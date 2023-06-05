@@ -12,9 +12,7 @@
     "useDefineForClassFields": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": [
-      "webpack-env",
-    ],
+    "types": ["node"],
     "paths": {
       "@/*": [
         "src/*"
@@ -33,7 +31,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-  ],
+, "env.d.ts", "default.d.ts"  ],
   "exclude": [
     "node_modules"
   ]

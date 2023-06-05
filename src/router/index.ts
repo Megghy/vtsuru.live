@@ -1,25 +1,59 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import IndexView from '../views/IndexView.vue';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import IndexView from '../views/IndexView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'home',
+    name: 'index',
     component: IndexView,
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+    path: '/user/:id',
+    name: 'user',
+    children: [
+      {
+        path: '',
+        name: 'user-index',
+        component: () => import('@/views/view/IndexView.vue'),
+        meta: {
+          title: '主页',
+        },
+      },
+      {
+        path: 'songlist',
+        name: 'user-songList',
+        component: () => import('@/views/view/SongListView.vue'),
+        meta: {
+          title: '歌单',
+        },
+      },
+    ],
   },
-];
+  //管理页面
+  {
+    path: '/manage',
+    name: 'manage',
+    children: [
+      {
+        path: '',
+        name: 'manage-index',
+        component: () => import('@/views/manage/DashboardView.vue'),
+        meta: {
+          title: '管理',
+        },
+      },
+      {
+        path: 'songlist',
+        name: 'songList',
+        component: () => import('@/views/view/SongListView.vue'),
+      },
+    ],
+  },
+]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
-});
+})
 
-export default router;
+export default router

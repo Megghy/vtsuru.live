@@ -1,0 +1,55 @@
+<script setup lang="ts">
+import { NAvatar, NButton, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText } from 'naive-ui'
+import { h } from 'vue'
+import { BookOutline } from '@vicons/ionicons5'
+import { useAccount } from '@/api/account'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+
+const accountInfo = useAccount()
+
+function renderIcon(icon: unknown) {
+  return () => h(NIcon, null, { default: () => h(icon as any) })
+}
+
+const menuOptions = [
+  {
+    label: '歌单',
+    key: 'hear-the-wind-sing',
+    icon: renderIcon(BookOutline),
+  },
+  {
+    label: '舞，舞，舞',
+    key: 'dance-dance-dance',
+    icon: renderIcon(BookOutline),
+  },
+]
+</script>
+
+<template>
+  <NLayout v-if="accountInfo">
+    <NLayoutHeader bordered style="height: 50px"> Header Header Header </NLayoutHeader>
+    <NLayout has-sider style="height: calc(100vh - 50px)">
+      <NLayoutSider bordered show-trigger collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" style="max-height: 320px">
+        <NMenu :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
+      </NLayoutSider>
+      <NLayout style="height: 100%">
+        <RouterView v-slot="{ Component }">
+          <KeepAlive>
+            <component :is="Component" />
+          </KeepAlive>
+        </RouterView>
+      </NLayout>
+    </NLayout>
+  </NLayout>
+  <template v-else>
+    <div style="display: flex;justify-content: center;align-items: center;flex-direction: column;padding: 50px;height: 100%;box-sizing: border-box;">
+      <NText>
+        请登录或注册后使用
+      </NText>
+      <NButton tag="a" href="/">
+        回到主页
+      </NButton>
+      <RegisterAndLogin style="max-width: 500px;min-width: 350px;"/>
+    </div>
+  </template>
+</template>
