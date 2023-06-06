@@ -28,7 +28,7 @@ const menuOptions = [
     icon: renderIcon(BookIcon),
   },
   {
-    label: '舞，舞，舞',
+    label: '棉花糖(匿名提问',
     key: 'dance-dance-dance',
     icon: renderIcon(BookIcon),
   },
@@ -56,7 +56,7 @@ onMounted(async () => {
 
 <template>
   <NResult v-if="!uId" status="error" title="输入的uId无效" description="再检查检查" />
-  <NResult v-else-if="!userInfo" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; display: flex; justify-content: left; align-items: center; padding-left: 15px">
       <NSpace>
@@ -79,11 +79,13 @@ onMounted(async () => {
         <NMenu :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
       </NLayoutSider>
       <NLayout style="height: 100%">
-        <RouterView v-slot="{ Component }">
+        <div class="viewer-page-content">
+          <RouterView v-slot="{ Component }">
           <KeepAlive>
             <component :is="Component" />
           </KeepAlive>
         </RouterView>
+        </div>
       </NLayout>
     </NLayout>
   </NLayout>
@@ -92,7 +94,7 @@ onMounted(async () => {
 <style lang="stylus" scoped>
 .viewer-page-content{
     height: 100%;
-    border-radius: 25px;
+    border-radius: 18px;
     box-shadow: inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;
     padding: 15px;
     margin-right: 10px;

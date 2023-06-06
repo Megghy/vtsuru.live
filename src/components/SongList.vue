@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { SongsInfo } from '@/api/api-models'
-import { DataTableColumns, NAvatar, NButton, NDataTable, NInput, NList, NListItem, NSpace } from 'naive-ui'
+import { DataTableColumns, NAvatar, NButton, NCollapseTransition, NDataTable, NInput, NList, NListItem, NSpace } from 'naive-ui'
 import { onMounted, h, ref } from 'vue'
 import APlayer from 'vue3-aplayer'
 
@@ -26,9 +26,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
     render(data) {
       return h(NAvatar, {
         src: data.cover,
-        imgProps: {
-
-        }
+        imgProps: {},
       })
     },
   },
