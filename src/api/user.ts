@@ -1,9 +1,8 @@
 import { QueryGetAPI } from '@/api/query'
-import { BASE_API } from '@/data/constants'
+import { BASE_API, USER_API_URL } from '@/data/constants'
 import { APIRoot, UserInfo } from './api-models'
 import { ref } from 'vue'
 
-const ACCOUNT_URL = `${BASE_API}user/`
 export const USERS = ref<{ [uId: number]: UserInfo }>({})
 
 export async function useUser(uId: number) {
@@ -17,7 +16,7 @@ export async function useUser(uId: number) {
 }
 
 export async function GetInfo(uId: number): Promise<APIRoot<UserInfo>> {
-  return QueryGetAPI<UserInfo>(`${ACCOUNT_URL}info`, {
+  return QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
     uId: uId,
   })
 }

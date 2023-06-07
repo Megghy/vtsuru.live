@@ -1,11 +1,10 @@
-import { BASE_API } from '@/data/constants'
+import { ACCOUNT_API_URL, BASE_API } from '@/data/constants'
 import { APIRoot } from './api-models'
 import { QueryPostAPI } from '@/api/query'
 import { UserInfo } from '@/api/api-models'
 import { ref } from 'vue'
 import { useCookies } from '@vueuse/integrations/useCookies'
 
-const ACCOUNT_URL = `${BASE_API}account/`
 export const ACCOUNT = ref<UserInfo>()
 
 const cookies = useCookies()
@@ -24,7 +23,7 @@ export function useAccount() {
 }
 
 export async function Register(name: string, email: string, password: string, token: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_URL}register`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL}register`, {
     name,
     email,
     password,
@@ -33,11 +32,11 @@ export async function Register(name: string, email: string, password: string, to
 }
 
 export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_URL}login`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL}login`, {
     nameOrEmail,
     password,
   })
 }
 export async function Self(): Promise<APIRoot<UserInfo>> {
-  return QueryPostAPI<UserInfo>(`${ACCOUNT_URL}self`)
+  return QueryPostAPI<UserInfo>(`${ACCOUNT_API_URL}self`)
 }

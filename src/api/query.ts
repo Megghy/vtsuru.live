@@ -1,12 +1,18 @@
 /* eslint-disable indent */
 import { APIRoot, PaginationResponse } from './api-models'
 
-export async function QueryPostAPI<T>(url: string, body?: unknown): Promise<APIRoot<T>> {
+export async function QueryPostAPI<T>(url: string, body?: unknown, headers?: any): Promise<APIRoot<T>> {
+  if (headers) {
+    headers['Content-Type'] = 'application/json'
+  }
+  else {
+    headers = {
+      'Content-Type': 'application/json',
+    }
+  }
   const data = await fetch(url, {
     method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: headers,
     body: JSON.stringify(body),
   }) // 不处理异常, 在页面处理
   return (await data.json()) as APIRoot<T>

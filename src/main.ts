@@ -6,4 +6,4 @@ import { GetSelfAccount } from './api/account'
 
 createApp(App).use(store).use(router).mount('#app')
 
-await GetSelfAccount()
+GetSelfAccount()

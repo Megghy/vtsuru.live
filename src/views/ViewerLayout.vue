@@ -6,7 +6,7 @@ import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as Wi
 import { GetInfo, useUser } from '@/api/user'
 import { useRoute } from 'vue-router'
 import { UserInfo } from '@/api/api-models'
-import { FETCH_API, USER_URL } from '@/data/constants'
+import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
 
 const route = useRoute()
@@ -56,7 +56,7 @@ onMounted(async () => {
 
 <template>
   <NResult v-if="!uId" status="error" title="输入的uId无效" description="再检查检查" />
-  <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  <NResult v-else-if="!userInfo" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; display: flex; justify-content: left; align-items: center; padding-left: 15px">
       <NSpace>
