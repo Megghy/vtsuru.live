@@ -2,7 +2,7 @@
 import { SongsInfo } from '@/api/api-models'
 import { QueryGetPaginationAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
-import { USER_URL } from '@/data/constants'
+import { USER_API_URL } from '@/data/constants'
 import { onMounted, ref } from 'vue'
 import { useRouteParams } from '@vueuse/router'
 
@@ -34,7 +34,7 @@ async function RequestData() {
       tags: ['hao'],
     },
   ]
-  await QueryGetPaginationAPI<SongsInfo[]>(`${USER_URL}info`, {
+  await QueryGetPaginationAPI<SongsInfo[]>(`${USER_API_URL}info`, {
     uId: uId.value,
   })
     .then((result) => {

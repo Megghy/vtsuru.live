@@ -1,15 +1,14 @@
 /* eslint-disable indent */
+import { useLocalStorage } from '@vueuse/core'
 import { APIRoot, PaginationResponse } from './api-models'
 
-export async function QueryPostAPI<T>(url: string, body?: unknown, headers?: any): Promise<APIRoot<T>> {
-  if (headers) {
-    headers['Content-Type'] = 'application/json'
-  }
-  else {
-    headers = {
-      'Content-Type': 'application/json',
-    }
-  }
+const cookie = useLocalStorage('JWT_Token', '')
+
+export async function QueryPostAPI<T>(url: string, body?: unknown, headers?: [string, string][]): Promise<APIRoot<T>> {
+  headers ??= []
+  headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  headers?.push(['Content-Type', 'application/json'])
+
   const data = await fetch(url, {
     method: 'post',
     headers: headers,
@@ -17,10 +16,17 @@ export async function QueryPostAPI<T>(url: string, body?: unknown, headers?: any
   }) // 不处理异常, 在页面处理
   return (await data.json()) as APIRoot<T>
 }
-export async function QueryGetAPI<T>(urlString: string, params?: any): Promise<APIRoot<T>> {
+export async function QueryGetAPI<T>(urlString: string, params?: any, headers?: [string, string][]): Promise<APIRoot<T>> {
   const url = new URL(urlString)
   url.search = new URLSearchParams(params).toString()
-  const data = await fetch(url.toString()) // 不处理异常, 在页面处理
+  if (cookie.value) {
+    headers ??= []
+    headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  }
+  const data = await fetch(url.toString(), {
+    method: 'get',
+    headers: headers,
+  }) // 不处理异常, 在页面处理
   return (await data.json()) as APIRoot<T>
 }
 export async function QueryPostPaginationAPI<T>(url: string, body?: unknown): Promise<APIRoot<PaginationResponse<T>>> {

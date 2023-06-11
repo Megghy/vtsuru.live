@@ -8,6 +8,11 @@ const routes: Array<RouteRecordRaw> = [
     component: IndexView,
   },
   {
+    path: '/verify',
+    name: 'verify',
+    component: () => import('@/views/VerifyView.vue'),
+  },
+  {
     path: '/user/:id',
     name: 'user',
     children: [
@@ -20,7 +25,7 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: 'songlist',
+        path: 'song-list',
         name: 'user-songList',
         component: () => import('@/views/view/SongListView.vue'),
         meta: {
@@ -43,9 +48,14 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: 'songlist',
-        name: 'songList',
-        component: () => import('@/views/view/SongListView.vue'),
+        path: 'song-list',
+        name: 'manage-songList',
+        component: () => import('@/views/manage/SongListManageView.vue'),
+      },
+      {
+        path: 'bili-verify',
+        name: 'manage-biliVerify',
+        component: () => import('@/views/manage/BiliVerifyView.vue'),
       },
     ],
   },

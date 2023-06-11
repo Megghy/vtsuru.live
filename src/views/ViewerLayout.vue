@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult } from 'naive-ui'
+import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser } from '@/api/user'
@@ -13,6 +13,7 @@ const route = useRoute()
 const uId = computed(() => {
   return Number(route.params.id)
 })
+const theme = useOsTheme()
 
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
@@ -24,12 +25,12 @@ function renderIcon(icon: unknown) {
 const menuOptions = [
   {
     label: '歌单',
-    key: 'hear-the-wind-sing',
+    key: 'song-list',
     icon: renderIcon(BookIcon),
   },
   {
     label: '棉花糖(匿名提问',
-    key: 'dance-dance-dance',
+    key: 'question-box',
     icon: renderIcon(BookIcon),
   },
 ]
@@ -56,16 +57,25 @@ onMounted(async () => {
 
 <template>
   <NResult v-if="!uId" status="error" title="输入的uId无效" description="再检查检查" />
-  <NResult v-else-if="!userInfo" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   <NLayout v-else style="height: 100vh">
-    <NLayoutHeader style="height: 50px; display: flex; justify-content: left; align-items: center; padding-left: 15px">
-      <NSpace>
-        <NText> VTSURU </NText>
-        <span>
-          {{ $route.meta.title }}
-        </span>
-      </NSpace>
-      <NButton style="right: 0px; position: relative" type="primary"> 控制台 </NButton>
+    <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
+      <NPageHeader :subtitle="($route.meta.title as string) ?? ''">
+        <template #extra>
+          <NSpace>
+            <NSwitch> </NSwitch>
+            <template v-if="accountInfo">
+              <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })"> 个人中心 </NButton>
+            </template>
+            <template v-else>
+              <NButton style="right: 0px; position: relative" type="primary"> 注册 / 登陆 </NButton>
+            </template>
+          </NSpace>
+        </template>
+        <template #title>
+          <NText style="font-size: 1.5rem"> VTSURU </NText>
+        </template>
+      </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 50px)">
       <NLayoutSider show-trigger collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false">
@@ -73,6 +83,9 @@ onMounted(async () => {
           <div v-if="biliUserInfo">
             <NSpace vertical justify="center" align="center">
               <NAvatar :src="biliUserInfo.face" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NText>
+                {{ biliUserInfo.uname }}
+              </NText>
             </NSpace>
           </div>
         </Transition>
@@ -81,10 +94,10 @@ onMounted(async () => {
       <NLayout style="height: 100%">
         <div class="viewer-page-content">
           <RouterView v-slot="{ Component }">
-          <KeepAlive>
-            <component :is="Component" />
-          </KeepAlive>
-        </RouterView>
+            <KeepAlive>
+              <component :is="Component" />
+            </KeepAlive>
+          </RouterView>
         </div>
       </NLayout>
     </NLayout>

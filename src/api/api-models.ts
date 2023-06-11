@@ -12,12 +12,17 @@ export interface PaginationResponse<T> {
 }
 export interface UserInfo {
   name: string
-  uId: number
+  id: number
   createAt: number
+  biliId?: number
+  biliRoomId?: number
 }
 export interface AccountInfo extends UserInfo {
-  isRoomValid: boolean
+  isEmailVerified: boolean
+  isBiliVerified: boolean
   enableFunctions: string[]
+  biliVerifyCode?: string
+  emailVerifyUrl?: string
 }
 export interface SongsInfo {
   id: string

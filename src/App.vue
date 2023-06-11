@@ -1,18 +1,20 @@
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides" style="height:100vh;">
-    <ViewerLayout v-if="layout == 'viewer'" />
-    <ManageLayout v-else-if="layout == 'manage'" />
-    <template v-else>
-      <RouterView />
-    </template>
-  </NConfigProvider>
+  <NMessageProvider>
+    <NConfigProvider :theme-overrides="themeOverrides" style="height: 100vh">
+      <ViewerLayout v-if="layout == 'viewer'" />
+      <ManageLayout v-else-if="layout == 'manage'" />
+      <template v-else>
+        <RouterView />
+      </template>
+    </NConfigProvider>
+  </NMessageProvider>
 </template>
 
 <script setup lang="ts">
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
 import { useRoute } from 'vue-router'
-import { NConfigProvider } from 'naive-ui'
+import { NConfigProvider, NMessageProvider } from 'naive-ui'
 import { computed } from 'vue'
 
 const route = useRoute()
@@ -28,7 +30,7 @@ const layout = computed(() => {
 
 const themeOverrides = {
   common: {
-    primaryColor: '#9ddddc',
+    //primaryColor: '#9ddddc',
   },
   // ...
 }
