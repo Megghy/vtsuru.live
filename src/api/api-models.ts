@@ -24,14 +24,31 @@ export interface AccountInfo extends UserInfo {
   biliVerifyCode?: string
   emailVerifyUrl?: string
 }
-export interface SongsInfo {
-  id: string
+export interface SongAuthorInfo {
   name: string
-  author: string
+  id: number
+}
+export enum SongFrom {
+  Custom,
+  Netease,
+  FiveSing,
+}
+export interface SongsInfo {
+  id: number
+  key: string
+  name: string
+  author: string[]
   url: string
-  cover: string
-  from: string
-  language: string
-  desc: string
-  tags: string[]
+  from: SongFrom
+  language: SongLanguage[]
+  description?: string
+  tags?: string[]
+}
+export enum SongLanguage {
+  Chinese, // 中文
+  English, // 英文
+  Japanese, // 日文
+  Spanish, // 西班牙文
+  French, // 法文
+  Other, //其他
 }
