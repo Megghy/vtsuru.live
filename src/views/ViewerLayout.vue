@@ -3,14 +3,14 @@
 import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
-import { GetInfo, useUser } from '@/api/user'
+import { useUser, useUserByUId } from '@/api/user'
 import { useRoute } from 'vue-router'
 import { UserInfo } from '@/api/api-models'
 import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
 
 const route = useRoute()
-const uId = computed(() => {
+const id = computed(() => {
   return Number(route.params.id)
 })
 const theme = useOsTheme()
@@ -35,7 +35,7 @@ const menuOptions = [
   },
 ]
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${uId.value}`)
+  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${id.value}`)
     .then(async (respone) => {
       let data = await respone.json()
       if (data.code == 0) {
@@ -51,12 +51,12 @@ async function RequestBiliUserData() {
 
 onMounted(async () => {
   await RequestBiliUserData()
-  userInfo.value = await useUser(uId.value)
+  userInfo.value = await useUser(id.value)
 })
 </script>
 
 <template>
-  <NResult v-if="!uId" status="error" title="输入的uId无效" description="再检查检查" />
+  <NResult v-if="!id" status="error" title="输入的uId无效" description="再检查检查" />
   <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
