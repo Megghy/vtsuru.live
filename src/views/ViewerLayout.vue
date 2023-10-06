@@ -10,7 +10,7 @@ import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
 
 const route = useRoute()
-const uId = computed(() => {
+const id = computed(() => {
   return Number(route.params.id)
 })
 const theme = useOsTheme()
@@ -57,7 +57,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NResult v-if="!uId" status="error" title="输入的uId无效" description="再检查检查" />
+  <NResult v-if="!id" status="error" title="输入的uId无效" description="再检查检查" />
   <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
