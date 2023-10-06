@@ -10,12 +10,16 @@ export interface PaginationResponse<T> {
   hasMore: boolean
   datas: T
 }
+export enum IndexTypes {
+  Default,
+}
 export interface UserInfo {
   name: string
   id: number
   createAt: number
   biliId?: number
   biliRoomId?: number
+  indexType: IndexTypes
 }
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
@@ -23,6 +27,19 @@ export interface AccountInfo extends UserInfo {
   enableFunctions: string[]
   biliVerifyCode?: string
   emailVerifyUrl?: string
+  settings: UserSetting
+}
+export interface Setting_SendEmail {
+  recieveQA: boolean
+  recieveQAReply: boolean
+}
+export interface UserSetting {
+  sendEmail: Setting_SendEmail
+  enableFunctions: FunctionTypes[]
+}
+export enum FunctionTypes {
+  SongList = 'SongList',
+  QuestionBox = 'QuestionBox',
 }
 export interface SongAuthorInfo {
   name: string
@@ -37,6 +54,7 @@ export interface SongsInfo {
   id: number
   key: string
   name: string
+  translateName?: string
   author: string[]
   url: string
   from: SongFrom
@@ -51,4 +69,26 @@ export enum SongLanguage {
   Spanish, // 西班牙文
   French, // 法文
   Other, //其他
+}
+export enum LevelTypes {
+  Info,
+  Success,
+  Warn,
+  Error,
+}
+export interface NotifactionInfo {
+  id: string
+  createTime: number
+  title: string
+  message: string
+  type: LevelTypes
+}
+export interface QAInfo {
+  id: number
+  sender: UserInfo
+  target: UserInfo
+  question: { message: string; image?: string }
+  answer?: { message: string; image?: string }
+  isReaded?: boolean
+  sendAt: number
 }

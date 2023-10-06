@@ -32,6 +32,14 @@ const routes: Array<RouteRecordRaw> = [
           title: '歌单',
         },
       },
+      {
+        path: 'question-box',
+        name: 'user-questionBox',
+        component: () => import('@/views/view/QuestionBoxView.vue'),
+        meta: {
+          title: '棉花糖(提问箱',
+        },
+      },
     ],
   },
   //管理页面
@@ -53,9 +61,19 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/SongListManageView.vue'),
       },
       {
+        path: 'question-box',
+        name: 'manage-questionBox',
+        component: () => import('@/views/manage/QuestionBoxManageView.vue'),
+      },
+      {
         path: 'bili-verify',
         name: 'manage-biliVerify',
         component: () => import('@/views/manage/BiliVerifyView.vue'),
+      },
+      {
+        path: 'setting',
+        name: 'manage-setting',
+        component: () => import('@/views/manage/SettingsManageView.vue'),
       },
     ],
   },

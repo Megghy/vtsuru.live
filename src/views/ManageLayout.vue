@@ -22,14 +22,23 @@ const menuOptions = [
             name: 'manage-songList',
           },
         },
-        { default: () => '回家' }
+        { default: () => '歌单' }
       ),
     key: 'song-list',
     icon: renderIcon(BookOutline),
   },
   {
-    label: '舞，舞，舞',
-    key: 'dance-dance-dance',
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-questionBox',
+          },
+        },
+        { default: () => '棉花糖(提问箱' }
+      ),
+    key: 'song-list',
     icon: renderIcon(BookOutline),
   },
 ]

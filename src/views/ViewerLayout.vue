@@ -3,7 +3,7 @@
 import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
-import { GetInfo, useUser } from '@/api/user'
+import { GetInfo, useUserWithUId } from '@/api/user'
 import { useRoute } from 'vue-router'
 import { UserInfo } from '@/api/api-models'
 import { FETCH_API } from '@/data/constants'
@@ -35,7 +35,7 @@ const menuOptions = [
   },
 ]
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${uId.value}`)
+  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`)
     .then(async (respone) => {
       let data = await respone.json()
       if (data.code == 0) {
@@ -50,8 +50,9 @@ async function RequestBiliUserData() {
 }
 
 onMounted(async () => {
+  console.log(route.params)
+  userInfo.value = await useUserWithUId(uId.value)
   await RequestBiliUserData()
-  userInfo.value = await useUser(uId.value)
 })
 </script>
 

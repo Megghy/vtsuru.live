@@ -2,6 +2,7 @@
 import { GetSelfAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { GetNotifactions } from '@/data/notifactions'
 import { useLocalStorage } from '@vueuse/core'
 import { FormInst, FormItemInst, FormItemRule, FormRules, NAlert, NButton, NCard, NDivider, NForm, NFormItem, NInput, NSpace, NSpin, NTab, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { ref } from 'vue'
@@ -141,6 +142,7 @@ function onLoginButtonClick(e: MouseEvent) {
           setTimeout(() => {
             GetSelfAccount().then((data) => {
               message.success(`成功登陆为 ${data?.name}`)
+              GetNotifactions();
             })
           }, 1)
         } else {

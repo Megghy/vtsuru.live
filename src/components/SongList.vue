@@ -8,6 +8,7 @@ import {
   FormRules,
   NAvatar,
   NButton,
+  NCard,
   NCollapseTransition,
   NDataTable,
   NDivider,
@@ -112,7 +113,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
     minWidth: 100,
     sorter: 'default',
     render(data) {
-      return h('span', data.name)
+      return h(NSpace, { size: 5 }, () => [h(NText, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
     },
   },
   {
@@ -149,7 +150,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
         h(
           NButton,
           {
-            size:'small',
+            size: 'small',
             onClick: () => {
               updateSongModel.value = JSON.parse(JSON.stringify(data))
               showModal.value = true
@@ -163,7 +164,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
           NButton,
           {
             type: 'primary',
-            size:'small',
+            size: 'small',
             onClick: () => {
               aplayerMusic.value = {
                 title: data.name,
@@ -181,7 +182,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
           NButton,
           {
             type: 'error',
-            size:'small',
+            size: 'small',
             onClick: () => {
               aplayerMusic.value = {
                 title: data.name,
@@ -195,10 +196,44 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
             default: () => '删除',
           }
         ),
+        GetPlayButton(data)
       ])
     },
   },
 ]
+function GetPlayButton(song: SongsInfo) {
+  switch (song.from) {
+    case SongFrom.FiveSing: {
+      return h(
+        NButton,
+        {
+          size: 'small',
+          color:"#00BBB3",
+          onClick: () => {
+            window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
+          },
+        },
+        {
+          default: () => '在5sing打开',
+        }
+      )
+    }
+    case SongFrom.Netease:
+      return h(
+        NButton,
+        {
+          size: 'small',
+          color: '#C20C0C',
+          onClick: () => {
+            window.open(`https://music.163.com/#/song?id=${song.id}`)
+          },
+        },
+        {
+          default: () => '在网易云打开',
+        }
+      )
+  }
+}
 function renderCell(value: string | number) {
   if (!value) {
     return h(NText, { depth: 3 }, { default: () => '未填写' })
@@ -229,8 +264,11 @@ onMounted(() => {
 
 <template>
   歌单 {{ songsInternal.length }}
+  <NCard embedded>
+    <NButton> </NButton>
+  </NCard>
   <Transition>
-    <APlayer v-if="aplayerMusic" :music="aplayerMusic" />
+    <APlayer v-if="aplayerMusic" :music="aplayerMusic" autoplay/>
   </Transition>
   <NDataTable :columns="columns" :data="songsInternal"> </NDataTable>
   <NModal v-model:show="showModal" style="max-width: 600px" preset="card">
@@ -256,6 +294,6 @@ onMounted(() => {
       </NFormItem>
     </NForm>
     <NDivider style="margin: 10px" />
-    <NButton @click="updateSong"> 更新 </NButton>
+    <NButton @click="updateSong" type="success"> 更新 </NButton>
   </NModal>
 </template>

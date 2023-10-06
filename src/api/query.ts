@@ -32,6 +32,6 @@ export async function QueryGetAPI<T>(urlString: string, params?: any, headers?: 
 export async function QueryPostPaginationAPI<T>(url: string, body?: unknown): Promise<APIRoot<PaginationResponse<T>>> {
   return await QueryPostAPI<PaginationResponse<T>>(url, body)
 }
-export async function QueryGetPaginationAPI<T>(urlString: string, params?: any): Promise<APIRoot<PaginationResponse<T>>> {
+export async function QueryGetPaginationAPI<T>(urlString: string, params?: unknown): Promise<APIRoot<PaginationResponse<T>>> {
   return await QueryGetAPI<PaginationResponse<T>>(urlString, params)
 }
