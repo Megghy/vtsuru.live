@@ -111,6 +111,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
     key: 'name',
     resizable: true,
     minWidth: 100,
+    width: 300,
     sorter: 'default',
     render(data) {
       return h(NSpace, { size: 5 }, () => [h(NText, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
@@ -119,9 +120,21 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
   {
     title: '作者',
     key: 'artist',
+    width: 200,
     resizable: true,
     render(data) {
       return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NTag, { bordered: false, size: 'small', type: 'info' }, () => a)))
+    },
+  },
+  {
+    title: '语言',
+    key: 'language',
+    width: 150,
+    resizable: true,
+    render(data) {
+      return (data.language?.length ?? 0) > 0
+        ? h(NSpace, { size: 5 }, () => data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label)))
+        : null
     },
   },
   {
@@ -146,7 +159,9 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
     disabled: () => !props.canEdit,
     width: 200,
     render(data) {
-      return h(NSpace, () => [
+      return h(NSpace, {
+        justify: 'space-around'
+      }, () => [
         h(
           NButton,
           {
@@ -196,7 +211,7 @@ const createColumns = (): DataTableColumns<SongsInfo> => [
             default: () => '删除',
           }
         ),
-        GetPlayButton(data)
+        GetPlayButton(data),
       ])
     },
   },
@@ -208,7 +223,7 @@ function GetPlayButton(song: SongsInfo) {
         NButton,
         {
           size: 'small',
-          color:"#00BBB3",
+          color: '#00BBB3',
           onClick: () => {
             window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
           },
@@ -268,9 +283,9 @@ onMounted(() => {
     <NButton> </NButton>
   </NCard>
   <Transition>
-    <APlayer v-if="aplayerMusic" :music="aplayerMusic" autoplay/>
+    <APlayer v-if="aplayerMusic" :music="aplayerMusic" autoplay />
   </Transition>
-  <NDataTable :columns="columns" :data="songsInternal"> </NDataTable>
+  <NDataTable size="small" :columns="columns" :data="songsInternal"> </NDataTable>
   <NModal v-model:show="showModal" style="max-width: 600px" preset="card">
     <template #header> 修改信息 </template>
     <NForm ref="formRef" :rules="updateSongRules" :model="updateSongModel" :render-cell="renderCell">

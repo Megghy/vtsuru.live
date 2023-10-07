@@ -3,8 +3,8 @@
 import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
-import { GetInfo, useUserWithUId } from '@/api/user'
-import { useRoute } from 'vue-router'
+import { GetInfo, useUser, useUserWithUId } from '@/api/user'
+import { RouterLink, useRoute } from 'vue-router'
 import { UserInfo } from '@/api/api-models'
 import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
@@ -24,13 +24,45 @@ function renderIcon(icon: unknown) {
 }
 const menuOptions = [
   {
-    label: '歌单',
-    key: 'song-list',
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'user-index',
+          },
+        },
+        { default: () => '主页' }
+      ),
+    key: 'user-index',
     icon: renderIcon(BookIcon),
   },
   {
-    label: '棉花糖(匿名提问',
-    key: 'question-box',
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'user-songList',
+          },
+        },
+        { default: () => '歌单' }
+      ),
+    key: 'user-songList',
+    icon: renderIcon(BookIcon),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'user-questionBox',
+          },
+        },
+        { default: () => '棉花糖 (提问箱' }
+      ),
+    key: 'user-questionBox',
     icon: renderIcon(BookIcon),
   },
 ]
@@ -50,8 +82,7 @@ async function RequestBiliUserData() {
 }
 
 onMounted(async () => {
-  console.log(route.params)
-  userInfo.value = await useUserWithUId(uId.value)
+  userInfo.value = await useUser()
   await RequestBiliUserData()
 })
 </script>
@@ -81,16 +112,16 @@ onMounted(async () => {
     <NLayout has-sider style="height: calc(100vh - 50px)">
       <NLayoutSider show-trigger collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false">
         <Transition>
-          <div v-if="biliUserInfo">
+          <div v-if="biliUserInfo" style="margin-top: 15px;">
             <NSpace vertical justify="center" align="center">
               <NAvatar :src="biliUserInfo.face" :img-props="{ referrerpolicy: 'no-referrer' }" />
-              <NText>
-                {{ biliUserInfo.uname }}
+              <NText strong>
+                {{ biliUserInfo.name }}
               </NText>
             </NSpace>
           </div>
         </Transition>
-        <NMenu :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
+        <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
       </NLayoutSider>
       <NLayout style="height: 100%">
         <div class="viewer-page-content">

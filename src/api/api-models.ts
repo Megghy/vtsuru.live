@@ -90,5 +90,8 @@ export interface QAInfo {
   question: { message: string; image?: string }
   answer?: { message: string; image?: string }
   isReaded?: boolean
+  isSenderRegisted: boolean
+  isPublic: boolean
+  isFavorite:boolean
   sendAt: number
 }
