@@ -16,6 +16,20 @@ export async function QueryPostAPI<T>(url: string, body?: unknown, headers?: [st
   }) // 不处理异常, 在页面处理
   return (await data.json()) as APIRoot<T>
 }
+export async function QueryPostAPIWithParams<T>(urlString: string, params?: any, body?: any, contentType?: string, headers?: [string, string][]): Promise<APIRoot<T>> {
+  const url = new URL(urlString)
+  url.search = new URLSearchParams(params).toString()
+  headers ??= []
+  headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  if (contentType) headers?.push(['Content-Type', contentType])
+
+  const data = await fetch(url, {
+    method: 'post',
+    headers: headers,
+    body: body,
+  }) // 不处理异常, 在页面处理
+  return (await data.json()) as APIRoot<T>
+}
 export async function QueryGetAPI<T>(urlString: string, params?: any, headers?: [string, string][]): Promise<APIRoot<T>> {
   const url = new URL(urlString)
   url.search = new URLSearchParams(params).toString()

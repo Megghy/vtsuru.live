@@ -95,3 +95,19 @@ export interface QAInfo {
   isFavorite:boolean
   sendAt: number
 }
+export interface LotteryUserInfo {
+  name: string
+  uId: number
+  level?: number
+  avatar: string
+  location?: string
+  isVIP?: boolean
+  card?: LotteryUserCardInfo
+}
+export interface LotteryUserCardInfo {
+  name: string
+  level: number
+  guardLevel: number
+  isGuard: boolean
+  isCharge: boolean
+}

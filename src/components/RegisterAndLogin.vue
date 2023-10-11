@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { GetSelfAccount } from '@/api/account'
+import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { GetNotifactions } from '@/data/notifactions'
@@ -128,7 +129,10 @@ function onLoginButtonClick(e: MouseEvent) {
 
   formRef.value?.validate().then(async () => {
     isLoading.value = true
-    await QueryPostAPI<string>(
+    await QueryPostAPI<{
+      account: AccountInfo
+      token: string
+    }>(
       ACCOUNT_API_URL + 'login',
       {
         nameOrEmail: loginModel.value.account,
@@ -138,13 +142,11 @@ function onLoginButtonClick(e: MouseEvent) {
     )
       .then(async (data) => {
         if (data.code == 200) {
-          cookie.value = data.data
+          localStorage.setItem('JWT_Token', data.data.token)
+          message.success(`成功登陆为 ${data?.data.account.name}`)
           setTimeout(() => {
-            GetSelfAccount().then((data) => {
-              message.success(`成功登陆为 ${data?.name}`)
-              GetNotifactions();
-            })
-          }, 1)
+            location.reload()
+          }, 1000)
         } else {
           message.error(data.message)
         }
@@ -161,57 +163,51 @@ function onLoginButtonClick(e: MouseEvent) {
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NCard embedded>
-      <template #header-extra>
-        <slot name="header-extra"> </slot>
-      </template>
-      <template v-if="cookie">
-        <NAlert type="warning"> 你已经登录 </NAlert>
-      </template>
-      <template v-else>
-        <NTabs default-value="login" size="large" animated pane-wrapper-style="margin: 0 -4px" pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;">
-          <NTabPane name="login" tab="登陆">
-            <NForm ref="formRef" :rules="loginRules" :model="loginModel">
-              <NFormItem path="account" label="用户名或邮箱">
-                <NInput v-model:value="loginModel.account" />
-              </NFormItem>
-              <NFormItem path="password" label="密码">
-                <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
-              </NFormItem>
-            </NForm>
-            <NSpace vertical justify="center" align="center">
-              <NSpin :show="!token">
-                <NButton type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
-              </NSpin>
-            </NSpace>
-          </NTabPane>
-          <NTabPane name="register" tab="注册">
-            <NForm ref="formRef" :rules="registerRules" :model="registerModel">
-              <NFormItem path="username" label="用户名">
-                <NInput v-model:value="registerModel.username" />
-              </NFormItem>
-              <NFormItem path="email" label="邮箱">
-                <NInput v-model:value="registerModel.email" />
-              </NFormItem>
-              <NFormItem path="password" label="密码">
-                <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
-              </NFormItem>
-              <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-                <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter.prevent />
-              </NFormItem>
-            </NForm>
-            <NSpace vertical justify="center" align="center">
-              <NSpin :show="!token">
-                <NButton type="primary" size="large" @click="onregisterButtonClick"> 注册 </NButton>
-              </NSpin>
-            </NSpace>
-          </NTabPane>
-        </NTabs>
+  <NCard embedded>
+    <template #header-extra>
+      <slot name="header-extra"> </slot>
+    </template>
+    <template v-if="cookie">
+      <NAlert type="warning"> 你已经登录 </NAlert>
+    </template>
+    <template v-else>
+      <NTabs default-value="login" size="large" animated pane-wrapper-style="margin: 0 -4px" pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;">
+        <NTabPane name="login" tab="登陆">
+          <NForm ref="formRef" :rules="loginRules" :model="loginModel">
+            <NFormItem path="account" label="用户名或邮箱">
+              <NInput v-model:value="loginModel.account" />
+            </NFormItem>
+            <NFormItem path="password" label="密码">
+              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
+            </NFormItem>
+          </NForm>
+          <NSpace vertical justify="center" align="center">
+            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
+          </NSpace>
+        </NTabPane>
+        <NTabPane name="register" tab="注册">
+          <NForm ref="formRef" :rules="registerRules" :model="registerModel">
+            <NFormItem path="username" label="用户名">
+              <NInput v-model:value="registerModel.username" />
+            </NFormItem>
+            <NFormItem path="email" label="邮箱">
+              <NInput v-model:value="registerModel.email" />
+            </NFormItem>
+            <NFormItem path="password" label="密码">
+              <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
+            </NFormItem>
+            <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
+              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter.prevent />
+            </NFormItem>
+          </NForm>
+          <NSpace vertical justify="center" align="center">
+            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onregisterButtonClick"> 注册 </NButton>
+          </NSpace>
+        </NTabPane>
+      </NTabs>
 
-        <NDivider />
-        <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
-      </template>
-    </NCard>
-  </NSpin>
+      <NDivider />
+      <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+    </template>
+  </NCard>
 </template>

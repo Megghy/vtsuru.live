@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme } from 'naive-ui'
+import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme, NModal } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
@@ -8,6 +8,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { UserInfo } from '@/api/api-models'
 import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 
 const route = useRoute()
 const id = computed(() => {
@@ -18,6 +19,8 @@ const theme = useOsTheme()
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
 const accountInfo = useAccount()
+
+const registerAndLoginModalVisiable = ref(false)
 
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
@@ -100,7 +103,7 @@ onMounted(async () => {
               <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })"> 个人中心 </NButton>
             </template>
             <template v-else>
-              <NButton style="right: 0px; position: relative" type="primary"> 注册 / 登陆 </NButton>
+              <NButton style="right: 0px; position: relative" type="primary" @click="registerAndLoginModalVisiable = true"> 注册 / 登陆 </NButton>
             </template>
           </NSpace>
         </template>
@@ -134,6 +137,9 @@ onMounted(async () => {
       </NLayout>
     </NLayout>
   </NLayout>
+  <NModal v-model:show="registerAndLoginModalVisiable" style="width: 500px; max-width: 90vw;">
+    <RegisterAndLogin />
+  </NModal>
 </template>
 
 <style lang="stylus" scoped>

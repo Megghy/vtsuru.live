@@ -17,13 +17,13 @@ export async function GetSelfAccount() {
       ACCOUNT.value = result.data
       console.log('[vtsuru] 已获取账户信息')
       return result.data
-    } else if (result.code == 403) {
-      cookie.value = ''
+    } else if (result.code == 401) {
+      localStorage.removeItem('JWT_Token')
       console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')
       message.error('Cookie 已失效, 需要重新登陆')
-    }
-    else {
-      console.warn('[vtsuru] '+ result.message)
+      location.reload()
+    } else {
+      console.warn('[vtsuru] ' + result.message)
       message.error(result.message)
     }
   }

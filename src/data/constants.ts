@@ -12,3 +12,4 @@ export const BILI_API_URL = `${BASE_API}bili/`
 export const SONG_API_URL = `${BASE_API}song-list/`
 export const NOTIFACTION_API_URL = `${BASE_API}notifaction/`
 export const QUESTION_API_URL = `${BASE_API}qa/`
+export const LOTTERY_API_URL = `${BASE_API}lottery/`

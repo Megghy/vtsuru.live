@@ -66,6 +66,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/QuestionBoxManageView.vue'),
       },
       {
+        path: 'lottery',
+        name: 'manage-lottery',
+        component: () => import('@/views/manage/LotteryView.vue'),
+      },
+      {
         path: 'bili-verify',
         name: 'manage-biliVerify',
         component: () => import('@/views/manage/BiliVerifyView.vue'),

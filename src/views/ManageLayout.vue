@@ -24,7 +24,7 @@ const menuOptions = [
         },
         { default: () => '歌单' }
       ),
-    key: 'song-list',
+    key: 'manage-songList',
     icon: renderIcon(BookOutline),
   },
   {
@@ -36,9 +36,9 @@ const menuOptions = [
             name: 'manage-questionBox',
           },
         },
-        { default: () => '棉花糖(提问箱' }
+        { default: () => '棉花糖 (提问箱' }
       ),
-    key: 'song-list',
+    key: 'manage-questionBox',
     icon: renderIcon(BookOutline),
   },
 ]
@@ -52,7 +52,7 @@ const menuOptions = [
         <NButton>
           <RouterLink :to="{ name: 'manage-index' }"> 个人中心 </RouterLink>
         </NButton>
-        <NMenu :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
+        <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
       </NLayoutSider>
       <NLayout style="height: 100%">
         <div style="box-sizing: border-box; padding: 20px">

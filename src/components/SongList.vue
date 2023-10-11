@@ -2,6 +2,7 @@
 import { SongAuthorInfo, SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
+import { List } from 'linqts'
 import {
   DataTableColumns,
   FormInst,
@@ -25,7 +26,9 @@ import {
   NText,
   useMessage,
 } from 'naive-ui'
-import { onMounted, h, ref, watch } from 'vue'
+import { FilterOptionValue } from 'naive-ui/es/data-table/src/interface'
+import { nextTick } from 'process'
+import { onMounted, h, ref, watch, computed } from 'vue'
 import APlayer from 'vue3-aplayer'
 
 const props = defineProps<{
@@ -104,118 +107,135 @@ const songSelectOption = [
   },
 ]
 const tagsSelectOption = ref<{ label: string; value: string }[]>([])
+const tags = ref<string[]>([])
+const tagsOptions = computed(() => {
+  return tags.value.map((t) => ({
+    label: t,
+    value: t,
+  }))
+})
 
-const createColumns = (): DataTableColumns<SongsInfo> => [
-  {
-    title: '名称',
-    key: 'name',
-    resizable: true,
-    minWidth: 100,
-    width: 300,
-    sorter: 'default',
-    render(data) {
-      return h(NSpace, { size: 5 }, () => [h(NText, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
+function createColumns(): DataTableColumns<SongsInfo> {
+  return [
+    {
+      title: '名称',
+      key: 'name',
+      resizable: true,
+      minWidth: 100,
+      width: 300,
+      sorter: 'default',
+      render(data) {
+        return h(NSpace, { size: 5 }, () => [h(NText, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
+      },
     },
-  },
-  {
-    title: '作者',
-    key: 'artist',
-    width: 200,
-    resizable: true,
-    render(data) {
-      return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NTag, { bordered: false, size: 'small', type: 'info' }, () => a)))
+    {
+      title: '作者',
+      key: 'artist',
+      width: 200,
+      resizable: true,
+      render(data) {
+        return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NTag, { bordered: false, size: 'small', type: 'info' }, () => a)))
+      },
     },
-  },
-  {
-    title: '语言',
-    key: 'language',
-    width: 150,
-    resizable: true,
-    render(data) {
-      return (data.language?.length ?? 0) > 0
-        ? h(NSpace, { size: 5 }, () => data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label)))
-        : null
+    {
+      title: '语言',
+      key: 'language',
+      width: 150,
+      resizable: true,
+      render(data) {
+        return (data.language?.length ?? 0) > 0
+          ? h(NSpace, { size: 5 }, () => data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label)))
+          : null
+      },
     },
-  },
-  {
-    title: '描述',
-    key: 'description',
-    resizable: true,
-    render(data) {
-      return h(NEllipsis, () => data.description)
+    {
+      title: '描述',
+      key: 'description',
+      resizable: true,
+      render(data) {
+        return h(NEllipsis, () => data.description)
+      },
     },
-  },
-  {
-    title: '标签',
-    key: 'tags',
-    resizable: true,
-    render(data) {
-      return (data.tags?.length ?? 0) > 0 ? h(NSpace, { size: 5 }, () => data.tags?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a))) : null
+    {
+      title: '标签',
+      key: 'tags',
+      resizable: true,
+      filter(value, row) {
+        return (row.tags?.findIndex((t) => t == value.toString()) ?? -1) > -1
+      },
+      filterOptions: tagsOptions.value,
+      render(data) {
+        return (data.tags?.length ?? 0) > 0 ? h(NSpace, { size: 5 }, () => data.tags?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a))) : null
+      },
     },
-  },
-  {
-    title: '操作',
-    key: 'manage',
-    disabled: () => !props.canEdit,
-    width: 200,
-    render(data) {
-      return h(NSpace, {
-        justify: 'space-around'
-      }, () => [
-        h(
-          NButton,
+    {
+      title: '操作',
+      key: 'manage',
+      disabled: () => !props.canEdit,
+      width: 200,
+      render(data) {
+        return h(
+          NSpace,
           {
-            size: 'small',
-            onClick: () => {
-              updateSongModel.value = JSON.parse(JSON.stringify(data))
-              showModal.value = true
-            },
+            justify: 'space-around',
           },
-          {
-            default: () => '修改',
-          }
-        ),
-        h(
-          NButton,
-          {
-            type: 'primary',
-            size: 'small',
-            onClick: () => {
-              aplayerMusic.value = {
-                title: data.name,
-                artist: data.author.join('/') ?? '',
-                src: data.url,
-                pic: '',
+          () => [
+            h(
+              NButton,
+              {
+                size: 'small',
+                onClick: () => {
+                  updateSongModel.value = JSON.parse(JSON.stringify(data))
+                  showModal.value = true
+                },
+              },
+              {
+                default: () => '修改',
               }
-            },
-          },
-          {
-            default: () => '播放',
-          }
-        ),
-        h(
-          NButton,
-          {
-            type: 'error',
-            size: 'small',
-            onClick: () => {
-              aplayerMusic.value = {
-                title: data.name,
-                artist: data.author.join('/') ?? '',
-                src: data.url,
-                pic: '',
+            ),
+            h(
+              NButton,
+              {
+                type: 'primary',
+                size: 'small',
+                onClick: () => {
+                  aplayerMusic.value = {
+                    title: data.name,
+                    artist: data.author.join('/') ?? '',
+                    src: data.url,
+                    pic: '',
+                  }
+                },
+              },
+              {
+                default: () => '播放',
               }
-            },
-          },
-          {
-            default: () => '删除',
-          }
-        ),
-        GetPlayButton(data),
-      ])
+            ),
+            h(
+              NButton,
+              {
+                type: 'error',
+                size: 'small',
+                onClick: () => {
+                  aplayerMusic.value = {
+                    title: data.name,
+                    artist: data.author.join('/') ?? '',
+                    src: data.url,
+                    pic: '',
+                  }
+                },
+              },
+              {
+                default: () => '删除',
+              }
+            ),
+            GetPlayButton(data),
+          ]
+        )
+      },
     },
-  },
-]
+  ]
+}
 function GetPlayButton(song: SongsInfo) {
   switch (song.from) {
     case SongFrom.FiveSing: {
@@ -273,7 +293,13 @@ async function updateSong() {
 
 onMounted(() => {
   songsInternal.value = props.songs
-  columns.value = createColumns()
+  tags.value = new List(songsInternal.value)
+    .SelectMany((s) => new List(s?.tags))
+    .Distinct()
+    .ToArray()
+  setTimeout(() => {
+    columns.value = createColumns()
+  }, 1)
 })
 </script>
 

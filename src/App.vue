@@ -1,7 +1,7 @@
 <template>
   <NMessageProvider>
     <NNotificationProvider>
-      <NConfigProvider :theme-overrides="themeOverrides" :locale="zhCN" style="height: 100vh">
+      <NConfigProvider :theme-overrides="themeOverrides" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
         <ViewerLayout v-if="layout == 'viewer'" />
         <ManageLayout v-else-if="layout == 'manage'" />
         <template v-else>
@@ -16,7 +16,7 @@
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
 import { useRoute } from 'vue-router'
-import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN } from 'naive-ui'
 import { computed } from 'vue'
 
 const route = useRoute()
