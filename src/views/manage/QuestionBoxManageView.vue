@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { QAInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { BASE_API, QUESTION_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, BASE_API, QUESTION_API_URL } from '@/data/constants'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { NButton, NCard, NDivider, NIcon, NImage, NInput, NList, NListItem, NModal, NSpace, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
@@ -120,6 +120,34 @@ async function favorite(question: QAInfo, fav: boolean) {
       message.error('修改失败')
     })
 }
+async function blacklist(question: QAInfo) {
+  await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
+    id: question.sender.id,
+  })
+    .then(async (data) => {
+      if (data.code == 200) {
+        await QueryGetAPI(QUESTION_API_URL + 'del', {
+          id: question.id,
+        })
+          .then((data) => {
+            if (data.code == 200) {
+              message.success('已拉黑 ' + question.sender.name)
+            } else {
+              message.error('修改失败: ' + data.message)
+            }
+          })
+          .catch((err) => {
+            console.error(err)
+          })
+      } else {
+        message.error('拉黑失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('拉黑失败')
+    })
+}
 let isRevieveGetted = false
 let isSendGetted = false
 async function onTabChange(value: string) {
@@ -176,7 +204,7 @@ onMounted(() => {
               <NSpace>
                 <NButton size="small" @click="favorite(item, !item.isFavorite)">
                   <template #icon>
-                    <NIcon :component="item.isFavorite ? Heart : HeartOutline" :color="item.isFavorite ? '#dd484f' : ''"/>
+                    <NIcon :component="item.isFavorite ? Heart : HeartOutline" :color="item.isFavorite ? '#dd484f' : ''" />
                   </template>
                   收藏
                 </NButton>

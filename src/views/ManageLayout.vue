@@ -41,6 +41,20 @@ const menuOptions = [
     key: 'manage-questionBox',
     icon: renderIcon(BookOutline),
   },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-lottery',
+          },
+        },
+        { default: () => '动态抽奖' }
+      ),
+    key: 'manage-lottery',
+    icon: renderIcon(BookOutline),
+  },
 ]
 </script>
 

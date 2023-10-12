@@ -103,6 +103,7 @@ export interface LotteryUserInfo {
   location?: string
   isVIP?: boolean
   card?: LotteryUserCardInfo
+  visiable: boolean
 }
 export interface LotteryUserCardInfo {
   name: string
