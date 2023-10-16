@@ -30,6 +30,7 @@ async function GetRecieveQAInfo() {
         if (data.data.length > 0) {
           recieveQuestions.value = new List(data.data)
             .OrderBy((d) => d.isReaded)
+            //.ThenByDescending(d => d.isFavorite)
             .ThenByDescending((d) => d.sendAt)
             .ToArray()
         }
@@ -106,7 +107,7 @@ async function read(question: QAInfo, read: boolean) {
 async function favorite(question: QAInfo, fav: boolean) {
   await QueryGetAPI(QUESTION_API_URL + 'favorite', {
     id: question.id,
-    favorite: fav ? 'true' : 'false',
+    favorite: fav,
   })
     .then((data) => {
       if (data.code == 200) {

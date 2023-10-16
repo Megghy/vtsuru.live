@@ -124,9 +124,7 @@ function onregisterButtonClick(e: MouseEvent) {
       })
   })
 }
-function onLoginButtonClick(e: MouseEvent) {
-  e.preventDefault()
-
+function onLoginButtonClick() {
   formRef.value?.validate().then(async () => {
     isLoading.value = true
     await QueryPostAPI<{
@@ -178,7 +176,7 @@ function onLoginButtonClick(e: MouseEvent) {
               <NInput v-model:value="loginModel.account" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
+              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter="onLoginButtonClick"/>
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">

@@ -146,9 +146,17 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   },
   filterOptions: authorsOptions.value,
   render(data) {
-    return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => (authorColumn.value.filterOptionValue = a) }, () => a)))
+    return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a)))
   },
 })
+const onAuthorClick = (author: string) => {
+  if(authorColumn.value.filterOptionValue == author){
+    authorColumn.value.filterOptionValue = undefined
+  }
+  else {
+    authorColumn.value.filterOptionValue = author
+  }
+}
 
 function createColumns(): DataTableColumns<SongsInfo> {
   authorColumn.value.filterOptions = authorsOptions.value
@@ -405,7 +413,7 @@ onMounted(() => {
   <NCard embedded size="small">
     <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="max-width: 150px" />
   </NCard>
-  <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsInternal.length }} 首 </NDivider>
+  <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
   <Transition>
     <div v-if="aplayerMusic">
       <APlayer :music="aplayerMusic" autoplay />
@@ -434,7 +442,7 @@ onMounted(() => {
         <NSelect v-model:value="updateSongModel.language" multiple :options="songSelectOption" placeholder="可选" />
       </NFormItem>
       <NFormItem path="tags" label="标签">
-        <NSelect v-model:value="updateSongModel.tags" filterable multiple tag placeholder="可选，按回车确认" :show-arrow="false" :show="false" :options="tagsSelectOption" />
+        <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认" :options="tagsSelectOption" />
       </NFormItem>
       <NFormItem path="url" label="链接">
         <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" :disabled="updateSongModel.from != SongFrom.Custom" />

@@ -6,13 +6,14 @@ import { NDivider } from 'naive-ui';
 
 const accountInfo = useAccount()
 
-const props = defineProps<{
+defineProps<{
   userInfo: UserInfo | undefined
   songs: SongsInfo[] | undefined
 }>()
 </script>
 
 <template>
-  <SongList v-if="songs" :songs="songs ?? []" :is-self="accountInfo?.id.toString() == $route.params.id?.toString()"/>
+  <NDivider style="margin-top: 10px;"/>
+  <SongList v-if="songs" :songs="songs ?? []" :is-self="accountInfo?.id == userInfo?.id"/>
   <NDivider/>
 </template>

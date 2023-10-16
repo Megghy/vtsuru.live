@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { NavigateToNewTab } from '@/Utils'
 import { LotteryUserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/data/constants'
-import { useLocalStorage } from '@vueuse/core'
+import { useLocalStorage, useStorage } from '@vueuse/core'
 import { randomInt } from 'crypto'
+import { format } from 'date-fns'
 import { List } from 'linqts'
 import {
   NAvatar,
@@ -13,22 +15,30 @@ import {
   NCollapseTransition,
   NCountdown,
   NDivider,
+  NEmpty,
   NGrid,
   NGridItem,
   NInput,
   NInputGroup,
   NInputGroupLabel,
   NInputNumber,
+  NList,
+  NListItem,
+  NModal,
   NRadioButton,
   NRadioGroup,
+  NScrollbar,
   NSpace,
   NTabPane,
   NTabs,
   NTag,
+  NTime,
+  NTooltip,
   useMessage,
+  useNotification,
 } from 'naive-ui'
 import { breadcrumbLight } from 'naive-ui/es/breadcrumb/styles'
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 interface TempLotteryResponseModel {
@@ -40,20 +50,40 @@ interface LotteryOption {
   resultCount: number
   lotteryType: 'single' | 'half'
   needVIP: boolean
+  needFanCard: boolean
+  needGuard: boolean
+  needCharge: boolean
+  fanCardLevel: number
+}
+interface LotteryHistory {
+  users: LotteryUserInfo[]
+  time: number
+  type: 'comment' | 'forward'
+  url: string
 }
 
+const lotteryHistory = useStorage<LotteryHistory[]>('LotteryHistory', [])
+
 const message = useMessage()
+const notification = useNotification()
 const token = ref()
 const turnstile = ref()
 const defaultOption = {
   resultCount: 1,
   lotteryType: 'single',
   needVIP: false,
+  needFanCard: false,
+  needGuard: false,
+  needCharge: false,
+  fanCardLevel: 1,
 } as LotteryOption
 const lotteryOption = useLocalStorage('Settings.LotteryOption', defaultOption)
 
 const isLoading = ref(false)
 const isLottering = ref(false)
+const isLotteried = ref(false)
+
+const showModal = ref(false)
 
 const inputDynamic = ref<string>()
 const inputDynamicId = computed(() => {
@@ -79,10 +109,15 @@ const originCommentUsers = ref<TempLotteryResponseModel>()
 const originForwardUsers = ref<TempLotteryResponseModel>()
 const currentType = ref<'comment' | 'forward'>('comment')
 
+const resultUsers = ref<LotteryUserInfo[]>()
+
 const commentUsers = ref<TempLotteryResponseModel>()
 const forwardUsers = ref<TempLotteryResponseModel>()
 
 const currentUsers = computed(() => {
+  return getCurrentUsers()
+})
+function getCurrentUsers() {
   switch (currentType.value) {
     case 'comment': {
       return commentUsers.value
@@ -92,6 +127,9 @@ const currentUsers = computed(() => {
     }
   }
   return undefined
+}
+const validUsers = computed(() => {
+  return currentUsers.value?.users.filter((u) => isUserValid(u))
 })
 
 async function onGet() {
@@ -118,7 +156,7 @@ async function getCommentsUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
-        originCommentUsers.value = data.data
+        originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
         commentUsers.value = data.data
         isCommentCountDown.value = false
       } else {
@@ -145,7 +183,7 @@ async function getForwardUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
-        originForwardUsers.value = data.data
+        originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
         forwardUsers.value = data.data
         isCommentCountDown.value = false
       } else {
@@ -164,20 +202,38 @@ async function getForwardUsers() {
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max)
 }
+function isUserValid(u: LotteryUserInfo) {
+  if (lotteryOption.value.needVIP) {
+    if (u.isVIP != true) return false
+  }
+  if (lotteryOption.value.needFanCard) {
+    if ((u.card?.level ?? -1) < lotteryOption.value.fanCardLevel) return false
+  }
+  if (lotteryOption.value.needGuard) {
+    if (u.card?.isGuard != true) return false
+  }
+  if (lotteryOption.value.needCharge) {
+    if (u.card?.isCharge != true) return false
+  }
+  return true
+}
 function startLottery() {
   if (!isLottering.value && currentUsers.value) {
     isLottering.value = true
     try {
       const data = currentUsers.value
-      const users = data.users.filter((u) => {
-        if (lotteryOption.value.needVIP) {
-          return u.isVIP == true
-        }
-      })
+      if ((validUsers.value?.length ?? -1) < lotteryOption.value.resultCount) {
+        message.warning('符合条件的抽奖人数达不到抽选人数')
+        isLottering.value = false
+        return
+      }
+
+      const tempUsers = getCurrentUsers()
+      if (tempUsers) tempUsers.users = validUsers.value ?? []
+
       switch (lotteryOption.value.lotteryType) {
         case 'single': {
           console.log('开始抽取单个用户')
-          const removed = [] as number[]
           removeSingleUser()
           function removeSingleUser() {
             if (data.users.length > lotteryOption.value.resultCount) {
@@ -186,7 +242,7 @@ function startLottery() {
                 removeSingleUser()
               }, 500)
             } else {
-              isLottering.value = false
+              onFinishLottery()
             }
           }
           break
@@ -198,68 +254,183 @@ function startLottery() {
     }
   }
 }
+function onFinishLottery() {
+  resultUsers.value = JSON.parse(JSON.stringify(currentUsers.value?.users))
+  isLottering.value = false
+  isLotteried.value = true
+  notification.create({
+    title: '抽奖完成',
+    description: '共' + resultUsers.value?.length + '人',
+    duration: 3000,
+    content: () =>
+      h(
+        NSpace,
+        { vertical: true },
+        resultUsers.value?.map((user) => h(NSpace, null, [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)]))
+      ),
+    meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+    onAfterLeave: () => {
+      message.success('已保存至历史')
+    },
+  })
+  lotteryHistory.value.push({
+    users: currentUsers.value?.users ?? [],
+    time: Date.now(),
+    type: currentType.value,
+    url: inputDynamicId.value ? 'https://t.bilibili.com/' + inputDynamicId.value : inputDynamic.value ?? '',
+  })
+}
+function reset() {
+  switch (currentType.value) {
+    case 'comment': {
+      commentUsers.value = JSON.parse(JSON.stringify(originCommentUsers.value))
+      console.log(originCommentUsers.value)
+      break
+    }
+    case 'forward': {
+      forwardUsers.value = JSON.parse(JSON.stringify(originForwardUsers.value))
+      break
+    }
+  }
+  isLotteried.value = false
+}
+function getLevelColor(level: number) {
+  switch (level) {
+    case 1: {
+      return 'gray'
+    }
+    case 2: {
+      return '#8bd29d'
+    }
+    case 4: {
+      return '#FEBB8B'
+    }
+    case 3: {
+      return '#7BCDEF'
+    }
+    case 5: {
+      return '#EE672A'
+    }
+    case 6: {
+      return '#F04C49'
+    }
+    default: {
+      return 'gray'
+    }
+  }
+}
 </script>
+
 <template>
   <NCard size="medium" embedded title="抽奖">
-    <NInput v-model:value="inputDynamic" placeholder="动态链接或直接输入动态Id" :status="inputDynamicId ? 'success' : 'warning'" />
+    <template #header-extra>
+      <NButton @click="showModal = true"> 历史记录 </NButton>
+    </template>
+    <NInput v-model:value="inputDynamic" placeholder="动态链接或直接输入动态Id" :status="inputDynamicId ? 'success' : 'warning'" :disabled="isLoading || isLottering" />
     <NDivider style="margin: 10px 0 10px 0" />
     <NCard size="small" embedded title="选项">
       <template #header-extra>
         <NButton size="small" secondary @click="lotteryOption = defaultOption"> 恢复默认 </NButton>
       </template>
       <NSpace justify="center">
-        <NRadioGroup v-model:value="currentType" name="用户类型">
+        <NRadioGroup v-model:value="currentType" name="用户类型" :disabled="isLottering">
           <NRadioButton value="comment"> 评论 </NRadioButton>
           <NRadioButton value="forward"> 转发 </NRadioButton>
         </NRadioGroup>
       </NSpace>
+      <NDivider style="margin: 10px 0 10px 0"></NDivider>
       <NSpace align="center">
         <NInputGroup style="max-width: 200px">
           <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
           <NInputNumber v-model:value="lotteryOption.resultCount" placeholder="" min="1" />
         </NInputGroup>
-        <NCheckbox> 是否大会员 </NCheckbox>
-        <NRadioGroup v-model:value="lotteryOption.lotteryType" name="抽取类型">
+        <NCheckbox v-model:checked="lotteryOption.needVIP"> 需要大会员 </NCheckbox>
+        <template v-if="currentType == 'comment'">
+          <NCheckbox v-model:checked="lotteryOption.needCharge"> 需要充电 </NCheckbox>
+          <NCheckbox v-model:checked="lotteryOption.needFanCard"> 需要粉丝牌 </NCheckbox>
+          <NCollapseTransition>
+            <NInputGroup v-if="lotteryOption.needFanCard" style="max-width: 200px">
+              <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
+              <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1" :disabled="isLottering" />
+            </NInputGroup>
+          </NCollapseTransition>
+        </template>
+        <NRadioGroup v-model:value="lotteryOption.lotteryType" name="抽取类型" size="small" :disabled="isLottering">
           <NRadioButton value="single"> 单个 </NRadioButton>
           <NRadioButton value="half"> 减半 </NRadioButton>
         </NRadioGroup>
       </NSpace>
     </NCard>
-    <NDivider style="margin: 10px 0 10px 0" />
+    <br />
     <NSpace justify="center" align="center">
       <NButton :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering" :loading="!token || isLoading" @click="onGet" type="primary"> 加载用户 </NButton>
       <NCountdown v-if="!isCommentCountDown" :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()" @finish="isCommentCountDown = true" />
     </NSpace>
-    <NDivider style="margin: 10px 0 10px 0" />
-    <template v-if="currentUsers">
-      <NSpace justify="space-between">
-        <span> 共 {{ currentUsers.users.length }} 人 </span>
-      </NSpace>
+    <br />
+    <NCard v-if="currentUsers" size="small">
       <NSpace justify="center">
-        <NButton type="primary" @click="startLottery" secondary :loading="isLottering"> 开始抽取 </NButton>
+        <NButton type="primary" @click="startLottery" :loading="isLottering" :disabled="isLotteried"> 开始抽取 </NButton>
+        <NButton type="info" :disabled="isLottering || !isLotteried" @click="reset"> 重置 </NButton>
       </NSpace>
-      <NDivider style="margin: 10px 0 10px 0" />
-      <NGrid cols="1 400:2 700:3 800:4" :x-gap="12" :y-gap="8">
-        <NGridItem v-for="item in currentUsers.users" v-bind:key="item.uId" :span="item.visiable ? 1 : 0">
-          <NCard size="small" :title="item.name">
+      <NDivider style="margin: 10px 0 10px 0"> 共 {{ validUsers?.length }} 人</NDivider>
+      <NGrid cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
+        <NGridItem v-for="item in validUsers" v-bind:key="item.uId">
+          <NCard size="small" :title="item.name" style="height: 155px">
             <template #header>
-              <NSpace align="center">
-                <NAvatar round lazy :src="item.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" />
-                <NTag v-if="item.level" size="tiny">
-                  {{ item.level }}
-                </NTag>
+              <NSpace align="center" vertical :size="5">
+                <NAvatar round lazy borderd :size="64" :src="item.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+                <NSpace>
+                  <NTag v-if="item.isVIP" size="tiny" round :color="{ color: '#fb7299', textColor: 'white', borderColor: 'white' }"> 大会员 </NTag>
+                  <NTooltip>
+                    <template #trigger>
+                      <NTag v-if="item.level" size="tiny" :color="{ color: getLevelColor(item.level), textColor: 'white', borderColor: 'white' }" :borderd="false"> LV {{ item.level }} </NTag>
+                    </template>
+                    用户等级
+                  </NTooltip>
+                  <NTag v-if="item.card" size="tiny" round>
+                    <NTag size="tiny" round :bordered="false">
+                      {{ item.card.level }}
+                    </NTag>
+                    <span style="color: #577fb8">
+                      {{ item.card.name }}
+                    </span>
+                  </NTag>
+                </NSpace>
                 {{ item.name }}
-
-                <NTag v-if="item.card" size="tiny">
-                  {{ item.card.level }}
-                  {{ item.card.name }}
-                </NTag>
               </NSpace>
             </template>
           </NCard>
         </NGridItem>
       </NGrid>
-    </template>
+    </NCard>
   </NCard>
+  <NModal v-model:show="showModal" preset="card" title="抽奖结果" style="max-width: 90%; width: 800px" closable>
+    <template #header-extra>
+      <NButton type="error" size="small" @click="lotteryHistory = []"> 清空 </NButton>
+    </template>
+    <NScrollbar v-if="lotteryHistory.length > 0" style="max-height: 80vh">
+      <NList>
+        <NListItem v-for="item in lotteryHistory" :key="item.time">
+          <NCard size="small">
+            <template #header>
+              <NTime :time="item.time" />
+            </template>
+            <template #header-extra>
+              <NButton type="error" size="small" @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"> 删除 </NButton>
+            </template>
+            <NSpace vertical>
+              <NSpace v-for="user in item.users" :key="user.uId">
+                <NAvatar round lazy :src="user.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" />
+                {{ user.name }}
+              </NSpace>
+            </NSpace>
+            <NDivider style="margin: 10px 0 10px 0" />
+            <NButton secondary @click="NavigateToNewTab(item.url)"> 目标动态 </NButton>
+          </NCard>
+        </NListItem>
+      </NList>
+    </NScrollbar>
+    <NEmpty v-else description="暂无记录" />
+  </NModal>
   <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
 </template>

@@ -4,24 +4,23 @@
 </template>
 
 <script lang="ts" setup>
-import { useUser } from '@/api/user'
 import { SongListTypes, SongsInfo } from '@/api/api-models'
 import DefaultSongListTemplate from '@/views/view/songListTemplate/DefaultSongListTemplate.vue'
 import { computed, onMounted, ref } from 'vue'
 import { UserInfo } from '@/api/api-models'
-import { useRouteParams } from '@vueuse/router'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
 
-defineProps<{
+const { biliInfo, userInfo } = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
+  userInfo: UserInfo | undefined
 }>()
 
 const songListType = computed(() => {
-  if (userInfo.value) {
-    switch (userInfo.value.songListType) {
+  if (userInfo) {
+    switch (userInfo.songListType) {
       case SongListTypes.Default:
         return DefaultSongListTemplate
 
@@ -33,7 +32,6 @@ const songListType = computed(() => {
   }
 })
 const songs = ref<SongsInfo[]>()
-const uId = useRouteParams('id', '-1', { transform: Number })
 const isLoading = ref(true)
 const message = useMessage()
 
@@ -42,7 +40,7 @@ const errMessage = ref('')
 async function getSongs() {
   isLoading.value = true
   await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get', {
-    id: uId.value,
+    id: userInfo?.id,
   })
     .then((data) => {
       if (data.code == 200) {
@@ -61,10 +59,7 @@ async function getSongs() {
     })
 }
 
-const userInfo = ref<UserInfo>()
-
 onMounted(async () => {
-  userInfo.value = await useUser()
   await getSongs()
 })
 </script>

@@ -17,7 +17,7 @@ function navigate(url: string) {
   <NDivider />
   <template v-if="userInfo?.biliId">
     <NSpace justify="center" align="center" vertical>
-      <NAvatar :src="biliInfo?.face" :size="width > 750 ? 175 : 100" round bordered style="box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);" />
+      <NAvatar v-if="biliInfo" :src="biliInfo?.face" :size="width > 750 ? 175 : 100" round bordered style="box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2)" />
       <NSpace align="baseline" justify="center">
         <NText strong style="font-size: 32px"> {{ biliInfo?.name }} </NText>
         <NText strong style="font-size: 20px" depth="3"> ({{ userInfo?.name }}) </NText>
@@ -29,7 +29,7 @@ function navigate(url: string) {
         {{ biliInfo?.sign }}
       </NText>
     </NSpace>
-    <NDivider/>
+    <NDivider />
     <NSpace align="center" justify="center">
       <NButton type="primary" @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"> 个人主页 </NButton>
       <NButton type="primary" secondary @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"> 直播间 </NButton>

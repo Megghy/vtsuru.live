@@ -22,8 +22,8 @@ import {
   useMessage,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
-import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
-import { Lottery24Filled } from '@vicons/fluent'
+import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
+import { CalendarClock24Filled, Lottery24Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink } from 'vue-router'
@@ -48,6 +48,36 @@ function renderIcon(icon: unknown) {
 }
 
 const menuOptions = [
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-history',
+          },
+          disabled: !accountInfo.value?.isEmailVerified,
+        },
+        { default: () => '历史' }
+      ),
+    key: 'manage-history',
+    icon: renderIcon(AnalyticsSharp),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-schedule',
+          },
+          disabled: !accountInfo.value?.isEmailVerified,
+        },
+        { default: () => '日程' }
+      ),
+    key: 'manage-schedule',
+    icon: renderIcon(CalendarClock24Filled),
+  },
   {
     label: () =>
       h(
@@ -196,9 +226,7 @@ onMounted(() => {
         <RegisterAndLogin style="max-width: 500px; min-width: 350px" />
       </template>
       <template v-else>
-        <NSpin :loading="isLoadingAccount">
-          正在请求账户数据...
-        </NSpin>
+        <NSpin :loading="isLoadingAccount"> 正在请求账户数据... </NSpin>
       </template>
     </NLayoutContent>
   </template>

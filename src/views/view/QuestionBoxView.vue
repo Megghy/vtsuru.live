@@ -1,24 +1,28 @@
 <script setup lang="ts">
 import { NAlert, NButton, NCard, NCheckbox, NDivider, NInput, NSpace, NTab, NTabPane, NTabs, NText, NUpload, UploadFileInfo, useMessage } from 'naive-ui'
 import GraphemeSplitter from 'grapheme-splitter'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
-import { useUser } from '@/api/user'
 import { QAInfo, UserInfo } from '@/api/api-models'
-import { QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
+import { QueryPostAPI } from '@/api/query'
 import { QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import VueTurnstile from 'vue-turnstile'
+
+const { biliInfo, userInfo } = defineProps<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  biliInfo: any | undefined
+  userInfo: UserInfo | undefined
+}>()
 
 const splitter = new GraphemeSplitter()
 
 const message = useMessage()
 const accountInfo = useAccount()
-const userInfo = ref<UserInfo>()
 const token = ref('')
 const turnstile = ref()
 
 const isSelf = computed(() => {
-  return userInfo.value?.id == accountInfo.value?.id
+  return userInfo?.id == accountInfo.value?.id
 })
 
 const questionMessage = ref('')
@@ -39,7 +43,7 @@ async function SendQuestion() {
   await QueryPostAPI<QAInfo>(
     QUESTION_API_URL + 'send',
     {
-      Target: userInfo.value?.id,
+      Target: userInfo?.id,
       IsAnonymous: !accountInfo.value || isAnonymous.value,
       Message: questionMessage.value,
       ImageBase64: fileList.value?.length > 0 ? await getBase64(fileList.value[0].file) : undefined,
@@ -83,8 +87,8 @@ function OnFileListChange(files: UploadFileInfo[]) {
   }
 }
 
-onMounted(async () => {
-  userInfo.value = await useUser()
+onUnmounted(() => {
+  turnstile.value?.remove()
 })
 </script>
 

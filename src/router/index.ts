@@ -76,9 +76,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/BiliVerifyView.vue'),
       },
       {
-        path: 'setting',
-        name: 'manage-setting',
-        component: () => import('@/views/manage/SettingsManageView.vue'),
+        path: 'history',
+        name: 'manage-history',
+        component: () => import('@/views/manage/HistoryView.vue'),
+      },
+      {
+        path: 'schedule',
+        name: 'manage-schedule',
+        component: () => import('@/views/manage/ScheduleManageView.vue'),
       },
     ],
   },

@@ -16,6 +16,7 @@ import {
   NModal,
   NEllipsis,
   MenuOption,
+NSpin,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
@@ -30,7 +31,7 @@ import { isDarkMode } from '@/Utils'
 
 const route = useRoute()
 const id = computed(() => {
-  return Number(route.params.id)
+  return route.params.id
 })
 const themeType = useStorage('Settings.Theme', ThemeType.Auto);
 
@@ -160,11 +161,14 @@ onMounted(async () => {
       </NLayoutSider>
       <NLayout style="height: 100%">
         <div class="viewer-page-content" :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`">
-          <RouterView v-slot="{ Component }">
+          <RouterView v-if="userInfo" v-slot="{ Component }">
             <KeepAlive>
-              <component :is="Component" :bili-info="biliUserInfo" />
+              <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
             </KeepAlive>
           </RouterView>
+          <template v-else>
+            <NSpin show/>
+          </template>
         </div>
       </NLayout>
     </NLayout>
