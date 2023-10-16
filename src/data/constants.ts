@@ -1,5 +1,10 @@
+import { ref } from 'vue'
+
 const debugAPI = import.meta.env.VITE_DEBUG_API
 const releseAPI = `${document.location.protocol}//api.vtsuru.live/`
+
+export const isBackendUsable = ref(true)
+
 export const BASE_API = process.env.NODE_ENV === 'development' ? debugAPI : releseAPI
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const FIVESING_SEARCH_API = 'http://search.5sing.kugou.com/home/json?sort=1&page=1&filter=3&type=0&keyword='

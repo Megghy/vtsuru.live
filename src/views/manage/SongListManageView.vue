@@ -171,10 +171,22 @@ async function addNeteaseSongs() {
 }
 async function addFingsingSongs(song: SongsInfo) {
   isModalLoading.value = true
+  if (!song.url) {
+    try {
+      const url = await getFivesingSongUrl(song)
+      song.url = url
+    } catch (err) {
+      isModalLoading.value = false
+      message.error('添加失败')
+      console.error(err)
+      return
+    }
+  }
   await addSongs([song], SongFrom.FiveSing)
     .then((data) => {
       if (data.code == 200) {
         message.success(`已添加歌曲`)
+        addSongModel.value = {} as SongsInfo
         songs.value.push(...data.data)
       } else {
         message.error('添加失败: ' + data.message)
@@ -311,8 +323,21 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NButton @click="showModal = true"> 添加歌曲 </NButton>
-  <NModal v-model:show="showModal" style="max-width: 1000px;" preset="card">
+  <NSpace>
+    <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
+    <NButton
+      @click="
+        () => {
+          getSongs()
+          message.success('完成')
+        }
+      "
+    >
+      刷新
+    </NButton>
+  </NSpace>
+  <NDivider style="margin: 16px 0 16px 0" />
+  <NModal v-model:show="showModal" style="max-width: 1000px" preset="card">
     <template #header> 添加歌曲 </template>
     <NSpin :show="isModalLoading">
       <NTabs default-value="custom" animated>
@@ -377,10 +402,10 @@ onMounted(async () => {
                         </NTag>
                       </NSpace>
                     </td>
-                    <td style="display: flex; justify-content: flex-end;">
+                    <td style="display: flex; justify-content: flex-end">
                       <!-- 在这里播放song.url链接中的音频 -->
-                      <NButton size="small" v-if="!song.url"  @click="playFivesingSong(song)" :loading="isGettingFivesingSongPlayUrl == song.id"> 试听 </NButton>
-                      <audio v-else controls autoplay style="max-height: 30px">
+                      <NButton size="small" v-if="!song.url" @click="playFivesingSong(song)" :loading="isGettingFivesingSongPlayUrl == song.id"> 试听 </NButton>
+                      <audio v-else controls style="max-height: 30px">
                         <source :src="song.url" />
                       </audio>
                     </td>
@@ -398,5 +423,6 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NModal>
-  <SongList :songs="songs" />
+  <SongList :songs="songs" is-self />
+  <NDivider />
 </template>

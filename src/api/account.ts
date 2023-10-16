@@ -6,6 +6,7 @@ import { useLocalStorage } from '@vueuse/core'
 import { createDiscreteApi } from 'naive-ui'
 
 export const ACCOUNT = ref<AccountInfo>()
+export const isLoadingAccount = ref(true)
 
 const { message } = createDiscreteApi(['message'])
 const cookie = useLocalStorage('JWT_Token', '')
@@ -15,6 +16,7 @@ export async function GetSelfAccount() {
     const result = await Self()
     if (result.code == 200) {
       ACCOUNT.value = result.data
+      isLoadingAccount.value = false
       console.log('[vtsuru] 已获取账户信息')
       return result.data
     } else if (result.code == 401) {
@@ -27,6 +29,7 @@ export async function GetSelfAccount() {
       message.error(result.message)
     }
   }
+  isLoadingAccount.value = false
 }
 export function useAccount() {
   return ACCOUNT

@@ -1,23 +1,22 @@
 <template>
-  <div style="display: flex; justify-content: center">
-    <div>
-      <NText strong tag="h1"> vtsuru </NText>
-      <component :is="indexType" :user-info="userInfo"/>
-    </div>
-  </div>
+  <component :is="indexType" :user-info="userInfo" :bili-info="biliInfo"/>
 </template>
 
 <script lang="ts" setup>
-import { useAccount } from '@/api/account'
 import { useUser } from '@/api/user'
 import { IndexTypes } from '@/api/api-models'
-import { NButton, NText } from 'naive-ui'
 import DefaultIndexTemplate from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { UserInfo } from '@/api/api-models'
+
+defineProps<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  biliInfo: any | undefined
+}>()
 
 const indexType = computed(() => {
-  if (userInfo) {
-    switch (userInfo.indexType) {
+  if (userInfo.value) {
+    switch (userInfo.value.indexType) {
       case IndexTypes.Default:
         return DefaultIndexTemplate
 
@@ -28,6 +27,9 @@ const indexType = computed(() => {
     return DefaultIndexTemplate
   }
 })
-const accountInfo = useAccount()
-const userInfo = await useUser()
+const userInfo = ref<UserInfo>()
+
+onMounted(async () => {
+  userInfo.value = await useUser()
+})
 </script>

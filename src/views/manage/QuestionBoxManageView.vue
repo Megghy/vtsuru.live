@@ -104,9 +104,9 @@ async function read(question: QAInfo, read: boolean) {
     })
 }
 async function favorite(question: QAInfo, fav: boolean) {
-  await QueryGetAPI(QUESTION_API_URL + 'read', {
+  await QueryGetAPI(QUESTION_API_URL + 'favorite', {
     id: question.id,
-    read: fav ? 'true' : 'false',
+    favorite: fav ? 'true' : 'false',
   })
     .then((data) => {
       if (data.code == 200) {
@@ -164,6 +164,11 @@ function onOpenModal(question: QAInfo) {
   replyMessage.value = question.answer?.message
   replyModalVisiable.value = true
 }
+function refresh() {
+  isSendGetted = false
+  isRevieveGetted = false
+  onTabChange(selectedTabItem.value)
+}
 
 onMounted(() => {
   GetRecieveQAInfo()
@@ -171,12 +176,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <NButton type="primary"> 刷新 </NButton>
+  <NButton type="primary" @click="refresh"> 刷新 </NButton>
   <NDivider style="margin: 10px 0 10px 0" />
   <NTabs animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
       只显示收藏 <NSwitch v-model:value="onlyFavorite" />
-      <NList>
+      <NList :bordered="false">
         <NListItem v-for="item in recieveQuestionsFiltered" :key="item.id">
           <NCard :embedded="!item.isReaded" hoverable size="small">
             <template #header>
@@ -209,7 +214,7 @@ onMounted(() => {
                   收藏
                 </NButton>
                 <NButton size="small"> 举报 </NButton>
-                <NButton size="small"> 拉黑 </NButton>
+                <NButton size="small" @click="blacklist(item)"> 拉黑 </NButton>
               </NSpace>
             </template>
             <template #header-extra>
@@ -279,3 +284,9 @@ onMounted(() => {
     <NButton :loading="isRepling" @click="reply" type="primary"> 发送 </NButton>
   </NModal>
 </template>
+
+<style>
+.n-list{
+  background-color: transparent;
+}
+</style>

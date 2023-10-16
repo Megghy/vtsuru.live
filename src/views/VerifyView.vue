@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ACCOUNT } from '@/api/account'
+import { ACCOUNT, useAccount } from '@/api/account'
 import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import router from '@/router'
-import { NButton, NCard, NSpace, NSpin, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NSpace, NSpin, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
+
+const accountInfo = useAccount()
 
 const message = useMessage()
 const token = ref('')
@@ -23,8 +25,11 @@ async function VerifyAccount() {
   ).then((data) => {
     if (data.code == 200) {
       ACCOUNT.value = data.data
-      router.push('index')
       message.success('成功激活账户: ' + ACCOUNT.value.name)
+      router.push('/manage')
+    }
+    else {
+      message.error('激活失败: ' + data.message)
     }
   })
 }
@@ -32,7 +37,7 @@ async function VerifyAccount() {
 
 <template>
   <div style="display: flex; align-items: center; justify-content: center; height: 100%">
-    <NCard embedded style="max-width: 500px">
+    <NCard v-if="accountInfo?.isEmailVerified != true" embedded style="max-width: 500px">
       <template #header> 激活账户 </template>
       <NSpin :show="!token">
         <NSpace justify="center" align="center" vertical>
@@ -41,5 +46,8 @@ async function VerifyAccount() {
         </NSpace>
       </NSpin>
     </NCard>
+    <NAlert v-else type="error">
+      此账户已完成验证
+    </NAlert>
   </div>
 </template>

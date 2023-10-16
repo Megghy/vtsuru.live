@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'user-index',
-        component: () => import('@/views/view/IndexView.vue'),
+        component: () => import('@/views/view/UserIndexView.vue'),
         meta: {
           title: '主页',
         },
@@ -37,7 +37,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'user-questionBox',
         component: () => import('@/views/view/QuestionBoxView.vue'),
         meta: {
-          title: '棉花糖(提问箱',
+          title: '棉花糖 (提问箱',
         },
       },
     ],

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@types/node": "^20.2.5",
+    "@vicons/fluent": "^0.12.0",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vueuse/core": "^10.1.2",
     "@vueuse/integrations": "^10.1.2",
@@ -18,6 +19,7 @@
     "linqts": "^1.15.0",
     "universal-cookie": "^4.0.4",
     "vite": "^4.3.9",
+    "vite-svg-loader": "^4.0.0",
     "vue": "^3.2.13",
     "vue-meta": "^3.0.0-alpha.10",
     "vue-request": "^2.0.3",

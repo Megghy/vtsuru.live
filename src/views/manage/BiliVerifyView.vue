@@ -90,7 +90,7 @@ onMounted(async () => {
             请在点击
             <NText type="primary" strong> 开始认证 </NText>
             后五分钟之内使用
-            <NText> 需要认证的账户 </NText>
+            <NText strong type="primary"> 需要认证的账户 </NText>
             在自己的直播间内发送
             <NButton type="info" text @click="copyCode">
               {{ accountInfo?.biliVerifyCode }}

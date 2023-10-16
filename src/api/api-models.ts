@@ -13,6 +13,9 @@ export interface PaginationResponse<T> {
 export enum IndexTypes {
   Default,
 }
+export enum SongListTypes {
+  Default,
+}
 export interface UserInfo {
   name: string
   id: number
@@ -20,26 +23,33 @@ export interface UserInfo {
   biliId?: number
   biliRoomId?: number
   indexType: IndexTypes
+  songListType: SongListTypes
+  enableFunctions: FunctionTypes[]
 }
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
   isBiliVerified: boolean
-  enableFunctions: string[]
   biliVerifyCode?: string
-  emailVerifyUrl?: string
+  bindEmail?: string
   settings: UserSetting
+
+  nextSendEmailTime?: number
 }
 export interface Setting_SendEmail {
   recieveQA: boolean
   recieveQAReply: boolean
 }
+export interface Setting_QuestionBox {
+  allowUnregistedUser: boolean
+}
 export interface UserSetting {
   sendEmail: Setting_SendEmail
+  questionBox: Setting_QuestionBox
   enableFunctions: FunctionTypes[]
 }
 export enum FunctionTypes {
-  SongList = 'SongList',
-  QuestionBox = 'QuestionBox',
+  SongList,
+  QuestionBox,
 }
 export interface SongAuthorInfo {
   name: string
@@ -61,6 +71,8 @@ export interface SongsInfo {
   language: SongLanguage[]
   description?: string
   tags?: string[]
+  createTime: number
+  updateTime: number
 }
 export enum SongLanguage {
   Chinese, // 中文
@@ -92,7 +104,7 @@ export interface QAInfo {
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean
-  isFavorite:boolean
+  isFavorite: boolean
   sendAt: number
 }
 export interface LotteryUserInfo {
@@ -111,4 +123,9 @@ export interface LotteryUserCardInfo {
   guardLevel: number
   isGuard: boolean
   isCharge: boolean
+}
+export enum ThemeType {
+  Auto = 'auto',
+  Light = 'light',
+  Dark = 'dark',
 }

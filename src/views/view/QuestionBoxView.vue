@@ -50,6 +50,7 @@ async function SendQuestion() {
       if (data.code == 200) {
         message.success('成功发送棉花糖')
         questionMessage.value = ''
+        fileList.value = []
       } else {
         message.error(data.message)
       }

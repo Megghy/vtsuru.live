@@ -205,8 +205,6 @@ function onLoginButtonClick(e: MouseEvent) {
           </NSpace>
         </NTabPane>
       </NTabs>
-
-      <NDivider />
       <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
     </template>
   </NCard>

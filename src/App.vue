@@ -1,7 +1,7 @@
 <template>
   <NMessageProvider>
     <NNotificationProvider>
-      <NConfigProvider :theme-overrides="themeOverrides" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
+      <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
         <ViewerLayout v-if="layout == 'viewer'" />
         <ManageLayout v-else-if="layout == 'manage'" />
         <template v-else>
@@ -16,8 +16,10 @@
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
 import { useRoute } from 'vue-router'
-import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN, useOsTheme, darkTheme } from 'naive-ui'
 import { computed } from 'vue'
+import { useStorage } from '@vueuse/core'
+import { ThemeType } from './api/api-models'
 
 const route = useRoute()
 const layout = computed(() => {
@@ -29,6 +31,16 @@ const layout = computed(() => {
     return ''
   }
 })
+
+const themeType = useStorage('Settings.Theme', ThemeType.Auto);
+const theme = computed(() => {
+  if (themeType.value == ThemeType.Auto) {
+    var osThemeRef = useOsTheme(); //获取当前系统主题
+    return osThemeRef.value === "dark" ? darkTheme : null;
+  } else {
+    return themeType.value == ThemeType.Dark ? darkTheme : null;
+  }
+});
 
 const themeOverrides = {
   common: {

@@ -1,74 +1,51 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NCard, NIcon, NLayout, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NEmpty, NResult, NPageHeader, NSwitch, useOsTheme, NModal } from 'naive-ui'
+import {
+  NAvatar,
+  NIcon,
+  NLayout,
+  NLayoutHeader,
+  NLayoutSider,
+  NMenu,
+  NSpace,
+  NText,
+  NButton,
+  NResult,
+  NPageHeader,
+  NSwitch,
+  NModal,
+  NEllipsis,
+  MenuOption,
+} from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
-import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from '@vicons/ionicons5'
+import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
 import { RouterLink, useRoute } from 'vue-router'
-import { UserInfo } from '@/api/api-models'
+import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
 import { FETCH_API } from '@/data/constants'
 import { useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { useElementSize, useStorage } from '@vueuse/core'
+import { isDarkMode } from '@/Utils'
 
 const route = useRoute()
 const id = computed(() => {
   return Number(route.params.id)
 })
-const theme = useOsTheme()
+const themeType = useStorage('Settings.Theme', ThemeType.Auto);
 
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
 const accountInfo = useAccount()
 
 const registerAndLoginModalVisiable = ref(false)
+const sider = ref()
+const { width } = useElementSize(sider)
 
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
 }
-const menuOptions = [
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'user-index',
-          },
-        },
-        { default: () => '主页' }
-      ),
-    key: 'user-index',
-    icon: renderIcon(BookIcon),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'user-songList',
-          },
-        },
-        { default: () => '歌单' }
-      ),
-    key: 'user-songList',
-    icon: renderIcon(BookIcon),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'user-questionBox',
-          },
-        },
-        { default: () => '棉花糖 (提问箱' }
-      ),
-    key: 'user-questionBox',
-    icon: renderIcon(BookIcon),
-  },
-]
+const menuOptions = ref<MenuOption[]>()
 async function RequestBiliUserData() {
   await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`)
     .then(async (respone) => {
@@ -86,6 +63,52 @@ async function RequestBiliUserData() {
 
 onMounted(async () => {
   userInfo.value = await useUser()
+  menuOptions.value = [
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'user-index',
+            },
+          },
+          { default: () => '主页' }
+        ),
+      key: 'user-index',
+      icon: renderIcon(Home),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'user-songList',
+            },
+          },
+          { default: () => '歌单' }
+        ),
+      show: (userInfo.value?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) > -1,
+      key: 'user-songList',
+      icon: renderIcon(MusicalNote),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'user-questionBox',
+            },
+          },
+          { default: () => '棉花糖 (提问箱' }
+        ),
+      show: (userInfo.value?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) > -1,
+      key: 'user-questionBox',
+      icon: renderIcon(Chatbox),
+    },
+  ]
   await RequestBiliUserData()
 })
 </script>
@@ -97,8 +120,15 @@ onMounted(async () => {
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''">
         <template #extra>
-          <NSpace>
-            <NSwitch> </NSwitch>
+          <NSpace align="center">
+            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
+              <template #checked>
+                <NIcon :component="Sunny" />
+              </template>
+              <template #unchecked>
+                <NIcon :component="Moon"/>
+              </template>
+            </NSwitch>
             <template v-if="accountInfo">
               <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })"> 个人中心 </NButton>
             </template>
@@ -108,36 +138,38 @@ onMounted(async () => {
           </NSpace>
         </template>
         <template #title>
-          <NText style="font-size: 1.5rem"> VTSURU </NText>
+          <NText strong style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"> VTSURU </NText>
         </template>
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider show-trigger collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false">
+      <NLayoutSider ref="sider" show-trigger default-collapsed collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false">
         <Transition>
-          <div v-if="biliUserInfo" style="margin-top: 15px;">
+          <div v-if="biliUserInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
-              <NAvatar :src="biliUserInfo.face" :img-props="{ referrerpolicy: 'no-referrer' }" />
-              <NText strong>
-                {{ biliUserInfo.name }}
-              </NText>
+              <NAvatar :src="biliUserInfo.face" :img-props="{ referrerpolicy: 'no-referrer' }" round bordered style="box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1)" />
+              <NEllipsis v-if="width > 100" style="max-width: 100%">
+                <NText strong>
+                  {{ biliUserInfo.name }}
+                </NText>
+              </NEllipsis>
             </NSpace>
           </div>
         </Transition>
         <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
       </NLayoutSider>
       <NLayout style="height: 100%">
-        <div class="viewer-page-content">
+        <div class="viewer-page-content" :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`">
           <RouterView v-slot="{ Component }">
             <KeepAlive>
-              <component :is="Component" />
+              <component :is="Component" :bili-info="biliUserInfo" />
             </KeepAlive>
           </RouterView>
         </div>
       </NLayout>
     </NLayout>
   </NLayout>
-  <NModal v-model:show="registerAndLoginModalVisiable" style="width: 500px; max-width: 90vw;">
+  <NModal v-model:show="registerAndLoginModalVisiable" style="width: 500px; max-width: 90vw">
     <RegisterAndLogin />
   </NModal>
 </template>
@@ -146,7 +178,6 @@ onMounted(async () => {
 .viewer-page-content{
     height: 100%;
     border-radius: 18px;
-    box-shadow: inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;
     padding: 15px;
     margin-right: 10px;
     box-sizing: border-box;
