@@ -18,8 +18,11 @@ const message = useMessage()
 
 const fansHistory = ref<{ time: number; count: number }[]>()
 const guardHistory = ref<{ time: number; count: number }[]>()
+const upstatHistory = ref<{ time: number; stats: { views: number; likes: number } }[]>()
 const fansOption = ref()
 const guardsOption = ref()
+const upstatViewOption = ref()
+const upstatLikeOption = ref()
 
 async function getFansHistory() {
   await QueryGetAPI<
@@ -27,9 +30,7 @@ async function getFansHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL + 'fans', {
-    id: accountInfo.value?.id,
-  })
+  >(HISTORY_API_URL + 'fans')
     .then((data) => {
       if (data.code == 200) {
         fansHistory.value = data.data
@@ -48,12 +49,32 @@ async function getGuardsHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL + 'guards', {
-    id: accountInfo.value?.id,
-  })
+  >(HISTORY_API_URL + 'guards')
     .then((data) => {
       if (data.code == 200) {
         guardHistory.value = data.data
+      } else {
+        message.error('加载失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('加载失败')
+    })
+}
+async function getUpstatHistory() {
+  await QueryGetAPI<
+    {
+      time: number
+      stats: {
+        views: number
+        likes: number
+      }
+    }[]
+  >(HISTORY_API_URL + 'upstat')
+    .then((data) => {
+      if (data.code == 200) {
+        upstatHistory.value = data.data
       } else {
         message.error('加载失败: ' + data.message)
       }
@@ -100,6 +121,25 @@ function getOptions() {
       lastDayGuards = g.count
     }
   })
+  let upstatViewIncreace: { time: number; value: number }[] = []
+  let upstatLikeIncreace: { time: number; value: number }[] = []
+  if (upstatHistory.value && upstatHistory.value.length > 0) {
+    let lastUpstatView = upstatHistory.value[0].stats.views
+    let lastUpstatLike = upstatHistory.value[0].stats.likes
+
+    upstatHistory.value?.forEach((u) => {
+      upstatViewIncreace.push({
+        time: u.time,
+        value: u.stats.views - lastUpstatView,
+      })
+      lastUpstatView = u.stats.views
+      upstatLikeIncreace.push({
+        time: u.time,
+        value: u.stats.likes - lastUpstatLike,
+      })
+      lastUpstatLike = u.stats.likes
+    })
+  }
 
   fansOption.value = {
     title: {
@@ -152,8 +192,6 @@ function getOptions() {
       {
         name: '粉丝数',
         type: 'line',
-        xAxisIndex: 1,
-        yAxisIndex: 1,
         emphasis: {
           focus: 'series',
         },
@@ -162,6 +200,7 @@ function getOptions() {
       {
         name: '增量 /日',
         type: 'line',
+        yAxisIndex: 1,
         smooth: true,
         showSymbol: false,
         emphasis: {
@@ -190,9 +229,6 @@ function getOptions() {
     },
     legend: {},
     yAxis: [
-      {
-        type: 'value',
-      },
       {
         type: 'value',
       },
@@ -234,11 +270,139 @@ function getOptions() {
       },
     ],
   }
+  upstatViewOption.value = {
+    title: {
+      text: '投稿播放数',
+      left: 'left',
+    },
+    tooltip: {
+      trigger: 'axis',
+    },
+    legend: {},
+    yAxis: [
+      {
+        type: 'value',
+      },
+      {
+        type: 'value',
+      },
+    ],
+    xAxis: [
+      {
+        type: 'category',
+        axisTick: {
+          alignWithLabel: true,
+        },
+        axisLine: {
+          onZero: false,
+          lineStyle: {
+            color: '#EE6666',
+          },
+        },
+        // prettier-ignore
+        data: upstatHistory.value?.map((f) => format(f.time, 'yyyy-MM-dd')),
+      },
+    ],
+    series: [
+      {
+        name: '播放数',
+        type: 'line',
+        emphasis: {
+          focus: 'series',
+        },
+        data: upstatHistory.value?.map((f) => f.stats.views),
+      },
+      {
+        name: '日增',
+        type: 'line',
+        step: 'start',
+        yAxisIndex: 1,
+        emphasis: {
+          focus: 'series',
+        },
+        data: upstatViewIncreace.map((f) => f.value),
+      },
+    ],
+    dataZoom: [
+      {
+        show: true,
+        realtime: true,
+        start: 0,
+        end: 100,
+        xAxisIndex: [0, 1],
+      },
+    ],
+  }
+  upstatLikeOption.value = {
+    title: {
+      text: '投稿点赞数',
+      left: 'left',
+    },
+    tooltip: {
+      trigger: 'axis',
+    },
+    legend: {},
+    yAxis: [
+      {
+        type: 'value',
+      },
+      {
+        type: 'value',
+      },
+    ],
+    xAxis: [
+      {
+        type: 'category',
+        axisTick: {
+          alignWithLabel: true,
+        },
+        axisLine: {
+          onZero: false,
+          lineStyle: {
+            color: '#EE6666',
+          },
+        },
+        // prettier-ignore
+        data: upstatHistory.value?.map((f) => format(f.time, 'yyyy-MM-dd')),
+      },
+    ],
+    series: [
+      {
+        name: '点赞数',
+        type: 'line',
+        emphasis: {
+          focus: 'series',
+        },
+        data: upstatHistory.value?.map((f) => f.stats.likes),
+      },
+      {
+        name: '日增',
+        type: 'line',
+        yAxisIndex: 1,
+        step: 'start',
+
+        emphasis: {
+          focus: 'series',
+        },
+        data: upstatLikeIncreace.map((f) => f.value),
+      },
+    ],
+    dataZoom: [
+      {
+        show: true,
+        realtime: true,
+        start: 0,
+        end: 100,
+        xAxisIndex: [0, 1],
+      },
+    ],
+  }
 }
 
 onMounted(async () => {
   await getFansHistory()
   await getGuardsHistory()
+  await getUpstatHistory()
   getOptions()
 })
 </script>
@@ -247,5 +411,7 @@ onMounted(async () => {
   <NCard size="small">
     <VChart :option="fansOption" style="height: 200px" />
     <VChart :option="guardsOption" style="height: 200px" />
+    <VChart :option="upstatViewOption" style="height: 200px" />
+    <VChart :option="upstatLikeOption" style="height: 200px" />
   </NCard>
 </template>

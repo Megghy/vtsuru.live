@@ -284,7 +284,6 @@ function reset() {
   switch (currentType.value) {
     case 'comment': {
       commentUsers.value = JSON.parse(JSON.stringify(originCommentUsers.value))
-      console.log(originCommentUsers.value)
       break
     }
     case 'forward': {

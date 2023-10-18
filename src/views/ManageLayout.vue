@@ -166,7 +166,7 @@ onMounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton size="small" style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'user-index', params: { id: accountInfo.id } })"> 回到主页 </NButton>
+            <NButton size="small" style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'user-index', params: { id: accountInfo.name } })"> 回到主页 </NButton>
           </NSpace>
         </template>
       </NPageHeader>

@@ -2,7 +2,7 @@
 import { SongAuthorInfo, SongFrom, SongLanguage, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
-import { refDebounced, useDebounceFn } from '@vueuse/core'
+import { refDebounced, useDebounceFn, useLocalStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
   DataTableBaseColumn,
@@ -51,6 +51,7 @@ watch(
     }, 1)
   }
 )
+const volume = useLocalStorage('Settings.AplayerVolume', 0.8)
 const songsInternal = ref(props.songs)
 const songsComputed = computed(() => {
   if (debouncedInput.value) {
@@ -70,7 +71,7 @@ const aplayerMusic = ref<{
   title: string
   artist: string
   src: string
-  pic: string
+  lrc: string
 }>()
 
 const formRef = ref<FormInst | null>(null)
@@ -150,10 +151,9 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   },
 })
 const onAuthorClick = (author: string) => {
-  if(authorColumn.value.filterOptionValue == author){
+  if (authorColumn.value.filterOptionValue == author) {
     authorColumn.value.filterOptionValue = undefined
-  }
-  else {
+  } else {
     authorColumn.value.filterOptionValue = author
   }
 }
@@ -218,11 +218,11 @@ function createColumns(): DataTableColumns<SongsInfo> {
           NSpace,
           {
             justify: 'end',
-            size: 10
+            size: 10,
           },
           () => [
             GetPlayButton(data),
-            data.url
+            data.url?.endsWith('mp3') || data.url?.endsWith('flac') || data.url?.endsWith('ogg') || data.url?.endsWith('wav') || data.url?.endsWith('m4a')
               ? h(NTooltip, null, {
                   trigger: () =>
                     h(
@@ -231,14 +231,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
                         type: 'primary',
                         size: 'small',
                         circle: true,
-                        onClick: () => {
-                          aplayerMusic.value = {
-                            title: data.name,
-                            artist: data.author.join('/') ?? '',
-                            src: data.url,
-                            pic: '',
-                          }
-                        },
+                        onClick: () => OnPlayMusic(data),
                       },
                       {
                         icon: () => h(NIcon, { component: Play24Filled }),
@@ -300,6 +293,87 @@ function createColumns(): DataTableColumns<SongsInfo> {
       },
     },
   ]
+}
+function OnPlayMusic(song: SongsInfo) {
+  aplayerMusic.value = undefined
+  if (song.from == SongFrom.Netease) GetLyric(song)
+  else {
+    aplayerMusic.value = {
+      title: song.name,
+      artist: song.author.join('/') ?? '',
+      src: song.url,
+      lrc: '',
+    }
+  }
+}
+async function GetLyric(song: SongsInfo) {
+  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
+    .then((data) => {
+      console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
+      if (data.code == 200) {
+        aplayerMusic.value = {
+          title: song.name,
+          artist: song.author.join('/') ?? '',
+          src: song.url,
+          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
+        }
+        //aplayerMusic.value.lrc = data.data.lyric
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      aplayerMusic.value = {
+        title: song.name,
+        artist: song.author.join('/') ?? '',
+        src: song.url,
+        lrc: '',
+      }
+    })
+}
+function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
+  const originalLines = originalLyrics.split('\n')
+  const translatedLines = translatedLyrics.split('\n')
+
+  let mergedLyrics = ''
+
+  for (let i = 0; i < originalLines.length; i++) {
+    const originalLine = originalLines[i]?.trim()
+    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配原歌词的时间字符串
+
+    let mergedLine = originalLine
+
+    if (originalTimeMatch) {
+      const originalTime = originalTimeMatch[1]
+      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
+
+      if (translatedLineIndex !== -1) {
+        const translatedLine = translatedLines[translatedLineIndex]
+        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配翻译歌词的时间字符串
+
+        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
+          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
+          if (translatedText) {
+            mergedLine += ` (${translatedText})`
+          }
+          translatedLines.splice(translatedLineIndex, 1) // 从翻译歌词数组中移除已匹配的行
+        }
+      }
+    }
+    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
+      //不是空行
+      mergedLyrics += `${mergedLine}\n`
+    }
+  }
+
+  // 将剩余的非空翻译歌词单独放在一行
+  for (const translatedLine of translatedLines) {
+    const translatedText = translatedLine.trim()
+    if (translatedText) {
+      mergedLyrics += `${translatedText}\n`
+    }
+  }
+
+  return mergedLyrics.trim()
 }
 function GetPlayButton(song: SongsInfo) {
   switch (song.from) {
@@ -411,12 +485,16 @@ onMounted(() => {
 
 <template>
   <NCard embedded size="small">
-    <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="max-width: 150px" />
+    <NSpace>
+      <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="width: 150px" />
+      <NSelect placeholder="选择歌手" v-model:value="authorColumn.filterOptionValue" :options="authorsOptions" clearable filterable size="small" style="width: 150px" />
+      <NButton v-if="authorColumn.filterOptionValue" type="error" @click="authorColumn.filterOptionValue = null" size="small"> 清除歌手选择 </NButton>
+    </NSpace>
   </NCard>
   <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
   <Transition>
-    <div v-if="aplayerMusic">
-      <APlayer :music="aplayerMusic" autoplay />
+    <div v-if="aplayerMusic" class="song-list">
+      <APlayer :music="aplayerMusic" autoplay :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0"/>
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>
