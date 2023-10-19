@@ -124,6 +124,16 @@ export interface LotteryUserCardInfo {
   isGuard: boolean
   isCharge: boolean
 }
+export interface ScheduleWeekInfo {
+  year: number
+  week: number
+  days: ScheduleDayInfo[]
+}
+export interface ScheduleDayInfo {
+  title: string
+  tag: string
+  time: number
+}
 export enum ThemeType {
   Auto = 'auto',
   Light = 'light',
