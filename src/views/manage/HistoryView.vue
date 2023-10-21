@@ -2,7 +2,7 @@
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
-import { NCard, NSpace, useMessage } from 'naive-ui'
+import { NAlert, NCard, NSpace, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -400,14 +400,17 @@ function getOptions() {
 }
 
 onMounted(async () => {
-  await getFansHistory()
-  await getGuardsHistory()
-  await getUpstatHistory()
-  getOptions()
+  if (accountInfo.value?.isBiliVerified == true) {
+    await getFansHistory()
+    await getGuardsHistory()
+    await getUpstatHistory()
+    getOptions()
+  }
 })
 </script>
 
 <template>
+  <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <NCard size="small">
     <NSpace vertical>
       <VChart :option="fansOption" style="height: 200px" />

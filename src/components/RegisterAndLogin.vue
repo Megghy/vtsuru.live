@@ -100,7 +100,7 @@ function onregisterButtonClick(e: MouseEvent) {
 
   formRef.value?.validate().then(async () => {
     isLoading.value = true
-    await QueryPostAPI(
+    await QueryPostAPI<string>(
       ACCOUNT_API_URL + 'register',
       {
         name: registerModel.value.username,
@@ -111,6 +111,11 @@ function onregisterButtonClick(e: MouseEvent) {
     )
       .then((data) => {
         if (data.code == 200) {
+          message.success(`注册成功`)
+          cookie.value = data.data
+          setTimeout(() => {
+            location.reload()
+          }, 1000)
         } else {
           message.error(data.message)
         }
@@ -176,7 +181,7 @@ function onLoginButtonClick() {
               <NInput v-model:value="loginModel.account" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter="onLoginButtonClick"/>
+              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter="onLoginButtonClick" />
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
