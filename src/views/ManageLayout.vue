@@ -30,7 +30,7 @@ import { RouterLink } from 'vue-router'
 import { useElementSize, useStorage } from '@vueuse/core'
 import { ACCOUNT_API_URL } from '@/data/constants'
 import { QueryGetAPI } from '@/api/query'
-import { ThemeType } from '@/api/api-models'
+import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { isDarkMode } from '@/Utils'
 
 const accountInfo = useAccount()
@@ -71,7 +71,7 @@ const menuOptions = [
           to: {
             name: 'manage-schedule',
           },
-          disabled: !accountInfo.value?.isEmailVerified,
+          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
         },
         { default: () => '日程' }
       ),
@@ -86,7 +86,7 @@ const menuOptions = [
           to: {
             name: 'manage-songList',
           },
-          disabled: !accountInfo.value?.isEmailVerified,
+          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
         },
         { default: () => '歌单' }
       ),
@@ -101,6 +101,7 @@ const menuOptions = [
           to: {
             name: 'manage-questionBox',
           },
+          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) == -1,
         },
         { default: () => '棉花糖 (提问箱' }
       ),

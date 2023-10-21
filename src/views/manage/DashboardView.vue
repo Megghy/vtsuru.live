@@ -9,7 +9,7 @@ const accountInfo = useAccount()
 </script>
 
 <template>
-  <NSpace justify="center" align="center" vertical>
+  <NSpace justify="center" align="center" vertical style="width: 100%;">
     <NCard embedded style="max-width: 90%;width: 800px;">
       <NSpace align="center" justify="center" vertical>
         <NText style="font-size: 3rem">
@@ -32,7 +32,7 @@ const accountInfo = useAccount()
       </NAlert>
       <NAlert>
         Bilibili 账户:
-        <NTag v-if="accountInfo?.isBiliVerified" type="success"> 已认证 </NTag>
+        <NTag v-if="accountInfo?.isBiliVerified" type="success"> 已认证 | {{ accountInfo?.biliId }} </NTag>
         <template v-else>
           <NTag type="error" size="small"> 未认证 </NTag>
           <NDivider vertical />
@@ -40,7 +40,7 @@ const accountInfo = useAccount()
         </template>
       </NAlert>
     </NCard>
-    <div style="max-width: 90%;width: 800px;">
+    <div style="width: 100%;">
       <NDivider/>
       <SettingsManageView />
     </div>

@@ -40,6 +40,14 @@ const routes: Array<RouteRecordRaw> = [
           title: '棉花糖 (提问箱',
         },
       },
+      {
+        path: 'schedule',
+        name: 'user-schedule',
+        component: () => import('@/views/view/ScheduleView.vue'),
+        meta: {
+          title: '日程',
+        },
+      },
     ],
   },
   //管理页面

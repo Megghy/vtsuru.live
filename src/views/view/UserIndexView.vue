@@ -1,5 +1,5 @@
 <template>
-  <component :is="indexType" :user-info="userInfo" :bili-info="biliInfo"/>
+  <component :is="componentType" :user-info="userInfo" :bili-info="biliInfo" />
 </template>
 
 <script lang="ts" setup>
@@ -8,16 +8,18 @@ import DefaultIndexTemplate from '@/views/view/indexTemplate/DefaultIndexTemplat
 import { computed, onMounted, ref } from 'vue'
 import { UserInfo } from '@/api/api-models'
 
-const { biliInfo, userInfo } = defineProps<{
+const props = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
+  template?: string | undefined
 }>()
 
-const indexType = computed(() => {
-  if (userInfo) {
-    switch (userInfo.indexType) {
-      case IndexTypes.Default:
+const componentType = computed(() => {
+  const type = props.template ?? props.userInfo?.extra?.templateTypes['index']?.toLowerCase()
+  if (props.userInfo) {
+    switch (type?.toLocaleLowerCase()) {
+      case '':
         return DefaultIndexTemplate
 
       default:

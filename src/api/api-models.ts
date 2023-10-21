@@ -22,9 +22,11 @@ export interface UserInfo {
   createAt: number
   biliId?: number
   biliRoomId?: number
-  indexType: IndexTypes
-  songListType: SongListTypes
-  enableFunctions: FunctionTypes[]
+  extra?: {
+    enableFunctions: FunctionTypes[]
+    isInBlackList: boolean
+    templateTypes: { [key: string]: string }
+  }
 }
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
@@ -46,10 +48,15 @@ export interface UserSetting {
   sendEmail: Setting_SendEmail
   questionBox: Setting_QuestionBox
   enableFunctions: FunctionTypes[]
+
+  indexTemplate: string | null,
+  songListTemplate: string | null
+  scheduleTemplate: string | null
 }
 export enum FunctionTypes {
   SongList,
   QuestionBox,
+  Schedule,
 }
 export interface SongAuthorInfo {
   name: string
@@ -130,9 +137,10 @@ export interface ScheduleWeekInfo {
   days: ScheduleDayInfo[]
 }
 export interface ScheduleDayInfo {
-  title: string
-  tag: string
-  time: number
+  title: string | null
+  tag: string | null
+  tagColor: string | null
+  time: string | null
 }
 export enum ThemeType {
   Auto = 'auto',

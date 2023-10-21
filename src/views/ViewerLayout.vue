@@ -1,23 +1,6 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import {
-  NAvatar,
-  NIcon,
-  NLayout,
-  NLayoutHeader,
-  NLayoutSider,
-  NMenu,
-  NSpace,
-  NText,
-  NButton,
-  NResult,
-  NPageHeader,
-  NSwitch,
-  NModal,
-  NEllipsis,
-  MenuOption,
-NSpin,
-} from 'naive-ui'
+import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
@@ -28,12 +11,13 @@ import { useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { useElementSize, useStorage } from '@vueuse/core'
 import { isDarkMode } from '@/Utils'
+import { CalendarClock24Filled } from '@vicons/fluent'
 
 const route = useRoute()
 const id = computed(() => {
   return route.params.id
 })
-const themeType = useStorage('Settings.Theme', ThemeType.Auto);
+const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
@@ -90,9 +74,24 @@ onMounted(async () => {
           },
           { default: () => '歌单' }
         ),
-      show: (userInfo.value?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) > -1,
+      show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) > -1,
       key: 'user-songList',
       icon: renderIcon(MusicalNote),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'user-schedule',
+            },
+          },
+          { default: () => '日程' }
+        ),
+      show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) > -1,
+      key: 'user-schedule',
+      icon: renderIcon(CalendarClock24Filled),
     },
     {
       label: () =>
@@ -105,7 +104,7 @@ onMounted(async () => {
           },
           { default: () => '棉花糖 (提问箱' }
         ),
-      show: (userInfo.value?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) > -1,
+      show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) > -1,
       key: 'user-questionBox',
       icon: renderIcon(Chatbox),
     },
@@ -127,7 +126,7 @@ onMounted(async () => {
                 <NIcon :component="Sunny" />
               </template>
               <template #unchecked>
-                <NIcon :component="Moon"/>
+                <NIcon :component="Moon" />
               </template>
             </NSwitch>
             <template v-if="accountInfo">
@@ -160,14 +159,17 @@ onMounted(async () => {
         <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
       </NLayoutSider>
       <NLayout style="height: 100%">
-        <div class="viewer-page-content" :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`">
+        <div
+          class="viewer-page-content"
+          :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
+        >
           <RouterView v-if="userInfo" v-slot="{ Component }">
             <KeepAlive>
               <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
             </KeepAlive>
           </RouterView>
           <template v-else>
-            <NSpin show/>
+            <NSpin show />
           </template>
         </div>
       </NLayout>

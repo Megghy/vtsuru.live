@@ -2,7 +2,7 @@
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
-import { NCard, useMessage } from 'naive-ui'
+import { NCard, NSpace, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -409,9 +409,11 @@ onMounted(async () => {
 
 <template>
   <NCard size="small">
-    <VChart :option="fansOption" style="height: 200px" />
-    <VChart :option="guardsOption" style="height: 200px" />
-    <VChart :option="upstatViewOption" style="height: 200px" />
-    <VChart :option="upstatLikeOption" style="height: 200px" />
+    <NSpace vertical>
+      <VChart :option="fansOption" style="height: 200px" />
+      <VChart :option="guardsOption" style="height: 200px" />
+      <VChart :option="upstatViewOption" style="height: 200px" />
+      <VChart :option="upstatLikeOption" style="height: 200px" />
+    </NSpace>
   </NCard>
 </template>
