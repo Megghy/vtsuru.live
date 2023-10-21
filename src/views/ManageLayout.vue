@@ -193,7 +193,7 @@ onMounted(() => {
         <NSpace justify="center">
           <NText depth="3" v-if="width > 150">
             有更多功能建议请
-            <NButton text type="info"> 反馈 </NButton>
+            <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
           </NText>
         </NSpace>
       </NLayoutSider>

@@ -237,7 +237,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NButton @click="showAddModal = true"> 添加周程 </NButton>
+  <NButton @click="showAddModal = true" type="primary"> 添加周程 </NButton>
   <NDivider />
   <NModal v-model:show="showAddModal" style="width: 600px; max-width: 90vw" preset="card" title="添加周程">
     <NSpace vertical>

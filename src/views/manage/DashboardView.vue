@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import { NAlert, NButton, NCard, NDivider, NSpace, NTag, NText, NThing, NTime } from 'naive-ui'
-import SettingsManageView from './SettingsManageView.vue';
+import SettingsManageView from './SettingsManageView.vue'
 
 const accountInfo = useAccount()
-
-
 </script>
 
 <template>
-  <NSpace justify="center" align="center" vertical style="width: 100%;">
-    <NCard embedded style="max-width: 90%;width: 800px;">
+  <NSpace justify="center" align="center" vertical style="width: 100%">
+    <NCard embedded style="max-width: 90%; width: 800px">
       <NSpace align="center" justify="center" vertical>
         <NText style="font-size: 3rem">
           {{ accountInfo?.name }}
@@ -40,9 +38,9 @@ const accountInfo = useAccount()
         </template>
       </NAlert>
     </NCard>
-    <div style="width: 100%;">
-      <NDivider/>
+  </NSpace>
+  <div>
+      <NDivider />
       <SettingsManageView />
     </div>
-  </NSpace>
 </template>

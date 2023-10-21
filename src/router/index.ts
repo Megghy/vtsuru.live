@@ -13,6 +13,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/VerifyView.vue'),
   },
   {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/AboutView.vue'),
+  },
+  {
     path: '/user/:id',
     name: 'user',
     children: [
