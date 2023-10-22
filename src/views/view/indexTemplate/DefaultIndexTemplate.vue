@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NDivider, NSpace, NText } from 'naive-ui'
+import { NAvatar, NButton, NDivider, NImage, NSpace, NText } from 'naive-ui'
 
 const width = window.innerWidth
 

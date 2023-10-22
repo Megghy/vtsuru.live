@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin } from 'naive-ui'
+import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin, NLayoutContent } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
@@ -22,6 +22,8 @@ const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
 const accountInfo = useAccount()
+
+const notfount = ref(false)
 
 const registerAndLoginModalVisiable = ref(false)
 const sider = ref()
@@ -47,7 +49,13 @@ async function RequestBiliUserData() {
 }
 
 onMounted(async () => {
-  userInfo.value = await useUser()
+  const result = await GetInfo(id.value?.toString())
+  if (result.code == 200) {
+    userInfo.value = result.data
+  } else {
+    notfount.value = true
+  }
+
   menuOptions.value = [
     {
       label: () =>
@@ -114,8 +122,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NResult v-if="!id" status="error" title="输入的uId无效" description="再检查检查" />
-  <NResult v-else-if="false" status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  <NLayoutContent v-if="!id" style="height: 100vh;">
+    <NResult status="error" title="输入的uId无效" description="再检查检查" />
+  </NLayoutContent>
+  <NLayoutContent v-else-if="notfount" style="height: 100vh;">
+    <NResult status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  </NLayoutContent>
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''">

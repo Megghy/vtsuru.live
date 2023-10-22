@@ -10,19 +10,17 @@ const { width } = useWindowSize()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
-    // week starts from 1-52, dayOfWeek starts from 0-6 where 0 is Monday
-    var simple = new Date(year, 0, 1 + (week - 1) * 7);
-    var dow = simple.getDay();
-    var ISOweekStart = simple;
-    if (dow <= 4)
-        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-    else
-        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-    return new Date(ISOweekStart.getFullYear(), ISOweekStart.getMonth(), ISOweekStart.getDate() + dayOfWeek);
+  // week starts from 1-52, dayOfWeek starts from 0-6 where 0 is Monday
+  var simple = new Date(year, 0, 1 + (week - 1) * 7)
+  var dow = simple.getDay()
+  var ISOweekStart = simple
+  if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1)
+  else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay())
+  return new Date(ISOweekStart.getFullYear(), ISOweekStart.getMonth(), ISOweekStart.getDate() + dayOfWeek)
 }
 
 defineProps<{
-  schedules: ScheduleWeekInfo[],
+  schedules: ScheduleWeekInfo[]
   isSelf: boolean
 }>()
 const emit = defineEmits<{
@@ -34,7 +32,7 @@ const emit = defineEmits<{
 
 <template>
   <NEmpty v-if="(schedules?.length ?? 0) == 0" />
-  <NList style="padding: 0;" bordered >
+  <NList v-else style="padding: 0" bordered>
     <NListItem v-for="item in schedules" v-bind:key="item.year + ' ' + item.week" style="padding: 0">
       <NCard size="small" :bordered="false">
         <template #header>
@@ -64,7 +62,7 @@ const emit = defineEmits<{
               <template #header-extra>
                 <template v-if="day.tag">
                   <NSpace :size="5">
-                    <NBadge v-if="day.tagColor" dot :color="day.tagColor"/>
+                    <NBadge v-if="day.tagColor" dot :color="day.tagColor" />
                     <NEllipsis>
                       <NText :style="{ color: day.tagColor }">
                         {{ day.tag }}

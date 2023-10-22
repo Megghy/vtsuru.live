@@ -98,6 +98,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'manage-schedule',
         component: () => import('@/views/manage/ScheduleManageView.vue'),
       },
+      {
+        path: 'event',
+        name: 'manage-event',
+        component: () => import('@/views/manage/EventView.vue'),
+      },
     ],
   },
 ]

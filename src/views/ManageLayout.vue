@@ -23,7 +23,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Lottery24Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Lottery24Filled, VehicleShip24Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink } from 'vue-router'
@@ -62,6 +62,21 @@ const menuOptions = [
       ),
     key: 'manage-history',
     icon: renderIcon(AnalyticsSharp),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-event',
+          },
+          disabled: accountInfo.value?.isBiliVerified != true,
+        },
+        { default: () => '舰长和SC' }
+      ),
+    key: 'manage-event',
+    icon: renderIcon(VehicleShip24Filled),
   },
   {
     label: () =>
