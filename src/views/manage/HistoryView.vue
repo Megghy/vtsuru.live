@@ -255,7 +255,7 @@ function getOptions() {
       {
         name: '舰长数',
         type: 'line',
-        step: 'start',
+        step: 'middle',
         emphasis: {
           focus: 'series',
         },
@@ -317,7 +317,7 @@ function getOptions() {
       {
         name: '日增',
         type: 'line',
-        step: 'start',
+        step: 'middle',
         yAxisIndex: 1,
         emphasis: {
           focus: 'series',
@@ -381,7 +381,7 @@ function getOptions() {
         name: '日增',
         type: 'line',
         yAxisIndex: 1,
-        step: 'start',
+        step: 'middle',
 
         emphasis: {
           focus: 'series',

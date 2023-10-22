@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { NAlert, NButton, NCard, NDivider, NSpace, NTag, NText, NThing, NTime } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NPopconfirm, NSpace, NTag, NText, NThing, NTime } from 'naive-ui'
 import SettingsManageView from './SettingsManageView.vue'
+import { useLocalStorage } from '@vueuse/core'
 
 const accountInfo = useAccount()
+const cookie = useLocalStorage('JWT_Token', '')
+
+function logout() {
+  cookie.value = undefined
+  window.location.reload()
+}
 </script>
 
 <template>
@@ -37,10 +44,19 @@ const accountInfo = useAccount()
           <NButton size="small" @click="$router.push({ name: 'manage-biliVerify' })" type="info"> 前往认证 </NButton>
         </template>
       </NAlert>
+      <NDivider />
+      <NSpace justify="center">
+        <NPopconfirm @positive-click="logout">
+          <template #trigger>
+            <NButton type="warning"> 登出 </NButton>
+          </template>
+          确定登出?
+        </NPopconfirm>
+      </NSpace>
     </NCard>
   </NSpace>
   <div>
-      <NDivider />
-      <SettingsManageView />
-    </div>
+    <NDivider />
+    <SettingsManageView />
+  </div>
 </template>
