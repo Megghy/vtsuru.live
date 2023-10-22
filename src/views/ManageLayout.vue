@@ -201,7 +201,10 @@ onMounted(() => {
         <div style="box-sizing: border-box; padding: 20px">
           <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
             <KeepAlive>
-              <component :is="Component" />
+              <Suspense>
+                <component :is="Component" />
+                <template #fallback> Loading... </template>
+              </Suspense>
             </KeepAlive>
           </RouterView>
           <template v-else>

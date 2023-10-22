@@ -2,13 +2,13 @@
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
-import { NAlert, NCard, NSpace, useMessage } from 'naive-ui'
+import { NAlert, NCard, NSpace, NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent } from 'echarts/components'
-import VChart, { THEME_KEY } from 'vue-echarts'
+import VChart from 'vue-echarts'
 import { format } from 'date-fns'
 
 use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, LineChart])
@@ -23,6 +23,8 @@ const fansOption = ref()
 const guardsOption = ref()
 const upstatViewOption = ref()
 const upstatLikeOption = ref()
+
+const isLoading = ref(true)
 
 async function getFansHistory() {
   await QueryGetAPI<
@@ -405,13 +407,15 @@ onMounted(async () => {
     await getGuardsHistory()
     await getUpstatHistory()
     getOptions()
+    isLoading.value = false
   }
 })
 </script>
 
 <template>
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
-  <NCard size="small">
+  <NSpin v-else-if="isLoading" show/>
+  <NCard v-else size="small">
     <NSpace vertical>
       <VChart :option="fansOption" style="height: 200px" />
       <VChart :option="guardsOption" style="height: 200px" />

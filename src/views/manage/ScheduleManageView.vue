@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
+import {  ScheduleWeekInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { SCHEDULE_API_URL } from '@/data/constants'
@@ -11,17 +11,13 @@ import {
   NButton,
   NColorPicker,
   NDivider,
-  NForm,
-  NFormItem,
   NInput,
   NInputGroup,
   NInputGroupLabel,
   NModal,
   NSelect,
   NSpace,
-  NTabPane,
-  NTabs,
-  NText,
+  NSpin,
   NTimePicker,
   useMessage,
 } from 'naive-ui'
@@ -124,6 +120,8 @@ const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>()
 const message = useMessage()
 
+const isLoading = ref(true)
+
 const showUpdateModal = ref(false)
 const showAddModal = ref(false)
 const showCopyModal = ref(false)
@@ -135,6 +133,7 @@ const selectedScheduleYear = ref(new Date().getFullYear())
 const selectedScheduleWeek = ref(Number(format(Date.now(), 'w')) + 1)
 
 async function get() {
+  isLoading.value = true
   await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL + 'get', {
     id: accountInfo.value?.id ?? -1,
   })
@@ -149,10 +148,11 @@ async function get() {
       console.error(err)
       message.error('加载失败')
     })
+    .finally(() => (isLoading.value = false))
 }
-const isLoading = ref(false)
+const isFetching = ref(false)
 async function addSchedule() {
-  isLoading.value = true
+  isFetching.value = true
   await QueryPostAPI(SCHEDULE_API_URL + 'update', {
     year: selectedScheduleYear.value,
     week: selectedScheduleWeek.value,
@@ -167,7 +167,7 @@ async function addSchedule() {
       }
     })
     .finally(() => {
-      isLoading.value = false
+      isFetching.value = false
     })
 }
 async function onCopySchedule() {
@@ -181,25 +181,30 @@ async function onCopySchedule() {
   }
 }
 async function onUpdateSchedule() {
+  isFetching.value = true
   await QueryPostAPI(SCHEDULE_API_URL + 'update', {
     year: updateScheduleModel.value.year,
     week: updateScheduleModel.value.week,
     day: selectedDay.value,
     days: updateScheduleModel.value?.days,
-  }).then((data) => {
-    if (data.code == 200) {
-      message.success('成功')
-      const s = schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)
-      if (s) {
-        s.days[selectedDay.value] = updateScheduleModel.value.days[selectedDay.value]
-      } else {
-        schedules.value?.push(updateScheduleModel.value)
-      }
-      //updateScheduleModel.value = {} as ScheduleWeekInfo
-    } else {
-      message.error('修改失败: ' + data.message)
-    }
   })
+    .then((data) => {
+      if (data.code == 200) {
+        message.success('成功')
+        const s = schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)
+        if (s) {
+          s.days[selectedDay.value] = updateScheduleModel.value.days[selectedDay.value]
+        } else {
+          schedules.value?.push(updateScheduleModel.value)
+        }
+        //updateScheduleModel.value = {} as ScheduleWeekInfo
+      } else {
+        message.error('修改失败: ' + data.message)
+      }
+    })
+    .finally(() => {
+      isFetching.value = false
+    })
 }
 async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
   await QueryGetAPI(SCHEDULE_API_URL + 'del', {
@@ -247,7 +252,7 @@ onMounted(() => {
       <NSelect :options="weekOptions" v-model:value="selectedScheduleWeek" />
     </NSpace>
     <NDivider />
-    <NButton @click="addSchedule" :loading="isLoading"> 添加 </NButton>
+    <NButton @click="addSchedule" :loading="isFetching"> 添加 </NButton>
   </NModal>
   <NModal v-model:show="showCopyModal" style="width: 600px; max-width: 90vw" preset="card" title="复制周程">
     <NAlert type="info"> 复制为 </NAlert>
@@ -258,7 +263,7 @@ onMounted(() => {
       <NSelect :options="weekOptions" v-model:value="selectedScheduleWeek" />
     </NSpace>
     <NDivider />
-    <NButton @click="onCopySchedule" :loading="isLoading"> 复制 </NButton>
+    <NButton @click="onCopySchedule" :loading="isFetching"> 复制 </NButton>
   </NModal>
   <NModal v-model:show="showUpdateModal" style="width: 600px; max-width: 90vw" preset="card" title="编辑周程">
     <NSelect :options="dayOptions" v-model:value="selectedDay" />
@@ -293,9 +298,10 @@ onMounted(() => {
           :show-alpha="false"
           :modes="['hex']"
         />
-        <NButton @click="onUpdateSchedule()"> 保存 </NButton>
+        <NButton @click="onUpdateSchedule()" :loading="isFetching"> 保存 </NButton>
       </NSpace>
     </template>
   </NModal>
-  <ScheduleList :schedules="schedules ?? []" @on-update="onOpenUpdateModal" @on-delete="onDeleteSchedule" @on-copy="onOpenCopyModal" is-self />
+  <NSpin v-if="isLoading" show />
+  <ScheduleList v-else :schedules="schedules ?? []" @on-update="onOpenUpdateModal" @on-delete="onDeleteSchedule" @on-copy="onOpenCopyModal" is-self />
 </template>

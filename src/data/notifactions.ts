@@ -28,6 +28,7 @@ function get() {
 export const notifactions = () => n
 export const GetNotifactions = () => {
   if (account) {
-    setInterval(get, 5000)
+    //setInterval(get, 5000)
+    //暂时不用
   }
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { QAInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, BASE_API, QUESTION_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import { NButton, NCard, NDivider, NIcon, NImage, NInput, NList, NListItem, NModal, NSpace, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NIcon, NImage, NInput, NList, NListItem, NModal, NSpace, NSpin, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { List } from 'linqts'
 import router from '@/router'
@@ -18,12 +18,14 @@ const message = useMessage()
 const selectedTabItem = ref('0')
 const isRepling = ref(false)
 const onlyFavorite = ref(false)
+const isLoading = ref(true)
 
 const replyModalVisiable = ref(false)
 const currentQuestion = ref<QAInfo>()
 const replyMessage = ref()
 
 async function GetRecieveQAInfo() {
+  isLoading.value = true
   await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-recieve')
     .then((data) => {
       if (data.code == 200) {
@@ -43,6 +45,9 @@ async function GetRecieveQAInfo() {
     .catch((err) => {
       message.error('发生错误')
       console.error(err)
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 async function GetSendQAInfo() {
@@ -179,7 +184,8 @@ onMounted(() => {
 <template>
   <NButton type="primary" @click="refresh"> 刷新 </NButton>
   <NDivider style="margin: 10px 0 10px 0" />
-  <NTabs animated @update:value="onTabChange" v-model:value="selectedTabItem">
+  <NSpin v-if="isLoading" show/>
+  <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
       只显示收藏 <NSwitch v-model:value="onlyFavorite" />
       <NList :bordered="false">
@@ -287,7 +293,7 @@ onMounted(() => {
 </template>
 
 <style>
-.n-list{
+.n-list {
   background-color: transparent;
 }
 </style>

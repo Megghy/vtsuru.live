@@ -85,6 +85,10 @@ const iconColor = 'white'
         BY
         <NButton tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style="color: rgb(161, 236, 199)"> Megghy </NButton>
       </span>
+      <NDivider vertical/>
+      <span>
+        <NButton @click="$router.push('/about')" text> 关于 </NButton>
+      </span>
     </NSpace>
   </div>
 </template>

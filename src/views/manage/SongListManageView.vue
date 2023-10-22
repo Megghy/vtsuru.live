@@ -3,8 +3,7 @@ import { useAccount } from '@/api/account'
 import { SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
-import { FETCH_API, FIVESING_SEARCH_API, SONG_API_URL } from '@/data/constants'
-import { ca } from 'date-fns/locale'
+import { FETCH_API, SONG_API_URL } from '@/data/constants'
 import {
   FormInst,
   FormRules,
@@ -13,10 +12,6 @@ import {
   NForm,
   NFormItem,
   NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NList,
-  NListItem,
   NModal,
   NPagination,
   NSelect,
@@ -306,15 +301,24 @@ async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
   }
   return ''
 }
-
+const isLoading = ref(true)
 async function getSongs() {
+  isLoading.value = true
   await QueryGetAPI<any>(SONG_API_URL + 'get', {
     id: accountInfo.value?.id,
-  }).then((data) => {
-    if (data.code == 200) {
-      songs.value = data.data
-    }
   })
+    .then((data) => {
+      if (data.code == 200) {
+        songs.value = data.data
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('获取歌曲失败: ' + err)
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 }
 
 onMounted(async () => {
@@ -326,6 +330,7 @@ onMounted(async () => {
   <NSpace>
     <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
     <NButton
+      :loading="isLoading"
       @click="
         () => {
           getSongs()
@@ -423,6 +428,7 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NModal>
-  <SongList :songs="songs" is-self />
+  <NSpin v-if="isLoading" show />
+  <SongList v-else :songs="songs" is-self />
   <NDivider />
 </template>

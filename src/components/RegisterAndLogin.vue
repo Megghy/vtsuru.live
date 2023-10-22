@@ -95,9 +95,7 @@ function onPasswordInput() {
     rPasswordFormItemRef.value?.validate({ trigger: 'password-input' })
   }
 }
-function onregisterButtonClick(e: MouseEvent) {
-  e.preventDefault()
-
+function onregisterButtonClick() {
   formRef.value?.validate().then(async () => {
     isLoading.value = true
     await QueryPostAPI<string>(
@@ -200,7 +198,7 @@ function onLoginButtonClick() {
               <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
             </NFormItem>
             <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter.prevent />
+              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onregisterButtonClick"/>
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">

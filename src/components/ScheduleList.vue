@@ -52,7 +52,7 @@ const emit = defineEmits<{
             </NPopconfirm>
           </NSpace>
         </template>
-        <NGrid x-gap="8" cols="1 1000:7">
+        <NGrid x-gap="8" cols="1 1200:7">
           <NGridItem v-for="(day, index) in item.days" v-bind:key="index">
             <NCard
               size="small"
