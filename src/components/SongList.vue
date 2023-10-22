@@ -231,6 +231,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
                         type: 'primary',
                         size: 'small',
                         circle: true,
+                        loading: isLrcLoading.value == data.key,
                         onClick: () => OnPlayMusic(data),
                       },
                       {
@@ -306,7 +307,9 @@ function OnPlayMusic(song: SongsInfo) {
     }
   }
 }
+const isLrcLoading = ref('')
 async function GetLyric(song: SongsInfo) {
+  isLrcLoading.value = song.key
   QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
     .then((data) => {
       console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
@@ -328,6 +331,9 @@ async function GetLyric(song: SongsInfo) {
         src: song.url,
         lrc: '',
       }
+    })
+    .finally(() => {
+      isLrcLoading.value = ''
     })
 }
 function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
@@ -494,7 +500,7 @@ onMounted(() => {
   <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
   <Transition>
     <div v-if="aplayerMusic" class="song-list">
-      <APlayer :music="aplayerMusic" autoplay :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0"/>
+      <APlayer :music="aplayerMusic" autoplay :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0" />
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>

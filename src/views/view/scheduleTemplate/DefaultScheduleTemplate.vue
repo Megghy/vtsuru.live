@@ -14,6 +14,6 @@ defineProps<{
 
 <template>
   <NDivider style="margin-top: 10px" />
-  <ScheduleList v-if="currentData" :schedules="currentData ?? []" :is-self="accountInfo?.id == userInfo?.id" v-bind="$attrs" />
+  <ScheduleList v-if="currentData" :schedules="currentData ?? []" :is-self="false" v-bind="$attrs" />
   <NDivider />
 </template>
