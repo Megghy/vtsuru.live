@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 const debugAPI = import.meta.env.VITE_DEBUG_API
-const releseAPI = `${document.location.protocol}//api.vtsuru.live/api/`
+const releseAPI = `https://vtsuru.suki.club/api/`
 
 export const isBackendUsable = ref(true)
 
