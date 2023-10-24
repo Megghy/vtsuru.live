@@ -5,6 +5,8 @@ const releseAPI = `https://vtsuru.suki.club/api/`
 
 export const isBackendUsable = ref(true)
 
+export const AVATAR_URL = 'https://workers.vrp.moe/api/bilibili/avatar/'
+
 export const BASE_API = process.env.NODE_ENV === 'development' ? debugAPI : releseAPI
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 

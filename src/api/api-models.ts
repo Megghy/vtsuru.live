@@ -34,6 +34,10 @@ export interface AccountInfo extends UserInfo {
   biliVerifyCode?: string
   bindEmail?: string
   settings: UserSetting
+  token: string
+
+  eventFetcherOnline: boolean
+  eventFetcherStatus: string
 
   nextSendEmailTime?: number
 }

@@ -135,6 +135,7 @@ const fakeSchedule = [
   },
 ] as ScheduleWeekInfo[]
 const selectedOption = ref(templateOptions[0].value)
+const selectedTab = ref('general')
 
 const scheduleTemplateOptions = [
   {
@@ -236,7 +237,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard v-if="accountInfo" title="设置" style="min-height: 800px">
+  <NCard v-if="accountInfo" title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
     <NTabs>
       <NTabPane tab="常规" name="general">
         <NDivider style="margin: 0"> 启用功能 </NDivider>

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem, NButton } from 'naive-ui'
 import vtb from '@/svgs/ic_vtuber.svg'
 import { AnalyticsSharp, Calendar, Chatbox, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { Lottery24Filled, MoreHorizontal24Filled } from '@vicons/fluent'
+import { Lottery24Filled, MoreHorizontal24Filled, VehicleShip24Filled } from '@vicons/fluent'
 
 const { width } = useWindowSize()
 
 const functions = [
+  {
+    name: '直播事件记录',
+    desc: '能够记录并查询上舰和SC记录 (需要另外部署脚本',
+    icon: VehicleShip24Filled,
+  },
   {
     name: '日程表',
     desc: '提供多种样式的日程表 (还没做完',
@@ -80,12 +84,12 @@ const iconColor = 'white'
         </NGridItem>
       </NGrid>
     </NSpace>
-    <NSpace style="position: absolute; bottom: 0;margin: 0 auto;width: 100vw;" justify="center">
+    <NSpace style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw" justify="center">
       <span style="color: white">
         BY
         <NButton tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style="color: rgb(161, 236, 199)"> Megghy </NButton>
       </span>
-      <NDivider vertical/>
+      <NDivider vertical />
       <span>
         <NButton @click="$router.push('/about')" text> 关于 </NButton>
       </span>

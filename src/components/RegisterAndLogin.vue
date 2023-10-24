@@ -139,7 +139,6 @@ function onLoginButtonClick() {
         nameOrEmail: loginModel.value.account,
         password: loginModel.value.password,
       },
-      [['Turnstile', token.value]]
     )
       .then(async (data) => {
         if (data.code == 200) {
@@ -183,7 +182,7 @@ function onLoginButtonClick() {
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
-            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
+            <NButton :loading="isLoading" type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
           </NSpace>
         </NTabPane>
         <NTabPane name="register" tab="注册">
@@ -198,15 +197,16 @@ function onLoginButtonClick() {
               <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
             </NFormItem>
             <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onregisterButtonClick"/>
+              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onregisterButtonClick" />
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
             <NButton :loading="!token || isLoading" type="primary" size="large" @click="onregisterButtonClick"> 注册 </NButton>
           </NSpace>
+
+          <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
         </NTabPane>
       </NTabs>
-      <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
     </template>
   </NCard>
 </template>
