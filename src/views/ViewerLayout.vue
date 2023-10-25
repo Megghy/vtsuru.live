@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin, NLayoutContent } from 'naive-ui'
+import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin, NLayoutContent, NBackTop } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
@@ -122,10 +122,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NLayoutContent v-if="!id" style="height: 100vh;">
+  <NLayoutContent v-if="!id" style="height: 100vh">
     <NResult status="error" title="输入的uId无效" description="再检查检查" />
   </NLayoutContent>
-  <NLayoutContent v-else-if="notfount" style="height: 100vh;">
+  <NLayoutContent v-else-if="notfount" style="height: 100vh">
     <NResult status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
   </NLayoutContent>
   <NLayout v-else style="height: 100vh">
@@ -159,7 +159,13 @@ onMounted(async () => {
         <Transition>
           <div v-if="biliUserInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
-              <NAvatar :src="biliUserInfo.face" :img-props="{ referrerpolicy: 'no-referrer' }" round bordered style="box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1)" />
+              <NAvatar
+                :src="biliUserInfo.face"
+                :img-props="{ referrerpolicy: 'no-referrer' }"
+                round
+                bordered
+                :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)' }"
+              />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
                   {{ biliUserInfo.name }}
@@ -183,6 +189,7 @@ onMounted(async () => {
           <template v-else>
             <NSpin show />
           </template>
+          <NBackTop/>
         </div>
       </NLayout>
     </NLayout>

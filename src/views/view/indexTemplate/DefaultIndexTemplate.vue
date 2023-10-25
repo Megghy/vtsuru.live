@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { isDarkMode } from '@/Utils'
 import { UserInfo } from '@/api/api-models'
 import { NAvatar, NButton, NDivider, NImage, NSpace, NText } from 'naive-ui'
 
@@ -17,7 +18,14 @@ function navigate(url: string) {
   <NDivider />
   <template v-if="userInfo?.biliId">
     <NSpace justify="center" align="center" vertical>
-      <NAvatar v-if="biliInfo" :src="biliInfo?.face" :size="width > 750 ? 175 : 100" round bordered style="box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2)" />
+      <NAvatar
+        v-if="biliInfo"
+        :src="biliInfo?.face"
+        :size="width > 750 ? 175 : 100"
+        round
+        bordered
+        :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
+      />
       <NSpace align="baseline" justify="center">
         <NText strong style="font-size: 32px"> {{ biliInfo?.name }} </NText>
         <NText strong style="font-size: 20px" depth="3"> ({{ userInfo?.name }}) </NText>

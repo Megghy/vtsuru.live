@@ -2,6 +2,7 @@
 import {
   NAlert,
   NAvatar,
+  NBackTop,
   NButton,
   NCard,
   NCountdown,
@@ -23,7 +24,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Lottery24Filled, VehicleShip24Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Lottery24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink } from 'vue-router'
@@ -60,7 +61,7 @@ const menuOptions = [
         { default: () => '历史' }
       ),
     key: 'manage-history',
-    disabled: !accountInfo.value?.isEmailVerified,
+    disabled: accountInfo.value?.isEmailVerified == false,
     icon: renderIcon(AnalyticsSharp),
   },
   {
@@ -75,7 +76,7 @@ const menuOptions = [
         { default: () => '舰长和SC' }
       ),
     key: 'manage-event',
-    disabled: !accountInfo.value?.isEmailVerified,
+    disabled: accountInfo.value?.isEmailVerified == false,
     icon: renderIcon(VehicleShip24Filled),
   },
   {
@@ -91,7 +92,7 @@ const menuOptions = [
       ),
     key: 'manage-schedule',
     icon: renderIcon(CalendarClock24Filled),
-    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
+    disabled: accountInfo.value?.isEmailVerified == false || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
   },
   {
     label: () =>
@@ -106,7 +107,7 @@ const menuOptions = [
       ),
     key: 'manage-songList',
     icon: renderIcon(MusicalNote),
-    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
+    disabled: accountInfo.value?.isEmailVerified == false || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
   },
   {
     label: () =>
@@ -121,7 +122,22 @@ const menuOptions = [
       ),
     key: 'manage-questionBox',
     icon: renderIcon(Chatbox),
-    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) == -1,
+    disabled: accountInfo.value?.isEmailVerified == false,
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-videoCollect',
+          },
+        },
+        { default: () => '视频征集' }
+      ),
+    key: 'manage-videoCollect',
+    icon: renderIcon(VideoAdd20Filled),
+    //disabled: accountInfo.value?.isEmailVerified == false,
   },
   {
     label: () =>
@@ -136,7 +152,7 @@ const menuOptions = [
       ),
     key: 'manage-lottery',
     icon: renderIcon(Lottery24Filled),
-    disabled: !accountInfo.value?.isEmailVerified,
+    //disabled: accountInfo.value?.isEmailVerified == false,
   },
 ]
 
@@ -231,6 +247,7 @@ onMounted(() => {
               <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
             </NAlert>
           </template>
+          <NBackTop />
         </div>
       </NLayout>
     </NLayout>

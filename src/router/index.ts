@@ -103,6 +103,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'manage-event',
         component: () => import('@/views/manage/EventView.vue'),
       },
+      {
+        path: 'video-collect',
+        name: 'manage-videoCollect',
+        component: () => import('@/views/manage/VideoCollectManageView.vue'),
+      },
     ],
   },
 ]

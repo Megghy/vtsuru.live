@@ -35,6 +35,8 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { saveAs } from 'file-saver'
+import { List } from 'linqts'
+import { isDarkMode } from '@/Utils'
 
 enum EventType {
   Guard,
@@ -72,7 +74,7 @@ const isLoading = ref(false)
 const selectedEvents = computed(() => {
   return events.value.filter((e) => e.type == selectedType.value)
 })
-const displayMode = ref<'grid' | 'column'>('column')
+const displayMode = ref<'grid' | 'column'>('grid')
 const exportType = ref<'json' | 'xml' | 'csv'>('csv')
 
 async function onDateChange() {
@@ -83,7 +85,7 @@ async function onDateChange() {
   })
     .then((data) => {
       if (data.code == 200) {
-        events.value = data.data
+        events.value = new List(data.data).OrderByDescending((d) => d.time).ToArray()
         message.success('已获取数据')
         //selectedType.value = type
       } else {
@@ -200,11 +202,11 @@ onMounted(() => {
       <NDivider> 共 {{ selectedEvents.length }} 条 </NDivider>
       <NSpin :show="isLoading">
         <NRadioGroup v-model:value="displayMode" style="display: flex; justify-content: center" size="small">
-          <NRadioButton value="column">
-            <NIcon :component="List16Filled" />
-          </NRadioButton>
           <NRadioButton value="grid">
             <NIcon :component="Grid28Filled" />
+          </NRadioButton>
+          <NRadioButton value="column">
+            <NIcon :component="List16Filled" />
           </NRadioButton>
         </NRadioGroup>
         <br />
@@ -212,13 +214,12 @@ onMounted(() => {
           <div v-if="displayMode == 'grid'">
             <NGrid cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
               <NGridItem v-for="item in selectedEvents" v-bind:key="item.time">
-                <NCard size="small" :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`">
+                <NCard size="small" :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`" embedded hoverable>
                   <NSpace align="center" vertical :size="5">
                     <NAvatar round lazy borderd :size="64" :src="AVATAR_URL + item.uId" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
                     <NSpace>
                       <NTag size="tiny" v-if="selectedType == EventType.Guard" :bordered="false"> {{ item.msg }} </NTag>
-                      <NTag v-if="selectedType == EventType.Guard" size="tiny" round :color="{ color: GetGuardColor(item.price), textColor: 'white', borderColor: 'white' }"> {{ item.price }} </NTag>
-                      <NTag v-else-if="selectedType == EventType.SC" size="tiny" round :color="{ color: GetSCColor(item.price), textColor: 'white', borderColor: 'white' }"> {{ item.price }} </NTag>
+                      <NTag size="tiny" round :color="{ color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price), textColor: 'white', borderColor: isDarkMode() ? 'white' : '#00000000' }"> {{ item.price }} </NTag>
                     </NSpace>
                     <NText>
                       {{ item.name }}
