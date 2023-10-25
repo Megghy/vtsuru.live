@@ -56,11 +56,11 @@ const menuOptions = [
           to: {
             name: 'manage-history',
           },
-          disabled: !accountInfo.value?.isEmailVerified,
         },
         { default: () => '历史' }
       ),
     key: 'manage-history',
+    disabled: !accountInfo.value?.isEmailVerified,
     icon: renderIcon(AnalyticsSharp),
   },
   {
@@ -71,11 +71,11 @@ const menuOptions = [
           to: {
             name: 'manage-event',
           },
-          disabled: accountInfo.value?.isBiliVerified != true,
         },
         { default: () => '舰长和SC' }
       ),
     key: 'manage-event',
+    disabled: !accountInfo.value?.isEmailVerified,
     icon: renderIcon(VehicleShip24Filled),
   },
   {
@@ -86,12 +86,12 @@ const menuOptions = [
           to: {
             name: 'manage-schedule',
           },
-          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
         },
         { default: () => '日程' }
       ),
     key: 'manage-schedule',
     icon: renderIcon(CalendarClock24Filled),
+    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
   },
   {
     label: () =>
@@ -101,12 +101,12 @@ const menuOptions = [
           to: {
             name: 'manage-songList',
           },
-          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
         },
         { default: () => '歌单' }
       ),
     key: 'manage-songList',
     icon: renderIcon(MusicalNote),
+    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
   },
   {
     label: () =>
@@ -116,12 +116,12 @@ const menuOptions = [
           to: {
             name: 'manage-questionBox',
           },
-          disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) == -1,
         },
         { default: () => '棉花糖 (提问箱' }
       ),
     key: 'manage-questionBox',
     icon: renderIcon(Chatbox),
+    disabled: !accountInfo.value?.isEmailVerified || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) == -1,
   },
   {
     label: () =>
@@ -136,6 +136,7 @@ const menuOptions = [
       ),
     key: 'manage-lottery',
     icon: renderIcon(Lottery24Filled),
+    disabled: !accountInfo.value?.isEmailVerified,
   },
 ]
 

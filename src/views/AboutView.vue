@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText } from 'naive-ui'
+import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTimelineItem } from 'naive-ui'
 </script>
 <template>
   <NLayoutContent style="height: 100vh">
@@ -7,9 +7,9 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText } from 'naive-u
       <NCard style="max-width: 80vw; width: 700px">
         <template #header> 关于 </template>
         <NText>
-          一个兴趣释然的网站.
+          一个兴趣使然的网站
           <br />
-          反馈 | 建议 | 需求 | 闲聊: 群:
+          反馈 | 建议 | 需求 | 闲聊: 🐧
           <NButton
             tag="a"
             type="info"
@@ -21,14 +21,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText } from 'naive-u
           </NButton>
           <NDivider vertical />
           邮箱:
-          <NButton
-            tag="a"
-            type="info"
-            href="mailto:megghy@qq.com"
-            text
-          >
-            megghy@qq.com
-          </NButton>
+          <NButton tag="a" type="info" href="mailto:admin@vtsuru.live" text> admin@vtsuru.live </NButton>
         </NText>
         <template #footer>
           <NSpace vertical>
@@ -36,15 +29,16 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText } from 'naive-u
               开发者:
               <NButton type="primary" tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style=""> Megghy </NButton>
             </span>
-            <span>
-              技术栈: 前端 VUE3 + NAIVE UI, 后端 .NET 8
-            </span>
+            <span> 技术栈: 前端 VUE3 + NAIVE UI, 后端 .NET 8 </span>
           </NSpace>
+          <NDivider title-placement="left"> 更新日志 </NDivider>
+          <NTimeline>
+            <NTimelineItem type="success" title="功能添加" content="舰长及SC记录" time="2023-10-24" line-type="dashed" />
+            <NTimelineItem type="info" content="开始运行" time="2023-10-23" />
+          </NTimeline>
         </template>
       </NCard>
-      <NButton @click="$router.push({ name: 'manage-index' })">
-        回到主页
-      </NButton>
+      <NButton @click="$router.push({ name: 'manage-index' })"> 回到主页 </NButton>
     </NSpace>
   </NLayoutContent>
 </template>

@@ -166,7 +166,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <NAlert type="warning"> 实验性功能, 尚不稳定. </NAlert>
+  <NSpace vertical>
+    <NAlert type="warning"> 实验性功能, 尚不稳定. </NAlert>
+    <NAlert v-if="!accountInfo?.isBiliVerified" type="warning"> 使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton> </NAlert>
+  </NSpace>
   <NDivider />
   <NAlert title="EVENT-FETCHER 状态" :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'info'">
     <NTag :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'error'">
