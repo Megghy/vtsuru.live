@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { NAlert, NButton, NCard, NDivider, NInput, NPopconfirm, NSpace, NTag, NText, NThing, NTime } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NEllipsis, NInput, NPopconfirm, NSpace, NTag, NText, NThing, NTime } from 'naive-ui'
 import SettingsManageView from './SettingsManageView.vue'
 import { useLocalStorage } from '@vueuse/core'
 
@@ -15,7 +15,7 @@ function logout() {
 
 <template>
   <NSpace justify="center" align="center" vertical style="width: 100%">
-    <NCard embedded style="max-width: 90%; width: 800px">
+    <NCard embedded style="width: 100%;">
       <NSpace align="center" justify="center" vertical>
         <NText style="font-size: 3rem">
           {{ accountInfo?.name }}
@@ -29,25 +29,29 @@ function logout() {
 
       <NDivider />
       <NSpace vertical>
-        <NAlert>
+        <NCard size="small">
           邮箱:
-          <NTag v-if="accountInfo?.isEmailVerified" type="success"> 已认证 | {{ accountInfo?.bindEmail }} </NTag>
+          <NEllipsis v-if="accountInfo?.isEmailVerified" style="max-width: 100%">
+            <NText style="color: var(--primary-color)"> 已认证 | {{ accountInfo?.bindEmail }} </NText>
+          </NEllipsis>
           <template v-else>
             <NTag type="error" size="small"> 未认证 </NTag>
           </template>
-        </NAlert>
-        <NAlert>
+        </NCard>
+        <NCard size="small">
           Bilibili 账户:
-          <NTag v-if="accountInfo?.isBiliVerified" type="success"> 已认证 | {{ accountInfo?.biliId }} </NTag>
+          <NEllipsis v-if="accountInfo?.isBiliVerified" style="max-width: 100%">
+            <NText style="color: var(--primary-color)"> 已认证 | {{ accountInfo?.biliId }} </NText>
+          </NEllipsis>
           <template v-else>
             <NTag type="error" size="small"> 未认证 </NTag>
             <NDivider vertical />
             <NButton size="small" @click="$router.push({ name: 'manage-biliVerify' })" type="info"> 前往认证 </NButton>
           </template>
-        </NAlert>
+        </NCard>
         <NAlert title="Token" type="info">
           请注意保管, 这个东西可以完全操作你的账号
-          <NInput type="password" :value="accountInfo?.token" show-password-on="click" status="error"/>
+          <NInput type="password" :value="accountInfo?.token" show-password-on="click" status="error" />
         </NAlert>
       </NSpace>
       <NDivider />
@@ -64,6 +68,6 @@ function logout() {
   <div>
     <NDivider />
     <SettingsManageView />
-    <NDivider/>
+    <NDivider />
   </div>
 </template>

@@ -1,26 +1,23 @@
 <script setup lang="ts">
 import {
-  NAlert,
-  NAvatar,
-  NBackTop,
   NButton,
-  NCard,
-  NCountdown,
   NDivider,
   NIcon,
   NLayout,
   NLayoutContent,
-  NLayoutFooter,
   NLayoutHeader,
-  NLayoutSider,
-  NMenu,
   NPageHeader,
   NSpace,
   NSpin,
   NSwitch,
   NText,
-  NTime,
+  NScrollbar,
   useMessage,
+  NMenu,
+  NLayoutSider,
+  NAlert,
+  NBackTop,
+  NCountdown,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
@@ -92,7 +89,7 @@ const menuOptions = [
       ),
     key: 'manage-schedule',
     icon: renderIcon(CalendarClock24Filled),
-    disabled: accountInfo.value?.isEmailVerified == false || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) == -1,
+    disabled: accountInfo.value?.isEmailVerified == false,
   },
   {
     label: () =>
@@ -107,7 +104,7 @@ const menuOptions = [
       ),
     key: 'manage-songList',
     icon: renderIcon(MusicalNote),
-    disabled: accountInfo.value?.isEmailVerified == false || (accountInfo.value?.settings?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) == -1,
+    disabled: accountInfo.value?.isEmailVerified == false,
   },
   {
     label: () =>
@@ -204,53 +201,57 @@ onMounted(() => {
         </template>
       </NPageHeader>
     </NLayoutHeader>
-    <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false">
-        <NSpace justify="center" style="margin-top: 16px">
-          <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
-            <template #icon>
-              <NIcon :component="BrowsersOutline" />
-            </template>
-            <template v-if="width >= 180"> 面板 </template>
-          </NButton>
-        </NSpace>
-        <NMenu
-          style="margin-top: 12px"
-          :disabled="accountInfo?.isEmailVerified != true"
-          :default-value="$route.name?.toString()"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-        />
-        <NSpace justify="center">
-          <NText depth="3" v-if="width > 150">
-            有更多功能建议请
-            <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
-          </NText>
-        </NSpace>
-      </NLayoutSider>
-      <NLayout style="height: 100%">
-        <div style="box-sizing: border-box; padding: 20px">
-          <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
-            <KeepAlive>
-              <Suspense>
-                <component :is="Component" />
-                <template #fallback> Loading... </template>
-              </Suspense>
-            </KeepAlive>
-          </RouterView>
-          <template v-else>
-            <NAlert type="info">
-              请进行邮箱验证
-              <br /><br />
-              <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
-              <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
-            </NAlert>
-          </template>
-          <NBackTop />
-        </div>
+    <NScrollbar x-scrollable>
+      <NLayout has-sider>
+        <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false">
+          <NSpace justify="center" style="margin-top: 16px">
+            <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
+              <template #icon>
+                <NIcon :component="BrowsersOutline" />
+              </template>
+              <template v-if="width >= 180"> 面板 </template>
+            </NButton>
+          </NSpace>
+          <NMenu
+            style="margin-top: 12px"
+            :disabled="accountInfo?.isEmailVerified != true"
+            :default-value="$route.name?.toString()"
+            :collapsed-width="64"
+            :collapsed-icon-size="22"
+            :options="menuOptions"
+          />
+          <NSpace justify="center">
+            <NText depth="3" v-if="width > 150">
+              有更多功能建议请
+              <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
+            </NText>
+          </NSpace>
+        </NLayoutSider>
+        <NScrollbar style="height: calc(100vh - 50px);" >
+          <NLayout >
+            <div style="box-sizing: border-box; padding: 20px; min-width: 300px">
+              <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
+                <KeepAlive>
+                  <Suspense>
+                    <component :is="Component" />
+                    <template #fallback> Loading... </template>
+                  </Suspense>
+                </KeepAlive>
+              </RouterView>
+              <template v-else>
+                <NAlert type="info">
+                  请进行邮箱验证
+                  <br /><br />
+                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
+                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
+                </NAlert>
+              </template>
+              <NBackTop />
+            </div>
+          </NLayout>
+        </NScrollbar>
       </NLayout>
-    </NLayout>
+    </NScrollbar>
   </NLayout>
   <template v-else>
     <NLayoutContent style="display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 50px; height: 100%; box-sizing: border-box">
