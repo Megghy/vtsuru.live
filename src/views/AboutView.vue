@@ -33,12 +33,13 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="success" title="功能添加" content="提问箱分享卡片" time="2023-10-25" />
             <NTimelineItem type="success" title="功能添加" content="舰长及SC记录" time="2023-10-24" line-type="dashed" />
             <NTimelineItem type="info" content="开始运行" time="2023-10-23" />
           </NTimeline>
         </template>
       </NCard>
-      <NButton @click="$router.push({ name: 'manage-index' })"> 回到主页 </NButton>
+      <NButton @click="$router.push({ name: 'manage-index' })"> 回到控制台 </NButton>
     </NSpace>
   </NLayoutContent>
 </template>

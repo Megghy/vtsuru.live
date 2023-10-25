@@ -3,10 +3,39 @@ import { QAInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import { NButton, NCard, NDivider, NIcon, NImage, NInput, NList, NListItem, NModal, NSpace, NSpin, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDivider,
+  NGradientText,
+  NIcon,
+  NImage,
+  NInput,
+  NInputGroup,
+  NList,
+  NListItem,
+  NModal,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { List } from 'linqts'
 import router from '@/router'
+import html2canvas from 'html2canvas'
+import QrcodeVue from 'qrcode.vue'
+import { useAccount } from '@/api/account'
+import { saveAs } from 'file-saver'
+import { copyToClipboard } from '@/Utils'
+
+const accountInfo = useAccount()
 
 const recieveQuestions = ref<QAInfo[]>([])
 const recieveQuestionsFiltered = computed(() => {
@@ -21,8 +50,12 @@ const onlyFavorite = ref(false)
 const isLoading = ref(true)
 
 const replyModalVisiable = ref(false)
+const shareModalVisiable = ref(false)
 const currentQuestion = ref<QAInfo>()
 const replyMessage = ref()
+
+const shareCardRef = ref()
+const shareUrl = computed(() => 'https://vtsuru.live/user/' + accountInfo.value?.name + '/question-box')
 
 async function GetRecieveQAInfo() {
   isLoading.value = true
@@ -175,6 +208,27 @@ function refresh() {
   isRevieveGetted = false
   onTabChange(selectedTabItem.value)
 }
+function saveShareImage() {
+  html2canvas(shareCardRef.value, {
+    width: shareCardRef.value.clientWidth, //dom 原始宽度
+    height: shareCardRef.value.clientHeight,
+    backgroundColor:null,
+    scrollY: 0, // html2canvas默认绘制视图内的页面，需要把scrollY，scrollX设置为0
+    scrollX: 0,
+    useCORS: true, //支持跨域，但好像没什么用
+    allowTaint: true, //允许跨域（默认false）
+    scale: 1,
+  }).then((canvas) => {
+    // 生成的ba64图片
+    canvas.toBlob(
+      (data) => {
+        saveAs(data, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
+      },
+      'image/png',
+      1
+    )
+  })
+}
 
 onMounted(() => {
   GetRecieveQAInfo()
@@ -182,9 +236,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <NButton type="primary" @click="refresh"> 刷新 </NButton>
+  <NSpace>
+    <NButton type="primary" @click="refresh"> 刷新 </NButton>
+    <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
+  </NSpace>
   <NDivider style="margin: 10px 0 10px 0" />
-  <NSpin v-if="isLoading" show/>
+  <NSpin v-if="isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
       只显示收藏 <NSwitch v-model:value="onlyFavorite" />
@@ -290,10 +347,96 @@ onMounted(() => {
     <NDivider style="margin: 10px 0 10px 0" />
     <NButton :loading="isRepling" @click="reply" type="primary"> 发送 </NButton>
   </NModal>
+  <NModal v-model:show="shareModalVisiable" preset="card" title="分享" style="width: 600px">
+    <div ref="shareCardRef" class="share-card container">
+      <NText class="share-card title"> 向我提问 </NText>
+      <NText class="share-card type"> 提 问 箱 </NText>
+      <NText class="share-card name">
+        {{ accountInfo?.name }}
+      </NText>
+      <NDivider class="share-card divider-1" />
+      <NText class="share-card site"> VTSURU.LIVE </NText>
+      <QrcodeVue class="share-card qrcode" :value="shareUrl" level="Q" :size="100" background="#00000000" foreground="#ffffff" :margin="1" />
+    </div>
+    <NDivider style="margin: 10px" />
+    <NInputGroup>
+      <NInput :value="shareUrl" />
+      <NButton secondary @click="copyToClipboard(shareUrl)"> 复制 </NButton>
+    </NInputGroup>
+    <br /><br />
+    <NSpace justify="center">
+      <NButton type="primary" @click="saveShareImage"> 保存卡片 </NButton>
+    </NSpace>
+  </NModal>
 </template>
 
 <style>
 .n-list {
   background-color: transparent;
+}
+
+.share-card.container {
+  position: relative;
+  height: 200px;
+  width: 550px;
+  border-radius: 10px;
+  background: linear-gradient(to right, #66bea3, #9179be);
+}
+.share-card.qrcode {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #3d554e, #503e74);
+}
+.share-card.title {
+  position: absolute;
+  font-size: 80px;
+  bottom: -17px;
+  left: 5px;
+  color: #e6e6e662;
+  font-weight: 550;
+}
+/* .share-card.type {
+  position: absolute;
+  font-size: 20px;
+  transform:rotate(90deg);
+  left: 300px;
+  bottom: 20px;
+  color: #e6e6e6b6;
+} */
+.share-card.type {
+  position: absolute;
+  font-size: 20px;
+  left: 332px;
+  bottom: 55px;
+  font-weight: 550;
+  color: #e6e6e662;
+}
+.share-card.name {
+  position: absolute;
+  font-size: 30px;
+  left: 10px;
+  bottom: 95px;
+  max-width: 300px;
+  word-wrap: break-word;
+  line-height: 1.3;
+  color: #e6e6e6;
+  font-weight: 550;
+}
+.share-card.site {
+  position: absolute;
+  font-size: 12px;
+  right: 20px;
+  top: 110px;
+  color: #e6e6e6a4;
+  font-weight: 550;
+}
+.share-card.divider-1 {
+  position: absolute;
+  width: 400px;
+  left: 5px;
+  bottom: 66px;
+  background-color: #c0c0c057;
 }
 </style>

@@ -55,13 +55,13 @@ const iconColor = 'white'
         <vtb />
         <NSpace vertical justify="center">
           <NGradientText
-            size="3.6rem"
+            size="3rem"
             :gradient="{
               deg: 180,
               from: '#e5e5e5',
               to: '#c2ebeb',
             }"
-            style="font-family: Microsoft YaHei, Times New Roman, Times, serif; font-weight: 700"
+            style="font-weight: 700"
           >
             VTSURU.LIVE
           </NGradientText>
@@ -69,6 +69,7 @@ const iconColor = 'white'
           <span></span>
           <NSpace justify="center">
             <NButton type="primary" size="large" @click="$router.push({ name: 'manage-index' })"> 开始使用 </NButton>
+            <NButton type="info"  size="large" @click="$router.push({ name: 'about' })"> 关于 </NButton>
           </NSpace>
         </NSpace>
       </NSpace>
