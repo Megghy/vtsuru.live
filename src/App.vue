@@ -2,7 +2,7 @@
   <NMessageProvider>
     <NNotificationProvider>
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
-        <NElement>
+        <NElement style="height: 100vh;">
           <ViewerLayout v-if="layout == 'viewer'" />
           <ManageLayout v-else-if="layout == 'manage'" />
           <template v-else>

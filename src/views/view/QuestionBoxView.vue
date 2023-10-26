@@ -1,10 +1,32 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NCheckbox, NDivider, NInput, NSpace, NTab, NTabPane, NTabs, NText, NUpload, UploadFileInfo, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NAvatar,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NImage,
+  NInput,
+  NList,
+  NListItem,
+  NSpace,
+  NTab,
+  NTabPane,
+  NTabs,
+  NText,
+  NTime,
+  NTooltip,
+  NUpload,
+  UploadFileInfo,
+  useMessage,
+} from 'naive-ui'
 import GraphemeSplitter from 'grapheme-splitter'
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { QAInfo, UserInfo } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import VueTurnstile from 'vue-turnstile'
 
@@ -27,9 +49,11 @@ const isSelf = computed(() => {
 
 const questionMessage = ref('')
 const fileList = ref<UploadFileInfo[]>([])
+const publicQuestions = ref<QAInfo[]>([])
 
 const isAnonymous = ref(true)
 const isSending = ref(false)
+const isGetting = ref(true)
 
 function countGraphemes(value: string) {
   return splitter.countGraphemes(value)
@@ -86,6 +110,30 @@ function OnFileListChange(files: UploadFileInfo[]) {
     }
   }
 }
+function getPublicQuestions() {
+  isGetting.value = true
+  QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
+    id: userInfo?.id,
+  })
+    .then((data) => {
+      if (data.code == 200) {
+        publicQuestions.value = data.data
+      } else {
+        message.error('获取公开提问失败:' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('获取公开提问失败')
+      console.error(err)
+    })
+    .finally(() => {
+      isGetting.value = false
+    })
+}
+
+onMounted(() => {
+  getPublicQuestions()
+})
 
 onUnmounted(() => {
   turnstile.value?.remove()
@@ -93,33 +141,74 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard embedded style="max-width: 700px; margin: 0 auto" title="提问">
-    <NSpace vertical>
-      <NInput :disabled="isSelf" show-count maxlength="1000" type="textarea" :count-graphemes="countGraphemes" v-model:value="questionMessage"> </NInput>
-      <NDivider style="margin: 10px 0 10px 0" />
-      <NSpace align="center">
-        <NUpload
-          :max="1"
-          accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
-          list-type="image-card"
-          :disabled="!accountInfo || isSelf"
-          :default-upload="false"
-          v-model:file-list="fileList"
-          @update:file-list="OnFileListChange"
-        >
-          + 上传图片
-        </NUpload>
-        <NAlert v-if="!accountInfo && !isSelf" type="warning"> 只有注册用户才能够上传图片 </NAlert>
-      </NSpace>
+  <div style="max-width: 700px; margin: 0 auto" title="提问">
+    <NCard embedded>
       <NSpace vertical>
-        <NCheckbox v-if="accountInfo" :disabled="isSelf" v-model:checked="isAnonymous" label="匿名提问" />
+        <NSpace align="center" justify="center">
+          <NInput :disabled="isSelf" show-count maxlength="1000" type="textarea" :count-graphemes="countGraphemes" v-model:value="questionMessage" style="width: 300px" />
+          <NUpload
+            :max="1"
+            accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+            list-type="image-card"
+            :disabled="!accountInfo || isSelf"
+            :default-upload="false"
+            v-model:file-list="fileList"
+            @update:file-list="OnFileListChange"
+          >
+            + 上传图片
+          </NUpload>
+        </NSpace>
+        <NDivider style="margin: 10px 0 10px 0" />
+        <NSpace align="center">
+          <NAlert v-if="!accountInfo && !isSelf" type="warning"> 只有注册用户才能够上传图片 </NAlert>
+        </NSpace>
+        <NSpace vertical>
+          <NCheckbox v-if="accountInfo" :disabled="isSelf" v-model:checked="isAnonymous" label="匿名提问" />
+        </NSpace>
+        <NDivider style="margin: 10px 0 10px 0" />
+        <NSpace justify="center">
+          <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion"> 发送 </NButton>
+          <NButton v-if="accountInfo" :disabled="isSelf" type="info" @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"> 我发送的 </NButton>
+        </NSpace>
+        <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+        <NAlert v-if="isSelf" type="warning"> 不能给自己提问 </NAlert>
       </NSpace>
-      <NDivider style="margin: 10px 0 10px 0" />
-      <NSpace justify="center">
-        <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion"> 发送 </NButton>
-      </NSpace>
-      <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
-      <NAlert v-if="isSelf" type="warning"> 不能给自己提问 </NAlert>
-    </NSpace>
-  </NCard>
+    </NCard>
+    <NDivider> 公开回复 </NDivider>
+    <NList v-if="publicQuestions.length > 0">
+      <NListItem v-for="item in publicQuestions" :key="item.id">
+        <NCard :embedded="!item.isReaded" hoverable size="small">
+          <template #header>
+            <NSpace :size="0" align="center">
+              <NText depth="3" style="font-size: small">
+                <NTooltip>
+                  <template #trigger>
+                    <NTime :time="item.sendAt" :to="Date.now()" type="relative" />
+                  </template>
+                  <NTime />
+                </NTooltip>
+              </NText>
+            </NSpace>
+          </template>
+          <NCard style="text-align: center">
+            {{ item.question.message }}
+            <br />
+            <NImage v-if="item.question.image" :src="item.question.image" height="100" lazy />
+          </NCard>
+          <template v-if="item.answer" #footer>
+            <NSpace align="center" :size="6">
+              <NAvatar :src="biliInfo.face + '@64w'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NDivider vertical />
+              <NText style="font-size: 16px">
+                {{ item.answer?.message }}
+              </NText>
+            </NSpace>
+          </template>
+        </NCard>
+      </NListItem>
+    </NList>
+    <NEmpty v-else />
+
+    <NDivider />
+  </div>
 </template>

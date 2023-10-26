@@ -6,6 +6,7 @@ import { Heart, HeartOutline } from '@vicons/ionicons5'
 import {
   NButton,
   NCard,
+  NCheckbox,
   NDivider,
   NGradientText,
   NIcon,
@@ -34,20 +35,26 @@ import QrcodeVue from 'qrcode.vue'
 import { useAccount } from '@/api/account'
 import { saveAs } from 'file-saver'
 import { copyToClipboard } from '@/Utils'
+import { useRoute } from 'vue-router'
 
 const accountInfo = useAccount()
+const route = useRoute()
 
 const recieveQuestions = ref<QAInfo[]>([])
 const recieveQuestionsFiltered = computed(() => {
-  return onlyFavorite.value ? recieveQuestions.value.filter((d) => d.isFavorite) : recieveQuestions.value
+  return recieveQuestions.value.filter((q) => {
+    return (q.isFavorite || !onlyFavorite.value) && (q.isPublic || !onlyPublic.value)
+  })
 })
 const sendQuestions = ref<QAInfo[]>([])
 const message = useMessage()
 
-const selectedTabItem = ref('0')
+const selectedTabItem = ref(route.query.send ? '1' : '0')
 const isRepling = ref(false)
 const onlyFavorite = ref(false)
+const onlyPublic = ref(false)
 const isLoading = ref(true)
+const isChangingPublic = ref(false)
 
 const replyModalVisiable = ref(false)
 const shareModalVisiable = ref(false)
@@ -84,6 +91,7 @@ async function GetRecieveQAInfo() {
     })
 }
 async function GetSendQAInfo() {
+  isLoading.value = true
   await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-send')
     .then((data) => {
       if (data.code == 200) {
@@ -96,6 +104,9 @@ async function GetSendQAInfo() {
     .catch((err) => {
       message.error('发生错误')
       console.error(err)
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 async function reply() {
@@ -159,6 +170,28 @@ async function favorite(question: QAInfo, fav: boolean) {
       message.error('修改失败')
     })
 }
+async function setPublic(pub: boolean) {
+  isChangingPublic.value = true
+  await QueryGetAPI(QUESTION_API_URL + 'public', {
+    id: currentQuestion.value?.id,
+    public: pub,
+  })
+    .then((data) => {
+      if (data.code == 200) {
+        if (currentQuestion.value) currentQuestion.value.isPublic = pub
+        message.success('已修改公开状态')
+      } else {
+        message.error('修改失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('修改失败')
+    })
+    .finally(() => {
+      isChangingPublic.value = false
+    })
+}
 async function blacklist(question: QAInfo) {
   await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
     id: question.sender.id,
@@ -212,7 +245,7 @@ function saveShareImage() {
   html2canvas(shareCardRef.value, {
     width: shareCardRef.value.clientWidth, //dom 原始宽度
     height: shareCardRef.value.clientHeight,
-    backgroundColor:null,
+    backgroundColor: null,
     scrollY: 0, // html2canvas默认绘制视图内的页面，需要把scrollY，scrollX设置为0
     scrollX: 0,
     useCORS: true, //支持跨域，但好像没什么用
@@ -231,7 +264,11 @@ function saveShareImage() {
 }
 
 onMounted(() => {
-  GetRecieveQAInfo()
+  if (selectedTabItem.value == '0') {
+    GetRecieveQAInfo()
+  } else {
+    GetSendQAInfo()
+  }
 })
 </script>
 
@@ -244,7 +281,7 @@ onMounted(() => {
   <NSpin v-if="isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
-      只显示收藏 <NSwitch v-model:value="onlyFavorite" />
+      只显示收藏 <NSwitch v-model:value="onlyFavorite" /> 只显示公开 <NSwitch v-model:value="onlyPublic" />
       <NList :bordered="false">
         <NListItem v-for="item in recieveQuestionsFiltered" :key="item.id">
           <NCard :embedded="!item.isReaded" hoverable size="small">
@@ -258,6 +295,7 @@ onMounted(() => {
                   {{ item.sender?.name ?? '匿名用户' }}
                 </NText>
                 <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false" style="margin-left: 5px"> 已注册 </NTag>
+                <NTag v-if="item.isPublic" size="small" type="success" :bordered="false" style="margin-left: 5px"> 公开 </NTag>
                 <NDivider vertical />
                 <NText depth="3" style="font-size: small">
                   <NTooltip>
@@ -341,11 +379,16 @@ onMounted(() => {
       </NList>
     </NTabPane>
   </NTabs>
-  <NModal preset="card" v-model:show="replyModalVisiable" style="max-width: 600px">
+  <NModal preset="card" v-model:show="replyModalVisiable" style="max-width: 90vw; width: 500px">
     <template #header> 回复 </template>
-    <NInput placeholder="请输入回复" type="textarea" v-model:value="replyMessage" maxlength="1000" show-count clearable />
+    <NSpace vertical>
+      <NInput placeholder="请输入回复" type="textarea" v-model:value="replyMessage" maxlength="1000" show-count clearable />
+      <NSpin :show="isChangingPublic">
+        <NCheckbox @update:checked="(v) => setPublic(v)" :default-checked="currentQuestion?.isPublic"> 公开可见 </NCheckbox>
+      </NSpin>
+    </NSpace>
     <NDivider style="margin: 10px 0 10px 0" />
-    <NButton :loading="isRepling" @click="reply" type="primary"> 发送 </NButton>
+    <NButton :loading="isRepling" @click="reply" type="primary" :secondary="currentQuestion?.answer ? true : false"> {{ currentQuestion?.answer ? '修改' : '发送' }} </NButton>
   </NModal>
   <NModal v-model:show="shareModalVisiable" preset="card" title="分享" style="width: 600px">
     <div ref="shareCardRef" class="share-card container">

@@ -142,7 +142,7 @@ onMounted(async () => {
               </template>
             </NSwitch>
             <template v-if="accountInfo">
-              <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })"> 个人中心 </NButton>
+              <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })" size="small"> 个人中心 </NButton>
             </template>
             <template v-else>
               <NButton style="right: 0px; position: relative" type="primary" @click="registerAndLoginModalVisiable = true"> 注册 / 登陆 </NButton>
