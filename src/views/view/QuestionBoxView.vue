@@ -59,7 +59,7 @@ function countGraphemes(value: string) {
   return splitter.countGraphemes(value)
 }
 async function SendQuestion() {
-  if (countGraphemes(questionMessage.value) < 10) {
+  if (countGraphemes(questionMessage.value) < 3) {
     message.error('内容最少需要10个字')
     return
   }
