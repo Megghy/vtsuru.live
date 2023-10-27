@@ -199,14 +199,10 @@ onMounted(async () => {
           class="viewer-page-content"
           :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
         >
-          <RouterView v-if="userInfo" v-slot="{ Component, route }">
-            <Transition name="fade" mode="out-in">
-              <KeepAlive>
-                <div :key="route.name">
-                  <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
-                </div>
-              </KeepAlive>
-            </Transition>
+          <RouterView v-if="userInfo" v-slot="{ Component }">
+            <KeepAlive>
+              <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
+            </KeepAlive>
           </RouterView>
           <template v-else>
             <NSpin show />

@@ -88,6 +88,7 @@ onMounted(() => {
 .schedule-template.pinky.container {
   --pinky-font-color-dark: #dba2a2c9;
   --pinky-border-color-dark: #eeb9b9;
+  margin: 0 auto;
   width: 540px;
   height: 700px;
   border-radius: 20px;

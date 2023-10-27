@@ -5,6 +5,7 @@ import { Ref, computed, h, onMounted, ref, defineAsyncComponent } from 'vue'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
+import { useRoute } from 'vue-router'
 
 interface TemplateDefineTypes {
   TemplateMap: { [name: string]: { name: string; compoent: any } }
@@ -15,6 +16,7 @@ interface TemplateDefineTypes {
 
 const accountInfo = useAccount()
 const message = useMessage()
+const route = useRoute()
 
 const isSaving = ref(false)
 
@@ -167,8 +169,8 @@ const templateOptions = [
     value: 'schedule',
   },
 ] as SelectOption[]
-const selectedOption = ref('index')
-const selectedTab = ref('general')
+const selectedOption = ref(route.query.template?.toString() ?? '')
+const selectedTab = ref(route.query.tab?.toString() ?? 'general')
 
 const selectedTemplateData = computed(() => templates[selectedOption.value])
 
@@ -259,15 +261,15 @@ function onOpenTemplateSettings() {
 const buttonGroup = computed(() => {
   return h(NSpace, () => [h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'), h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置')])
 })
-onMounted(() => {
-  RequestBiliUserData()
+onMounted(async () => {
+  await RequestBiliUserData()
 })
 </script>
 
 <template>
   <NCard v-if="accountInfo" title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
     <NSpin :show="isSaving">
-      <NTabs>
+      <NTabs v-model:value="selectedTab">
         <NTabPane tab="常规" name="general">
           <NDivider style="margin: 0"> 启用功能 </NDivider>
           <NCheckboxGroup v-model:value="accountInfo.settings.enableFunctions" @update:value="SaveComboGroupSetting">

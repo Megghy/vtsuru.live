@@ -8,7 +8,7 @@ const width = window.innerWidth
 const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
-  currentData: any
+  currentData?: any
 }>()
 function navigate(url: string) {
   window.open(url, '_blank')

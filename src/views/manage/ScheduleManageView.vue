@@ -1,26 +1,11 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import {  ScheduleWeekInfo } from '@/api/api-models'
+import { ScheduleWeekInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { SCHEDULE_API_URL } from '@/data/constants'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
-import {
-  NAlert,
-  NBadge,
-  NButton,
-  NColorPicker,
-  NDivider,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  NSpace,
-  NSpin,
-  NTimePicker,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NBadge, NButton, NColorPicker, NDivider, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpace, NSpin, NTimePicker, useMessage } from 'naive-ui'
 import { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
 import { VNode, computed, h, onMounted, ref } from 'vue'
 
@@ -242,7 +227,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <NButton @click="showAddModal = true" type="primary"> 添加周程 </NButton>
+  <NSpace>
+    <NButton @click="showAddModal = true" type="primary"> 添加周程 </NButton>
+    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })"> 修改模板 </NButton>
+  </NSpace>
   <NDivider />
   <NModal v-model:show="showAddModal" style="width: 600px; max-width: 90vw" preset="card" title="添加周程">
     <NSpace vertical>

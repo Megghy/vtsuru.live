@@ -227,15 +227,12 @@ onMounted(() => {
             </NText>
           </NSpace>
         </NLayoutSider>
-        <NScrollbar style="height: calc(100vh - 50px);" >
-          <NLayout >
+        <NScrollbar style="height: calc(100vh - 50px)">
+          <NLayout>
             <div style="box-sizing: border-box; padding: 20px; min-width: 300px">
               <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
                 <KeepAlive>
-                  <Suspense>
-                    <component :is="Component" />
-                    <template #fallback> Loading... </template>
-                  </Suspense>
+                  <component :is="Component"/>
                 </KeepAlive>
               </RouterView>
               <template v-else>
