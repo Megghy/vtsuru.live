@@ -169,7 +169,7 @@ const templateOptions = [
     value: 'schedule',
   },
 ] as SelectOption[]
-const selectedOption = ref(route.query.template?.toString() ?? '')
+const selectedOption = ref(route.query.template?.toString() ?? 'index')
 const selectedTab = ref(route.query.tab?.toString() ?? 'general')
 
 const selectedTemplateData = computed(() => templates[selectedOption.value])
