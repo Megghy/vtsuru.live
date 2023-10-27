@@ -173,7 +173,7 @@ onMounted(async () => {
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider ref="sider" show-trigger default-collapsed collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false">
+      <NLayoutSider ref="sider" show-trigger default-collapsed collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false" style="height: 100%">
         <Transition>
           <div v-if="biliUserInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
@@ -193,6 +193,12 @@ onMounted(async () => {
           </div>
         </Transition>
         <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
+        <NSpace justify="center">
+          <NText depth="3" v-if="width > 150">
+            有更多功能建议请
+            <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
+          </NText>
+        </NSpace>
       </NLayoutSider>
       <NLayout style="height: 100%">
         <div

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NForm, NModal, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, SelectOption, useMessage } from 'naive-ui'
-import { Ref, computed, h, onMounted, ref, defineAsyncComponent } from 'vue'
+import { Ref, computed, h, onMounted, ref, defineAsyncComponent, onActivated } from 'vue'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
@@ -261,6 +261,14 @@ function onOpenTemplateSettings() {
 const buttonGroup = computed(() => {
   return h(NSpace, () => [h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'), h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置')])
 })
+onActivated(() => {
+  if (route.query.tab) {
+    selectedTab.value = route.query.tab.toString()
+  }
+  if (route.query.template) {
+    selectedOption.value = route.query.template.toString()
+  }
+})
 onMounted(async () => {
   await RequestBiliUserData()
 })
@@ -297,12 +305,16 @@ onMounted(async () => {
                 <component :is="buttonGroup" />
               </NSpace>
               <NDivider />
-              <component
-                :is="selectedTemplateData.TemplateMap[selectedTemplateData.Selected.value].compoent"
-                :user-info="accountInfo"
-                :bili-info="biliUserInfo"
-                :current-data="selectedTemplateData.Data"
-              />
+              <Transition name="fade" mode="out-in">
+                <div v-if="true" :key="selectedTemplateData.Selected.value">
+                  <component
+                    :is="selectedTemplateData.TemplateMap[selectedTemplateData.Selected.value].compoent"
+                    :user-info="accountInfo"
+                    :bili-info="biliUserInfo"
+                    :current-data="selectedTemplateData.Data"
+                  />
+                </div>
+              </Transition>
             </div>
           </NSpace>
         </NTabPane>

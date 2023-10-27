@@ -4,7 +4,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
 <template>
   <NLayoutContent style="height: 100vh">
     <NSpace style="margin-top: 50px" justify="center" align="center" vertical>
-      <NCard style="max-width: 80vw; width: 700px">
+      <NCard style="max-width: 80vw; width: 700px" embedded>
         <template #header> 关于 </template>
         <NText>
           一个兴趣使然的网站
