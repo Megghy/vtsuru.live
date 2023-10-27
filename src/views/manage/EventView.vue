@@ -79,26 +79,27 @@ const exportType = ref<'json' | 'xml' | 'csv'>('csv')
 
 async function onDateChange() {
   isLoading.value = true
-  await QueryGetAPI<EventModel[]>(BASE_API + 'event/get', {
-    start: selectedDate.value[0],
-    end: selectedDate.value[1],
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        events.value = new List(data.data).OrderByDescending((d) => d.time).ToArray()
-        message.success('已获取数据')
-        //selectedType.value = type
-      } else {
-        message.error('获取数据失败: ' + data.message)
-      }
+  const data = await get()
+  events.value = data
+  isLoading.value = false
+}
+async function get() {
+  try {
+    const data = await QueryGetAPI<EventModel[]>(BASE_API + 'event/get', {
+      start: selectedDate.value[0],
+      end: selectedDate.value[1],
     })
-    .catch((err) => {
-      console.error(err)
-      message.error('获取数据失败')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
+    if (data.code == 200) {
+      message.success('已获取数据')
+      return new List(data.data).OrderByDescending((d) => d.time).ToArray()
+    } else {
+      message.error('获取数据失败: ' + data.message)
+      return []
+    }
+  } catch (err) {
+    message.error('获取数据失败')
+    return []
+  }
 }
 function GetSCColor(price: number): string {
   if (price === 0) return `#2a60b2`
@@ -219,7 +220,13 @@ onMounted(() => {
                     <NAvatar round lazy borderd :size="64" :src="AVATAR_URL + item.uId" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
                     <NSpace>
                       <NTag size="tiny" v-if="selectedType == EventType.Guard" :bordered="false"> {{ item.msg }} </NTag>
-                      <NTag size="tiny" round :color="{ color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price), textColor: 'white', borderColor: isDarkMode() ? 'white' : '#00000000' }"> {{ item.price }} </NTag>
+                      <NTag
+                        size="tiny"
+                        round
+                        :color="{ color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price), textColor: 'white', borderColor: isDarkMode() ? 'white' : '#00000000' }"
+                      >
+                        {{ item.price }}
+                      </NTag>
                     </NSpace>
                     <NText>
                       {{ item.name }}

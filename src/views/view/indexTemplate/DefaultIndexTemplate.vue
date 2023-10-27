@@ -8,6 +8,7 @@ const width = window.innerWidth
 const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  currentData: any
 }>()
 function navigate(url: string) {
   window.open(url, '_blank')
@@ -24,6 +25,9 @@ function navigate(url: string) {
         :size="width > 750 ? 175 : 100"
         round
         bordered
+        :img-props="{
+          referrerpolicy: 'no-referrer'
+        }"
         :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
       />
       <NSpace align="baseline" justify="center">

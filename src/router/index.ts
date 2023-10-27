@@ -42,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'user-questionBox',
         component: () => import('@/views/view/QuestionBoxView.vue'),
         meta: {
-          title: '棉花糖 (提问箱',
+          title: '提问箱',
         },
       },
       {
@@ -65,48 +65,72 @@ const routes: Array<RouteRecordRaw> = [
         name: 'manage-index',
         component: () => import('@/views/manage/DashboardView.vue'),
         meta: {
-          title: '管理',
+          title: '面板',
         },
       },
       {
         path: 'song-list',
         name: 'manage-songList',
         component: () => import('@/views/manage/SongListManageView.vue'),
+        meta: {
+          title: '歌单',
+        },
       },
       {
         path: 'question-box',
         name: 'manage-questionBox',
         component: () => import('@/views/manage/QuestionBoxManageView.vue'),
+        meta: {
+          title: '提问箱',
+        },
       },
       {
         path: 'lottery',
         name: 'manage-lottery',
         component: () => import('@/views/manage/LotteryView.vue'),
+        meta: {
+          title: '动态抽奖',
+        },
       },
       {
         path: 'bili-verify',
         name: 'manage-biliVerify',
         component: () => import('@/views/manage/BiliVerifyView.vue'),
+        meta: {
+          title: 'Bilibili认证',
+        },
       },
       {
         path: 'history',
         name: 'manage-history',
         component: () => import('@/views/manage/HistoryView.vue'),
+        meta: {
+          title: '数据跟踪',
+        },
       },
       {
         path: 'schedule',
         name: 'manage-schedule',
         component: () => import('@/views/manage/ScheduleManageView.vue'),
+        meta: {
+          title: '日程',
+        },
       },
       {
         path: 'event',
         name: 'manage-event',
         component: () => import('@/views/manage/EventView.vue'),
+        meta: {
+          title: '事件记录',
+        },
       },
       {
         path: 'video-collect',
         name: 'manage-videoCollect',
         component: () => import('@/views/manage/VideoCollectManageView.vue'),
+        meta: {
+          title: '视频征集',
+        },
       },
     ],
   },

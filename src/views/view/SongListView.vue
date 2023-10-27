@@ -1,6 +1,6 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component v-else :is="componentType" :user-info="userInfo" :currentData="currentData" />
+  <component v-else :is="componentType" :user-info="userInfo" :bili-info="biliInfo" :currentData="currentData" />
 </template>
 
 <script lang="ts" setup>

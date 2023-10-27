@@ -21,6 +21,7 @@
     "grapheme-splitter": "^1.0.4",
     "html2canvas": "^1.4.1",
     "linqts": "^1.15.0",
+    "mitt": "^3.0.1",
     "qrcode.vue": "^3.4.1",
     "universal-cookie": "^4.0.4",
     "vite": "^4.3.9",

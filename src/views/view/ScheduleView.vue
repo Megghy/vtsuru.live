@@ -1,17 +1,15 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component v-else v-bind="$attrs" :is="componentType" :user-info="userInfo" :currentData="currentData" />
+  <component v-else :is="ScheduleTemplateMap[componentType ?? ''].compoent" :bili-info="biliInfo" :user-info="userInfo" :currentData="currentData" v-bind="$attrs" />
 </template>
 
 <script lang="ts" setup>
 import { ScheduleWeekInfo } from '@/api/api-models'
-import DefaultScheduleTemplate from '@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue'
-import { computed, onMounted, ref, watch } from 'vue'
 import { UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { SCHEDULE_API_URL } from '@/data/constants'
+import { SCHEDULE_API_URL, ScheduleTemplateMap } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
-import PinkySchedule from './scheduleTemplate/PinkySchedule.vue'
+import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,19 +20,7 @@ const props = defineProps<{
 }>()
 
 const componentType = computed(() => {
-  const type = props.template ?? props.userInfo?.extra?.templateTypes['schedule']?.toLowerCase()
-  if (props.userInfo) {
-    switch (type?.toLocaleLowerCase()) {
-      case 'test':
-        return DefaultScheduleTemplate
-      case 'pinkyschedule':
-        return PinkySchedule
-      default:
-        return DefaultScheduleTemplate
-    }
-  } else {
-    return DefaultScheduleTemplate
-  }
+  return props.template ?? props.userInfo?.extra?.templateTypes['schedule']?.toLowerCase()
 })
 const currentData = ref<ScheduleWeekInfo[]>()
 const isLoading = ref(true)

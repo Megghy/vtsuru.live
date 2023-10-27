@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 
 const debugAPI = import.meta.env.VITE_DEBUG_API
 const releseAPI = `https://vtsuru.suki.club/api/`
@@ -21,3 +21,14 @@ export const QUESTION_API_URL = `${BASE_API}qa/`
 export const LOTTERY_API_URL = `${BASE_API}lottery/`
 export const HISTORY_API_URL = `${BASE_API}history/`
 export const SCHEDULE_API_URL = `${BASE_API}schedule/`
+
+export const ScheduleTemplateMap = {
+  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue')) },
+  pinky: { name: '粉粉', compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/PinkySchedule.vue')) },
+} as { [key: string]: { name: string; compoent: any } }
+export const SongListTemplateMap = {
+  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')) },
+} as { [key: string]: { name: string; compoent: any } }
+export const IndexTemplateMap = {
+  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/indexTemplate/DefaultIndexTemplate.vue')) },
+} as { [key: string]: { name: string; compoent: any } }

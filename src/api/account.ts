@@ -23,7 +23,9 @@ export async function GetSelfAccount() {
       localStorage.removeItem('JWT_Token')
       console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')
       message.error('Cookie 已失效, 需要重新登陆')
-      location.reload()
+      setTimeout(() => {
+        location.reload()
+      }, 1500);
     } else {
       console.warn('[vtsuru] ' + result.message)
       message.error(result.message)

@@ -360,10 +360,9 @@ onMounted(() => {
               <NCard :bordered="false" size="small">
                 <template #header>
                   <NSpace align="center">
-                    <NTag size="small" type="warning" :bordered="false">
-                      {{ item.target.name }}
-                    </NTag>
+                  <NText depth="3">
                     回复
+                  </NText>
                   </NSpace>
                 </template>
                 {{ item.answer.message }}

@@ -2,7 +2,7 @@
   <NMessageProvider>
     <NNotificationProvider>
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
-        <NElement style="height: 100vh;">
+        <NElement style="height: 100vh">
           <ViewerLayout v-if="layout == 'viewer'" />
           <ManageLayout v-else-if="layout == 'manage'" />
           <template v-else>
@@ -19,15 +19,19 @@ import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
 import { useRoute } from 'vue-router'
 import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN, useOsTheme, darkTheme, NElement } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { ThemeType } from './api/api-models'
+import { ThemeType, UserInfo } from './api/api-models'
+import { useUser } from './api/user'
 
 const route = useRoute()
+
 const layout = computed(() => {
   if (route.path.startsWith('/user')) {
+    document.title = route.meta.title + ' · ' + route.params.id + ' · VTsuru'
     return 'viewer'
   } else if (route.path.startsWith('/manage')) {
+    document.title = route.meta.title + ' · 管理 · VTsuru'
     return 'manage'
   } else {
     return ''

@@ -1,6 +1,26 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { NAvatar, NIcon, NLayout, NLayoutHeader, NLayoutSider, NMenu, NSpace, NText, NButton, NResult, NPageHeader, NSwitch, NModal, NEllipsis, MenuOption, NSpin, NLayoutContent, NBackTop } from 'naive-ui'
+import {
+  NAvatar,
+  NIcon,
+  NLayout,
+  NLayoutHeader,
+  NLayoutSider,
+  NMenu,
+  NSpace,
+  NText,
+  NButton,
+  NResult,
+  NPageHeader,
+  NSwitch,
+  NModal,
+  NEllipsis,
+  MenuOption,
+  NSpin,
+  NLayoutContent,
+  NBackTop,
+  NScrollbar,
+} from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
 import { GetInfo, useUser, useUserWithUId } from '@/api/user'
@@ -49,10 +69,8 @@ async function RequestBiliUserData() {
 }
 
 onMounted(async () => {
-  const result = await GetInfo(id.value?.toString())
-  if (result.code == 200) {
-    userInfo.value = result.data
-  } else {
+  userInfo.value = await useUser(id.value?.toString())
+  if (!userInfo.value) {
     notfount.value = true
   }
 
@@ -181,15 +199,19 @@ onMounted(async () => {
           class="viewer-page-content"
           :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
         >
-          <RouterView v-if="userInfo" v-slot="{ Component }">
-            <KeepAlive>
-              <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
-            </KeepAlive>
+          <RouterView v-if="userInfo" v-slot="{ Component, route }">
+            <Transition name="fade" mode="out-in">
+              <KeepAlive>
+                <div :key="route.name">
+                  <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
+                </div>
+              </KeepAlive>
+            </Transition>
           </RouterView>
           <template v-else>
             <NSpin show />
           </template>
-          <NBackTop/>
+          <NBackTop />
         </div>
       </NLayout>
     </NLayout>
@@ -206,5 +228,6 @@ onMounted(async () => {
     padding: 15px;
     margin-right: 10px;
     box-sizing: border-box;
+    overflow-y: auto;
 }
 </style>

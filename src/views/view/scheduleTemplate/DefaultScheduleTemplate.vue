@@ -8,6 +8,7 @@ const accountInfo = useAccount()
 
 defineProps<{
   userInfo: UserInfo | undefined
+  biliInfo: any | undefined
   currentData: ScheduleWeekInfo[] | undefined
 }>()
 </script>
