@@ -151,3 +151,12 @@ export enum ThemeType {
   Light = 'light',
   Dark = 'dark',
 }
+export interface VideoCollectTable{
+  id: string
+  name: string
+  title: string
+  description: string
+  createAt: number
+  endAt: number
+
+}

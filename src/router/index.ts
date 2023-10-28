@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/AboutView.vue'),
   },
   {
+    path: '/reset-password',
+    name: 'resetPassword',
+    component: () => import('@/views/ChangePasswordView.vue'),
+  },
+  {
     path: '/user/:id',
     name: 'user',
     children: [
@@ -27,6 +32,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/view/UserIndexView.vue'),
         meta: {
           title: '主页',
+          keepAlive: true,
         },
       },
       {
@@ -35,6 +41,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/view/SongListView.vue'),
         meta: {
           title: '歌单',
+          keepAlive: true,
         },
       },
       {
@@ -43,6 +50,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/view/QuestionBoxView.vue'),
         meta: {
           title: '提问箱',
+          keepAlive: true,
         },
       },
       {
@@ -51,6 +59,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/view/ScheduleView.vue'),
         meta: {
           title: '日程',
+          keepAlive: true,
         },
       },
     ],
@@ -74,6 +83,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/SongListManageView.vue'),
         meta: {
           title: '歌单',
+          keepAlive: true,
         },
       },
       {
@@ -82,6 +92,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/QuestionBoxManageView.vue'),
         meta: {
           title: '提问箱',
+          keepAlive: true,
         },
       },
       {
@@ -90,6 +101,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/LotteryView.vue'),
         meta: {
           title: '动态抽奖',
+          keepAlive: true,
         },
       },
       {
@@ -106,6 +118,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/HistoryView.vue'),
         meta: {
           title: '数据跟踪',
+          keepAlive: true,
         },
       },
       {
@@ -114,6 +127,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/ScheduleManageView.vue'),
         meta: {
           title: '日程',
+          keepAlive: true,
         },
       },
       {
@@ -122,6 +136,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/EventView.vue'),
         meta: {
           title: '事件记录',
+          keepAlive: true,
         },
       },
       {
@@ -130,6 +145,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/VideoCollectManageView.vue'),
         meta: {
           title: '视频征集',
+          keepAlive: true,
         },
       },
     ],

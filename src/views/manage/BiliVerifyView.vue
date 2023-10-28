@@ -3,6 +3,7 @@ import { GetSelfAccount, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { BILI_API_URL } from '@/data/constants'
 import { NAlert, NButton, NCard, NCode, NInput, NInputNumber, NSpace, NSpin, NText, NCountdown, NInputGroup, useMessage } from 'naive-ui'
+import { isTaggedTemplateExpression } from 'typescript'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()
@@ -10,6 +11,7 @@ const message = useMessage()
 const accountInfo = useAccount()
 const isStart = ref(false)
 const timeLeft = ref(0)
+const timeOut = ref(false)
 
 const uId = ref()
 const roomId = ref()
@@ -45,6 +47,11 @@ async function checkStatus() {
       GetSelfAccount()
     }, 1)
     return true
+  } else if (data.code == 400 && isStart.value) {
+    timeOut.value = true
+    clearInterval(timer.value)
+    message.error('认证超时')
+    return false
   }
   return false
 }
@@ -74,8 +81,24 @@ onMounted(async () => {
     <template #header> Bilibili 身份验证 </template>
     <template v-if="isStart">
       <NSpace vertical justify="center" align="center">
-        <NSpin />
-        <span> 剩余 <NCountdown :duration="timeLeft - Date.now()" /> </span>
+        <template v-if="!timeOut">
+          <NSpin />
+          <span> 剩余 <NCountdown :duration="timeLeft - Date.now()" /> </span>
+        </template>
+        <NAlert v-else type="error">
+          认证超时
+          <NButton
+            @click="
+              () => {
+                isStart = false
+                timeOut = false
+              }
+            "
+            type="info"
+          >
+            重新开始
+          </NButton>
+        </NAlert>
         <NInputGroup>
           <NInput :allow-input="() => false" v-model:value="accountInfo.biliVerifyCode" />
           <NButton @click="copyCode"> 复制认证码 </NButton>
@@ -89,7 +112,7 @@ onMounted(async () => {
           <NText>
             请在点击
             <NText type="primary" strong> 开始认证 </NText>
-            后五分钟之内使用
+            后2分钟之内使用
             <NText strong type="primary"> 需要认证的账户 </NText>
             在自己的直播间内发送
             <NButton type="info" text @click="copyCode">

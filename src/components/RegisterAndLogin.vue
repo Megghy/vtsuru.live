@@ -5,7 +5,27 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { GetNotifactions } from '@/data/notifactions'
 import { useLocalStorage } from '@vueuse/core'
-import { FormInst, FormItemInst, FormItemRule, FormRules, NAlert, NButton, NCard, NDivider, NForm, NFormItem, NInput, NSpace, NSpin, NTab, NTabPane, NTabs, useMessage } from 'naive-ui'
+import {
+  FormInst,
+  FormItemInst,
+  FormItemRule,
+  FormRules,
+  NAlert,
+  NButton,
+  NCard,
+  NCountdown,
+  NDivider,
+  NForm,
+  NFormItem,
+  NInput,
+  NSpace,
+  NSpin,
+  NTab,
+  NTabPane,
+  NTabs,
+  NTime,
+  useMessage,
+} from 'naive-ui'
 import { ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -30,6 +50,11 @@ const loginModel = ref<LoginModel>({} as LoginModel)
 const token = ref('')
 const turnstile = ref()
 const cookie = useLocalStorage('JWT_Token', '')
+
+const selectedTab = ref('login')
+const inputForgetPasswordValue = ref('')
+const isForgetPassword = ref(false)
+const canSendForgetPassword = ref(true)
 
 const formRef = ref<FormInst | null>(null)
 const rPasswordFormItemRef = ref<FormItemInst | null>(null)
@@ -95,7 +120,7 @@ function onPasswordInput() {
     rPasswordFormItemRef.value?.validate({ trigger: 'password-input' })
   }
 }
-function onregisterButtonClick() {
+function onRegisterButtonClick() {
   formRef.value?.validate().then(async () => {
     isLoading.value = true
     await QueryPostAPI<string>(
@@ -133,13 +158,10 @@ function onLoginButtonClick() {
     await QueryPostAPI<{
       account: AccountInfo
       token: string
-    }>(
-      ACCOUNT_API_URL + 'login',
-      {
-        nameOrEmail: loginModel.value.account,
-        password: loginModel.value.password,
-      },
-    )
+    }>(ACCOUNT_API_URL + 'login', {
+      nameOrEmail: loginModel.value.account,
+      password: loginModel.value.password,
+    })
       .then(async (data) => {
         if (data.code == 200) {
           localStorage.setItem('JWT_Token', data.data.token)
@@ -153,12 +175,37 @@ function onLoginButtonClick() {
       })
       .catch((err) => {
         console.error(err)
+        message.error('登陆失败')
       })
       .finally(() => {
         isLoading.value = false
         turnstile.value?.reset()
       })
   })
+}
+async function onForgetPassword() {
+  canSendForgetPassword.value = false
+  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
+    .then(async (data) => {
+      if (data.code == 200) {
+        message.success('已发送密码重置链接到你的邮箱, 请检查')
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('发生错误')
+    })
+    .finally(() => {
+      turnstile.value?.reset()
+    })
+}
+function onForgetPasswordClick() {
+  isForgetPassword.value = true
+  setTimeout(() => {
+    selectedTab.value = 'forget'
+  }, 50)
 }
 </script>
 
@@ -171,7 +218,7 @@ function onLoginButtonClick() {
       <NAlert type="warning"> 你已经登录 </NAlert>
     </template>
     <template v-else>
-      <NTabs default-value="login" size="large" animated pane-wrapper-style="margin: 0 -4px" pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;">
+      <NTabs v-model:value="selectedTab" size="large" animated pane-wrapper-style="margin: 0 -4px" pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;" style="min-width: 300px">
         <NTabPane name="login" tab="登陆">
           <NForm ref="formRef" :rules="loginRules" :model="loginModel">
             <NFormItem path="account" label="用户名或邮箱">
@@ -181,6 +228,7 @@ function onLoginButtonClick() {
               <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter="onLoginButtonClick" />
             </NFormItem>
           </NForm>
+          <NButton text secondary style="margin-left: 5px; color: gray" @click="onForgetPasswordClick"> 忘记密码 </NButton>
           <NSpace vertical justify="center" align="center">
             <NButton :loading="isLoading" type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
           </NSpace>
@@ -197,16 +245,23 @@ function onLoginButtonClick() {
               <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
             </NFormItem>
             <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onregisterButtonClick" />
+              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onRegisterButtonClick" />
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
-            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onregisterButtonClick"> 注册 </NButton>
+            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onRegisterButtonClick"> 注册 </NButton>
           </NSpace>
-
-          <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+        </NTabPane>
+        <NTabPane v-if="isForgetPassword" name="forget" tab="忘记密码">
+          <NInput placeholder="请输入邮箱" v-model:value="inputForgetPasswordValue" maxlength="64" />
+          <NDivider />
+          <NSpace vertical justify="center" align="center">
+            <NButton :loading="!token || !canSendForgetPassword" type="primary" size="large" @click="onForgetPassword"> 提交 </NButton>
+            <NCountdown v-if="!canSendForgetPassword" :duration="60000" @finish="canSendForgetPassword = true" />
+          </NSpace>
         </NTabPane>
       </NTabs>
     </template>
   </NCard>
+  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
 </template>
