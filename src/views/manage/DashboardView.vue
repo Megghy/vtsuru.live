@@ -18,6 +18,7 @@ const newEmailAddress = ref('')
 const newEmailVerifyCode = ref('')
 const canSendEmailVerifyCode = ref(true)
 
+const oldPassword = ref('')
 const newPassword = ref('')
 const newPassword2 = ref('')
 const isLoading = ref(false)

@@ -1,31 +1,23 @@
 <script setup lang="ts">
-import { ACCOUNT, useAccount } from '@/api/account'
+import { ACCOUNT } from '@/api/account'
 import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { ACCOUNT_API_URL } from '@/data/constants'
 import router from '@/router'
-import { NAlert, NButton, NCard, NLayoutContent, NSpace, NSpin, useMessage } from 'naive-ui'
+import { NButton, NCard, NLayoutContent, NSpace, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import VueTurnstile from 'vue-turnstile'
-
-const accountInfo = useAccount()
 
 const message = useMessage()
-const token = ref('')
 const route = useRoute()
 
 const isLoading = ref(false)
 
 async function VerifyAccount() {
   isLoading.value = true
-  await QueryGetAPI<AccountInfo>(
-    ACCOUNT_API_URL + 'verify',
-    {
-      target: route.query.target,
-    },
-    [['Turnstile', token.value]]
-  )
+  await QueryGetAPI<AccountInfo>(ACCOUNT_API_URL + 'verify', {
+    target: route.query.target,
+  })
     .then((data) => {
       if (data.code == 200) {
         ACCOUNT.value = data.data
@@ -46,12 +38,9 @@ async function VerifyAccount() {
     <div style="display: flex; align-items: center; justify-content: center; height: 100%">
       <NCard embedded style="max-width: 500px">
         <template #header> 激活账户 </template>
-        <NSpin :show="!token">
-          <NSpace justify="center" align="center" vertical>
-            <NButton @click="VerifyAccount" type="primary" size="large" :loading="isLoading || !token"> 进行账户激活 </NButton>
-            <VueTurnstile :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
-          </NSpace>
-        </NSpin>
+        <NSpace justify="center" align="center" vertical>
+          <NButton @click="VerifyAccount" type="primary" size="large" :loading="isLoading"> 进行账户激活 </NButton>
+        </NSpace>
       </NCard>
     </div>
   </NLayoutContent>

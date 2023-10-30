@@ -3,11 +3,16 @@
     <NNotificationProvider>
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
         <NElement style="height: 100vh">
-          <ViewerLayout v-if="layout == 'viewer'" />
-          <ManageLayout v-else-if="layout == 'manage'" />
-          <template v-else>
-            <RouterView />
-          </template>
+          <Suspense>
+            <ViewerLayout v-if="layout == 'viewer'" />
+            <ManageLayout v-else-if="layout == 'manage'" />
+            <template v-else>
+              <RouterView />
+            </template>
+            <template #fallback>
+              <NSpin size="large" show/>
+            </template>
+          </Suspense>
         </NElement>
       </NConfigProvider>
     </NNotificationProvider>
@@ -18,7 +23,7 @@
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
 import { useRoute } from 'vue-router'
-import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN, useOsTheme, darkTheme, NElement } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN, useOsTheme, darkTheme, NElement, NSpin } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { ThemeType, UserInfo } from './api/api-models'
@@ -34,6 +39,7 @@ const layout = computed(() => {
     document.title = route.meta.title + ' · 管理 · VTsuru'
     return 'manage'
   } else {
+    document.title = route.meta.title + ' · VTsuru'
     return ''
   }
 })

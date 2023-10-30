@@ -23,6 +23,24 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/ChangePasswordView.vue'),
   },
   {
+    path: '/video-collect/:id',
+    name: 'video-collect',
+    component: () => import('@/views/VideoCollectPublic.vue'),
+    meta: {
+      title: '推荐 · 视频征集',
+      keepAlive: true,
+    },
+  },
+  {
+    path: '/video-collect/list/:id',
+    name: 'video-collect-list',
+    component: () => import('@/views/VideoCollectListView.vue'),
+    meta: {
+      title: '结果 · 视频征集',
+      keepAlive: true,
+    },
+  },
+  {
     path: '/user/:id',
     name: 'user',
     children: [
@@ -148,7 +166,25 @@ const routes: Array<RouteRecordRaw> = [
           keepAlive: true,
         },
       },
+      {
+        path: 'video-collect/:id',
+        name: 'manage-videoCollect-Detail',
+        component: () => import('@/views/manage/VideoCollectDetailView.vue'),
+        meta: {
+          title: '详情 · 视频征集',
+          keepAlive: true,
+          parent: 'manage-videoCollect',
+        },
+      },
     ],
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'notfound',
+    component: import('@/views/NotfoundView.vue'),
+    meta: {
+      title: '页面不存在',
+    },
   },
 ]
 

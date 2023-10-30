@@ -151,12 +151,59 @@ export enum ThemeType {
   Light = 'light',
   Dark = 'dark',
 }
+export interface VideoCollectCreateModel {
+  id?: string
+  name: string
+  description: string
+  endAt: number
+  maxVideoCount: number
+}
 export interface VideoCollectTable{
   id: string
+  shortId: string
   name: string
-  title: string
   description: string
   createAt: number
   endAt: number
-
+  isFinish: boolean
+  videoCount: number
+  maxVideoCount: number
+  owner: UserInfo
+}
+export interface VideoCollectVideo {
+  id: string
+  title: string
+  description: string
+  publistTime: number
+  ownerName: string
+  ownerUId: number
+  cover: string
+  length: number
+  watched?: boolean
+}
+export enum VideoFrom{
+  Collect,
+  Spam
+}
+export enum VideoStatus
+{
+    Pending,
+    Accepted,
+    Rejected,
+}
+export interface VideoSender{
+  sendAt: number
+  sender?: string
+  senderId?: number
+  description?: string
+  from: VideoFrom
+}
+export interface VideoInfo {
+  bvid: string
+  senders: VideoSender[]
+  status: VideoStatus
+}
+export interface VideoCollectDetail {
+  table: VideoCollectTable
+  videos: { info: VideoInfo; video: VideoCollectVideo }[]
 }

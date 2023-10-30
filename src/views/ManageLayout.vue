@@ -215,7 +215,7 @@ onMounted(() => {
           <NMenu
             style="margin-top: 12px"
             :disabled="accountInfo?.isEmailVerified != true"
-            :default-value="$route.name?.toString()"
+            :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
             :collapsed-width="64"
             :collapsed-icon-size="22"
             :options="menuOptions"
@@ -232,7 +232,12 @@ onMounted(() => {
             <div style="box-sizing: border-box; padding: 20px; min-width: 300px">
               <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
                 <KeepAlive>
-                  <component :is="Component"/>
+                  <Suspense>
+                    <component :is="Component" />
+                    <template #fallback>
+                      <NSpin show />
+                    </template>
+                  </Suspense>
                 </KeepAlive>
               </RouterView>
               <template v-else>
