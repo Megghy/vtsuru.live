@@ -288,12 +288,12 @@ function closeTable() {
         message.success('已' + (videoDetail.value.table.isFinish ? '开启表' : '关闭表'))
         videoDetail.value.table.isFinish = !videoDetail.value.table.isFinish
       } else {
-        message.error('关闭失败: ' + data.message)
+        message.error('操作失败: ' + data.message)
       }
     })
     .catch((err) => {
       console.error(err)
-      message.error('关闭失败')
+      message.error('操作失败')
     })
     .finally(() => {
       isLoading.value = false
@@ -309,6 +309,7 @@ function closeTable() {
       <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
       <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
       <NButton type="warning" size="small" @click="closeTable"> {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }} </NButton>
+      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果表 </NButton>
       <NPopconfirm :on-positive-click="deleteTable">
         <template #trigger>
           <NButton type="error" size="small"> 删除 </NButton>
@@ -323,6 +324,7 @@ function closeTable() {
         <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
         <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
         <NButton type="warning" size="small" @click="closeTable"> {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }} </NButton>
+        <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果表 </NButton>
         <NPopconfirm :on-positive-click="deleteTable">
           <template #trigger>
             <NButton type="error" size="small"> 删除 </NButton>
