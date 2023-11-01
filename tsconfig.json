@@ -31,7 +31,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-, "env.d.ts", "default.d.ts"  ],
+, "env.d.ts", "default.d.ts", "src/data/chat/ChatClientDirectOpenLive.js"  ],
   "exclude": [
     "node_modules"
   ]

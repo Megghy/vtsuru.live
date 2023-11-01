@@ -6,21 +6,33 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     name: 'index',
     component: IndexView,
+    meta: {
+      title: '你好',
+    },
   },
   {
     path: '/verify',
     name: 'verify',
     component: () => import('@/views/VerifyView.vue'),
+    meta: {
+      title: '认证',
+    },
   },
   {
     path: '/about',
     name: 'about',
     component: () => import('@/views/AboutView.vue'),
+    meta: {
+      title: '关于',
+    },
   },
   {
     path: '/reset-password',
     name: 'resetPassword',
     component: () => import('@/views/ChangePasswordView.vue'),
+    meta: {
+      title: '重置密码',
+    },
   },
   {
     path: '/video-collect/:id',
@@ -174,6 +186,20 @@ const routes: Array<RouteRecordRaw> = [
           title: '详情 · 视频征集',
           keepAlive: true,
           parent: 'manage-videoCollect',
+        },
+      },
+    ],
+  },
+  {
+    path: '/open-live',
+    name: 'open-live',
+    children: [
+      {
+        path: 'lottery',
+        name: 'open-live-lottery',
+        component: () => import('@/views/open_live/OpenLottery.vue'),
+        meta: {
+          title: '直播抽奖',
         },
       },
     ],

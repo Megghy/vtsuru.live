@@ -22,6 +22,7 @@ export const LOTTERY_API_URL = `${BASE_API}lottery/`
 export const HISTORY_API_URL = `${BASE_API}history/`
 export const SCHEDULE_API_URL = `${BASE_API}schedule/`
 export const VIDEO_COLLECT_API_URL = `${BASE_API}video-collect/`
+export const OPEN_LIVE_API_URL = `${BASE_API}open-live/`
 
 export const ScheduleTemplateMap = {
   '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue')) },

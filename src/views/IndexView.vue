@@ -3,7 +3,7 @@ import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem,
 import vtb from '@/svgs/ic_vtuber.svg'
 import { AnalyticsSharp, Calendar, Chatbox, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { Lottery24Filled, MoreHorizontal24Filled, VehicleShip24Filled } from '@vicons/fluent'
+import { Lottery24Filled, MoreHorizontal24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 
 const { width } = useWindowSize()
 
@@ -34,9 +34,14 @@ const functions = [
     icon: Lottery24Filled,
   },
   {
+    name: '直播抽奖',
+    desc: '从直播间弹幕或礼物抽取用户',
+    icon: Lottery24Filled,
+  },
+  {
     name: '视频征集',
     desc: '创建用来收集视频链接的页面, 可以从动态爬取, 也可以提前对视频进行筛选',
-    icon: Lottery24Filled,
+    icon: VideoAdd20Filled,
   },
   {
     name: '数据跟踪',

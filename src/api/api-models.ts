@@ -207,3 +207,24 @@ export interface VideoCollectDetail {
   table: VideoCollectTable
   videos: { info: VideoInfo; video: VideoCollectVideo }[]
 }
+export interface GameInfo {
+  game_id: string
+}
+
+export interface WebsocketInfo {
+  auth_body: string
+  wss_link: string[]
+}
+
+export interface AnchorInfo {
+  room_id: number
+  uname: string
+  uface: string
+  uid: number
+}
+
+export interface OpenLiveInfo {
+  game_info: GameInfo
+  websocket_info: WebsocketInfo
+  anchor_info: AnchorInfo
+}
