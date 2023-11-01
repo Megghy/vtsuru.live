@@ -134,7 +134,6 @@ async function start() {
     if (auth) {
       authResult.value = auth
     } else {
-      message.error('无法获取场次数据, 请刷新重试')
       return
     }
     initChatClient()

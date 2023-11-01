@@ -3,7 +3,7 @@ import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem,
 import vtb from '@/svgs/ic_vtuber.svg'
 import { AnalyticsSharp, Calendar, Chatbox, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { Lottery24Filled, MoreHorizontal24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 
 const { width } = useWindowSize()
 
@@ -49,8 +49,13 @@ const functions = [
     icon: AnalyticsSharp,
   },
   {
+    name: '绝不收米!',
+    desc: '为爱发电, 所有功能都免费并提供技术支持 (当然你想赞助的话也可以捏',
+    icon: MoneyOff24Filled,
+  },
+  {
     name: '还有更多',
-    desc: '有其他合理需求或者建议, 或者有想要添加的样式? 向我提出!',
+    desc: '更多功能仍在开发中. 有其他合理需求或者建议, 或者有想要添加的样式? 向我提出!',
     icon: MoreHorizontal24Filled,
   },
 ]
