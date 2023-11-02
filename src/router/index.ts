@@ -180,6 +180,15 @@ const routes: Array<RouteRecordRaw> = [
           parent: 'manage-videoCollect',
         },
       },
+      {
+        path: 'live-lottery',
+        name: 'manage-liveLottery',
+        component: () => import('@/views/open_live/OpenLottery.vue'),
+        meta: {
+          title: '直播抽奖',
+          keepAlive: true,
+        },
+      },
     ],
   },
   {

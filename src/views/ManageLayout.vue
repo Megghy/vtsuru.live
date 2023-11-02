@@ -151,6 +151,21 @@ const menuOptions = [
     icon: renderIcon(Lottery24Filled),
     //disabled: accountInfo.value?.isEmailVerified == false,
   },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-liveLottery',
+          },
+        },
+        { default: () => '直播抽奖' }
+      ),
+    key: 'manage-liveLottery',
+    icon: renderIcon(Lottery24Filled),
+    //disabled: accountInfo.value?.isEmailVerified == false,
+  },
 ]
 
 async function resendEmail() {

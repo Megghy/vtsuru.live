@@ -321,7 +321,7 @@ function getLevelColor(level: number) {
 </script>
 
 <template>
-  <NCard size="medium" embedded title="抽奖">
+  <NCard size="medium" embedded title="动态抽奖">
     <template #header-extra>
       <NButton @click="showModal = true"> 历史记录 </NButton>
     </template>

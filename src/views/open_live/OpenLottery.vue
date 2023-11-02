@@ -5,6 +5,7 @@ import { QueryPostAPI } from '@/api/query'
 import { OPEN_LIVE_API_URL } from '@/data/constants'
 import { LotteryUserInfo, OpenLiveInfo } from '@/api/api-models'
 import {
+  NAlert,
   NAvatar,
   NButton,
   NCard,
@@ -115,7 +116,7 @@ let chatClient: any
 
 async function get() {
   try {
-    const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'start', authInfo.value)
+    const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'start', authInfo.value?.Code ? authInfo.value : undefined)
     if (data.code == 200) {
       console.log('[OPEN-LIVE] 已获取场次信息')
       return data.data
@@ -330,7 +331,7 @@ onMounted(() => {
 
 <template>
   <NLayoutContent style="height: 100vh">
-    <NResult v-if="false" status="403" title="403" description="该页面只能从饭贩访问" />
+    <NResult v-if="!authInfo?.Code && !accountInfo" status="403" title="403" description="该页面只能从饭贩访问或者注册用户使用" />
     <template v-else>
       <NCard style="margin: 20px">
         <template #header>
@@ -338,11 +339,15 @@ onMounted(() => {
           <NDivider vertical />
           <NButton text type="primary" tag="a" href="https://vtsuru.live" target="_blank"> 前往 VTsuru.live 主站 </NButton>
         </template>
+        <NAlert v-if="!authInfo?.Code && accountInfo && !accountInfo.isBiliVerified" type="error"> 请先绑定B站账号 </NAlert>
+        <NAlert v-else-if="!authInfo?.Code && accountInfo && accountInfo.biliAuthCodeStatus != 1" type="error"> 身份码状态异常, 请重新绑定 </NAlert>
         <NCard>
           <NSpace align="center">
             连接状态:
             <NTag :type="isConnected ? 'success' : 'warning'"> {{ isConnected ? `已连接 | ${authResult?.anchor_info.uname}` : '未连接' }} </NTag>
-            <NButton v-if="!isConnected" type="primary" @click="start" size="small"> 连接直播间 </NButton>
+            <NButton v-if="!isConnected" type="primary" @click="start" size="small" :disabled="!authInfo?.Code && (!accountInfo?.isBiliVerified || accountInfo.biliAuthCodeStatus != 1)">
+              连接直播间
+            </NButton>
             <NButton type="info" @click="showModal = true" size="small"> 抽奖历史</NButton>
           </NSpace>
         </NCard>
