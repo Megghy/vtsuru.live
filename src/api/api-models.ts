@@ -36,10 +36,18 @@ export interface AccountInfo extends UserInfo {
   settings: UserSetting
   token: string
 
+  biliAuthCodeStatus: BiliAuthCodeStatusType
+
   eventFetcherOnline: boolean
   eventFetcherStatus: string
 
   nextSendEmailTime?: number
+}
+export enum BiliAuthCodeStatusType {
+  NotBind,
+  Active,
+  Notfound,
+  Inactive,
 }
 export interface Setting_SendEmail {
   recieveQA: boolean

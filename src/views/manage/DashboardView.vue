@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NThing, NTime, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NThing, NTime, NTooltip, useMessage } from 'naive-ui'
 import SettingsManageView from './SettingsManageView.vue'
 import { useLocalStorage } from '@vueuse/core'
 import { ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { Question24Regular } from '@vicons/fluent'
+import VueTurnstile from 'vue-turnstile'
+import { BiliAuthCodeStatusType } from '@/api/api-models'
+
+const token = ref()
+const turnstile = ref()
 
 const accountInfo = useAccount()
 const cookie = useLocalStorage('JWT_Token', '')
@@ -13,6 +19,7 @@ const message = useMessage()
 
 const resetEmailModalVisiable = ref(false)
 const resetPasswordModalVisiable = ref(false)
+const bindBiliCodeModalVisiable = ref(false)
 
 const newEmailAddress = ref('')
 const newEmailVerifyCode = ref('')
@@ -21,6 +28,7 @@ const canSendEmailVerifyCode = ref(true)
 const oldPassword = ref('')
 const newPassword = ref('')
 const newPassword2 = ref('')
+const biliCode = ref('')
 const isLoading = ref(false)
 
 function logout() {
@@ -102,6 +110,68 @@ async function resetPassword() {
       message.error('发生错误')
     })
 }
+async function BindBili() {
+  if (!biliCode.value) {
+    message.error('身份码不能为空')
+    return
+  }
+  isLoading.value = true
+  await QueryGetAPI<{
+    uname: string
+    uid: number
+    uface: string
+    room_id: number
+  }>(ACCOUNT_API_URL + 'bind-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+    .then(async (data) => {
+      if (data.code == 200) {
+        message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
+        setTimeout(() => {
+          location.reload()
+        }, 1000)
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('发生错误')
+    })
+    .finally(() => {
+      turnstile.value?.reset()
+      isLoading.value = false
+    })
+}
+async function ChangeBili() {
+  if (!biliCode.value) {
+    message.error('身份码不能为空')
+    return
+  }
+  isLoading.value = true
+  await QueryGetAPI<{
+    uname: string
+    uid: number
+    uface: string
+    room_id: number
+  }>(ACCOUNT_API_URL + 'change-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+    .then(async (data) => {
+      if (data.code == 200) {
+        message.success('已更新身份码')
+        setTimeout(() => {
+          location.reload()
+        }, 1000)
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      message.error('发生错误')
+    })
+    .finally(() => {
+      turnstile.value?.reset()
+      isLoading.value = false
+    })
+}
 </script>
 
 <template>
@@ -138,6 +208,10 @@ async function resetPassword() {
             <NText style="color: var(--primary-color)">
               <NSpace :size="5" align="center">
                 已认证 | {{ accountInfo?.biliId }}
+                <NTag v-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Active" type="success" size="small" :bordered="false"> 身份码: 有效 </NTag>
+                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive" type="error" size="small" :bordered="false"> 身份码: 需更新 </NTag>
+                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Notfound" type="warning" size="small" :bordered="false"> 身份码: 需绑定 </NTag>
+                <NButton size="tiny" type="info" @click="bindBiliCodeModalVisiable = true"> 更新身份码 </NButton>
                 <NPopconfirm @positive-click="resetBili">
                   <template #trigger>
                     <NButton size="tiny" type="error"> 解除绑定 </NButton>
@@ -150,7 +224,7 @@ async function resetPassword() {
           <template v-else>
             <NTag type="error" size="small"> 未认证 </NTag>
             <NDivider vertical />
-            <NButton size="small" @click="$router.push({ name: 'manage-biliVerify' })" type="info"> 前往认证 </NButton>
+            <NButton size="small" @click="bindBiliCodeModalVisiable = true" type="info"> 进行绑定 </NButton>
           </template>
         </NCard>
         <NAlert title="Token" type="info">
@@ -198,4 +272,28 @@ async function resetPassword() {
       <NButton @click="resetPassword" type="warning"> 确定修改 </NButton>
     </template>
   </NModal>
+  <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%">
+    <NSpace vertical>
+      <NInputGroup>
+        <NInput v-model:value="biliCode" placeholder="身份码" />
+        <NTooltip>
+          <template #trigger>
+            <NButton type="primary" tag="a" href="https://play-live.bilibili.com/" target="_blank">
+              <template #icon>
+                <NIcon>
+                  <Question24Regular />
+                </NIcon>
+              </template>
+              前往获取
+            </NButton>
+          </template>
+          在幻星页面右侧或者开播页获取推流地址旁边可以复制身份码
+        </NTooltip>
+      </NInputGroup>
+    </NSpace>
+    <template #footer>
+      <NButton @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()" type="success" :loading="!token || isLoading"> 确定 </NButton>
+    </template>
+  </NModal>
+  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
 </template>

@@ -135,14 +135,6 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: 'bili-verify',
-        name: 'manage-biliVerify',
-        component: () => import('@/views/manage/BiliVerifyView.vue'),
-        meta: {
-          title: 'Bilibili认证',
-        },
-      },
-      {
         path: 'history',
         name: 'manage-history',
         component: () => import('@/views/manage/HistoryView.vue'),
