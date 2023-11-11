@@ -365,25 +365,6 @@ onMounted(async () => {
     }
   }
   timer = setInterval(updateUsers, 1000 * 10)
-
-  const data: OpenLiveLotteryUserInfo[] = []
-
-  for (let i = 0; i < 13; i++) {
-    const userInfo: OpenLiveLotteryUserInfo = {
-      name: `User ${i + 1}`,
-      uId: i + 1,
-      level: i + 10,
-      avatar: `http://i0.hdslb.com/bfs/face/284f87fba8ff1b9c9564925747c7dc456df65cca.jpg`,
-      fans_medal_level: i + 1,
-      fans_medal_name: `Fans Medal ${i + 1}`,
-      fans_medal_wearing_status: true,
-      guard_level: i + 5,
-    }
-
-    data.push(userInfo)
-  }
-  originUsers.value = data
-  currentUsers.value = JSON.parse(JSON.stringify(data))
 })
 onUnmounted(() => {
   if (timer) {
