@@ -555,7 +555,7 @@ onUnmounted(() => {
         <LiveLotteryOBS :code="code" />
       </div>
       <br />
-      <NInput :value="'https://localhost:5173/obs/live-lottery?code=' + code" />
+      <NInput :value="'https://vtsuru.live/obs/live-lottery?code=' + code" />
       <NDivider />
       <NCollapse>
         <NCollapseItem title="使用说明">
