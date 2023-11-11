@@ -33,6 +33,7 @@
     "vue-router": "4",
     "vue-turnstile": "^1.0.0",
     "vue3-aplayer": "^1.7.3",
+    "vue3-marquee": "^4.1.0",
     "vuex": "^4.0.0"
   },
   "devDependencies": {

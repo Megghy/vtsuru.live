@@ -206,6 +206,20 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
+    path: '/obs',
+    name: 'obs',
+    children: [
+      {
+        path: 'live-lottery',
+        name: 'obs-live-lottery',
+        component: () => import('@/views/obs/LiveLotteryOBS.vue'),
+        meta: {
+          title: '直播抽奖',
+        },
+      },
+    ],
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'notfound',
     component: import('@/views/NotfoundView.vue'),

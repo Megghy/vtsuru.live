@@ -36,6 +36,7 @@ export interface AccountInfo extends UserInfo {
   settings: UserSetting
   token: string
 
+  biliAuthCode?: string
   biliAuthCodeStatus: BiliAuthCodeStatusType
 
   eventFetcherOnline: boolean
@@ -235,4 +236,23 @@ export interface OpenLiveInfo {
   game_info: GameInfo
   websocket_info: WebsocketInfo
   anchor_info: AnchorInfo
+}
+export interface OpenLiveLotteryUserInfo {
+  name: string
+  uId: number
+  level?: number
+  avatar: string
+  fans_medal_level: number
+  fans_medal_name: string //粉丝勋章名
+  fans_medal_wearing_status: boolean //该房间粉丝勋章佩戴情况
+  guard_level: number
+}
+export enum OpenLiveLotteryType{
+  Waiting,
+  Result
+}
+export interface UpdateLiveLotteryUsersModel {
+  users: OpenLiveLotteryUserInfo[]
+  resultUsers: OpenLiveLotteryUserInfo[]
+  type: OpenLiveLotteryType
 }

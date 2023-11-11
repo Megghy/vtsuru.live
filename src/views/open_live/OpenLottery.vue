@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { QueryPostAPI } from '@/api/query'
-import { OPEN_LIVE_API_URL } from '@/data/constants'
-import { LotteryUserInfo, OpenLiveInfo } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { LOTTERY_API_URL, OPEN_LIVE_API_URL } from '@/data/constants'
+import { LotteryUserInfo, OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo } from '@/api/api-models'
 import {
   NAlert,
   NAvatar,
   NButton,
   NCard,
   NCheckbox,
+  NCollapse,
+  NCollapseItem,
   NCollapseTransition,
   NDivider,
   NEmpty,
@@ -21,6 +23,7 @@ import {
   NInputGroupLabel,
   NInputNumber,
   NLayoutContent,
+  NLi,
   NList,
   NListItem,
   NModal,
@@ -33,6 +36,7 @@ import {
   NTag,
   NTime,
   NTooltip,
+  NUl,
   useMessage,
   useNotification,
 } from 'naive-ui'
@@ -41,6 +45,7 @@ import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { Delete24Filled, Info24Filled } from '@vicons/fluent'
+import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
 
 interface AuthInfo {
   Timestamp: string
@@ -48,18 +53,6 @@ interface AuthInfo {
   Mid: string
   Caller: string
   CodeSign: string
-}
-interface OpenLiveLotteryBaseUserInfo {
-  name: string
-  uId: number
-  level?: number
-  avatar: string
-}
-interface OpenLiveLotteryUserInfo extends OpenLiveLotteryBaseUserInfo {
-  fans_medal_level: number
-  fans_medal_name: string //粉丝勋章名
-  fans_medal_wearing_status: boolean //该房间粉丝勋章佩戴情况
-  guard_level: number
 }
 interface LotteryOption {
   resultCount: number
@@ -75,7 +68,7 @@ interface LotteryOption {
   giftName?: string
 }
 interface LotteryHistory {
-  users: OpenLiveLotteryBaseUserInfo[]
+  users: OpenLiveLotteryUserInfo[]
   time: number
 }
 const CMD_CALLBACK_MAP = {
@@ -102,6 +95,9 @@ const notification = useNotification()
 
 const authInfo = ref<AuthInfo>()
 const authResult = ref<OpenLiveInfo | null>(null)
+const code = computed(() => {
+  return authInfo.value?.Code ?? accountInfo.value?.biliAuthCode
+})
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
@@ -111,6 +107,7 @@ const isLottering = ref(false)
 const isLotteried = ref(false)
 const isConnected = ref(false)
 const showModal = ref(false)
+const showOBSModal = ref(false)
 
 let chatClient: any
 
@@ -128,6 +125,30 @@ async function get() {
     console.error(err)
   }
   return null
+}
+async function getUsers() {
+  try {
+    const data = await QueryGetAPI<OpenLiveLotteryUserInfo[]>(LOTTERY_API_URL + 'live/get-users', {
+      code: code.value,
+    })
+    if (data.code == 200) {
+      console.log('[OPEN-LIVE] 已获历史抽奖用户')
+      return data.data
+    }
+  } catch (err) {
+    console.error(err)
+  }
+  return null
+}
+function updateUsers() {
+  QueryPostAPI(LOTTERY_API_URL + 'live/update-users', {
+    code: code.value,
+    users: originUsers.value,
+    resultUsers: resultUsers.value,
+    type: isLotteried.value ? OpenLiveLotteryType.Result : OpenLiveLotteryType.Waiting,
+  }).catch((err) => {
+    console.error('[OPEN-LIVE] 更新历史抽奖用户失败: ' + err)
+  })
 }
 async function start() {
   if (!chatClient) {
@@ -160,6 +181,7 @@ function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
     originUsers.value.push(user)
     currentUsers.value.push(user)
     console.log(`[OPEN-LIVE-Lottery] ${user.name} 添加到队列中`)
+    updateUsers()
   } else {
     console.log(`[OPEN-LIVE-Lottery] ${user.name} 因不符合条件而被忽略`)
   }
@@ -264,6 +286,7 @@ function onFinishLottery() {
       message.success('已保存至历史')
     },
   })
+  updateUsers()
   lotteryHistory.value.push({
     users: currentUsers.value ?? [],
     time: Date.now(),
@@ -272,6 +295,7 @@ function onFinishLottery() {
 function reset() {
   currentUsers.value = JSON.parse(JSON.stringify(originUsers.value))
   isLotteried.value = false
+  updateUsers()
 }
 function clear() {
   originUsers.value = []
@@ -279,10 +303,14 @@ function clear() {
   resultUsers.value = []
   currentUsers.value = []
   message.success('已清空队列')
+
+  updateUsers()
 }
 function removeUser(user: OpenLiveLotteryUserInfo) {
   currentUsers.value = currentUsers.value.filter((u) => u.uId != user.uId)
   originUsers.value = originUsers.value.filter((u) => u.uId != user.uId)
+
+  updateUsers()
 }
 
 function onDanmaku(command: any) {
@@ -324,16 +352,51 @@ function continueLottery() {
   message.info('开始监听')
 }
 
-onMounted(() => {
+let timer: any
+onMounted(async () => {
   authInfo.value = route.query as unknown as AuthInfo
+  if (authInfo.value?.Code) {
+    const users = (await getUsers()) ?? []
+    originUsers.value = users
+    currentUsers.value = JSON.parse(JSON.stringify(users))
+    console.log('[OPEN-LIVE-Lottery] 从历史记录中加载 ' + users.length + ' 位用户')
+    if (users.length > 0) {
+      message.info('从历史记录中加载 ' + users.length + ' 位用户')
+    }
+  }
+  timer = setInterval(updateUsers, 1000 * 10)
+
+  const data: OpenLiveLotteryUserInfo[] = []
+
+  for (let i = 0; i < 13; i++) {
+    const userInfo: OpenLiveLotteryUserInfo = {
+      name: `User ${i + 1}`,
+      uId: i + 1,
+      level: i + 10,
+      avatar: `http://i0.hdslb.com/bfs/face/284f87fba8ff1b9c9564925747c7dc456df65cca.jpg`,
+      fans_medal_level: i + 1,
+      fans_medal_name: `Fans Medal ${i + 1}`,
+      fans_medal_wearing_status: true,
+      guard_level: i + 5,
+    }
+
+    data.push(userInfo)
+  }
+  originUsers.value = data
+  currentUsers.value = JSON.parse(JSON.stringify(data))
+})
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+  }
 })
 </script>
 
 <template>
-  <NLayoutContent style="height: 100vh">
+  <NLayoutContent style="height: 100vh; padding: 20px">
     <NResult v-if="!authInfo?.Code && !accountInfo" status="403" title="403" description="该页面只能从饭贩访问或者注册用户使用" />
     <template v-else>
-      <NCard style="margin: 20px">
+      <NCard>
         <template #header>
           直播抽奖
           <NDivider vertical />
@@ -349,6 +412,7 @@ onMounted(() => {
               连接直播间
             </NButton>
             <NButton type="info" @click="showModal = true" size="small"> 抽奖历史</NButton>
+            <NButton type="success" @click="showOBSModal = true" size="small"> OBS组件</NButton>
           </NSpace>
         </NCard>
         <NCard size="small" embedded title="抽奖选项">
@@ -502,6 +566,28 @@ onMounted(() => {
         </NList>
       </NScrollbar>
       <NEmpty v-else description="暂无记录" />
+    </NModal>
+    <NModal v-model:show="showOBSModal" preset="card" title="OBS 组件" style="max-width: 90%; width: 800px; max-height: 90vh" closable content-style="overflow: auto">
+      <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
+      <NDivider> 浏览 </NDivider>
+      <div style="height: 400px; width: 250px; position: relative; margin: 0 auto">
+        <LiveLotteryOBS :code="code" />
+      </div>
+      <br />
+      <NInput :value="'https://localhost:5173/obs/live-lottery?code=' + code" />
+      <NDivider />
+      <NCollapse>
+        <NCollapseItem title="使用说明">
+          <NUl>
+            <NLi>在 OBS 来源中添加源, 选择 浏览器</NLi>
+            <NLi>在 URL 栏填入上方链接</NLi>
+            <NLi>根据自己的需要调整宽度和高度</NLi>
+            <NLi>完事</NLi>
+          </NUl>
+        </NCollapseItem>
+      </NCollapse>
+
+      <NDivider />
     </NModal>
   </NLayoutContent>
 </template>

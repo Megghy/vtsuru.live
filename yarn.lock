@@ -3362,6 +3362,11 @@ vue3-aplayer@^1.7.3:
   dependencies:
     vue-loader "^16.1.2"
 
+vue3-marquee@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/vue3-marquee/-/vue3-marquee-4.1.0.tgz#145baa65dd40059358e4079d51ab596c2ccf1299"
+  integrity sha512-AkvpNC6+7CwvIBgiAr8qMs1XvhGhfSS2ahlMEp80YXAmDOP8nDdn/smQ6eWtusf+hLX21yTaSOoKGcill4bCRg==
+
 vue@^3.2.13, vue@^3.2.45:
   version "3.3.7"
   resolved "https://registry.yarnpkg.com/vue/-/vue-3.3.7.tgz#972a218682443a3819d121261b2bff914417f4f0"

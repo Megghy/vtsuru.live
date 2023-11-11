@@ -2,18 +2,21 @@
   <NMessageProvider>
     <NNotificationProvider>
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
-        <NElement style="height: 100vh">
-          <Suspense>
-            <ViewerLayout v-if="layout == 'viewer'" />
-            <ManageLayout v-else-if="layout == 'manage'" />
-            <template v-else>
-              <RouterView />
-            </template>
-            <template #fallback>
-              <NSpin size="large" show/>
-            </template>
-          </Suspense>
-        </NElement>
+        <Suspense>
+          <div style="height: 100vh">
+            <NElement style="height: 100%;" v-if="layout != 'obs'">
+              <ViewerLayout v-if="layout == 'viewer'" />
+              <ManageLayout v-else-if="layout == 'manage'" />
+              <template v-else-if="layout == ''">
+                <RouterView />
+              </template>
+            </NElement>
+            <RouterView v-else/>
+          </div>
+          <template #fallback>
+            <NSpin size="large" show />
+          </template>
+        </Suspense>
       </NConfigProvider>
     </NNotificationProvider>
   </NMessageProvider>
@@ -38,6 +41,9 @@ const layout = computed(() => {
   } else if (route.path.startsWith('/manage')) {
     document.title = route.meta.title + ' · 管理 · VTsuru'
     return 'manage'
+  } else if (route.path.startsWith('/obs')) {
+    document.title = route.meta.title + ' · OBS · VTsuru'
+    return 'obs'
   } else {
     document.title = route.meta.title + ' · VTsuru'
     return ''
