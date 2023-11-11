@@ -3,7 +3,7 @@ import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { LOTTERY_API_URL, OPEN_LIVE_API_URL } from '@/data/constants'
-import { LotteryUserInfo, OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo } from '@/api/api-models'
+import { LotteryUserInfo, OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import {
   NAlert,
   NAvatar,
@@ -128,7 +128,7 @@ async function get() {
 }
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<OpenLiveLotteryUserInfo[]>(LOTTERY_API_URL + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
       code: code.value,
     })
     if (data.code == 200) {
@@ -356,7 +356,7 @@ let timer: any
 onMounted(async () => {
   authInfo.value = route.query as unknown as AuthInfo
   if (authInfo.value?.Code) {
-    const users = (await getUsers()) ?? []
+    const users = (await getUsers())?.users ?? []
     originUsers.value = users
     currentUsers.value = JSON.parse(JSON.stringify(users))
     console.log('[OPEN-LIVE-Lottery] 从历史记录中加载 ' + users.length + ' 位用户')
