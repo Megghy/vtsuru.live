@@ -152,18 +152,30 @@ function updateUsers() {
 }
 async function start() {
   if (!chatClient) {
-    const auth = await get()
-    if (auth) {
-      authResult.value = auth
-    } else {
-      return
-    }
-    initChatClient()
+    await connectRoom()
     isConnected.value = true
     setInterval(() => {
-      QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', authInfo.value)
+      if (chatClient) {
+        QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', authInfo.value).then((data) => {
+          if (data.code != 200) {
+            console.error('[OPEN-LIVE] 心跳失败: ' + data.message)
+            chatClient.stop()
+            chatClient = null
+            connectRoom()
+          }
+        })
+      }
     }, 20 * 1000)
   }
+}
+async function connectRoom() {
+  const auth = await get()
+  if (auth) {
+    authResult.value = auth
+  } else {
+    return
+  }
+  initChatClient()
 }
 async function initChatClient() {
   chatClient = new ChatClientDirectOpenLive(authResult.value)
