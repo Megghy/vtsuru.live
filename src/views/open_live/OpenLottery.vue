@@ -204,7 +204,7 @@ function isUserValid(u: OpenLiveLotteryUserInfo, danmu: any) {
   if (cmd === 'LIVE_OPEN_PLATFORM_DM' && lotteryOption.value.type != 'danmaku') {
     return false
   }
-  if (cmd === 'IVE_OPEN_PLATFORM_SEND_GIFT' && lotteryOption.value.type != 'gift') {
+  if (cmd === 'LIVE_OPEN_PLATFORM_SEND_GIFT' && lotteryOption.value.type != 'gift') {
     return false
   }
   if (lotteryOption.value.needWearFanMedal) {
