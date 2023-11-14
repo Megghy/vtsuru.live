@@ -186,7 +186,7 @@ async function initChatClient() {
   console.log('[OPEN-LIVE] 已连接房间: ' + authResult.value?.anchor_info.room_id)
 }
 function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
-  if (originUsers.value.find((u) => u.uId == user.uId)) {
+  if (originUsers.value.find((u) => u.uId == user.uId) || !isStartLottery.value) {
     return
   }
   if (isUserValid(user, danmu)) {
@@ -201,6 +201,12 @@ function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
 function isUserValid(u: OpenLiveLotteryUserInfo, danmu: any) {
   const cmd = danmu.cmd
   const data = danmu.data
+  if (cmd === 'LIVE_OPEN_PLATFORM_DM' && lotteryOption.value.type != 'danmaku') {
+    return false
+  }
+  if (cmd === 'IVE_OPEN_PLATFORM_SEND_GIFT' && lotteryOption.value.type != 'gift') {
+    return false
+  }
   if (lotteryOption.value.needWearFanMedal) {
     if (!u.fans_medal_wearing_status) return false
   }
