@@ -429,8 +429,7 @@ onUnmounted(() => {
         </NCard>
         <NCard v-if="originUsers" size="small">
           <NSpace justify="center" align="center">
-            <NSpin v-if="isStartLottery" size="small" />
-            <NButton type="primary" @click="continueLottery" :loading="isLottering" :disabled="isStartLottery || isLotteried || !client"> 开始 </NButton>
+            <NButton type="primary" @click="continueLottery" :loading="isStartLottery" :disabled="isStartLottery || isLotteried || !client"> 开始 </NButton>
             <NButton type="warning" :disabled="!isStartLottery" @click="pause"> 停止 </NButton>
             <NButton type="error" :disabled="isLottering || originUsers.length == 0" @click="clear"> 清空 </NButton>
           </NSpace>

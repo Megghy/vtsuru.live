@@ -19,10 +19,10 @@ const props = defineProps<{
 const activeSongs = ref<SongRequestInfo[]>([])
 
 function onGetDanmaku(danmaku: DanmakuInfo) {
-
+  console.log(danmaku)
 }
 function onGetSC(danmaku: SCInfo) {
-
+  console.log(danmaku)
 }
 
 onMounted(() => {
@@ -39,12 +39,8 @@ onUnmounted(() => {
   开发中...
   <NTabs animated>
     <NTabPane name="list" tab="列表">
-      <NList>
-
-      </NList>
+      <NList> </NList>
     </NTabPane>
-    <NTabPane name="history" tab="历史">
-
-    </NTabPane>
+    <NTabPane name="history" tab="历史"> </NTabPane>
   </NTabs>
 </template>
