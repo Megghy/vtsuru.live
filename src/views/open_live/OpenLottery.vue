@@ -334,7 +334,7 @@ onUnmounted(() => {
 
 <template>
   <NLayoutContent style="height: 100vh; padding: 20px">
-    <NResult v-if="code && !accountInfo" status="403" title="403" description="该页面只能从饭贩访问或者注册用户使用" />
+    <NResult v-if="!code && !accountInfo" status="403" title="403" description="该页面只能从幻星平台访问或者注册用户使用" />
     <template v-else>
       <NCard>
         <template #header>

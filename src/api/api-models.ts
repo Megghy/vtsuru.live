@@ -256,3 +256,34 @@ export interface UpdateLiveLotteryUsersModel {
   resultUsers: OpenLiveLotteryUserInfo[]
   type: OpenLiveLotteryType
 }
+export interface SongRequestInfo {
+  songName: string
+  song?: SongsInfo
+  status: SongRequestStatus
+  from: SongRequestFrom
+  scPrice?: number
+  user?: SongRequestUserInfo
+  createAt: number
+}
+export interface SongRequestUserInfo {
+  name: string
+  uId: number
+  guardLevel: number
+  fansMedalLevel: number
+  fansMedalName: string
+  fansMedalWearingStatus: boolean
+}
+
+export enum SongRequestFrom {
+  Manual,
+  Danmaku,
+  SC,
+  Web,
+}
+
+export enum SongRequestStatus {
+  Waiting,
+  Singing,
+  Finish,
+  Cancel,
+}

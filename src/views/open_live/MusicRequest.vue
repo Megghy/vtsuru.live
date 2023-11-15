@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
+import { SongRequestInfo } from '@/api/api-models'
 import DanmakuClient, { AuthInfo, DanmakuInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
-import { useMessage } from 'naive-ui'
-import { onMounted, onUnmounted } from 'vue'
+import { NList, NTabPane, NTabs, useMessage } from 'naive-ui'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -15,6 +16,8 @@ const props = defineProps<{
   code: string | undefined
 }>()
 
+const activeSongs = ref<SongRequestInfo[]>([])
+
 function onGetDanmaku(danmaku: DanmakuInfo) {
 
 }
@@ -23,11 +26,6 @@ function onGetSC(danmaku: SCInfo) {
 }
 
 onMounted(() => {
-  const authInfo = route.query as unknown as AuthInfo
-  if (!authInfo?.Code && !accountInfo.value?.isBiliVerified) {
-    message.warning('你并不是从幻星平台进入此页面, 且本站账号也未进行 Bilibili 账号认证, 此功能将不可用')
-    return
-  }
   props.client.on('danmaku', onGetDanmaku)
   props.client.on('sc', onGetSC)
 })
@@ -37,4 +35,16 @@ onUnmounted(() => {
 })
 </script>
 
-<template>开发中...</template>
+<template>
+  开发中...
+  <NTabs animated>
+    <NTabPane name="list" tab="列表">
+      <NList>
+
+      </NList>
+    </NTabPane>
+    <NTabPane name="history" tab="历史">
+
+    </NTabPane>
+  </NTabs>
+</template>
