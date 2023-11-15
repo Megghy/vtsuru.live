@@ -46,14 +46,8 @@ import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { Delete24Filled, Info24Filled } from '@vicons/fluent'
 import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
+import DanmakuClient, { AuthInfo, DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 
-interface AuthInfo {
-  Timestamp: string
-  Code: string
-  Mid: string
-  Caller: string
-  CodeSign: string
-}
 interface LotteryOption {
   resultCount: number
   lotteryType: 'single' | 'half'
@@ -93,46 +87,27 @@ const message = useMessage()
 const accountInfo = useAccount()
 const notification = useNotification()
 
-const authInfo = ref<AuthInfo>()
-const authResult = ref<OpenLiveInfo | null>(null)
-const code = computed(() => {
-  return authInfo.value?.Code ?? accountInfo.value?.biliAuthCode
-})
-
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const resultUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const isStartLottery = ref(false)
 const isLottering = ref(false)
 const isLotteried = ref(false)
-const isConnected = ref(false)
 const showModal = ref(false)
 const showOBSModal = ref(false)
 
-let chatClient: any
+const props = defineProps<{
+  client: DanmakuClient
+  roomInfo: RoomAuthInfo
+  code: string | undefined
+}>()
 
-async function get() {
-  try {
-    const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'start', authInfo.value?.Code ? authInfo.value : undefined)
-    if (data.code == 200) {
-      console.log('[OPEN-LIVE] 已获取场次信息')
-      return data.data
-    } else {
-      message.error('无法获取场次数据: ' + data.message)
-      return null
-    }
-  } catch (err) {
-    console.error(err)
-  }
-  return null
-}
 async function getUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
-      code: code.value,
+      code: props.code,
     })
     if (data.code == 200) {
-      console.log('[OPEN-LIVE] 已获历史抽奖用户')
       return data.data
     }
   } catch (err) {
@@ -142,48 +117,13 @@ async function getUsers() {
 }
 function updateUsers() {
   QueryPostAPI(LOTTERY_API_URL + 'live/update-users', {
-    code: code.value,
+    code: props.code,
     users: originUsers.value,
     resultUsers: resultUsers.value,
     type: isLotteried.value ? OpenLiveLotteryType.Result : OpenLiveLotteryType.Waiting,
   }).catch((err) => {
-    console.error('[OPEN-LIVE] 更新历史抽奖用户失败: ' + err)
+    console.error('[OPEN-LIVE-Lottery] 更新历史抽奖用户失败: ' + err)
   })
-}
-async function start() {
-  if (!chatClient) {
-    await connectRoom()
-    isConnected.value = true
-    setInterval(() => {
-      if (chatClient) {
-        QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', authInfo.value).then((data) => {
-          if (data.code != 200) {
-            console.error('[OPEN-LIVE] 心跳失败: ' + data.message)
-            chatClient.stop()
-            chatClient = null
-            connectRoom()
-          }
-        })
-      }
-    }, 20 * 1000)
-  }
-}
-async function connectRoom() {
-  const auth = await get()
-  if (auth) {
-    authResult.value = auth
-  } else {
-    return
-  }
-  initChatClient()
-}
-async function initChatClient() {
-  chatClient = new ChatClientDirectOpenLive(authResult.value)
-
-  //chatClient.msgHandler = this;
-  chatClient.CMD_CALLBACK_MAP = CMD_CALLBACK_MAP
-  chatClient.start()
-  console.log('[OPEN-LIVE] 已连接房间: ' + authResult.value?.anchor_info.room_id)
 }
 function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
   if (originUsers.value.find((u) => u.uId == user.uId) || !isStartLottery.value) {
@@ -201,12 +141,6 @@ function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
 function isUserValid(u: OpenLiveLotteryUserInfo, danmu: any) {
   const cmd = danmu.cmd
   const data = danmu.data
-  if (cmd === 'LIVE_OPEN_PLATFORM_DM' && lotteryOption.value.type != 'danmaku') {
-    return false
-  }
-  if (cmd === 'LIVE_OPEN_PLATFORM_SEND_GIFT' && lotteryOption.value.type != 'gift') {
-    return false
-  }
   if (lotteryOption.value.needWearFanMedal) {
     if (!u.fans_medal_wearing_status) return false
   }
@@ -331,35 +265,37 @@ function removeUser(user: OpenLiveLotteryUserInfo) {
   updateUsers()
 }
 
-function onDanmaku(command: any) {
-  const data = command.data
-  addUser(
-    {
-      uId: data.uid,
-      name: data.uname,
-      avatar: data.uface,
-      fans_medal_level: data.fans_medal_level,
-      fans_medal_name: data.fans_medal_name,
-      fans_medal_wearing_status: data.fans_medal_wearing_status,
-      guard_level: data.guard_level,
-    },
-    command
-  )
+function onDanmaku(data: DanmakuInfo, command: any) {
+  if (lotteryOption.value.type == 'danmaku') {
+    addUser(
+      {
+        uId: data.uid,
+        name: data.uname,
+        avatar: data.uface,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        guard_level: data.guard_level,
+      },
+      command
+    )
+  }
 }
-function onGift(command: any) {
-  const data = command.data
-  addUser(
-    {
-      uId: data.uid,
-      name: data.uname,
-      avatar: data.uface,
-      fans_medal_level: data.fans_medal_level,
-      fans_medal_name: data.fans_medal_name,
-      fans_medal_wearing_status: data.fans_medal_wearing_status,
-      guard_level: data.guard_level,
-    },
-    command
-  )
+function onGift(data: GiftInfo, command: any) {
+  if (lotteryOption.value.type == 'gift') {
+    addUser(
+      {
+        uId: data.uid,
+        name: data.uname,
+        avatar: data.uface,
+        fans_medal_level: data.fans_medal_level,
+        fans_medal_name: data.fans_medal_name,
+        fans_medal_wearing_status: data.fans_medal_wearing_status,
+        guard_level: data.guard_level,
+      },
+      command
+    )
+  }
 }
 function pause() {
   isStartLottery.value = false
@@ -372,8 +308,7 @@ function continueLottery() {
 
 let timer: any
 onMounted(async () => {
-  authInfo.value = route.query as unknown as AuthInfo
-  if (authInfo.value?.Code) {
+  if (props.code) {
     const users = (await getUsers())?.users ?? []
     originUsers.value = users
     currentUsers.value = JSON.parse(JSON.stringify(users))
@@ -382,18 +317,24 @@ onMounted(async () => {
       message.info('从历史记录中加载 ' + users.length + ' 位用户')
     }
   }
+  if (props.client) {
+    props.client.on('danmaku', onDanmaku)
+    props.client.on('gift', onGift)
+  }
   timer = setInterval(updateUsers, 1000 * 10)
 })
 onUnmounted(() => {
   if (timer) {
     clearInterval(timer)
   }
+  props.client?.off('danmaku', onDanmaku)
+  props.client?.off('gift', onGift)
 })
 </script>
 
 <template>
   <NLayoutContent style="height: 100vh; padding: 20px">
-    <NResult v-if="!authInfo?.Code && !accountInfo" status="403" title="403" description="该页面只能从饭贩访问或者注册用户使用" />
+    <NResult v-if="code && !accountInfo" status="403" title="403" description="该页面只能从饭贩访问或者注册用户使用" />
     <template v-else>
       <NCard>
         <template #header>
@@ -401,15 +342,10 @@ onUnmounted(() => {
           <NDivider vertical />
           <NButton text type="primary" tag="a" href="https://vtsuru.live" target="_blank"> 前往 VTsuru.live 主站 </NButton>
         </template>
-        <NAlert v-if="!authInfo?.Code && accountInfo && !accountInfo.isBiliVerified" type="error"> 请先绑定B站账号 </NAlert>
-        <NAlert v-else-if="!authInfo?.Code && accountInfo && accountInfo.biliAuthCodeStatus != 1" type="error"> 身份码状态异常, 请重新绑定 </NAlert>
+        <NAlert v-if="!code && accountInfo && !accountInfo.isBiliVerified" type="error"> 请先绑定B站账号 </NAlert>
+        <NAlert v-else-if="!code && accountInfo && accountInfo.biliAuthCodeStatus != 1" type="error"> 身份码状态异常, 请重新绑定 </NAlert>
         <NCard>
           <NSpace align="center">
-            连接状态:
-            <NTag :type="isConnected ? 'success' : 'warning'"> {{ isConnected ? `已连接 | ${authResult?.anchor_info.uname}` : '未连接' }} </NTag>
-            <NButton v-if="!isConnected" type="primary" @click="start" size="small" :disabled="!authInfo?.Code && (!accountInfo?.isBiliVerified || accountInfo.biliAuthCodeStatus != 1)">
-              连接直播间
-            </NButton>
             <NButton type="info" @click="showModal = true" size="small"> 抽奖历史</NButton>
             <NButton type="success" @click="showOBSModal = true" size="small"> OBS组件</NButton>
           </NSpace>
@@ -433,13 +369,13 @@ onUnmounted(() => {
             </NInputGroup>
             <NCheckbox :disabled="isStartLottery" v-model:checked="lotteryOption.needGuard"> 需要上舰 </NCheckbox>
             <NCheckbox :disabled="isStartLottery" v-model:checked="lotteryOption.needFanMedal"> 需要粉丝牌 </NCheckbox>
+            <NCollapseTransition>
+              <NInputGroup v-if="lotteryOption.needFanMedal" style="max-width: 200px">
+                <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
+                <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1" :disabled="isLottering || isStartLottery" />
+              </NInputGroup>
+            </NCollapseTransition>
             <template v-if="lotteryOption.type == 'danmaku'">
-              <NCollapseTransition>
-                <NInputGroup v-if="lotteryOption.needFanMedal" style="max-width: 200px">
-                  <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-                  <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1" :disabled="isLottering || isStartLottery" />
-                </NInputGroup>
-              </NCollapseTransition>
               <NTooltip>
                 <template #trigger>
                   <NInputGroup style="max-width: 250px">
@@ -493,9 +429,8 @@ onUnmounted(() => {
         </NCard>
         <NCard v-if="originUsers" size="small">
           <NSpace justify="center" align="center">
-            <NTag :bordered="false" type="warning" v-if="!isConnected"> 开始前需要先连接直播间 </NTag>
             <NSpin v-if="isStartLottery" size="small" />
-            <NButton type="primary" @click="continueLottery" :loading="isLottering" :disabled="isStartLottery || isLotteried || !isConnected"> 开始 </NButton>
+            <NButton type="primary" @click="continueLottery" :loading="isLottering" :disabled="isStartLottery || isLotteried || !client"> 开始 </NButton>
             <NButton type="warning" :disabled="!isStartLottery" @click="pause"> 停止 </NButton>
             <NButton type="error" :disabled="isLottering || originUsers.length == 0" @click="clear"> 清空 </NButton>
           </NSpace>
@@ -507,11 +442,11 @@ onUnmounted(() => {
           <NDivider style="margin: 10px 0 10px 0"> 共 {{ currentUsers?.length }} 人</NDivider>
           <NGrid v-if="currentUsers.length > 0" cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
             <NGridItem v-for="item in currentUsers" v-bind:key="item.uId">
-              <NCard size="small" :title="item.name" style="height: 155px">
+              <NCard size="small" :title="item.name" style="height: 155px" embedded>
                 <template #header>
                   <NSpace align="center" vertical :size="5">
                     <NAvatar round lazy borderd :size="64" :src="item.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
-                    <NSpace>
+                    <NSpace v-if="item.fans_medal_wearing_status">
                       <NTag size="tiny" round>
                         <NTag size="tiny" round :bordered="false">
                           {{ item.fans_medal_level }}
@@ -521,6 +456,7 @@ onUnmounted(() => {
                         </span>
                       </NTag>
                     </NSpace>
+                    <NTag v-else size="tiny" round :bordered="false"> 无粉丝牌 </NTag>
                     {{ item.name }}
                   </NSpace>
 
@@ -535,9 +471,6 @@ onUnmounted(() => {
           </NGrid>
           <NEmpty v-else description="暂无用户" />
         </NCard>
-        <NSpace justify="center" style="margin-top: 20px">
-          <NButton type="info" text tag="a" href="https://vtsuru.live" target="_blank"> vtsuru.live </NButton>
-        </NSpace>
       </NCard>
     </template>
     <NModal v-model:show="showModal" preset="card" title="抽奖结果" style="max-width: 90%; width: 800px" closable>
@@ -590,3 +523,4 @@ onUnmounted(() => {
     </NModal>
   </NLayoutContent>
 </template>
+@/data/DanmakuClient

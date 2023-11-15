@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem, NButton } from 'naive-ui'
 import vtb from '@/svgs/ic_vtuber.svg'
-import { AnalyticsSharp, Calendar, Chatbox, MusicalNote } from '@vicons/ionicons5'
+import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
 import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 
@@ -15,12 +15,12 @@ const functions = [
   },
   {
     name: '日程表',
-    desc: '提供多种样式的日程表 (还没做完',
+    desc: '提供多种样式的日程表 (样式还没做完',
     icon: Calendar,
   },
   {
     name: '歌单',
-    desc: '可以放自己的歌单或者能唱的歌, 支持多种样式 (也还没做完',
+    desc: '可以放自己的歌单或者能唱的歌, 支持多种样式 (样式也还没做完',
     icon: MusicalNote,
   },
   {
@@ -37,6 +37,11 @@ const functions = [
     name: '直播抽奖',
     desc: '从直播间弹幕或礼物抽取用户',
     icon: Lottery24Filled,
+  },
+  {
+    name: '弹幕点歌',
+    desc: '可以让弹幕进行点歌!',
+    icon: ListCircle,
   },
   {
     name: '视频征集',
@@ -85,6 +90,7 @@ const iconColor = 'white'
           <NSpace justify="center">
             <NButton type="primary" size="large" @click="$router.push({ name: 'manage-index' })"> 开始使用 </NButton>
             <NButton size="large" @click="$router.push('/user/Megghy')"> 展示 </NButton>
+            <NButton size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank" color="#ff778f"> 幻星平台 </NButton>
             <NButton type="info" size="large" @click="$router.push({ name: 'about' })"> 关于 </NButton>
           </NSpace>
         </NSpace>

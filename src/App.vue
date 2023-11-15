@@ -4,14 +4,15 @@
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
         <Suspense>
           <div style="height: 100vh">
-            <NElement style="height: 100%;" v-if="layout != 'obs'">
+            <NElement style="height: 100%" v-if="layout != 'obs'">
               <ViewerLayout v-if="layout == 'viewer'" />
               <ManageLayout v-else-if="layout == 'manage'" />
+              <OpenLiveLayout v-else-if="layout == 'open-live'" />
               <template v-else-if="layout == ''">
                 <RouterView />
               </template>
             </NElement>
-            <RouterView v-else/>
+            <RouterView v-else />
           </div>
           <template #fallback>
             <NSpin size="large" show />
@@ -31,6 +32,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { ThemeType, UserInfo } from './api/api-models'
 import { useUser } from './api/user'
+import OpenLiveLayout from './views/OpenLiveLayout.vue'
 
 const route = useRoute()
 
@@ -41,6 +43,9 @@ const layout = computed(() => {
   } else if (route.path.startsWith('/manage')) {
     document.title = route.meta.title + ' · 管理 · VTsuru'
     return 'manage'
+  } else if (route.path.startsWith('/open-live')) {
+    document.title = route.meta.title + ' · 开放平台 · VTsuru'
+    return 'open-live'
   } else if (route.path.startsWith('/obs')) {
     document.title = route.meta.title + ' · OBS · VTsuru'
     return 'obs'

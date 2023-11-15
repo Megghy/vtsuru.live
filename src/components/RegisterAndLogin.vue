@@ -179,7 +179,6 @@ function onLoginButtonClick() {
       })
       .finally(() => {
         isLoading.value = false
-        turnstile.value?.reset()
       })
   })
 }

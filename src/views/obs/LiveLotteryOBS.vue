@@ -34,7 +34,6 @@ async function getUsers() {
       code: currentCode.value,
     })
     if (data.code == 200) {
-      console.log('[OPEN-LIVE] 已获历史抽奖用户')
       return data.data
     }
   } catch (err) {

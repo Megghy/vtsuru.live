@@ -196,11 +196,27 @@ const routes: Array<RouteRecordRaw> = [
     name: 'open-live',
     children: [
       {
+        path: '',
+        name: 'open-live-index',
+        component: () => import('@/views/open_live/OpenLiveIndex.vue'),
+        meta: {
+          title: '开放平台',
+        },
+      },
+      {
         path: 'lottery',
         name: 'open-live-lottery',
         component: () => import('@/views/open_live/OpenLottery.vue'),
         meta: {
           title: '直播抽奖',
+        },
+      },
+      {
+        path: 'song-request',
+        name: 'open-live-song-request',
+        component: () => import('@/views/open_live/MusicRequest.vue'),
+        meta: {
+          title: '点歌',
         },
       },
     ],
