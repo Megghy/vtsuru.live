@@ -60,16 +60,38 @@ export interface Setting_QuestionBox {
 export interface UserSetting {
   sendEmail: Setting_SendEmail
   questionBox: Setting_QuestionBox
+  songRequest: Setting_SongRequest
   enableFunctions: FunctionTypes[]
 
   indexTemplate: string | null,
   songListTemplate: string | null
   scheduleTemplate: string | null
 }
+export interface Setting_SongRequest {
+  orderPrefix: string
+  onlyAllowSongList: boolean
+  queueMaxSize: number
+  allowAllDanmaku: boolean
+  allowFromWeb: boolean
+  needWearFanMedal: boolean
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
+  allowSC: boolean
+  sCIgnoreLimit: boolean
+  sCMinPrice: number
+  fanMedalMinLevel: number
+  allowReorderSong: boolean
+  cooldownSecond: number
+  zongduCooldownSecond: number
+  tiduCooldownSecond: number
+  jianzhangCooldownSecond: number
+}
 export enum FunctionTypes {
   SongList,
   QuestionBox,
   Schedule,
+  SongRequest,
 }
 export interface SongAuthorInfo {
   name: string
@@ -257,6 +279,7 @@ export interface UpdateLiveLotteryUsersModel {
   type: OpenLiveLotteryType
 }
 export interface SongRequestInfo {
+  id: number
   songName: string
   song?: SongsInfo
   status: SongRequestStatus
@@ -267,11 +290,11 @@ export interface SongRequestInfo {
 }
 export interface SongRequestUserInfo {
   name: string
-  uId: number
-  guardLevel: number
-  fansMedalLevel: number
-  fansMedalName: string
-  fansMedalWearingStatus: boolean
+  uid: number
+  guard_level: number
+  fans_medal_level: number
+  fans_medal_name: string
+  fans_medal_wearing_status: boolean
 }
 
 export enum SongRequestFrom {
@@ -286,4 +309,24 @@ export enum SongRequestStatus {
   Singing,
   Finish,
   Cancel,
+}
+export interface EventModel {
+  type: EventDataTypes
+  name: string
+  avatar: string
+  uid: number
+  msg: string
+  time: number
+  num: number
+  price: number
+  guard_level: number
+  fans_medal_level: number
+  fans_medal_name: string
+  fans_medal_wearing_status: boolean
+}
+export enum EventDataTypes {
+  Guard,
+  SC,
+  Gift,
+  Message,
 }

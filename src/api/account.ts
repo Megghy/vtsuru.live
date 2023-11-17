@@ -47,6 +47,9 @@ function refreshCookie() {
     }
   })
 }
+export async function SaveAccountSettings() {
+  return await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', ACCOUNT.value?.settings)
+}
 export function useAccount() {
   return ACCOUNT
 }
