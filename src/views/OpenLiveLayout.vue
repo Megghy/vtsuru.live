@@ -29,8 +29,9 @@ import {
   useMessage,
   NDivider,
   NTag,
+  NAlert,
 } from 'naive-ui'
-import { ref, onMounted, h } from 'vue'
+import { ref, onMounted, h, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -89,6 +90,9 @@ onMounted(async () => {
     message.error('你不是从幻星平台访问此页面, 或未提供对应参数, 无法使用此功能')
   }
 })
+onUnmounted(() => {
+  client.value?.Stop()
+})
 </script>
 
 <template>
@@ -108,7 +112,7 @@ onMounted(async () => {
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''">
         <template #extra>
           <NSpace align="center">
-            <NTag :type="client ? 'success' : 'warning'"> {{ client ? `已连接 | ${client.roomAuthInfo.value?.anchor_info.uname}` : '未连接' }} </NTag>
+            <NTag :type="client?.roomAuthInfo.value ? 'success' : 'warning'"> {{ client?.roomAuthInfo.value ? `已连接 | ${client.roomAuthInfo.value?.anchor_info.uname}` : '未连接' }} </NTag>
             <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
               <template #checked>
                 <NIcon :component="Sunny" />
@@ -120,7 +124,9 @@ onMounted(async () => {
           </NSpace>
         </template>
         <template #title>
-          <NText strong style="font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-justify: auto"> VTSURU | 开放平台 </NText>
+          <NButton text tag="a" @click="$router.push({ name: 'open-live-index', query: $route.query })">
+            <NText strong style="font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-justify: auto"> VTSURU | 开放平台 </NText>
+          </NButton>
         </template>
       </NPageHeader>
     </NLayoutHeader>
@@ -152,21 +158,23 @@ onMounted(async () => {
           </NText>
         </NSpace>
       </NLayoutSider>
-      <NLayoutContent yle="height: 100%" :native-scrollbar="false">
-        <RouterView v-if="client?.roomAuthInfo" v-slot="{ Component }">
+      <NLayoutContent style="height: 100%; padding: 10px" :native-scrollbar="false">
+        <RouterView v-if="client?.roomAuthInfo.value" v-slot="{ Component }">
           <KeepAlive>
             <component :is="Component" :room-info="client?.roomAuthInfo" :client="client" :code="authInfo.Code" />
           </KeepAlive>
         </RouterView>
         <template v-else>
-          <NSpin show />
+          <NAlert type="info" title="正在请求弹幕客户端认证信息...">
+            <NSpin show />
+          </NAlert>
         </template>
         <NBackTop />
       </NLayoutContent>
     </NLayout>
     <NLayoutFooter style="height: 30px" bordered>
       <NSpace justify="center" align="center" style="height: 100%">
-        <NButton text tag="a" href="/" target="_blank" type="info" secondary> vtsuru.live </NButton>
+        <NButton text tag="a" href="/" target="_blank" type="info"> vtsuru.live </NButton>
       </NSpace>
     </NLayoutFooter>
   </NLayout>

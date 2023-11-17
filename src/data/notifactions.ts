@@ -1,6 +1,6 @@
 import { QueryGetAPI } from '@/api/query'
 import { useRequest } from 'vue-request'
-import { NOTIFACTION_API_URL, isBackendUsable } from './constants'
+import { NOTIFACTION_API_URL, SONG_REQUEST_API_URL, isBackendUsable } from './constants'
 import { NotifactionInfo } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { ref } from 'vue'
@@ -10,7 +10,7 @@ const n = ref<NotifactionInfo>()
 let isLoading = false
 function get() {
   if (isLoading) return
-  QueryGetAPI<NotifactionInfo>(NOTIFACTION_API_URL + 'get')
+  QueryGetAPI<NotifactionInfo>(SONG_REQUEST_API_URL + 'get-active')
     .then((data) => {
       if (data.code == 200) {
         n.value = data.data

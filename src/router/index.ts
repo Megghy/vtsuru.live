@@ -233,6 +233,14 @@ const routes: Array<RouteRecordRaw> = [
           title: '直播抽奖',
         },
       },
+      {
+        path: 'song-request',
+        name: 'obs-song-request',
+        component: () => import('@/views/obs/SongRequestOBS.vue'),
+        meta: {
+          title: '弹幕点歌',
+        },
+      },
     ],
   },
   {
