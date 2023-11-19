@@ -245,7 +245,6 @@ export default class DanmakuClient {
       chatClient.start()
       console.log('[OPEN-LIVE] 已连接房间: ' + auth.anchor_info.room_id)
       this.roomAuthInfo.value = auth
-      this.client = chatClient
       return true
     } else {
       console.log('[OPEN-LIVE] 无法开启场次')

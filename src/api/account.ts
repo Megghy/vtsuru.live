@@ -1,5 +1,5 @@
 import { ACCOUNT_API_URL, BASE_API } from '@/data/constants'
-import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
+import { APIRoot, AccountInfo } from './api-models'
 import { QueryPostAPI } from '@/api/query'
 import { ref } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
@@ -46,12 +46,6 @@ function refreshCookie() {
       console.log('[vtsuru] 已刷新Cookie')
     }
   })
-}
-export async function SaveAccountSettings() {
-  return await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', ACCOUNT.value?.settings)
-}
-export async function SaveEnableFunctions(functions: FunctionTypes[]) {
-  return await QueryPostAPI(ACCOUNT_API_URL + 'update-enable-functions', functions)
 }
 export function useAccount() {
   return ACCOUNT

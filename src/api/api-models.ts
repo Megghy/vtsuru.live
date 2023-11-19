@@ -60,39 +60,16 @@ export interface Setting_QuestionBox {
 export interface UserSetting {
   sendEmail: Setting_SendEmail
   questionBox: Setting_QuestionBox
-  songRequest: Setting_SongRequest
   enableFunctions: FunctionTypes[]
 
-  indexTemplate: string | null
+  indexTemplate: string | null,
   songListTemplate: string | null
   scheduleTemplate: string | null
-}
-export interface Setting_SongRequest {
-  orderPrefix: string
-  onlyAllowSongList: boolean
-  queueMaxSize: number
-  allowAllDanmaku: boolean
-  allowFromWeb: boolean
-  needWearFanMedal: boolean
-  needJianzhang: boolean
-  needTidu: boolean
-  needZongdu: boolean
-  allowSC: boolean
-  scIgnoreLimit: boolean
-  scMinPrice: number
-  fanMedalMinLevel: number
-  allowReorderSong: boolean
-  enableCooldown: boolean
-  cooldownSecond: number
-  zongduCooldownSecond: number
-  tiduCooldownSecond: number
-  jianzhangCooldownSecond: number
 }
 export enum FunctionTypes {
   SongList,
   QuestionBox,
   Schedule,
-  SongRequest,
 }
 export interface SongAuthorInfo {
   name: string
@@ -190,7 +167,7 @@ export interface VideoCollectCreateModel {
   endAt: number
   maxVideoCount: number
 }
-export interface VideoCollectTable {
+export interface VideoCollectTable{
   id: string
   shortId: string
   name: string
@@ -213,16 +190,17 @@ export interface VideoCollectVideo {
   length: number
   watched?: boolean
 }
-export enum VideoFrom {
+export enum VideoFrom{
   Collect,
-  Spam,
+  Spam
 }
-export enum VideoStatus {
-  Pending,
-  Accepted,
-  Rejected,
+export enum VideoStatus
+{
+    Pending,
+    Accepted,
+    Rejected,
 }
-export interface VideoSender {
+export interface VideoSender{
   sendAt: number
   sender?: string
   senderId?: number
@@ -269,9 +247,9 @@ export interface OpenLiveLotteryUserInfo {
   fans_medal_wearing_status: boolean //该房间粉丝勋章佩戴情况
   guard_level: number
 }
-export enum OpenLiveLotteryType {
+export enum OpenLiveLotteryType{
   Waiting,
-  Result,
+  Result
 }
 export interface UpdateLiveLotteryUsersModel {
   users: OpenLiveLotteryUserInfo[]
@@ -279,7 +257,6 @@ export interface UpdateLiveLotteryUsersModel {
   type: OpenLiveLotteryType
 }
 export interface SongRequestInfo {
-  id: number
   songName: string
   song?: SongsInfo
   status: SongRequestStatus
@@ -287,16 +264,14 @@ export interface SongRequestInfo {
   scPrice?: number
   user?: SongRequestUserInfo
   createAt: number
-  finishAt?:number
-  isInLocal?: boolean
 }
 export interface SongRequestUserInfo {
   name: string
-  uid: number
-  guard_level: number
-  fans_medal_level: number
-  fans_medal_name: string
-  fans_medal_wearing_status: boolean
+  uId: number
+  guardLevel: number
+  fansMedalLevel: number
+  fansMedalName: string
+  fansMedalWearingStatus: boolean
 }
 
 export enum SongRequestFrom {
@@ -311,24 +286,4 @@ export enum SongRequestStatus {
   Singing,
   Finish,
   Cancel,
-}
-export interface EventModel {
-  type: EventDataTypes
-  name: string
-  avatar: string
-  uid: number
-  msg: string
-  time: number
-  num: number
-  price: number
-  guard_level: number
-  fans_medal_level: number
-  fans_medal_name: string
-  fans_medal_wearing_status: boolean
-}
-export enum EventDataTypes {
-  Guard,
-  SC,
-  Gift,
-  Message,
 }
