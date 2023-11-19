@@ -1,5 +1,5 @@
 import { OpenLiveInfo } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
 import { OPEN_LIVE_API_URL } from './constants'
 import { ref, toRef } from 'vue'
@@ -191,7 +191,7 @@ export default class DanmakuClient {
   }
   private sendHeartbeat() {
     if (this.client) {
-      QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo?.Code ? this.authInfo : undefined).then((data) => {
+      ;(this.authInfo ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo) : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')).then((data) => {
         if (data.code != 200) {
           console.error('[OPEN-LIVE] 心跳失败: ' + data.message)
           this.client.stop()
