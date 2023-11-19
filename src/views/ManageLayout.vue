@@ -166,6 +166,21 @@ const menuOptions = [
     icon: renderIcon(Lottery24Filled),
     //disabled: accountInfo.value?.isEmailVerified == false,
   },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-songRequest',
+          },
+        },
+        { default: () => '弹幕点歌' }
+      ),
+    key: 'manage-songRequest',
+    icon: renderIcon(MusicalNote),
+    //disabled: accountInfo.value?.isEmailVerified == false,
+  },
 ]
 
 async function resendEmail() {

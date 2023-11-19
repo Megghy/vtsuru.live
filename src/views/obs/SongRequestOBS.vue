@@ -93,7 +93,7 @@ onUnmounted(() => {
     <div class="song-request-singing-container" :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1">
       <div class="song-request-singing-prefix"></div>
       <template v-if="singing">
-        <img class="song-request-singing-avatar" :src="AVATAR_URL + singing?.user?.uid" />
+        <img class="song-request-singing-avatar" :src="AVATAR_URL + singing?.user?.uid" referrerpolicy="no-referrer" />
         <p class="song-request-singing-song-name">{{ singing?.songName }}</p>
         <p class="song-request-singing-name">{{ singing?.user?.name }}</p>
       </template>

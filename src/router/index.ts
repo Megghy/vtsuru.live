@@ -189,6 +189,15 @@ const routes: Array<RouteRecordRaw> = [
           keepAlive: true,
         },
       },
+      {
+        path: 'song-request',
+        name: 'manage-songRequest',
+        component: () => import('@/views/manage/SongRequestManage.vue'),
+        meta: {
+          title: '弹幕点歌',
+          keepAlive: true,
+        },
+      },
     ],
   },
   {
