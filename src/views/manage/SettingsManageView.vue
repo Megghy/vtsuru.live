@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
+import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
 import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NForm, NModal, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, SelectOption, useMessage } from 'naive-ui'
 import { Ref, computed, h, onMounted, ref, defineAsyncComponent, onActivated } from 'vue'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
@@ -195,7 +195,7 @@ async function SaveComboGroupSetting(value: (string | number)[], meta: { actionT
   if (accountInfo.value) {
     isSaving.value = true
     //UpdateEnableFunction(meta.value as FunctionTypes, meta.actionType == 'check')
-    await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', accountInfo.value?.settings)
+    await SaveEnableFunctions(accountInfo.value.settings.enableFunctions)
       .then((data) => {
         if (data.code == 200) {
           //message.success('保存成功')
@@ -216,10 +216,10 @@ async function SaveComboGroupSetting(value: (string | number)[], meta: { actionT
   }
 }
 async function SaveComboSetting() {
+  isSaving.value = true
   if (accountInfo.value) {
-    isSaving.value = true
     //UpdateEnableFunction(meta.value as FunctionTypes, meta.actionType == 'check')
-    await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', accountInfo.value?.settings)
+    await SaveAccountSettings()
       .then((data) => {
         if (data.code == 200) {
           message.success('已保存')

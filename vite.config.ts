@@ -6,12 +6,7 @@ import svgLoader from 'vite-svg-loader'
 import mkcert from 'vite-plugin-mkcert'
 
 export default defineConfig({
-  server: {
-    https: true, // 需要开启https服务
-  },
-  plugins: [vue(), svgLoader(), mkcert({
-    source: 'coding'
-  })],
+  plugins: [vue(), svgLoader()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
