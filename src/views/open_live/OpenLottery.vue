@@ -441,7 +441,7 @@ onUnmounted(() => {
             :loading="isLottering"
             :disabled="isStartLottery || isLotteried"
             data-umami-event="Open-Live Use Lottery"
-            :data-umami-event-uid="client.roomAuthInfo.value?.anchor_info.uid"
+            :data-umami-event-uid="client?.roomAuthInfo?.value?.anchor_info?.uid"
           >
             进行抽取
           </NButton>

@@ -111,7 +111,17 @@ const props = defineProps<{
 }>()
 
 const localActiveSongs = useStorage('SongRequest.ActiveSongs', [] as SongRequestInfo[])
-const songs = ref<SongRequestInfo[]>(await getAllSong())
+const originSongs = ref<SongRequestInfo[]>(await getAllSong())
+const songs = computed(() => {
+  return originSongs.value.filter((s) => {
+    return (
+      (filterSongName.value == '' || filterSongNameContains.value
+        ? s.songName.toLowerCase().includes(filterSongName.value.toLowerCase())
+        : s.songName.toLowerCase() == filterSongName.value.toLowerCase()) &&
+      (filterName.value == '' || filterNameContains.value ? s.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) : s.user?.name.toLowerCase() == filterName.value.toLowerCase())
+    )
+  })
+})
 const activeSongs = computed(() => {
   return (accountInfo ? songs.value : localActiveSongs.value)
     .sort((a, b) => b.status - a.status)
@@ -128,6 +138,10 @@ const historySongs = computed(() => {
 })
 
 const newSongName = ref('')
+const filterSongName = ref('')
+const filterSongNameContains = ref(false)
+const filterName = ref('')
+const filterNameContains = ref(false)
 
 const defaultPrefix = useStorage('Settings.SongRequest.DefaultPrefix', '点歌')
 const configCanEdit = computed(() => {
@@ -186,7 +200,7 @@ async function addSong(danmaku: EventModel) {
       .then((data) => {
         if (data.code == 200) {
           message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
-          songs.value.unshift(data.data)
+          originSongs.value.unshift(data.data)
         } else {
           //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
           const time = Date.now()
@@ -237,7 +251,7 @@ async function addSongManual() {
       .then((data) => {
         if (data.code == 200) {
           message.success(`已手动添加曲目: ${data.data.songName}`)
-          activeSongs.value.unshift(data.data)
+          originSongs.value.unshift(data.data)
           newSongName.value = ''
           console.log(`[OPEN-LIVE-Song-Request] 已手动添加曲目: ${data.data.songName}`)
         } else {
@@ -414,7 +428,7 @@ async function deleteSongs(values: SongRequestInfo[]) {
     .then((data) => {
       if (data.code == 200) {
         message.success('删除成功')
-        songs.value = songs.value.filter((s) => !values.includes(s))
+        originSongs.value = originSongs.value.filter((s) => !values.includes(s))
       } else {
         message.error('删除失败: ' + data.message)
         console.error('删除失败: ' + data.message)
@@ -541,7 +555,7 @@ const columns = [
           break
         }
       }
-      return h(NTag, { type: statusType, size: 'small' }, () => STATUS_MAP[data.status])
+      return h(NTag, { type: statusType, size: 'small', style: data.status == SongRequestStatus.Singing ? 'animation: animated-border 2.5s infinite;' : '' }, () => STATUS_MAP[data.status])
     },
   },
   {
@@ -678,7 +692,7 @@ onUnmounted(() => {
   </NCard>
   <br />
   <NCard>
-    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)" animated>
+    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)" animated display-directive="show:lazy">
       <NTabPane name="list" tab="列表">
         <NCard size="small">
           <NSpace align="center">
@@ -811,6 +825,26 @@ onUnmounted(() => {
         <NEmpty v-else description="暂无曲目" />
       </NTabPane>
       <NTabPane name="history" tab="历史">
+        <NCard size="small">
+          <NSpace>
+            <NInputGroup style="width: 300px">
+              <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
+              <NInput v-model:value="filterSongName" clearable>
+                <template #suffix>
+                  <NCheckbox v-model:checked="filterSongNameContains"> 包含 </NCheckbox>
+                </template>
+              </NInput>
+            </NInputGroup>
+            <NInputGroup style="width: 300px">
+              <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
+              <NInput v-model:value="filterName" clearable>
+                <template #suffix>
+                  <NCheckbox v-model:checked="filterNameContains"> 包含 </NCheckbox>
+                </template>
+              </NInput>
+            </NInputGroup>
+          </NSpace>
+        </NCard>
         <NDataTable
           size="small"
           ref="table"

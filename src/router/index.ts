@@ -183,7 +183,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'live-lottery',
         name: 'manage-liveLottery',
-        component: () => import('@/views/open_live/OpenLottery.vue'),
+        component: () => import('@/views/manage/LiveLotteryManage.vue'),
         meta: {
           title: '直播抽奖',
           keepAlive: true,
