@@ -5,6 +5,8 @@ import path from 'path'
 import svgLoader from 'vite-svg-loader'
 import mkcert from 'vite-plugin-mkcert'
 
+const Timestamp = new Date().getTime()
+
 export default defineConfig({
   plugins: [vue(), svgLoader()],
   resolve: {

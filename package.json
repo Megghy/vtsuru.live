@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "node gen-version.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "vite lint"
