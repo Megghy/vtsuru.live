@@ -72,6 +72,7 @@ const iconColor = 'white'
   <div class="index-background">
     <NSpace vertical justify="center" align="center" style="padding-top: 30px">
       <NSpace justify="center" align="center" :size="width > 700 ? 50 : 0">
+        <vtb />
         <NSpace vertical justify="center">
           <NGradientText
             size="3rem"
