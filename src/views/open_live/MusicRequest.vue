@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
-import { EventDataTypes, EventModel, FunctionTypes, OpenLiveInfo, Setting_SongRequest, SongRequestFrom, SongRequestInfo, SongRequestStatus, SongRequestUserInfo } from '@/api/api-models'
+import {
+  EventDataTypes,
+  EventModel,
+  FunctionTypes,
+  OpenLiveInfo,
+  Setting_SongRequest,
+  SongFrom,
+  SongRequestFrom,
+  SongRequestInfo,
+  SongRequestStatus,
+  SongRequestUserInfo,
+  SongsInfo,
+} from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import DanmakuClient, { AuthInfo, DanmakuInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
-import { OPEN_LIVE_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
-import { Check24Filled, Checkmark12Regular, Delete24Filled, Dismiss12Filled, Dismiss16Filled, Info24Filled, Mic24Filled, PeopleQueue24Filled } from '@vicons/fluent'
+import { OPEN_LIVE_API_URL, SONG_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
+import { Check24Filled, Checkmark12Regular, Delete24Filled, Dismiss12Filled, Dismiss16Filled, Info24Filled, Mic24Filled, PeopleQueue24Filled, Play24Filled } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 import { format, isSameDay } from 'date-fns'
@@ -48,8 +60,8 @@ import {
 } from 'naive-ui'
 import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
 import SongRequestOBS from '../obs/SongRequestOBS.vue'
+import APlayer from 'vue3-aplayer'
 
 const defaultSettings = {
   orderPrefix: '点歌',
@@ -103,6 +115,13 @@ const settings = computed({
     }
   },
 })
+const aplayerMusic = ref<{
+  title: string
+  artist: string
+  src: string
+  lrc: string
+  autoplay: boolean
+}>()
 
 const props = defineProps<{
   client: DanmakuClient
@@ -674,6 +693,96 @@ async function updateActive() {
     console.error(err)
   }
 }
+function playMusic(song: SongRequestInfo) {
+  aplayerMusic.value = undefined
+  if (song.song?.from == SongFrom.Netease) GetLyric(song.song)
+  else {
+    aplayerMusic.value = {
+      title: song.song?.name ?? '未知',
+      artist: song.song?.author?.join('/') ?? '',
+      src: song.song?.url ?? '',
+      lrc: '',
+      autoplay: true,
+    }
+  }
+}
+const isLrcLoading = ref('')
+async function GetLyric(song: SongsInfo) {
+  isLrcLoading.value = song.key
+  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
+    .then((data) => {
+      console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
+      if (data.code == 200) {
+        aplayerMusic.value = {
+          title: song.name,
+          artist: song.author.join('/') ?? '',
+          src: song.url,
+          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
+
+          autoplay: true,
+        }
+        //aplayerMusic.value.lrc = data.data.lyric
+      }
+    })
+    .catch((err) => {
+      console.error(err)
+      aplayerMusic.value = {
+        title: song.name,
+        artist: song.author.join('/') ?? '',
+        src: song.url,
+        lrc: '',
+        autoplay: true,
+      }
+    })
+    .finally(() => {
+      isLrcLoading.value = ''
+    })
+}
+function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
+  const originalLines = originalLyrics.split('\n')
+  const translatedLines = translatedLyrics.split('\n')
+
+  let mergedLyrics = ''
+
+  for (let i = 0; i < originalLines.length; i++) {
+    const originalLine = originalLines[i]?.trim()
+    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配原歌词的时间字符串
+
+    let mergedLine = originalLine
+
+    if (originalTimeMatch) {
+      const originalTime = originalTimeMatch[1]
+      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
+
+      if (translatedLineIndex !== -1) {
+        const translatedLine = translatedLines[translatedLineIndex]
+        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配翻译歌词的时间字符串
+
+        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
+          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
+          if (translatedText) {
+            mergedLine += ` (${translatedText})`
+          }
+          translatedLines.splice(translatedLineIndex, 1) // 从翻译歌词数组中移除已匹配的行
+        }
+      }
+    }
+    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
+      //不是空行
+      mergedLyrics += `${mergedLine}\n`
+    }
+  }
+
+  // 将剩余的非空翻译歌词单独放在一行
+  for (const translatedLine of translatedLines) {
+    const translatedText = translatedLine.trim()
+    if (translatedText) {
+      mergedLyrics += `${translatedText}\n`
+    }
+  }
+
+  return mergedLyrics.trim()
+}
 
 let timer: any
 let updateActiveTimer: any
@@ -715,7 +824,16 @@ onUnmounted(() => {
   </NCard>
   <br />
   <NCard>
-    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)" animated display-directive="show:lazy">
+    <NTabs
+      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
+      animated
+      display-directive="show:lazy"
+      @update:value="
+        () => {
+          if (aplayerMusic) aplayerMusic.autoplay = false
+        }
+      "
+    >
       <NTabPane name="list" tab="列表">
         <NCard size="small">
           <NSpace align="center">
@@ -727,7 +845,7 @@ onUnmounted(() => {
             </NTag>
             <NTag type="success" :bordered="false">
               <template #icon>
-                <NIcon :component="PeopleQueue24Filled" />
+                <NIcon :component="Checkmark12Regular" />
               </template>
               今日已演唱 | {{ songs.filter((s) => s.status != SongRequestStatus.Cancel && isSameDay(s.finishAt ?? 0, Date.now())).length }} 首
             </NTag>
@@ -744,6 +862,12 @@ onUnmounted(() => {
           </NSpace>
         </NCard>
         <NDivider> 共 {{ activeSongs.length }} 首 </NDivider>
+        <Transition>
+          <div v-if="aplayerMusic" class="song-list">
+            <APlayer :music="aplayerMusic" :autoplay="aplayerMusic.autoplay" :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0" />
+            <NDivider style="margin: 15px 0 15px 0" />
+          </div>
+        </Transition>
         <NList v-if="activeSongs.length > 0" :show-divider="false" hoverable>
           <NListItem v-for="song in activeSongs" :key="song.id" style="padding: 5px">
             <NCard embedded size="small" content-style="padding: 5px;" :style="`${song.status == SongRequestStatus.Singing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
@@ -794,7 +918,16 @@ onUnmounted(() => {
                   </NTooltip>
                 </NSpace>
                 <NSpace justify="end" align="center">
-                  <audio v-if="song.song" :volumn="volumn" :src="song.song?.url" controls style="width: 300px; height: 30px; margin-bottom: -5px"></audio>
+                  <NTooltip>
+                    <template #trigger>
+                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLrcLoading == song?.song?.key" :disabled="!song.song" @click="playMusic(song)">
+                        <template #icon>
+                          <NIcon :component="Play24Filled" />
+                        </template>
+                      </NButton>
+                    </template>
+                    试听
+                  </NTooltip>
                   <NTooltip>
                     <template #trigger>
                       <NButton
