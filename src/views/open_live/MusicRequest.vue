@@ -85,6 +85,7 @@ const message = useMessage()
 const notice = useNotification()
 
 const isWarnMessageAutoClose = useStorage('SongRequest.Settings.WarnMessageAutoClose', false)
+const volumn = useStorage('Settings.Volumn', 0.5)
 
 const isLoading = ref(false)
 const showOBSModal = ref(false)
@@ -114,12 +115,24 @@ const localActiveSongs = useStorage('SongRequest.ActiveSongs', [] as SongRequest
 const originSongs = ref<SongRequestInfo[]>(await getAllSong())
 const songs = computed(() => {
   return originSongs.value.filter((s) => {
-    return (
-      (filterSongName.value == '' || filterSongNameContains.value
-        ? s.songName.toLowerCase().includes(filterSongName.value.toLowerCase())
-        : s.songName.toLowerCase() == filterSongName.value.toLowerCase()) &&
-      (filterName.value == '' || filterNameContains.value ? s.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) : s.user?.name.toLowerCase() == filterName.value.toLowerCase())
-    )
+    if (filterName.value) {
+      if (filterNameContains.value) {
+        if (!s.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
+          return false
+        }
+      } else if (s.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
+        return false
+      }
+    } else if (filterSongName.value) {
+      if (filterSongNameContains.value) {
+        if (!s.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
+          return false
+        }
+      } else if (s.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
+        return false
+      }
+    }
+    return true
   })
 })
 const activeSongs = computed(() => {
@@ -166,27 +179,6 @@ async function getAllSong() {
     } catch (err) {
       console.error(err)
       message.error('无法获取数据')
-    }
-    return []
-  } else {
-    return localActiveSongs.value
-  }
-}
-async function getActiveSong() {
-  if (accountInfo.value) {
-    try {
-      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
-        id: accountInfo.value.id,
-      })
-      if (data.code == 200) {
-        console.log('[OPEN-LIVE-Song-Request] 已获取点歌队列')
-        return data.data
-      } else {
-        message.error('无法获取点歌队列: ' + data.message)
-        return []
-      }
-    } catch (err) {
-      console.error(err)
     }
     return []
   } else {
@@ -656,8 +648,32 @@ function GetGuardColor(level: number | null | undefined): string {
   }
   return ''
 }
+async function updateActive() {
+  if (!accountInfo.value) return
+  try {
+    const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
+      id: accountInfo.value?.id,
+    })
+    if (data.code == 200) {
+      data.data.forEach((item) => {
+        const song = originSongs.value.find((s) => s.id == item.id)
+        if (song) {
+          if (song.status != item.status) song.status = item.status
+        } else {
+          originSongs.value.unshift(item)
+        }
+      })
+    } else {
+      message.error('无法获取点歌队列: ' + data.message)
+      return []
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
 
 let timer: any
+let updateActiveTimer: any
 const updateKey = ref(0)
 onMounted(() => {
   if (accountInfo.value) {
@@ -668,11 +684,15 @@ onMounted(() => {
   timer = setInterval(() => {
     updateKey.value++
   }, 1000)
+  updateActiveTimer = setInterval(() => {
+    updateActive()
+  }, 3000)
 })
 onUnmounted(() => {
   props.client.off('danmaku', onGetDanmaku)
   props.client.off('sc', onGetSC)
   clearInterval(timer)
+  clearInterval(updateActiveTimer)
 })
 </script>
 
@@ -771,7 +791,7 @@ onUnmounted(() => {
                   </NTooltip>
                 </NSpace>
                 <NSpace justify="end" align="center">
-                  <audio v-if="song.song" :src="song.song?.url" controls style="width: 300px; height: 30px; margin-bottom: -5px"></audio>
+                  <audio v-if="song.song" :volumn="volumn" :src="song.song?.url" controls style="width: 300px; height: 30px; margin-bottom: -5px"></audio>
                   <NTooltip>
                     <template #trigger>
                       <NButton

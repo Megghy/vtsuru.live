@@ -12,6 +12,7 @@ import {
   NAvatar,
   NButton,
   NCard,
+  NCheckbox,
   NCollapseTransition,
   NDataTable,
   NDivider,
@@ -31,9 +32,9 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { onMounted, h, ref, watch, computed, reactive } from 'vue'
+import { onMounted, h, ref, watch, computed, reactive, VNodeChild } from 'vue'
 import APlayer from 'vue3-aplayer'
-import { NotepadEdit20Filled, Delete24Filled, Play24Filled, SquareArrowForward24Filled } from '@vicons/fluent'
+import { NotepadEdit20Filled, Delete24Filled, Play24Filled, SquareArrowForward24Filled, Info24Filled } from '@vicons/fluent'
 import NeteaseIcon from '@/svgs/netease.svg'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 
@@ -41,6 +42,7 @@ const props = defineProps<{
   songs: SongsInfo[]
   canEdit?: boolean
   isSelf: boolean
+  extraButtom?: (song: SongsInfo) => VNodeChild[]
 }>()
 watch(
   () => props.songs,
@@ -212,7 +214,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       title: '操作',
       key: 'manage',
       disabled: () => !props.canEdit,
-      width: props.isSelf ? 170 : 100,
+      width: 170,
       render(data) {
         return h(
           NSpace,
@@ -289,6 +291,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
                   }),
                 ]
               : null,
+            props.extraButtom?.(data),
           ]
         )
       },
@@ -527,6 +530,17 @@ onMounted(() => {
       </NFormItem>
       <NFormItem path="tags" label="标签">
         <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认" :options="tagsSelectOption" />
+      </NFormItem>
+      <NFormItem path="paidSong" label="付费歌曲">
+        <NCheckbox v-model:checked="updateSongModel.paidSong">
+          是否付费歌曲
+          <NTooltip>
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            用于区分是否可以从网页进行点歌
+          </NTooltip>
+        </NCheckbox>
       </NFormItem>
       <NFormItem path="url" label="链接">
         <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" :disabled="updateSongModel.from != SongFrom.Custom" />

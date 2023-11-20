@@ -4,13 +4,16 @@ import { SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
 import { FETCH_API, SONG_API_URL } from '@/data/constants'
+import { Info24Filled } from '@vicons/fluent'
 import {
   FormInst,
   FormRules,
   NButton,
+  NCheckbox,
   NDivider,
   NForm,
   NFormItem,
+  NIcon,
   NInput,
   NModal,
   NPagination,
@@ -21,6 +24,7 @@ import {
   NTable,
   NTabs,
   NTag,
+  NTooltip,
   NTransfer,
   useMessage,
 } from 'naive-ui'
@@ -218,7 +222,7 @@ async function getNeteaseSongList() {
       if (data.code == 200) {
         neteaseSongs.value = data.data
         neteaseSongsOptions.value = data.data.map((s) => ({
-          label: `${s.name} - ${s.author.join('/')}`,
+          label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
           value: s.key,
           disabled: songs.value.findIndex((exist) => exist.id == s.id) > -1,
         }))
@@ -362,6 +366,17 @@ onMounted(async () => {
             </NFormItem>
             <NFormItem path="url" label="链接">
               <NInput v-model:value="addSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" />
+            </NFormItem>
+            <NFormItem path="paidSong" label="付费歌曲">
+              <NCheckbox v-model:checked="addSongModel.paidSong">
+                是否付费歌曲
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  用于区分是否可以从网页进行点歌
+                </NTooltip>
+              </NCheckbox>
             </NFormItem>
           </NForm>
           <NButton type="primary" @click="addCustomSong"> 添加 </NButton>

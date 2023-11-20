@@ -219,7 +219,9 @@ onMounted(async () => {
     </NLayout>
   </NLayout>
   <NModal v-model:show="registerAndLoginModalVisiable" style="width: 500px; max-width: 90vw">
-    <RegisterAndLogin />
+    <div>
+      <RegisterAndLogin />
+    </div>
   </NModal>
 </template>
 

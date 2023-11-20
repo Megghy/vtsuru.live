@@ -41,6 +41,7 @@ export interface AccountInfo extends UserInfo {
 
   eventFetcherOnline: boolean
   eventFetcherStatus: string
+  canRequestSong: boolean
 
   nextSendEmailTime?: number
 }
@@ -116,6 +117,7 @@ export interface SongsInfo {
   tags?: string[]
   createTime: number
   updateTime: number
+  paidSong: boolean
 }
 export enum SongLanguage {
   Chinese, // 中文

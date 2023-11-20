@@ -69,7 +69,9 @@ const allowGuardTypes = computed(() => {
 async function update() {
   const r = await get()
   if (r) {
-    songs.value = r.songs
+    songs.value = r.songs.sort((a, b) => {
+      return b.createAt - a.createAt
+    })
     settings.value = r.setting
   }
 }
@@ -90,7 +92,7 @@ onUnmounted(() => {
     <NDivider class="song-request-divider">
       <p class="song-request-header-count">已有 {{ activeSongs.length ?? 0 }} 首</p>
     </NDivider>
-    <div class="song-request-singing-container" :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1">
+    <div class="song-request-singing-container" :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1" :from="(singing?.from as number)" :status="(singing?.status as number)">
       <div class="song-request-singing-prefix"></div>
       <template v-if="singing">
         <img class="song-request-singing-avatar" :src="AVATAR_URL + singing?.user?.uid" referrerpolicy="no-referrer" />
@@ -107,10 +109,10 @@ onUnmounted(() => {
             <div class="song-request-list-item-song-name">
               {{ song.songName }}
             </div>
+            <p class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
             <div class="song-request-list-item-level" :has-level="(song.user?.fans_medal_level ?? 0) > 0">
               {{ song.user?.fans_medal_level }}
             </div>
-            <p class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
           </span>
         </Vue3Marquee>
       </template>
@@ -211,9 +213,16 @@ onUnmounted(() => {
   /* 添加无限旋转动画 */
   animation: rotate 20s linear infinite;
 }
+/* 网页点歌 */
+.song-request-singing-container[from='3'] .song-request-singing-avatar {
+  display: none;
+}
 .song-request-singing-song-name {
   font-size: large;
   font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80%;
 }
 .song-request-singing-name {
   font-size: 12px;
@@ -236,12 +245,16 @@ onUnmounted(() => {
   padding: 10px;
   height: 100%;
   border-radius: 10px;
+  overflow-x: hidden;
 }
 .marquee {
   justify-items: left;
 }
 .song-request-list-item {
   display: flex;
+  width: 100%;
+  align-self: flex-start;
+  position: relative;
   align-items: center;
   justify-content: left;
   gap: 10px;
@@ -249,13 +262,17 @@ onUnmounted(() => {
 .song-request-list-item-song-name {
   font-size: 18px;
   font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80%;
 }
 
 /* 手动添加 */
 .song-request-list-item[from='0'] .song-request-list-item-name {
   font-style: italic;
   font-weight: bold;
-  color: #c6e4d9;
+  color: #d2d8d6;
   font-size: 12px;
 }
 .song-request-list-item[from='0'] .song-request-list-item-avatar {
@@ -265,10 +282,15 @@ onUnmounted(() => {
 /* 弹幕点歌 */
 .song-request-list-item[from='1'] {
 }
+
 .song-request-list-item-name {
   font-style: italic;
   font-size: 12px;
   color: rgba(204, 204, 204, 0.993);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  margin-left: auto;
 }
 .song-request-list-item-level {
   text-align: center;
