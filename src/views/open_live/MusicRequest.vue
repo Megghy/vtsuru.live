@@ -661,6 +661,9 @@ async function updateActive() {
           if (song.status != item.status) song.status = item.status
         } else {
           originSongs.value.unshift(item)
+          if (item.from == SongRequestFrom.Web) {
+            message.success(`[${item.user?.name}] 直接从网页歌单点歌: ${item.songName}`)
+          }
         }
       })
     } else {

@@ -22,6 +22,7 @@ export interface UserInfo {
   createAt: number
   biliId?: number
   biliRoomId?: number
+  canRequestSong: boolean
   extra?: {
     enableFunctions: FunctionTypes[]
     isInBlackList: boolean
@@ -41,7 +42,6 @@ export interface AccountInfo extends UserInfo {
 
   eventFetcherOnline: boolean
   eventFetcherStatus: string
-  canRequestSong: boolean
 
   nextSendEmailTime?: number
 }
@@ -289,7 +289,7 @@ export interface SongRequestInfo {
   scPrice?: number
   user?: SongRequestUserInfo
   createAt: number
-  finishAt?:number
+  finishAt?: number
   isInLocal?: boolean
 }
 export interface SongRequestUserInfo {

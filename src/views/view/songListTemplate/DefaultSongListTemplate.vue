@@ -3,9 +3,10 @@ import { useAccount } from '@/api/account'
 import { SongsInfo, UserInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
 import { CloudAdd20Filled } from '@vicons/fluent'
-import { NButton, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
+import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
 import { h, ref } from 'vue'
 import { Setting_SongRequest, SongRequestInfo } from '@/api/api-models'
+import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 
 const accountInfo = useAccount()
 
@@ -68,5 +69,14 @@ const buttoms = (song: SongsInfo) => [
 <template>
   <NDivider style="margin-top: 10px" />
   <SongList v-if="currentData" :songs="currentData ?? []" :is-self="accountInfo?.id == userInfo?.id" :extra-buttom="buttoms" v-bind="$attrs" />
+  <NCollapse v-if="userInfo?.canRequestSong">
+    <NCollapseItem title="点歌列表">
+      <NCard size="small" embedded>
+        <div style="height: 400px; width: 700px; max-width: 100%; position: relative; margin: 0 auto">
+          <SongRequestOBS :id="userInfo?.id" />
+        </div>
+      </NCard>
+    </NCollapseItem>
+  </NCollapse>
   <NDivider />
 </template>
