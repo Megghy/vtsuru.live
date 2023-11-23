@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SongAuthorInfo, SongFrom, SongLanguage, SongsInfo, UserInfo } from '@/api/api-models'
+import { SongAuthorInfo, SongFrom, SongLanguage, SongsInfo, SongRequestOption } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
 import { refDebounced, useDebounceFn, useLocalStorage } from '@vueuse/core'
@@ -21,6 +21,9 @@ import {
   NFormItem,
   NIcon,
   NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
   NList,
   NListItem,
   NModal,
@@ -170,7 +173,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       width: 300,
       sorter: 'default',
       render(data) {
-        return h(NSpace, { size: 5 }, () => [h(NText, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
+        return h(NSpace, { size: 5 }, () => [h(NText, { style: { color: data.options?.scMinPrice ? '#c36767' : '' } }, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
       },
       title: '曲名',
     },
@@ -196,6 +199,24 @@ function createColumns(): DataTableColumns<SongsInfo> {
       resizable: true,
       render(data) {
         return h(NEllipsis, () => data.description)
+      },
+    },
+    {
+      title: '要求',
+      key: 'options',
+      resizable: true,
+      render(data) {
+        return data.options
+          ? h(NSpace, {}, () => [
+              data.options?.needJianzhang ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' }, () => '舰长') : null,
+              data.options?.needTidu ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(2), borderColor: 'white' }, size: 'small' }, () => '提督') : null,
+              data.options?.needZongdu ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(1), borderColor: 'white' }, size: 'small' }, () => '总督') : null,
+              data.options?.scMinPrice
+                ? h(NTag, { color: { textColor: 'white', color: GetSCColor(data.options.scMinPrice), borderColor: 'white' }, size: 'small' }, () => 'SC | ' + data.options?.scMinPrice)
+                : null,
+              data.options?.fanMedalMinLevel ? h(NTag, { type: 'info', size: 'small' }, () => '粉丝牌 | ' + data.options?.fanMedalMinLevel) : null,
+            ])
+          : null
       },
     },
     {
@@ -483,6 +504,33 @@ async function delSong(song: SongsInfo) {
     }
   })
 }
+function GetSCColor(price: number): string {
+  if (price === 0) return `#2a60b2`
+  if (price > 0 && price < 30) return `#2a60b2`
+  if (price >= 30 && price < 50) return `#2a60b2`
+  if (price >= 50 && price < 100) return `#427d9e`
+  if (price >= 100 && price < 500) return `#c99801`
+  if (price >= 500 && price < 1000) return `#e09443`
+  if (price >= 1000 && price < 2000) return `#e54d4d`
+  if (price >= 2000) return `#ab1a32`
+  return ''
+}
+function GetGuardColor(level: number | null | undefined): string {
+  if (level) {
+    switch (level) {
+      case 1: {
+        return 'rgb(122, 4, 35)'
+      }
+      case 2: {
+        return 'rgb(157, 155, 255)'
+      }
+      case 3: {
+        return 'rgb(104, 136, 241)'
+      }
+    }
+  }
+  return ''
+}
 
 onMounted(() => {
   songsInternal.value = props.songs
@@ -531,16 +579,65 @@ onMounted(() => {
       <NFormItem path="tags" label="标签">
         <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认" :options="tagsSelectOption" />
       </NFormItem>
-      <NFormItem path="paidSong" label="付费歌曲">
-        <NCheckbox v-model:checked="updateSongModel.paidSong">
-          是否付费歌曲
+      <NFormItem path="options">
+        <template #label>
+          点歌设置
           <NTooltip>
             <template #trigger>
               <NIcon :component="Info24Filled" />
             </template>
-            用于区分是否可以从网页进行点歌
+            这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
           </NTooltip>
-        </NCheckbox>
+        </template>
+        <NSpace vertical>
+          <NCheckbox
+            :checked="updateSongModel.options != undefined"
+            @update:checked="(checked: boolean) => {updateSongModel.options = checked ? {
+          needJianzhang: false,
+          needTidu: false,
+          needZongdu: false
+        } as SongRequestOption : undefined}"
+          >
+            是否启用
+          </NCheckbox>
+          <template v-if="updateSongModel.options != undefined">
+            <NSpace>
+              <NCheckbox v-model:checked="updateSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
+              <NCheckbox v-model:checked="updateSongModel.options.needTidu"> 需要提督 </NCheckbox>
+              <NCheckbox v-model:checked="updateSongModel.options.needZongdu"> 需要总督 </NCheckbox>
+            </NSpace>
+            <NSpace align="center">
+              <NCheckbox
+                :checked="updateSongModel.options.scMinPrice != undefined"
+                @update:checked="(checked: boolean) => {if(updateSongModel.options) updateSongModel.options.scMinPrice = checked ? 30 : undefined}"
+              >
+                需要SC
+              </NCheckbox>
+              <NInputGroup v-if="updateSongModel.options?.scMinPrice" style="width: 200px">
+                <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
+                <NInputNumber v-model:value="updateSongModel.options.scMinPrice" min="30" />
+              </NInputGroup>
+            </NSpace>
+            <NSpace align="center">
+              <NCheckbox
+                :checked="updateSongModel.options.fanMedalMinLevel != undefined"
+                @update:checked="(checked: boolean) => {if(updateSongModel.options) updateSongModel.options.fanMedalMinLevel = checked ? 5 : undefined}"
+              >
+                需要粉丝牌
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  这个即使不开也会遵循全局点歌设置的粉丝牌等级
+                </NTooltip>
+              </NCheckbox>
+              <NInputGroup v-if="updateSongModel.options?.fanMedalMinLevel" style="width: 200px">
+                <NInputGroupLabel> 最低等级 </NInputGroupLabel>
+                <NInputNumber v-model:value="updateSongModel.options.fanMedalMinLevel" min="0" />
+              </NInputGroup>
+            </NSpace>
+          </template>
+        </NSpace>
       </NFormItem>
       <NFormItem path="url" label="链接">
         <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" :disabled="updateSongModel.from != SongFrom.Custom" />

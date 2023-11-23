@@ -21,3 +21,15 @@ export function copyToClipboard(text: string) {
     message.warning('当前环境不支持自动复制, 请手动选择并复制')
   }
 }
+export function objectsToCSV(arr: any[]) {
+  const array = [Object.keys(arr[0])].concat(arr)
+  return array
+    .map((row) => {
+      return Object.values(row)
+        .map((value) => {
+          return typeof value === 'string' ? JSON.stringify(value) : value
+        })
+        .toString()
+    })
+    .join('\n')
+}
