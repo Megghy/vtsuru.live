@@ -37,6 +37,7 @@ import { computed, onMounted, ref } from 'vue'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import { isDarkMode } from '@/Utils'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 
 enum EventType {
   Guard,
@@ -174,11 +175,7 @@ onMounted(() => {
     <NAlert v-if="!accountInfo?.isBiliVerified" type="warning"> 使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton> </NAlert>
   </NSpace>
   <NDivider />
-  <NAlert title="EVENT-FETCHER 状态" :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'info'">
-    <NTag :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'error'">
-      {{ accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? '正常' : `异常: ${accountInfo.eventFetcherStatus}`) : '未连接' }}
-    </NTag>
-  </NAlert>
+  <EventFetcherStatusCard />
   <NDivider />
   <NCard size="small" style="witdh: 100%">
     <template v-if="accountInfo?.eventFetcherOnline">

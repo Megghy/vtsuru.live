@@ -180,7 +180,7 @@ export default class DanmakuClient {
       console.log('[OPEN-LIVE] 正在停止弹幕客户端')
       this.client.stop()
     } else {
-      console.warn('[OPEN-LIVE] 弹幕客户端未被启动')
+      console.warn('[OPEN-LIVE] 弹幕客户端未被启动, 忽略')
     }
     clearInterval(this.timer)
     this.events = {
