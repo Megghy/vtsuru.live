@@ -117,7 +117,15 @@ export interface SongsInfo {
   tags?: string[]
   createTime: number
   updateTime: number
-  paidSong: boolean
+  //paidSong: boolean
+  options?: SongRequestOption
+}
+export interface SongRequestOption{
+  needJianzhang: boolean;
+  needTidu: boolean;
+  needZongdu: boolean;
+  scMinPrice?: number;
+  fanMedalMinLevel?: number;
 }
 export enum SongLanguage {
   Chinese, // 中文

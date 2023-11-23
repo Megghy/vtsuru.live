@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { objectsToCSV } from '@/Utils'
 import { useAccount } from '@/api/account'
-import { SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
+import { SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
 import { FETCH_API, SONG_API_URL } from '@/data/constants'
@@ -15,6 +16,9 @@ import {
   NFormItem,
   NIcon,
   NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
   NModal,
   NPagination,
   NSelect,
@@ -30,6 +34,8 @@ import {
 } from 'naive-ui'
 import { Option } from 'naive-ui/es/transfer/src/interface'
 import { computed, onMounted, ref } from 'vue'
+import { saveAs } from 'file-saver'
+import { format } from 'date-fns'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -324,6 +330,34 @@ async function getSongs() {
       isLoading.value = false
     })
 }
+function exportData() {
+  const text = objectsToCSV(
+    songs.value.map((s) => ({
+      id: s.id,
+      名称: s.name,
+      翻译名称: s.translateName,
+      作者: s.author?.join('/') ?? '未知',
+      创建于: format(s.createTime, 'yyyy-MM-dd HH:mm:ss'),
+      更新于: format(s.updateTime, 'yyyy-MM-dd HH:mm:ss'),
+      描述: s.description,
+      来自: from(s.from),
+      语言: s.language.map((l) => songSelectOption.find((o) => o.value == l)?.label).join(','),
+      标签: s.tags?.join(',') ?? '',
+      链接: s.url,
+    }))
+  )
+  const from = (f: SongFrom) => {
+    switch (f) {
+      case SongFrom.Custom:
+        return '手动添加'
+      case SongFrom.Netease:
+        return '网易云'
+      case SongFrom.FiveSing:
+        return '5sing'
+    }
+  }
+  saveAs(new Blob([text], { type: 'text/plain;charset=utf-8' }), `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`)
+}
 
 onMounted(async () => {
   await getSongs()
@@ -333,6 +367,7 @@ onMounted(async () => {
 <template>
   <NSpace>
     <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
+    <NButton @click="exportData" type="primary" secondary> 导出为 CSV </NButton>
     <NButton
       :loading="isLoading"
       @click="
@@ -367,16 +402,65 @@ onMounted(async () => {
             <NFormItem path="url" label="链接">
               <NInput v-model:value="addSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" />
             </NFormItem>
-            <NFormItem path="paidSong" label="付费歌曲">
-              <NCheckbox v-model:checked="addSongModel.paidSong">
-                是否付费歌曲
+            <NFormItem path="options">
+              <template #label>
+                点歌设置
                 <NTooltip>
                   <template #trigger>
                     <NIcon :component="Info24Filled" />
                   </template>
-                  用于区分是否可以从网页进行点歌
+                  这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
                 </NTooltip>
-              </NCheckbox>
+              </template>
+              <NSpace vertical>
+                <NCheckbox
+                  :checked="addSongModel.options != undefined"
+                  @update:checked="(checked: boolean) => {addSongModel.options = checked ? {
+                    needJianzhang: false,
+                    needTidu: false,
+                    needZongdu: false
+                  } as SongRequestOption : undefined}"
+                >
+                  是否启用
+                </NCheckbox>
+                <template v-if="addSongModel.options != undefined">
+                  <NSpace>
+                    <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
+                    <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
+                    <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
+                  </NSpace>
+                  <NSpace align="center">
+                    <NCheckbox
+                      :checked="addSongModel.options.scMinPrice != undefined"
+                      @update:checked="(checked: boolean) => {if(addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined}"
+                    >
+                      需要SC
+                    </NCheckbox>
+                    <NInputGroup v-if="addSongModel.options?.scMinPrice" style="width: 200px">
+                      <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
+                      <NInputNumber v-model:value="addSongModel.options.scMinPrice" min="30" />
+                    </NInputGroup>
+                  </NSpace>
+                  <NSpace align="center">
+                    <NCheckbox
+                      :checked="addSongModel.options.fanMedalMinLevel != undefined"
+                      @update:checked="(checked: boolean) => {if(addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined}"
+                    >
+                      需要粉丝牌
+                      <NTooltip>
+                        <template #trigger>
+                          <NIcon :component="Info24Filled" />
+                        </template>
+                        这个即使不开也会遵循全局点歌设置的粉丝牌等级
+                      </NTooltip>
+                    </NCheckbox>
+                    <NInputGroup v-if="addSongModel.options?.fanMedalMinLevel" style="width: 200px">
+                      <NInputGroupLabel> 最低等级 </NInputGroupLabel>
+                      <NInputNumber v-model:value="addSongModel.options.fanMedalMinLevel" min="0" />
+                    </NInputGroup>
+                  </NSpace>
+                </template>
+              </NSpace>
             </NFormItem>
           </NForm>
           <NButton type="primary" @click="addCustomSong"> 添加 </NButton>
