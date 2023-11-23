@@ -58,7 +58,7 @@ import {
   useMessage,
   useNotification,
 } from 'naive-ui'
-import { computed, h, onMounted, onUnmounted, ref } from 'vue'
+import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import SongRequestOBS from '../obs/SongRequestOBS.vue'
 import APlayer from 'vue3-aplayer'
@@ -211,7 +211,7 @@ async function addSong(danmaku: EventModel) {
       .then((data) => {
         if (data.code == 200) {
           message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
-          originSongs.value.unshift(data.data)
+          if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
         } else {
           //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
           const time = Date.now()
@@ -791,22 +791,33 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.songRequest
   }
-  if (accountInfo.value?.eventFetcherOnline != true) {
-    props.client.on('danmaku', onGetDanmaku)
-    props.client.on('sc', onGetSC)
-  }
+  init()
+})
+onActivated(() => {
+  init()
+})
+function init() {
+  dispose()
+  props.client.on('danmaku', onGetDanmaku)
+  props.client.on('sc', onGetSC)
   timer = setInterval(() => {
     updateKey.value++
   }, 1000)
   updateActiveTimer = setInterval(() => {
     updateActive()
-  }, 3000)
-})
-onUnmounted(() => {
+  }, 2000)
+}
+function dispose() {
   props.client.off('danmaku', onGetDanmaku)
   props.client.off('sc', onGetSC)
   clearInterval(timer)
   clearInterval(updateActiveTimer)
+}
+onDeactivated(() => {
+  dispose()
+})
+onUnmounted(() => {
+  dispose()
 })
 </script>
 

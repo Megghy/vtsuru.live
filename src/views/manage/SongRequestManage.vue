@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import DanmakuClient from '@/data/DanmakuClient'
-import { onMounted, onUnmounted } from 'vue'
+import { onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
 import MusicRequest from '../open_live/MusicRequest.vue'
 import { NAlert } from 'naive-ui'
 
@@ -9,9 +9,7 @@ const accountInfo = useAccount()
 let client = new DanmakuClient(null)
 
 onMounted(() => {
-  if(accountInfo.value?.eventFetcherOnline != true){
-    client.Start()
-  }
+  client.Start()
 })
 onUnmounted(() => {
   client.Stop()
