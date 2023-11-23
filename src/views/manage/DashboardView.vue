@@ -9,6 +9,7 @@ import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { Question24Regular } from '@vicons/fluent'
 import VueTurnstile from 'vue-turnstile'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 
 const token = ref()
 const turnstile = ref()
@@ -227,6 +228,7 @@ async function ChangeBili() {
             <NButton size="small" @click="bindBiliCodeModalVisiable = true" type="info"> 进行绑定 </NButton>
           </template>
         </NCard>
+        <EventFetcherStatusCard />
         <NAlert title="Token" type="info">
           请注意保管, 这个东西可以完全操作你的账号
           <NInput type="password" :value="accountInfo?.token" show-password-on="click" status="error" />

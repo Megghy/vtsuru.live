@@ -9,7 +9,9 @@ const accountInfo = useAccount()
 let client = new DanmakuClient(null)
 
 onMounted(() => {
-  client.Start()
+  if(accountInfo.value?.eventFetcherOnline != true){
+    client.Start()
+  }
 })
 onUnmounted(() => {
   client.Stop()
