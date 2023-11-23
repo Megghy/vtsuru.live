@@ -38,7 +38,7 @@ const buttoms = (song: SongsInfo) => [
                 loading: isLoading.value == song.key,
                 disabled: !accountInfo,
                 onClick: () => {
-                  if (song.paidSong || !props.songRequestSettings.allowFromWeb) {
+                  if (song.options || !props.songRequestSettings.allowFromWeb) {
                     navigator.clipboard.writeText(`${props.songRequestSettings.orderPrefix} ${song.name}`)
                     message.success('复制成功')
                   } else {
@@ -53,13 +53,7 @@ const buttoms = (song: SongsInfo) => [
               }
             ),
           default: () =>
-            !props.songRequestSettings.allowFromWeb
-              ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板'
-              : song.paidSong
-              ? '点歌 | 这是付费SC歌曲, 点击后将复制点歌内容到剪切板'
-              : !accountInfo
-              ? '点歌 | 你需要登录后才能点歌'
-              : '点歌',
+            !props.songRequestSettings.allowFromWeb || song.options ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板' : !accountInfo ? '点歌 | 你需要登录后才能点歌' : '点歌',
         }
       )
     : undefined,
