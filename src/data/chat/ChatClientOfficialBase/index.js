@@ -1,4 +1,5 @@
 import { BrotliDecode } from './brotli_decode'
+import { setInterval, clearInterval, setTimeout, clearTimeout } from 'worker-timers'
 
 const HEADER_SIZE = 16
 
@@ -142,8 +143,9 @@ export default class ChatClientOfficialBase {
 
   onWsOpen() {
     this.sendAuth()
-    this.heartbeatTimerId = window.setInterval(this.sendHeartbeat.bind(this), HEARTBEAT_INTERVAL)
+    this.heartbeatTimerId = setInterval(this.sendHeartbeat.bind(this), HEARTBEAT_INTERVAL)
     this.refreshReceiveTimeoutTimer()
+    console.log('ws 已连接');
   }
 
   sendHeartbeat() {
@@ -152,9 +154,9 @@ export default class ChatClientOfficialBase {
 
   refreshReceiveTimeoutTimer() {
     if (this.receiveTimeoutTimerId) {
-      window.clearTimeout(this.receiveTimeoutTimerId)
+      clearTimeout(this.receiveTimeoutTimerId)
     }
-    this.receiveTimeoutTimerId = window.setTimeout(this.onReceiveTimeout.bind(this), RECEIVE_TIMEOUT)
+    this.receiveTimeoutTimerId = setTimeout(this.onReceiveTimeout.bind(this), RECEIVE_TIMEOUT)
   }
 
   onReceiveTimeout() {
@@ -164,7 +166,7 @@ export default class ChatClientOfficialBase {
 
   discardWebsocket() {
     if (this.receiveTimeoutTimerId) {
-      window.clearTimeout(this.receiveTimeoutTimerId)
+      clearTimeout(this.receiveTimeoutTimerId)
       this.receiveTimeoutTimerId = null
     }
 
@@ -177,11 +179,11 @@ export default class ChatClientOfficialBase {
   onWsClose() {
     this.websocket = null
     if (this.heartbeatTimerId) {
-      window.clearInterval(this.heartbeatTimerId)
+      clearInterval(this.heartbeatTimerId)
       this.heartbeatTimerId = null
     }
     if (this.receiveTimeoutTimerId) {
-      window.clearTimeout(this.receiveTimeoutTimerId)
+      clearTimeout(this.receiveTimeoutTimerId)
       this.receiveTimeoutTimerId = null
     }
 
@@ -189,8 +191,8 @@ export default class ChatClientOfficialBase {
       return
     }
     this.retryCount++
-    console.warn('掉线重连中', this.retryCount)
-    window.setTimeout(this.wsConnect.bind(this), 1000)
+    console.warn('心跳超时, 重连中', this.retryCount)
+    setTimeout(this.wsConnect.bind(this), 1000)
   }
 
   onWsMessage(event) {
