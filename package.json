@@ -35,7 +35,8 @@
     "vue-turnstile": "^1.0.0",
     "vue3-aplayer": "^1.7.3",
     "vue3-marquee": "^4.1.0",
-    "vuex": "^4.0.0"
+    "vuex": "^4.0.0",
+    "worker-timers": "^7.0.78"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.21.3",

@@ -830,17 +830,11 @@ onUnmounted(() => {
     <NText depth="3">
       如果没有部署
       <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VtsuruEventFetcher </NButton>
-      则其需要保持此页面开启才能点歌
+      则其需要保持此页面开启才能点歌, 也不要同时开多个页面, 会导致点歌重复 !(部署了则不影响)
     </NText>
   </NAlert>
   <NAlert type="warning" v-else title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑">
     <NButton @click="$router.push({ name: 'manage-index' })" type="primary"> 前往登录或注册 </NButton>
-  </NAlert>
-  <br />
-  <NAlert v-if="accountInfo?.eventFetcherOnline != true" type="warning" closable>
-    不要同时开多个页面, 会导致点歌重复! 可以考虑使用
-    <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VtsuruEventFetcher </NButton>
-    , 部署后还可以记录SC和上舰历史
   </NAlert>
   <br />
   <NCard size="small">
