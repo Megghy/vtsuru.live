@@ -62,6 +62,7 @@ export interface UserSetting {
   sendEmail: Setting_SendEmail
   questionBox: Setting_QuestionBox
   songRequest: Setting_SongRequest
+  queue: Setting_Queue
   enableFunctions: FunctionTypes[]
 
   indexTemplate: string | null
@@ -89,11 +90,55 @@ export interface Setting_SongRequest {
   tiduCooldownSecond: number
   jianzhangCooldownSecond: number
 }
+export interface Setting_Queue {
+  keyword: string
+  matchType: KeywordMatchType
+  sortType?: QueueSortType
+  queueMaxSize: number
+
+  allowAllDanmaku: boolean
+  allowFromWeb: boolean
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
+  fanMedalMinLevel?: number
+
+  allowGift: boolean
+  giftNames?: string[]
+  minGiftPrice?: number
+  giftFilterType: QueueGiftFilterType
+  allowIncreasePaymentBySendGift: boolean
+  allowIncreaseByAnyPayment: boolean
+
+  enableCooldown: boolean
+  cooldownSecond: number
+  zongduCooldownSecond: number
+  tiduCooldownSecond: number
+  jianzhangCooldownSecond: number
+}
+
+export enum KeywordMatchType {
+  Full,
+  Contains,
+  Regex,
+}
+
+export enum QueueSortType {
+  GuardFirst,
+  PaymentFist,
+  TimeFirst,
+}
+
+export enum QueueGiftFilterType {
+  Or,
+  And,
+}
 export enum FunctionTypes {
   SongList,
   QuestionBox,
   Schedule,
   SongRequest,
+  Queue,
 }
 export interface SongAuthorInfo {
   name: string
@@ -120,12 +165,12 @@ export interface SongsInfo {
   //paidSong: boolean
   options?: SongRequestOption
 }
-export interface SongRequestOption{
-  needJianzhang: boolean;
-  needTidu: boolean;
-  needZongdu: boolean;
-  scMinPrice?: number;
-  fanMedalMinLevel?: number;
+export interface SongRequestOption {
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
+  scMinPrice?: number
+  fanMedalMinLevel?: number
 }
 export enum SongLanguage {
   Chinese, // 中文
@@ -295,12 +340,12 @@ export interface SongRequestInfo {
   status: SongRequestStatus
   from: SongRequestFrom
   scPrice?: number
-  user?: SongRequestUserInfo
+  user?: DanmakuUserInfo
   createAt: number
   finishAt?: number
   isInLocal?: boolean
 }
-export interface SongRequestUserInfo {
+export interface DanmakuUserInfo {
   name: string
   uid: number
   guard_level: number
@@ -315,10 +360,22 @@ export enum SongRequestFrom {
   SC,
   Web,
 }
+export enum QueueFrom {
+  Manual,
+  Danmaku,
+  Gift,
+  Web,
+}
 
 export enum SongRequestStatus {
   Waiting,
   Singing,
+  Finish,
+  Cancel,
+}
+export enum QueueStatus {
+  Waiting,
+  Progressing,
   Finish,
   Cancel,
 }
@@ -341,4 +398,14 @@ export enum EventDataTypes {
   SC,
   Gift,
   Message,
+}
+export interface ResponseQueueModel {
+  id: number
+  status: QueueStatus
+  from: QueueFrom
+  giftPrice?: number
+  user?: DanmakuUserInfo
+  createAt: number
+  finishAt?: number | null
+  isInLocal?: boolean
 }

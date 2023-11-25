@@ -2,7 +2,7 @@
 import { isDarkMode } from '@/Utils'
 import { OpenLiveInfo, ThemeType } from '@/api/api-models'
 import DanmakuClient, { AuthInfo } from '@/data/DanmakuClient'
-import { Lottery24Filled } from '@vicons/fluent'
+import { Lottery24Filled, PeopleQueue24Filled } from '@vicons/fluent'
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
@@ -74,6 +74,20 @@ const menuOptions = [
       ),
     key: 'open-live-song-request',
     icon: renderIcon(MusicalNote),
+  },{
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'open-live-queue',
+            query: route.query,
+          },
+        },
+        { default: () => '排队' }
+      ),
+    key: 'open-live-queue',
+    icon: renderIcon(PeopleQueue24Filled),
   },
 ]
 

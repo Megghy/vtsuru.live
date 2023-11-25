@@ -200,6 +200,16 @@ const routes: Array<RouteRecordRaw> = [
           danmaku: true,
         },
       },
+      {
+        path: 'queue',
+        name: 'manage-liveQueue',
+        component: () => import('@/views/open_live/OpenQueue.vue'),
+        meta: {
+          title: '弹幕排队',
+          keepAlive: true,
+          danmaku: true,
+        },
+      },
     ],
   },
   {
@@ -230,6 +240,14 @@ const routes: Array<RouteRecordRaw> = [
           title: '点歌',
         },
       },
+      {
+        path: 'queue',
+        name: 'open-live-queue',
+        component: () => import('@/views/open_live/OpenQueue.vue'),
+        meta: {
+          title: '排队',
+        },
+      },
     ],
   },
   {
@@ -250,6 +268,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/obs/SongRequestOBS.vue'),
         meta: {
           title: '弹幕点歌',
+        },
+      },
+      {
+        path: 'queue',
+        name: 'obs-queue',
+        component: () => import('@/views/obs/QueueOBS.vue'),
+        meta: {
+          title: '弹幕排队',
         },
       },
     ],
