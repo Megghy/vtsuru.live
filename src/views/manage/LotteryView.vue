@@ -66,7 +66,7 @@ const lotteryHistory = useStorage<LotteryHistory[]>('LotteryHistory', [])
 
 const message = useMessage()
 const notification = useNotification()
-const token = ref()
+const token = ref('')
 const turnstile = ref()
 const defaultOption = {
   resultCount: 1,

@@ -317,10 +317,8 @@ onMounted(async () => {
       message.info('从历史记录中加载 ' + users.length + ' 位用户')
     }
   }
-  if (props.client) {
-    props.client.on('danmaku', onDanmaku)
-    props.client.on('gift', onGift)
-  }
+  props.client?.on('danmaku', onDanmaku)
+  props.client?.on('gift', onGift)
   timer = setInterval(updateUsers, 1000 * 10)
 })
 onUnmounted(() => {

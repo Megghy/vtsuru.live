@@ -80,12 +80,16 @@ const menuOptions = [
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
 }
-
+const danmakuClientError = ref<string>()
 onMounted(async () => {
   authInfo.value = route.query as unknown as AuthInfo
   if (authInfo.value?.Code) {
     client.value = new DanmakuClient(authInfo.value)
-    await client.value.Start()
+    const result = await client.value.Start()
+    if (!result.success) {
+      message.error('无法启动弹幕客户端: ' + result.message)
+      danmakuClientError.value = result.message
+    }
   } else {
     message.error('你不是从幻星平台访问此页面, 或未提供对应参数, 无法使用此功能')
   }
@@ -159,6 +163,9 @@ onUnmounted(() => {
         </NSpace>
       </NLayoutSider>
       <NLayoutContent style="height: 100%; padding: 10px" :native-scrollbar="false">
+        <NAlert v-if="danmakuClientError" type="error" title="无法启动弹幕客户端">
+          {{ danmakuClientError }}
+        </NAlert>
         <RouterView v-if="client?.roomAuthInfo.value" v-slot="{ Component }">
           <KeepAlive>
             <component :is="Component" :room-info="client?.roomAuthInfo" :client="client" :code="authInfo.Code" />

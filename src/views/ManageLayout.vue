@@ -18,26 +18,36 @@ import {
   NAlert,
   NBackTop,
   NCountdown,
+  NTooltip,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Lottery24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Chat24Filled, Info24Filled, Lottery24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useElementSize, useStorage } from '@vueuse/core'
 import { ACCOUNT_API_URL } from '@/data/constants'
 import { QueryGetAPI } from '@/api/query'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { isDarkMode } from '@/Utils'
+import DanmakuLayout from './manage/DanmakuLayout.vue'
+import { computed } from '@vue/reactivity'
 
 const accountInfo = useAccount()
 const message = useMessage()
+const route = useRoute()
 
 const windowWidth = window.innerWidth
 const sider = ref()
 const { width } = useElementSize(sider)
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+const type = computed(() => {
+  if (route.meta.danmaku) {
+    return 'danmaku'
+  }
+  return ''
+})
 
 const canResendEmail = ref(false)
 
@@ -153,33 +163,94 @@ const menuOptions = [
   },
   {
     label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'manage-liveLottery',
+      h(NText, () => [
+        '弹幕相关',
+        h(
+          NTooltip,
+          {
+            style: 'padding: 0;',
           },
-        },
-        { default: () => '直播抽奖' }
-      ),
-    key: 'manage-liveLottery',
-    icon: renderIcon(Lottery24Filled),
+          {
+            trigger: () => h(NIcon, { component: Info24Filled }),
+            default: () =>
+              h(
+                NAlert,
+                {
+                  type: 'warning',
+                  size: 'small',
+                  title: '可用性警告',
+                  style: 'max-width: 600px;',
+                },
+                () =>
+                  h('div', {}, [
+                    '当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                    h(
+                      NButton,
+                      {
+                        text: true,
+                        tag: 'a',
+                        href: 'https://developer.chrome.com/blog/background_tabs/',
+                        target: '_blank',
+                        type: 'info',
+                      },
+                      '此文章'
+                    ),
+                    '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
+                    h('br'),
+                    '为避免这种情况, 建议注册本站账后使用',
+                    h(
+                      NButton,
+                      {
+                        type: 'primary',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
+                        target: '_blank',
+                      },
+                      'VtsuruEventFetcher'
+                    ),
+                    ', 否则请在使用功能时尽量保持网页在前台运行',
+                  ])
+              ),
+          }
+        ),
+      ]),
+    key: 'manage-danmaku',
+    icon: renderIcon(Chat24Filled),
     //disabled: accountInfo.value?.isEmailVerified == false,
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'manage-songRequest',
-          },
-        },
-        { default: () => '弹幕点歌' }
-      ),
-    key: 'manage-songRequest',
-    icon: renderIcon(MusicalNote),
-    //disabled: accountInfo.value?.isEmailVerified == false,
+    children: [
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: {
+                name: 'manage-liveLottery',
+              },
+            },
+            { default: () => '直播抽奖' }
+          ),
+        key: 'manage-liveLottery',
+        icon: renderIcon(Lottery24Filled),
+        //disabled: accountInfo.value?.isEmailVerified == false,
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: {
+                name: 'manage-songRequest',
+              },
+            },
+            { default: () => '点歌' }
+          ),
+        key: 'manage-songRequest',
+        icon: renderIcon(MusicalNote),
+        //disabled: accountInfo.value?.isEmailVerified == false,
+      },
+    ],
   },
 ]
 
@@ -226,7 +297,7 @@ onMounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton size="small" style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'user-index', params: { id: accountInfo.name } })"> 回到主页 </NButton>
+            <NButton size="small" style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"> 回到主页 </NButton>
           </NSpace>
         </template>
       </NPageHeader>
@@ -260,9 +331,10 @@ onMounted(() => {
         <NScrollbar style="height: calc(100vh - 50px)">
           <NLayout>
             <div style="box-sizing: border-box; padding: 20px; min-width: 300px">
-              <RouterView v-slot="{ Component }" v-if="accountInfo?.isEmailVerified">
+              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
                 <KeepAlive>
-                  <Suspense>
+                  <DanmakuLayout v-if="route.meta.danmaku" :component="Component" />
+                  <Suspense v-else>
                     <component :is="Component" />
                     <template #fallback>
                       <NSpin show />

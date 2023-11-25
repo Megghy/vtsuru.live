@@ -22,7 +22,7 @@ const accountInfo = useAccount()
       </template>
     </NCard>
     <NCard hoverable embedded size="small" title="弹幕点歌" style="width: 300px">
-      通过弹幕或者SC进行点歌, 注册后可以保存和导出 (开发中
+      通过弹幕或者SC进行点歌, 注册后可以保存和导出 (这个是歌势用的点歌, 不是拿来放歌的那种!)
       <template #footer>
         <NButton @click="$router.push({ name: 'open-live-song-request', query: $route.query })" type="primary"> 前往使用 </NButton>
       </template>
@@ -30,7 +30,7 @@ const accountInfo = useAccount()
   </NSpace>
   <br />
   <NAlert v-if="accountInfo?.eventFetcherOnline != true" type="warning" title="可用性警告" style="max-width: 600px; margin: 0 auto">
-    当浏览器在后台运行时定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见
+    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见
     <NButton text tag="a" href="https://developer.chrome.com/blog/background_tabs/" target="_blank" type="info">此文章</NButton>), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连,
     不过还是有可能会遗漏事件
     <br />
