@@ -24,6 +24,7 @@ export const SCHEDULE_API_URL = `${BASE_API}schedule/`
 export const VIDEO_COLLECT_API_URL = `${BASE_API}video-collect/`
 export const OPEN_LIVE_API_URL = `${BASE_API}open-live/`
 export const SONG_REQUEST_API_URL = `${BASE_API}song-request/`
+export const QUEUE_API_URL = `${BASE_API}queue/`
 export const EVENT_API_URL = `${BASE_API}event/`
 
 export const ScheduleTemplateMap = {

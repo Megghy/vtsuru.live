@@ -44,6 +44,11 @@ const functions = [
     icon: ListCircle,
   },
   {
+    name: '弹幕排队',
+    desc: '通过发送弹幕和礼物加入队列, 允许设置多种条件',
+    icon: ListCircle,
+  },
+  {
     name: '视频征集',
     desc: '创建用来收集视频链接的页面, 可以从动态爬取, 也可以提前对视频进行筛选',
     icon: VideoAdd20Filled,

@@ -22,7 +22,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Chat24Filled, Info24Filled, Lottery24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Chat24Filled, Info24Filled, Lottery24Filled, PeopleQueue24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -229,7 +229,7 @@ const menuOptions = [
                 name: 'manage-liveLottery',
               },
             },
-            { default: () => '直播抽奖' }
+            { default: () => '抽奖' }
           ),
         key: 'manage-liveLottery',
         icon: renderIcon(Lottery24Filled),
@@ -248,6 +248,20 @@ const menuOptions = [
           ),
         key: 'manage-songRequest',
         icon: renderIcon(MusicalNote),
+        //disabled: accountInfo.value?.isEmailVerified == false,
+      },{
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: {
+                name: 'manage-liveQueue',
+              },
+            },
+            { default: () => '排队' }
+          ),
+        key: 'manage-liveQueue',
+        icon: renderIcon(PeopleQueue24Filled),
         //disabled: accountInfo.value?.isEmailVerified == false,
       },
     ],

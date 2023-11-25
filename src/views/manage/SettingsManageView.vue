@@ -284,6 +284,8 @@ onMounted(async () => {
             <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
             <NCheckbox :value="FunctionTypes.QuestionBox"> 提问箱(棉花糖 </NCheckbox>
             <NCheckbox :value="FunctionTypes.Schedule"> 日程 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.SongRequest"> 点歌 </NCheckbox>
+            <NCheckbox :value="FunctionTypes.Queue"> 排队 </NCheckbox>
           </NCheckboxGroup>
           <NDivider> 通知 </NDivider>
           <NSpace>

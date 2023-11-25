@@ -27,6 +27,12 @@ const accountInfo = useAccount()
         <NButton @click="$router.push({ name: 'open-live-song-request', query: $route.query })" type="primary"> 前往使用 </NButton>
       </template>
     </NCard>
+    <NCard hoverable embedded size="small" title="弹幕排队" style="width: 300px">
+      通过发送弹幕或者礼物进行排队, 允许设置多种条件
+      <template #footer>
+        <NButton @click="$router.push({ name: 'open-live-queue', query: $route.query })" type="primary"> 前往使用 </NButton>
+      </template>
+    </NCard>
   </NSpace>
   <br />
   <NAlert v-if="accountInfo?.eventFetcherOnline != true" type="warning" title="可用性警告" style="max-width: 600px; margin: 0 auto">

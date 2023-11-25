@@ -10,7 +10,7 @@ import {
   SongRequestFrom,
   SongRequestInfo,
   SongRequestStatus,
-  SongRequestUserInfo,
+  DanmakuUserInfo,
   SongsInfo,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
@@ -241,7 +241,7 @@ async function addSong(danmaku: EventModel) {
         fans_medal_name: danmaku.fans_medal_name,
         fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
         guard_level: danmaku.guard_level,
-      } as SongRequestUserInfo,
+      } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
       id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
