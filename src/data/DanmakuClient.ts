@@ -161,11 +161,11 @@ export default class DanmakuClient {
     sc: [],
   }
 
-  public async Start(): Promise<boolean> {
+  public async Start(): Promise<{ success: boolean; message: string }> {
     if (!this.client) {
       console.log('[OPEN-LIVE] 正在启动弹幕客户端')
       const result = await this.initClient()
-      if (result) {
+      if (result.success) {
         this.timer = setInterval(() => {
           this.sendHeartbeat()
         }, 20 * 1000)
@@ -173,7 +173,10 @@ export default class DanmakuClient {
       return result
     } else {
       console.warn('[OPEN-LIVE] 弹幕客户端已被启动过')
-      return false
+      return {
+        success: false,
+        message: '弹幕客户端已被启动过',
+      }
     }
   }
   public Stop() {
@@ -194,7 +197,8 @@ export default class DanmakuClient {
   }
   private sendHeartbeat() {
     if (this.client) {
-      (this.authInfo ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo) : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')).then((data) => {
+      const query = this.authInfo ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo) : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')
+      query.then((data) => {
         if (data.code != 200) {
           console.error('[OPEN-LIVE] 心跳失败: ' + data.message)
           this.client.stop()
@@ -239,40 +243,56 @@ export default class DanmakuClient {
     }
     return this
   }
-  private async initClient() {
+  private async initClient(): Promise<{ success: boolean; message: string }> {
     const auth = await this.getAuthInfo()
-    if (auth) {
-      const chatClient = new ChatClientDirectOpenLive(auth)
+    if (auth.data) {
+      const chatClient = new ChatClientDirectOpenLive(auth.data)
       //chatClient.msgHandler = this;
       chatClient.CMD_CALLBACK_MAP = this.CMD_CALLBACK_MAP
       chatClient.start()
-      console.log('[OPEN-LIVE] 已连接房间: ' + auth.anchor_info.room_id)
-      this.roomAuthInfo.value = auth
+      this.roomAuthInfo.value = auth.data
       this.client = chatClient
-      return true
+      console.log('[OPEN-LIVE] 已连接房间: ' + auth.data.anchor_info.room_id)
+      return {
+        success: true,
+        message: '',
+      }
     } else {
       console.log('[OPEN-LIVE] 无法开启场次')
-      return false
+      return {
+        success: false,
+        message: auth.message,
+      }
     }
   }
-  private async getAuthInfo() {
+  private async getAuthInfo(): Promise<{ data: OpenLiveInfo | null; message: string }> {
     try {
       const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'start', this.authInfo?.Code ? this.authInfo : undefined)
       if (data.code == 200) {
         console.log('[OPEN-LIVE] 已获取场次信息')
-        return data.data
+        return {
+          data: data.data,
+          message: '',
+        }
       } else {
         console.error('无法获取场次数据: ' + data.message)
-        return null
+        return {
+          data: null,
+          message: data.message,
+        }
       }
     } catch (err) {
       console.error(err)
+
+      return {
+        data: null,
+        message: err?.toString() || '未知错误',
+      }
     }
-    return null
   }
 
   private CMD_CALLBACK_MAP = {
-    LIVE_OPEN_PLATFORM_DM: this.onDanmaku,
-    LIVE_OPEN_PLATFORM_SEND_GIFT: this.onGift,
+    LIVE_OPEN_PLATFORM_DM: this.onDanmaku.bind(this),
+    LIVE_OPEN_PLATFORM_SEND_GIFT: this.onGift.bind(this),
   }
 }

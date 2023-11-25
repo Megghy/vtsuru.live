@@ -183,19 +183,21 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'live-lottery',
         name: 'manage-liveLottery',
-        component: () => import('@/views/manage/LiveLotteryManage.vue'),
+        component: () => import('@/views/open_live/OpenLottery.vue'),
         meta: {
           title: '直播抽奖',
           keepAlive: true,
+          danmaku: true,
         },
       },
       {
         path: 'song-request',
         name: 'manage-songRequest',
-        component: () => import('@/views/manage/SongRequestManage.vue'),
+        component: () => import('@/views/open_live/MusicRequest.vue'),
         meta: {
           title: '弹幕点歌',
           keepAlive: true,
+          danmaku: true,
         },
       },
     ],

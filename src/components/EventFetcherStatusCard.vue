@@ -22,7 +22,9 @@ const accountInfo = useAccount()
     <NTag :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'error'">
       {{ accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? '正常' : `异常: ${accountInfo.eventFetcherStatus}`) : '未连接' }}
     </NTag>
-    <NDivider vertical />
-    <NButton v-if="accountInfo?.eventFetcherOnline != true" type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
+    <template v-if="accountInfo?.eventFetcherOnline != true">
+      <NDivider vertical />
+      <NButton type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
+    </template>
   </NAlert>
 </template>
