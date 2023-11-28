@@ -44,6 +44,7 @@ export interface AccountInfo extends UserInfo {
   eventFetcherStatus: string
 
   nextSendEmailTime?: number
+  isServerFetcherOnline:boolean
 }
 export enum BiliAuthCodeStatusType {
   NotBind,

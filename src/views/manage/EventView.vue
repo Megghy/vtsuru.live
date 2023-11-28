@@ -171,14 +171,18 @@ onMounted(() => {
 
 <template>
   <NSpace vertical>
-    <NAlert type="warning"> 实验性功能, 尚不稳定. </NAlert>
     <NAlert v-if="!accountInfo?.isBiliVerified" type="warning"> 使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton> </NAlert>
+    <NAlert type="info">
+      当前本站正在测试直接从服务端记录并储存数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
+      <br />
+      在我们被限制连接之前无需部署 VtsuruEventFetcher 即可使用相关功能 (如记录上舰和SC) 😊
+    </NAlert>
   </NSpace>
   <NDivider />
   <EventFetcherStatusCard />
   <NDivider />
   <NCard size="small" style="witdh: 100%">
-    <template v-if="accountInfo?.eventFetcherOnline">
+    <template v-if="accountInfo?.isBiliVerified">
       <NSpace justify="center" align="center">
         <NDatePicker v-model:value="selectedDate" @update:value="onDateChange" type="datetimerange" :shortcuts="rangeShortcuts" start-placeholder="开始时间" end-placeholder="结束时间" />
         <NRadioGroup v-model:value="selectedType">

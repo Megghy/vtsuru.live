@@ -177,6 +177,11 @@ async function ChangeBili() {
 
 <template>
   <NSpace justify="center" align="center" vertical style="width: 100%">
+    <NAlert type="info">
+      当前本站正在测试直接从服务端记录并储存数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
+      <br />
+      在我们被限制连接之前无需部署 VtsuruEventFetcher 即可使用相关功能 (如记录上舰和SC) 😊
+    </NAlert>
     <NCard embedded style="width: 100%">
       <NSpace align="center" justify="center" vertical>
         <NText style="font-size: 3rem">

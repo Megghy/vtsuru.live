@@ -193,7 +193,7 @@ const menuOptions = [
                         target: '_blank',
                         type: 'info',
                       },
-                      '此文章'
+                      () => '此文章'
                     ),
                     '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
                     h('br'),
@@ -208,7 +208,7 @@ const menuOptions = [
                         href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
                         target: '_blank',
                       },
-                      'VtsuruEventFetcher'
+                      () => 'VtsuruEventFetcher'
                     ),
                     ', 否则请在使用功能时尽量保持网页在前台运行',
                   ])
@@ -249,7 +249,8 @@ const menuOptions = [
         key: 'manage-songRequest',
         icon: renderIcon(MusicalNote),
         //disabled: accountInfo.value?.isEmailVerified == false,
-      },{
+      },
+      {
         label: () =>
           h(
             RouterLink,
