@@ -73,7 +73,7 @@ const songs = computed(() => {
       .slice(0, index.value)
   }
 })
-const onScroll = throttle((e: UIEvent) => {
+const onScroll = throttle((e: Event) => {
   const container = e.target as HTMLDivElement
   if (container.scrollTop + container.clientHeight >= container.scrollHeight - 20) {
     loadMore()
@@ -115,7 +115,7 @@ function loadMore() {
       </NSpace>
     </NCard>
     <NEmpty v-if="!currentData || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />
-    <div v-else ref="container" :style="{ flexGrow: 1, height: windowSize.width.value > 900 ? '90vh' : '800px', overflowY: 'auto', overflowX: 'hidden' }" @scroll="onScroll">
+    <NScrollbar v-else ref="container" :style="{ flexGrow: 1, height: windowSize.width.value > 900 ? '90vh' : '800px', overflowY: 'auto', overflowX: 'hidden' }" @scroll="onScroll">
       <NGrid cols="1 600:2 900:3 1200:4" x-gap="10" y-gap="10" responsive="self">
         <NGridItem v-for="item in songs" :key="item.key">
           <NCard size="small" style="height: 200px; min-width: 300px">
@@ -195,6 +195,6 @@ function loadMore() {
       <NSpace justify="center">
         <NButton v-if="currentData.length > index" @click="loadMore"> 加载更多 </NButton>
       </NSpace>
-    </div>
+    </NScrollbar>
   </div>
 </template>
