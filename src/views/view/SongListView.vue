@@ -2,23 +2,23 @@
   <NSpin v-if="isLoading" show />
   <component
     v-else
-    :is="componentType"
+    :is="SongListTemplateMap[componentType ?? '']?.compoent"
     :user-info="userInfo"
     :bili-info="biliInfo"
     :currentData="currentData"
     :song-request-settings="settings"
-    :song-request-active="songs"
+    :song-request-active="songsActive"
     @request-song="requestSong"
+    v-bind="$attrs"
   />
 </template>
 
 <script lang="ts" setup>
 import { Setting_SongRequest, SongRequestInfo, SongsInfo } from '@/api/api-models'
-import DefaultSongListTemplate from '@/views/view/songListTemplate/DefaultSongListTemplate.vue'
 import { computed, onMounted, ref } from 'vue'
 import { UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
-import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
+import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
 import { useAccount } from '@/api/account'
 
@@ -33,25 +33,14 @@ const props = defineProps<{
 }>()
 
 const componentType = computed(() => {
-  const type = props.template ?? props.userInfo?.extra?.templateTypes['songlist']?.toLowerCase()
-  if (props.userInfo) {
-    switch (type?.toLocaleLowerCase()) {
-      case '':
-        return DefaultSongListTemplate
-
-      default:
-        return DefaultSongListTemplate
-    }
-  } else {
-    return DefaultSongListTemplate
-  }
+  return props.template ?? props.userInfo?.extra?.templateTypes['songlist']?.toLowerCase()
 })
 const currentData = ref<SongsInfo[]>()
 const isLoading = ref(true)
 const message = useMessage()
 
 const errMessage = ref('')
-const songs = ref<SongRequestInfo[]>([])
+const songsActive = ref<SongRequestInfo[]>([])
 const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
 
 async function getSongRequestInfo() {
@@ -89,31 +78,47 @@ async function getSongs() {
     })
 }
 async function requestSong(song: SongsInfo) {
-  if (props.userInfo && accountInfo.value?.id != props.userInfo?.id) {
-    try {
-      const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL + 'add-from-web', {
-        target: props.userInfo?.id,
-        song: song.key,
-      })
+  if (song.options || !settings.value.allowFromWeb) {
+    navigator.clipboard.writeText(`${settings.value.orderPrefix} ${song.name}`)
+    if (!accountInfo.value) {
+      message.warning('要从网页点歌请先登录, 点歌弹幕已复制到剪切板')
+    } else {
+      message.success('复制成功')
+    }
+  } else {
+    if (props.userInfo) {
+      try {
+        const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL + 'add-from-web', {
+          target: props.userInfo?.id,
+          song: song.key,
+        })
 
-      if (data.code == 200) {
-        message.success('点歌成功')
-      } else {
-        message.error('点歌失败: ' + data.message)
+        if (data.code == 200) {
+          message.success('点歌成功')
+        } else {
+          message.error('点歌失败: ' + data.message)
+        }
+      } catch (err) {
+        message.error('点歌失败: ' + err)
       }
-    } catch (err) {
-      message.error('点歌失败: ' + err)
     }
   }
 }
 
 onMounted(async () => {
   if (!props.fakeData) {
-    await getSongs()
-    const r = await getSongRequestInfo()
-    if (r) {
-      songs.value = r.songs
-      settings.value = r.setting
+    try {
+      await getSongs()
+      setTimeout(async () => {
+        const r = await getSongRequestInfo()
+        if (r) {
+          songsActive.value = r.songs
+          settings.value = r.setting
+        }
+      }, 1000)
+    } catch (err) {
+      console.error(err)
+      message.error('加载失败')
     }
   } else {
     currentData.value = props.fakeData

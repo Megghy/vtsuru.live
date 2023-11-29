@@ -40,6 +40,7 @@ import APlayer from 'vue3-aplayer'
 import { NotepadEdit20Filled, Delete24Filled, Play24Filled, SquareArrowForward24Filled, Info24Filled } from '@vicons/fluent'
 import NeteaseIcon from '@/svgs/netease.svg'
 import FiveSingIcon from '@/svgs/fivesing.svg'
+import SongPlayer from './SongPlayer.vue'
 
 const props = defineProps<{
   songs: SongsInfo[]
@@ -72,12 +73,8 @@ const updateSongModel = ref<SongsInfo>({} as SongsInfo)
 const searchMusicKeyword = ref()
 const debouncedInput = refDebounced(searchMusicKeyword, 500)
 
-const aplayerMusic = ref<{
-  title: string
-  artist: string
-  src: string
-  lrc: string
-}>()
+const playingSong = ref<SongsInfo>()
+const isLrcLoading = ref<string>()
 
 const formRef = ref<FormInst | null>(null)
 const updateSongRules: FormRules = {
@@ -255,7 +252,9 @@ function createColumns(): DataTableColumns<SongsInfo> {
                         size: 'small',
                         circle: true,
                         loading: isLrcLoading.value == data.key,
-                        onClick: () => OnPlayMusic(data),
+                        onClick: () => {
+                          playingSong.value = data
+                        },
                       },
                       {
                         icon: () => h(NIcon, { component: Play24Filled }),
@@ -319,92 +318,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
     },
   ]
 }
-function OnPlayMusic(song: SongsInfo) {
-  aplayerMusic.value = undefined
-  if (song.from == SongFrom.Netease) GetLyric(song)
-  else {
-    aplayerMusic.value = {
-      title: song.name,
-      artist: song.author.join('/') ?? '',
-      src: song.url,
-      lrc: '',
-    }
-  }
-}
-const isLrcLoading = ref('')
-async function GetLyric(song: SongsInfo) {
-  isLrcLoading.value = song.key
-  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
-    .then((data) => {
-      console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
-      if (data.code == 200) {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author.join('/') ?? '',
-          src: song.url,
-          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
-        }
-        //aplayerMusic.value.lrc = data.data.lyric
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      aplayerMusic.value = {
-        title: song.name,
-        artist: song.author.join('/') ?? '',
-        src: song.url,
-        lrc: '',
-      }
-    })
-    .finally(() => {
-      isLrcLoading.value = ''
-    })
-}
-function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics.split('\n')
-  const translatedLines = translatedLyrics.split('\n')
 
-  let mergedLyrics = ''
-
-  for (let i = 0; i < originalLines.length; i++) {
-    const originalLine = originalLines[i]?.trim()
-    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配原歌词的时间字符串
-
-    let mergedLine = originalLine
-
-    if (originalTimeMatch) {
-      const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
-
-      if (translatedLineIndex !== -1) {
-        const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配翻译歌词的时间字符串
-
-        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
-          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
-          if (translatedText) {
-            mergedLine += ` (${translatedText})`
-          }
-          translatedLines.splice(translatedLineIndex, 1) // 从翻译歌词数组中移除已匹配的行
-        }
-      }
-    }
-    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      //不是空行
-      mergedLyrics += `${mergedLine}\n`
-    }
-  }
-
-  // 将剩余的非空翻译歌词单独放在一行
-  for (const translatedLine of translatedLines) {
-    const translatedText = translatedLine.trim()
-    if (translatedText) {
-      mergedLyrics += `${translatedText}\n`
-    }
-  }
-
-  return mergedLyrics.trim()
-}
 function GetPlayButton(song: SongsInfo) {
   switch (song.from) {
     case SongFrom.FiveSing: {
@@ -550,8 +464,8 @@ onMounted(() => {
   </NCard>
   <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
   <Transition>
-    <div v-if="aplayerMusic" class="song-list">
-      <APlayer :music="aplayerMusic" autoplay :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0" />
+    <div v-if="playingSong" class="song-list">
+      <SongPlayer :song="playingSong" v-model:is-lrc-loading="isLrcLoading" />
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>

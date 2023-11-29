@@ -33,6 +33,7 @@ export const ScheduleTemplateMap = {
 } as { [key: string]: { name: string; compoent: any } }
 export const SongListTemplateMap = {
   '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')) },
+  simple: { name: '简单', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')) },
 } as { [key: string]: { name: string; compoent: any } }
 export const IndexTemplateMap = {
   '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/indexTemplate/DefaultIndexTemplate.vue')) },
