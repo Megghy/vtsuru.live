@@ -148,7 +148,7 @@ onMounted(async () => {
   </NLayoutContent>
   <NLayout v-else style="height: 100vh">
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
-      <NPageHeader :subtitle="($route.meta.title as string) ?? ''">
+      <NPageHeader :subtitle="($route.meta.title as string) ?? ''" style="margin-top: 6px">
         <template #extra>
           <NSpace align="center">
             <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
@@ -168,7 +168,9 @@ onMounted(async () => {
           </NSpace>
         </template>
         <template #title>
-          <NText strong style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"> VTSURU </NText>
+          <NButton text tag="a" @click="$router.push({ name: 'index' })">
+            <NText strong style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"> VTSURU </NText>
+          </NButton>
         </template>
       </NPageHeader>
     </NLayoutHeader>

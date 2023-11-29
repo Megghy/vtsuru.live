@@ -62,6 +62,7 @@ import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } 
 import { useRoute } from 'vue-router'
 import SongRequestOBS from '../obs/SongRequestOBS.vue'
 import APlayer from 'vue3-aplayer'
+import SongPlayer from '@/components/SongPlayer.vue'
 
 const defaultSettings = {
   orderPrefix: '点歌',
@@ -115,13 +116,7 @@ const settings = computed({
     }
   },
 })
-const aplayerMusic = ref<{
-  title: string
-  artist: string
-  src: string
-  lrc: string
-  autoplay: boolean
-}>()
+const selectedSong = ref<SongsInfo>()
 
 const props = defineProps<{
   client: DanmakuClient
@@ -693,96 +688,7 @@ async function updateActive() {
     console.error(err)
   }
 }
-function playMusic(song: SongRequestInfo) {
-  aplayerMusic.value = undefined
-  if (song.song?.from == SongFrom.Netease) GetLyric(song.song)
-  else {
-    aplayerMusic.value = {
-      title: song.song?.name ?? '未知',
-      artist: song.song?.author?.join('/') ?? '',
-      src: song.song?.url ?? '',
-      lrc: '',
-      autoplay: true,
-    }
-  }
-}
 const isLrcLoading = ref('')
-async function GetLyric(song: SongsInfo) {
-  isLrcLoading.value = song.key
-  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
-    .then((data) => {
-      console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
-      if (data.code == 200) {
-        aplayerMusic.value = {
-          title: song.name,
-          artist: song.author.join('/') ?? '',
-          src: song.url,
-          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
-
-          autoplay: true,
-        }
-        //aplayerMusic.value.lrc = data.data.lyric
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      aplayerMusic.value = {
-        title: song.name,
-        artist: song.author.join('/') ?? '',
-        src: song.url,
-        lrc: '',
-        autoplay: true,
-      }
-    })
-    .finally(() => {
-      isLrcLoading.value = ''
-    })
-}
-function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics.split('\n')
-  const translatedLines = translatedLyrics.split('\n')
-
-  let mergedLyrics = ''
-
-  for (let i = 0; i < originalLines.length; i++) {
-    const originalLine = originalLines[i]?.trim()
-    const originalTimeMatch = originalLine?.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配原歌词的时间字符串
-
-    let mergedLine = originalLine
-
-    if (originalTimeMatch) {
-      const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
-
-      if (translatedLineIndex !== -1) {
-        const translatedLine = translatedLines[translatedLineIndex]
-        const translatedTimeMatch = translatedLine.match(/\[(\d{2}:\d{2}\.\d{2,3})\]/) // 匹配翻译歌词的时间字符串
-
-        if (translatedTimeMatch && translatedTimeMatch[1] === originalTime) {
-          const translatedText = translatedLine.slice(translatedTimeMatch[0].length).trim()
-          if (translatedText) {
-            mergedLine += ` (${translatedText})`
-          }
-          translatedLines.splice(translatedLineIndex, 1) // 从翻译歌词数组中移除已匹配的行
-        }
-      }
-    }
-    if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      //不是空行
-      mergedLyrics += `${mergedLine}\n`
-    }
-  }
-
-  // 将剩余的非空翻译歌词单独放在一行
-  for (const translatedLine of translatedLines) {
-    const translatedText = translatedLine.trim()
-    if (translatedText) {
-      mergedLyrics += `${translatedText}\n`
-    }
-  }
-
-  return mergedLyrics.trim()
-}
 
 let timer: any
 let updateActiveTimer: any
@@ -849,16 +755,7 @@ onUnmounted(() => {
   </NCard>
   <br />
   <NCard>
-    <NTabs
-      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
-      animated
-      display-directive="show:lazy"
-      @update:value="
-        () => {
-          if (aplayerMusic) aplayerMusic.autoplay = false
-        }
-      "
-    >
+    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)" animated display-directive="show:lazy">
       <NTabPane name="list" tab="列表">
         <NCard size="small">
           <NSpace align="center">
@@ -888,8 +785,8 @@ onUnmounted(() => {
         </NCard>
         <NDivider> 共 {{ activeSongs.length }} 首 </NDivider>
         <Transition>
-          <div v-if="aplayerMusic" class="song-list">
-            <APlayer :music="aplayerMusic" :autoplay="aplayerMusic.autoplay" :showLrc="aplayerMusic.lrc != null && aplayerMusic.lrc.length > 0" />
+          <div v-if="selectedSong" class="song-list">
+            <SongPlayer :song="selectedSong" v-model:is-lrc-loading="isLrcLoading" />
             <NDivider style="margin: 15px 0 15px 0" />
           </div>
         </Transition>
@@ -945,7 +842,7 @@ onUnmounted(() => {
                 <NSpace justify="end" align="center">
                   <NTooltip v-if="song.song">
                     <template #trigger>
-                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLrcLoading == song?.song?.key" @click="playMusic(song)">
+                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLrcLoading == song?.song?.key" @click="selectedSong = song.song">
                         <template #icon>
                           <NIcon :component="Play24Filled" />
                         </template>

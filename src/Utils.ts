@@ -33,3 +33,19 @@ export function objectsToCSV(arr: any[]) {
     })
     .join('\n')
 }
+export function GetGuardColor(level: number | null | undefined): string {
+  if (level) {
+    switch (level) {
+      case 1: {
+        return 'rgb(122, 4, 35)'
+      }
+      case 2: {
+        return 'rgb(157, 155, 255)'
+      }
+      case 3: {
+        return 'rgb(104, 136, 241)'
+      }
+    }
+  }
+  return ''
+}

@@ -10,12 +10,13 @@ import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 
 const accountInfo = useAccount()
 
+//所有模板都应该有这些
 const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
   songRequestSettings: Setting_SongRequest
   songRequestActive: SongRequestInfo[]
-  currentData: SongsInfo[] | undefined
+  currentData?: SongsInfo[] | undefined
 }>()
 const emits = defineEmits(['requestSong'])
 
@@ -38,14 +39,9 @@ const buttoms = (song: SongsInfo) => [
                 loading: isLoading.value == song.key,
                 disabled: !accountInfo,
                 onClick: () => {
-                  if (song.options || !props.songRequestSettings.allowFromWeb) {
-                    navigator.clipboard.writeText(`${props.songRequestSettings.orderPrefix} ${song.name}`)
-                    message.success('复制成功')
-                  } else {
-                    isLoading.value = song.key
-                    emits('requestSong', song)
-                    isLoading.value = ''
-                  }
+                  isLoading.value = song.key
+                  emits('requestSong', song)
+                  isLoading.value = ''
                 },
               },
               {
