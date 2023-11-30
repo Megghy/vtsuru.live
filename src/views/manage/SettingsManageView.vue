@@ -2,7 +2,7 @@
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
 import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NForm, NModal, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, SelectOption, useMessage } from 'naive-ui'
 import { Ref, computed, h, onMounted, ref, defineAsyncComponent, onActivated } from 'vue'
-import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongsInfo } from '@/api/api-models'
+import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
 import { useRoute } from 'vue-router'
@@ -100,6 +100,8 @@ const templates = {
         key: 'song1',
         name: '歌曲1',
         author: ['作者1'],
+        tags: ['标签1', '标签2'],
+        description: '这是一段描述',
         url: 'https://example.com/song1.mp3',
         from: SongFrom.Custom,
         language: [SongLanguage.Chinese],
@@ -110,20 +112,29 @@ const templates = {
         id: 2,
         key: 'song2',
         name: '歌曲2',
-        author: ['作者2'],
+        author: ['作者1'],
+        tags: ['标签1', '标签2'],
         url: 'https://example.com/song2.mp3',
         from: SongFrom.Custom,
         language: [SongLanguage.Chinese],
         createTime: Date.now(),
         updateTime: Date.now(),
+        description: '这还是一段描述',
+        options: {
+          scMinPrice: 30,
+          fanMedalMinLevel: 5,
+          needJianzhang: true,
+        } as SongRequestOption
       },
       {
         id: 3,
         key: 'song3',
         name: '歌曲3',
+        tags: ['标签3', '很长很长很长很长很长很长很长很长很长很长的标签'],
         author: ['作者3'],
         url: 'https://example.com/song3.mp3',
         from: SongFrom.Custom,
+        description: '这是一段很长很长很长很长很长很长很长很长很长很长的描述',
         language: [SongLanguage.Chinese],
         createTime: Date.now(),
         updateTime: Date.now(),
@@ -144,6 +155,7 @@ const templates = {
         key: 'song5',
         name: '歌曲5',
         author: ['作者5'],
+        tags: ['标签1', '标签5', '标签6', '标签7', '标签8', '标签9', '标签10'],
         url: 'https://example.com/song5.mp3',
         from: SongFrom.Custom,
         language: [SongLanguage.Chinese],
