@@ -10,17 +10,17 @@ const { width } = useWindowSize()
 const functions = [
   {
     name: '直播事件记录',
-    desc: '能够记录并查询上舰和SC记录 (需要另外部署脚本',
+    desc: '能够记录并查询上舰和SC记录',
     icon: VehicleShip24Filled,
   },
   {
     name: '日程表',
-    desc: '提供多种样式的日程表 (样式还没做完',
+    desc: '提供多种样式的日程表',
     icon: Calendar,
   },
   {
     name: '歌单',
-    desc: '可以放自己的歌单或者能唱的歌, 支持多种样式 (样式也还没做完',
+    desc: '可以放自己的歌单或者能唱的歌, 支持多种样式',
     icon: MusicalNote,
   },
   {

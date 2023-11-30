@@ -7,7 +7,7 @@ import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useDebounceFn, useElementSize, useInfiniteScroll, useWindowSize } from '@vueuse/core'
 import { debounce, throttle } from 'lodash'
-import { NGridItem, NGrid, NCard, NSpace, NDivider, NButton, NCollapseTransition, NInput, NText, NEllipsis, NSelect, NEmpty, NIcon, NTag, NScrollbar, NTooltip } from 'naive-ui'
+import { NGridItem, NGrid, NCard, NSpace, NDivider, NButton, NCollapseTransition, NInput, NText, NEllipsis, NSelect, NEmpty, NIcon, NTag, NScrollbar, NTooltip, NPopover } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
@@ -127,7 +127,7 @@ function loadMore() {
                 </NEllipsis>
               </NSpace>
             </template>
-            <NText depth="3">
+            <NSpace vertical>
               <NSpace v-if="(item.author?.length ?? 0) > 0" :size="0">
                 <div v-for="(author, index) in item.author" v-bind:key="author">
                   <NButton size="small" text @click="selectedAuthor == author ? (selectedAuthor = undefined) : (selectedAuthor = author)">
@@ -138,23 +138,25 @@ function loadMore() {
                   </NButton>
                 </div>
               </NSpace>
-            </NText>
+            </NSpace>
             <template #footer>
-              <NEllipsis>
-                {{ item.description }}
-              </NEllipsis>
-              <template v-if="item.options">
-                <NSpace>
-                  <NTag v-if="item.options?.scMinPrice" size="small" type="error" :bordered="false"> SC | {{ item.options?.scMinPrice }}</NTag>
-                  <NTag v-if="item.options?.fanMedalMinLevel" size="small" type="info" :bordered="false"> 粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag>
-                  <NTag v-if="item.options?.needZongdu" size="small" :color="{ color: GetGuardColor(1) }"> 总督 </NTag>
-                  <NTag v-if="item.options?.needTidu" size="small" :color="{ color: GetGuardColor(2) }"> 提督 </NTag>
-                  <NTag v-if="item.options?.needJianzhang" size="small" :color="{ color: GetGuardColor(3) }"> 舰长 </NTag>
-                </NSpace>
-              </template>
+              <NSpace vertical>
+                <NEllipsis>
+                  {{ item.description }}
+                </NEllipsis>
+                <template v-if="item.options">
+                  <NSpace>
+                    <NTag v-if="item.options?.scMinPrice" size="small" type="error" :bordered="false"> SC | {{ item.options?.scMinPrice }}</NTag>
+                    <NTag v-if="item.options?.fanMedalMinLevel" size="small" type="info" :bordered="false"> 粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag>
+                    <NTag v-if="item.options?.needZongdu" size="small" :color="{ color: GetGuardColor(1) }"> 总督 </NTag>
+                    <NTag v-if="item.options?.needTidu" size="small" :color="{ color: GetGuardColor(2) }"> 提督 </NTag>
+                    <NTag v-if="item.options?.needJianzhang" size="small" :color="{ color: GetGuardColor(3) }"> 舰长 </NTag>
+                  </NSpace>
+                </template>
+              </NSpace>
             </template>
             <template #action>
-              <NSpace>
+              <NSpace align="center" :wrap="false">
                 <NTooltip v-if="item.url">
                   <template #trigger>
                     <NButton size="small" @click="selectedSong = item" type="success" :loading="isLrcLoading == item.key">
@@ -176,7 +178,7 @@ function loadMore() {
                           isLoading = ''
                         }
                       "
-                      :type="!songRequestSettings.allowFromWeb || item.options ? 'warning' : 'info'"
+                      :type="songRequestSettings?.allowFromWeb == false || item.options ? 'warning' : 'info'"
                       :loading="isLoading == item.key"
                     >
                       <template #icon>
@@ -184,8 +186,46 @@ function loadMore() {
                       </template>
                     </NButton>
                   </template>
-                  {{ !songRequestSettings.allowFromWeb || item.options ? '点歌 | 用户或此歌曲不允许从网页点歌, 点击后将复制点歌内容到剪切板' : !accountInfo ? '点歌 | 你需要登录后才能点歌' : '点歌' }}
+                  {{
+                    songRequestSettings?.allowFromWeb == false || item.options
+                      ? '点歌 | 用户或此歌曲不允许从网页点歌, 点击后将复制点歌内容到剪切板'
+                      : !accountInfo
+                      ? '点歌 | 你需要登录后才能点歌'
+                      : '点歌'
+                  }}
                 </NTooltip>
+
+                <NPopover v-if="(item.tags?.length ?? 0) > 3" trigger="hover">
+                  <template #trigger>
+                    <NButton size="small" secondary :type="item.tags?.includes(selectedTag) ? 'primary' : 'default'"> 标签 </NButton>
+                  </template>
+                  <NSpace :wrap="false">
+                    <NButton
+                      v-for="tag in item.tags"
+                      size="tiny"
+                      :key="tag"
+                      @click="() => (selectedTag == tag ? (selectedTag = '') : (selectedTag = tag))"
+                      :type="selectedTag == tag ? 'primary' : 'default'"
+                    >
+                      <NEllipsis style="max-width: 50px">
+                        {{ tag }}
+                      </NEllipsis>
+                    </NButton>
+                  </NSpace>
+                </NPopover>
+                <NSpace v-else :wrap="false">
+                  <NButton
+                    v-for="tag in item.tags"
+                    size="tiny"
+                    :key="tag"
+                    @click="() => (selectedTag == tag ? (selectedTag = '') : (selectedTag = tag))"
+                    :type="selectedTag == tag ? 'primary' : 'default'"
+                  >
+                    <NEllipsis style="max-width: 50px">
+                      {{ tag }}
+                    </NEllipsis>
+                  </NButton>
+                </NSpace>
               </NSpace>
             </template>
           </NCard>

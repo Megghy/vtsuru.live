@@ -49,6 +49,9 @@ const accountInfo = useAccount()
     <p>
       详见
       <NButton text tag="a" href="/" target="_blank" type="primary"> VTsuru.live </NButton>
+
+      <NDivider vertical />
+      <NButton text tag="a" href="/about" target="_blank" type="info"> 关于本站 </NButton>
     </p>
   </NSpace>
 </template>

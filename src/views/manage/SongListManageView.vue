@@ -379,6 +379,7 @@ onMounted(async () => {
     >
       刷新
     </NButton>
+    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'songlist' } })"> 修改模板 </NButton>
   </NSpace>
   <NDivider style="margin: 16px 0 16px 0" />
   <NModal v-model:show="showModal" style="max-width: 1000px" preset="card">

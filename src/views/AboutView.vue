@@ -33,6 +33,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="info" title="功能更新" content="歌单添加 '简单' 模板" time="2023-11-30" />
             <NTimelineItem type="success" title="功能添加" content="排队" time="2023-11-25" />
             <NTimelineItem type="success" title="功能添加" content="点歌" time="2023-11-20" />
             <NTimelineItem type="success" title="上架幻星平台" content="如题" time="2023-11-4" />
