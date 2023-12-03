@@ -14,6 +14,11 @@ const functions = [
     icon: VehicleShip24Filled,
   },
   {
+    name: '直播场次记录',
+    desc: '记录每场直播的数据以及弹幕等内容',
+    icon: VehicleShip24Filled,
+  },
+  {
     name: '日程表',
     desc: '提供多种样式的日程表',
     icon: Calendar,

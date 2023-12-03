@@ -335,6 +335,7 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
 }
 
 function onGetDanmaku(danmaku: DanmakuInfo) {
+  console.log(danmaku)
   if (checkMessage(danmaku.msg)) {
     addSong({
       msg: danmaku.msg,

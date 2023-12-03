@@ -410,3 +410,30 @@ export interface ResponseQueueModel {
   finishAt?: number | null
   isInLocal?: boolean
 }
+export interface ResponseLiveInfoModel {
+  liveId: string
+  isFinish: boolean
+  parentArea: string
+  area: string
+  coverUrl: string
+  danmakusCount: number
+  startAt: number
+  stopAt: number | null
+  title: string
+  totalIncome: number
+  totalIncomeWithGuard: number
+  likeCount: number
+  paymentCount: number
+  interactionCount: number
+}
+export interface DanmakuModel {
+  id: string
+  uId: number
+  uName: string
+  type: EventDataTypes // Assuming EventDataTypes is an enum or type available in your TypeScript codebase
+  time: number
+  msg: string | null
+  price: number | null
+  isEmoji: boolean
+  num: number
+}

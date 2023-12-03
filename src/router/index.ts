@@ -210,6 +210,24 @@ const routes: Array<RouteRecordRaw> = [
           danmaku: true,
         },
       },
+      {
+        path: 'live',
+        name: 'manage-live',
+        component: () => import('@/views/manage/LiveManager.vue'),
+        meta: {
+          title: '直播记录',
+          keepAlive: true,
+        },
+      },
+      {
+        path: 'live/:id',
+        name: 'manage-liveDetail',
+        component: () => import('@/views/manage/LiveDetailManage.vue'),
+        meta: {
+          title: '直播详情',
+          keepAlive: true,
+        },
+      },
     ],
   },
   {
