@@ -22,7 +22,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Chat24Filled, Info24Filled, Lottery24Filled, PeopleQueue24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -85,6 +85,21 @@ const menuOptions = [
     key: 'manage-event',
     disabled: accountInfo.value?.isEmailVerified == false,
     icon: renderIcon(VehicleShip24Filled),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-live',
+          },
+        },
+        { default: () => '直播记录' }
+      ),
+    key: 'manage-live',
+    disabled: accountInfo.value?.isEmailVerified == false,
+    icon: renderIcon(Live24Filled),
   },
   {
     label: () =>

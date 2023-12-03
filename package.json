@@ -18,6 +18,7 @@
     "core-js": "^3.8.3",
     "date-fns": "^2.30.0",
     "echarts": "^5.4.3",
+    "fast-xml-parser": "^4.3.2",
     "file-saver": "^2.0.5",
     "grapheme-splitter": "^1.0.4",
     "html2canvas": "^1.4.1",
@@ -35,6 +36,7 @@
     "vue-turnstile": "^1.0.0",
     "vue3-aplayer": "^1.7.3",
     "vue3-marquee": "^4.1.0",
+    "vueuc": "^0.4.51",
     "vuex": "^4.0.0",
     "worker-timers": "^7.0.78"
   },
