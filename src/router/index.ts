@@ -228,6 +228,14 @@ const routes: Array<RouteRecordRaw> = [
           keepAlive: true,
         },
       },
+      {
+        path: 'feedback',
+        name: 'manage-feedback',
+        component: () => import('@/views/FeedbackManage.vue'),
+        meta: {
+          title: '反馈',
+        },
+      },
     ],
   },
   {

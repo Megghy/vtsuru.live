@@ -437,3 +437,24 @@ export interface DanmakuModel {
   isEmoji: boolean
   num: number
 }
+export interface ResponseFeedbackModel {
+  message: string
+  type: FeedbackType
+  status: FeedbackStatus
+  replyMessage?: string
+  userName?: string
+  createAt: number
+}
+export enum FeedbackType {
+  Opinion,
+  Bug,
+  FunctionRequest,
+  Other,
+}
+export enum FeedbackStatus {
+  Padding,
+  Progressing,
+  Finish,
+  Todo,
+  Reject,
+}

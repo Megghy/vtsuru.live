@@ -309,13 +309,19 @@ onMounted(() => {
             </template>
             <template #footer>
               <NSpace>
+                <NButton v-if="!item.isReaded" size="small" @click="read(item, true)" type="success"> 设为已读 </NButton>
                 <NButton size="small" @click="favorite(item, !item.isFavorite)">
                   <template #icon>
                     <NIcon :component="item.isFavorite ? Heart : HeartOutline" :color="item.isFavorite ? '#dd484f' : ''" />
                   </template>
                   收藏
                 </NButton>
-                <NButton size="small"> 举报 </NButton>
+                <NTooltip>
+                  <template #trigger>
+                    <NButton size="small"> 举报 </NButton>
+                  </template>
+                  暂时还没写
+                </NTooltip>
                 <NButton size="small" @click="blacklist(item)"> 拉黑 </NButton>
               </NSpace>
             </template>
@@ -360,9 +366,7 @@ onMounted(() => {
               <NCard :bordered="false" size="small">
                 <template #header>
                   <NSpace align="center">
-                  <NText depth="3">
-                    回复
-                  </NText>
+                    <NText depth="3"> 回复 </NText>
                   </NSpace>
                 </template>
                 {{ item.answer.message }}
