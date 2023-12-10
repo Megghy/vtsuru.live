@@ -22,7 +22,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, PersonFeedback24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -342,6 +342,16 @@ onMounted(() => {
               </template>
               <template v-if="width >= 180"> 面板 </template>
             </NButton>
+            <NTooltip v-if="width >= 180">
+              <template #trigger>
+                <NButton @click="$router.push({ name: 'manage-feedback' })">
+                  <template #icon>
+                    <NIcon :component="PersonFeedback24Filled" />
+                  </template>
+                </NButton>
+              </template>
+              反馈
+            </NTooltip>
           </NSpace>
           <NMenu
             style="margin-top: 12px"
@@ -351,10 +361,13 @@ onMounted(() => {
             :collapsed-icon-size="22"
             :options="menuOptions"
           />
-          <NSpace justify="center">
-            <NText depth="3" v-if="width > 150">
+          <NSpace v-if="width > 150" justify="center" align="center" vertical>
+            <NText depth="3">
               有更多功能建议请
-              <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
+              <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })"> 反馈 </NButton>
+            </NText>
+            <NText depth="3">
+              <NButton text type="info" @click="$router.push({ name: 'about' })"> 关于本站 </NButton>
             </NText>
           </NSpace>
         </NLayoutSider>

@@ -19,6 +19,8 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           >
             873260337
           </NButton>
+          或者
+          <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })"> 反馈页面 </NButton>
           <NDivider vertical />
           邮箱:
           <NButton tag="a" type="info" href="mailto:admin@vtsuru.live" text> admin@vtsuru.live </NButton>
