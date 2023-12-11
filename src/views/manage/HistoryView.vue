@@ -6,12 +6,12 @@ import { NAlert, NCard, NSpace, NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import { TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent } from 'echarts/components'
+import { BarChart, LineChart } from 'echarts/charts'
+import { TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { format } from 'date-fns'
+import { addHours, format, getUnixTime, isSameDay, isSameHour, startOfHour } from 'date-fns'
 
-use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, LineChart])
+use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, LineChart, ToolboxComponent, BarChart])
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -86,33 +86,65 @@ async function getUpstatHistory() {
       message.error('加载失败')
     })
 }
-function isSameDay(time1: number, time2: number) {
+function isSameDaySimple(time1: number, time2: number) {
   const time1Date = new Date(time1)
   const time2Date = new Date(time2)
   return time1Date.getFullYear() === time2Date.getFullYear() && time1Date.getMonth() === time2Date.getMonth() && time1Date.getDate() === time2Date.getDate()
 }
 function getOptions() {
-  let fansIncreacement = [] as { time: number; count: number; timeString: string }[]
+  let fansIncreacement = [] as { time: Date; count: number; timeString: string }[]
+  let completeTimeSeries: {
+    time: Date
+    count: number
+  }[] = []
   let guards = [] as { time: number; count: number; timeString: string }[]
 
-  let fansIncreacementLastHour = 0
-  let lastHourFans = 0
-  fansHistory.value?.forEach((f) => {
-    if (!isSameDay(f.time, fansIncreacementLastHour)) {
-      fansIncreacement.push({
-        time: fansIncreacementLastHour,
-        count: fansIncreacementLastHour == 0 ? 0 : f.count - lastHourFans,
-        //将timeString转换为yyyy-MM-dd HH
-        timeString: format(f.time, 'yyyy-MM-dd'),
+  if (fansHistory.value) {
+    const startTime = new Date(fansHistory.value[0].time)
+    const endTime = new Date(fansHistory.value[fansHistory.value.length - 1].time)
+
+    let currentTime = startTime
+    // 生成完整的小时序列
+    while (currentTime <= endTime) {
+      let found = fansHistory.value.find((f) => isSameHour(currentTime, f.time))
+      let count = found ? found.count : completeTimeSeries[completeTimeSeries.length - 1]?.count || 0
+
+      completeTimeSeries.push({
+        time: currentTime,
+        count: count,
       })
-      fansIncreacementLastHour = f.time
-      lastHourFans = f.count
+
+      currentTime = addHours(currentTime, 1)
     }
-  })
+    // 计算日增量数据
+    let previousDayCount = completeTimeSeries[0].count
+
+    completeTimeSeries.forEach((entry, index, array) => {
+      if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
+        if (index > 0) {
+          let dailyIncrement = entry.count - previousDayCount
+          fansIncreacement.push({
+            time: startOfHour(array[index - 1].time),
+            count: dailyIncrement,
+            timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+          })
+        }
+        previousDayCount = entry.count
+      } else if (index === array.length - 1) {
+        let dailyIncrement = entry.count - previousDayCount
+        fansIncreacement.push({
+          time: startOfHour(entry.time),
+          count: dailyIncrement,
+          timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+        })
+      }
+    })
+  }
+
   let lastDayGuards = 0
   let lastDay = 0
   guardHistory.value?.forEach((g) => {
-    if (!isSameDay(g.time, lastDayGuards)) {
+    if (!isSameDaySimple(g.time, lastDayGuards)) {
       guards.push({
         time: lastDayGuards,
         count: lastDay == 0 ? 0 : g.count - lastDayGuards,
@@ -142,7 +174,16 @@ function getOptions() {
       lastUpstatLike = u.stats.likes
     })
   }
-
+  const chartData = {
+    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd HH:mm')),
+    hourlyCounts: completeTimeSeries.map((entry) => entry.count),
+    dailyIncrements: fansIncreacement.map((entry) => {
+      return {
+        date: format(entry.time, 'yyyy-MM-dd'),
+        count: entry.count,
+      }
+    }),
+  }
   fansOption.value = {
     title: {
       text: '粉丝数',
@@ -150,31 +191,33 @@ function getOptions() {
     },
     tooltip: {
       trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        crossStyle: {
+          color: '#999',
+        },
+      },
+    },
+    toolbox: {
+      feature: {
+        dataView: { show: true, readOnly: false },
+        magicType: { show: true, type: ['line', 'bar'] },
+        restore: { show: true },
+        saveAsImage: { show: true },
+      },
     },
     legend: {},
     yAxis: [
       {
         type: 'value',
+        name: '每小时粉丝数',
       },
       {
         type: 'value',
+        name: '每日增量',
       },
     ],
     xAxis: [
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#EE6666',
-          },
-        },
-        // prettier-ignore
-        data: fansIncreacement.map((f) => f.timeString),
-      },
       {
         type: 'category',
         axisTick: {
@@ -187,7 +230,23 @@ function getOptions() {
           },
         },
         // prettier-ignore
-        data: fansHistory.value?.map(f => format(f.time, 'yyyy-MM-dd HH:mm')),
+        data: chartData.xAxisData,
+      },
+
+      {
+        type: 'category',
+        axisTick: {
+          alignWithLabel: true,
+        },
+        boundaryGap: false, // 设置为false使得柱状图紧贴左右两侧
+        axisLine: {
+          onZero: false,
+          lineStyle: {
+            color: '#EE6666',
+          },
+        },
+        // prettier-ignore
+        data: fansIncreacement.map((f) => f.timeString),
       },
     ],
     series: [
@@ -197,18 +256,17 @@ function getOptions() {
         emphasis: {
           focus: 'series',
         },
-        data: fansHistory.value?.map((f) => f.count),
+        data: chartData.hourlyCounts,
       },
       {
         name: '增量 /日',
-        type: 'line',
+        type: 'bar',
         yAxisIndex: 1,
-        smooth: true,
-        showSymbol: false,
+        xAxisIndex: 1,
         emphasis: {
           focus: 'series',
         },
-        data: fansIncreacement.map((f) => f.count),
+        data: chartData.dailyIncrements.map((f) => f.count),
       },
     ],
     dataZoom: [
@@ -316,8 +374,7 @@ function getOptions() {
       },
       {
         name: '日增',
-        type: 'line',
-        step: 'middle',
+        type: 'bar',
         yAxisIndex: 1,
         emphasis: {
           focus: 'series',
@@ -379,10 +436,8 @@ function getOptions() {
       },
       {
         name: '日增',
-        type: 'line',
+        type: 'bar',
         yAxisIndex: 1,
-        step: 'middle',
-
         emphasis: {
           focus: 'series',
         },
@@ -414,7 +469,7 @@ onMounted(async () => {
 
 <template>
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
-  <NSpin v-else-if="isLoading" show/>
+  <NSpin v-else-if="isLoading" show />
   <NCard v-else size="small">
     <NSpace vertical>
       <VChart :option="fansOption" style="height: 200px" />
