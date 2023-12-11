@@ -36,6 +36,7 @@ import { Option } from 'naive-ui/es/transfer/src/interface'
 import { computed, onMounted, ref } from 'vue'
 import { saveAs } from 'file-saver'
 import { format } from 'date-fns'
+import { List } from 'linqts'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -77,6 +78,27 @@ const fivesingTotalPageCount = ref(1)
 const fivesingCurrentPage = ref(1)
 
 const isGettingFivesingSongPlayUrl = ref(0)
+
+const authors = computed(() => {
+  return new List(songs.value)
+    .SelectMany((s) => new List(s?.author))
+    .Distinct()
+    .ToArray()
+    .map((t) => ({
+      label: t,
+      value: t,
+    }))
+})
+const tags = computed(() => {
+  return new List(songs.value)
+    .SelectMany((s) => new List(s?.tags))
+    .Distinct()
+    .ToArray()
+    .map((t) => ({
+      label: t,
+      value: t,
+    }))
+})
 
 const formRef = ref<FormInst | null>(null)
 const addSongModel = ref<SongsInfo>({} as SongsInfo)
@@ -392,13 +414,16 @@ onMounted(async () => {
               <NInput v-model:value="addSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
             </NFormItem>
             <NFormItem path="author" label="作者">
-              <NSelect v-model:value="addSongModel.author" filterable multiple tag placeholder="输入，按回车确认" :show-arrow="false" :show="false" />
+              <NSelect v-model:value="addSongModel.author" :options="authors" filterable multiple tag placeholder="输入后按回车新增" />
             </NFormItem>
             <NFormItem path="description" label="备注">
               <NInput v-model:value="addSongModel.description" placeholder="可选" :maxlength="250" show-count autosize style="min-width: 300px" clearable />
             </NFormItem>
             <NFormItem path="language" label="语言">
               <NSelect v-model:value="addSongModel.language" multiple :options="songSelectOption" placeholder="可选" />
+            </NFormItem>
+            <NFormItem path="tags" label="标签">
+              <NSelect v-model:value="addSongModel.tags" filterable multiple clearable tag placeholder="可选，输入后按回车新增" :options="tags" />
             </NFormItem>
             <NFormItem path="url" label="链接">
               <NInput v-model:value="addSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" />

@@ -482,7 +482,7 @@ onMounted(() => {
         <NInput v-model:value="updateSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
       </NFormItem>
       <NFormItem path="author" label="作者">
-        <NSelect v-model:value="updateSongModel.author" filterable multiple tag placeholder="输入，按回车确认" :show-arrow="false" :show="false" />
+        <NSelect v-model:value="updateSongModel.author" filterable multiple tag placeholder="输入，按回车确认" :options="authorsOptions" />
       </NFormItem>
       <NFormItem path="description" label="备注">
         <NInput v-model:value="updateSongModel.description" placeholder="可选" :maxlength="250" show-count autosize style="min-width: 300px" clearable />
