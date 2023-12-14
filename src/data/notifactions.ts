@@ -10,7 +10,7 @@ const n = ref<NotifactionInfo>()
 let isLoading = false
 function get() {
   if (isLoading) return
-  QueryGetAPI<NotifactionInfo>(SONG_REQUEST_API_URL + 'get-active')
+  QueryGetAPI<NotifactionInfo>(SONG_REQUEST_API_URL() + 'get-active')
     .then((data) => {
       if (data.code == 200) {
         n.value = data.data

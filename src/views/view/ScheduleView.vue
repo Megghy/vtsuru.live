@@ -30,7 +30,7 @@ const errMessage = ref('')
 
 async function get() {
   isLoading.value = true
-  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL + 'get', {
+  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL() + 'get', {
     id: props.userInfo?.id,
   })
     .then((data) => {
@@ -42,7 +42,6 @@ async function get() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('加载失败')
     })
     .finally(() => {

@@ -28,12 +28,11 @@ const isLoading = ref(false)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL() + 'get', { id: route.params.id })
     if (data.code == 200) {
       return data.data.table
     }
   } catch (err) {
-    console.error(err)
     message.error('获取失败')
   }
   return null
@@ -45,7 +44,7 @@ async function add() {
   }
   isLoading.value = true
   addModel.value.id = table.value?.id ?? route.params.id.toString()
-  await QueryPostAPI(VIDEO_COLLECT_API_URL + 'add', addModel.value, [['Turnstile', token.value]])
+  await QueryPostAPI(VIDEO_COLLECT_API_URL() + 'add', addModel.value, [['Turnstile', token.value]])
     .then((data) => {
       if (data.code == 200) {
         message.success('已成功推荐视频')
@@ -57,7 +56,6 @@ async function add() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('添加失败')
     })
     .finally(() => {

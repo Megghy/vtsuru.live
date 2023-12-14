@@ -164,7 +164,6 @@ async function getCommentsUsers() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取失败')
     })
     .finally(() => {
@@ -191,7 +190,6 @@ async function getForwardUsers() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取失败')
     })
     .finally(() => {
@@ -249,7 +247,6 @@ function startLottery() {
         }
       }
     } catch (err) {
-      console.error(err)
       message.error('发生错误')
     }
   }

@@ -66,7 +66,7 @@ const shareUrl = computed(() => 'https://vtsuru.live/user/' + accountInfo.value?
 
 async function GetRecieveQAInfo() {
   isLoading.value = true
-  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-recieve')
+  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL() + 'get-recieve')
     .then((data) => {
       if (data.code == 200) {
         if (data.data.length > 0) {
@@ -84,7 +84,6 @@ async function GetRecieveQAInfo() {
     })
     .catch((err) => {
       message.error('发生错误')
-      console.error(err)
     })
     .finally(() => {
       isLoading.value = false
@@ -92,7 +91,7 @@ async function GetRecieveQAInfo() {
 }
 async function GetSendQAInfo() {
   isLoading.value = true
-  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-send')
+  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL() + 'get-send')
     .then((data) => {
       if (data.code == 200) {
         sendQuestions.value = data.data
@@ -103,7 +102,6 @@ async function GetSendQAInfo() {
     })
     .catch((err) => {
       message.error('发生错误')
-      console.error(err)
     })
     .finally(() => {
       isLoading.value = false
@@ -111,7 +109,7 @@ async function GetSendQAInfo() {
 }
 async function reply() {
   isRepling.value = true
-  await QueryPostAPI<QAInfo>(QUESTION_API_URL + 'reply', {
+  await QueryPostAPI<QAInfo>(QUESTION_API_URL() + 'reply', {
     Id: currentQuestion.value?.id,
     Message: replyMessage.value,
   })
@@ -129,7 +127,6 @@ async function reply() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('发送失败')
     })
     .finally(() => {
@@ -137,7 +134,7 @@ async function reply() {
     })
 }
 async function read(question: QAInfo, read: boolean) {
-  await QueryGetAPI(QUESTION_API_URL + 'read', {
+  await QueryGetAPI(QUESTION_API_URL() + 'read', {
     id: question.id,
     read: read ? 'true' : 'false',
   })
@@ -149,12 +146,11 @@ async function read(question: QAInfo, read: boolean) {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('修改失败')
     })
 }
 async function favorite(question: QAInfo, fav: boolean) {
-  await QueryGetAPI(QUESTION_API_URL + 'favorite', {
+  await QueryGetAPI(QUESTION_API_URL() + 'favorite', {
     id: question.id,
     favorite: fav,
   })
@@ -166,13 +162,12 @@ async function favorite(question: QAInfo, fav: boolean) {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('修改失败')
     })
 }
 async function setPublic(pub: boolean) {
   isChangingPublic.value = true
-  await QueryGetAPI(QUESTION_API_URL + 'public', {
+  await QueryGetAPI(QUESTION_API_URL() + 'public', {
     id: currentQuestion.value?.id,
     public: pub,
   })
@@ -185,7 +180,6 @@ async function setPublic(pub: boolean) {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('修改失败')
     })
     .finally(() => {
@@ -193,30 +187,25 @@ async function setPublic(pub: boolean) {
     })
 }
 async function blacklist(question: QAInfo) {
-  await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
+  await QueryGetAPI(ACCOUNT_API_URL() + 'black-list/add', {
     id: question.sender.id,
   })
     .then(async (data) => {
       if (data.code == 200) {
-        await QueryGetAPI(QUESTION_API_URL + 'del', {
+        await QueryGetAPI(QUESTION_API_URL() + 'del', {
           id: question.id,
+        }).then((data) => {
+          if (data.code == 200) {
+            message.success('已拉黑 ' + question.sender.name)
+          } else {
+            message.error('修改失败: ' + data.message)
+          }
         })
-          .then((data) => {
-            if (data.code == 200) {
-              message.success('已拉黑 ' + question.sender.name)
-            } else {
-              message.error('修改失败: ' + data.message)
-            }
-          })
-          .catch((err) => {
-            console.error(err)
-          })
       } else {
         message.error('拉黑失败: ' + data.message)
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('拉黑失败')
     })
 }

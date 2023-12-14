@@ -30,15 +30,13 @@ const isMoreThanContainer = computed(() => {
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL() + 'live/get-users', {
       code: currentCode.value,
     })
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
   return {
     users: [],
     resultUsers: [],

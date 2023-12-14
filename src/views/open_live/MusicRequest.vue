@@ -180,7 +180,7 @@ const table = ref()
 async function getAllSong() {
   if (accountInfo.value) {
     try {
-      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-all', {
+      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL() + 'get-all', {
         id: accountInfo.value.id,
       })
       if (data.code == 200) {
@@ -191,7 +191,6 @@ async function getAllSong() {
         return []
       }
     } catch (err) {
-      console.error(err)
       message.error('无法获取数据')
     }
     return []
@@ -202,26 +201,22 @@ async function getAllSong() {
 async function addSong(danmaku: EventModel) {
   console.log(`[OPEN-LIVE-Song-Request] 收到 [${danmaku.name}] 的点歌${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`)
   if (accountInfo.value) {
-    await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL + 'try-add', danmaku)
-      .then((data) => {
-        if (data.code == 200) {
-          message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
-          if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
-        } else {
-          //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
-          const time = Date.now()
-          notice.warning({
-            title: danmaku.name + ' 点歌失败',
-            description: data.message,
-            duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
-          })
-          console.log(`[OPEN-LIVE-Song-Request] [${danmaku.name}] 添加曲目失败: ${data.message}`)
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+    await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL() + 'try-add', danmaku).then((data) => {
+      if (data.code == 200) {
+        message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
+        if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
+      } else {
+        //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
+        const time = Date.now()
+        notice.warning({
+          title: danmaku.name + ' 点歌失败',
+          description: data.message,
+          duration: isWarnMessageAutoClose.value ? 3000 : 0,
+          meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
+        })
+        console.log(`[OPEN-LIVE-Song-Request] [${danmaku.name}] 添加曲目失败: ${data.message}`)
+      }
+    })
   } else {
     const songData = {
       songName: danmaku.msg.trim().substring(settings.value.orderPrefix.length),
@@ -251,22 +246,18 @@ async function addSongManual() {
     return
   }
   if (accountInfo.value) {
-    await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL + 'add', {
+    await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL() + 'add', {
       name: newSongName.value,
+    }).then((data) => {
+      if (data.code == 200) {
+        message.success(`已手动添加曲目: ${data.data.songName}`)
+        originSongs.value.unshift(data.data)
+        newSongName.value = ''
+        console.log(`[OPEN-LIVE-Song-Request] 已手动添加曲目: ${data.data.songName}`)
+      } else {
+        message.error(`手动添加曲目失败: ${data.message}`)
+      }
     })
-      .then((data) => {
-        if (data.code == 200) {
-          message.success(`已手动添加曲目: ${data.data.songName}`)
-          originSongs.value.unshift(data.data)
-          newSongName.value = ''
-          console.log(`[OPEN-LIVE-Song-Request] 已手动添加曲目: ${data.data.songName}`)
-        } else {
-          message.error(`手动添加曲目失败: ${data.message}`)
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
   } else {
     const songData = {
       songName: newSongName.value,
@@ -309,7 +300,7 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
       statusString2 = '演唱中'
       break
   }
-  await QueryGetAPI(SONG_REQUEST_API_URL + statusString, {
+  await QueryGetAPI(SONG_REQUEST_API_URL() + statusString, {
     id: song.id,
   })
     .then((data) => {
@@ -326,7 +317,6 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error(`更新曲目状态失败`)
     })
     .finally(() => {
@@ -400,7 +390,6 @@ async function onUpdateFunctionEnable() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error(`点歌功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`)
       })
   }
@@ -408,7 +397,7 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(SONG_REQUEST_API_URL + 'update-setting', settings.value)
+    await QueryPostAPI(SONG_REQUEST_API_URL() + 'update-setting', settings.value)
       .then((data) => {
         if (data.code == 200) {
           message.success('已保存')
@@ -417,7 +406,6 @@ async function updateSettings() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('保存失败')
       })
       .finally(() => {
@@ -438,16 +426,14 @@ async function deleteSongs(values: SongRequestInfo[]) {
         originSongs.value = originSongs.value.filter((s) => !values.includes(s))
       } else {
         message.error('删除失败: ' + data.message)
-        console.error('删除失败: ' + data.message)
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('删除失败')
     })
 }
 async function deactiveAllSongs() {
-  await QueryGetAPI(SONG_REQUEST_API_URL + 'deactive')
+  await QueryGetAPI(SONG_REQUEST_API_URL() + 'deactive')
     .then((data) => {
       if (data.code == 200) {
         message.success('已全部取消')
@@ -461,7 +447,6 @@ async function deactiveAllSongs() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('取消失败')
     })
 }
@@ -666,7 +651,7 @@ function GetGuardColor(level: number | null | undefined): string {
 async function updateActive() {
   if (!accountInfo.value) return
   try {
-    const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
+    const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL() + 'get-active', {
       id: accountInfo.value?.id,
     })
     if (data.code == 200) {
@@ -685,9 +670,7 @@ async function updateActive() {
       message.error('无法获取点歌队列: ' + data.message)
       return []
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
 }
 const isLrcLoading = ref('')
 

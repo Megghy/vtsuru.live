@@ -54,15 +54,13 @@ const activeItems = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(QUEUE_API_URL + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(QUEUE_API_URL() + 'get-active-and-settings', {
       id: currentId.value,
     })
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
   return {} as { queue: ResponseQueueModel[]; setting: Setting_Queue }
 }
 const isMoreThanContainer = computed(() => {
@@ -119,7 +117,15 @@ onUnmounted(() => {
     <div class="queue-content" ref="listContainerRef">
       <template v-if="activeItems.length > 0">
         <Vue3Marquee class="queue-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
-          <span class="queue-list-item" :from="(item.from as number)" :status="(item.status as number)" :payment="item.giftPrice ?? 0" v-for="item in activeItems" :key="item.id" :style="`height: ${itemHeight}px`">
+          <span
+            class="queue-list-item"
+            :from="(item.from as number)"
+            :status="(item.status as number)"
+            :payment="item.giftPrice ?? 0"
+            v-for="item in activeItems"
+            :key="item.id"
+            :style="`height: ${itemHeight}px`"
+          >
             <div class="queue-list-item-level" :has-level="(item.user?.fans_medal_level ?? 0) > 0">
               {{ item.user?.fans_medal_level }}
             </div>
@@ -302,7 +308,7 @@ onUnmounted(() => {
 }
 
 /* 弹幕点歌 */
-.queue-list-item[payment='0']  .queue-list-item-payment{
+.queue-list-item[payment='0'] .queue-list-item-payment {
   display: none;
 }
 

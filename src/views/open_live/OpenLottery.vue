@@ -104,25 +104,23 @@ const props = defineProps<{
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL() + 'live/get-users', {
       code: props.code,
     })
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
   return null
 }
 function updateUsers() {
-  QueryPostAPI(LOTTERY_API_URL + 'live/update-users', {
+  QueryPostAPI(LOTTERY_API_URL() + 'live/update-users', {
     code: props.code,
     users: originUsers.value,
     resultUsers: resultUsers.value,
     type: isLotteried.value ? OpenLiveLotteryType.Result : OpenLiveLotteryType.Waiting,
   }).catch((err) => {
-    console.error('[OPEN-LIVE-Lottery] 更新历史抽奖用户失败: ' + err)
+    console.error('[OPEN-LIVE-Lottery] 更新历史抽奖用户失败')
   })
 }
 function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
@@ -213,7 +211,6 @@ function startLottery() {
         }
       }
     } catch (err) {
-      console.error(err)
       message.error('发生错误')
     }
   }

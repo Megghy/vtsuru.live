@@ -45,20 +45,18 @@ const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
 
 async function getSongRequestInfo() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL() + 'get-active-and-settings', {
       id: props.userInfo?.id,
     })
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
   return {} as { songs: SongRequestInfo[]; setting: Setting_SongRequest }
 }
 async function getSongs() {
   isLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get', {
+  await QueryGetAPI<SongsInfo[]>(SONG_API_URL() + 'get', {
     id: props.userInfo?.id,
   })
     .then((data) => {
@@ -70,7 +68,6 @@ async function getSongs() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('加载失败')
     })
     .finally(() => {
@@ -88,7 +85,7 @@ async function requestSong(song: SongsInfo) {
   } else {
     if (props.userInfo) {
       try {
-        const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL + 'add-from-web', {
+        const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL() + 'add-from-web', {
           target: props.userInfo?.id,
           song: song.key,
         })
@@ -117,7 +114,6 @@ onMounted(async () => {
         }
       }, 1000)
     } catch (err) {
-      console.error(err)
       message.error('加载失败')
     }
   } else {

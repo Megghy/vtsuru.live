@@ -197,10 +197,10 @@ export default class DanmakuClient {
   }
   private sendHeartbeat() {
     if (this.client) {
-      const query = this.authInfo ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo) : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')
+      const query = this.authInfo ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL() + 'heartbeat', this.authInfo) : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL() + 'heartbeat-internal')
       query.then((data) => {
         if (data.code != 200) {
-          console.error('[OPEN-LIVE] 心跳失败: ' + data.message)
+          console.error('[OPEN-LIVE] 心跳失败')
           this.client.stop()
           this.client = null
           this.initClient()
@@ -267,7 +267,7 @@ export default class DanmakuClient {
   }
   private async getAuthInfo(): Promise<{ data: OpenLiveInfo | null; message: string }> {
     try {
-      const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'start', this.authInfo?.Code ? this.authInfo : undefined)
+      const data = await QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL() + 'start', this.authInfo?.Code ? this.authInfo : undefined)
       if (data.code == 200) {
         console.log('[OPEN-LIVE] 已获取场次信息')
         return {
@@ -275,15 +275,12 @@ export default class DanmakuClient {
           message: '',
         }
       } else {
-        console.error('无法获取场次数据: ' + data.message)
         return {
           data: null,
           message: data.message,
         }
       }
     } catch (err) {
-      console.error(err)
-
       return {
         data: null,
         message: err?.toString() || '未知错误',

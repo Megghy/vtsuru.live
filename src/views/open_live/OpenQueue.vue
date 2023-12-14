@@ -191,7 +191,7 @@ const table = ref()
 async function getAll() {
   if (accountInfo.value) {
     try {
-      const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-all', {
+      const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL() + 'get-all', {
         id: accountInfo.value.id,
       })
       if (data.code == 200) {
@@ -202,7 +202,6 @@ async function getAll() {
         return []
       }
     } catch (err) {
-      console.error(err)
       message.error('无法获取数据')
     }
     return []
@@ -216,37 +215,33 @@ async function add(danmaku: EventModel) {
   }
   console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.name}] 的排队请求`)
   if (accountInfo.value) {
-    await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL + 'try-add', danmaku)
-      .then((data) => {
-        if (data.code == 200) {
-          if (data.message != 'EventFetcher') {
-            //如果存在则替换, 否则插入最后
-            const index = originQueue.value.findIndex((q) => q.id == data.data.id)
-            if (index > -1) {
-              message.info(
-                `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${((data.data?.giftPrice ?? 0) - (originQueue.value[index]?.giftPrice ?? 0)).toFixed(1)}, 当前总计付费: ¥ ${data.data.giftPrice}`
-              )
-              originQueue.value.splice(index, 1, data.data)
-            } else {
-              originQueue.value.push(data.data)
-              message.success(`[${danmaku.name}] 添加至队列`)
-            }
+    await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL() + 'try-add', danmaku).then((data) => {
+      if (data.code == 200) {
+        if (data.message != 'EventFetcher') {
+          //如果存在则替换, 否则插入最后
+          const index = originQueue.value.findIndex((q) => q.id == data.data.id)
+          if (index > -1) {
+            message.info(
+              `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${((data.data?.giftPrice ?? 0) - (originQueue.value[index]?.giftPrice ?? 0)).toFixed(1)}, 当前总计付费: ¥ ${data.data.giftPrice}`
+            )
+            originQueue.value.splice(index, 1, data.data)
+          } else {
+            originQueue.value.push(data.data)
+            message.success(`[${danmaku.name}] 添加至队列`)
           }
-        } else {
-          //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
-          const time = Date.now()
-          notice.warning({
-            title: danmaku.name + ' 排队失败',
-            description: data.message,
-            duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
-          })
-          console.log(`[OPEN-LIVE-QUEUE] [${danmaku.name}] 排队失败: ${data.message}`)
         }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
+      } else {
+        //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
+        const time = Date.now()
+        notice.warning({
+          title: danmaku.name + ' 排队失败',
+          description: data.message,
+          duration: isWarnMessageAutoClose.value ? 3000 : 0,
+          meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
+        })
+        console.log(`[OPEN-LIVE-QUEUE] [${danmaku.name}] 排队失败: ${data.message}`)
+      }
+    })
   } else {
     const songData = {
       status: QueueStatus.Waiting,
@@ -274,22 +269,18 @@ async function addManual() {
     return
   }
   if (accountInfo.value) {
-    await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL + 'add', {
+    await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL() + 'add', {
       name: newQueueName.value,
+    }).then((data) => {
+      if (data.code == 200) {
+        message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
+        originQueue.value.unshift(data.data)
+        newQueueName.value = ''
+        console.log(`[OPEN-LIVE-QUEUE] 已手动添加用户至队列: ${data.data.user?.name}`)
+      } else {
+        message.error(`手动添加失败: ${data.message}`)
+      }
     })
-      .then((data) => {
-        if (data.code == 200) {
-          message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
-          originQueue.value.unshift(data.data)
-          newQueueName.value = ''
-          console.log(`[OPEN-LIVE-QUEUE] 已手动添加用户至队列: ${data.data.user?.name}`)
-        } else {
-          message.error(`手动添加失败: ${data.message}`)
-        }
-      })
-      .catch((err) => {
-        console.error(err)
-      })
   } else {
     const songData = {
       status: QueueStatus.Waiting,
@@ -311,7 +302,7 @@ async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) 
     return
   }
   isLoading.value = true
-  await QueryGetAPI(QUEUE_API_URL + 'set-status', {
+  await QueryGetAPI(QUEUE_API_URL() + 'set-status', {
     id: queueData.id,
     status: status,
   })
@@ -329,7 +320,6 @@ async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) 
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error(`更新队列状态失败`)
     })
     .finally(() => {
@@ -427,7 +417,6 @@ async function onUpdateFunctionEnable() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error(`队列功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`)
       })
   }
@@ -435,7 +424,7 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(QUEUE_API_URL + 'update-setting', settings.value)
+    await QueryPostAPI(QUEUE_API_URL() + 'update-setting', settings.value)
       .then((data) => {
         if (data.code == 200) {
           message.success('已保存')
@@ -444,7 +433,6 @@ async function updateSettings() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('保存失败')
       })
       .finally(() => {
@@ -469,12 +457,11 @@ async function deleteQueue(values: ResponseQueueModel[]) {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('删除失败')
     })
 }
 async function deactiveAllSongs() {
-  await QueryGetAPI(QUEUE_API_URL + 'deactive')
+  await QueryGetAPI(QUEUE_API_URL() + 'deactive')
     .then((data) => {
       if (data.code == 200) {
         message.success('已全部取消')
@@ -488,7 +475,6 @@ async function deactiveAllSongs() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('取消失败')
     })
 }
@@ -677,7 +663,7 @@ function GetGuardColor(level: number | null | undefined): string {
 async function updateActive() {
   if (!accountInfo.value) return
   try {
-    const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-active', {
+    const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL() + 'get-active', {
       id: accountInfo.value?.id,
     })
     if (data.code == 200) {
@@ -700,9 +686,7 @@ async function updateActive() {
       message.error('无法获取队列: ' + data.message)
       return []
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
 }
 let timer: any
 let updateActiveTimer: any
@@ -989,14 +973,14 @@ onUnmounted(() => {
                   />
                 </NSpace>
                 <span>
-                  <NRadioGroup v-model:value="settings.giftFilterType" :disabled="!configCanEdit">
+                  <NRadioGroup v-model:value="settings.giftFilterType" :disabled="!configCanEdit" @update:value="updateSettings">
                     <NRadioButton :value="QueueGiftFilterType.And"> 需同时满足礼物名和价格 </NRadioButton>
                     <NRadioButton :value="QueueGiftFilterType.Or"> 礼物名/价格 二选一 </NRadioButton>
                   </NRadioGroup>
                 </span>
-                <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 在队列中时继续发送礼物会叠加 </NCheckbox>
-                <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 在队列中时允许发送任意礼物来增加付费量 </NCheckbox>
               </template>
+              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物) </NCheckbox>
+              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许发送任意礼物来叠加付费量 </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
             <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings" :disabled="!configCanEdit"> 启用排队冷却 </NCheckbox>

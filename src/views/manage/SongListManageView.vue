@@ -164,7 +164,6 @@ async function addCustomSong() {
         })
         .catch((err) => {
           message.error('添加失败')
-          console.error(err)
         })
     })
     .finally(() => {
@@ -190,7 +189,6 @@ async function addNeteaseSongs() {
     })
     .catch((err) => {
       message.error('添加失败')
-      console.error(err)
     })
     .finally(() => {
       isModalLoading.value = false
@@ -205,7 +203,6 @@ async function addFingsingSongs(song: SongsInfo) {
     } catch (err) {
       isModalLoading.value = false
       message.error('添加失败')
-      console.error(err)
       return
     }
   }
@@ -221,7 +218,6 @@ async function addFingsingSongs(song: SongsInfo) {
     })
     .catch((err) => {
       message.error('添加失败')
-      console.error(err)
     })
     .finally(() => {
       isModalLoading.value = false
@@ -243,7 +239,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
 
 async function getNeteaseSongList() {
   isModalLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
+  await QueryGetAPI<SongsInfo[]>(SONG_API_URL() + 'get-netease-list', {
     id: neteaseSongListId.value,
   })
     .then((data) => {
@@ -260,7 +256,6 @@ async function getNeteaseSongList() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取歌单失败: ' + err)
     })
     .finally(() => {
@@ -293,7 +288,6 @@ async function getFivesingSearchList(isRestart = false) {
       message.success(`成功获取搜索信息, 共 ${json.pageInfo.totalCount} 条, 当前第 ${fivesingCurrentPage.value} 页`)
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取歌单失败: ' + err)
     })
     .finally(() => {
@@ -316,7 +310,6 @@ async function playFivesingSong(song: SongsInfo) {
       song.url = data
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取歌曲链接失败: ' + err)
     })
     .finally(() => {
@@ -336,7 +329,7 @@ async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
 const isLoading = ref(true)
 async function getSongs() {
   isLoading.value = true
-  await QueryGetAPI<any>(SONG_API_URL + 'get', {
+  await QueryGetAPI<any>(SONG_API_URL() + 'get', {
     id: accountInfo.value?.id,
   })
     .then((data) => {
@@ -345,7 +338,6 @@ async function getSongs() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('获取歌曲失败: ' + err)
     })
     .finally(() => {

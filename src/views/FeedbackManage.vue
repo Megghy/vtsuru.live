@@ -43,7 +43,7 @@ const newFeedback = ref<FeedbackModel>({
 
 async function get() {
   try {
-    const data = await QueryGetAPI<ResponseFeedbackModel[]>(FEEDBACK_API_URL + 'get')
+    const data = await QueryGetAPI<ResponseFeedbackModel[]>(FEEDBACK_API_URL() + 'get')
     if (data.code == 200) {
       return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
     } else {
@@ -51,7 +51,6 @@ async function get() {
       return []
     }
   } catch (err) {
-    console.error(err)
     message.error('无法获取数据')
   }
   return []
@@ -61,7 +60,7 @@ async function add() {
     message.error('反馈内容不能为空')
     return
   }
-  await QueryPostAPI<ResponseFeedbackModel>(FEEDBACK_API_URL + 'add', newFeedback.value)
+  await QueryPostAPI<ResponseFeedbackModel>(FEEDBACK_API_URL() + 'add', newFeedback.value)
     .then((data) => {
       if (data.code == 200) {
         message.success('发送成功, 感谢你的反馈!')
@@ -73,7 +72,6 @@ async function add() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('发送失败')
     })
 }

@@ -143,9 +143,6 @@ function onRegisterButtonClick() {
           message.error(data.message)
         }
       })
-      .catch((err) => {
-        console.error(err)
-      })
       .finally(() => {
         isLoading.value = false
         turnstile.value?.reset()
@@ -158,7 +155,7 @@ function onLoginButtonClick() {
     await QueryPostAPI<{
       account: AccountInfo
       token: string
-    }>(ACCOUNT_API_URL + 'login', {
+    }>(ACCOUNT_API_URL() + 'login', {
       nameOrEmail: loginModel.value.account,
       password: loginModel.value.password,
     })
@@ -174,7 +171,6 @@ function onLoginButtonClick() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('登陆失败')
       })
       .finally(() => {
@@ -184,7 +180,7 @@ function onLoginButtonClick() {
 }
 async function onForgetPassword() {
   canSendForgetPassword.value = false
-  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
+  await QueryGetAPI(ACCOUNT_API_URL() + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已发送密码重置链接到你的邮箱, 请检查')
@@ -193,7 +189,6 @@ async function onForgetPassword() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('发生错误')
     })
     .finally(() => {

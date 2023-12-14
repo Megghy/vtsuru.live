@@ -33,12 +33,11 @@ const totalTime = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL() + 'get', { id: route.params.id })
     if (data.code == 200) {
       return data.data
     }
   } catch (err) {
-    console.error(err)
     message.error('获取失败')
   }
   return null
@@ -117,14 +116,12 @@ function formatSecondsToTime(seconds: number): string {
         <NDivider vertical />
         已观看 {{ watchedVideos.length }} 条
       </NDivider>
-      <NAlert v-if="watchedVideos.length == acceptVideos?.length" type="success">
-        已观看全部视频
-      </NAlert>
+      <NAlert v-if="watchedVideos.length == acceptVideos?.length" type="success"> 已观看全部视频 </NAlert>
       <NList ref="card">
         <NListItem v-for="item in acceptVideos" v-bind:key="item.info.bvid">
           <NCard size="small" :hoverable="!item.video.watched" :embedded="!item.video.watched">
             <NSpace>
-              <NImage :src="item.video.cover + '@100h'" lazy :img-props="{ referrerpolicy: 'no-referrer' }" height="75" @click="onClick(item.video)" preview-disabled style="cursor: pointer"/>
+              <NImage :src="item.video.cover + '@100h'" lazy :img-props="{ referrerpolicy: 'no-referrer' }" height="75" @click="onClick(item.video)" preview-disabled style="cursor: pointer" />
               <NSpace vertical :size="5">
                 <NButton style="width: 100%; max-width: 100px" @click="onClick(item.video)" text>
                   <NText :title="item.video.title" :delete="item.video.watched" :style="`color: ${item.video.watched ? '#a54e4e' : ''};width: ${width - 20}px;`">
