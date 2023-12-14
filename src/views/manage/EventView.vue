@@ -86,7 +86,7 @@ async function onDateChange() {
 }
 async function get() {
   try {
-    const data = await QueryGetAPI<EventModel[]>(BASE_API + 'event/get', {
+    const data = await QueryGetAPI<EventModel[]>(BASE_API() + 'event/get', {
       start: selectedDate.value[0],
       end: selectedDate.value[1],
     })

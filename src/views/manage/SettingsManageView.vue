@@ -199,9 +199,6 @@ async function RequestBiliUserData() {
         throw new Error('Bili User API Error: ' + data.message)
       }
     })
-    .catch((err) => {
-      console.error(err)
-    })
 }
 async function SaveComboGroupSetting(value: (string | number)[], meta: { actionType: 'check' | 'uncheck'; value: string | number }) {
   if (accountInfo.value) {
@@ -219,7 +216,6 @@ async function SaveComboGroupSetting(value: (string | number)[], meta: { actionT
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('修改失败')
       })
       .finally(() => {
@@ -240,7 +236,6 @@ async function SaveComboSetting() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('修改失败')
       })
       .finally(() => {

@@ -43,7 +43,7 @@ function OnPlayMusic(song: SongsInfo) {
 }
 async function GetLyric(song: SongsInfo) {
   emits('update:isLrcLoading', song.key)
-  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
+  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL() + 'get-netease-lyric', { id: song.id })
     .then((data) => {
       console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
       if (data.code == 200) {
@@ -66,9 +66,6 @@ async function GetLyric(song: SongsInfo) {
           lrc: '',
         }
       }
-    })
-    .catch((err) => {
-      console.error(err)
     })
     .finally(() => {
       emits('update:isLrcLoading', undefined)

@@ -39,7 +39,7 @@ export async function GetSelfAccount() {
   isLoadingAccount.value = false
 }
 function refreshCookie() {
-  QueryPostAPI<string>(`${ACCOUNT_API_URL}refresh-token`).then((data) => {
+  QueryPostAPI<string>(`${ACCOUNT_API_URL()}refresh-token`).then((data) => {
     if (data.code == 200) {
       cookie.value = data.data
       cookieRefreshDate.value = Date.now()
@@ -48,17 +48,17 @@ function refreshCookie() {
   })
 }
 export async function SaveAccountSettings() {
-  return await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', ACCOUNT.value?.settings)
+  return await QueryPostAPI(ACCOUNT_API_URL() + 'update-setting', ACCOUNT.value?.settings)
 }
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
-  return await QueryPostAPI(ACCOUNT_API_URL + 'update-enable-functions', functions)
+  return await QueryPostAPI(ACCOUNT_API_URL() + 'update-enable-functions', functions)
 }
 export function useAccount() {
   return ACCOUNT
 }
 
 export async function Register(name: string, email: string, password: string, token: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL}register`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL()}register`, {
     name,
     email,
     password,
@@ -67,11 +67,11 @@ export async function Register(name: string, email: string, password: string, to
 }
 
 export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL}login`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL()}login`, {
     nameOrEmail,
     password,
   })
 }
 export async function Self(): Promise<APIRoot<AccountInfo>> {
-  return QueryPostAPI<AccountInfo>(`${ACCOUNT_API_URL}self`)
+  return QueryPostAPI<AccountInfo>(`${ACCOUNT_API_URL()}self`)
 }

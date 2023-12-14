@@ -63,9 +63,6 @@ async function RequestBiliUserData() {
         throw new Error('Bili User API Error: ' + data.message)
       }
     })
-    .catch((err) => {
-      console.error(err)
-    })
 }
 
 onMounted(async () => {

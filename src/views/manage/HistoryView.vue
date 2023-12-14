@@ -32,7 +32,7 @@ async function getFansHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL + 'fans')
+  >(HISTORY_API_URL() + 'fans')
     .then((data) => {
       if (data.code == 200) {
         fansHistory.value = data.data
@@ -41,7 +41,6 @@ async function getFansHistory() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('加载失败')
     })
 }
@@ -51,7 +50,7 @@ async function getGuardsHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL + 'guards')
+  >(HISTORY_API_URL() + 'guards')
     .then((data) => {
       if (data.code == 200) {
         guardHistory.value = data.data
@@ -60,7 +59,6 @@ async function getGuardsHistory() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('加载失败')
     })
 }
@@ -73,7 +71,7 @@ async function getUpstatHistory() {
         likes: number
       }
     }[]
-  >(HISTORY_API_URL + 'upstat')
+  >(HISTORY_API_URL() + 'upstat')
     .then((data) => {
       if (data.code == 200) {
         upstatHistory.value = data.data
@@ -82,7 +80,6 @@ async function getUpstatHistory() {
       }
     })
     .catch((err) => {
-      console.error(err)
       message.error('加载失败')
     })
 }
@@ -97,7 +94,6 @@ function getOptions() {
     time: Date
     count: number
   }[] = []
-  let guards = [] as { time: number; count: number; timeString: string }[]
 
   if (fansHistory.value) {
     const startTime = new Date(fansHistory.value[0].time)
@@ -143,12 +139,19 @@ function getOptions() {
 
   let lastDayGuards = 0
   let lastDay = 0
+  let guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
+  let guards = [] as { time: number; count: number; timeString: string }[]
   guardHistory.value?.forEach((g) => {
-    if (!isSameDaySimple(g.time, lastDayGuards)) {
-      guards.push({
+    if (!isSameDay(g.time, lastDay)) {
+      guardsIncreacement.push({
         time: lastDayGuards,
         count: lastDay == 0 ? 0 : g.count - lastDayGuards,
         //将timeString转换为yyyy-MM-dd HH
+        timeString: format(g.time, 'yyyy-MM-dd'),
+      })
+      guards.push({
+        time: g.time,
+        count: g.count,
         timeString: format(g.time, 'yyyy-MM-dd'),
       })
       lastDay = g.time
@@ -238,7 +241,7 @@ function getOptions() {
         axisTick: {
           alignWithLabel: true,
         },
-        boundaryGap: false, // 设置为false使得柱状图紧贴左右两侧
+        //boundaryGap: chartData.dailyIncrements.length < 15, // 设置为false使得柱状图紧贴左右两侧
         axisLine: {
           onZero: false,
           lineStyle: {
@@ -292,6 +295,9 @@ function getOptions() {
       {
         type: 'value',
       },
+      {
+        type: 'value',
+      },
     ],
     xAxis: [
       {
@@ -306,7 +312,7 @@ function getOptions() {
           },
         },
         // prettier-ignore
-        data: guards.map((f) => f.timeString ),
+        data: guardsIncreacement.map((f) => f.timeString),
       },
     ],
     series: [
@@ -318,6 +324,15 @@ function getOptions() {
           focus: 'series',
         },
         data: guards.map((f) => f.count),
+      },
+      {
+        name: '日增',
+        type: 'bar',
+        yAxisIndex: 1,
+        emphasis: {
+          focus: 'series',
+        },
+        data: guardsIncreacement.map((f) => f.count),
       },
     ],
     dataZoom: [

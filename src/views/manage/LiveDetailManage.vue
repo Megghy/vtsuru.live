@@ -22,9 +22,9 @@ const liveInfo = ref<ResponseLiveDetail | undefined>(await get())
 
 async function get() {
   try {
-    const data = await QueryGetAPI<ResponseLiveDetail>(LIVE_API_URL + 'get', {
+    const data = await QueryGetAPI<ResponseLiveDetail>(LIVE_API_URL() + 'get', {
       id: route.params.id,
-      useEmoji: true
+      useEmoji: true,
     })
     if (data.code == 200) {
       return data.data
@@ -33,7 +33,6 @@ async function get() {
       return undefined
     }
   } catch (err) {
-    console.error(err)
     message.error('无法获取数据')
   }
   return undefined

@@ -15,7 +15,7 @@ const isLoading = ref(false)
 
 async function VerifyAccount() {
   isLoading.value = true
-  await QueryGetAPI<AccountInfo>(ACCOUNT_API_URL + 'verify', {
+  await QueryGetAPI<AccountInfo>(ACCOUNT_API_URL() + 'verify', {
     target: route.query.target,
   })
     .then((data) => {

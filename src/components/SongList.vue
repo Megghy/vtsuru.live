@@ -393,7 +393,7 @@ function renderCell(value: string | number) {
 }
 
 async function updateSong() {
-  await QueryPostAPI<SongsInfo>(SONG_API_URL + 'update', {
+  await QueryPostAPI<SongsInfo>(SONG_API_URL() + 'update', {
     key: updateSongModel.value.key,
     song: updateSongModel.value,
   }).then((data) => {
@@ -407,7 +407,7 @@ async function updateSong() {
   })
 }
 async function delSong(song: SongsInfo) {
-  await QueryGetAPI<SongsInfo>(SONG_API_URL + 'del', {
+  await QueryGetAPI<SongsInfo>(SONG_API_URL() + 'del', {
     key: song.key,
   }).then((data) => {
     if (data.code == 200) {

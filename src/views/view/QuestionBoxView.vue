@@ -85,7 +85,6 @@ async function SendQuestion() {
     })
     .catch((err) => {
       message.error('发送失败')
-      console.error(err)
     })
     .finally(() => {
       isSending.value = false
@@ -112,7 +111,7 @@ function OnFileListChange(files: UploadFileInfo[]) {
 }
 function getPublicQuestions() {
   isGetting.value = true
-  QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
+  QueryGetAPI<QAInfo[]>(QUESTION_API_URL() + 'get-public', {
     id: userInfo?.id,
   })
     .then((data) => {
@@ -124,7 +123,6 @@ function getPublicQuestions() {
     })
     .catch((err) => {
       message.error('获取公开提问失败')
-      console.error(err)
     })
     .finally(() => {
       isGetting.value = false

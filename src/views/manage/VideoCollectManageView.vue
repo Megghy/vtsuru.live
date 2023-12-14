@@ -94,7 +94,7 @@ const isLoading2 = ref(false)
 async function get() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<VideoCollectTable[]>(VIDEO_COLLECT_API_URL + 'get-all')
+    const data = await QueryGetAPI<VideoCollectTable[]>(VIDEO_COLLECT_API_URL() + 'get-all')
     if (data.code == 200) {
       //videoTables.value = data.data
       return data.data
@@ -103,7 +103,6 @@ async function get() {
       return []
     }
   } catch (err) {
-    console.error(err)
     message.error('获取失败')
     return []
   } finally {
@@ -113,7 +112,7 @@ async function get() {
 function createTable() {
   formRef.value?.validate().then(async () => {
     isLoading2.value = true
-    QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL + 'create', createVideoModel.value)
+    QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL() + 'create', createVideoModel.value)
       .then((data) => {
         if (data.code == 200) {
           videoTables.value.push(data.data)
@@ -125,7 +124,6 @@ function createTable() {
         }
       })
       .catch((err) => {
-        console.error(err)
         message.error('创建失败')
       })
       .finally(() => {

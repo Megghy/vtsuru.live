@@ -39,15 +39,13 @@ const activeSongs = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL() + 'get-active-and-settings', {
       id: currentId.value,
     })
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {
-    console.error(err)
-  }
+  } catch (err) {}
   return {} as { songs: SongRequestInfo[]; setting: Setting_SongRequest }
 }
 const isMoreThanContainer = computed(() => {
