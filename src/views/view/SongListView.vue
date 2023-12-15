@@ -45,7 +45,7 @@ const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
 
 async function getSongRequestInfo() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL() + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
       id: props.userInfo?.id,
     })
     if (data.code == 200) {
@@ -56,7 +56,7 @@ async function getSongRequestInfo() {
 }
 async function getSongs() {
   isLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL() + 'get', {
+  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get', {
     id: props.userInfo?.id,
   })
     .then((data) => {
@@ -85,7 +85,7 @@ async function requestSong(song: SongsInfo) {
   } else {
     if (props.userInfo) {
       try {
-        const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL() + 'add-from-web', {
+        const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL + 'add-from-web', {
           target: props.userInfo?.id,
           song: song.key,
         })

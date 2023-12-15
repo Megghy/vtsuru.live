@@ -119,7 +119,7 @@ const selectedScheduleWeek = ref(Number(format(Date.now(), 'w')) + 1)
 
 async function get() {
   isLoading.value = true
-  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL() + 'get', {
+  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL + 'get', {
     id: accountInfo.value?.id ?? -1,
   })
     .then((data) => {
@@ -137,7 +137,7 @@ async function get() {
 const isFetching = ref(false)
 async function addSchedule() {
   isFetching.value = true
-  await QueryPostAPI(SCHEDULE_API_URL() + 'update', {
+  await QueryPostAPI(SCHEDULE_API_URL + 'update', {
     year: selectedScheduleYear.value,
     week: selectedScheduleWeek.value,
   })
@@ -166,7 +166,7 @@ async function onCopySchedule() {
 }
 async function onUpdateSchedule() {
   isFetching.value = true
-  await QueryPostAPI(SCHEDULE_API_URL() + 'update', {
+  await QueryPostAPI(SCHEDULE_API_URL + 'update', {
     year: updateScheduleModel.value.year,
     week: updateScheduleModel.value.week,
     day: selectedDay.value,
@@ -191,7 +191,7 @@ async function onUpdateSchedule() {
     })
 }
 async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
-  await QueryGetAPI(SCHEDULE_API_URL() + 'del', {
+  await QueryGetAPI(SCHEDULE_API_URL + 'del', {
     year: schedule.year,
     week: schedule.week,
   }).then((data) => {

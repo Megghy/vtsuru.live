@@ -4,7 +4,28 @@ import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-m
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { FEEDBACK_API_URL } from '@/data/constants'
 import { List } from 'linqts'
-import { NButton, NCard, NCheckbox, NDivider, NEllipsis, NEmpty, NForm, NGrid, NGridItem, NInput, NModal, NRadioButton, NRadioGroup, NSpace, NSpin, NTag, NText, NTooltip, useMessage } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NForm,
+  NGrid,
+  NGridItem,
+  NInput,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NSpace,
+  NSpin,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 interface FeedbackModel {
@@ -43,7 +64,7 @@ const newFeedback = ref<FeedbackModel>({
 
 async function get() {
   try {
-    const data = await QueryGetAPI<ResponseFeedbackModel[]>(FEEDBACK_API_URL() + 'get')
+    const data = await QueryGetAPI<ResponseFeedbackModel[]>(FEEDBACK_API_URL + 'get')
     if (data.code == 200) {
       return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
     } else {
@@ -60,7 +81,7 @@ async function add() {
     message.error('反馈内容不能为空')
     return
   }
-  await QueryPostAPI<ResponseFeedbackModel>(FEEDBACK_API_URL() + 'add', newFeedback.value)
+  await QueryPostAPI<ResponseFeedbackModel>(FEEDBACK_API_URL + 'add', newFeedback.value)
     .then((data) => {
       if (data.code == 200) {
         message.success('发送成功, 感谢你的反馈!')
@@ -78,8 +99,11 @@ async function add() {
 </script>
 
 <template>
-  <NSpace>
+  <NSpace align="center">
     <NButton @click="showAddModal = true" type="info">添加反馈</NButton>
+    <NText depth="3">
+      或者直接加群 873260337 说也可以
+    </NText>
   </NSpace>
   <NDivider>
     <NTooltip>
@@ -96,7 +120,7 @@ async function add() {
   <NSpace v-else>
     <NCard v-for="item in selectedFeedback" v-bind:key="item.createAt" size="small" embedded style="min-width: 300px">
       <template #header>
-        <NTag v-if="item.status == FeedbackStatus.Padding" :bordered="false"> 等待中 </NTag>
+        <NTag v-if="item.status == FeedbackStatus.Padding" :bordered="false"> 等待 </NTag>
         <NTag v-else-if="item.status == FeedbackStatus.Progressing" type="success">
           <template #icon>
             <NSpin :size="12" />
@@ -113,6 +137,15 @@ async function add() {
             {{ item.userName }}
           </NEllipsis>
         </template>
+        <NDivider vertical />
+        <NTooltip>
+          <template #trigger>
+            <NText depth="3" style="font-size: small">
+              <NTime :time="item.createAt" type="relative" />
+            </NText>
+          </template>
+          <NTime :time="item.createAt" />
+        </NTooltip>
       </template>
       <template #header-extra>
         <NTag v-if="item.type == FeedbackType.Opinion" :bordered="false" size="small" type="info" :color="{ color: '#5f877d', textColor: 'white' }"> 建议 </NTag>

@@ -1,6 +1,6 @@
 import { ACCOUNT_API_URL, BASE_API } from '@/data/constants'
 import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
-import { QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ref } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { createDiscreteApi } from 'naive-ui'
@@ -19,7 +19,7 @@ export async function GetSelfAccount() {
     if (result.code == 200) {
       ACCOUNT.value = result.data
       isLoadingAccount.value = false
-      console.log('[vtsuru] 已获取账户信息')
+      //console.log('[vtsuru] 已获取账户信息')
       if (!isSameDay(new Date(), cookieRefreshDate.value)) {
         refreshCookie()
       }
@@ -38,8 +38,15 @@ export async function GetSelfAccount() {
   }
   isLoadingAccount.value = false
 }
+export function UpdateAccountLoop() {
+  setInterval(() => {
+    if (ACCOUNT.value) {
+      GetSelfAccount()
+    }
+  }, 60 * 1000)
+}
 function refreshCookie() {
-  QueryPostAPI<string>(`${ACCOUNT_API_URL()}refresh-token`).then((data) => {
+  QueryPostAPI<string>(`${ACCOUNT_API_URL}refresh-token`).then((data) => {
     if (data.code == 200) {
       cookie.value = data.data
       cookieRefreshDate.value = Date.now()
@@ -48,17 +55,17 @@ function refreshCookie() {
   })
 }
 export async function SaveAccountSettings() {
-  return await QueryPostAPI(ACCOUNT_API_URL() + 'update-setting', ACCOUNT.value?.settings)
+  return await QueryPostAPI(ACCOUNT_API_URL + 'update-setting', ACCOUNT.value?.settings)
 }
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
-  return await QueryPostAPI(ACCOUNT_API_URL() + 'update-enable-functions', functions)
+  return await QueryPostAPI(ACCOUNT_API_URL + 'update-enable-functions', functions)
 }
 export function useAccount() {
   return ACCOUNT
 }
 
 export async function Register(name: string, email: string, password: string, token: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL()}register`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL}register`, {
     name,
     email,
     password,
@@ -67,11 +74,22 @@ export async function Register(name: string, email: string, password: string, to
 }
 
 export async function Login(nameOrEmail: string, password: string): Promise<APIRoot<string>> {
-  return QueryPostAPI<string>(`${ACCOUNT_API_URL()}login`, {
+  return QueryPostAPI<string>(`${ACCOUNT_API_URL}login`, {
     nameOrEmail,
     password,
   })
 }
 export async function Self(): Promise<APIRoot<AccountInfo>> {
-  return QueryPostAPI<AccountInfo>(`${ACCOUNT_API_URL()}self`)
+  return QueryPostAPI<AccountInfo>(`${ACCOUNT_API_URL}self`)
+}
+export async function AddBiliBlackList(id: number, name: string): Promise<APIRoot<unknown>> {
+  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/add-bili`, {
+    id: id,
+    name: name,
+  })
+}
+export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
+  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del-bili`, {
+    id: id,
+  })
 }

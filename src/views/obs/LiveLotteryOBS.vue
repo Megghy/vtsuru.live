@@ -30,7 +30,7 @@ const isMoreThanContainer = computed(() => {
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL() + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
       code: currentCode.value,
     })
     if (data.code == 200) {

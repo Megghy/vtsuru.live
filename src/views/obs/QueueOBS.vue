@@ -54,7 +54,7 @@ const activeItems = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(QUEUE_API_URL() + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(QUEUE_API_URL + 'get-active-and-settings', {
       id: currentId.value,
     })
     if (data.code == 200) {
@@ -111,7 +111,7 @@ onUnmounted(() => {
         <img class="queue-singing-avatar" :src="AVATAR_URL + progressing?.user?.uid" referrerpolicy="no-referrer" />
         <p class="queue-singing-name">{{ progressing?.user?.name }}</p>
       </template>
-      <div v-else class="queue-singing-empty">空闲中</div>
+      <div v-else class="queue-singing-empty">等待中</div>
       <div class="queue-singing-suffix"></div>
     </div>
     <div class="queue-content" ref="listContainerRef">
@@ -122,12 +122,15 @@ onUnmounted(() => {
             :from="(item.from as number)"
             :status="(item.status as number)"
             :payment="item.giftPrice ?? 0"
-            v-for="item in activeItems"
+            v-for="(item, index) in activeItems"
             :key="item.id"
             :style="`height: ${itemHeight}px`"
           >
+            <div class="queue-list-item-index" :index="index + 1">
+              {{ index + 1 }}
+            </div>
             <div class="queue-list-item-level" :has-level="(item.user?.fans_medal_level ?? 0) > 0">
-              {{ item.user?.fans_medal_level }}
+              {{ `${item.user?.fans_medal_name} ${item.user?.fans_medal_level}` }}
             </div>
             <div class="queue-list-item-user-name">
               {{ item.user?.name }}
@@ -140,7 +143,7 @@ onUnmounted(() => {
         <NEmpty class="queue-empty" description="暂无人排队" />
       </div>
     </div>
-    <div class="queue-footer" ref="footerRef">
+    <div class="queue-footer" ref="footerRef" v-if="settings.showRequireInfo">
       <Vue3Marquee :key="key" ref="footerListRef" class="queue-footer-marquee" :pause="footerSize.width < footerListSize.width" :duration="20">
         <span class="queue-tag" type="prefix">
           <div class="queue-tag-key">关键词</div>
@@ -204,7 +207,7 @@ onUnmounted(() => {
   text-shadow: 0 0 10px #ca7b7b6e, 0 0 20px #ffffff8e, 0 0 30px #61606086, 0 0 40px rgba(64, 156, 179, 0.555);
 }
 .queue-header-count {
-  color: #ffffffbd;
+  color: #ffffff;
   text-align: center;
   font-size: 14px;
 }
@@ -320,6 +323,16 @@ onUnmounted(() => {
   white-space: nowrap;
 
   margin-left: auto;
+}
+.queue-list-item-index {
+  text-align: center;
+  height: 18px;
+  padding: 2px;
+  min-width: 15px;
+  border-radius: 5px;
+  background-color: #0f0f0f48;
+  color: rgba(204, 204, 204, 0.993);
+  font-size: 12px;
 }
 .queue-list-item-level {
   text-align: center;

@@ -285,7 +285,7 @@ const menuOptions = [
 ]
 
 async function resendEmail() {
-  await QueryGetAPI(ACCOUNT_API_URL() + 'send-verify-email')
+  await QueryGetAPI(ACCOUNT_API_URL + 'send-verify-email')
     .then((data) => {
       if (data.code == 200) {
         canResendEmail.value = false

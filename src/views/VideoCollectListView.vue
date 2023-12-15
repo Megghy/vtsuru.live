@@ -33,7 +33,7 @@ const totalTime = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL() + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
     if (data.code == 200) {
       return data.data
     }

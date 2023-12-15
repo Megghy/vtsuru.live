@@ -11,7 +11,7 @@ import VueTurnstile from 'vue-turnstile'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 
-const token = ref()
+const token = ref('')
 const turnstile = ref()
 
 const accountInfo = useAccount()
@@ -38,7 +38,7 @@ function logout() {
 }
 function resetBili() {
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL() + 'reset-bili')
+  QueryGetAPI(ACCOUNT_API_URL + 'reset-bili')
     .then((data) => {
       if (data.code == 200) {
         message.success('已解绑 Bilibili 账号')
@@ -55,7 +55,7 @@ function resetBili() {
 }
 function resetEmail() {
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL() + 'reset-email', { email: newEmailAddress.value, code: newEmailVerifyCode.value })
+  QueryGetAPI(ACCOUNT_API_URL + 'reset-email', { email: newEmailAddress.value, code: newEmailVerifyCode.value })
     .then((data) => {
       if (data.code == 200) {
         message.success('已将邮箱改绑为 ' + newEmailAddress.value)
@@ -71,7 +71,7 @@ function resetEmail() {
     })
 }
 function sendEmailVerifyCode() {
-  QueryGetAPI(ACCOUNT_API_URL() + 'reset-email/code', { email: newEmailAddress.value })
+  QueryGetAPI(ACCOUNT_API_URL + 'reset-email/code', { email: newEmailAddress.value })
     .then((data) => {
       if (data.code == 200) {
         message.success('发送成功, 请检查目标邮箱. 如果没有收到, 请检查垃圾邮件')
@@ -92,7 +92,7 @@ async function resetPassword() {
     message.error('两次密码不一致')
     return
   }
-  await QueryGetAPI(ACCOUNT_API_URL() + 'verify/reset-password', { password: newPassword.value })
+  await QueryGetAPI(ACCOUNT_API_URL + 'verify/reset-password', { password: newPassword.value })
     .then(async (data) => {
       if (data.code == 200) {
         message.success('密码已修改')
@@ -118,7 +118,7 @@ async function BindBili() {
     uid: number
     uface: string
     room_id: number
-  }>(ACCOUNT_API_URL() + 'bind-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+  }>(ACCOUNT_API_URL + 'bind-bili', { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
@@ -148,7 +148,7 @@ async function ChangeBili() {
     uid: number
     uface: string
     room_id: number
-  }>(ACCOUNT_API_URL() + 'change-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+  }>(ACCOUNT_API_URL + 'change-bili', { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已更新身份码')

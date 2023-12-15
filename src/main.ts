@@ -3,7 +3,7 @@ import { BASE_API, apiFail } from '@/data/constants'
 import { createApp, h } from 'vue'
 import App from './App.vue'
 import router from './router'
-import { GetSelfAccount } from './api/account'
+import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import { NText, createDiscreteApi } from 'naive-ui'
 
@@ -38,4 +38,5 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
     //加载其他数据
     GetSelfAccount()
     GetNotifactions()
+    UpdateAccountLoop()
   })

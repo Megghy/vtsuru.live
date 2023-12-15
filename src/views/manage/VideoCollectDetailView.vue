@@ -108,7 +108,7 @@ const acceptVideos = computed(() => {
 
 async function getData() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL() + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
     if (data.code == 200) {
       updateModel.value = {
         id: data.data.table.id,
@@ -200,7 +200,7 @@ const rejectButtonGroup = (v: VideoInfo) =>
   ])
 function setStatus(status: VideoStatus, video: VideoInfo) {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL() + 'set-status', {
+  QueryGetAPI(VIDEO_COLLECT_API_URL + 'set-status', {
     id: videoDetail.value.table.id,
     bvid: video.bvid,
     status: status,
@@ -235,7 +235,7 @@ function dateDisabled(ts: number) {
 function updateTable() {
   isLoading.value = true
   updateModel.value.id = videoDetail.value.table.id
-  QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL() + 'update', updateModel.value)
+  QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL + 'update', updateModel.value)
     .then((data) => {
       if (data.code == 200) {
         message.success('更新成功')
@@ -253,7 +253,7 @@ function updateTable() {
 }
 function deleteTable() {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL() + 'del', {
+  QueryGetAPI(VIDEO_COLLECT_API_URL + 'del', {
     id: videoDetail.value.table.id,
   })
     .then((data) => {
@@ -275,7 +275,7 @@ function deleteTable() {
 }
 function closeTable() {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL() + 'finish', {
+  QueryGetAPI(VIDEO_COLLECT_API_URL + 'finish', {
     id: videoDetail.value.table.id,
     finish: !videoDetail.value.table.isFinish,
   })

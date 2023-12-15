@@ -21,7 +21,7 @@ function changePassword() {
     return
   }
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL() + 'verify/reset-password', {
+  QueryGetAPI(ACCOUNT_API_URL + 'verify/reset-password', {
     key: key.value,
     password: password.value,
   })

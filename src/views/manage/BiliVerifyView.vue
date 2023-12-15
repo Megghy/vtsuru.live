@@ -18,7 +18,7 @@ const roomId = ref()
 const timer = ref()
 
 function onStartVerify() {
-  QueryGetAPI(BILI_API_URL() + 'verify', {
+  QueryGetAPI(BILI_API_URL + 'verify', {
     uId: uId.value,
   }).then((data) => {
     if (data.code == 200) {
@@ -34,7 +34,7 @@ async function checkStatus() {
     uId: number
     roomId: number
     endTime: number
-  }>(BILI_API_URL() + 'status')
+  }>(BILI_API_URL + 'status')
   if (data.code == 200) {
     //正在进行认证
     roomId.value ??= data.data.roomId

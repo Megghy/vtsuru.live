@@ -44,7 +44,28 @@ export interface AccountInfo extends UserInfo {
   eventFetcherStatus: string
 
   nextSendEmailTime?: number
-  isServerFetcherOnline:boolean
+  isServerFetcherOnline: boolean
+  blackList: number[]
+  biliBlackList: { [key: number]: string }
+  streamerInfo?: StreamerModel
+}
+export interface StreamerModel{
+  name: string;
+  uId: number;
+  roomId: number;
+  faceUrl: string;
+  title: string;
+  coverUrl: string;
+  frameUrl: string;
+  area: string;
+  parentArea: string;
+  lastStreamAt: number;
+  totalDanmakuCount: number;
+  totalIncome: number;
+  totalStreamCount: number;
+  totalStreamTime: number;
+  lastDanmakuCount: number;
+  isStreaming: boolean;
 }
 export enum BiliAuthCodeStatusType {
   NotBind,
@@ -72,6 +93,7 @@ export interface UserSetting {
 }
 export interface Setting_SongRequest {
   orderPrefix: string
+  enableOnStreaming: boolean
   onlyAllowSongList: boolean
   queueMaxSize: number
   allowAllDanmaku: boolean
@@ -90,9 +112,12 @@ export interface Setting_SongRequest {
   zongduCooldownSecond: number
   tiduCooldownSecond: number
   jianzhangCooldownSecond: number
+
+  showRequireInfo: boolean
 }
 export interface Setting_Queue {
   keyword: string
+  enableOnStreaming: boolean
   matchType: KeywordMatchType
   sortType?: QueueSortType
   queueMaxSize: number
@@ -116,6 +141,8 @@ export interface Setting_Queue {
   zongduCooldownSecond: number
   tiduCooldownSecond: number
   jianzhangCooldownSecond: number
+
+  showRequireInfo: boolean
 }
 
 export enum KeywordMatchType {
