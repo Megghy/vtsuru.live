@@ -30,7 +30,7 @@ export async function useUser(id: string | undefined = undefined) {
 }
 export async function useUserWithUId(id: number) {
   if (!USERS.value[id.toString()]) {
-    const result = await QueryGetAPI<UserInfo>(`${USER_API_URL()}info`, {
+    const result = await QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
       uId: id,
     })
     if (result.code == 200) {
@@ -41,7 +41,7 @@ export async function useUserWithUId(id: number) {
 }
 
 export async function GetInfo(id: string): Promise<APIRoot<UserInfo>> {
-  return QueryGetAPI<UserInfo>(`${USER_API_URL()}info`, {
+  return QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
     id: id,
   })
 }

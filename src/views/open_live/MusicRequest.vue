@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
+import { AddBiliBlackList, SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
 import {
   EventDataTypes,
   EventModel,
@@ -16,7 +16,18 @@ import {
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import DanmakuClient, { AuthInfo, DanmakuInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
 import { OPEN_LIVE_API_URL, SONG_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
-import { Check24Filled, Checkmark12Regular, Delete24Filled, Dismiss12Filled, Dismiss16Filled, Info24Filled, Mic24Filled, PeopleQueue24Filled, Play24Filled } from '@vicons/fluent'
+import {
+  Check24Filled,
+  Checkmark12Regular,
+  Delete24Filled,
+  Dismiss12Filled,
+  Dismiss16Filled,
+  Info24Filled,
+  Mic24Filled,
+  PeopleQueue24Filled,
+  Play24Filled,
+  PresenceBlocked16Regular,
+} from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 import { format, isSameDay } from 'date-fns'
@@ -99,6 +110,7 @@ const notice = useNotification()
 
 const isWarnMessageAutoClose = useStorage('SongRequest.Settings.WarnMessageAutoClose', false)
 const volumn = useStorage('Settings.Volumn', 0.5)
+const isReverse = useStorage('SongRequest.Settings.Reverse', false)
 
 const isLoading = ref(false)
 const showOBSModal = ref(false)
@@ -128,7 +140,7 @@ const props = defineProps<{
 const localActiveSongs = useStorage('SongRequest.ActiveSongs', [] as SongRequestInfo[])
 const originSongs = ref<SongRequestInfo[]>(await getAllSong())
 const songs = computed(() => {
-  return originSongs.value.filter((s) => {
+  const result = originSongs.value.filter((s) => {
     if (filterName.value) {
       if (filterNameContains.value) {
         if (!s.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
@@ -148,6 +160,11 @@ const songs = computed(() => {
     }
     return true
   })
+  if (isReverse.value) {
+    return result.reverse()
+  } else {
+    return result
+  }
 })
 const activeSongs = computed(() => {
   return (accountInfo ? songs.value : localActiveSongs.value)
@@ -180,7 +197,7 @@ const table = ref()
 async function getAllSong() {
   if (accountInfo.value) {
     try {
-      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL() + 'get-all', {
+      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-all', {
         id: accountInfo.value.id,
       })
       if (data.code == 200) {
@@ -200,8 +217,12 @@ async function getAllSong() {
 }
 async function addSong(danmaku: EventModel) {
   console.log(`[OPEN-LIVE-Song-Request] 收到 [${danmaku.name}] 的点歌${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`)
+  if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
+    message.info('当前未在直播中, 无法添加点歌请求. 或者关闭设置中的仅允许直播时加入')
+    return
+  }
   if (accountInfo.value) {
-    await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL() + 'try-add', danmaku).then((data) => {
+    await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL + 'try-add', danmaku).then((data) => {
       if (data.code == 200) {
         message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
         if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
@@ -246,7 +267,7 @@ async function addSongManual() {
     return
   }
   if (accountInfo.value) {
-    await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL() + 'add', {
+    await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL + 'add', {
       name: newSongName.value,
     }).then((data) => {
       if (data.code == 200) {
@@ -300,7 +321,7 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
       statusString2 = '演唱中'
       break
   }
-  await QueryGetAPI(SONG_REQUEST_API_URL() + statusString, {
+  await QueryGetAPI(SONG_REQUEST_API_URL + statusString, {
     id: song.id,
   })
     .then((data) => {
@@ -397,7 +418,7 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(SONG_REQUEST_API_URL() + 'update-setting', settings.value)
+    await QueryPostAPI(SONG_REQUEST_API_URL + 'update-setting', settings.value)
       .then((data) => {
         if (data.code == 200) {
           message.success('已保存')
@@ -433,7 +454,7 @@ async function deleteSongs(values: SongRequestInfo[]) {
     })
 }
 async function deactiveAllSongs() {
-  await QueryGetAPI(SONG_REQUEST_API_URL() + 'deactive')
+  await QueryGetAPI(SONG_REQUEST_API_URL + 'deactive')
     .then((data) => {
       if (data.code == 200) {
         message.success('已全部取消')
@@ -651,7 +672,7 @@ function GetGuardColor(level: number | null | undefined): string {
 async function updateActive() {
   if (!accountInfo.value) return
   try {
-    const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL() + 'get-active', {
+    const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
       id: accountInfo.value?.id,
     })
     if (data.code == 200) {
@@ -672,6 +693,26 @@ async function updateActive() {
     }
   } catch (err) {}
 }
+function blockUser(item: SongRequestInfo) {
+  if (item.from != SongRequestFrom.Danmaku) {
+    message.error(`[${item.user?.name}] 不是来自弹幕的用户`)
+    return
+  }
+  if (item.user) {
+    AddBiliBlackList(item.user.uid, item.user.name)
+      .then((data) => {
+        if (data.code == 200) {
+          message.success(`[${item.user?.name}] 已添加到黑名单`)
+          updateSongStatus(item, SongRequestStatus.Cancel)
+        } else {
+          message.error(data.message)
+        }
+      })
+      .catch((err) => {
+        message.error(err)
+      })
+  }
+}
 const isLrcLoading = ref('')
 
 let timer: any
@@ -681,6 +722,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.songRequest
   }
+  props.client.on('danmaku', onGetDanmaku)
+  props.client.on('sc', onGetSC)
   init()
 })
 onActivated(() => {
@@ -688,8 +731,6 @@ onActivated(() => {
 })
 function init() {
   dispose()
-  props.client.on('danmaku', onGetDanmaku)
-  props.client.on('sc', onGetSC)
   timer = setInterval(() => {
     updateKey.value++
   }, 1000)
@@ -698,8 +739,6 @@ function init() {
   }, 2000)
 }
 function dispose() {
-  props.client.off('danmaku', onGetDanmaku)
-  props.client.off('sc', onGetSC)
   clearInterval(timer)
   clearInterval(updateActiveTimer)
 }
@@ -707,6 +746,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
+  props.client.off('danmaku', onGetDanmaku)
+  props.client.off('sc', onGetSC)
   dispose()
 })
 </script>
@@ -759,6 +800,7 @@ onUnmounted(() => {
               <NInput placeholder="手动添加" v-model:value="newSongName" />
               <NButton type="primary" @click="addSongManual"> 添加 </NButton>
             </NInputGroup>
+            <NCheckbox v-model:checked="isReverse"> 倒序 </NCheckbox>
             <NPopconfirm @positive-click="deactiveAllSongs">
               <template #trigger>
                 <NButton type="error"> 全部取消 </NButton>
@@ -869,6 +911,21 @@ onUnmounted(() => {
                     </template>
                     已完成演唱
                   </NTooltip>
+                  <NTooltip v-if="song.from == SongRequestFrom.Danmaku">
+                    <template #trigger>
+                      <NPopconfirm @positive-click="blockUser(song)">
+                        <template #trigger>
+                          <NButton circle type="warning" style="height: 30px; width: 30px" :loading="isLoading">
+                            <template #icon>
+                              <NIcon :component="PresenceBlocked16Regular" />
+                            </template>
+                          </NButton>
+                        </template>
+                        确定拉黑 {{ song.user?.name }} 吗
+                      </NPopconfirm>
+                    </template>
+                    拉黑用户
+                  </NTooltip>
                   <NTooltip>
                     <template #trigger>
                       <NButton circle type="error" style="height: 30px; width: 30px" :loading="isLoading" @click="updateSongStatus(song, SongRequestStatus.Cancel)">
@@ -941,6 +998,7 @@ onUnmounted(() => {
               <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
             </NInputGroup>
             <NSpace align="center">
+              <NCheckbox v-model:checked="settings.enableOnStreaming" @update:checked="updateSettings" :disabled="!configCanEdit"> 仅在直播时才允许加入 </NCheckbox>
               <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许所有弹幕点歌 </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
                 <NCheckbox v-model:checked="settings.needWearFanMedal" @update:checked="updateSettings" :disabled="!configCanEdit"> 需要拥有粉丝牌 </NCheckbox>
@@ -1003,6 +1061,8 @@ onUnmounted(() => {
                 <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
               </NInputGroup>
             </NSpace>
+            <NDivider> OBS </NDivider>
+            <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
             <NDivider> 其他 </NDivider>
             <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭点歌失败时的提示消息 </NCheckbox>
           </NSpace>

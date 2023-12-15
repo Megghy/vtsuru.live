@@ -104,7 +104,7 @@ const props = defineProps<{
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL() + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
       code: props.code,
     })
     if (data.code == 200) {
@@ -114,7 +114,7 @@ async function getUsers() {
   return null
 }
 function updateUsers() {
-  QueryPostAPI(LOTTERY_API_URL() + 'live/update-users', {
+  QueryPostAPI(LOTTERY_API_URL + 'live/update-users', {
     code: props.code,
     users: originUsers.value,
     resultUsers: resultUsers.value,

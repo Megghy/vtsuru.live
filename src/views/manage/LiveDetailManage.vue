@@ -22,7 +22,7 @@ const liveInfo = ref<ResponseLiveDetail | undefined>(await get())
 
 async function get() {
   try {
-    const data = await QueryGetAPI<ResponseLiveDetail>(LIVE_API_URL() + 'get', {
+    const data = await QueryGetAPI<ResponseLiveDetail>(LIVE_API_URL + 'get', {
       id: route.params.id,
       useEmoji: true,
     })

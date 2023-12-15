@@ -30,7 +30,7 @@ const errMessage = ref('')
 
 async function get() {
   isLoading.value = true
-  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL() + 'get', {
+  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL + 'get', {
     id: props.userInfo?.id,
   })
     .then((data) => {

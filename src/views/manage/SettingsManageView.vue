@@ -1,6 +1,26 @@
 <script setup lang="ts">
-import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
-import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NForm, NModal, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, SelectOption, useMessage } from 'naive-ui'
+import { DelBiliBlackList, SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NDivider,
+  NEmpty,
+  NForm,
+  NList,
+  NListItem,
+  NModal,
+  NSelect,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NText,
+  SelectOption,
+  useMessage,
+} from 'naive-ui'
 import { Ref, computed, h, onMounted, ref, defineAsyncComponent, onActivated } from 'vue'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
@@ -124,7 +144,7 @@ const templates = {
           scMinPrice: 30,
           fanMedalMinLevel: 5,
           needJianzhang: true,
-        } as SongRequestOption
+        } as SongRequestOption,
       },
       {
         id: 3,
@@ -190,15 +210,14 @@ const biliUserInfo = ref()
 const settingModalVisiable = ref(false)
 
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=10021741`)
-    .then(async (respone) => {
-      let data = await respone.json()
-      if (data.code == 0) {
-        biliUserInfo.value = data.card
-      } else {
-        throw new Error('Bili User API Error: ' + data.message)
-      }
-    })
+  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=10021741`).then(async (respone) => {
+    let data = await respone.json()
+    if (data.code == 0) {
+      biliUserInfo.value = data.card
+    } else {
+      throw new Error('Bili User API Error: ' + data.message)
+    }
+  })
 }
 async function SaveComboGroupSetting(value: (string | number)[], meta: { actionType: 'check' | 'uncheck'; value: string | number }) {
   if (accountInfo.value) {
@@ -268,6 +287,24 @@ function onOpenTemplateSettings() {
 const buttonGroup = computed(() => {
   return h(NSpace, () => [h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'), h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置')])
 })
+
+function unblockUser(id: number) {
+  DelBiliBlackList(id)
+    .then((data) => {
+      if (data.code == 200) {
+        message.success(`[${id}] 已移除黑名单`)
+        if (accountInfo.value) {
+          delete accountInfo.value.biliBlackList[id]
+        }
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      message.error(err)
+    })
+}
+
 onActivated(() => {
   if (route.query.tab) {
     selectedTab.value = route.query.tab.toString()
@@ -303,6 +340,22 @@ onMounted(async () => {
           <NSpace>
             <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser" @update:checked="SaveComboSetting"> 允许未注册用户提问 </NCheckbox>
           </NSpace>
+        </NTabPane>
+        <NTabPane tab="黑名单" name="blacklist">
+          <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
+            <NListItem v-for="item in Object.entries(accountInfo.biliBlackList)" :key="item[0]">
+              <NSpace align="center">
+                <NText>
+                  {{ item[1] }}
+                </NText>
+                <NText depth="3">
+                  {{ item[0] }}
+                </NText>
+                <NButton type="error" @click="unblockUser(Number(item[0]))" size="small"> 移除 </NButton>
+              </NSpace>
+            </NListItem>
+          </NList>
+          <NEmpty v-else />
         </NTabPane>
         <NTabPane tab="模板" name="template">
           <NSpace vertical>

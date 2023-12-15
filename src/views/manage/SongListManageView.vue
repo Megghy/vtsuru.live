@@ -239,7 +239,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
 
 async function getNeteaseSongList() {
   isModalLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL() + 'get-netease-list', {
+  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
     id: neteaseSongListId.value,
   })
     .then((data) => {
@@ -329,7 +329,7 @@ async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
 const isLoading = ref(true)
 async function getSongs() {
   isLoading.value = true
-  await QueryGetAPI<any>(SONG_API_URL() + 'get', {
+  await QueryGetAPI<any>(SONG_API_URL + 'get', {
     id: accountInfo.value?.id,
   })
     .then((data) => {

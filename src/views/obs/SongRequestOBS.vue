@@ -39,7 +39,7 @@ const activeSongs = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL() + 'get-active-and-settings', {
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
       id: currentId.value,
     })
     if (data.code == 200) {
@@ -103,13 +103,16 @@ onUnmounted(() => {
     <div class="song-request-content" ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
         <Vue3Marquee class="song-request-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
-          <span class="song-request-list-item" :from="(song.from as number)" :status="(song.status as number)" v-for="song in activeSongs" :key="song.id" :style="`height: ${itemHeight}px`">
+          <span class="song-request-list-item" :from="(song.from as number)" :status="(song.status as number)" v-for="(song, index) in activeSongs" :key="song.id" :style="`height: ${itemHeight}px`">
+            <div class="song-request-list-item-index" :index="index + 1">
+              {{ index + 1 }}
+            </div>
             <div class="song-request-list-item-song-name">
               {{ song.songName }}
             </div>
             <p class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
             <div class="song-request-list-item-level" :has-level="(song.user?.fans_medal_level ?? 0) > 0">
-              {{ song.user?.fans_medal_level }}
+              {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </span>
         </Vue3Marquee>
@@ -118,7 +121,7 @@ onUnmounted(() => {
         <NEmpty class="song-request-empty" description="暂无人点歌" />
       </div>
     </div>
-    <div class="song-request-footer" ref="footerRef">
+    <div class="song-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
       <Vue3Marquee :key="key" ref="footerListRef" class="song-request-footer-marquee" :pause="footerSize.width < footerListSize.width" :duration="20">
         <span class="song-request-tag" type="prefix">
           <div class="song-request-tag-key">前缀</div>
@@ -289,6 +292,16 @@ onUnmounted(() => {
   white-space: nowrap;
 
   margin-left: auto;
+}
+.song-request-list-item-index {
+  text-align: center;
+  height: 18px;
+  padding: 2px;
+  min-width: 15px;
+  border-radius: 5px;
+  background-color: #0f0f0f48;
+  color: rgba(204, 204, 204, 0.993);
+  font-size: 12px;
 }
 .song-request-list-item-level {
   text-align: center;

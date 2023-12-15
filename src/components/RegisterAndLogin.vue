@@ -155,7 +155,7 @@ function onLoginButtonClick() {
     await QueryPostAPI<{
       account: AccountInfo
       token: string
-    }>(ACCOUNT_API_URL() + 'login', {
+    }>(ACCOUNT_API_URL + 'login', {
       nameOrEmail: loginModel.value.account,
       password: loginModel.value.password,
     })
@@ -180,7 +180,7 @@ function onLoginButtonClick() {
 }
 async function onForgetPassword() {
   canSendForgetPassword.value = false
-  await QueryGetAPI(ACCOUNT_API_URL() + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
+  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已发送密码重置链接到你的邮箱, 请检查')

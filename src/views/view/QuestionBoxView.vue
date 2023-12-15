@@ -111,7 +111,7 @@ function OnFileListChange(files: UploadFileInfo[]) {
 }
 function getPublicQuestions() {
   isGetting.value = true
-  QueryGetAPI<QAInfo[]>(QUESTION_API_URL() + 'get-public', {
+  QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
     id: userInfo?.id,
   })
     .then((data) => {

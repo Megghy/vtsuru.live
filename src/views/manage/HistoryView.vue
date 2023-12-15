@@ -32,7 +32,7 @@ async function getFansHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL() + 'fans')
+  >(HISTORY_API_URL + 'fans')
     .then((data) => {
       if (data.code == 200) {
         fansHistory.value = data.data
@@ -50,7 +50,7 @@ async function getGuardsHistory() {
       time: number
       count: number
     }[]
-  >(HISTORY_API_URL() + 'guards')
+  >(HISTORY_API_URL + 'guards')
     .then((data) => {
       if (data.code == 200) {
         guardHistory.value = data.data
@@ -71,7 +71,7 @@ async function getUpstatHistory() {
         likes: number
       }
     }[]
-  >(HISTORY_API_URL() + 'upstat')
+  >(HISTORY_API_URL + 'upstat')
     .then((data) => {
       if (data.code == 200) {
         upstatHistory.value = data.data

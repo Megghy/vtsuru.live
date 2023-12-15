@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SaveEnableFunctions, useAccount } from '@/api/account'
+import { AddBiliBlackList, SaveEnableFunctions, useAccount } from '@/api/account'
 import {
   EventDataTypes,
   EventModel,
@@ -31,6 +31,7 @@ import {
   Mic24Filled,
   PeopleQueue24Filled,
   Play24Filled,
+  PresenceBlocked16Regular,
 } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
@@ -82,6 +83,7 @@ import QueueOBS from '../obs/QueueOBS.vue'
 
 const defaultSettings = {
   keyword: '排队',
+  enableOnStreaming: false,
   queueMaxSize: 10,
   allowAllDanmaku: true,
   allowFromWeb: true,
@@ -90,7 +92,7 @@ const defaultSettings = {
   needTidu: false,
   needZongdu: false,
   allowGift: true,
-  giftNames: ['小花花'],
+  giftNames: [],
   minGiftPrice: 0.1,
   allowIncreaseByAnyPayment: true,
   allowIncreasePaymentBySendGift: true,
@@ -103,6 +105,7 @@ const defaultSettings = {
   matchType: KeywordMatchType.Contains,
   sortType: QueueSortType.TimeFirst,
   giftFilterType: QueueGiftFilterType.Or,
+  showRequireInfo: true,
 } as Setting_Queue
 const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -117,6 +120,7 @@ const message = useMessage()
 const notice = useNotification()
 
 const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false)
+const isReverse = useStorage('Queue.Settings.Reverse', false)
 const volumn = useStorage('Settings.Volumn', 0.5)
 
 const isLoading = ref(false)
@@ -169,6 +173,9 @@ const queue = computed(() => {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenByDescending((q) => q.createAt)
     }
   }
+  if (isReverse.value) {
+    list = list.Reverse()
+  }
   return list.ToArray()
 })
 const historySongs = computed(() => {
@@ -191,7 +198,7 @@ const table = ref()
 async function getAll() {
   if (accountInfo.value) {
     try {
-      const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL() + 'get-all', {
+      const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-all', {
         id: accountInfo.value.id,
       })
       if (data.code == 200) {
@@ -214,8 +221,12 @@ async function add(danmaku: EventModel) {
     return
   }
   console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.name}] 的排队请求`)
+  if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
+    message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入')
+    return
+  }
   if (accountInfo.value) {
-    await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL() + 'try-add', danmaku).then((data) => {
+    await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL + 'try-add', danmaku).then((data) => {
       if (data.code == 200) {
         if (data.message != 'EventFetcher') {
           //如果存在则替换, 否则插入最后
@@ -269,7 +280,7 @@ async function addManual() {
     return
   }
   if (accountInfo.value) {
-    await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL() + 'add', {
+    await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL + 'add', {
       name: newQueueName.value,
     }).then((data) => {
       if (data.code == 200) {
@@ -302,7 +313,7 @@ async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) 
     return
   }
   isLoading.value = true
-  await QueryGetAPI(QUEUE_API_URL() + 'set-status', {
+  await QueryGetAPI(QUEUE_API_URL + 'set-status', {
     id: queueData.id,
     status: status,
   })
@@ -313,7 +324,7 @@ async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) 
         if (status > QueueStatus.Progressing) {
           queueData.finishAt = Date.now()
         }
-        message.success(`已更新队列状态为: ${STATUS_MAP[status]}`)
+        message.success(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
       } else {
         console.log(`[OPEN-LIVE-QUEUE] 更新队列状态失败: ${data.message}`)
         message.error(`更新队列状态失败: ${data.message}`)
@@ -424,7 +435,7 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(QUEUE_API_URL() + 'update-setting', settings.value)
+    await QueryPostAPI(QUEUE_API_URL + 'update-setting', settings.value)
       .then((data) => {
         if (data.code == 200) {
           message.success('已保存')
@@ -461,7 +472,7 @@ async function deleteQueue(values: ResponseQueueModel[]) {
     })
 }
 async function deactiveAllSongs() {
-  await QueryGetAPI(QUEUE_API_URL() + 'deactive')
+  await QueryGetAPI(QUEUE_API_URL + 'deactive')
     .then((data) => {
       if (data.code == 200) {
         message.success('已全部取消')
@@ -663,7 +674,7 @@ function GetGuardColor(level: number | null | undefined): string {
 async function updateActive() {
   if (!accountInfo.value) return
   try {
-    const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL() + 'get-active', {
+    const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-active', {
       id: accountInfo.value?.id,
     })
     if (data.code == 200) {
@@ -688,6 +699,26 @@ async function updateActive() {
     }
   } catch (err) {}
 }
+function blockUser(item: ResponseQueueModel) {
+  if (item.from != QueueFrom.Danmaku) {
+    message.error(`[${item.user?.name}] 不是来自弹幕的用户`)
+    return
+  }
+  if (item.user) {
+    AddBiliBlackList(item.user.uid, item.user.name)
+      .then((data) => {
+        if (data.code == 200) {
+          message.success(`[${item.user?.name}] 已添加到黑名单`)
+          updateStatus(item, QueueStatus.Cancel)
+        } else {
+          message.error(data.message)
+        }
+      })
+      .catch((err) => {
+        message.error(err)
+      })
+  }
+}
 let timer: any
 let updateActiveTimer: any
 const updateKey = ref(0)
@@ -695,6 +726,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.queue
   }
+  props.client.on('danmaku', onGetDanmaku)
+  props.client.on('gift', onGetGift)
   init()
 })
 onActivated(() => {
@@ -702,8 +735,6 @@ onActivated(() => {
 })
 function init() {
   dispose()
-  props.client.on('danmaku', onGetDanmaku)
-  props.client.on('gift', onGetGift)
   timer = setInterval(() => {
     updateKey.value++
   }, 1000)
@@ -712,8 +743,6 @@ function init() {
   }, 2000)
 }
 function dispose() {
-  props.client.off('danmaku', onGetDanmaku)
-  props.client.off('gift', onGetGift)
   clearInterval(timer)
   clearInterval(updateActiveTimer)
 }
@@ -721,6 +750,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
+  props.client.off('danmaku', onGetDanmaku)
+  props.client.off('gift', onGetGift)
   dispose()
 })
 </script>
@@ -784,6 +815,7 @@ onUnmounted(() => {
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
             </NRadioGroup>
+            <NCheckbox v-model:checked="isReverse"> 倒序 </NCheckbox>
           </NSpace>
         </NCard>
         <NDivider> 共 {{ queue.length }} 人 </NDivider>
@@ -867,6 +899,21 @@ onUnmounted(() => {
                     </template>
                     已完成
                   </NTooltip>
+                  <NTooltip v-if="queueData.from == QueueFrom.Danmaku">
+                    <template #trigger>
+                      <NPopconfirm @positive-click="blockUser(queueData)">
+                        <template #trigger>
+                          <NButton circle type="warning" style="height: 30px; width: 30px" :loading="isLoading">
+                            <template #icon>
+                              <NIcon :component="PresenceBlocked16Regular" />
+                            </template>
+                          </NButton>
+                        </template>
+                        确定拉黑 {{ queueData.user?.name }} 吗
+                      </NPopconfirm>
+                    </template>
+                    拉黑用户
+                  </NTooltip>
                   <NTooltip>
                     <template #trigger>
                       <NButton circle type="error" style="height: 30px; width: 30px" :loading="isLoading" @click="updateStatus(queueData, QueueStatus.Cancel)">
@@ -937,6 +984,7 @@ onUnmounted(() => {
               <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
             </NInputGroup>
             <NSpace align="center">
+              <NCheckbox v-model:checked="settings.enableOnStreaming" @update:checked="updateSettings" :disabled="!configCanEdit"> 仅在直播时才允许加入 </NCheckbox>
               <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许所有用户加入 </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
                 <NInputGroup style="width: 270px">
@@ -979,7 +1027,9 @@ onUnmounted(() => {
                   </NRadioGroup>
                 </span>
               </template>
-              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物) </NCheckbox>
+              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit">
+                在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
+              </NCheckbox>
               <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许发送任意礼物来叠加付费量 </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
@@ -1006,6 +1056,8 @@ onUnmounted(() => {
                 <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
               </NInputGroup>
             </NSpace>
+            <NDivider> OBS </NDivider>
+            <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
             <NDivider> 其他 </NDivider>
             <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭加入队列失败时的提示消息 </NCheckbox>
           </NSpace>
