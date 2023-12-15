@@ -124,7 +124,7 @@ function onRegisterButtonClick() {
   formRef.value?.validate().then(async () => {
     isLoading.value = true
     await QueryPostAPI<string>(
-      ACCOUNT_API_URL() + 'register',
+      ACCOUNT_API_URL + 'register',
       {
         name: registerModel.value.username,
         email: registerModel.value.email,
