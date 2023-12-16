@@ -114,6 +114,7 @@ export interface Setting_SongRequest {
   jianzhangCooldownSecond: number
 
   showRequireInfo: boolean
+  isReverse: boolean
 }
 export interface Setting_Queue {
   keyword: string
@@ -143,6 +144,7 @@ export interface Setting_Queue {
   jianzhangCooldownSecond: number
 
   showRequireInfo: boolean
+  isReverse: boolean
 }
 
 export enum KeywordMatchType {
