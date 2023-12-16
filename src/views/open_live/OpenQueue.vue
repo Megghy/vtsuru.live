@@ -106,6 +106,7 @@ const defaultSettings = {
   sortType: QueueSortType.TimeFirst,
   giftFilterType: QueueGiftFilterType.Or,
   showRequireInfo: true,
+  isReverse: false,
 } as Setting_Queue
 const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -173,7 +174,7 @@ const queue = computed(() => {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenByDescending((q) => q.createAt)
     }
   }
-  if (isReverse.value) {
+  if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     list = list.Reverse()
   }
   return list.ToArray()
@@ -815,7 +816,8 @@ onUnmounted(() => {
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
             </NRadioGroup>
-            <NCheckbox v-model:checked="isReverse"> 倒序 </NCheckbox>
+            <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings"> 倒序 </NCheckbox>
+            <NCheckbox v-else v-model:checked="isReverse"> 倒序 </NCheckbox>
           </NSpace>
         </NCard>
         <NDivider> 共 {{ queue.length }} 人 </NDivider>
@@ -1030,7 +1032,7 @@ onUnmounted(() => {
               <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit">
                 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
               </NCheckbox>
-              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许发送任意礼物来叠加付费量 </NCheckbox>
+              <NCheckbox v-if="settings.allowIncreasePaymentBySendGift" v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许发送任意礼物来叠加付费量 </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
             <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings" :disabled="!configCanEdit"> 启用排队冷却 </NCheckbox>

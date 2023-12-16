@@ -95,6 +95,7 @@ const defaultSettings = {
   zongduCooldownSecond: 300,
   tiduCooldownSecond: 600,
   jianzhangCooldownSecond: 900,
+  isReverse: false,
 } as Setting_SongRequest
 const STATUS_MAP = {
   [SongRequestStatus.Waiting]: '等待中',
@@ -160,7 +161,7 @@ const songs = computed(() => {
     }
     return true
   })
-  if (isReverse.value) {
+  if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     return result.reverse()
   } else {
     return result
@@ -800,7 +801,8 @@ onUnmounted(() => {
               <NInput placeholder="手动添加" v-model:value="newSongName" />
               <NButton type="primary" @click="addSongManual"> 添加 </NButton>
             </NInputGroup>
-            <NCheckbox v-model:checked="isReverse"> 倒序 </NCheckbox>
+            <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings"> 倒序 </NCheckbox>
+            <NCheckbox v-else v-model:checked="isReverse"> 倒序 </NCheckbox>
             <NPopconfirm @positive-click="deactiveAllSongs">
               <template #trigger>
                 <NButton type="error"> 全部取消 </NButton>

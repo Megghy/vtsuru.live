@@ -49,6 +49,9 @@ const activeItems = computed(() => {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenByDescending((q) => q.createAt)
     }
   }
+  if(settings.value.isReverse){
+    list = list.Reverse()
+  }
   return list.ToArray()
 })
 

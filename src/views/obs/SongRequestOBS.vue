@@ -28,13 +28,20 @@ const itemHeight = 40
 
 const key = ref(Date.now())
 
-const songs = ref<SongRequestInfo[]>([])
+const originSongs = ref<SongRequestInfo[]>([])
+const songs = computed(() => {
+  if (settings.value.isReverse) {
+    return originSongs.value.reverse()
+  } else {
+    return originSongs.value
+  }
+})
 const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
 const singing = computed(() => {
-  return songs.value.find((s) => s.status == SongRequestStatus.Singing)
+  return originSongs.value.find((s) => s.status == SongRequestStatus.Singing)
 })
 const activeSongs = computed(() => {
-  return songs.value.filter((s) => s.status == SongRequestStatus.Waiting)
+  return originSongs.value.filter((s) => s.status == SongRequestStatus.Waiting)
 })
 
 async function get() {
@@ -49,7 +56,7 @@ async function get() {
   return {} as { songs: SongRequestInfo[]; setting: Setting_SongRequest }
 }
 const isMoreThanContainer = computed(() => {
-  return songs.value.length * itemHeight > height.value
+  return originSongs.value.length * itemHeight > height.value
 })
 const allowGuardTypes = computed(() => {
   const types = []
@@ -67,7 +74,7 @@ const allowGuardTypes = computed(() => {
 async function update() {
   const r = await get()
   if (r) {
-    songs.value = r.songs.sort((a, b) => {
+    originSongs.value = r.songs.sort((a, b) => {
       return b.createAt - a.createAt
     })
     settings.value = r.setting
@@ -90,7 +97,12 @@ onUnmounted(() => {
     <NDivider class="song-request-divider">
       <p class="song-request-header-count">已有 {{ activeSongs.length ?? 0 }} 首</p>
     </NDivider>
-    <div class="song-request-singing-container" :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1" :from="(singing?.from as number)" :status="(singing?.status as number)">
+    <div
+      class="song-request-singing-container"
+      :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1"
+      :from="(singing?.from as number)"
+      :status="(singing?.status as number)"
+    >
       <div class="song-request-singing-prefix"></div>
       <template v-if="singing">
         <img class="song-request-singing-avatar" :src="AVATAR_URL + singing?.user?.uid" referrerpolicy="no-referrer" />
