@@ -132,7 +132,7 @@ async function speak() {
     speechCount.value--
     readedDanmaku.value++
     console.log(`[TTS] 正在朗读: ${text}`)
-    await EasySpeech.speak({
+    /*await EasySpeech.speak({
       text: text,
       volume: settings.value.speechInfo.volume,
       pitch: settings.value.speechInfo.pitch,
@@ -150,7 +150,29 @@ async function speak() {
       })
       .finally(() => {
         isSpeaking.value = false
-      })
+      })*/
+    const synth = window.speechSynthesis
+    let u = new SpeechSynthesisUtterance()
+    u.text = text
+    let voices = synth.getVoices()
+    const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
+    if (voice) {
+      u.voice = voice
+      u.volume = settings.value.speechInfo.volume
+      u.rate = settings.value.speechInfo.rate
+      u.pitch = settings.value.speechInfo.pitch
+      synth.speak(u)
+      u.onend = () => {
+        isSpeaking.value = false
+      }
+      u.onerror = (err) => {
+        if (err.error == 'interrupted') {
+          return
+        }
+        console.log(err)
+        message.error('无法播放语音: ' + err.error)
+      }
+    }
   }
 }
 function onGetEvent(data: EventModel) {
@@ -219,6 +241,7 @@ function stopSpeech() {
 }
 function cancelSpeech() {
   EasySpeech.cancel()
+  isSpeaking.value = false
 }
 async function uploadConfig() {
   await QueryPostAPI(VTSURU_API_URL + 'set-config', {
@@ -351,77 +374,92 @@ onUnmounted(() => {
 
 <template>
   <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
-  <NSpace v-else>
-    <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'"> {{ canSpeech ? '停止监听' : '开始监听' }} </NButton>
-    <NButton @click="uploadConfig" type="primary" secondary> 保存配置到服务器 </NButton>
-    <NPopconfirm @positive-click="downloadConfig">
-      <template #trigger>
-        <NButton type="primary" secondary> 从服务器获取配置 </NButton>
-      </template>
-      这将覆盖当前设置, 确定?
-    </NPopconfirm>
-  </NSpace>
-  <template v-if="canSpeech">
-    <NDivider> 状态 </NDivider>
-    <NSpace vertical align="center">
+  <template v-else>
+    <NAlert type="info">
+      建议在 Edge 浏览器使用
       <NTooltip>
         <template #trigger>
-          <NButton circle :disabled="!isSpeaking" @click="cancelSpeech" :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
-            <template #icon>
-              <NIcon :component="Mic24Filled" :color="isSpeaking ? 'green' : 'gray'" />
-            </template>
-          </NButton>
+          <NText strong italic type="primary">Microsoft 某某 Online (Nature)</NText>
         </template>
-        {{ isSpeaking ? '取消朗读' : '未朗读' }}
+        例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland), 各种营销号就用的这些配音
       </NTooltip>
-      <NText depth="3"> 队列: {{ speechCount }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
-    </NSpace>
-  </template>
-  <NDivider />
-  <NSpace vertical>
-    <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions" :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
-    <span style="width: 100%">
-      <NText> 音量 </NText>
-      <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
-    </span>
-    <span style="width: 100%">
-      <NText> 音调 </NText>
-      <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.pitch" :min="0" :max="2" :step="0.01" />
-    </span>
-    <span style="width: 100%">
-      <NText> 语速 </NText>
-      <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
-    </span>
-  </NSpace>
-  <NDivider> 自定义内容 </NDivider>
-  <NSpace vertical>
+      系列语音, 效果要好很多
+    </NAlert>
+    <br />
     <NSpace>
-      支持的变量:
-      <NButton size="tiny" secondary v-for="item in Object.values(templateConstants)" :key="item.name" @click="copyToClipboard(item.words)"> {{ item.words }} | {{ item.name }} </NButton>
+      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id">
+        {{ canSpeech ? '停止监听' : '开始监听' }}
+      </NButton>
+      <NButton @click="uploadConfig" type="primary" secondary> 保存配置到服务器 </NButton>
+      <NPopconfirm @positive-click="downloadConfig">
+        <template #trigger>
+          <NButton type="primary" secondary> 从服务器获取配置 </NButton>
+        </template>
+        这将覆盖当前设置, 确定?
+      </NPopconfirm>
     </NSpace>
-    <NInputGroup>
-      <NInputGroupLabel> 弹幕模板 </NInputGroupLabel>
-      <NInput v-model:value="settings.danmakuTemplate" placeholder="弹幕消息" />
-      <NButton @click="test(EventDataTypes.Message)" type="info"> 测试 </NButton>
-    </NInputGroup>
-    <NInputGroup>
-      <NInputGroupLabel> 礼物模板 </NInputGroupLabel>
-      <NInput v-model:value="settings.giftTemplate" placeholder="礼物消息" />
-      <NButton @click="test(EventDataTypes.Gift)" type="info"> 测试 </NButton>
-    </NInputGroup>
-    <NInputGroup>
-      <NInputGroupLabel> SC模板 </NInputGroupLabel>
-      <NInput v-model:value="settings.scTemplate" placeholder="SC消息" />
-      <NButton @click="test(EventDataTypes.SC)" type="info"> 测试 </NButton>
-    </NInputGroup>
-    <NInputGroup>
-      <NInputGroupLabel> 上舰模板 </NInputGroupLabel>
-      <NInput v-model:value="settings.guardTemplate" placeholder="上舰消息" />
-      <NButton @click="test(EventDataTypes.Guard)" type="info"> 测试 </NButton>
-    </NInputGroup>
-  </NSpace>
-  <NDivider> 设置 </NDivider>
-  <NText depth="3"> 没想好需要什么, 有建议的话可以和我说 </NText>
+    <template v-if="canSpeech">
+      <NDivider> 状态 </NDivider>
+      <NSpace vertical align="center">
+        <NTooltip>
+          <template #trigger>
+            <NButton circle :disabled="!isSpeaking" @click="cancelSpeech" :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
+              <template #icon>
+                <NIcon :component="Mic24Filled" :color="isSpeaking ? 'green' : 'gray'" />
+              </template>
+            </NButton>
+          </template>
+          {{ isSpeaking ? '取消朗读' : '未朗读' }}
+        </NTooltip>
+        <NText depth="3"> 队列: {{ speechCount }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
+      </NSpace>
+    </template>
+    <NDivider />
+    <NSpace vertical>
+      <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions" :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
+      <span style="width: 100%">
+        <NText> 音量 </NText>
+        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
+      </span>
+      <span style="width: 100%">
+        <NText> 音调 </NText>
+        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.pitch" :min="0" :max="2" :step="0.01" />
+      </span>
+      <span style="width: 100%">
+        <NText> 语速 </NText>
+        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
+      </span>
+    </NSpace>
+    <NDivider> 自定义内容 </NDivider>
+    <NSpace vertical>
+      <NSpace>
+        支持的变量:
+        <NButton size="tiny" secondary v-for="item in Object.values(templateConstants)" :key="item.name" @click="copyToClipboard(item.words)"> {{ item.words }} | {{ item.name }} </NButton>
+      </NSpace>
+      <NInputGroup>
+        <NInputGroupLabel> 弹幕模板 </NInputGroupLabel>
+        <NInput v-model:value="settings.danmakuTemplate" placeholder="弹幕消息" />
+        <NButton @click="test(EventDataTypes.Message)" type="info"> 测试 </NButton>
+      </NInputGroup>
+      <NInputGroup>
+        <NInputGroupLabel> 礼物模板 </NInputGroupLabel>
+        <NInput v-model:value="settings.giftTemplate" placeholder="礼物消息" />
+        <NButton @click="test(EventDataTypes.Gift)" type="info"> 测试 </NButton>
+      </NInputGroup>
+      <NInputGroup>
+        <NInputGroupLabel> SC模板 </NInputGroupLabel>
+        <NInput v-model:value="settings.scTemplate" placeholder="SC消息" />
+        <NButton @click="test(EventDataTypes.SC)" type="info"> 测试 </NButton>
+      </NInputGroup>
+      <NInputGroup>
+        <NInputGroupLabel> 上舰模板 </NInputGroupLabel>
+        <NInput v-model:value="settings.guardTemplate" placeholder="上舰消息" />
+        <NButton @click="test(EventDataTypes.Guard)" type="info"> 测试 </NButton>
+      </NInputGroup>
+    </NSpace>
+    <NDivider> 设置 </NDivider>
+    <NText depth="3"> 没想好需要什么, 有建议的话可以和我说 </NText>
+  </template>
 </template>
 
 <style>
