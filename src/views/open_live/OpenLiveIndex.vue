@@ -33,6 +33,13 @@ const accountInfo = useAccount()
         <NButton @click="$router.push({ name: 'open-live-queue', query: $route.query })" type="primary"> 前往使用 </NButton>
       </template>
     </NCard>
+
+    <NCard hoverable embedded size="small" title="读弹幕" style="width: 300px">
+      通过浏览器自带的tts服务读弹幕 (此功能需要 Chrome, Edge 等现代浏览器!)
+      <template #footer>
+        <NButton @click="$router.push({ name: 'open-live-speech', query: $route.query })" type="primary"> 前往使用 </NButton>
+      </template>
+    </NCard>
   </NSpace>
   <br />
   <NAlert v-if="accountInfo?.eventFetcherOnline != true" type="warning" title="可用性警告" style="max-width: 600px; margin: 0 auto">

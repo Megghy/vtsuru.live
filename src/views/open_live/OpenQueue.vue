@@ -8,29 +8,20 @@ import {
   QueueGiftFilterType,
   QueueSortType,
   Setting_Queue,
-  Setting_SongRequest,
-  SongFrom,
   QueueFrom,
-  SongRequestInfo,
   QueueStatus,
   DanmakuUserInfo,
-  SongsInfo,
   ResponseQueueModel,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import DanmakuClient, { AuthInfo, DanmakuInfo, GiftInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
-import { OPEN_LIVE_API_URL, SONG_API_URL, QUEUE_API_URL } from '@/data/constants'
+import { QUEUE_API_URL } from '@/data/constants'
 import {
-  Check24Filled,
   Checkmark12Regular,
   ClipboardTextLtr24Filled,
   Delete24Filled,
-  Dismiss12Filled,
   Dismiss16Filled,
-  Info24Filled,
-  Mic24Filled,
   PeopleQueue24Filled,
-  Play24Filled,
   PresenceBlocked16Regular,
 } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
@@ -47,7 +38,6 @@ import {
   NCollapseItem,
   NDataTable,
   NDivider,
-  NEllipsis,
   NEmpty,
   NIcon,
   NInput,
@@ -59,7 +49,6 @@ import {
   NListItem,
   NModal,
   NPopconfirm,
-  NRadio,
   NRadioButton,
   NRadioGroup,
   NSelect,
@@ -78,7 +67,6 @@ import {
 } from 'naive-ui'
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import SongRequestOBS from '../obs/SongRequestOBS.vue'
 import QueueOBS from '../obs/QueueOBS.vue'
 
 const defaultSettings = {

@@ -211,6 +211,16 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: 'speech',
+        name: 'manage-speech',
+        component: () => import('@/views/open_live/ReadDanmaku.vue'),
+        meta: {
+          title: '读弹幕',
+          keepAlive: true,
+          danmaku: true,
+        },
+      },
+      {
         path: 'live',
         name: 'manage-live',
         component: () => import('@/views/manage/LiveManager.vue'),
@@ -272,6 +282,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/open_live/OpenQueue.vue'),
         meta: {
           title: '排队',
+        },
+      },
+      {
+        path: 'speech',
+        name: 'open-live-speech',
+        component: () => import('@/views/open_live/ReadDanmaku.vue'),
+        meta: {
+          title: '读弹幕',
         },
       },
     ],
