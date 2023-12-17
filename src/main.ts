@@ -6,6 +6,7 @@ import router from './router'
 import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import { NText, createDiscreteApi } from 'naive-ui'
+import EasySpeech from 'easy-speech'
 
 createApp(App).use(router).mount('#app')
 
@@ -39,4 +40,19 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
     GetSelfAccount()
     GetNotifactions()
     UpdateAccountLoop()
+    InitTTS();
   })
+function InitTTS() {
+  try {
+    const result = EasySpeech.detect()
+    if (result.speechSynthesis) {
+      EasySpeech.init({ maxTimeout: 5000, interval: 250 })
+        .then(() => console.log('[SpeechSynthesis] 已加载tts服务'))
+        .catch((e) => console.error(e))
+    } else {
+      console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
+    }
+  } catch (e) {
+    console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
+  }
+}

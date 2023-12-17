@@ -3,7 +3,7 @@ import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem,
 import vtb from '@/svgs/ic_vtuber.svg'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 
 const { width } = useWindowSize()
 
@@ -52,6 +52,11 @@ const functions = [
     name: '弹幕排队',
     desc: '通过发送弹幕和礼物加入队列, 允许设置多种条件',
     icon: ListCircle,
+  },
+  {
+    name: '读弹幕',
+    desc: '通过浏览器自带的tts服务念出弹幕 (此功能需要 Chrome, Edge 等现代浏览器!)',
+    icon: TabletSpeaker24Filled,
   },
   {
     name: '视频征集',

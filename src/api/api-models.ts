@@ -422,6 +422,7 @@ export interface EventModel {
   fans_medal_level: number
   fans_medal_name: string
   fans_medal_wearing_status: boolean
+  emoji?: string
 }
 export enum EventDataTypes {
   Guard,

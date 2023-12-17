@@ -1,4 +1,4 @@
-import { OpenLiveInfo } from '@/api/api-models'
+import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
 import { OPEN_LIVE_API_URL } from './constants'
@@ -66,6 +66,22 @@ export interface SCInfo {
   fans_medal_level: number // 对应房间勋章信息  (新增)
   fans_medal_name: string // 对应房间勋章名字  (新增)
   fans_medal_wearing_status: boolean // 该房间粉丝勋章佩戴情况   (新增)
+}
+interface GuardInfo {
+  user_info: {
+    uid: number // 用户uid
+    uname: string // 用户昵称
+    uface: string // 用户头像
+  }
+  guard_level: number // 对应的大航海等级 1总督 2提督 3舰长
+  guard_num: number
+  guard_unit: string // (个月)
+  fans_medal_level: number // 粉丝勋章等级
+  fans_medal_name: string // 粉丝勋章名
+  fans_medal_wearing_status: boolean // 该房间粉丝勋章佩戴情况
+  timestamp: number
+  room_id: number
+  msg_id: string // 消息唯一id
 }
 export interface AuthInfo {
   Timestamp: string
@@ -137,6 +153,7 @@ interface DanmakuEventsMap {
   danmaku: (arg1: DanmakuInfo, arg2?: any) => void
   gift: (arg1: GiftInfo, arg2?: any) => void
   sc: (arg1: SCInfo, arg2?: any) => void
+  guard: (arg1: GuardInfo, arg2?: any) => void
 }
 
 export default class DanmakuClient {
@@ -155,10 +172,23 @@ export default class DanmakuClient {
     danmaku: ((arg1: DanmakuInfo, arg2?: any) => void)[]
     gift: ((arg1: GiftInfo, arg2?: any) => void)[]
     sc: ((arg1: SCInfo, arg2?: any) => void)[]
+    guard: ((arg1: GuardInfo, arg2?: any) => void)[]
   } = {
     danmaku: [],
     gift: [],
     sc: [],
+    guard: [],
+  }
+  private eventsAsModel: {
+    danmaku: ((arg1: EventModel, arg2?: any) => void)[]
+    gift: ((arg1: EventModel, arg2?: any) => void)[]
+    sc: ((arg1: EventModel, arg2?: any) => void)[]
+    guard: ((arg1: EventModel, arg2?: any) => void)[]
+  } = {
+    danmaku: [],
+    gift: [],
+    sc: [],
+    guard: [],
   }
 
   public async Start(): Promise<{ success: boolean; message: string }> {
@@ -193,6 +223,13 @@ export default class DanmakuClient {
       danmaku: [],
       gift: [],
       sc: [],
+      guard: [],
+    }
+    this.eventsAsModel = {
+      danmaku: [],
+      gift: [],
+      sc: [],
+      guard: [],
     }
   }
   private sendHeartbeat() {
@@ -210,35 +247,143 @@ export default class DanmakuClient {
   }
   private onDanmaku = (command: any) => {
     const data = command.data as DanmakuInfo
-    if (this.events.danmaku) {
-      this.events.danmaku.forEach((d) => {
-        d(data, command)
-      })
-    }
+
+    this.events.danmaku?.forEach((d) => {
+      d(data, command)
+    })
+    this.eventsAsModel.danmaku?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Message,
+          name: data.uname,
+          uid: data.uid,
+          msg: data.msg,
+          price: 0,
+          num: 0,
+          time: data.timestamp,
+          guard_level: data.guard_level,
+          fans_medal_level: data.fans_medal_level,
+          fans_medal_name: data.fans_medal_name,
+          fans_medal_wearing_status: data.fans_medal_wearing_status,
+          emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
+          avatar: data.uface,
+        },
+        command
+      )
+    })
   }
   private onGift = (command: any) => {
     const data = command.data as GiftInfo
-    if (this.events.gift) {
-      this.events.gift.forEach((d) => {
-        d(data, command)
-      })
-    }
+    const price = (data.price * data.gift_num) / 1000
+    this.events.gift?.forEach((d) => {
+      d(data, command)
+    })
+    this.eventsAsModel.gift?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Gift,
+          name: data.uname,
+          uid: data.uid,
+          msg: data.gift_name,
+          price: data.paid ? price : -price,
+          num: data.gift_num,
+          time: data.timestamp,
+          guard_level: data.guard_level,
+          fans_medal_level: data.fans_medal_level,
+          fans_medal_name: data.fans_medal_name,
+          fans_medal_wearing_status: data.fans_medal_wearing_status,
+          avatar: data.uface,
+        },
+        command
+      )
+    })
+  }
+  private onSC = (command: any) => {
+    const data = command.data as SCInfo
+    this.events.sc?.forEach((d) => {
+      d(data, command)
+    })
+    this.eventsAsModel.sc?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.SC,
+          name: data.uname,
+          uid: data.uid,
+          msg: data.message,
+          price: data.rmb,
+          num: 1,
+          time: data.timestamp,
+          guard_level: data.guard_level,
+          fans_medal_level: data.fans_medal_level,
+          fans_medal_name: data.fans_medal_name,
+          fans_medal_wearing_status: data.fans_medal_wearing_status,
+          avatar: data.uface,
+        },
+        command
+      )
+    })
+  }
+  private onGuard = (command: any) => {
+    const data = command.data as GuardInfo
+    this.events.guard?.forEach((d) => {
+      d(data, command)
+    })
+    this.eventsAsModel.guard?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Guard,
+          name: data.user_info.uname,
+          uid: data.user_info.uid,
+          msg: data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
+          price: 0,
+          num: data.guard_num,
+          time: data.timestamp,
+          guard_level: data.guard_level,
+          fans_medal_level: data.fans_medal_level,
+          fans_medal_name: data.fans_medal_name,
+          fans_medal_wearing_status: data.fans_medal_wearing_status,
+          avatar: data.user_info.uface,
+        },
+        command
+      )
+    })
   }
   public on(eventName: 'danmaku', listener: DanmakuEventsMap['danmaku']): this
   public on(eventName: 'gift', listener: DanmakuEventsMap['gift']): this
   public on(eventName: 'sc', listener: DanmakuEventsMap['sc']): this
-  public on(eventName: 'danmaku' | 'gift' | 'sc', listener: (...args: any[]) => void): this {
+  public on(eventName: 'guard', listener: DanmakuEventsMap['guard']): this
+  public on(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
     if (!this.events[eventName]) {
       this.events[eventName] = []
     }
     this.events[eventName].push(listener)
     return this
   }
-  public off(eventName: 'danmaku' | 'gift' | 'sc', listener: (...args: any[]) => void): this {
+  public onEvent(eventName: 'danmaku', listener: (arg1: EventModel, arg2?: any) => void): this
+  public onEvent(eventName: 'gift', listener: (arg1: EventModel, arg2?: any) => void): this
+  public onEvent(eventName: 'sc', listener: (arg1: EventModel, arg2?: any) => void): this
+  public onEvent(eventName: 'guard', listener: (arg1: EventModel, arg2?: any) => void): this
+  public onEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+    if (!this.eventsAsModel[eventName]) {
+      this.eventsAsModel[eventName] = []
+    }
+    this.eventsAsModel[eventName].push(listener)
+    return this
+  }
+  public off(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
     if (this.events[eventName]) {
       const index = this.events[eventName].indexOf(listener)
       if (index > -1) {
         this.events[eventName].splice(index, 1)
+      }
+    }
+    return this
+  }
+  public offEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+    if (this.eventsAsModel[eventName]) {
+      const index = this.eventsAsModel[eventName].indexOf(listener)
+      if (index > -1) {
+        this.eventsAsModel[eventName].splice(index, 1)
       }
     }
     return this
@@ -291,5 +436,7 @@ export default class DanmakuClient {
   private CMD_CALLBACK_MAP = {
     LIVE_OPEN_PLATFORM_DM: this.onDanmaku.bind(this),
     LIVE_OPEN_PLATFORM_SEND_GIFT: this.onGift.bind(this),
+    LIVE_OPEN_PLATFORM_SUPER_CHAT: this.onSC.bind(this),
+    LIVE_OPEN_PLATFORM_GUARD: this.onGuard.bind(this),
   }
 }

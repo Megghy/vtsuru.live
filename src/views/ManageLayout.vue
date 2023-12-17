@@ -22,7 +22,7 @@ import {
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, PersonFeedback24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, PersonFeedback24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -278,6 +278,21 @@ const menuOptions = [
           ),
         key: 'manage-liveQueue',
         icon: renderIcon(PeopleQueue24Filled),
+        //disabled: accountInfo.value?.isEmailVerified == false,
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: {
+                name: 'manage-speech',
+              },
+            },
+            { default: () => '读弹幕' }
+          ),
+        key: 'manage-speech',
+        icon: renderIcon(TabletSpeaker24Filled),
         //disabled: accountInfo.value?.isEmailVerified == false,
       },
     ],
