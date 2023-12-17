@@ -366,7 +366,7 @@ function checkMessage(eventData: EventModel) {
   if (settings.value.keyword && eventData.type === EventDataTypes.Message && !checkMatch(eventData.msg)) {
     return false //非排队弹幕
   } else if (eventData.type === EventDataTypes.Gift) {
-    if (!settings.value.allowGift) {
+    if (!settings.value.allowGift && !settings.value.allowIncreasePaymentBySendGift) {
       return false // { success: false, message: '不允许通过礼物排队' }
     }
     const nameNotMatch = (settings.value.giftNames?.length ?? 0) > 0 && settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) != true
@@ -814,7 +814,7 @@ onUnmounted(() => {
             <NCard embedded size="small" content-style="padding: 5px;" :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
               <NSpace justify="space-between" align="center" style="height: 100%; margin: 0 5px 0 5px">
                 <NSpace align="center">
-                  <div :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;`">
+                  <div :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;color: white;`">
                     {{ index + 1 }}
                   </div>
                   <NText strong style="font-size: 18px">
