@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import EasySpeech from 'easy-speech'
-import { NButton, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSelect, NSlider, NSpace, NTag, NText, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSelect, NSlider, NSpace, NTag, NText, NTooltip, useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import { useStorage } from '@vueuse/core'
 import { Queue } from 'queue-typescript'
@@ -350,7 +350,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NSpace>
+  <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
+  <NSpace v-else>
     <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'"> {{ canSpeech ? '停止监听' : '开始监听' }} </NButton>
     <NButton @click="uploadConfig" type="primary" secondary> 保存配置到服务器 </NButton>
     <NPopconfirm @positive-click="downloadConfig">
@@ -373,7 +374,7 @@ onUnmounted(() => {
         </template>
         {{ isSpeaking ? '取消朗读' : '未朗读' }}
       </NTooltip>
-      <NText depth="3"> 队列: {{ speechCount }} <NDivider vertical /> 已读: {{readedDanmaku }} 条 </NText>
+      <NText depth="3"> 队列: {{ speechCount }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
     </NSpace>
   </template>
   <NDivider />
@@ -420,9 +421,7 @@ onUnmounted(() => {
     </NInputGroup>
   </NSpace>
   <NDivider> 设置 </NDivider>
-  <NText depth="3">
-    没想好需要什么, 有建议的话可以和我说
-  </NText>
+  <NText depth="3"> 没想好需要什么, 有建议的话可以和我说 </NText>
 </template>
 
 <style>
