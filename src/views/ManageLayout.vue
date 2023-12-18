@@ -60,6 +60,7 @@ const type = computed(() => {
   }
   return ''
 })
+const cookie = useStorage('JWT_Token', '')
 
 const canResendEmail = ref(false)
 
@@ -171,6 +172,7 @@ const menuOptions = [
       ),
     key: 'manage-videoCollect',
     icon: renderIcon(VideoAdd20Filled),
+    disabled: accountInfo.value?.isEmailVerified == false,
     //disabled: accountInfo.value?.isEmailVerified == false,
   },
   {
@@ -245,6 +247,7 @@ const menuOptions = [
       ]),
     key: 'manage-danmaku',
     icon: renderIcon(Chat24Filled),
+    disabled: accountInfo.value?.isEmailVerified == false,
     //disabled: accountInfo.value?.isEmailVerified == false,
     children: [
       {
