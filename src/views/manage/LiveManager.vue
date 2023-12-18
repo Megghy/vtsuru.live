@@ -2,6 +2,7 @@
 import { useAccount } from '@/api/account'
 import { ResponseLiveInfoModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/components/LiveInfoContainer.vue'
 import { LIVE_API_URL } from '@/data/constants'
 import { List } from 'linqts'
@@ -45,13 +46,8 @@ function OnClickCover(live: ResponseLiveInfoModel) {
 <template>
   <NSpace vertical>
     <NAlert type="warning"> 测试功能, 尚不稳定 </NAlert>
-    <NAlert type="info">
-      当前本站正在测试直接从服务端记录并储存数据, 不过并不清楚B站的风控策略, 此功能不一定会长期有效
-      <br />
-      在我们被限制连接之前无需部署 VtsuruEventFetcher 即可使用相关功能 (如记录上舰和SC以及直播记录) 😊
-    </NAlert>
   </NSpace>
-  <br />
+  <NDivider />
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <template v-else>
     <NSpace vertical justify="center" align="center">

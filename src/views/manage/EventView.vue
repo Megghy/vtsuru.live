@@ -139,16 +139,15 @@ function exportData() {
           num: v.num,
           price: v.price,
           msg: v.msg,
-        }))
+        })),
       )
       break
     }
   }
   saveAs(
     new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}}_${accountInfo.value?.id}_${
-      accountInfo.value?.name
-    }_${selectedType.value}.${exportType.value}`
+    `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}}_${accountInfo.value
+      ?.id}_${accountInfo.value?.name}_${selectedType.value}.${exportType.value}`,
   )
 }
 function objectsToCSV(arr: any[]) {
@@ -173,13 +172,16 @@ onMounted(() => {
   <NSpace vertical>
     <NAlert v-if="!accountInfo?.isBiliVerified" type="warning"> 使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton> </NAlert>
     <NAlert type="info">
-      当前本站正在测试直接从服务端记录并储存数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
+      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
       <br />
-      在我们被限制连接之前无需部署 VtsuruEventFetcher 即可使用相关功能 (如记录上舰和SC) 😊
+      在我们被限制连接之前满足以上条件的主播无需部署
+      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
+        VtsuruEventFetcher
+      </NButton>
+      即可使用相关功能 (如记录上舰和SC, 直播场记录等) 😊
     </NAlert>
+    <EventFetcherStatusCard />
   </NSpace>
-  <NDivider />
-  <EventFetcherStatusCard />
   <NDivider />
   <NCard size="small" style="witdh: 100%">
     <template v-if="accountInfo?.isBiliVerified">
