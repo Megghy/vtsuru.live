@@ -3,12 +3,15 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import svgLoader from 'vite-svg-loader'
-import mkcert from 'vite-plugin-mkcert'
-
-const Timestamp = new Date().getTime()
+import vueJsx from '@vitejs/plugin-vue-jsx';
 
 export default defineConfig({
-  plugins: [vue(), svgLoader()],
+  plugins: [vue({
+    script: {
+      propsDestructure: true,
+        defineModel: true
+      }
+  }), svgLoader(), vueJsx()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
