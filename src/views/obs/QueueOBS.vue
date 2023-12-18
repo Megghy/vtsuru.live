@@ -38,15 +38,15 @@ const activeItems = computed(() => {
   let list = new List(queue.value).Where((q) => q?.status == QueueStatus.Waiting).OrderByDescending((q) => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      list = list.OrderByDescending((q) => q.createAt)
+      list = list.ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
-      list = list.OrderBy((q) => q.user?.guard_level).ThenByDescending((q) => q.createAt)
+      list = list.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
-      list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenByDescending((q) => q.createAt)
+      list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
     }
   }
   if(settings.value.isReverse){
