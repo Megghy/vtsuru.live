@@ -19,10 +19,22 @@ import {
   NBackTop,
   NCountdown,
   NTooltip,
+NPopconfirm,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
 import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
-import { CalendarClock24Filled, Chat24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, PersonFeedback24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import {
+  CalendarClock24Filled,
+  Chat24Filled,
+  Info24Filled,
+  Live24Filled,
+  Lottery24Filled,
+  PeopleQueue24Filled,
+  PersonFeedback24Filled,
+  TabletSpeaker24Filled,
+  VehicleShip24Filled,
+  VideoAdd20Filled,
+} from '@vicons/fluent'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -65,7 +77,7 @@ const menuOptions = [
             name: 'manage-history',
           },
         },
-        { default: () => '历史' }
+        { default: () => '历史' },
       ),
     key: 'manage-history',
     disabled: accountInfo.value?.isEmailVerified == false,
@@ -80,7 +92,7 @@ const menuOptions = [
             name: 'manage-event',
           },
         },
-        { default: () => '舰长和SC' }
+        { default: () => '舰长和SC' },
       ),
     key: 'manage-event',
     disabled: accountInfo.value?.isEmailVerified == false,
@@ -95,7 +107,7 @@ const menuOptions = [
             name: 'manage-live',
           },
         },
-        { default: () => '直播记录' }
+        { default: () => '直播记录' },
       ),
     key: 'manage-live',
     disabled: accountInfo.value?.isEmailVerified == false,
@@ -110,7 +122,7 @@ const menuOptions = [
             name: 'manage-schedule',
           },
         },
-        { default: () => '日程' }
+        { default: () => '日程' },
       ),
     key: 'manage-schedule',
     icon: renderIcon(CalendarClock24Filled),
@@ -125,7 +137,7 @@ const menuOptions = [
             name: 'manage-songList',
           },
         },
-        { default: () => '歌单' }
+        { default: () => '歌单' },
       ),
     key: 'manage-songList',
     icon: renderIcon(MusicalNote),
@@ -140,7 +152,7 @@ const menuOptions = [
             name: 'manage-questionBox',
           },
         },
-        { default: () => '棉花糖 (提问箱' }
+        { default: () => '棉花糖 (提问箱' },
       ),
     key: 'manage-questionBox',
     icon: renderIcon(Chatbox),
@@ -155,7 +167,7 @@ const menuOptions = [
             name: 'manage-videoCollect',
           },
         },
-        { default: () => '视频征集' }
+        { default: () => '视频征集' },
       ),
     key: 'manage-videoCollect',
     icon: renderIcon(VideoAdd20Filled),
@@ -170,7 +182,7 @@ const menuOptions = [
             name: 'manage-lottery',
           },
         },
-        { default: () => '动态抽奖' }
+        { default: () => '动态抽奖' },
       ),
     key: 'manage-lottery',
     icon: renderIcon(Lottery24Filled),
@@ -208,7 +220,7 @@ const menuOptions = [
                         target: '_blank',
                         type: 'info',
                       },
-                      () => '此文章'
+                      () => '此文章',
                     ),
                     '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
                     h('br'),
@@ -223,12 +235,12 @@ const menuOptions = [
                         href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
                         target: '_blank',
                       },
-                      () => 'VtsuruEventFetcher'
+                      () => 'VtsuruEventFetcher',
                     ),
                     ', 否则请在使用功能时尽量保持网页在前台运行',
-                  ])
+                  ]),
               ),
-          }
+          },
         ),
       ]),
     key: 'manage-danmaku',
@@ -244,7 +256,7 @@ const menuOptions = [
                 name: 'manage-liveLottery',
               },
             },
-            { default: () => '抽奖' }
+            { default: () => '抽奖' },
           ),
         key: 'manage-liveLottery',
         icon: renderIcon(Lottery24Filled),
@@ -259,7 +271,7 @@ const menuOptions = [
                 name: 'manage-songRequest',
               },
             },
-            { default: () => '点歌' }
+            { default: () => '点歌' },
           ),
         key: 'manage-songRequest',
         icon: renderIcon(MusicalNote),
@@ -274,7 +286,7 @@ const menuOptions = [
                 name: 'manage-liveQueue',
               },
             },
-            { default: () => '排队' }
+            { default: () => '排队' },
           ),
         key: 'manage-liveQueue',
         icon: renderIcon(PeopleQueue24Filled),
@@ -289,7 +301,7 @@ const menuOptions = [
                 name: 'manage-speech',
               },
             },
-            { default: () => '读弹幕' }
+            { default: () => '读弹幕' },
           ),
         key: 'manage-speech',
         icon: renderIcon(TabletSpeaker24Filled),
@@ -314,6 +326,10 @@ async function resendEmail() {
       message.error('发送失败')
     })
 }
+function logout() {
+  cookie.value = undefined
+  window.location.reload()
+}
 
 onMounted(() => {
   if (accountInfo.value?.isEmailVerified == false) {
@@ -333,7 +349,7 @@ onMounted(() => {
         </template>
         <template #extra>
           <NSpace align="center" justify="center">
-            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
+            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -403,8 +419,17 @@ onMounted(() => {
                 <NAlert type="info">
                   请进行邮箱验证
                   <br /><br />
-                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
-                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
+                  <NSpace>
+                    <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
+                    <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
+
+                    <NPopconfirm @positive-click="logout" size="small">
+                      <template #trigger>
+                        <NButton type="error"> 登出 </NButton>
+                      </template>
+                      确定登出?
+                    </NPopconfirm>
+                  </NSpace>
                 </NAlert>
               </template>
               <NBackTop />
