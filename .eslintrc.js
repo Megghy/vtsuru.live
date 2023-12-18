@@ -2,12 +2,16 @@ module.exports = {
   root: true,
   env: {
     node: true,
+    'vite/config': true, // 添加Vite环境支持
   },
-  extends: ['@vue/typescript/recommended', 'plugin:vue/vue3-essential', 'prettier', '@vue/eslint-config-typescript'],
-  parser: '@babel/eslint-parser',
+  extends: [
+    '@vue/typescript/recommended',
+    'plugin:vue/vue3-essential',
+    'prettier',
+    '@vue/eslint-config-typescript',
+  ],
   parserOptions: {
     ecmaVersion: 'latest',
-    requireConfigFile: false,
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
