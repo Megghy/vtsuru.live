@@ -187,8 +187,9 @@ async function ChangeBili() {
           注册
         </NText>
       </NSpace>
-
-      <NDivider />
+      <NDivider>
+        <NText depth="3" style="font-size: 18px"> {{ accountInfo?.id }} </NText>
+      </NDivider>
       <NSpace vertical>
         <NCard size="small">
           <NSpace :size="5">

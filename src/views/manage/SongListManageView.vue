@@ -51,10 +51,10 @@ const neteaseSongListId = computed(() => {
     const url = new URL(neteaseIdInput.value)
     console.log(url)
     if (url.host == 'music.163.com') {
-      let regex = /id=(\d+)/
+      const regex = /id=(\d+)/
 
       // 使用exec方法在链接中查找匹配项
-      let match = regex.exec(neteaseIdInput.value)
+      const match = regex.exec(neteaseIdInput.value)
 
       // 如果找到了匹配项，那么match[1]就是分组1的值，也就是id的值
       if (match) {
@@ -233,7 +233,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
       Author: s.author,
       Url: s.url,
       Description: s.description,
-    }))
+    })),
   )
 }
 
@@ -345,6 +345,16 @@ async function getSongs() {
     })
 }
 function exportData() {
+  const from = (f: SongFrom) => {
+    switch (f) {
+      case SongFrom.Custom:
+        return '手动添加'
+      case SongFrom.Netease:
+        return '网易云'
+      case SongFrom.FiveSing:
+        return '5sing'
+    }
+  }
   const text = objectsToCSV(
     songs.value.map((s) => ({
       id: s.id,
@@ -358,19 +368,12 @@ function exportData() {
       语言: s.language.map((l) => songSelectOption.find((o) => o.value == l)?.label).join(','),
       标签: s.tags?.join(',') ?? '',
       链接: s.url,
-    }))
+    })),
   )
-  const from = (f: SongFrom) => {
-    switch (f) {
-      case SongFrom.Custom:
-        return '手动添加'
-      case SongFrom.Netease:
-        return '网易云'
-      case SongFrom.FiveSing:
-        return '5sing'
-    }
-  }
-  saveAs(new Blob([text], { type: 'text/plain;charset=utf-8' }), `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`)
+  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+  const utf8encoder = new TextEncoder()
+  const utf8array = utf8encoder.encode(text)
+  saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`)
 }
 
 onMounted(async () => {
@@ -433,11 +436,17 @@ onMounted(async () => {
               <NSpace vertical>
                 <NCheckbox
                   :checked="addSongModel.options != undefined"
-                  @update:checked="(checked: boolean) => {addSongModel.options = checked ? {
-                    needJianzhang: false,
-                    needTidu: false,
-                    needZongdu: false
-                  } as SongRequestOption : undefined}"
+                  @update:checked="
+                    (checked: boolean) => {
+                      addSongModel.options = checked
+                        ? ({
+                            needJianzhang: false,
+                            needTidu: false,
+                            needZongdu: false,
+                          } as SongRequestOption)
+                        : undefined
+                    }
+                  "
                 >
                   是否启用
                 </NCheckbox>
@@ -450,7 +459,11 @@ onMounted(async () => {
                   <NSpace align="center">
                     <NCheckbox
                       :checked="addSongModel.options.scMinPrice != undefined"
-                      @update:checked="(checked: boolean) => {if(addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined}"
+                      @update:checked="
+                        (checked: boolean) => {
+                          if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
+                        }
+                      "
                     >
                       需要SC
                     </NCheckbox>
@@ -462,7 +475,11 @@ onMounted(async () => {
                   <NSpace align="center">
                     <NCheckbox
                       :checked="addSongModel.options.fanMedalMinLevel != undefined"
-                      @update:checked="(checked: boolean) => {if(addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined}"
+                      @update:checked="
+                        (checked: boolean) => {
+                          if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                        }
+                      "
                     >
                       需要粉丝牌
                       <NTooltip>

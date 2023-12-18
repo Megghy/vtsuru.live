@@ -25,8 +25,6 @@ import {
   NInputGroup,
   NInputGroupLabel,
   NInputNumber,
-  NList,
-  NListItem,
   NModal,
   NPopconfirm,
   NSelect,
@@ -38,8 +36,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { onMounted, h, ref, watch, computed, reactive, VNodeChild } from 'vue'
-import APlayer from 'vue3-aplayer'
+import { onMounted, h, ref, watch, computed, VNodeChild } from 'vue'
 import { NotepadEdit20Filled, Delete24Filled, Play24Filled, SquareArrowForward24Filled, Info24Filled } from '@vicons/fluent'
 import NeteaseIcon from '@/svgs/netease.svg'
 import FiveSingIcon from '@/svgs/fivesing.svg'
