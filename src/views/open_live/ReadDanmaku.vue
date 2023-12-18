@@ -74,7 +74,7 @@ const voiceOptions = computed(() => {
   })
 })
 const isSpeaking = ref(false)
-const speakQueue = new Queue<string>()
+const speakQueue = ref<EventModel[]>([])
 
 const canSpeech = ref(false)
 const readedDanmaku = ref(0)
@@ -121,15 +121,17 @@ const templateConstants = {
     regex: /\{\s*gift_name\s*\}/gi,
   },
 }
-const speechCount = ref(0)
+function forceSpeak(data: EventModel) {
+  cancelSpeech()
+  speakQueue.value.unshift(data)
+}
 async function speak() {
-  if (isSpeaking.value) {
+  if (isSpeaking.value || speakQueue.value.length == 0) {
     return
   }
-  const text = speakQueue.dequeue()
+  const text = getTextFromDanmaku(speakQueue.value.shift())
   if (text) {
     isSpeaking.value = true
-    speechCount.value--
     readedDanmaku.value++
     console.log(`[TTS] 正在朗读: ${text}`)
     /*await EasySpeech.speak({
@@ -151,27 +153,30 @@ async function speak() {
       .finally(() => {
         isSpeaking.value = false
       })*/
-    const synth = window.speechSynthesis
-    let u = new SpeechSynthesisUtterance()
-    u.text = text
-    let voices = synth.getVoices()
-    const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
-    if (voice) {
-      u.voice = voice
-      u.volume = settings.value.speechInfo.volume
-      u.rate = settings.value.speechInfo.rate
-      u.pitch = settings.value.speechInfo.pitch
-      synth.speak(u)
-      u.onend = () => {
-        isSpeaking.value = false
+    speakDirect(text)
+  }
+}
+function speakDirect(text: string) {
+  const synth = window.speechSynthesis
+  let u = new SpeechSynthesisUtterance()
+  u.text = text
+  let voices = synth.getVoices()
+  const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
+  if (voice) {
+    u.voice = voice
+    u.volume = settings.value.speechInfo.volume
+    u.rate = settings.value.speechInfo.rate
+    u.pitch = settings.value.speechInfo.pitch
+    synth.speak(u)
+    u.onend = () => {
+      isSpeaking.value = false
+    }
+    u.onerror = (err) => {
+      if (err.error == 'interrupted') {
+        return
       }
-      u.onerror = (err) => {
-        if (err.error == 'interrupted') {
-          return
-        }
-        console.log(err)
-        message.error('无法播放语音: ' + err.error)
-      }
+      console.log(err)
+      message.error('无法播放语音: ' + err.error)
     }
   }
 }
@@ -183,9 +188,21 @@ function onGetEvent(data: EventModel) {
     // 不支持表情
     return
   }
-  onGetEventInternal(data)
+  if (data.type == EventDataTypes.Gift) {
+    const exist = speakQueue.value.find((v) => v.type == EventDataTypes.Gift && v.uid == data.uid && v.msg == data.msg)
+    if (exist) {
+      exist.num += data.num
+      exist.price += data.price
+      console.log(`[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.num - data.num} => ${exist.num}]`)
+      return
+    }
+  }
+  speakQueue.value.push(data)
 }
-function onGetEventInternal(data: EventModel) {
+function getTextFromDanmaku(data: EventModel | undefined) {
+  if (!data) {
+    return
+  }
   let text: string
   switch (data.type) {
     case EventDataTypes.Message:
@@ -228,8 +245,7 @@ function onGetEventInternal(data: EventModel) {
   } else if (data.type === EventDataTypes.Guard) {
     text = text.replace(templateConstants.guard_num.regex, data.num.toString())
   }
-  speakQueue.enqueue(text)
-  speechCount.value++
+  return text
 }
 function startSpeech() {
   canSpeech.value = true
@@ -277,11 +293,10 @@ async function downloadConfig() {
       message.error('获取失败')
     })
 }
-
 function test(type: EventDataTypes) {
   switch (type) {
     case EventDataTypes.Message:
-      onGetEventInternal({
+      forceSpeak({
         type: EventDataTypes.Message,
         name: accountInfo.value?.name ?? '未知用户',
         uid: accountInfo.value?.biliId ?? 0,
@@ -298,7 +313,7 @@ function test(type: EventDataTypes) {
       })
       break
     case EventDataTypes.SC:
-      onGetEventInternal({
+      forceSpeak({
         type: EventDataTypes.SC,
         name: accountInfo.value?.name ?? '未知用户',
         uid: accountInfo.value?.biliId ?? 0,
@@ -315,7 +330,7 @@ function test(type: EventDataTypes) {
       })
       break
     case EventDataTypes.Guard:
-      onGetEventInternal({
+      forceSpeak({
         type: EventDataTypes.Guard,
         name: accountInfo.value?.name ?? '未知用户',
         uid: accountInfo.value?.biliId ?? 0,
@@ -332,7 +347,7 @@ function test(type: EventDataTypes) {
       })
       break
     case EventDataTypes.Gift:
-      onGetEventInternal({
+      forceSpeak({
         type: EventDataTypes.Gift,
         name: accountInfo.value?.name ?? '未知用户',
         uid: accountInfo.value?.biliId ?? 0,
@@ -411,7 +426,7 @@ onUnmounted(() => {
           </template>
           {{ isSpeaking ? '取消朗读' : '未朗读' }}
         </NTooltip>
-        <NText depth="3"> 队列: {{ speechCount }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
+        <NText depth="3"> 队列: {{ speakQueue.length }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
       </NSpace>
     </template>
     <NDivider />
