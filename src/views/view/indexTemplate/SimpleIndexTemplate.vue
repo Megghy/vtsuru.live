@@ -1,0 +1,40 @@
+<script lang="ts" setup>
+import { UserInfo } from '@/api/api-models'
+import { TemplateConfig } from '@/data/VTsuruTypes'
+import { h } from 'vue'
+
+const width = window.innerWidth
+
+const props = defineProps<{
+  userInfo: UserInfo | undefined
+  biliInfo: any | undefined
+  currentData?: any
+}>()
+function navigate(url: string) {
+  window.open(url, '_blank')
+}
+</script>
+
+<script>
+export type SimpleIndexConfig = {
+  cover?: string
+}
+export const Config: TemplateConfig<SimpleIndexConfig> = {
+  name: 'Template.Index.Simple',
+  items: [
+    {
+      name: '封面',
+      type: 'image',
+      imageLimit: 1,
+      onUploaded: (url, config) => {config.cover = (url instanceof String ? url as string : url[0])}
+    },
+    {
+      name: 'test',
+      type: 'default',
+       render: (config) => h('div', '1')
+    }
+  ]
+}
+</script>
+
+<template></template>
