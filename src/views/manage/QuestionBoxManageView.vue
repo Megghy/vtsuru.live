@@ -279,8 +279,8 @@ onMounted(() => {
                   <NTag type="warning" size="tiny"> 未读 </NTag>
                   <NDivider vertical />
                 </template>
-                <NText :depth="item.sender?.name ? 1 : 3" style="margin-top: 3px">
-                  {{ item.sender?.name ?? '匿名用户' }}
+                <NText :depth="item.isAnonymous ? 3 : 1" style="margin-top: 3px">
+                  {{ item.isAnonymous ? '匿名用户' : item.sender?.name }}
                 </NText>
                 <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false" style="margin-left: 5px"> 已注册 </NTag>
                 <NTag v-if="item.isPublic" size="small" type="success" :bordered="false" style="margin-left: 5px"> 公开 </NTag>

@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { DelBiliBlackList, SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
+import { DelBiliBlackList, SaveAccountSettings, SaveEnableFunctions, downloadConfigDirect, useAccount } from '@/api/account'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
+import DynamicForm from '@/components/DynamicForm.vue'
+import { TemplateConfig } from '@/data/VTsuruTypes'
 import { FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
 import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NList, NListItem, NModal, NSelect, NSpace, NSpin, NTabPane, NTabs, NText, SelectOption, useMessage } from 'naive-ui'
-import { Ref, computed, h, onActivated, onMounted, ref } from 'vue'
+import { computed, h, nextTick, onActivated, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface TemplateDefineTypes {
   TemplateMap: { [name: string]: { name: string; compoent: any } }
   Options: SelectOption[]
   Data: any
-  Selected: Ref<string>
+  Selected: string
+  Config?: any | undefined
 }
 
 const accountInfo = useAccount()
@@ -19,7 +22,7 @@ const route = useRoute()
 
 const isSaving = ref(false)
 
-const templates = {
+const templates = ref({
   index: {
     TemplateMap: IndexTemplateMap,
     Options: Object.entries(IndexTemplateMap).map((v) => ({
@@ -27,7 +30,7 @@ const templates = {
       value: v[0],
     })),
     Data: null,
-    Selected: ref(accountInfo.value?.settings.indexTemplate ?? ''),
+    Selected: accountInfo.value?.settings.indexTemplate ?? '',
   },
   schedule: {
     TemplateMap: ScheduleTemplateMap,
@@ -85,7 +88,7 @@ const templates = {
         ],
       },
     ] as ScheduleWeekInfo[],
-    Selected: ref(accountInfo.value?.settings.scheduleTemplate ?? ''),
+    Selected: accountInfo.value?.settings.scheduleTemplate ?? '',
   },
   songlist: {
     TemplateMap: SongListTemplateMap,
@@ -162,9 +165,9 @@ const templates = {
         updateTime: Date.now(),
       },
     ] as SongsInfo[],
-    Selected: ref(accountInfo.value?.settings.songListTemplate ?? ''),
+    Selected: accountInfo.value?.settings.songListTemplate ?? '',
   },
-} as { [type: string]: TemplateDefineTypes }
+} as { [type: string]: TemplateDefineTypes })
 
 const templateOptions = [
   {
@@ -183,7 +186,15 @@ const templateOptions = [
 const selectedOption = ref(route.query.template?.toString() ?? 'index')
 const selectedTab = ref(route.query.tab?.toString() ?? 'general')
 
-const selectedTemplateData = computed(() => templates[selectedOption.value])
+const dynamicConfigRef = ref()
+const selectedTemplateData = computed(() => templates.value[selectedOption.value])
+const selectedComponent = computed(() => selectedTemplateData.value?.TemplateMap[selectedTemplateData.value.Selected].compoent)
+const selectedTemplateConfig = computed(() => {
+  if (dynamicConfigRef.value?.Config) {
+    return dynamicConfigRef.value?.Config as TemplateConfig<any>
+  }
+  return undefined
+})
 
 const biliUserInfo = ref()
 const settingModalVisiable = ref(false)
@@ -245,23 +256,48 @@ async function SaveTemplateSetting() {
   if (accountInfo.value) {
     switch (selectedOption.value) {
       case 'index': {
-        accountInfo.value.settings.indexTemplate = selectedTemplateData.value.Selected.value ?? ''
+        accountInfo.value.settings.indexTemplate = selectedTemplateData.value.Selected ?? ''
         break
       }
       case 'songlist': {
-        accountInfo.value.settings.songListTemplate = selectedTemplateData.value.Selected.value ?? ''
+        accountInfo.value.settings.songListTemplate = selectedTemplateData.value.Selected ?? ''
         break
       }
       case 'schedule': {
-        accountInfo.value.settings.scheduleTemplate = selectedTemplateData.value.Selected.value ?? ''
+        accountInfo.value.settings.scheduleTemplate = selectedTemplateData.value.Selected ?? ''
         break
       }
     }
     await SaveComboSetting()
   }
 }
-function onOpenTemplateSettings() {
+async function onOpenTemplateSettings() {
   settingModalVisiable.value = true
+  nextTick(async () => {
+    await getTemplateConfig()
+  })
+}
+async function getTemplateConfig() {
+  if (selectedTemplateConfig.value && !selectedTemplateData.value.Config) {
+    await downloadConfigDirect(selectedTemplateConfig.value.name)
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('已获取配置文件')
+          console.log(`已获取模板配置: ${selectedTemplateConfig.value?.name}`)
+          selectedTemplateData.value.Config = JSON.parse(data.data)
+        } else if (data.code == 404) {
+          //message.error(`未找到名为 ${name} 的配置文件`)
+          console.error(`未找到名为 ${selectedTemplateConfig.value?.name} 的配置文件`)
+          selectedTemplateData.value.Config = dynamicConfigRef.value.DefaultConfig
+        } else {
+          message.error('获取失败: ' + data.message)
+          console.error('获取失败: ' + data.message)
+        }
+      })
+      .catch((err) => {
+        message.error(err)
+      })
+  }
 }
 const buttonGroup = computed(() => {
   return h(NSpace, () => [h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'), h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置')])
@@ -342,18 +378,13 @@ onMounted(async () => {
             <NDivider style="margin: 5px 0 5px 0" title-placement="left"> 模板 </NDivider>
             <div>
               <NSpace>
-                <NSelect style="width: 150px" :options="selectedTemplateData.Options" v-model:value="selectedTemplateData.Selected.value" />
+                <NSelect style="width: 150px" :options="selectedTemplateData.Options" v-model:value="selectedTemplateData.Selected" />
                 <component :is="buttonGroup" />
               </NSpace>
               <NDivider />
               <Transition name="fade" mode="out-in">
-                <div v-if="true" :key="selectedTemplateData.Selected.value">
-                  <component
-                    :is="selectedTemplateData.TemplateMap[selectedTemplateData.Selected.value].compoent"
-                    :user-info="accountInfo"
-                    :bili-info="biliUserInfo"
-                    :current-data="selectedTemplateData.Data"
-                  />
+                <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
+                  <component ref="dynamicConfigRef" :is="selectedComponent" :user-info="accountInfo" :bili-info="biliUserInfo" :current-data="selectedTemplateData.Data" />
                 </div>
               </Transition>
             </div>
@@ -362,5 +393,9 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NCard>
-  <NModal preset="card" v-model:show="settingModalVisiable" closable style="width: 600px; max-width: 90vw" title="模板设置"> 开发中... </NModal>
+  <NModal preset="card" v-model:show="settingModalVisiable" closable style="width: 600px; max-width: 90vw" title="模板设置">
+    只是测试, 没用
+    <NSpin v-if="!selectedTemplateData.Config" show />
+    <DynamicForm v-else :key="selectedTemplateData.Selected" :configData="selectedTemplateData.Config" :config="selectedTemplateConfig" />
+  </NModal>
 </template>

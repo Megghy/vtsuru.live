@@ -93,22 +93,28 @@ export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
     id: id,
   })
 }
+export function downloadConfigDirect<T>(name: string) {
+  return QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
+    name: name,
+  })
+}
 export async function downloadConfig<T>(name: string) {
   try {
     const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
       name: name,
     })
     if (resp.code == 200) {
-      message.success('已获取配置文件')
+      console.log('已获取配置文件: ' + name)
       return JSON.parse(resp.data) as T
     } else if (resp.code == 404) {
-      message.error(`未找到名为 ${name} 的配置文件`)
+      console.error(`未找到名为 ${name} 的配置文件`)
     } else {
-      message.error('获取失败: ' + resp.message)
+      console.error(`无法获取配置文件 [${name}]: ` + resp.message)
     }
   } catch (err) {
-    message.error(`获取配置文件失败: ` + err)
+    console.error(`无法获取配置文件 [${name}]: ` + err)
   }
+  return null
 }
 export async function uploadConfig(name: string, data: unknown) {
   try {
@@ -117,11 +123,13 @@ export async function uploadConfig(name: string, data: unknown) {
       json: JSON.stringify(data),
     })
     if (resp.code == 200) {
-      message.success('已保存至服务器')
+      console.log('已保存配置文件至服务器:' + name)
+      return true
     } else {
-      message.error('保存失败: ' + resp.message)
+      console.error('保存失败: ' + resp.message)
     }
   } catch (err) {
-    message.error(`保存配置文件失败: ` + err)
+    console.error(`保存配置文件失败: ` + err)
   }
+  return false
 }

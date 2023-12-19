@@ -1,3 +1,4 @@
+import DefaultIndexTemplateVue from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
 import { computed, defineAsyncComponent, ref, watchEffect } from 'vue'
 
 const debugAPI = import.meta.env.VITE_DEBUG_API
@@ -41,5 +42,5 @@ export const SongListTemplateMap = {
   simple: { name: '简单', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')) },
 } as { [key: string]: { name: string; compoent: any } }
 export const IndexTemplateMap = {
-  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/indexTemplate/DefaultIndexTemplate.vue')) },
+  '': { name: '默认', compoent: DefaultIndexTemplateVue },
 } as { [key: string]: { name: string; compoent: any } }
