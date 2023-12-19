@@ -1,32 +1,25 @@
 <script setup lang="ts">
 import { AddBiliBlackList, SaveEnableFunctions, useAccount } from '@/api/account'
 import {
+  DanmakuUserInfo,
   EventDataTypes,
   EventModel,
   FunctionTypes,
   KeywordMatchType,
+  QueueFrom,
   QueueGiftFilterType,
   QueueSortType,
-  Setting_Queue,
-  QueueFrom,
   QueueStatus,
-  DanmakuUserInfo,
   ResponseQueueModel,
+  Setting_Queue,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import DanmakuClient, { AuthInfo, DanmakuInfo, GiftInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
+import DanmakuClient, { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 import { QUEUE_API_URL } from '@/data/constants'
-import {
-  Checkmark12Regular,
-  ClipboardTextLtr24Filled,
-  Delete24Filled,
-  Dismiss16Filled,
-  PeopleQueue24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
+import { Checkmark12Regular, ClipboardTextLtr24Filled, Delete24Filled, Dismiss16Filled, PeopleQueue24Filled, PresenceBlocked16Regular } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
-import { format, isSameDay } from 'date-fns'
+import { isSameDay } from 'date-fns'
 import { List } from 'linqts'
 import {
   DataTableColumns,
@@ -145,7 +138,7 @@ const queue = computed(() => {
   let list = new List(accountInfo ? originQueue.value : localQueues.value)
     .Where(
       (q) =>
-        !filterName.value || (filterNameContains.value ? q?.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) == true : q?.user?.name.toLowerCase() == filterName.value.toLowerCase())
+        !filterName.value || (filterNameContains.value ? q?.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) == true : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
     )
     .Where((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
     .OrderByDescending((q) => q.from == QueueFrom.Manual)
@@ -165,7 +158,7 @@ const queue = computed(() => {
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     list = list.Reverse()
   }
-  list = list.OrderByDescending((q) => q.status == QueueStatus.Progressing ? 1 : 0)
+  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
 const historySongs = computed(() => {
@@ -223,7 +216,7 @@ async function add(danmaku: EventModel) {
           const index = originQueue.value.findIndex((q) => q.id == data.data.id)
           if (index > -1) {
             message.info(
-              `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${((data.data?.giftPrice ?? 0) - (originQueue.value[index]?.giftPrice ?? 0)).toFixed(1)}, 当前总计付费: ¥ ${data.data.giftPrice}`
+              `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${((data.data?.giftPrice ?? 0) - (originQueue.value[index]?.giftPrice ?? 0)).toFixed(1)}, 当前总计付费: ¥ ${data.data.giftPrice}`,
             )
             originQueue.value.splice(index, 1, data.data)
           } else {
@@ -446,7 +439,7 @@ async function updateSettings() {
 async function deleteQueue(values: ResponseQueueModel[]) {
   await QueryPostAPI(
     QUEUE_API_URL + 'del',
-    values.map((s) => s.id)
+    values.map((s) => s.id),
   )
     .then((data) => {
       if (data.code == 200) {
@@ -500,7 +493,7 @@ const columns = [
         {
           trigger: () => data.user?.name,
           default: () => (data.from == QueueFrom.Manual ? '就是主播自己' : data.user?.uid),
-        }
+        },
       )
     },
   },
@@ -611,7 +604,7 @@ const columns = [
                     },
                     {
                       icon: () => h(NIcon, { component: ReloadCircleSharp }),
-                    }
+                    },
                   ),
                 default: () => '重新放回等待列表',
               })
@@ -633,14 +626,14 @@ const columns = [
                       },
                       {
                         icon: () => h(NIcon, { component: Delete24Filled }),
-                      }
+                      },
                     ),
                   default: () => '删除记录',
                 }),
               default: () => '确定删除?',
-            }
+            },
           ),
-        ]
+        ],
       )
     },
   },
@@ -815,7 +808,9 @@ onUnmounted(() => {
             <NCard embedded size="small" content-style="padding: 5px;" :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
               <NSpace justify="space-between" align="center" style="height: 100%; margin: 0 5px 0 5px">
                 <NSpace align="center">
-                  <div :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;color: white;`">
+                  <div
+                    :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;color: white;`"
+                  >
                     {{ index + 1 }}
                   </div>
                   <NText strong style="font-size: 18px">
@@ -876,8 +871,8 @@ onUnmounted(() => {
                       queue.findIndex((s) => s.id != queueData.id && s.status == QueueStatus.Progressing) > -1
                         ? '还有其他正在正在处理中的用户'
                         : queueData.status == QueueStatus.Waiting && queueData.id
-                        ? '开始处理'
-                        : '取消'
+                          ? '开始处理'
+                          : '取消'
                     }}
                   </NTooltip>
                   <NTooltip>
@@ -1021,7 +1016,9 @@ onUnmounted(() => {
               <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit">
                 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
               </NCheckbox>
-              <NCheckbox v-if="settings.allowIncreasePaymentBySendGift" v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许发送任意礼物来叠加付费量 </NCheckbox>
+              <NCheckbox v-if="settings.allowIncreasePaymentBySendGift" v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="updateSettings" :disabled="!configCanEdit">
+                允许发送任意礼物来叠加付费量
+              </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
             <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings" :disabled="!configCanEdit"> 启用排队冷却 </NCheckbox>

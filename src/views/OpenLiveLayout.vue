@@ -1,37 +1,33 @@
 <script setup lang="ts">
 import { isDarkMode } from '@/Utils'
-import { OpenLiveInfo, ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/api-models'
 import DanmakuClient, { AuthInfo } from '@/data/DanmakuClient'
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent'
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
+  NAlert,
   NAvatar,
+  NBackTop,
+  NButton,
+  NEllipsis,
   NIcon,
   NLayout,
+  NLayoutContent,
+  NLayoutFooter,
   NLayoutHeader,
   NLayoutSider,
   NMenu,
-  NSpace,
-  NText,
-  NButton,
-  NResult,
   NPageHeader,
-  NSwitch,
-  NModal,
-  NEllipsis,
-  MenuOption,
+  NResult,
+  NSpace,
   NSpin,
-  NLayoutContent,
-  NLayoutFooter,
-  NBackTop,
-  NScrollbar,
-  useMessage,
-  NDivider,
+  NSwitch,
   NTag,
-  NAlert,
+  NText,
+  useMessage,
 } from 'naive-ui'
-import { ref, onMounted, h, onUnmounted } from 'vue'
+import { h, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -55,7 +51,7 @@ const menuOptions = [
             query: route.query,
           },
         },
-        { default: () => '抽奖' }
+        { default: () => '抽奖' },
       ),
     key: 'open-live-lottery',
     icon: renderIcon(Lottery24Filled),
@@ -70,7 +66,7 @@ const menuOptions = [
             query: route.query,
           },
         },
-        { default: () => '点歌' }
+        { default: () => '点歌' },
       ),
     key: 'open-live-song-request',
     icon: renderIcon(MusicalNote),
@@ -85,7 +81,7 @@ const menuOptions = [
             query: route.query,
           },
         },
-        { default: () => '排队' }
+        { default: () => '排队' },
       ),
     key: 'open-live-queue',
     icon: renderIcon(PeopleQueue24Filled),
@@ -100,7 +96,7 @@ const menuOptions = [
             query: route.query,
           },
         },
-        { default: () => '读弹幕' }
+        { default: () => '读弹幕' },
       ),
     key: 'open-live-speech',
     icon: renderIcon(TabletSpeaker24Filled),
@@ -147,7 +143,7 @@ onUnmounted(() => {
         <template #extra>
           <NSpace align="center">
             <NTag :type="client?.roomAuthInfo.value ? 'success' : 'warning'"> {{ client?.roomAuthInfo.value ? `已连接 | ${client.roomAuthInfo.value?.anchor_info.uname}` : '未连接' }} </NTag>
-            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
+            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { EventDataTypes, ResponseLiveInfoModel } from '@/api/api-models'
+import { ResponseLiveInfoModel } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
-import { List } from 'linqts'
-import { NPopover, NSpace, NStatistic, NTime, NDivider, NNumberAnimation, NTag, NButton, NTooltip, NIcon } from 'naive-ui'
+import { NButton, NDivider, NIcon, NNumberAnimation, NPopover, NSpace, NStatistic, NTag, NTime, NTooltip } from 'naive-ui'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -25,7 +24,7 @@ watch(
   () => live,
   (newValue) => {
     defaultDanmakusCount.value = newValue.danmakusCount
-  }
+  },
 )
 </script>
 

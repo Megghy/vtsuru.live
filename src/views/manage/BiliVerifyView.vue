@@ -2,8 +2,7 @@
 import { GetSelfAccount, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { BILI_API_URL } from '@/data/constants'
-import { NAlert, NButton, NCard, NCode, NInput, NInputNumber, NSpace, NSpin, NText, NCountdown, NInputGroup, useMessage } from 'naive-ui'
-import { isTaggedTemplateExpression } from 'typescript'
+import { NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NInputNumber, NSpace, NSpin, NText, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()

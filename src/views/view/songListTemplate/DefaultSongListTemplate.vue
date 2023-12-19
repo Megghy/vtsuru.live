@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { SongsInfo, UserInfo } from '@/api/api-models'
+import { Setting_SongRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
+import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
 import { h, ref } from 'vue'
-import { Setting_SongRequest, SongRequestInfo } from '@/api/api-models'
-import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 
 const accountInfo = useAccount()
 
@@ -46,11 +45,11 @@ const buttoms = (song: SongsInfo) => [
               },
               {
                 icon: () => h(NIcon, { component: CloudAdd20Filled }),
-              }
+              },
             ),
           default: () =>
             !props.songRequestSettings.allowFromWeb || song.options ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板' : !accountInfo ? '点歌 | 你需要登录后才能点歌' : '点歌',
-        }
+        },
       )
     : undefined,
 ]

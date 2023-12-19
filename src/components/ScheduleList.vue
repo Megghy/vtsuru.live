@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { useWindowSize } from '@vueuse/core'
-import { NGrid, NList, NListItem, NSpace, NCard, NEmpty, NGridItem, NText, NTime, NButton, NPopconfirm, NEllipsis, NBadge } from 'naive-ui'
-import { ref } from 'vue'
 import { ScheduleWeekInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SCHEDULE_API_URL } from '@/data/constants'
+import { useWindowSize } from '@vueuse/core'
+import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NList, NListItem, NPopconfirm, NSpace, NText, NTime } from 'naive-ui'
 
 const { width } = useWindowSize()
 

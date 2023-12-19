@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NCard, NDivider, NGradientText, NSpace, NText, NIcon, NGrid, NGridItem, NButton } from 'naive-ui'
 import vtb from '@/svgs/ic_vtuber.svg'
+import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import { NButton, NDivider, NGradientText, NGrid, NGridItem, NIcon, NSpace, NText } from 'naive-ui'
 
 const { width } = useWindowSize()
 

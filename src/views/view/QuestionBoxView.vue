@@ -1,33 +1,11 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NAvatar,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NImage,
-  NInput,
-  NList,
-  NListItem,
-  NSpace,
-  NTab,
-  NTabPane,
-  NTabs,
-  NText,
-  NTime,
-  NTooltip,
-  NUpload,
-  UploadFileInfo,
-  useMessage,
-} from 'naive-ui'
-import GraphemeSplitter from 'grapheme-splitter'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import GraphemeSplitter from 'grapheme-splitter'
+import { NAlert, NAvatar, NButton, NCard, NCheckbox, NDivider, NEmpty, NImage, NInput, NList, NListItem, NSpace, NText, NTime, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 const { biliInfo, userInfo } = defineProps<{
@@ -72,7 +50,7 @@ async function SendQuestion() {
       Message: questionMessage.value,
       ImageBase64: fileList.value?.length > 0 ? await getBase64(fileList.value[0].file) : undefined,
     },
-    [['Turnstile', token.value]]
+    [['Turnstile', token.value]],
   )
     .then((data) => {
       if (data.code == 200) {

@@ -30,6 +30,6 @@ onUnmounted(() => {
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <NSpin v-else-if="isClientLoading" show />
   <KeepAlive v-else>
-    <component :is="component" :client="client" :room-info="client.roomAuthInfo?.value" :code="accountInfo?.biliAuthCode"/>
+    <component :is="component" :client="client" :room-info="client.roomAuthInfo?.value" :code="accountInfo?.biliAuthCode" />
   </KeepAlive>
 </template>

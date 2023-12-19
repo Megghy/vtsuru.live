@@ -1,38 +1,14 @@
 <script setup lang="ts">
-import { AddBiliBlackList, SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
-import {
-  EventDataTypes,
-  EventModel,
-  FunctionTypes,
-  OpenLiveInfo,
-  Setting_SongRequest,
-  SongFrom,
-  SongRequestFrom,
-  SongRequestInfo,
-  SongRequestStatus,
-  DanmakuUserInfo,
-  SongsInfo,
-} from '@/api/api-models'
+import { AddBiliBlackList, SaveEnableFunctions, useAccount } from '@/api/account'
+import { DanmakuUserInfo, EventDataTypes, EventModel, FunctionTypes, Setting_SongRequest, SongRequestFrom, SongRequestInfo, SongRequestStatus, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import DanmakuClient, { AuthInfo, DanmakuInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
-import { OPEN_LIVE_API_URL, SONG_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
-import {
-  Check24Filled,
-  Checkmark12Regular,
-  Delete24Filled,
-  Dismiss12Filled,
-  Dismiss16Filled,
-  Info24Filled,
-  Mic24Filled,
-  PeopleQueue24Filled,
-  Play24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
+import SongPlayer from '@/components/SongPlayer.vue'
+import DanmakuClient, { DanmakuInfo, RoomAuthInfo, SCInfo } from '@/data/DanmakuClient'
+import { SONG_REQUEST_API_URL } from '@/data/constants'
+import { Checkmark12Regular, Delete24Filled, Dismiss16Filled, Info24Filled, Mic24Filled, PeopleQueue24Filled, Play24Filled, PresenceBlocked16Regular } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
-import { format, isSameDay } from 'date-fns'
-import { ca } from 'date-fns/locale'
-import { number } from 'echarts'
+import { isSameDay } from 'date-fns'
 import { List } from 'linqts'
 import {
   DataTableColumns,
@@ -44,7 +20,6 @@ import {
   NCollapseItem,
   NDataTable,
   NDivider,
-  NEllipsis,
   NEmpty,
   NIcon,
   NInput,
@@ -72,8 +47,6 @@ import {
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import SongRequestOBS from '../obs/SongRequestOBS.vue'
-import APlayer from 'vue3-aplayer'
-import SongPlayer from '@/components/SongPlayer.vue'
 
 const defaultSettings = {
   orderPrefix: '点歌',
@@ -440,7 +413,7 @@ async function updateSettings() {
 async function deleteSongs(values: SongRequestInfo[]) {
   await QueryPostAPI(
     SONG_REQUEST_API_URL + 'del',
-    values.map((s) => s.id)
+    values.map((s) => s.id),
   )
     .then((data) => {
       if (data.code == 200) {
@@ -497,7 +470,7 @@ const columns = [
         {
           trigger: () => h(NTag, { bordered: false, size: 'small' }, data.from == SongRequestFrom.Manual ? () => h(NText, { italic: true }, () => '手动添加') : () => data.user?.name),
           default: () => (data.from == SongRequestFrom.Manual ? '就是主播自己' : data.user?.uid),
-        }
+        },
       )
     },
   },
@@ -608,7 +581,7 @@ const columns = [
                     },
                     {
                       icon: () => h(NIcon, { component: ReloadCircleSharp }),
-                    }
+                    },
                   ),
                 default: () => '重新放回等待列表',
               })
@@ -630,14 +603,14 @@ const columns = [
                       },
                       {
                         icon: () => h(NIcon, { component: Delete24Filled }),
-                      }
+                      },
                     ),
                   default: () => '删除记录',
                 }),
               default: () => '确定删除?',
-            }
+            },
           ),
-        ]
+        ],
       )
     },
   },
@@ -899,8 +872,8 @@ onUnmounted(() => {
                       songs.findIndex((s) => s.id != song.id && s.status == SongRequestStatus.Singing) > -1
                         ? '还有其他正在演唱的歌曲'
                         : song.status == SongRequestStatus.Waiting && song.id
-                        ? '开始演唱'
-                        : '停止演唱'
+                          ? '开始演唱'
+                          : '停止演唱'
                     }}
                   </NTooltip>
                   <NTooltip>

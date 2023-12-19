@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { copyToClipboard } from '@/Utils'
+import { useAccount } from '@/api/account'
 import { QAInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
+import router from '@/router'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
+import { saveAs } from 'file-saver'
+import html2canvas from 'html2canvas'
+import { List } from 'linqts'
 import {
   NButton,
   NCard,
   NCheckbox,
   NDivider,
-  NGradientText,
   NIcon,
   NImage,
   NInput,
@@ -27,14 +32,8 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
-import { List } from 'linqts'
-import router from '@/router'
-import html2canvas from 'html2canvas'
 import QrcodeVue from 'qrcode.vue'
-import { useAccount } from '@/api/account'
-import { saveAs } from 'file-saver'
-import { copyToClipboard } from '@/Utils'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const accountInfo = useAccount()
@@ -247,7 +246,7 @@ function saveShareImage() {
         saveAs(data, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
       },
       'image/png',
-      1
+      1,
     )
   })
 }

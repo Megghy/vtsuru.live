@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NLayoutContent, NSpace, useMessage } from 'naive-ui'
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/data/constants'
 import router from '@/router'
+import { NButton, NCard, NInput, NLayoutContent, NSpace, useMessage } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const password = ref('')
 const password2 = ref('')

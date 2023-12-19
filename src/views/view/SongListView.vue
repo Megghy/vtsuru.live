@@ -14,13 +14,12 @@
 </template>
 
 <script lang="ts" setup>
-import { Setting_SongRequest, SongRequestInfo, SongsInfo } from '@/api/api-models'
-import { computed, onMounted, ref } from 'vue'
-import { UserInfo } from '@/api/api-models'
+import { useAccount } from '@/api/account'
+import { Setting_SongRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
-import { useAccount } from '@/api/account'
+import { computed, onMounted, ref } from 'vue'
 
 const accountInfo = useAccount()
 

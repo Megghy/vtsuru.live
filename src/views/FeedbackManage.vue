@@ -4,28 +4,7 @@ import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-m
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { FEEDBACK_API_URL } from '@/data/constants'
 import { List } from 'linqts'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NForm,
-  NGrid,
-  NGridItem,
-  NInput,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSpace,
-  NSpin,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+import { NButton, NCard, NCheckbox, NDivider, NEllipsis, NEmpty, NInput, NModal, NRadioButton, NRadioGroup, NSpace, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 interface FeedbackModel {
@@ -101,9 +80,7 @@ async function add() {
 <template>
   <NSpace align="center">
     <NButton @click="showAddModal = true" type="info">添加反馈</NButton>
-    <NText depth="3">
-      或者直接加群 873260337 说也可以
-    </NText>
+    <NText depth="3"> 或者直接加群 873260337 说也可以 </NText>
   </NSpace>
   <NDivider>
     <NTooltip>

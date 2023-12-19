@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { SongsInfo, SongFrom } from '@/api/api-models'
+import { SongFrom, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
 import { NEmpty } from 'naive-ui'
-import { computed, ref, toRef, toRefs, watch } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 import APlayer from 'vue3-aplayer'
 
 const props = defineProps<{

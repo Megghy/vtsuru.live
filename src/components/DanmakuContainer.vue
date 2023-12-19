@@ -1,43 +1,43 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <script setup lang="ts">
-import { onMounted, h, computed, nextTick, watch, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { DanmakuModel, EventDataTypes, ResponseLiveInfoModel } from '@/api/api-models'
+import DanmakuItem from '@/components/DanmakuItem.vue'
+import { GetString } from '@/data/DanmakuExport'
+import router from '@/router'
+import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
+import { useDebounceFn, useLocalStorage, useWindowSize } from '@vueuse/core'
+import { saveAs } from 'file-saver'
+import { List } from 'linqts'
 import {
-  NSkeleton,
+  NAvatar,
+  NButton,
   NCard,
-  NDivider,
   NCheckbox,
   NCheckboxGroup,
-  NModal,
-  NButton,
-  NPopover,
-  NIcon,
-  NInput,
-  NSpace,
-  NSwitch,
-  NInputNumber,
-  NCollapseTransition,
-  NTag,
-  NSpin,
-  NRadioGroup,
-  NList,
-  NListItem,
-  NAvatar,
-  NTooltip,
-  NRadioButton,
   NCollapse,
   NCollapseItem,
+  NCollapseTransition,
+  NDivider,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NPopover,
+  NRadioButton,
+  NRadioGroup,
+  NSkeleton,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NTag,
+  NTooltip,
 } from 'naive-ui'
-import router from '@/router'
-import { Search24Filled, Money20Regular, Wrench24Filled, Money24Regular, Info12Filled, Home24Filled } from '@vicons/fluent'
-import { saveAs } from 'file-saver'
-import { useLocalStorage, useWindowSize, useDebounceFn } from '@vueuse/core'
-import { ResponseLiveInfoModel, DanmakuModel, EventDataTypes } from '@/api/api-models'
-import { List } from 'linqts'
-import { useAccount } from '@/api/account'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import LiveInfoContainer from './LiveInfoContainer.vue'
-import { GetString } from '@/data/DanmakuExport'
 import SimpleVirtualList from './SimpleVirtualList.vue'
-import DanmakuItem from '@/components/DanmakuItem.vue'
 
 enum RankType {
   Danmaku,
@@ -117,7 +117,7 @@ watch(
   () => showTools,
   (newV, oldV) => {
     innerShowTools.value = newV
-  }
+  },
 )
 const danmakuRef = computed(() => {
   //不知道为啥不能直接watch
@@ -257,7 +257,7 @@ function Export() {
   isExporting.value = true
   saveAs(
     new Blob([GetString(accountInfo.value, currentLive, onlyExportFilteredDanmakus.value ? danmakus.value : currentDanmakus, exportType.value)], { type: 'text/plain;charset=utf-8' }),
-    `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`
+    `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
   )
   isExporting.value = false
 }

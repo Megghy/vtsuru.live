@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoCollectVideo, VideoFrom, VideoInfo, VideoStatus } from '@/api/api-models'
+import { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
 import router from '@/router'
 import { Clock24Filled, Person24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
-import { formatDuration } from 'date-fns'
 import { List } from 'linqts'
 import {
   FormRules,
@@ -21,7 +20,6 @@ import {
   NGrid,
   NGridItem,
   NIcon,
-  NImage,
   NInput,
   NInputNumber,
   NModal,
@@ -30,9 +28,7 @@ import {
   NSpace,
   NTabPane,
   NTabs,
-  NTag,
   NText,
-  NThing,
   useMessage,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
@@ -143,44 +139,47 @@ const gridRender = (type: 'padding' | 'reject' | 'accept') => {
   }
   return videos.length == 0
     ? h(NEmpty)
-    : h(NGrid, { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' }, () =>
-        videos?.map((v) =>
-          h(NGridItem, () =>
-            h(
-              NCard,
-              { style: 'height: 330px;', embedded: true, size: 'small' },
-              {
-                cover: () =>
-                  h('div', { style: 'position: relative;height: 150px;' }, [
-                    h('img', {
-                      src: v.video.cover,
-                      referrerpolicy: 'no-referrer',
-                      style: 'max-height: 100%; object-fit: contain;cursor: pointer',
-                      onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
-                    }),
-                    h(NSpace, { style: { position: 'relative', bottom: '20px', background: '#00000073' }, justify: 'space-around' }, () => [
-                      h('span', [h(NIcon, { component: Clock24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length))]),
-                      h('span', [h(NIcon, { component: Person24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName)]),
+    : h(
+        NGrid,
+        { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' },
+        () =>
+          videos?.map((v) =>
+            h(NGridItem, () =>
+              h(
+                NCard,
+                { style: 'height: 330px;', embedded: true, size: 'small' },
+                {
+                  cover: () =>
+                    h('div', { style: 'position: relative;height: 150px;' }, [
+                      h('img', {
+                        src: v.video.cover,
+                        referrerpolicy: 'no-referrer',
+                        style: 'max-height: 100%; object-fit: contain;cursor: pointer',
+                        onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
+                      }),
+                      h(NSpace, { style: { position: 'relative', bottom: '20px', background: '#00000073' }, justify: 'space-around' }, () => [
+                        h('span', [h(NIcon, { component: Clock24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length))]),
+                        h('span', [h(NIcon, { component: Person24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName)]),
+                      ]),
                     ]),
-                  ]),
-                header: () =>
-                  h(NButton, { style: 'width: 100%;', text: true, onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank') }, () =>
-                    h(NEllipsis, { style: 'max-width: 100%;' }, { default: () => v.video.title, tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title) })
-                  ),
-                default: () =>
-                  h(NScrollbar, { style: 'height: 65px;' }, () =>
-                    h(NCard, { contentStyle: 'padding: 5px;' }, () =>
-                      v.info.senders.map((s) => [
-                        h('div', { style: 'font-size: 12px;' }, [h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`), h('div', `推荐理由: ${s.description ?? '未填写'}`)]),
-                        h(NSpace, { style: 'margin: 0;' }),
-                      ])
-                    )
-                  ),
-                footer: () => footer(v.info),
-              }
-            )
-          )
-        )
+                  header: () =>
+                    h(NButton, { style: 'width: 100%;', text: true, onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank') }, () =>
+                      h(NEllipsis, { style: 'max-width: 100%;' }, { default: () => v.video.title, tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title) }),
+                    ),
+                  default: () =>
+                    h(NScrollbar, { style: 'height: 65px;' }, () =>
+                      h(NCard, { contentStyle: 'padding: 5px;' }, () =>
+                        v.info.senders.map((s) => [
+                          h('div', { style: 'font-size: 12px;' }, [h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`), h('div', `推荐理由: ${s.description ?? '未填写'}`)]),
+                          h(NSpace, { style: 'margin: 0;' }),
+                        ]),
+                      ),
+                    ),
+                  footer: () => footer(v.info),
+                },
+              ),
+            ),
+          ),
       )
 }
 const paddingButtonGroup = (v: VideoInfo) =>

@@ -1,31 +1,9 @@
 <script setup lang="ts">
-import { GetSelfAccount } from '@/api/account'
 import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
-import { GetNotifactions } from '@/data/notifactions'
 import { useLocalStorage } from '@vueuse/core'
-import {
-  FormInst,
-  FormItemInst,
-  FormItemRule,
-  FormRules,
-  NAlert,
-  NButton,
-  NCard,
-  NCountdown,
-  NDivider,
-  NForm,
-  NFormItem,
-  NInput,
-  NSpace,
-  NSpin,
-  NTab,
-  NTabPane,
-  NTabs,
-  NTime,
-  useMessage,
-} from 'naive-ui'
+import { FormInst, FormItemInst, FormItemRule, FormRules, NAlert, NButton, NCard, NCountdown, NDivider, NForm, NFormItem, NInput, NSpace, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -130,7 +108,7 @@ function onRegisterButtonClick() {
         email: registerModel.value.email,
         password: registerModel.value.password,
       },
-      [['Turnstile', token.value]]
+      [['Turnstile', token.value]],
     )
       .then((data) => {
         if (data.code == 200) {

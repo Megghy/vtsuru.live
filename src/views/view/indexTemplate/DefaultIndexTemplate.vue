@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { isDarkMode } from '@/Utils'
 import { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NDivider, NImage, NSpace, NText } from 'naive-ui'
+import { NAvatar, NButton, NDivider, NSpace, NText } from 'naive-ui'
 
 const width = window.innerWidth
 
@@ -26,7 +26,7 @@ function navigate(url: string) {
         round
         bordered
         :img-props="{
-          referrerpolicy: 'no-referrer'
+          referrerpolicy: 'no-referrer',
         }"
         :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
       />

@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import EasySpeech from 'easy-speech'
-import { NAlert, NButton, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSelect, NSlider, NSpace, NTag, NText, NTooltip, useMessage } from 'naive-ui'
-import { useRoute } from 'vue-router'
-import { useStorage } from '@vueuse/core'
-import { Queue } from 'queue-typescript'
-import DanmakuClient, { DanmakuInfo, RoomAuthInfo } from '@/data/DanmakuClient'
-import { EventDataTypes, EventModel } from '@/api/api-models'
-import { useAccount } from '@/api/account'
-import { Mic24Filled } from '@vicons/fluent'
 import { copyToClipboard } from '@/Utils'
+import { useAccount } from '@/api/account'
+import { EventDataTypes, EventModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
 import { VTSURU_API_URL } from '@/data/constants'
-import { setInterval, clearInterval } from 'worker-timers'
+import { Mic24Filled } from '@vicons/fluent'
+import { useStorage } from '@vueuse/core'
+import EasySpeech from 'easy-speech'
+import { NAlert, NButton, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSelect, NSlider, NSpace, NText, NTooltip, useMessage } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { clearInterval, setInterval } from 'worker-timers'
 
 const props = defineProps<{
   client: DanmakuClient

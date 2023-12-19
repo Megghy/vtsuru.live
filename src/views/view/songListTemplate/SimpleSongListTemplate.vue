@@ -5,9 +5,9 @@ import { FunctionTypes, Setting_SongRequest, SongRequestInfo, SongsInfo, UserInf
 import SongPlayer from '@/components/SongPlayer.vue'
 import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
-import { useDebounceFn, useElementSize, useInfiniteScroll, useWindowSize } from '@vueuse/core'
-import { debounce, throttle } from 'lodash'
-import { NGridItem, NGrid, NCard, NSpace, NDivider, NButton, NCollapseTransition, NInput, NText, NEllipsis, NSelect, NEmpty, NIcon, NTag, NScrollbar, NTooltip, NPopover } from 'naive-ui'
+import { useWindowSize } from '@vueuse/core'
+import { throttle } from 'lodash'
+import { NButton, NCard, NCollapseTransition, NDivider, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NInput, NPopover, NScrollbar, NSelect, NSpace, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
@@ -40,7 +40,7 @@ const tags = computed(() => {
           .map((item) => {
             return item.tags ?? []
           })
-          .reduce((prev, curr) => [...prev, ...curr], [])
+          .reduce((prev, curr) => [...prev, ...curr], []),
       ),
     ]
   }
@@ -54,7 +54,7 @@ const authors = computed(() => {
           .map((item) => {
             return item.author ?? []
           })
-          .reduce((prev, curr) => [...prev, ...curr], [])
+          .reduce((prev, curr) => [...prev, ...curr], []),
       ),
     ]
   }
@@ -190,8 +190,8 @@ function loadMore() {
                     songRequestSettings?.allowFromWeb == false || item.options
                       ? '点歌 | 用户或此歌曲不允许从网页点歌, 点击后将复制点歌内容到剪切板'
                       : !accountInfo
-                      ? '点歌 | 你需要登录后才能点歌'
-                      : '点歌'
+                        ? '点歌 | 你需要登录后才能点歌'
+                        : '点歌'
                   }}
                 </NTooltip>
 

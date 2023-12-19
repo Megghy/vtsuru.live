@@ -2,11 +2,9 @@
 import { useAccount } from '@/api/account'
 import { ResponseLiveInfoModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/components/LiveInfoContainer.vue'
 import { LIVE_API_URL } from '@/data/constants'
-import { List } from 'linqts'
-import { NButton, NDivider, NList, NListItem, NAlert, NPagination, NPopover, NSpace, NStatistic, NTag, NTime, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NDivider, NList, NListItem, NPagination, NSpace, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

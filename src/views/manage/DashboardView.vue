@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NThing, NTime, NTooltip, useMessage } from 'naive-ui'
-import SettingsManageView from './SettingsManageView.vue'
-import { useLocalStorage } from '@vueuse/core'
-import { ref } from 'vue'
+import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { Question24Regular } from '@vicons/fluent'
+import { useLocalStorage } from '@vueuse/core'
+import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
-import { BiliAuthCodeStatusType } from '@/api/api-models'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import SettingsManageView from './SettingsManageView.vue'
 
 const token = ref('')
 const turnstile = ref()
@@ -175,9 +175,7 @@ async function ChangeBili() {
       当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
       <br />
       在我们被限制连接之前满足以上条件的主播无需部署
-      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
+      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text> VtsuruEventFetcher </NButton>
       即可使用相关功能 (如记录上舰和SC, 直播场记录等) 😊
     </NAlert>
     <NCard embedded style="width: 100%">
