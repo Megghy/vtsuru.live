@@ -43,7 +43,7 @@ enum EventType {
 interface EventModel {
   type: EventType
   name: string
-  uId: number
+  uid: number
   msg: string
   time: number
   num: number
@@ -66,7 +66,7 @@ const rangeShortcuts = {
 }
 const selectedDate = ref<[number, number]>([rangeShortcuts.本月()[0], rangeShortcuts.本月()[1]])
 const selectedType = ref(EventType.Guard)
-const events = ref<EventModel[]>([])
+const events = ref<EventModel[]>(await get())
 const isLoading = ref(false)
 
 const selectedEvents = computed(() => {
@@ -132,7 +132,7 @@ function exportData() {
           type: v.type,
           time: format(v.time, 'yyyy-MM-dd HH:mm:ss'),
           name: v.name,
-          uId: v.uId,
+          uId: v.uid,
           num: v.num,
           price: v.price,
           msg: v.msg,
@@ -159,10 +159,6 @@ function objectsToCSV(arr: any[]) {
     })
     .join('\n')
 }
-
-onMounted(() => {
-  if (accountInfo.value?.eventFetcherOnline) onDateChange()
-})
 </script>
 
 <template>
@@ -215,7 +211,7 @@ onMounted(() => {
               <NGridItem v-for="item in selectedEvents" v-bind:key="item.time">
                 <NCard size="small" :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`" embedded hoverable>
                   <NSpace align="center" vertical :size="5">
-                    <NAvatar round lazy borderd :size="64" :src="AVATAR_URL + item.uId" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+                    <NAvatar round lazy borderd :size="64" :src="AVATAR_URL + item.uid" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
                     <NSpace>
                       <NTag size="tiny" v-if="selectedType == EventType.Guard" :bordered="false"> {{ item.msg }} </NTag>
                       <NTag
@@ -252,7 +248,7 @@ onMounted(() => {
             <tbody v-for="item in selectedEvents" v-bind:key="item.time">
               <tr>
                 <td>{{ item.name }}</td>
-                <td>{{ item.uId }}</td>
+                <td>{{ item.uid }}</td>
                 <td><NTime :time="item.time" /></td>
                 <td v-if="selectedType == EventType.Guard">{{ item.msg }}</td>
                 <td>
