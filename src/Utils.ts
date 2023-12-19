@@ -1,6 +1,6 @@
+import { useStorage } from '@vueuse/core'
 import { createDiscreteApi, useOsTheme } from 'naive-ui'
 import { ThemeType } from './api/api-models'
-import { useStorage } from '@vueuse/core'
 
 const { message } = createDiscreteApi(['message'])
 
@@ -48,4 +48,26 @@ export function GetGuardColor(level: number | null | undefined): string {
     }
   }
   return ''
+}
+export function downloadImage(imageSrc: string, filename: string) {
+  const image = new Image()
+  image.crossOrigin = 'Anonymous' // This might be needed depending on the image's server
+  image.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = image.width
+    canvas.height = image.height
+    const ctx = canvas.getContext('2d')
+    ctx!.drawImage(image, 0, 0)
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    }) // Omitted the 'image/jpeg' to use the original image format
+  }
+  image.src = imageSrc
 }

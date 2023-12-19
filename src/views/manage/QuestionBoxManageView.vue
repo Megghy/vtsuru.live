@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { copyToClipboard } from '@/Utils'
+import { copyToClipboard, downloadImage } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { QAInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
@@ -250,6 +250,9 @@ function saveShareImage() {
     )
   })
 }
+function saveQRCode() {
+  downloadImage(`https://api.qrserver.com/v1/create-qr-code/?data=${shareUrl.value}`, 'vtsuru-提问箱二维码.png');
+}
 
 onMounted(() => {
   if (selectedTabItem.value == '0') {
@@ -320,9 +323,11 @@ onMounted(() => {
               <NImage v-if="item.question?.image" :src="item.question.image" height="100" lazy />
               <br />
             </template>
-            <NButton text @click="onOpenModal(item)">
+
+            <NText style="">
               {{ item.question?.message }}
-            </NButton>
+            </NText>
+            <NButton text @click="onOpenModal(item)" style="max-width: 100%; word-wrap: break-word"> </NButton>
           </NCard>
         </NListItem>
       </NList>
@@ -400,6 +405,7 @@ onMounted(() => {
     <br /><br />
     <NSpace justify="center">
       <NButton type="primary" @click="saveShareImage"> 保存卡片 </NButton>
+      <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
     </NSpace>
   </NModal>
 </template>

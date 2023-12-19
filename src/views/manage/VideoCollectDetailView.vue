@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { downloadImage } from '@/Utils'
 import { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
@@ -293,6 +294,9 @@ function closeTable() {
       isLoading.value = false
     })
 }
+function saveQRCode() {
+  downloadImage(`https://api.qrserver.com/v1/create-qr-code/?data=${'https://vtsuru.live/video-collect/' + videoDetail.value.table.shortId}`, `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`)
+}
 </script>
 <template>
   <NSpace>
@@ -365,8 +369,12 @@ function closeTable() {
     </NTabs>
   </template>
   <NModal v-model:show="shareModalVisiable" title="分享" preset="card" style="width: 600px; max-width: 90vw">
-    <Qrcode :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId" level="Q" :size="100" background="#00000000" foreground="#ffffff" :margin="1" />
+    <Qrcode :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId" level="Q" :size="100" background="#fff" :margin="1" />
     <NInput :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId" />
+    <NDivider/>
+    <NSpace justify="center">
+      <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
+    </NSpace>
   </NModal>
   <NModal v-model:show="editModalVisiable" title="更新信息" preset="card" style="width: 600px; max-width: 90vw">
     <NForm ref="formRef" :model="updateModel" :rules="createRules">
