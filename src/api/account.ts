@@ -1,10 +1,10 @@
-import { ACCOUNT_API_URL, BASE_API } from '@/data/constants'
-import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ref } from 'vue'
+import { ACCOUNT_API_URL, VTSURU_API_URL } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
-import { createDiscreteApi } from 'naive-ui'
 import { isSameDay } from 'date-fns'
+import { createDiscreteApi } from 'naive-ui'
+import { ref } from 'vue'
+import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
 
 export const ACCOUNT = ref<AccountInfo>()
 export const isLoadingAccount = ref(true)
@@ -92,4 +92,36 @@ export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
   return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del-bili`, {
     id: id,
   })
+}
+export async function downloadConfig<T>(name: string) {
+  try {
+    const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
+      name: name,
+    })
+    if (resp.code == 200) {
+      message.success('已获取配置文件')
+      return JSON.parse(resp.data) as T
+    } else if (resp.code == 404) {
+      message.error(`未找到名为 ${name} 的配置文件`)
+    } else {
+      message.error('获取失败: ' + resp.message)
+    }
+  } catch (err) {
+    message.error(`获取配置文件失败: ` + err)
+  }
+}
+export async function uploadConfig(name: string, data: unknown) {
+  try {
+    const resp = await QueryPostAPI(VTSURU_API_URL + 'set-config', {
+      name: name,
+      json: JSON.stringify(data),
+    })
+    if (resp.code == 200) {
+      message.success('已保存至服务器')
+    } else {
+      message.error('保存失败: ' + resp.message)
+    }
+  } catch (err) {
+    message.error(`保存配置文件失败: ` + err)
+  }
 }
