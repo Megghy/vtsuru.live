@@ -12,6 +12,7 @@ import { Mic24Filled } from '@vicons/fluent'
 import { copyToClipboard } from '@/Utils'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/data/constants'
+import { setInterval, clearInterval } from 'worker-timers'
 
 const props = defineProps<{
   client: DanmakuClient
@@ -157,27 +158,37 @@ async function speak() {
   }
 }
 function speakDirect(text: string) {
-  const synth = window.speechSynthesis
-  let u = new SpeechSynthesisUtterance()
-  u.text = text
-  let voices = synth.getVoices()
-  const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
-  if (voice) {
-    u.voice = voice
-    u.volume = settings.value.speechInfo.volume
-    u.rate = settings.value.speechInfo.rate
-    u.pitch = settings.value.speechInfo.pitch
-    synth.speak(u)
-    u.onend = () => {
-      isSpeaking.value = false
+  try {
+    const synth = window.speechSynthesis
+    if (!synth) {
+      console.error('当前浏览器环境不支持tts')
+      return
     }
-    u.onerror = (err) => {
-      if (err.error == 'interrupted') {
-        return
+    synth.cancel()
+    let u = new SpeechSynthesisUtterance()
+    u.text = text
+    let voices = synth.getVoices()
+    const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
+    if (voice) {
+      u.voice = voice
+      u.volume = settings.value.speechInfo.volume
+      u.rate = settings.value.speechInfo.rate
+      u.pitch = settings.value.speechInfo.pitch
+      synth.speak(u)
+      u.onend = () => {
+        isSpeaking.value = false
       }
-      console.log(err)
-      message.error('无法播放语音: ' + err.error)
+      u.onerror = (err) => {
+        if (err.error == 'interrupted') {
+          return
+        }
+        console.log(err)
+        message.error('无法播放语音: ' + err.error)
+        isSpeaking.value = false
+      }
     }
+  } catch (err) {
+    console.log(err)
   }
 }
 function onGetEvent(data: EventModel) {
@@ -237,6 +248,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
     .replace(templateConstants.message.regex, data.msg)
     .replace(templateConstants.guard_level.regex, data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '')
     .replace(templateConstants.fans_medal_level.regex, data.fans_medal_level.toString())
+    .trim()
 
   if (data.type === EventDataTypes.Message) {
     text = text.replace(/\[.*?\]/g, ' ') //删除表情
@@ -245,6 +257,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
   } else if (data.type === EventDataTypes.Guard) {
     text = text.replace(templateConstants.guard_num.regex, data.num.toString())
   }
+  text = text.replace(/[^0-9a-z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF ]/gi, '').normalize('NFKC') //过滤无效字符, 全角转半角
   return text
 }
 function startSpeech() {
@@ -366,12 +379,12 @@ function test(type: EventDataTypes) {
   }
 }
 
-let speechQueueTimer: any
+let speechQueueTimer: number
 onMounted(() => {
   speechSynthesisInfo.value = EasySpeech.detect()
   speechQueueTimer = setInterval(() => {
     speak()
-  }, 100)
+  }, 500)
 
   props.client.onEvent('danmaku', onGetEvent)
   props.client.onEvent('sc', onGetEvent)
