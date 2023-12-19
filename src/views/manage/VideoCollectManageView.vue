@@ -4,33 +4,7 @@ import { VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
-import { Clock24Filled } from '@vicons/fluent'
-import {
-  CountdownProps,
-  FormRules,
-  NButton,
-  NCard,
-  NCountdown,
-  NDatePicker,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NModal,
-  NSpace,
-  NSpin,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+import { FormRules, NButton, NDatePicker, NDivider, NEmpty, NForm, NFormItem, NInput, NInputNumber, NList, NListItem, NModal, NSpace, NSpin, NText, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 const accountInfo = useAccount()

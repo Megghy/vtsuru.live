@@ -4,9 +4,7 @@ import { LotteryUserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { useLocalStorage, useStorage } from '@vueuse/core'
-import { randomInt } from 'crypto'
 import { format } from 'date-fns'
-import { List } from 'linqts'
 import {
   NAvatar,
   NButton,
@@ -29,15 +27,12 @@ import {
   NRadioGroup,
   NScrollbar,
   NSpace,
-  NTabPane,
-  NTabs,
   NTag,
   NTime,
   NTooltip,
   useMessage,
   useNotification,
 } from 'naive-ui'
-import { breadcrumbLight } from 'naive-ui/es/breadcrumb/styles'
 import { computed, h, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -152,7 +147,7 @@ async function getCommentsUsers() {
     {
       id: inputDynamicId.value,
     },
-    [['Turnstile', token.value]]
+    [['Turnstile', token.value]],
   )
     .then((data) => {
       if (data.code == 200) {
@@ -178,7 +173,7 @@ async function getForwardUsers() {
     {
       id: inputDynamicId.value,
     },
-    [['Turnstile', token.value]]
+    [['Turnstile', token.value]],
   )
     .then((data) => {
       if (data.code == 200) {
@@ -263,7 +258,7 @@ function onFinishLottery() {
       h(
         NSpace,
         { vertical: true },
-        resultUsers.value?.map((user) => h(NSpace, null, [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)]))
+        resultUsers.value?.map((user) => h(NSpace, null, [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)])),
       ),
     meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
     onAfterLeave: () => {

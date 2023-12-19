@@ -1,37 +1,36 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
+import { isDarkMode } from '@/Utils'
+import { useAccount } from '@/api/account'
+import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
+import { useUser } from '@/api/user'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { FETCH_API } from '@/data/constants'
+import { CalendarClock24Filled } from '@vicons/fluent'
+import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { useElementSize, useStorage } from '@vueuse/core'
 import {
+  MenuOption,
   NAvatar,
+  NBackTop,
+  NButton,
+  NEllipsis,
   NIcon,
   NLayout,
+  NLayoutContent,
   NLayoutHeader,
   NLayoutSider,
   NMenu,
-  NSpace,
-  NText,
-  NButton,
-  NResult,
-  NPageHeader,
-  NSwitch,
   NModal,
-  NEllipsis,
-  MenuOption,
+  NPageHeader,
+  NResult,
+  NSpace,
   NSpin,
-  NLayoutContent,
-  NBackTop,
-  NScrollbar,
+  NSwitch,
+  NText,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
-import { BookOutline as BookIcon, Chatbox, Home, Moon, MusicalNote, PersonOutline as PersonIcon, Sunny, WineOutline as WineIcon } from '@vicons/ionicons5'
-import { GetInfo, useUser, useUserWithUId } from '@/api/user'
 import { RouterLink, useRoute } from 'vue-router'
-import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
-import { FETCH_API } from '@/data/constants'
-import { useAccount } from '@/api/account'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { useElementSize, useStorage } from '@vueuse/core'
-import { isDarkMode } from '@/Utils'
-import { CalendarClock24Filled } from '@vicons/fluent'
 
 const route = useRoute()
 const id = computed(() => {
@@ -54,15 +53,14 @@ function renderIcon(icon: unknown) {
 }
 const menuOptions = ref<MenuOption[]>()
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`)
-    .then(async (respone) => {
-      let data = await respone.json()
-      if (data.code == 0) {
-        biliUserInfo.value = data.card
-      } else {
-        throw new Error('Bili User API Error: ' + data.message)
-      }
-    })
+  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`).then(async (respone) => {
+    let data = await respone.json()
+    if (data.code == 0) {
+      biliUserInfo.value = data.card
+    } else {
+      throw new Error('Bili User API Error: ' + data.message)
+    }
+  })
 }
 
 onMounted(async () => {
@@ -81,7 +79,7 @@ onMounted(async () => {
               name: 'user-index',
             },
           },
-          { default: () => '主页' }
+          { default: () => '主页' },
         ),
       key: 'user-index',
       icon: renderIcon(Home),
@@ -95,7 +93,7 @@ onMounted(async () => {
               name: 'user-songList',
             },
           },
-          { default: () => '歌单' }
+          { default: () => '歌单' },
         ),
       show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.SongList) ?? -1) > -1,
       key: 'user-songList',
@@ -110,7 +108,7 @@ onMounted(async () => {
               name: 'user-schedule',
             },
           },
-          { default: () => '日程' }
+          { default: () => '日程' },
         ),
       show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.Schedule) ?? -1) > -1,
       key: 'user-schedule',
@@ -125,7 +123,7 @@ onMounted(async () => {
               name: 'user-questionBox',
             },
           },
-          { default: () => '棉花糖 (提问箱' }
+          { default: () => '棉花糖 (提问箱' },
         ),
       show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) > -1,
       key: 'user-questionBox',
@@ -148,7 +146,7 @@ onMounted(async () => {
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''" style="margin-top: 6px">
         <template #extra>
           <NSpace align="center">
-            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => themeType = value ? ThemeType.Light : ThemeType.Dark">
+            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>

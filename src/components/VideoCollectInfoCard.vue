@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VideoCollectTable } from '@/api/api-models'
 import router from '@/router'
-import { Clock24Filled, Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
+import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
 import { CountdownProps, NCard, NCountdown, NDivider, NEllipsis, NIcon, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
 
 const props = defineProps<{

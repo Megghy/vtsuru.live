@@ -1,30 +1,9 @@
 <script setup lang="ts">
 import { DelBiliBlackList, SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NDivider,
-  NEmpty,
-  NForm,
-  NList,
-  NListItem,
-  NModal,
-  NSelect,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  SelectOption,
-  useMessage,
-} from 'naive-ui'
-import { Ref, computed, h, onMounted, ref, defineAsyncComponent, onActivated } from 'vue'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
+import { FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
+import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NList, NListItem, NModal, NSelect, NSpace, NSpin, NTabPane, NTabs, NText, SelectOption, useMessage } from 'naive-ui'
+import { Ref, computed, h, onActivated, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface TemplateDefineTypes {

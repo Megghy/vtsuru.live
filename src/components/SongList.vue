@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { SongAuthorInfo, SongFrom, SongLanguage, SongsInfo, SongRequestOption } from '@/api/api-models'
+import { SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
-import { refDebounced, useDebounceFn, useLocalStorage } from '@vueuse/core'
+import FiveSingIcon from '@/svgs/fivesing.svg'
+import NeteaseIcon from '@/svgs/netease.svg'
+import { Delete24Filled, Info24Filled, NotepadEdit20Filled, Play24Filled, SquareArrowForward24Filled } from '@vicons/fluent'
+import { refDebounced, useLocalStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
   DataTableBaseColumn,
@@ -10,11 +13,9 @@ import {
   DataTableRowKey,
   FormInst,
   FormRules,
-  NAvatar,
   NButton,
   NCard,
   NCheckbox,
-  NCollapseTransition,
   NDataTable,
   NDivider,
   NEllipsis,
@@ -36,10 +37,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { onMounted, h, ref, watch, computed, VNodeChild } from 'vue'
-import { NotepadEdit20Filled, Delete24Filled, Play24Filled, SquareArrowForward24Filled, Info24Filled } from '@vicons/fluent'
-import NeteaseIcon from '@/svgs/netease.svg'
-import FiveSingIcon from '@/svgs/fivesing.svg'
+import { VNodeChild, computed, h, onMounted, ref, watch } from 'vue'
 import SongPlayer from './SongPlayer.vue'
 
 const props = defineProps<{

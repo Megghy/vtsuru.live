@@ -4,8 +4,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ScheduleWeekInfo } from '@/api/api-models'
-import { UserInfo } from '@/api/api-models'
+import { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL, ScheduleTemplateMap } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'

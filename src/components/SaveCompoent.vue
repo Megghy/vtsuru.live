@@ -29,7 +29,7 @@ function saveCompoent() {
         saveAs(data, props.fileName + '.png')
       },
       'image/png',
-      1
+      1,
     )
   })
 }

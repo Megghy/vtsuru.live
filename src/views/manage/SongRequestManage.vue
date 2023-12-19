@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import DanmakuClient from '@/data/DanmakuClient'
-import { onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
-import MusicRequest from '../open_live/MusicRequest.vue'
 import { NAlert } from 'naive-ui'
+import { onMounted, onUnmounted } from 'vue'
+import MusicRequest from '../open_live/MusicRequest.vue'
 
 const accountInfo = useAccount()
 let client = new DanmakuClient(null)

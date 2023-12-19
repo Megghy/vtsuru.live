@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import DanmakuClient from '@/data/DanmakuClient'
-import { onMounted, onUnmounted } from 'vue'
 import { NAlert } from 'naive-ui'
+import { onMounted, onUnmounted } from 'vue'
 import OpenLottery from '../open_live/OpenLottery.vue'
 
 const accountInfo = useAccount()

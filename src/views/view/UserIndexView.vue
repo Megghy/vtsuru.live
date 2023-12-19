@@ -3,10 +3,9 @@
 </template>
 
 <script lang="ts" setup>
-import { IndexTypes } from '@/api/api-models'
-import DefaultIndexTemplate from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
-import { computed, onMounted, ref } from 'vue'
 import { UserInfo } from '@/api/api-models'
+import DefaultIndexTemplate from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { VVirtualList } from 'vueuc'
-import type { VirtualListInst } from 'vueuc'
-import { NScrollbar } from 'naive-ui/es/_internal'
 import type { ScrollbarInst } from 'naive-ui/es/_internal'
+import { NScrollbar } from 'naive-ui/es/_internal'
 import { computed, onMounted, ref, type PropType } from 'vue'
+import type { VirtualListInst } from 'vueuc'
+import { VVirtualList } from 'vueuc'
 import type { ItemData } from 'vueuc/lib/virtual-list/src/type'
 
 const scrollerInstRef = ref<ScrollbarInst | null>(null)

@@ -24,14 +24,13 @@
 </template>
 
 <script setup lang="ts">
-import ViewerLayout from '@/views/ViewerLayout.vue'
 import ManageLayout from '@/views/ManageLayout.vue'
-import { useRoute } from 'vue-router'
-import { NConfigProvider, NMessageProvider, NNotificationProvider, zhCN, dateZhCN, useOsTheme, darkTheme, NElement, NSpin } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import ViewerLayout from '@/views/ViewerLayout.vue'
 import { useStorage } from '@vueuse/core'
-import { ThemeType, UserInfo } from './api/api-models'
-import { useUser } from './api/user'
+import { NConfigProvider, NElement, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { ThemeType } from './api/api-models'
 import OpenLiveLayout from './views/OpenLiveLayout.vue'
 
 const route = useRoute()

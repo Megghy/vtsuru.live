@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { NavigateToNewTab } from '@/Utils'
-import { VideoCollectCreateModel, VideoCollectDetail, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
+import { VideoCollectDetail, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
 import { Clock24Regular, Person24Regular, Question24Regular } from '@vicons/fluent'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { NAlert, NButton, NCard, NDivider, NElement, NEllipsis, NIcon, NImage, NLayoutContent, NList, NListItem, NProgress, NResult, NSpace, NText, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NEllipsis, NIcon, NImage, NLayoutContent, NList, NListItem, NProgress, NResult, NSpace, NText, NTooltip, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 

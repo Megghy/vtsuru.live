@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { FormRules, NForm } from 'naive-ui';
+import { FormRules, NForm } from 'naive-ui'
 
 defineProps<{
- rules: FormRules
+  rules: FormRules
 }>()
 
-function getItems() {
-  
-}
+function getItems() {}
 </script>
 
 <template>
-  <NForm>
-
-  </NForm>
+  <NForm> </NForm>
 </template>

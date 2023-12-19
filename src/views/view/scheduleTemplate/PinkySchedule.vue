@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
-import { getYear, getWeek, startOfWeek } from 'date-fns'
+import SaveCompoent from '@/components/SaveCompoent.vue'
+import { getWeek, getYear } from 'date-fns'
 import { NDivider, NSelect, NSpace } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
-import SaveCompoent from '@/components/SaveCompoent.vue'
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const table = ref()

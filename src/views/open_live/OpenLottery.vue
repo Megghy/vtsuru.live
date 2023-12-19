@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, h, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useAccount } from '@/api/account'
+import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { LOTTERY_API_URL, OPEN_LIVE_API_URL } from '@/data/constants'
-import { LotteryUserInfo, OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
+import DanmakuClient, { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
+import { LOTTERY_API_URL } from '@/data/constants'
+import { Delete24Filled, Info24Filled } from '@vicons/fluent'
+import { useLocalStorage, useStorage } from '@vueuse/core'
+import { format } from 'date-fns'
 import {
   NAlert,
   NAvatar,
@@ -22,7 +25,6 @@ import {
   NInputGroup,
   NInputGroupLabel,
   NInputNumber,
-  NLayoutContent,
   NLi,
   NList,
   NListItem,
@@ -32,7 +34,6 @@ import {
   NResult,
   NScrollbar,
   NSpace,
-  NSpin,
   NTag,
   NTime,
   NTooltip,
@@ -40,13 +41,9 @@ import {
   useMessage,
   useNotification,
 } from 'naive-ui'
-import { useAccount } from '@/api/account'
-import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
-import { useLocalStorage, useStorage } from '@vueuse/core'
-import { format } from 'date-fns'
-import { Delete24Filled, Info24Filled } from '@vicons/fluent'
+import { h, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
-import DanmakuClient, { AuthInfo, DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 
 interface LotteryOption {
   resultCount: number
@@ -227,8 +224,10 @@ function onFinishLottery() {
     description: '共' + resultUsers.value?.length + '人',
     duration: 3000,
     content: () =>
-      h(NSpace, { vertical: true }, () =>
-        resultUsers.value?.map((user) => h(NSpace, null, () => [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)]))
+      h(
+        NSpace,
+        { vertical: true },
+        () => resultUsers.value?.map((user) => h(NSpace, null, () => [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)])),
       ),
     meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
     onAfterLeave: () => {
@@ -274,7 +273,7 @@ function onDanmaku(data: DanmakuInfo, command: any) {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         guard_level: data.guard_level,
       },
-      command
+      command,
     )
   }
 }
@@ -290,7 +289,7 @@ function onGift(data: GiftInfo, command: any) {
         fans_medal_wearing_status: data.fans_medal_wearing_status,
         guard_level: data.guard_level,
       },
-      command
+      command,
     )
   }
 }

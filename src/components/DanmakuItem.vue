@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NButton, NDivider, NTooltip, NTag, NIcon, NCard } from 'naive-ui'
-import { format } from 'date-fns'
-import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { AccountInfo, DanmakuModel, EventDataTypes } from '@/api/api-models'
+import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
+import { format } from 'date-fns'
+import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
 
 function GetSCColor(price: number): string {
   if (price === 0) return `#2a60b2`

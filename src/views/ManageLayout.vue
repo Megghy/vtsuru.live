@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NDivider,
-  NIcon,
-  NLayout,
-  NLayoutContent,
-  NLayoutHeader,
-  NPageHeader,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NText,
-  NScrollbar,
-  useMessage,
-  NMenu,
-  NLayoutSider,
-  NAlert,
-  NBackTop,
-  NCountdown,
-  NTooltip,
-NPopconfirm,
-} from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
-import { BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, AnalyticsSharp } from '@vicons/ionicons5'
+import { isDarkMode } from '@/Utils'
+import { isLoadingAccount, useAccount } from '@/api/account'
+import { ThemeType } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { ACCOUNT_API_URL } from '@/data/constants'
 import {
   CalendarClock24Filled,
   Chat24Filled,
@@ -35,16 +17,34 @@ import {
   VehicleShip24Filled,
   VideoAdd20Filled,
 } from '@vicons/fluent'
-import { isLoadingAccount, useAccount } from '@/api/account'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { useElementSize, useStorage } from '@vueuse/core'
-import { ACCOUNT_API_URL } from '@/data/constants'
-import { QueryGetAPI } from '@/api/query'
-import { FunctionTypes, ThemeType } from '@/api/api-models'
-import { isDarkMode } from '@/Utils'
-import DanmakuLayout from './manage/DanmakuLayout.vue'
+import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { computed } from '@vue/reactivity'
+import { useElementSize, useStorage } from '@vueuse/core'
+import {
+  NAlert,
+  NBackTop,
+  NButton,
+  NCountdown,
+  NDivider,
+  NIcon,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NLayoutSider,
+  NMenu,
+  NPageHeader,
+  NPopconfirm,
+  NScrollbar,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
+import { h, onMounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import DanmakuLayout from './manage/DanmakuLayout.vue'
 
 const accountInfo = useAccount()
 const message = useMessage()
