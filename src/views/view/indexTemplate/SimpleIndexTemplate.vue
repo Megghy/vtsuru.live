@@ -15,25 +15,27 @@ function navigate(url: string) {
 }
 </script>
 
-<script>
-export type SimpleIndexConfig = {
+<script lang="ts">
+export type ConfigType = {
   cover?: string
 }
-export const Config: TemplateConfig<SimpleIndexConfig> = {
+export const Config: TemplateConfig<ConfigType> = {
   name: 'Template.Index.Simple',
   items: [
     {
       name: '封面',
       type: 'image',
       imageLimit: 1,
-      onUploaded: (url, config) => {config.cover = (url instanceof String ? url as string : url[0])}
+      onUploaded: (url, config) => {
+        config.cover = url instanceof String ? (url as string) : url[0]
+      },
     },
     {
       name: 'test',
-      type: 'default',
-       render: (config) => h('div', '1')
-    }
-  ]
+      type: 'render',
+      render: (config) => h('div', '1'),
+    },
+  ],
 }
 </script>
 

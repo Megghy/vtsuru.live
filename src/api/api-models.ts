@@ -234,6 +234,7 @@ export interface QAInfo {
   isPublic: boolean
   isFavorite: boolean
   sendAt: number
+  isAnonymous: boolean
 }
 export interface LotteryUserInfo {
   name: string

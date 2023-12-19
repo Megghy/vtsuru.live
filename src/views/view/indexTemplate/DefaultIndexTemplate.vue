@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { isDarkMode } from '@/Utils'
 import { UserInfo } from '@/api/api-models'
+import { TemplateConfig } from '@/data/VTsuruTypes'
 import { NAvatar, NButton, NDivider, NSpace, NText } from 'naive-ui'
 
 const width = window.innerWidth
@@ -12,6 +13,37 @@ const props = defineProps<{
 }>()
 function navigate(url: string) {
   window.open(url, '_blank')
+}
+defineExpose({ Config, DefaultConfig })
+</script>
+
+<script lang="ts">
+export type ConfigType = {
+  cover: string
+}
+export const DefaultConfig = {} as ConfigType
+export const Config: TemplateConfig<ConfigType> = {
+  name: 'Template.Index.Simple',
+  items: [
+    {
+      name: '封面',
+      type: 'image',
+      imageLimit: 1,
+      onUploaded: (url, config) => {
+        config.cover = url instanceof String ? (url as string) : url[0]
+      },
+    },
+    {
+      name: 'test',
+      type: 'string',
+      data: {
+        get: (d) => d.cover,
+        set: (d, v) => {
+          d.cover = v
+        },
+      },
+    },
+  ],
 }
 </script>
 
