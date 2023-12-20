@@ -5,10 +5,34 @@ import { EventDataTypes, EventModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
 import { VTSURU_API_URL } from '@/data/constants'
-import { Mic24Filled } from '@vicons/fluent'
+import { Info24Filled, Mic24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
-import { NAlert, NButton, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSelect, NSlider, NSpace, NText, NTooltip, useMessage } from 'naive-ui'
+import { List } from 'linqts'
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NEmpty,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NList,
+  NListItem,
+  NPopconfirm,
+  NSelect,
+  NSlider,
+  NSpace,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
@@ -26,6 +50,8 @@ type SpeechSettings = {
   scTemplate: string
   guardTemplate: string
   giftTemplate: string
+
+  combineGiftDelay?: number
 }
 type SpeechInfo = {
   volume: number
@@ -48,6 +74,8 @@ const settings = useStorage<SpeechSettings>('Setting.Speech.Settings', {
   scTemplate: '{name} 发送了醒目留言: {message}',
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
+
+  combineGiftDelay: 2,
 })
 const speechSynthesisInfo = ref<{
   speechSynthesis: SpeechSynthesis | undefined
@@ -66,15 +94,18 @@ const speechSynthesisInfo = ref<{
 }>()
 const languageDisplayName = new Intl.DisplayNames(['zh'], { type: 'language' })
 const voiceOptions = computed(() => {
-  return EasySpeech.voices().map((v) => {
-    return {
-      label: `[${languageDisplayName.of(v.lang)}] ${v.name}`,
-      value: v.name,
-    }
-  })
+  return new List(EasySpeech.voices())
+    .Select((v) => {
+      return {
+        label: `[${languageDisplayName.of(v.lang)}] ${v.name}`,
+        value: v.name,
+      }
+    })
+    .DistinctBy((v) => v.value)
+    .ToArray()
 })
 const isSpeaking = ref(false)
-const speakQueue = ref<EventModel[]>([])
+const speakQueue = ref<{ updateAt: number; combineCount?: number; data: EventModel }[]>([])
 
 const canSpeech = ref(false)
 const readedDanmaku = ref(0)
@@ -123,13 +154,25 @@ const templateConstants = {
 }
 function forceSpeak(data: EventModel) {
   cancelSpeech()
-  speakQueue.value.unshift(data)
+
+  speakQueue.value.splice(
+    speakQueue.value.findIndex((v) => v.data == data),
+    1,
+  )
+  speakQueue.value.unshift({
+    updateAt: 0,
+    data,
+  })
 }
 async function speak() {
   if (isSpeaking.value || speakQueue.value.length == 0) {
     return
   }
-  const text = getTextFromDanmaku(speakQueue.value.shift())
+  const data = speakQueue.value[0]
+  if (data.data.type == EventDataTypes.Gift && data.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000) {
+    return
+  }
+  const text = getTextFromDanmaku(speakQueue.value.shift()?.data)
   if (text) {
     isSpeaking.value = true
     readedDanmaku.value++
@@ -156,6 +199,7 @@ async function speak() {
     speakDirect(text)
   }
 }
+let checkTimer: number
 function speakDirect(text: string) {
   try {
     const synth = window.speechSynthesis
@@ -169,13 +213,20 @@ function speakDirect(text: string) {
     let voices = synth.getVoices()
     const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
     if (voice) {
+      if (checkTimer) {
+        clearInterval(checkTimer)
+      }
       u.voice = voice
       u.volume = settings.value.speechInfo.volume
       u.rate = settings.value.speechInfo.rate
       u.pitch = settings.value.speechInfo.pitch
       synth.speak(u)
+      checkTimer = setInterval(() => {
+        message.error('语音播放超时')
+        cancelSpeech()
+      }, 30000)
       u.onend = () => {
-        isSpeaking.value = false
+        cancelSpeech()
       }
       u.onerror = (err) => {
         if (err.error == 'interrupted') {
@@ -183,7 +234,7 @@ function speakDirect(text: string) {
         }
         console.log(err)
         message.error('无法播放语音: ' + err.error)
-        isSpeaking.value = false
+        cancelSpeech()
       }
     }
   } catch (err) {
@@ -199,15 +250,23 @@ function onGetEvent(data: EventModel) {
     return
   }
   if (data.type == EventDataTypes.Gift) {
-    const exist = speakQueue.value.find((v) => v.type == EventDataTypes.Gift && v.uid == data.uid && v.msg == data.msg)
+    const exist = speakQueue.value.find(
+      (v) => v.data.type == EventDataTypes.Gift && v.data.uid == data.uid && v.data.msg == data.msg && v.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000,
+    )
     if (exist) {
-      exist.num += data.num
-      exist.price += data.price
-      console.log(`[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.num - data.num} => ${exist.num}]`)
+      exist.updateAt = Date.now()
+      exist.data.num += data.num
+      exist.data.price += data.price
+      exist.combineCount ??= 0
+      exist.combineCount += data.num
+      console.log(`[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`)
       return
     }
   }
-  speakQueue.value.push(data)
+  speakQueue.value.push({
+    data,
+    updateAt: data.type == EventDataTypes.Gift ? Date.now() : 0,
+  })
 }
 function getTextFromDanmaku(data: EventModel | undefined) {
   if (!data) {
@@ -270,6 +329,9 @@ function stopSpeech() {
 function cancelSpeech() {
   EasySpeech.cancel()
   isSpeaking.value = false
+  if (checkTimer) {
+    clearInterval(checkTimer)
+  }
 }
 async function uploadConfig() {
   await QueryPostAPI(VTSURU_API_URL + 'set-config', {
@@ -383,7 +445,7 @@ onMounted(() => {
   speechSynthesisInfo.value = EasySpeech.detect()
   speechQueueTimer = setInterval(() => {
     speak()
-  }, 500)
+  }, 250)
 
   props.client.onEvent('danmaku', onGetEvent)
   props.client.onEvent('sc', onGetEvent)
@@ -417,10 +479,10 @@ onUnmounted(() => {
       <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id">
         {{ canSpeech ? '停止监听' : '开始监听' }}
       </NButton>
-      <NButton @click="uploadConfig" type="primary" secondary> 保存配置到服务器 </NButton>
+      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo"> 保存配置到服务器 </NButton>
       <NPopconfirm @positive-click="downloadConfig">
         <template #trigger>
-          <NButton type="primary" secondary> 从服务器获取配置 </NButton>
+          <NButton type="primary" secondary :disabled="!accountInfo"> 从服务器获取配置 </NButton>
         </template>
         这将覆盖当前设置, 确定?
       </NPopconfirm>
@@ -439,6 +501,33 @@ onUnmounted(() => {
           {{ isSpeaking ? '取消朗读' : '未朗读' }}
         </NTooltip>
         <NText depth="3"> 队列: {{ speakQueue.length }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
+        <NCollapse :default-expanded-names="['1']">
+          <NCollapseItem title="队列" name="1">
+            <NEmpty v-if="speakQueue.length == 0"> 暂无 </NEmpty>
+            <NList v-else size="small" bordered>
+              <NListItem v-for="item in speakQueue">
+                <NSpace align="center">
+                  <NButton @click="forceSpeak(item.data)" type="primary" secondary size="small"> 读 </NButton>
+                  <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small"> 取消 </NButton>
+                  <NTag v-if="item.data.type == EventDataTypes.Gift && item.combineCount" type="info" size="small" style="animation: animated-border 2.5s infinite"> 连续赠送中</NTag>
+                  <NTag v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay" type="success" size="small"> 等待连续赠送检查 </NTag>
+                  <span>
+                    <NTag v-if="item.data.type == EventDataTypes.Message" type="success" size="small"> 弹幕</NTag>
+                    <NTag v-else-if="item.data.type == EventDataTypes.Gift" type="success" size="small"> 礼物</NTag>
+                    <NTag v-else-if="item.data.type == EventDataTypes.Guard" type="success" size="small"> 舰长</NTag>
+                    <NTag v-else-if="item.data.type == EventDataTypes.SC" type="success" size="small"> SC</NTag>
+                  </span>
+                  <NText>
+                    {{ item.data.name }}
+                  </NText>
+                  <NText depth="3">
+                    {{ getTextFromDanmaku(item.data) }}
+                  </NText>
+                </NSpace>
+              </NListItem>
+            </NList>
+          </NCollapseItem>
+        </NCollapse>
       </NSpace>
     </template>
     <NDivider />
@@ -485,7 +574,37 @@ onUnmounted(() => {
       </NInputGroup>
     </NSpace>
     <NDivider> 设置 </NDivider>
-    <NText depth="3"> 没想好需要什么, 有建议的话可以和我说 </NText>
+    <NSpace align="center">
+      <NCheckbox
+        :checked="settings.combineGiftDelay != undefined"
+        @update:checked="
+          (checked: boolean) => {
+            settings.combineGiftDelay = checked ? 2 : undefined
+          }
+        "
+      >
+        是否启用礼物合并
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          在指定时间内连续送相同礼物会等停止送礼物之后才会念
+          <br />
+          这也会导致送的礼物会等待指定时间之后才会念, 即使没有连续赠送
+        </NTooltip>
+      </NCheckbox>
+      <NInputGroup v-if="settings.combineGiftDelay" style="width: 200px">
+        <NInputGroupLabel> 送礼间隔 (秒) </NInputGroupLabel>
+        <NInputNumber
+          v-model:value="settings.combineGiftDelay"
+          @update:value="
+            (value) => {
+              if (!value || value <= 0) settings.combineGiftDelay = undefined
+            }
+          "
+        />
+      </NInputGroup>
+    </NSpace>
   </template>
 </template>
 
