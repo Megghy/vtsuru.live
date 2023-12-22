@@ -93,7 +93,7 @@ export function GetString(account: AccountInfo | undefined, live: ResponseLiveIn
           })
         }
       })
-      function GetTime(danmaku: DanmakuModel) {
+      const GetTime = (danmaku: DanmakuModel) => {
         return ((danmaku.time - live.startAt) / 1000).toFixed(3)
       }
       return builder.build(xmlJsonObj)

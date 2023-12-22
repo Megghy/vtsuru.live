@@ -18,7 +18,6 @@ import {
   VideoAdd20Filled,
 } from '@vicons/fluent'
 import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
-import { computed } from '@vue/reactivity'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
@@ -42,7 +41,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import DanmakuLayout from './manage/DanmakuLayout.vue'
 

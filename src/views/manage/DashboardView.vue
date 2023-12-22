@@ -21,10 +21,13 @@ const message = useMessage()
 const resetEmailModalVisiable = ref(false)
 const resetPasswordModalVisiable = ref(false)
 const bindBiliCodeModalVisiable = ref(false)
+const resetNameModalVisiable = ref(false)
 
 const newEmailAddress = ref('')
 const newEmailVerifyCode = ref('')
 const canSendEmailVerifyCode = ref(true)
+
+const newName = ref('')
 
 const oldPassword = ref('')
 const newPassword = ref('')
@@ -96,6 +99,26 @@ async function resetPassword() {
     .then(async (data) => {
       if (data.code == 200) {
         message.success('密码已修改')
+        setTimeout(() => {
+          location.reload()
+        }, 1000)
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('发生错误')
+    })
+}
+async function resetName() {
+  if (accountInfo.value?.name == newName.value) {
+    message.error('新用户名与旧用户名一致')
+    return
+  }
+  await QueryGetAPI(ACCOUNT_API_URL + 'verify/reset-name', { name: newName.value })
+    .then(async (data) => {
+      if (data.code == 200) {
+        message.success('用户名已修改')
         setTimeout(() => {
           location.reload()
         }, 1000)
@@ -274,6 +297,14 @@ async function ChangeBili() {
     </NSpace>
     <template #footer>
       <NButton @click="resetPassword" type="warning"> 确定修改 </NButton>
+    </template>
+  </NModal>
+  <NModal v-model:show="resetNameModalVisiable" preset="card" title="修改用户名" style="width: 400px; max-width: 90%">
+    <NSpace vertical>
+      <NInput v-model:value="newName" type="password" placeholder="新用户名" />
+    </NSpace>
+    <template #footer>
+      <NButton @click="resetName" type="warning"> 确定修改 </NButton>
     </template>
   </NModal>
   <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%">
