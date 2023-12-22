@@ -25,10 +25,9 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
 
-    - name: Install Yarn
-      run: npm install -g yarn@canary # Yarn Berry corresponds to Yarn 2+, which includes Yarn 3 and future versions
+    - name: 📥 Monorepo install
+      uses: ./.github/actions/yarn-nm-install
 
     - name: Check Yarn Version
       run: yarn --version
