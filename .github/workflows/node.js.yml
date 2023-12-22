@@ -25,6 +25,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: yarn install
-    - run: yarn build
+        cache: 'yarn'
+
+    - name: Install Yarn
+      run: npm install -g yarn@canary # Yarn Berry corresponds to Yarn 2+, which includes Yarn 3 and future versions
+
+    - name: Check Yarn Version
+      run: yarn --version
+
+    - name: Install dependencies
+      run: yarn install
+
+    - name: Build the project
+      run: yarn build
