@@ -264,8 +264,8 @@ async function ChangeBili() {
       </NSpace>
       <NDivider />
       <NSpace justify="center">
+        <NButton type="info" @click="resetNameModalVisiable = true"> 修改用户名 </NButton>
         <NButton type="warning" @click="resetPasswordModalVisiable = true"> 修改密码 </NButton>
-        <NButton type="warning" @click="resetNameModalVisiable = true"> 修改用户名 </NButton>
         <NPopconfirm @positive-click="logout">
           <template #trigger>
             <NButton type="error"> 登出 </NButton>

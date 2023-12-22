@@ -34,6 +34,7 @@ import {
   NSwitch,
   NTag,
   NTooltip,
+  NVirtualList,
 } from 'naive-ui'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import LiveInfoContainer from './LiveInfoContainer.vue'
@@ -326,16 +327,6 @@ onMounted(() => {
     <NModal v-model:show="showModal" @after-leave="userDanmakus = undefined" preset="card" :style="'width: 600px;max-width: 90vw;max-height: 90vh;'" content-style="overflow-y: auto">
       <template #header>
         {{ userDanmakus?.[0].uName }}
-        <NPopover>
-          <template #trigger>
-            <NButton text @click="ToUserSpace(userDanmakus?.[0].uId ?? 0)">
-              <template #icon>
-                <NIcon :component="Search24Filled" />
-              </template>
-            </NButton>
-          </template>
-          查询发言记录
-        </NPopover>
       </template>
       <template #header-extra>
         <NSwitch v-model:value="modalShowTools" size="small">

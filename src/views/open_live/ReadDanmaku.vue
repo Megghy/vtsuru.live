@@ -546,7 +546,15 @@ onUnmounted(() => {
         <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
       </span>
     </NSpace>
-    <NDivider> 自定义内容 </NDivider>
+    <NDivider>
+      自定义内容
+      <NTooltip>
+        <template #trigger>
+          <NIcon :component="Info24Filled" />
+        </template>
+        留空则不念
+      </NTooltip>
+    </NDivider>
     <NSpace vertical>
       <NSpace>
         支持的变量:

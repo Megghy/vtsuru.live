@@ -118,7 +118,7 @@ watch(
                 <NNumberAnimation :from="0" :to="live.totalIncomeWithGuard" show-separator />
               </span>
             </template>
-            <NNumberAnimation :from="0" :to="live.totalIncome" show-separator />
+            {{ live.totalIncome }}
           </NTooltip>
         </NStatistic>
       </transition>
