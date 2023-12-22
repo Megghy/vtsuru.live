@@ -1,12 +1,12 @@
 import { QueryGetAPI } from '@/api/query'
 import { BASE_API, apiFail } from '@/data/constants'
+import EasySpeech from 'easy-speech'
+import { NText, createDiscreteApi } from 'naive-ui'
 import { createApp, h } from 'vue'
 import App from './App.vue'
-import router from './router'
 import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
-import { NText, createDiscreteApi } from 'naive-ui'
-import EasySpeech from 'easy-speech'
+import router from './router'
 
 createApp(App).use(router).mount('#app')
 
@@ -17,18 +17,18 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
     if (version.code == 200) {
       currentVersion = version.data
       const savedVersion = localStorage.getItem('Version')
+      localStorage.setItem('Version', currentVersion)
 
       if (currentVersion && savedVersion && savedVersion !== currentVersion) {
         //alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
         notification.info({
           title: '发现新的版本更新',
-          content: '请按 Ctrl+F5 强制刷新页面',
+          content: '将自动刷新页面',
           duration: 5000,
           meta: () => h(NText, { depth: 3 }, () => currentVersion),
         })
+        location.reload()
       }
-
-      localStorage.setItem('Version', currentVersion)
     }
   })
   .catch(() => {
@@ -40,7 +40,7 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
     GetSelfAccount()
     GetNotifactions()
     UpdateAccountLoop()
-    InitTTS();
+    InitTTS()
   })
 function InitTTS() {
   try {

@@ -559,6 +559,9 @@ onMounted(async () => {
             <NPagination v-model:page="fivesingCurrentPage" :page-count="fivesingTotalPageCount" simple @update-page="getFivesingSearchList(false)" />
           </template>
         </NTabPane>
+        <NTabPane name="file" tab="从文件导入">
+          开发中...
+        </NTabPane>
       </NTabs>
     </NSpin>
   </NModal>
