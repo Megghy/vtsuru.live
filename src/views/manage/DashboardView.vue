@@ -29,7 +29,6 @@ const canSendEmailVerifyCode = ref(true)
 
 const newName = ref('')
 
-const oldPassword = ref('')
 const newPassword = ref('')
 const newPassword2 = ref('')
 const biliCode = ref('')
@@ -115,7 +114,8 @@ async function resetName() {
     message.error('新用户名与旧用户名一致')
     return
   }
-  await QueryGetAPI(ACCOUNT_API_URL + 'verify/reset-name', { name: newName.value })
+  isLoading.value = true
+  await QueryGetAPI(ACCOUNT_API_URL + 'change-name', { name: newName.value })
     .then(async (data) => {
       if (data.code == 200) {
         message.success('用户名已修改')
@@ -128,6 +128,9 @@ async function resetName() {
     })
     .catch((err) => {
       message.error('发生错误')
+    })
+    .finally(() => {
+      isLoading.value = false
     })
 }
 async function BindBili() {
@@ -262,6 +265,7 @@ async function ChangeBili() {
       <NDivider />
       <NSpace justify="center">
         <NButton type="warning" @click="resetPasswordModalVisiable = true"> 修改密码 </NButton>
+        <NButton type="warning" @click="resetNameModalVisiable = true"> 修改用户名 </NButton>
         <NPopconfirm @positive-click="logout">
           <template #trigger>
             <NButton type="error"> 登出 </NButton>
@@ -301,10 +305,10 @@ async function ChangeBili() {
   </NModal>
   <NModal v-model:show="resetNameModalVisiable" preset="card" title="修改用户名" style="width: 400px; max-width: 90%">
     <NSpace vertical>
-      <NInput v-model:value="newName" type="password" placeholder="新用户名" />
+      <NInput v-model:value="newName" placeholder="新用户名" />
     </NSpace>
     <template #footer>
-      <NButton @click="resetName" type="warning"> 确定修改 </NButton>
+      <NButton @click="resetName" type="warning" :loading="isLoading"> 确定修改 </NButton>
     </template>
   </NModal>
   <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%">
