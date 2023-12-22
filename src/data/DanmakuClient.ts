@@ -1,9 +1,9 @@
 import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
+import { ref } from 'vue'
+import { clearInterval, setInterval } from 'worker-timers'
 import { OPEN_LIVE_API_URL } from './constants'
-import { ref, toRef } from 'vue'
-import { setInterval, clearInterval } from 'worker-timers'
 
 export interface DanmakuInfo {
   room_id: number
@@ -268,7 +268,7 @@ export default class DanmakuClient {
           emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
           avatar: data.uface,
         },
-        command
+        command,
       )
     })
   }
@@ -294,7 +294,7 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           avatar: data.uface,
         },
-        command
+        command,
       )
     })
   }
@@ -319,7 +319,7 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           avatar: data.uface,
         },
-        command
+        command,
       )
     })
   }
@@ -344,7 +344,7 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           avatar: data.user_info.uface,
         },
-        command
+        command,
       )
     })
   }

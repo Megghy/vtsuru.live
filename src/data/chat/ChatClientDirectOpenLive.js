@@ -1,6 +1,4 @@
-import * as base from './ChatClientOfficialBase'
-import ChatClientOfficialBase from './ChatClientOfficialBase'
-
+import ChatClientOfficialBase, * as base from './ChatClientOfficialBase'
 
 export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
   constructor(authInfo) {

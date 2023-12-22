@@ -235,7 +235,6 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/manage/LiveDetailManage.vue'),
         meta: {
           title: '直播详情',
-          keepAlive: true,
         },
       },
       {

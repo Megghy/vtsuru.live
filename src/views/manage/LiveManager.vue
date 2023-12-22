@@ -39,6 +39,7 @@ function OnClickCover(live: ResponseLiveInfoModel) {
     params: { id: live.liveId },
   })
 }
+
 </script>
 
 <template>
@@ -54,7 +55,7 @@ function OnClickCover(live: ResponseLiveInfoModel) {
     <NDivider />
     <NList bordered hoverable clickable>
       <NListItem @click="OnClickCover(live)" v-for="live in lives" v-bind:key="live.liveId">
-        <LiveInfoContainer :live="live" />
+        <LiveInfoContainer :live="live" :key="live.liveId"/>
       </NListItem>
     </NList>
   </template>
