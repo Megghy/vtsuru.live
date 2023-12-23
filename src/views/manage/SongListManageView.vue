@@ -233,6 +233,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
       Author: s.author,
       Url: s.url,
       Description: s.description,
+      Cover: s.cover,
     })),
   )
 }

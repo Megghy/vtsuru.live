@@ -33,7 +33,7 @@ import {
   useMessage,
   useNotification,
 } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 interface TempLotteryResponseModel {
@@ -310,6 +310,10 @@ function getLevelColor(level: number) {
     }
   }
 }
+
+onUnmounted(() => {
+  turnstile.value?.remove()
+})
 </script>
 
 <template>

@@ -194,6 +194,7 @@ export interface SongsInfo {
   updateTime: number
   //paidSong: boolean
   options?: SongRequestOption
+  cover?: string
 }
 export interface SongRequestOption {
   needJianzhang: boolean
