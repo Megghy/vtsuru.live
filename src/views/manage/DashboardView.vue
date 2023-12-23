@@ -7,7 +7,7 @@ import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { Question24Regular } from '@vicons/fluent'
 import { useLocalStorage } from '@vueuse/core'
 import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import SettingsManageView from './SettingsManageView.vue'
 
@@ -193,6 +193,9 @@ async function ChangeBili() {
       isLoading.value = false
     })
 }
+onUnmounted(() => {
+  turnstile.value?.remove()
+})
 </script>
 
 <template>

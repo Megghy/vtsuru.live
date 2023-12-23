@@ -31,6 +31,7 @@ export const QUEUE_API_URL = { toString: () => `${BASE_API()}queue/` }
 export const EVENT_API_URL = { toString: () => `${BASE_API()}event/` }
 export const LIVE_API_URL = { toString: () => `${BASE_API()}live/` }
 export const FEEDBACK_API_URL = { toString: () => `${BASE_API()}feedback/` }
+export const MUSIC_REQUEST_API_URL = { toString: () => `${BASE_API()}vtsuru/` }
 export const VTSURU_API_URL = { toString: () => `${BASE_API()}vtsuru/` }
 
 export const ScheduleTemplateMap = {

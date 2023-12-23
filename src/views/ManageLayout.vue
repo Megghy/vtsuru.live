@@ -211,7 +211,7 @@ const menuOptions = [
                 },
                 () =>
                   h('div', {}, [
-                    '当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                    '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
                     h(
                       NButton,
                       {
@@ -238,7 +238,34 @@ const menuOptions = [
                       },
                       () => 'VtsuruEventFetcher',
                     ),
-                    ', 否则请在使用功能时尽量保持网页在前台运行',
+                    ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
+                    h('br'),
+                    'Chrome: ',
+                    h(
+                      NButton,
+                      {
+                        type: 'info',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
+                        target: '_blank',
+                      },
+                      () => '让特定网站保持活动状态',
+                    ),
+                    ', Edge: ',
+                    h(
+                      NButton,
+                      {
+                        type: 'info',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
+                        target: '_blank',
+                      },
+                      () => '永远不想进入睡眠状态的网站',
+                    ),
                   ]),
               ),
           },

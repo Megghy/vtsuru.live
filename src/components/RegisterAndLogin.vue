@@ -4,7 +4,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
 import { FormInst, FormItemInst, FormItemRule, FormRules, NAlert, NButton, NCard, NCountdown, NDivider, NForm, NFormItem, NInput, NSpace, NTabPane, NTabs, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 interface RegisterModel {
@@ -179,6 +179,10 @@ function onForgetPasswordClick() {
     selectedTab.value = 'forget'
   }, 50)
 }
+
+onUnmounted(() => {
+  turnstile.value?.remove()
+})
 </script>
 
 <template>

@@ -63,7 +63,7 @@ type SpeechInfo = {
 const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
-const settings = useStorage<SpeechSettings>('Setting.Speech.Settings', {
+const settings = useStorage<SpeechSettings>('Setting.Speech', {
   speechInfo: {
     volume: 1,
     pitch: 1,
@@ -464,16 +464,41 @@ onUnmounted(() => {
 <template>
   <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
   <template v-else>
-    <NAlert type="info">
-      建议在 Edge 浏览器使用
-      <NTooltip>
-        <template #trigger>
-          <NText strong italic type="primary">Microsoft 某某 Online (Nature)</NText>
-        </template>
-        例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland), 各种营销号就用的这些配音
-      </NTooltip>
-      系列语音, 效果要好很多
-    </NAlert>
+    <NSpace vertical>
+      <NAlert type="info">
+        建议在 Edge 浏览器使用
+        <NTooltip>
+          <template #trigger>
+            <NText strong italic type="primary">Microsoft 某某 Online (Nature)</NText>
+          </template>
+          例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland), 各种营销号就用的这些配音
+        </NTooltip>
+        系列语音, 效果要好很多
+      </NAlert>
+      <NAlert type="info" closeable>
+        当在后台运行时请关闭浏览器的 页面休眠/内存节省功能. Chrome:
+        <NButton
+          tag="a"
+          type="info"
+          href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
+          target="_blank"
+          text
+        >
+          让特定网站保持活动状态
+        </NButton>
+        Edge:
+
+        <NButton
+          tag="a"
+          type="info"
+          href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
+          target="_blank"
+          text
+        >
+          永远不想进入睡眠状态的网站
+        </NButton>
+      </NAlert>
+    </NSpace>
     <br />
     <NSpace>
       <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id">
