@@ -98,25 +98,39 @@ export function downloadConfigDirect<T>(name: string) {
     name: name,
   })
 }
-export async function downloadConfig<T>(name: string) {
+export async function DownloadConfig<T>(name: string) {
   try {
     const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
       name: name,
     })
     if (resp.code == 200) {
       console.log('已获取配置文件: ' + name)
-      return JSON.parse(resp.data) as T
+      return {
+        msg: undefined,
+        data: JSON.parse(resp.data) as T,
+      }
     } else if (resp.code == 404) {
       console.error(`未找到名为 ${name} 的配置文件`)
+      return {
+        msg: `未找到名为 ${name} 的配置文件, 需要先上传`,
+        data: undefined,
+      }
     } else {
       console.error(`无法获取配置文件 [${name}]: ` + resp.message)
+      return {
+        msg: `无法获取配置文件 [${name}]: ` + resp.message,
+        data: undefined,
+      }
     }
   } catch (err) {
     console.error(`无法获取配置文件 [${name}]: ` + err)
+    return {
+      msg: `无法获取配置文件 [${name}]: ` + err,
+      data: undefined,
+    }
   }
-  return null
 }
-export async function uploadConfig(name: string, data: unknown) {
+export async function UploadConfig(name: string, data: unknown) {
   try {
     const resp = await QueryPostAPI(VTSURU_API_URL + 'set-config', {
       name: name,

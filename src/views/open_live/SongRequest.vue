@@ -320,7 +320,6 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
 }
 
 function onGetDanmaku(danmaku: DanmakuInfo) {
-  console.log(danmaku)
   if (checkMessage(danmaku.msg)) {
     addSong({
       msg: danmaku.msg,
@@ -357,6 +356,9 @@ function onGetSC(danmaku: SCInfo) {
   }
 }
 function checkMessage(msg: string) {
+  if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) != true) {
+    return false
+  }
   return msg
     .trim()
     .toLowerCase()

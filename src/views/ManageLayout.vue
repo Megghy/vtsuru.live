@@ -294,15 +294,50 @@ const menuOptions = [
       {
         label: () =>
           h(
-            RouterLink,
+            NTooltip,
+            {},
             {
-              to: {
-                name: 'manage-songRequest',
-              },
+              trigger: () =>
+                h(
+                  RouterLink,
+                  {
+                    to: {
+                      name: 'manage-songRequest',
+                    },
+                  },
+                  {
+                    default: () => '点歌(歌势',
+                  },
+                ),
+              default: () => '歌势用的, 观众点歌之后需要自己唱',
             },
-            { default: () => '点歌' },
           ),
         key: 'manage-songRequest',
+        icon: renderIcon(MusicalNote),
+        //disabled: accountInfo.value?.isEmailVerified == false,
+      },
+      {
+        label: () =>
+          h(
+            NTooltip,
+            {},
+            {
+              trigger: () =>
+                h(
+                  RouterLink,
+                  {
+                    to: {
+                      name: 'manage-musicRequest',
+                    },
+                  },
+                  {
+                    default: () => '点歌(点播',
+                  },
+                ),
+              default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
+            },
+          ),
+        key: 'manage-musicRequest',
         icon: renderIcon(MusicalNote),
         //disabled: accountInfo.value?.isEmailVerified == false,
       },
