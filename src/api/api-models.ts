@@ -178,6 +178,7 @@ export enum SongFrom {
   Custom,
   Netease,
   FiveSing,
+  Kugou
 }
 export interface SongsInfo {
   id: number

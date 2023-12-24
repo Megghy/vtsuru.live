@@ -44,8 +44,13 @@ const functions = [
     icon: Lottery24Filled,
   },
   {
-    name: '弹幕点歌',
-    desc: '可以让弹幕进行点歌!',
+    name: '弹幕点歌 (歌势)',
+    desc: '可以让弹幕进行点歌, 然后自己唱',
+    icon: ListCircle,
+  },
+  {
+    name: '弹幕点歌 (点播)',
+    desc: '可以让弹幕进行点歌, 进行搜索后直接播放',
     icon: ListCircle,
   },
   {

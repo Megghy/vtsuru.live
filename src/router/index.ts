@@ -191,21 +191,11 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: 'song-request',
-        name: 'manage-songRequest',
-        component: () => import('@/views/open_live/MusicRequest.vue'),
-        meta: {
-          title: '弹幕点歌',
-          keepAlive: true,
-          danmaku: true,
-        },
-      },
-      {
         path: 'queue',
         name: 'manage-liveQueue',
         component: () => import('@/views/open_live/OpenQueue.vue'),
         meta: {
-          title: '弹幕排队',
+          title: '排队',
           keepAlive: true,
           danmaku: true,
         },
@@ -216,6 +206,26 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/open_live/ReadDanmaku.vue'),
         meta: {
           title: '读弹幕',
+          keepAlive: true,
+          danmaku: true,
+        },
+      },
+      {
+        path: 'song-request',
+        name: 'manage-songRequest',
+        component: () => import('@/views/open_live/SongRequest.vue'),
+        meta: {
+          title: '点歌 (歌势',
+          keepAlive: true,
+          danmaku: true,
+        },
+      },
+      {
+        path: 'music-request',
+        name: 'manage-musicRequest',
+        component: () => import('@/views/open_live/MusicRequest.vue'),
+        meta: {
+          title: '点歌 (放歌',
           keepAlive: true,
           danmaku: true,
         },
@@ -270,7 +280,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'song-request',
         name: 'open-live-song-request',
-        component: () => import('@/views/open_live/MusicRequest.vue'),
+        component: () => import('@/views/open_live/SongRequest.vue'),
         meta: {
           title: '点歌',
         },
@@ -310,7 +320,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'obs-song-request',
         component: () => import('@/views/obs/SongRequestOBS.vue'),
         meta: {
-          title: '弹幕点歌',
+          title: '弹幕点歌 (歌势',
         },
       },
       {
@@ -319,6 +329,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/obs/QueueOBS.vue'),
         meta: {
           title: '弹幕排队',
+        },
+      },
+      {
+        path: 'music-request',
+        name: 'obs-music-request',
+        component: () => import('@/views/obs/MusicRequestOBS.vue'),
+        meta: {
+          title: '弹幕排队 (播放',
         },
       },
     ],
