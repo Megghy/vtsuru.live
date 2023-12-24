@@ -266,7 +266,7 @@ function clearMusic() {
     })
 }
 async function uploadConfig() {
-  await UploadConfig('MusicRequest', JSON.stringify(settings.value))
+  await UploadConfig('MusicRequest', settings.value)
     .then((data) => {
       if (data) {
         message.success('已保存至服务器')
