@@ -3,7 +3,7 @@ import { computed, defineAsyncComponent, ref, watchEffect } from 'vue'
 
 const debugAPI = import.meta.env.VITE_DEBUG_API
 const releseAPI = `https://vtsuru.suki.club/api/`
-const failoverAPI = `https://failover-api.vtsuru.live/api/`
+const failoverAPI = `https://failover-api.vtsuru.suki.club/api/`
 
 export const isBackendUsable = ref(true)
 
