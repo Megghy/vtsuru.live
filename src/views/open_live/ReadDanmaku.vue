@@ -506,7 +506,7 @@ onUnmounted(() => {
   <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
   <template v-else>
     <NSpace vertical>
-      <NAlert type="info">
+      <NAlert v-if="settings.voiceType == 'local'" type="info" closeable >
         建议在 Edge 浏览器使用
         <NTooltip>
           <template #trigger>
@@ -668,10 +668,10 @@ onUnmounted(() => {
               </NButton>
               将被替换为要念的文本
             </NAlert>
-            <NAlert v-if="isVtsuruVoiceAPI" type="success">
+            <NAlert v-if="isVtsuruVoiceAPI" type="success" closable>
               看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
               <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank"> Xz乔希 </NButton>
-              训练的 Taffy 模型结果, 不支持部分英文, 侵删
+              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试 侵删
             </NAlert>
           </NSpace>
           <br />

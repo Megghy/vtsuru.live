@@ -191,90 +191,97 @@ const menuOptions = [
   },
   {
     label: () =>
-      h(NText, () => [
-        '弹幕相关',
-        h(
-          NTooltip,
-          {
-            style: 'padding: 0;',
-          },
-          {
-            trigger: () => h(NIcon, { component: Info24Filled }),
-            default: () =>
+      h(
+        NTooltip,
+        {},
+        {
+          trigger: () =>
+            h(NText, () => [
+              '弹幕相关',
               h(
-                NAlert,
+                NTooltip,
                 {
-                  type: 'warning',
-                  size: 'small',
-                  title: '可用性警告',
-                  style: 'max-width: 600px;',
+                  style: 'padding: 0;',
                 },
-                () =>
-                  h('div', {}, [
-                    '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                {
+                  trigger: () => h(NIcon, { component: Info24Filled }),
+                  default: () =>
                     h(
-                      NButton,
+                      NAlert,
                       {
-                        text: true,
-                        tag: 'a',
-                        href: 'https://developer.chrome.com/blog/background_tabs/',
-                        target: '_blank',
-                        type: 'info',
-                      },
-                      () => '此文章',
-                    ),
-                    '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
-                    h('br'),
-                    '为避免这种情况, 建议注册本站账后使用',
-                    h(
-                      NButton,
-                      {
-                        type: 'primary',
-                        text: true,
+                        type: 'warning',
                         size: 'small',
-                        tag: 'a',
-                        href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
-                        target: '_blank',
+                        title: '可用性警告',
+                        style: 'max-width: 600px;',
                       },
-                      () => 'VtsuruEventFetcher',
+                      () =>
+                        h('div', {}, [
+                          '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                          h(
+                            NButton,
+                            {
+                              text: true,
+                              tag: 'a',
+                              href: 'https://developer.chrome.com/blog/background_tabs/',
+                              target: '_blank',
+                              type: 'info',
+                            },
+                            () => '此文章',
+                          ),
+                          '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
+                          h('br'),
+                          '为避免这种情况, 建议注册本站账后使用',
+                          h(
+                            NButton,
+                            {
+                              type: 'primary',
+                              text: true,
+                              size: 'small',
+                              tag: 'a',
+                              href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
+                              target: '_blank',
+                            },
+                            () => 'VtsuruEventFetcher',
+                          ),
+                          ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
+                          h('br'),
+                          'Chrome: ',
+                          h(
+                            NButton,
+                            {
+                              type: 'info',
+                              text: true,
+                              size: 'small',
+                              tag: 'a',
+                              href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
+                              target: '_blank',
+                            },
+                            () => '让特定网站保持活动状态',
+                          ),
+                          ', Edge: ',
+                          h(
+                            NButton,
+                            {
+                              type: 'info',
+                              text: true,
+                              size: 'small',
+                              tag: 'a',
+                              href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
+                              target: '_blank',
+                            },
+                            () => '永远不想进入睡眠状态的网站',
+                          ),
+                        ]),
                     ),
-                    ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
-                    h('br'),
-                    'Chrome: ',
-                    h(
-                      NButton,
-                      {
-                        type: 'info',
-                        text: true,
-                        size: 'small',
-                        tag: 'a',
-                        href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
-                        target: '_blank',
-                      },
-                      () => '让特定网站保持活动状态',
-                    ),
-                    ', Edge: ',
-                    h(
-                      NButton,
-                      {
-                        type: 'info',
-                        text: true,
-                        size: 'small',
-                        tag: 'a',
-                        href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
-                        target: '_blank',
-                      },
-                      () => '永远不想进入睡眠状态的网站',
-                    ),
-                  ]),
+                },
               ),
-          },
-        ),
-      ]),
+            ]),
+          default: () => accountInfo.value?.isBiliVerified ? '需要使用直播弹幕的功能' : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
+        },
+      ),
     key: 'manage-danmaku',
     icon: renderIcon(Chat24Filled),
     disabled: accountInfo.value?.isEmailVerified == false,
-    //disabled: accountInfo.value?.isEmailVerified == false,
     children: [
       {
         label: () =>
@@ -289,7 +296,6 @@ const menuOptions = [
           ),
         key: 'manage-liveLottery',
         icon: renderIcon(Lottery24Filled),
-        //disabled: accountInfo.value?.isEmailVerified == false,
       },
       {
         label: () =>
@@ -314,7 +320,6 @@ const menuOptions = [
           ),
         key: 'manage-songRequest',
         icon: renderIcon(MusicalNote),
-        //disabled: accountInfo.value?.isEmailVerified == false,
       },
       {
         label: () =>
@@ -339,7 +344,6 @@ const menuOptions = [
           ),
         key: 'manage-musicRequest',
         icon: renderIcon(MusicalNote),
-        //disabled: accountInfo.value?.isEmailVerified == false,
       },
       {
         label: () =>
@@ -354,7 +358,6 @@ const menuOptions = [
           ),
         key: 'manage-liveQueue',
         icon: renderIcon(PeopleQueue24Filled),
-        //disabled: accountInfo.value?.isEmailVerified == false,
       },
       {
         label: () =>
@@ -369,7 +372,6 @@ const menuOptions = [
           ),
         key: 'manage-speech',
         icon: renderIcon(TabletSpeaker24Filled),
-        //disabled: accountInfo.value?.isEmailVerified == false,
       },
     ],
   },

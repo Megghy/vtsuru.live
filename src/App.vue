@@ -2,36 +2,40 @@
   <NMessageProvider>
     <NNotificationProvider>
       <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
-        <Suspense>
-          <div style="height: 100vh">
-            <NElement style="height: 100%" v-if="layout != 'obs'">
-              <ViewerLayout v-if="layout == 'viewer'" />
-              <ManageLayout v-else-if="layout == 'manage'" />
-              <OpenLiveLayout v-else-if="layout == 'open-live'" />
-              <template v-else-if="layout == ''">
-                <RouterView />
-              </template>
-            </NElement>
-            <RouterView v-else />
-          </div>
-          <template #fallback>
-            <NSpin size="large" show />
-          </template>
-        </Suspense>
+        <NLoadingBarProvider>
+          <Suspense>
+            <TempComponent>
+              <NElement style="height: 100%" v-if="layout != 'obs'">
+                <ViewerLayout v-if="layout == 'viewer'" />
+                <ManageLayout v-else-if="layout == 'manage'" />
+                <OpenLiveLayout v-else-if="layout == 'open-live'" />
+                <template v-else-if="layout == ''">
+                  <RouterView />
+                </template>
+              </NElement>
+              <RouterView v-else />
+            </TempComponent>
+            <template #fallback>
+              <NSpin size="large" show />
+            </template>
+          </Suspense>
+        </NLoadingBarProvider>
       </NConfigProvider>
     </NNotificationProvider>
   </NMessageProvider>
 </template>
 
 <script setup lang="ts">
+import { useProviderStore } from '@/store/useProviderStore'
 import ManageLayout from '@/views/ManageLayout.vue'
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import { useStorage } from '@vueuse/core'
-import { NConfigProvider, NElement, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useOsTheme, zhCN } from 'naive-ui'
-import { computed } from 'vue'
+import { NConfigProvider, NElement, NLoadingBarProvider, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useLoadingBar, useOsTheme, zhCN } from 'naive-ui'
+import { computed, defineComponent, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ThemeType } from './api/api-models'
 import OpenLiveLayout from './views/OpenLiveLayout.vue'
+import TempComponent from './components/TempComponent.vue'
 
 const route = useRoute()
 

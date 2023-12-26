@@ -2,13 +2,17 @@ import { QueryGetAPI } from '@/api/query'
 import { BASE_API, apiFail } from '@/data/constants'
 import EasySpeech from 'easy-speech'
 import { NText, createDiscreteApi } from 'naive-ui'
+import { createPinia } from 'pinia'
 import { createApp, h } from 'vue'
 import App from './App.vue'
 import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import router from './router'
 
-createApp(App).use(router).mount('#app')
+const pinia = createPinia()
+
+const app = createApp(App)
+app.use(router).use(pinia).mount('#app')
 
 let currentVersion: string
 const { notification } = createDiscreteApi(['notification'])
@@ -20,6 +24,9 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
       localStorage.setItem('Version', currentVersion)
 
       if (currentVersion && savedVersion && savedVersion !== currentVersion) {
+        setTimeout(() => {
+          location.reload()
+        }, 1000)
         //alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
         notification.info({
           title: '发现新的版本更新',
@@ -27,7 +34,6 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
           duration: 5000,
           meta: () => h(NText, { depth: 3 }, () => currentVersion),
         })
-        location.reload()
       }
     }
   })
