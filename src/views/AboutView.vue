@@ -26,15 +26,12 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           <NButton tag="a" type="info" href="mailto:admin@vtsuru.live" text> admin@vtsuru.live </NButton>
         </NText>
         <template #footer>
-          <NSpace vertical>
-            <span>
-              开发者:
-              <NButton type="primary" tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style=""> Megghy </NButton>
-            </span>
-            <span> 技术栈: 前端 VUE3 + NAIVE UI, 后端 .NET 8 </span>
+          <NSpace vertical align="center">
+            <span style="color: gray"> MADE WITH ❤️ BY <NButton type="primary" tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style=""> Megghy </NButton> </span>
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="info" title="功能更新" content="读弹幕支持自定义API" time="2023-12-25" />
             <NTimelineItem type="success" title="功能添加" content="弹幕点歌 (点播)" time="2023-12-24" />
             <NTimelineItem type="success" title="功能添加" content="读弹幕" time="2023-12-17" />
             <NTimelineItem type="success" title="功能添加" content="直播记录" time="2023-12-3" />

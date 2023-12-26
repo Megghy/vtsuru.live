@@ -1,3 +1,4 @@
+import { useProviderStore } from '@/store/useProviderStore'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import IndexView from '../views/IndexView.vue'
 
@@ -354,6 +355,14 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+})
+router.beforeEach((to, from, next) => {
+  useProviderStore().loadingBar?.start()
+  next()
+})
+router.afterEach((to, from) => {
+  const loadingBar = useProviderStore().loadingBar
+  loadingBar?.finish()
 })
 
 export default router
