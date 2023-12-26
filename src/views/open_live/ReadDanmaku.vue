@@ -4,10 +4,11 @@ import { useAccount } from '@/api/account'
 import { EventDataTypes, EventModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
-import { VTSURU_API_URL } from '@/data/constants'
+import { FETCH_API, VTSURU_API_URL } from '@/data/constants'
 import { Info24Filled, Mic24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
+import GraphemeSplitter from 'grapheme-splitter'
 import { List } from 'linqts'
 import {
   NAlert,
@@ -22,18 +23,23 @@ import {
   NInputGroup,
   NInputGroupLabel,
   NInputNumber,
+  NLi,
   NList,
   NListItem,
   NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
   NSelect,
   NSlider,
   NSpace,
+  NSpin,
   NTag,
   NText,
   NTooltip,
+  NUl,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 
@@ -50,6 +56,9 @@ type SpeechSettings = {
   scTemplate: string
   guardTemplate: string
   giftTemplate: string
+  voiceType: 'local' | 'api'
+  voiceAPISchemeType: 'http' | 'https'
+  voiceAPI?: string
 
   combineGiftDelay?: number
 }
@@ -74,6 +83,9 @@ const settings = useStorage<SpeechSettings>('Setting.Speech', {
   scTemplate: '{name} 发送了醒目留言: {message}',
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
+  voiceType: 'local',
+  voiceAPISchemeType: 'https',
+  voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1',
 
   combineGiftDelay: 2,
 })
@@ -106,6 +118,9 @@ const voiceOptions = computed(() => {
 })
 const isSpeaking = ref(false)
 const speakQueue = ref<{ updateAt: number; combineCount?: number; data: EventModel }[]>([])
+const isVtsuruVoiceAPI = computed(() => {
+  return settings.value.voiceType == 'api' && settings.value.voiceAPI?.toLowerCase().trim().startsWith('voice.vtsuru.live')
+})
 
 const canSpeech = ref(false)
 const readedDanmaku = ref(0)
@@ -177,29 +192,21 @@ async function speak() {
     isSpeaking.value = true
     readedDanmaku.value++
     console.log(`[TTS] 正在朗读: ${text}`)
-    /*await EasySpeech.speak({
-      text: text,
-      volume: settings.value.speechInfo.volume,
-      pitch: settings.value.speechInfo.pitch,
-      rate: settings.value.speechInfo.rate,
-      voice: EasySpeech.voices().find((v) => v.name == settings.value.speechInfo.voice) ?? undefined,
-    })
-      .then(() => {})
-      .catch((error) => {
-        if (error.error == 'interrupted') {
-          //被中断
-          return
-        }
-        console.log(error)
-        message.error('无法播放语音: ' + error.error)
-      })
-      .finally(() => {
-        isSpeaking.value = false
-      })*/
-    speakDirect(text)
+    if (checkTimer) {
+      clearInterval(checkTimer)
+    }
+    checkTimer = setInterval(() => {
+      message.error('语音播放超时')
+      cancelSpeech()
+    }, 30000)
+    if (settings.value.voiceType == 'local') {
+      speakDirect(text)
+    } else {
+      speakFromAPI(text)
+    }
   }
 }
-let checkTimer: number
+let checkTimer: number | undefined
 function speakDirect(text: string) {
   try {
     const synth = window.speechSynthesis
@@ -213,18 +220,11 @@ function speakDirect(text: string) {
     let voices = synth.getVoices()
     const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
     if (voice) {
-      if (checkTimer) {
-        clearInterval(checkTimer)
-      }
       u.voice = voice
       u.volume = settings.value.speechInfo.volume
       u.rate = settings.value.speechInfo.rate
       u.pitch = settings.value.speechInfo.pitch
       synth.speak(u)
-      checkTimer = setInterval(() => {
-        message.error('语音播放超时')
-        cancelSpeech()
-      }, 30000)
       u.onend = () => {
         cancelSpeech()
       }
@@ -240,6 +240,51 @@ function speakDirect(text: string) {
   } catch (err) {
     console.log(err)
   }
+}
+const apiAudio = ref<HTMLAudioElement>()
+const isApiAudioLoading = ref(false)
+const apiAudioSrc = ref('')
+const splitter = new GraphemeSplitter()
+function speakFromAPI(text: string) {
+  if (!settings.value.voiceAPI) {
+    message.error('未设置语音API')
+    return
+  }
+  isSpeaking.value = true
+  isApiAudioLoading.value = true
+  const url = `${settings.value.voiceAPISchemeType == 'https' ? 'https' : FETCH_API + 'http'}://${settings.value.voiceAPI
+    .trim()
+    .replace(/^(?:https?:\/\/)/, '')
+    .replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))}`
+  const tempURL = new URL(url)
+  if (isVtsuruVoiceAPI.value && splitter.countGraphemes(tempURL.searchParams.get('text') ?? '') > 50) {
+    message.error('本站提供的测试接口字数不允许超过 50 字. 内容: [' + tempURL.searchParams.get('text') + ']')
+    cancelSpeech()
+    return
+  }
+  apiAudioSrc.value = url
+  nextTick(() => {
+    //apiAudio.value?.load()
+    apiAudio.value?.play().catch((err) => {
+      console.log(err)
+      message.error('无法播放语音:' + err)
+      cancelSpeech()
+    })
+  })
+}
+function onAPIError(e: Event) {
+  if (!apiAudioSrc.value) return
+  cancelSpeech()
+}
+function cancelSpeech() {
+  isSpeaking.value = false
+  if (checkTimer) {
+    clearInterval(checkTimer)
+    checkTimer = undefined
+  }
+  isApiAudioLoading.value = false
+  apiAudio.value?.pause()
+  EasySpeech.cancel()
 }
 function onGetEvent(data: EventModel) {
   if (!canSpeech.value) {
@@ -325,13 +370,6 @@ function startSpeech() {
 function stopSpeech() {
   canSpeech.value = false
   message.success('已停止监听')
-}
-function cancelSpeech() {
-  EasySpeech.cancel()
-  isSpeaking.value = false
-  if (checkTimer) {
-    clearInterval(checkTimer)
-  }
 }
 async function uploadConfig() {
   await QueryPostAPI(VTSURU_API_URL + 'set-config', {
@@ -439,6 +477,9 @@ function test(type: EventDataTypes) {
       break
   }
 }
+function testAPI() {
+  speakFromAPI('这是一条测试弹幕')
+}
 
 let speechQueueTimer: number
 onMounted(() => {
@@ -473,7 +514,8 @@ onUnmounted(() => {
           </template>
           例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland), 各种营销号就用的这些配音
         </NTooltip>
-        系列语音, 效果要好很多
+        系列语音, 效果要好
+        <NText strong>很多很多</NText>
       </NAlert>
       <NAlert type="info" closeable>
         当在后台运行时请关闭浏览器的 页面休眠/内存节省功能. Chrome:
@@ -515,7 +557,17 @@ onUnmounted(() => {
     <template v-if="canSpeech">
       <NDivider> 状态 </NDivider>
       <NSpace vertical align="center">
-        <NTooltip>
+        <NTooltip v-if="settings.voiceType == 'api' && isApiAudioLoading">
+          <template #trigger>
+            <NButton circle @click="cancelSpeech">
+              <template #icon>
+                <NSpin show />
+              </template>
+            </NButton>
+          </template>
+          取消
+        </NTooltip>
+        <NTooltip v-else>
           <template #trigger>
             <NButton circle :disabled="!isSpeaking" @click="cancelSpeech" :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
               <template #icon>
@@ -555,22 +607,102 @@ onUnmounted(() => {
         </NCollapse>
       </NSpace>
     </template>
-    <NDivider />
-    <NSpace vertical>
-      <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions" :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
-      <span style="width: 100%">
-        <NText> 音量 </NText>
-        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
-      </span>
-      <span style="width: 100%">
-        <NText> 音调 </NText>
-        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.pitch" :min="0" :max="2" :step="0.01" />
-      </span>
-      <span style="width: 100%">
-        <NText> 语速 </NText>
-        <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
-      </span>
-    </NSpace>
+    <NDivider>
+      <NRadioGroup v-model:value="settings.voiceType" size="small">
+        <NRadioButton value="local">本地</NRadioButton>
+        <NRadioButton value="api">
+          API
+
+          <NTooltip>
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            自定义语音API, 可以播放自己训练的模型或者其他tts之类的
+          </NTooltip>
+        </NRadioButton>
+      </NRadioGroup>
+    </NDivider>
+    <Transition name="fade" mode="out-in">
+      <NSpace v-if="settings.voiceType == 'local'" vertical>
+        <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions" :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
+        <span style="width: 100%">
+          <NText> 音量 </NText>
+          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
+        </span>
+        <span style="width: 100%">
+          <NText> 音调 </NText>
+          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.pitch" :min="0" :max="2" :step="0.01" />
+        </span>
+        <span style="width: 100%">
+          <NText> 语速 </NText>
+          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
+        </span>
+      </NSpace>
+      <template v-else>
+        <div>
+          <NCollapse>
+            <NCollapseItem title="要求" name="1">
+              <NUl>
+                <NLi> 直接返回音频数据 (wav, mp3, m4a etc.) </NLi>
+                <NLi>
+                  最好使用HTTPS
+                  <NTooltip>
+                    <template #trigger>
+                      <NIcon :component="Info24Filled" />
+                    </template>
+                    不使用https的话将会使用 cloudflare workers 进行代理, 会慢很多
+                  </NTooltip>
+                </NLi>
+                <NLi> 指定API可以被外部访问 </NLi>
+              </NUl>
+              推荐项目:
+              <NButton text type="info" tag="a" href="https://github.com/Artrajz/vits-simple-api" target="_blank"> vits-simple-api </NButton>
+            </NCollapseItem>
+          </NCollapse>
+          <br />
+          <NSpace vertical>
+            <NAlert type="info">
+              地址中的
+              <NButton @click="copyToClipboard('{{text}}')" size="tiny" :bordered="false" type="primary" secondary>
+                {{ '\{\{ text \}\}' }}
+              </NButton>
+              将被替换为要念的文本
+            </NAlert>
+            <NAlert v-if="isVtsuruVoiceAPI" type="success">
+              看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
+              <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank"> Xz乔希 </NButton>
+              训练的 Taffy 模型结果, 不支持部分英文, 侵删
+            </NAlert>
+          </NSpace>
+          <br />
+          <NInputGroup>
+            <NSelect
+              v-model:value="settings.voiceAPISchemeType"
+              :options="[
+                { label: 'https://', value: 'https' },
+                { label: 'http://', value: 'http' },
+              ]"
+              style="width: 110px"
+            />
+            <NInput
+              v-model:value="settings.voiceAPI"
+              placeholder="API 地址, 例如 xxx.com/voice/bert-vits2?text={{text}}&id=0 (前面不要带https://)"
+              :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'"
+            />
+            <NButton @click="testAPI" type="info"> 测试 </NButton>
+          </NInputGroup>
+          <br /><br />
+          <NSpace vertical>
+            <NAlert v-if="settings.voiceAPISchemeType == 'http'" type="info"> 不使用https的话将会使用 cloudflare workers 进行代理, 会慢很多 </NAlert>
+            <span style="width: 100%">
+              <NText> 音量 </NText>
+              <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
+            </span>
+          </NSpace>
+          <audio ref="apiAudio" :src="apiAudioSrc" :volume="settings.speechInfo.volume" @ended="cancelSpeech" @canplay="isApiAudioLoading = false" @error="onAPIError"></audio>
+        </div>
+      </template>
+    </Transition>
     <NDivider>
       自定义内容
       <NTooltip>

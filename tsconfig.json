@@ -12,6 +12,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
+    "allowJs": false,
     "sourceMap": false,
     "baseUrl": ".",
     "types": ["node"],
