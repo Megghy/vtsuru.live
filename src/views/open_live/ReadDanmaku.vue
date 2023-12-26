@@ -85,7 +85,7 @@ const settings = useStorage<SpeechSettings>('Setting.Speech', {
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
   voiceType: 'local',
   voiceAPISchemeType: 'https',
-  voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1',
+  voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
 
   combineGiftDelay: 2,
 })
