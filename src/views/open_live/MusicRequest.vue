@@ -37,7 +37,7 @@ import {
   SelectOption,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import APlayer from 'vue3-aplayer'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
@@ -357,7 +357,8 @@ function onMusicEnd() {
     currentOriginMusic.value = undefined
     setTimeout(() => {
       if (!settings.value.playMusicWhenFree) {
-        aplayer.value?.pause()
+        message.info('根据配置，已暂停播放音乐')
+        pauseMusic()
       }
     }, 10)
   }
@@ -368,15 +369,16 @@ function playWaitingMusic(music: WaitMusicInfo) {
   if (index > -1) {
     waitingMusics.value.splice(index, 1)
   }
-  aplayer.value?.pause()
+  pauseMusic()
   currentOriginMusic.value = music
-  aplayer.value?.audio.addEventListener(
-    'loadeddata',
-    () => {
-      aplayer.value?.play()
-    },
-    { once: true },
-  )
+  nextTick(() => {
+    aplayer.value?.play()
+  })
+}
+function pauseMusic() {
+  if (!aplayer.value?.audio.paused) {
+    aplayer.value?.pause()
+  }
 }
 function setSinkId() {
   try {

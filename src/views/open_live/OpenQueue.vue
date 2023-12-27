@@ -200,6 +200,9 @@ async function getAll() {
   }
 }
 async function add(danmaku: EventModel) {
+  if (!accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.Queue)) {
+    return
+  }
   if (!checkMessage(danmaku)) {
     return
   }
