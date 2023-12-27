@@ -542,14 +542,14 @@ onUnmounted(() => {
       </NAlert>
     </NSpace>
     <br />
-    <NSpace>
-      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id">
+    <NSpace align="center">
+      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id" size="large">
         {{ canSpeech ? '停止监听' : '开始监听' }}
       </NButton>
-      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo"> 保存配置到服务器 </NButton>
+      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small"> 保存配置到服务器 </NButton>
       <NPopconfirm @positive-click="downloadConfig">
         <template #trigger>
-          <NButton type="primary" secondary :disabled="!accountInfo"> 从服务器获取配置 </NButton>
+          <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
         </template>
         这将覆盖当前设置, 确定?
       </NPopconfirm>

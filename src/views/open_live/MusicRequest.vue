@@ -338,6 +338,7 @@ async function onGetEvent(data: EventModel) {
       console.log(`正在播放 [${data.name}] 点的 ${result.name} - ${result.author?.join('/')}`)
     } else {
       waitingMusics.value.push(music)
+      message.success(`[${data.name}] 点了一首 ${result.name} - ${result.author?.join('/')}`)
     }
   }
 }
@@ -459,23 +460,24 @@ onUnmounted(() => {
     <NAlert type="info"> 搜索时会优先选择非VIP歌曲, 所以点到付费曲目时可能会是猴版或者各种奇怪的歌 </NAlert>
   </NSpace>
   <NDivider />
-  <NSpace>
+  <NSpace align="center">
     <NButton
       @click="listening ? stopListen() : startListen()"
       :type="listening ? 'error' : 'primary'"
       :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }"
       data-umami-event="Use Music Request"
       :data-umami-event-uid="accountInfo?.biliId"
+      size="large"
     >
       {{ listening ? '停止监听' : '开始监听' }}
     </NButton>
-    <NButton @click="showOBSModal = true" type="info"> OBS组件 </NButton>
-    <NButton @click="showNeteaseModal = true"> 从网易云歌单导入空闲歌单 </NButton>
+    <NButton @click="showOBSModal = true" type="info" size="small"> OBS组件 </NButton>
+    <NButton @click="showNeteaseModal = true" size="small"> 从网易云歌单导入空闲歌单 </NButton>
 
-    <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo"> 保存配置到服务器 </NButton>
+    <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small"> 保存配置到服务器 </NButton>
     <NPopconfirm @positive-click="downloadConfig">
       <template #trigger>
-        <NButton type="primary" secondary :disabled="!accountInfo"> 从服务器获取配置 </NButton>
+        <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
       </template>
       这将覆盖当前设置, 确定?
     </NPopconfirm>
