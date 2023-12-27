@@ -52,7 +52,7 @@ onMounted(() => {
 
 <template>
   <NSpace>
-    <NSelect :options="options" v-model:value="selectedDate" style="max-width: 200px" placeholder="选择其他周表" />
+    <NSelect :options="options" v-model:value="selectedDate" style="width: 200px" placeholder="选择其他周表" />
     <SaveCompoent :compoent="table" :file-name="`周表_${selectedDate}_${userInfo?.name}`" />
   </NSpace>
   <NDivider />
