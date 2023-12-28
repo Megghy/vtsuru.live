@@ -226,7 +226,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'manage-musicRequest',
         component: () => import('@/views/open_live/MusicRequest.vue'),
         meta: {
-          title: '点歌 (放歌',
+          title: '点歌 (点播',
           keepAlive: true,
           danmaku: true,
         },
