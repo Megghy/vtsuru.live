@@ -59,6 +59,7 @@ type SpeechSettings = {
   voiceType: 'local' | 'api'
   voiceAPISchemeType: 'http' | 'https'
   voiceAPI?: string
+  splitText: boolean
 
   combineGiftDelay?: number
 }
@@ -86,6 +87,7 @@ const settings = useStorage<SpeechSettings>('Setting.Speech', {
   voiceType: 'local',
   voiceAPISchemeType: 'https',
   voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
+  splitText: false,
 
   combineGiftDelay: 2,
 })
@@ -188,12 +190,11 @@ async function speak() {
   if (data.data.type == EventDataTypes.Gift && data.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000) {
     return
   }
-  const text = getTextFromDanmaku(speakQueue.value.shift()?.data)
+  let text = getTextFromDanmaku(speakQueue.value.shift()?.data)
   if (text) {
     isSpeaking.value = true
     readedDanmaku.value++
     speakingText.value = text
-    console.log(`[TTS] 正在朗读: ${text}`)
     if (checkTimer) {
       clearInterval(checkTimer)
     }
@@ -204,9 +205,25 @@ async function speak() {
     if (settings.value.voiceType == 'local') {
       speakDirect(text)
     } else {
+      text = settings.value.splitText ? insertSpaces(text) : text
       speakFromAPI(text)
     }
+    console.log(`[TTS] 正在朗读: ${text}`)
   }
+}
+function insertSpaces(sentence: string) {
+  // First, insert spaces around English words and numbers
+  //sentence = sentence.replace(/([a-zA-Z]+)/g, "'$1'")
+
+  // Then, split all-caps words into single letters, each surrounded by spaces
+  sentence = sentence.replace(/\b([A-Z]{2,})\b/g, function (match) {
+    return match.split('').join(' ')
+  })
+
+  // Clean up any extra spaces that may have been added
+  sentence = sentence.replace(/\s+/g, ' ').trim()
+
+  return sentence
 }
 let checkTimer: number | undefined
 function speakDirect(text: string) {
@@ -357,7 +374,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
       break
   }
   text = text
-    .replace(templateConstants.name.regex, data.name)
+    .replace(templateConstants.name.regex, settings.value.voiceType == 'api' && settings.value.splitText ? `\'${data.name}\'` : data.name)
     .replace(templateConstants.count.regex, data.num.toString())
     .replace(templateConstants.price.regex, data.price.toString())
     .replace(templateConstants.message.regex, data.msg)
@@ -372,8 +389,21 @@ function getTextFromDanmaku(data: EventModel | undefined) {
   } else if (data.type === EventDataTypes.Guard) {
     text = text.replace(templateConstants.guard_num.regex, data.num.toString())
   }
-  text = text.replace(/[^0-9a-z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF ]/gi, '').normalize('NFKC') //过滤无效字符, 全角转半角
+  text = fullWidthToHalfWidth(text)
+    .replace(/[^0-9a-zA-Z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF ,.:'"\s]/gi, '')
+    .normalize('NFKC') //过滤无效字符, 全角转半角
   return text
+}
+function fullWidthToHalfWidth(str: string) {
+  // Convert full-width characters to half-width ones
+  var result = str.replace(/[\uff01-\uff5e]/g, function (ch) {
+    return String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+  })
+
+  // Convert full-width space (u3000) to half-width one
+  result = result.replace(/\u3000/g, ' ')
+
+  return result
 }
 function startSpeech() {
   canSpeech.value = true
@@ -441,7 +471,7 @@ function test(type: EventDataTypes) {
         type: EventDataTypes.SC,
         name: accountInfo.value?.name ?? '未知用户',
         uid: accountInfo.value?.biliId ?? 0,
-        msg: '测试sc',
+        msg: '测试SC',
         price: 30,
         num: 1,
         time: Date.now(),
@@ -683,7 +713,7 @@ onUnmounted(() => {
             <NAlert v-if="isVtsuruVoiceAPI" type="success" closable>
               看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
               <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank"> Xz乔希 </NButton>
-              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试, 不保证可用性. 侵删
+              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试, 用的人多的时候会比较慢, 不保证可用性. 侵删
             </NAlert>
           </NSpace>
           <br />
@@ -781,6 +811,19 @@ onUnmounted(() => {
           "
         />
       </NInputGroup>
+      <NCheckbox v-model:checked="settings.splitText">
+        启用句子拆分
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          仅API方式可用, 为英文用户名用引号包裹起来, 并将所有大写单词拆分成单个单词, 以防止部分单词念不出来
+          <br />
+          例: 原文: Megghy 说: UPPERCASE单词,word.
+          <br />
+          结果: 'Megghy' 说: U P P E R C A S E 单词,word.
+        </NTooltip>
+      </NCheckbox>
     </NSpace>
   </template>
 </template>

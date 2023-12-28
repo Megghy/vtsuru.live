@@ -29,7 +29,7 @@ export async function QueryPostAPIWithParams<T>(urlString: string, params?: any,
   } catch (e) {
     console.error(`[POST] API调用失败: ${e}`)
     failCount++
-    if (failCount > 3 && !apiFail.value) {
+    if (!apiFail.value) {
       apiFail.value = true
       console.log('默认API异常, 切换至故障转移节点')
     }
@@ -54,7 +54,7 @@ export async function QueryGetAPI<T>(urlString: string, params?: any, headers?: 
   } catch (e) {
     console.error(`[GET] API调用失败: ${e}`)
     failCount++
-    if (failCount > 3 && !apiFail.value) {
+    if (!apiFail.value) {
       apiFail.value = true
       console.log('默认API异常, 切换至故障转移节点')
     }
