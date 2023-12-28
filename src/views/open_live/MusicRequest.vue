@@ -135,6 +135,8 @@ async function searchMusic(keyword: string) {
   })
   if (data.code == 200) {
     return data.data
+  } else if (data.code == 404) {
+    message.error('未找到包含关键词: ' + keyword + ' 的歌曲')
   }
   return undefined
 }
