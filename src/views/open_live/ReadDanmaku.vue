@@ -117,6 +117,7 @@ const voiceOptions = computed(() => {
     .ToArray()
 })
 const isSpeaking = ref(false)
+const speakingText = ref('')
 const speakQueue = ref<{ updateAt: number; combineCount?: number; data: EventModel }[]>([])
 const isVtsuruVoiceAPI = computed(() => {
   return settings.value.voiceType == 'api' && settings.value.voiceAPI?.toLowerCase().trim().startsWith('voice.vtsuru.live')
@@ -191,6 +192,7 @@ async function speak() {
   if (text) {
     isSpeaking.value = true
     readedDanmaku.value++
+    speakingText.value = text
     console.log(`[TTS] 正在朗读: ${text}`)
     if (checkTimer) {
       clearInterval(checkTimer)
@@ -258,7 +260,7 @@ function speakFromAPI(text: string) {
     .replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))}`
   const tempURL = new URL(url)
   if (isVtsuruVoiceAPI.value && splitter.countGraphemes(tempURL.searchParams.get('text') ?? '') > 50) {
-    message.error('本站提供的测试接口字数不允许超过 50 字. 内容: [' + tempURL.searchParams.get('text') + ']')
+    message.error('本站提供的测试接口字数不允许超过 100 字. 内容: [' + tempURL.searchParams.get('text') + ']')
     cancelSpeech()
     return
   }
@@ -266,6 +268,10 @@ function speakFromAPI(text: string) {
   nextTick(() => {
     //apiAudio.value?.load()
     apiAudio.value?.play().catch((err) => {
+      if (err.toString().startsWith('AbortError')) {
+        return
+      }
+      console.log(err)
       console.log(err)
       message.error('无法播放语音:' + err)
       cancelSpeech()
@@ -283,8 +289,14 @@ function cancelSpeech() {
     checkTimer = undefined
   }
   isApiAudioLoading.value = false
-  apiAudio.value?.pause()
+  pauseAPI()
   EasySpeech.cancel()
+  speakingText.value = ''
+}
+function pauseAPI() {
+  if (!apiAudio.value?.paused) {
+    apiAudio.value?.pause()
+  }
 }
 function onGetEvent(data: EventModel) {
   if (!canSpeech.value) {
@@ -506,7 +518,7 @@ onUnmounted(() => {
   <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
   <template v-else>
     <NSpace vertical>
-      <NAlert v-if="settings.voiceType == 'local'" type="info" closeable >
+      <NAlert v-if="settings.voiceType == 'local'" type="info" closeable>
         建议在 Edge 浏览器使用
         <NTooltip>
           <template #trigger>
@@ -671,7 +683,7 @@ onUnmounted(() => {
             <NAlert v-if="isVtsuruVoiceAPI" type="success" closable>
               看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
               <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank"> Xz乔希 </NButton>
-              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试 侵删
+              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试, 不保证可用性. 侵删
             </NAlert>
           </NSpace>
           <br />
@@ -689,7 +701,7 @@ onUnmounted(() => {
               placeholder="API 地址, 例如 xxx.com/voice/bert-vits2?text={{text}}&id=0 (前面不要带https://)"
               :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'"
             />
-            <NButton @click="testAPI" type="info"> 测试 </NButton>
+            <NButton @click="testAPI" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
           </NInputGroup>
           <br /><br />
           <NSpace vertical>
@@ -720,22 +732,22 @@ onUnmounted(() => {
       <NInputGroup>
         <NInputGroupLabel> 弹幕模板 </NInputGroupLabel>
         <NInput v-model:value="settings.danmakuTemplate" placeholder="弹幕消息" />
-        <NButton @click="test(EventDataTypes.Message)" type="info"> 测试 </NButton>
+        <NButton @click="test(EventDataTypes.Message)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> 礼物模板 </NInputGroupLabel>
         <NInput v-model:value="settings.giftTemplate" placeholder="礼物消息" />
-        <NButton @click="test(EventDataTypes.Gift)" type="info"> 测试 </NButton>
+        <NButton @click="test(EventDataTypes.Gift)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> SC模板 </NInputGroupLabel>
         <NInput v-model:value="settings.scTemplate" placeholder="SC消息" />
-        <NButton @click="test(EventDataTypes.SC)" type="info"> 测试 </NButton>
+        <NButton @click="test(EventDataTypes.SC)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> 上舰模板 </NInputGroupLabel>
         <NInput v-model:value="settings.guardTemplate" placeholder="上舰消息" />
-        <NButton @click="test(EventDataTypes.Guard)" type="info"> 测试 </NButton>
+        <NButton @click="test(EventDataTypes.Guard)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
       </NInputGroup>
     </NSpace>
     <NDivider> 设置 </NDivider>

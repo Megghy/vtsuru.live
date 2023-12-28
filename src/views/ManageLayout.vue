@@ -5,6 +5,7 @@ import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ACCOUNT_API_URL } from '@/data/constants'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import {
   CalendarClock24Filled,
   Chat24Filled,
@@ -28,6 +29,7 @@ import {
   NIcon,
   NLayout,
   NLayoutContent,
+  NLayoutFooter,
   NLayoutHeader,
   NLayoutSider,
   NMenu,
@@ -37,12 +39,14 @@ import {
   NSpace,
   NSpin,
   NSwitch,
+  NTag,
   NText,
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import APlayer from 'vue3-aplayer'
 import DanmakuLayout from './manage/DanmakuLayout.vue'
 
 const accountInfo = useAccount()
@@ -60,8 +64,17 @@ const type = computed(() => {
   return ''
 })
 const cookie = useStorage('JWT_Token', '')
+const musicRquestStore = useMusicRequestProvider()
 
 const canResendEmail = ref(false)
+
+const aplayerHeight = computed(() => {
+  return musicRquestStore.originMusics.length == 0 ? '0' : '80'
+})
+const aplayer = ref()
+watch(aplayer, () => {
+  musicRquestStore.aplayerRef = aplayer.value
+})
 
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
@@ -276,7 +289,7 @@ const menuOptions = [
                 },
               ),
             ]),
-          default: () => accountInfo.value?.isBiliVerified ? '需要使用直播弹幕的功能' : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
+          default: () => (accountInfo.value?.isBiliVerified ? '需要使用直播弹幕的功能' : '你尚未进行 Bilibili 认证, 请前往面板进行绑定'),
         },
       ),
     key: 'manage-danmaku',
@@ -428,82 +441,103 @@ onMounted(() => {
         </template>
       </NPageHeader>
     </NLayoutHeader>
-    <NScrollbar x-scrollable>
-      <NLayout has-sider>
-        <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false">
-          <NSpace justify="center" style="margin-top: 16px">
-            <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
-              <template #icon>
-                <NIcon :component="BrowsersOutline" />
-              </template>
-              <template v-if="width >= 180"> 面板 </template>
-            </NButton>
-            <NTooltip v-if="width >= 180">
-              <template #trigger>
-                <NButton @click="$router.push({ name: 'manage-feedback' })">
-                  <template #icon>
-                    <NIcon :component="PersonFeedback24Filled" />
+    <NLayout has-sider>
+      <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false">
+        <NSpace justify="center" style="margin-top: 16px">
+          <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
+            <template #icon>
+              <NIcon :component="BrowsersOutline" />
+            </template>
+            <template v-if="width >= 180"> 面板 </template>
+          </NButton>
+          <NTooltip v-if="width >= 180">
+            <template #trigger>
+              <NButton @click="$router.push({ name: 'manage-feedback' })">
+                <template #icon>
+                  <NIcon :component="PersonFeedback24Filled" />
+                </template>
+              </NButton>
+            </template>
+            反馈
+          </NTooltip>
+        </NSpace>
+        <NMenu
+          style="margin-top: 12px"
+          :disabled="accountInfo?.isEmailVerified != true"
+          :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+        />
+        <NSpace v-if="width > 150" justify="center" align="center" vertical>
+          <NText depth="3">
+            有更多功能建议请
+            <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })"> 反馈 </NButton>
+          </NText>
+          <NText depth="3">
+            <NButton text type="info" @click="$router.push({ name: 'about' })"> 关于本站 </NButton>
+          </NText>
+        </NSpace>
+      </NLayoutSider>
+      <NLayout>
+        <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
+          <NLayoutContent style="box-sizing: border-box; padding: 20px; min-width: 300px">
+            <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
+              <KeepAlive>
+                <DanmakuLayout v-if="route.meta.danmaku" :component="Component" />
+                <Suspense v-else>
+                  <component :is="Component" />
+                  <template #fallback>
+                    <NSpin show />
                   </template>
-                </NButton>
-              </template>
-              反馈
-            </NTooltip>
-          </NSpace>
-          <NMenu
-            style="margin-top: 12px"
-            :disabled="accountInfo?.isEmailVerified != true"
-            :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
-            :collapsed-width="64"
-            :collapsed-icon-size="22"
-            :options="menuOptions"
-          />
-          <NSpace v-if="width > 150" justify="center" align="center" vertical>
-            <NText depth="3">
-              有更多功能建议请
-              <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })"> 反馈 </NButton>
-            </NText>
-            <NText depth="3">
-              <NButton text type="info" @click="$router.push({ name: 'about' })"> 关于本站 </NButton>
-            </NText>
-          </NSpace>
-        </NLayoutSider>
-        <NScrollbar style="height: calc(100vh - 50px)">
-          <NLayout>
-            <div style="box-sizing: border-box; padding: 20px; min-width: 300px">
-              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
-                <KeepAlive>
-                  <DanmakuLayout v-if="route.meta.danmaku" :component="Component" />
-                  <Suspense v-else>
-                    <component :is="Component" />
-                    <template #fallback>
-                      <NSpin show />
-                    </template>
-                  </Suspense>
-                </KeepAlive>
-              </RouterView>
-              <template v-else>
-                <NAlert type="info">
-                  请进行邮箱验证
-                  <br /><br />
-                  <NSpace>
-                    <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
-                    <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
+                </Suspense>
+              </KeepAlive>
+            </RouterView>
+            <template v-else>
+              <NAlert type="info">
+                请进行邮箱验证
+                <br /><br />
+                <NSpace>
+                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
+                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
 
-                    <NPopconfirm @positive-click="logout" size="small">
-                      <template #trigger>
-                        <NButton type="error"> 登出 </NButton>
-                      </template>
-                      确定登出?
-                    </NPopconfirm>
-                  </NSpace>
-                </NAlert>
-              </template>
-              <NBackTop />
-            </div>
-          </NLayout>
+                  <NPopconfirm @positive-click="logout" size="small">
+                    <template #trigger>
+                      <NButton type="error"> 登出 </NButton>
+                    </template>
+                    确定登出?
+                  </NPopconfirm>
+                </NSpace>
+              </NAlert>
+            </template>
+            <NBackTop />
+          </NLayoutContent>
         </NScrollbar>
+        <NLayoutFooter :style="`height: ${aplayerHeight}px;overflow: auto`">
+          <div style="display: flex; align-items: center; margin: 0 10px 0 10px">
+            <APlayer
+              v-if="musicRquestStore.aplayerMusics.length > 0"
+              ref="aplayer"
+              :list="musicRquestStore.aplayerMusics"
+              v-model:music="musicRquestStore.currentMusic"
+              v-model:volume="musicRquestStore.settings.volume"
+              v-model:shuffle="musicRquestStore.settings.shuffle"
+              v-model:repeat="musicRquestStore.settings.repeat"
+              :listMaxHeight="'200'"
+              mutex
+              listFolded
+              @ended="musicRquestStore.onMusicEnd"
+              @play="musicRquestStore.onMusicPlay"
+              style="flex: 1;min-width: 400px;"
+            />
+            <NSpace vertical>
+              <NTag :bordered="false" type="info" size="small"> 队列: {{ musicRquestStore.waitingMusics.length }} </NTag>
+              <NButton size="small" type="info" @click="musicRquestStore.waitingMusics.length > 0 ? musicRquestStore.onMusicEnd() : musicRquestStore.aplayerRef?.onAudioEnded()"> 下一首 </NButton>
+            </NSpace>
+          </div>
+        </NLayoutFooter>
       </NLayout>
-    </NScrollbar>
+    </NLayout>
   </NLayout>
   <template v-else>
     <NLayoutContent style="display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 50px; height: 100%; box-sizing: border-box">

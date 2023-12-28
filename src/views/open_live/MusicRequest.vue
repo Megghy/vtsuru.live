@@ -4,6 +4,7 @@ import { DanmakuUserInfo, EventModel, FunctionTypes, SongFrom, SongsInfo } from 
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
 import { MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
+import { MusicRequestSettings, useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
@@ -37,27 +38,10 @@ import {
   SelectOption,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import APlayer from 'vue3-aplayer'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
 
-type MusicRequestSettings = {
-  playMusicWhenFree: boolean
-
-  repeat: 'repeat-one' | 'repeat-all' | 'no-repeat'
-  listMaxHeight: string
-  shuffle: boolean
-  volume: number
-
-  orderPrefix: string
-  orderCooldown?: number
-  orderMusicFirst: boolean
-  platform: 'netease' | 'kugou'
-  deviceId?: string
-
-  blacklist: string[]
-}
 type Music = {
   id: number
   title: string
@@ -71,21 +55,11 @@ type WaitMusicInfo = {
   music: SongsInfo
 }
 
-const settings = useStorage<MusicRequestSettings>('Setting.MusicRequest', {
-  playMusicWhenFree: true,
-  repeat: 'repeat-all',
-  listMaxHeight: '300',
-  shuffle: true,
-  volume: 0.5,
-
-  orderPrefix: '点歌',
-  orderCooldown: 600,
-  orderMusicFirst: true,
-  platform: 'netease',
-
-  blacklist: [],
+const settings = computed(() => {
+  return musicRquestStore.settings
 })
 const cooldown = useStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
+const musicRquestStore = useMusicRequestProvider()
 
 const props = defineProps<{
   client: DanmakuClient
@@ -99,28 +73,9 @@ const deviceList = ref<SelectOption[]>([])
 const accountInfo = useAccount()
 const message = useMessage()
 
-const aplayer = ref()
-
 const listening = ref(false)
-
-const originMusics = ref<SongsInfo[]>(await get())
-const waitingMusics = useStorage<WaitMusicInfo[]>('Setting.MusicRequest.Waiting', [])
-const musics = computed(() => {
-  return originMusics.value.map((s) => songToMusic(s))
-})
-const currentMusic = ref<Music>({
-  id: -1,
-  title: '',
-  artist: '',
-  src: '',
-  pic: '',
-  lrc: '',
-} as Music)
-const currentOriginMusic = ref<WaitMusicInfo>()
-watch(currentOriginMusic, (music) => {
-  if (music) {
-    currentMusic.value = songToMusic(music.music)
-  }
+const originMusics = computed(() => {
+  return musicRquestStore.originMusics
 })
 
 const isLoading = ref(false)
@@ -242,7 +197,7 @@ function delMusic(song: SongsInfo) {
     .then((data) => {
       if (data.code == 200) {
         message.success('已删除')
-        originMusics.value = originMusics.value.filter((s) => s.key != song.key)
+        musicRquestStore.originMusics = originMusics.value.filter((s) => s.key != song.key)
       } else {
         message.error('删除失败: ' + data.message)
       }
@@ -256,7 +211,7 @@ function clearMusic() {
     .then((data) => {
       if (data.code == 200) {
         message.success('已清空')
-        originMusics.value = []
+        musicRquestStore.originMusics = []
       } else {
         message.error('清空失败: ' + data.message)
       }
@@ -284,7 +239,7 @@ async function downloadConfig() {
       if (data.msg) {
         message.error('获取失败: ' + data.msg)
       } else {
-        settings.value = data.data
+        musicRquestStore.settings = data.data ?? ({} as MusicRequestSettings)
         message.success('已获取配置文件')
       }
     })
@@ -304,10 +259,9 @@ function stopListen() {
   listening.value = false
   message.success('已停止监听')
 }
-const isPlayingOrderMusic = ref(false)
 async function onGetEvent(data: EventModel) {
   if (!listening.value || !checkMessage(data.msg)) return
-  if (settings.value.orderCooldown && cooldown.value[data.uid]) {
+  if (settings.value.orderCooldown && cooldown.value[data.uid] && data.uid != (accountInfo.value?.biliId ?? -1)) {
     const lastRequest = cooldown.value[data.uid]
     if (Date.now() - lastRequest < settings.value.orderCooldown * 1000) {
       message.info(`[${data.name}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`)
@@ -333,63 +287,13 @@ async function onGetEvent(data: EventModel) {
       },
       music: result,
     } as WaitMusicInfo
-    if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || originMusics.value.length == 0 || aplayer.value?.audio.paused) {
-      playWaitingMusic(music)
-      console.log(`正在播放 [${data.name}] 点的 ${result.name} - ${result.author?.join('/')}`)
-    } else {
-      waitingMusics.value.push(music)
-      message.success(`[${data.name}] 点了一首 ${result.name} - ${result.author?.join('/')}`)
-    }
+    musicRquestStore.addWaitingMusic(music)
   }
 }
 function checkMessage(msg: string) {
   return msg.trim().toLowerCase().startsWith(settings.value.orderPrefix.trimStart())
 }
-function onMusicEnd() {
-  const data = waitingMusics.value.shift()
-  if (data) {
-    setTimeout(() => {
-      playWaitingMusic(data)
-      message.success(`正在播放 [${data.from.name}] 点的 ${data.music.name}`)
-      console.log(`正在播放 [${data.from.name}] 点的 ${data.music.name}`)
-    }, 10) //逆天
-  } else {
-    isPlayingOrderMusic.value = false
-    currentOriginMusic.value = undefined
-    setTimeout(() => {
-      if (!settings.value.playMusicWhenFree) {
-        message.info('根据配置，已暂停播放音乐')
-        pauseMusic()
-      }
-    }, 10)
-  }
-}
-function playWaitingMusic(music: WaitMusicInfo) {
-  isPlayingOrderMusic.value = true
-  const index = waitingMusics.value.indexOf(music)
-  if (index > -1) {
-    waitingMusics.value.splice(index, 1)
-  }
-  pauseMusic()
-  currentOriginMusic.value = music
-  nextTick(() => {
-    aplayer.value?.play()
-  })
-}
-function pauseMusic() {
-  if (!aplayer.value?.audio.paused) {
-    aplayer.value?.pause()
-  }
-}
-function setSinkId() {
-  try {
-    aplayer.value?.audio.setSinkId(settings.value.deviceId ?? 'default')
-    console.log('设置音频输出设备为 ' + (settings.value.deviceId ?? '默认'))
-  } catch (err) {
-    console.error(err)
-    message.error('设置音频输出设备失败: ' + err)
-  }
-}
+
 function songToMusic(s: SongsInfo) {
   return {
     id: s.id,
@@ -417,32 +321,34 @@ async function getOutputDevice() {
 }
 function blockMusic(song: SongsInfo) {
   settings.value.blacklist.push(song.name)
-  waitingMusics.value.splice(
-    waitingMusics.value.findIndex((m) => m.music == song),
+  musicRquestStore.waitingMusics.splice(
+    musicRquestStore.waitingMusics.findIndex((m) => m.music == song),
     1,
   )
   message.success(`[${song.name}] 已添加到黑名单`)
 }
 function updateWaiting() {
   QueryPostAPI(MUSIC_REQUEST_API_URL + 'update-waiting', {
-    playing: currentOriginMusic.value,
-    waiting: waitingMusics.value,
+    playing: musicRquestStore.currentOriginMusic,
+    waiting: musicRquestStore.waitingMusics,
   })
 }
 
 let timer: number
 onMounted(async () => {
   props.client.onEvent('danmaku', onGetEvent)
-
+  if (musicRquestStore.originMusics.length == 0) {
+    musicRquestStore.originMusics = await get()
+  }
   if (originMusics.value.length > 0) {
-    currentMusic.value = songToMusic(originMusics.value[0])
+    musicRquestStore.currentMusic = songToMusic(originMusics.value[0])
   }
   await getOutputDevice()
   if (deviceList.value.length > 0) {
     if (!deviceList.value.find((d) => d.value == settings.value.deviceId)) {
       settings.value.deviceId = undefined
     } else {
-      setSinkId()
+      musicRquestStore.setSinkId()
     }
   }
   timer = setInterval(updateWaiting, 2000)
@@ -483,26 +389,14 @@ onUnmounted(() => {
     </NPopconfirm>
   </NSpace>
   <NDivider />
-  <APlayer
-    v-if="musics.length > 0 || currentMusic.src"
-    :list="musics"
-    v-model:music="currentMusic"
-    ref="aplayer"
-    v-model:volume="settings.volume"
-    v-model:shuffle="settings.shuffle"
-    v-model:repeat="settings.repeat"
-    :listMaxHeight="'200'"
-    mutex
-    @ended="onMusicEnd"
-  />
   <NCollapse :default-expanded-names="['1']">
     <NCollapseItem title="队列" name="1">
-      <NEmpty v-if="waitingMusics.length == 0"> 暂无 </NEmpty>
+      <NEmpty v-if="musicRquestStore.waitingMusics.length == 0"> 暂无 </NEmpty>
       <NList v-else size="small" bordered>
-        <NListItem v-for="item in waitingMusics">
+        <NListItem v-for="item in musicRquestStore.waitingMusics">
           <NSpace align="center">
-            <NButton @click="playWaitingMusic(item)" type="primary" secondary size="small"> 播放 </NButton>
-            <NButton @click="waitingMusics.splice(waitingMusics.indexOf(item), 1)" type="error" secondary size="small"> 取消 </NButton>
+            <NButton @click="musicRquestStore.playMusic(item.music)" type="primary" secondary size="small"> 播放 </NButton>
+            <NButton @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)" type="error" secondary size="small"> 取消 </NButton>
             <NButton @click="blockMusic(item.music)" type="warning" secondary size="small"> 拉黑 </NButton>
             <span>
               <NTag v-if="item.music.from == SongFrom.Netease" type="success" size="small"> 网易</NTag>
@@ -558,7 +452,13 @@ onUnmounted(() => {
         </NSpace>
         <NSpace>
           <NButton @click="getOutputDevice"> 获取输出设备 </NButton>
-          <NSelect v-model:value="settings.deviceId" :options="deviceList" :fallback-option="() => ({ label: '未选择', value: '' })" style="min-width: 200px" @update:value="setSinkId" />
+          <NSelect
+            v-model:value="settings.deviceId"
+            :options="deviceList"
+            :fallback-option="() => ({ label: '未选择', value: '' })"
+            style="min-width: 200px"
+            @update:value="musicRquestStore.setSinkId"
+          />
         </NSpace>
       </NSpace>
     </NTabPane>
@@ -573,7 +473,7 @@ onUnmounted(() => {
         <NButton @click="showNeteaseModal = true"> 从网易云歌单导入 </NButton>
       </NSpace>
       <NDivider style="margin: 15px 0 10px 0" />
-      <NEmpty v-if="musics.length == 0"> 暂无 </NEmpty>
+      <NEmpty v-if="musicRquestStore.originMusics.length == 0"> 暂无 </NEmpty>
       <NVirtualList v-else :style="`max-height: 1000px`" :item-size="30" :items="originMusics" item-resizable>
         <template #default="{ item, index }">
           <p :style="`min-height: ${30}px;width:97%;display:flex;align-items:center;`">
@@ -584,6 +484,8 @@ onUnmounted(() => {
                 </template>
                 确定删除?
               </NPopconfirm>
+
+              <NButton type="info" secondary size="small" @click="musicRquestStore.playMusic(item)"> 播放 </NButton>
               <NText> {{ item.name }} - {{ item.author?.join('/') }} </NText>
             </NSpace>
           </p>
