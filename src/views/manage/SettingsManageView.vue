@@ -4,7 +4,7 @@ import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOpt
 import DynamicForm from '@/components/DynamicForm.vue'
 import { TemplateConfig } from '@/data/VTsuruTypes'
 import { FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
-import { NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NList, NListItem, NModal, NSelect, NSpace, NSpin, NTabPane, NTabs, NText, SelectOption, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NList, NListItem, NModal, NSelect, NSpace, NSpin, NTabPane, NTabs, NText, SelectOption, useMessage } from 'naive-ui'
 import { computed, h, nextTick, onActivated, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -373,6 +373,10 @@ onMounted(async () => {
           <NEmpty v-else />
         </NTabPane>
         <NTabPane tab="模板" name="template">
+          <NAlert type="success">
+            如果有合适的设计稿或者想法可以给我说然后做成模板捏
+          </NAlert>
+          <br/>
           <NSpace vertical>
             <NSpace align="center"> 页面 <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" /> </NSpace>
             <NDivider style="margin: 5px 0 5px 0" title-placement="left"> 模板 </NDivider>
