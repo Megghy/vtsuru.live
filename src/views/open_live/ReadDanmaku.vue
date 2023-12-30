@@ -271,13 +271,14 @@ function speakFromAPI(text: string) {
   }
   isSpeaking.value = true
   isApiAudioLoading.value = true
-  const url = `${settings.value.voiceAPISchemeType == 'https' ? 'https' : FETCH_API + 'http'}://${settings.value.voiceAPI
+  let url = `${settings.value.voiceAPISchemeType == 'https' ? 'https' : FETCH_API + 'http'}://${settings.value.voiceAPI
     .trim()
     .replace(/^(?:https?:\/\/)/, '')
     .replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))}`
   const tempURL = new URL(url)
   if (isVtsuruVoiceAPI.value) {
     tempURL.searchParams.set('vtsuruId', accountInfo.value?.id.toString() ?? '-1')
+    url = tempURL.toString()
   }
   if (isVtsuruVoiceAPI.value && splitter.countGraphemes(tempURL.searchParams.get('text') ?? '') > 50) {
     message.error('本站提供的测试接口字数不允许超过 100 字. 内容: [' + tempURL.searchParams.get('text') + ']')
