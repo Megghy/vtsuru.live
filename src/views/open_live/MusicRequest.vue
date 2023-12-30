@@ -312,7 +312,6 @@ async function getOutputDevice() {
       // 请保留此代码以确保用户授权访问设备
       audio: true,
     })
-
     const list = await navigator.mediaDevices.enumerateDevices()
 
     deviceList.value = list.filter((device) => device.kind === 'audiooutput').map((d) => ({ label: d.label, value: d.deviceId }))
