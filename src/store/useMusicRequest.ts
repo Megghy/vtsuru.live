@@ -66,7 +66,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const message = useMessage()
 
   function addWaitingMusic(info: WaitMusicInfo) {
-    if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || originMusics.value.length == 0 || aplayerRef.value?.audio.paused) {
+    if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || aplayerRef.value?.audio.paused == true) {
       playMusic(info.music)
       console.log(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
     } else {

@@ -456,7 +456,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Message:
       forceSpeak({
         type: EventDataTypes.Message,
-        name: accountInfo.value?.name ?? '未知用户',
+        name: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '测试弹幕',
         price: 0,
@@ -473,9 +473,9 @@ function test(type: EventDataTypes) {
     case EventDataTypes.SC:
       forceSpeak({
         type: EventDataTypes.SC,
-        name: accountInfo.value?.name ?? '未知用户',
+        name: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
-        msg: '测试SC',
+        msg: '测试留言',
         price: 30,
         num: 1,
         time: Date.now(),
@@ -490,7 +490,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Guard:
       forceSpeak({
         type: EventDataTypes.Guard,
-        name: accountInfo.value?.name ?? '未知用户',
+        name: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '舰长',
         price: 0,
@@ -507,7 +507,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Gift:
       forceSpeak({
         type: EventDataTypes.Gift,
-        name: accountInfo.value?.name ?? '未知用户',
+        name: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '测试礼物',
         price: 5,
