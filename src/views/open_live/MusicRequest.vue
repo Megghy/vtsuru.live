@@ -41,6 +41,7 @@ import {
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
+import { useRoute } from 'vue-router'
 
 type Music = {
   id: number
@@ -54,6 +55,8 @@ type WaitMusicInfo = {
   from: DanmakuUserInfo
   music: SongsInfo
 }
+
+const route = useRoute()
 
 const settings = computed(() => {
   return musicRquestStore.settings
@@ -262,7 +265,11 @@ function stopListen() {
   message.success('已停止监听')
 }
 async function onGetEvent(data: EventModel) {
-  if (!listening.value || !checkMessage(data.msg)) return
+  if (!checkMessage(data.msg)) return
+  if (!listening.value) {
+    if (route.name == 'manage-musicRequest') message.warning('(有人点歌, 不过你还没有开启监听)')
+    return
+  }
   if (settings.value.orderCooldown && cooldown.value[data.uid] && data.uid != (accountInfo.value?.biliId ?? -1)) {
     const lastRequest = cooldown.value[data.uid]
     if (Date.now() - lastRequest < settings.value.orderCooldown * 1000) {
@@ -317,7 +324,7 @@ async function getOutputDevice() {
     deviceList.value = list.filter((device) => device.kind === 'audiooutput').map((d) => ({ label: d.label, value: d.deviceId }))
   } catch (err) {
     console.error(err)
-    message.error('获取音频输出设备失败: ' + err)
+    message.error('获取音频输出设备失败, 获取你需要授予网页读取麦克风权限: ' + err)
   }
 }
 function blockMusic(song: SongsInfo) {
