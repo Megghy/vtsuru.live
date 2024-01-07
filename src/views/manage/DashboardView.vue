@@ -4,7 +4,7 @@ import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
-import { Question24Regular } from '@vicons/fluent'
+import { Mic24Filled, Question24Regular } from '@vicons/fluent'
 import { useLocalStorage } from '@vueuse/core'
 import { NAlert, NButton, NCard, NCountdown, NDivider, NEllipsis, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSpace, NTag, NText, NTime, NTooltip, useLoadingBar, useMessage } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
@@ -242,7 +242,15 @@ onUnmounted(() => {
                 已认证 | {{ accountInfo?.biliId }}
                 <NTag v-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Active" type="success" size="small" :bordered="false"> 身份码: 有效 </NTag>
                 <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive" type="error" size="small" :bordered="false"> 身份码: 需更新 </NTag>
-                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Notfound" type="warning" size="small" :bordered="false"> 身份码: 需绑定 </NTag>
+                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Notfound" type="warning" size="small" :bordered="false">
+                  身份码: 需绑定
+                  <NTooltip>
+                    <template #trigger>
+                      <NIcon :component="Mic24Filled" />
+                    </template>
+                    如果你不是主播的话则不需要在意这个提示
+                  </NTooltip>
+                </NTag>
                 <NButton size="tiny" type="info" @click="bindBiliCodeModalVisiable = true"> 更新身份码 </NButton>
                 <NPopconfirm @positive-click="resetBili">
                   <template #trigger>
