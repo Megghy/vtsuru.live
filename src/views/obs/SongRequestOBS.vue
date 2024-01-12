@@ -122,8 +122,8 @@ onUnmounted(() => {
             <div class="song-request-list-item-song-name">
               {{ song.songName }}
             </div>
-            <p class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
-            <div class="song-request-list-item-level" :has-level="(song.user?.fans_medal_level ?? 0) > 0">
+            <p v-if="settings.showUserName" class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
+            <div v-if="settings.showFanMadelInfo" class="song-request-list-item-level" :has-level="(song.user?.fans_medal_level ?? 0) > 0">
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </span>
