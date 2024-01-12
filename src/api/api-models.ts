@@ -114,6 +114,9 @@ export interface Setting_SongRequest {
   jianzhangCooldownSecond: number
 
   showRequireInfo: boolean
+  showUserName: boolean
+  showFanMadelInfo: boolean
+
   isReverse: boolean
 }
 export interface Setting_Queue {

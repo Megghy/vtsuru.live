@@ -362,7 +362,7 @@ function checkMessage(msg: string) {
   return msg
     .trim()
     .toLowerCase()
-    .startsWith(accountInfo.value ? settings.value.orderPrefix : defaultPrefix.value)
+    .startsWith(accountInfo.value ? settings.value.orderPrefix.toLowerCase() : defaultPrefix.value)
 }
 async function onUpdateFunctionEnable() {
   if (accountInfo.value) {
@@ -1039,7 +1039,11 @@ onUnmounted(() => {
               </NInputGroup>
             </NSpace>
             <NDivider> OBS </NDivider>
-            <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
+            <NSpace>
+              <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
+              <NCheckbox v-model:checked="settings.showUserName" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示点歌用户名 </NCheckbox>
+              <NCheckbox v-model:checked="settings.showFanMadelInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示点歌用户粉丝牌 </NCheckbox>
+            </NSpace>
             <NDivider> 其他 </NDivider>
             <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭点歌失败时的提示消息 </NCheckbox>
           </NSpace>
