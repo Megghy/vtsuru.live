@@ -42,6 +42,7 @@ export interface AccountInfo extends UserInfo {
 
   eventFetcherOnline: boolean
   eventFetcherStatus: string
+  eventFetcherStatusV3: { [errorCode: string]: string }
 
   nextSendEmailTime?: number
   isServerFetcherOnline: boolean
