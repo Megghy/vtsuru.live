@@ -436,6 +436,9 @@ export enum EventDataTypes {
   SC,
   Gift,
   Message,
+  Like,
+  SCDel,
+  Enter
 }
 export interface ResponseQueueModel {
   id: number
