@@ -157,7 +157,12 @@ defineEmits<{
         <NDivider vertical />
         {{ danmaku.msg }}
       </span>
-      <span v-else> {{ danmaku.msg }} default </span>
+      <span
+        v-else-if="danmaku.type == EventDataTypes.Enter"
+        style="color: forestgreen"
+      >
+        进入直播间
+      </span>
     </span>
   </template>
 </template>
