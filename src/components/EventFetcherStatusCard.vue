@@ -2,12 +2,29 @@
 import { useAccount } from '@/api/account'
 import { Info24Filled } from '@vicons/fluent'
 import { NAlert, NButton, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
+import { computed } from 'vue'
 
 const accountInfo = useAccount()
+
+const status = computed(() => {
+  if (!accountInfo.value) return 'error'
+  if (accountInfo.value.eventFetcherOnline == true) {
+    if (accountInfo.value.eventFetcherStatus) {
+      if (accountInfo.value.eventFetcherStatus == 'ok') return 'success'
+      else return 'warning'
+    } else if (Object.keys(accountInfo.value.eventFetcherStatusV3 ?? {}).length > 0) {
+      return 'warning'
+    } else {
+      return 'success'
+    }
+  } else {
+    return 'info'
+  }
+})
 </script>
 
 <template>
-  <NAlert :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'info'">
+  <NAlert :type="status">
     <template #header>
       EVENT-FETCHER 状态
       <NTooltip>
@@ -19,8 +36,12 @@ const accountInfo = useAccount()
         事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
       </NTooltip>
     </template>
-    <NTag :type="accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? 'success' : 'warning') : 'error'">
-      {{ accountInfo?.eventFetcherOnline ? (accountInfo?.eventFetcherStatus == 'ok' ? '正常' : `异常: ${accountInfo.eventFetcherStatus}`) : '未连接' }}
+    <NTag :type="status">
+      <template v-if="status == 'success'"> 运行中 </template>
+      <template v-else-if="status == 'warning'">
+        <template v-if="accountInfo?.eventFetcherStatus"> 异常: {{ accountInfo.eventFetcherStatus }} </template>
+      </template>
+      <template v-else-if="status == 'info'"> 未连接 </template>
     </NTag>
     <template v-if="accountInfo?.eventFetcherOnline != true">
       <NDivider vertical />
