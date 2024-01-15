@@ -34,6 +34,8 @@ const status = computed(() => {
         这是一个可以持续监听直播间内的 Superchat 和上舰事件并上传到本站进行记录的 Nodejs/.Net 程序
         <br />
         事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
+        <br />
+        <NButton type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
       </NTooltip>
     </template>
     <NTag :type="status">

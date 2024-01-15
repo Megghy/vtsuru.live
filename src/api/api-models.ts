@@ -497,4 +497,5 @@ export enum FeedbackStatus {
   Finish,
   Todo,
   Reject,
+  Developing,
 }
