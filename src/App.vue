@@ -5,14 +5,14 @@
         <NLoadingBarProvider>
           <Suspense>
             <TempComponent>
-              <NElement style="height: 100%" v-if="layout != 'obs'">
+              <NLayoutContent style="height: 100%" v-if="layout != 'obs'">
                 <ViewerLayout v-if="layout == 'viewer'" />
                 <ManageLayout v-else-if="layout == 'manage'" />
                 <OpenLiveLayout v-else-if="layout == 'open-live'" />
                 <template v-else-if="layout == ''">
                   <RouterView />
                 </template>
-              </NElement>
+              </NLayoutContent>
               <RouterView v-else />
             </TempComponent>
             <template #fallback>
@@ -30,7 +30,7 @@ import { useProviderStore } from '@/store/useProviderStore'
 import ManageLayout from '@/views/ManageLayout.vue'
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import { useStorage } from '@vueuse/core'
-import { NConfigProvider, NElement, NLoadingBarProvider, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useLoadingBar, useOsTheme, zhCN } from 'naive-ui'
+import { NConfigProvider, NElement, NLayoutContent, NLoadingBarProvider, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useLoadingBar, useOsTheme, zhCN } from 'naive-ui'
 import { computed, defineComponent, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ThemeType } from './api/api-models'

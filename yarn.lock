@@ -2363,6 +2363,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-oxlint@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "eslint-plugin-oxlint@npm:0.2.0"
+  checksum: fc0d6b56e9e93129b16f46f5ddfd2bf7233292b6a643efeda4c421d2796ee009333ca3bada4241b14dcd14b21eb757ead4aaa84671af73da925042eabed425d8
+  languageName: node
+  linkType: hard
+
 "eslint-plugin-prettier@npm:^5.1.2":
   version: 5.1.2
   resolution: "eslint-plugin-prettier@npm:5.1.2"
@@ -4873,6 +4880,7 @@ __metadata:
     eslint: "npm:^8.56.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-import: "npm:^2.29.1"
+    eslint-plugin-oxlint: "npm:^0.2.0"
     eslint-plugin-prettier: "npm:^5.1.2"
     eslint-plugin-vue: "npm:^9.19.2"
     fast-xml-parser: "npm:^4.3.2"

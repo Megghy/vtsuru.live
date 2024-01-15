@@ -46,7 +46,7 @@ async function get() {
       return data.data
     }
   } catch (err) {}
-  return {} as { playing: WaitMusicInfo; waiting: WaitMusicInfo[] }
+  return originSongs.value
 }
 const isMoreThanContainer = computed(() => {
   return originSongs.value.waiting.length * itemHeight > height.value
@@ -95,9 +95,6 @@ onUnmounted(() => {
               {{ item.music.name }}
             </div>
             <p class="music-request-list-item-name">{{ item.from ? item.from.name : '主播添加' }}</p>
-            <div class="music-request-list-item-level" :has-level="(item.from?.fans_medal_level ?? 0) > 0">
-              {{ `${item.from?.fans_medal_name} ${item.from?.fans_medal_level}` }}
-            </div>
           </span>
         </Vue3Marquee>
       </template>

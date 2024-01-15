@@ -2,6 +2,7 @@
 import { useAccount } from '@/api/account'
 import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import FeedbackItem from '@/components/FeedbackItem.vue'
 import { FEEDBACK_API_URL } from '@/data/constants'
 import { List } from 'linqts'
 import { NButton, NCard, NCheckbox, NDivider, NEllipsis, NEmpty, NInput, NModal, NRadioButton, NRadioGroup, NSpace, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
@@ -24,6 +25,7 @@ const order = {
   [FeedbackStatus.Todo]: 3,
   [FeedbackStatus.Finish]: 4,
   [FeedbackStatus.Reject]: 5,
+  [FeedbackStatus.Developing]: 6,
 }
 const selectedFeedback = computed(() => {
   return feedbacks.value.sort((a, b) => {
@@ -79,7 +81,12 @@ async function add() {
 
 <template>
   <NSpace align="center">
-    <NButton @click="showAddModal = true" type="info">添加反馈</NButton>
+    <NTooltip :disabled="accountInfo !== undefined">
+      <template #trigger>
+        <NButton @click="showAddModal = true" type="info" :disabled="!accountInfo">添加反馈</NButton>
+      </template>
+      你需要登陆后才能提交反馈
+    </NTooltip>
     <NText depth="3"> 或者直接加群 873260337 说也可以 </NText>
   </NSpace>
   <NDivider>
@@ -94,54 +101,41 @@ async function add() {
     </NTooltip>
   </NDivider>
   <NEmpty v-if="feedbacks.length == 0" description="暂无反馈" />
-  <NSpace v-else>
-    <NCard v-for="item in selectedFeedback" v-bind:key="item.createAt" size="small" embedded style="min-width: 300px">
-      <template #header>
-        <NTag v-if="item.status == FeedbackStatus.Padding" :bordered="false"> 等待 </NTag>
-        <NTag v-else-if="item.status == FeedbackStatus.Progressing" type="success">
-          <template #icon>
-            <NSpin :size="12" />
-          </template>
-          处理中
-        </NTag>
-        <NTag v-else-if="item.status == FeedbackStatus.Finish" :bordered="false" type="primary"> 已完成 </NTag>
-        <NTag v-else-if="item.status == FeedbackStatus.Todo" :bordered="false" type="info"> 计划中 </NTag>
-        <NTag v-else-if="item.status == FeedbackStatus.Reject" :bordered="false" type="warning"> 搁置 </NTag>
-        <NDivider vertical />
-        <NTag v-if="!item.userName"> 匿名 </NTag>
-        <template v-else>
-          <NEllipsis>
-            {{ item.userName }}
-          </NEllipsis>
-        </template>
-        <NDivider vertical />
-        <NTooltip>
-          <template #trigger>
-            <NText depth="3" style="font-size: small">
-              <NTime :time="item.createAt" type="relative" />
-            </NText>
-          </template>
-          <NTime :time="item.createAt" />
-        </NTooltip>
-      </template>
-      <template #header-extra>
-        <NTag v-if="item.type == FeedbackType.Opinion" :bordered="false" size="small" type="info" :color="{ color: '#5f877d', textColor: 'white' }"> 建议 </NTag>
-        <NTag v-else-if="item.type == FeedbackType.Bug" :bordered="false" size="small" type="info" :color="{ color: '#875f5f', textColor: 'white' }"> Bug </NTag>
-        <NTag v-else-if="item.type == FeedbackType.FunctionRequest" :bordered="false" size="small" type="info" :color="{ color: '#5f6887', textColor: 'white' }"> 功能 </NTag>
-        <NTag v-else-if="item.type == FeedbackType.Other" :bordered="false" size="small" type="info" :color="{ color: '#595557', textColor: 'white' }"> 其他 </NTag>
-      </template>
-      {{ item.message }}
-      <template v-if="item.replyMessage" #footer>
-        <NDivider style="margin: 0px 0 10px 0" />
-        <NSpace align="center">
-          <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`"></div>
-          <NText>
-            {{ item.replyMessage }}
-          </NText>
-        </NSpace>
-      </template>
-    </NCard>
+  <NSpace v-else-if="orderType == 'time'">
+    <FeedbackItem v-for="item in selectedFeedback" :item="item" />
   </NSpace>
+  <template v-else>
+    <NDivider> 开发计划 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing)" :item="item" />
+    </NSpace>
+    <NDivider> 处理中 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing)" :item="item" />
+    </NSpace>
+    <NDivider> 等待回复 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding)" :item="item" />
+    </NSpace>
+    <NDivider> 计划中 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo)" :item="item" />
+    </NSpace>
+    <NDivider> 已完成 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish)" :item="item" />
+    </NSpace>
+    <NDivider> 搁置 </NDivider>
+    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject).length == 0" description="无" />
+    <NSpace v-else>
+      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject)" :item="item" />
+    </NSpace>
+  </template>
   <NModal v-model:show="showAddModal" preset="card" title="添加反馈" style="width: 600px; max-width: 90vw">
     <NSpace vertical>
       <NInput v-model:value="newFeedback.message" type="textarea" placeholder="请输入反馈内容" clearable show-count maxlength="1000" />

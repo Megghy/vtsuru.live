@@ -2,12 +2,13 @@
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
+import { Info24Filled } from '@vicons/fluent'
 import { addHours, format, isSameDay, isSameHour, startOfHour } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NCard, NSpace, NSpin, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NIcon, NSpace, NSpin, NText, NTooltip, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -486,6 +487,24 @@ onMounted(async () => {
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <NSpin v-else-if="isLoading" show />
   <NCard v-else size="small">
+    <NTooltip trigger="click" placement="bottom">
+      <template #trigger>
+        <NButton type="info">
+          <template #icon>
+            <NIcon :component="Info24Filled" />
+          </template>
+          关于数据更新
+        </NButton>
+      </template>
+      更新速度:
+      <NSpace vertical>
+        <span> 粉丝数: 1000粉以下: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次 </span>
+        <span> 舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次 </span>
+        <span> 投稿数据: 每天一次 </span>
+      </NSpace>
+    </NTooltip>
+    <br />
+    <br />
     <NSpace vertical>
       <VChart :option="fansOption" style="height: 200px" />
       <VChart :option="guardsOption" style="height: 200px" />

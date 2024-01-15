@@ -190,10 +190,13 @@ onMounted(async () => {
           </div>
         </Transition>
         <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
-        <NSpace justify="center">
-          <NText depth="3" v-if="width > 150">
+        <NSpace v-if="width > 150" justify="center" align="center" vertical>
+          <NText depth="3">
             有更多功能建议请
-            <NButton text type="info" @click="$router.push({ name: 'about' })"> 反馈 </NButton>
+            <NButton text type="info" tag="a" href="/feedback" target="_blank"> 反馈 </NButton>
+          </NText>
+          <NText depth="3">
+            <NButton text type="info" tag="a" href="/about" target="_blank"> 关于本站 </NButton>
           </NText>
         </NSpace>
       </NLayoutSider>
