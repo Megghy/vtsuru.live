@@ -173,6 +173,7 @@ export enum FunctionTypes {
   Schedule,
   SongRequest,
   Queue,
+  Point
 }
 export interface SongAuthorInfo {
   name: string
@@ -498,4 +499,30 @@ export enum FeedbackStatus {
   Todo,
   Reject,
   Developing,
+}
+export interface TagInfo
+{
+    name: string
+    color: string
+}
+export enum GoodsStatus
+{
+    Normal,   // 商品正常
+    //OutOfStock,  // 商品无货
+    Discontinued  // 商品下架
+}
+export enum GoodsTypes {
+  Physical,
+  Virtual,
+}
+export interface ResponsePointGoodModel {
+  id: number
+  name: string
+  count: number
+  price: number
+  tags: TagInfo[]
+  cover?: string
+  images: string[]
+  status: GoodsStatus
+  type: GoodsTypes
 }
