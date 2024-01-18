@@ -159,5 +159,13 @@ export default //管理页面
         title: '反馈',
       },
     },
+    {
+      path: 'point',
+      name: 'manage-point',
+      component: () => import('@/views/manage/PointManage.vue'),
+      meta: {
+        title: '积分',
+      },
+    },
   ],
 }

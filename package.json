@@ -17,6 +17,7 @@
     "date-fns": "^3.0.6",
     "easy-speech": "^2.2.0",
     "echarts": "^5.4.3",
+    "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-oxlint": "^0.2.0",
     "eslint-plugin-prettier": "^5.1.2",
@@ -43,11 +44,11 @@
     "worker-timers": "^7.0.80"
   },
   "devDependencies": {
+    "@types/eslint": "^8",
     "@typescript-eslint/parser": "^6.16.0",
     "@vicons/ionicons5": "^0.12.0",
     "@vitejs/plugin-vue-jsx": "^3.1.0",
     "@vue/eslint-config-typescript": "^12.0.0",
-    "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.19.2",
     "naive-ui": "^2.36.0",

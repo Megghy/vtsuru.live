@@ -147,3 +147,50 @@ export async function UploadConfig(name: string, data: unknown) {
   }
   return false
 }
+export async function EnableFunction(func: FunctionTypes) {
+  if (ACCOUNT.value) {
+    if (ACCOUNT.value.settings.enableFunctions.includes(func)) {
+      return true
+    } else {
+      ACCOUNT.value.settings.enableFunctions.push(func)
+      if (await updateFunctionEnable()) {
+        return true
+      } else {
+        ACCOUNT.value.settings.enableFunctions.splice(ACCOUNT.value.settings.enableFunctions.indexOf(func), 1)
+        return false
+      }
+    }
+  }
+  return false
+}
+export async function DisableFunction(func: FunctionTypes) {
+  if (ACCOUNT.value) {
+    if (!ACCOUNT.value.settings.enableFunctions.includes(func)) {
+      return true
+    } else {
+      ACCOUNT.value.settings.enableFunctions.splice(ACCOUNT.value.settings.enableFunctions.indexOf(func), 1)
+      if (await updateFunctionEnable()) {
+        return true
+      } else {
+        ACCOUNT.value.settings.enableFunctions.push(func)
+        return false
+      }
+    }
+  }
+  return false
+}
+async function updateFunctionEnable() {
+  if (ACCOUNT.value) {
+    try {
+      const data = await SaveEnableFunctions(ACCOUNT.value.settings.enableFunctions)
+      if (data.code == 200) {
+        return true
+      } else {
+        return false
+      }
+    } catch (err) {
+      console.log(err)
+      return false
+    }
+  }
+}

@@ -528,7 +528,7 @@ onMounted(() => {
               listFolded
               @ended="musicRquestStore.onMusicEnd"
               @play="musicRquestStore.onMusicPlay"
-              style="flex: 1;min-width: 400px;"
+              style="flex: 1; min-width: 400px"
             />
             <NSpace vertical>
               <NTag :bordered="false" type="info" size="small"> 队列: {{ musicRquestStore.waitingMusics.length }} </NTag>

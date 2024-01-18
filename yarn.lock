@@ -603,13 +603,13 @@ __metadata:
   linkType: hard
 
 "@humanwhocodes/config-array@npm:^0.11.13":
-  version: 0.11.13
-  resolution: "@humanwhocodes/config-array@npm:0.11.13"
+  version: 0.11.14
+  resolution: "@humanwhocodes/config-array@npm:0.11.14"
   dependencies:
-    "@humanwhocodes/object-schema": "npm:^2.0.1"
-    debug: "npm:^4.1.1"
+    "@humanwhocodes/object-schema": "npm:^2.0.2"
+    debug: "npm:^4.3.1"
     minimatch: "npm:^3.0.5"
-  checksum: d76ca802d853366094d0e98ff0d0994117fc8eff96649cd357b15e469e428228f597cd2e929d54ab089051684949955f16ee905bb19f7b2f0446fb377157be7a
+  checksum: 66f725b4ee5fdd8322c737cb5013e19fac72d4d69c8bf4b7feb192fcb83442b035b92186f8e9497c220e58b2d51a080f28a73f7899bc1ab288c3be172c467541
   languageName: node
   linkType: hard
 
@@ -620,10 +620,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@humanwhocodes/object-schema@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@humanwhocodes/object-schema@npm:2.0.1"
-  checksum: 9dba24e59fdb4041829d92b693aacb778add3b6f612aaa9c0774f3b650c11a378cc64f042a59da85c11dae33df456580a3c36837b953541aed6ff94294f97fac
+"@humanwhocodes/object-schema@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "@humanwhocodes/object-schema@npm:2.0.2"
+  checksum: 6fd83dc320231d71c4541d0244051df61f301817e9f9da9fd4cb7e44ec8aacbde5958c1665b0c419401ab935114fdf532a6ad5d4e7294b1af2f347dd91a6983f
   languageName: node
   linkType: hard
 
@@ -851,7 +851,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:^7.0.12":
+"@types/eslint@npm:^8":
+  version: 8.56.2
+  resolution: "@types/eslint@npm:8.56.2"
+  dependencies:
+    "@types/estree": "npm:*"
+    "@types/json-schema": "npm:*"
+  checksum: e33ca87a30a9454ba9943e1270ac759996f5fe598a1c1afbaec1d1e7346a339e20bf2a9d81f177067116bbaa6cfa4f748993cb338f57978ae862ad38ffae56fe
+  languageName: node
+  linkType: hard
+
+"@types/estree@npm:*":
+  version: 1.0.5
+  resolution: "@types/estree@npm:1.0.5"
+  checksum: b3b0e334288ddb407c7b3357ca67dbee75ee22db242ca7c56fe27db4e1a31989cb8af48a84dd401deb787fe10cc6b2ab1ee82dc4783be87ededbe3d53c79c70d
+  languageName: node
+  linkType: hard
+
+"@types/json-schema@npm:*, @types/json-schema@npm:^7.0.12":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: a996a745e6c5d60292f36731dd41341339d4eeed8180bb09226e5c8d23759067692b1d88e5d91d72ee83dfc00d3aca8e7bd43ea120516c17922cbcb7c3e252db
@@ -1926,7 +1943,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -4864,6 +4881,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "vtsuru.live@workspace:."
   dependencies:
+    "@types/eslint": "npm:^8"
     "@types/node": "npm:^20.10.6"
     "@typescript-eslint/eslint-plugin": "npm:^6.16.0"
     "@typescript-eslint/parser": "npm:^6.16.0"
