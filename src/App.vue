@@ -6,12 +6,14 @@
           <Suspense>
             <TempComponent>
               <NLayoutContent style="height: 100%" v-if="layout != 'obs'">
-                <ViewerLayout v-if="layout == 'viewer'" />
-                <ManageLayout v-else-if="layout == 'manage'" />
-                <OpenLiveLayout v-else-if="layout == 'open-live'" />
-                <template v-else-if="layout == ''">
-                  <RouterView />
-                </template>
+                <NElement>
+                  <ViewerLayout v-if="layout == 'viewer'" />
+                  <ManageLayout v-else-if="layout == 'manage'" />
+                  <OpenLiveLayout v-else-if="layout == 'open-live'" />
+                  <template v-else-if="layout == ''">
+                    <RouterView />
+                  </template>
+                </NElement>
               </NLayoutContent>
               <RouterView v-else />
             </TempComponent>

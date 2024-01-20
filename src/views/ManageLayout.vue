@@ -550,7 +550,7 @@ onMounted(() => {
         <RegisterAndLogin style="max-width: 500px; min-width: 350px" />
       </template>
       <template v-else>
-        <NSpin :loading="isLoadingAccount"> 正在请求账户数据... </NSpin>
+        <NSpin :loading="isLoadingAccount" style="overflow: hidden;"> 正在请求账户数据... </NSpin>
       </template>
     </NLayoutContent>
   </template>

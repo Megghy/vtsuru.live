@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
+import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
+import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 const accountInfo = useAccount()
@@ -37,8 +37,18 @@ const status = computed(() => {
         <NButton type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
       </NTooltip>
     </template>
+    <NTooltip v-if="status != 'info'">
+      <template #trigger>
+        <NTag size="small" :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }">
+          <NIcon :component="FlashCheckmark16Filled" />
+          {{ accountInfo?.eventFetcherVersion ?? '未知' }}
+        </NTag>
+      </template>
+      你所使用的版本
+    </NTooltip>
+    <NDivider vertical/>
     <NTag :type="status">
-      <template v-if="accountInfo?.eventFetcherStatus">
+      <template v-if="accountInfo?.eventFetcherOnline == true && accountInfo?.eventFetcherStatus">
         此版本已过期, 请更新
         <NTooltip trigger="click">
           <template #trigger>
@@ -48,7 +58,13 @@ const status = computed(() => {
         </NTooltip>
       </template>
       <template v-else>
-        <template v-if="status == 'success'"> 运行中 </template>
+        <template v-if="status == 'success'">
+          运行中 | 今日已接收
+          <NText color="white" strong>
+            {{ accountInfo?.eventFetcherTodayReceive }}
+          </NText>
+          条
+        </template>
         <template v-else-if="status == 'warning'">
           <template v-if="accountInfo?.eventFetcherStatusV3"> 异常: {{ Object.values(accountInfo.eventFetcherStatusV3).join('; ') }} </template>
         </template>

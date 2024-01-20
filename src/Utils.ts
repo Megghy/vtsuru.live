@@ -71,3 +71,12 @@ export function downloadImage(imageSrc: string, filename: string) {
   }
   image.src = imageSrc
 }
+export function getBase64(file: File | undefined | null): Promise<string | undefined> {
+  if (!file) return new Promise((resolve) => resolve(undefined))
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result?.toString().split(',')[1] || undefined)
+    reader.onerror = (error) => reject(error)
+  })
+}

@@ -1,9 +1,9 @@
 // vite.config.ts
-import vue from '@vitejs/plugin-vue';
-import vueJsx from '@vitejs/plugin-vue-jsx';
-import path from 'path';
-import { defineConfig } from 'vite';
-import svgLoader from 'vite-svg-loader';
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import path from 'path'
+import { defineConfig } from 'vite'
+import svgLoader from 'vite-svg-loader'
 
 export default defineConfig({
   plugins: [
@@ -23,5 +23,8 @@ export default defineConfig({
   },
   define: {
     'process.env': {},
+  },
+  optimizeDeps: {
+    include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
   },
 })

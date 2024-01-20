@@ -34,6 +34,11 @@ function onClick() {
     <NText depth="3" style="font-size: 13px">
       <NTime :time="item.createAt" />
     </NText>
+    <br/>
+    <NText depth="3" style="font-size: 13px">
+      结束:
+      <NTime :time="item.endAt" />
+    </NText>
     <br />
     <NText depth="3">
       <NEllipsis>
