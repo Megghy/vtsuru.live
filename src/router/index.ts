@@ -66,6 +66,15 @@ const routes: Array<RouteRecordRaw> = [
       keepAlive: true,
     },
   },
+  {
+    path: '/bili-auth',
+    name: 'bili-auth',
+    component: () => import('@/views/BiliAuthView.vue'),
+    meta: {
+      title: 'Bilibili 账户认证',
+      keepAlive: true,
+    },
+  },
   manage,
   user,
   obs,

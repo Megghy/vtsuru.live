@@ -153,7 +153,7 @@ const gridRender = (type: 'padding' | 'reject' | 'accept') => {
                   cover: () =>
                     h('div', { style: 'position: relative;height: 150px;' }, [
                       h('img', {
-                        src: v.video.cover,
+                        src: v.video.cover.replace('http://', 'https://'),
                         referrerpolicy: 'no-referrer',
                         style: 'max-height: 100%; object-fit: contain;cursor: pointer',
                         onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
@@ -307,7 +307,7 @@ function saveQRCode() {
       <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
       <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
       <NButton type="warning" size="small" @click="closeTable"> {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }} </NButton>
-      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果表 </NButton>
+      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果页面 </NButton>
       <NPopconfirm :on-positive-click="deleteTable">
         <template #trigger>
           <NButton type="error" size="small"> 删除 </NButton>

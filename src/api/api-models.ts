@@ -43,6 +43,8 @@ export interface AccountInfo extends UserInfo {
   eventFetcherOnline: boolean
   eventFetcherStatus: string
   eventFetcherStatusV3: { [errorCode: string]: string }
+  eventFetcherTodayReceive: number
+  eventFetcherVersion?: string
 
   nextSendEmailTime?: number
   isServerFetcherOnline: boolean
@@ -525,4 +527,19 @@ export interface ResponsePointGoodModel {
   images: string[]
   status: GoodsStatus
   type: GoodsTypes
+}
+
+export interface PointGoodsModel {
+  id?: number
+  name: string
+  count: number
+  price: number
+  tags: TagInfo[]
+  coverImageBase64?: string
+  status: GoodsStatus
+  type: GoodsTypes
+  collectUrl?: string
+  embedCollectUrl?: boolean
+  description: string
+  content?: string
 }
