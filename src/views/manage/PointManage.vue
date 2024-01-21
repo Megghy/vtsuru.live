@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { getBase64 } from '@/Utils'
+import { getBase64, getImageUploadModel } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { ResponsePointGoodModel, FunctionTypes, PointGoodsModel, GoodsTypes, GoodsStatus, TagInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
-import { Info24Filled } from '@vicons/fluent'
+import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
+import { FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
+import { Info24Filled, MoreVertical16Filled } from '@vicons/fluent'
 import { List } from 'linqts'
 import {
   NAlert,
@@ -32,15 +33,21 @@ import {
   FormItemRule,
   NScrollbar,
   FormValidationError,
-NSelect,
+  NSelect,
+  NGrid,
+  NGridItem,
+  NDropdown,
+  NImage,
+  useDialog,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
+const dialog = useDialog()
 
 const goods = ref<ResponsePointGoodModel[]>(await getGoods())
-const addGoodsModel = ref<PointGoodsModel>({
+const currentGoodsModel = ref<PointGoodsModel>({
   type: GoodsTypes.Virtual,
   status: GoodsStatus.Normal,
 } as PointGoodsModel)
@@ -48,6 +55,7 @@ const addGoodsModel = ref<PointGoodsModel>({
 const showAddGoodsModal = ref(false)
 
 const isAllowedPrivacyPolicy = ref(false)
+const isUpdating = ref(false)
 
 const fileList = ref<UploadFileInfo[]>([])
 
@@ -64,30 +72,53 @@ const rules = {
     required: true,
     message: '请输入虚拟礼物的具体内容',
     validator: (rule: FormItemRule, value: string) => {
-      return addGoodsModel.value.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0
+      return currentGoodsModel.value.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0
     },
   },
   privacy: {
     required: true,
     message: '需要阅读并同意本站隐私政策',
     validator: (rule: FormItemRule, value: boolean) => {
-      return (addGoodsModel.value.type != GoodsTypes.Physical && addGoodsModel.value.collectUrl != undefined) || isAllowedPrivacyPolicy.value
+      return (currentGoodsModel.value.type != GoodsTypes.Physical && currentGoodsModel.value.collectUrl != undefined) || isAllowedPrivacyPolicy.value
     },
   },
 }
 const formRef = ref()
 
 const existTags = computed(() => {
+  if (goods.value.length == 0) {
+    return []
+  }
   //获取所有已存在商品的tags并去重
   const tempSet = new Set<TagInfo>()
   for (let i = 0; i < goods.value.length; i++) {
+    const goodsTags = goods.value[i].tags
+    if (!goodsTags || goodsTags.length == 0) {
+      continue
+    }
     for (let j = 0; j < goods.value[i].tags.length; j++) {
       tempSet.add(goods.value[i].tags[j])
     }
   }
   return Array.from(tempSet).map((item) => {
-    return { label: item.name, value: item.id }
+    return { label: item.name, value: item.name }
   })
+})
+
+const dropDownActions = {
+  update: {
+    label: '修改',
+    key: 'update',
+    action: (item: ResponsePointGoodModel) => onUpdateClick(item),
+  },
+  delete: {
+    label: '删除',
+    key: 'delete',
+    action: (item: ResponsePointGoodModel) => onDeleteClick(item),
+  },
+} as { [key: string]: { label: string; key: string; action: (item: ResponsePointGoodModel) => void } }
+const dropDownOptions = computed(() => {
+  return Object.values(dropDownActions)
 })
 
 async function getGoods() {
@@ -119,18 +150,25 @@ async function setFunctionEnable(enable: boolean) {
   }
 }
 async function updateGoods(e: MouseEvent) {
+  if (isUpdating.value || !formRef.value) return
   e.preventDefault()
-  if (!formRef.value) return
+  isUpdating.value = true
   await formRef.value
     .validate()
     .then(async () => {
       if (fileList.value.length > 0) {
-        addGoodsModel.value.coverImageBase64 = await getBase64(fileList.value[0].file)
+        currentGoodsModel.value.cover = await getImageUploadModel(fileList.value)
       }
-      await QueryPostAPI<ResponsePointGoodModel>(POINT_API_URL + 'update-goods', addGoodsModel.value)
+      console.log(currentGoodsModel.value.cover)
+      await QueryPostAPI<ResponsePointGoodModel>(POINT_API_URL + 'update-goods', currentGoodsModel.value)
         .then((data) => {
           if (data.code == 200) {
             message.success('成功')
+            if (goods.value.find((g) => g.id == data.data.id)) {
+              goods.value[goods.value.findIndex((g) => g.id == data.data.id)] = data.data
+            } else {
+              goods.value.push(data.data)
+            }
           } else {
             message.error('失败: ' + data.message)
           }
@@ -144,6 +182,11 @@ async function updateGoods(e: MouseEvent) {
       console.log(err)
       message.error('表单验证失败')
     })
+    .finally(() => {
+      isUpdating.value = false
+      showAddGoodsModal.value = false
+      currentGoodsModel.value = {} as PointGoodsModel
+    })
 }
 function OnFileListChange(files: UploadFileInfo[]) {
   if (files.length == 1) {
@@ -153,6 +196,50 @@ function OnFileListChange(files: UploadFileInfo[]) {
       fileList.value = []
     }
   }
+}
+function onUpdateClick(item: ResponsePointGoodModel) {
+  currentGoodsModel.value = {
+    ...item,
+    count: item.count ?? 0,
+    cover: undefined,
+  }
+  fileList.value = [
+    {
+      id: item.cover ?? 'cover',
+      thumbnailUrl: FILE_BASE_URL + item.cover,
+      name: '封面',
+      status: 'finished',
+    },
+  ]
+  showAddGoodsModal.value = true
+}
+function onDeleteClick(item: ResponsePointGoodModel) {
+  const d = dialog.warning({
+    title: '警告',
+    content: '你确定要删除这个礼物吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      d.loading = true
+      try {
+        const data = await QueryGetAPI(POINT_API_URL + 'delete-goods', {
+          id: item.id,
+        })
+        if (data.code == 200) {
+          message.success('成功')
+          goods.value = goods.value.filter((g) => g.id != item.id)
+        } else {
+          message.error('失败: ' + data.message)
+          console.error(data.message)
+        }
+      } catch (err) {
+        message.error('失败: ' + err)
+        console.error(err)
+      } finally {
+        d.loading = false
+      }
+    },
+  })
 }
 </script>
 
@@ -172,25 +259,44 @@ function OnFileListChange(files: UploadFileInfo[]) {
         <NButton type="primary" @click="showAddGoodsModal = true"> 添加礼物 </NButton>
       </NFlex>
       <NDivider />
+      <NGrid :cols="4">
+        <NGridItem v-for="item in goods" :key="item.id">
+          <PointGoodsItem :goods="item">
+            <template #header-extra>
+              <NDropdown :options="dropDownOptions" trigger="click" @select="(v) => dropDownActions[v].action(item)">
+                <NButton text style="font-size: 24px">
+                  <template #icon>
+                    <NIcon :component="MoreVertical16Filled" />
+                  </template>
+                </NButton>
+              </NDropdown>
+            </template>
+          </PointGoodsItem>
+        </NGridItem>
+      </NGrid>
     </NTabPane>
   </NTabs>
 
-  <NModal v-model:show="showAddGoodsModal" preset="card" style="width: 600px; max-width: 90%" title="添加礼物">
+  <NModal v-model:show="showAddGoodsModal" preset="card" style="width: 600px; max-width: 90%" title="添加/修改礼物信息">
     <NScrollbar style="max-height: 80vh">
-      <NForm ref="formRef" :model="addGoodsModel" :rules="rules">
+      <NForm ref="formRef" :model="currentGoodsModel" :rules="rules" style="width: 95%">
         <NFormItem path="name" label="名称" required>
-          <NInput v-model:value="addGoodsModel.name" placeholder="填写礼物名称" />
+          <NInput v-model:value="currentGoodsModel.name" placeholder="必填, 礼物名称" />
         </NFormItem>
         <NFormItem path="price" label="所需积分" required>
-          <NInputNumber v-model:value="addGoodsModel.price" placeholder="填写需要的积分" min="0" />
+          <NInputNumber v-model:value="currentGoodsModel.price" placeholder="必填, 兑换所需要的积分" min="0" />
         </NFormItem>
-        <NFormItem path="description" label="描述" type="textarea">
-          <NInput v-model:value="addGoodsModel.description" placeholder="填写礼物描述" />
+        <NFormItem path="description" label="描述">
+          <NInput v-model:value="currentGoodsModel.description" placeholder="可选, 礼物描述" />
         </NFormItem>
         <NFormItem path="tags" label="标签">
-          <NSelect v-model:value="addGoodsModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认" :options="existTags" />
+          <NSelect :value="currentGoodsModel.tags?.map((tag) => tag.name)" filterable multiple clearable tag placeholder="可选，输入后按回车添加" :options="existTags" />
         </NFormItem>
-        <NFormItem path="cover" label="封面" type="textarea">
+        <NFormItem path="cover" label="封面">
+          <NFlex v-if="currentGoodsModel.cover">
+            <NText>当前封面: </NText>
+            <NImage :src="FILE_BASE_URL + currentGoodsModel.cover" height="50" object-fit="cover" />
+          </NFlex>
           <NUpload
             :max="1"
             accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
@@ -199,19 +305,19 @@ function OnFileListChange(files: UploadFileInfo[]) {
             v-model:file-list="fileList"
             @update:file-list="OnFileListChange"
           >
-            + 上传图片
+            + {{ currentGoodsModel.cover ? '更换' : '上传' }}封面
           </NUpload>
         </NFormItem>
         <NFormItem path="type" label="类型">
-          <NRadioGroup v-model:value="addGoodsModel.type">
+          <NRadioGroup v-model:value="currentGoodsModel.type">
             <NRadioButton :value="GoodsTypes.Virtual">虚拟礼物</NRadioButton>
             <NRadioButton :value="GoodsTypes.Physical">实体礼物</NRadioButton>
           </NRadioGroup>
         </NFormItem>
-        <template v-if="addGoodsModel.type == GoodsTypes.Physical">
+        <template v-if="currentGoodsModel.type == GoodsTypes.Physical">
           <NFormItem path="collectUrl" label="收货地址">
             <NFlex vertical>
-              <NRadioGroup :value="addGoodsModel.collectUrl == undefined ? 0 : 1" @update:value="(v) => (addGoodsModel.collectUrl = v == 1 ? '' : undefined)">
+              <NRadioGroup :value="currentGoodsModel.collectUrl == undefined ? 0 : 1" @update:value="(v) => (currentGoodsModel.collectUrl = v == 1 ? '' : undefined)">
                 <NRadioButton :value="0">通过本站收集收货地址</NRadioButton>
                 <NRadioButton :value="1">
                   使用站外链接收集地址
@@ -225,12 +331,12 @@ function OnFileListChange(files: UploadFileInfo[]) {
               </NRadioGroup>
             </NFlex>
           </NFormItem>
-          <template v-if="addGoodsModel.collectUrl != undefined">
+          <template v-if="currentGoodsModel.collectUrl != undefined">
             <NFormItem path="url" label="收集链接">
-              <NInput v-model:value="addGoodsModel.collectUrl" placeholder="用于给用户填写自己收货地址的表格的分享链接" />
+              <NInput v-model:value="currentGoodsModel.collectUrl" placeholder="用于给用户填写自己收货地址的表格的分享链接" />
             </NFormItem>
             <NFormItem label="内嵌收集链接">
-              <NCheckbox v-model:checked="addGoodsModel.embedCollectUrl"> 尝试将收集链接嵌入到网页中 </NCheckbox>
+              <NCheckbox v-model:checked="currentGoodsModel.embedCollectUrl"> 尝试将收集链接嵌入到网页中 </NCheckbox>
             </NFormItem>
           </template>
           <template v-else>
@@ -240,20 +346,20 @@ function OnFileListChange(files: UploadFileInfo[]) {
           </template>
         </template>
         <template v-else>
-          <NFormItem path="content" label="礼物内容" required>
-            <NInput
-              v-model:value="addGoodsModel.content"
-              style="min-height: 100px"
-              type="textarea"
-              placeholder="虚拟礼物的具体内容, 网盘链接什么之类的"
-              maxlength="10000"
-              show-count
-              autosize
-              clearable
-            />
+          <NFormItem path="content" required>
+            <template #label>
+              礼物内容
+              <NTooltip>
+                <template #trigger>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                虚拟礼物的具体内容, 网盘链接什么之类的
+              </NTooltip>
+            </template>
+            <NInput v-model:value="currentGoodsModel.content" type="textarea" placeholder="写这里咯" maxlength="10000" show-count clearable />
           </NFormItem>
         </template>
-        <NButton @click="updateGoods" type="primary"> 添加 </NButton>
+        <NButton @click="updateGoods" type="primary" :loading="isUpdating"> 添加 </NButton>
       </NForm>
     </NScrollbar>
   </NModal>

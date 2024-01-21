@@ -520,7 +520,9 @@ export enum GoodsTypes {
 export interface ResponsePointGoodModel {
   id: number
   name: string
-  count: number
+  description: string
+  content?: string
+  count?: number
   price: number
   tags: TagInfo[]
   cover?: string
@@ -528,14 +530,17 @@ export interface ResponsePointGoodModel {
   status: GoodsStatus
   type: GoodsTypes
 }
-
+export interface ImageUploadModel{
+  existImages: string[]
+  newImagesBase64: string[]
+}
 export interface PointGoodsModel {
   id?: number
   name: string
   count: number
   price: number
   tags: TagInfo[]
-  coverImageBase64?: string
+  cover?: ImageUploadModel
   status: GoodsStatus
   type: GoodsTypes
   collectUrl?: string

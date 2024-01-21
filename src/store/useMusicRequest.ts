@@ -66,18 +66,21 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const message = useMessage()
 
   function addWaitingMusic(info: WaitMusicInfo) {
+    console.log(settings.value.orderMusicFirst + ' ' + isPlayingOrderMusic.value)
     if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || aplayerRef.value?.audio.paused == true) {
       playMusic(info.music)
+      isPlayingOrderMusic.value = true
       console.log(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
+      message.success(`正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`)
     } else {
       waitingMusics.value.push(info)
       message.success(`[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`)
     }
   }
   function onMusicEnd() {
+    isPlayingOrderMusic.value = false
     if (!playWaitingMusic()) {
-      isPlayingOrderMusic.value = false
-      if (currentOriginMusic) {
+      if (currentOriginMusic.value) {
         currentOriginMusic.value = undefined
       }
       setTimeout(() => {
@@ -139,6 +142,14 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       message.error('设置音频输出设备失败: ' + err)
     }
   }
+  function nextMusic() {
+    if (waitingMusics.value.length > 0) {
+      onMusicEnd()
+    } else {
+      isPlayingOrderMusic.value = false
+      aplayerRef.value?.onAudioEnded()
+    }
+  }
 
   return {
     waitingMusics,
@@ -155,6 +166,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     onMusicEnd,
     onMusicPlay,
     pauseMusic,
+    nextMusic,
     aplayerRef,
   }
 })

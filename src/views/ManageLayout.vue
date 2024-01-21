@@ -409,6 +409,9 @@ function logout() {
   cookie.value = undefined
   window.location.reload()
 }
+function onNextMusic() {
+  musicRquestStore.nextMusic();
+}
 
 onMounted(() => {
   if (accountInfo.value?.isEmailVerified == false) {
@@ -532,7 +535,7 @@ onMounted(() => {
             />
             <NSpace vertical>
               <NTag :bordered="false" type="info" size="small"> 队列: {{ musicRquestStore.waitingMusics.length }} </NTag>
-              <NButton size="small" type="info" @click="musicRquestStore.waitingMusics.length > 0 ? musicRquestStore.onMusicEnd() : musicRquestStore.aplayerRef?.onAudioEnded()"> 下一首 </NButton>
+              <NButton size="small" type="info" @click="onNextMusic"> 下一首 </NButton>
             </NSpace>
           </div>
         </NLayoutFooter>
@@ -550,7 +553,7 @@ onMounted(() => {
         <RegisterAndLogin style="max-width: 500px; min-width: 350px" />
       </template>
       <template v-else>
-        <NSpin :loading="isLoadingAccount" style="overflow: hidden;"> 正在请求账户数据... </NSpin>
+        <NSpin :loading="isLoadingAccount" style="overflow: hidden"> 正在请求账户数据... </NSpin>
       </template>
     </NLayoutContent>
   </template>

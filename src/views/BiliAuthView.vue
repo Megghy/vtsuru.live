@@ -42,6 +42,8 @@ function onStartVerify() {
       currentStep.value = 1
       timer.value = setInterval(checkStatus, 2500)
       startModel.value = data.data
+    } else {
+      message.error('无法开启认证流程: ' + data.message)
     }
   })
 }
@@ -154,7 +156,7 @@ onMounted(async () => {
             <NText> 你的登陆链接为: </NText>
             <NInputGroup>
               <NInput :value="`https://vtsuru.live/point?auth=${biliToken}`" type="textarea" :allow-input="() => false" />
-              <NButton @click="copyCode" type="info" style="height: 100%;"> 复制登陆链接 </NButton>
+              <NButton @click="copyCode" type="info" style="height: 100%"> 复制登陆链接 </NButton>
             </NInputGroup>
             <NButton @click="" type="primary"> 前往个人中心 </NButton>
           </NFlex>
