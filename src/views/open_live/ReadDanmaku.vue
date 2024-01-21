@@ -350,7 +350,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
   if (!data) {
     return
   }
-  let text: string
+  let text: string = ''
   switch (data.type) {
     case EventDataTypes.Message:
       if (!settings.value.danmakuTemplate) {
@@ -829,6 +829,7 @@ onUnmounted(() => {
         </NTooltip>
       </NCheckbox>
     </NSpace>
+    <NDivider />
   </template>
 </template>
 

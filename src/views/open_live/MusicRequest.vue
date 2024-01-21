@@ -32,6 +32,7 @@ import {
   NTabs,
   NTag,
   NText,
+  NTooltip,
   NTransfer,
   NUl,
   NVirtualList,
@@ -133,6 +134,10 @@ async function get() {
   return []
 }
 async function searchMusic(keyword: string) {
+  const inSongList = originMusics.value.find((m) => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
+  if (inSongList) {
+    return inSongList
+  }
   const data = await QueryGetAPI<SongsInfo>(MUSIC_REQUEST_API_URL + 'search-' + settings.value.platform, {
     keyword: keyword,
   })
@@ -459,7 +464,12 @@ onUnmounted(() => {
           <NCheckbox v-model:checked="settings.orderMusicFirst"> 优先播放点歌 </NCheckbox>
         </NSpace>
         <NSpace>
-          <NButton @click="getOutputDevice"> 获取输出设备 </NButton>
+          <NTooltip>
+            <template #trigger>
+              <NButton @click="getOutputDevice" type="info"> 获取输出设备 </NButton>
+            </template>
+            获取和修改输出设备需要打开麦克风权限
+          </NTooltip>
           <NSelect
             v-model:value="settings.deviceId"
             :options="deviceList"

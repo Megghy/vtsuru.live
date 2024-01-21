@@ -12,7 +12,7 @@ const emptyCover = IMGUR_URL + 'None.png'
 </script>
 
 <template>
-  <NCard style="max-width: 300px">
+  <NCard>
     <template #cover>
       <NImage :src="goods.cover ? FILE_BASE_URL + goods.cover : emptyCover" :fallback-src="emptyCover" height="150" object-fit="cover" :preview-disabled="!goods.cover" style="width: 100%" />
     </template>

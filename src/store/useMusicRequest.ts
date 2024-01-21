@@ -66,7 +66,6 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const message = useMessage()
 
   function addWaitingMusic(info: WaitMusicInfo) {
-    console.log(settings.value.orderMusicFirst + ' ' + isPlayingOrderMusic.value)
     if ((settings.value.orderMusicFirst && !isPlayingOrderMusic.value) || aplayerRef.value?.audio.paused == true) {
       playMusic(info.music)
       isPlayingOrderMusic.value = true
