@@ -159,11 +159,12 @@ async function updateGoods(e: MouseEvent) {
       if (fileList.value.length > 0) {
         currentGoodsModel.value.cover = await getImageUploadModel(fileList.value)
       }
-      console.log(currentGoodsModel.value.cover)
       await QueryPostAPI<ResponsePointGoodModel>(POINT_API_URL + 'update-goods', currentGoodsModel.value)
         .then((data) => {
           if (data.code == 200) {
             message.success('成功')
+            showAddGoodsModal.value = false
+            currentGoodsModel.value = {} as PointGoodsModel
             if (goods.value.find((g) => g.id == data.data.id)) {
               goods.value[goods.value.findIndex((g) => g.id == data.data.id)] = data.data
             } else {
@@ -184,8 +185,6 @@ async function updateGoods(e: MouseEvent) {
     })
     .finally(() => {
       isUpdating.value = false
-      showAddGoodsModal.value = false
-      currentGoodsModel.value = {} as PointGoodsModel
     })
 }
 function OnFileListChange(files: UploadFileInfo[]) {
@@ -253,13 +252,14 @@ function onDeleteClick(item: ResponsePointGoodModel) {
       <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VtsuruEventFetcher </NButton>
     </NText>
   </NAlert>
-  <NTabs>
+  <NDivider />
+  <NTabs animated>
     <NTabPane name="goods" tab="礼物">
       <NFlex>
         <NButton type="primary" @click="showAddGoodsModal = true"> 添加礼物 </NButton>
       </NFlex>
       <NDivider />
-      <NGrid :cols="4">
+      <NGrid cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
         <NGridItem v-for="item in goods" :key="item.id">
           <PointGoodsItem :goods="item">
             <template #header-extra>
@@ -275,6 +275,15 @@ function onDeleteClick(item: ResponsePointGoodModel) {
         </NGridItem>
       </NGrid>
     </NTabPane>
+    <NTabPane name="orders" tab="订单">
+
+    </NTabPane>
+    <NTabPane name="users" tab="用户">
+
+    </NTabPane>
+    <NTabPane name="settings" tab="设置">
+      
+    </NTabPane>
   </NTabs>
 
   <NModal v-model:show="showAddGoodsModal" preset="card" style="width: 600px; max-width: 90%" title="添加/修改礼物信息">
@@ -285,6 +294,10 @@ function onDeleteClick(item: ResponsePointGoodModel) {
         </NFormItem>
         <NFormItem path="price" label="所需积分" required>
           <NInputNumber v-model:value="currentGoodsModel.price" placeholder="必填, 兑换所需要的积分" min="0" />
+        </NFormItem>
+        <NFormItem path="count" label="库存">
+          <NCheckbox :checked="currentGoodsModel.count && currentGoodsModel.count < 0" @update:checked="(v) => (currentGoodsModel.count = v ? -1 : 100)"> 不限 </NCheckbox>
+          <NInputNumber v-if="currentGoodsModel.count > -1" v-model:value="currentGoodsModel.count" placeholder="可选, 礼物库存" style="max-width: 120px;"/>
         </NFormItem>
         <NFormItem path="description" label="描述">
           <NInput v-model:value="currentGoodsModel.description" placeholder="可选, 礼物描述" />

@@ -39,7 +39,6 @@ function OnClickCover(live: ResponseLiveInfoModel) {
     params: { id: live.liveId },
   })
 }
-
 </script>
 
 <template>
@@ -50,12 +49,12 @@ function OnClickCover(live: ResponseLiveInfoModel) {
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <template v-else>
     <NSpace vertical justify="center" align="center">
-      <NPagination v-model:page="page" show-quick-jumper show-size-picker :page-sizes="[10, 20, 30, 40]" :item-count="lives.length" />
+      <NPagination v-model:page="page" v-model:page-size="pageSize" show-quick-jumper show-size-picker :page-sizes="[10, 20, 30, 40]" :item-count="lives.length" />
     </NSpace>
     <NDivider />
     <NList bordered hoverable clickable>
-      <NListItem @click="OnClickCover(live)" v-for="live in lives" v-bind:key="live.liveId">
-        <LiveInfoContainer :live="live" :key="live.liveId"/>
+      <NListItem @click="OnClickCover(live)" v-for="live in lives.slice((page - 1) * pageSize, page * pageSize)" v-bind:key="live.liveId">
+        <LiveInfoContainer :live="live" :key="live.liveId" />
       </NListItem>
     </NList>
   </template>
