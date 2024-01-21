@@ -1,30 +1,32 @@
 <template>
-  <NMessageProvider>
-    <NNotificationProvider>
-      <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
-        <NLoadingBarProvider>
-          <Suspense>
-            <TempComponent>
-              <NLayoutContent style="height: 100%" v-if="layout != 'obs'">
-                <NElement>
-                  <ViewerLayout v-if="layout == 'viewer'" />
-                  <ManageLayout v-else-if="layout == 'manage'" />
-                  <OpenLiveLayout v-else-if="layout == 'open-live'" />
-                  <template v-else-if="layout == ''">
-                    <RouterView />
-                  </template>
-                </NElement>
-              </NLayoutContent>
-              <RouterView v-else />
-            </TempComponent>
-            <template #fallback>
-              <NSpin size="large" show />
-            </template>
-          </Suspense>
-        </NLoadingBarProvider>
-      </NConfigProvider>
-    </NNotificationProvider>
-  </NMessageProvider>
+  <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
+    <NMessageProvider>
+      <NNotificationProvider>
+        <NDialogProvider>
+          <NLoadingBarProvider>
+            <Suspense>
+              <TempComponent>
+                <NLayoutContent style="height: 100%" v-if="layout != 'obs'">
+                  <NElement>
+                    <ViewerLayout v-if="layout == 'viewer'" />
+                    <ManageLayout v-else-if="layout == 'manage'" />
+                    <OpenLiveLayout v-else-if="layout == 'open-live'" />
+                    <template v-else-if="layout == ''">
+                      <RouterView />
+                    </template>
+                  </NElement>
+                </NLayoutContent>
+                <RouterView v-else />
+              </TempComponent>
+              <template #fallback>
+                <NSpin size="large" show />
+              </template>
+            </Suspense>
+          </NLoadingBarProvider>
+        </NDialogProvider>
+      </NNotificationProvider>
+    </NMessageProvider>
+  </NConfigProvider>
 </template>
 
 <script setup lang="ts">
@@ -32,7 +34,21 @@ import { useProviderStore } from '@/store/useProviderStore'
 import ManageLayout from '@/views/ManageLayout.vue'
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import { useStorage } from '@vueuse/core'
-import { NConfigProvider, NElement, NLayoutContent, NLoadingBarProvider, NMessageProvider, NNotificationProvider, NSpin, darkTheme, dateZhCN, useLoadingBar, useOsTheme, zhCN } from 'naive-ui'
+import {
+  NConfigProvider,
+  NDialogProvider,
+  NElement,
+  NLayoutContent,
+  NLoadingBarProvider,
+  NMessageProvider,
+  NNotificationProvider,
+  NSpin,
+  darkTheme,
+  dateZhCN,
+  useLoadingBar,
+  useOsTheme,
+  zhCN,
+} from 'naive-ui'
 import { computed, defineComponent, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ThemeType } from './api/api-models'

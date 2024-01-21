@@ -1,5 +1,5 @@
 import { useStorage } from '@vueuse/core'
-import { createDiscreteApi, useOsTheme } from 'naive-ui'
+import { UploadFileInfo, createDiscreteApi, useOsTheme } from 'naive-ui'
 import { ThemeType } from './api/api-models'
 
 const { message } = createDiscreteApi(['message'])
@@ -79,4 +79,27 @@ export function getBase64(file: File | undefined | null): Promise<string | undef
     reader.onload = () => resolve(reader.result?.toString().split(',')[1] || undefined)
     reader.onerror = (error) => reject(error)
   })
+}
+export async function getImageUploadModel(files: UploadFileInfo[] | undefined | null, maxSize: number = 10 * 1024 * 1024) {
+  let result = {
+    existImages: [],
+    newImagesBase64: [],
+  } as { existImages: string[]; newImagesBase64: string[] }
+  if (!files) return result
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i]
+    if ((file.file?.size ?? 0) > maxSize) {
+      message.error('文件大小不能超过 ' + maxSize / 1024 / 1024 + 'MB')
+      return result
+    }
+    if (!file.file) {
+      result.existImages.push(file.id) //用id绝对路径当的文件名
+    } else {
+      const base64 = await getBase64(file.file)
+      if (base64) {
+        result.newImagesBase64.push(base64)
+      }
+    }
+  }
+  return result
 }

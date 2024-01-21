@@ -37,6 +37,15 @@ export default {
         title: '日程',
         keepAlive: true,
       },
+      children: [
+        {
+          path: 'ics',
+          beforeEnter(to: any) {
+            // 直接重定向到外部 URL
+            window.location.href = 'https://vtsuru.live/api/schedule/get-ics?id=' + to.query.id
+          },
+        },
+      ],
     },
   ],
 }
