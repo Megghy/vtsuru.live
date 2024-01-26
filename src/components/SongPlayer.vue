@@ -72,8 +72,8 @@ async function GetLyric(song: SongsInfo) {
     })
 }
 function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
-  const originalLines = originalLyrics.split('\n')
-  const translatedLines = translatedLyrics.split('\n')
+  const originalLines = originalLyrics?.split('\n') ?? []
+  const translatedLines = translatedLyrics?.split('\n') ?? []
 
   let mergedLyrics = ''
 
