@@ -3,7 +3,7 @@ import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
-import { addHours, format, isSameDay, isSameHour, startOfHour } from 'date-fns'
+import { addDays, addHours, format, isSameDay, isSameHour, startOfDay, startOfHour } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components'
 import { use } from 'echarts/core'
@@ -89,27 +89,45 @@ function isSameDaySimple(time1: number, time2: number) {
   const time2Date = new Date(time2)
   return time1Date.getFullYear() === time2Date.getFullYear() && time1Date.getMonth() === time2Date.getMonth() && time1Date.getDate() === time2Date.getDate()
 }
+const statisticStartDate = new Date(2023, 10, 4)
+const statisticStartDateTime = statisticStartDate.getTime()
 function getOptions() {
-  let fansIncreacement = [] as { time: Date; count: number; timeString: string }[]
+  let fansIncreacement = [] as { time: Date; count: number }[]
   let completeTimeSeries: {
     time: Date
     count: number
+    change: boolean
   }[] = []
 
-  if (fansHistory.value) {
-    const startTime = new Date(fansHistory.value[0].time)
-    const endTime = new Date(fansHistory.value[fansHistory.value.length - 1].time)
+  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
+  if (startTime < statisticStartDate) startTime = statisticStartDate
+  const endTime = new Date()
 
+  if (fansHistory.value) {
     let currentTime = startTime
+    let lastFansTimeIndex = fansHistory.value.length > 0 ? (fansHistory.value[0].time >= statisticStartDateTime ? 0 : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)) : -1
+    let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
     // 生成完整的小时序列
     while (currentTime <= endTime) {
-      let found = fansHistory.value.find((f) => isSameHour(currentTime, f.time))
-      let count = found ? found.count : completeTimeSeries[completeTimeSeries.length - 1]?.count || 0
+      if (lastFansTimeIndex > -1) {
+        const tempData = fansHistory.value[lastFansTimeIndex]
+        const found = isSameHour(tempData?.time, currentTime) ? tempData : undefined
+        const count = found ? found.count : lastDayCount
+        lastDayCount = count
+        lastFansTimeIndex += found ? 1 : 0
 
-      completeTimeSeries.push({
-        time: currentTime,
-        count: count,
-      })
+        completeTimeSeries.push({
+          time: currentTime,
+          count: count,
+          change: found ? true : false,
+        })
+      } else {
+        completeTimeSeries.push({
+          time: currentTime,
+          count: 0,
+          change: false,
+        })
+      }
 
       currentTime = addHours(currentTime, 1)
     }
@@ -123,7 +141,7 @@ function getOptions() {
           fansIncreacement.push({
             time: startOfHour(array[index - 1].time),
             count: dailyIncrement,
-            timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+            //timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
           })
         }
         previousDayCount = entry.count
@@ -132,7 +150,7 @@ function getOptions() {
         fansIncreacement.push({
           time: startOfHour(entry.time),
           count: dailyIncrement,
-          timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+          //timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
         })
       }
     })
@@ -142,7 +160,28 @@ function getOptions() {
   let lastDay = 0
   let guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
   let guards = [] as { time: number; count: number; timeString: string }[]
-  guardHistory.value?.forEach((g) => {
+
+  // 生成完整的天序列
+  let currentGuardTime = startTime
+  let lastDayGuardCount = 0
+  let completeGuardTimeSeries: {
+    time: Date
+    count: number
+  }[] = []
+  while (currentGuardTime <= endTime) {
+    let found = guardHistory.value?.find((f) => isSameDay(currentGuardTime, f.time))
+    let count = found ? found.count : lastDayGuardCount
+    lastDayGuardCount = count
+
+    completeGuardTimeSeries.push({
+      time: currentGuardTime,
+      count: count,
+    })
+
+    currentGuardTime = startOfDay(addDays(currentGuardTime, 1))
+  }
+
+  completeGuardTimeSeries.forEach((g) => {
     if (!isSameDay(g.time, lastDay)) {
       guardsIncreacement.push({
         time: lastDayGuards,
@@ -151,11 +190,11 @@ function getOptions() {
         timeString: format(g.time, 'yyyy-MM-dd'),
       })
       guards.push({
-        time: g.time,
+        time: g.time.getTime() / 1000,
         count: g.count,
         timeString: format(g.time, 'yyyy-MM-dd'),
       })
-      lastDay = g.time
+      lastDay = g.time.getTime() / 1000
       lastDayGuards = g.count
     }
   })
@@ -235,6 +274,9 @@ function getOptions() {
         },
         // prettier-ignore
         data: chartData.xAxisData,
+        formatter: (value: number, index: number) => {
+          return `${value}${completeTimeSeries[index].change ? '' : '(无变化)'}`
+        },
       },
 
       {
@@ -250,7 +292,7 @@ function getOptions() {
           },
         },
         // prettier-ignore
-        data: fansIncreacement.map((f) => f.timeString),
+        data: fansIncreacement.map((f) => format(f.time, 'yyyy-MM-dd')),
       },
     ],
     series: [
@@ -271,6 +313,12 @@ function getOptions() {
           focus: 'series',
         },
         data: chartData.dailyIncrements.map((f) => f.count),
+        itemStyle: {
+          color: function (params: any) {
+            // params.value 是当前数据项的值
+            return params.value < 0 ? '#FF4D4F' : '#3398DB' // 负数时红色，正数时默认颜色
+          },
+        },
       },
     ],
     dataZoom: [
@@ -334,6 +382,12 @@ function getOptions() {
           focus: 'series',
         },
         data: guardsIncreacement.map((f) => f.count),
+        itemStyle: {
+          color: function (params: any) {
+            // params.value 是当前数据项的值
+            return params.value < 0 ? '#FF4D4F' : '#3398DB' // 负数时红色，正数时默认颜色
+          },
+        },
       },
     ],
     dataZoom: [
