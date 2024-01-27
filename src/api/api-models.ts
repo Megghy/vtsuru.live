@@ -52,23 +52,23 @@ export interface AccountInfo extends UserInfo {
   biliBlackList: { [key: number]: string }
   streamerInfo?: StreamerModel
 }
-export interface StreamerModel{
-  name: string;
-  uId: number;
-  roomId: number;
-  faceUrl: string;
-  title: string;
-  coverUrl: string;
-  frameUrl: string;
-  area: string;
-  parentArea: string;
-  lastStreamAt: number;
-  totalDanmakuCount: number;
-  totalIncome: number;
-  totalStreamCount: number;
-  totalStreamTime: number;
-  lastDanmakuCount: number;
-  isStreaming: boolean;
+export interface StreamerModel {
+  name: string
+  uId: number
+  roomId: number
+  faceUrl: string
+  title: string
+  coverUrl: string
+  frameUrl: string
+  area: string
+  parentArea: string
+  lastStreamAt: number
+  totalDanmakuCount: number
+  totalIncome: number
+  totalStreamCount: number
+  totalStreamTime: number
+  lastDanmakuCount: number
+  isStreaming: boolean
 }
 export enum BiliAuthCodeStatusType {
   NotBind,
@@ -150,6 +150,9 @@ export interface Setting_Queue {
   jianzhangCooldownSecond: number
 
   showRequireInfo: boolean
+  showPayment: boolean
+  showFanMadelInfo: boolean
+
   isReverse: boolean
 }
 
@@ -175,7 +178,7 @@ export enum FunctionTypes {
   Schedule,
   SongRequest,
   Queue,
-  Point
+  Point,
 }
 export interface SongAuthorInfo {
   name: string
@@ -185,7 +188,7 @@ export enum SongFrom {
   Custom,
   Netease,
   FiveSing,
-  Kugou
+  Kugou,
 }
 export interface SongsInfo {
   id: number
@@ -441,7 +444,7 @@ export enum EventDataTypes {
   Message,
   Like,
   SCDel,
-  Enter
+  Enter,
 }
 export interface ResponseQueueModel {
   id: number
@@ -502,16 +505,14 @@ export enum FeedbackStatus {
   Reject,
   Developing,
 }
-export interface TagInfo
-{
-    name: string
-    color: string
+export interface TagInfo {
+  name: string
+  color: string
 }
-export enum GoodsStatus
-{
-    Normal,   // 商品正常
-    //OutOfStock,  // 商品无货
-    Discontinued  // 商品下架
+export enum GoodsStatus {
+  Normal, // 商品正常
+  //OutOfStock,  // 商品无货
+  Discontinued, // 商品下架
 }
 export enum GoodsTypes {
   Physical,
@@ -530,7 +531,7 @@ export interface ResponsePointGoodModel {
   status: GoodsStatus
   type: GoodsTypes
 }
-export interface ImageUploadModel{
+export interface ImageUploadModel {
   existImages: string[]
   newImagesBase64: string[]
 }

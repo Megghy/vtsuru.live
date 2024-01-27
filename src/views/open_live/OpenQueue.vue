@@ -88,6 +88,8 @@ const defaultSettings = {
   giftFilterType: QueueGiftFilterType.Or,
   showRequireInfo: true,
   isReverse: false,
+  showFanMadelInfo: true,
+  showPayment: true,
 } as Setting_Queue
 const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -1049,6 +1051,8 @@ onUnmounted(() => {
             </NSpace>
             <NDivider> OBS </NDivider>
             <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
+            <NCheckbox v-model:checked="settings.showPayment" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示付费信息 </NCheckbox>
+            <NCheckbox v-model:checked="settings.showFanMadelInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示用户粉丝牌 </NCheckbox>
             <NDivider> 其他 </NDivider>
             <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭加入队列失败时的提示消息 </NCheckbox>
           </NSpace>

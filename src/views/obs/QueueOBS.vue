@@ -49,7 +49,7 @@ const activeItems = computed(() => {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
     }
   }
-  if(settings.value.isReverse){
+  if (settings.value.isReverse) {
     list = list.Reverse()
   }
   return list.ToArray()
@@ -108,7 +108,7 @@ onUnmounted(() => {
     <NDivider class="queue-divider">
       <p class="queue-header-count">已有 {{ activeItems.length ?? 0 }} 人</p>
     </NDivider>
-    <div class="queue-singing-container" :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1" :from="(progressing?.from as number)" :status="(progressing?.status as number)">
+    <div class="queue-singing-container" :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1" :from="progressing?.from as number" :status="progressing?.status as number">
       <div class="queue-singing-prefix"></div>
       <template v-if="progressing">
         <img class="queue-singing-avatar" :src="AVATAR_URL + progressing?.user?.uid" referrerpolicy="no-referrer" />
@@ -122,8 +122,8 @@ onUnmounted(() => {
         <Vue3Marquee class="queue-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
           <span
             class="queue-list-item"
-            :from="(item.from as number)"
-            :status="(item.status as number)"
+            :from="item.from as number"
+            :status="item.status as number"
             :payment="item.giftPrice ?? 0"
             v-for="(item, index) in activeItems"
             :key="item.id"
@@ -132,13 +132,13 @@ onUnmounted(() => {
             <div class="queue-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
-            <div class="queue-list-item-level" :has-level="(item.user?.fans_medal_level ?? 0) > 0">
+            <div v-if="settings.showFanMadelInfo" class="queue-list-item-level" :has-level="(item.user?.fans_medal_level ?? 0) > 0">
               {{ `${item.user?.fans_medal_name} ${item.user?.fans_medal_level}` }}
             </div>
             <div class="queue-list-item-user-name">
               {{ item.user?.name }}
             </div>
-            <p class="queue-list-item-payment">{{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice }}</p>
+            <p v-if="settings.showPayment" class="queue-list-item-payment">{{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice }}</p>
           </span>
         </Vue3Marquee>
       </template>
@@ -207,7 +207,11 @@ onUnmounted(() => {
   text-align: center;
   font-size: 20px;
   font-weight: bold;
-  text-shadow: 0 0 10px #ca7b7b6e, 0 0 20px #ffffff8e, 0 0 30px #61606086, 0 0 40px rgba(64, 156, 179, 0.555);
+  text-shadow:
+    0 0 10px #ca7b7b6e,
+    0 0 20px #ffffff8e,
+    0 0 30px #61606086,
+    0 0 40px rgba(64, 156, 179, 0.555);
 }
 .queue-header-count {
   color: #ffffff;
