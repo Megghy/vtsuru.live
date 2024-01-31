@@ -341,6 +341,15 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+.queue-list-item-index[index='1'] {
+  color: #ebc34c;
+}
+.queue-list-item-index[index='2'] {
+  color: #c0c0c0;
+}
+.queue-list-item-index[index='3'] {
+  color: #b87333;
+}
 .queue-list-item-level {
   text-align: center;
   height: 18px;

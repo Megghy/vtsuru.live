@@ -525,7 +525,7 @@ export interface ResponsePointGoodModel {
   content?: string
   count?: number
   price: number
-  tags: TagInfo[]
+  tags: string[]
   cover?: string
   images: string[]
   status: GoodsStatus
@@ -540,7 +540,7 @@ export interface PointGoodsModel {
   name: string
   count: number
   price: number
-  tags: TagInfo[]
+  tags: string[]
   cover?: ImageUploadModel
   status: GoodsStatus
   type: GoodsTypes
@@ -548,4 +548,22 @@ export interface PointGoodsModel {
   embedCollectUrl?: boolean
   description: string
   content?: string
+}
+export interface AddressInfo {
+  province: string
+  city: string
+  district: string
+  address: string
+  phone: number
+  name: string
+}
+export interface BiliAuthModel {
+  id: number
+  userId: number
+  openId: string
+  address?: AddressInfo
+}
+export interface PointOrderModel{
+  id: number
+  
 }
