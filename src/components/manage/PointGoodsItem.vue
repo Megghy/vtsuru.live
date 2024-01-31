@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ResponsePointGoodModel } from '@/api/api-models'
-import { NButton, NCard, NDropdown, NEllipsis, NFlex, NIcon, NImage, NPopselect, NText } from 'naive-ui'
+import { NButton, NCard, NDropdown, NEllipsis, NFlex, NIcon, NImage, NPopselect, NTag, NText } from 'naive-ui'
 import { FILE_BASE_URL, IMGUR_URL } from '@/data/constants'
 import { computed, ref } from 'vue'
 import { MoreHorizontal16Filled, MoreVertical16Filled } from '@vicons/fluent'
@@ -25,9 +25,12 @@ const emptyCover = IMGUR_URL + 'None.png'
       </NEllipsis>
     </template>
     <NFlex vertical>
-      <NText depth="3">
+      <NText depth="3" :italic="!goods.description">
         {{ goods.description }}
       </NText>
+      <NFlex>
+        <NTag v-for="tag in goods.tags" :key="tag" :bordered="false">{{ tag }}</NTag>
+      </NFlex>
       <NFlex justify="space-between">
         <NFlex>
           <NText> 库存: </NText>

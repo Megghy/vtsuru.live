@@ -77,7 +77,7 @@ onUnmounted(() => {
     <div class="music-request-singing-container" :playing="originSongs.playing ? 'true' : 'false'" :from="originSongs.playing?.music.from ?? -1">
       <div class="music-request-singing-prefix"></div>
       <template v-if="originSongs.playing">
-        <img class="music-request-singing-avatar" :src="AVATAR_URL + originSongs.playing.from?.uid" referrerpolicy="no-referrer" />
+        <img class="music-request-singing-avatar" :src="originSongs.playing.music.cover ?? AVATAR_URL + originSongs.playing.from?.uid" referrerpolicy="no-referrer" />
         <p class="music-request-singing-song-name">{{ originSongs.playing.music.name }}</p>
         <p class="music-request-singing-name">{{ originSongs.playing.from?.name }}</p>
       </template>
