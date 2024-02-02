@@ -467,7 +467,7 @@ function test(type: EventDataTypes) {
         fans_medal_name: '',
         fans_medal_wearing_status: false,
         emoji: undefined,
-        avatar: '',
+        uface: '',
       })
       break
     case EventDataTypes.SC:
@@ -484,7 +484,7 @@ function test(type: EventDataTypes) {
         fans_medal_name: '',
         fans_medal_wearing_status: false,
         emoji: undefined,
-        avatar: '',
+        uface: '',
       })
       break
     case EventDataTypes.Guard:
@@ -501,7 +501,7 @@ function test(type: EventDataTypes) {
         fans_medal_name: '',
         fans_medal_wearing_status: false,
         emoji: undefined,
-        avatar: '',
+        uface: '',
       })
       break
     case EventDataTypes.Gift:
@@ -518,7 +518,7 @@ function test(type: EventDataTypes) {
         fans_medal_name: '',
         fans_medal_wearing_status: false,
         emoji: undefined,
-        avatar: '',
+        uface: '',
       })
       break
   }
