@@ -326,37 +326,11 @@ async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) 
     })
 }
 
-function onGetDanmaku(danmaku: DanmakuInfo) {
-  add({
-    msg: danmaku.msg,
-    type: EventDataTypes.Message,
-    time: danmaku.timestamp,
-    uid: danmaku.uid,
-    name: danmaku.uname,
-    avatar: danmaku.uface,
-    fans_medal_level: danmaku.fans_medal_level,
-    fans_medal_name: danmaku.fans_medal_name,
-    fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
-    guard_level: danmaku.guard_level,
-    num: 1,
-    price: 0,
-  } as EventModel)
+function onGetDanmaku(danmaku: EventModel) {
+  add(danmaku)
 }
-function onGetGift(danmaku: GiftInfo) {
-  add({
-    msg: danmaku.gift_name,
-    type: EventDataTypes.Gift,
-    time: danmaku.timestamp,
-    uid: danmaku.uid,
-    name: danmaku.uname,
-    fans_medal_level: danmaku.fans_medal_level,
-    fans_medal_name: danmaku.fans_medal_name,
-    fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
-    guard_level: danmaku.guard_level,
-    avatar: danmaku.uface,
-    num: 1,
-    price: (danmaku.gift_num * danmaku.price) / 1000,
-  } as EventModel)
+function onGetGift(danmaku: EventModel) {
+  add(danmaku)
 }
 function checkMessage(eventData: EventModel) {
   if (!configCanEdit.value && queue.value.find((q) => q.user?.uid == eventData.uid)) {
@@ -714,8 +688,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.queue
   }
-  props.client.on('danmaku', onGetDanmaku)
-  props.client.on('gift', onGetGift)
+  props.client.onEvent('danmaku', onGetDanmaku)
+  props.client.onEvent('gift', onGetGift)
   init()
 })
 onActivated(() => {
@@ -738,8 +712,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
-  props.client.off('danmaku', onGetDanmaku)
-  props.client.off('gift', onGetGift)
+  props.client.offEvent('danmaku', onGetDanmaku)
+  props.client.offEvent('gift', onGetGift)
   dispose()
 })
 </script>

@@ -42,7 +42,7 @@ import {
   NPopconfirm,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
-import PointOrderManage from './PointOrderManage.vue'
+import PointOrderManage from '../PointOrderManage.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()

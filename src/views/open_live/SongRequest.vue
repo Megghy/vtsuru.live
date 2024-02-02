@@ -319,40 +319,14 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
     })
 }
 
-function onGetDanmaku(danmaku: DanmakuInfo) {
+function onGetDanmaku(danmaku: EventModel) {
   if (checkMessage(danmaku.msg)) {
-    addSong({
-      msg: danmaku.msg,
-      type: EventDataTypes.Message,
-      time: danmaku.timestamp,
-      uid: danmaku.uid,
-      name: danmaku.uname,
-      avatar: danmaku.uface,
-      fans_medal_level: danmaku.fans_medal_level,
-      fans_medal_name: danmaku.fans_medal_name,
-      fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
-      guard_level: danmaku.guard_level,
-      num: 1,
-      price: 0,
-    } as EventModel)
+    addSong(danmaku)
   }
 }
-function onGetSC(danmaku: SCInfo) {
-  if (settings.value.allowSC && checkMessage(danmaku.message)) {
-    addSong({
-      msg: danmaku.message,
-      type: EventDataTypes.SC,
-      time: danmaku.timestamp,
-      uid: danmaku.uid,
-      name: danmaku.uname,
-      fans_medal_level: danmaku.fans_medal_level,
-      fans_medal_name: danmaku.fans_medal_name,
-      fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
-      guard_level: danmaku.guard_level,
-      avatar: danmaku.uface,
-      num: 1,
-      price: danmaku.rmb,
-    } as EventModel)
+function onGetSC(danmaku: EventModel) {
+  if (settings.value.allowSC && checkMessage(danmaku.msg)) {
+    addSong(danmaku)
   }
 }
 function checkMessage(msg: string) {
@@ -698,8 +672,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.songRequest
   }
-  props.client.on('danmaku', onGetDanmaku)
-  props.client.on('sc', onGetSC)
+  props.client.onEvent('danmaku', onGetDanmaku)
+  props.client.onEvent('sc', onGetSC)
   init()
 })
 onActivated(() => {
@@ -722,8 +696,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
-  props.client.off('danmaku', onGetDanmaku)
-  props.client.off('sc', onGetSC)
+  props.client.offEvent('danmaku', onGetDanmaku)
+  props.client.offEvent('sc', onGetSC)
   dispose()
 })
 </script>
