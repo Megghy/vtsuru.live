@@ -162,7 +162,7 @@ export default //管理页面
     {
       path: 'point',
       name: 'manage-point',
-      component: () => import('@/views/manage/PointManage.vue'),
+      component: () => import('@/views/manage/point/PointManage.vue'),
       meta: {
         title: '积分',
       },

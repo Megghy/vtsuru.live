@@ -425,7 +425,7 @@ export enum QueueStatus {
 export interface EventModel {
   type: EventDataTypes
   name: string
-  avatar: string
+  uface: string
   uid: number
   msg: string
   time: number
@@ -557,13 +557,47 @@ export interface AddressInfo {
   phone: number
   name: string
 }
-export interface BiliAuthModel {
+export interface BiliAuthBaseModel {
   id: number
   userId: number
   openId: string
+  avatar: string
+  name: string
+}
+export interface BiliAuthModel extends BiliAuthBaseModel {
   address?: AddressInfo
 }
 export interface PointOrderModel{
   id: number
-  
+
+}
+export interface ResponsePointUserModel{
+  point: number
+  orderCount: number
+  isAuthed: boolean
+  info?: BiliAuthBaseModel
+}
+
+export interface ResponsePointOrder2StreamerModel {
+  id: number
+  customer: BiliAuthModel
+  address?: AddressInfo
+  goodsId: number
+  createAt: number
+  status: PointOrderStatus
+}
+
+export interface ResponsePointOrder2UserModel {
+  id: number
+  address?: AddressInfo
+  goodsId: PointGoodsModel
+  status: PointOrderStatus
+  createAt: number
+}
+export enum PointOrderStatus {
+  Pending, // 订单正在等待处理
+  Shipped, // 订单已发货
+  Canceled, // 订单已取消
+  Refunded, // 订单已退款
+  Failed, // 订单处理失败
 }
