@@ -266,7 +266,7 @@ export default class DanmakuClient {
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
-          avatar: data.uface,
+          uface: data.uface,
         },
         command,
       )
@@ -292,7 +292,7 @@ export default class DanmakuClient {
           fans_medal_level: data.fans_medal_level,
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
-          avatar: data.uface,
+          uface: data.uface,
         },
         command,
       )
@@ -317,7 +317,7 @@ export default class DanmakuClient {
           fans_medal_level: data.fans_medal_level,
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
-          avatar: data.uface,
+          uface: data.uface,
         },
         command,
       )
@@ -342,7 +342,7 @@ export default class DanmakuClient {
           fans_medal_level: data.fans_medal_level,
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
-          avatar: data.user_info.uface,
+          uface: data.user_info.uface,
         },
         command,
       )

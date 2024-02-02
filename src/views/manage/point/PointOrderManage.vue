@@ -2,7 +2,7 @@
 import { PointOrderModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
-import { useMessage } from 'naive-ui'
+import { NCard, NList, NListItem, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 const message = useMessage()
@@ -25,4 +25,12 @@ async function getOrders() {
 }
 </script>
 
-<template></template>
+<template>
+  <NList bordered hoverable clickable>
+    <NListItem v-for="order in orders" v-bind:key="order.id">
+      <NCard :bordered="false">
+
+      </NCard>
+    </NListItem>
+  </NList>
+</template>
