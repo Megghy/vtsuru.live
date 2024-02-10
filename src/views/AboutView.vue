@@ -31,6 +31,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="info" title="功能更新" content="歌单新增从文件导入" time="2024-2-10" />
             <NTimelineItem type="info" title="功能更新" content="排队的OBS组件添加设置项" time="2024-1-27" />
             <NTimelineItem type="warning" title="Bug修复" content="修复点歌会直接跳到下一首的问题 (怎么没人跟我说" time="2024-1-22" />
             <NTimelineItem type="info" title="功能更新" content="读弹幕支持自定义API" time="2023-12-25" />
