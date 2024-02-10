@@ -8,6 +8,7 @@ import App from './App.vue'
 import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import router from './router'
+import { useAuthStore } from './store/useAuthStore'
 
 const pinia = createPinia()
 
@@ -45,6 +46,7 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
     //加载其他数据
     GetSelfAccount()
     GetNotifactions()
+    useAuthStore().getAuthInfo()
     UpdateAccountLoop()
     InitTTS()
   })

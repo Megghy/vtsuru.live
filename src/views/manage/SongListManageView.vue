@@ -6,12 +6,14 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
 import { FETCH_API, SONG_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
+import { ArchiveOutline } from '@vicons/ionicons5'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
   FormInst,
   FormRules,
+  NAlert,
   NButton,
   NCheckbox,
   NDivider,
@@ -23,7 +25,9 @@ import {
   NInputGroupLabel,
   NInputNumber,
   NModal,
+  NP,
   NPagination,
+  NScrollbar,
   NSelect,
   NSpace,
   NSpin,
@@ -31,12 +35,17 @@ import {
   NTable,
   NTabs,
   NTag,
+  NText,
   NTooltip,
   NTransfer,
+  NUpload,
+  NUploadDragger,
+  UploadFileInfo,
   useMessage,
 } from 'naive-ui'
 import { Option } from 'naive-ui/es/transfer/src/interface'
 import { computed, onMounted, ref } from 'vue'
+import * as XLSX from 'xlsx'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -143,6 +152,17 @@ const songSelectOption = [
   },
 ]
 
+const uploadFiles = ref<UploadFileInfo[]>([])
+const uploadSongsFromFile = ref<SongsInfo[]>([])
+const uploadSongsOptions = computed(() => {
+  return uploadSongsFromFile.value.map((s) => ({
+    label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
+    value: s.name,
+    disabled: songs.value.findIndex((exist) => exist.name == s.name) > -1,
+  }))
+})
+const selecteduploadSongs = ref<string[]>([])
+
 async function addCustomSong() {
   isModalLoading.value = true
   formRef.value
@@ -181,7 +201,9 @@ async function addNeteaseSongs() {
         neteaseSongsOptions.value = neteaseSongs.value.map((s) => ({
           label: `${s.name} - ${s.author.join('/')}`,
           value: s.key,
-          disabled: songs.value.findIndex((exist) => exist.id == s.id) > -1 || data.data.findIndex((add) => add.id == s.id) > -1,
+          disabled:
+            songs.value.findIndex((exist) => exist.id == s.id) > -1 ||
+            data.data.findIndex((add) => add.id == s.id) > -1,
         }))
       } else {
         message.error('添加失败: ' + data.message)
@@ -218,6 +240,33 @@ async function addFingsingSongs(song: SongsInfo) {
     })
     .catch((err) => {
       message.error('添加失败')
+      console.error(err)
+    })
+    .finally(() => {
+      isModalLoading.value = false
+    })
+}
+async function addUploadFileSong() {
+  if (selecteduploadSongs.value.length == 0) {
+    message.error('请选择歌曲')
+    return
+  }
+  isModalLoading.value = true
+  await addSongs(
+    uploadSongsFromFile.value.filter((s) => selecteduploadSongs.value.find((select) => s.name == select)),
+    SongFrom.Custom,
+  )
+    .then((data) => {
+      if (data.code == 200) {
+        message.success(`已添加 ${data.data.length} 首歌曲`)
+        songs.value.push(...data.data)
+      } else {
+        message.error('添加失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('添加失败: ' + err)
+      console.error(err)
     })
     .finally(() => {
       isModalLoading.value = false
@@ -234,6 +283,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
       Url: s.url,
       Description: s.description,
       Cover: s.cover,
+      Tags: s.tags,
     })),
   )
 }
@@ -251,7 +301,9 @@ async function getNeteaseSongList() {
           value: s.key,
           disabled: songs.value.findIndex((exist) => exist.id == s.id) > -1,
         }))
-        message.success(`成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`)
+        message.success(
+          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
+        )
       } else {
         message.error('获取歌单失败: ' + data.message)
       }
@@ -265,7 +317,10 @@ async function getNeteaseSongList() {
 }
 async function getFivesingSearchList(isRestart = false) {
   isModalLoading.value = true
-  await fetch(FETCH_API + `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`)
+  await fetch(
+    FETCH_API +
+      `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`,
+  )
     .then(async (data) => {
       const json = await data.json()
       if (json.list.length == 0) {
@@ -318,7 +373,9 @@ async function playFivesingSong(song: SongsInfo) {
     })
 }
 async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
-  const data = await fetch(FETCH_API + `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`)
+  const data = await fetch(
+    FETCH_API + `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`,
+  )
   const result = await data.text()
   //忽略掉result的第一个字符和最后一个字符, 并反序列化
   const json = JSON.parse(result.substring(1, result.length - 1))
@@ -374,7 +431,119 @@ function exportData() {
   const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
   const utf8encoder = new TextEncoder()
   const utf8array = utf8encoder.encode(text)
-  saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`)
+  saveAs(
+    new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
+    `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
+  )
+}
+function parseExcelFile() {
+  if (uploadFiles.value.length == 0) {
+    message.error('请选择文件')
+    return
+  }
+  const file = uploadFiles.value[0]
+  if (!file.file) {
+    message.error('无效的文件')
+    return
+  }
+  const reader = new FileReader()
+  reader.readAsArrayBuffer(file.file)
+  reader.onload = (e) => {
+    const data = new Uint8Array(e?.target?.result as ArrayBuffer)
+    const workbook = XLSX.read(data, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null })
+    if (json.length == 0) {
+      message.error('文件为空')
+    }
+    const headers = json[0] as any
+    const rows = json.slice(1) as any[]
+    const songs = rows.map((row) => {
+      const song = {} as SongsInfo
+      for (let i = 0; i < headers.length; i++) {
+        const key = headers[i] as string
+        const value = row[i] as string
+        switch (key.toLowerCase().trim()) {
+          case 'id':
+          case 'name':
+          case '名称':
+          case '曲名':
+          case '歌名':
+            if (!value) {
+              console.log('忽略空歌名: ' + row)
+              continue
+            }
+            song.name = value
+            break
+          case 'author':
+          case 'singer':
+          case '作者':
+          case '歌手':
+            song.author = new List(value?.includes('/') ? value.split('/') : value.split(','))
+              .Select((a) => a.trim())
+              .Distinct()
+              .ToArray()
+            break
+          case 'description':
+          case 'desc':
+          case '说明':
+          case '描述':
+            song.description = value
+            break
+          case 'url':
+          case '链接':
+            song.url = value
+            break
+          case 'language':
+          case '语言':
+            switch (value) {
+              case '中文':
+              case '汉语':
+                song.language = [SongLanguage.Chinese]
+                break
+              case '英文':
+              case '英语':
+                song.language = [SongLanguage.English]
+                break
+              case '日文':
+              case '日语':
+                song.language = [SongLanguage.Japanese]
+                break
+              case '法语':
+                song.language = [SongLanguage.French]
+                break
+              case '西语':
+                song.language = [SongLanguage.Spanish]
+                break
+              default:
+                song.language = [SongLanguage.Other]
+            }
+            break
+          case 'tags':
+          case 'tag':
+          case '标签':
+            song.tags = new List(value?.split(','))
+              .Select((t) => t.trim())
+              .Distinct()
+              .ToArray()
+            break
+        }
+      }
+      return song
+    })
+    uploadSongsFromFile.value = songs.filter((s) => s.name)
+    console.log(uploadSongsFromFile.value)
+    message.success('解析完成, 共获取 ' + uploadSongsFromFile.value.length + ' 首曲目')
+  }
+}
+function beforeUpload(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
+  //只能选择xlsx和xls和csv
+  if (data.file.name.endsWith('.xlsx') || data.file.name.endsWith('.xls') || data.file.name.endsWith('.csv')) {
+    return true
+  }
+  message.error('只能选择xlsx和xls和csv')
+  return false
 }
 
 onMounted(async () => {
@@ -397,174 +566,299 @@ onMounted(async () => {
     >
       刷新
     </NButton>
-    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'songlist' } })"> 修改模板 </NButton>
+    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'songlist' } })">
+      修改模板
+    </NButton>
   </NSpace>
   <NDivider style="margin: 16px 0 16px 0" />
   <NModal v-model:show="showModal" style="max-width: 1000px" preset="card">
     <template #header> 添加歌曲 </template>
-    <NSpin :show="isModalLoading">
-      <NTabs default-value="custom" animated>
-        <NTabPane name="custom" tab="手动录入">
-          <NForm ref="formRef" :rules="addSongRules" :model="addSongModel">
-            <NFormItem path="name" label="名称">
-              <NInput v-model:value="addSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
-            </NFormItem>
-            <NFormItem path="author" label="作者">
-              <NSelect v-model:value="addSongModel.author" :options="authors" filterable multiple tag placeholder="输入后按回车新增" />
-            </NFormItem>
-            <NFormItem path="description" label="备注">
-              <NInput v-model:value="addSongModel.description" placeholder="可选" :maxlength="250" show-count autosize style="min-width: 300px" clearable />
-            </NFormItem>
-            <NFormItem path="language" label="语言">
-              <NSelect v-model:value="addSongModel.language" multiple :options="songSelectOption" placeholder="可选" />
-            </NFormItem>
-            <NFormItem path="tags" label="标签">
-              <NSelect v-model:value="addSongModel.tags" filterable multiple clearable tag placeholder="可选，输入后按回车新增" :options="tags" />
-            </NFormItem>
-            <NFormItem path="url" label="链接">
-              <NInput v-model:value="addSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" />
-            </NFormItem>
-            <NFormItem path="options">
-              <template #label>
-                点歌设置
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon :component="Info24Filled" />
-                  </template>
-                  这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
-                </NTooltip>
-              </template>
-              <NSpace vertical>
-                <NCheckbox
-                  :checked="addSongModel.options != undefined"
-                  @update:checked="
-                    (checked: boolean) => {
-                      addSongModel.options = checked
-                        ? ({
-                            needJianzhang: false,
-                            needTidu: false,
-                            needZongdu: false,
-                          } as SongRequestOption)
-                        : undefined
-                    }
-                  "
-                >
-                  是否启用
-                </NCheckbox>
-                <template v-if="addSongModel.options != undefined">
-                  <NSpace>
-                    <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
-                    <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
-                    <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
-                  </NSpace>
-                  <NSpace align="center">
-                    <NCheckbox
-                      :checked="addSongModel.options.scMinPrice != undefined"
-                      @update:checked="
-                        (checked: boolean) => {
-                          if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                        }
-                      "
-                    >
-                      需要SC
-                    </NCheckbox>
-                    <NInputGroup v-if="addSongModel.options?.scMinPrice" style="width: 200px">
-                      <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-                      <NInputNumber v-model:value="addSongModel.options.scMinPrice" min="30" />
-                    </NInputGroup>
-                  </NSpace>
-                  <NSpace align="center">
-                    <NCheckbox
-                      :checked="addSongModel.options.fanMedalMinLevel != undefined"
-                      @update:checked="
-                        (checked: boolean) => {
-                          if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                        }
-                      "
-                    >
-                      需要粉丝牌
-                      <NTooltip>
-                        <template #trigger>
-                          <NIcon :component="Info24Filled" />
-                        </template>
-                        这个即使不开也会遵循全局点歌设置的粉丝牌等级
-                      </NTooltip>
-                    </NCheckbox>
-                    <NInputGroup v-if="addSongModel.options?.fanMedalMinLevel" style="width: 200px">
-                      <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-                      <NInputNumber v-model:value="addSongModel.options.fanMedalMinLevel" min="0" />
-                    </NInputGroup>
-                  </NSpace>
+    <NScrollbar style="max-height: 80vh">
+      <NSpin :show="isModalLoading">
+        <NTabs default-value="custom" animated>
+          <NTabPane name="custom" tab="手动录入">
+            <NForm ref="formRef" :rules="addSongRules" :model="addSongModel">
+              <NFormItem path="name" label="名称">
+                <NInput
+                  v-model:value="addSongModel.name"
+                  autosize
+                  style="min-width: 200px"
+                  placeholder="就是歌曲名称"
+                />
+              </NFormItem>
+              <NFormItem path="author" label="作者">
+                <NSelect
+                  v-model:value="addSongModel.author"
+                  :options="authors"
+                  filterable
+                  multiple
+                  tag
+                  placeholder="输入后按回车新增"
+                />
+              </NFormItem>
+              <NFormItem path="description" label="备注">
+                <NInput
+                  v-model:value="addSongModel.description"
+                  placeholder="可选"
+                  :maxlength="250"
+                  show-count
+                  autosize
+                  style="min-width: 300px"
+                  clearable
+                />
+              </NFormItem>
+              <NFormItem path="language" label="语言">
+                <NSelect
+                  v-model:value="addSongModel.language"
+                  multiple
+                  :options="songSelectOption"
+                  placeholder="可选"
+                />
+              </NFormItem>
+              <NFormItem path="tags" label="标签">
+                <NSelect
+                  v-model:value="addSongModel.tags"
+                  filterable
+                  multiple
+                  clearable
+                  tag
+                  placeholder="可选，输入后按回车新增"
+                  :options="tags"
+                />
+              </NFormItem>
+              <NFormItem path="url" label="链接">
+                <NInput
+                  v-model:value="addSongModel.url"
+                  placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
+                />
+              </NFormItem>
+              <NFormItem path="options">
+                <template #label>
+                  点歌设置
+                  <NTooltip>
+                    <template #trigger>
+                      <NIcon :component="Info24Filled" />
+                    </template>
+                    这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
+                  </NTooltip>
                 </template>
-              </NSpace>
-            </NFormItem>
-          </NForm>
-          <NButton type="primary" @click="addCustomSong"> 添加 </NButton>
-        </NTabPane>
-        <NTabPane name="netease" tab="从网易云歌单导入">
-          <NInput clearable style="width: 100%" autosize :status="neteaseSongListId ? 'success' : 'error'" v-model:value="neteaseIdInput" placeholder="直接输入歌单Id或者网页链接">
-            <template #suffix>
-              <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
+                <NSpace vertical>
+                  <NCheckbox
+                    :checked="addSongModel.options != undefined"
+                    @update:checked="
+                      (checked: boolean) => {
+                        addSongModel.options = checked
+                          ? ({
+                              needJianzhang: false,
+                              needTidu: false,
+                              needZongdu: false,
+                            } as SongRequestOption)
+                          : undefined
+                      }
+                    "
+                  >
+                    是否启用
+                  </NCheckbox>
+                  <template v-if="addSongModel.options != undefined">
+                    <NSpace>
+                      <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
+                      <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
+                      <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
+                    </NSpace>
+                    <NSpace align="center">
+                      <NCheckbox
+                        :checked="addSongModel.options.scMinPrice != undefined"
+                        @update:checked="
+                          (checked: boolean) => {
+                            if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
+                          }
+                        "
+                      >
+                        需要SC
+                      </NCheckbox>
+                      <NInputGroup v-if="addSongModel.options?.scMinPrice" style="width: 200px">
+                        <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
+                        <NInputNumber v-model:value="addSongModel.options.scMinPrice" min="30" />
+                      </NInputGroup>
+                    </NSpace>
+                    <NSpace align="center">
+                      <NCheckbox
+                        :checked="addSongModel.options.fanMedalMinLevel != undefined"
+                        @update:checked="
+                          (checked: boolean) => {
+                            if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                          }
+                        "
+                      >
+                        需要粉丝牌
+                        <NTooltip>
+                          <template #trigger>
+                            <NIcon :component="Info24Filled" />
+                          </template>
+                          这个即使不开也会遵循全局点歌设置的粉丝牌等级
+                        </NTooltip>
+                      </NCheckbox>
+                      <NInputGroup v-if="addSongModel.options?.fanMedalMinLevel" style="width: 200px">
+                        <NInputGroupLabel> 最低等级 </NInputGroupLabel>
+                        <NInputNumber v-model:value="addSongModel.options.fanMedalMinLevel" min="0" />
+                      </NInputGroup>
+                    </NSpace>
+                  </template>
+                </NSpace>
+              </NFormItem>
+            </NForm>
+            <NButton type="primary" @click="addCustomSong"> 添加 </NButton>
+          </NTabPane>
+          <NTabPane name="netease" tab="从网易云歌单导入">
+            <NInput
+              clearable
+              style="width: 100%"
+              autosize
+              :status="neteaseSongListId ? 'success' : 'error'"
+              v-model:value="neteaseIdInput"
+              placeholder="直接输入歌单Id或者网页链接"
+            >
+              <template #suffix>
+                <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
+              </template>
+            </NInput>
+            <NDivider style="margin: 10px" />
+            <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId"> 获取 </NButton>
+            <template v-if="neteaseSongsOptions.length > 0">
+              <NDivider style="margin: 10px" />
+              <NTransfer
+                style="height: 500px"
+                ref="transfer"
+                v-model:value="selectedNeteaseSongs"
+                :options="neteaseSongsOptions"
+                source-filterable
+              />
+              <NDivider style="margin: 10px" />
+              <NButton type="primary" @click="addNeteaseSongs">
+                添加到歌单 | {{ selectedNeteaseSongs.length }} 首
+              </NButton>
             </template>
-          </NInput>
-          <NDivider style="margin: 10px" />
-          <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId"> 获取 </NButton>
-          <template v-if="neteaseSongsOptions.length > 0">
+          </NTabPane>
+          <NTabPane name="5sing" tab="从5sing搜索">
+            <NInput
+              clearable
+              style="width: 100%"
+              autosize
+              v-model:value="fivesingSearchInput"
+              placeholder="输入要搜索的歌名"
+              maxlength="15"
+            />
             <NDivider style="margin: 10px" />
-            <NTransfer style="height: 500px" ref="transfer" v-model:value="selectedNeteaseSongs" :options="neteaseSongsOptions" source-filterable />
-            <NDivider style="margin: 10px" />
-            <NButton type="primary" @click="addNeteaseSongs"> 添加到歌单 | {{ selectedNeteaseSongs.length }} 首 </NButton>
-          </template>
-        </NTabPane>
-        <NTabPane name="5sing" tab="从5sing搜索">
-          <NInput clearable style="width: 100%" autosize v-model:value="fivesingSearchInput" placeholder="输入要搜索的歌名" maxlength="15" />
-          <NDivider style="margin: 10px" />
-          <NButton type="primary" @click="getFivesingSearchList(true)" :disabled="!fivesingSearchInput"> 搜索 </NButton>
-          <template v-if="fivesingResults.length > 0">
-            <NDivider style="margin: 10px" />
-            <div style="overflow-x: auto">
-              <NTable size="small" style="overflow-x: auto">
-                <thead>
-                  <tr>
-                    <th>名称</th>
-                    <th>作者</th>
-                    <th>试听</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="song in fivesingResults" v-bind:key="song.id">
-                    <td>{{ song.name }}</td>
-                    <td>
-                      <NSpace>
-                        <NTag size="small" v-for="author in song.author" :key="author">
-                          {{ author }}
-                        </NTag>
-                      </NSpace>
-                    </td>
-                    <td style="display: flex; justify-content: flex-end">
-                      <!-- 在这里播放song.url链接中的音频 -->
-                      <NButton size="small" v-if="!song.url" @click="playFivesingSong(song)" :loading="isGettingFivesingSongPlayUrl == song.id"> 试听 </NButton>
-                      <audio v-else controls style="max-height: 30px">
-                        <source :src="song.url" />
-                      </audio>
-                    </td>
-                    <td>
-                      <NButton size="small" color="green" @click="addFingsingSongs(song)" :disabled="songs.findIndex((s) => s.from == SongFrom.FiveSing && s.id == song.id) > -1"> 添加 </NButton>
-                    </td>
-                  </tr>
-                </tbody>
-              </NTable>
-            </div>
-            <br />
-            <NPagination v-model:page="fivesingCurrentPage" :page-count="fivesingTotalPageCount" simple @update-page="getFivesingSearchList(false)" />
-          </template>
-        </NTabPane>
-        <NTabPane name="file" tab="从文件导入">
-          开发中...
-        </NTabPane>
-      </NTabs>
-    </NSpin>
+            <NButton type="primary" @click="getFivesingSearchList(true)" :disabled="!fivesingSearchInput">
+              搜索
+            </NButton>
+            <template v-if="fivesingResults.length > 0">
+              <NDivider style="margin: 10px" />
+              <div style="overflow-x: auto">
+                <NTable size="small" style="overflow-x: auto">
+                  <thead>
+                    <tr>
+                      <th>名称</th>
+                      <th>作者</th>
+                      <th>试听</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="song in fivesingResults" v-bind:key="song.id">
+                      <td>{{ song.name }}</td>
+                      <td>
+                        <NSpace>
+                          <NTag size="small" v-for="author in song.author" :key="author">
+                            {{ author }}
+                          </NTag>
+                        </NSpace>
+                      </td>
+                      <td style="display: flex; justify-content: flex-end">
+                        <!-- 在这里播放song.url链接中的音频 -->
+                        <NButton
+                          size="small"
+                          v-if="!song.url"
+                          @click="playFivesingSong(song)"
+                          :loading="isGettingFivesingSongPlayUrl == song.id"
+                        >
+                          试听
+                        </NButton>
+                        <audio v-else controls style="max-height: 30px">
+                          <source :src="song.url" />
+                        </audio>
+                      </td>
+                      <td>
+                        <NButton
+                          size="small"
+                          color="green"
+                          @click="addFingsingSongs(song)"
+                          :disabled="songs.findIndex((s) => s.from == SongFrom.FiveSing && s.id == song.id) > -1"
+                        >
+                          添加
+                        </NButton>
+                      </td>
+                    </tr>
+                  </tbody>
+                </NTable>
+              </div>
+              <br />
+              <NPagination
+                v-model:page="fivesingCurrentPage"
+                :page-count="fivesingTotalPageCount"
+                simple
+                @update-page="getFivesingSearchList(false)"
+              />
+            </template>
+          </NTabPane>
+          <NTabPane name="file" tab="从文件导入">
+            <NAlert type="info">
+              Excel 文件格式详见:
+              <NButton
+                type="info"
+                tag="a"
+                href="https://www.yuque.com/megghy/dez70g/ngrqwkiegrh593w5"
+                target="_blank"
+                size="tiny"
+              >
+                此页面
+              </NButton>
+            </NAlert>
+            <NUpload
+              v-model:file-list="uploadFiles"
+              :default-upload="false"
+              :max="1"
+              directory-dnd
+              @before-upload="beforeUpload"
+            >
+              <NUploadDragger>
+                <div style="margin-bottom: 12px">
+                  <n-icon size="48" :depth="3">
+                    <ArchiveOutline />
+                  </n-icon>
+                </div>
+                <NText style="font-size: 16px"> 点击或者拖动文件到该区域来上传 </NText>
+                <NP depth="3" style="margin: 8px 0 0 0"> 仅限 Excel 文件(.xlsx和.xls) 以及 csv 文件 </NP>
+              </NUploadDragger>
+            </NUpload>
+            <NButton type="primary" @click="parseExcelFile"> 解析 </NButton>
+            <template v-if="uploadSongsOptions.length > 0">
+              <NDivider style="margin: 10px" />
+              <NButton type="primary" @click="addUploadFileSong">
+                添加到歌单 | {{ selecteduploadSongs.length }} 首
+              </NButton>
+              <NDivider style="margin: 10px" />
+              <NTransfer
+                style="height: 400px"
+                v-model:value="selecteduploadSongs"
+                :options="uploadSongsOptions"
+                source-filterable
+              />
+            </template>
+          </NTabPane>
+        </NTabs>
+      </NSpin>
+    </NScrollbar>
   </NModal>
   <NSpin v-if="isLoading" show />
   <SongList v-else :songs="songs" is-self />

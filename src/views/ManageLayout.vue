@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils'
+import { NavigateToNewTab, isDarkMode } from '@/Utils'
 import { isLoadingAccount, useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
@@ -48,6 +48,7 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import APlayer from 'vue3-aplayer'
 import DanmakuLayout from './manage/DanmakuLayout.vue'
+import { useAuthStore } from '@/store/useAuthStore'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -289,7 +290,10 @@ const menuOptions = [
                 },
               ),
             ]),
-          default: () => (accountInfo.value?.isBiliVerified ? '需要使用直播弹幕的功能' : '你尚未进行 Bilibili 认证, 请前往面板进行绑定'),
+          default: () =>
+            accountInfo.value?.isBiliVerified
+              ? '需要使用直播弹幕的功能'
+              : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
         },
       ),
     key: 'manage-danmaku',
@@ -410,7 +414,18 @@ function logout() {
   window.location.reload()
 }
 function onNextMusic() {
-  musicRquestStore.nextMusic();
+  musicRquestStore.nextMusic()
+}
+function gotoAuthPage() {
+  if (!accountInfo.value?.biliUserAuthInfo) {
+    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+    return
+  }
+  useAuthStore()
+    .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
+    .then(() => {
+      NavigateToNewTab('/bili-user')
+    })
 }
 
 onMounted(() => {
@@ -431,7 +446,12 @@ onMounted(() => {
         </template>
         <template #extra>
           <NSpace align="center" justify="center">
-            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
+            <NSwitch
+              :default-value="!isDarkMode()"
+              @update:value="
+                (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
+              "
+            >
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -439,30 +459,54 @@ onMounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton size="small" style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"> 回到主页 </NButton>
+            <NButton
+              size="small"
+              style="right: 0px; position: relative"
+              type="primary"
+              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"
+            >
+              回到主页
+            </NButton>
           </NSpace>
         </template>
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider>
-      <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false">
-        <NSpace justify="center" style="margin-top: 16px">
-          <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
+      <NLayoutSider
+        ref="sider"
+        bordered
+        show-trigger
+        collapse-mode="width"
+        :default-collapsed="windowWidth < 750"
+        :collapsed-width="64"
+        :width="180"
+        :native-scrollbar="false"
+      >
+        <NSpace vertical style="margin-top: 16px" align="center">
+          <NSpace justify="center">
+            <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
+              <template #icon>
+                <NIcon :component="BrowsersOutline" />
+              </template>
+              <template v-if="width >= 180"> 面板 </template>
+            </NButton>
+            <NTooltip v-if="width >= 180">
+              <template #trigger>
+                <NButton @click="$router.push({ name: 'manage-feedback' })">
+                  <template #icon>
+                    <NIcon :component="PersonFeedback24Filled" />
+                  </template>
+                </NButton>
+              </template>
+              反馈
+            </NTooltip>
+          </NSpace>
+          <NButton v-if="false" @click="gotoAuthPage()" type="info" secondary>
             <template #icon>
               <NIcon :component="BrowsersOutline" />
             </template>
-            <template v-if="width >= 180"> 面板 </template>
+            <template v-if="width >= 180"> 认证用户主页 </template>
           </NButton>
-          <NTooltip v-if="width >= 180">
-            <template #trigger>
-              <NButton @click="$router.push({ name: 'manage-feedback' })">
-                <template #icon>
-                  <NIcon :component="PersonFeedback24Filled" />
-                </template>
-              </NButton>
-            </template>
-            反馈
-          </NTooltip>
         </NSpace>
         <NMenu
           style="margin-top: 12px"
@@ -501,8 +545,14 @@ onMounted(() => {
                 请进行邮箱验证
                 <br /><br />
                 <NSpace>
-                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail"> 重新发送验证邮件 </NButton>
-                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()" @finish="canResendEmail = true" />
+                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail">
+                    重新发送验证邮件
+                  </NButton>
+                  <NCountdown
+                    v-if="!canResendEmail"
+                    :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                    @finish="canResendEmail = true"
+                  />
 
                   <NPopconfirm @positive-click="logout" size="small">
                     <template #trigger>
@@ -534,7 +584,9 @@ onMounted(() => {
               style="flex: 1; min-width: 400px"
             />
             <NSpace vertical>
-              <NTag :bordered="false" type="info" size="small"> 队列: {{ musicRquestStore.waitingMusics.length }} </NTag>
+              <NTag :bordered="false" type="info" size="small">
+                队列: {{ musicRquestStore.waitingMusics.length }}
+              </NTag>
               <NButton size="small" type="info" @click="onNextMusic"> 下一首 </NButton>
             </NSpace>
           </div>
@@ -543,7 +595,17 @@ onMounted(() => {
     </NLayout>
   </NLayout>
   <template v-else>
-    <NLayoutContent style="display: flex; justify-content: center; align-items: center; flex-direction: column; padding: 50px; height: 100%; box-sizing: border-box">
+    <NLayoutContent
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 50px;
+        height: 100%;
+        box-sizing: border-box;
+      "
+    >
       <template v-if="!isLoadingAccount">
         <NSpace vertical justify="center" align="center">
           <NText> 请登录或注册后使用 </NText>

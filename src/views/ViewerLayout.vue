@@ -6,7 +6,7 @@ import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/data/constants'
-import { CalendarClock24Filled } from '@vicons/fluent'
+import { CalendarClock24Filled, Wallet24Filled } from '@vicons/fluent'
 import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
@@ -128,6 +128,21 @@ onMounted(async () => {
       show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.QuestionBox) ?? -1) > -1,
       key: 'user-questionBox',
       icon: renderIcon(Chatbox),
+    },
+    {
+      label: () =>
+        h(
+          RouterLink,
+          {
+            to: {
+              name: 'user-goods',
+            },
+          },
+          { default: () => '积分' },
+        ),
+      show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.Point) ?? -1) > -1,
+      key: 'user-goods',
+      icon: renderIcon(Wallet24Filled),
     },
   ]
   await RequestBiliUserData()

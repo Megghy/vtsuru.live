@@ -40,12 +40,23 @@ export default {
       children: [
         {
           path: 'ics',
+          name: 'user-schedule-ics',
+          component: () => import('@/views/view/ScheduleView.vue'),
           beforeEnter(to: any) {
             // 直接重定向到外部 URL
             window.location.href = 'https://vtsuru.live/api/schedule/get-ics?id=' + to.query.id
           },
         },
       ],
+    },
+    {
+      path: 'goods',
+      name: 'user-goods',
+      component: () => import('@/views/pointViews/PointGoodsView.vue'),
+      meta: {
+        title: '积分兑换',
+        keepAlive: true,
+      },
     },
   ],
 }

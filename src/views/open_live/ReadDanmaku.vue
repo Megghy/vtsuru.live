@@ -60,6 +60,7 @@ type SpeechSettings = {
   voiceAPISchemeType: 'http' | 'https'
   voiceAPI?: string
   splitText: boolean
+  useAPIDirectly: boolean
 
   combineGiftDelay?: number
 }
@@ -87,6 +88,7 @@ const settings = useStorage<SpeechSettings>('Setting.Speech', {
   voiceType: 'local',
   voiceAPISchemeType: 'https',
   voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
+  useAPIDirectly: false,
   splitText: false,
 
   combineGiftDelay: 2,
@@ -122,7 +124,9 @@ const isSpeaking = ref(false)
 const speakingText = ref('')
 const speakQueue = ref<{ updateAt: number; combineCount?: number; data: EventModel }[]>([])
 const isVtsuruVoiceAPI = computed(() => {
-  return settings.value.voiceType == 'api' && settings.value.voiceAPI?.toLowerCase().trim().startsWith('voice.vtsuru.live')
+  return (
+    settings.value.voiceType == 'api' && settings.value.voiceAPI?.toLowerCase().trim().startsWith('voice.vtsuru.live')
+  )
 })
 
 const canSpeech = ref(false)
@@ -187,7 +191,10 @@ async function speak() {
     return
   }
   const data = speakQueue.value[0]
-  if (data.data.type == EventDataTypes.Gift && data.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000) {
+  if (
+    data.data.type == EventDataTypes.Gift &&
+    data.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000
+  ) {
     return
   }
   let text = getTextFromDanmaku(speakQueue.value.shift()?.data)
@@ -271,7 +278,7 @@ function speakFromAPI(text: string) {
   }
   isSpeaking.value = true
   isApiAudioLoading.value = true
-  let url = `${settings.value.voiceAPISchemeType == 'https' ? 'https' : FETCH_API + 'http'}://${settings.value.voiceAPI
+  let url = `${settings.value.voiceAPISchemeType == 'https' ? 'https' : (settings.value.useAPIDirectly ? '' : FETCH_API) + 'http'}://${settings.value.voiceAPI
     .trim()
     .replace(/^(?:https?:\/\/)/, '')
     .replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))}`
@@ -329,7 +336,11 @@ function onGetEvent(data: EventModel) {
   }
   if (data.type == EventDataTypes.Gift) {
     const exist = speakQueue.value.find(
-      (v) => v.data.type == EventDataTypes.Gift && v.data.uid == data.uid && v.data.msg == data.msg && v.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000,
+      (v) =>
+        v.data.type == EventDataTypes.Gift &&
+        v.data.uid == data.uid &&
+        v.data.msg == data.msg &&
+        v.updateAt > Date.now() - (settings.value.combineGiftDelay ?? 0) * 1000,
     )
     if (exist) {
       exist.updateAt = Date.now()
@@ -337,7 +348,9 @@ function onGetEvent(data: EventModel) {
       exist.data.price += data.price
       exist.combineCount ??= 0
       exist.combineCount += data.num
-      console.log(`[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`)
+      console.log(
+        `[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`,
+      )
       return
     }
   }
@@ -378,11 +391,17 @@ function getTextFromDanmaku(data: EventModel | undefined) {
       break
   }
   text = text
-    .replace(templateConstants.name.regex, settings.value.voiceType == 'api' && settings.value.splitText ? `\'${data.name}\'` : data.name)
+    .replace(
+      templateConstants.name.regex,
+      settings.value.voiceType == 'api' && settings.value.splitText ? `\'${data.name}\'` : data.name,
+    )
     .replace(templateConstants.count.regex, data.num.toString())
     .replace(templateConstants.price.regex, data.price.toString())
     .replace(templateConstants.message.regex, data.msg)
-    .replace(templateConstants.guard_level.regex, data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '')
+    .replace(
+      templateConstants.guard_level.regex,
+      data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
+    )
     .replace(templateConstants.fans_medal_level.regex, data.fans_medal_level.toString())
     .trim()
 
@@ -468,6 +487,8 @@ function test(type: EventDataTypes) {
         fans_medal_wearing_status: false,
         emoji: undefined,
         uface: '',
+        open_id: '00000000-0000-0000-0000-000000000000',
+        ouid: '00000000-0000-0000-0000-000000000000',
       })
       break
     case EventDataTypes.SC:
@@ -485,6 +506,8 @@ function test(type: EventDataTypes) {
         fans_medal_wearing_status: false,
         emoji: undefined,
         uface: '',
+        open_id: '00000000-0000-0000-0000-000000000000',
+        ouid: '00000000-0000-0000-0000-000000000000',
       })
       break
     case EventDataTypes.Guard:
@@ -502,6 +525,8 @@ function test(type: EventDataTypes) {
         fans_medal_wearing_status: false,
         emoji: undefined,
         uface: '',
+        open_id: '00000000-0000-0000-0000-000000000000',
+        ouid: '00000000-0000-0000-0000-000000000000',
       })
       break
     case EventDataTypes.Gift:
@@ -519,6 +544,8 @@ function test(type: EventDataTypes) {
         fans_medal_wearing_status: false,
         emoji: undefined,
         uface: '',
+        open_id: '00000000-0000-0000-0000-000000000000',
+        ouid: '00000000-0000-0000-0000-000000000000',
       })
       break
   }
@@ -549,7 +576,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error"> 你的浏览器不支持语音功能 </NAlert>
+  <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error">
+    你的浏览器不支持语音功能
+  </NAlert>
   <template v-else>
     <NSpace vertical>
       <NAlert v-if="settings.voiceType == 'local'" type="info" closeable>
@@ -589,10 +618,18 @@ onUnmounted(() => {
     </NSpace>
     <br />
     <NSpace align="center">
-      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'" data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id" size="large">
+      <NButton
+        @click="canSpeech ? stopSpeech() : startSpeech()"
+        :type="canSpeech ? 'error' : 'primary'"
+        data-umami-event="Use TTS"
+        :data-umami-event-uid="accountInfo?.id"
+        size="large"
+      >
         {{ canSpeech ? '停止监听' : '开始监听' }}
       </NButton>
-      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small"> 保存配置到服务器 </NButton>
+      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small">
+        保存配置到服务器
+      </NButton>
       <NPopconfirm @positive-click="downloadConfig">
         <template #trigger>
           <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
@@ -615,7 +652,12 @@ onUnmounted(() => {
         </NTooltip>
         <NTooltip v-else>
           <template #trigger>
-            <NButton circle :disabled="!isSpeaking" @click="cancelSpeech" :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
+            <NButton
+              circle
+              :disabled="!isSpeaking"
+              @click="cancelSpeech"
+              :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`"
+            >
               <template #icon>
                 <NIcon :component="Mic24Filled" :color="isSpeaking ? 'green' : 'gray'" />
               </template>
@@ -631,9 +673,24 @@ onUnmounted(() => {
               <NListItem v-for="item in speakQueue">
                 <NSpace align="center">
                   <NButton @click="forceSpeak(item.data)" type="primary" secondary size="small"> 读 </NButton>
-                  <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small"> 取消 </NButton>
-                  <NTag v-if="item.data.type == EventDataTypes.Gift && item.combineCount" type="info" size="small" style="animation: animated-border 2.5s infinite"> 连续赠送中</NTag>
-                  <NTag v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay" type="success" size="small"> 等待连续赠送检查 </NTag>
+                  <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small">
+                    取消
+                  </NButton>
+                  <NTag
+                    v-if="item.data.type == EventDataTypes.Gift && item.combineCount"
+                    type="info"
+                    size="small"
+                    style="animation: animated-border 2.5s infinite"
+                  >
+                    连续赠送中</NTag
+                  >
+                  <NTag
+                    v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay"
+                    type="success"
+                    size="small"
+                  >
+                    等待连续赠送检查
+                  </NTag>
                   <span>
                     <NTag v-if="item.data.type == EventDataTypes.Message" type="success" size="small"> 弹幕</NTag>
                     <NTag v-else-if="item.data.type == EventDataTypes.Gift" type="success" size="small"> 礼物</NTag>
@@ -670,7 +727,11 @@ onUnmounted(() => {
     </NDivider>
     <Transition name="fade" mode="out-in">
       <NSpace v-if="settings.voiceType == 'local'" vertical>
-        <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions" :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
+        <NSelect
+          v-model:value="settings.speechInfo.voice"
+          :options="voiceOptions"
+          :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })"
+        />
         <span style="width: 100%">
           <NText> 音量 </NText>
           <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
@@ -687,7 +748,7 @@ onUnmounted(() => {
       <template v-else>
         <div>
           <NCollapse>
-            <NCollapseItem title="要求" name="1">
+            <NCollapseItem title="要求 👀 " name="1">
               <NUl>
                 <NLi> 直接返回音频数据 (wav, mp3, m4a etc.) </NLi>
                 <NLi>
@@ -699,10 +760,12 @@ onUnmounted(() => {
                     不使用https的话将会使用 cloudflare workers 进行代理, 会慢很多
                   </NTooltip>
                 </NLi>
-                <NLi> 指定API可以被外部访问 </NLi>
+                <NLi> 指定API可以被外部访问 (除非你本地部署并且启用了https) </NLi>
               </NUl>
-              推荐项目:
-              <NButton text type="info" tag="a" href="https://github.com/Artrajz/vits-simple-api" target="_blank"> vits-simple-api </NButton>
+              推荐项目, 可以用于本地部署:
+              <NButton text type="info" tag="a" href="https://github.com/Artrajz/vits-simple-api" target="_blank">
+                vits-simple-api
+              </NButton>
             </NCollapseItem>
           </NCollapse>
           <br />
@@ -716,8 +779,15 @@ onUnmounted(() => {
             </NAlert>
             <NAlert v-if="isVtsuruVoiceAPI" type="success" closable>
               看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
-              <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank"> Xz乔希 </NButton>
-              训练的 Taffy 模型结果, 不支持部分英文, 仅用于测试, 用的人多的时候会比较慢, 不保证可用性. 侵删
+              <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank">
+                Xz乔希
+              </NButton>
+              训练的
+              <NTooltip>
+                <template #trigger> Taffy </template>
+                链接里的 id 改成 0 会变成莲莲捏🥰
+              </NTooltip>
+              模型结果, 不支持部分英文, 仅用于测试, 用的人多的时候会比较慢, 不保证可用性. 侵删
             </NAlert>
           </NSpace>
           <br />
@@ -739,13 +809,38 @@ onUnmounted(() => {
           </NInputGroup>
           <br /><br />
           <NSpace vertical>
-            <NAlert v-if="settings.voiceAPISchemeType == 'http'" type="info"> 不使用https的话将会使用 cloudflare workers 进行代理, 会慢很多 </NAlert>
+            <NAlert v-if="settings.voiceAPISchemeType == 'http'" type="info">
+              不使用https的话默认将会使用 cloudflare workers 进行代理, 会慢很多
+              <br />
+              <NCheckbox v-model:checked="settings.useAPIDirectly">
+                不使用代理
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  希望你知道这样做会产生的影响, 无法使用不关我事
+                </NTooltip>
+              </NCheckbox>
+            </NAlert>
             <span style="width: 100%">
               <NText> 音量 </NText>
-              <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
+              <NSlider
+                style="min-width: 200px"
+                v-model:value="settings.speechInfo.volume"
+                :min="0"
+                :max="1"
+                :step="0.01"
+              />
             </span>
           </NSpace>
-          <audio ref="apiAudio" :src="apiAudioSrc" :volume="settings.speechInfo.volume" @ended="cancelSpeech" @canplay="isApiAudioLoading = false" @error="onAPIError"></audio>
+          <audio
+            ref="apiAudio"
+            :src="apiAudioSrc"
+            :volume="settings.speechInfo.volume"
+            @ended="cancelSpeech"
+            @canplay="isApiAudioLoading = false"
+            @error="onAPIError"
+          ></audio>
         </div>
       </template>
     </Transition>
@@ -761,7 +856,15 @@ onUnmounted(() => {
     <NSpace vertical>
       <NSpace>
         支持的变量:
-        <NButton size="tiny" secondary v-for="item in Object.values(templateConstants)" :key="item.name" @click="copyToClipboard(item.words)"> {{ item.words }} | {{ item.name }} </NButton>
+        <NButton
+          size="tiny"
+          secondary
+          v-for="item in Object.values(templateConstants)"
+          :key="item.name"
+          @click="copyToClipboard(item.words)"
+        >
+          {{ item.words }} | {{ item.name }}
+        </NButton>
       </NSpace>
       <NInputGroup>
         <NInputGroupLabel> 弹幕模板 </NInputGroupLabel>

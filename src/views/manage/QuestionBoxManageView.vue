@@ -293,7 +293,7 @@ onMounted(() => {
                     <template #trigger>
                       <NTime :time="item.sendAt" :to="Date.now()" type="relative" />
                     </template>
-                    <NTime />
+                    <NTime  :time="item.sendAt" />
                   </NTooltip>
                 </NText>
               </NSpace>

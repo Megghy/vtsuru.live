@@ -4,10 +4,12 @@ import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
 import { ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 import { OPEN_LIVE_API_URL } from './constants'
+import { GuidUtils } from '@/Utils'
 
 export interface DanmakuInfo {
   room_id: number
   uid: number
+  open_id: string
   uname: string
   msg: string
   msg_id: string
@@ -23,6 +25,7 @@ export interface DanmakuInfo {
 export interface GiftInfo {
   room_id: number
   uid: number
+  open_id: string
   uname: string
   uface: string
   gift_id: number
@@ -53,6 +56,7 @@ export interface GiftInfo {
 export interface SCInfo {
   room_id: number // 直播间id
   uid: number // 购买用户UID
+  open_id: string
   uname: string // 购买的用户昵称
   uface: string // 购买用户头像
   message_id: number // 留言id(风控场景下撤回留言需要)
@@ -70,6 +74,7 @@ export interface SCInfo {
 interface GuardInfo {
   user_info: {
     uid: number // 用户uid
+    open_id: string
     uname: string // 用户昵称
     uface: string // 用户头像
   }
@@ -267,6 +272,8 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
           uface: data.uface,
+          open_id: data.open_id,
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
         },
         command,
       )
@@ -293,6 +300,8 @@ export default class DanmakuClient {
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.uface,
+          open_id: data.open_id,
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
         },
         command,
       )
@@ -318,6 +327,8 @@ export default class DanmakuClient {
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.uface,
+          open_id: data.open_id,
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
         },
         command,
       )
@@ -343,6 +354,8 @@ export default class DanmakuClient {
           fans_medal_name: data.fans_medal_name,
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.user_info.uface,
+          open_id: data.user_info.open_id,
+          ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
         },
         command,
       )
