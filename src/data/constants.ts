@@ -10,6 +10,7 @@ export const isBackendUsable = ref(true)
 export const AVATAR_URL = 'https://workers.vrp.moe/api/bilibili/avatar/'
 export const FILE_BASE_URL = 'https://files.vtsuru.live'
 export const IMGUR_URL = FILE_BASE_URL + '/imgur/'
+export const THINGS_URL = FILE_BASE_URL + '/things/'
 export const apiFail = ref(false)
 
 export const BASE_API = () => (process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI)

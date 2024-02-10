@@ -27,6 +27,7 @@ export interface UserInfo {
     enableFunctions: FunctionTypes[]
     isInBlackList: boolean
     templateTypes: { [key: string]: string }
+    streamerInfo?: StreamerModel
   }
 }
 export interface AccountInfo extends UserInfo {
@@ -51,6 +52,7 @@ export interface AccountInfo extends UserInfo {
   blackList: number[]
   biliBlackList: { [key: number]: string }
   streamerInfo?: StreamerModel
+  biliUserAuthInfo?: BiliAuthModel
 }
 export interface StreamerModel {
   name: string
@@ -88,6 +90,8 @@ export interface UserSetting {
   questionBox: Setting_QuestionBox
   songRequest: Setting_SongRequest
   queue: Setting_Queue
+  point: Setting_Point
+
   enableFunctions: FunctionTypes[]
 
   indexTemplate: string | null
@@ -155,7 +159,20 @@ export interface Setting_Queue {
 
   isReverse: boolean
 }
-
+export interface Setting_Point {
+  allowType: EventDataTypes[]
+  jianzhangPoint: number // decimal maps to number in TypeScript
+  tiduPoint: number // decimal maps to number in TypeScript
+  zongduPoint: number // decimal maps to number in TypeScript
+  giftPercentMap: { [key: string]: number } // Dictionary<string, double> maps to an index signature in TypeScript
+  scPointPercent: number // double maps to number in TypeScript
+  giftPointPercent: number // double maps to number in TypeScript
+  giftAllowType: SettingPointGiftAllowType
+}
+export enum SettingPointGiftAllowType {
+  All,
+  WhiteList,
+}
 export enum KeywordMatchType {
   Full,
   Contains,
@@ -427,6 +444,7 @@ export interface EventModel {
   name: string
   uface: string
   uid: number
+  open_id: string
   msg: string
   time: number
   num: number
@@ -436,6 +454,7 @@ export interface EventModel {
   fans_medal_name: string
   fans_medal_wearing_status: boolean
   emoji?: string
+  ouid: string
 }
 export enum EventDataTypes {
   Guard,
@@ -530,6 +549,8 @@ export interface ResponsePointGoodModel {
   images: string[]
   status: GoodsStatus
   type: GoodsTypes
+  isAllowRebuy: boolean
+  maxBuyCount?: number
 }
 export interface ImageUploadModel {
   existImages: string[]
@@ -548,11 +569,15 @@ export interface PointGoodsModel {
   embedCollectUrl?: boolean
   description: string
   content?: string
+  isAllowRebuy: boolean
+  maxBuyCount?: number
 }
 export interface AddressInfo {
+  id?: string
   province: string
   city: string
   district: string
+  street: string
   address: string
   phone: number
   name: string
@@ -563,41 +588,66 @@ export interface BiliAuthBaseModel {
   openId: string
   avatar: string
   name: string
+  createAt: number
 }
 export interface BiliAuthModel extends BiliAuthBaseModel {
-  address?: AddressInfo
+  address?: AddressInfo[]
+  token: string
 }
-export interface PointOrderModel{
-  id: number
-
-}
-export interface ResponsePointUserModel{
+export interface ResponsePointUserModel {
   point: number
   orderCount: number
   isAuthed: boolean
-  info?: BiliAuthBaseModel
+  info: BiliAuthBaseModel
+  updateAt: number
+  createAt: number
+
+  trackingNumber?: string
+  expressCompany?: string
 }
 
-export interface ResponsePointOrder2StreamerModel {
+export interface ResponsePointOrder2OwnerModel {
+  instanceOf: 'owner'
   id: number
+  point: number
+  type: GoodsTypes
   customer: BiliAuthModel
   address?: AddressInfo
   goodsId: number
   createAt: number
   status: PointOrderStatus
+
+  trackingNumber?: string
+  expressCompany?: string
 }
 
 export interface ResponsePointOrder2UserModel {
+  instanceOf: 'user'
   id: number
+  point: number
+  type: GoodsTypes
   address?: AddressInfo
-  goodsId: PointGoodsModel
+  goods: ResponsePointGoodModel
   status: PointOrderStatus
   createAt: number
 }
 export enum PointOrderStatus {
   Pending, // 订单正在等待处理
   Shipped, // 订单已发货
-  Canceled, // 订单已取消
-  Refunded, // 订单已退款
-  Failed, // 订单处理失败
+  Completed, // 订单已完成
+}
+export interface ResponsePointHisrotyModel {
+  point: number
+  ouId: string
+  type: EventDataTypes
+  from: PointFrom
+  createAt: number
+
+  extra?: any
+}
+
+export enum PointFrom {
+  Danmaku,
+  Manual,
+  Use,
 }

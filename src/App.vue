@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { useProviderStore } from '@/store/useProviderStore'
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import ManageLayout from '@/views/ManageLayout.vue'
 import ViewerLayout from '@/views/ViewerLayout.vue'
 import { useStorage } from '@vueuse/core'

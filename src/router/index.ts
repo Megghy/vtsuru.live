@@ -1,4 +1,4 @@
-import { useProviderStore } from '@/store/useProviderStore'
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import IndexView from '../views/IndexView.vue'
 import manage from './manage'
@@ -75,6 +75,15 @@ const routes: Array<RouteRecordRaw> = [
       keepAlive: true,
     },
   },
+  {
+    path: '/bili-user',
+    name: 'bili-user',
+    component: () => import('@/views/pointViews/PointUserLayout.vue'),
+    meta: {
+      title: 'Bilibili 账户',
+      keepAlive: true,
+    },
+  },
   manage,
   user,
   obs,
@@ -94,11 +103,11 @@ const router = createRouter({
   routes,
 })
 router.beforeEach((to, from, next) => {
-  useProviderStore().loadingBar?.start()
+  useLoadingBarStore().loadingBar?.start()
   next()
 })
 router.afterEach((to, from) => {
-  const loadingBar = useProviderStore().loadingBar
+  const loadingBar = useLoadingBarStore().loadingBar
   loadingBar?.finish()
 })
 

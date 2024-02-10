@@ -103,3 +103,54 @@ export async function getImageUploadModel(files: UploadFileInfo[] | undefined | 
   }
   return result
 }
+export class GuidUtils {
+  // 将数字转换为GUID
+  public static numToGuid(value: number): string {
+    const buffer = new ArrayBuffer(16)
+    const view = new DataView(buffer)
+    view.setBigUint64(8, BigInt(value)) // 将数字写入后8个字节
+    return GuidUtils.bufferToGuid(buffer)
+  }
+
+  // 检查GUID是否由数字生成
+  public static isGuidFromUserId(guid: string): boolean {
+    const buffer = GuidUtils.guidToBuffer(guid)
+    const view = new DataView(buffer)
+    for (let i = 0; i < 8; i++) {
+      if (view.getUint8(i) !== 0) return false // 检查前8个字节是否为0
+    }
+    return true
+  }
+
+  // 将GUID转换为数字
+  public static guidToLong(guid: string): number {
+    if (!GuidUtils.isGuidFromUserId(guid)) {
+      throw new Error('The provided GUID was not generated from a long value.')
+    }
+    const buffer = GuidUtils.guidToBuffer(guid)
+    const view = new DataView(buffer)
+    return Number(view.getBigUint64(8)) // 读取后8个字节的long值
+  }
+
+  // 辅助方法：将ArrayBuffer转换为GUID字符串
+  private static bufferToGuid(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer)
+    const guid = bytes.reduce((str, byte, idx) => {
+      const pair = byte.toString(16).padStart(2, '0')
+      return str + (idx === 4 || idx === 6 || idx === 8 || idx === 10 ? '-' : '') + pair
+    }, '')
+    return guid
+  }
+
+  // 辅助方法：将GUID字符串转换为ArrayBuffer
+  private static guidToBuffer(guid: string): ArrayBuffer {
+    const hex = guid.replace(/-/g, '')
+    if (hex.length !== 32) throw new Error('Invalid GUID format.')
+    const buffer = new ArrayBuffer(16)
+    const view = new DataView(buffer)
+    for (let i = 0; i < 16; i++) {
+      view.setUint8(i, parseInt(hex.substr(i * 2, 2), 16))
+    }
+    return buffer
+  }
+}

@@ -4,7 +4,24 @@ import { QueryGetAPI } from '@/api/query'
 import { BILI_API_URL, BILI_AUTH_API_URL } from '@/data/constants'
 import { useStorage } from '@vueuse/core'
 import { randomUUID } from 'crypto'
-import { NFlex, NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NInputNumber, NSpace, NSpin, NText, useMessage, NTimeline, NTimelineItem, NSteps, NStep } from 'naive-ui'
+import {
+  NFlex,
+  NAlert,
+  NButton,
+  NCard,
+  NCountdown,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NSpace,
+  NSpin,
+  NText,
+  useMessage,
+  NTimeline,
+  NTimelineItem,
+  NSteps,
+  NStep,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -112,7 +129,7 @@ onMounted(async () => {
           <NSpace vertical justify="center" align="center" style="width: 100%">
             <template v-if="!timeOut">
               <NSpin />
-              <span> 剩余 <NCountdown :duration="timeLeft - Date.now()" /> </span>
+              <span> 剩余 <NCountdown :duration="timeLeft" /> </span>
               <NInputGroup>
                 <NInput :value="startModel?.code" :allow-input="() => false" />
                 <NButton @click="copyCode"> 复制认证码 </NButton>
@@ -141,7 +158,7 @@ onMounted(async () => {
               <NText>
                 点击
                 <NText type="primary" strong> 开始认证 </NText>
-                后请在 2 分钟之内使用
+                后请在 5 分钟之内使用
                 <NText strong type="primary"> 需要认证的账户 </NText>
                 在指定的直播间直播间内发送给出的验证码
               </NText>
@@ -155,10 +172,25 @@ onMounted(async () => {
             <NAlert type="success"> 你已完成验证! 请妥善保存你的登陆链接, 请勿让其他人获取. 丢失后可以再次通过认证流程获得 </NAlert>
             <NText> 你的登陆链接为: </NText>
             <NInputGroup>
-              <NInput :value="`https://vtsuru.live/point?auth=${biliToken}`" type="textarea" :allow-input="() => false" />
+              <NInput :value="`https://vtsuru.live/bili-user?auth=${biliToken}`" type="textarea" :allow-input="() => false" />
               <NButton @click="copyCode" type="info" style="height: 100%"> 复制登陆链接 </NButton>
             </NInputGroup>
-            <NButton @click="" type="primary"> 前往个人中心 </NButton>
+            <NFlex>
+              <NButton @click="$router.push({ name: 'bili-user' })" type="primary"> 前往个人中心 </NButton>
+              <NButton
+                @click="
+                  () => {
+                    currentStep = 0
+                    //@ts-ignore
+                    biliToken = null
+                    guidKey = uuidv4()
+                  }
+                "
+                type="warning"
+              >
+                重新认证
+              </NButton>
+            </NFlex>
           </NFlex>
         </template>
       </NFlex>

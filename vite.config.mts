@@ -4,6 +4,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
+import Markdown from 'unplugin-vue-markdown/vite'
 
 export default defineConfig({
   plugins: [
@@ -12,9 +13,13 @@ export default defineConfig({
         propsDestructure: true,
         defineModel: true,
       },
+      include: [/\.vue$/, /\.md$/],
     }),
     svgLoader(),
     vueJsx(),
+    Markdown({
+      /* options */
+    }),
   ],
   resolve: {
     alias: {

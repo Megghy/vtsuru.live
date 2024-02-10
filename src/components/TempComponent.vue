@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useProviderStore } from '@/store/useProviderStore'
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import { useLoadingBar } from 'naive-ui'
 import { onMounted } from 'vue'
 
 // Setup code
 onMounted(() => {
-  const providerStore = useProviderStore()
+  const providerStore = useLoadingBarStore()
   const loadingBar = useLoadingBar()
   providerStore.setLoadingBar(loadingBar)
 })
