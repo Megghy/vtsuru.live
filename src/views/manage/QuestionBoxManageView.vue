@@ -416,6 +416,13 @@ onMounted(() => {
         >
           允许未注册用户进行提问
         </NCheckbox>
+        <NDivider> 通知 </NDivider>
+        <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="saveSettings">
+          收到新提问时发送邮件
+        </NCheckbox>
+        <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQAReply" @update:checked="saveSettings">
+          提问后收到回复时发送邮件
+        </NCheckbox>
       </NSpin>
     </NTabPane>
   </NTabs>
