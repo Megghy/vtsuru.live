@@ -5,14 +5,51 @@ import { HISTORY_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
 import { addDays, addHours, format, isSameDay, isSameHour, startOfDay, startOfHour } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
-import { DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent } from 'echarts/components'
+import {
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NIcon, NSpace, NSpin, NText, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 
-use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, LineChart, ToolboxComponent, BarChart])
+use([
+  CanvasRenderer,
+  LineChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+  DataZoomComponent,
+  LineChart,
+  ToolboxComponent,
+  BarChart,
+])
+type HistoryModel = {
+  fan: {
+    records: HistoryRecordModel[]
+    updateAt: number
+  }
+  guard: {
+    records: HistoryRecordModel[]
+    updateAt: number
+  }
+  upstat: {
+    records: HistoryUpstatRecordModel[]
+    updateAt: number
+  }
+}
+type HistoryRecordModel = {
+  time: number
+  count: number
+}
+type HistoryUpstatRecordModel = { time: number; stats: { views: number; likes: number } }
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -20,6 +57,9 @@ const message = useMessage()
 const fansHistory = ref<{ time: number; count: number }[]>()
 const guardHistory = ref<{ time: number; count: number }[]>()
 const upstatHistory = ref<{ time: number; stats: { views: number; likes: number } }[]>()
+const fansUpdateAt = ref(0)
+const guardUpdateAt = ref(0)
+const upstatUpdateAt = ref(0)
 const fansOption = ref()
 const guardsOption = ref()
 const upstatViewOption = ref()
@@ -27,55 +67,16 @@ const upstatLikeOption = ref()
 
 const isLoading = ref(true)
 
-async function getFansHistory() {
-  await QueryGetAPI<
-    {
-      time: number
-      count: number
-    }[]
-  >(HISTORY_API_URL + 'fans')
+async function getHistory() {
+  await QueryGetAPI<HistoryModel>(HISTORY_API_URL + 'get-all')
     .then((data) => {
       if (data.code == 200) {
-        fansHistory.value = data.data
-      } else {
-        message.error('加载失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('加载失败')
-    })
-}
-async function getGuardsHistory() {
-  await QueryGetAPI<
-    {
-      time: number
-      count: number
-    }[]
-  >(HISTORY_API_URL + 'guards')
-    .then((data) => {
-      if (data.code == 200) {
-        guardHistory.value = data.data
-      } else {
-        message.error('加载失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('加载失败')
-    })
-}
-async function getUpstatHistory() {
-  await QueryGetAPI<
-    {
-      time: number
-      stats: {
-        views: number
-        likes: number
-      }
-    }[]
-  >(HISTORY_API_URL + 'upstat')
-    .then((data) => {
-      if (data.code == 200) {
-        upstatHistory.value = data.data
+        fansHistory.value = data.data.fan.records
+        guardHistory.value = data.data.guard.records
+        upstatHistory.value = data.data.upstat.records
+        fansUpdateAt.value = data.data.fan.updateAt
+        guardUpdateAt.value = data.data.guard.updateAt
+        upstatUpdateAt.value = data.data.upstat.updateAt
       } else {
         message.error('加载失败: ' + data.message)
       }
@@ -87,7 +88,11 @@ async function getUpstatHistory() {
 function isSameDaySimple(time1: number, time2: number) {
   const time1Date = new Date(time1)
   const time2Date = new Date(time2)
-  return time1Date.getFullYear() === time2Date.getFullYear() && time1Date.getMonth() === time2Date.getMonth() && time1Date.getDate() === time2Date.getDate()
+  return (
+    time1Date.getFullYear() === time2Date.getFullYear() &&
+    time1Date.getMonth() === time2Date.getMonth() &&
+    time1Date.getDate() === time2Date.getDate()
+  )
 }
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
@@ -105,7 +110,12 @@ function getOptions() {
 
   if (fansHistory.value) {
     let currentTime = startTime
-    let lastFansTimeIndex = fansHistory.value.length > 0 ? (fansHistory.value[0].time >= statisticStartDateTime ? 0 : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)) : -1
+    let lastFansTimeIndex =
+      fansHistory.value.length > 0
+        ? fansHistory.value[0].time >= statisticStartDateTime
+          ? 0
+          : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
+        : -1
     let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
     // 生成完整的小时序列
     while (currentTime <= endTime) {
@@ -228,10 +238,6 @@ function getOptions() {
     }),
   }
   fansOption.value = {
-    title: {
-      text: '粉丝数',
-      left: 'left',
-    },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -239,6 +245,17 @@ function getOptions() {
         crossStyle: {
           color: '#999',
         },
+      },
+      formatter: (param: any) => {
+        let name = param[0].name + '<br>'
+        let str = ''
+        for (var i = 0; i < param.length; i++) {
+          const status =
+            param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].change ? '' : '(未获取)') : ''
+          const statusHtml = status == '' ? '' : '&nbsp;<span style="color:gray">' + status + '</span>'
+          str += param[i].marker + param[i].seriesName + '：' + param[i].data + statusHtml + '<br>'
+        }
+        return name + str
       },
     },
     toolbox: {
@@ -274,9 +291,6 @@ function getOptions() {
         },
         // prettier-ignore
         data: chartData.xAxisData,
-        formatter: (value: number, index: number) => {
-          return `${value}${completeTimeSeries[index].change ? '' : '(无变化)'}`
-        },
       },
 
       {
@@ -303,6 +317,17 @@ function getOptions() {
           focus: 'series',
         },
         data: chartData.hourlyCounts,
+        itemStyle: {
+          normal: {
+            color: function (data: any) {
+              if (completeTimeSeries[data.dataIndex].change) {
+                return '#18a058'
+              } else {
+                return '#5470C6'
+              }
+            },
+          },
+        },
       },
       {
         name: '增量 /日',
@@ -332,10 +357,10 @@ function getOptions() {
     ],
   }
   guardsOption.value = {
-    title: {
+    /*title: {
       text: '舰长数',
       left: 'left',
-    },
+    },*/
     tooltip: {
       trigger: 'axis',
     },
@@ -401,10 +426,10 @@ function getOptions() {
     ],
   }
   upstatViewOption.value = {
-    title: {
+    /*title: {
       text: '投稿播放数',
       left: 'left',
-    },
+    },*/
     tooltip: {
       trigger: 'axis',
     },
@@ -463,10 +488,10 @@ function getOptions() {
     ],
   }
   upstatLikeOption.value = {
-    title: {
+    /*title: {
       text: '投稿点赞数',
       left: 'left',
-    },
+    },*/
     tooltip: {
       trigger: 'axis',
     },
@@ -528,9 +553,7 @@ function getOptions() {
 
 onMounted(async () => {
   if (accountInfo.value?.isBiliVerified == true) {
-    await getFansHistory()
-    await getGuardsHistory()
-    await getUpstatHistory()
+    await getHistory()
     getOptions()
     isLoading.value = false
   }
@@ -552,7 +575,9 @@ onMounted(async () => {
       </template>
       更新速度:
       <NSpace vertical>
-        <span> 粉丝数: 1000粉以下: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次 </span>
+        <span>
+          粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
+        </span>
         <span> 舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次 </span>
         <span> 投稿数据: 每天一次 </span>
       </NSpace>
@@ -560,9 +585,63 @@ onMounted(async () => {
     <br />
     <br />
     <NSpace vertical>
+      <NDivider>
+        粉丝
+        <NDivider vertical />
+        <NTooltip>
+          <template #trigger>
+            <span>
+              <NTime :time="fansUpdateAt" type="relative" />
+              更新
+            </span>
+          </template>
+          <NTime :time="fansUpdateAt" />
+        </NTooltip>
+      </NDivider>
       <VChart :option="fansOption" style="height: 200px" />
+      <NDivider>
+        舰长
+        <NDivider vertical />
+        <NTooltip>
+          <template #trigger>
+            <span>
+              <NTime :time="guardUpdateAt" type="relative" />
+              更新
+            </span>
+          </template>
+          <NTime :time="guardUpdateAt" />
+        </NTooltip>
+      </NDivider>
       <VChart :option="guardsOption" style="height: 200px" />
+
+      <NDivider>
+        投稿播放量
+        <NDivider vertical />
+        <NTooltip>
+          <template #trigger>
+            <span>
+              <NTime :time="upstatUpdateAt" type="relative" />
+              更新
+            </span>
+          </template>
+          <NTime :time="upstatUpdateAt" />
+        </NTooltip>
+      </NDivider>
       <VChart :option="upstatViewOption" style="height: 200px" />
+
+      <NDivider>
+        投稿点赞量
+        <NDivider vertical />
+        <NTooltip>
+          <template #trigger>
+            <span>
+              <NTime :time="upstatUpdateAt" type="relative" />
+              更新
+            </span>
+          </template>
+          <NTime :time="upstatUpdateAt" />
+        </NTooltip>
+      </NDivider>
       <VChart :option="upstatLikeOption" style="height: 200px" />
     </NSpace>
   </NCard>
