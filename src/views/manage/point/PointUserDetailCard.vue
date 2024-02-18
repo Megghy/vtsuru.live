@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { ResponsePointHisrotyModel, ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/api-models'
+import {
+  ResponsePointGoodModel,
+  ResponsePointHisrotyModel,
+  ResponsePointOrder2OwnerModel,
+  ResponsePointUserModel,
+} from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
+import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
@@ -30,6 +36,7 @@ import { h, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   user: ResponsePointUserModel
+  goods: ResponsePointGoodModel[]
 }>()
 
 const message = useMessage()
@@ -174,9 +181,7 @@ onMounted(async () => {
       <template v-if="orders.length == 0">
         <NEmpty description="暂无订单" />
       </template>
-      <NList v-else>
-        <NListItem v-for="order in orders" v-bind:key="order.id"> </NListItem>
-      </NList>
+      <PointOrderCard v-else :order="orders" type="owner" :goods="goods" />
     </NSpin>
     <NDivider> 积分历史 </NDivider>
     <NSpin :show="isLoading">
