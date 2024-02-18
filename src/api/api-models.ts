@@ -551,6 +551,8 @@ export interface ResponsePointGoodModel {
   type: GoodsTypes
   isAllowRebuy: boolean
   maxBuyCount?: number
+  collectUrl?: string
+  embedCollectUrl?: boolean
 }
 export interface ImageUploadModel {
   existImages: string[]
@@ -559,7 +561,7 @@ export interface ImageUploadModel {
 export interface PointGoodsModel {
   id?: number
   name: string
-  count: number
+  count?: number
   price: number
   tags: string[]
   cover?: ImageUploadModel
@@ -630,6 +632,9 @@ export interface ResponsePointOrder2UserModel {
   goods: ResponsePointGoodModel
   status: PointOrderStatus
   createAt: number
+
+  trackingNumber?: string
+  expressCompany?: string
 }
 export enum PointOrderStatus {
   Pending, // 订单正在等待处理

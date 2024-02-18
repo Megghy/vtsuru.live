@@ -318,14 +318,12 @@ function getOptions() {
         },
         data: chartData.hourlyCounts,
         itemStyle: {
-          normal: {
-            color: function (data: any) {
-              if (completeTimeSeries[data.dataIndex].change) {
-                return '#18a058'
-              } else {
-                return '#5470C6'
-              }
-            },
+          color: function (data: any) {
+            if (completeTimeSeries[data.dataIndex].change) {
+              return '#18a058'
+            } else {
+              return '#5470C6'
+            }
           },
         },
       },

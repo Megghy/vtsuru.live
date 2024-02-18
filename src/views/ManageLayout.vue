@@ -7,6 +7,7 @@ import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ACCOUNT_API_URL } from '@/data/constants'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import {
+  BookCoins20Filled,
   CalendarClock24Filled,
   Chat24Filled,
   Info24Filled,
@@ -111,6 +112,21 @@ const menuOptions = [
     key: 'manage-event',
     disabled: accountInfo.value?.isEmailVerified == false,
     icon: renderIcon(VehicleShip24Filled),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-point',
+          },
+        },
+        { default: () => '积分和礼物' },
+      ),
+    key: 'manage-point',
+    disabled: accountInfo.value?.isEmailVerified == false,
+    icon: renderIcon(BookCoins20Filled),
   },
   {
     label: () =>
@@ -501,7 +517,7 @@ onMounted(() => {
               反馈
             </NTooltip>
           </NSpace>
-          <NButton v-if="false" @click="gotoAuthPage()" type="info" secondary>
+          <NButton v-if="accountInfo.biliUserAuthInfo" @click="gotoAuthPage()" type="info" secondary>
             <template #icon>
               <NIcon :component="BrowsersOutline" />
             </template>

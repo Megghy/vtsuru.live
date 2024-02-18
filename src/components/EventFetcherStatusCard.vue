@@ -8,7 +8,7 @@ const accountInfo = useAccount()
 
 const status = computed(() => {
   if (!accountInfo.value) return 'error'
-  if (accountInfo.value.eventFetcherOnline == true) {
+  if (accountInfo.value.eventFetcherOnline == true || accountInfo.value.isServerFetcherOnline == true) {
     if (accountInfo.value.eventFetcherStatus) {
       return 'warning'
     } else if (Object.keys(accountInfo.value.eventFetcherStatusV3 ?? {}).length > 0) {
@@ -34,19 +34,29 @@ const status = computed(() => {
         <br />
         事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
         <br />
-        <NButton type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
+        <NButton
+          type="info"
+          size="small"
+          tag="a"
+          href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
+          target="_blank"
+        >
+          关于 EVENT-FETCHER
+        </NButton>
       </NTooltip>
     </template>
-    <NTooltip v-if="status != 'info'">
-      <template #trigger>
-        <NTag size="small" :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }">
-          <NIcon :component="FlashCheckmark16Filled" />
-          {{ accountInfo?.eventFetcherVersion ?? '未知' }}
-        </NTag>
-      </template>
-      你所使用的版本
-    </NTooltip>
-    <NDivider vertical/>
+    <template v-if="status != 'info' && !accountInfo?.isServerFetcherOnline">
+      <NTooltip>
+        <template #trigger>
+          <NTag size="small" :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }">
+            <NIcon :component="FlashCheckmark16Filled" />
+            {{ accountInfo?.eventFetcherVersion ?? '未知' }}
+          </NTag>
+        </template>
+        你所使用的版本
+      </NTooltip>
+      <NDivider vertical />
+    </template>
     <NTag :type="status">
       <template v-if="accountInfo?.eventFetcherOnline == true && accountInfo?.eventFetcherStatus">
         此版本已过期, 请更新
@@ -54,26 +64,40 @@ const status = computed(() => {
           <template #trigger>
             <NButton type="warning" size="tiny"> 关于 </NButton>
           </template>
-          Node.js 版已不再更新, 如果是 Docker 的话请切换至 ghcr.io/megghy/vtsurueventfetcher.net, 其他环境请下载 https://github.com/Megghy/VtsuruEventFetcher.Net/releases/latest
+          Node.js 版已不再更新, 如果是 Docker 的话请切换至 ghcr.io/megghy/vtsurueventfetcher.net, 其他环境请下载
+          https://github.com/Megghy/VtsuruEventFetcher.Net/releases/latest
         </NTooltip>
       </template>
       <template v-else>
         <template v-if="status == 'success'">
-          运行中 | 今日已接收
+          <NText>
+            {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }}
+          </NText>
+          | 今日已接收
           <NText color="white" strong>
             {{ accountInfo?.eventFetcherTodayReceive }}
           </NText>
           条
         </template>
         <template v-else-if="status == 'warning'">
-          <template v-if="accountInfo?.eventFetcherStatusV3"> 异常: {{ Object.values(accountInfo.eventFetcherStatusV3).join('; ') }} </template>
+          <template v-if="accountInfo?.eventFetcherStatusV3">
+            异常: {{ Object.values(accountInfo.eventFetcherStatusV3).join('; ') }}
+          </template>
         </template>
         <template v-else-if="status == 'info'"> 未连接 </template>
       </template>
     </NTag>
     <template v-if="accountInfo?.eventFetcherOnline != true">
       <NDivider vertical />
-      <NButton type="info" size="small" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> 关于 EVENT-FETCHER </NButton>
+      <NButton
+        type="info"
+        size="tiny"
+        tag="a"
+        href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
+        target="_blank"
+      >
+        关于 EVENT-FETCHER
+      </NButton>
     </template>
   </NAlert>
 </template>

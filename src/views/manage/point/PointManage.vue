@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { getBase64, getImageUploadModel } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { ResponsePointGoodModel, FunctionTypes, PointGoodsModel, GoodsTypes, GoodsStatus, TagInfo } from '@/api/api-models'
+import {
+  ResponsePointGoodModel,
+  FunctionTypes,
+  PointGoodsModel,
+  GoodsTypes,
+  GoodsStatus,
+  TagInfo,
+} from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
@@ -49,6 +56,7 @@ import { cloneFnJSON } from '@vueuse/core'
 import { useAuthStore } from '@/store/useAuthStore'
 import PointSettings from './PointSettings.vue'
 import { useRouteHash } from '@vueuse/router'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -60,7 +68,7 @@ const realHash = useRouteHash('goods', {
 })
 const hash = computed({
   get() {
-    return realHash.value?.slice(1) ?? ''
+    return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods'
   },
   set(val) {
     realHash.value = '#' + val
@@ -77,7 +85,9 @@ const defaultGoodsModel = {
   } as PointGoodsModel,
   fileList: [],
 } as { goods: PointGoodsModel; fileList: UploadFileInfo[] }
-const currentGoodsModel = ref<{ goods: PointGoodsModel; fileList: UploadFileInfo[] }>(JSON.parse(JSON.stringify(defaultGoodsModel)))
+const currentGoodsModel = ref<{ goods: PointGoodsModel; fileList: UploadFileInfo[] }>(
+  JSON.parse(JSON.stringify(defaultGoodsModel)),
+)
 
 const showAddGoodsModal = ref(false)
 
@@ -93,6 +103,10 @@ const rules = {
     required: true,
     message: '请输入礼物价格',
   },
+  'goods.type': {
+    required: true,
+    message: '请选择是虚拟礼物或实物',
+  },
   content: {
     required: true,
     message: '请输入虚拟礼物的具体内容',
@@ -102,10 +116,11 @@ const rules = {
   },
   privacy: {
     required: true,
-    message: '需要阅读并同意本站隐私政策',
+    message: '需要阅读并同意本站隐私协议',
     validator: (rule: FormItemRule, value: boolean) => {
       return (
-        (currentGoodsModel.value.goods.type != GoodsTypes.Physical && currentGoodsModel.value.goods.collectUrl != undefined) ||
+        (currentGoodsModel.value.goods.type != GoodsTypes.Physical &&
+          currentGoodsModel.value.goods.collectUrl != undefined) ||
         isAllowedPrivacyPolicy.value
       )
     },
@@ -114,7 +129,22 @@ const rules = {
     required: true,
     message: '需要输入最大购买数量',
     validator: (rule: FormItemRule, value: number) => {
-      return currentGoodsModel.value.goods.type != GoodsTypes.Physical || (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0
+      return (
+        currentGoodsModel.value.goods.type != GoodsTypes.Physical ||
+        (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0
+      )
+    },
+  },
+  'goods.url': {
+    required: true,
+    message: '请输入收集收货地址的链接',
+    validator: (rule: FormItemRule, value: string) => {
+      try {
+        new URL(value)
+        return true
+      } catch (err) {
+        return false
+      }
     },
   },
 }
@@ -179,6 +209,7 @@ async function updateGoods(e: MouseEvent) {
       if (currentGoodsModel.value.fileList.length > 0) {
         currentGoodsModel.value.goods.cover = await getImageUploadModel(currentGoodsModel.value.fileList)
       }
+      console.log(currentGoodsModel.value.goods)
       await QueryPostAPI<ResponsePointGoodModel>(POINT_API_URL + 'update-goods', currentGoodsModel.value.goods)
         .then((data) => {
           if (data.code == 200) {
@@ -220,7 +251,7 @@ function onUpdateClick(item: ResponsePointGoodModel) {
   currentGoodsModel.value = {
     goods: {
       ...item,
-      count: item.count ?? 0,
+      count: item.count,
       cover: undefined,
     },
     fileList: item.cover
@@ -313,23 +344,40 @@ function resetGoods() {
 }
 function responseGoodsToModel(goods: ResponsePointGoodModel) {}
 
-onMounted(() => {
-  if (!hash.value) {
-    hash.value = 'goods'
-  }
-})
+onMounted(() => {})
 </script>
 
 <template>
-  <NAlert type="info">
-    启用积分系统
-    <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Point)" @update:value="setFunctionEnable" />
-    <br />
-    <NText depth="3">
-      此功能需要部署
-      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VtsuruEventFetcher </NButton>
-    </NText>
-  </NAlert>
+  <NFlex style="width: 100%">
+    <NAlert type="info" style="min-width: 400px">
+      启用
+      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/ohulp2torghlqqn8" target="_blank">
+        积分系统
+      </NButton>
+      <NDivider vertical />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Point)"
+        @update:value="setFunctionEnable"
+      />
+      <br />
+      <NText depth="3">
+        此功能需要部署
+        <NButton
+          text
+          type="primary"
+          tag="a"
+          href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
+          target="_blank"
+        >
+          VtsuruEventFetcher
+        </NButton>
+        , 否则将无法记录各种事件
+      </NText>
+    </NAlert>
+    <EventFetcherStatusCard style="flex: 1" />
+  </NFlex>
+  <br />
+  <NAlert type="success"> 此功能将于 3月11日 官方启用 OpenId 后正式上线 </NAlert>
   <NDivider />
   <NTabs animated v-model:value="hash">
     <NTabPane name="goods" tab="礼物">
@@ -337,13 +385,17 @@ onMounted(() => {
         <NButton type="primary" @click="onModalOpen"> 添加礼物 </NButton>
       </NFlex>
       <NDivider />
-      <NGrid cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
+      <NEmpty v-if="goods.filter((g) => g.status != GoodsStatus.Discontinued).length == 0" description="暂无礼物" />
+      <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
         <NGridItem v-for="item in goods.filter((g) => g.status != GoodsStatus.Discontinued)" :key="item.id">
           <PointGoodsItem :goods="item">
             <template #footer>
+              <span> 价格: {{ item.price }} </span>
               <NFlex>
                 <NButton type="info" size="small" @click="onUpdateClick(item)"> 修改 </NButton>
-                <NButton type="warning" size="small" @click="onSetShelfClick(item, GoodsStatus.Discontinued)"> 下架 </NButton>
+                <NButton type="warning" size="small" @click="onSetShelfClick(item, GoodsStatus.Discontinued)">
+                  下架
+                </NButton>
                 <NButton type="error" size="small" @click="onDeleteClick(item)"> 删除 </NButton>
               </NFlex>
             </template>
@@ -351,11 +403,15 @@ onMounted(() => {
         </NGridItem>
       </NGrid>
       <NDivider>已下架</NDivider>
-      <NEmpty v-if="goods.filter((g) => g.status == GoodsStatus.Discontinued).length == 0" description="暂无已下架的物品" />
+      <NEmpty
+        v-if="goods.filter((g) => g.status == GoodsStatus.Discontinued).length == 0"
+        description="暂无已下架的礼物"
+      />
       <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
         <NGridItem v-for="item in goods.filter((g) => g.status == GoodsStatus.Discontinued)" :key="item.id">
           <PointGoodsItem :goods="item">
             <template #footer>
+              <span> 价格: {{ item.price }} </span>
               <NFlex>
                 <NButton type="info" size="small" @click="onUpdateClick(item)"> 修改 </NButton>
                 <NButton type="success" size="small" @click="onSetShelfClick(item, GoodsStatus.Normal)"> 上架 </NButton>
@@ -396,20 +452,25 @@ onMounted(() => {
         </NFormItem>
         <NFormItem path="goods.count" label="库存">
           <NCheckbox
-            :checked="currentGoodsModel.goods.count && currentGoodsModel.goods.count < 0"
-            @update:checked="(v) => (currentGoodsModel.goods.count = v ? -1 : 100)"
+            :checked="!currentGoodsModel.goods.count"
+            @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)"
           >
             不限
           </NCheckbox>
           <NInputNumber
-            v-if="currentGoodsModel.goods.count > -1"
+            v-if="currentGoodsModel.goods.count"
             v-model:value="currentGoodsModel.goods.count"
             placeholder="可选, 礼物库存"
             style="max-width: 120px"
           />
         </NFormItem>
         <NFormItem path="goods.description" label="描述">
-          <NInput v-model:value="currentGoodsModel.goods.description" placeholder="可选, 礼物描述" maxlength="500" type="textarea" />
+          <NInput
+            v-model:value="currentGoodsModel.goods.description"
+            placeholder="可选, 礼物描述"
+            maxlength="500"
+            type="textarea"
+          />
         </NFormItem>
         <NFormItem path="goods.tags" label="标签">
           <NSelect
@@ -446,12 +507,16 @@ onMounted(() => {
         </NFormItem>
         <template v-if="currentGoodsModel.goods.type == GoodsTypes.Physical">
           <NFormItem path="settings" label="选项">
-            <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">允许重复购买</NCheckbox>
+            <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">允许重复兑换</NCheckbox>
           </NFormItem>
-          <NFormItem path="goods.maxBuyCount" label="最大购买数量">
-            <NInputNumber v-model:value="currentGoodsModel.goods.maxBuyCount" placeholder="必填, 最大购买数量" min="1" />
+          <NFormItem path="goods.maxBuyCount" label="最大兑换数量">
+            <NInputNumber
+              v-model:value="currentGoodsModel.goods.maxBuyCount"
+              placeholder="必填, 最大兑换数量"
+              min="1"
+            />
           </NFormItem>
-          <NFormItem path="goods.collectUrl" label="收货地址">
+          <NFormItem path="address" label="收货地址">
             <NFlex vertical>
               <NRadioGroup
                 :value="currentGoodsModel.goods.collectUrl == undefined ? 0 : 1"
@@ -471,15 +536,21 @@ onMounted(() => {
             </NFlex>
           </NFormItem>
           <template v-if="currentGoodsModel.goods.collectUrl != undefined">
-            <NFormItem path="goods.url" label="收集链接">
+            <NFormItem path="goods.collectUrl" label="收集链接">
               <NFlex vertical style="width: 100%">
-                <NInput v-model:value="currentGoodsModel.goods.collectUrl" placeholder="用于给用户填写自己收货地址的表格的分享链接" maxlength="300" />
-                <NCheckbox v-model:checked="currentGoodsModel.goods.embedCollectUrl"> 尝试将收集链接嵌入到网页中 </NCheckbox>
+                <NInput
+                  v-model:value="currentGoodsModel.goods.collectUrl"
+                  placeholder="用于给用户填写自己收货地址的表格的分享链接"
+                  maxlength="300"
+                />
+                <NCheckbox v-model:checked="currentGoodsModel.goods.embedCollectUrl">
+                  尝试将收集链接嵌入到网页中
+                </NCheckbox>
               </NFlex>
             </NFormItem>
           </template>
           <template v-else>
-            <NFormItem path="privacy" label="隐私策略" required>
+            <NFormItem path="privacy" label="隐私协议" required>
               <NCheckbox v-model:checked="isAllowedPrivacyPolicy"> 同意本站隐私协议 </NCheckbox>
             </NFormItem>
           </template>
@@ -495,10 +566,19 @@ onMounted(() => {
                 虚拟礼物的具体内容, 网盘链接什么之类的
               </NTooltip>
             </template>
-            <NInput v-model:value="currentGoodsModel.goods.content" type="textarea" placeholder="写这里咯" maxlength="10000" show-count clearable />
+            <NInput
+              v-model:value="currentGoodsModel.goods.content"
+              type="textarea"
+              placeholder="写这里咯"
+              maxlength="10000"
+              show-count
+              clearable
+            />
           </NFormItem>
         </template>
-        <NButton @click="updateGoods" type="primary" :loading="isUpdating"> {{ currentGoodsModel.goods.id ? '修改' : '创建' }} </NButton>
+        <NButton @click="updateGoods" type="primary" :loading="isUpdating">
+          {{ currentGoodsModel.goods.id ? '修改' : '创建' }}
+        </NButton>
       </NForm>
     </NScrollbar>
   </NModal>

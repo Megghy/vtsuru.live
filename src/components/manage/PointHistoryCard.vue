@@ -1,11 +1,27 @@
 <script setup lang="ts">
-import { DataTableColumns, NDataTable, NDivider, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui'
-import { h } from 'vue'
-import { EventDataTypes, PointFrom, ResponsePointHisrotyModel } from '@/api/api-models'
+import {
+  DataTableColumns,
+  NButton,
+  NDataTable,
+  NDivider,
+  NFlex,
+  NInput,
+  NModal,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+} from 'naive-ui'
+import { h, ref } from 'vue'
+import { EventDataTypes, PointFrom, ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
+import PointGoodsItem from './PointGoodsItem.vue'
 
 const props = defineProps<{
   histories: ResponsePointHisrotyModel[]
 }>()
+
+const showGoodsModal = ref(false)
+const currentGoods = ref<ResponsePointGoodModel>()
 
 const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
   {
@@ -23,7 +39,11 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     title: '积分变动',
     key: 'point',
     render: (row: ResponsePointHisrotyModel) => {
-      return h(NText, { style: { color: row.from === PointFrom.Use ? 'red' : 'green' } }, () => (row.from === PointFrom.Use ? '' : '+') + row.point)
+      return h(
+        NText,
+        { style: { color: row.from === PointFrom.Use ? 'red' : 'green' } },
+        () => (row.from === PointFrom.Use ? '' : '+') + row.point,
+      )
     },
   },
   {
@@ -38,7 +58,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         value: PointFrom.Danmaku,
       },
       {
-        label: '手动',
+        label: '主播赠予',
         value: PointFrom.Manual,
       },
       {
@@ -52,7 +72,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
           case PointFrom.Danmaku:
             return h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间')
           case PointFrom.Manual:
-            return h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '手动')
+            return h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '主播赠予')
           case PointFrom.Use:
             return h(NTag, { type: 'warning', bordered: false, size: 'small' }, () => '使用')
         }
@@ -71,33 +91,52 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             case EventDataTypes.Guard:
               return h(NFlex, { justify: 'center', align: 'center' }, () => [
                 h(NTag, { type: 'info', size: 'small' }, () => '上舰'),
-                h(NDivider, { vertical: true, style: { margin: '0' } }),
                 row.extra?.msg,
               ])
             case EventDataTypes.Gift:
               return h(NFlex, { justify: 'center' }, () => [
                 h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '礼物'),
-                h(NDivider, { vertical: true }),
                 row.extra?.msg,
               ])
             case EventDataTypes.SC:
               return h(NFlex, { justify: 'center' }, () => [
                 h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => 'SC'),
-                h(NDivider, { vertical: true }),
                 row.extra?.price,
               ])
           }
         case PointFrom.Manual:
           return h(NFlex, { align: 'center' }, () => [
-            h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '备注'),
-            h(NDivider, { vertical: true }),
-            h(NText, { depth: 3 }, () => row.extra ?? h(NText, { italic: true, depth: '3' }, () => '未提供')),
+            h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '来自'),
+            h(
+              NButton,
+              {
+                tag: 'a',
+                href: '/user/' + row.extra.user?.name,
+                target: '_blank',
+                text: true,
+                type: 'info',
+                secondary: true,
+              },
+              () => row.extra.user?.name,
+            ),
+            h(NTag, { type: 'info', size: 'small', style: { margin: '0' }, bordered: false }, () => '备注'),
+            h(NText, {}, () => row.extra.reason ?? h(NText, { italic: true, depth: '3' }, () => '未提供')),
           ])
         case PointFrom.Use:
           return h(NFlex, { align: 'center' }, () => [
-            h(NTag, { type: 'success', size: 'small', style: { margin: '0' }, strong: true }, () => '购买'),
-            h(NDivider, { vertical: true }),
-            row.extra,
+            h(NTag, { type: 'success', size: 'small', style: { margin: '0' }, strong: true }, () => '兑换'),
+            h(
+              NButton,
+              {
+                text: true,
+                type: 'info',
+                onClick: () => {
+                  currentGoods.value = row.extra
+                  showGoodsModal.value = true
+                },
+              },
+              () => row.extra?.name,
+            ),
           ])
       }
     },
@@ -112,4 +151,11 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     :pagination="{ showSizePicker: true, pageSizes: [10, 25, 50, 100], defaultPageSize: 10, size: 'small' }"
   >
   </NDataTable>
+  <NModal v-model:show="showGoodsModal" preset="card" title="礼物详情 (快照)" style="max-width: 400px; height: auto">
+    <PointGoodsItem :goods="currentGoods" />
+    <template v-if="currentGoods?.content">
+      <NDivider> 礼物内容 </NDivider>
+      <NInput :value="currentGoods?.content" type="textarea" readonly placeholder="无内容" />
+    </template>
+  </NModal>
 </template>

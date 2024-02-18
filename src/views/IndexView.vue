@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import vtb from '@/svgs/ic_vtuber.svg'
-import { Lottery24Filled, MoneyOff24Filled, MoreHorizontal24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import {
+  BookCoins20Filled,
+  Lottery24Filled,
+  MoneyOff24Filled,
+  MoreHorizontal24Filled,
+  TabletSpeaker24Filled,
+  VehicleShip24Filled,
+  VideoAdd20Filled,
+} from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
 import { NButton, NDivider, NGradientText, NGrid, NGridItem, NIcon, NSpace, NText } from 'naive-ui'
@@ -12,6 +20,11 @@ const functions = [
     name: '直播事件记录',
     desc: '能够记录并查询上舰和SC记录',
     icon: VehicleShip24Filled,
+  },
+  {
+    name: '积分兑换 (将于3月11日上线',
+    desc: '通过上舰, Superchat, 赠送礼物等操作可以获取积分, 并通过积分兑换虚拟或者实体礼物',
+    icon: BookCoins20Filled,
   },
   {
     name: '日程表',
@@ -110,7 +123,15 @@ const iconColor = 'white'
           <NSpace justify="center">
             <NButton type="primary" size="large" @click="$router.push({ name: 'manage-index' })"> 开始使用 </NButton>
             <NButton size="large" @click="$router.push('/user/Megghy')"> 展示 </NButton>
-            <NButton size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank" color="#ff778f"> 幻星平台 </NButton>
+            <NButton
+              size="large"
+              tag="a"
+              href="https://play-live.bilibili.com/details/1698742711771"
+              target="_blank"
+              color="#ff778f"
+            >
+              幻星平台
+            </NButton>
             <NButton type="info" size="large" @click="$router.push({ name: 'about' })"> 关于 </NButton>
           </NSpace>
         </NSpace>
@@ -130,7 +151,15 @@ const iconColor = 'white'
     <NSpace style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw" justify="center">
       <span style="color: white">
         BY
-        <NButton tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style="color: rgb(215, 245, 230)"> Megghy </NButton>
+        <NButton
+          tag="a"
+          href="https://space.bilibili.com/10021741"
+          target="_blank"
+          text
+          style="color: rgb(215, 245, 230)"
+        >
+          Megghy
+        </NButton>
       </span>
     </NSpace>
   </div>
