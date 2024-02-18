@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { NavigateToNewTab } from '@/Utils'
+import { useAccount } from '@/api/account'
 import {
   AddressInfo,
   GoodsTypes,
@@ -18,6 +20,7 @@ import {
   NCard,
   NDataTable,
   NDivider,
+  NEmpty,
   NFlex,
   NForm,
   NFormItem,
@@ -48,8 +51,10 @@ const props = defineProps<{
   userInfo: UserInfo
   biliInfo: any
 }>()
+const router = useRouter()
 
 const useAuth = useAuthStore()
+const accountInfo = useAccount()
 const isLoading = ref(false)
 const message = useMessage()
 const dialog = useDialog()
@@ -96,7 +101,11 @@ function getTooltip(goods: ResponsePointGoodModel) {
 async function buyGoods() {
   if (buyCount.value < 1) {
     message.error('兑换数量不能小于1')
-  } else if (!selectedAddress.value && currentGoods.value?.type == GoodsTypes.Physical) {
+  } else if (
+    !selectedAddress.value &&
+    currentGoods.value?.type == GoodsTypes.Physical &&
+    !currentGoods.value.collectUrl
+  ) {
     message.error('请选择收货地址')
   } else if (!Number.isInteger(buyCount.value)) {
     message.error('兑换数量必须为整数')
@@ -117,7 +126,7 @@ async function buyGoods() {
           positiveText: '前往查看',
           negativeText: '我知道了',
           onPositiveClick: () => {
-            useRouter().push({ name: 'PointOrderView', params: { id: data.data.id } })
+            router.push({ name: 'bili-user', hash: '#orders' })
           },
           onNegativeClick: () => {
             showBuyModal.value = false
@@ -161,6 +170,17 @@ const renderOption = ({ node, option }: { node: any; option: SelectOption }) => 
     () => h(AddressDisplay, { address: biliAuth.value.address?.find((a) => a.id == option.value) }),
   )
 }
+function gotoAuthPage() {
+  if (!accountInfo.value?.biliUserAuthInfo) {
+    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+    return
+  }
+  useAuthStore()
+    .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
+    .then(() => {
+      NavigateToNewTab('/bili-user')
+    })
+}
 
 onMounted(async () => {
   if (props.userInfo && useAuth.isAuthed) {
@@ -186,13 +206,17 @@ onMounted(async () => {
       立即认证
     </NButton>
   </NAlert>
-  <NCard v-else>
+  <NCard v-else style="max-width: 600px" embedded hoverable>
     <template #header> 你好, {{ useAuth.biliAuth.name }} </template>
+    <template #header-extra>
+      <NButton type="info" @click="gotoAuthPage" secondary size="small"> 前往认证用户中心 </NButton>
+    </template>
     <NText> 你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }} </NText>
   </NCard>
   <NDivider />
   <NSpin :show="isLoading">
-    <NGrid cols="1 500:2 700:3 1000:4 1200:5" x-gap="12" y-gap="8">
+    <NEmpty v-if="goods.length == 0"> 暂无礼物 </NEmpty>
+    <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" x-gap="12" y-gap="8">
       <NGridItem v-for="item in goods" :key="item.id">
         <PointGoodsItem :goods="item">
           <template #footer>
@@ -235,9 +259,23 @@ onMounted(async () => {
       <NDivider> 选项 </NDivider>
       <NForm>
         <NFormItem label="兑换数量" required
-          ><NInputNumber v-model:value="buyCount" :min="1" style="max-width: 120px" step="1" :precision="0" />
+          ><NInputNumber
+            v-model:value="buyCount"
+            :min="1"
+            :max="currentGoods.maxBuyCount ?? 100000"
+            style="max-width: 120px"
+            step="1"
+            :precision="0"
+          />
         </NFormItem>
-        <NFormItem label="收货地址" required>
+        <NFormItem
+          v-if="
+            currentGoods.type == GoodsTypes.Physical &&
+            (currentGoods.collectUrl == null || currentGoods.collectUrl == undefined)
+          "
+          label="收货地址"
+          required
+        >
           <NSelect
             v-model:show="showAddressSelect"
             :value="selectedAddress?.id"
@@ -246,6 +284,8 @@ onMounted(async () => {
             :render-option="renderOption"
             placeholder="请选择地址"
           />
+          &nbsp;
+          <NButton size="small" type="info" tag="a" href="/bili-user#settings" target="_blank"> 管理收货地址 </NButton>
         </NFormItem>
       </NForm>
     </template>

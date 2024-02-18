@@ -266,10 +266,13 @@ onUnmounted(() => {
 <template>
   <NSpace justify="center" align="center" vertical style="width: 100%">
     <NAlert type="info">
-      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
+      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据,
+      不过并不清楚B站的风控策略, 此功能不一定会长期启用
       <br />
       在我们被限制连接之前满足以上条件的主播无需部署
-      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text> VtsuruEventFetcher </NButton>
+      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
+        VtsuruEventFetcher
+      </NButton>
       即可使用相关功能 (如记录上舰和SC, 直播场记录等) 😊
     </NAlert>
     <NCard embedded style="width: 100%">
@@ -296,7 +299,14 @@ onUnmounted(() => {
             <template v-else>
               <NTag type="error" size="small"> 未认证 </NTag>
             </template>
-            <NButton v-if="accountInfo?.isEmailVerified" type="warning" size="tiny" @click="resetEmailModalVisiable = true"> 修改邮箱 </NButton>
+            <NButton
+              v-if="accountInfo?.isEmailVerified"
+              type="warning"
+              size="tiny"
+              @click="resetEmailModalVisiable = true"
+            >
+              修改邮箱
+            </NButton>
           </NSpace>
         </NCard>
         <NCard size="small">
@@ -305,13 +315,28 @@ onUnmounted(() => {
             <NText style="color: var(--primary-color)">
               <NSpace :size="5" align="center">
                 已认证 | {{ accountInfo?.biliId }}
-                <NTag v-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Active" type="success" size="small" :bordered="false">
+                <NTag
+                  v-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Active"
+                  type="success"
+                  size="small"
+                  :bordered="false"
+                >
                   身份码: 有效
                 </NTag>
-                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive" type="error" size="small" :bordered="false">
+                <NTag
+                  v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive"
+                  type="error"
+                  size="small"
+                  :bordered="false"
+                >
                   身份码: 需更新
                 </NTag>
-                <NTag v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Notfound" type="warning" size="small" :bordered="false">
+                <NTag
+                  v-else-if="accountInfo.biliAuthCodeStatus == BiliAuthCodeStatusType.Notfound"
+                  type="warning"
+                  size="small"
+                  :bordered="false"
+                >
                   身份码: 需绑定
                   <NTooltip>
                     <template #trigger>
@@ -332,7 +357,7 @@ onUnmounted(() => {
           </NEllipsis>
           <template v-else>
             <NTag type="error" size="small">
-              未认证
+              未绑定
               <NTooltip>
                 <template #trigger>
                   <NIcon :component="Info24Filled" />
@@ -344,7 +369,7 @@ onUnmounted(() => {
             <NButton size="small" @click="bindBiliCodeModalVisiable = true" type="info"> 进行绑定 </NButton>
           </template>
         </NCard>
-        <NCard size="small" v-if="false">
+        <NCard size="small">
           用户 Bilibili 账户:
           <NEllipsis v-if="accountInfo?.biliUserAuthInfo" style="max-width: 100%">
             <NText style="color: var(--primary-color)">
@@ -370,7 +395,7 @@ onUnmounted(() => {
               </NTooltip>
             </NTag>
             <NDivider vertical />
-            <NButton size="small" @click="bindBiliAuthModalVisiable = true" type="info"> 进行绑定 </NButton>
+            <NButton size="small" @click="bindBiliAuthModalVisiable = true" type="info"> 进行认证 </NButton>
           </template>
         </NCard>
         <EventFetcherStatusCard />
@@ -428,7 +453,12 @@ onUnmounted(() => {
       <NButton @click="resetName" type="warning" :loading="isLoading"> 确定修改 </NButton>
     </template>
   </NModal>
-  <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%">
+  <NModal
+    v-model:show="bindBiliCodeModalVisiable"
+    preset="card"
+    title="绑定/更新身份码"
+    style="width: 400px; max-width: 90%"
+  >
     <NSpace vertical>
       <NInputGroup>
         <NInput v-model:value="biliCode" placeholder="身份码" />
@@ -448,13 +478,25 @@ onUnmounted(() => {
       </NInputGroup>
     </NSpace>
     <template #footer>
-      <NButton @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()" type="success" :loading="!token || isLoading"> 确定 </NButton>
+      <NButton
+        @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
+        type="success"
+        :loading="!token || isLoading"
+      >
+        确定
+      </NButton>
     </template>
   </NModal>
-  <NModal v-model:show="bindBiliAuthModalVisiable" preset="card" title="绑定用户账户" style="width: 700px; max-width: 90%">
+  <NModal
+    v-model:show="bindBiliAuthModalVisiable"
+    preset="card"
+    title="绑定用户账户"
+    style="width: 700px; max-width: 90%"
+  >
     <NSpace vertical>
       <NAlert title="获取认证链接" type="info">
-        因为部分功能如积分兑换等也需要对没有注册本站账户的用户开放, 所以需要现在另一个页面获取认证链接, 然后再回到这里绑定
+        因为部分功能如积分兑换等也需要对没有注册本站账户的用户开放, 所以需要现在另一个页面获取认证链接,
+        然后再回到这里绑定
       </NAlert>
       <NInputGroup>
         <NInput v-model:value="biliAuthText" placeholder="认证链接, 或者 Token" />
@@ -466,7 +508,7 @@ onUnmounted(() => {
                   <Question24Regular />
                 </NIcon>
               </template>
-              前往获取
+              前往认证
             </NButton>
           </template>
           直接粘贴认证完成后给出的类似

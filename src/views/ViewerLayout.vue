@@ -1,11 +1,12 @@
 <!-- eslint-disable vue/component-name-in-template-casing -->
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils'
+import { NavigateToNewTab, isDarkMode } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/data/constants'
+import { useAuthStore } from '@/store/useAuthStore'
 import { CalendarClock24Filled, Wallet24Filled } from '@vicons/fluent'
 import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
@@ -28,6 +29,7 @@ import {
   NSpin,
   NSwitch,
   NText,
+  useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -41,6 +43,8 @@ const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 const userInfo = ref<UserInfo>()
 const biliUserInfo = ref()
 const accountInfo = useAccount()
+const useAuth = useAuthStore()
+const message = useMessage()
 
 const notfount = ref(false)
 
@@ -53,16 +57,28 @@ function renderIcon(icon: unknown) {
 }
 const menuOptions = ref<MenuOption[]>()
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`).then(async (respone) => {
-    let data = await respone.json()
-    if (data.code == 0) {
-      biliUserInfo.value = data.card
-    } else {
-      throw new Error('Bili User API Error: ' + data.message)
-    }
-  })
+  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`).then(
+    async (respone) => {
+      let data = await respone.json()
+      if (data.code == 0) {
+        biliUserInfo.value = data.card
+      } else {
+        throw new Error('Bili User API Error: ' + data.message)
+      }
+    },
+  )
 }
-
+function gotoAuthPage() {
+  if (!accountInfo.value?.biliUserAuthInfo) {
+    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+    return
+  }
+  useAuthStore()
+    .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
+    .then(() => {
+      NavigateToNewTab('/bili-user')
+    })
+}
 onMounted(async () => {
   userInfo.value = await useUser(id.value?.toString())
   if (!userInfo.value) {
@@ -161,7 +177,12 @@ onMounted(async () => {
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''" style="margin-top: 6px">
         <template #extra>
           <NSpace align="center">
-            <NSwitch :default-value="!isDarkMode()" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
+            <NSwitch
+              :default-value="!isDarkMode()"
+              @update:value="
+                (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
+              "
+            >
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -170,10 +191,35 @@ onMounted(async () => {
               </template>
             </NSwitch>
             <template v-if="accountInfo">
-              <NButton style="right: 0px; position: relative" type="primary" @click="$router.push({ name: 'manage-index' })" size="small"> 个人中心 </NButton>
+              <NSpace>
+                <NButton
+                  v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
+                  style="right: 0px; position: relative"
+                  type="primary"
+                  @click="gotoAuthPage"
+                  size="small"
+                  secondary
+                >
+                  认证用户中心
+                </NButton>
+                <NButton
+                  style="right: 0px; position: relative"
+                  type="primary"
+                  @click="$router.push({ name: 'manage-index' })"
+                  size="small"
+                >
+                  个人中心
+                </NButton>
+              </NSpace>
             </template>
             <template v-else>
-              <NButton style="right: 0px; position: relative" type="primary" @click="registerAndLoginModalVisiable = true"> 注册 / 登陆 </NButton>
+              <NButton
+                style="right: 0px; position: relative"
+                type="primary"
+                @click="registerAndLoginModalVisiable = true"
+              >
+                注册 / 登陆
+              </NButton>
             </template>
           </NSpace>
         </template>
@@ -185,7 +231,16 @@ onMounted(async () => {
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider ref="sider" show-trigger default-collapsed collapse-mode="width" :collapsed-width="64" :width="180" :native-scrollbar="false" style="height: 100%">
+      <NLayoutSider
+        ref="sider"
+        show-trigger
+        default-collapsed
+        collapse-mode="width"
+        :collapsed-width="64"
+        :width="180"
+        :native-scrollbar="false"
+        style="height: 100%"
+      >
         <Transition>
           <div v-if="biliUserInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
@@ -194,7 +249,9 @@ onMounted(async () => {
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 round
                 bordered
-                :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)' }"
+                :style="{
+                  boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
+                }"
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
@@ -204,7 +261,12 @@ onMounted(async () => {
             </NSpace>
           </div>
         </Transition>
-        <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" />
+        <NMenu
+          :default-value="$route.name?.toString()"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+        />
         <NSpace v-if="width > 150" justify="center" align="center" vertical>
           <NText depth="3">
             有更多功能建议请

@@ -28,7 +28,7 @@ import PointUserHistoryView from './PointUserHistoryView.vue'
 import PointUserSettings from './PointUserSettings.vue'
 import { useRouteHash } from '@vueuse/router'
 import PointOrderView from './PointOrderView.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const useAuth = useAuthStore()
 const message = useMessage()
@@ -43,6 +43,7 @@ const hash = computed({
     realHash.value = '#' + val
   },
 })
+const router = useRouter()
 
 const biliAuth = computed(() => useAuth.biliAuth)
 const isLoading = ref(false)
@@ -58,12 +59,23 @@ const pointColumn = [
     key: 'points',
   },
   {
-    title: '详情',
+    title: '更多',
     key: 'action',
     render: (row: { owner: UserInfo; points: number }) => {
-      return h(NButton, {
-        onClick: () => {},
-      })
+      return h(NFlex, {}, () => [
+        h(
+          NButton,
+          {
+            onClick: () => {
+              router.push({ name: 'user-goods', params: { id: row.owner.name } })
+            },
+            size: 'small',
+            secondary: true,
+            type: 'info',
+          },
+          () => '查看礼物',
+        ),
+      ])
     },
   },
 ]

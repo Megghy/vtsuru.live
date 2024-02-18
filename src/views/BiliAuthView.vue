@@ -117,7 +117,7 @@ onMounted(async () => {
 
 <template>
   <NFlex justify="center" align="center" style="height: 100vh">
-    <NCard embedded style="margin: 20px">
+    <NCard embedded style="margin: 20px; max-width: 1100px">
       <template #header> Bilibili 身份验证 </template>
       <NFlex :wrap="false">
         <NSteps :current="currentStep + 1" vertical style="max-width: 300px">
@@ -134,7 +134,14 @@ onMounted(async () => {
                 <NInput :value="startModel?.code" :allow-input="() => false" />
                 <NButton @click="copyCode"> 复制认证码 </NButton>
               </NInputGroup>
-              <NButton type="primary" tag="a" :href="'https://live.bilibili.com/' + startModel?.targetRoomId" target="_blank"> 前往直播间 </NButton>
+              <NButton
+                type="primary"
+                tag="a"
+                :href="'https://live.bilibili.com/' + startModel?.targetRoomId"
+                target="_blank"
+              >
+                前往直播间
+              </NButton>
             </template>
             <NAlert v-else type="error">
               认证超时
@@ -169,10 +176,16 @@ onMounted(async () => {
         </template>
         <template v-else-if="currentStep == 2">
           <NFlex justify="center" align="center" vertical style="width: 100%">
-            <NAlert type="success"> 你已完成验证! 请妥善保存你的登陆链接, 请勿让其他人获取. 丢失后可以再次通过认证流程获得 </NAlert>
+            <NAlert type="success">
+              你已完成验证! 请妥善保存你的登陆链接, 请勿让其他人获取. 丢失后可以再次通过认证流程获得
+            </NAlert>
             <NText> 你的登陆链接为: </NText>
             <NInputGroup>
-              <NInput :value="`https://vtsuru.live/bili-user?auth=${biliToken}`" type="textarea" :allow-input="() => false" />
+              <NInput
+                :value="`https://vtsuru.live/bili-user?auth=${biliToken}`"
+                type="textarea"
+                :allow-input="() => false"
+              />
               <NButton @click="copyCode" type="info" style="height: 100%"> 复制登陆链接 </NButton>
             </NInputGroup>
             <NFlex>
