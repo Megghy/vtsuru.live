@@ -426,7 +426,7 @@ onMounted(() => {})
       <PointOrderManage :goods="goods" />
     </NTabPane>
     <NTabPane name="users" tab="用户" display-directive="show:lazy">
-      <PointUserManage />
+      <PointUserManage :goods="goods" />
     </NTabPane>
     <NTabPane name="settings" tab="设置" display-directive="show:lazy">
       <PointSettings />

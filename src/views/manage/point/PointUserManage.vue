@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ResponsePointUserModel } from '@/api/api-models'
+import { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
 import {
@@ -25,6 +25,10 @@ import {
 import { computed, h, onMounted, ref } from 'vue'
 import PointUserDetailCard from './PointUserDetailCard.vue'
 import { useStorage } from '@vueuse/core'
+
+const props = defineProps<{
+  goods: ResponsePointGoodModel[]
+}>()
 
 type PointUserSettings = {
   onlyAuthed: boolean
@@ -171,12 +175,12 @@ onMounted(async () => {
   <NModal
     v-model:show="showModal"
     preset="card"
-    style="max-width: 600px; min-width: 400px"
+    style="max-width: 1000px; min-width: 400px"
     title="用户详情"
     content-style="padding: 0"
   >
     <NScrollbar style="max-height: 80vh">
-      <PointUserDetailCard v-if="currentUser" :user="currentUser" :authInfo="currentUser.info" />
+      <PointUserDetailCard v-if="currentUser" :user="currentUser" :authInfo="currentUser.info" :goods="goods" />
     </NScrollbar>
   </NModal>
 </template>

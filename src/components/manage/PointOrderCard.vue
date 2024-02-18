@@ -104,8 +104,12 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
     title: '时间',
     key: 'time',
     sorter: 'default',
+    minWidth: 80,
     render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
-      return h(NTime, { time: row.createAt })
+      return h(NTooltip, null, {
+        trigger: () => h(NTime, { time: row.createAt, type: 'relative' }),
+        default: () => h(NTime, { time: row.createAt }),
+      })
     },
   },
   {
@@ -171,6 +175,7 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
   {
     title: '地址',
     key: 'address',
+    minWidth: 250,
     render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
       const collectUrl =
         row.instanceOf == 'user' ? row.goods.collectUrl : props.goods?.find((g) => g.id == row.goodsId)?.collectUrl
@@ -188,6 +193,7 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
   {
     title: '快递信息',
     key: 'express',
+    minWidth: 150,
     render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
       if (row.type == GoodsTypes.Physical) {
         return row.trackingNumber
@@ -304,6 +310,7 @@ onMounted(() => {
     :columns="orderColumn"
     :data="order"
     :pagination="{ showSizePicker: true, pageSizes: [10, 25, 50, 100], defaultPageSize: 10, size: 'small' }"
+    size="small"
   >
   </NDataTable>
   <NModal
