@@ -348,7 +348,7 @@ onMounted(() => {})
 </script>
 
 <template>
-  <NFlex style="width: 100%">
+  <NFlex>
     <NAlert type="info" style="min-width: 400px">
       启用
       <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/ohulp2torghlqqn8" target="_blank">
@@ -374,10 +374,10 @@ onMounted(() => {})
         , 否则将无法记录各种事件
       </NText>
     </NAlert>
-    <EventFetcherStatusCard style="flex: 1" />
+    <EventFetcherStatusCard />
   </NFlex>
   <br />
-  <NAlert type="success"> 此功能将于 3月11日 官方启用 OpenId 后正式上线 </NAlert>
+  <NAlert type="success" style="max-width: 400px"> 此功能将于 3月11日 官方启用 OpenId 后正式上线 </NAlert>
   <NDivider />
   <NTabs animated v-model:value="hash">
     <NTabPane name="goods" tab="礼物">

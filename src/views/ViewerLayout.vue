@@ -7,7 +7,7 @@ import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { CalendarClock24Filled, Wallet24Filled } from '@vicons/fluent'
+import { BookCoins20Filled, CalendarClock24Filled, Wallet24Filled } from '@vicons/fluent'
 import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
@@ -158,7 +158,7 @@ onMounted(async () => {
         ),
       show: (userInfo.value?.extra?.enableFunctions.indexOf(FunctionTypes.Point) ?? -1) > -1,
       key: 'user-goods',
-      icon: renderIcon(Wallet24Filled),
+      icon: renderIcon(BookCoins20Filled),
     },
   ]
   await RequestBiliUserData()

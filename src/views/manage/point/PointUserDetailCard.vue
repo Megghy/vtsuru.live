@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  ResponsePointHisrotyModel,
-  ResponsePointOrder2OwnerModel,
-  ResponsePointUserModel,
-} from '@/api/api-models'
+import { ResponsePointHisrotyModel, ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
 import { POINT_API_URL } from '@/data/constants'
@@ -126,7 +122,9 @@ async function givePoint() {
 
 onMounted(async () => {
   pointHistory.value = await getPointHistory()
-  orders.value = await getOrders()
+  if (props.user.info?.id) {
+    orders.value = await getOrders()
+  }
 })
 </script>
 
@@ -162,7 +160,9 @@ onMounted(async () => {
         <NFlex>
           <NTooltip :disabled="user.isAuthed">
             <template #trigger>
-              <NButton type="primary" @click="showAddPointModal = true" :disabled="!user.isAuthed" size="small"> 给予积分 </NButton>
+              <NButton type="primary" @click="showAddPointModal = true" :disabled="!user.isAuthed" size="small">
+                给予积分
+              </NButton>
             </template>
             <NText> 未认证用户无法给予积分 </NText>
           </NTooltip>
@@ -185,7 +185,13 @@ onMounted(async () => {
     <NModal v-model:show="showAddPointModal" preset="card" style="width: 500px; max-width: 90vw; height: auto">
       <template #header> 给予积分 </template>
       <NFlex vertical>
-        <NInputNumber v-model:value="addPointCount" type="number" placeholder="请输入积分数量" min="0" style="max-width: 120px" />
+        <NInputNumber
+          v-model:value="addPointCount"
+          type="number"
+          placeholder="请输入积分数量"
+          min="0"
+          style="max-width: 120px"
+        />
         <NInput placeholder="请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
         <NButton type="primary" @click="givePoint" :loading="isLoading"> 给予 </NButton>
       </NFlex>
