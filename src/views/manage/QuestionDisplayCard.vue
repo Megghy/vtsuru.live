@@ -52,7 +52,7 @@ onUnmounted(() => {
       backgroundColor: '#' + setting.borderColor,
       borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
       borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
-      borderTopWidth: 0,
+      borderTopWidth: setting.showUserName ? 0 : setting.borderWidth,
     }"
     :display="question ? 1 : 0"
   >
@@ -114,6 +114,7 @@ onUnmounted(() => {
 .question-display-user-name {
   text-align: center;
   margin: 5px;
+  transition: all 0.3s ease;
 }
 .question-display-text {
   min-height: 50px;
