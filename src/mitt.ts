@@ -9,9 +9,7 @@ declare type MittType<T = any> = {
   onMusicRequestPlayerEnded: {
     music: Music
   }
-  onMusicRequestPlayNextWaitingMusic: {
-    
-  }
+  onMusicRequestPlayNextWaitingMusic: never
 };
 // 类型
 const emitter: Emitter<MittType> = mitt<MittType>()
