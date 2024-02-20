@@ -59,7 +59,7 @@ const menuOptions = ref<MenuOption[]>()
 async function RequestBiliUserData() {
   await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`).then(
     async (respone) => {
-      let data = await respone.json()
+      const data = await respone.json()
       if (data.code == 0) {
         biliUserInfo.value = data.card
       } else {

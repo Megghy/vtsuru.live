@@ -83,7 +83,7 @@ const showModal = ref(false)
 const inputDynamic = ref<string>()
 const inputDynamicId = computed(() => {
   try {
-    var id = BigInt(inputDynamic.value ?? '')
+    const id = BigInt(inputDynamic.value ?? '')
     return id
   } catch {
     try {

@@ -5,9 +5,11 @@ import { isSameDay } from 'date-fns'
 import { createDiscreteApi } from 'naive-ui'
 import { ref } from 'vue'
 import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
+import { useRoute } from 'vue-router'
 
 export const ACCOUNT = ref<AccountInfo>()
 export const isLoadingAccount = ref(true)
+const route = useRoute()
 
 const { message } = createDiscreteApi(['message'])
 const cookie = useLocalStorage('JWT_Token', '')
@@ -40,7 +42,8 @@ export async function GetSelfAccount() {
 }
 export function UpdateAccountLoop() {
   setInterval(() => {
-    if (ACCOUNT.value) {
+    if (ACCOUNT.value && route?.name != 'question-display') {
+      // 防止在问题详情页刷新
       GetSelfAccount()
     }
   }, 60 * 1000)
@@ -93,7 +96,7 @@ export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
     id: id,
   })
 }
-export function downloadConfigDirect<T>(name: string) {
+export function downloadConfigDirect(name: string) {
   return QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
     name: name,
   })

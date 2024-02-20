@@ -544,7 +544,7 @@ onMounted(() => {
       </NLayoutSider>
       <NLayout>
         <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
-          <NLayoutContent style="box-sizing: border-box; padding: 20px; min-width: 300px">
+          <NLayoutContent style="box-sizing: border-box; padding: 20px; min-width: 300px; height: 100%">
             <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
               <KeepAlive>
                 <DanmakuLayout v-if="route.meta.danmaku" :component="Component" />

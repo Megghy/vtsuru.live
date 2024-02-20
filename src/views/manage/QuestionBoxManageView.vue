@@ -2,18 +2,19 @@
 import { copyToClipboard, downloadImage } from '@/Utils'
 import { SaveAccountSettings, useAccount } from '@/api/account'
 import { QAInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
+import { QueryGetAPI } from '@/api/query'
+import { QUESTION_API_URL } from '@/data/constants'
 import router from '@/router'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import { Heart, HeartOutline, SwapHorizontal } from '@vicons/ionicons5'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
-import { List } from 'linqts'
 import {
+  NAffix,
   NButton,
   NCard,
   NCheckbox,
   NDivider,
+  NFlex,
   NIcon,
   NImage,
   NInput,
@@ -21,8 +22,10 @@ import {
   NList,
   NListItem,
   NModal,
+  NScrollbar,
   NSpace,
   NSpin,
+  NSplit,
   NSwitch,
   NTabPane,
   NTabs,
@@ -35,195 +38,42 @@ import {
 import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import QuestionDisplay from './QuestionDisplaySettings.vue'
+import { useElementSize } from '@vueuse/core'
+import QuestionItem from '@/components/QuestionItems.vue'
+import { ArrowCircleRight12Filled } from '@vicons/fluent'
+import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
 const route = useRoute()
-
-const recieveQuestions = ref<QAInfo[]>([])
-const recieveQuestionsFiltered = computed(() => {
-  return recieveQuestions.value.filter((q) => {
-    return (
-      (q.isFavorite || !onlyFavorite.value) && (q.isPublic || !onlyPublic.value) && (!q.isReaded || !onlyUnread.value)
-    )
-  })
-})
-const sendQuestions = ref<QAInfo[]>([])
 const message = useMessage()
 
+const useQB = useQuestionBox()
+
 const selectedTabItem = ref(route.query.send ? '1' : '0')
-const isRepling = ref(false)
-const onlyFavorite = ref(false)
-const onlyPublic = ref(false)
-const onlyUnread = ref(false)
-const isLoading = ref(true)
-const isChangingPublic = ref(false)
 
 const replyModalVisiable = ref(false)
 const shareModalVisiable = ref(false)
-const currentQuestion = ref<QAInfo>()
 const replyMessage = ref()
+
+const showSettingCard = ref(true)
 
 const shareCardRef = ref()
 const shareUrl = computed(() => 'https://vtsuru.live/user/' + accountInfo.value?.name + '/question-box')
 
-async function GetRecieveQAInfo() {
-  isLoading.value = true
-  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-recieve')
-    .then((data) => {
-      if (data.code == 200) {
-        if (data.data.length > 0) {
-          recieveQuestions.value = new List(data.data)
-            .OrderBy((d) => d.isReaded)
-            //.ThenByDescending(d => d.isFavorite)
-            .ThenByDescending((d) => d.sendAt)
-            .ToArray()
-        }
-        message.success('共收取 ' + data.data.length + ' 条提问')
-        isRevieveGetted = true
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('发生错误')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-async function GetSendQAInfo() {
-  isLoading.value = true
-  await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-send')
-    .then((data) => {
-      if (data.code == 200) {
-        sendQuestions.value = data.data
-        message.success('共发送 ' + data.data.length + ' 条提问')
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('发生错误')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
-}
-async function reply() {
-  isRepling.value = true
-  await QueryPostAPI<QAInfo>(QUESTION_API_URL + 'reply', {
-    Id: currentQuestion.value?.id,
-    Message: replyMessage.value,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        var index = recieveQuestions.value.findIndex((q) => q.id == currentQuestion.value?.id)
-        if (index > -1) {
-          recieveQuestions.value[index] = data.data
-        }
-        message.success('回复成功')
-        currentQuestion.value = undefined
-        replyModalVisiable.value = false
-      } else {
-        message.error('发送失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('发送失败')
-    })
-    .finally(() => {
-      isRepling.value = false
-    })
-}
-async function read(question: QAInfo, read: boolean) {
-  await QueryGetAPI(QUESTION_API_URL + 'read', {
-    id: question.id,
-    read: read ? 'true' : 'false',
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        question.isReaded = read
-      } else {
-        message.error('修改失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('修改失败')
-    })
-}
-async function favorite(question: QAInfo, fav: boolean) {
-  await QueryGetAPI(QUESTION_API_URL + 'favorite', {
-    id: question.id,
-    favorite: fav,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        question.isFavorite = fav
-      } else {
-        message.error('修改失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('修改失败')
-    })
-}
-async function setPublic(pub: boolean) {
-  isChangingPublic.value = true
-  await QueryGetAPI(QUESTION_API_URL + 'public', {
-    id: currentQuestion.value?.id,
-    public: pub,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        if (currentQuestion.value) currentQuestion.value.isPublic = pub
-        message.success('已修改公开状态')
-      } else {
-        message.error('修改失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('修改失败')
-    })
-    .finally(() => {
-      isChangingPublic.value = false
-    })
-}
-async function blacklist(question: QAInfo) {
-  await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
-    id: question.sender.id,
-  })
-    .then(async (data) => {
-      if (data.code == 200) {
-        await QueryGetAPI(QUESTION_API_URL + 'del', {
-          id: question.id,
-        }).then((data) => {
-          if (data.code == 200) {
-            message.success('已拉黑 ' + question.sender.name)
-          } else {
-            message.error('修改失败: ' + data.message)
-          }
-        })
-      } else {
-        message.error('拉黑失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('拉黑失败')
-    })
-}
 let isRevieveGetted = false
 let isSendGetted = false
 async function onTabChange(value: string) {
   if (value == '0' && !isRevieveGetted) {
-    await GetRecieveQAInfo()
+    await useQB.GetRecieveQAInfo()
     isRevieveGetted = true
   } else if (value == '1' && !isSendGetted) {
-    await GetSendQAInfo()
+    await useQB.GetSendQAInfo()
     isSendGetted = true
   }
 }
 function onOpenModal(question: QAInfo) {
-  currentQuestion.value = question
+  useQB.currentQuestion = question
   replyMessage.value = question.answer?.message
   replyModalVisiable.value = true
 }
@@ -258,7 +108,7 @@ function saveQRCode() {
 }
 async function saveSettings() {
   try {
-    isLoading.value = true
+    useQB.isLoading = true
     const data = await SaveAccountSettings()
     if (data.code == 200) {
       message.success('保存成功')
@@ -268,15 +118,21 @@ async function saveSettings() {
   } catch (error) {
     message.error('保存失败:' + error)
   }
-  isLoading.value = false
+  useQB.isLoading = false
 }
+
+const parentRef = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   if (selectedTabItem.value == '0') {
-    GetRecieveQAInfo()
+    useQB.GetRecieveQAInfo()
   } else {
-    GetSendQAInfo()
+    useQB.GetSendQAInfo()
   }
+
+  useQB.displayQuestion = useQB.recieveQuestions.find(
+    (s) => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
+  )
 })
 </script>
 
@@ -286,89 +142,63 @@ onMounted(() => {
     <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
   </NSpace>
   <NDivider style="margin: 10px 0 10px 0" />
-  <NSpin v-if="isLoading" show />
+  <NSpin v-if="useQB.isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
-      <NCheckbox v-model:checked="onlyFavorite"> 只显示收藏 </NCheckbox>
-      <NCheckbox v-model:checked="onlyPublic"> 只显示公开 </NCheckbox>
-      <NCheckbox v-model:checked="onlyUnread"> 只显示未读 </NCheckbox>
-      <NList :bordered="false">
-        <NListItem v-for="item in recieveQuestionsFiltered" :key="item.id">
-          <NCard :embedded="!item.isReaded" hoverable size="small">
-            <template #header>
-              <NSpace :size="0" align="center">
-                <template v-if="!item.isReaded">
-                  <NTag type="warning" size="tiny"> 未读 </NTag>
-                  <NDivider vertical />
-                </template>
-                <NText :depth="item.isAnonymous ? 3 : 1" style="margin-top: 3px">
-                  {{ item.isAnonymous ? '匿名用户' : item.sender?.name }}
-                </NText>
-                <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false" style="margin-left: 5px">
-                  已注册
-                </NTag>
-                <NTag v-if="item.isPublic" size="small" type="success" :bordered="false" style="margin-left: 5px">
-                  公开
-                </NTag>
-                <NDivider vertical />
-                <NText depth="3" style="font-size: small">
-                  <NTooltip>
-                    <template #trigger>
-                      <NTime :time="item.sendAt" :to="Date.now()" type="relative" />
-                    </template>
-                    <NTime :time="item.sendAt" />
-                  </NTooltip>
-                </NText>
-              </NSpace>
-            </template>
-            <template #footer>
-              <NSpace>
-                <NButton v-if="!item.isReaded" size="small" @click="read(item, true)" type="success">
-                  设为已读
-                </NButton>
-                <NButton size="small" @click="favorite(item, !item.isFavorite)">
+      <NButton @click="$router.push({ name: 'question-display' })" type="primary">
+        打开展示页
+      </NButton>
+      <NDivider vertical />
+      <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
+      <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
+      <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
+      <NDivider style="margin: 10px 0 10px 0" />
+      <QuestionItem :questions="useQB.recieveQuestionsFiltered">
+        <template #footer="{ item }">
+          <NSpace>
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  @click="useQB.setCurrentQuestion(item)"
+                  size="small"
+                  :type="useQB.displayQuestion?.id == item.id ? 'primary' : 'default'"
+                >
                   <template #icon>
-                    <NIcon
-                      :component="item.isFavorite ? Heart : HeartOutline"
-                      :color="item.isFavorite ? '#dd484f' : ''"
-                    />
+                    <NIcon :component="ArrowCircleRight12Filled" />
                   </template>
-                  收藏
                 </NButton>
-                <NTooltip>
-                  <template #trigger>
-                    <NButton size="small"> 举报 </NButton>
-                  </template>
-                  暂时还没写
-                </NTooltip>
-                <NButton size="small" @click="blacklist(item)"> 拉黑 </NButton>
-              </NSpace>
-            </template>
-            <template #header-extra>
-              <NButton
-                @click="onOpenModal(item)"
-                :type="item.isReaded ? 'default' : 'primary'"
-                :secondary="item.isReaded"
-              >
-                {{ item.answer ? '查看回复' : '回复' }}
-              </NButton>
-            </template>
-            <template v-if="item.question?.image">
-              <NImage v-if="item.question?.image" :src="item.question.image" height="100" lazy />
-              <br />
-            </template>
-
-            <NText style="">
-              {{ item.question?.message }}
-            </NText>
-            <NButton text @click="onOpenModal(item)" style="max-width: 100%; word-wrap: break-word"> </NButton>
-          </NCard>
-        </NListItem>
-      </NList>
+              </template>
+              设为当前展示的提问
+            </NTooltip>
+            <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
+              设为已读
+            </NButton>
+            <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
+            <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
+              <template #icon>
+                <NIcon :component="item.isFavorite ? Heart : HeartOutline" :color="item.isFavorite ? '#dd484f' : ''" />
+              </template>
+              收藏
+            </NButton>
+            <!-- <NTooltip>
+                        <template #trigger>
+                          <NButton size="small"> 举报 </NButton>
+                        </template>
+                        暂时还没写
+                      </NTooltip> -->
+            <NButton size="small" @click="useQB.blacklist(item)"> 拉黑 </NButton>
+          </NSpace>
+        </template>
+        <template #header-extra="{ item }">
+          <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
+            {{ item.answer ? '查看回复' : '回复' }}
+          </NButton>
+        </template>
+      </QuestionItem>
     </NTabPane>
-    <NTabPane tab="我发送的" name="1">
+    <NTabPane ref="parentRef" tab="我发送的" name="1">
       <NList>
-        <NListItem v-for="item in sendQuestions" :key="item.id">
+        <NListItem v-for="item in useQB.sendQuestions" :key="item.id">
           <NCard hoverable size="small">
             <template #header>
               <NSpace :size="0" align="center">
@@ -409,7 +239,7 @@ onMounted(() => {
       </NList>
     </NTabPane>
     <NTabPane v-if="accountInfo" tab="设置" name="2">
-      <NSpin :show="isLoading">
+      <NSpin :show="useQB.isLoading">
         <NCheckbox
           v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
           @update:checked="saveSettings"
@@ -437,15 +267,20 @@ onMounted(() => {
         show-count
         clearable
       />
-      <NSpin :show="isChangingPublic">
-        <NCheckbox @update:checked="(v) => setPublic(v)" :default-checked="currentQuestion?.isPublic">
+      <NSpin :show="useQB.isChangingPublic">
+        <NCheckbox @update:checked="(v) => useQB.setPublic(v)" :default-checked="useQB.currentQuestion?.isPublic">
           公开可见
         </NCheckbox>
       </NSpin>
     </NSpace>
     <NDivider style="margin: 10px 0 10px 0" />
-    <NButton :loading="isRepling" @click="reply" type="primary" :secondary="currentQuestion?.answer ? true : false">
-      {{ currentQuestion?.answer ? '修改' : '发送' }}
+    <NButton
+      :loading="useQB.isRepling"
+      @click="useQB.reply(useQB.currentQuestion?.id ?? -1, replyMessage)"
+      type="primary"
+      :secondary="useQB.currentQuestion?.answer ? true : false"
+    >
+      {{ useQB.currentQuestion?.answer ? '修改' : '发送' }}
     </NButton>
   </NModal>
   <NModal v-model:show="shareModalVisiable" preset="card" title="分享" style="width: 600px">

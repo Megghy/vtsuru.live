@@ -5,6 +5,7 @@ import manage from './manage'
 import user from './user'
 import obs from './obs'
 import open_live from './open_live'
+import singlePage from './singlePage'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -96,6 +97,7 @@ const routes: Array<RouteRecordRaw> = [
       title: '页面不存在',
     },
   },
+  ...singlePage,
 ]
 
 const router = createRouter({
@@ -106,7 +108,7 @@ router.beforeEach((to, from, next) => {
   useLoadingBarStore().loadingBar?.start()
   next()
 })
-router.afterEach((to, from) => {
+router.afterEach(() => {
   const loadingBar = useLoadingBarStore().loadingBar
   loadingBar?.finish()
 })

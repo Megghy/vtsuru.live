@@ -91,6 +91,7 @@ export interface UserSetting {
   songRequest: Setting_SongRequest
   queue: Setting_Queue
   point: Setting_Point
+  questionDisplay: Setting_QuestionDisplay
 
   enableFunctions: FunctionTypes[]
 
@@ -168,6 +169,32 @@ export interface Setting_Point {
   scPointPercent: number // double maps to number in TypeScript
   giftPointPercent: number // double maps to number in TypeScript
   giftAllowType: SettingPointGiftAllowType
+}
+export interface Setting_QuestionDisplay {
+  font?: string // Optional string, with a maximum length of 30 characters
+  nameFont: string // Optional string, with a maximum length of 30 characters
+  fontSize: number // Default is 20
+  fontWeight: number
+  nameFontSize: number // Default is 20
+  lineSpacing: number // Default is 0, 行间距
+  fontColor?: string // Optional string, must exactly be 6 characters long
+  nameFontColor?: string // Optional string, must exactly be 6 characters long
+  nameFontWeight?: number
+  backgroundColor?: string // Optional string, must exactly be 6 characters long
+  showUserName: boolean // Default is true
+  align: QuestionDisplayAlign // Default is QuestionDisplayAlign.Left, 对齐
+  showImage: boolean // Default is false
+
+  borderColor?: string
+  borderWidth?: number
+
+  currentQuestion?: number
+}
+
+export enum QuestionDisplayAlign {
+  Left,
+  Right,
+  Center,
 }
 export enum SettingPointGiftAllowType {
   All,
