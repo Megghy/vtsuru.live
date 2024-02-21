@@ -25,7 +25,6 @@ import {
   NList,
   NListItem,
   NModal,
-  NPopover,
   NRadioButton,
   NRadioGroup,
   NSkeleton,
@@ -34,7 +33,6 @@ import {
   NSwitch,
   NTag,
   NTooltip,
-  NVirtualList,
 } from 'naive-ui'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import LiveInfoContainer from './LiveInfoContainer.vue'
@@ -57,11 +55,11 @@ const accountInfo = useAccount()
 const debouncedFn = useDebounceFn(() => {
   UpdateDanmakus()
 }, 750)
-let isLoading = ref(false)
-let showModal = ref(false)
-let showExportModal = ref(false)
-let userDanmakus = ref<DanmakuModel[] | undefined>()
-let hideAvatar = useLocalStorage('Setting.HideAvatar', false)
+const isLoading = ref(false)
+const showModal = ref(false)
+const showExportModal = ref(false)
+const userDanmakus = ref<DanmakuModel[] | undefined>()
+const hideAvatar = useLocalStorage('Setting.HideAvatar', false)
 const { width } = useWindowSize()
 
 interface Props {
@@ -113,7 +111,7 @@ const emit = defineEmits<{
 defineExpose({
   InsertDanmakus,
 })
-let danmakus = ref<DanmakuModel[]>([])
+const danmakus = ref<DanmakuModel[]>([])
 watch(
   () => showTools,
   (newV, oldV) => {
@@ -128,25 +126,26 @@ watch(danmakuRef, (newValue) => {
   danmakus.value = GetFilteredDanmakus(newValue)
 })
 
-let keyword = ref('')
-let enableRegex = ref(false)
-let deselect = ref(false)
-let price = ref<number | undefined>()
-let filterSelected = ref(defaultFilterSelected)
-let innerShowTools = ref(showTools)
-let modalShowTools = ref(false)
-let orderDecreasing = ref(false)
-let orderByPrice = ref(false)
-let processing = ref(false)
-let isRanking = ref(false)
-let rankInfo = ref<RankInfo[]>([])
-let currentRankInfo = ref<RankInfo[]>([])
-let rankType = ref(RankType.Danmaku)
-let hideEmoji = ref(false)
+const keyword = ref('')
+const enableRegex = ref(false)
+const deselect = ref(false)
+const price = ref<number | undefined>()
+const filterSelected = ref(defaultFilterSelected)
+const innerShowTools = ref(showTools)
+const modalShowTools = ref(false)
+const orderDecreasing = ref(false)
+const orderByPrice = ref(false)
+const processing = ref(false)
+const isRanking = ref(false)
+const rankInfo = ref<RankInfo[]>([])
+const currentRankInfo = ref<RankInfo[]>([])
+const rankType = ref(RankType.Danmaku)
+const hideEmoji = ref(false)
+const existEnterMessage = ref(false)
 
-let exportType = ref<'json' | 'xml' | 'csv'>('json')
-let onlyExportFilteredDanmakus = ref(false)
-let isExporting = ref(false)
+const exportType = ref<'json' | 'xml' | 'csv'>('json')
+const onlyExportFilteredDanmakus = ref(false)
+const isExporting = ref(false)
 
 function OnNameClick(uId: number) {
   if (isInModal) {
@@ -257,7 +256,17 @@ function GetRankIndexColor(index: number) {
 function Export() {
   isExporting.value = true
   saveAs(
-    new Blob([GetString(accountInfo.value, currentLive, onlyExportFilteredDanmakus.value ? danmakus.value : currentDanmakus, exportType.value)], { type: 'text/plain;charset=utf-8' }),
+    new Blob(
+      [
+        GetString(
+          accountInfo.value,
+          currentLive,
+          onlyExportFilteredDanmakus.value ? danmakus.value : currentDanmakus,
+          exportType.value,
+        ),
+      ],
+      { type: 'text/plain;charset=utf-8' },
+    ),
     `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
   )
   isExporting.value = false
@@ -283,7 +292,9 @@ function GetFilteredDanmakus(targetDanmakus?: DanmakuModel[]) {
     tempDanmakus = tempDanmakus.filter((d) => d.type != EventDataTypes.Message || !d.isEmoji)
   }
   if (orderByPrice.value) {
-    tempDanmakus = tempDanmakus.filter((d) => d.type != EventDataTypes.Message).sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+    tempDanmakus = tempDanmakus
+      .filter((d) => d.type != EventDataTypes.Message)
+      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
   } else {
     tempDanmakus = tempDanmakus.sort((a, b) => a.time - b.time)
   }
@@ -295,7 +306,11 @@ function GetFilteredDanmakus(targetDanmakus?: DanmakuModel[]) {
     if (d.uId.toString() == keyword.value || d.uName == keyword.value) {
       return true
     }
-    return enableRegex.value ? (d.msg?.match(keyword.value) ? true : false) : d.msg?.toLowerCase().includes(keyword.value.toLowerCase()) == true
+    return enableRegex.value
+      ? d.msg?.match(keyword.value)
+        ? true
+        : false
+      : d.msg?.toLowerCase().includes(keyword.value.toLowerCase()) == true
   }
   if (price.value && price.value > 0) {
     tempDanmakus = tempDanmakus.filter((d) => (d.price ?? 0) >= (price.value ?? 0))
@@ -317,14 +332,22 @@ function RoundNumber(num: number) {
 }
 
 onMounted(() => {
-  danmakus.value = currentDanmakus
+  danmakus.value = GetFilteredDanmakus()
+  existEnterMessage.value = danmakus.value.some((d) => d.type == EventDataTypes.Message)
+  //defaultFilterSelected.push(EventDataTypes.Enter)
 })
 </script>
 
 <template>
   <NSkeleton v-if="isLoading"> </NSkeleton>
   <NSpin v-else :show="processing">
-    <NModal v-model:show="showModal" @after-leave="userDanmakus = undefined" preset="card" :style="'width: 600px;max-width: 90vw;max-height: 90vh;'" content-style="overflow-y: auto">
+    <NModal
+      v-model:show="showModal"
+      @after-leave="userDanmakus = undefined"
+      preset="card"
+      :style="'width: 600px;max-width: 90vw;max-height: 90vh;'"
+      content-style="overflow-y: auto"
+    >
       <template #header>
         {{ userDanmakus?.[0].uName }}
       </template>
@@ -337,7 +360,15 @@ onMounted(() => {
           </template>
         </NSwitch>
       </template>
-      <DanmakuContainer :show-live-info="false" :current-danmakus="userDanmakus ?? []" :current-live="currentLive" :height="500" :show-border="false" :show-tools="modalShowTools" to="space" />
+      <DanmakuContainer
+        :show-live-info="false"
+        :current-danmakus="userDanmakus ?? []"
+        :current-live="currentLive"
+        :height="500"
+        :show-border="false"
+        :show-tools="modalShowTools"
+        to="space"
+      />
     </NModal>
     <NModal v-model:show="showExportModal" preset="card" style="width: 500px; max-width: 90vw; height: auto">
       <template #header> 导出 </template>
@@ -363,9 +394,10 @@ onMounted(() => {
           <NCollapse>
             <NCollapseItem title="关于" name="1">
               <div>
-                文件名格式: {<NTooltip><template #trigger>生成时间</template>Unix</NTooltip>}_{<NTooltip><template #trigger>开始时间</template>Unix: {{ currentLive.startAt }} </NTooltip>}_{<NTooltip
-                  ><template #trigger>直播间标题</template>' _ ' 将被转义为 ' - '</NTooltip
-                >}_{<NTooltip><template #trigger>用户名</template>{{ accountInfo?.name }}</NTooltip
+                文件名格式: {<NTooltip><template #trigger>生成时间</template>Unix</NTooltip>}_{<NTooltip
+                  ><template #trigger>开始时间</template>Unix: {{ currentLive.startAt }} </NTooltip
+                >}_{<NTooltip><template #trigger>直播间标题</template>' _ ' 将被转义为 ' - '</NTooltip>}_{<NTooltip
+                  ><template #trigger>用户名</template>{{ accountInfo?.name }}</NTooltip
                 >}.{{ exportType }}
                 <br />
                 弹幕Type对应:
@@ -410,7 +442,9 @@ onMounted(() => {
       <NCollapseTransition :show="innerShowTools && !isRanking">
         <NSpace vertical style="padding-bottom: 16px">
           <NSpace align="center">
-            <NButton type="primary" size="small" @click="showExportModal = true" @update:value="UpdateDanmakus"> 导出 </NButton>
+            <NButton type="primary" size="small" @click="showExportModal = true" @update:value="UpdateDanmakus">
+              导出
+            </NButton>
             <NCheckbox v-model:checked="orderDecreasing" @update:checked="UpdateDanmakus"> 降序 </NCheckbox>
             <NCollapseTransition :show="filterSelected.includes(EventDataTypes.Message)">
               <NCheckbox v-model:checked="hideEmoji" @update:checked="UpdateDanmakus"> 隐藏表情 </NCheckbox>
@@ -419,7 +453,14 @@ onMounted(() => {
             <NCheckbox v-model:checked="orderByPrice" @update:checked="UpdateDanmakus"> 按价格排序 </NCheckbox>
           </NSpace>
           <NSpace align="center">
-            <NInput v-model:value="keyword" size="small" style="max-width: 200px" placeholder="内容筛选" clearable @update:value="debouncedFn">
+            <NInput
+              v-model:value="keyword"
+              size="small"
+              style="max-width: 200px"
+              placeholder="内容筛选"
+              clearable
+              @update:value="debouncedFn"
+            >
               <template #prefix>
                 <NIcon :component="Search24Filled" />
               </template>
@@ -428,7 +469,15 @@ onMounted(() => {
             <NCheckbox v-model:checked="deselect" @update:checked="UpdateDanmakus"> 反选 </NCheckbox>
           </NSpace>
           <NSpace align="center">
-            <NInputNumber v-model:value="price" placeholder="最低价格" size="small" style="max-width: 200px" clearable :min="0" @update:value="debouncedFn">
+            <NInputNumber
+              v-model:value="price"
+              placeholder="最低价格"
+              size="small"
+              style="max-width: 200px"
+              clearable
+              :min="0"
+              @update:value="debouncedFn"
+            >
               <template #prefix>
                 <NIcon :component="Money20Regular" />
               </template>
@@ -445,6 +494,8 @@ onMounted(() => {
               <NCheckbox :value="EventDataTypes.Gift" label="礼物" />
               <NCheckbox :value="EventDataTypes.Guard" label="舰长" />
               <NCheckbox :value="EventDataTypes.SC" label="Superchat" />
+
+              <NCheckbox v-if="existEnterMessage" :value="EventDataTypes.Enter" label="入场" />
             </NSpace>
           </NCheckboxGroup>
         </NSpace>
@@ -462,15 +513,39 @@ onMounted(() => {
         </NDivider>
       </NCollapseTransition>
       <div :style="isRanking ? 'display:none' : ''">
-        <SimpleVirtualList v-if="danmakus.length > itemRange" :items="danmakus" :default-size="itemHeight" :default-height="height ?? 1000">
+        <SimpleVirtualList
+          v-if="danmakus.length > itemRange"
+          :items="danmakus"
+          :default-size="itemHeight"
+          :default-height="height ?? 1000"
+        >
           <template #default="{ item }">
             <p :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`">
-              <DanmakuItem :danmaku="item" :account-info="accountInfo" @on-click-name="OnNameClick" :show-name="showName" :show-avatar="!hideAvatar" :height="itemHeight" />
+              <DanmakuItem
+                :danmaku="item"
+                :account-info="accountInfo"
+                @on-click-name="OnNameClick"
+                :show-name="showName"
+                :show-avatar="!hideAvatar"
+                :height="itemHeight"
+              />
             </p>
           </template>
         </SimpleVirtualList>
-        <p v-else v-for="item in danmakus" :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`" v-bind:key="item.id">
-          <DanmakuItem :danmaku="item" :account-info="accountInfo" @on-click-name="OnNameClick" :show-name="showName" :show-avatar="!hideAvatar" :height="itemHeight" />
+        <p
+          v-else
+          v-for="item in danmakus"
+          :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`"
+          v-bind:key="item.id"
+        >
+          <DanmakuItem
+            :danmaku="item"
+            :account-info="accountInfo"
+            @on-click-name="OnNameClick"
+            :show-name="showName"
+            :show-avatar="!hideAvatar"
+            :height="itemHeight"
+          />
         </p>
       </div>
       <div v-if="isRanking">
