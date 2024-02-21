@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "npx oxlint && vite lint",
+    "lint": "vite lint",
     "postinstall": "husky init",
     "prepare": "husky"
   },
