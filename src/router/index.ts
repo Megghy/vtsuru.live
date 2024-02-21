@@ -86,9 +86,14 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   manage,
-  user,
   obs,
   open_live,
+  {
+    path: '/@:id',
+    name: 'user',
+    alias: '/user/:id',
+    children: user,
+  },
   {
     path: '/:pathMatch(.*)*',
     name: 'notfound',
