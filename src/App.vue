@@ -1,5 +1,11 @@
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN" :date-locale="dateZhCN">
+  <NConfigProvider
+    :theme-overrides="themeOverrides"
+    :theme="theme"
+    style="height: 100vh"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+  >
     <NMessageProvider>
       <NNotificationProvider>
         <NDialogProvider>
@@ -58,7 +64,7 @@ import TempComponent from './components/TempComponent.vue'
 const route = useRoute()
 
 const layout = computed(() => {
-  if (route.path.startsWith('/user')) {
+  if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
     document.title = route.meta.title + ' · ' + route.params.id + ' · VTsuru'
     return 'viewer'
   } else if (route.path.startsWith('/manage')) {

@@ -60,7 +60,7 @@ const replyMessage = ref()
 const showSettingCard = ref(true)
 
 const shareCardRef = ref()
-const shareUrl = computed(() => 'https://vtsuru.live/user/' + accountInfo.value?.name + '/question-box')
+const shareUrl = computed(() => 'https://vtsuru.live/@' + accountInfo.value?.name + '/question-box')
 
 let isRevieveGetted = false
 let isSendGetted = false

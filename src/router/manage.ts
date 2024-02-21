@@ -80,7 +80,6 @@ export default //管理页面
       component: () => import('@/views/manage/VideoCollectDetailView.vue'),
       meta: {
         title: '详情 · 视频征集',
-        keepAlive: true,
         parent: 'manage-videoCollect',
       },
     },
