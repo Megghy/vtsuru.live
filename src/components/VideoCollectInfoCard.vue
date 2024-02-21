@@ -25,6 +25,7 @@ const renderCountdown: CountdownProps['render'] = (info: { hours: number; minute
 }
 function onClick() {
   if (props.canClick == true) {
+    console.log(props.item.id)
     router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
   }
 }

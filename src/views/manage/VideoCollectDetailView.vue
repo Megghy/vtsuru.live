@@ -40,7 +40,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
-import { VNode, computed, h, ref } from 'vue'
+import { VNode, computed, h, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -358,6 +358,12 @@ function saveQRCode() {
     `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`,
   )
 }
+
+onActivated(async () => {
+  if (route.params.id != videoDetail.value.table.id) {
+    videoDetail.value = await getData()
+  }
+})
 </script>
 <template>
   <NSpace>
