@@ -101,13 +101,13 @@ const createRules: FormRules = {
 }
 
 const paddingVideos = computed(() => {
-  return videoDetail.value.videos.filter((v) => v.info.status == VideoStatus.Pending)
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Pending) ?? []
 })
 const rejectVideos = computed(() => {
-  return videoDetail.value.videos.filter((v) => v.info.status == VideoStatus.Rejected)
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Rejected) ?? []
 })
 const acceptVideos = computed(() => {
-  return videoDetail.value.videos.filter((v) => v.info.status == VideoStatus.Accepted)
+  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Accepted) ?? []
 })
 
 async function getData() {
@@ -121,6 +121,7 @@ async function getData() {
         description: data.data.table.description,
         maxVideoCount: data.data.table.maxVideoCount,
       } as VideoCollectCreateModel
+      console.log(data.data)
       return data.data
     }
   } catch (err) {
