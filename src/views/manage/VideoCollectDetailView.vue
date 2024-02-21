@@ -121,7 +121,6 @@ async function getData() {
         description: data.data.table.description,
         maxVideoCount: data.data.table.maxVideoCount,
       } as VideoCollectCreateModel
-      console.log(data.data)
       return data.data
     }
   } catch (err) {
