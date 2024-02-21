@@ -2,7 +2,14 @@ import { VNode } from 'vue'
 
 export type TemplateConfig<T> = {
   name: string
-  items: (TemplateConfigStringItem<T> | TemplateConfigNumberItem<T> | TemplateConfigStringArrayItem<T> | TemplateConfigNumberArrayItem<T> | TemplateConfigImageItem<T> | TemplateConfigRenderItem<T>)[]
+  items: (
+    | TemplateConfigStringItem<T>
+    | TemplateConfigNumberItem<T>
+    | TemplateConfigStringArrayItem<T>
+    | TemplateConfigNumberArrayItem<T>
+    | TemplateConfigImageItem<T>
+    | TemplateConfigRenderItem<T>
+  )[]
   onConfirm?: (arg0: T) => void
 }
 interface TemplateConfigBase {

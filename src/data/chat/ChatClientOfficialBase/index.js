@@ -145,7 +145,7 @@ export default class ChatClientOfficialBase {
     this.sendAuth()
     this.heartbeatTimerId = setInterval(this.sendHeartbeat.bind(this), HEARTBEAT_INTERVAL)
     this.refreshReceiveTimeoutTimer()
-    console.log('ws 已连接');
+    console.log('ws 已连接')
   }
 
   sendHeartbeat() {

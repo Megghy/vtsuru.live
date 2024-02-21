@@ -13,7 +13,8 @@ export const IMGUR_URL = FILE_BASE_URL + '/imgur/'
 export const THINGS_URL = FILE_BASE_URL + '/things/'
 export const apiFail = ref(false)
 
-export const BASE_API = () => (process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI)
+export const BASE_API = () =>
+  process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 
 export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0'
@@ -40,12 +41,24 @@ export const POINT_API_URL = { toString: () => `${BASE_API()}point/` }
 export const BILI_AUTH_API_URL = { toString: () => `${BASE_API()}bili-auth/` }
 
 export const ScheduleTemplateMap = {
-  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue')) },
-  pinky: { name: '粉粉', compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/PinkySchedule.vue')) },
+  '': {
+    name: '默认',
+    compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue')),
+  },
+  pinky: {
+    name: '粉粉',
+    compoent: defineAsyncComponent(() => import('@/views/view/scheduleTemplate/PinkySchedule.vue')),
+  },
 } as { [key: string]: { name: string; compoent: any } }
 export const SongListTemplateMap = {
-  '': { name: '默认', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')) },
-  simple: { name: '简单', compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')) },
+  '': {
+    name: '默认',
+    compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')),
+  },
+  simple: {
+    name: '简单',
+    compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')),
+  },
 } as { [key: string]: { name: string; compoent: any } }
 export const IndexTemplateMap = {
   '': { name: '默认', compoent: DefaultIndexTemplateVue },

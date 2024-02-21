@@ -9,7 +9,12 @@ const builder = new XMLBuilder({
   format: true,
 })
 
-export function GetString(account: AccountInfo | undefined, live: ResponseLiveInfoModel, danmakus: DanmakuModel[], type: 'json' | 'xml' | 'csv') {
+export function GetString(
+  account: AccountInfo | undefined,
+  live: ResponseLiveInfoModel,
+  danmakus: DanmakuModel[],
+  type: 'json' | 'xml' | 'csv',
+) {
   const tempDanmakus = new List(danmakus)
     .Select((d) => {
       return {

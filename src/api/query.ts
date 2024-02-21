@@ -6,10 +6,20 @@ import { apiFail } from '@/data/constants'
 const cookie = useLocalStorage('JWT_Token', '')
 let failCount = 0
 
-export async function QueryPostAPI<T>(urlString: string, body?: unknown, headers?: [string, string][]): Promise<APIRoot<T>> {
+export async function QueryPostAPI<T>(
+  urlString: string,
+  body?: unknown,
+  headers?: [string, string][],
+): Promise<APIRoot<T>> {
   return await QueryPostAPIWithParams<T>(urlString, undefined, body, 'application/json', headers)
 }
-export async function QueryPostAPIWithParams<T>(urlString: string, params?: any, body?: any, contentType?: string, headers?: [string, string][]): Promise<APIRoot<T>> {
+export async function QueryPostAPIWithParams<T>(
+  urlString: string,
+  params?: any,
+  body?: any,
+  contentType?: string,
+  headers?: [string, string][],
+): Promise<APIRoot<T>> {
   const url = new URL(urlString)
   url.search = getParams(params)
   headers ??= []
@@ -36,7 +46,11 @@ export async function QueryPostAPIWithParams<T>(urlString: string, params?: any,
     throw e
   }
 }
-export async function QueryGetAPI<T>(urlString: string, params?: any, headers?: [string, string][]): Promise<APIRoot<T>> {
+export async function QueryGetAPI<T>(
+  urlString: string,
+  params?: any,
+  headers?: [string, string][],
+): Promise<APIRoot<T>> {
   const url = new URL(urlString)
   url.search = getParams(params)
   if (cookie.value) {
@@ -72,6 +86,9 @@ function getParams(params?: [string, string][]) {
 export async function QueryPostPaginationAPI<T>(url: string, body?: unknown): Promise<APIRoot<PaginationResponse<T>>> {
   return await QueryPostAPI<PaginationResponse<T>>(url, body)
 }
-export async function QueryGetPaginationAPI<T>(urlString: string, params?: unknown): Promise<APIRoot<PaginationResponse<T>>> {
+export async function QueryGetPaginationAPI<T>(
+  urlString: string,
+  params?: unknown,
+): Promise<APIRoot<PaginationResponse<T>>> {
   return await QueryGetAPI<PaginationResponse<T>>(urlString, params)
 }

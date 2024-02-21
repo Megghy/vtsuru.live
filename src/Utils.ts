@@ -80,7 +80,10 @@ export function getBase64(file: File | undefined | null): Promise<string | undef
     reader.onerror = (error) => reject(error)
   })
 }
-export async function getImageUploadModel(files: UploadFileInfo[] | undefined | null, maxSize: number = 10 * 1024 * 1024) {
+export async function getImageUploadModel(
+  files: UploadFileInfo[] | undefined | null,
+  maxSize: number = 10 * 1024 * 1024,
+) {
   const result = {
     existImages: [],
     newImagesBase64: [],
