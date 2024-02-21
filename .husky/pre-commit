@@ -1,9 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-# 自动修复 ESLint 检测到的问题
-npx eslint --fix 'src/**/*.{js,jsx,ts,tsx}' || true
-
 # 使用 Prettier 格式化代码
 npx prettier --write 'src/**/*.{js,jsx,ts,tsx,json,css,md}'
 

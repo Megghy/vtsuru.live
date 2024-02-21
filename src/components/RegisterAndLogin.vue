@@ -20,7 +20,6 @@ interface LoginModel {
 
 const message = useMessage()
 
-const isRegister = ref(false)
 const isLoading = ref(false)
 
 const registerModel = ref<RegisterModel>({} as RegisterModel)
@@ -148,7 +147,7 @@ function onLoginButtonClick() {
           message.error(data.message)
         }
       })
-      .catch((err) => {
+      .catch(() => {
         message.error('登陆失败')
       })
       .finally(() => {
@@ -166,7 +165,7 @@ async function onForgetPassword() {
         message.error(data.message)
       }
     })
-    .catch((err) => {
+    .catch(() => {
       message.error('发生错误')
     })
     .finally(() => {

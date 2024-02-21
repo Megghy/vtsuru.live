@@ -44,14 +44,25 @@ async function getUsers() {
   } as UpdateLiveLotteryUsersModel
 }
 
+const visiable = ref(true)
+const active = ref(true)
 let timer: any
 onMounted(() => {
   timer = setInterval(async () => {
+    if (!visiable.value || !active.value) return
     const r = await getUsers()
     if (r) {
       result.value = r
     }
   }, 2000)
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+    visiable.value = visibility
+  }
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onActiveChange = function (a: boolean) {
+    active.value = a
+  }
 })
 onUnmounted(() => {
   clearInterval(timer)

@@ -3,7 +3,7 @@ import { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/data/constants'
 import { useRouteQuery } from '@vueuse/router'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import QuestionDisplayCard from '../manage/QuestionDisplayCard.vue'
 
 const hash = ref('')
@@ -44,10 +44,26 @@ async function getQuestionAndSetting() {
   }
 }
 
+const visiable = ref(true)
+const active = ref(true)
+let timer: any
 onMounted(() => {
-  setInterval(() => {
+  timer = setInterval(() => {
+    if (!visiable.value || !active.value) return
     checkIfChanged()
   }, 1000)
+
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+    visiable.value = visibility
+  }
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onActiveChange = function (a: boolean) {
+    active.value = a
+  }
+})
+onUnmounted(() => {
+  clearInterval(timer)
 })
 </script>
 
