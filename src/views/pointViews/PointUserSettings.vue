@@ -1,42 +1,35 @@
 <script setup lang="ts">
 import { AddressInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import { POINT_API_URL, THINGS_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useStorage } from '@vueuse/core'
 import {
-  FormRules,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NLayoutContent,
-  NList,
-  NListItem,
-  NModal,
-  NPopconfirm,
-  NScrollbar,
-  NSelect,
-  NSpace,
-  NSpin,
-  NTag,
-  NText,
-  NTimeline,
-  NTimelineItem,
-  SelectOption,
-  useMessage,
+FormRules,
+NButton,
+NCard,
+NCheckbox,
+NCollapse,
+NCollapseItem,
+NDivider,
+NFlex,
+NForm,
+NFormItem,
+NInput,
+NInputNumber,
+NList,
+NListItem,
+NModal,
+NPopconfirm,
+NScrollbar,
+NSelect,
+NSpin,
+NTag,
+useMessage
 } from 'naive-ui'
-import { computed, h, ref } from 'vue'
-//@ts-ignore
+import { computed, ref } from 'vue'
+//@ts-expect-error 导入有点问题
 import UserAgreement from '@/document/UserAgreement.md'
-import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 
 type AreaData = {
   [province: string]: {
@@ -203,21 +196,21 @@ function onAreaSelectChange(level: number) {
   const newValue = {} as AddressInfo
   switch (level) {
     case 0: {
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.city = undefined
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.district = undefined
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.street = undefined
     }
     case 1: {
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.district = undefined
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.street = undefined
     }
     case 2: {
-      // @ts-ignore
+      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.street = undefined
     }
   }

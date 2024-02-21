@@ -76,7 +76,9 @@ export const Config: TemplateConfig<ConfigType> = {
     <NDivider />
     <NSpace align="center" justify="center">
       <NButton type="primary" @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"> 个人主页 </NButton>
-      <NButton type="primary" secondary @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"> 直播间 </NButton>
+      <NButton type="primary" secondary @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)">
+        直播间
+      </NButton>
     </NSpace>
   </template>
   <template v-else>

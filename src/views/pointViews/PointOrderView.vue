@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ResponsePointOrder2UserModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { NButton, NCard, NEmpty, NList, NListItem, useMessage } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { NEmpty, useMessage } from 'naive-ui'
+import { onMounted, ref } from 'vue'
 
 const message = useMessage()
 const useAuth = useAuthStore()

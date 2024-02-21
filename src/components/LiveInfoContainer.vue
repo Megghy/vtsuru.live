@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { ResponseLiveInfoModel } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
-import { NButton, NDivider, NIcon, NNumberAnimation, NPopover, NSpace, NStatistic, NTag, NTime, NTooltip } from 'naive-ui'
+import {
+  NButton,
+  NDivider,
+  NIcon,
+  NNumberAnimation,
+  NPopover,
+  NSpace,
+  NStatistic,
+  NTag,
+  NTime,
+  NTooltip,
+} from 'naive-ui'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -12,7 +23,7 @@ const { live } = defineProps<{
   live: ResponseLiveInfoModel
 }>()
 
-let defaultDanmakusCount = ref(0)
+const defaultDanmakusCount = ref(0)
 function OnClickCover() {
   router.push({
     name: 'manage-liveDetail',
@@ -50,7 +61,14 @@ watch(
         </NButton>
         <span>
           <span v-if="!live.isFinish">
-            <NTag size="tiny" :bordered="false" type="success" style="justify-items: center; box-shadow: 0 0 3px #589580"> 直播中 </NTag>
+            <NTag
+              size="tiny"
+              :bordered="false"
+              type="success"
+              style="justify-items: center; box-shadow: 0 0 3px #589580"
+            >
+              直播中
+            </NTag>
           </span>
           <span v-else style="color: gray">
             {{ (((live.stopAt ?? 0) - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }}

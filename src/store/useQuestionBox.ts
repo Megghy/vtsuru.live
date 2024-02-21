@@ -38,7 +38,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const displayQuestion = ref<QAInfo>()
 
   let isRevieveGetted = false
-  let isSendGetted = false
+  //const isSendGetted = false
 
   const message = useMessage()
 
@@ -83,7 +83,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('发生错误')
+        message.error('发生错误: ' + err)
       })
       .finally(() => {
         isLoading.value = false
@@ -97,7 +97,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     })
       .then((data) => {
         if (data.code == 200) {
-          var index = recieveQuestions.value.findIndex((q) => q.id == id)
+          const index = recieveQuestions.value.findIndex((q) => q.id == id)
           if (index > -1) {
             recieveQuestions.value[index] = data.data
           }
@@ -109,7 +109,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('发送失败')
+        message.error('发送失败: ' + err)
       })
       .finally(() => {
         isRepling.value = false
@@ -131,7 +131,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('修改失败')
+        message.error('修改失败: ' + err)
       })
   }
   async function favorite(question: QAInfo, fav: boolean) {
@@ -147,7 +147,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('修改失败')
+        message.error('修改失败: ' + err)
       })
   }
   async function setPublic(pub: boolean) {
@@ -165,7 +165,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('修改失败')
+        message.error('修改失败: ' + err)
       })
       .finally(() => {
         isChangingPublic.value = false
@@ -191,7 +191,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('拉黑失败')
+        message.error('拉黑失败: ' + err)
       })
   }
   async function setCurrentQuestion(item: QAInfo) {

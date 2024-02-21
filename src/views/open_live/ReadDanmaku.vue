@@ -241,9 +241,9 @@ function speakDirect(text: string) {
       return
     }
     synth.cancel()
-    let u = new SpeechSynthesisUtterance()
+    const u = new SpeechSynthesisUtterance()
     u.text = text
-    let voices = synth.getVoices()
+    const voices = synth.getVoices()
     const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
     if (voice) {
       u.voice = voice
@@ -670,7 +670,7 @@ onUnmounted(() => {
           <NCollapseItem title="队列" name="1">
             <NEmpty v-if="speakQueue.length == 0"> 暂无 </NEmpty>
             <NList v-else size="small" bordered>
-              <NListItem v-for="item in speakQueue">
+              <NListItem v-for="item in speakQueue" :key="item.data.time">
                 <NSpace align="center">
                   <NButton @click="forceSpeak(item.data)" type="primary" secondary size="small"> 读 </NButton>
                   <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small">

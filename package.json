@@ -2,10 +2,13 @@
   "name": "vtsuru.live",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "vite lint"
+    "lint": "npx oxlint && vite lint",
+    "postinstall": "husky init",
+    "prepare": "husky"
   },
   "dependencies": {
     "@types/node": "^20.11.19",
@@ -47,6 +50,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.0.1",
     "@types/eslint": "^8.56.2",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/parser": "^7.0.1",
@@ -55,6 +59,7 @@
     "@vue/eslint-config-typescript": "^12.0.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-vue": "^9.21.1",
+    "husky": "^9.0.11",
     "naive-ui": "^2.37.3",
     "stylus": "^0.62.0",
     "typescript": "^5.3.3"

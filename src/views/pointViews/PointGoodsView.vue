@@ -4,12 +4,10 @@ import { useAccount } from '@/api/account'
 import {
   AddressInfo,
   GoodsTypes,
-  PointGoodsModel,
   ResponsePointGoodModel,
   ResponsePointOrder2UserModel,
   UserInfo,
 } from '@/api/api-models'
-import { useUser } from '@/api/user'
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/data/constants'
@@ -18,7 +16,6 @@ import {
   NAlert,
   NButton,
   NCard,
-  NDataTable,
   NDivider,
   NEmpty,
   NFlex,
@@ -26,25 +23,18 @@ import {
   NFormItem,
   NGrid,
   NGridItem,
-  NIcon,
-  NInputGroup,
-  NInputGroupLabel,
   NInputNumber,
-  NLayoutContent,
   NModal,
   NSelect,
-  NSpace,
   NSpin,
   NTag,
   NText,
-  NTimeline,
-  NTimelineItem,
   NTooltip,
   SelectOption,
   useDialog,
   useMessage,
 } from 'naive-ui'
-import { ref, computed, onMounted, h } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{

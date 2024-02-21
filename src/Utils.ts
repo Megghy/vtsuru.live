@@ -81,7 +81,7 @@ export function getBase64(file: File | undefined | null): Promise<string | undef
   })
 }
 export async function getImageUploadModel(files: UploadFileInfo[] | undefined | null, maxSize: number = 10 * 1024 * 1024) {
-  let result = {
+  const result = {
     existImages: [],
     newImagesBase64: [],
   } as { existImages: string[]; newImagesBase64: string[] }

@@ -39,4 +39,4 @@ export const Config: TemplateConfig<ConfigType> = {
 }
 </script>
 
-<template></template>
+<template>1</template>

@@ -58,7 +58,12 @@ onMounted(() => {
   <NDivider />
   <div ref="table" class="schedule-template pinky container">
     <div class="schedule-template pinky day-container">
-      <div class="schedule-template pinky day-item" :id="index.toString()" v-for="(item, index) in currentWeek?.days" :key="index">
+      <div
+        class="schedule-template pinky day-item"
+        :id="index.toString()"
+        v-for="(item, index) in currentWeek?.days"
+        :key="index"
+      >
         <div class="schedule-template pinky header">
           <span class="schedule-template pinky week">
             {{ days[index] }}
@@ -93,7 +98,8 @@ onMounted(() => {
   height: 700px;
   border-radius: 20px;
   background-color: #faebeb;
-  background-image: linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%), linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
+  background-image: linear-gradient(90deg, #ffffff 10%, rgba(0, 0, 0, 0) 10%),
+    linear-gradient(#ffffff 10%, rgba(0, 0, 0, 0) 10%);
   background-size: 20px 20px;
   border: 3px solid #e0cbcb;
 }

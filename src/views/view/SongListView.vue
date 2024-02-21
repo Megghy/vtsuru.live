@@ -44,9 +44,12 @@ const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
 
 async function getSongRequestInfo() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
-      id: props.userInfo?.id,
-    })
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(
+      SONG_REQUEST_API_URL + 'get-active-and-settings',
+      {
+        id: props.userInfo?.id,
+      },
+    )
     if (data.code == 200) {
       return data.data
     }

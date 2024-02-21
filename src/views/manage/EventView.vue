@@ -34,7 +34,7 @@ import {
   NUl,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 enum EventType {
   Guard,
@@ -57,7 +57,10 @@ const rangeShortcuts = {
   上个月: () => {
     const cur = new Date()
     const lastMonth = new Date(cur.getFullYear(), cur.getMonth() - 1)
-    return [new Date(cur.getFullYear(), cur.getMonth() - 1, 1).getTime(), new Date(cur.getFullYear(), cur.getMonth(), 1).getTime()] as const
+    return [
+      new Date(cur.getFullYear(), cur.getMonth() - 1, 1).getTime(),
+      new Date(cur.getFullYear(), cur.getMonth(), 1).getTime(),
+    ] as const
   },
   本月: () => {
     const cur = new Date()
@@ -143,8 +146,9 @@ function exportData() {
   }
   saveAs(
     new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}}_${accountInfo.value
-      ?.id}_${accountInfo.value?.name}_${selectedType.value}.${exportType.value}`,
+    `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}}_${
+      accountInfo.value?.id
+    }_${accountInfo.value?.name}_${selectedType.value}.${exportType.value}`,
   )
 }
 function objectsToCSV(arr: any[]) {
@@ -163,12 +167,19 @@ function objectsToCSV(arr: any[]) {
 
 <template>
   <NSpace vertical>
-    <NAlert v-if="!accountInfo?.isBiliVerified" type="warning"> 使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton> </NAlert>
+    <NAlert v-if="!accountInfo?.isBiliVerified" type="warning">
+      使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })"
+        >认证Bilibili账号</NButton
+      >
+    </NAlert>
     <NAlert type="info">
-      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据, 不过并不清楚B站的风控策略, 此功能不一定会长期启用
+      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据,
+      不过并不清楚B站的风控策略, 此功能不一定会长期启用
       <br />
       在我们被限制连接之前满足以上条件的主播无需部署
-      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text> VtsuruEventFetcher </NButton>
+      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
+        VtsuruEventFetcher
+      </NButton>
       即可使用相关功能 (如记录上舰和SC, 直播场记录等) 😊
     </NAlert>
     <EventFetcherStatusCard />
@@ -177,7 +188,14 @@ function objectsToCSV(arr: any[]) {
   <NCard size="small" style="witdh: 100%">
     <template v-if="accountInfo?.isBiliVerified">
       <NSpace justify="center" align="center">
-        <NDatePicker v-model:value="selectedDate" @update:value="onDateChange" type="datetimerange" :shortcuts="rangeShortcuts" start-placeholder="开始时间" end-placeholder="结束时间" />
+        <NDatePicker
+          v-model:value="selectedDate"
+          @update:value="onDateChange"
+          type="datetimerange"
+          :shortcuts="rangeShortcuts"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+        />
         <NRadioGroup v-model:value="selectedType">
           <NRadioButton :value="EventType.Guard">舰长</NRadioButton>
           <NRadioButton :value="EventType.SC">Superchat</NRadioButton>
@@ -209,15 +227,32 @@ function objectsToCSV(arr: any[]) {
           <div v-if="displayMode == 'grid'">
             <NGrid cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
               <NGridItem v-for="item in selectedEvents" v-bind:key="item.time">
-                <NCard size="small" :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`" embedded hoverable>
+                <NCard
+                  size="small"
+                  :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`"
+                  embedded
+                  hoverable
+                >
                   <NSpace align="center" vertical :size="5">
-                    <NAvatar round lazy borderd :size="64" :src="AVATAR_URL + item.uid" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+                    <NAvatar
+                      round
+                      lazy
+                      borderd
+                      :size="64"
+                      :src="AVATAR_URL + item.uid"
+                      :img-props="{ referrerpolicy: 'no-referrer' }"
+                      style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
+                    />
                     <NSpace>
                       <NTag size="tiny" v-if="selectedType == EventType.Guard" :bordered="false"> {{ item.msg }} </NTag>
                       <NTag
                         size="tiny"
                         round
-                        :color="{ color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price), textColor: 'white', borderColor: isDarkMode() ? 'white' : '#00000000' }"
+                        :color="{
+                          color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                          textColor: 'white',
+                          borderColor: isDarkMode() ? 'white' : '#00000000',
+                        }"
                       >
                         {{ item.price }}
                       </NTag>
@@ -252,7 +287,15 @@ function objectsToCSV(arr: any[]) {
                 <td><NTime :time="item.time" /></td>
                 <td v-if="selectedType == EventType.Guard">{{ item.msg }}</td>
                 <td>
-                  <NTag :color="{ color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price), textColor: 'white', borderColor: 'white' }"> {{ item.price }} </NTag>
+                  <NTag
+                    :color="{
+                      color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                      textColor: 'white',
+                      borderColor: 'white',
+                    }"
+                  >
+                    {{ item.price }}
+                  </NTag>
                 </td>
                 <td v-if="selectedType == EventType.SC">
                   <NEllipsis style="max-width: 300px">{{ item.msg }}</NEllipsis>
@@ -265,8 +308,13 @@ function objectsToCSV(arr: any[]) {
     </template>
     <template v-else>
       <NCollapse :default-expanded-names="['1']">
-        <NCollapseItem title="这是什么?" name="1"> 可以查看曾经收到的Superchat以及上舰记录, 并导出为 CSV 之类的表格 </NCollapseItem>
-        <NCollapseItem title="可以直接用吗"> 遗憾的是并不能, 使用这个功能需要你拥有一个可以7*24小时运行 Docker 容器或者 Node.js 脚本的环境, 并且可以访问互联网 </NCollapseItem>
+        <NCollapseItem title="这是什么?" name="1">
+          可以查看曾经收到的Superchat以及上舰记录, 并导出为 CSV 之类的表格
+        </NCollapseItem>
+        <NCollapseItem title="可以直接用吗">
+          遗憾的是并不能, 使用这个功能需要你拥有一个可以7*24小时运行 Docker 容器或者 Node.js 脚本的环境,
+          并且可以访问互联网
+        </NCollapseItem>
         <NCollapseItem title="有没有什么要求?">
           关于环境的话理论上能够运行 Docker 或者 Node.js 的环境都能可以
           <br /><br />
@@ -278,13 +326,18 @@ function objectsToCSV(arr: any[]) {
             <NLi>拥有掌握以上技能的 stf 或者朋友</NLi>
           </NUl>
           <NH3>
-            <NText strong> 即使你对相关知识一窍不通也不用担心, 跟着后面的傻瓜教程中的 Koyeb 也可以完成部署. 理论上这玩意里头的免费套餐就够用了, 当然如果你想要更稳一点上个付费套餐也不影响 </NText>
+            <NText strong>
+              即使你对相关知识一窍不通也不用担心, 跟着后面的傻瓜教程中的 Koyeb 也可以完成部署.
+              理论上这玩意里头的免费套餐就够用了, 当然如果你想要更稳一点上个付费套餐也不影响
+            </NText>
           </NH3>
         </NCollapseItem>
       </NCollapse>
       <NDivider style="margin-bottom: 10px" />
       <NSpace justify="center">
-        <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary"> 部署指南 </NButton>
+        <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary">
+          部署指南
+        </NButton>
       </NSpace>
     </template>
   </NCard>

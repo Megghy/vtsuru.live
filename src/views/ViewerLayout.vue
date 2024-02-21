@@ -7,7 +7,7 @@ import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { BookCoins20Filled, CalendarClock24Filled, Wallet24Filled } from '@vicons/fluent'
+import { BookCoins20Filled, CalendarClock24Filled } from '@vicons/fluent'
 import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {

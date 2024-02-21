@@ -1,36 +1,13 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NColorPicker,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpin,
-  NTooltip,
-  NDrawer,
-  useMessage,
-  NScrollbar,
-  NDrawerContent,
-  NModal,
-} from 'naive-ui'
-import { QAInfo, QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
-import QuestionDisplayCard from '@/views/manage/QuestionDisplayCard.vue'
 import { useAccount } from '@/api/account'
+import { QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
+import { QueryPostAPI } from '@/api/query'
+import QuestionItem from '@/components/QuestionItem.vue'
+import QuestionItems from '@/components/QuestionItems.vue'
 import { QUESTION_API_URL } from '@/data/constants'
+import { useQuestionBox } from '@/store/useQuestionBox'
+import QuestionDisplayCard from '@/views/manage/QuestionDisplayCard.vue'
 import {
   ArrowCircleLeft12Filled,
   ArrowCircleRight12Filled,
@@ -39,11 +16,31 @@ import {
   TextAlignLeft16Filled,
   TextAlignRight16Filled,
 } from '@vicons/fluent'
-import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
-import QuestionItems from '@/components/QuestionItems.vue'
-import QuestionItem from '@/components/QuestionItem.vue'
-import { useQuestionBox } from '@/store/useQuestionBox'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
+import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
+import {
+  NButton,
+  NCard,
+  NCheckbox,
+  NColorPicker,
+  NDivider,
+  NDrawer,
+  NDrawerContent,
+  NFlex,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NSelect,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
+import { computed, onMounted, ref, watch } from 'vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -144,6 +141,9 @@ onMounted(() => {
   <NFlex :wrap="false" style="margin: 20px">
     <NFlex style="height: calc(100vh - 40px)" :wrap="false" vertical>
       <NCard size="small" title="内容设置">
+        <template #header-extra>
+          <NButton @click="$router.push({ name: 'manage-questionBox' })" size="tiny" secondary> 回到控制台 </NButton>
+        </template>
         <NFlex align="center">
           <NButton @click="useQB.GetRecieveQAInfo" type="primary"> 刷新 </NButton>
           <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
@@ -310,53 +310,55 @@ onMounted(() => {
                 如果选用了本地字体且使用了obs组件的话请确保运行obs的电脑上也有这个字体
               </NTooltip>
             </NFlex>
-            <NFlex>
-              字体颜色
-              <NColorPicker
-                :value="setting.fontColor ? '#' + setting.fontColor : undefined"
-                show-preview
-                :modes="['hex']"
-                :actions="['clear', 'confirm']"
-                :show-alpha="false"
-                @update:value="
-                  (c: string | null | undefined) => {
-                    setting.fontColor = c?.replace('#', '')
-                  }
-                "
-                @confirm="updateSettings"
-              />
-            </NFlex>
-            <NFlex>
-              背景颜色
-              <NColorPicker
-                :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined"
-                show-preview
-                :modes="['hex']"
-                :actions="['clear', 'confirm']"
-                :show-alpha="false"
-                @update:value="
-                  (c: string | null | undefined) => {
-                    setting.backgroundColor = c?.replace('#', '')
-                  }
-                "
-                @confirm="updateSettings"
-              />
-            </NFlex>
-            <NFlex>
-              边框颜色
-              <NColorPicker
-                :value="setting.borderColor ? '#' + setting.borderColor : undefined"
-                show-preview
-                :modes="['hex']"
-                :actions="['clear', 'confirm']"
-                :show-alpha="false"
-                @update:value="
-                  (c: string | null | undefined) => {
-                    setting.borderColor = c?.replace('#', '')
-                  }
-                "
-                @confirm="updateSettings"
-              />
+            <NFlex justify="space-around" style="width: 100%">
+              <NFlex style="min-width: 80px">
+                字体颜色
+                <NColorPicker
+                  :value="setting.fontColor ? '#' + setting.fontColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.fontColor = c?.replace('#', '')
+                    }
+                  "
+                  @confirm="updateSettings"
+                />
+              </NFlex>
+              <NFlex style="min-width: 80px">
+                背景颜色
+                <NColorPicker
+                  :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.backgroundColor = c?.replace('#', '')
+                    }
+                  "
+                  @confirm="updateSettings"
+                />
+              </NFlex>
+              <NFlex style="min-width: 80px">
+                边框颜色
+                <NColorPicker
+                  :value="setting.borderColor ? '#' + setting.borderColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="
+                    (c: string | null | undefined) => {
+                      setting.borderColor = c?.replace('#', '')
+                    }
+                  "
+                  @confirm="updateSettings"
+                />
+              </NFlex>
             </NFlex>
           </NFlex>
         </NCard>
@@ -393,7 +395,7 @@ onMounted(() => {
                 如果选用了本地字体且使用了obs组件的话请确保运行obs的电脑上也有这个字体
               </NTooltip>
             </NFlex>
-            <NFlex>
+            <NFlex style="min-width: 80px">
               字体颜色
               <NColorPicker
                 :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined"
@@ -428,7 +430,7 @@ onMounted(() => {
     preset="card"
     v-model:show="showOBSModal"
     closable
-    style="max-width: 90vw"
+    style="max-width: 90vw; width: auto"
     title="OBS组件"
     content-style="display: flex; align-items: center; justify-content: center; flex-direction: column"
   >
@@ -440,6 +442,7 @@ onMounted(() => {
     >
       <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" />
     </div>
+    <NDivider />
     <NInput readonly :value="'https://vtsuru.live/obs/question-display?token=' + accountInfo?.token" />
   </NModal>
 </template>

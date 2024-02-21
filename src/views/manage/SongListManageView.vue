@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { objectsToCSV } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { FunctionTypes, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
 import { FETCH_API, SONG_API_URL } from '@/data/constants'
@@ -31,6 +31,7 @@ import {
   NSelect,
   NSpace,
   NSpin,
+  NSwitch,
   NTabPane,
   NTable,
   NTabs,
@@ -545,6 +546,19 @@ function beforeUpload(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }
   message.error('只能选择xlsx和xls和csv')
   return false
 }
+async function setFunctionEnable(enable: boolean) {
+  let success = false
+  if (enable) {
+    success = await EnableFunction(FunctionTypes.SongList)
+  } else {
+    success = await DisableFunction(FunctionTypes.SongList)
+  }
+  if (success) {
+    message.success('已' + (enable ? '启用' : '禁用'))
+  } else {
+    message.error('无法' + (enable ? '启用' : '禁用'))
+  }
+}
 
 onMounted(async () => {
   await getSongs()
@@ -552,7 +566,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpace>
+  <NSpace align="center">
+    <NAlert type="info" style="max-width: 200px">
+      启用歌单
+      <NDivider vertical />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongList)"
+        @update:value="setFunctionEnable"
+      />
+    </NAlert>
     <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
     <NButton @click="exportData" type="primary" secondary> 导出为 CSV </NButton>
     <NButton
@@ -833,9 +855,9 @@ onMounted(async () => {
             >
               <NUploadDragger>
                 <div style="margin-bottom: 12px">
-                  <n-icon size="48" :depth="3">
+                  <NIcon size="48" :depth="3">
                     <ArchiveOutline />
-                  </n-icon>
+                  </NIcon>
                 </div>
                 <NText style="font-size: 16px"> 点击或者拖动文件到该区域来上传 </NText>
                 <NP depth="3" style="margin: 8px 0 0 0"> 仅限 Excel 文件(.xlsx和.xls) 以及 csv 文件 </NP>

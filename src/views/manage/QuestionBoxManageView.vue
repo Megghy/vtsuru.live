@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { copyToClipboard, downloadImage } from '@/Utils'
-import { SaveAccountSettings, useAccount } from '@/api/account'
-import { QAInfo } from '@/api/api-models'
+import { DisableFunction, EnableFunction, SaveAccountSettings, useAccount } from '@/api/account'
+import { FunctionTypes, QAInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/data/constants'
 import router from '@/router'
@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import {
   NAffix,
+  NAlert,
   NButton,
   NCard,
   NCheckbox,
@@ -123,6 +124,20 @@ async function saveSettings() {
 
 const parentRef = ref<HTMLElement | null>(null)
 
+async function setFunctionEnable(enable: boolean) {
+  let success = false
+  if (enable) {
+    success = await EnableFunction(FunctionTypes.QuestionBox)
+  } else {
+    success = await DisableFunction(FunctionTypes.QuestionBox)
+  }
+  if (success) {
+    message.success('已' + (enable ? '启用' : '禁用'))
+  } else {
+    message.error('无法' + (enable ? '启用' : '禁用'))
+  }
+}
+
 onMounted(() => {
   if (selectedTabItem.value == '0') {
     useQB.GetRecieveQAInfo()
@@ -137,7 +152,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace>
+  <NSpace align="center">
+    <NAlert type="info" style="max-width: 200px">
+      启用提问箱
+      <NDivider vertical />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.QuestionBox)"
+        @update:value="setFunctionEnable"
+      />
+    </NAlert>
     <NButton type="primary" @click="refresh"> 刷新 </NButton>
     <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
   </NSpace>
@@ -145,9 +168,7 @@ onMounted(() => {
   <NSpin v-if="useQB.isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0">
-      <NButton @click="$router.push({ name: 'question-display' })" type="primary">
-        打开展示页
-      </NButton>
+      <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
       <NDivider vertical />
       <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
       <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>

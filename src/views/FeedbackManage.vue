@@ -5,7 +5,20 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import FeedbackItem from '@/components/FeedbackItem.vue'
 import { FEEDBACK_API_URL } from '@/data/constants'
 import { List } from 'linqts'
-import { NButton, NCard, NCheckbox, NDivider, NEllipsis, NEmpty, NInput, NModal, NRadioButton, NRadioGroup, NSpace, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import {
+  NButton,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NInput,
+  NModal,
+  NRadioButton,
+  NRadioGroup,
+  NSpace,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 interface FeedbackModel {
@@ -28,6 +41,7 @@ const order = {
   [FeedbackStatus.Developing]: 6,
 }
 const selectedFeedback = computed(() => {
+  // eslint-disable-next-line vue/no-side-effects-in-computed-properties
   return feedbacks.value.sort((a, b) => {
     if (orderType.value == 'time') {
       return b.createAt - a.createAt
@@ -102,43 +116,77 @@ async function add() {
   </NDivider>
   <NEmpty v-if="feedbacks.length == 0" description="暂无反馈" />
   <NSpace v-else-if="orderType == 'time'">
-    <FeedbackItem v-for="item in selectedFeedback" :item="item" />
+    <FeedbackItem v-for="item in selectedFeedback" :item="item" :key="item.createAt" />
   </NSpace>
   <template v-else>
     <NDivider> 开发计划 </NDivider>
     <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing).length == 0" description="无" />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
     <NDivider> 处理中 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing).length == 0"
+      description="无"
+    />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
     <NDivider> 等待回复 </NDivider>
     <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding).length == 0" description="无" />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
     <NDivider> 计划中 </NDivider>
     <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo).length == 0" description="无" />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
     <NDivider> 已完成 </NDivider>
     <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish).length == 0" description="无" />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
     <NDivider> 搁置 </NDivider>
     <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject).length == 0" description="无" />
     <NSpace v-else>
-      <FeedbackItem v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject)" :item="item" />
+      <FeedbackItem
+        v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject)"
+        :item="item"
+        :key="item.createAt"
+      />
     </NSpace>
   </template>
   <NModal v-model:show="showAddModal" preset="card" title="添加反馈" style="width: 600px; max-width: 90vw">
     <NSpace vertical>
-      <NInput v-model:value="newFeedback.message" type="textarea" placeholder="请输入反馈内容" clearable show-count maxlength="1000" />
+      <NInput
+        v-model:value="newFeedback.message"
+        type="textarea"
+        placeholder="请输入反馈内容"
+        clearable
+        show-count
+        maxlength="1000"
+      />
       <NRadioGroup v-model:value="newFeedback.type" name="radiogroup">
         <NRadioButton :value="FeedbackType.Opinion">建议 / 意见</NRadioButton>
         <NRadioButton :value="FeedbackType.Bug">Bug</NRadioButton>

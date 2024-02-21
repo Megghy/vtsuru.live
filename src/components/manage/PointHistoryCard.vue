@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { EventDataTypes, PointFrom, ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
 import {
   DataTableColumns,
   NButton,
@@ -13,7 +14,6 @@ import {
   NTooltip,
 } from 'naive-ui'
 import { h, ref } from 'vue'
-import { EventDataTypes, PointFrom, ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
 import PointGoodsItem from './PointGoodsItem.vue'
 
 const props = defineProps<{

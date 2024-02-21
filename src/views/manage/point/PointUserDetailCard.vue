@@ -9,12 +9,9 @@ import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
 import {
-  DataTableColumns,
   NButton,
   NCard,
-  NDataTable,
   NDescriptions,
   NDescriptionsItem,
   NDivider,
@@ -22,8 +19,6 @@ import {
   NFlex,
   NInput,
   NInputNumber,
-  NList,
-  NListItem,
   NModal,
   NSpin,
   NTag,
@@ -32,7 +27,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { h, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps<{
   user: ResponsePointUserModel

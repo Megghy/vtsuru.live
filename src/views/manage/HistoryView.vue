@@ -15,7 +15,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NTime, NTooltip, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -97,8 +97,8 @@ function isSameDaySimple(time1: number, time2: number) {
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
 function getOptions() {
-  let fansIncreacement = [] as { time: Date; count: number }[]
-  let completeTimeSeries: {
+  const fansIncreacement = [] as { time: Date; count: number }[]
+  const completeTimeSeries: {
     time: Date
     count: number
     change: boolean
@@ -147,7 +147,7 @@ function getOptions() {
     completeTimeSeries.forEach((entry, index, array) => {
       if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
         if (index > 0) {
-          let dailyIncrement = entry.count - previousDayCount
+          const dailyIncrement = entry.count - previousDayCount
           fansIncreacement.push({
             time: startOfHour(array[index - 1].time),
             count: dailyIncrement,
@@ -156,7 +156,7 @@ function getOptions() {
         }
         previousDayCount = entry.count
       } else if (index === array.length - 1) {
-        let dailyIncrement = entry.count - previousDayCount
+        const dailyIncrement = entry.count - previousDayCount
         fansIncreacement.push({
           time: startOfHour(entry.time),
           count: dailyIncrement,
@@ -168,19 +168,19 @@ function getOptions() {
 
   let lastDayGuards = 0
   let lastDay = 0
-  let guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
-  let guards = [] as { time: number; count: number; timeString: string }[]
+  const guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
+  const guards = [] as { time: number; count: number; timeString: string }[]
 
   // 生成完整的天序列
   let currentGuardTime = startTime
   let lastDayGuardCount = 0
-  let completeGuardTimeSeries: {
+  const completeGuardTimeSeries: {
     time: Date
     count: number
   }[] = []
   while (currentGuardTime <= endTime) {
-    let found = guardHistory.value?.find((f) => isSameDay(currentGuardTime, f.time))
-    let count = found ? found.count : lastDayGuardCount
+    const found = guardHistory.value?.find((f) => isSameDay(currentGuardTime, f.time))
+    const count = found ? found.count : lastDayGuardCount
     lastDayGuardCount = count
 
     completeGuardTimeSeries.push({
@@ -208,8 +208,8 @@ function getOptions() {
       lastDayGuards = g.count
     }
   })
-  let upstatViewIncreace: { time: number; value: number }[] = []
-  let upstatLikeIncreace: { time: number; value: number }[] = []
+  const upstatViewIncreace: { time: number; value: number }[] = []
+  const upstatLikeIncreace: { time: number; value: number }[] = []
   if (upstatHistory.value && upstatHistory.value.length > 0) {
     let lastUpstatView = upstatHistory.value[0].stats.views
     let lastUpstatLike = upstatHistory.value[0].stats.likes
@@ -247,7 +247,7 @@ function getOptions() {
         },
       },
       formatter: (param: any) => {
-        let name = param[0].name + '<br>'
+        const name = param[0].name + '<br>'
         let str = ''
         for (var i = 0; i < param.length; i++) {
           const status =

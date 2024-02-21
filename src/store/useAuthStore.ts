@@ -1,11 +1,10 @@
-import { defineStore } from 'pinia'
-import { useMessage } from 'naive-ui'
-import { computed, ref } from 'vue'
-import { AddressInfo, BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
+import { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useStorage } from '@vueuse/core'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/data/constants'
+import { useStorage } from '@vueuse/core'
 import { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 
 export const useAuthStore = defineStore('BiliAuth', () => {
   const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)

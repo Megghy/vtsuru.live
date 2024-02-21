@@ -27,14 +27,24 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
         </NText>
         <template #footer>
           <NSpace vertical align="center">
-            <span style="color: gray"> MADE WITH ❤️ BY <NButton type="primary" tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style=""> Megghy </NButton> </span>
+            <span style="color: gray">
+              MADE WITH ❤️ BY
+              <NButton type="primary" tag="a" href="https://space.bilibili.com/10021741" target="_blank" text style="">
+                Megghy
+              </NButton>
+            </span>
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
             <NTimelineItem type="info" title="功能更新" content="棉花糖添加展示页面" time="2024-2-20" />
             <NTimelineItem type="info" title="功能更新" content="歌单新增从文件导入" time="2024-2-10" />
             <NTimelineItem type="info" title="功能更新" content="排队的OBS组件添加设置项" time="2024-1-27" />
-            <NTimelineItem type="warning" title="Bug修复" content="修复点歌会直接跳到下一首的问题 (怎么没人跟我说" time="2024-1-22" />
+            <NTimelineItem
+              type="warning"
+              title="Bug修复"
+              content="修复点歌会直接跳到下一首的问题 (怎么没人跟我说"
+              time="2024-1-22"
+            />
             <NTimelineItem type="info" title="功能更新" content="读弹幕支持自定义API" time="2023-12-25" />
             <NTimelineItem type="success" title="功能添加" content="弹幕点歌 (点播)" time="2023-12-24" />
             <NTimelineItem type="success" title="功能添加" content="读弹幕" time="2023-12-17" />
@@ -47,7 +57,13 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
             <NTimelineItem type="info" title="功能更新" content="日程表添加 '粉粉' 模板" time="2023-10-27" />
             <NTimelineItem type="info" title="功能更新" content="提问箱新增公开选项" time="2023-10-26" />
             <NTimelineItem type="success" title="功能添加" content="提问箱分享卡片" time="2023-10-25" />
-            <NTimelineItem type="success" title="功能添加" content="舰长及SC记录" time="2023-10-24" line-type="dashed" />
+            <NTimelineItem
+              type="success"
+              title="功能添加"
+              content="舰长及SC记录"
+              time="2023-10-24"
+              line-type="dashed"
+            />
             <NTimelineItem type="info" content="开始运行" time="2023-10-23" />
           </NTimeline>
         </template>

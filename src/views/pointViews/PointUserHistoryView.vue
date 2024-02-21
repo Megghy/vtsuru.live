@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { NDataTable, NLayoutContent, NSpace, useMessage } from 'naive-ui'
-import { onMounted, ref } from 'vue'
-import { useAuthStore } from '@/store/useAuthStore'
-import { POINT_API_URL } from '@/data/constants'
 import { ResponsePointHisrotyModel } from '@/api/api-models'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
+import { POINT_API_URL } from '@/data/constants'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useMessage } from 'naive-ui'
+import { onMounted, ref } from 'vue'
 
 const message = useMessage()
 const useAuth = useAuthStore()

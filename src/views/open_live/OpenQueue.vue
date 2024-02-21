@@ -14,9 +14,16 @@ import {
   Setting_Queue,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import DanmakuClient, { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
+import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
 import { QUEUE_API_URL } from '@/data/constants'
-import { Checkmark12Regular, ClipboardTextLtr24Filled, Delete24Filled, Dismiss16Filled, PeopleQueue24Filled, PresenceBlocked16Regular } from '@vicons/fluent'
+import {
+  Checkmark12Regular,
+  ClipboardTextLtr24Filled,
+  Delete24Filled,
+  Dismiss16Filled,
+  PeopleQueue24Filled,
+  PresenceBlocked16Regular,
+} from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 import { isSameDay } from 'date-fns'
@@ -140,7 +147,10 @@ const queue = computed(() => {
   let list = new List(accountInfo ? originQueue.value : localQueues.value)
     .Where(
       (q) =>
-        !filterName.value || (filterNameContains.value ? q?.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) == true : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
+        !filterName.value ||
+        (filterNameContains.value
+          ? q?.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) == true
+          : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
     )
     .Where((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
     .OrderByDescending((q) => q.from == QueueFrom.Manual)
@@ -342,7 +352,9 @@ function checkMessage(eventData: EventModel) {
     if (!settings.value.allowGift && !settings.value.allowIncreasePaymentBySendGift) {
       return false // { success: false, message: '不允许通过礼物排队' }
     }
-    const nameNotMatch = (settings.value.giftNames?.length ?? 0) > 0 && settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) != true
+    const nameNotMatch =
+      (settings.value.giftNames?.length ?? 0) > 0 &&
+      settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) != true
     const priceNotMatch = settings.value.minGiftPrice && eventData.price < settings.value.minGiftPrice
     if (settings.value.giftFilterType === QueueGiftFilterType.Or && (!nameNotMatch || !priceNotMatch)) {
       return true // { success: true, message: '' }
@@ -371,7 +383,9 @@ async function onUpdateFunctionEnable() {
   if (accountInfo.value) {
     const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
     if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.Queue)) {
-      accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter((f) => f != FunctionTypes.Queue)
+      accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
+        (f) => f != FunctionTypes.Queue,
+      )
     } else {
       accountInfo.value.settings.enableFunctions.push(FunctionTypes.Queue)
     }
@@ -381,16 +395,22 @@ async function onUpdateFunctionEnable() {
     await SaveEnableFunctions(accountInfo.value?.settings.enableFunctions)
       .then((data) => {
         if (data.code == 200) {
-          message.success(`已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}队列功能`)
+          message.success(
+            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}队列功能`,
+          )
         } else {
           if (accountInfo.value) {
             accountInfo.value.settings.enableFunctions = oldValue
           }
-          message.error(`队列功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`)
+          message.error(
+            `队列功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`,
+          )
         }
       })
       .catch((err) => {
-        message.error(`队列功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`)
+        message.error(
+          `队列功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`,
+        )
       })
   }
 }
@@ -544,7 +564,15 @@ const columns = [
           break
         }
       }
-      return h(NTag, { type: statusType, size: 'small', style: data.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : '' }, () => STATUS_MAP[data.status])
+      return h(
+        NTag,
+        {
+          type: statusType,
+          size: 'small',
+          style: data.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : '',
+        },
+        () => STATUS_MAP[data.status],
+      )
     },
   },
   {
@@ -646,7 +674,9 @@ async function updateActive() {
           if (queueData.status != item.status) queueData.status = item.status
           if (queueData.giftPrice != item.giftPrice) {
             queueData.giftPrice = item.giftPrice
-            message.info(`${queueData.user?.name} 通过发送礼物再次付费: ¥ ${(item?.giftPrice ?? 0) - (queueData?.giftPrice ?? 0)}, 当前总计付费: ¥ ${item.giftPrice}`)
+            message.info(
+              `${queueData.user?.name} 通过发送礼物再次付费: ¥ ${(item?.giftPrice ?? 0) - (queueData?.giftPrice ?? 0)}, 当前总计付费: ¥ ${item.giftPrice}`,
+            )
           }
         } else {
           originQueue.value.unshift(item)
@@ -721,16 +751,25 @@ onUnmounted(() => {
 <template>
   <NAlert type="info" v-if="accountInfo">
     启用队列功能
-    <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)" @update:value="onUpdateFunctionEnable" />
+    <NSwitch
+      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
+      @update:value="onUpdateFunctionEnable"
+    />
 
     <br />
     <NText depth="3">
       如果没有部署
-      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VtsuruEventFetcher </NButton>
+      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+        VtsuruEventFetcher
+      </NButton>
       则其需要保持此页面开启才能使用, 也不要同时开多个页面, 会导致重复 !(部署了则不影响)
     </NText>
   </NAlert>
-  <NAlert type="warning" v-else title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑">
+  <NAlert
+    type="warning"
+    v-else
+    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑"
+  >
     <NButton tag="a" href="/manage" target="_blank" type="primary"> 前往登录或注册 </NButton>
   </NAlert>
   <br />
@@ -746,7 +785,11 @@ onUnmounted(() => {
   </NCard>
   <br />
   <NCard>
-    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)" animated display-directive="show:lazy">
+    <NTabs
+      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
+      animated
+      display-directive="show:lazy"
+    >
       <NTabPane name="list" tab="列表">
         <NCard size="small">
           <NSpace align="center">
@@ -760,7 +803,11 @@ onUnmounted(() => {
               <template #icon>
                 <NIcon :component="Checkmark12Regular" />
               </template>
-              今日已处理 | {{ queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }} 位
+              今日已处理 |
+              {{
+                queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length
+              }}
+              位
             </NTag>
             <NInputGroup>
               <NInput placeholder="手动添加" v-model:value="newQueueName" />
@@ -772,19 +819,31 @@ onUnmounted(() => {
               </template>
               确定全部取消吗?
             </NPopconfirm>
-            <NRadioGroup v-model:value="settings.sortType" :disabled="!configCanEdit" @update:value="updateSettings" type="button">
+            <NRadioGroup
+              v-model:value="settings.sortType"
+              :disabled="!configCanEdit"
+              @update:value="updateSettings"
+              type="button"
+            >
               <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
             </NRadioGroup>
-            <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings"> 倒序 </NCheckbox>
+            <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
+              倒序
+            </NCheckbox>
             <NCheckbox v-else v-model:checked="isReverse"> 倒序 </NCheckbox>
           </NSpace>
         </NCard>
         <NDivider> 共 {{ queue.length }} 人 </NDivider>
         <NList v-if="queue.length > 0" :show-divider="false" hoverable>
           <NListItem v-for="(queueData, index) in queue" :key="queueData.id" style="padding: 5px">
-            <NCard embedded size="small" content-style="padding: 5px;" :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
+            <NCard
+              embedded
+              size="small"
+              content-style="padding: 5px;"
+              :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`"
+            >
               <NSpace justify="space-between" align="center" style="height: 100%; margin: 0 5px 0 5px">
                 <NSpace align="center">
                   <div
@@ -803,7 +862,12 @@ onUnmounted(() => {
                   <template v-if="queueData.from == QueueFrom.Manual">
                     <NTag size="small" :bordered="false"> 手动添加 </NTag>
                   </template>
-                  <NSpace v-if="(queueData.from == QueueFrom.Danmaku || queueData.from == QueueFrom.Gift) && queueData.user?.fans_medal_wearing_status">
+                  <NSpace
+                    v-if="
+                      (queueData.from == QueueFrom.Danmaku || queueData.from == QueueFrom.Gift) &&
+                      queueData.user?.fans_medal_wearing_status
+                    "
+                  >
                     <NTag size="tiny" round>
                       <NTag size="tiny" round :bordered="false">
                         <NText depth="3">
@@ -815,10 +879,17 @@ onUnmounted(() => {
                       </span>
                     </NTag>
                   </NSpace>
-                  <NTag v-if="(queueData.user?.guard_level ?? 0) > 0" size="small" :bordered="false" :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }">
+                  <NTag
+                    v-if="(queueData.user?.guard_level ?? 0) > 0"
+                    size="small"
+                    :bordered="false"
+                    :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }"
+                  >
                     {{ queueData.user?.guard_level == 1 ? '总督' : queueData.user?.guard_level == 2 ? '提督' : '舰长' }}
                   </NTag>
-                  <NTag v-if="(queueData.giftPrice ?? 0) > 0" size="small" :bordered="false" type="error"> 付费 | {{ queueData.giftPrice }} </NTag>
+                  <NTag v-if="(queueData.giftPrice ?? 0) > 0" size="small" :bordered="false" type="error">
+                    付费 | {{ queueData.giftPrice }}
+                  </NTag>
                   <NTooltip>
                     <template #trigger>
                       <NText style="font-size: small">
@@ -835,8 +906,15 @@ onUnmounted(() => {
                         circle
                         type="primary"
                         style="height: 30px; width: 30px"
-                        :disabled="queue.findIndex((s) => s.id != queueData.id && s.status == QueueStatus.Progressing) > -1"
-                        @click="updateStatus(queueData, queueData.status == QueueStatus.Progressing ? QueueStatus.Waiting : QueueStatus.Progressing)"
+                        :disabled="
+                          queue.findIndex((s) => s.id != queueData.id && s.status == QueueStatus.Progressing) > -1
+                        "
+                        @click="
+                          updateStatus(
+                            queueData,
+                            queueData.status == QueueStatus.Progressing ? QueueStatus.Waiting : QueueStatus.Progressing,
+                          )
+                        "
                         :style="`animation: ${queueData.status == QueueStatus.Waiting ? '' : 'loading 5s linear infinite'}`"
                         :secondary="queueData.status == QueueStatus.Progressing"
                         :loading="isLoading"
@@ -856,7 +934,13 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLoading" @click="updateStatus(queueData, QueueStatus.Finish)">
+                      <NButton
+                        circle
+                        type="success"
+                        style="height: 30px; width: 30px"
+                        :loading="isLoading"
+                        @click="updateStatus(queueData, QueueStatus.Finish)"
+                      >
                         <template #icon>
                           <NIcon :component="Checkmark12Regular" />
                         </template>
@@ -881,7 +965,13 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton circle type="error" style="height: 30px; width: 30px" :loading="isLoading" @click="updateStatus(queueData, QueueStatus.Cancel)">
+                      <NButton
+                        circle
+                        type="error"
+                        style="height: 30px; width: 30px"
+                        :loading="isLoading"
+                        @click="updateStatus(queueData, QueueStatus.Cancel)"
+                      >
                         <template #icon>
                           <NIcon :component="Dismiss16Filled" />
                         </template>
@@ -937,7 +1027,12 @@ onUnmounted(() => {
                 </template>
                 <NInput v-else v-model:value="defaultKeyword" />
               </NInputGroup>
-              <NRadioGroup v-model:value="settings.matchType" :disabled="!configCanEdit" @update:value="updateSettings" type="button">
+              <NRadioGroup
+                v-model:value="settings.matchType"
+                :disabled="!configCanEdit"
+                @update:value="updateSettings"
+                type="button"
+              >
                 <NRadioButton :value="KeywordMatchType.Full"> 完全一致 </NRadioButton>
                 <NRadioButton :value="KeywordMatchType.Contains"> 包含 </NRadioButton>
                 <NRadioButton :value="KeywordMatchType.Regex"> 正则 </NRadioButton>
@@ -949,21 +1044,60 @@ onUnmounted(() => {
               <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
             </NInputGroup>
             <NSpace align="center">
-              <NCheckbox v-model:checked="settings.enableOnStreaming" @update:checked="updateSettings" :disabled="!configCanEdit"> 仅在直播时才允许加入 </NCheckbox>
-              <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许所有用户加入 </NCheckbox>
+              <NCheckbox
+                v-model:checked="settings.enableOnStreaming"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
+                仅在直播时才允许加入
+              </NCheckbox>
+              <NCheckbox
+                v-model:checked="settings.allowAllDanmaku"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
+                允许所有用户加入
+              </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
                 <NInputGroup style="width: 270px">
                   <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
                   <NInputNumber v-model:value="settings.fanMedalMinLevel" :disabled="!configCanEdit" min="0" />
                   <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
                 </NInputGroup>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needJianzhang" @update:checked="updateSettings" :disabled="!configCanEdit"> 只允许舰长 </NCheckbox>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needTidu" @update:checked="updateSettings" :disabled="!configCanEdit"> 只允许提督 </NCheckbox>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needZongdu" @update:checked="updateSettings" :disabled="!configCanEdit"> 只允许总督 </NCheckbox>
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needJianzhang"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  只允许舰长
+                </NCheckbox>
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needTidu"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  只允许提督
+                </NCheckbox>
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needZongdu"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  只允许总督
+                </NCheckbox>
               </template>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox v-model:checked="settings.allowGift" @update:checked="updateSettings" :disabled="!configCanEdit"> 允许通过发送礼物加入队列 </NCheckbox>
+              <NCheckbox
+                v-model:checked="settings.allowGift"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
+                允许通过发送礼物加入队列
+              </NCheckbox>
               <template v-if="settings.allowGift">
                 <NInputGroup v-if="settings.allowGift" style="width: 250px">
                   <NInputGroupLabel> 最低价格 </NInputGroupLabel>
@@ -986,21 +1120,40 @@ onUnmounted(() => {
                   />
                 </NSpace>
                 <span>
-                  <NRadioGroup v-model:value="settings.giftFilterType" :disabled="!configCanEdit" @update:value="updateSettings">
+                  <NRadioGroup
+                    v-model:value="settings.giftFilterType"
+                    :disabled="!configCanEdit"
+                    @update:value="updateSettings"
+                  >
                     <NRadioButton :value="QueueGiftFilterType.And"> 需同时满足礼物名和价格 </NRadioButton>
                     <NRadioButton :value="QueueGiftFilterType.Or"> 礼物名/价格 二选一 </NRadioButton>
                   </NRadioGroup>
                 </span>
               </template>
-              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings" :disabled="!configCanEdit">
+              <NCheckbox
+                v-model:checked="settings.allowIncreasePaymentBySendGift"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
                 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
               </NCheckbox>
-              <NCheckbox v-if="settings.allowIncreasePaymentBySendGift" v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="updateSettings" :disabled="!configCanEdit">
+              <NCheckbox
+                v-if="settings.allowIncreasePaymentBySendGift"
+                v-model:checked="settings.allowIncreaseByAnyPayment"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
                 允许发送任意礼物来叠加付费量
               </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
-            <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings" :disabled="!configCanEdit"> 启用排队冷却 </NCheckbox>
+            <NCheckbox
+              v-model:checked="settings.enableCooldown"
+              @update:checked="updateSettings"
+              :disabled="!configCanEdit"
+            >
+              启用排队冷却
+            </NCheckbox>
             <NSpace v-if="settings.enableCooldown">
               <NInputGroup style="width: 250px">
                 <NInputGroupLabel> 普通弹幕 </NInputGroupLabel>
@@ -1024,9 +1177,27 @@ onUnmounted(() => {
               </NInputGroup>
             </NSpace>
             <NDivider> OBS </NDivider>
-            <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示底部的需求信息 </NCheckbox>
-            <NCheckbox v-model:checked="settings.showPayment" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示付费信息 </NCheckbox>
-            <NCheckbox v-model:checked="settings.showFanMadelInfo" :disabled="!configCanEdit" @update:checked="updateSettings"> 显示用户粉丝牌 </NCheckbox>
+            <NCheckbox
+              v-model:checked="settings.showRequireInfo"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
+              显示底部的需求信息
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="settings.showPayment"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
+              显示付费信息
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="settings.showFanMadelInfo"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
+              显示用户粉丝牌
+            </NCheckbox>
             <NDivider> 其他 </NDivider>
             <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭加入队列失败时的提示消息 </NCheckbox>
           </NSpace>
