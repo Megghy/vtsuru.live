@@ -1018,6 +1018,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/obs-studio@npm:^2.17.2":
+  version: 2.17.2
+  resolution: "@types/obs-studio@npm:2.17.2"
+  checksum: 1c7a288532cbee075900882e845ef8b8038d096d77adc6daae13749d9e7f1d8699a87248406e834d70d264868f605c4dc09535fa2738334905d7aed2bfc4083e
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.5.0":
   version: 7.5.6
   resolution: "@types/semver@npm:7.5.6"
@@ -5327,6 +5334,7 @@ __metadata:
     "@eslint/eslintrc": "npm:^3.0.1"
     "@types/eslint": "npm:^8.56.2"
     "@types/node": "npm:^20.11.19"
+    "@types/obs-studio": "npm:^2.17.2"
     "@types/uuid": "npm:^9.0.8"
     "@typescript-eslint/eslint-plugin": "npm:^7.0.1"
     "@typescript-eslint/parser": "npm:^7.0.1"

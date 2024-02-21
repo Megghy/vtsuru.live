@@ -97,6 +97,7 @@ const allowGuardTypes = computed(() => {
   return types
 })
 async function update() {
+  if (!visiable.value || !active.value) return
   const r = await get()
   if (r) {
     queue.value = r.queue.sort((a, b) => {
@@ -106,10 +107,21 @@ async function update() {
   }
 }
 
+const visiable = ref(true)
+const active = ref(true)
 let timer: any
 onMounted(() => {
   update()
   timer = setInterval(update, 2000)
+
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+    visiable.value = visibility
+  }
+  //@ts-expect-error 这里获取不了
+  window.obsstudio.onActiveChange = function (a: boolean) {
+    active.value = a
+  }
 })
 onUnmounted(() => {
   clearInterval(timer)
