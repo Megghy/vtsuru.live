@@ -5,6 +5,7 @@ import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ACCOUNT_API_URL } from '@/data/constants'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import {
   BookCoins20Filled,
@@ -49,7 +50,6 @@ import { computed, h, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import APlayer from 'vue3-aplayer'
 import DanmakuLayout from './manage/DanmakuLayout.vue'
-import { useAuthStore } from '@/store/useAuthStore'
 
 const accountInfo = useAccount()
 const message = useMessage()

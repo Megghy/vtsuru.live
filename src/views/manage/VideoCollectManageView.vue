@@ -4,7 +4,24 @@ import { VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
-import { FormRules, NButton, NDatePicker, NDivider, NEmpty, NForm, NFormItem, NInput, NInputNumber, NList, NListItem, NModal, NSpace, NSpin, NText, useMessage } from 'naive-ui'
+import {
+  FormRules,
+  NButton,
+  NDatePicker,
+  NDivider,
+  NEmpty,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NSpace,
+  NSpin,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { ref } from 'vue'
 
 const accountInfo = useAccount()
@@ -128,13 +145,28 @@ function createTable() {
         <NInput v-model:value="createVideoModel.name" placeholder="征集表的标题" maxlength="30" show-count />
       </NFormItem>
       <NFormItem label="描述" path="description">
-        <NInput v-model:value="createVideoModel.description" placeholder="可以是备注之类的" maxlength="300" show-count />
+        <NInput
+          v-model:value="createVideoModel.description"
+          placeholder="可以是备注之类的"
+          maxlength="300"
+          show-count
+        />
       </NFormItem>
       <NFormItem label="视频数量" path="maxVideoCount">
-        <NInputNumber v-model:value="createVideoModel.maxVideoCount" placeholder="最大数量" type="number" style="max-width: 150px" />
+        <NInputNumber
+          v-model:value="createVideoModel.maxVideoCount"
+          placeholder="最大数量"
+          type="number"
+          style="max-width: 150px"
+        />
       </NFormItem>
       <NFormItem label="结束时间" path="endAt">
-        <NDatePicker v-model:value="createVideoModel.endAt" type="datetime" placeholder="结束征集的时间" :isDateDisabled="dateDisabled" />
+        <NDatePicker
+          v-model:value="createVideoModel.endAt"
+          type="datetime"
+          placeholder="结束征集的时间"
+          :isDateDisabled="dateDisabled"
+        />
         <NDivider vertical />
         <NText depth="3"> 最低为一小时 </NText>
       </NFormItem>

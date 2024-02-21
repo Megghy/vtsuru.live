@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { QueueFrom, QueueSortType, ResponseQueueModel, Setting_Queue, Setting_SongRequest, SongRequestFrom, SongRequestInfo, QueueStatus } from '@/api/api-models'
+import {
+  QueueFrom,
+  QueueSortType,
+  ResponseQueueModel,
+  Setting_Queue,
+  Setting_SongRequest,
+  SongRequestFrom,
+  SongRequestInfo,
+  QueueStatus,
+} from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { AVATAR_URL, QUEUE_API_URL, SONG_REQUEST_API_URL } from '@/data/constants'
 import { useElementSize } from '@vueuse/core'
@@ -35,7 +44,9 @@ const progressing = computed(() => {
   return queue.value.find((s) => s.status == QueueStatus.Progressing)
 })
 const activeItems = computed(() => {
-  let list = new List(queue.value).Where((q) => q?.status == QueueStatus.Waiting).OrderByDescending((q) => q.from == QueueFrom.Manual)
+  let list = new List(queue.value)
+    .Where((q) => q?.status == QueueStatus.Waiting)
+    .OrderByDescending((q) => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
       list = list.ThenBy((q) => q.createAt)
@@ -57,9 +68,12 @@ const activeItems = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(QUEUE_API_URL + 'get-active-and-settings', {
-      id: currentId.value,
-    })
+    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(
+      QUEUE_API_URL + 'get-active-and-settings',
+      {
+        id: currentId.value,
+      },
+    )
     if (data.code == 200) {
       return data.data
     }
@@ -108,7 +122,12 @@ onUnmounted(() => {
     <NDivider class="queue-divider">
       <p class="queue-header-count">已有 {{ activeItems.length ?? 0 }} 人</p>
     </NDivider>
-    <div class="queue-singing-container" :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1" :from="progressing?.from as number" :status="progressing?.status as number">
+    <div
+      class="queue-singing-container"
+      :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1"
+      :from="progressing?.from as number"
+      :status="progressing?.status as number"
+    >
       <div class="queue-singing-prefix"></div>
       <template v-if="progressing">
         <img class="queue-singing-avatar" :src="AVATAR_URL + progressing?.user?.uid" referrerpolicy="no-referrer" />
@@ -119,7 +138,14 @@ onUnmounted(() => {
     </div>
     <div class="queue-content" ref="listContainerRef">
       <template v-if="activeItems.length > 0">
-        <Vue3Marquee class="queue-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
+        <Vue3Marquee
+          class="queue-list"
+          :key="key"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
           <span
             class="queue-list-item"
             :from="item.from as number"
@@ -132,13 +158,21 @@ onUnmounted(() => {
             <div class="queue-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
-            <div v-if="settings.showFanMadelInfo" class="queue-list-item-level" :has-level="(item.user?.fans_medal_level ?? 0) > 0">
+            <div
+              v-if="settings.showFanMadelInfo"
+              class="queue-list-item-level"
+              :has-level="(item.user?.fans_medal_level ?? 0) > 0"
+            >
               {{ `${item.user?.fans_medal_name} ${item.user?.fans_medal_level}` }}
             </div>
             <div class="queue-list-item-user-name">
               {{ item.user?.name }}
             </div>
-            <p v-if="settings.showPayment" class="queue-list-item-payment">{{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice }}</p>
+            <p v-if="settings.showPayment" class="queue-list-item-payment">
+              {{
+                item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice
+              }}
+            </p>
           </span>
         </Vue3Marquee>
       </template>
@@ -147,7 +181,13 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="queue-footer" ref="footerRef" v-if="settings.showRequireInfo">
-      <Vue3Marquee :key="key" ref="footerListRef" class="queue-footer-marquee" :pause="footerSize.width < footerListSize.width" :duration="20">
+      <Vue3Marquee
+        :key="key"
+        ref="footerListRef"
+        class="queue-footer-marquee"
+        :pause="footerSize.width < footerListSize.width"
+        :duration="20"
+      >
         <span class="queue-tag" type="prefix">
           <div class="queue-tag-key">关键词</div>
           <div class="queue-tag-value">
@@ -181,7 +221,13 @@ onUnmounted(() => {
         <span class="queue-tag" type="fan-madel">
           <div class="queue-tag-key">粉丝牌</div>
           <div class="queue-tag-value">
-            {{ settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku ? (settings.fanMedalMinLevel > 0 ? '> ' + settings.fanMedalMinLevel : '佩戴') : '无需' }}
+            {{
+              settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
+                ? settings.fanMedalMinLevel > 0
+                  ? '> ' + settings.fanMedalMinLevel
+                  : '佩戴'
+                : '无需'
+            }}
           </div>
         </span></Vue3Marquee
       >

@@ -4,7 +4,26 @@ import { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import GraphemeSplitter from 'grapheme-splitter'
-import { NAlert, NAvatar, NButton, NCard, NCheckbox, NDivider, NEmpty, NImage, NInput, NList, NListItem, NSpace, NText, NTime, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NAvatar,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NImage,
+  NInput,
+  NList,
+  NListItem,
+  NSpace,
+  NText,
+  NTime,
+  NTooltip,
+  NUpload,
+  UploadFileInfo,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -121,7 +140,15 @@ onUnmounted(() => {
     <NCard embedded>
       <NSpace vertical>
         <NSpace align="center" justify="center">
-          <NInput :disabled="isSelf" show-count maxlength="1000" type="textarea" :count-graphemes="countGraphemes" v-model:value="questionMessage" style="width: 300px" />
+          <NInput
+            :disabled="isSelf"
+            show-count
+            maxlength="1000"
+            type="textarea"
+            :count-graphemes="countGraphemes"
+            v-model:value="questionMessage"
+            style="width: 300px"
+          />
           <NUpload
             :max="1"
             accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
@@ -143,10 +170,25 @@ onUnmounted(() => {
         </NSpace>
         <NDivider style="margin: 10px 0 10px 0" />
         <NSpace justify="center">
-          <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion"> 发送 </NButton>
-          <NButton v-if="accountInfo" :disabled="isSelf" type="info" @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"> 我发送的 </NButton>
+          <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion">
+            发送
+          </NButton>
+          <NButton
+            v-if="accountInfo"
+            :disabled="isSelf"
+            type="info"
+            @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
+          >
+            我发送的
+          </NButton>
         </NSpace>
-        <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+        <VueTurnstile
+          ref="turnstile"
+          :site-key="TURNSTILE_KEY"
+          v-model="token"
+          theme="auto"
+          style="text-align: center"
+        />
         <NAlert v-if="isSelf" type="warning"> 不能给自己提问 </NAlert>
       </NSpace>
     </NCard>

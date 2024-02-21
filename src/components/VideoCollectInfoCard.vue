@@ -2,7 +2,19 @@
 import { VideoCollectTable } from '@/api/api-models'
 import router from '@/router'
 import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
-import { CountdownProps, NCard, NCountdown, NDivider, NEllipsis, NIcon, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import {
+  CountdownProps,
+  NCard,
+  NCountdown,
+  NDivider,
+  NEllipsis,
+  NIcon,
+  NSpace,
+  NTag,
+  NText,
+  NTime,
+  NTooltip,
+} from 'naive-ui'
 
 const props = defineProps<{
   item: VideoCollectTable
@@ -34,7 +46,7 @@ function onClick() {
     <NText depth="3" style="font-size: 13px">
       <NTime :time="item.createAt" />
     </NText>
-    <br/>
+    <br />
     <NText depth="3" style="font-size: 13px">
       结束:
       <NTime :time="item.endAt" />
@@ -62,7 +74,9 @@ function onClick() {
             <NIcon :component="Clock24Regular" />
             <NTooltip>
               <template #trigger>
-                <NText depth="3"> 剩余 <NCountdown :duration="item.endAt - Date.now()" :render="renderCountdown" /> </NText>
+                <NText depth="3">
+                  剩余 <NCountdown :duration="item.endAt - Date.now()" :render="renderCountdown" />
+                </NText>
               </template>
               结束于 <NTime :time="item.endAt" />
             </NTooltip>

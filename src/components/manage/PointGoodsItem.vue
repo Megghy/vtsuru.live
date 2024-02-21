@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { GoodsTypes, ResponsePointGoodModel } from '@/api/api-models'
-import { NButton, NCard, NDropdown, NEllipsis, NEmpty, NFlex, NIcon, NImage, NPopselect, NTag, NText } from 'naive-ui'
 import { FILE_BASE_URL, IMGUR_URL } from '@/data/constants'
-import { computed, ref } from 'vue'
-import { MoreHorizontal16Filled, MoreVertical16Filled } from '@vicons/fluent'
+import { NCard, NEllipsis, NEmpty, NFlex, NImage, NTag, NText } from 'naive-ui'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined

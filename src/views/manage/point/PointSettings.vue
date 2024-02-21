@@ -188,13 +188,20 @@ async function updateGift() {
           </template>
           <NCard>
             <NFlex vertical>
-              <NButton @click="showAddGiftModal = true" type="primary" :disabled="!canEdit" style="max-width: 200px"> 添加礼物 </NButton>
+              <NButton @click="showAddGiftModal = true" type="primary" :disabled="!canEdit" style="max-width: 200px">
+                添加礼物
+              </NButton>
               <NList bordered>
                 <NListItem v-for="item in Object.entries(setting.giftPercentMap)" :key="item[0]">
                   <NFlex align="center">
                     <NTag :bordered="false" size="small" type="success"> {{ item[0] }} </NTag>
                     <NInputGroup style="width: 200px" :disabled="!canEdit">
-                      <NInputNumber :value="setting.giftPercentMap[item[0]]" @update:value="(v) => (setting.giftPercentMap[item[0]] = v ?? 0)" :disabled="!canEdit" min="0" />
+                      <NInputNumber
+                        :value="setting.giftPercentMap[item[0]]"
+                        @update:value="(v) => (setting.giftPercentMap[item[0]] = v ?? 0)"
+                        :disabled="!canEdit"
+                        min="0"
+                      />
                       <NButton @click="updateSettings" type="info" :disabled="!canEdit">确定</NButton>
                     </NInputGroup>
                     <NPopconfirm @positive-click="deleteGift(item[0])">

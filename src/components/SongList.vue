@@ -4,7 +4,13 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
-import { Delete24Filled, Info24Filled, NotepadEdit20Filled, Play24Filled, SquareArrowForward24Filled } from '@vicons/fluent'
+import {
+  Delete24Filled,
+  Info24Filled,
+  NotepadEdit20Filled,
+  Play24Filled,
+  SquareArrowForward24Filled,
+} from '@vicons/fluent'
 import { refDebounced, useLocalStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
@@ -154,7 +160,11 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   },
   filterOptions: authorsOptions.value,
   render(data) {
-    return h(NSpace, { size: 5 }, () => data.author.map((a) => h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a)))
+    return h(NSpace, { size: 5 }, () =>
+      data.author.map((a) =>
+        h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a),
+      ),
+    )
   },
 })
 const onAuthorClick = (author: string) => {
@@ -179,7 +189,10 @@ function createColumns(): DataTableColumns<SongsInfo> {
       width: 300,
       sorter: 'default',
       render(data) {
-        return h(NSpace, { size: 5 }, () => [h(NText, { style: { color: data.options?.scMinPrice ? '#c36767' : '' } }, () => data.name), h(NText, { depth: '3' }, () => data.translateName)])
+        return h(NSpace, { size: 5 }, () => [
+          h(NText, { style: { color: data.options?.scMinPrice ? '#c36767' : '' } }, () => data.name),
+          h(NText, { depth: '3' }, () => data.translateName),
+        ])
       },
       title: '曲名',
     },
@@ -195,7 +208,11 @@ function createColumns(): DataTableColumns<SongsInfo> {
       },
       render(data) {
         return (data.language?.length ?? 0) > 0
-          ? h(NSpace, { size: 5 }, () => data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label)))
+          ? h(NSpace, { size: 5 }, () =>
+              data.language?.map((a) =>
+                h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label),
+              ),
+            )
           : null
       },
     },
@@ -214,13 +231,40 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         return data.options
           ? h(NSpace, {}, () => [
-              data.options?.needJianzhang ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' }, () => '舰长') : null,
-              data.options?.needTidu ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(2), borderColor: 'white' }, size: 'small' }, () => '提督') : null,
-              data.options?.needZongdu ? h(NTag, { color: { textColor: 'white', color: GetGuardColor(1), borderColor: 'white' }, size: 'small' }, () => '总督') : null,
-              data.options?.scMinPrice
-                ? h(NTag, { color: { textColor: 'white', color: GetSCColor(data.options.scMinPrice), borderColor: 'white' }, size: 'small' }, () => 'SC | ' + data.options?.scMinPrice)
+              data.options?.needJianzhang
+                ? h(
+                    NTag,
+                    { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' },
+                    () => '舰长',
+                  )
                 : null,
-              data.options?.fanMedalMinLevel ? h(NTag, { type: 'info', size: 'small' }, () => '粉丝牌 | ' + data.options?.fanMedalMinLevel) : null,
+              data.options?.needTidu
+                ? h(
+                    NTag,
+                    { color: { textColor: 'white', color: GetGuardColor(2), borderColor: 'white' }, size: 'small' },
+                    () => '提督',
+                  )
+                : null,
+              data.options?.needZongdu
+                ? h(
+                    NTag,
+                    { color: { textColor: 'white', color: GetGuardColor(1), borderColor: 'white' }, size: 'small' },
+                    () => '总督',
+                  )
+                : null,
+              data.options?.scMinPrice
+                ? h(
+                    NTag,
+                    {
+                      color: { textColor: 'white', color: GetSCColor(data.options.scMinPrice), borderColor: 'white' },
+                      size: 'small',
+                    },
+                    () => 'SC | ' + data.options?.scMinPrice,
+                  )
+                : null,
+              data.options?.fanMedalMinLevel
+                ? h(NTag, { type: 'info', size: 'small' }, () => '粉丝牌 | ' + data.options?.fanMedalMinLevel)
+                : null,
             ])
           : null
       },
@@ -234,7 +278,9 @@ function createColumns(): DataTableColumns<SongsInfo> {
       },
       filterOptions: tagsSelectOption.value,
       render(data) {
-        return (data.tags?.length ?? 0) > 0 ? h(NSpace, { size: 5 }, () => data.tags?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a))) : null
+        return (data.tags?.length ?? 0) > 0
+          ? h(NSpace, { size: 5 }, () => data.tags?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)))
+          : null
       },
     },
     {
@@ -251,7 +297,11 @@ function createColumns(): DataTableColumns<SongsInfo> {
           },
           () => [
             GetPlayButton(data),
-            data.url?.endsWith('mp3') || data.url?.endsWith('flac') || data.url?.endsWith('ogg') || data.url?.endsWith('wav') || data.url?.endsWith('m4a')
+            data.url?.endsWith('mp3') ||
+            data.url?.endsWith('flac') ||
+            data.url?.endsWith('ogg') ||
+            data.url?.endsWith('wav') ||
+            data.url?.endsWith('m4a')
               ? h(NTooltip, null, {
                   trigger: () =>
                     h(
@@ -571,8 +621,23 @@ onMounted(() => {
   <NCard embedded size="small">
     <NSpace>
       <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="width: 150px" />
-      <NSelect placeholder="选择歌手" v-model:value="authorColumn.filterOptionValue" :options="authorsOptions" clearable filterable size="small" style="width: 150px" />
-      <NButton v-if="authorColumn.filterOptionValue" type="error" @click="authorColumn.filterOptionValue = null" size="small"> 清除歌手选择 </NButton>
+      <NSelect
+        placeholder="选择歌手"
+        v-model:value="authorColumn.filterOptionValue"
+        :options="authorsOptions"
+        clearable
+        filterable
+        size="small"
+        style="width: 150px"
+      />
+      <NButton
+        v-if="authorColumn.filterOptionValue"
+        type="error"
+        @click="authorColumn.filterOptionValue = null"
+        size="small"
+      >
+        清除歌手选择
+      </NButton>
     </NSpace>
   </NCard>
   <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
@@ -582,14 +647,22 @@ onMounted(() => {
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>
-  <NButton :disabled="selectedColumn.length <= 1 && isSelf" type="info" @click="showBatchModal = true" size="small"> 批量编辑 </NButton>
+  <NButton :disabled="selectedColumn.length <= 1 && isSelf" type="info" @click="showBatchModal = true" size="small">
+    批量编辑
+  </NButton>
   <NDivider style="margin: 5px 0 5px 0" />
   <NDataTable
     v-model:checked-row-keys="selectedColumn"
     size="small"
     :columns="columns"
     :data="songsComputed"
-    :pagination="{ itemCount: songsInternal.length, defaultPageSize: 25, pageSizes: [25, 50, 200], size: 'small', showSizePicker: true }"
+    :pagination="{
+      itemCount: songsInternal.length,
+      defaultPageSize: 25,
+      pageSizes: [25, 50, 200],
+      size: 'small',
+      showSizePicker: true,
+    }"
   />
   <NModal v-model:show="showModal" style="max-width: 600px" preset="card">
     <template #header> 修改信息 </template>
@@ -598,16 +671,39 @@ onMounted(() => {
         <NInput v-model:value="updateSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
       </NFormItem>
       <NFormItem path="author" label="作者">
-        <NSelect v-model:value="updateSongModel.author" filterable multiple tag placeholder="输入，按回车确认" :options="authorsOptions" />
+        <NSelect
+          v-model:value="updateSongModel.author"
+          filterable
+          multiple
+          tag
+          placeholder="输入，按回车确认"
+          :options="authorsOptions"
+        />
       </NFormItem>
       <NFormItem path="description" label="备注">
-        <NInput v-model:value="updateSongModel.description" placeholder="可选" :maxlength="250" show-count autosize style="min-width: 300px" clearable />
+        <NInput
+          v-model:value="updateSongModel.description"
+          placeholder="可选"
+          :maxlength="250"
+          show-count
+          autosize
+          style="min-width: 300px"
+          clearable
+        />
       </NFormItem>
       <NFormItem path="language" label="语言">
         <NSelect v-model:value="updateSongModel.language" multiple :options="songSelectOption" placeholder="可选" />
       </NFormItem>
       <NFormItem path="tags" label="标签">
-        <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认" :options="tagsSelectOption" />
+        <NSelect
+          v-model:value="updateSongModel.tags"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，按回车确认"
+          :options="tagsSelectOption"
+        />
       </NFormItem>
       <NFormItem path="options">
         <template #label>
@@ -684,21 +780,45 @@ onMounted(() => {
         </NSpace>
       </NFormItem>
       <NFormItem path="url" label="链接">
-        <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" :disabled="updateSongModel.from != SongFrom.Custom" />
+        <NInput
+          v-model:value="updateSongModel.url"
+          placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
+          :disabled="updateSongModel.from != SongFrom.Custom"
+        />
       </NFormItem>
     </NForm>
     <NDivider style="margin: 10px" />
     <NButton @click="updateSong" type="success"> 更新 </NButton>
   </NModal>
-  <NModal v-model:show="showBatchModal" preset="card" :title="`批量编辑 | 已选择: ${selectedColumn.length}`" style="max-width: 600px">
+  <NModal
+    v-model:show="showBatchModal"
+    preset="card"
+    :title="`批量编辑 | 已选择: ${selectedColumn.length}`"
+    style="max-width: 600px"
+  >
     <NTabs>
       <NTabPane name="author" tab="作者">
-        <NSelect v-model:value="batchUpdate_Author" filterable multiple tag placeholder="输入后按回车新增" :options="authorsOptions" />
+        <NSelect
+          v-model:value="batchUpdate_Author"
+          filterable
+          multiple
+          tag
+          placeholder="输入后按回车新增"
+          :options="authorsOptions"
+        />
         <NDivider />
         <NButton @click="batchUpdateAuthor" type="success"> 更新 </NButton>
       </NTabPane>
       <NTabPane name="tag" tab="标签">
-        <NSelect v-model:value="batchUpdate_Tag" filterable multiple clearable tag placeholder="可选，按回车确认" :options="tagsSelectOption" />
+        <NSelect
+          v-model:value="batchUpdate_Tag"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，按回车确认"
+          :options="tagsSelectOption"
+        />
         <NDivider />
         <NButton @click="batchUpdateTag" type="success"> 更新 </NButton>
       </NTabPane>

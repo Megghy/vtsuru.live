@@ -36,8 +36,8 @@ export const AUTH_REPLY_CODE_TOKEN_ERROR = -101
 const HEARTBEAT_INTERVAL = 10 * 1000
 const RECEIVE_TIMEOUT = HEARTBEAT_INTERVAL + 5 * 1000
 
-let textEncoder = new TextEncoder()
-let textDecoder = new TextDecoder()
+const textEncoder = new TextEncoder()
+const textDecoder = new TextDecoder()
 
 export default class ChatClientOfficialBase {
   constructor() {
@@ -83,8 +83,8 @@ export default class ChatClientOfficialBase {
       // string
       body = textEncoder.encode(data)
     }
-    let header = new ArrayBuffer(HEADER_SIZE)
-    let headerView = new DataView(header)
+    const header = new ArrayBuffer(HEADER_SIZE)
+    const headerView = new DataView(header)
     headerView.setUint32(0, HEADER_SIZE + body.byteLength) // pack_len
     headerView.setUint16(4, HEADER_SIZE) // raw_header_size
     headerView.setUint16(6, 1) // ver
@@ -201,7 +201,7 @@ export default class ChatClientOfficialBase {
       return
     }
 
-    let data = new Uint8Array(event.data)
+    const data = new Uint8Array(event.data)
     this.parseWsMessage(data)
 
     // 至少成功处理1条消息
@@ -214,7 +214,7 @@ export default class ChatClientOfficialBase {
     let packLen = dataView.getUint32(0)
     let rawHeaderSize = dataView.getUint16(4)
     // let ver = dataView.getUint16(6)
-    let operation = dataView.getUint32(8)
+    const operation = dataView.getUint32(8)
     // let seqId = dataView.getUint32(12)
 
     switch (operation) {
@@ -223,7 +223,7 @@ export default class ChatClientOfficialBase {
         // 业务消息，可能有多个包一起发，需要分包
         while (true) {
           // eslint-disable-line no-constant-condition
-          let body = new Uint8Array(data.buffer, offset + rawHeaderSize, packLen - rawHeaderSize)
+          const body = new Uint8Array(data.buffer, offset + rawHeaderSize, packLen - rawHeaderSize)
           this.parseBusinessMessage(dataView, body)
 
           offset += packLen
@@ -244,7 +244,7 @@ export default class ChatClientOfficialBase {
       }
       default: {
         // 未知消息
-        let body = new Uint8Array(data.buffer, offset + rawHeaderSize, packLen - rawHeaderSize)
+        const body = new Uint8Array(data.buffer, offset + rawHeaderSize, packLen - rawHeaderSize)
         console.warn('未知包类型，operation=', operation, dataView, body)
         break
       }
@@ -252,8 +252,8 @@ export default class ChatClientOfficialBase {
   }
 
   parseBusinessMessage(dataView, body) {
-    let ver = dataView.getUint16(6)
-    let operation = dataView.getUint32(8)
+    const ver = dataView.getUint16(6)
+    const operation = dataView.getUint32(8)
 
     switch (operation) {
       case OP_SEND_MSG_REPLY: {
@@ -302,11 +302,11 @@ export default class ChatClientOfficialBase {
 
   handlerCommand(command) {
     let cmd = command.cmd || ''
-    let pos = cmd.indexOf(':')
+    const pos = cmd.indexOf(':')
     if (pos != -1) {
       cmd = cmd.substr(0, pos)
     }
-    let callback = this.CMD_CALLBACK_MAP[cmd]
+    const callback = this.CMD_CALLBACK_MAP[cmd]
     if (callback) {
       callback.call(this, command)
     }

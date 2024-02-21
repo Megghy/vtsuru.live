@@ -1,11 +1,27 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { ScheduleWeekInfo } from '@/api/api-models'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { FunctionTypes, ScheduleWeekInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { SCHEDULE_API_URL } from '@/data/constants'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
-import { NAlert, NBadge, NButton, NColorPicker, NDivider, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpace, NSpin, NTimePicker, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NBadge,
+  NButton,
+  NColorPicker,
+  NDivider,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NModal,
+  NSelect,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NTimePicker,
+  useMessage,
+} from 'naive-ui'
 import { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
 import { VNode, computed, h, onMounted, ref } from 'vue'
 
@@ -40,10 +56,11 @@ const yearOptions = [
   },
 ] as SelectMixedOption[]
 const weekOptions = computed(() => {
-  let weeks = [] as SelectMixedOption[]
+  const weeks = [] as SelectMixedOption[]
   const all = getAllWeeks(selectedScheduleYear.value)
   all.forEach((week) => {
-    const isExist = (schedules.value?.findIndex((s) => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
+    const isExist =
+      (schedules.value?.findIndex((s) => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
     weeks.push({
       label: `${isExist ? '(已安排)' : ''} 第${week[0] + 1}周 (${week[1]})`,
       value: week[0] + 1,
@@ -53,7 +70,7 @@ const weekOptions = computed(() => {
   return weeks
 })
 const dayOptions = computed(() => {
-  let days = [] as SelectMixedOption[]
+  const days = [] as SelectMixedOption[]
   for (let i = 0; i < 7; i++) {
     try {
       days.push({
@@ -67,7 +84,7 @@ const dayOptions = computed(() => {
   return days
 })
 const existTagOptions = computed(() => {
-  let colors = [] as SelectMixedOption[]
+  const colors = [] as SelectMixedOption[]
   schedules.value?.forEach((s) => {
     s.days.forEach((d) => {
       if (d.tag && !colors.find((c) => c.value == d.tagColor && c.label == d.tag)) {
@@ -85,7 +102,7 @@ function getAllWeeks(year: number) {
   const endDate = endOfYear(new Date(year, 11, 31))
 
   let date = startOfWeek(startDate, { weekStartsOn: 1 })
-  let weeks: [number, string][] = []
+  const weeks: [number, string][] = []
 
   let index = 0
 
@@ -175,7 +192,9 @@ async function onUpdateSchedule() {
     .then((data) => {
       if (data.code == 200) {
         message.success('成功')
-        const s = schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)
+        const s = schedules.value?.find(
+          (s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value,
+        )
         if (s) {
           s.days[selectedDay.value] = updateScheduleModel.value.days[selectedDay.value]
         } else {
@@ -218,7 +237,23 @@ function onSelectChange(value: string | null, option: SelectMixedOption) {
   }
 }
 const renderOption = ({ node, option }: { node: VNode; option: SelectOption }) =>
-  h(NSpace, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null, node])
+  h(NSpace, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
+    option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null,
+    node,
+  ])
+async function setFunctionEnable(enable: boolean) {
+  let success = false
+  if (enable) {
+    success = await EnableFunction(FunctionTypes.Schedule)
+  } else {
+    success = await DisableFunction(FunctionTypes.Schedule)
+  }
+  if (success) {
+    message.success('已' + (enable ? '启用' : '禁用'))
+  } else {
+    message.error('无法' + (enable ? '启用' : '禁用'))
+  }
+}
 
 onMounted(() => {
   get()
@@ -226,9 +261,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace>
+  <NSpace align="center">
+    <NAlert type="info" style="max-width: 200px">
+      启用日程表
+      <NDivider vertical />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Schedule)"
+        @update:value="setFunctionEnable"
+      />
+    </NAlert>
     <NButton @click="showAddModal = true" type="primary"> 添加周程 </NButton>
-    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })"> 修改模板 </NButton>
+    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
+      修改模板
+    </NButton>
   </NSpace>
   <NDivider />
   <NModal v-model:show="showAddModal" style="width: 600px; max-width: 90vw" preset="card" title="添加周程">
@@ -260,7 +305,13 @@ onMounted(() => {
         <NSpace>
           <NInputGroup>
             <NInputGroupLabel type="primary"> 标签 </NInputGroupLabel>
-            <NInput v-model:value="updateScheduleModel.days[selectedDay].tag" placeholder="标签 | 留空视为无安排" style="max-width: 300px" maxlength="10" show-count />
+            <NInput
+              v-model:value="updateScheduleModel.days[selectedDay].tag"
+              placeholder="标签 | 留空视为无安排"
+              style="max-width: 300px"
+              maxlength="10"
+              show-count
+            />
           </NInputGroup>
           <NSelect
             v-model:value="selectedExistTag"
@@ -275,9 +326,19 @@ onMounted(() => {
         </NSpace>
         <NInputGroup>
           <NInputGroupLabel> 内容 </NInputGroupLabel>
-          <NInput v-model:value="updateScheduleModel.days[selectedDay].title" placeholder="内容" style="max-width: 200px" maxlength="30" show-count />
+          <NInput
+            v-model:value="updateScheduleModel.days[selectedDay].title"
+            placeholder="内容"
+            style="max-width: 200px"
+            maxlength="30"
+            show-count
+          />
         </NInputGroup>
-        <NTimePicker default-formatted-value="20:00" v-model:formatted-value="updateScheduleModel.days[selectedDay].time" format="HH:mm" />
+        <NTimePicker
+          default-formatted-value="20:00"
+          v-model:formatted-value="updateScheduleModel.days[selectedDay].time"
+          format="HH:mm"
+        />
         <NColorPicker
           v-model:value="updateScheduleModel.days[selectedDay].tagColor"
           :swatches="['#FFFFFF', '#18A058', '#2080F0', '#F0A020', 'rgba(208, 48, 80, 1)']"
@@ -290,5 +351,12 @@ onMounted(() => {
     </template>
   </NModal>
   <NSpin v-if="isLoading" show />
-  <ScheduleList v-else :schedules="schedules ?? []" @on-update="onOpenUpdateModal" @on-delete="onDeleteSchedule" @on-copy="onOpenCopyModal" is-self />
+  <ScheduleList
+    v-else
+    :schedules="schedules ?? []"
+    @on-update="onOpenUpdateModal"
+    @on-delete="onDeleteSchedule"
+    @on-copy="onOpenCopyModal"
+    is-self
+  />
 </template>

@@ -39,9 +39,12 @@ const originSongs = ref<{ playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }>({
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ playing: WaitMusicInfo; waiting: WaitMusicInfo[] }>(MUSIC_REQUEST_API_URL + 'get-waiting', {
-      id: currentId.value,
-    })
+    const data = await QueryGetAPI<{ playing: WaitMusicInfo; waiting: WaitMusicInfo[] }>(
+      MUSIC_REQUEST_API_URL + 'get-waiting',
+      {
+        id: currentId.value,
+      },
+    )
     if (data.code == 200) {
       return data.data
     }
@@ -74,10 +77,18 @@ onUnmounted(() => {
     <NDivider class="music-request-divider">
       <p class="music-request-header-count">已有 {{ originSongs.waiting.length ?? 0 }} 首</p>
     </NDivider>
-    <div class="music-request-singing-container" :playing="originSongs.playing ? 'true' : 'false'" :from="originSongs.playing?.music.from ?? -1">
+    <div
+      class="music-request-singing-container"
+      :playing="originSongs.playing ? 'true' : 'false'"
+      :from="originSongs.playing?.music.from ?? -1"
+    >
       <div class="music-request-singing-prefix"></div>
       <template v-if="originSongs.playing">
-        <img class="music-request-singing-avatar" :src="originSongs.playing.music.cover ?? AVATAR_URL + originSongs.playing.from?.uid" referrerpolicy="no-referrer" />
+        <img
+          class="music-request-singing-avatar"
+          :src="originSongs.playing.music.cover ?? AVATAR_URL + originSongs.playing.from?.uid"
+          referrerpolicy="no-referrer"
+        />
         <p class="music-request-singing-song-name">{{ originSongs.playing.music.name }}</p>
         <p class="music-request-singing-name">{{ originSongs.playing.from?.name }}</p>
       </template>
@@ -86,8 +97,21 @@ onUnmounted(() => {
     </div>
     <div class="music-request-content" ref="listContainerRef">
       <template v-if="originSongs.waiting.length > 0">
-        <Vue3Marquee class="music-request-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
-          <span class="music-request-list-item" :from="item.music.from as number" v-for="(item, index) in originSongs.waiting" :key="item.music.id" :style="`height: ${itemHeight}px`">
+        <Vue3Marquee
+          class="music-request-list"
+          :key="key"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <span
+            class="music-request-list-item"
+            :from="item.music.from as number"
+            v-for="(item, index) in originSongs.waiting"
+            :key="item.music.id"
+            :style="`height: ${itemHeight}px`"
+          >
             <div class="music-request-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>

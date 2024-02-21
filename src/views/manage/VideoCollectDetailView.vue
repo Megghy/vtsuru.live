@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { downloadImage } from '@/Utils'
-import { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
+import {
+  VideoCollectCreateModel,
+  VideoCollectDetail,
+  VideoCollectTable,
+  VideoCollectVideo,
+  VideoInfo,
+  VideoStatus,
+} from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
@@ -140,63 +147,114 @@ const gridRender = (type: 'padding' | 'reject' | 'accept') => {
   }
   return videos.length == 0
     ? h(NEmpty)
-    : h(
-        NGrid,
-        { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' },
-        () =>
-          videos?.map((v) =>
-            h(NGridItem, () =>
-              h(
-                NCard,
-                { style: 'height: 330px;', embedded: true, size: 'small' },
-                {
-                  cover: () =>
-                    h('div', { style: 'position: relative;height: 150px;' }, [
-                      h('img', {
-                        src: v.video.cover.replace('http://', 'https://'),
-                        referrerpolicy: 'no-referrer',
-                        style: 'max-height: 100%; object-fit: contain;cursor: pointer',
-                        onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
-                      }),
-                      h(NSpace, { style: { position: 'relative', bottom: '20px', background: '#00000073' }, justify: 'space-around' }, () => [
-                        h('span', [h(NIcon, { component: Clock24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length))]),
-                        h('span', [h(NIcon, { component: Person24Filled, color: 'lightgrey' }), h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName)]),
-                      ]),
-                    ]),
-                  header: () =>
-                    h(NButton, { style: 'width: 100%;', text: true, onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank') }, () =>
-                      h(NEllipsis, { style: 'max-width: 100%;' }, { default: () => v.video.title, tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title) }),
-                    ),
-                  default: () =>
-                    h(NScrollbar, { style: 'height: 65px;' }, () =>
-                      h(NCard, { contentStyle: 'padding: 5px;' }, () =>
-                        v.info.senders.map((s) => [
-                          h('div', { style: 'font-size: 12px;' }, [h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`), h('div', `推荐理由: ${s.description ?? '未填写'}`)]),
-                          h(NSpace, { style: 'margin: 0;' }),
+    : h(NGrid, { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' }, () =>
+        videos?.map((v) =>
+          h(NGridItem, () =>
+            h(
+              NCard,
+              { style: 'height: 330px;', embedded: true, size: 'small' },
+              {
+                cover: () =>
+                  h('div', { style: 'position: relative;height: 150px;' }, [
+                    h('img', {
+                      src: v.video.cover.replace('http://', 'https://'),
+                      referrerpolicy: 'no-referrer',
+                      style: 'max-height: 100%; object-fit: contain;cursor: pointer',
+                      onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
+                    }),
+                    h(
+                      NSpace,
+                      {
+                        style: { position: 'relative', bottom: '20px', background: '#00000073' },
+                        justify: 'space-around',
+                      },
+                      () => [
+                        h('span', [
+                          h(NIcon, { component: Clock24Filled, color: 'lightgrey' }),
+                          h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length)),
                         ]),
-                      ),
+                        h('span', [
+                          h(NIcon, { component: Person24Filled, color: 'lightgrey' }),
+                          h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName),
+                        ]),
+                      ],
                     ),
-                  footer: () => footer(v.info),
-                },
-              ),
+                  ]),
+                header: () =>
+                  h(
+                    NButton,
+                    {
+                      style: 'width: 100%;',
+                      text: true,
+                      onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
+                    },
+                    () =>
+                      h(
+                        NEllipsis,
+                        { style: 'max-width: 100%;' },
+                        {
+                          default: () => v.video.title,
+                          tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title),
+                        },
+                      ),
+                  ),
+                default: () =>
+                  h(NScrollbar, { style: 'height: 65px;' }, () =>
+                    h(NCard, { contentStyle: 'padding: 5px;' }, () =>
+                      v.info.senders.map((s) => [
+                        h('div', { style: 'font-size: 12px;' }, [
+                          h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`),
+                          h('div', `推荐理由: ${s.description ?? '未填写'}`),
+                        ]),
+                        h(NSpace, { style: 'margin: 0;' }),
+                      ]),
+                    ),
+                  ),
+                footer: () => footer(v.info),
+              },
             ),
           ),
+        ),
       )
 }
 const paddingButtonGroup = (v: VideoInfo) =>
   h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(NButton, { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) }, () => '通过'),
-    h(NButton, { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) }, () => '拒绝'),
+    h(
+      NButton,
+      { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
+      () => '通过',
+    ),
+    h(
+      NButton,
+      { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) },
+      () => '拒绝',
+    ),
   ])
 const acceptButtonGroup = (v: VideoInfo) =>
   h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(NButton, { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) }, () => '重设为未审核'),
-    h(NButton, { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) }, () => '拒绝'),
+    h(
+      NButton,
+      { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) },
+      () => '重设为未审核',
+    ),
+    h(
+      NButton,
+      { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) },
+      () => '拒绝',
+    ),
   ])
 const rejectButtonGroup = (v: VideoInfo) =>
   h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(NButton, { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) }, () => '通过'),
-    h(NButton, { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) }, () => '重设为未审核'),
+    h(
+      NButton,
+      { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
+      () => '通过',
+    ),
+    h(
+      NButton,
+      { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) },
+      () => '重设为未审核',
+    ),
   ])
 function setStatus(status: VideoStatus, video: VideoInfo) {
   isLoading.value = true
@@ -295,7 +353,10 @@ function closeTable() {
     })
 }
 function saveQRCode() {
-  downloadImage(`https://api.qrserver.com/v1/create-qr-code/?data=${'https://vtsuru.live/video-collect/' + videoDetail.value.table.shortId}`, `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`)
+  downloadImage(
+    `https://api.qrserver.com/v1/create-qr-code/?data=${'https://vtsuru.live/video-collect/' + videoDetail.value.table.shortId}`,
+    `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`,
+  )
 }
 </script>
 <template>
@@ -306,8 +367,12 @@ function saveQRCode() {
     <template v-if="width <= 1000">
       <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
       <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
-      <NButton type="warning" size="small" @click="closeTable"> {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }} </NButton>
-      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果页面 </NButton>
+      <NButton type="warning" size="small" @click="closeTable">
+        {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
+      </NButton>
+      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })">
+        结果页面
+      </NButton>
       <NPopconfirm :on-positive-click="deleteTable">
         <template #trigger>
           <NButton type="error" size="small"> 删除 </NButton>
@@ -321,8 +386,15 @@ function saveQRCode() {
       <NSpace>
         <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
         <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
-        <NButton type="warning" size="small" @click="closeTable"> {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }} </NButton>
-        <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"> 结果表 </NButton>
+        <NButton type="warning" size="small" @click="closeTable">
+          {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
+        </NButton>
+        <NButton
+          size="small"
+          @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
+        >
+          结果表
+        </NButton>
         <NPopconfirm :on-positive-click="deleteTable">
           <template #trigger>
             <NButton type="error" size="small"> 删除 </NButton>
@@ -369,9 +441,15 @@ function saveQRCode() {
     </NTabs>
   </template>
   <NModal v-model:show="shareModalVisiable" title="分享" preset="card" style="width: 600px; max-width: 90vw">
-    <Qrcode :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId" level="Q" :size="100" background="#fff" :margin="1" />
+    <Qrcode
+      :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId"
+      level="Q"
+      :size="100"
+      background="#fff"
+      :margin="1"
+    />
     <NInput :value="'https://vtsuru.live/video-collect/' + videoDetail.table.shortId" />
-    <NDivider/>
+    <NDivider />
     <NSpace justify="center">
       <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
     </NSpace>
@@ -385,10 +463,20 @@ function saveQRCode() {
         <NInput v-model:value="updateModel.description" placeholder="可以是备注之类的" maxlength="300" show-count />
       </NFormItem>
       <NFormItem label="视频数量" path="maxVideoCount">
-        <NInputNumber v-model:value="updateModel.maxVideoCount" placeholder="最大数量" type="number" style="max-width: 150px" />
+        <NInputNumber
+          v-model:value="updateModel.maxVideoCount"
+          placeholder="最大数量"
+          type="number"
+          style="max-width: 150px"
+        />
       </NFormItem>
       <NFormItem label="结束时间" path="endAt">
-        <NDatePicker v-model:value="updateModel.endAt" type="datetime" placeholder="结束征集的时间" :isDateDisabled="dateDisabled" />
+        <NDatePicker
+          v-model:value="updateModel.endAt"
+          type="datetime"
+          placeholder="结束征集的时间"
+          :isDateDisabled="dateDisabled"
+        />
         <NDivider vertical />
         <NText depth="3"> 最低为一小时 </NText>
       </NFormItem>

@@ -2,7 +2,19 @@
 import { GetSelfAccount, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { BILI_API_URL } from '@/data/constants'
-import { NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NInputNumber, NSpace, NSpin, NText, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCountdown,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NSpace,
+  NSpin,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()
@@ -102,7 +114,9 @@ onMounted(async () => {
           <NInput :allow-input="() => false" v-model:value="accountInfo.biliVerifyCode" />
           <NButton @click="copyCode"> 复制认证码 </NButton>
         </NInputGroup>
-        <NButton v-if="roomId" type="primary" tag="a" :href="'https://live.bilibili.com/' + roomId" target="_blank"> 前往直播间 </NButton>
+        <NButton v-if="roomId" type="primary" tag="a" :href="'https://live.bilibili.com/' + roomId" target="_blank">
+          前往直播间
+        </NButton>
       </NSpace>
     </template>
     <template v-else>

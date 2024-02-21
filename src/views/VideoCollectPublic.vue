@@ -3,7 +3,19 @@ import { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/data/constants'
-import { NAlert, NButton, NCard, NDivider, NInput, NInputNumber, NLayoutContent, NResult, NSpace, NText, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NInput,
+  NInputNumber,
+  NLayoutContent,
+  NResult,
+  NSpace,
+  NText,
+  useMessage,
+} from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'

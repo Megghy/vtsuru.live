@@ -6,7 +6,7 @@ import { onMounted, onUnmounted } from 'vue'
 import OpenLottery from '../open_live/OpenLottery.vue'
 
 const accountInfo = useAccount()
-let client = new DanmakuClient(null)
+const client = new DanmakuClient(null)
 
 onMounted(() => {
   client.Start()

@@ -1,62 +1,50 @@
 <script setup lang="ts">
-import { getBase64, getImageUploadModel } from '@/Utils'
+import { getImageUploadModel } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import {
-  ResponsePointGoodModel,
-  FunctionTypes,
-  PointGoodsModel,
-  GoodsTypes,
-  GoodsStatus,
-  TagInfo,
-} from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, PointGoodsModel, ResponsePointGoodModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
-import { Info24Filled, MoreVertical16Filled } from '@vicons/fluent'
-import { List } from 'linqts'
+import { useAuthStore } from '@/store/useAuthStore'
+import { Info24Filled } from '@vicons/fluent'
+import { useRouteHash } from '@vueuse/router'
 import {
+  FormItemRule,
   NAlert,
   NButton,
+  NCheckbox,
   NDivider,
+  NEmpty,
+  NFlex,
   NForm,
   NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NImage,
   NInput,
+  NInputNumber,
   NModal,
+  NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NSelect,
   NSwitch,
   NTabPane,
   NTabs,
   NText,
-  useMessage,
-  NFlex,
-  NInputNumber,
-  NRadioGroup,
-  NRadio,
   NTooltip,
-  NIcon,
-  NCheckbox,
-  NRadioButton,
   NUpload,
   UploadFileInfo,
-  FormItemRule,
-  NScrollbar,
-  FormValidationError,
-  NSelect,
-  NGrid,
-  NGridItem,
-  NDropdown,
-  NImage,
   useDialog,
-  NPopconfirm,
-  NEmpty,
+  useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import PointOrderManage from './PointOrderManage.vue'
-import PointUserManage from './PointUserManage.vue'
-import { cloneFnJSON } from '@vueuse/core'
-import { useAuthStore } from '@/store/useAuthStore'
 import PointSettings from './PointSettings.vue'
-import { useRouteHash } from '@vueuse/router'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import PointUserManage from './PointUserManage.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -240,7 +228,7 @@ async function updateGoods(e: MouseEvent) {
 }
 function OnFileListChange(files: UploadFileInfo[]) {
   if (files.length == 1) {
-    var file = files[0]
+    const file = files[0]
     if ((file.file?.size ?? 0) > 10 * 1024 * 1024) {
       message.error('文件大小不能超过10MB')
       currentGoodsModel.value.fileList = []

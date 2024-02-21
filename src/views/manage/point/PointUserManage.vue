@@ -2,6 +2,7 @@
 import { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
+import { useStorage } from '@vueuse/core'
 import {
   DataTableColumns,
   NButton,
@@ -11,8 +12,6 @@ import {
   NDivider,
   NEmpty,
   NFlex,
-  NList,
-  NListItem,
   NModal,
   NPopconfirm,
   NScrollbar,
@@ -24,7 +23,6 @@ import {
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import PointUserDetailCard from './PointUserDetailCard.vue'
-import { useStorage } from '@vueuse/core'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]

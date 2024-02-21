@@ -1,6 +1,13 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component v-else :is="ScheduleTemplateMap[componentType ?? ''].compoent" :bili-info="biliInfo" :user-info="userInfo" :currentData="currentData" v-bind="$attrs" />
+  <component
+    v-else
+    :is="ScheduleTemplateMap[componentType ?? ''].compoent"
+    :bili-info="biliInfo"
+    :user-info="userInfo"
+    :currentData="currentData"
+    v-bind="$attrs"
+  />
 </template>
 
 <script lang="ts" setup>

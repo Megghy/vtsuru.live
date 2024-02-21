@@ -157,7 +157,9 @@ async function getNeteaseSongList() {
     .then((data) => {
       if (data.code == 200) {
         neteaseSongs.value = data.data
-        message.success(`成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`)
+        message.success(
+          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
+        )
       } else {
         message.error('获取歌单失败: ' + data.message)
       }
@@ -278,7 +280,9 @@ async function onGetEvent(data: EventModel) {
   if (settings.value.orderCooldown && cooldown.value[data.uid] && data.uid != (accountInfo.value?.biliId ?? -1)) {
     const lastRequest = cooldown.value[data.uid]
     if (Date.now() - lastRequest < settings.value.orderCooldown * 1000) {
-      message.info(`[${data.name}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`)
+      message.info(
+        `[${data.name}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`,
+      )
       return
     }
   }
@@ -326,7 +330,9 @@ async function getOutputDevice() {
     })
     const list = await navigator.mediaDevices.enumerateDevices()
 
-    deviceList.value = list.filter((device) => device.kind === 'audiooutput').map((d) => ({ label: d.label, value: d.deviceId }))
+    deviceList.value = list
+      .filter((device) => device.kind === 'audiooutput')
+      .map((d) => ({ label: d.label, value: d.deviceId }))
   } catch (err) {
     console.error(err)
     message.error('获取音频输出设备失败, 获取你需要授予网页读取麦克风权限: ' + err)
@@ -393,7 +399,9 @@ onUnmounted(() => {
     <NButton @click="showOBSModal = true" type="info" size="small"> OBS组件 </NButton>
     <NButton @click="showNeteaseModal = true" size="small"> 从网易云歌单导入空闲歌单 </NButton>
 
-    <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small"> 保存配置到服务器 </NButton>
+    <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small">
+      保存配置到服务器
+    </NButton>
     <NPopconfirm @positive-click="downloadConfig">
       <template #trigger>
         <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
@@ -406,10 +414,19 @@ onUnmounted(() => {
     <NCollapseItem title="队列" name="1">
       <NEmpty v-if="musicRquestStore.waitingMusics.length == 0"> 暂无 </NEmpty>
       <NList v-else size="small" bordered>
-        <NListItem v-for="item in musicRquestStore.waitingMusics">
+        <NListItem v-for="item in musicRquestStore.waitingMusics" :key="item.music.name">
           <NSpace align="center">
-            <NButton @click="musicRquestStore.playMusic(item.music)" type="primary" secondary size="small"> 播放 </NButton>
-            <NButton @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)" type="error" secondary size="small"> 取消 </NButton>
+            <NButton @click="musicRquestStore.playMusic(item.music)" type="primary" secondary size="small">
+              播放
+            </NButton>
+            <NButton
+              @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
+              type="error"
+              secondary
+              size="small"
+            >
+              取消
+            </NButton>
             <NButton @click="blockMusic(item.music)" type="warning" secondary size="small"> 拉黑 </NButton>
             <span>
               <NTag v-if="item.music.from == SongFrom.Netease" type="success" size="small"> 网易</NTag>
@@ -493,7 +510,7 @@ onUnmounted(() => {
       <NDivider style="margin: 15px 0 10px 0" />
       <NEmpty v-if="musicRquestStore.originMusics.length == 0"> 暂无 </NEmpty>
       <NVirtualList v-else :style="`max-height: 1000px`" :item-size="30" :items="originMusics" item-resizable>
-        <template #default="{ item, index }">
+        <template #default="{ item }">
           <p :style="`min-height: ${30}px;width:97%;display:flex;align-items:center;`">
             <NSpace align="center" style="width: 100%">
               <NPopconfirm @positive-click="delMusic(item)">
@@ -512,9 +529,16 @@ onUnmounted(() => {
     </NTabPane>
     <NTabPane name="blacklist" tab="黑名单">
       <NList>
-        <NListItem v-for="item in settings.blacklist">
+        <NListItem v-for="item in settings.blacklist" :key="item">
           <NSpace align="center" style="width: 100%">
-            <NButton @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)" type="error" secondary size="small"> 删除 </NButton>
+            <NButton
+              @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)"
+              type="error"
+              secondary
+              size="small"
+            >
+              删除
+            </NButton>
             <NText> {{ item }} </NText>
           </NSpace>
         </NListItem>
@@ -523,18 +547,35 @@ onUnmounted(() => {
   </NTabs>
   <NDivider style="height: 100px" />
   <NModal v-model:show="showNeteaseModal" preset="card" :title="`获取歌单`" style="max-width: 600px">
-    <NInput clearable style="width: 100%" autosize :status="neteaseSongListId ? 'success' : 'error'" v-model:value="neteaseIdInput" placeholder="直接输入歌单Id或者网页链接">
+    <NInput
+      clearable
+      style="width: 100%"
+      autosize
+      :status="neteaseSongListId ? 'success' : 'error'"
+      v-model:value="neteaseIdInput"
+      placeholder="直接输入歌单Id或者网页链接"
+    >
       <template #suffix>
         <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
       </template>
     </NInput>
     <NDivider style="margin: 10px" />
-    <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId" :loading="isLoading"> 获取 </NButton>
+    <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId" :loading="isLoading">
+      获取
+    </NButton>
     <template v-if="neteaseSongsOptions.length > 0">
       <NDivider style="margin: 10px" />
-      <NTransfer style="height: 500px" ref="transfer" v-model:value="selectedNeteaseSongs" :options="neteaseSongsOptions" source-filterable />
+      <NTransfer
+        style="height: 500px"
+        ref="transfer"
+        v-model:value="selectedNeteaseSongs"
+        :options="neteaseSongsOptions"
+        source-filterable
+      />
       <NDivider style="margin: 10px" />
-      <NButton type="primary" @click="addNeteaseSongs" :loading="isLoading"> 添加到歌单 | {{ selectedNeteaseSongs.length }} 首 </NButton>
+      <NButton type="primary" @click="addNeteaseSongs" :loading="isLoading">
+        添加到歌单 | {{ selectedNeteaseSongs.length }} 首
+      </NButton>
     </template>
   </NModal>
   <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">

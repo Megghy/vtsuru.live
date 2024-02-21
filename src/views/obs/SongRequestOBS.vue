@@ -31,6 +31,7 @@ const key = ref(Date.now())
 const originSongs = ref<SongRequestInfo[]>([])
 const songs = computed(() => {
   if (settings.value.isReverse) {
+    // eslint-disable-next-line vue/no-side-effects-in-computed-properties
     return originSongs.value.reverse()
   } else {
     return originSongs.value
@@ -46,9 +47,12 @@ const activeSongs = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(SONG_REQUEST_API_URL + 'get-active-and-settings', {
-      id: currentId.value,
-    })
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(
+      SONG_REQUEST_API_URL + 'get-active-and-settings',
+      {
+        id: currentId.value,
+      },
+    )
     if (data.code == 200) {
       return data.data
     }
@@ -100,8 +104,8 @@ onUnmounted(() => {
     <div
       class="song-request-singing-container"
       :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1"
-      :from="(singing?.from as number)"
-      :status="(singing?.status as number)"
+      :from="singing?.from as number"
+      :status="singing?.status as number"
     >
       <div class="song-request-singing-prefix"></div>
       <template v-if="singing">
@@ -114,16 +118,36 @@ onUnmounted(() => {
     </div>
     <div class="song-request-content" ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
-        <Vue3Marquee class="song-request-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;width: ${width}px;`">
-          <span class="song-request-list-item" :from="(song.from as number)" :status="(song.status as number)" v-for="(song, index) in activeSongs" :key="song.id" :style="`height: ${itemHeight}px`">
+        <Vue3Marquee
+          class="song-request-list"
+          :key="key"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <span
+            class="song-request-list-item"
+            :from="song.from as number"
+            :status="song.status as number"
+            v-for="(song, index) in activeSongs"
+            :key="song.id"
+            :style="`height: ${itemHeight}px`"
+          >
             <div class="song-request-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
             <div class="song-request-list-item-song-name">
               {{ song.songName }}
             </div>
-            <p v-if="settings.showUserName" class="song-request-list-item-name">{{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}</p>
-            <div v-if="settings.showFanMadelInfo" class="song-request-list-item-level" :has-level="(song.user?.fans_medal_level ?? 0) > 0">
+            <p v-if="settings.showUserName" class="song-request-list-item-name">
+              {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
+            </p>
+            <div
+              v-if="settings.showFanMadelInfo"
+              class="song-request-list-item-level"
+              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
+            >
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </span>
@@ -134,7 +158,13 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="song-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
-      <Vue3Marquee :key="key" ref="footerListRef" class="song-request-footer-marquee" :pause="footerSize.width < footerListSize.width" :duration="20">
+      <Vue3Marquee
+        :key="key"
+        ref="footerListRef"
+        class="song-request-footer-marquee"
+        :pause="footerSize.width < footerListSize.width"
+        :duration="20"
+      >
         <span class="song-request-tag" type="prefix">
           <div class="song-request-tag-key">前缀</div>
           <div class="song-request-tag-value">
@@ -156,7 +186,13 @@ onUnmounted(() => {
         <span class="song-request-tag" type="fan-madel">
           <div class="song-request-tag-key">粉丝牌</div>
           <div class="song-request-tag-value">
-            {{ settings.needWearFanMedal ? (settings.fanMedalMinLevel > 0 ? '> ' + settings.fanMedalMinLevel : '佩戴') : '无需' }}
+            {{
+              settings.needWearFanMedal
+                ? settings.fanMedalMinLevel > 0
+                  ? '> ' + settings.fanMedalMinLevel
+                  : '佩戴'
+                : '无需'
+            }}
           </div>
         </span></Vue3Marquee
       >
@@ -182,7 +218,11 @@ onUnmounted(() => {
   text-align: center;
   font-size: 20px;
   font-weight: bold;
-  text-shadow: 0 0 10px #ca7b7b6e, 0 0 20px #ffffff8e, 0 0 30px #61606086, 0 0 40px rgba(64, 156, 179, 0.555);
+  text-shadow:
+    0 0 10px #ca7b7b6e,
+    0 0 20px #ffffff8e,
+    0 0 30px #61606086,
+    0 0 40px rgba(64, 156, 179, 0.555);
 }
 .song-request-header-count {
   color: #ffffffbd;

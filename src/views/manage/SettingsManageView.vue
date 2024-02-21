@@ -1,10 +1,35 @@
 <script setup lang="ts">
-import { DelBiliBlackList, SaveAccountSettings, SaveEnableFunctions, downloadConfigDirect, useAccount } from '@/api/account'
+import {
+  DelBiliBlackList,
+  SaveAccountSettings,
+  SaveEnableFunctions,
+  downloadConfigDirect,
+  useAccount,
+} from '@/api/account'
 import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import DynamicForm from '@/components/DynamicForm.vue'
 import { TemplateConfig } from '@/data/VTsuruTypes'
 import { FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
-import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NList, NListItem, NModal, NSelect, NSpace, NSpin, NTabPane, NTabs, NText, SelectOption, useMessage } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCheckboxGroup,
+  NDivider,
+  NEmpty,
+  NList,
+  NListItem,
+  NModal,
+  NSelect,
+  NSpace,
+  NSpin,
+  NTabPane,
+  NTabs,
+  NText,
+  SelectOption,
+  useMessage,
+} from 'naive-ui'
 import { computed, h, nextTick, onActivated, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -188,7 +213,9 @@ const selectedTab = ref(route.query.tab?.toString() ?? 'general')
 
 const dynamicConfigRef = ref()
 const selectedTemplateData = computed(() => templates.value[selectedOption.value])
-const selectedComponent = computed(() => selectedTemplateData.value?.TemplateMap[selectedTemplateData.value.Selected].compoent)
+const selectedComponent = computed(
+  () => selectedTemplateData.value?.TemplateMap[selectedTemplateData.value.Selected].compoent,
+)
 const selectedTemplateConfig = computed(() => {
   if (dynamicConfigRef.value?.Config) {
     return dynamicConfigRef.value?.Config as TemplateConfig<any>
@@ -201,7 +228,7 @@ const settingModalVisiable = ref(false)
 
 async function RequestBiliUserData() {
   await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=10021741`).then(async (respone) => {
-    let data = await respone.json()
+    const data = await respone.json()
     if (data.code == 0) {
       biliUserInfo.value = data.card
     } else {
@@ -209,7 +236,10 @@ async function RequestBiliUserData() {
     }
   })
 }
-async function SaveComboGroupSetting(value: (string | number)[], meta: { actionType: 'check' | 'uncheck'; value: string | number }) {
+async function SaveComboGroupSetting(
+  value: (string | number)[],
+  meta: { actionType: 'check' | 'uncheck'; value: string | number },
+) {
   if (accountInfo.value) {
     isSaving.value = true
     //UpdateEnableFunction(meta.value as FunctionTypes, meta.actionType == 'check')
@@ -220,12 +250,14 @@ async function SaveComboGroupSetting(value: (string | number)[], meta: { actionT
         } else {
           message.error('修改失败')
           if (accountInfo.value) {
-            accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter((f) => f != (meta.value as FunctionTypes))
+            accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
+              (f) => f != (meta.value as FunctionTypes),
+            )
           }
         }
       })
       .catch((err) => {
-        message.error('修改失败')
+        message.error('修改失败: ' + err)
       })
       .finally(() => {
         isSaving.value = false
@@ -245,7 +277,7 @@ async function SaveComboSetting() {
         }
       })
       .catch((err) => {
-        message.error('修改失败')
+        message.error('修改失败: ' + err)
       })
       .finally(() => {
         isSaving.value = false
@@ -300,7 +332,10 @@ async function getTemplateConfig() {
   }
 }
 const buttonGroup = computed(() => {
-  return h(NSpace, () => [h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'), h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置')])
+  return h(NSpace, () => [
+    h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'),
+    h(NButton, { type: 'info', onClick: onOpenTemplateSettings }, () => '模板设置'),
+  ])
 })
 
 function unblockUser(id: number) {
@@ -348,12 +383,24 @@ onMounted(async () => {
           </NCheckboxGroup>
           <NDivider> 通知 </NDivider>
           <NSpace>
-            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="SaveComboSetting"> 收到新提问时发送邮件 </NCheckbox>
-            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQAReply" @update:checked="SaveComboSetting"> 提问收到回复时发送邮件 </NCheckbox>
+            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="SaveComboSetting">
+              收到新提问时发送邮件
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
+              @update:checked="SaveComboSetting"
+            >
+              提问收到回复时发送邮件
+            </NCheckbox>
           </NSpace>
           <NDivider> 提问箱 </NDivider>
           <NSpace>
-            <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser" @update:checked="SaveComboSetting"> 允许未注册用户提问 </NCheckbox>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+              @update:checked="SaveComboSetting"
+            >
+              允许未注册用户提问
+            </NCheckbox>
           </NSpace>
         </NTabPane>
         <NTabPane tab="黑名单" name="blacklist">
@@ -373,22 +420,32 @@ onMounted(async () => {
           <NEmpty v-else />
         </NTabPane>
         <NTabPane tab="模板" name="template">
-          <NAlert type="success">
-            如果有合适的设计稿或者想法可以给我说然后做成模板捏
-          </NAlert>
-          <br/>
+          <NAlert type="success"> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </NAlert>
+          <br />
           <NSpace vertical>
-            <NSpace align="center"> 页面 <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" /> </NSpace>
+            <NSpace align="center">
+              页面 <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" />
+            </NSpace>
             <NDivider style="margin: 5px 0 5px 0" title-placement="left"> 模板 </NDivider>
             <div>
               <NSpace>
-                <NSelect style="width: 150px" :options="selectedTemplateData.Options" v-model:value="selectedTemplateData.Selected" />
+                <NSelect
+                  style="width: 150px"
+                  :options="selectedTemplateData.Options"
+                  v-model:value="selectedTemplateData.Selected"
+                />
                 <component :is="buttonGroup" />
               </NSpace>
               <NDivider />
               <Transition name="fade" mode="out-in">
                 <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
-                  <component ref="dynamicConfigRef" :is="selectedComponent" :user-info="accountInfo" :bili-info="biliUserInfo" :current-data="selectedTemplateData.Data" />
+                  <component
+                    ref="dynamicConfigRef"
+                    :is="selectedComponent"
+                    :user-info="accountInfo"
+                    :bili-info="biliUserInfo"
+                    :current-data="selectedTemplateData.Data"
+                  />
                 </div>
               </Transition>
             </div>
@@ -397,9 +454,20 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NCard>
-  <NModal preset="card" v-model:show="settingModalVisiable" closable style="width: 600px; max-width: 90vw" title="模板设置">
+  <NModal
+    preset="card"
+    v-model:show="settingModalVisiable"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="模板设置"
+  >
     只是测试, 没用
     <NSpin v-if="!selectedTemplateData.Config" show />
-    <DynamicForm v-else :key="selectedTemplateData.Selected" :configData="selectedTemplateData.Config" :config="selectedTemplateConfig" />
+    <DynamicForm
+      v-else
+      :key="selectedTemplateData.Selected"
+      :configData="selectedTemplateData.Config"
+      :config="selectedTemplateConfig"
+    />
   </NModal>
 </template>

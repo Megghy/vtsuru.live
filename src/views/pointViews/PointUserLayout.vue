@@ -1,34 +1,33 @@
 <script setup lang="ts">
+import { UserInfo } from '@/api/api-models'
+import { POINT_API_URL } from '@/data/constants'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useRouteHash } from '@vueuse/router'
 import {
   NButton,
   NCard,
   NDataTable,
-  NListItem,
-  NTabPane,
-  NTabs,
-  NLayout,
-  NLayoutContent,
-  NText,
-  useMessage,
-  NLayoutHeader,
-  NFlex,
   NDescriptions,
   NDescriptionsItem,
+  NDivider,
+  NFlex,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NList,
+  NListItem,
   NResult,
   NSpin,
-  NDivider,
-  NTag,
-  NList,
+  NTabPane,
+  NTabs,
+  NText,
+  useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
-import { useAuthStore } from '@/store/useAuthStore'
-import { UserInfo } from '@/api/api-models'
-import { POINT_API_URL } from '@/data/constants'
+import { useRoute, useRouter } from 'vue-router'
+import PointOrderView from './PointOrderView.vue'
 import PointUserHistoryView from './PointUserHistoryView.vue'
 import PointUserSettings from './PointUserSettings.vue'
-import { useRouteHash } from '@vueuse/router'
-import PointOrderView from './PointOrderView.vue'
-import { useRoute, useRouter } from 'vue-router'
 
 const useAuth = useAuthStore()
 const message = useMessage()

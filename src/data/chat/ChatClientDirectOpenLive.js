@@ -128,8 +128,8 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
       return
     }
 
-    let ids = []
-    for (let id of command.data.message_ids) {
+    const ids = []
+    for (const id of command.data.message_ids) {
       ids.push(id.toString())
     }
     this.onDelSuperChat({ ids })

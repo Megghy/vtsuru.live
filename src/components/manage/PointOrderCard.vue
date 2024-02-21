@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import {
-  GoodsStatus,
   GoodsTypes,
   PointOrderStatus,
   ResponsePointGoodModel,
   ResponsePointOrder2OwnerModel,
   ResponsePointOrder2UserModel,
 } from '@/api/api-models'
+import { QueryPostAPI } from '@/api/query'
+import { POINT_API_URL } from '@/data/constants'
+import { Info24Filled } from '@vicons/fluent'
 import {
   DataTableColumns,
   DataTableRowKey,
   NAutoComplete,
   NButton,
-  NCard,
   NDataTable,
   NDivider,
   NFlex,
@@ -34,9 +35,6 @@ import {
 import { computed, h, onMounted, ref, watch } from 'vue'
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
-import { Info24Filled } from '@vicons/fluent'
-import { QueryPostAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
 
 const props = defineProps<{
   order: ResponsePointOrder2UserModel[] | ResponsePointOrder2OwnerModel[]

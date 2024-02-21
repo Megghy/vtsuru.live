@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
+import { OpenLiveLotteryType, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/data/constants'
 import { useElementSize } from '@vueuse/core'
-import { NCard, NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
+import { NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
@@ -66,8 +66,20 @@ onUnmounted(() => {
     </NDivider>
     <div class="lottery-content" ref="listContainerRef">
       <template v-if="users.length > 0">
-        <Vue3Marquee v-if="result.type == OpenLiveLotteryType.Waiting" vertical :pause="!isMoreThanContainer" :duration="20" :style="`height: ${height}px;`">
-          <span class="lottery-list-item" :id="index.toString()" v-for="(user, index) in users" :key="user.uId" style="height: 50px">
+        <Vue3Marquee
+          v-if="result.type == OpenLiveLotteryType.Waiting"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;`"
+        >
+          <span
+            class="lottery-list-item"
+            :id="index.toString()"
+            v-for="(user, index) in users"
+            :key="user.uId"
+            style="height: 50px"
+          >
             <img class="lottery-avatar" :src="user.avatar + '@30h'" referrerpolicy="no-referrer" />
             <div>
               <p class="lottery-name">{{ user.name }}</p>
@@ -85,10 +97,26 @@ onUnmounted(() => {
             v-for="user in result.resultUsers"
             :key="user.uId"
             title="抽奖结果"
-            style="height: 100px; width: 100px; display: flex; flex-direction: column; align-items: center; border-radius: 5px; border: #fff 1px solid; padding: 10px; margin: 10px"
+            style="
+              height: 100px;
+              width: 100px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              border-radius: 5px;
+              border: #fff 1px solid;
+              padding: 10px;
+              margin: 10px;
+            "
           >
             <NSpace vertical>
-              <img height="50" width="50" style="border-radius: 50%" :src="user.avatar + '@50h_50w'" referrerpolicy="no-referrer" />
+              <img
+                height="50"
+                width="50"
+                style="border-radius: 50%"
+                :src="user.avatar + '@50h_50w'"
+                referrerpolicy="no-referrer"
+              />
               <NText style="font-size: large">
                 {{ user.name }}
               </NText>
@@ -100,9 +128,25 @@ onUnmounted(() => {
             v-for="user in result.resultUsers"
             :key="user.uId"
             title="抽奖结果"
-            style="height: 100px; width: 100px; display: flex; flex-direction: column; align-items: center; border-radius: 5px; border: #fff 1px solid; padding: 10px; margin: 10px"
+            style="
+              height: 100px;
+              width: 100px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              border-radius: 5px;
+              border: #fff 1px solid;
+              padding: 10px;
+              margin: 10px;
+            "
           >
-            <img height="50" width="50" style="border-radius: 50%" :src="user.avatar + '@50h_50w'" referrerpolicy="no-referrer" />
+            <img
+              height="50"
+              width="50"
+              style="border-radius: 50%"
+              :src="user.avatar + '@50h_50w'"
+              referrerpolicy="no-referrer"
+            />
             <NText style="font-size: large; margin-top: 10px">
               {{ user.name }}
             </NText>
@@ -131,7 +175,11 @@ onUnmounted(() => {
   text-align: center !important;
   font-size: 24px !important;
   font-weight: bold !important;
-  text-shadow: 0 0 10px #ca7b7b6e, 0 0 20px #ffffff8e, 0 0 30px #61606086, 0 0 40px rgba(64, 156, 179, 0.555) !important;
+  text-shadow:
+    0 0 10px #ca7b7b6e,
+    0 0 20px #ffffff8e,
+    0 0 30px #61606086,
+    0 0 40px rgba(64, 156, 179, 0.555) !important;
 }
 .lottery-header-count {
   color: #ffffffbd !important;
@@ -156,7 +204,9 @@ onUnmounted(() => {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
-  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition:
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 .lottery-avatar {
   height: 30px !important;
