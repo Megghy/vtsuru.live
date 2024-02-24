@@ -127,12 +127,9 @@ export class GuidUtils {
 
   // 将GUID转换为数字
   public static guidToLong(guid: string): number {
-    if (!GuidUtils.isGuidFromUserId(guid)) {
-      throw new Error('The provided GUID was not generated from a long value.')
-    }
     const buffer = GuidUtils.guidToBuffer(guid)
     const view = new DataView(buffer)
-    return Number(view.getBigUint64(8)) // 读取后8个字节的long值
+    return Number(view.getBigUint64(8))
   }
 
   // 辅助方法：将ArrayBuffer转换为GUID字符串
@@ -140,7 +137,7 @@ export class GuidUtils {
     const bytes = new Uint8Array(buffer)
     const guid = bytes.reduce((str, byte, idx) => {
       const pair = byte.toString(16).padStart(2, '0')
-      return str + (idx === 4 || idx === 6 || idx === 8 || idx === 10 ? '-' : '') + pair
+      return str + pair + (idx === 3 || idx === 5 || idx === 7 || idx === 9 ? '-' : '')
     }, '')
     return guid
   }
