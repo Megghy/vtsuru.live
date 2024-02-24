@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { GuidUtils } from '@/Utils'
 import {
   ResponsePointGoodModel,
   ResponsePointHisrotyModel,
@@ -98,11 +99,26 @@ async function givePoint() {
   }
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(POINT_API_URL + 'give-point', {
-      authId: props.user.info?.id,
-      count: addPointCount.value,
-      reason: addPointReason.value,
-    })
+    const data = await QueryGetAPI(
+      POINT_API_URL + 'give-point',
+      props.user.info?.id >= 0
+        ? {
+            authId: props.user.info?.id,
+            count: addPointCount.value,
+            reason: addPointReason.value ?? '',
+          }
+        : props.user.info?.userId
+          ? {
+              uId: props.user.info?.userId,
+              count: addPointCount.value,
+              reason: addPointReason.value ?? '',
+            }
+          : {
+              oId: props.user.info?.openId,
+              count: addPointCount.value,
+              reason: addPointReason.value ?? '',
+            },
+    )
     if (data.code == 200) {
       message.success('添加成功')
       showAddPointModal.value = false
@@ -160,14 +176,7 @@ onMounted(async () => {
       </NDescriptions>
       <template #footer>
         <NFlex>
-          <NTooltip :disabled="user.isAuthed">
-            <template #trigger>
-              <NButton type="primary" @click="showAddPointModal = true" :disabled="!user.isAuthed" size="small">
-                给予积分
-              </NButton>
-            </template>
-            <NText> 未认证用户无法给予积分 </NText>
-          </NTooltip>
+          <NButton type="primary" @click="showAddPointModal = true" size="small"> 给予积分 </NButton>
         </NFlex>
       </template>
     </NCard>

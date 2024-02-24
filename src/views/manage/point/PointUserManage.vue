@@ -12,6 +12,10 @@ import {
   NDivider,
   NEmpty,
   NFlex,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NInputNumber,
   NModal,
   NPopconfirm,
   NScrollbar,
@@ -42,7 +46,12 @@ const settings = useStorage<PointUserSettings>('Settings.Point.Users', JSON.pars
 const pn = ref(1)
 const ps = ref(25)
 const showModal = ref(false)
+const showGivePointModal = ref(false)
 const isLoading = ref(true)
+
+const addPointCount = ref(0)
+const addPointReason = ref<string>()
+const addPointTarget = ref<number>()
 
 const users = ref<ResponsePointUserModel[]>([])
 const filteredUsers = computed(() => {
@@ -137,9 +146,42 @@ async function getUsers() {
   }
   return []
 }
+async function refresh() {
+  users.value = await getUsers()
+}
+async function givePoint() {
+  if (addPointCount.value <= 0) {
+    message.error('积分数量必须大于0')
+    return
+  }
+  if (!addPointTarget.value) {
+    message.error('请输入用户')
+  }
+  isLoading.value = true
+  try {
+    const data = await QueryGetAPI(POINT_API_URL + 'give-point', {
+      uId: addPointTarget.value,
+      count: addPointCount.value,
+      reason: addPointReason.value,
+    })
+    if (data.code == 200) {
+      message.success('添加成功')
+      showGivePointModal.value = false
+      await refresh()
+
+      addPointCount.value = 0
+      addPointReason.value = undefined
+      addPointTarget.value = undefined
+    } else {
+      message.error('添加失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('添加失败: ' + err)
+  }
+}
 
 onMounted(async () => {
-  users.value = await getUsers()
+  await refresh()
 })
 </script>
 
@@ -154,13 +196,19 @@ onMounted(async () => {
           <span>确定要恢复默认设置吗?</span>
         </NPopconfirm>
       </template>
+      <template #footer>
+        <NFlex>
+          <NButton type="primary" @click="refresh">刷新</NButton>
+          <NButton type="info" @click="showGivePointModal = true">给予积分</NButton>
+        </NFlex>
+      </template>
       <NFlex>
         <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
       </NFlex>
     </NCard>
     <template v-if="filteredUsers.length == 0">
       <NDivider />
-      <NEmpty description="暂无用户" />
+      <NEmpty :description="settings.onlyAuthed ? '没有已认证的用户' : '没有用户'" />
     </template>
     <NDataTable
       v-else
@@ -180,5 +228,31 @@ onMounted(async () => {
     <NScrollbar style="max-height: 80vh">
       <PointUserDetailCard v-if="currentUser" :user="currentUser" :authInfo="currentUser.info" :goods="goods" />
     </NScrollbar>
+  </NModal>
+  <NModal v-model:show="showGivePointModal" preset="card" style="max-width: 500px" title="给予积分">
+    <NFlex vertical>
+      <NInputGroup>
+        <NInputGroupLabel> 目标用户 </NInputGroupLabel>
+        <NInputNumber
+          v-model:value="addPointTarget"
+          type="number"
+          placeholder="请输入目标用户UId"
+          min="0"
+          style="max-width: 200px"
+        />
+      </NInputGroup>
+      <NInputGroup>
+        <NInputGroupLabel> 积分数量 </NInputGroupLabel>
+        <NInputNumber
+          v-model:value="addPointCount"
+          type="number"
+          placeholder="请输入积分数量"
+          min="0"
+          style="max-width: 120px"
+        />
+      </NInputGroup>
+      <NInput placeholder="(选填) 请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
+      <NButton type="primary" @click="givePoint" :loading="isLoading"> 给予 </NButton>
+    </NFlex>
   </NModal>
 </template>
