@@ -40,15 +40,47 @@ defineProps<{
       </NTooltip>
     </template>
     <template #header-extra>
-      <NTag v-if="item.type == FeedbackType.Opinion" :bordered="false" size="small" type="info" :color="{ color: '#5f877d', textColor: 'white' }"> 建议 </NTag>
-      <NTag v-else-if="item.type == FeedbackType.Bug" :bordered="false" size="small" type="info" :color="{ color: '#875f5f', textColor: 'white' }"> Bug </NTag>
-      <NTag v-else-if="item.type == FeedbackType.FunctionRequest" :bordered="false" size="small" type="info" :color="{ color: '#5f6887', textColor: 'white' }"> 功能 </NTag>
-      <NTag v-else-if="item.type == FeedbackType.Other" :bordered="false" size="small" type="info" :color="{ color: '#595557', textColor: 'white' }"> 其他 </NTag>
+      <NTag
+        v-if="item.type == FeedbackType.Opinion"
+        :bordered="false"
+        size="small"
+        type="info"
+        :color="{ color: '#5f877d', textColor: 'white' }"
+      >
+        建议
+      </NTag>
+      <NTag
+        v-else-if="item.type == FeedbackType.Bug"
+        :bordered="false"
+        size="small"
+        type="info"
+        :color="{ color: '#875f5f', textColor: 'white' }"
+      >
+        Bug
+      </NTag>
+      <NTag
+        v-else-if="item.type == FeedbackType.FunctionRequest"
+        :bordered="false"
+        size="small"
+        type="info"
+        :color="{ color: '#5f6887', textColor: 'white' }"
+      >
+        功能
+      </NTag>
+      <NTag
+        v-else-if="item.type == FeedbackType.Other"
+        :bordered="false"
+        size="small"
+        type="info"
+        :color="{ color: '#595557', textColor: 'white' }"
+      >
+        其他
+      </NTag>
     </template>
     {{ item.message }}
     <template v-if="item.replyMessage" #footer>
       <NDivider style="margin: 0px 0 10px 0" />
-      <NSpace align="center">
+      <NSpace align="center" :wrap="false">
         <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`"></div>
         <NText>
           {{ item.replyMessage }}
