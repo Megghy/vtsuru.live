@@ -1,7 +1,7 @@
 import { QueryGetAPI } from '@/api/query'
 import { BASE_API, apiFail } from '@/data/constants'
 import EasySpeech from 'easy-speech'
-import { NText, createDiscreteApi } from 'naive-ui'
+import { NButton, NFlex, NText, createDiscreteApi } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createApp, h } from 'vue'
 import App from './App.vue'
@@ -16,6 +16,8 @@ const app = createApp(App)
 app.use(router).use(pinia).mount('#app')
 
 let currentVersion: string
+let isHaveNewVersion = false
+
 const { notification } = createDiscreteApi(['notification'])
 QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
   .then((version) => {
@@ -35,6 +37,34 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
           duration: 5000,
           meta: () => h(NText, { depth: 3 }, () => currentVersion),
         })
+      } else {
+        setInterval(() => {
+          if (isHaveNewVersion) {
+            return
+          }
+          QueryGetAPI<string>(BASE_API() + 'vtsuru/version').then((keepCheckData) => {
+            if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
+              isHaveNewVersion = true
+              currentVersion = version.data
+              localStorage.setItem('Version', currentVersion)
+
+              const n = notification.info({
+                title: '发现新的版本更新',
+                content: '是否现在刷新?',
+                meta: () => h(NText, { depth: 3 }, () => currentVersion),
+                action: () =>
+                  h(NFlex, null, () => [
+                    h(
+                      NButton,
+                      { text: true, type: 'primary', onClick: () => location.reload(), size: 'small' },
+                      { default: () => '刷新' },
+                    ),
+                    h(NButton, { text: true, onClick: () => n.destroy(), size: 'small' }, { default: () => '稍后' }),
+                  ]),
+              })
+            }
+          })
+        }, 60 * 1000)
       }
     }
   })

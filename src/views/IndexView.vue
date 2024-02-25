@@ -11,7 +11,7 @@ import {
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NDivider, NGradientText, NGrid, NGridItem, NIcon, NSpace, NText } from 'naive-ui'
+import { NButton, NDivider, NEllipsis, NGradientText, NGrid, NGridItem, NIcon, NSpace, NText } from 'naive-ui'
 
 const { width } = useWindowSize()
 
@@ -73,7 +73,7 @@ const functions = [
   },
   {
     name: '视频征集',
-    desc: '创建用来收集视频链接的页面, 可以从动态爬取, 也可以提前对视频进行筛选',
+    desc: '创建用来收集视频链接的页面, 可以从动态爬取(画饼), 也可以提前对视频进行筛选',
     icon: VideoAdd20Filled,
   },
   {
@@ -140,9 +140,11 @@ const iconColor = 'white'
       <NDivider style="width: 90vw" />
       <NGrid cols="1 s:2 m:3 l:4 xl:5 2xl:5" x-gap="50" y-gap="50" style="max-width: 80vw" responsive="screen">
         <NGridItem v-for="item in functions" :key="item.name">
-          <NSpace align="end">
+          <NSpace align="end" :wrap="false">
             <NIcon :component="item.icon" :color="iconColor" size="20" />
-            <NText class="index-feature header"> {{ item.name }} </NText>
+            <NEllipsis>
+              <NText class="index-feature header"> {{ item.name }} </NText>
+            </NEllipsis>
           </NSpace>
           <NText class="index-feature content"> {{ item.desc }} </NText>
         </NGridItem>
