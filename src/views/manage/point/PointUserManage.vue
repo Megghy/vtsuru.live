@@ -12,6 +12,7 @@ import {
   NDivider,
   NEmpty,
   NFlex,
+  NIcon,
   NInput,
   NInputGroup,
   NInputGroupLabel,
@@ -21,12 +22,14 @@ import {
   NScrollbar,
   NSpin,
   NTag,
+  NText,
   NTime,
   NTooltip,
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import PointUserDetailCard from './PointUserDetailCard.vue'
+import { Info24Filled } from '@vicons/fluent'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]
@@ -78,7 +81,13 @@ const column: DataTableColumns<ResponsePointUserModel> = [
     title: '用户名',
     key: 'username',
     render: (row: ResponsePointUserModel) => {
-      return row.info?.name ?? '未知'
+      return (
+        row.info?.name ??
+        h(NFlex, null, () => [
+          '未知',
+          h(NText, { depth: 3 }, { default: () => `(${row.info.userId ?? row.info.openId})` }),
+        ])
+      )
     },
   },
   {
@@ -231,16 +240,18 @@ onMounted(async () => {
   </NModal>
   <NModal v-model:show="showGivePointModal" preset="card" style="max-width: 500px" title="给予积分">
     <NFlex vertical>
-      <NInputGroup>
-        <NInputGroupLabel> 目标用户 </NInputGroupLabel>
-        <NInputNumber
-          v-model:value="addPointTarget"
-          type="number"
-          placeholder="请输入目标用户UId"
-          min="0"
-          style="max-width: 200px"
-        />
-      </NInputGroup>
+      <NFlex :wrap="false" align="center">
+        <NInputGroup style="max-width: 200px">
+          <NInputGroupLabel> 目标用户 </NInputGroupLabel>
+          <NInputNumber v-model:value="addPointTarget" type="number" placeholder="请输入目标用户UId" min="0" />
+        </NInputGroup>
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          如果目标用户没在直播间发言过则无法显示用户名, 不过不影响使用
+        </NTooltip>
+      </NFlex>
       <NInputGroup>
         <NInputGroupLabel> 积分数量 </NInputGroupLabel>
         <NInputNumber

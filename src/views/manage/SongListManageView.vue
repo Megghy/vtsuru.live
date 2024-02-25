@@ -878,6 +878,9 @@ onMounted(async () => {
               />
             </template>
           </NTabPane>
+          <NTabPane name="directory" tab="从文件夹读取">
+            开发中...
+          </NTabPane>
         </NTabs>
       </NSpin>
     </NScrollbar>
