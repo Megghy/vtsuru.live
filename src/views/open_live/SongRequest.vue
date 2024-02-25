@@ -748,7 +748,7 @@ onUnmounted(() => {
 
 <template>
   <NAlert type="info" v-if="accountInfo">
-    启用点歌功能
+    启用弹幕点歌功能
     <NSwitch
       :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
       @update:value="onUpdateFunctionEnable"
@@ -1219,6 +1219,9 @@ onUnmounted(() => {
         </NSpin>
       </NTabPane>
     </NTabs>
+    <template v-else>
+      <NAlert title="未启用" type="error"> 请先启用弹幕点歌功能 </NAlert>
+    </template>
   </NCard>
   <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">
     <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>

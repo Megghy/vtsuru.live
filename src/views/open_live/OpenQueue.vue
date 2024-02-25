@@ -750,7 +750,7 @@ onUnmounted(() => {
 
 <template>
   <NAlert type="info" v-if="accountInfo">
-    启用队列功能
+    启用弹幕队列功能
     <NSwitch
       :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
       @update:value="onUpdateFunctionEnable"
@@ -804,9 +804,7 @@ onUnmounted(() => {
                 <NIcon :component="Checkmark12Regular" />
               </template>
               今日已处理 |
-              {{
-                queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length
-              }}
+              {{ queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }}
               位
             </NTag>
             <NInputGroup>
@@ -1204,6 +1202,9 @@ onUnmounted(() => {
         </NSpin>
       </NTabPane>
     </NTabs>
+    <template v-else>
+      <NAlert title="未启用" type="error"> 请先启用弹幕排队功能 </NAlert>
+    </template>
   </NCard>
   <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">
     <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
