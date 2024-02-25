@@ -481,10 +481,12 @@ function parseExcelFile() {
           case 'singer':
           case '作者':
           case '歌手':
-            song.author = new List(value?.includes('/') ? value.split('/') : value.split(','))
-              .Select((a) => a.trim())
-              .Distinct()
-              .ToArray()
+            song.author = value
+              ?.replace('／', '/')
+              .replace('，', ',')
+              .split(/\/|,/)
+              .map((a: string) => a.trim())
+              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
             break
           case 'description':
           case 'desc':
@@ -524,10 +526,12 @@ function parseExcelFile() {
           case 'tags':
           case 'tag':
           case '标签':
-            song.tags = new List(value?.split(','))
-              .Select((t) => t.trim())
-              .Distinct()
-              .ToArray()
+            song.tags = value
+              ?.replace('／', '/')
+              .replace('，', ',')
+              .split(/\/|,/)
+              .map((t: string) => t.trim())
+              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
             break
         }
       }
@@ -878,9 +882,7 @@ onMounted(async () => {
               />
             </template>
           </NTabPane>
-          <NTabPane name="directory" tab="从文件夹读取">
-            开发中...
-          </NTabPane>
+          <NTabPane name="directory" tab="从文件夹读取"> 开发中... </NTabPane>
         </NTabs>
       </NSpin>
     </NScrollbar>
