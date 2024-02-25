@@ -1,5 +1,5 @@
 import DefaultIndexTemplateVue from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
-import { computed, defineAsyncComponent, ref, watchEffect } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
 
 const debugAPI = import.meta.env.VITE_DEBUG_API
 const releseAPI = `https://vtsuru.suki.club/api/`
