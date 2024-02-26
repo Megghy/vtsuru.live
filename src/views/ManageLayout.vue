@@ -454,7 +454,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NLayout v-if="accountInfo">
+  <NLayout v-if="accountInfo" style="height: 100vh">
     <NLayoutHeader bordered style="height: 50px; padding: 10px 15px 5px 15px">
       <NPageHeader>
         <template #title>
@@ -487,7 +487,7 @@ onMounted(() => {
         </template>
       </NPageHeader>
     </NLayoutHeader>
-    <NLayout has-sider>
+    <NLayout has-sider style="height: calc(100vh - 50px)">
       <NLayoutSider
         ref="sider"
         bordered
@@ -497,6 +497,7 @@ onMounted(() => {
         :collapsed-width="64"
         :width="180"
         :native-scrollbar="false"
+        :scrollbar-props="{ trigger: 'none', style: {} }"
       >
         <NSpace vertical style="margin-top: 16px" align="center">
           <NSpace justify="center">

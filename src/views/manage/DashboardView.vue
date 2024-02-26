@@ -265,15 +265,18 @@ onUnmounted(() => {
 
 <template>
   <NSpace justify="center" align="center" vertical style="width: 100%">
-    <NAlert type="info">
-      当前本站正在测试为粉丝数大于 1000 或至少拥有一位舰长的主播直接从服务端记录并储存弹幕数据,
-      不过并不清楚B站的风控策略, 此功能不一定会长期启用
-      <br />
-      在我们被限制连接之前满足以上条件的主播无需部署
+    <NAlert type="warning" title="2024.2.26">
+      近期逸站对开放平台直播弹幕流进行了极为严格的限制, 目前本站服务器只能连接个位数的直播间, 这使得在不使用
       <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
         VtsuruEventFetcher
       </NButton>
-      即可使用相关功能 (如记录上舰和SC, 直播场记录等) 😊
+      的情况下获取弹幕数据几乎不可能实现.
+      <br />
+      在这种情况下建议有相关功能需求的用户 (如直播记录, 积分等) 部署
+      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
+        VtsuruEventFetcher
+      </NButton>
+      以获得完整的功能体验
     </NAlert>
     <NCard embedded style="width: 100%">
       <NSpace align="center" justify="center" vertical>
