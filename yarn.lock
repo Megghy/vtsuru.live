@@ -3404,15 +3404,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:^9.0.11":
-  version: 9.0.11
-  resolution: "husky@npm:9.0.11"
-  bin:
-    husky: bin.mjs
-  checksum: 2c787dcf74a837fc9a4fea7da907509d4bd9a289f4ea10ecc9d86279e4d4542b0f5f6443a619bccae19e265f2677172cc2b86aae5c932a35a330cc227d914605
-  languageName: node
-  linkType: hard
-
 "iconv-lite@npm:^0.6.2":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
@@ -5675,7 +5666,6 @@ __metadata:
     file-saver: "npm:^2.0.5"
     grapheme-splitter: "npm:^1.0.4"
     html2canvas: "npm:^1.4.1"
-    husky: "npm:^9.0.11"
     linqts: "npm:^1.15.0"
     mitt: "npm:^3.0.1"
     music-metadata-browser: "npm:^2.5.10"

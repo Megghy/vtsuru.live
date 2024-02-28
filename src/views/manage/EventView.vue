@@ -3,7 +3,7 @@ import { isDarkMode } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import { AVATAR_URL, BASE_API } from '@/data/constants'
+import { AVATAR_URL, BASE_API, EVENT_API_URL } from '@/data/constants'
 import { Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
@@ -86,7 +86,7 @@ async function onDateChange() {
 }
 async function get() {
   try {
-    const data = await QueryGetAPI<EventModel[]>(BASE_API() + 'event/get', {
+    const data = await QueryGetAPI<EventModel[]>(EVENT_API_URL + 'get', {
       start: selectedDate.value[0],
       end: selectedDate.value[1],
     })

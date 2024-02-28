@@ -4,10 +4,25 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 const webFetcher = useWebFetcher()
 
-onMounted(() => {
-  webFetcher.Start()
+let timer: any
+onMounted(async () => {
+  await webFetcher.Start()
+  setTimeout(() => {
+    // @ts-expect-error obs的东西
+    if (!webFetcher.isStarted && window.obsstudio) {
+      timer = setInterval(() => {
+        if (webFetcher.isStarted) {
+          return
+        }
+        webFetcher.Stop()
+        webFetcher.Start()
+      }, 20000)
+    }
+  }, 10000)
 })
-onUnmounted(() => {})
+onUnmounted(() => {
+  clearInterval(timer)
+})
 </script>
 
 <template>
