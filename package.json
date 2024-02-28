@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "vite lint",
+    "lint": "vite lint"
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.0",
