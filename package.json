@@ -7,8 +7,6 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "vite lint",
-    "postinstall": "husky init",
-    "prepare": "husky"
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.0",
