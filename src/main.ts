@@ -19,7 +19,7 @@ let currentVersion: string
 let isHaveNewVersion = false
 
 const { notification } = createDiscreteApi(['notification'])
-QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
+QueryGetAPI<string>(BASE_API + 'vtsuru/version')
   .then((version) => {
     if (version.code == 200) {
       currentVersion = version.data
@@ -42,7 +42,7 @@ QueryGetAPI<string>(BASE_API() + 'vtsuru/version')
           if (isHaveNewVersion) {
             return
           }
-          QueryGetAPI<string>(BASE_API() + 'vtsuru/version').then((keepCheckData) => {
+          QueryGetAPI<string>(BASE_API + 'vtsuru/version').then((keepCheckData) => {
             if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
               isHaveNewVersion = true
               currentVersion = version.data

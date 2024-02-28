@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
+import { EventFetcherType } from '@/api/api-models'
 import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
 import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 const accountInfo = useAccount()
+const state = accountInfo.value?.eventFetcherState
 
 const status = computed(() => {
-  if (!accountInfo.value) return 'error'
-  if (accountInfo.value.eventFetcherOnline == true || accountInfo.value.isServerFetcherOnline == true) {
-    if (accountInfo.value.eventFetcherStatus) {
+  if (state.online == true) {
+    if (state.status == undefined || state.status == null) {
       return 'warning'
-    } else if (Object.keys(accountInfo.value.eventFetcherStatusV3 ?? {}).length > 0) {
+    } else if (Object.keys(state.status ?? {}).length > 0) {
       return 'warning'
     } else {
       return 'success'
@@ -23,7 +24,7 @@ const status = computed(() => {
 </script>
 
 <template>
-  <NAlert :type="status">
+  <NAlert :type="status" v-if="status">
     <template #header>
       EVENT-FETCHER 状态
       <NTooltip>
@@ -50,7 +51,7 @@ const status = computed(() => {
         <template #trigger>
           <NTag size="small" :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }">
             <NIcon :component="FlashCheckmark16Filled" />
-            {{ accountInfo?.eventFetcherVersion ?? '未知' }}
+            {{ state.type == EventFetcherType.OBS ? 'OBS/网页端' : state.version ?? '未知' }}
           </NTag>
         </template>
         你所使用的版本
@@ -58,7 +59,7 @@ const status = computed(() => {
       <NDivider vertical />
     </template>
     <NTag :type="status">
-      <template v-if="accountInfo?.eventFetcherOnline == true && accountInfo?.eventFetcherStatus">
+      <template v-if="state?.online == true && (state?.status == null || state?.status == undefined)">
         此版本已过期, 请更新
         <NTooltip trigger="click">
           <template #trigger>
@@ -75,19 +76,17 @@ const status = computed(() => {
           </NText>
           | 今日已接收
           <NText color="white" strong>
-            {{ accountInfo?.eventFetcherTodayReceive }}
+            {{ state.todayReceive }}
           </NText>
           条
         </template>
         <template v-else-if="status == 'warning'">
-          <template v-if="accountInfo?.eventFetcherStatusV3">
-            异常: {{ Object.values(accountInfo.eventFetcherStatusV3).join('; ') }}
-          </template>
+          <template v-if="state.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
         </template>
         <template v-else-if="status == 'info'"> 未连接 </template>
       </template>
     </NTag>
-    <template v-if="accountInfo?.eventFetcherOnline != true">
+    <template v-if="!state.online">
       <NDivider vertical />
       <NButton
         type="info"

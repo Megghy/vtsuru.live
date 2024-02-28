@@ -11,6 +11,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@microsoft/signalr": "^8.0.0",
+    "@microsoft/signalr-protocol-msgpack": "^8.0.0",
     "@types/node": "^20.11.19",
     "@typescript-eslint/eslint-plugin": "^7.0.1",
     "@vicons/fluent": "^0.12.0",

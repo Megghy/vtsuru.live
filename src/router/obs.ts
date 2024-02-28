@@ -42,5 +42,13 @@ export default {
         title: '棉花糖展示',
       },
     },
+    {
+      path: 'web-fetcher',
+      name: 'obs-web-fetcher',
+      component: () => import('@/views/obs/WebFetcherOBS.vue'),
+      meta: {
+        title: '弹幕收集器 (OBS版',
+      },
+    },
   ],
 }
