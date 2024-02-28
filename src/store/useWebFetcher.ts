@@ -86,6 +86,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         result = await connectDanmakuClient()
       }
       isStarted.value = true
+      disconnectedByServer = false
     })
 
     connection.onclose(reconnect)
