@@ -1,5 +1,0 @@
-# 使用 Prettier 格式化代码
-npx prettier --write 'src/**/*.{js,jsx,ts,tsx,json,css,md}'
-
-# 可以加入一个Git命令来确保这些改动被包含在push中
-git add .
