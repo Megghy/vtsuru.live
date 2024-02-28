@@ -14,6 +14,7 @@ onMounted(async () => {
         if (webFetcher.isStarted) {
           return
         }
+
         webFetcher.Stop()
         webFetcher.Start()
       }, 20000)
