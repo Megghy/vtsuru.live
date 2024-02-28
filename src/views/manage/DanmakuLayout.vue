@@ -11,7 +11,7 @@ const props = defineProps<{
 const accountInfo = useAccount()
 const message = useMessage()
 
-let client = new DanmakuClient(null)
+const client = new DanmakuClient(null)
 const isClientLoading = ref(true)
 
 onMounted(async () => {

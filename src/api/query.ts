@@ -23,7 +23,7 @@ export async function QueryPostAPIWithParams<T>(
   const url = new URL(urlString)
   url.search = getParams(params)
   headers ??= []
-  headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
 
   if (contentType) headers?.push(['Content-Type', contentType])
 
@@ -55,7 +55,7 @@ export async function QueryGetAPI<T>(
   url.search = getParams(params)
   if (cookie.value) {
     headers ??= []
-    headers?.push(['Authorization', `Bearer ${cookie.value}`])
+    if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
   }
   try {
     const data = await fetch(url.toString(), {
@@ -80,6 +80,9 @@ function getParams(params?: [string, string][]) {
   const resultParams = new URLSearchParams(params)
   if (urlParams.has('as')) {
     resultParams.set('as', urlParams.get('as') || '')
+  }
+  if (urlParams.has('token')) {
+    resultParams.set('token', urlParams.get('token') || '')
   }
   return resultParams.toString()
 }

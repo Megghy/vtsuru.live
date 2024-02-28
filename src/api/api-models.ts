@@ -30,6 +30,20 @@ export interface UserInfo {
     streamerInfo?: StreamerModel
   }
 }
+export interface EventFetcherStateModel {
+  online: boolean
+  status: { [errorCode: string]: string }
+  version?: string
+  todayReceive: number
+  useCookie: boolean
+  type: EventFetcherType
+}
+
+export enum EventFetcherType {
+  Application,
+  OBS,
+  Server,
+}
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
   isBiliVerified: boolean
@@ -41,11 +55,7 @@ export interface AccountInfo extends UserInfo {
   biliAuthCode?: string
   biliAuthCodeStatus: BiliAuthCodeStatusType
 
-  eventFetcherOnline: boolean
-  eventFetcherStatus: string
-  eventFetcherStatusV3: { [errorCode: string]: string }
-  eventFetcherTodayReceive: number
-  eventFetcherVersion?: string
+  eventFetcherState: EventFetcherStateModel
 
   nextSendEmailTime?: number
   isServerFetcherOnline: boolean

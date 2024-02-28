@@ -54,12 +54,15 @@ onMounted(() => {
   }, 1000)
 
   //@ts-expect-error 这里获取不了
-  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-    visiable.value = visibility
-  }
-  //@ts-expect-error 这里获取不了
-  window.obsstudio.onActiveChange = function (a: boolean) {
-    active.value = a
+  if (window.obsstudio) {
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+      visiable.value = visibility
+    }
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onActiveChange = function (a: boolean) {
+      active.value = a
+    }
   }
 })
 onUnmounted(() => {

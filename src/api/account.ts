@@ -7,7 +7,7 @@ import { ref } from 'vue'
 import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
 import { useRoute } from 'vue-router'
 
-export const ACCOUNT = ref<AccountInfo>()
+export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
 const route = useRoute()
 

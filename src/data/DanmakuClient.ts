@@ -159,6 +159,7 @@ interface DanmakuEventsMap {
   gift: (arg1: GiftInfo, arg2?: any) => void
   sc: (arg1: SCInfo, arg2?: any) => void
   guard: (arg1: GuardInfo, arg2?: any) => void
+  all: (arg1: any) => void
 }
 
 export default class DanmakuClient {
@@ -167,54 +168,83 @@ export default class DanmakuClient {
   }
 
   private client: any
-  private authInfo: AuthInfo | null
   private timer: any | undefined
+  private isStarting = false
 
+  public authInfo: AuthInfo | null
   public roomAuthInfo = ref<RoomAuthInfo>({} as RoomAuthInfo)
   public authCode: string | undefined
+
+  public isRunning: boolean = false
 
   private events: {
     danmaku: ((arg1: DanmakuInfo, arg2?: any) => void)[]
     gift: ((arg1: GiftInfo, arg2?: any) => void)[]
     sc: ((arg1: SCInfo, arg2?: any) => void)[]
     guard: ((arg1: GuardInfo, arg2?: any) => void)[]
+    all: ((arg1: any) => void)[]
   } = {
     danmaku: [],
     gift: [],
     sc: [],
     guard: [],
+    all: [],
   }
   private eventsAsModel: {
     danmaku: ((arg1: EventModel, arg2?: any) => void)[]
     gift: ((arg1: EventModel, arg2?: any) => void)[]
     sc: ((arg1: EventModel, arg2?: any) => void)[]
     guard: ((arg1: EventModel, arg2?: any) => void)[]
+    all: ((arg1: any) => void)[]
   } = {
     danmaku: [],
     gift: [],
     sc: [],
     guard: [],
+    all: [],
   }
 
   public async Start(): Promise<{ success: boolean; message: string }> {
-    if (!this.client) {
-      console.log('[OPEN-LIVE] 正在启动弹幕客户端')
-      const result = await this.initClient()
-      if (result.success) {
-        this.timer = setInterval(() => {
-          this.sendHeartbeat()
-        }, 20 * 1000)
-      }
-      return result
-    } else {
-      console.warn('[OPEN-LIVE] 弹幕客户端已被启动过')
+    if (this.isRunning) {
       return {
         success: false,
-        message: '弹幕客户端已被启动过',
+        message: '弹幕客户端已启动',
       }
+    }
+    if (this.isStarting) {
+      return {
+        success: false,
+        message: '弹幕客户端正在启动',
+      }
+    }
+    this.isStarting = true
+    try {
+      if (!this.client) {
+        console.log('[OPEN-LIVE] 正在启动弹幕客户端')
+        const result = await this.initClient()
+        if (result.success) {
+          this.isRunning = true
+          this.timer ??= setInterval(() => {
+            this.sendHeartbeat()
+          }, 20 * 1000)
+        }
+        return result
+      } else {
+        console.warn('[OPEN-LIVE] 弹幕客户端已被启动过')
+        return {
+          success: false,
+          message: '弹幕客户端已被启动过',
+        }
+      }
+    } finally {
+      this.isStarting = false
     }
   }
   public Stop() {
+    if (!this.isRunning) {
+      return
+    }
+    this.isRunning = false
     if (this.client) {
       console.log('[OPEN-LIVE] 正在停止弹幕客户端')
       this.client.stop()
@@ -223,35 +253,51 @@ export default class DanmakuClient {
     }
     if (this.timer) {
       clearInterval(this.timer)
+      this.timer = undefined
     }
     this.events = {
       danmaku: [],
       gift: [],
       sc: [],
       guard: [],
+      all: [],
     }
     this.eventsAsModel = {
       danmaku: [],
       gift: [],
       sc: [],
       guard: [],
+      all: [],
     }
   }
   private sendHeartbeat() {
-    if (this.client) {
-      const query = this.authInfo
-        ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo)
-        : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')
-      query.then((data) => {
-        if (data.code != 200) {
-          console.error('[OPEN-LIVE] 心跳失败')
-          this.client.stop()
-          this.client = null
-          this.initClient()
-        }
-      })
+    if (!this.isRunning) {
+      clearInterval(this.timer)
+      this.timer = undefined
+      return
     }
+    const query = this.authInfo
+      ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo)
+      : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')
+    query.then((data) => {
+      if (data.code != 200) {
+        console.error('[OPEN-LIVE] 心跳失败, 将重新连接')
+        this.client?.stop()
+        this.client = null
+        this.initClient()
+      }
+    })
   }
+
+  private onRawMessage = (command: any) => {
+    this.eventsAsModel.all?.forEach((d) => {
+      d(command)
+    })
+    this.events.all?.forEach((d) => {
+      d(command)
+    })
+  }
+
   private onDanmaku = (command: any) => {
     const data = command.data as DanmakuInfo
 
@@ -378,7 +424,8 @@ export default class DanmakuClient {
   public onEvent(eventName: 'gift', listener: (arg1: EventModel, arg2?: any) => void): this
   public onEvent(eventName: 'sc', listener: (arg1: EventModel, arg2?: any) => void): this
   public onEvent(eventName: 'guard', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+  public onEvent(eventName: 'all', listener: (arg1: any) => void): this
+  public onEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard' | 'all', listener: (...args: any[]) => void): this {
     if (!this.eventsAsModel[eventName]) {
       this.eventsAsModel[eventName] = []
     }
@@ -418,7 +465,7 @@ export default class DanmakuClient {
         message: '',
       }
     } else {
-      console.log('[OPEN-LIVE] 无法开启场次')
+      console.log('[OPEN-LIVE] 无法开启场次: ' + auth.message)
       return {
         success: false,
         message: auth.message,
@@ -456,5 +503,6 @@ export default class DanmakuClient {
     LIVE_OPEN_PLATFORM_SEND_GIFT: this.onGift.bind(this),
     LIVE_OPEN_PLATFORM_SUPER_CHAT: this.onSC.bind(this),
     LIVE_OPEN_PLATFORM_GUARD: this.onGuard.bind(this),
+    RAW_MESSAGE: this.onRawMessage.bind(this),
   }
 }

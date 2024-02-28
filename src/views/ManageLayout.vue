@@ -454,7 +454,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NLayout v-if="accountInfo" style="height: 100vh">
+  <NLayout v-if="accountInfo.id" style="height: 100vh">
     <NLayoutHeader bordered style="height: 50px; padding: 10px 15px 5px 15px">
       <NPageHeader>
         <template #title>

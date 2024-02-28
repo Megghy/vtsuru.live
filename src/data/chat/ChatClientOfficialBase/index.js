@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// @ts-nocheck
 import { BrotliDecode } from './brotli_decode'
 import { setInterval, clearInterval, setTimeout, clearTimeout } from 'worker-timers'
 
@@ -145,7 +147,7 @@ export default class ChatClientOfficialBase {
     this.sendAuth()
     this.heartbeatTimerId = setInterval(this.sendHeartbeat.bind(this), HEARTBEAT_INTERVAL)
     this.refreshReceiveTimeoutTimer()
-    console.log('ws 已连接')
+    //console.log('ws 已连接')
   }
 
   sendHeartbeat() {
@@ -270,7 +272,10 @@ export default class ChatClientOfficialBase {
           // 没压缩过的直接反序列化
           if (body.length !== 0) {
             try {
-              body = JSON.parse(textDecoder.decode(body))
+              const text = textDecoder.decode(body)
+              this.onRawMessage(text)
+              this.CMD_CALLBACK_MAP['RAW_MESSAGE']?.call(this, text)
+              body = JSON.parse(text)
               this.handlerCommand(body)
             } catch (e) {
               console.error('body=', body)
@@ -299,6 +304,7 @@ export default class ChatClientOfficialBase {
       }
     }
   }
+  onRawMessage(command) {}
 
   handlerCommand(command) {
     let cmd = command.cmd || ''

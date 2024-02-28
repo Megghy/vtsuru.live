@@ -134,6 +134,13 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
     }
     this.onDelSuperChat({ ids })
   }
+
+  rawMessageCallback(command) {
+    if (!this.onRawMessage) {
+      return
+    }
+    this.onRawMessage(command)
+  }
 }
 
 const CMD_CALLBACK_MAP = {
@@ -142,4 +149,5 @@ const CMD_CALLBACK_MAP = {
   LIVE_OPEN_PLATFORM_GUARD: ChatClientDirectOpenLive.prototype.guardCallback,
   LIVE_OPEN_PLATFORM_SUPER_CHAT: ChatClientDirectOpenLive.prototype.superChatCallback,
   LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL: ChatClientDirectOpenLive.prototype.superChatDelCallback,
+  RAW_MESSAGE: ChatClientDirectOpenLive.prototype.rawMessageCallback,
 }
