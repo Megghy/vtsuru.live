@@ -9,11 +9,14 @@ import { GetSelfAccount, UpdateAccountLoop } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import router from './router'
 import { useAuthStore } from './store/useAuthStore'
+import { useRoute } from 'vue-router'
 
 const pinia = createPinia()
 
 const app = createApp(App)
 app.use(router).use(pinia).mount('#app')
+
+const route = useRoute()
 
 let currentVersion: string
 let isHaveNewVersion = false
@@ -48,20 +51,22 @@ QueryGetAPI<string>(BASE_API + 'vtsuru/version')
               currentVersion = version.data
               localStorage.setItem('Version', currentVersion)
 
-              const n = notification.info({
-                title: '发现新的版本更新',
-                content: '是否现在刷新?',
-                meta: () => h(NText, { depth: 3 }, () => currentVersion),
-                action: () =>
-                  h(NFlex, null, () => [
-                    h(
-                      NButton,
-                      { text: true, type: 'primary', onClick: () => location.reload(), size: 'small' },
-                      { default: () => '刷新' },
-                    ),
-                    h(NButton, { text: true, onClick: () => n.destroy(), size: 'small' }, { default: () => '稍后' }),
-                  ]),
-              })
+              if (!route.path.startsWith('/obs')) {
+                const n = notification.info({
+                  title: '发现新的版本更新',
+                  content: '是否现在刷新?',
+                  meta: () => h(NText, { depth: 3 }, () => currentVersion),
+                  action: () =>
+                    h(NFlex, null, () => [
+                      h(
+                        NButton,
+                        { text: true, type: 'primary', onClick: () => location.reload(), size: 'small' },
+                        { default: () => '刷新' },
+                      ),
+                      h(NButton, { text: true, onClick: () => n.destroy(), size: 'small' }, { default: () => '稍后' }),
+                    ]),
+                })
+              }
             }
           })
         }, 60 * 1000)
