@@ -477,6 +477,19 @@ async function delSong(song: SongsInfo) {
     }
   })
 }
+async function delBatchSong() {
+  const ids = selectedColumn.value.map((s) => s.toString())
+  await QueryPostAPI<SongsInfo>(SONG_API_URL + 'del-batch', ids).then((data) => {
+    if (data.code == 200) {
+      songsInternal.value = songsInternal.value.filter((s) => !ids.includes(s.key))
+      message.success('已删除 ' + ids.length + ' 首歌曲')
+      showBatchModal.value = false
+      selectedColumn.value = []
+    } else {
+      message.error('未能删除歌曲: ' + data.message)
+    }
+  })
+}
 function GetSCColor(price: number): string {
   if (price === 0) return `#2a60b2`
   if (price > 0 && price < 30) return `#2a60b2`
@@ -797,6 +810,14 @@ onMounted(() => {
     style="max-width: 600px"
   >
     <NTabs>
+      <NTabPane name="delete" tab="删除">
+        <NPopconfirm @positive-click="delBatchSong">
+          <template #trigger>
+            <NButton type="error"> 批量删除 </NButton>
+          </template>
+          <span> 确定删除 {{ selectedColumn.length }} 首曲目吗？ </span>
+        </NPopconfirm>
+      </NTabPane>
       <NTabPane name="author" tab="作者">
         <NSelect
           v-model:value="batchUpdate_Author"

@@ -4,7 +4,6 @@ import { APIRoot, PaginationResponse } from './api-models'
 import { apiFail } from '@/data/constants'
 
 const cookie = useLocalStorage('JWT_Token', '')
-let failCount = 0
 
 export async function QueryPostAPI<T>(
   urlString: string,
@@ -34,11 +33,9 @@ export async function QueryPostAPIWithParams<T>(
       body: typeof body === 'string' ? body : JSON.stringify(body),
     })
     const result = (await data.json()) as APIRoot<T>
-    failCount = 0
     return result
   } catch (e) {
     console.error(`[POST] API调用失败: ${e}`)
-    failCount++
     if (!apiFail.value) {
       apiFail.value = true
       console.log('默认API异常, 切换至故障转移节点')
@@ -63,11 +60,9 @@ export async function QueryGetAPI<T>(
       headers: headers,
     })
     const result = (await data.json()) as APIRoot<T>
-    failCount = 0
     return result
   } catch (e) {
     console.error(`[GET] API调用失败: ${e}`)
-    failCount++
     if (!apiFail.value) {
       apiFail.value = true
       console.log('默认API异常, 切换至故障转移节点')
