@@ -121,10 +121,10 @@ function updateUsers() {
   })
 }
 function addUser(user: OpenLiveLotteryUserInfo, danmu: any) {
-  if (originUsers.value.find((u) => u.uId == user.uId) || !isStartLottery.value) {
+  if (originUsers.value.find((u) => u.openId == user.openId) || !isStartLottery.value) {
     return
   }
-  if (isUserValid(user, danmu)) {
+  if (isUserValid(user, danmu) && !originUsers.value.find((u) => u.openId == user.openId)) {
     originUsers.value.push(user)
     currentUsers.value.push(user)
     console.log(`[OPEN-LIVE-Lottery] ${user.name} 添加到队列中`)
@@ -267,8 +267,8 @@ function clear() {
   updateUsers()
 }
 function removeUser(user: OpenLiveLotteryUserInfo) {
-  currentUsers.value = currentUsers.value.filter((u) => u.uId != user.uId)
-  originUsers.value = originUsers.value.filter((u) => u.uId != user.uId)
+  currentUsers.value = currentUsers.value.filter((u) => u.openId != user.openId)
+  originUsers.value = originUsers.value.filter((u) => u.openId != user.openId)
 
   updateUsers()
 }
@@ -278,6 +278,7 @@ function onDanmaku(data: DanmakuInfo, command: any) {
     addUser(
       {
         uId: data.uid,
+        openId: data.open_id,
         name: data.uname,
         avatar: data.uface,
         fans_medal_level: data.fans_medal_level,
@@ -294,6 +295,7 @@ function onGift(data: GiftInfo, command: any) {
     addUser(
       {
         uId: data.uid,
+        openId: data.open_id,
         name: data.uname,
         avatar: data.uface,
         fans_medal_level: data.fans_medal_level,
@@ -496,7 +498,7 @@ onUnmounted(() => {
         </NSpace>
         <NDivider style="margin: 10px 0 10px 0"> 共 {{ currentUsers?.length }} 人</NDivider>
         <NGrid v-if="currentUsers.length > 0" cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
-          <NGridItem v-for="item in currentUsers" v-bind:key="item.uId">
+          <NGridItem v-for="item in currentUsers" v-bind:key="item.openId">
             <NCard size="small" :title="item.name" style="height: 155px" embedded>
               <template #header>
                 <NSpace align="center" vertical :size="5">
@@ -558,7 +560,7 @@ onUnmounted(() => {
               </NButton>
             </template>
             <NSpace vertical>
-              <NSpace v-for="user in item.users" :key="user.uId">
+              <NSpace v-for="user in item.users" :key="user.openId">
                 <NAvatar round lazy :src="user.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" />
                 {{ user.name }}
               </NSpace>
