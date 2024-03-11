@@ -414,6 +414,7 @@ export interface OpenLiveInfo {
 export interface OpenLiveLotteryUserInfo {
   name: string
   uId: number
+  openId: string
   level?: number
   avatar: string
   fans_medal_level: number

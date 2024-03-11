@@ -5,6 +5,7 @@ import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
+import { List } from 'linqts'
 import {
   NAvatar,
   NButton,
@@ -151,6 +152,9 @@ async function getCommentsUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
+        data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
+        data.data.total = data.data.users.length
+
         originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
         commentUsers.value = data.data
         isCommentCountDown.value = false
@@ -177,6 +181,9 @@ async function getForwardUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
+        data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
+        data.data.total = data.data.users.length
+        
         originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
         forwardUsers.value = data.data
         isCommentCountDown.value = false
@@ -258,7 +265,12 @@ function onFinishLottery() {
       h(
         NSpace,
         { vertical: true },
-        resultUsers.value?.map((user) => h(NSpace, null, [h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }), h('span', user.name)])),
+        resultUsers.value?.map((user) =>
+          h(NSpace, null, [
+            h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }),
+            h('span', user.name),
+          ]),
+        ),
       ),
     meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
     onAfterLeave: () => {
@@ -321,7 +333,12 @@ onUnmounted(() => {
     <template #header-extra>
       <NButton @click="showModal = true"> 历史记录 </NButton>
     </template>
-    <NInput v-model:value="inputDynamic" placeholder="动态链接或直接输入动态Id" :status="inputDynamicId ? 'success' : 'warning'" :disabled="isLoading || isLottering" />
+    <NInput
+      v-model:value="inputDynamic"
+      placeholder="动态链接或直接输入动态Id"
+      :status="inputDynamicId ? 'success' : 'warning'"
+      :disabled="isLoading || isLottering"
+    />
     <NDivider style="margin: 10px 0 10px 0" />
     <NCard size="small" embedded title="选项">
       <template #header-extra>
@@ -346,7 +363,13 @@ onUnmounted(() => {
           <NCollapseTransition>
             <NInputGroup v-if="lotteryOption.needFanCard" style="max-width: 200px">
               <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-              <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1" :disabled="isLottering" />
+              <NInputNumber
+                v-model:value="lotteryOption.fanCardLevel"
+                min="1"
+                max="50"
+                :default-value="1"
+                :disabled="isLottering"
+              />
             </NInputGroup>
           </NCollapseTransition>
         </template>
@@ -358,13 +381,26 @@ onUnmounted(() => {
     </NCard>
     <br />
     <NSpace justify="center" align="center">
-      <NButton :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering" :loading="!token || isLoading" @click="onGet" type="primary"> 加载用户 </NButton>
-      <NCountdown v-if="!isCommentCountDown" :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()" @finish="isCommentCountDown = true" />
+      <NButton
+        :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering"
+        :loading="!token || isLoading"
+        @click="onGet"
+        type="primary"
+      >
+        加载用户
+      </NButton>
+      <NCountdown
+        v-if="!isCommentCountDown"
+        :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()"
+        @finish="isCommentCountDown = true"
+      />
     </NSpace>
     <br />
     <NCard v-if="currentUsers" size="small">
       <NSpace justify="center">
-        <NButton type="primary" @click="startLottery" :loading="isLottering" :disabled="isLotteried"> 开始抽取 </NButton>
+        <NButton type="primary" @click="startLottery" :loading="isLottering" :disabled="isLotteried">
+          开始抽取
+        </NButton>
         <NButton type="info" :disabled="isLottering || !isLotteried" @click="reset"> 重置 </NButton>
       </NSpace>
       <NDivider style="margin: 10px 0 10px 0"> 共 {{ validUsers?.length }} 人</NDivider>
@@ -373,12 +409,34 @@ onUnmounted(() => {
           <NCard size="small" :title="item.name" style="height: 155px">
             <template #header>
               <NSpace align="center" vertical :size="5">
-                <NAvatar round lazy borderd :size="64" :src="item.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+                <NAvatar
+                  round
+                  lazy
+                  borderd
+                  :size="64"
+                  :src="item.avatar + '@64w_64h'"
+                  :img-props="{ referrerpolicy: 'no-referrer' }"
+                  style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
+                />
                 <NSpace>
-                  <NTag v-if="item.isVIP" size="tiny" round :color="{ color: '#fb7299', textColor: 'white', borderColor: 'white' }"> 大会员 </NTag>
+                  <NTag
+                    v-if="item.isVIP"
+                    size="tiny"
+                    round
+                    :color="{ color: '#fb7299', textColor: 'white', borderColor: 'white' }"
+                  >
+                    大会员
+                  </NTag>
                   <NTooltip>
                     <template #trigger>
-                      <NTag v-if="item.level" size="tiny" :color="{ color: getLevelColor(item.level), textColor: 'white', borderColor: 'white' }" :borderd="false"> LV {{ item.level }} </NTag>
+                      <NTag
+                        v-if="item.level"
+                        size="tiny"
+                        :color="{ color: getLevelColor(item.level), textColor: 'white', borderColor: 'white' }"
+                        :borderd="false"
+                      >
+                        LV {{ item.level }}
+                      </NTag>
                     </template>
                     用户等级
                   </NTooltip>
@@ -411,7 +469,9 @@ onUnmounted(() => {
               <NTime :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton type="error" size="small" @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"> 删除 </NButton>
+              <NButton type="error" size="small" @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)">
+                删除
+              </NButton>
             </template>
             <NSpace vertical>
               <NSpace v-for="user in item.users" :key="user.uId">
