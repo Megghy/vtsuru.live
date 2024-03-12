@@ -65,7 +65,7 @@ import {
 } from 'naive-ui'
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import SongRequestOBS from '../obs/LiveRequestOBS.vue'
+import LiveRequestOBS from '../obs/LiveRequestOBS.vue'
 
 const defaultSettings = {
   orderPrefix: '点播',
@@ -1235,7 +1235,7 @@ onUnmounted(() => {
     <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
     <NDivider> 浏览 </NDivider>
     <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
-      <SongRequestOBS :id="accountInfo?.id" />
+      <LiveRequestOBS :id="accountInfo?.id" />
     </div>
     <br />
     <NInput :value="'https://vtsuru.live/obs/live-request?id=' + accountInfo?.id" />

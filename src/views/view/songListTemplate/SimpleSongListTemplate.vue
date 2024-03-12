@@ -3,7 +3,7 @@ import { GetGuardColor } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
-import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
+import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
@@ -143,7 +143,7 @@ function loadMore() {
           clearable
         />
         <NDivider />
-        <SongRequestOBS
+        <LiveRequestOBS
           v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)"
           :id="userInfo?.id"
         />

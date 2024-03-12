@@ -2,7 +2,7 @@
 import { useAccount } from '@/api/account'
 import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
-import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
+import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
 import { h, ref } from 'vue'
@@ -72,7 +72,7 @@ const buttoms = (song: SongsInfo) => [
     <NCollapseItem title="点歌列表">
       <NCard size="small" embedded>
         <div style="height: 400px; width: 700px; max-width: 100%; position: relative; margin: 0 auto">
-          <SongRequestOBS :id="userInfo?.id" />
+          <LiveRequestOBS :id="userInfo?.id" />
         </div>
       </NCard>
     </NCollapseItem>
