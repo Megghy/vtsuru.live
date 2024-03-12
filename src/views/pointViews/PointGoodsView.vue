@@ -60,7 +60,7 @@ const currentGoods = ref<ResponsePointGoodModel>()
 const buyCount = ref(1)
 const selectedAddress = ref<AddressInfo>()
 const canDoBuy = computed(() => {
-  return currentGoods.value && currentGoods.value.price * buyCount.value < currentPoint.value
+  return currentGoods.value && currentGoods.value.price * buyCount.value <= currentPoint.value
 })
 
 const addressOptions = computed(() => {
