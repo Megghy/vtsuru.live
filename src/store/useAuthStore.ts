@@ -17,10 +17,10 @@ export const useAuthStore = defineStore('BiliAuth', () => {
       token: string
     }[]
   >('Bili.Auth.Tokens', [])
-  const biliToken = useStorage<string>('Bili.Auth.Selected', null)
+  const currentToken = useStorage<string>('Bili.Auth.Selected', null)
 
   const isLoading = ref(false)
-  const isAuthed = computed(() => biliToken.value != null && biliToken.value.length > 0)
+  const isAuthed = computed(() => currentToken.value != null && currentToken.value.length > 0)
 
   async function setCurrentAuth(token: string) {
     if (!token) {
@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
       return
     }
     biliAuth.value = {} as BiliAuthModel
-    biliToken.value = token
+    currentToken.value = token
     await getAuthInfo()
   }
 
@@ -44,7 +44,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
           if (index >= 0) {
             biliTokens.value[index] = {
               id: biliAuth.value.id,
-              token: biliToken.value,
+              token: currentToken.value,
               name: biliAuth.value.name,
               uId: biliAuth.value.userId,
             }
@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
           } else {
             biliTokens.value.push({
               id: biliAuth.value.id,
-              token: biliToken.value,
+              token: currentToken.value,
               name: biliAuth.value.name,
               uId: biliAuth.value.userId,
             })
@@ -75,14 +75,14 @@ export const useAuthStore = defineStore('BiliAuth', () => {
   function QueryBiliAuthGetAPI<T>(url: string, params?: any, headers?: [string, string][]) {
     headers ??= []
     if (headers.find((h) => h[0] == 'Bili-Auth') == null) {
-      headers.push(['Bili-Auth', biliToken.value ?? ''])
+      headers.push(['Bili-Auth', currentToken.value ?? ''])
     }
     return QueryGetAPI<T>(url, params, headers)
   }
   function QueryBiliAuthPostAPI<T>(url: string, body?: unknown, headers?: [string, string][]) {
     headers ??= []
     if (headers.find((h) => h[0] == 'Bili-Auth') == null) {
-      headers.push(['Bili-Auth', biliToken.value ?? ''])
+      headers.push(['Bili-Auth', currentToken.value ?? ''])
     }
     return QueryPostAPI<T>(url, body, headers)
   }
@@ -123,7 +123,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
 
   return {
     biliAuth,
-    biliToken,
+    biliToken: currentToken,
     biliTokens,
     isLoading,
     isAuthed,
