@@ -22,7 +22,7 @@ const functions = [
     icon: VehicleShip24Filled,
   },
   {
-    name: '积分兑换 (将于3月11日上线',
+    name: '积分兑换',
     desc: '通过上舰, Superchat, 赠送礼物等操作可以获取积分, 并通过积分兑换虚拟或者实体礼物',
     icon: BookCoins20Filled,
   },
