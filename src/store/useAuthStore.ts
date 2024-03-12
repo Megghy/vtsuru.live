@@ -127,6 +127,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
     biliTokens,
     isLoading,
     isAuthed,
+    currentToken,
     getAuthInfo,
     QueryBiliAuthGetAPI,
     QueryBiliAuthPostAPI,

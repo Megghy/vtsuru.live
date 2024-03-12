@@ -5,7 +5,7 @@ import { NButton, NFlex, NText, createDiscreteApi } from 'naive-ui'
 import { createPinia } from 'pinia'
 import { createApp, h } from 'vue'
 import App from './App.vue'
-import { GetSelfAccount, UpdateAccountLoop } from './api/account'
+import { GetSelfAccount, UpdateAccountLoop, useAccount } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import router from './router'
 import { useAuthStore } from './store/useAuthStore'
@@ -77,11 +77,18 @@ QueryGetAPI<string>(BASE_API + 'vtsuru/version')
     apiFail.value = true
     console.log('默认API调用失败, 切换至故障转移节点')
   })
-  .finally(() => {
+  .finally(async () => {
     //加载其他数据
-    GetSelfAccount()
+    await GetSelfAccount()
+    const account = useAccount()
+    const useAuth = useAuthStore()
+    if (account.value.id) {
+      if (account.value.biliUserAuthInfo && !useAuth.currentToken) {
+        useAuth.currentToken = account.value.biliUserAuthInfo.token
+      }
+    }
+    useAuth.getAuthInfo()
     GetNotifactions()
-    useAuthStore().getAuthInfo()
     UpdateAccountLoop()
     InitTTS()
   })
