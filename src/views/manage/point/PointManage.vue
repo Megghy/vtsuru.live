@@ -364,8 +364,6 @@ onMounted(() => {})
     </NAlert>
     <EventFetcherStatusCard />
   </NFlex>
-  <br />
-  <NAlert type="success" style="max-width: 400px"> 此功能将于 3月11日 官方启用 OpenId 后正式上线 </NAlert>
   <NDivider />
   <NTabs animated v-model:value="hash">
     <NTabPane name="goods" tab="礼物">
