@@ -41,8 +41,8 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
     render: (row: ResponsePointHisrotyModel) => {
       return h(
         NText,
-        { style: { color: row.from === PointFrom.Use ? 'red' : 'green' } },
-        () => (row.from === PointFrom.Use ? '' : '+') + row.point,
+        { style: { color: row.point < 0 ? 'red' : 'green' } },
+        () => (row.point < 0 ? '' : '+') + row.point,
       )
     },
   },
@@ -58,7 +58,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         value: PointFrom.Danmaku,
       },
       {
-        label: '主播赠予',
+        label: '主播操作',
         value: PointFrom.Manual,
       },
       {
@@ -72,7 +72,11 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
           case PointFrom.Danmaku:
             return h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间')
           case PointFrom.Manual:
-            return h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '主播赠予')
+            return h(
+              NTag,
+              { type: 'success', bordered: false, size: 'small' },
+              () => '主播' + (row.point > 0 ? '赠予' : '扣除'),
+            )
           case PointFrom.Use:
             return h(NTag, { type: 'warning', bordered: false, size: 'small' }, () => '使用')
         }
@@ -90,7 +94,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
           switch (row.type) {
             case EventDataTypes.Guard:
               return h(NFlex, { justify: 'center', align: 'center' }, () => [
-                h(NTag, { type: 'info', size: 'small' }, () => '上舰'),
+                h(NTag, { type: 'error', size: 'small' }, () => '上舰'),
                 row.extra?.msg,
               ])
             case EventDataTypes.Gift:
@@ -100,7 +104,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               ])
             case EventDataTypes.SC:
               return h(NFlex, { justify: 'center' }, () => [
-                h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => 'SC'),
+                h(NTag, { type: 'warning', size: 'small', style: { margin: '0' } }, () => 'SC'),
                 row.extra?.price,
               ])
           }
@@ -111,7 +115,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               NButton,
               {
                 tag: 'a',
-                href: '/user/' + row.extra.user?.name,
+                href: '/@' + row.extra.user?.name,
                 target: '_blank',
                 text: true,
                 type: 'info',

@@ -90,6 +90,7 @@ const songs = computed(() => {
       })
       .slice(0, index.value)
   }
+  return []
 })
 const onScroll = throttle((e: Event) => {
   const container = e.target as HTMLDivElement
@@ -121,6 +122,7 @@ function loadMore() {
       <NSpace>
         <NButton
           v-for="tag in tags"
+          :key="tag"
           size="small"
           secondary
           :type="selectedTag == tag ? 'primary' : 'default'"
