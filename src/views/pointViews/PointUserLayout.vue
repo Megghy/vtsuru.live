@@ -110,6 +110,7 @@ onMounted(async () => {
   const route = useRoute()
   if (route.query.auth) {
     useAuth.biliToken = route.query.auth as string
+    console.log(route.query.auth)
   }
   if (biliAuth.value?.id < 0) {
     isLoading.value = true

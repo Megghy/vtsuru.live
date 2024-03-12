@@ -24,6 +24,7 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useAuthStore } from '@/store/useAuthStore'
 
 type AuthStartModel = {
   code: string
@@ -35,11 +36,12 @@ type AuthStartModel = {
 const message = useMessage()
 
 const guidKey = useStorage('Bili.Auth.Key', uuidv4())
-const biliToken = useStorage<string>('Bili.Auth.Token', null)
+const currentToken = useStorage<string>('Bili.Auth.Selected', null)
+const useAuth = useAuthStore()
 
 const startModel = ref<AuthStartModel>()
 
-const currentStep = ref(biliToken.value ? 2 : 0)
+const currentStep = ref(currentToken.value ? 2 : 0)
 
 const isStart = computed(() => {
   return currentStep.value > 0
@@ -76,7 +78,9 @@ async function checkStatus() {
     clearInterval(timer.value)
     message.success('认证成功')
 
-    biliToken.value = data.data as string
+    currentToken.value = data.data as string
+    useAuth.getAuthInfo()
+
     currentStep.value = 2
 
     return true
@@ -106,7 +110,7 @@ function copyCode() {
 }
 
 onMounted(async () => {
-  if (!biliToken.value) {
+  if (!currentToken.value) {
     if (await checkStatus()) {
       currentStep.value = 1
       timer.value = setInterval(checkStatus, 5000)
@@ -182,7 +186,7 @@ onMounted(async () => {
             <NText> 你的登陆链接为: </NText>
             <NInputGroup>
               <NInput
-                :value="`https://vtsuru.live/bili-user?auth=${biliToken}`"
+                :value="`https://vtsuru.live/bili-user?auth=${currentToken}`"
                 type="textarea"
                 :allow-input="() => false"
               />
@@ -195,7 +199,7 @@ onMounted(async () => {
                   () => {
                     currentStep = 0
                     //@ts-ignore
-                    biliToken = null
+                    currentToken = null
                     guidKey = uuidv4()
                   }
                 "
