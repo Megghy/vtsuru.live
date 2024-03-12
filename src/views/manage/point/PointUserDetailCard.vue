@@ -93,8 +93,8 @@ async function getPointHistory() {
   return []
 }
 async function givePoint() {
-  if (addPointCount.value <= 0) {
-    message.error('积分数量必须大于0')
+  if (addPointCount.value == 0) {
+    message.error('积分数量不能为 0')
     return
   }
   isLoading.value = true
@@ -164,7 +164,7 @@ onMounted(async () => {
         <NDescriptionsItem v-if="user.info.userId > 0" label="UId">
           {{ user.info.userId }}
         </NDescriptionsItem>
-        <NDescriptionsItem v-else label="OpenId">
+        <NDescriptionsItem v-if="user.info.openId != '00000000-0000-0000-0000-000000000000'" label="OpenId">
           {{ user.info.openId }}
         </NDescriptionsItem>
         <NDescriptionsItem label="积分">
@@ -176,7 +176,7 @@ onMounted(async () => {
       </NDescriptions>
       <template #footer>
         <NFlex>
-          <NButton type="primary" @click="showAddPointModal = true" size="small"> 给予积分 </NButton>
+          <NButton type="primary" @click="showAddPointModal = true" size="small"> 给予/扣除积分 </NButton>
         </NFlex>
       </template>
     </NCard>
@@ -192,17 +192,22 @@ onMounted(async () => {
       <PointHistoryCard :histories="pointHistory" />
     </NSpin>
     <NModal v-model:show="showAddPointModal" preset="card" style="width: 500px; max-width: 90vw; height: auto">
-      <template #header> 给予积分 </template>
+      <template #header> 给予/扣除积分 </template>
       <NFlex vertical>
-        <NInputNumber
-          v-model:value="addPointCount"
-          type="number"
-          placeholder="请输入积分数量"
-          min="0"
-          style="max-width: 120px"
-        />
+        <NFlex align="center" :wrap="false">
+          <NInputNumber v-model:value="addPointCount" type="number" placeholder="负数为扣除" style="max-width: 120px" />
+
+          <NTooltip>
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            负数为扣除
+          </NTooltip>
+        </NFlex>
         <NInput placeholder="请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
-        <NButton type="primary" @click="givePoint" :loading="isLoading"> 给予 </NButton>
+        <NButton type="primary" @click="givePoint" :loading="isLoading">
+          {{ addPointCount > 0 ? '给予' : '扣除' }}
+        </NButton>
       </NFlex>
     </NModal>
   </NCard>

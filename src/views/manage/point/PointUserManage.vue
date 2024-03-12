@@ -159,8 +159,8 @@ async function refresh() {
   users.value = await getUsers()
 }
 async function givePoint() {
-  if (addPointCount.value <= 0) {
-    message.error('积分数量必须大于0')
+  if (addPointCount.value == 0) {
+    message.error('积分数量不能为 0')
     return
   }
   if (!addPointTarget.value) {
@@ -208,7 +208,7 @@ onMounted(async () => {
       <template #footer>
         <NFlex>
           <NButton type="primary" @click="refresh">刷新</NButton>
-          <NButton type="info" @click="showGivePointModal = true">给予积分</NButton>
+          <NButton type="info" @click="showGivePointModal = true">给予/扣除积分</NButton>
         </NFlex>
       </template>
       <NFlex>
@@ -238,10 +238,10 @@ onMounted(async () => {
       <PointUserDetailCard v-if="currentUser" :user="currentUser" :authInfo="currentUser.info" :goods="goods" />
     </NScrollbar>
   </NModal>
-  <NModal v-model:show="showGivePointModal" preset="card" style="max-width: 500px" title="给予积分">
+  <NModal v-model:show="showGivePointModal" preset="card" style="max-width: 500px" title="给予/扣除积分">
     <NFlex vertical>
-      <NFlex :wrap="false" align="center">
-        <NInputGroup style="max-width: 200px">
+      <NFlex :wrap="false" align="center" :size="0">
+        <NInputGroup style="max-width: 300px">
           <NInputGroupLabel> 目标用户 </NInputGroupLabel>
           <NInputNumber v-model:value="addPointTarget" type="number" placeholder="请输入目标用户UId" min="0" />
         </NInputGroup>
@@ -250,20 +250,26 @@ onMounted(async () => {
             <NIcon :component="Info24Filled" />
           </template>
           如果目标用户没在直播间发言过则无法显示用户名, 不过不影响使用
+          <br />
+          因为uid和b站提供的openid不兼容, 未认证用户可能会出现两个记录, 不过在认证完成后会合并成一个
         </NTooltip>
       </NFlex>
-      <NInputGroup>
-        <NInputGroupLabel> 积分数量 </NInputGroupLabel>
-        <NInputNumber
-          v-model:value="addPointCount"
-          type="number"
-          placeholder="请输入积分数量"
-          min="0"
-          style="max-width: 120px"
-        />
-      </NInputGroup>
+      <NFlex :wrap="false" align="center" :size="5">
+        <NInputGroup style="max-width: 220px">
+          <NInputGroupLabel> 积分数量 </NInputGroupLabel>
+          <NInputNumber v-model:value="addPointCount" type="number" placeholder="输入要给予的积分" />
+        </NInputGroup>
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          负数为扣除
+        </NTooltip>
+      </NFlex>
       <NInput placeholder="(选填) 请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
-      <NButton type="primary" @click="givePoint" :loading="isLoading"> 给予 </NButton>
+      <NButton type="primary" @click="givePoint" :loading="isLoading">
+        {{ addPointCount > 0 ? '给予' : '扣除' }}
+      </NButton>
     </NFlex>
   </NModal>
 </template>
