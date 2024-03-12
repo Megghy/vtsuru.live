@@ -52,12 +52,12 @@ onUnmounted(() => {
       backgroundColor: '#' + setting.borderColor,
       borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
       borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
-      borderTopWidth: setting.showUserName ? 0 : setting.borderWidth,
+      borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
     }"
     :display="question ? 1 : 0"
   >
     <div
-      v-if="setting.showUserName"
+      v-if="setting.showUserName && question"
       class="question-display-user-name"
       :style="{
         color: '#' + setting.nameFontColor,
@@ -79,7 +79,7 @@ onUnmounted(() => {
         fontFamily: setting.font,
       }"
     >
-      <div class="question-display-text">
+      <div class="question-display-text" :is-empty="question ? 0 : 1">
         {{ question?.question.message }}
       </div>
       <img

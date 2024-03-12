@@ -11,9 +11,10 @@ export default {
       },
     },
     {
-      path: 'song-request',
-      name: 'obs-song-request',
-      component: () => import('@/views/obs/SongRequestOBS.vue'),
+      path: 'live-request',
+      name: 'obs-live-request',
+      alias: 'song-request',
+      component: () => import('@/views/obs/LiveRequestOBS.vue'),
       meta: {
         title: '弹幕点歌 (歌势',
       },

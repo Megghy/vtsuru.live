@@ -36,6 +36,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NSpace>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="info" title="功能更新" content="1. 点歌(歌势) 修改为点播 2. 棉花糖支持创建话题(标签) 3. 一些bug修复" time="2024-3-12" />
             <NTimelineItem type="info" title="功能更新" content="棉花糖添加展示页面" time="2024-2-20" />
             <NTimelineItem type="info" title="功能更新" content="歌单新增从文件导入" time="2024-2-10" />
             <NTimelineItem type="info" title="功能更新" content="排队的OBS组件添加设置项" time="2024-1-27" />

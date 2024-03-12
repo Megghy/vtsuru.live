@@ -749,7 +749,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert type="info" v-if="accountInfo">
+  <NAlert type="info" v-if="accountInfo.id">
     启用弹幕队列功能
     <NSwitch
       :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"

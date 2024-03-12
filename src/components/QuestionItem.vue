@@ -10,7 +10,7 @@ const props = defineProps<{
 <template>
   <NCard v-if="item" :embedded="!item.isReaded" hoverable size="small" :bordered="false">
     <template #header>
-      <NFlex :size="0" align="center" >
+      <NFlex :size="0" align="center">
         <template v-if="!item.isReaded">
           <NTag type="warning" size="tiny"> 未读 </NTag>
           <NDivider vertical />
@@ -22,6 +22,14 @@ const props = defineProps<{
           已注册
         </NTag>
         <NTag v-if="item.isPublic" size="small" type="success" :bordered="false" style="margin-left: 5px"> 公开 </NTag>
+        <NTooltip v-if="item.tag">
+          <template #trigger>
+            <NTag size="small" type="success" style="margin-left: 5px">
+              {{ item.tag }}
+            </NTag>
+          </template>
+          标签/话题
+        </NTooltip>
         <NDivider vertical />
         <NText depth="3" style="font-size: small">
           <NTooltip>

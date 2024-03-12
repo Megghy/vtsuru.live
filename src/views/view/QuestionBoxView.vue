@@ -16,6 +16,7 @@ import {
   NInput,
   NList,
   NListItem,
+  NSelect,
   NSpace,
   NText,
   NTime,
@@ -47,6 +48,8 @@ const isSelf = computed(() => {
 const questionMessage = ref('')
 const fileList = ref<UploadFileInfo[]>([])
 const publicQuestions = ref<QAInfo[]>([])
+const tags = ref<string[]>([])
+const selectedTag = ref()
 
 const isAnonymous = ref(true)
 const isSending = ref(false)
@@ -57,7 +60,7 @@ function countGraphemes(value: string) {
 }
 async function SendQuestion() {
   if (countGraphemes(questionMessage.value) < 3) {
-    message.error('内容最少需要10个字')
+    message.error('内容最少需要3个字')
     return
   }
   isSending.value = true
@@ -68,6 +71,7 @@ async function SendQuestion() {
       IsAnonymous: !accountInfo.value || isAnonymous.value,
       Message: questionMessage.value,
       ImageBase64: fileList.value?.length > 0 ? await getBase64(fileList.value[0].file) : undefined,
+      Tag: selectedTag.value,
     },
     [['Turnstile', token.value]],
   )
@@ -125,9 +129,29 @@ function getPublicQuestions() {
       isGetting.value = false
     })
 }
+function getTags() {
+  isGetting.value = true
+  QueryGetAPI<string[]>(QUESTION_API_URL + 'get-tags', {
+    id: userInfo?.id,
+  })
+    .then((data) => {
+      if (data.code == 200) {
+        tags.value = data.data
+      } else {
+        message.error('获取标签失败:' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('获取标签失败: ' + err)
+    })
+    .finally(() => {
+      isGetting.value = false
+    })
+}
 
 onMounted(() => {
   getPublicQuestions()
+  getTags()
 })
 
 onUnmounted(() => {
@@ -140,6 +164,16 @@ onUnmounted(() => {
     <NCard embedded>
       <NSpace vertical>
         <NSpace align="center" justify="center">
+          <NSelect
+            v-model:value="selectedTag"
+            placeholder="(可选) 要提问的话题"
+            filterable
+            clearable
+            :options="tags.map((s) => ({ label: s, value: s }))"
+            style="width: 200px"
+          >
+            <template #header> 不选的话则是默认话题 </template>
+          </NSelect>
           <NInput
             :disabled="isSelf"
             show-count
@@ -153,7 +187,7 @@ onUnmounted(() => {
             :max="1"
             accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
             list-type="image-card"
-            :disabled="!accountInfo || isSelf"
+            :disabled="!accountInfo.id || isSelf"
             :default-upload="false"
             v-model:file-list="fileList"
             @update:file-list="OnFileListChange"
@@ -163,19 +197,18 @@ onUnmounted(() => {
         </NSpace>
         <NDivider style="margin: 10px 0 10px 0" />
         <NSpace align="center">
-          <NAlert v-if="!accountInfo && !isSelf" type="warning"> 只有注册用户才能够上传图片 </NAlert>
+          <NAlert v-if="!accountInfo.id && !isSelf" type="warning"> 只有注册用户才能够上传图片 </NAlert>
         </NSpace>
-        <NSpace vertical>
-          <NCheckbox v-if="accountInfo" :disabled="isSelf" v-model:checked="isAnonymous" label="匿名提问" />
+        <NSpace v-if="accountInfo.id" vertical>
+          <NCheckbox :disabled="isSelf" v-model:checked="isAnonymous" label="匿名提问" />
+          <NDivider style="margin: 10px 0 10px 0" />
         </NSpace>
-        <NDivider style="margin: 10px 0 10px 0" />
         <NSpace justify="center">
           <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion">
             发送
           </NButton>
           <NButton
-            v-if="accountInfo"
-            :disabled="isSelf"
+            :disabled="isSelf || !accountInfo.id"
             type="info"
             @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
           >

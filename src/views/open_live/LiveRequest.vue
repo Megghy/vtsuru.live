@@ -5,7 +5,7 @@ import {
   EventDataTypes,
   EventModel,
   FunctionTypes,
-  Setting_SongRequest,
+  Setting_LiveRequest,
   SongRequestFrom,
   SongRequestInfo,
   SongRequestStatus,
@@ -65,10 +65,10 @@ import {
 } from 'naive-ui'
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import SongRequestOBS from '../obs/SongRequestOBS.vue'
+import SongRequestOBS from '../obs/LiveRequestOBS.vue'
 
 const defaultSettings = {
-  orderPrefix: '点歌',
+  orderPrefix: '点播',
   onlyAllowSongList: false,
   queueMaxSize: 10,
   allowAllDanmaku: true,
@@ -88,11 +88,11 @@ const defaultSettings = {
   tiduCooldownSecond: 600,
   jianzhangCooldownSecond: 900,
   isReverse: false,
-} as Setting_SongRequest
+} as Setting_LiveRequest
 const STATUS_MAP = {
   [SongRequestStatus.Waiting]: '等待中',
-  [SongRequestStatus.Singing]: '演唱中',
-  [SongRequestStatus.Finish]: '已演唱',
+  [SongRequestStatus.Singing]: '处理中',
+  [SongRequestStatus.Finish]: '已处理',
   [SongRequestStatus.Cancel]: '已取消',
 }
 
@@ -194,7 +194,7 @@ async function getAllSong() {
         id: accountInfo.value.id,
       })
       if (data.code == 200) {
-        console.log('[OPEN-LIVE-Song-Request] 已获取所有数据')
+        console.log('[OPEN-LIVE-LIVE-REQUEST] 已获取所有数据')
         return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
       } else {
         message.error('无法获取数据: ' + data.message)
@@ -210,10 +210,10 @@ async function getAllSong() {
 }
 async function addSong(danmaku: EventModel) {
   console.log(
-    `[OPEN-LIVE-Song-Request] 收到 [${danmaku.name}] 的点歌${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
+    `[OPEN-LIVE-LIVE-REQUEST] 收到 [${danmaku.name}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
   )
   if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
-    message.info('当前未在直播中, 无法添加点歌请求. 或者关闭设置中的仅允许直播时加入')
+    message.info('当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入')
     return
   }
   if (accountInfo.value) {
@@ -225,12 +225,12 @@ async function addSong(danmaku: EventModel) {
         //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
         const time = Date.now()
         notice.warning({
-          title: danmaku.name + ' 点歌失败',
+          title: danmaku.name + ' 点播失败',
           description: data.message,
           duration: isWarnMessageAutoClose.value ? 3000 : 0,
           meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
         })
-        console.log(`[OPEN-LIVE-Song-Request] [${danmaku.name}] 添加曲目失败: ${data.message}`)
+        console.log(`[OPEN-LIVE-LIVE-REQUEST] [${danmaku.name}] 添加曲目失败: ${data.message}`)
       }
     })
   } else {
@@ -253,12 +253,12 @@ async function addSong(danmaku: EventModel) {
       id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
     } as SongRequestInfo
     localActiveSongs.value.unshift(songData)
-    message.success(`[${danmaku.name}] 添加曲目: ${songData.songName}`)
+    message.success(`[${danmaku.name}] 添加: ${songData.songName}`)
   }
 }
 async function addSongManual() {
   if (!newSongName.value) {
-    message.error('请输入曲目名')
+    message.error('请输入名称')
     return
   }
   if (accountInfo.value) {
@@ -266,12 +266,12 @@ async function addSongManual() {
       name: newSongName.value,
     }).then((data) => {
       if (data.code == 200) {
-        message.success(`已手动添加曲目: ${data.data.songName}`)
+        message.success(`已手动添加: ${data.data.songName}`)
         originSongs.value.unshift(data.data)
         newSongName.value = ''
-        console.log(`[OPEN-LIVE-Song-Request] 已手动添加曲目: ${data.data.songName}`)
+        console.log(`[OPEN-LIVE-LIVE-REQUEST] 已手动添加: ${data.data.songName}`)
       } else {
-        message.error(`手动添加曲目失败: ${data.message}`)
+        message.error(`手动添加失败: ${data.message}`)
       }
     })
   } else {
@@ -287,7 +287,7 @@ async function addSongManual() {
       id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
     } as SongRequestInfo
     localActiveSongs.value.unshift(songData)
-    message.success(`已手动添加曲目: ${songData.songName}`)
+    message.success(`已手动添加: ${songData.songName}`)
   }
 }
 async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus) {
@@ -313,7 +313,7 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
       break
     case SongRequestStatus.Singing:
       statusString = 'singing'
-      statusString2 = '演唱中'
+      statusString2 = '处理中'
       break
   }
   await QueryGetAPI(SONG_REQUEST_API_URL + statusString, {
@@ -321,19 +321,19 @@ async function updateSongStatus(song: SongRequestInfo, status: SongRequestStatus
   })
     .then((data) => {
       if (data.code == 200) {
-        console.log(`[OPEN-LIVE-Song-Request] 更新曲目状态: ${song.songName} -> ${statusString}`)
+        console.log(`[OPEN-LIVE-LIVE-REQUEST] 更新状态: ${song.songName} -> ${statusString}`)
         song.status = status
         if (status > SongRequestStatus.Singing) {
           song.finishAt = Date.now()
         }
-        message.success(`已更新曲目状态为: ${statusString2}`)
+        message.success(`已更新状态为: ${statusString2}`)
       } else {
-        console.log(`[OPEN-LIVE-Song-Request] 更新曲目状态失败: ${data.message}`)
-        message.error(`更新曲目状态失败: ${data.message}`)
+        console.log(`[OPEN-LIVE-LIVE-REQUEST] 更新状态失败: ${data.message}`)
+        message.error(`更新状态失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error(`更新曲目状态失败`)
+      message.error(`更新状态失败`)
     })
     .finally(() => {
       isLoading.value = false
@@ -376,20 +376,20 @@ async function onUpdateFunctionEnable() {
       .then((data) => {
         if (data.code == 200) {
           message.success(
-            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}点歌功能`,
+            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}点播功能`,
           )
         } else {
           if (accountInfo.value) {
             accountInfo.value.settings.enableFunctions = oldValue
           }
           message.error(
-            `点歌功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`,
+            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`,
           )
         }
       })
       .catch((err) => {
         message.error(
-          `点歌功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`,
+          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`,
         )
       })
   }
@@ -677,12 +677,12 @@ async function updateActive() {
         } else {
           originSongs.value.unshift(item)
           if (item.from == SongRequestFrom.Web) {
-            message.success(`[${item.user?.name}] 直接从网页歌单点歌: ${item.songName}`)
+            message.success(`[${item.user?.name}] 直接从网页歌单点播: ${item.songName}`)
           }
         }
       })
     } else {
-      message.error('无法获取点歌队列: ' + data.message)
+      message.error('无法获取点播队列: ' + data.message)
       return []
     }
   } catch (err) {}
@@ -747,8 +747,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert type="info" v-if="accountInfo">
-    启用弹幕点歌功能
+  <NAlert type="info" v-if="accountInfo.id">
+    启用弹幕点播功能
     <NSwitch
       :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
       @update:value="onUpdateFunctionEnable"
@@ -760,7 +760,7 @@ onUnmounted(() => {
       <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
         VtsuruEventFetcher
       </NButton>
-      则其需要保持此页面开启才能点歌, 也不要同时开多个页面, 会导致点歌重复 !(部署了则不影响)
+      则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 !(部署了则不影响)
     </NText>
   </NAlert>
   <NAlert
@@ -801,12 +801,12 @@ onUnmounted(() => {
               <template #icon>
                 <NIcon :component="Checkmark12Regular" />
               </template>
-              今日已演唱 |
+              今日已处理 |
               {{
                 songs.filter((s) => s.status != SongRequestStatus.Cancel && isSameDay(s.finishAt ?? 0, Date.now()))
                   .length
               }}
-              首
+              个
             </NTag>
             <NInputGroup>
               <NInput placeholder="手动添加" v-model:value="newSongName" />
@@ -1049,7 +1049,7 @@ onUnmounted(() => {
           <NDivider> 规则 </NDivider>
           <NSpace vertical>
             <NInputGroup style="width: 250px">
-              <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
+              <NInputGroupLabel> 点播弹幕前缀 </NInputGroupLabel>
               <template v-if="configCanEdit">
                 <NInput v-model:value="settings.orderPrefix" />
                 <NButton @click="updateSettings" type="primary">确定</NButton>
@@ -1075,7 +1075,7 @@ onUnmounted(() => {
                 @update:checked="updateSettings"
                 :disabled="!configCanEdit"
               >
-                允许所有弹幕点歌
+                允许所有弹幕点播
               </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
                 <NCheckbox
@@ -1118,7 +1118,7 @@ onUnmounted(() => {
             </NSpace>
             <NSpace align="center">
               <NCheckbox v-model:checked="settings.allowSC" @update:checked="updateSettings" :disabled="!configCanEdit">
-                允许通过 SuperChat 点歌
+                允许通过 SuperChat 点播
               </NCheckbox>
               <span v-if="settings.allowSC">
                 <NCheckbox
@@ -1126,13 +1126,13 @@ onUnmounted(() => {
                   @update:checked="updateSettings"
                   :disabled="!configCanEdit"
                 >
-                  SC点歌无视限制
+                  SC 点播无视限制
                 </NCheckbox>
                 <NTooltip>
                   <template #trigger>
                     <NIcon :component="Info24Filled" />
                   </template>
-                  包含冷却时间, 队列长度, 重复点歌等
+                  包含冷却时间, 队列长度, 重复点播等
                 </NTooltip>
               </span>
               <NInputGroup v-if="settings.allowSC" style="width: 250px">
@@ -1141,6 +1141,7 @@ onUnmounted(() => {
                 <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
               </NInputGroup>
             </NSpace>
+            <NDivider> 点歌 </NDivider>
             <NSpace>
               <NCheckbox
                 v-model:checked="settings.onlyAllowSongList"
@@ -1165,7 +1166,7 @@ onUnmounted(() => {
               @update:checked="updateSettings"
               :disabled="!configCanEdit"
             >
-              启用点歌冷却
+              启用点播冷却
             </NCheckbox>
             <NSpace v-if="settings.enableCooldown">
               <NInputGroup style="width: 250px">
@@ -1190,7 +1191,14 @@ onUnmounted(() => {
               </NInputGroup>
             </NSpace>
             <NDivider> OBS </NDivider>
-            <NSpace>
+            <NSpace align="center">
+              <NInputGroup style="width: 220px">
+                <NInputGroupLabel> 标题 </NInputGroupLabel>
+                <template v-if="configCanEdit">
+                  <NInput v-model:value="settings.obsTitle" placeholder="默认为 点播" />
+                  <NButton @click="updateSettings" type="primary">确定</NButton>
+                </template>
+              </NInputGroup>
               <NCheckbox
                 v-model:checked="settings.showRequireInfo"
                 :disabled="!configCanEdit"
@@ -1203,24 +1211,24 @@ onUnmounted(() => {
                 :disabled="!configCanEdit"
                 @update:checked="updateSettings"
               >
-                显示点歌用户名
+                显示点播用户名
               </NCheckbox>
               <NCheckbox
                 v-model:checked="settings.showFanMadelInfo"
                 :disabled="!configCanEdit"
                 @update:checked="updateSettings"
               >
-                显示点歌用户粉丝牌
+                显示点播用户粉丝牌
               </NCheckbox>
             </NSpace>
             <NDivider> 其他 </NDivider>
-            <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭点歌失败时的提示消息 </NCheckbox>
+            <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭点播失败时的提示消息 </NCheckbox>
           </NSpace>
         </NSpin>
       </NTabPane>
     </NTabs>
     <template v-else>
-      <NAlert title="未启用" type="error"> 请先启用弹幕点歌功能 </NAlert>
+      <NAlert title="未启用" type="error"> 请先启用弹幕点播功能 </NAlert>
     </template>
   </NCard>
   <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">
@@ -1230,7 +1238,7 @@ onUnmounted(() => {
       <SongRequestOBS :id="accountInfo?.id" />
     </div>
     <br />
-    <NInput :value="'https://vtsuru.live/obs/song-request?id=' + accountInfo?.id" />
+    <NInput :value="'https://vtsuru.live/obs/live-request?id=' + accountInfo?.id" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">

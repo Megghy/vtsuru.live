@@ -7,6 +7,11 @@ import { useMessage } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+export type QATagInfo = {
+  name: string
+  createAt: number
+  visiable: boolean
+}
 export const useQuestionBox = defineStore('QuestionBox', () => {
   const isLoading = ref(false)
   const isRepling = ref(false)
@@ -16,6 +21,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   const recieveQuestions = ref<QAInfo[]>([])
   const sendQuestions = ref<QAInfo[]>([])
+  const tags = ref<QATagInfo[]>([])
 
   const onlyFavorite = ref(false)
   const onlyPublic = ref(false)
@@ -27,7 +33,10 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         return false
       }*/
       return (
-        (q.isFavorite || !onlyFavorite.value) && (q.isPublic || !onlyPublic.value) && (!q.isReaded || !onlyUnread.value)
+        (q.isFavorite || !onlyFavorite.value) &&
+        (q.isPublic || !onlyPublic.value) &&
+        (!q.isReaded || !onlyUnread.value) &&
+        (!displayTag.value || q.tag == displayTag.value)
       )
     })
     return result
@@ -36,6 +45,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   })
   const currentQuestion = ref<QAInfo>()
   const displayQuestion = ref<QAInfo>()
+  const displayTag = ref<string>()
 
   let isRevieveGetted = false
   //const isSendGetted = false
@@ -58,7 +68,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
               displayQuestion.value = recieveQuestions.value.find((q) => q.id == displayId)
             }
           }
-          message.success('共收取 ' + data.data.length + ' 条提问')
+          //message.success('共收取 ' + data.data.length + ' 条提问')
           isRevieveGetted = true
         } else {
           message.error(data.message)
@@ -77,7 +87,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       .then((data) => {
         if (data.code == 200) {
           sendQuestions.value = data.data
-          message.success('共发送 ' + data.data.length + ' 条提问')
+          //message.success('共发送 ' + data.data.length + ' 条提问')
         } else {
           message.error(data.message)
         }
@@ -87,6 +97,98 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       })
       .finally(() => {
         isLoading.value = false
+      })
+  }
+  async function GetTags() {
+    isLoading.value = true
+    await QueryGetAPI<QATagInfo[]>(QUESTION_API_URL + 'get-tags', {
+      id: accountInfo.value?.id,
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          tags.value = data.data
+        } else {
+          message.error(data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('发生错误: ' + err)
+      })
+      .finally(() => {
+        isLoading.value = false
+      })
+  }
+  async function addTag(tag: string) {
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
+    if (tags.value.find((t) => t.name == tag)) {
+      message.warning('标签已存在')
+      return
+    }
+    await QueryGetAPI(QUESTION_API_URL + 'add-tag', {
+      tag: tag,
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('添加成功')
+          GetTags()
+        } else {
+          message.error('添加失败: ' + data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('添加失败: ' + err)
+      })
+  }
+  async function delTag(tag: string) {
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
+    if (!tags.value.find((t) => t.name == tag)) {
+      message.warning('标签不存在')
+      return
+    }
+    await QueryGetAPI(QUESTION_API_URL + 'del-tag', {
+      tag: tag,
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('删除成功')
+          GetTags()
+        } else {
+          message.error('删除失败: ' + data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('删除失败: ' + err)
+      })
+  }
+  async function updateTagVisiable(tag: string, visiable: boolean) {
+    if (!tag) {
+      message.warning('请输入标签')
+      return
+    }
+    if (!tags.value.find((t) => t.name == tag)) {
+      message.warning('标签不存在')
+      return
+    }
+    await QueryGetAPI(QUESTION_API_URL + 'update-tag-visiable', {
+      tag: tag,
+      visiable: visiable,
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('修改成功')
+          GetTags()
+        } else {
+          message.error('修改失败: ' + data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('修改失败: ' + err)
       })
   }
   async function reply(id: number, msg: string) {
@@ -229,12 +331,18 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     recieveQuestions,
     recieveQuestionsFiltered,
     sendQuestions,
+    tags,
     onlyFavorite,
     onlyPublic,
     onlyUnread,
     displayQuestion,
+    displayTag,
     GetRecieveQAInfo,
     GetSendQAInfo,
+    GetTags,
+    addTag,
+    delTag,
+    updateTagVisiable,
     reply,
     read,
     favorite,

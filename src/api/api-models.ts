@@ -98,7 +98,7 @@ export interface Setting_QuestionBox {
 export interface UserSetting {
   sendEmail: Setting_SendEmail
   questionBox: Setting_QuestionBox
-  songRequest: Setting_SongRequest
+  songRequest: Setting_LiveRequest
   queue: Setting_Queue
   point: Setting_Point
   questionDisplay: Setting_QuestionDisplay
@@ -109,7 +109,7 @@ export interface UserSetting {
   songListTemplate: string | null
   scheduleTemplate: string | null
 }
-export interface Setting_SongRequest {
+export interface Setting_LiveRequest {
   orderPrefix: string
   enableOnStreaming: boolean
   onlyAllowSongList: boolean
@@ -134,6 +134,7 @@ export interface Setting_SongRequest {
   showRequireInfo: boolean
   showUserName: boolean
   showFanMadelInfo: boolean
+  obsTitle: string
 
   isReverse: boolean
 }
@@ -301,6 +302,8 @@ export interface QAInfo {
   isFavorite: boolean
   sendAt: number
   isAnonymous: boolean
+
+  tag?: string
 }
 export interface LotteryUserInfo {
   name: string

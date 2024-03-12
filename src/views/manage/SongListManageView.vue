@@ -581,7 +581,7 @@ onMounted(async () => {
     </NAlert>
     <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
     <NButton @click="exportData" type="primary" secondary> 导出为 CSV </NButton>
-    <NButton @click="$router.push({ name: 'manage-songRequest' })" secondary> 前往点歌页 </NButton>
+    <NButton @click="$router.push({ name: 'manage-liveRequest' })" secondary> 前往点歌页 </NButton>
     <NButton @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })" secondary>
       前往展示页
     </NButton>

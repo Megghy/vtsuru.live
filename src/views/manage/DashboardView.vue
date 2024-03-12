@@ -394,7 +394,7 @@ onUnmounted(() => {
                 <template #trigger>
                   <NIcon :component="Info24Filled" />
                 </template>
-                用于进行积分兑换等操作
+                用于进行积分兑换等操作, 如果你是主播可以不用管
               </NTooltip>
             </NTag>
             <NDivider vertical />

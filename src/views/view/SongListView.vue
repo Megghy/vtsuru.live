@@ -6,8 +6,8 @@
     :user-info="userInfo"
     :bili-info="biliInfo"
     :currentData="currentData"
-    :song-request-settings="settings"
-    :song-request-active="songsActive"
+    :live-request-settings="settings"
+    :live-request-active="songsActive"
     @request-song="requestSong"
     v-bind="$attrs"
   />
@@ -15,7 +15,7 @@
 
 <script lang="ts" setup>
 import { useAccount } from '@/api/account'
-import { Setting_SongRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
@@ -40,11 +40,11 @@ const message = useMessage()
 
 const errMessage = ref('')
 const songsActive = ref<SongRequestInfo[]>([])
-const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
+const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 
 async function getSongRequestInfo() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
       SONG_REQUEST_API_URL + 'get-active-and-settings',
       {
         id: props.userInfo?.id,
@@ -54,7 +54,7 @@ async function getSongRequestInfo() {
       return data.data
     }
   } catch (err) {}
-  return {} as { songs: SongRequestInfo[]; setting: Setting_SongRequest }
+  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
 async function getSongs() {
   isLoading.value = true
