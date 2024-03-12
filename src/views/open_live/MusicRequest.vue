@@ -260,10 +260,10 @@ async function downloadConfig() {
     })
 }
 function startListen() {
-  if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
+  /*if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
     message.warning('使用这个点歌则需要先关闭歌势点歌 (SongRequest)')
     return
-  }
+  }*/
   listening.value = true
   message.success('开始监听')
 }

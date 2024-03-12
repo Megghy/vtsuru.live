@@ -77,7 +77,6 @@ const addressOptions = computed(() => {
 
 const canBuy = computed(() => {
   if (!biliAuth.value.id) return false
-  if (!currentPoint.value) return false
   return true
 })
 function getTooltip(goods: ResponsePointGoodModel) {
@@ -213,7 +212,7 @@ onMounted(async () => {
             <NFlex justify="space-between" align="center">
               <NTooltip>
                 <template #trigger>
-                  <NButton :disabled="!canBuy" size="small" type="primary" @click="onBuyClick(item)">兑换</NButton>
+                  <NButton :disabled="getTooltip(item) != '开始兑换'" size="small" type="primary" @click="onBuyClick(item)">兑换</NButton>
                 </template>
                 {{ getTooltip(item) }}
               </NTooltip>
