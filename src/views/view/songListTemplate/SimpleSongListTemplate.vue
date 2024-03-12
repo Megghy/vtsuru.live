@@ -1,19 +1,37 @@
 <script setup lang="ts">
 import { GetGuardColor } from '@/Utils'
 import { useAccount } from '@/api/account'
-import { FunctionTypes, Setting_SongRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import { FunctionTypes, Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
-import { NButton, NCard, NCollapseTransition, NDivider, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NInput, NPopover, NScrollbar, NSelect, NSpace, NTag, NText, NTooltip } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCollapseTransition,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NPopover,
+  NScrollbar,
+  NSelect,
+  NSpace,
+  NTag,
+  NText,
+  NTooltip,
+} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
-  songRequestSettings: Setting_SongRequest
+  songRequestSettings: Setting_LiveRequest
   songRequestActive: SongRequestInfo[]
   currentData: SongsInfo[] | undefined
 }>()
@@ -86,14 +104,28 @@ function loadMore() {
 }
 </script>
 <template>
-  <div :style="{ display: 'flex', justifyContent: 'center', flexDirection: windowSize.width.value > 900 ? 'row' : 'column', gap: '10px', width: '100%' }">
+  <div
+    :style="{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: windowSize.width.value > 900 ? 'row' : 'column',
+      gap: '10px',
+      width: '100%',
+    }"
+  >
     <NCard size="small" :style="{ width: windowSize.width.value > 900 ? '400px' : '100%' }">
       <NCollapseTransition>
         <SongPlayer v-if="selectedSong" :song="selectedSong" v-model:is-lrc-loading="isLrcLoading" />
       </NCollapseTransition>
       <NDivider> 标签 </NDivider>
       <NSpace>
-        <NButton v-for="tag in tags" size="small" secondary :type="selectedTag == tag ? 'primary' : 'default'" @click="selectedTag == tag ? (selectedTag = '') : (selectedTag = tag)">
+        <NButton
+          v-for="tag in tags"
+          size="small"
+          secondary
+          :type="selectedTag == tag ? 'primary' : 'default'"
+          @click="selectedTag == tag ? (selectedTag = '') : (selectedTag = tag)"
+        >
           {{ tag }}
         </NButton>
       </NSpace>
@@ -111,17 +143,32 @@ function loadMore() {
           clearable
         />
         <NDivider />
-        <SongRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)" :id="userInfo?.id" />
+        <SongRequestOBS
+          v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)"
+          :id="userInfo?.id"
+        />
       </NSpace>
     </NCard>
     <NEmpty v-if="!currentData || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />
-    <NScrollbar v-else ref="container" :style="{ flexGrow: 1, height: windowSize.width.value > 900 ? '90vh' : '800px', overflowY: 'auto', overflowX: 'hidden' }" @scroll="onScroll">
+    <NScrollbar
+      v-else
+      ref="container"
+      :style="{
+        flexGrow: 1,
+        height: windowSize.width.value > 900 ? '90vh' : '800px',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }"
+      @scroll="onScroll"
+    >
       <NGrid cols="1 600:2 900:3 1200:4" x-gap="10" y-gap="10" responsive="self">
         <NGridItem v-for="item in songs" :key="item.key">
           <NCard size="small" style="height: 200px; min-width: 300px">
             <template #header>
               <NSpace :wrap="false" align="center">
-                <div :style="`border-radius: 4px; background-color: ${item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"></div>
+                <div
+                  :style="`border-radius: 4px; background-color: ${item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"
+                ></div>
                 <NEllipsis>
                   {{ item.name }}
                 </NEllipsis>
@@ -130,7 +177,11 @@ function loadMore() {
             <NSpace vertical>
               <NSpace v-if="(item.author?.length ?? 0) > 0" :size="0">
                 <div v-for="(author, index) in item.author" v-bind:key="author">
-                  <NButton size="small" text @click="selectedAuthor == author ? (selectedAuthor = undefined) : (selectedAuthor = author)">
+                  <NButton
+                    size="small"
+                    text
+                    @click="selectedAuthor == author ? (selectedAuthor = undefined) : (selectedAuthor = author)"
+                  >
                     <NText depth="3" :style="{ color: selectedAuthor == author ? '#82bcd3' : '' }">
                       {{ author }}
                     </NText>
@@ -146,11 +197,19 @@ function loadMore() {
                 </NEllipsis>
                 <template v-if="item.options">
                   <NSpace>
-                    <NTag v-if="item.options?.scMinPrice" size="small" type="error" :bordered="false"> SC | {{ item.options?.scMinPrice }}</NTag>
-                    <NTag v-if="item.options?.fanMedalMinLevel" size="small" type="info" :bordered="false"> 粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag>
-                    <NTag v-if="item.options?.needZongdu" size="small" :color="{ color: GetGuardColor(1) }"> 总督 </NTag>
+                    <NTag v-if="item.options?.scMinPrice" size="small" type="error" :bordered="false">
+                      SC | {{ item.options?.scMinPrice }}</NTag
+                    >
+                    <NTag v-if="item.options?.fanMedalMinLevel" size="small" type="info" :bordered="false">
+                      粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag
+                    >
+                    <NTag v-if="item.options?.needZongdu" size="small" :color="{ color: GetGuardColor(1) }">
+                      总督
+                    </NTag>
                     <NTag v-if="item.options?.needTidu" size="small" :color="{ color: GetGuardColor(2) }"> 提督 </NTag>
-                    <NTag v-if="item.options?.needJianzhang" size="small" :color="{ color: GetGuardColor(3) }"> 舰长 </NTag>
+                    <NTag v-if="item.options?.needJianzhang" size="small" :color="{ color: GetGuardColor(3) }">
+                      舰长
+                    </NTag>
                   </NSpace>
                 </template>
               </NSpace>
@@ -159,7 +218,12 @@ function loadMore() {
               <NSpace align="center" :wrap="false">
                 <NTooltip v-if="item.url">
                   <template #trigger>
-                    <NButton size="small" @click="selectedSong = item" type="success" :loading="isLrcLoading == item.key">
+                    <NButton
+                      size="small"
+                      @click="selectedSong = item"
+                      type="success"
+                      :loading="isLrcLoading == item.key"
+                    >
                       <template #icon>
                         <NIcon :component="Play24Filled" />
                       </template>
@@ -197,7 +261,9 @@ function loadMore() {
 
                 <NPopover v-if="(item.tags?.length ?? 0) > 3" trigger="hover">
                   <template #trigger>
-                    <NButton size="small" secondary :type="item.tags?.includes(selectedTag) ? 'primary' : 'default'"> 标签 </NButton>
+                    <NButton size="small" secondary :type="item.tags?.includes(selectedTag) ? 'primary' : 'default'">
+                      标签
+                    </NButton>
                   </template>
                   <NSpace :wrap="false">
                     <NButton

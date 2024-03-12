@@ -26,7 +26,7 @@ const accountInfo = useAccount()
     <NCard hoverable embedded size="small" title="弹幕点歌" style="width: 300px">
       通过弹幕或者SC进行点歌, 注册后可以保存和导出 (这个是歌势用的点歌, 不是拿来放歌的那种!)
       <template #footer>
-        <NButton @click="$router.push({ name: 'open-live-song-request', query: $route.query })" type="primary">
+        <NButton @click="$router.push({ name: 'open-live-live-request', query: $route.query })" type="primary">
           前往使用
         </NButton>
       </template>

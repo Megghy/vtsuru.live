@@ -369,7 +369,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NCard v-if="accountInfo" title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
+  <NCard title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
     <NSpin :show="isSaving">
       <NTabs v-model:value="selectedTab">
         <NTabPane tab="常规" name="general">

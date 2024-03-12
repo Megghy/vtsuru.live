@@ -36,7 +36,7 @@ export const HISTORY_API_URL = { toString: () => `${BASE_API}history/` }
 export const SCHEDULE_API_URL = { toString: () => `${BASE_API}schedule/` }
 export const VIDEO_COLLECT_API_URL = { toString: () => `${BASE_API}video-collect/` }
 export const OPEN_LIVE_API_URL = { toString: () => `${BASE_API}open-live/` }
-export const SONG_REQUEST_API_URL = { toString: () => `${BASE_API}song-request/` }
+export const SONG_REQUEST_API_URL = { toString: () => `${BASE_API}live-request/` }
 export const QUEUE_API_URL = { toString: () => `${BASE_API}queue/` }
 export const EVENT_API_URL = { toString: () => `${BASE_API}event/` }
 export const LIVE_API_URL = { toString: () => `${BASE_API}live/` }

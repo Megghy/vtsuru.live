@@ -145,6 +145,14 @@ onMounted(() => {
           <NButton @click="$router.push({ name: 'manage-questionBox' })" size="tiny" secondary> 回到控制台 </NButton>
         </template>
         <NFlex align="center">
+          <NSelect
+            v-model:value="useQB.displayTag"
+            placeholder="选择当前话题"
+            filterable
+            clearable
+            :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
+            style="width: 200px"
+          />
           <NButton @click="useQB.GetRecieveQAInfo" type="primary"> 刷新 </NButton>
           <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
           <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>

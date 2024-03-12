@@ -190,7 +190,7 @@ onMounted(async () => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <template v-if="accountInfo">
+            <template v-if="accountInfo.id">
               <NSpace>
                 <NButton
                   v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"

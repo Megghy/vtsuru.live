@@ -114,11 +114,11 @@ export default //管理页面
       },
     },
     {
-      path: 'song-request',
-      name: 'manage-songRequest',
-      component: () => import('@/views/open_live/SongRequest.vue'),
+      path: 'live-request',
+      name: 'manage-liveRequest',
+      component: () => import('@/views/open_live/LiveRequest.vue'),
       meta: {
-        title: '点歌 (歌势',
+        title: '点播',
         keepAlive: true,
         danmaku: true,
       },
@@ -128,7 +128,7 @@ export default //管理页面
       name: 'manage-musicRequest',
       component: () => import('@/views/open_live/MusicRequest.vue'),
       meta: {
-        title: '点歌 (点播',
+        title: '点歌',
         keepAlive: true,
         danmaku: true,
       },

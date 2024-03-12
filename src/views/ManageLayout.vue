@@ -341,17 +341,17 @@ const menuOptions = [
                   RouterLink,
                   {
                     to: {
-                      name: 'manage-songRequest',
+                      name: 'manage-liveRequest',
                     },
                   },
                   {
-                    default: () => '点歌(歌势',
+                    default: () => '点播',
                   },
                 ),
-              default: () => '歌势用的, 观众点歌之后需要自己唱',
+              default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
             },
           ),
-        key: 'manage-songRequest',
+        key: 'manage-liveRequest',
         icon: renderIcon(MusicalNote),
       },
       {
@@ -369,7 +369,7 @@ const menuOptions = [
                     },
                   },
                   {
-                    default: () => '点歌(点播',
+                    default: () => '点歌',
                   },
                 ),
               default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',

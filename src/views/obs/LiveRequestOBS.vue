@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Setting_SongRequest, SongRequestFrom, SongRequestInfo, SongRequestStatus } from '@/api/api-models'
+import { Setting_LiveRequest, SongRequestFrom, SongRequestInfo, SongRequestStatus } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { AVATAR_URL, SONG_REQUEST_API_URL } from '@/data/constants'
 import { useElementSize } from '@vueuse/core'
@@ -37,7 +37,7 @@ const songs = computed(() => {
     return originSongs.value
   }
 })
-const settings = ref<Setting_SongRequest>({} as Setting_SongRequest)
+const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 const singing = computed(() => {
   return originSongs.value.find((s) => s.status == SongRequestStatus.Singing)
 })
@@ -47,7 +47,7 @@ const activeSongs = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_SongRequest }>(
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
       SONG_REQUEST_API_URL + 'get-active-and-settings',
       {
         id: currentId.value,
@@ -57,7 +57,7 @@ async function get() {
       return data.data
     }
   } catch (err) {}
-  return {} as { songs: SongRequestInfo[]; setting: Setting_SongRequest }
+  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
 const isMoreThanContainer = computed(() => {
   return originSongs.value.length * itemHeight > height.value
@@ -92,14 +92,16 @@ let timer: any
 onMounted(() => {
   update()
   timer = setInterval(update, 2000)
-
   //@ts-expect-error 这里获取不了
-  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-    visiable.value = visibility
-  }
-  //@ts-expect-error 这里获取不了
-  window.obsstudio.onActiveChange = function (a: boolean) {
-    active.value = a
+  if (window.obsstudio) {
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+      visiable.value = visibility
+    }
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onActiveChange = function (a: boolean) {
+      active.value = a
+    }
   }
 })
 onUnmounted(() => {
@@ -108,30 +110,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="song-request-background" v-bind="$attrs">
-    <p class="song-request-header">点歌</p>
-    <NDivider class="song-request-divider">
-      <p class="song-request-header-count">已有 {{ activeSongs.length ?? 0 }} 首</p>
+  <div class="live-request-background" v-bind="$attrs">
+    <p class="live-request-header">{{ settings.obsTitle ?? '点播' }}</p>
+    <NDivider class="live-request-divider">
+      <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 首</p>
     </NDivider>
     <div
-      class="song-request-singing-container"
+      class="live-request-processing-container"
       :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1"
       :from="singing?.from as number"
       :status="singing?.status as number"
     >
-      <div class="song-request-singing-prefix"></div>
+      <div class="live-request-processing-prefix"></div>
       <template v-if="singing">
-        <img class="song-request-singing-avatar" :src="AVATAR_URL + singing?.user?.uid" referrerpolicy="no-referrer" />
-        <p class="song-request-singing-song-name">{{ singing?.songName }}</p>
-        <p class="song-request-singing-name">{{ singing?.user?.name }}</p>
+        <img
+          class="live-request-processing-avatar"
+          :src="AVATAR_URL + singing?.user?.uid"
+          referrerpolicy="no-referrer"
+        />
+        <p class="live-request-processing-song-name">{{ singing?.songName }}</p>
+        <p class="live-request-processing-name">{{ singing?.user?.name }}</p>
       </template>
-      <div v-else class="song-request-singing-empty">暂未演唱</div>
-      <div class="song-request-singing-suffix"></div>
+      <div v-else class="live-request-processing-empty">暂无</div>
+      <div class="live-request-processing-suffix"></div>
     </div>
-    <div class="song-request-content" ref="listContainerRef">
+    <div class="live-request-content" ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
         <Vue3Marquee
-          class="song-request-list"
+          class="live-request-list"
           :key="key"
           vertical
           :pause="!isMoreThanContainer"
@@ -139,25 +145,25 @@ onUnmounted(() => {
           :style="`height: ${height}px;width: ${width}px;`"
         >
           <span
-            class="song-request-list-item"
+            class="live-request-list-item"
             :from="song.from as number"
             :status="song.status as number"
             v-for="(song, index) in activeSongs"
             :key="song.id"
             :style="`height: ${itemHeight}px`"
           >
-            <div class="song-request-list-item-index" :index="index + 1">
+            <div class="live-request-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
-            <div class="song-request-list-item-song-name">
+            <div class="live-request-list-item-song-name">
               {{ song.songName }}
             </div>
-            <p v-if="settings.showUserName" class="song-request-list-item-name">
+            <p v-if="settings.showUserName" class="live-request-list-item-name">
               {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
             </p>
             <div
               v-if="settings.showFanMadelInfo"
-              class="song-request-list-item-level"
+              class="live-request-list-item-level"
               :has-level="(song.user?.fans_medal_level ?? 0) > 0"
             >
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
@@ -166,38 +172,38 @@ onUnmounted(() => {
         </Vue3Marquee>
       </template>
       <div v-else style="position: relative; top: 20%">
-        <NEmpty class="song-request-empty" description="暂无人点歌" />
+        <NEmpty class="live-request-empty" description="暂无人点歌" />
       </div>
     </div>
-    <div class="song-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
+    <div class="live-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
       <Vue3Marquee
         :key="key"
         ref="footerListRef"
-        class="song-request-footer-marquee"
+        class="live-request-footer-marquee"
         :pause="footerSize.width < footerListSize.width"
         :duration="20"
       >
-        <span class="song-request-tag" type="prefix">
-          <div class="song-request-tag-key">前缀</div>
-          <div class="song-request-tag-value">
+        <span class="live-request-tag" type="prefix">
+          <div class="live-request-tag-key">前缀</div>
+          <div class="live-request-tag-value">
             {{ settings.orderPrefix }}
           </div>
         </span>
-        <span class="song-request-tag" type="prefix">
-          <div class="song-request-tag-key">允许</div>
-          <div class="song-request-tag-value">
+        <span class="live-request-tag" type="prefix">
+          <div class="live-request-tag-key">允许</div>
+          <div class="live-request-tag-value">
             {{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join(',') : '无' }}
           </div>
         </span>
-        <span class="song-request-tag" type="sc">
-          <div class="song-request-tag-key">SC点歌</div>
-          <div class="song-request-tag-value">
+        <span class="live-request-tag" type="sc">
+          <div class="live-request-tag-key">SC点歌</div>
+          <div class="live-request-tag-value">
             {{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}
           </div>
         </span>
-        <span class="song-request-tag" type="fan-madel">
-          <div class="song-request-tag-key">粉丝牌</div>
-          <div class="song-request-tag-value">
+        <span class="live-request-tag" type="fan-madel">
+          <div class="live-request-tag-key">粉丝牌</div>
+          <div class="live-request-tag-value">
             {{
               settings.needWearFanMedal
                 ? settings.fanMedalMinLevel > 0
@@ -213,7 +219,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.song-request-background {
+.live-request-background {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -224,7 +230,7 @@ onUnmounted(() => {
   border-radius: 10px;
   color: white;
 }
-.song-request-header {
+.live-request-header {
   margin: 0;
   color: #fff;
   text-align: center;
@@ -236,60 +242,60 @@ onUnmounted(() => {
     0 0 30px #61606086,
     0 0 40px rgba(64, 156, 179, 0.555);
 }
-.song-request-header-count {
+.live-request-header-count {
   color: #ffffffbd;
   text-align: center;
   font-size: 14px;
 }
-.song-request-divider {
+.live-request-divider {
   margin: 0 auto;
   margin-top: -15px;
   margin-bottom: -15px;
   width: 90%;
 }
-.song-request-singing-container {
+.live-request-processing-container {
   height: 35px;
   margin: 0 10px 0 10px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.song-request-singing-empty {
+.live-request-processing-empty {
   font-weight: bold;
   font-style: italic;
   color: #ffffffbe;
 }
-.song-request-singing-prefix {
+.live-request-processing-prefix {
   border: 2px solid rgb(231, 231, 231);
   height: 30px;
   width: 10px;
   border-radius: 10px;
 }
-.song-request-singing-container[singing='true'] .song-request-singing-prefix {
+.live-request-processing-container[singing='true'] .live-request-processing-prefix {
   background-color: #75c37f;
   animation: animated-border 3s linear infinite;
 }
-.song-request-singing-container[singing='false'] .song-request-singing-prefix {
+.live-request-processing-container[singing='false'] .live-request-processing-prefix {
   background-color: #c37575;
 }
-.song-request-singing-avatar {
+.live-request-processing-avatar {
   height: 30px;
   border-radius: 50%;
   /* 添加无限旋转动画 */
   animation: rotate 20s linear infinite;
 }
 /* 网页点歌 */
-.song-request-singing-container[from='3'] .song-request-singing-avatar {
+.live-request-processing-container[from='3'] .live-request-processing-avatar {
   display: none;
 }
-.song-request-singing-song-name {
+.live-request-processing-song-name {
   font-size: large;
   font-weight: bold;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 80%;
 }
-.song-request-singing-name {
+.live-request-processing-name {
   font-size: 12px;
   font-style: italic;
 }
@@ -304,7 +310,7 @@ onUnmounted(() => {
 .n-divider__line {
   background-color: #ffffffd5;
 }
-.song-request-content {
+.live-request-content {
   background-color: #0f0f0f4f;
   margin: 10px;
   padding: 10px;
@@ -315,7 +321,7 @@ onUnmounted(() => {
 .marquee {
   justify-items: left;
 }
-.song-request-list-item {
+.live-request-list-item {
   display: flex;
   width: 100%;
   align-self: flex-start;
@@ -324,7 +330,7 @@ onUnmounted(() => {
   justify-content: left;
   gap: 10px;
 }
-.song-request-list-item-song-name {
+.live-request-list-item-song-name {
   font-size: 18px;
   font-weight: bold;
   overflow: hidden;
@@ -334,21 +340,21 @@ onUnmounted(() => {
 }
 
 /* 手动添加 */
-.song-request-list-item[from='0'] .song-request-list-item-name {
+.live-request-list-item[from='0'] .live-request-list-item-name {
   font-style: italic;
   font-weight: bold;
   color: #d2d8d6;
   font-size: 12px;
 }
-.song-request-list-item[from='0'] .song-request-list-item-avatar {
+.live-request-list-item[from='0'] .live-request-list-item-avatar {
   display: none;
 }
 
 /* 弹幕点歌 */
-.song-request-list-item[from='1'] {
+.live-request-list-item[from='1'] {
 }
 
-.song-request-list-item-name {
+.live-request-list-item-name {
   font-style: italic;
   font-size: 12px;
   color: rgba(204, 204, 204, 0.993);
@@ -357,7 +363,7 @@ onUnmounted(() => {
 
   margin-left: auto;
 }
-.song-request-list-item-index {
+.live-request-list-item-index {
   text-align: center;
   height: 18px;
   padding: 2px;
@@ -367,7 +373,7 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
-.song-request-list-item-level {
+.live-request-list-item-level {
   text-align: center;
   height: 18px;
   padding: 2px;
@@ -377,10 +383,10 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
-.song-request-list-item-level[has-level='false'] {
+.live-request-list-item-level[has-level='false'] {
   display: none;
 }
-.song-request-footer {
+.live-request-footer {
   margin: 0 5px 5px 5px;
   height: 60px;
   border-radius: 5px;
@@ -388,7 +394,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
 }
-.song-request-tag {
+.live-request-tag {
   display: flex;
   margin: 5px 0 5px 5px;
   height: 40px;
@@ -400,12 +406,12 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: left;
 }
-.song-request-tag-key {
+.live-request-tag-key {
   font-style: italic;
   color: rgb(211, 211, 211);
   font-size: 12px;
 }
-.song-request-tag-value {
+.live-request-tag-value {
   font-size: 14px;
 }
 @keyframes animated-border {

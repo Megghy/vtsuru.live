@@ -15,15 +15,19 @@ import {
   NCard,
   NCheckbox,
   NDivider,
+  NEmpty,
   NFlex,
   NIcon,
   NImage,
   NInput,
   NInputGroup,
+  NInputGroupLabel,
   NList,
   NListItem,
   NModal,
+  NPopconfirm,
   NScrollbar,
+  NSelect,
   NSpace,
   NSpin,
   NSplit,
@@ -39,10 +43,8 @@ import {
 import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import QuestionDisplay from './QuestionDisplaySettings.vue'
-import { useElementSize } from '@vueuse/core'
 import QuestionItem from '@/components/QuestionItems.vue'
-import { ArrowCircleRight12Filled } from '@vicons/fluent'
+import { ArrowCircleRight12Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
@@ -56,6 +58,7 @@ const selectedTabItem = ref(route.query.send ? '1' : '0')
 const replyModalVisiable = ref(false)
 const shareModalVisiable = ref(false)
 const replyMessage = ref()
+const addTagName = ref('')
 
 const showSettingCard = ref(true)
 
@@ -65,6 +68,8 @@ const shareUrl = computed(() => 'https://vtsuru.live/@' + accountInfo.value?.nam
 let isRevieveGetted = false
 let isSendGetted = false
 async function onTabChange(value: string) {
+  return
+
   if (value == '0' && !isRevieveGetted) {
     await useQB.GetRecieveQAInfo()
     isRevieveGetted = true
@@ -81,7 +86,11 @@ function onOpenModal(question: QAInfo) {
 function refresh() {
   isSendGetted = false
   isRevieveGetted = false
-  onTabChange(selectedTabItem.value)
+  if (selectedTabItem.value == '0') {
+    useQB.GetRecieveQAInfo()
+  } else if (selectedTabItem.value == '1') {
+    useQB.GetSendQAInfo()
+  }
 }
 function saveShareImage() {
   html2canvas(shareCardRef.value, {
@@ -139,11 +148,9 @@ async function setFunctionEnable(enable: boolean) {
 }
 
 onMounted(() => {
-  if (selectedTabItem.value == '0') {
-    useQB.GetRecieveQAInfo()
-  } else {
-    useQB.GetSendQAInfo()
-  }
+  useQB.GetTags()
+  useQB.GetRecieveQAInfo()
+  useQB.GetSendQAInfo()
 
   useQB.displayQuestion = useQB.recieveQuestions.find(
     (s) => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
@@ -167,30 +174,27 @@ onMounted(() => {
   <NDivider style="margin: 10px 0 10px 0" />
   <NSpin v-if="useQB.isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
-    <NTabPane tab="我收到的" name="0">
-      <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
+    <NTabPane tab="我收到的" name="0" display-directive="show:lazy">
       <NDivider vertical />
-      <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
-      <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
-      <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
+      <NFlex align="center">
+        <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
+        <NSelect
+          v-model:value="useQB.displayTag"
+          placeholder="选择当前话题"
+          filterable
+          clearable
+          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
+          style="width: 200px"
+        />
+        <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
+        <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
+        <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
+      </NFlex>
       <NDivider style="margin: 10px 0 10px 0" />
-      <QuestionItem :questions="useQB.recieveQuestionsFiltered">
+      <NEmpty v-if="useQB.recieveQuestionsFiltered.length == 0" description="暂无收到的提问" />
+      <QuestionItem v-else :questions="useQB.recieveQuestionsFiltered">
         <template #footer="{ item }">
           <NSpace>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  @click="useQB.setCurrentQuestion(item)"
-                  size="small"
-                  :type="useQB.displayQuestion?.id == item.id ? 'primary' : 'default'"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowCircleRight12Filled" />
-                  </template>
-                </NButton>
-              </template>
-              设为当前展示的提问
-            </NTooltip>
             <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
               设为已读
             </NButton>
@@ -217,8 +221,9 @@ onMounted(() => {
         </template>
       </QuestionItem>
     </NTabPane>
-    <NTabPane ref="parentRef" tab="我发送的" name="1">
-      <NList>
+    <NTabPane ref="parentRef" tab="我发送的" name="1" display-directive="show:lazy">
+      <NEmpty v-if="useQB.sendQuestions.length == 0" description="暂无发送的提问" />
+      <NList v-else>
         <NListItem v-for="item in useQB.sendQuestions" :key="item.id">
           <NCard hoverable size="small">
             <template #header>
@@ -259,7 +264,8 @@ onMounted(() => {
         </NListItem>
       </NList>
     </NTabPane>
-    <NTabPane v-if="accountInfo" tab="设置" name="2">
+    <NTabPane tab="设置" name="2" display-directive="show:lazy">
+      <NDivider> 设定 </NDivider>
       <NSpin :show="useQB.isLoading">
         <NCheckbox
           v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
@@ -267,6 +273,59 @@ onMounted(() => {
         >
           允许未注册用户进行提问
         </NCheckbox>
+        <NDivider>
+          标签
+          <NTooltip>
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            类似于话题, 可以在投稿时选择
+          </NTooltip>
+        </NDivider>
+        <NInputGroup>
+          <NInputGroupLabel> 标签名称 </NInputGroupLabel>
+          <NInput v-model:value="addTagName" placeholder="就是名称" maxlength="30" show-count clearable />
+          <NButton type="primary" @click="useQB.addTag(addTagName)"> 添加 </NButton>
+        </NInputGroup>
+        <NDivider style="margin: 15px 0 15px 0" />
+        <NEmpty v-if="useQB.tags.length == 0" description="暂无标签" />
+        <NFlex v-else justify="center">
+          <NList bordered>
+            <NListItem v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)" :key="item.name">
+              <NFlex align="center">
+                <NTag :bordered="false" size="small" :type="item.visiable ? 'success' : 'error'">
+                  {{ item.name }}
+                </NTag>
+                <NTooltip>
+                  <template #trigger>
+                    <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
+                      <template #trigger>
+                        <NButton :type="item.visiable ? 'success' : 'error'" text>
+                          <template #icon>
+                            <NIcon v-if="item.visiable" :component="Eye24Filled" />
+                            <NIcon v-else :component="EyeOff24Filled" />
+                          </template>
+                        </NButton>
+                      </template>
+                      确定要{{ item.visiable ? '隐藏' : '显示' }}这个标签吗?
+                    </NPopconfirm>
+                  </template>
+                  {{ item.visiable ? '隐藏' : '显示' }}
+                </NTooltip>
+                <NPopconfirm @positive-click="useQB.delTag(item.name)">
+                  <template #trigger>
+                    <NButton type="error" text>
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  确定要删除这个标签吗?
+                </NPopconfirm>
+              </NFlex>
+            </NListItem>
+          </NList>
+        </NFlex>
         <NDivider> 通知 </NDivider>
         <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="saveSettings">
           收到新提问时发送邮件

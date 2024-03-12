@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { Setting_SongRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
 import SongRequestOBS from '@/views/obs/SongRequestOBS.vue'
 import { CloudAdd20Filled } from '@vicons/fluent'
@@ -13,7 +13,7 @@ const accountInfo = useAccount()
 const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
-  songRequestSettings: Setting_SongRequest
+  songRequestSettings: Setting_LiveRequest
   songRequestActive: SongRequestInfo[]
   currentData?: SongsInfo[] | undefined
 }>()
@@ -48,7 +48,11 @@ const buttoms = (song: SongsInfo) => [
               },
             ),
           default: () =>
-            !props.songRequestSettings.allowFromWeb || song.options ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板' : !accountInfo ? '点歌 | 你需要登录后才能点歌' : '点歌',
+            !props.songRequestSettings.allowFromWeb || song.options
+              ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板'
+              : !accountInfo
+                ? '点歌 | 你需要登录后才能点歌'
+                : '点歌',
         },
       )
     : undefined,
@@ -57,7 +61,13 @@ const buttoms = (song: SongsInfo) => [
 
 <template>
   <NDivider style="margin-top: 10px" />
-  <SongList v-if="currentData" :songs="currentData ?? []" :is-self="accountInfo?.id == userInfo?.id" :extra-buttom="buttoms" v-bind="$attrs" />
+  <SongList
+    v-if="currentData"
+    :songs="currentData ?? []"
+    :is-self="accountInfo?.id == userInfo?.id"
+    :extra-buttom="buttoms"
+    v-bind="$attrs"
+  />
   <NCollapse v-if="userInfo?.canRequestSong">
     <NCollapseItem title="点歌列表">
       <NCard size="small" embedded>

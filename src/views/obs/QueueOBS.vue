@@ -4,7 +4,7 @@ import {
   QueueSortType,
   ResponseQueueModel,
   Setting_Queue,
-  Setting_SongRequest,
+  Setting_LiveRequest,
   SongRequestFrom,
   SongRequestInfo,
   QueueStatus,

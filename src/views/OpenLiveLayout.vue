@@ -62,13 +62,13 @@ const menuOptions = [
         RouterLink,
         {
           to: {
-            name: 'open-live-song-request',
+            name: 'open-live-live-request',
             query: route.query,
           },
         },
         { default: () => '点歌' },
       ),
-    key: 'open-live-song-request',
+    key: 'open-live-live-request',
     icon: renderIcon(MusicalNote),
   },
   {

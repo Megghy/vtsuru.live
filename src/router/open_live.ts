@@ -19,9 +19,9 @@ export default {
       },
     },
     {
-      path: 'song-request',
-      name: 'open-live-song-request',
-      component: () => import('@/views/open_live/SongRequest.vue'),
+      path: 'live-request',
+      name: 'open-live-live-request',
+      component: () => import('@/views/open_live/LiveRequest.vue'),
       meta: {
         title: '点歌',
       },
