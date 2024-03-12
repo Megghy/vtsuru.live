@@ -81,10 +81,10 @@ const canBuy = computed(() => {
   return true
 })
 function getTooltip(goods: ResponsePointGoodModel) {
-  if (!canBuy.value) return '请先进行账号认证'
   if ((currentPoint.value ?? 0) < goods.price) {
     return '当前积分不足'
-  } else {
+  } else if (!biliAuth.value.id) return '请先进行账号认证'
+  else {
     return '开始兑换'
   }
 }
