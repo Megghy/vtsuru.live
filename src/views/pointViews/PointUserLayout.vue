@@ -117,16 +117,13 @@ onMounted(async () => {
     await useAuth.getAuthInfo()
     isLoading.value = false
   }
-  if (biliAuth.value.id >= 0) {
-    points.value = await getAllPoints()
-  }
 })
 </script>
 
 <template>
   <NLayout>
-    <NSpin v-if="!biliAuth.id && useAuth.isLoading" :show="useAuth.isLoading" />
-    <NLayoutContent v-else-if="!useAuth.biliToken && useAuth.biliTokens.length > 0" style="height: 100vh">
+    <NSpin v-if="!biliAuth.id && useAuth.currentToken" :show="useAuth.isLoading" />
+    <NLayoutContent v-else-if="!useAuth.currentToken && useAuth.biliTokens.length > 0" style="height: 100vh">
       <NCard title="选择B站账号" embedded>
         <NList clickable bordered>
           <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">
@@ -135,7 +132,7 @@ onMounted(async () => {
         </NList>
       </NCard>
     </NLayoutContent>
-    <NLayoutContent v-else-if="!biliAuth.id" style="height: 100vh">
+    <NLayoutContent v-else-if="!useAuth.currentToken" style="height: 100vh">
       <NResult status="error" title="你还未进行过B站账户验证" description="请先进行认证" style="padding-top: 64px">
         <template #footer>
           <NButton type="primary" @click="$router.push({ name: 'bili-auth' })">去认证</NButton>
@@ -163,8 +160,10 @@ onMounted(async () => {
             </NCard>
             <NDivider />
             <NTabs v-if="hash" v-model:value="hash" default-value="points" animated>
-              <NTabPane name="points" tab="我的积分" display-directive="show:lazy">
+              <NTabPane name="points" tab="我的积分" display-directive="show:lazy" @vue:mounted="getAllPoints()">
                 <NDivider style="margin-top: 10px" />
+                <NButton style="margin-bottom: 10px" @click="getAllPoints()" size="small" type="primary">刷新</NButton>
+                <NDivider />
                 <NFlex justify="center">
                   <NDataTable
                     :loading="isLoading"

@@ -119,7 +119,6 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 target: '_blank',
                 text: true,
                 type: 'info',
-                secondary: true,
               },
               () => row.extra.user?.name,
             ),
