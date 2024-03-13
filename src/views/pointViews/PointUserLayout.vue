@@ -87,6 +87,7 @@ async function getAllPoints() {
     )
     if (data.code == 200) {
       console.log('[point] 已获取积分')
+      points.value = data.data
       return data.data
     }
   } catch (err) {
