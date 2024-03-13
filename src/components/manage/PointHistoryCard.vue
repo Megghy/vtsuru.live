@@ -70,7 +70,22 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
       const get = () => {
         switch (row.from) {
           case PointFrom.Danmaku:
-            return h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间')
+            return h(NFlex, { align: 'center' }, () => [
+              h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间'),
+              row.extra?.user
+                ? h(
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: '/@' + row.extra.user?.name,
+                      target: '_blank',
+                      text: true,
+                      type: 'success',
+                    },
+                    () => row.extra.user?.name,
+                  )
+                : null,
+            ])
           case PointFrom.Manual:
             return h(
               NTag,
@@ -95,17 +110,22 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             case EventDataTypes.Guard:
               return h(NFlex, { justify: 'center', align: 'center' }, () => [
                 h(NTag, { type: 'error', size: 'small' }, () => '上舰'),
-                row.extra?.msg,
+                row.extra?.danmaku.msg,
               ])
             case EventDataTypes.Gift:
-              return h(NFlex, { justify: 'center' }, () => [
+              return h(NFlex, { justify: 'center', align: 'center' }, () => [
                 h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '礼物'),
-                row.extra?.msg,
+                row.extra?.danmaku.msg,
+                h(
+                  NTag,
+                  { type: 'warning', size: 'tiny', style: { margin: '0' }, bordered: false },
+                  () => (row.extra?.danmaku.num ?? 1) + '个',
+                ),
               ])
             case EventDataTypes.SC:
               return h(NFlex, { justify: 'center' }, () => [
                 h(NTag, { type: 'warning', size: 'small', style: { margin: '0' } }, () => 'SC'),
-                row.extra?.price,
+                row.extra?.danmaku.price,
               ])
           }
         case PointFrom.Manual:

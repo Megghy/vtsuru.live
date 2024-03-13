@@ -16,9 +16,12 @@ export enum IndexTypes {
 export enum SongListTypes {
   Default,
 }
-export interface UserInfo {
+export interface UserBasicInfo {
   name: string
   id: number
+  isBiliAuthed: boolean
+}
+export interface UserInfo extends UserBasicInfo {
   createAt: number
   biliId?: number
   biliRoomId?: number
@@ -234,7 +237,7 @@ export enum FunctionTypes {
   SongRequest,
   Queue,
   Point,
-  VideoCollect
+  VideoCollect,
 }
 export interface SongAuthorInfo {
   name: string
@@ -293,8 +296,8 @@ export interface NotifactionInfo {
 }
 export interface QAInfo {
   id: number
-  sender: UserInfo
-  target: UserInfo
+  sender: UserBasicInfo
+  target: UserBasicInfo
   question: { message: string; image?: string }
   answer?: { message: string; image?: string }
   isReaded?: boolean
@@ -356,7 +359,7 @@ export interface VideoCollectTable {
   isFinish: boolean
   videoCount: number
   maxVideoCount: number
-  owner: UserInfo
+  owner: UserBasicInfo
 }
 export interface VideoCollectVideo {
   id: string
