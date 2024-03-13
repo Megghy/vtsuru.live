@@ -120,6 +120,12 @@ export const useAuthStore = defineStore('BiliAuth', () => {
     }
     return []
   }
+  function logout() {
+    biliAuth.value = {} as BiliAuthModel
+    biliTokens.value = biliTokens.value.filter((t) => t.token != currentToken.value)
+    currentToken.value = ''
+    console.log('[bili-auth] 已登出 Bilibili 认证')
+  }
 
   return {
     biliAuth,
@@ -134,5 +140,6 @@ export const useAuthStore = defineStore('BiliAuth', () => {
     GetSpecificPoint,
     GetGoods,
     setCurrentAuth,
+    logout,
   }
 })

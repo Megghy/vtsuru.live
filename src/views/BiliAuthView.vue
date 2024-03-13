@@ -21,6 +21,7 @@ import {
   NTimelineItem,
   NSteps,
   NStep,
+  NPopconfirm,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
@@ -78,8 +79,8 @@ async function checkStatus() {
     clearInterval(timer.value)
     message.success('认证成功')
 
-    currentToken.value = data.data as string
-    useAuth.getAuthInfo()
+    guidKey.value = uuidv4()
+    useAuth.setCurrentAuth(data.data as string)
 
     currentStep.value = 2
 
@@ -194,8 +195,8 @@ onMounted(async () => {
             </NInputGroup>
             <NFlex>
               <NButton @click="$router.push({ name: 'bili-user' })" type="primary"> 前往个人中心 </NButton>
-              <NButton
-                @click="
+              <NPopconfirm
+                @positive-click="
                   () => {
                     currentStep = 0
                     //@ts-ignore
@@ -203,10 +204,13 @@ onMounted(async () => {
                     guidKey = uuidv4()
                   }
                 "
-                type="warning"
+                positive-text="继续"
               >
-                重新认证
-              </NButton>
+                <template #trigger>
+                  <NButton type="warning"> 认证其他账号 </NButton>
+                </template>
+                这将会登出当前已认证的账号, 请先在认证其他账号前保存你的登陆链接
+              </NPopconfirm>
             </NFlex>
           </NFlex>
         </template>

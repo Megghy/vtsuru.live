@@ -124,8 +124,16 @@ onMounted(async () => {
 <template>
   <NLayout>
     <NSpin v-if="!biliAuth.id && useAuth.currentToken" :show="useAuth.isLoading" />
-    <NLayoutContent v-else-if="!useAuth.currentToken && useAuth.biliTokens.length > 0" style="height: 100vh">
+    <NLayoutContent
+      v-else-if="!useAuth.currentToken && useAuth.biliTokens.length > 0"
+      style="height: 100vh; padding: 50px"
+    >
       <NCard title="选择B站账号" embedded>
+        <template #header-extra>
+          <NButton type="primary" @click="$router.push({ name: 'bili-auth' })" size="small" secondary
+            >认证其他账号</NButton
+          >
+        </template>
         <NList clickable bordered>
           <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">
             <NFlex align="center"> {{ item.name }} - {{ item.uId }} </NFlex>
@@ -151,11 +159,14 @@ onMounted(async () => {
           <div style="max-width: 95vw; width: 900px">
             <NCard title="我的信息">
               <NDescriptions label-placement="left" bordered size="small">
-                <NDescriptionsItem label="OpenId">
-                  {{ biliAuth.openId }}
+                <NDescriptionsItem label="用户名">
+                  {{ biliAuth.name ?? '未知' }}
                 </NDescriptionsItem>
                 <NDescriptionsItem label="UserId">
                   {{ biliAuth.userId }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="OpenId">
+                  {{ biliAuth.openId }}
                 </NDescriptionsItem>
               </NDescriptions>
             </NCard>

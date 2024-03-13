@@ -5,27 +5,27 @@ import { POINT_API_URL, THINGS_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useStorage } from '@vueuse/core'
 import {
-FormRules,
-NButton,
-NCard,
-NCheckbox,
-NCollapse,
-NCollapseItem,
-NDivider,
-NFlex,
-NForm,
-NFormItem,
-NInput,
-NInputNumber,
-NList,
-NListItem,
-NModal,
-NPopconfirm,
-NScrollbar,
-NSelect,
-NSpin,
-NTag,
-useMessage
+  FormRules,
+  NButton,
+  NCard,
+  NCheckbox,
+  NCollapse,
+  NCollapseItem,
+  NDivider,
+  NFlex,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
+  NList,
+  NListItem,
+  NModal,
+  NPopconfirm,
+  NScrollbar,
+  NSelect,
+  NSpin,
+  NTag,
+  useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 //@ts-expect-error 导入有点问题
@@ -223,6 +223,10 @@ function switchAuth(token: string) {
   useAuth.setCurrentAuth(token)
   message.success('已切换账号')
 }
+
+function logout() {
+  useAuth.logout()
+}
 </script>
 
 <template>
@@ -261,9 +265,20 @@ function switchAuth(token: string) {
               </NList>
             </NFlex>
           </NCollapseItem>
+          <NCollapseItem title="登录链接" name="2">
+            <NInput type="textarea" :value="'https://vtsuru.live/bili-user?auth=' + useAuth.biliToken" readonly />
+          </NCollapseItem>
         </NCollapse>
       </NCard>
       <NCard title="账号操作" embedded>
+        <NFlex>
+          <NPopconfirm @positive-click="logout">
+            <template #trigger>
+              <NButton type="warning" size="small"> 登出 </NButton>
+            </template>
+            确定要登出吗?
+          </NPopconfirm>
+        </NFlex>
         <NDivider> 切换账号 </NDivider>
         <NList clickable bordered>
           <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">

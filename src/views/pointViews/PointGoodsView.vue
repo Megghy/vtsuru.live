@@ -164,11 +164,12 @@ function gotoAuthPage() {
     message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
-  useAuthStore()
+  /*useAuthStore()
     .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
     .then(() => {
       NavigateToNewTab('/bili-user')
-    })
+    })*/
+  NavigateToNewTab('/bili-user')
 }
 
 onMounted(async () => {
@@ -212,7 +213,13 @@ onMounted(async () => {
             <NFlex justify="space-between" align="center">
               <NTooltip>
                 <template #trigger>
-                  <NButton :disabled="getTooltip(item) != '开始兑换'" size="small" type="primary" @click="onBuyClick(item)">兑换</NButton>
+                  <NButton
+                    :disabled="getTooltip(item) != '开始兑换'"
+                    size="small"
+                    type="primary"
+                    @click="onBuyClick(item)"
+                    >兑换</NButton
+                  >
                 </template>
                 {{ getTooltip(item) }}
               </NTooltip>
