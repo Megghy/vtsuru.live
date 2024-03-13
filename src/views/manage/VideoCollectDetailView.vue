@@ -387,7 +387,7 @@ onActivated(async () => {
       </NPopconfirm>
     </template>
   </NSpace>
-  <VideoCollectInfoCard :item="videoDetail.table" style="width: 100%; max-width: 90vw">
+  <VideoCollectInfoCard :item="videoDetail.table" style="width: 100%; max-width: 90vw" from="owner">
     <template v-if="width > 1000" #header-extra>
       <NSpace>
         <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>

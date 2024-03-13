@@ -120,8 +120,21 @@ const iconColor = 'white'
           </NGradientText>
           <NText style="font-size: 1.5em; font-weight: 500; color: white"> 一个给主播提供便利功能的网站 😊 </NText>
           <span></span>
-          <NSpace justify="center">
-            <NButton type="primary" size="large" @click="$router.push({ name: 'manage-index' })"> 开始使用 </NButton>
+          <NSpace justify="center" align="center">
+            <NSpace align="center">
+              <NSpace vertical justify="end">
+                <NText style="font-size: medium" italic> 我是主播 </NText>
+                <NButton type="primary" size="small" @click="$router.push({ name: 'manage-index' })">
+                  开始使用
+                </NButton>
+              </NSpace>
+              <NSpace vertical>
+                <NText style="font-size: medium" italic> 我是观众 </NText>
+                <NButton type="primary" size="small" secondary @click="$router.push({ name: 'bili-user' })" bordered>
+                  用户主页
+                </NButton>
+              </NSpace>
+            </NSpace>
             <NButton size="large" @click="$router.push('/user/Megghy')"> 展示 </NButton>
             <NButton
               size="large"

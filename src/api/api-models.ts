@@ -234,6 +234,7 @@ export enum FunctionTypes {
   SongRequest,
   Queue,
   Point,
+  VideoCollect
 }
 export interface SongAuthorInfo {
   name: string

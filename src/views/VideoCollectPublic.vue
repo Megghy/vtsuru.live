@@ -92,7 +92,7 @@ onUnmounted(() => {
             <NText depth="3" style="font-size: 14px">{{ table.owner?.name }}</NText>
           </NButton>
         </template>
-        <VideoCollectInfoCard :item="table" />
+        <VideoCollectInfoCard :item="table" :canClick="false" from="user" />
         <NDivider />
         <NAlert v-if="table.isFinish" type="error" title="该征集表已截止" />
         <NSpace v-else vertical>

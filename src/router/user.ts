@@ -55,4 +55,13 @@ export default [
       keepAlive: true,
     },
   },
+  {
+    path: 'video-collect',
+    name: 'user-video-collect',
+    component: () => import('@/views/view/VideoCollectView.vue'),
+    meta: {
+      title: '视频征集',
+      keepAlive: true,
+    },
+  },
 ]
