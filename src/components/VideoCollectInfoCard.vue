@@ -19,19 +19,25 @@ import {
 const props = defineProps<{
   item: VideoCollectTable
   canClick?: boolean
+  from: 'user' | 'owner'
+  bordered?: boolean
 }>()
 const renderCountdown: CountdownProps['render'] = (info: { hours: number; minutes: number; seconds: number }) => {
   return `${String(info.hours).padStart(2, '0')}时 ${String(info.minutes).padStart(2, '0')}分 ${String(info.seconds).padStart(2, '0')}秒`
 }
 function onClick() {
   if (props.canClick == true) {
-    router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
+    if (props.from == 'user') {
+      window.open('https://vtsuru.live/video-collect/' + props.item.shortId, '_blank')
+    } else {
+      router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
+    }
   }
 }
 </script>
 
 <template>
-  <NCard size="small" style="width: 100%; max-width: 70vw; cursor: pointer" @click="onClick" embedded hoverable>
+  <NCard size="small" style="width: 100%; max-width: 70vw; cursor: pointer" @click="onClick" embedded hoverable :bordered="bordered">
     <template #header>
       <NSpace :size="5">
         <NTag v-if="item.isFinish" size="small"> 已结束 </NTag>

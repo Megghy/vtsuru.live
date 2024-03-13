@@ -180,7 +180,7 @@ const filterSongNameContains = ref(false)
 const filterName = ref('')
 const filterNameContains = ref(false)
 
-const defaultPrefix = useStorage('Settings.SongRequest.DefaultPrefix', '点歌')
+const defaultPrefix = useStorage('Settings.SongRequest.DefaultPrefix', '点播')
 const configCanEdit = computed(() => {
   return accountInfo.value != null && accountInfo.value != undefined
 })

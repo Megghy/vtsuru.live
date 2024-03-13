@@ -63,6 +63,38 @@ export async function SaveAccountSettings() {
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
   return await QueryPostAPI(ACCOUNT_API_URL + 'update-enable-functions', functions)
 }
+export async function UpdateFunctionEnable(func: FunctionTypes) {
+  if (ACCOUNT.value) {
+    const oldValue = JSON.parse(JSON.stringify(ACCOUNT.value.settings.enableFunctions))
+    if (ACCOUNT.value?.settings.enableFunctions.includes(func)) {
+      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter(
+        (f) => f != func,
+      )
+    } else {
+      ACCOUNT.value.settings.enableFunctions.push(func)
+    }
+    await SaveEnableFunctions(ACCOUNT.value?.settings.enableFunctions)
+      .then((data) => {
+        if (data.code == 200) {
+          message.success(
+            `已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`,
+          )
+        } else {
+          if (ACCOUNT.value) {
+            ACCOUNT.value.settings.enableFunctions = oldValue
+          }
+          message.error(
+            `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${data.message}`,
+          )
+        }
+      })
+      .catch((err) => {
+        message.error(
+          `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`,
+        )
+      })
+  }
+}
 export function useAccount() {
   return ACCOUNT
 }

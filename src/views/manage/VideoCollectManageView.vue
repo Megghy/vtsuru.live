@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { VideoCollectTable } from '@/api/api-models'
+import { UpdateFunctionEnable, useAccount } from '@/api/account'
+import { FunctionTypes, VideoCollectTable } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
 import {
   FormRules,
+  NAlert,
   NButton,
   NDatePicker,
   NDivider,
@@ -19,6 +20,7 @@ import {
   NModal,
   NSpace,
   NSpin,
+  NSwitch,
   NText,
   useMessage,
 } from 'naive-ui'
@@ -125,6 +127,14 @@ function createTable() {
 </script>
 
 <template>
+  <NAlert type="info" v-if="accountInfo.id">
+    在个人主页展示进行中的征集表
+    <NSwitch
+      :value="accountInfo.settings.enableFunctions.includes(FunctionTypes.VideoCollect)"
+      @update:value="UpdateFunctionEnable(FunctionTypes.VideoCollect)"
+    />
+  </NAlert>
+  <NDivider />
   <NSpace>
     <NButton @click="createModalVisible = true" type="primary"> 新建征集表 </NButton>
   </NSpace>
@@ -132,9 +142,9 @@ function createTable() {
   <NSpin :show="isLoading">
     <NSpace justify="center">
       <NEmpty v-if="videoTables.length == 0" />
-      <NList v-else>
-        <NListItem v-for="item in videoTables" :key="item.id">
-          <VideoCollectInfoCard :item="item" canClick style="width: 500px; max-width: 70vw" />
+      <NList v-else bordered>
+        <NListItem v-for="item in videoTables" :key="item.id" style="padding: 0">
+          <VideoCollectInfoCard :item="item" canClick style="width: 500px; max-width: 70vw" from="owner" />
         </NListItem>
       </NList>
     </NSpace>
