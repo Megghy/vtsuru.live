@@ -154,7 +154,7 @@ onUnmounted(() => {
               {{ client?.roomAuthInfo.value ? `已连接 | ${client.roomAuthInfo.value?.anchor_info.uname}` : '未连接' }}
             </NTag>
             <NSwitch
-              :default-value="!isDarkMode()"
+              :default-value="!isDarkMode"
               @update:value="
                 (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
               "
@@ -198,7 +198,7 @@ onUnmounted(() => {
                 round
                 bordered
                 :style="{
-                  boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
+                  boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
                 }"
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">

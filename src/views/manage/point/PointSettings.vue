@@ -111,6 +111,14 @@ async function updateGift() {
 </script>
 
 <template>
+  <NAlert v-if="!accountInfo.eventFetcherState.online" type="warning">
+    由于你尚未部署
+    <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+      VtsuruEventFetcher
+    </NButton>
+    , 以下选项设置了也没用
+  </NAlert>
+  <br />
   <NAlert type="info"> 积分总是最多保留两位小数, 四舍五入 </NAlert>
   <NDivider> 常用 </NDivider>
   <NSpin :show="isLoading">

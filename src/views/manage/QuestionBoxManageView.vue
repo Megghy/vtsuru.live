@@ -160,7 +160,10 @@ onMounted(() => {
 
 <template>
   <NSpace align="center">
-    <NAlert type="info" style="max-width: 200px">
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
+      style="max-width: 200px"
+    >
       启用提问箱
       <NDivider vertical />
       <NSwitch

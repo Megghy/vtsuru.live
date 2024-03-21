@@ -1,6 +1,8 @@
 import { useStorage } from '@vueuse/core'
 import { UploadFileInfo, createDiscreteApi, useOsTheme } from 'naive-ui'
 import { ThemeType } from './api/api-models'
+import { computed } from 'vue'
+import { VTSURU_API_URL } from './data/constants'
 
 const { message } = createDiscreteApi(['message'])
 
@@ -9,10 +11,10 @@ export function NavigateToNewTab(url: string) {
   window.open(url, '_blank')
 }
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)
-export function isDarkMode(): boolean {
+export const isDarkMode = computed(() => {
   if (themeType.value == ThemeType.Auto) return osThemeRef.value === 'dark'
   else return themeType.value == ThemeType.Dark
-}
+})
 export function copyToClipboard(text: string) {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text)
@@ -106,6 +108,13 @@ export async function getImageUploadModel(
   }
   return result
 }
+export function getUserAvatarUrl(userId: number) {
+  return VTSURU_API_URL + 'user-face/' + userId
+}
+export function getOUIdAvatarUrl(ouid: string) {
+  return VTSURU_API_URL + 'face/' + ouid
+}
+
 export class GuidUtils {
   // 将数字转换为GUID
   public static numToGuid(value: number): string {

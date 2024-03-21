@@ -2,6 +2,7 @@
 import { useAccount } from '@/api/account'
 import { ResponseLiveInfoModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/components/LiveInfoContainer.vue'
 import { LIVE_API_URL } from '@/data/constants'
 import { NAlert, NButton, NDivider, NList, NListItem, NPagination, NSpace, useMessage } from 'naive-ui'
@@ -43,7 +44,6 @@ function OnClickCover(live: ResponseLiveInfoModel) {
 
 <template>
   <NSpace vertical>
-    <NAlert type="warning"> 测试功能, 尚不稳定 </NAlert>
     <NAlert type="error" title="2024.2.26">
       近期逸站对开放平台直播弹幕流进行了极为严格的限制, 目前本站服务器只能连接个位数的直播间, 这使得在不使用
       <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
@@ -57,6 +57,8 @@ function OnClickCover(live: ResponseLiveInfoModel) {
       </NButton>
       , 否则只能记录直播的时间而不包含弹幕
     </NAlert>
+
+    <EventFetcherStatusCard />
   </NSpace>
   <NDivider />
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>

@@ -13,9 +13,11 @@ export const IMGUR_URL = FILE_BASE_URL + '/imgur/'
 export const THINGS_URL = FILE_BASE_URL + '/things/'
 export const apiFail = ref(false)
 
-export const BASE_API = {
-  toString: () =>
-    (process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI) + 'api/',
+export const BASE_URL = {
+  toString: () => (process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI),
+}
+export const BASE_API_URL = {
+  toString: () => BASE_URL + 'api/',
 }
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const BASE_HUB_URL = {
@@ -25,26 +27,27 @@ export const BASE_HUB_URL = {
 
 export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0'
 
-export const USER_API_URL = { toString: () => `${BASE_API}user/` }
-export const ACCOUNT_API_URL = { toString: () => `${BASE_API}account/` }
-export const BILI_API_URL = { toString: () => `${BASE_API}bili/` }
-export const SONG_API_URL = { toString: () => `${BASE_API}song-list/` }
-export const NOTIFACTION_API_URL = { toString: () => `${BASE_API}notifaction/` }
-export const QUESTION_API_URL = { toString: () => `${BASE_API}qa/` }
-export const LOTTERY_API_URL = { toString: () => `${BASE_API}lottery/` }
-export const HISTORY_API_URL = { toString: () => `${BASE_API}history/` }
-export const SCHEDULE_API_URL = { toString: () => `${BASE_API}schedule/` }
-export const VIDEO_COLLECT_API_URL = { toString: () => `${BASE_API}video-collect/` }
-export const OPEN_LIVE_API_URL = { toString: () => `${BASE_API}open-live/` }
-export const SONG_REQUEST_API_URL = { toString: () => `${BASE_API}live-request/` }
-export const QUEUE_API_URL = { toString: () => `${BASE_API}queue/` }
-export const EVENT_API_URL = { toString: () => `${BASE_API}event/` }
-export const LIVE_API_URL = { toString: () => `${BASE_API}live/` }
-export const FEEDBACK_API_URL = { toString: () => `${BASE_API}feedback/` }
-export const MUSIC_REQUEST_API_URL = { toString: () => `${BASE_API}music-request/` }
-export const VTSURU_API_URL = { toString: () => `${BASE_API}vtsuru/` }
-export const POINT_API_URL = { toString: () => `${BASE_API}point/` }
-export const BILI_AUTH_API_URL = { toString: () => `${BASE_API}bili-auth/` }
+export const USER_API_URL = { toString: () => `${BASE_API_URL}user/` }
+export const ACCOUNT_API_URL = { toString: () => `${BASE_API_URL}account/` }
+export const BILI_API_URL = { toString: () => `${BASE_API_URL}bili/` }
+export const SONG_API_URL = { toString: () => `${BASE_API_URL}song-list/` }
+export const NOTIFACTION_API_URL = { toString: () => `${BASE_API_URL}notifaction/` }
+export const QUESTION_API_URL = { toString: () => `${BASE_API_URL}qa/` }
+export const LOTTERY_API_URL = { toString: () => `${BASE_API_URL}lottery/` }
+export const HISTORY_API_URL = { toString: () => `${BASE_API_URL}history/` }
+export const SCHEDULE_API_URL = { toString: () => `${BASE_API_URL}schedule/` }
+export const VIDEO_COLLECT_API_URL = { toString: () => `${BASE_API_URL}video-collect/` }
+export const OPEN_LIVE_API_URL = { toString: () => `${BASE_API_URL}open-live/` }
+export const SONG_REQUEST_API_URL = { toString: () => `${BASE_API_URL}live-request/` }
+export const QUEUE_API_URL = { toString: () => `${BASE_API_URL}queue/` }
+export const EVENT_API_URL = { toString: () => `${BASE_API_URL}event/` }
+export const LIVE_API_URL = { toString: () => `${BASE_API_URL}live/` }
+export const FEEDBACK_API_URL = { toString: () => `${BASE_API_URL}feedback/` }
+export const MUSIC_REQUEST_API_URL = { toString: () => `${BASE_API_URL}music-request/` }
+export const VTSURU_API_URL = { toString: () => `${BASE_API_URL}vtsuru/` }
+export const POINT_API_URL = { toString: () => `${BASE_API_URL}point/` }
+export const BILI_AUTH_API_URL = { toString: () => `${BASE_API_URL}bili-auth/` }
+export const FORUM_API_URL = { toString: () => `${BASE_API_URL}forum/` }
 
 export const ScheduleTemplateMap = {
   '': {

@@ -1,5 +1,5 @@
 import { QueryGetAPI } from '@/api/query'
-import { BASE_API, apiFail } from '@/data/constants'
+import { BASE_API_URL, apiFail } from '@/data/constants'
 import EasySpeech from 'easy-speech'
 import { NButton, NFlex, NText, createDiscreteApi } from 'naive-ui'
 import { createPinia } from 'pinia'
@@ -16,13 +16,11 @@ const pinia = createPinia()
 const app = createApp(App)
 app.use(router).use(pinia).mount('#app')
 
-const route = useRoute()
-
 let currentVersion: string
 let isHaveNewVersion = false
 
 const { notification } = createDiscreteApi(['notification'])
-QueryGetAPI<string>(BASE_API + 'vtsuru/version')
+QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
   .then((version) => {
     if (version.code == 200) {
       currentVersion = version.data
@@ -45,12 +43,13 @@ QueryGetAPI<string>(BASE_API + 'vtsuru/version')
           if (isHaveNewVersion) {
             return
           }
-          QueryGetAPI<string>(BASE_API + 'vtsuru/version').then((keepCheckData) => {
+          QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version').then((keepCheckData) => {
             if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
               isHaveNewVersion = true
               currentVersion = version.data
               localStorage.setItem('Version', currentVersion)
 
+              const route = useRoute()
               if (!route.path.startsWith('/obs')) {
                 const n = notification.info({
                   title: '发现新的版本更新',

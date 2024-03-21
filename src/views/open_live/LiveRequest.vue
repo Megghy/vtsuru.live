@@ -747,7 +747,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert type="info" v-if="accountInfo.id">
+  <NAlert
+    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? 'success' : 'warning'"
+    v-if="accountInfo.id"
+  >
     启用弹幕点播功能
     <NSwitch
       :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"

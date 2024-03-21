@@ -9,7 +9,6 @@ import { useRoute } from 'vue-router'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
-const route = useRoute()
 
 const { message } = createDiscreteApi(['message'])
 const cookie = useLocalStorage('JWT_Token', '')
@@ -42,6 +41,7 @@ export async function GetSelfAccount() {
 }
 export function UpdateAccountLoop() {
   setInterval(() => {
+    const route = useRoute()
     if (ACCOUNT.value && route?.name != 'question-display') {
       // 防止在问题详情页刷新
       GetSelfAccount()
@@ -67,18 +67,14 @@ export async function UpdateFunctionEnable(func: FunctionTypes) {
   if (ACCOUNT.value) {
     const oldValue = JSON.parse(JSON.stringify(ACCOUNT.value.settings.enableFunctions))
     if (ACCOUNT.value?.settings.enableFunctions.includes(func)) {
-      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter(
-        (f) => f != func,
-      )
+      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter((f) => f != func)
     } else {
       ACCOUNT.value.settings.enableFunctions.push(func)
     }
     await SaveEnableFunctions(ACCOUNT.value?.settings.enableFunctions)
       .then((data) => {
         if (data.code == 200) {
-          message.success(
-            `已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`,
-          )
+          message.success(`已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`)
         } else {
           if (ACCOUNT.value) {
             ACCOUNT.value.settings.enableFunctions = oldValue
@@ -89,9 +85,7 @@ export async function UpdateFunctionEnable(func: FunctionTypes) {
         }
       })
       .catch((err) => {
-        message.error(
-          `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`,
-        )
+        message.error(`${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`)
       })
   }
 }

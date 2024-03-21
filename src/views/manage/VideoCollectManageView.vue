@@ -127,7 +127,11 @@ function createTable() {
 </script>
 
 <template>
-  <NAlert type="info" v-if="accountInfo.id">
+  <NAlert
+    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.VideoCollect) ? 'success' : 'warning'"
+    v-if="accountInfo.id"
+    style="max-width: 300px"
+  >
     在个人主页展示进行中的征集表
     <NSwitch
       :value="accountInfo.settings.enableFunctions.includes(FunctionTypes.VideoCollect)"

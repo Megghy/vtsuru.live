@@ -262,7 +262,10 @@ onMounted(() => {
 
 <template>
   <NSpace align="center">
-    <NAlert type="info" style="max-width: 200px">
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
+      style="max-width: 200px"
+    >
       启用日程表
       <NDivider vertical />
       <NSwitch

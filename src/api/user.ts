@@ -1,9 +1,8 @@
 import { QueryGetAPI } from '@/api/query'
-import { BASE_API, USER_API_URL, apiFail } from '@/data/constants'
-import { APIRoot, UserInfo } from './api-models'
+import { USER_API_URL, apiFail } from '@/data/constants'
 import { ref } from 'vue'
-import { useRouteParams } from '@vueuse/router'
 import { useRoute } from 'vue-router'
+import { APIRoot, UserInfo } from './api-models'
 
 export const USERS = ref<{ [id: string]: UserInfo }>({})
 

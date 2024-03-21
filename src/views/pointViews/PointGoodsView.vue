@@ -199,7 +199,10 @@ onMounted(async () => {
   <NCard v-else style="max-width: 600px" embedded hoverable>
     <template #header> 你好, {{ useAuth.biliAuth.name }} </template>
     <template #header-extra>
-      <NButton type="info" @click="gotoAuthPage" secondary size="small"> 前往认证用户中心 </NButton>
+      <NFlex>
+        <NButton type="info" @click="gotoAuthPage" secondary size="small"> 前往认证用户中心 </NButton>
+        <NButton @click="NavigateToNewTab('/bili-user#settings')" secondary size="small"> 切换账号 </NButton>
+      </NFlex>
     </template>
     <NText> 你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }} </NText>
   </NCard>

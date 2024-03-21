@@ -1,0 +1,63 @@
+
+.dark-theme {
+  --w-e-toolbar-active-bg-color: #2c2c2c;
+  transition: all 1s;
+}
+.dark-theme {
+  background-color: #333;
+  color: #ccc;
+}
+
+.dark-theme .w-e-text-container {
+  background: #333;
+  color: #ccc;
+}
+.dark-theme .w-e-bar-item-menus-container{
+    background: #333;
+    color: #ccc;
+  }
+.dark-theme .w-e-toolbar {
+  background: #444;
+  border-bottom: 1px solid #555;
+}
+
+.dark-theme .w-e-menu {
+  color: #fff;
+  /* 更明亮的文字颜色 */
+}
+.dark-theme .w-e-bar-item button {
+  color: #fff!important;
+  /* 更明亮的图标颜色 */
+}
+.dark-theme .w-e-bar svg {
+  fill: #fff;
+}
+.dark-theme .w-e-icon {
+  color: #fff;
+  /* 更明亮的图标颜色 */
+}
+
+.dark-theme .w-e-menu.active {
+  color: #409EFF;
+  /* 菜单选中时的颜色 */
+}
+
+.dark-theme .w-e-menu-text {
+  color: #fff;
+  /* 更明亮的菜单文字颜色 */
+}
+.dark-theme .w-e-bar{
+  background-color: #ffffff00;
+}
+.dark-theme .w-e-droplist.w-e-list {
+  background-color: #444;
+}
+
+.dark-theme .w-e-list,
+.dark-theme .w-e-list li a {
+  color: #ccc;
+}
+
+.dark-theme .w-e-text a {
+  color: #5dbeff;
+}

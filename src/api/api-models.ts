@@ -3,12 +3,11 @@ export interface APIRoot<T> {
   message: string
   data: T
 }
-export interface PaginationResponse<T> {
+export interface PaginationResponse<T> extends APIRoot<T> {
   total: number
-  index: number
-  size: number
-  hasMore: boolean
-  datas: T
+  pn: number
+  ps: number
+  more: boolean
 }
 export enum IndexTypes {
   Default,
@@ -661,7 +660,9 @@ export interface ResponsePointOrder2OwnerModel {
   customer: BiliAuthModel
   address?: AddressInfo
   goodsId: number
+  count: number
   createAt: number
+  updateAt: number
   status: PointOrderStatus
 
   trackingNumber?: string
@@ -692,6 +693,7 @@ export interface ResponsePointHisrotyModel {
   type: EventDataTypes
   from: PointFrom
   createAt: number
+  count: number
 
   extra?: any
 }

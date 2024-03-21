@@ -4,6 +4,7 @@ import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useRouteHash } from '@vueuse/router'
 import {
+  NAlert,
   NButton,
   NCard,
   NDataTable,
@@ -123,11 +124,12 @@ onMounted(async () => {
 
 <template>
   <NLayout>
-    <NSpin v-if="!biliAuth.id && useAuth.currentToken" :show="useAuth.isLoading" />
+    <NSpin v-if="useAuth.isLoading && useAuth.currentToken" :show="useAuth.isLoading" />
     <NLayoutContent
-      v-else-if="!useAuth.currentToken && useAuth.biliTokens.length > 0"
+      v-else-if="(!useAuth.currentToken && useAuth.biliTokens.length > 0) || useAuth.isInvalid"
       style="height: 100vh; padding: 50px"
     >
+      <NAlert v-if="useAuth.isInvalid" type="error"> 当前登录的 Bilibili 账号已失效 </NAlert>
       <NCard title="选择B站账号" embedded>
         <template #header-extra>
           <NButton type="primary" @click="$router.push({ name: 'bili-auth' })" size="small" secondary
@@ -142,6 +144,7 @@ onMounted(async () => {
       </NCard>
     </NLayoutContent>
     <NLayoutContent v-else-if="!useAuth.currentToken" style="height: 100vh">
+      <NAlert v-if="useAuth.isInvalid" type="error"> 当前登录的 Bilibili 账号已失效 </NAlert>
       <NResult status="error" title="你还未进行过B站账户验证" description="请先进行认证" style="padding-top: 64px">
         <template #footer>
           <NButton type="primary" @click="$router.push({ name: 'bili-auth' })">去认证</NButton>
@@ -156,7 +159,7 @@ onMounted(async () => {
       </NLayoutHeader>
       <NLayoutContent content-style="padding: 24px;">
         <NFlex align="center" justify="center">
-          <div style="max-width: 95vw; width: 900px">
+          <div style="max-width: 95vw; width: 1200px">
             <NCard title="我的信息">
               <NDescriptions label-placement="left" bordered size="small">
                 <NDescriptionsItem label="用户名">
