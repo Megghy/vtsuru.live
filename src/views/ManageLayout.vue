@@ -15,6 +15,7 @@ import {
   Live24Filled,
   Lottery24Filled,
   PeopleQueue24Filled,
+  Person48Filled,
   PersonFeedback24Filled,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
@@ -463,7 +464,7 @@ onMounted(() => {
         <template #extra>
           <NSpace align="center" justify="center">
             <NSwitch
-              :default-value="!isDarkMode()"
+              :default-value="!isDarkMode"
               @update:value="
                 (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
               "
@@ -481,7 +482,7 @@ onMounted(() => {
               type="primary"
               @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"
             >
-              回到主页
+              回到展示页
             </NButton>
           </NSpace>
         </template>
@@ -520,7 +521,7 @@ onMounted(() => {
           </NSpace>
           <NButton v-if="accountInfo.biliUserAuthInfo" @click="gotoAuthPage()" type="info" secondary>
             <template #icon>
-              <NIcon :component="BrowsersOutline" />
+              <NIcon :component="Person48Filled" />
             </template>
             <template v-if="width >= 180"> 认证用户主页 </template>
           </NButton>

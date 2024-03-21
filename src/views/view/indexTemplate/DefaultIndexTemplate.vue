@@ -60,7 +60,7 @@ export const Config: TemplateConfig<ConfigType> = {
         :img-props="{
           referrerpolicy: 'no-referrer',
         }"
-        :style="{ boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
+        :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
       />
       <NSpace align="baseline" justify="center">
         <NText strong style="font-size: 32px"> {{ biliInfo?.name }} </NText>

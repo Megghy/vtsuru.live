@@ -87,7 +87,7 @@ watch(
             </span>
             <span v-else>
               已直播:
-              {{ ((Date.now() - (live.stopAt ?? 0)) / (3600 * 1000)).toFixed(1) }}
+              {{ ((Date.now() - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }}
               时
             </span>
           </NPopover>

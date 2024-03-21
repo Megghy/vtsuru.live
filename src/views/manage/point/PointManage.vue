@@ -337,7 +337,14 @@ onMounted(() => {})
 
 <template>
   <NFlex>
-    <NAlert type="info" style="min-width: 400px">
+    <NAlert
+      :type="
+        accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+          ? 'success'
+          : 'warning'
+      "
+      style="min-width: 400px"
+    >
       启用
       <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/ohulp2torghlqqn8" target="_blank">
         积分系统
@@ -369,6 +376,9 @@ onMounted(() => {})
     <NTabPane name="goods" tab="礼物">
       <NFlex>
         <NButton type="primary" @click="onModalOpen"> 添加礼物 </NButton>
+        <NButton @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })" secondary>
+          前往展示页
+        </NButton>
       </NFlex>
       <NDivider />
       <NEmpty v-if="goods.filter((g) => g.status != GoodsStatus.Discontinued).length == 0" description="暂无礼物" />

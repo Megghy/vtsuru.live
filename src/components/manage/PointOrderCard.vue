@@ -99,6 +99,17 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
     key: 'id',
   },
   {
+    title: '礼物名',
+    key: 'giftName',
+    render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
+      return row.instanceOf == 'user' ? row.goods.name : props.goods?.find((g) => g.id == row.goodsId)?.name
+    },
+  },
+  {
+    title: '数量',
+    key: 'count',
+  },
+  {
     title: '时间',
     key: 'time',
     sorter: 'default',
@@ -118,9 +129,12 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
   {
     title: '订单状态',
     key: 'status',
-    filter: (filterOptionValue: unknown, row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
-      return row.status == filterOptionValue
-    },
+    filter:
+      props.type == 'owner'
+        ? undefined
+        : (filterOptionValue: unknown, row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
+            return row.status == filterOptionValue
+          },
     filterOptions: [
       {
         label: '等待发货',
@@ -151,9 +165,12 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
   {
     title: '订单类型',
     key: 'type',
-    filter: (filterOptionValue: unknown, row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
-      return row.type == filterOptionValue
-    },
+    filter:
+      props.type == 'owner'
+        ? undefined
+        : (filterOptionValue: unknown, row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
+            return row.type == filterOptionValue
+          },
     filterOptions: [
       {
         label: '实体礼物',
@@ -360,7 +377,10 @@ onMounted(() => {
             ></iframe>
           </template>
         </template>
-        <template v-else-if="orderDetail.instanceOf == 'owner'">
+        <template v-else-if="orderDetail.instanceOf == 'owner'"
+          ><NFlex justify="center">
+            <PointGoodsItem style="max-width: 300px" :goods="currentGoods" />
+          </NFlex>
           <NDivider> 设置订单状态 </NDivider>
           <NFlex justify="center" style="width: 100%">
             <NSteps

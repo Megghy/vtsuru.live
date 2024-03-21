@@ -3,7 +3,7 @@ import { ResponsePointHisrotyModel } from '@/api/api-models'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { useMessage } from 'naive-ui'
+import { NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()
@@ -26,6 +26,8 @@ async function getHistories() {
   } catch (err) {
     message.error('获取积分历史失败: ' + err)
     console.error(err)
+  } finally {
+    isLoading.value = false
   }
   return []
 }
@@ -36,5 +38,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <PointHistoryCard :histories="history" />
+  <NSpin :show="isLoading">
+    <PointHistoryCard :histories="history" />
+  </NSpin>
 </template>

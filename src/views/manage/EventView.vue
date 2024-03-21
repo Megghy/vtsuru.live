@@ -3,7 +3,7 @@ import { isDarkMode } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import { AVATAR_URL, BASE_API, EVENT_API_URL } from '@/data/constants'
+import { AVATAR_URL, BASE_API_URL, EVENT_API_URL } from '@/data/constants'
 import { Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
@@ -253,7 +253,7 @@ function objectsToCSV(arr: any[]) {
                         :color="{
                           color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                           textColor: 'white',
-                          borderColor: isDarkMode() ? 'white' : '#00000000',
+                          borderColor: isDarkMode ? 'white' : '#00000000',
                         }"
                       >
                         {{ item.price }}

@@ -133,6 +133,22 @@ const column: DataTableColumns<ResponsePointUserModel> = [
           },
           { default: () => '详情' },
         ),
+        h(
+          NPopconfirm,
+          { onPositiveClick: () => deleteUser(row) },
+          {
+            default: '确定要删除这个用户吗？记录将无法恢复',
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  type: 'error',
+                  size: 'small',
+                },
+                { default: () => '删除' },
+              ),
+          },
+        ),
       ])
     },
   },
@@ -176,7 +192,9 @@ async function givePoint() {
     if (data.code == 200) {
       message.success('添加成功')
       showGivePointModal.value = false
-      await refresh()
+      setTimeout(() => {
+        refresh()
+      }, 1500)
 
       addPointCount.value = 0
       addPointReason.value = undefined
@@ -186,6 +204,37 @@ async function givePoint() {
     }
   } catch (err) {
     message.error('添加失败: ' + err)
+  } finally {
+    isLoading.value = false
+  }
+}
+async function deleteUser(user: ResponsePointUserModel) {
+  isLoading.value = true
+  try {
+    const data = await QueryGetAPI(
+      POINT_API_URL + 'delete-user',
+      user.isAuthed
+        ? {
+            authId: user.info.id,
+          }
+        : user.info.userId
+          ? {
+              uId: user.info.userId,
+            }
+          : {
+              uId: user.info.openId,
+            },
+    )
+    if (data.code == 200) {
+      message.success('已删除')
+      users.value = users.value.filter((u) => u != user)
+    } else {
+      message.error('删除失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('删除失败: ' + err)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -215,6 +264,7 @@ onMounted(async () => {
         <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
       </NFlex>
     </NCard>
+    <NDivider />
     <template v-if="filteredUsers.length == 0">
       <NDivider />
       <NEmpty :description="settings.onlyAuthed ? '没有已认证的用户' : '没有用户'" />

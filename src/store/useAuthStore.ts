@@ -21,6 +21,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
 
   const isLoading = ref(false)
   const isAuthed = computed(() => currentToken.value != null && currentToken.value.length > 0)
+  const isInvalid = ref(false)
 
   async function setCurrentAuth(token: string) {
     if (!token) {
@@ -58,9 +59,12 @@ export const useAuthStore = defineStore('BiliAuth', () => {
             })
             console.log('添加新的认证账户: ' + biliAuth.value.userId)
           }
+          isInvalid.value = false
           return true
         } else {
           console.error('[bili-auth] 无法获取 Bilibili 认证信息: ' + data.message)
+          isInvalid.value = true
+          logout()
           //message.error('无法获取 Bilibili 认证信息: ' + data.message)
         }
       })
@@ -133,6 +137,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
     biliTokens,
     isLoading,
     isAuthed,
+    isInvalid,
     currentToken,
     getAuthInfo,
     QueryBiliAuthGetAPI,

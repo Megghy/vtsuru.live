@@ -571,7 +571,10 @@ onMounted(async () => {
 
 <template>
   <NSpace align="center">
-    <NAlert type="info" style="max-width: 200px">
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
+      style="max-width: 200px"
+    >
       启用歌单
       <NDivider vertical />
       <NSwitch

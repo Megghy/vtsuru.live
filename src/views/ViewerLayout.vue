@@ -7,7 +7,13 @@ import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { BookCoins20Filled, CalendarClock24Filled, VideoAdd20Filled } from '@vicons/fluent'
+import {
+  BookCoins20Filled,
+  CalendarClock24Filled,
+  Person48Filled,
+  VideoAdd20Filled,
+  WindowWrench20Filled,
+} from '@vicons/fluent'
 import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
@@ -51,6 +57,7 @@ const notfount = ref(false)
 const registerAndLoginModalVisiable = ref(false)
 const sider = ref()
 const { width } = useElementSize(sider)
+const windowWidth = window.innerWidth
 
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
@@ -73,11 +80,12 @@ function gotoAuthPage() {
     message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
-  useAuthStore()
+  /*useAuthStore()
     .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
     .then(() => {
       NavigateToNewTab('/bili-user')
-    })
+    })*/
+  NavigateToNewTab('/bili-user')
 }
 onMounted(async () => {
   userInfo.value = await useUser(id.value?.toString())
@@ -193,7 +201,7 @@ onMounted(async () => {
         <template #extra>
           <NSpace align="center">
             <NSwitch
-              :default-value="!isDarkMode()"
+              :default-value="!isDarkMode"
               @update:value="
                 (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
               "
@@ -211,11 +219,16 @@ onMounted(async () => {
                   v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
                   style="right: 0px; position: relative"
                   type="primary"
-                  @click="gotoAuthPage"
+                  tag="a"
+                  href="/bili-user"
+                  target="_blank"
                   size="small"
                   secondary
                 >
-                  认证用户中心
+                  <template #icon>
+                    <NIcon :component="Person48Filled" />
+                  </template>
+                  <span v-if="windowWidth >= 768"> 认证用户中心 </span>
                 </NButton>
                 <NButton
                   style="right: 0px; position: relative"
@@ -223,7 +236,10 @@ onMounted(async () => {
                   @click="$router.push({ name: 'manage-index' })"
                   size="small"
                 >
-                  个人中心
+                  <template #icon>
+                    <NIcon :component="WindowWrench20Filled" />
+                  </template>
+                  <span v-if="windowWidth >= 768"> 主播后台 </span>
                 </NButton>
               </NSpace>
             </template>
@@ -265,7 +281,7 @@ onMounted(async () => {
                 round
                 bordered
                 :style="{
-                  boxShadow: isDarkMode() ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
+                  boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
                 }"
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
@@ -295,7 +311,7 @@ onMounted(async () => {
       <NLayout style="height: 100%">
         <div
           class="viewer-page-content"
-          :style="`box-shadow:${isDarkMode() ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
+          :style="`box-shadow:${isDarkMode ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
         >
           <RouterView v-if="userInfo" v-slot="{ Component }">
             <KeepAlive>

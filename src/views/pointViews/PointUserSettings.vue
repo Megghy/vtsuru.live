@@ -25,6 +25,7 @@ import {
   NSelect,
   NSpin,
   NTag,
+  NText,
   useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
@@ -284,7 +285,7 @@ function logout() {
           <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">
             <NFlex align="center">
               <NTag v-if="useAuth.biliToken == item.token" type="info"> 当前账号 </NTag>
-              {{ item.uId }}
+              {{ item.name }} <NDivider vertical style="margin: 0" /><NText depth="3"> {{ item.uId }} </NText>
             </NFlex>
           </NListItem>
         </NList>

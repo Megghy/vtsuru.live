@@ -3,7 +3,7 @@ import { ResponsePointOrder2UserModel } from '@/api/api-models'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
-import { NEmpty, useMessage } from 'naive-ui'
+import { NEmpty, NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()
@@ -24,8 +24,9 @@ async function getOrders() {
   } catch (err) {
     console.log(err)
     message.error('获取订单失败: ' + err)
+  } finally {
+    isLoading.value = false
   }
-  isLoading.value = false
   return []
 }
 
@@ -35,6 +36,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NEmpty v-if="orders.length == 0" description="暂无订单"></NEmpty>
-  <PointOrderCard v-else :order="orders" :loading="isLoading" type="user" />
+  <NSpin :show="isLoading">
+    <NEmpty v-if="orders.length == 0" description="暂无订单" />
+    <PointOrderCard v-else :order="orders" :loading="isLoading" type="user" />
+  </NSpin>
 </template>

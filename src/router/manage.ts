@@ -166,5 +166,13 @@ export default //管理页面
         title: '积分',
       },
     },
+    {
+      path: 'forum',
+      name: 'manage-forum',
+      component: () => import('@/views/manage/ForumManage.vue'),
+      meta: {
+        title: '粉丝讨论区',
+      },
+    },
   ],
 }

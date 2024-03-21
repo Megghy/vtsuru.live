@@ -64,4 +64,22 @@ export default [
       keepAlive: true,
     },
   },
+  {
+    path: 'forum/topic/:topicId',
+    name: 'user-forum-topic-detail',
+    component: () => import('@/views/view/forumViews/ForumTopicDetail.vue'),
+    meta: {
+      title: '帖子详情',
+      keepAlive: true,
+    },
+  },
+  {
+    path: 'forum',
+    name: 'user-forum',
+    component: () => import('@/views/view/forumViews/ForumView.vue'),
+    meta: {
+      title: '讨论区',
+      keepAlive: true,
+    },
+  },
 ]

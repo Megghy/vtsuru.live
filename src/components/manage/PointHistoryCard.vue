@@ -119,7 +119,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 h(
                   NTag,
                   { type: 'warning', size: 'tiny', style: { margin: '0' }, bordered: false },
-                  () => (row.extra?.danmaku.num ?? 1) + '个',
+                  () => (row.count ?? 1) + '个',
                 ),
               ])
             case EventDataTypes.SC:
