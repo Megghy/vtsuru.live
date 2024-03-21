@@ -23,8 +23,8 @@ const accountInfo = useAccount()
         </NButton>
       </template>
     </NCard>
-    <NCard hoverable embedded size="small" title="弹幕点歌" style="width: 300px">
-      通过弹幕或者SC进行点歌, 注册后可以保存和导出 (这个是歌势用的点歌, 不是拿来放歌的那种!)
+    <NCard hoverable embedded size="small" title="弹幕点播" style="width: 300px">
+      通过弹幕或者SC进行点歌或者其他的点播(比如跳舞或者点播视频之类的), 注册后可以保存和导出
       <template #footer>
         <NButton @click="$router.push({ name: 'open-live-live-request', query: $route.query })" type="primary">
           前往使用
@@ -51,7 +51,7 @@ const accountInfo = useAccount()
   </NSpace>
   <br />
   <NAlert
-    v-if="accountInfo?.eventFetcherOnline != true"
+    v-if="accountInfo?.eventFetcherState.online != true"
     type="warning"
     title="可用性警告"
     style="max-width: 600px; margin: 0 auto"
