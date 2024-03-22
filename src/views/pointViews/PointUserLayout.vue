@@ -107,6 +107,12 @@ function switchAuth(token: string) {
   useAuth.setCurrentAuth(token)
   message.success('已选择账号')
 }
+let isFirstMounted = true
+function onAllPointPaneMounted() {
+  if (!isFirstMounted) return
+  isFirstMounted = false
+  getAllPoints()
+}
 
 onMounted(async () => {
   const route = useRoute()
@@ -175,7 +181,7 @@ onMounted(async () => {
             </NCard>
             <NDivider />
             <NTabs v-if="hash" v-model:value="hash" default-value="points" animated>
-              <NTabPane name="points" tab="我的积分" display-directive="show:lazy" @vue:mounted="getAllPoints()">
+              <NTabPane name="points" tab="我的积分" display-directive="show:lazy" @vue:mounted="onAllPointPaneMounted">
                 <NDivider style="margin-top: 10px" />
                 <NButton style="margin-bottom: 10px" @click="getAllPoints()" size="small" type="primary">刷新</NButton>
                 <NDivider />
