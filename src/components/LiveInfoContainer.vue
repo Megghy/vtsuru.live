@@ -30,6 +30,7 @@ function OnClickCover() {
     params: { id: live.liveId },
   })
 }
+const guartPriceStartData = new Date(Date.UTC(2024, 2, 24, 10, 0, 0))
 
 watch(
   () => live,
@@ -119,7 +120,7 @@ watch(
         <NStatistic tabular-nums>
           <template #label>
             收益
-            <NTooltip>
+            <NTooltip v-if="new Date(live.startAt) < guartPriceStartData">
               <template #trigger>
                 <NIcon :component="Info24Filled" />
               </template>

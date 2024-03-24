@@ -85,16 +85,18 @@ export interface ForumTopicBaseModel {
   isLocked?: boolean // Assuming the default value is handled elsewhere
   isPinned?: boolean // Assuming the default value is handled elsewhere
   isHighlighted?: boolean // Assuming the default value is handled elsewhere
+  isDeleted?: boolean // Assuming the default value is handled elsewhere
 }
 export interface ForumTopicModel extends ForumTopicBaseModel {
   isLocked?: boolean // Assuming the default value is handled elsewhere
-  isDeleted?: boolean // Assuming the default value is handled elsewhere
 
   isHidden?: boolean // Assuming the default value is handled elsewhere
 
   type?: ForumTopicTypes // Assuming the default value is handled elsewhere
   extraTypeId?: number | null // Nullable int in C# is optional or null in TS
   likedBy?: number[] // Assuming the default value is handled elsewhere
+
+  isAdmin: boolean
 }
 export interface ForumCommentModel {
   id: number
@@ -105,6 +107,8 @@ export interface ForumCommentModel {
 
   likeCount: number
   isLiked: boolean
+
+  isDeleted: boolean
 }
 export interface ForumReplyModel {
   id: number

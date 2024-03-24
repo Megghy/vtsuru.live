@@ -3,13 +3,14 @@ import { getUserAvatarUrl } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
 import { useForumStore } from '@/store/useForumStore'
-import { ArrowReply16Filled } from '@vicons/fluent'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NText, NTime, NTooltip } from 'naive-ui'
+import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
+import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 const props = defineProps<{
   item: ForumReplyModel
   replyTo?: ForumReplyModel
+  replyToId?: number
   comment: ForumCommentModel
   topic: ForumTopicModel
   showReplyButton?: boolean
@@ -21,6 +22,9 @@ const accountInfo = useAccount()
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
+const emits = defineEmits<{
+  (e: 'delete', id: number): void
+}>()
 </script>
 
 <template>
@@ -69,6 +73,29 @@ const canOprate = computed(() => {
         </template>
         回复这条回复
       </NTooltip>
+      <NPopconfirm
+        v-if="(item.user.id === accountInfo.id || topic.isAdmin) && showReplyButton"
+        @positive-click="emits('delete', item.id)"
+      >
+        <template #trigger>
+          <NTooltip v-if="showReplyButton">
+            <template #trigger>
+              <NButton
+                size="tiny"
+                round
+                secondary
+                :disabled="!canOprate"
+              >
+                <template #icon>
+                  <NIcon :component="Delete24Filled" />
+                </template>
+              </NButton>
+            </template>
+            删除
+          </NTooltip>
+        </template>
+        确定删除这条回复吗
+      </NPopconfirm>
     </NFlex>
   </NFlex>
 </template>

@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { getUserAvatarUrl } from '@/Utils'
-import { UserInfo } from '@/api/api-models'
+import { PaginationResponse, UserInfo } from '@/api/api-models'
 import { ForumCommentModel, ForumCommentSortTypes, ForumTopicModel } from '@/api/models/forum'
 import '@/assets/forumContentStyle.css'
 import TurnstileVerify from '@/components/TurnstileVerify.vue'
 import VEditor from '@/components/VEditor.vue'
 import { VTSURU_API_URL } from '@/data/constants'
 import { useForumStore } from '@/store/useForumStore'
-import { ArrowCircleLeft12Filled, ArrowCircleLeft12Regular, Comment24Regular, Eye24Regular } from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import {
+  ArrowCircleLeft12Filled,
+  ArrowCircleLeft12Regular,
+  Comment24Regular,
+  Delete24Filled,
+  Eye24Regular,
+} from '@vicons/fluent'
+import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
 import {
   NAvatar,
   NAvatarGroup,
@@ -25,6 +31,9 @@ import {
   NList,
   NListItem,
   NModal,
+  NPagination,
+  NPopconfirm,
+  NTag,
   NText,
   NTime,
   NTooltip,
@@ -35,6 +44,7 @@ import { useRoute } from 'vue-router'
 import ForumCommentItem from './ForumCommentItem.vue'
 import ForumReplyItem from './ForumReplyItem.vue'
 import { useAccount } from '@/api/account'
+import router from '@/router'
 
 type PostCommentModel = {
   content: string
@@ -69,9 +79,10 @@ const currentCommentContent = ref<PostCommentModel>({} as PostCommentModel)
 const currentReplyContent = ref<PostReplyModel>({} as PostReplyModel)
 
 const topic = ref<ForumTopicModel>({ id: -1 } as ForumTopicModel)
-const comments = ref<ForumCommentModel[]>([])
+const comments = ref<PaginationResponse<ForumCommentModel[]>>()
 const ps = ref(20)
 const pn = ref(0)
+const total = ref(0)
 const sort = ref(ForumCommentSortTypes.Time)
 
 const canOprate = computed(() => {
@@ -89,7 +100,9 @@ async function postComment() {
     .PostComment(currentCommentContent.value, token.value)
     .then(async (comment) => {
       if (comment) {
-        comments.value = (await useForum.GetComments(topic.value.id, pn.value, ps.value, sort.value)) ?? []
+        setTimeout(async () => {
+          refreshComments()
+        }, 1000)
         currentCommentContent.value = {} as PostCommentModel
         showCommentModal.value = false
       }
@@ -110,7 +123,7 @@ async function postReply() {
     .PostReply(currentReplyContent.value, token.value)
     .then(async (comment) => {
       if (comment) {
-        comments.value = (await useForum.GetComments(topic.value.id, pn.value, ps.value, sort.value)) ?? []
+        refreshComments()
         currentReplyContent.value = {} as PostReplyModel
         useForum.SetReplyingComment()
       }
@@ -119,12 +132,38 @@ async function postReply() {
       turnstile.value?.reset()
     })
 }
+async function refreshComments() {
+  comments.value = await useForum.GetComments(topic.value.id, pn.value, ps.value, sort.value)
+}
+function onDeleteComment(id: number) {
+  if (comments.value) {
+    comments.value.data = comments.value.data.filter((c) => c.id !== id)
+  }
+}
+async function delTopic(topicId: number) {
+  useForum.DelTopic(topicId).then((success) => {
+    if (success) {
+      setTimeout(() => {
+        router.push({ name: 'user-forum', params: { id: userInfo?.name } })
+      })
+    }
+  })
+}
+async function restoreTopic(topicId: number) {
+  useForum.RestoreTopic(topicId).then((success) => {
+    if (success) {
+      setTimeout(() => {
+        topic.value.isDeleted = false
+      })
+    }
+  })
+}
 
 onMounted(async () => {
   if (route.params.topicId) {
     topicId.value = route.params.topicId as unknown as number
     topic.value = (await useForum.GetTopicDetail(topicId.value)) ?? ({ id: -1 } as ForumTopicModel)
-    comments.value = (await useForum.GetComments(topicId.value, pn.value, ps.value, sort.value)) ?? []
+    refreshComments()
   }
 })
 </script>
@@ -136,11 +175,14 @@ onMounted(async () => {
       <NBackTop />
       <NBadge class="back-forum-badge" style="width: 100%; left: 0" type="info" :offset="[3, 3]">
         <NCard size="small">
-          <NText style="font-size: large; font-weight: bold; text-align: center; width: 100%">
-            <NEllipsis style="width: 100%">
-              {{ topic.title }}
-            </NEllipsis>
-          </NText>
+          <NFlex align="center" :wrap="false">
+            <NTag v-if="topic.isDeleted" type="warning" :bordered="false"> 已删除 </NTag>
+            <NText style="font-size: large; font-weight: bold; text-align: center; width: 100%">
+              <NEllipsis style="width: 100%">
+                {{ topic.title }}
+              </NEllipsis>
+            </NText>
+          </NFlex>
         </NCard>
         <template #value>
           <NTooltip>
@@ -232,6 +274,41 @@ onMounted(async () => {
               </template>
               评论
             </NTooltip>
+            <NFlex style="flex: 1" justify="end">
+              <NTooltip v-if="topic?.user?.id === accountInfo.id || topic.isAdmin">
+                <template #trigger>
+                  <NPopconfirm @positive-click="delTopic(topic.id)">
+                    <template #trigger>
+                      <NButton size="small" text :disabled="!canOprate">
+                        <template #icon>
+                          <NIcon
+                            :component="Delete24Filled"
+                            :color="topic.isDeleted || topic.isAdmin ? '#dd484f' : '#7f7f7f'"
+                          />
+                        </template>
+                      </NButton>
+                    </template>
+                    {{ topic.isDeleted ? '确定完全删除这个话题吗? 这将无法恢复' : '确定删除这个话题吗' }}
+                  </NPopconfirm>
+                </template>
+                {{ topic.isDeleted || topic.isAdmin ? '完全' : '' }}删除
+              </NTooltip>
+              <NTooltip v-if="topic.isDeleted && topic.isAdmin">
+                <template #trigger>
+                  <NPopconfirm @positive-click="restoreTopic(topic.id)">
+                    <template #trigger>
+                      <NButton size="small" text :disabled="!canOprate">
+                        <template #icon>
+                          <NIcon :component="SyncCircleSharp" color="#7f7f7f" />
+                        </template>
+                      </NButton>
+                    </template>
+                    要恢复这个话题吗?
+                  </NPopconfirm>
+                </template>
+                恢复
+              </NTooltip>
+            </NFlex>
           </NFlex>
         </template>
         <div class="editor-content-view" v-html="topic.content"></div>
@@ -239,12 +316,34 @@ onMounted(async () => {
       <NDivider>
         <NButton @click="showCommentModal = true" type="primary" :disabled="!canOprate">发送评论</NButton>
       </NDivider>
-      <NEmpty v-if="comments.length === 0" description="暂无评论" />
+      <NFlex align="center" justify="center">
+        <NPagination
+          v-if="comments && (comments?.data.length ?? 0) > 0"
+          v-model:page="pn"
+          :item-count="comments?.data.length ?? 0"
+          :page-size="ps"
+          show-quick-jumper
+          @update:page="refreshComments"
+        />
+      </NFlex>
+      <br />
+      <NEmpty v-if="!comments || comments.data.length === 0" description="暂无评论" />
       <NList v-else hoverable bordered size="small">
-        <NListItem v-for="item in comments" :key="item.id">
-          <ForumCommentItem :item="item" :topic="topic" />
+        <NListItem v-for="item in comments.data" :key="item.id">
+          <ForumCommentItem :item="item" :topic="topic" @delete="onDeleteComment" />
         </NListItem>
       </NList>
+      <br />
+      <NFlex v-if="(comments?.data.length ?? 0) > 5" align="center" justify="center">
+        <NPagination
+          v-if="comments && (comments?.data.length ?? 0) > 0"
+          v-model:page="pn"
+          :item-count="comments?.data.length ?? 0"
+          :page-size="ps"
+          show-quick-jumper
+          @update:page="refreshComments"
+        />
+      </NFlex>
       <NDivider />
     </div>
   </template>

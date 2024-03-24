@@ -45,6 +45,10 @@ const showAgreement = ref(false)
 const create_Name = ref('')
 const create_Description = ref('')
 
+const showAddAdminModal = ref(false)
+const inputUser = ref<UserBasicInfo>({} as UserBasicInfo)
+const addAdminName = ref()
+
 const paginationSetting = { defaultPageSize: 20, showSizePicker: true, pageSizes: [20, 50, 100] }
 
 async function createForum() {
@@ -154,6 +158,46 @@ const banColumns: DataTableColumns<ForumUserModel> = [
     },
   },
 ]
+
+const adminColumns: DataTableColumns<ForumUserModel> = [
+  ...defaultColumns,
+  {
+    title: '操作',
+    key: 'action',
+    render(row) {
+      return h(
+        NButton,
+        {
+          text: true,
+          type: 'success',
+          onClick: () =>
+            useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
+              if (success) message.success('操作成功')
+              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
+            }),
+        },
+        { default: () => '通过申请' },
+      )
+    },
+  },
+]
+
+async function addAdmin() {
+  if (!currentForum.value.id) return
+  try {
+    const data = await QueryPostAPI<ForumModel>(FORUM_API_URL + 'manage/add-admin', {
+      forum: currentForum.value.id,
+      user: addAdminName.value,
+    })
+    if (data.code == 200) {
+      message.success('操作成功')
+    } else {
+      message.error('操作失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('操作失败: ' + err)
+  }
+}
 </script>
 
 <template>
@@ -215,11 +259,12 @@ const banColumns: DataTableColumns<ForumUserModel> = [
         </NTabPane>
         <NTabPane tab="成员" name="member">
           <NDivider> 申请 </NDivider>
-          <NDataTable
-            :columns="applyingColumns"
-            :data="currentForum.applying"
-            :pagination="paginationSetting"
-          />
+          <NDataTable :columns="applyingColumns" :data="currentForum.applying" :pagination="paginationSetting" />
+          <NDivider> 管理员 </NDivider>
+          <NFlex>
+            <NButton @click="showAddAdminModal = true" size="small" type="primary"> 添加管理员 </NButton>
+          </NFlex>
+          <NDataTable :columns="adminColumns" :data="currentForum.admins" :pagination="paginationSetting" />
           <template v-if="currentForum.settings.requireApply">
             <NDivider> 成员 </NDivider>
             <NDataTable
@@ -229,11 +274,7 @@ const banColumns: DataTableColumns<ForumUserModel> = [
             />
           </template>
           <NDivider> 封禁用户 </NDivider>
-          <NDataTable
-            :columns="banColumns"
-            :data="currentForum.blackList"
-            :pagination="paginationSetting"
-          />
+          <NDataTable :columns="banColumns" :data="currentForum.blackList" :pagination="paginationSetting" />
         </NTabPane>
       </NTabs>
     </NSpin>
@@ -245,5 +286,9 @@ const banColumns: DataTableColumns<ForumUserModel> = [
     style="width: 600px; max-width: 90vw"
   >
     <Agreement />
+  </NModal>
+  <NModal v-model:show="showAddAdminModal" preset="card" title="添加管理员" style="width: 600px; max-width: 90vw">
+    <NInput v-model:value="addAdminName" placeholder="请输入用户名或VTsuruId" />
+    <NButton @click="addAdmin" type="primary"> 添加 </NButton>
   </NModal>
 </template>
