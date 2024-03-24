@@ -124,7 +124,7 @@ export const useForumStore = defineStore('forum', () => {
         sort,
       })
       if (data.code == 200) {
-        return data.data
+        return data
       } else {
         console.error('无法获取数据: ' + data.message)
         message?.error('无法获取数据: ' + data.message)
@@ -317,7 +317,7 @@ export const useForumStore = defineStore('forum', () => {
   async function DelComment(comment: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(FORUM_API_URL + 'manage/delete-comment', { comment: comment })
+      const data = await QueryGetAPI(FORUM_API_URL + 'delete-comment', { comment: comment })
       if (data.code == 200) {
         message?.success('删除成功')
         return true
@@ -349,6 +349,46 @@ export const useForumStore = defineStore('forum', () => {
     } catch (err) {
       message?.error('删除失败: ' + err)
       console.error('删除失败: ' + err)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+  async function RestoreComment(comment: number) {
+    try {
+      isLoading.value = true
+      const data = await QueryGetAPI(FORUM_API_URL + 'manage/restore-comment', { comment: comment })
+      if (data.code == 200) {
+        message?.success('恢复成功')
+        return true
+      } else {
+        message?.error('恢复失败: ' + data.message)
+        console.error('恢复失败: ' + data.message)
+        return false
+      }
+    } catch (err) {
+      message?.error('恢复失败: ' + err)
+      console.error('恢复失败: ' + err)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+  async function RestoreTopic(topic: number) {
+    try {
+      isLoading.value = true
+      const data = await QueryGetAPI(FORUM_API_URL + 'manage/restore-topic', { topic })
+      if (data.code == 200) {
+        message?.success('恢复成功')
+        return true
+      } else {
+        message?.error('恢复失败: ' + data.message)
+        console.error('恢复失败: ' + data.message)
+        return false
+      }
+    } catch (err) {
+      message?.error('恢复失败: ' + err)
+      console.error('恢复失败: ' + err)
       return false
     } finally {
       isLoading.value = false
@@ -393,6 +433,8 @@ export const useForumStore = defineStore('forum', () => {
     DelComment,
     DelReply,
     ConfirmApply,
+    RestoreComment,
+    RestoreTopic,
     isLoading,
     isLikeLoading,
     replyingComment,

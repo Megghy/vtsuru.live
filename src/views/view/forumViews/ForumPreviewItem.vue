@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { useAccount } from '@/api/account'
 import { ForumModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { useForumStore } from '@/store/useForumStore'
-import { ArrowReply24Filled, Chat24Regular, MoreVertical24Filled, Star24Filled } from '@vicons/fluent'
+import { ArrowReply24Filled, Chat24Regular, Delete24Filled, MoreVertical24Filled, Star24Filled } from '@vicons/fluent'
+import { SyncCircleSharp } from '@vicons/ionicons5'
 import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDialog } from 'naive-ui'
+import { h } from 'vue'
 
 const props = defineProps<{
   item: ForumTopicBaseModel
@@ -11,6 +14,7 @@ const props = defineProps<{
 
 const useForum = useForumStore()
 const dialog = useDialog()
+const accountInfo = useAccount()
 
 function onDropdownSelect(key: string) {
   switch (key) {
@@ -26,6 +30,21 @@ function onDropdownSelect(key: string) {
               setTimeout(() => {
                 window.location.reload()
               }, 1000)
+            }
+          })
+        },
+      })
+      break
+    case 'delete':
+      dialog.warning({
+        title: '问问',
+        content: '确定要恢复这条话题吗？',
+        positiveText: '确定',
+        negativeText: '再想想',
+        onPositiveClick: () => {
+          useForum.RestoreTopic(props.item.id).then((success) => {
+            if (success) {
+              props.item.isDeleted = false
             }
           })
         },
@@ -54,7 +73,8 @@ function onDropdownSelect(key: string) {
 <template>
   <NFlex align="center">
     <NFlex align="center" :wrap="false">
-      <NTag v-if="item.isPinned" size="small" round>
+      <NTag v-if="item.isDeleted" size="small" round :bordered="false"> 已删除 </NTag>
+      <NTag v-if="item.isPinned" size="small" round :bordered="false">
         <NIcon :component="Star24Filled" color="#dba913" />
       </NTag>
       <NTag size="small" style="color: gray">
@@ -63,7 +83,10 @@ function onDropdownSelect(key: string) {
         </template>
         {{ item.commentCount }}
       </NTag>
-      <NText style="font-size: large">
+      <NText
+        :style="{ fontSize: 'large', color: item.user?.id == accountInfo?.id ? '#5f877d' : '' }"
+        :depth="item.isDeleted ? 3 : 1"
+      >
         {{ item.title }}
       </NText>
     </NFlex>
@@ -84,8 +107,18 @@ function onDropdownSelect(key: string) {
       <NDropdown
         v-if="forum.isAdmin"
         :options="[
-          { label: '删除', key: 'delete' },
-          { label: item.isPinned ? '取消置顶' : '置顶', key: 'top' },
+          {
+            label: item.isPinned ? '取消置顶' : '置顶',
+            key: 'top',
+            icon: () => h(NIcon, { component: Star24Filled }),
+            type: 'info',
+          },
+          {
+            label: item.isDeleted ? '恢复' : '删除',
+            key: item.isDeleted ? 'restore' : 'delete',
+            icon: () => h(NIcon, { component: item.isDeleted ? SyncCircleSharp : Delete24Filled }),
+            type: 'error',
+          },
         ]"
         trigger="hover"
         @select="onDropdownSelect"

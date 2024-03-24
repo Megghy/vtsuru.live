@@ -2,7 +2,7 @@ import { QueryGetAPI } from '@/api/query'
 import { USER_API_URL, apiFail } from '@/data/constants'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { APIRoot, UserInfo } from './api-models'
+import { APIRoot, UserBasicInfo, UserInfo } from './api-models'
 
 export const USERS = ref<{ [id: string]: UserInfo }>({})
 
@@ -37,6 +37,10 @@ export async function useUserWithUId(id: number) {
     }
   }
   return USERS.value[id.toString()]
+}
+export async function getUserBasicInfo(id: string | number | undefined) {
+  if (!id) return undefined
+  return (await QueryGetAPI<UserBasicInfo>(`${USER_API_URL}basic/${id}`)).data
 }
 
 export async function GetInfo(id: string): Promise<APIRoot<UserInfo>> {
