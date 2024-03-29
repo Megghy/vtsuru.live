@@ -53,7 +53,7 @@ onActivated(async () => {
 <template>
   <NSpin v-if="isLoading" show />
   <template v-else>
-    <NButton @click="router.go(-1)" text>
+    <NButton @click="router.push({ name: 'manage-live' })" text>
       {{ '< 返回' }}
     </NButton>
     <DanmakuContainer

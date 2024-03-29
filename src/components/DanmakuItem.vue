@@ -39,7 +39,7 @@ const {
   height?: number
 }>()
 defineEmits<{
-  (e: 'onClickName', uId: number): void
+  (e: 'onClickName', uId: number, ouId: string): void
 }>()
 </script>
 
@@ -69,7 +69,7 @@ defineEmits<{
             </template>
             {{ format(danmaku.time, 'yyyy-MM-dd HH:mm:ss') }}
           </NTooltip>
-          <NButton v-if="showName" text type="primary" @click="$emit('onClickName', danmaku.uId)">
+          <NButton v-if="showName" text type="primary" @click="$emit('onClickName', danmaku.uId, danmaku.ouId)">
             <NTag v-if="danmaku.uId == accountInfo?.biliId" size="small" type="warning">
               {{ danmaku.uName }}
             </NTag>
@@ -110,7 +110,7 @@ defineEmits<{
     </span>
     <span>
       <template v-if="showName && danmaku.uId != -1">
-        <NButton class="danmaku-item" text type="info" @click="$emit('onClickName', danmaku.uId)">
+        <NButton class="danmaku-item" text type="info" @click="$emit('onClickName', danmaku.uId, danmaku.ouId)">
           <NTooltip v-if="danmaku.uId == accountInfo?.biliId">
             <template #trigger>
               <NTag size="small" type="warning" style="cursor: pointer">
