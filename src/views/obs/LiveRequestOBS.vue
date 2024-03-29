@@ -79,10 +79,14 @@ async function update() {
   if (!visiable.value || !active.value) return
   const r = await get()
   if (r) {
+    const isCountChange = originSongs.value.length != r.songs.length
     originSongs.value = r.songs.sort((a, b) => {
       return b.createAt - a.createAt
     })
     settings.value = r.setting
+    if (isCountChange) {
+      key.value = Date.now()
+    }
   }
 }
 
@@ -113,7 +117,7 @@ onUnmounted(() => {
   <div class="live-request-background" v-bind="$attrs">
     <p class="live-request-header">{{ settings.obsTitle ?? '点播' }}</p>
     <NDivider class="live-request-divider">
-      <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 首</p>
+      <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 条</p>
     </NDivider>
     <div
       class="live-request-processing-container"
@@ -172,7 +176,7 @@ onUnmounted(() => {
         </Vue3Marquee>
       </template>
       <div v-else style="position: relative; top: 20%">
-        <NEmpty class="live-request-empty" description="暂无人点歌" />
+        <NEmpty class="live-request-empty" description="暂无人点播" />
       </div>
     </div>
     <div class="live-request-footer" v-if="settings.showRequireInfo" ref="footerRef">

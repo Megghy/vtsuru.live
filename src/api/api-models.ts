@@ -545,6 +545,7 @@ export interface DanmakuModel {
   price: number | null
   isEmoji: boolean
   num: number
+  ouId: string
 }
 export interface ResponseFeedbackModel {
   message: string

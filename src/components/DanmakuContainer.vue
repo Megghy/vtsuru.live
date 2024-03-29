@@ -33,6 +33,7 @@ import {
   NSwitch,
   NTag,
   NTooltip,
+  useMessage,
 } from 'naive-ui'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import LiveInfoContainer from './LiveInfoContainer.vue'
@@ -43,7 +44,7 @@ enum RankType {
   Paid,
 }
 interface RankInfo {
-  uId: number
+  ouId: string
   uName: string
   Paid: number
   Danmakus: number
@@ -106,7 +107,7 @@ const {
   to = 'space',
 } = defineProps<Props>()
 const emit = defineEmits<{
-  (e: 'onClickName', uId: number): boolean
+  (e: 'onClickName', uId: number, ouId: string): boolean
 }>()
 defineExpose({
   InsertDanmakus,
@@ -146,19 +147,24 @@ const existEnterMessage = ref(false)
 const exportType = ref<'json' | 'xml' | 'csv'>('json')
 const onlyExportFilteredDanmakus = ref(false)
 const isExporting = ref(false)
+const message = useMessage()
 
-function OnNameClick(uId: number) {
+function OnNameClick(uId: number, ouId: string) {
   if (isInModal) {
-    emit('onClickName', uId)
+    emit('onClickName', uId, ouId)
     return
   }
   switch (to) {
     case 'userDanmakus': {
-      userDanmakus.value = currentDanmakus.filter((d) => d.uId == uId)
+      userDanmakus.value = currentDanmakus.filter((d) => (d.uId ? d.uId == uId : d.ouId == ouId))
       showModal.value = true
       break
     }
     case 'space': {
+      if (!uId) {
+        message.error('从开放平台获取的弹幕已不再支持前往用户空间')
+        return
+      }
       showModal.value = false
       nextTick(() => {
         window.open('https://space.bilibili.com/' + uId, '_blank')
@@ -204,15 +210,16 @@ function OnRank(isRank: boolean) {
 function OnRankDirect(type: RankType, refresh: boolean, orderByDescending = true) {
   if (refresh) {
     var rank = {} as {
-      [uId: number]: RankInfo
+      [ouId: string]: RankInfo
     }
     currentDanmakus.forEach((danmaku) => {
-      if (danmaku.uId in rank) {
-        if (danmaku.type == EventDataTypes.Message) rank[danmaku.uId].Danmakus++
-        rank[danmaku.uId].Paid += danmaku.price ?? 0
+      if (danmaku.ouId in rank) {
+        if (danmaku.type == EventDataTypes.Message) rank[danmaku.ouId].Danmakus++
+        rank[danmaku.ouId].Paid += danmaku.price ?? 0
       } else {
-        rank[danmaku.uId] = {
-          uId: danmaku.uId,
+        rank[danmaku.ouId] = {
+          //uId: danmaku.uId,
+          ouId: danmaku.ouId,
           uName: danmaku.uName,
           Paid: danmaku.price ?? 0,
           Danmakus: danmaku.type == EventDataTypes.Message ? 1 : 0,
@@ -318,7 +325,7 @@ function GetFilteredDanmakus(targetDanmakus?: DanmakuModel[]) {
   if (orderDecreasing.value) tempDanmakus = tempDanmakus.reverse()
   var index = 0
   tempDanmakus.forEach((d) => {
-    d.id = `${d.uId}_${d.time}_${index}`
+    d.id = `${d.ouId}_${d.time}_${index}`
     index++
   })
   return tempDanmakus
@@ -563,14 +570,14 @@ onMounted(() => {
         </NRadioGroup>
         <NDivider />
         <NList :show-divider="false" style="background-color: rgba(255, 255, 255, 0)">
-          <NListItem v-for="user in currentRankInfo" v-bind:key="user.uId">
+          <NListItem v-for="user in currentRankInfo" v-bind:key="user.ouId">
             <span style="display: flex; align-items: center">
               <NAvatar round size="small" :style="GetRankIndexColor(user.Index)">
                 {{ user.Index }}
               </NAvatar>
               <NDivider vertical />
-              <NButton text type="info" @click="OnNameClick(user.uId)">
-                <NTooltip v-if="user.uId == accountInfo?.biliId">
+              <NButton text type="info" @click="OnNameClick(accountInfo?.biliId ?? 0, user.ouId)">
+                <NTooltip v-if="user.uName == accountInfo?.name">
                   <template #trigger>
                     <NTag size="small" type="warning" style="cursor: pointer">
                       {{ user.uName }}
