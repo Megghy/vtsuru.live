@@ -134,7 +134,7 @@ watch(
           <NTooltip>
             <template #trigger>
               <span style="font-size: 18px; font-weight: 500; color: #a35353">
-                <NNumberAnimation :from="0" :to="live.totalIncomeWithGuard" show-separator />
+                <NNumberAnimation :from="0" :to="new Date(live.startAt) < guartPriceStartData ? live.totalIncomeWithGuard : live.totalIncome" show-separator />
               </span>
             </template>
             {{ live.totalIncome }}
