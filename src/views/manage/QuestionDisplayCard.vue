@@ -56,18 +56,20 @@ onUnmounted(() => {
     }"
     :display="question ? 1 : 0"
   >
-    <div
-      v-if="setting.showUserName && question"
-      class="question-display-user-name"
-      :style="{
-        color: '#' + setting.nameFontColor,
-        fontSize: setting.nameFontSize + 'px',
-        fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
-        fontFamily: setting.nameFont,
-      }"
-    >
-      {{ question?.sender?.name ?? '匿名用户' }}
-    </div>
+    <Transition name="scale" mode="out-in">
+      <div
+        v-if="setting.showUserName && question"
+        class="question-display-user-name"
+        :style="{
+          color: '#' + setting.nameFontColor,
+          fontSize: setting.nameFontSize + 'px',
+          fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
+          fontFamily: setting.nameFont,
+        }"
+      >
+        {{ question?.sender?.name ?? '匿名用户' }}
+      </div>
+    </Transition>
     <div
       class="question-display-content"
       :style="{
@@ -78,15 +80,28 @@ onUnmounted(() => {
         textAlign: align,
         fontFamily: setting.font,
       }"
+      :is-empty="question ? 0 : 1"
     >
-      <div class="question-display-text" :is-empty="question ? 0 : 1">
-        {{ question?.question.message }}
-      </div>
-      <img
-        class="question-display-image"
-        v-if="setting.showImage && question?.question.image"
-        :src="question?.question.image"
-      />
+      <Transition name="fade" mode="out-in">
+        <template v-if="question">
+          <div>
+            <div class="question-display-text">
+              {{ question?.question.message }}
+            </div>
+            <img
+              class="question-display-image"
+              v-if="setting.showImage && question?.question.image"
+              :src="question?.question.image"
+            />
+          </div>
+        </template>
+        <div v-else class="question-display-loading loading" :style="{ color: '#' + setting.fontColor }">
+          <div :style="{ color: '#' + setting.fontColor }"></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -99,9 +114,9 @@ onUnmounted(() => {
   border: 2 solid rgb(255, 255, 255);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
   border-style: solid;
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 .question-display-content {
   border-radius: 10px;
@@ -110,19 +125,156 @@ onUnmounted(() => {
   height: 100%;
   justify-content: space-evenly;
   padding: 24px;
+  overflow: auto;
 }
 .question-display-user-name {
   text-align: center;
   margin: 5px;
-  transition: all 0.3s ease;
+  height: 32px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .question-display-text {
   min-height: 50px;
-  transition: all 0.3s ease;
 }
 .question-display-image {
   max-width: 40%;
   max-height: 40%;
   margin: 0 auto;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 51%, 0.377);
+
+  -webkit-box-shadow: none;
+
+  border-radius: 10px;
+
+  -webkit-box-shadow: none;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+
+  background: #cccccc4b;
+
+  -webkit-box-shadow: none;
+
+  -webkit-box-shadow: none;
+}
+</style>
+
+<style scoped>
+.loading,
+.loading > div {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.loading {
+  display: block;
+  margin: 0 auto;
+  font-size: 0;
+}
+
+.loading.la-dark {
+  color: #333;
+}
+
+.loading > div {
+  display: inline-block;
+  float: none;
+  background-color: currentColor;
+  border: 0 solid currentColor;
+}
+
+.loading {
+  width: 40px;
+  height: 10px;
+}
+
+.loading > div {
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+}
+
+.loading > div:first-child {
+  transform: translateX(0%);
+  animation: ball-newton-cradle-left 1.5s 0s ease-out infinite;
+}
+
+.loading > div:last-child {
+  transform: translateX(0%);
+  animation: ball-newton-cradle-right 1.5s 0s ease-out infinite;
+}
+
+.loading.la-sm {
+  width: 20px;
+  height: 4px;
+}
+
+.loading.la-sm > div {
+  width: 4px;
+  height: 4px;
+}
+
+.loading.la-2x {
+  width: 80px;
+  height: 20px;
+}
+
+.loading.la-2x > div {
+  width: 20px;
+  height: 20px;
+}
+
+.loading.la-3x {
+  width: 120px;
+  height: 30px;
+}
+
+.loading.la-3x > div {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes ball-newton-cradle-left {
+  25% {
+    transform: translateX(-200%);
+    animation-timing-function: ease-in;
+  }
+
+  50% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes ball-newton-cradle-right {
+  50% {
+    transform: translateX(0%);
+  }
+
+  75% {
+    transform: translateX(200%);
+    animation-timing-function: ease-in;
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+.loading > div:first-child {
+  animation: ball-newton-cradle-left 1.5s 0s ease-in-out infinite;
+}
+
+.loading > div:last-child {
+  animation: ball-newton-cradle-right 1.5s 0s ease-in-out infinite;
 }
 </style>

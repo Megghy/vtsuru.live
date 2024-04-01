@@ -173,6 +173,13 @@ onMounted(() => {
     </NAlert>
     <NButton type="primary" @click="refresh"> 刷新 </NButton>
     <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
+    <NButton
+      type="primary"
+      @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+      secondary
+    >
+      前往提问页
+    </NButton>
   </NSpace>
   <NDivider style="margin: 10px 0 10px 0" />
   <NSpin v-if="useQB.isLoading" show />
@@ -188,7 +195,9 @@ onMounted(() => {
           clearable
           :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
           style="width: 200px"
-        />
+        >
+          <template #header> <NText strong depth="3"> 在设置选项卡中添加或删除话题 </NText> </template>
+        </NSelect>
         <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
         <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
         <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
@@ -285,14 +294,16 @@ onMounted(() => {
             类似于话题, 可以在投稿时选择
           </NTooltip>
         </NDivider>
-        <NInputGroup>
-          <NInputGroupLabel> 标签名称 </NInputGroupLabel>
-          <NInput v-model:value="addTagName" placeholder="就是名称" maxlength="30" show-count clearable />
-          <NButton type="primary" @click="useQB.addTag(addTagName)"> 添加 </NButton>
-        </NInputGroup>
-        <NDivider style="margin: 15px 0 15px 0" />
+        <NFlex>
+          <NInputGroup style="max-width: 400px">
+            <NInputGroupLabel> 标签名称 </NInputGroupLabel>
+            <NInput v-model:value="addTagName" placeholder="就是名称" maxlength="30" show-count clearable />
+            <NButton type="primary" @click="useQB.addTag(addTagName)"> 添加 </NButton>
+          </NInputGroup>
+        </NFlex>
+        <br />
         <NEmpty v-if="useQB.tags.length == 0" description="暂无标签" />
-        <NFlex v-else justify="center">
+        <NFlex v-else>
           <NList bordered>
             <NListItem v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)" :key="item.name">
               <NFlex align="center">
