@@ -178,4 +178,25 @@ const themeOverrides = {
   position: absolute;
   left: 0;
 }
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.5s ease-out;
+}
+.slide-up-enter-to {
+  position: absolute;
+  top: 0;
+}
+.slide-up-enter-from {
+  position: absolute;
+  top: -100%;
+}
+.slide-up-leave-to {
+  position: absolute;
+  bottom : -100%;
+}
+.slide-up-leave-from {
+  position: absolute;
+  bottom : 0;
+}
 </style>

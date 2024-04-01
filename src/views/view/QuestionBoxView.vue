@@ -18,6 +18,7 @@ import {
   NListItem,
   NSelect,
   NSpace,
+  NTag,
   NText,
   NTime,
   NTooltip,
@@ -136,7 +137,11 @@ function getTags() {
   })
     .then((data) => {
       if (data.code == 200) {
-        tags.value = data.data
+        if (userInfo?.id == accountInfo.value.id) {
+          tags.value = data.data.map((tag) => JSON.parse(JSON.stringify(tag)).name)
+        } else {
+          tags.value = data.data
+        }
       } else {
         message.error('获取标签失败:' + data.message)
       }
@@ -147,6 +152,13 @@ function getTags() {
     .finally(() => {
       isGetting.value = false
     })
+}
+function onSelectTag(tag: string) {
+  if (selectedTag.value == tag) {
+    selectedTag.value = null
+    return
+  }
+  selectedTag.value = tag
 }
 
 onMounted(() => {
@@ -163,6 +175,20 @@ onUnmounted(() => {
   <div style="max-width: 700px; margin: 0 auto" title="提问">
     <NCard embedded>
       <NSpace vertical>
+        <NCard title="投稿话题 (可选)" size="small">
+          <NSpace v-if="tags.length > 0">
+            <NTag
+              v-for="tag in tags"
+              :key="tag"
+              @click="onSelectTag(tag)"
+              style="cursor: pointer"
+              :bordered="false"
+              :type="selectedTag == tag ? 'primary' : 'default'"
+            >
+              {{ tag }}
+            </NTag>
+          </NSpace>
+        </NCard>
         <NSpace align="center" justify="center">
           <NSelect
             v-model:value="selectedTag"

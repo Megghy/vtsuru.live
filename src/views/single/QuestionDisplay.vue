@@ -72,7 +72,7 @@ watch([cardSize.width, cardSize.height], () => {
 
 const setting = computed({
   get: () => {
-    if (accountInfo.value) {
+    if (accountInfo.value && accountInfo.value.settings) {
       return accountInfo.value.settings.questionDisplay
     }
     return defaultSettings
@@ -161,6 +161,16 @@ onMounted(() => {
       <template v-if="useQB.displayQuestion">
         <NDivider style="margin: 10px 0 10px 0" />
         <NCard size="small" title="当前展示" embedded>
+          <template #header-extra>
+            <NFlex>
+              <NButton @click="useQB.setCurrentQuestion(useQB.displayQuestion)" size="small" secondary type="info">
+                取消展示
+              </NButton>
+              <NButton @click="useQB.read(useQB.displayQuestion, true)" size="small" secondary type="success">
+                已读
+              </NButton>
+            </NFlex>
+          </template>
           <QuestionItem :item="useQB.displayQuestion" />
         </NCard>
         <NDivider style="margin: 10px 0 10px 0" />
