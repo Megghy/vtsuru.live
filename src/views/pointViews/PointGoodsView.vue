@@ -160,11 +160,11 @@ const renderOption = ({ node, option }: { node: any; option: SelectOption }) => 
   )
 }
 function gotoAuthPage() {
-  if (!accountInfo.value?.biliUserAuthInfo) {
+  /*if (!accountInfo.value?.biliUserAuthInfo) {
     message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
-  /*useAuthStore()
+  useAuthStore()
     .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
     .then(() => {
       NavigateToNewTab('/bili-user')

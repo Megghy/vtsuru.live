@@ -24,12 +24,14 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import ForumPreviewItem from './ForumPreviewItem.vue'
 import ForumCommentItem from './ForumCommentItem.vue'
+import { useAccount } from '@/api/account'
 
 const { biliInfo, userInfo } = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
 }>()
+const accountInfo = useAccount()
 const token = ref('')
 const turnstile = ref()
 const editor = ref()
@@ -107,11 +109,15 @@ onUnmounted(() => {
       forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
   >
-    <NAlert type="warning"> 你需要成为成员才能访问 </NAlert>
+    <NAlert type="warning"> 你需要成为成员才能访问 {{ forumInfo.name }} </NAlert>
+    <br />
     <NAlert v-if="forumInfo.isApplied" type="success"> 已申请, 正在等待管理员审核 </NAlert>
-    <NCard v-else title="加入">
-      加入 {{ forumInfo.name }}
-      <NButton type="primary" @click="ApplyToForum" :loading="useForum.isLoading">
+    <NCard v-else title="加入该讨论区">
+      <NAlert v-if="!accountInfo.id" type="error"> 需要登录后才能够加入 </NAlert>
+      <NAlert v-else-if="forumInfo.settings.requireApply" type="warning"> 申请需要审核 </NAlert>
+      <NAlert v-else type="success"> 该讨论区可直接加入 </NAlert>
+      <NDivider />
+      <NButton type="primary" @click="ApplyToForum" :loading="useForum.isLoading" :disabled="!accountInfo.id">
         {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
       </NButton>
     </NCard>
@@ -129,6 +135,9 @@ onUnmounted(() => {
         <NCard style="max-width: 300px">
           <NFlex vertical>
             <NButton @click="showPostTopicModal = true"> 发布话题 </NButton>
+            <NCard v-if="forumInfo.isAdmin" size="small" title="管理员">
+              
+            </NCard>
           </NFlex>
         </NCard>
         <NList bordered style="flex: 1" size="small" hoverable clickable>
