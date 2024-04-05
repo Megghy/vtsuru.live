@@ -3,7 +3,24 @@ import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
-import { FormInst, FormItemInst, FormItemRule, FormRules, NAlert, NButton, NCard, NCountdown, NDivider, NForm, NFormItem, NInput, NSpace, NTabPane, NTabs, useMessage } from 'naive-ui'
+import {
+  FormInst,
+  FormItemInst,
+  FormItemRule,
+  FormRules,
+  NAlert,
+  NButton,
+  NCard,
+  NCountdown,
+  NDivider,
+  NForm,
+  NFormItem,
+  NInput,
+  NSpace,
+  NTabPane,
+  NTabs,
+  useMessage,
+} from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
@@ -87,7 +104,11 @@ const loginRules: FormRules = {
   ],
 }
 function validatePasswordStartWith(rule: FormItemRule, value: string): boolean {
-  return !!registerModel.value.password && registerModel.value.password.startsWith(value) && registerModel.value.password.length >= value.length
+  return (
+    !!registerModel.value.password &&
+    registerModel.value.password.startsWith(value) &&
+    registerModel.value.password.length >= value.length
+  )
 }
 function validatePasswordSame(rule: FormItemRule, value: string): boolean {
   return value === registerModel.value.password
@@ -157,7 +178,9 @@ function onLoginButtonClick() {
 }
 async function onForgetPassword() {
   canSendForgetPassword.value = false
-  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [['Turnstile', token.value]])
+  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [
+    ['Turnstile', token.value],
+  ])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已发送密码重置链接到你的邮箱, 请检查')
@@ -193,17 +216,31 @@ onUnmounted(() => {
       <NAlert type="warning"> 你已经登录 </NAlert>
     </template>
     <template v-else>
-      <NTabs v-model:value="selectedTab" size="large" animated pane-wrapper-style="margin: 0 -4px" pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;" style="min-width: 300px">
+      <NTabs
+        v-model:value="selectedTab"
+        size="large"
+        animated
+        pane-wrapper-style="margin: 0 -4px"
+        pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
+        style="min-width: 300px"
+      >
         <NTabPane name="login" tab="登陆">
           <NForm ref="formRef" :rules="loginRules" :model="loginModel">
             <NFormItem path="account" label="用户名或邮箱">
               <NInput v-model:value="loginModel.account" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput" @keydown.enter="onLoginButtonClick" />
+              <NInput
+                v-model:value="loginModel.password"
+                type="password"
+                @input="onPasswordInput"
+                @keydown.enter="onLoginButtonClick"
+              />
             </NFormItem>
           </NForm>
-          <NButton text secondary style="margin-left: 5px; color: gray" @click="onForgetPasswordClick"> 忘记密码 </NButton>
+          <NButton text secondary style="margin-left: 5px; color: gray" @click="onForgetPasswordClick">
+            忘记密码
+          </NButton>
           <NSpace vertical justify="center" align="center">
             <NButton :loading="isLoading" type="primary" size="large" @click="onLoginButtonClick"> 登陆 </NButton>
           </NSpace>
@@ -211,27 +248,43 @@ onUnmounted(() => {
         <NTabPane name="register" tab="注册">
           <NForm ref="formRef" :rules="registerRules" :model="registerModel">
             <NFormItem path="username" label="用户名">
-              <NInput v-model:value="registerModel.username" />
+              <NInput v-model:value="registerModel.username" placeholder="输入一个用户名, 不允许纯数字" />
             </NFormItem>
             <NFormItem path="email" label="邮箱">
-              <NInput v-model:value="registerModel.email" />
+              <NInput v-model:value="registerModel.email" placeholder="就是邮箱, 没收到的话请检查垃圾箱" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput" @keydown.enter.prevent />
+              <NInput
+                v-model:value="registerModel.password"
+                type="password"
+                @input="onPasswordInput"
+                @keydown.enter.prevent
+                placeholder="输入密码, 需要包含英文和数字"
+              />
             </NFormItem>
             <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password" type="password" @keydown.enter="onRegisterButtonClick" />
+              <NInput
+                v-model:value="registerModel.reenteredPassword"
+                :disabled="!registerModel.password"
+                type="password"
+                @keydown.enter="onRegisterButtonClick"
+                placeholder="再次输入密码"
+              />
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
-            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onRegisterButtonClick"> 注册 </NButton>
+            <NButton :loading="!token || isLoading" type="primary" size="large" @click="onRegisterButtonClick">
+              注册
+            </NButton>
           </NSpace>
         </NTabPane>
         <NTabPane v-if="isForgetPassword" name="forget" tab="忘记密码">
           <NInput placeholder="请输入邮箱" v-model:value="inputForgetPasswordValue" maxlength="64" />
           <NDivider />
           <NSpace vertical justify="center" align="center">
-            <NButton :loading="!token || !canSendForgetPassword" type="primary" size="large" @click="onForgetPassword"> 提交 </NButton>
+            <NButton :loading="!token || !canSendForgetPassword" type="primary" size="large" @click="onForgetPassword">
+              提交
+            </NButton>
             <NCountdown v-if="!canSendForgetPassword" :duration="60000" @finish="canSendForgetPassword = true" />
           </NSpace>
         </NTabPane>

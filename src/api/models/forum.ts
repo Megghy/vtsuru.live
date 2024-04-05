@@ -49,6 +49,7 @@ export type ForumModel = {
   createAt: number
 
   isAdmin: boolean
+  isMember: boolean
 }
 export type ForumSectionModel = {
   id: number

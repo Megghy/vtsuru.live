@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { useForumStore } from '@/store/useForumStore'
 import {
   DataTableColumns,
@@ -19,6 +19,7 @@ import {
   NModal,
   NSelect,
   NSpin,
+  NSwitch,
   NTabPane,
   NTabs,
   NTag,
@@ -26,11 +27,12 @@ import {
   useMessage,
 } from 'naive-ui'
 import { h, ref } from 'vue'
-import { ForumModel, ForumUserModel } from '@/api/models/forum'
+import { ForumModel, ForumUserLevels, ForumUserModel } from '@/api/models/forum'
 import { FORUM_API_URL } from '@/data/constants'
 // @ts-ignore
 import Agreement from '@/document/EnableForumAgreement.md'
 import { UserBasicInfo } from '@/api/api-models'
+import UserBasicInfoCard from '@/components/UserBasicInfoCard.vue'
 
 const useForum = useForumStore()
 const accountInfo = useAccount()
@@ -46,10 +48,37 @@ const create_Name = ref('')
 const create_Description = ref('')
 
 const showAddAdminModal = ref(false)
-const inputUser = ref<UserBasicInfo>({} as UserBasicInfo)
 const addAdminName = ref()
+const currentAdminInfo = ref<UserBasicInfo>()
+
+const showBanModal = ref(false)
+const addBanName = ref()
+const currentBanUserInfo = ref<UserBasicInfo>()
 
 const paginationSetting = { defaultPageSize: 20, showSizePicker: true, pageSizes: [20, 50, 100] }
+
+const levels = [
+  {
+    label: '1. 所有人',
+    value: ForumUserLevels.Guest,
+  },
+  {
+    label: '2. 已注册用户',
+    value: ForumUserLevels.User,
+  },
+  {
+    label: '3. 已加入的用户',
+    value: ForumUserLevels.Member,
+  },
+  {
+    label: '4. 加入并绑定B站的用户',
+    value: ForumUserLevels.AuthedMember,
+  },
+  {
+    label: '5. 仅管理员',
+    value: ForumUserLevels.Admin,
+  },
+]
 
 async function createForum() {
   if (!readedAgreement.value) {
@@ -78,6 +107,9 @@ async function createForum() {
 }
 async function SwitchForum(owner: number) {
   currentForum.value = (await useForum.GetForumInfo(owner)) ?? ({} as ForumModel)
+}
+async function refreshForumInfo() {
+  currentForum.value = (await useForum.GetForumInfo(currentForum.value.owner.id)) ?? ({} as ForumModel)
 }
 const defaultColumns: DataTableColumns<ForumUserModel> = [
   {
@@ -125,13 +157,11 @@ const memberColumns: DataTableColumns<ForumUserModel> = [
         {
           text: true,
           type: 'success',
-          onClick: () =>
-            useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
-              if (success) message.success('操作成功')
-              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
-            }),
+          onClick: () => {
+            banUser(row.id)
+          },
         },
-        { default: () => '通过申请' },
+        { default: () => '封禁' },
       )
     },
   },
@@ -147,13 +177,9 @@ const banColumns: DataTableColumns<ForumUserModel> = [
         {
           text: true,
           type: 'success',
-          onClick: () =>
-            useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
-              if (success) message.success('操作成功')
-              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
-            }),
+          onClick: () => unbanUser(row.id),
         },
-        { default: () => '通过申请' },
+        { default: () => '解禁' },
       )
     },
   },
@@ -169,33 +195,92 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
         NButton,
         {
           text: true,
-          type: 'success',
-          onClick: () =>
-            useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
-              if (success) message.success('操作成功')
-              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
-            }),
+          type: 'error',
+          onClick: () => {
+            removeAdmin(row.id)
+          },
         },
-        { default: () => '通过申请' },
+        { default: () => ' 取消管理员' },
       )
     },
   },
 ]
 
 async function addAdmin() {
-  if (!currentForum.value.id) return
   try {
-    const data = await QueryPostAPI<ForumModel>(FORUM_API_URL + 'manage/add-admin', {
-      forum: currentForum.value.id,
-      user: addAdminName.value,
+    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/add-admin', {
+      forum: currentForum.value.owner.id,
+      id: currentAdminInfo.value?.id,
     })
     if (data.code == 200) {
-      message.success('操作成功')
+      message.success('已添加 ' + currentAdminInfo.value?.name + ' 为管理员')
+      refreshForumInfo()
+      addAdminName.value = ''
+      showAddAdminModal.value = false
     } else {
       message.error('操作失败: ' + data.message)
     }
   } catch (err) {
     message.error('操作失败: ' + err)
+  }
+}
+async function removeAdmin(id: number) {
+  try {
+    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/del-admin', {
+      forum: currentForum.value.owner.id,
+      id,
+    })
+    if (data.code == 200) {
+      message.success('已取消管理员权限')
+      refreshForumInfo()
+    } else {
+      message.error('操作失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('操作失败: ' + err)
+  }
+}
+async function banUser(id: number) {
+  try {
+    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/ban', {
+      forum: currentForum.value.owner.id,
+      id: currentBanUserInfo.value?.id,
+    })
+    if (data.code == 200) {
+      message.success('已封禁用户')
+      refreshForumInfo()
+    } else {
+      message.error('操作失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('操作失败: ' + err)
+  }
+}
+async function unbanUser(id: number) {
+  try {
+    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/unban', {
+      forum: currentForum.value.owner.id,
+      id,
+    })
+    if (data.code == 200) {
+      message.success('已解禁')
+      refreshForumInfo()
+    } else {
+      message.error('操作失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('操作失败: ' + err)
+  }
+}
+async function updateForumSettings() {
+  try {
+    const data = await QueryPostAPI(FORUM_API_URL + 'manage/update-setting', currentForum.value.settings)
+    if (data.code == 200) {
+    } else {
+      message.error('修改失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('修改失败: ' + err)
   }
 }
 </script>
@@ -256,14 +341,52 @@ async function addAdmin() {
             <NDescriptionsItem label="管理员数量"> {{ currentForum.admins?.length ?? 0 }} </NDescriptionsItem>
           </NDescriptions>
           <NDivider> 设置 </NDivider>
+          <NDescriptions class="setting" label-placement="left">
+            <NDescriptionsItem label="加入需要进行管理员同意">
+              <NCheckbox v-model:checked="currentForum.settings.requireApply" @update:checked="updateForumSettings" />
+            </NDescriptionsItem>
+            <NDescriptionsItem v-if="currentForum.settings.requireApply" label="仅允许已绑定账号的用户申请">
+              <NCheckbox
+                v-model:checked="currentForum.settings.requireAuthedToJoin"
+                @update:checked="updateForumSettings"
+              />
+            </NDescriptionsItem>
+            <NDescriptionsItem label="允许发布帖子">
+              <NCheckbox v-model:checked="currentForum.settings.allowPost" @update:checked="updateForumSettings" />
+            </NDescriptionsItem>
+            <NDescriptionsItem label="允许谁查看讨论区">
+              <NSelect
+                v-model:value="currentForum.settings.allowedViewerLevel"
+                :options="levels"
+                @update:value="updateForumSettings"
+                style="min-width: 200px"
+              />
+            </NDescriptionsItem>
+            <NDescriptionsItem label="允许谁发布帖子">
+              <NSelect
+                v-model:value="currentForum.settings.allowedPostLevel"
+                :options="levels"
+                @update:value="updateForumSettings"
+                style="min-width: 200px"
+              />
+            </NDescriptionsItem>
+          </NDescriptions>
         </NTabPane>
         <NTabPane tab="成员" name="member">
-          <NDivider> 申请 </NDivider>
+          <NDivider> 申请加入 </NDivider>
           <NDataTable :columns="applyingColumns" :data="currentForum.applying" :pagination="paginationSetting" />
           <NDivider> 管理员 </NDivider>
           <NFlex>
-            <NButton @click="showAddAdminModal = true" size="small" type="primary"> 添加管理员 </NButton>
+            <NButton
+              @click="showAddAdminModal = true"
+              size="small"
+              type="primary"
+              :disabled="currentForum.owner.id != accountInfo.id"
+            >
+              添加管理员
+            </NButton>
           </NFlex>
+          <br />
           <NDataTable :columns="adminColumns" :data="currentForum.admins" :pagination="paginationSetting" />
           <template v-if="currentForum.settings.requireApply">
             <NDivider> 成员 </NDivider>
@@ -274,6 +397,10 @@ async function addAdmin() {
             />
           </template>
           <NDivider> 封禁用户 </NDivider>
+          <NFlex>
+            <NButton @click="showBanModal = true" size="small" type="primary"> 封禁用户 </NButton>
+          </NFlex>
+          <br />
           <NDataTable :columns="banColumns" :data="currentForum.blackList" :pagination="paginationSetting" />
         </NTabPane>
       </NTabs>
@@ -288,7 +415,27 @@ async function addAdmin() {
     <Agreement />
   </NModal>
   <NModal v-model:show="showAddAdminModal" preset="card" title="添加管理员" style="width: 600px; max-width: 90vw">
+    <UserBasicInfoCard :user="addAdminName" @update:user-info="(v) => (currentAdminInfo = v)" />
+    <br />
     <NInput v-model:value="addAdminName" placeholder="请输入用户名或VTsuruId" />
-    <NButton @click="addAdmin" type="primary"> 添加 </NButton>
+    <NDivider />
+    <NButton @click="addAdmin" type="primary" :disabled="!currentAdminInfo?.id"> 添加 </NButton>
+  </NModal>
+
+  <NModal v-model:show="showBanModal" preset="card" title="封禁用户" style="width: 600px; max-width: 90vw">
+    <UserBasicInfoCard :user="addBanName" @update:user-info="(v) => (currentBanUserInfo = v)" />
+    <br />
+    <NInput v-model:value="addBanName" placeholder="请输入用户名或VTsuruId" />
+    <NDivider />
+    <NButton @click="banUser(currentBanUserInfo!.id)" type="warning" :disabled="!currentBanUserInfo?.id">
+      封禁
+    </NButton>
   </NModal>
 </template>
+
+<style>
+.setting .n-descriptions-table-content {
+  display: flex !important;
+  align-items: center !important;
+}
+</style>
