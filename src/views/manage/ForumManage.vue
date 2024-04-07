@@ -26,7 +26,7 @@ import {
   NTime,
   useMessage,
 } from 'naive-ui'
-import { h, ref } from 'vue'
+import { h, onMounted, ref } from 'vue'
 import { ForumModel, ForumUserLevels, ForumUserModel } from '@/api/models/forum'
 import { FORUM_API_URL } from '@/data/constants'
 // @ts-ignore
@@ -40,7 +40,7 @@ const message = useMessage()
 
 const managedForums = ref((await useForum.GetManagedForums()) ?? [])
 const currentForum = ref((await useForum.GetForumInfo(accountInfo.value.id)) ?? ({} as ForumModel))
-const selectedForum = ref(accountInfo.value.id)
+const selectedForum = ref()
 
 const readedAgreement = ref(false)
 const showAgreement = ref(false)
@@ -106,6 +106,7 @@ async function createForum() {
   }
 }
 async function SwitchForum(owner: number) {
+  selectedForum.value = owner
   currentForum.value = (await useForum.GetForumInfo(owner)) ?? ({} as ForumModel)
 }
 async function refreshForumInfo() {
@@ -152,17 +153,32 @@ const memberColumns: DataTableColumns<ForumUserModel> = [
     title: '操作',
     key: 'action',
     render(row) {
-      return h(
-        NButton,
-        {
-          text: true,
-          type: 'success',
-          onClick: () => {
-            banUser(row.id)
+      return h(NFlex, {}, () => [
+        h(
+          NButton,
+          {
+            text: true,
+            type: 'error',
+            onClick: () => {
+              banUser(row.id)
+            },
           },
-        },
-        { default: () => '封禁' },
-      )
+          { default: () => '封禁' },
+        ),
+        currentForum.value.owner.id == accountInfo.value.id
+          ? h(
+              NButton,
+              {
+                text: true,
+                type: 'success',
+                onClick: () => {
+                  addAdmin(row.id)
+                },
+              },
+              { default: () => '设为管理员' },
+            )
+          : null,
+      ])
     },
   },
 ]
@@ -190,30 +206,33 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
   {
     title: '操作',
     key: 'action',
+    disabled: () => currentForum.value.owner.id != accountInfo.value.id,
     render(row) {
-      return h(
-        NButton,
-        {
-          text: true,
-          type: 'error',
-          onClick: () => {
-            removeAdmin(row.id)
-          },
-        },
-        { default: () => ' 取消管理员' },
-      )
+      return currentForum.value.owner.id == accountInfo.value.id
+        ? h(
+            NButton,
+            {
+              text: true,
+              type: 'error',
+              onClick: () => {
+                removeAdmin(row.id)
+              },
+            },
+            { default: () => ' 取消管理员' },
+          )
+        : null
     },
   },
 ]
 
-async function addAdmin() {
+async function addAdmin(id: number) {
   try {
     const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/add-admin', {
       forum: currentForum.value.owner.id,
-      id: currentAdminInfo.value?.id,
+      id: id,
     })
     if (data.code == 200) {
-      message.success('已添加 ' + currentAdminInfo.value?.name + ' 为管理员')
+      message.success('已设置为管理员')
       refreshForumInfo()
       addAdminName.value = ''
       showAddAdminModal.value = false
@@ -244,7 +263,7 @@ async function banUser(id: number) {
   try {
     const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/ban', {
       forum: currentForum.value.owner.id,
-      id: currentBanUserInfo.value?.id,
+      id: id,
     })
     if (data.code == 200) {
       message.success('已封禁用户')
@@ -283,9 +302,36 @@ async function updateForumSettings() {
     message.error('修改失败: ' + err)
   }
 }
+
+onMounted(() => {
+  if (currentForum.value.name) {
+    selectedForum.value = currentForum.value.owner.id
+  }
+})
 </script>
 
 <template>
+  <template v-if="!currentForum.name && managedForums.length > 0">
+    <NAlert type="info"> 你是某些讨论区的管理员, 可以在下方选择需要管理的讨论区 </NAlert>
+    <br />
+  </template>
+  <NSelect
+    v-model:value="selectedForum"
+    :options="
+      managedForums.map((f) => ({
+        label: (f.owner.id == accountInfo.id ? '[我的] ' : '') + f.name + ` (${f.owner.name})`,
+        value: f.owner.id,
+      }))
+    "
+    @update:value="(v) => SwitchForum(v)"
+    placeholder="选择要管理的粉丝讨论区"
+    :fallback-option="(v) => ({ label: '尚未创建', value: v })"
+  >
+    <template #header>
+      <NButton @click="SwitchForum(accountInfo.id)" size="small" type="primary"> 我的粉丝讨论区 </NButton>
+    </template>
+  </NSelect>
+  <NDivider />
   <NCard v-if="!currentForum.name" size="small" title="啊哦">
     <NAlert type="error"> 你尚未创建粉丝讨论区 </NAlert>
     <NDivider />
@@ -310,23 +356,8 @@ async function updateForumSettings() {
       </NFlex>
     </NFlex>
   </NCard>
-  <template v-else>
+  <template v-else-if="currentForum">
     <NSpin :show="useForum.isLoading">
-      <NSelect
-        v-model:value="selectedForum"
-        :options="
-          managedForums.map((f) => ({
-            label: (f.owner.id == accountInfo.id ? '[我的] ' : '') + f.name + ` (${f.owner.name})`,
-            value: f.owner.id,
-          }))
-        "
-        @update:value="(v) => SwitchForum(v)"
-      >
-        <template #header>
-          <NButton @click="SwitchForum(accountInfo.id)" size="small" type="primary"> 我的粉丝讨论区 </NButton>
-        </template>
-      </NSelect>
-      <NDivider />
       <NTabs animated v-bind:key="selectedForum" type="segment">
         <NTabPane tab="信息" name="info">
           <NDescriptions bordered size="small">
@@ -375,6 +406,12 @@ async function updateForumSettings() {
         <NTabPane tab="成员" name="member">
           <NDivider> 申请加入 </NDivider>
           <NDataTable :columns="applyingColumns" :data="currentForum.applying" :pagination="paginationSetting" />
+          <NDivider> 成员 </NDivider>
+          <NDataTable
+            :columns="memberColumns"
+            :data="currentForum.members.sort((a, b) => (a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0))"
+            :pagination="paginationSetting"
+          />
           <NDivider> 管理员 </NDivider>
           <NFlex>
             <NButton
@@ -388,14 +425,6 @@ async function updateForumSettings() {
           </NFlex>
           <br />
           <NDataTable :columns="adminColumns" :data="currentForum.admins" :pagination="paginationSetting" />
-          <template v-if="currentForum.settings.requireApply">
-            <NDivider> 成员 </NDivider>
-            <NDataTable
-              :columns="memberColumns"
-              :data="currentForum.members.sort((a, b) => (a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0))"
-              :pagination="paginationSetting"
-            />
-          </template>
           <NDivider> 封禁用户 </NDivider>
           <NFlex>
             <NButton @click="showBanModal = true" size="small" type="primary"> 封禁用户 </NButton>
@@ -419,7 +448,7 @@ async function updateForumSettings() {
     <br />
     <NInput v-model:value="addAdminName" placeholder="请输入用户名或VTsuruId" />
     <NDivider />
-    <NButton @click="addAdmin" type="primary" :disabled="!currentAdminInfo?.id"> 添加 </NButton>
+    <NButton @click="addAdmin(currentAdminInfo!.id)" type="primary" :disabled="!currentAdminInfo?.id"> 添加 </NButton>
   </NModal>
 
   <NModal v-model:show="showBanModal" preset="card" title="封禁用户" style="width: 600px; max-width: 90vw">
