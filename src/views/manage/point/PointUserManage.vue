@@ -37,6 +37,7 @@ const props = defineProps<{
 
 type PointUserSettings = {
   onlyAuthed: boolean
+  searchKeyword?: string
 }
 
 const message = useMessage()
@@ -62,6 +63,12 @@ const filteredUsers = computed(() => {
     .filter((user) => {
       if (settings.value.onlyAuthed) {
         return user.isAuthed
+      }
+      if (settings.value.searchKeyword) {
+        return (
+          user.info.name?.toLowerCase().includes(settings.value.searchKeyword.toLowerCase()) == true ||
+          user.info.userId?.toString() == settings.value.searchKeyword
+        )
       }
       return true
     })
@@ -137,7 +144,7 @@ const column: DataTableColumns<ResponsePointUserModel> = [
           NPopconfirm,
           { onPositiveClick: () => deleteUser(row) },
           {
-            default: '确定要删除这个用户吗？记录将无法恢复',
+            default: () => '确定要删除这个用户吗？记录将无法恢复',
             trigger: () =>
               h(
                 NButton,
@@ -260,7 +267,24 @@ onMounted(async () => {
           <NButton type="info" @click="showGivePointModal = true">给予/扣除积分</NButton>
         </NFlex>
       </template>
-      <NFlex>
+      <NFlex align="center">
+        <NFlex :wrap="false" align="center" :size="5">
+          <NInput
+            v-model:value="settings.searchKeyword"
+            placeholder="搜索用户 (用户名或uid)"
+            style="max-width: 200px"
+            clearable
+          />
+          <NTooltip>
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户
+            (因为开放平台提供的是用户uid)
+            <br/>
+            2. 用户名只会保持在首条记录出现时的用户名
+          </NTooltip>
+        </NFlex>
         <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
       </NFlex>
     </NCard>
@@ -271,6 +295,7 @@ onMounted(async () => {
     </template>
     <NDataTable
       v-else
+      v-model:page="pn"
       scroll-x="600"
       :columns="column"
       :data="filteredUsers"

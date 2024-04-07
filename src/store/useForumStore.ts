@@ -397,7 +397,7 @@ export const useForumStore = defineStore('forum', () => {
   async function ConfirmApply(owner: number, id: number) {
     try {
       isLoading.value = true
-      const data = await QueryGetAPI(FORUM_API_URL + 'manage/confirm-apply', { owner: owner, id: id })
+      const data = await QueryGetAPI(FORUM_API_URL + 'manage/confirm-apply', { forum: owner, id: id })
       if (data.code == 200) {
         message?.success('已通过申请')
         return true
