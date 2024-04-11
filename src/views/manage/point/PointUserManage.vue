@@ -280,7 +280,7 @@ onMounted(async () => {
               <NIcon :component="Info24Filled" />
             </template>
             1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户
-            (因为开放平台提供的是用户uid)
+            (因为开放平台提供的是OpenId, 不通用)
             <br/>
             2. 用户名只会保持在首条记录出现时的用户名
           </NTooltip>
