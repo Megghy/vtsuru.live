@@ -51,7 +51,7 @@ const accountInfo = useAccount()
   </NSpace>
   <br />
   <NAlert
-    v-if="accountInfo?.eventFetcherState.online != true"
+    v-if="accountInfo?.eventFetcherState?.online != true"
     type="warning"
     title="可用性警告"
     style="max-width: 600px; margin: 0 auto"
