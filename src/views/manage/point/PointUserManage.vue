@@ -282,7 +282,7 @@ onMounted(async () => {
             1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户
             (因为开放平台提供的是OpenId, 不通用)
             <br/>
-            2. 用户名只会保持在首条记录出现时的用户名
+            2. 用户名只会保持在首条记录出现时的用户名, 即用户更换用户名之后这里也只会保持不变
           </NTooltip>
         </NFlex>
         <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
