@@ -10,6 +10,8 @@ import {
   SongRequestInfo,
   SongRequestStatus,
   SongsInfo,
+  QueueGiftFilterType,
+  QueueSortType,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import SongPlayer from '@/components/SongPlayer.vue'
@@ -50,6 +52,9 @@ import {
   NListItem,
   NModal,
   NPopconfirm,
+  NRadioButton,
+  NRadioGroup,
+  NSelect,
   NSpace,
   NSpin,
   NSwitch,
@@ -133,30 +138,44 @@ const props = defineProps<{
 const localActiveSongs = useStorage('SongRequest.ActiveSongs', [] as SongRequestInfo[])
 const originSongs = ref<SongRequestInfo[]>(await getAllSong())
 const songs = computed(() => {
-  const result = originSongs.value.filter((s) => {
+  let result = new List(originSongs.value).Where((s) => {
     if (filterName.value) {
       if (filterNameContains.value) {
-        if (!s.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
+        if (!s?.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
           return false
         }
-      } else if (s.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
+      } else if (s?.user?.name.toLowerCase() !== filterName.value.toLowerCase()) {
         return false
       }
     } else if (filterSongName.value) {
       if (filterSongNameContains.value) {
-        if (!s.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
+        if (!s?.songName.toLowerCase().includes(filterSongName.value.toLowerCase())) {
           return false
         }
-      } else if (s.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
+      } else if (s?.songName.toLowerCase() !== filterSongName.value.toLowerCase()) {
         return false
       }
     }
     return true
   })
+  switch (settings.value.sortType) {
+    case QueueSortType.TimeFirst: {
+      result = result.ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.GuardFirst: {
+      result = result.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.PaymentFist: {
+      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+    }
+  }
+  console.log(settings.value.sortType)
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
-    return result.reverse()
+    return result.Reverse().ToArray()
   } else {
-    return result
+    return result.ToArray()
   }
 })
 const activeSongs = computed(() => {
@@ -400,7 +419,7 @@ async function updateSettings() {
     await QueryPostAPI(SONG_REQUEST_API_URL + 'update-setting', settings.value)
       .then((data) => {
         if (data.code == 200) {
-          message.success('已保存')
+          //message.success('已保存')
         } else {
           message.error('保存失败: ' + data.message)
         }
@@ -490,7 +509,7 @@ const columns = [
     title: '来自',
     key: 'from',
     render(data) {
-      let fromType: 'info' | 'success' | 'default' | 'error'
+      let fromType: 'info' | 'success' | 'default' | 'error' = 'info'
       switch (data.from) {
         case SongRequestFrom.Danmaku: {
           fromType = 'info'
@@ -515,7 +534,10 @@ const columns = [
             return '弹幕'
           }
           case SongRequestFrom.SC: {
-            return 'SuperChat | ' + data.scPrice
+            return 'SuperChat | ' + data.price
+          }
+          case SongRequestFrom.Gift: {
+            return '礼物 | ' + data.price
           }
           case SongRequestFrom.Manual: {
             return '手动添加'
@@ -815,6 +837,16 @@ onUnmounted(() => {
               <NInput placeholder="手动添加" v-model:value="newSongName" />
               <NButton type="primary" @click="addSongManual"> 添加 </NButton>
             </NInputGroup>
+            <!-- <NRadioGroup
+              v-model:value="settings.sortType"
+              :disabled="!configCanEdit"
+              @update:value="updateSettings"
+              type="button"
+            >
+              <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
+              <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
+              <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
+            </NRadioGroup> -->
             <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
               倒序
             </NCheckbox>
@@ -893,9 +925,16 @@ onUnmounted(() => {
                   <NTag
                     v-if="song.from == SongRequestFrom.SC"
                     size="small"
-                    :color="{ textColor: 'white', color: GetSCColor(song.scPrice ?? 0) }"
+                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }"
                   >
-                    SC | {{ song.scPrice }}
+                    SC | {{ song.price }}
+                  </NTag>
+                  <NTag
+                    v-if="song.from == SongRequestFrom.Gift"
+                    size="small"
+                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }"
+                  >
+                    Gift | {{ song.price }}
                   </NTag>
                   <NTooltip>
                     <template #trigger>
@@ -1051,15 +1090,17 @@ onUnmounted(() => {
         <NSpin :show="isLoading">
           <NDivider> 规则 </NDivider>
           <NSpace vertical>
-            <NInputGroup style="width: 250px">
-              <NInputGroupLabel> 点播弹幕前缀 </NInputGroupLabel>
-              <template v-if="configCanEdit">
-                <NInput v-model:value="settings.orderPrefix" />
-                <NButton @click="updateSettings" type="primary">确定</NButton>
-              </template>
-              <NInput v-else v-model:value="defaultPrefix" />
-            </NInputGroup>
-
+            <NSpace align="center">
+              <NInputGroup style="width: 250px">
+                <NInputGroupLabel> 点播弹幕前缀 </NInputGroupLabel>
+                <template v-if="configCanEdit">
+                  <NInput v-model:value="settings.orderPrefix" />
+                  <NButton @click="updateSettings" type="primary">确定</NButton>
+                </template>
+                <NInput v-else v-model:value="defaultPrefix" />
+              </NInputGroup>
+              <NAlert v-if="settings.orderPrefix.includes(' ')" type="info"> 前缀包含空格 </NAlert>
+            </NSpace>
             <NInputGroup style="width: 250px">
               <NInputGroupLabel> 最大队列长度 </NInputGroupLabel>
               <NInputNumber v-model:value="settings.queueMaxSize" :disabled="!configCanEdit" />
@@ -1144,6 +1185,67 @@ onUnmounted(() => {
                 <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
               </NInputGroup>
             </NSpace>
+
+            <!-- <NCheckbox v-model:checked="settings.allowGift" @update:checked="updateSettings" :disabled="!configCanEdit">
+              允许通过发送礼物加入队列
+            </NCheckbox>
+            <NSpace>
+              <template v-if="settings.allowGift">
+                <NAlert type="warning"> 赠送礼物后需要再次发送点播弹幕才能够加入 </NAlert>
+                <NInputGroup v-if="settings.allowGift" style="width: 250px">
+                  <NInputGroupLabel> 最低价格 </NInputGroupLabel>
+                  <NInputNumber v-model:value="settings.minGiftPrice" :disabled="!configCanEdit" />
+                  <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                </NInputGroup>
+                <NSpace align="center">
+                  礼物名
+                  <NSelect
+                    style="width: 250px"
+                    v-model:value="settings.giftNames"
+                    :disabled="!configCanEdit"
+                    filterable
+                    multiple
+                    tag
+                    placeholder="礼物名称，按回车确认"
+                    :show-arrow="false"
+                    :show="false"
+                    @update:value="updateSettings"
+                  />
+                </NSpace>
+                <span>
+                  <NRadioGroup
+                    v-model:value="settings.giftFilterType"
+                    :disabled="!configCanEdit"
+                    @update:value="updateSettings"
+                  >
+                    <NRadioButton :value="QueueGiftFilterType.And"> 需同时满足礼物名和价格 </NRadioButton>
+                    <NRadioButton :value="QueueGiftFilterType.Or"> 礼物名/价格 二选一 </NRadioButton>
+                  </NRadioGroup>
+                </span>
+                <NCheckbox
+                  v-model:checked="settings.sendGiftIgnoreLimit"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  赠送礼物后无视用户等级限制
+                </NCheckbox>
+              </template>
+              <NCheckbox
+                v-model:checked="settings.allowIncreasePaymentBySendGift"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
+                在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
+              </NCheckbox>
+              <NCheckbox
+                v-if="settings.allowIncreasePaymentBySendGift"
+                v-model:checked="settings.allowIncreaseByAnyPayment"
+                @update:checked="updateSettings"
+                :disabled="!configCanEdit"
+              >
+                允许发送任意礼物来叠加付费量
+              </NCheckbox>
+            </NSpace> -->
             <NDivider> 点歌 </NDivider>
             <NSpace>
               <NCheckbox

@@ -75,7 +75,7 @@ const accountInfo = useAccount()
   </NAlert>
   <NDivider> 还有更多 </NDivider>
   <NSpace justify="center" align="center" vertical>
-    动态抽奖、视频征集、歌单、棉花糖、日程表...
+    舰长积分、动态抽奖、视频征集、歌单、棉花糖、日程表...
     <p>
       详见
       <NButton text tag="a" href="/" target="_blank" type="primary"> VTsuru.live </NButton>

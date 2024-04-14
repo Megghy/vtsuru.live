@@ -115,12 +115,15 @@ onMounted(() => {
   timer = setInterval(update, 2000)
 
   //@ts-expect-error 这里获取不了
-  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-    visiable.value = visibility
-  }
-  //@ts-expect-error 这里获取不了
-  window.obsstudio.onActiveChange = function (a: boolean) {
-    active.value = a
+  if (window.obsstudio) {
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onVisibilityChange = function (visibility: boolean) {
+      visiable.value = visibility
+    }
+    //@ts-expect-error 这里获取不了
+    window.obsstudio.onActiveChange = function (a: boolean) {
+      active.value = a
+    }
   }
 })
 onUnmounted(() => {
@@ -186,6 +189,8 @@ onUnmounted(() => {
               }}
             </p>
           </span>
+
+        <NDivider v-if="isMoreThanContainer" class="queue-footer-divider" style="margin: 10px 0 10px 0" />
         </Vue3Marquee>
       </template>
       <div v-else style="position: relative; top: 20%">
@@ -241,8 +246,8 @@ onUnmounted(() => {
                 : '无需'
             }}
           </div>
-        </span></Vue3Marquee
-      >
+        </span>
+      </Vue3Marquee>
     </div>
   </div>
 </template>
@@ -399,14 +404,22 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+
 .queue-list-item-index[index='1'] {
-  color: #ebc34c;
+  background-color: #ebc34c;
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 6px #ebc34c;
 }
 .queue-list-item-index[index='2'] {
-  color: #c0c0c0;
+  background-color: #c0c0c0;
+  color: white;
+  font-weight: bold;
 }
 .queue-list-item-index[index='3'] {
-  color: #b87333;
+  background-color: #b87333;
+  color: white;
+  font-weight: bold;
 }
 .queue-list-item-level {
   text-align: center;

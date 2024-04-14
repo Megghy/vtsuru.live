@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Setting_LiveRequest, SongRequestFrom, SongRequestInfo, SongRequestStatus } from '@/api/api-models'
+import {
+  QueueSortType,
+  Setting_LiveRequest,
+  SongRequestFrom,
+  SongRequestInfo,
+  SongRequestStatus,
+} from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { AVATAR_URL, SONG_REQUEST_API_URL } from '@/data/constants'
 import { useElementSize } from '@vueuse/core'
@@ -7,6 +13,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 import { NCard, NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
+import { List } from 'linqts'
 
 const props = defineProps<{
   id?: number
@@ -19,30 +26,45 @@ const currentId = computed(() => {
 })
 
 const listContainerRef = ref()
-const footerRef = ref()
-const footerListRef = ref()
 const { height, width } = useElementSize(listContainerRef)
-const footerSize = useElementSize(footerRef)
-const footerListSize = useElementSize(footerListRef)
 const itemHeight = 40
 
 const key = ref(Date.now())
 
 const originSongs = ref<SongRequestInfo[]>([])
 const songs = computed(() => {
+  let result = new List(originSongs.value)
+  switch (settings.value.sortType) {
+    case QueueSortType.TimeFirst: {
+      result = result.ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.GuardFirst: {
+      result = result.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.PaymentFist: {
+      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+    }
+  }
   if (settings.value.isReverse) {
     // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-    return originSongs.value.reverse()
+    return result.Reverse().ToArray()
   } else {
-    return originSongs.value
+    return result.ToArray()
   }
 })
+
+const isMoreThanContainer = computed(() => {
+  return songs.value.length * itemHeight > height.value
+})
+
 const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 const singing = computed(() => {
-  return originSongs.value.find((s) => s.status == SongRequestStatus.Singing)
+  return songs.value.find((s) => s.status == SongRequestStatus.Singing)
 })
 const activeSongs = computed(() => {
-  return originSongs.value.filter((s) => s.status == SongRequestStatus.Waiting)
+  return songs.value.filter((s) => s.status == SongRequestStatus.Waiting)
 })
 
 async function get() {
@@ -59,9 +81,6 @@ async function get() {
   } catch (err) {}
   return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
-const isMoreThanContainer = computed(() => {
-  return originSongs.value.length * itemHeight > height.value
-})
 const allowGuardTypes = computed(() => {
   const types = []
   if (settings.value.needTidu) {
@@ -89,6 +108,8 @@ async function update() {
     }
   }
 }
+
+const direction = ref<'normal' | 'reverse'>('normal')
 
 const visiable = ref(true)
 const active = ref(true)
@@ -138,17 +159,17 @@ onUnmounted(() => {
       <div v-else class="live-request-processing-empty">暂无</div>
       <div class="live-request-processing-suffix"></div>
     </div>
-    <div class="live-request-content" ref="listContainerRef">
+    <div class="live-request-content"  ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
         <Vue3Marquee
           class="live-request-list"
           :key="key"
           vertical
-          :pause="!isMoreThanContainer"
           :duration="20"
+          :pause="!isMoreThanContainer"
           :style="`height: ${height}px;width: ${width}px;`"
         >
-          <span
+          <div
             class="live-request-list-item"
             :from="song.from as number"
             :status="song.status as number"
@@ -172,7 +193,8 @@ onUnmounted(() => {
             >
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
-          </span>
+          </div>
+          <NDivider v-if="isMoreThanContainer" class="live-request-footer-divider" style="margin: 10px 0 10px 0" />
         </Vue3Marquee>
       </template>
       <div v-else style="position: relative; top: 20%">
@@ -184,8 +206,8 @@ onUnmounted(() => {
         :key="key"
         ref="footerListRef"
         class="live-request-footer-marquee"
-        :pause="footerSize.width < footerListSize.width"
-        :duration="20"
+        :duration="10"
+        animate-on-overflow-only
       >
         <span class="live-request-tag" type="prefix">
           <div class="live-request-tag-key">前缀</div>
@@ -216,8 +238,8 @@ onUnmounted(() => {
                 : '无需'
             }}
           </div>
-        </span></Vue3Marquee
-      >
+        </span>
+      </Vue3Marquee>
     </div>
   </div>
 </template>
@@ -417,6 +439,22 @@ onUnmounted(() => {
 }
 .live-request-tag-value {
   font-size: 14px;
+}
+.live-request-list-item-index[index='1'] {
+  background-color: #ebc34c;
+  color: white;
+  font-weight: bold;
+  text-shadow: 0 0 6px #ebc34c;
+}
+.live-request-list-item-index[index='2'] {
+  background-color: #c0c0c0;
+  color: white;
+  font-weight: bold;
+}
+.live-request-list-item-index[index='3'] {
+  background-color: #b87333;
+  color: white;
+  font-weight: bold;
 }
 @keyframes animated-border {
   0% {
