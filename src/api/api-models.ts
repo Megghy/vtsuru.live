@@ -113,6 +113,7 @@ export interface UserSetting {
 }
 export interface Setting_LiveRequest {
   orderPrefix: string
+  sortType?: QueueSortType
   enableOnStreaming: boolean
   onlyAllowSongList: boolean
   queueMaxSize: number
@@ -132,6 +133,14 @@ export interface Setting_LiveRequest {
   zongduCooldownSecond: number
   tiduCooldownSecond: number
   jianzhangCooldownSecond: number
+
+  allowGift: boolean
+  giftNames?: string[]
+  minGiftPrice?: number
+  giftFilterType: QueueGiftFilterType
+  allowIncreasePaymentBySendGift: boolean
+  allowIncreaseByAnyPayment: boolean
+  sendGiftIgnoreLimit: boolean
 
   showRequireInfo: boolean
   showUserName: boolean
@@ -160,6 +169,8 @@ export interface Setting_Queue {
   giftFilterType: QueueGiftFilterType
   allowIncreasePaymentBySendGift: boolean
   allowIncreaseByAnyPayment: boolean
+  sendGiftDirectJoin: boolean
+  sendGiftIgnoreLimit: boolean
 
   enableCooldown: boolean
   cooldownSecond: number
@@ -443,7 +454,7 @@ export interface SongRequestInfo {
   song?: SongsInfo
   status: SongRequestStatus
   from: SongRequestFrom
-  scPrice?: number
+  price?: number
   user?: DanmakuUserInfo
   createAt: number
   finishAt?: number
@@ -463,6 +474,7 @@ export enum SongRequestFrom {
   Danmaku,
   SC,
   Web,
+  Gift
 }
 export enum QueueFrom {
   Manual,

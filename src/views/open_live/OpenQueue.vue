@@ -23,6 +23,7 @@ import {
   Dismiss16Filled,
   PeopleQueue24Filled,
   PresenceBlocked16Regular,
+  Info24Filled,
 } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
@@ -97,6 +98,8 @@ const defaultSettings = {
   isReverse: false,
   showFanMadelInfo: true,
   showPayment: true,
+  sendGiftDirectJoin: true,
+  sendGiftIgnoreLimit: false,
 } as Setting_Queue
 const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -1071,7 +1074,7 @@ onUnmounted(() => {
                   @update:checked="updateSettings"
                   :disabled="!configCanEdit"
                 >
-                  只允许舰长
+                  允许舰长
                 </NCheckbox>
                 <NCheckbox
                   v-if="!settings.allowAllDanmaku"
@@ -1079,7 +1082,7 @@ onUnmounted(() => {
                   @update:checked="updateSettings"
                   :disabled="!configCanEdit"
                 >
-                  只允许提督
+                  允许提督
                 </NCheckbox>
                 <NCheckbox
                   v-if="!settings.allowAllDanmaku"
@@ -1087,7 +1090,7 @@ onUnmounted(() => {
                   @update:checked="updateSettings"
                   :disabled="!configCanEdit"
                 >
-                  只允许总督
+                  允许总督
                 </NCheckbox>
               </template>
             </NSpace>
@@ -1130,6 +1133,27 @@ onUnmounted(() => {
                     <NRadioButton :value="QueueGiftFilterType.Or"> 礼物名/价格 二选一 </NRadioButton>
                   </NRadioGroup>
                 </span>
+                <NCheckbox
+                  v-model:checked="settings.sendGiftDirectJoin"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  赠送礼物后自动加入队列
+                  <NTooltip>
+                    <template #trigger>
+                      <NIcon :component="Info24Filled" />
+                    </template>
+                    否则需要手动再发送一次排队的弹幕
+                  </NTooltip>
+                </NCheckbox>
+
+                <NCheckbox
+                  v-model:checked="settings.sendGiftIgnoreLimit"
+                  @update:checked="updateSettings"
+                  :disabled="!configCanEdit"
+                >
+                  赠送礼物后无视用户等级限制
+                </NCheckbox>
               </template>
               <NCheckbox
                 v-model:checked="settings.allowIncreasePaymentBySendGift"
