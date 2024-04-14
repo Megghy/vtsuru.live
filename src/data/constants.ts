@@ -48,6 +48,7 @@ export const VTSURU_API_URL = { toString: () => `${BASE_API_URL}vtsuru/` }
 export const POINT_API_URL = { toString: () => `${BASE_API_URL}point/` }
 export const BILI_AUTH_API_URL = { toString: () => `${BASE_API_URL}bili-auth/` }
 export const FORUM_API_URL = { toString: () => `${BASE_API_URL}forum/` }
+export const USER_INDEX_API_URL = { toString: () => `${BASE_API_URL}user-index/` }
 
 export const ScheduleTemplateMap = {
   '': {

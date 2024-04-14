@@ -6,10 +6,28 @@ import {
   downloadConfigDirect,
   useAccount,
 } from '@/api/account'
-import { FunctionTypes, ScheduleWeekInfo, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
+import {
+  FunctionTypes,
+  ResponseUserIndexModel,
+  ScheduleWeekInfo,
+  SongFrom,
+  SongLanguage,
+  SongRequestOption,
+  SongsInfo,
+  VideoCollectVideo,
+} from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import DynamicForm from '@/components/DynamicForm.vue'
+import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { TemplateConfig } from '@/data/VTsuruTypes'
-import { FETCH_API, IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/data/constants'
+import {
+  FETCH_API,
+  IndexTemplateMap,
+  ScheduleTemplateMap,
+  SongListTemplateMap,
+  USER_INDEX_API_URL,
+} from '@/data/constants'
+import { Delete24Regular } from '@vicons/fluent'
 import {
   NAlert,
   NButton,
@@ -18,15 +36,21 @@ import {
   NCheckboxGroup,
   NDivider,
   NEmpty,
+  NFlex,
+  NIcon,
+  NInput,
   NList,
   NListItem,
   NModal,
+  NPopconfirm,
   NSelect,
   NSpace,
   NSpin,
   NTabPane,
   NTabs,
+  NTag,
   NText,
+  NTooltip,
   SelectOption,
   useMessage,
 } from 'naive-ui'
@@ -225,6 +249,15 @@ const selectedTemplateConfig = computed(() => {
 
 const biliUserInfo = ref()
 const settingModalVisiable = ref(false)
+const showAddVideoModal = ref(false)
+const showAddLinkModal = ref(false)
+
+const indexDisplayInfo = ref<ResponseUserIndexModel>()
+const addVideoUrl = ref('')
+const isLoading = ref(false)
+const addLinkName = ref('')
+const addLinkUrl = ref('')
+const linkKey = ref(0)
 
 async function RequestBiliUserData() {
   await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=10021741`).then(async (respone) => {
@@ -303,6 +336,96 @@ async function SaveTemplateSetting() {
     await SaveComboSetting()
   }
 }
+async function updateIndexSettings() {
+  await QueryPostAPI(USER_INDEX_API_URL + 'update-setting', accountInfo.value.settings.index)
+    .then((data) => {
+      if (data.code == 200) {
+        message.success('已保存')
+      } else {
+        message.error('保存失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('保存失败: ' + err)
+    })
+}
+async function addVideo() {
+  if (!addVideoUrl.value) {
+    message.error('请输入视频链接')
+    return
+  }
+  isLoading.value = true
+  await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'add-video', {
+    video: addVideoUrl.value,
+  })
+    .then((data) => {
+      if (data.code == 200) {
+        message.success('已添加')
+        indexDisplayInfo.value?.videos.push(data.data)
+        accountInfo.value?.settings.index.videos.push(data.data.id)
+        addVideoUrl.value = ''
+      } else {
+        message.error('保存失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('保存失败: ' + err)
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
+}
+async function removeVideo(id: string) {
+  isLoading.value = true
+  await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'del-video', {
+    video: id,
+  })
+    .then((data) => {
+      if (data.code == 200) {
+        message.success('已删除')
+        if (indexDisplayInfo.value) {
+          indexDisplayInfo.value.videos = indexDisplayInfo.value?.videos.filter((v) => v.id != id)
+        }
+
+        accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v != id)
+      } else {
+        message.error('删除失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('删除失败: ' + err)
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
+}
+async function addLink() {
+  if (!addLinkName.value || !addLinkUrl.value) {
+    message.error('请输入名称和链接')
+    return
+  }
+  try {
+    new URL(addLinkUrl.value)
+  } catch (e) {
+    message.error('请输入正确的链接')
+    return
+  }
+  if (Object.keys(accountInfo.value.settings.index.links).includes(addLinkName.value)) {
+    message.error(addLinkName.value + '已存在')
+    return
+  }
+  accountInfo.value.settings.index.links[addLinkName.value] = addLinkUrl.value
+  await updateIndexSettings()
+  addLinkName.value = ''
+  addLinkUrl.value = ''
+  location.reload()
+}
+async function removeLink(name: string) {
+  delete accountInfo.value.settings.index.links[name]
+  await updateIndexSettings()
+
+  location.reload()
+}
 async function onOpenTemplateSettings() {
   settingModalVisiable.value = true
   nextTick(async () => {
@@ -354,6 +477,23 @@ function unblockUser(id: number) {
       message.error(err)
     })
 }
+async function getIndexInfo() {
+  try {
+    isLoading.value = true
+    const data = await QueryGetAPI<ResponseUserIndexModel>(USER_INDEX_API_URL + 'get', { id: accountInfo.value.id })
+    if (data.code == 200) {
+      return data.data
+    } else if (data.code != 404) {
+      message?.error('无法获取数据: ' + data.message)
+      return undefined
+    }
+  } catch (err) {
+    message?.error('无法获取数据: ' + err)
+    return undefined
+  } finally {
+    isLoading.value = false
+  }
+}
 
 onActivated(() => {
   if (route.query.tab) {
@@ -365,6 +505,10 @@ onActivated(() => {
 })
 onMounted(async () => {
   await RequestBiliUserData()
+  indexDisplayInfo.value = await getIndexInfo()
+  if (route.query.tab) {
+    message.info('已切换到指定面板, 在页面下方')
+  }
 })
 </script>
 
@@ -402,6 +546,57 @@ onMounted(async () => {
               允许未注册用户提问
             </NCheckbox>
           </NSpace>
+        </NTabPane>
+        <NTabPane tab="主页" name="index">
+          <NDivider> 通知 </NDivider>
+          <NInput v-model:value="accountInfo.settings.index.notification" type="textarea" />
+          <br /><br />
+          <NButton type="primary" @click="updateIndexSettings"> 保存 </NButton>
+          <NDivider> 展示视频 </NDivider>
+          <NButton type="primary" @click="showAddVideoModal = true"> 添加视频 </NButton>
+          <br /><br />
+          <NEmpty v-if="accountInfo.settings.index.videos.length == 0" />
+          <NFlex v-else>
+            <NCard v-for="item in indexDisplayInfo?.videos ?? []" :key="item.id" style="width: 300px">
+              <SimpleVideoCard :video="item" />
+              <template #footer>
+                <NButton type="warning" @click="removeVideo(item.id)"> 删除 </NButton>
+              </template>
+            </NCard>
+          </NFlex>
+          <NDivider> 其他链接 </NDivider>
+          <NButton type="primary" @click="showAddLinkModal = true"> 添加链接 </NButton>
+          <br /><br />
+          <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length == 0" />
+          <NFlex v-else :key="linkKey">
+            <NFlex v-for="item in Object.entries(indexDisplayInfo?.links ?? {})" :key="item[0]" align="center">
+              <NTooltip>
+                <template #trigger>
+                  <NTag :bordered="false" size="small" type="info">
+                    {{ item[0] }}
+                  </NTag>
+                </template>
+                {{ item[1] }}
+              </NTooltip>
+              <NPopconfirm @positive-click="removeLink(item[0])">
+                <template #trigger>
+                  <NButton type="error" text>
+                    <template #icon>
+                      <NIcon :component="Delete24Regular" />
+                    </template>
+                  </NButton>
+                </template>
+                确定要删除这个链接吗?
+              </NPopconfirm>
+            </NFlex>
+          </NFlex>
+          <NModal v-model:show="showAddLinkModal" :show-icon="false" preset="dialog" title="添加链接">
+            <NFlex vertical>
+              <NInput v-model:value="addLinkName" placeholder="链接名称" />
+              <NInput v-model:value="addLinkUrl" placeholder="链接地址" />
+              <NButton type="primary" @click="addLink"> 添加 </NButton>
+            </NFlex>
+          </NModal>
         </NTabPane>
         <NTabPane tab="黑名单" name="blacklist">
           <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
@@ -469,5 +664,16 @@ onMounted(async () => {
       :configData="selectedTemplateData.Config"
       :config="selectedTemplateConfig"
     />
+  </NModal>
+  <NModal
+    preset="card"
+    v-model:show="showAddVideoModal"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="添加视频"
+  >
+    <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
+    <NDivider />
+    <NButton type="primary" @click="addVideo" :loading="isLoading"> 添加视频 </NButton>
   </NModal>
 </template>
