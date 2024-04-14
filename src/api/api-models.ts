@@ -104,12 +104,20 @@ export interface UserSetting {
   queue: Setting_Queue
   point: Setting_Point
   questionDisplay: Setting_QuestionDisplay
+  index: Setting_Index
 
   enableFunctions: FunctionTypes[]
 
   indexTemplate: string | null
   songListTemplate: string | null
   scheduleTemplate: string | null
+}
+export interface Setting_Index {
+  videos: string[]
+  notification: string
+  links: {
+    [key: string]: string
+  }
 }
 export interface Setting_LiveRequest {
   orderPrefix: string
@@ -474,7 +482,7 @@ export enum SongRequestFrom {
   Danmaku,
   SC,
   Web,
-  Gift
+  Gift,
 }
 export enum QueueFrom {
   Manual,
@@ -715,4 +723,12 @@ export enum PointFrom {
   Danmaku,
   Manual,
   Use,
+}
+
+export interface ResponseUserIndexModel{
+  notification: string
+  videos: VideoCollectVideo[]
+  links: {
+    [key: string]: string
+  }
 }
