@@ -40,7 +40,9 @@ const songs = computed(() => {
       break
     }
     case QueueSortType.GuardFirst: {
-      result = result.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      result = result
+        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {

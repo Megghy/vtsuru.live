@@ -164,14 +164,15 @@ const songs = computed(() => {
       break
     }
     case QueueSortType.GuardFirst: {
-      result = result.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      result = result
+        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
       result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
     }
   }
-  console.log(settings.value.sortType)
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     return result.Reverse().ToArray()
   } else {
@@ -192,6 +193,27 @@ const historySongs = computed(() => {
       return song.status == SongRequestStatus.Finish || song.status == SongRequestStatus.Cancel
     })
 })
+
+function sortSongs(songs: SongRequestInfo[]) {
+  let result = new List(songs)
+  switch (settings.value.sortType) {
+    case QueueSortType.TimeFirst: {
+      result = result.ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.GuardFirst: {
+      result = result.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      break
+    }
+    case QueueSortType.PaymentFist: {
+      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+    }
+  }
+  if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
+    return result.Reverse().ToArray()
+  }
+  return result.ToArray()
+}
 
 const newSongName = ref('')
 const filterSongName = ref('')
@@ -837,7 +859,7 @@ onUnmounted(() => {
               <NInput placeholder="手动添加" v-model:value="newSongName" />
               <NButton type="primary" @click="addSongManual"> 添加 </NButton>
             </NInputGroup>
-            <!-- <NRadioGroup
+            <NRadioGroup
               v-model:value="settings.sortType"
               :disabled="!configCanEdit"
               @update:value="updateSettings"
@@ -846,7 +868,7 @@ onUnmounted(() => {
               <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
-            </NRadioGroup> -->
+            </NRadioGroup>
             <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
               倒序
             </NCheckbox>
