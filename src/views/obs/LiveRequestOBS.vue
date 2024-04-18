@@ -48,6 +48,9 @@ const songs = computed(() => {
     case QueueSortType.PaymentFist: {
       result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
     }
+    case QueueSortType.FansMedalFirst: {
+      result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+    }
   }
   if (settings.value.isReverse) {
     // eslint-disable-next-line vue/no-side-effects-in-computed-properties
@@ -161,7 +164,7 @@ onUnmounted(() => {
       <div v-else class="live-request-processing-empty">暂无</div>
       <div class="live-request-processing-suffix"></div>
     </div>
-    <div class="live-request-content"  ref="listContainerRef">
+    <div class="live-request-content" ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
         <Vue3Marquee
           class="live-request-list"

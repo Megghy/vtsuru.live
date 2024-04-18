@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { copyToClipboard, downloadImage } from '@/Utils'
-import { DisableFunction, EnableFunction, SaveAccountSettings, useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes, QAInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/data/constants'
@@ -117,18 +117,19 @@ function saveQRCode() {
   downloadImage(`https://api.qrserver.com/v1/create-qr-code/?data=${shareUrl.value}`, 'vtsuru-提问箱二维码.png')
 }
 async function saveSettings() {
-  try {
-    useQB.isLoading = true
-    const data = await SaveAccountSettings()
-    if (data.code == 200) {
-      message.success('保存成功')
-    } else {
-      message.error('保存失败: ' + data.message)
-    }
-  } catch (error) {
-    message.error('保存失败:' + error)
-  }
-  useQB.isLoading = false
+  useQB.isLoading = true
+  await SaveSetting('QuestionBox', accountInfo.value.settings.questionBox)
+    .then((msg) => {
+      if (msg) {
+        message.success('已保存')
+        return true
+      } else {
+        message.error('保存失败: ' + msg)
+      }
+    })
+    .finally(() => {
+      useQB.isLoading = false
+    })
 }
 
 const parentRef = ref<HTMLElement | null>(null)

@@ -48,7 +48,7 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
               isHaveNewVersion = true
               currentVersion = version.data
               localStorage.setItem('Version', currentVersion)
-
+              console.log('[vtsuru] 发现新版本: ' + currentVersion)
               const route = useRoute()
               if (!route.path.startsWith('/obs')) {
                 const n = notification.info({

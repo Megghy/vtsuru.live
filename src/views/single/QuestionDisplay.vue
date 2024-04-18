@@ -1,6 +1,6 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
+import { SaveSetting, useAccount } from '@/api/account'
 import { QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import QuestionItem from '@/components/QuestionItem.vue'
@@ -86,16 +86,14 @@ const setting = computed({
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(QUESTION_API_URL + 'update-setting', setting.value)
-      .then((data) => {
-        if (data.code == 200) {
-          //message.success('已保存')
+    await SaveSetting('QuestionDisplay', setting.value)
+      .then((msg) => {
+        if (msg) {
+          message.success('已保存')
+          return true
         } else {
-          message.error('保存失败: ' + data.message)
+          message.error('保存失败: ' + msg)
         }
-      })
-      .catch((err) => {
-        message.error('保存失败')
       })
       .finally(() => {
         isLoading.value = false

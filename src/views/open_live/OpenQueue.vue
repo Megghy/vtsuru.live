@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AddBiliBlackList, SaveEnableFunctions, useAccount } from '@/api/account'
+import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
   DanmakuUserInfo,
   EventDataTypes,
@@ -163,11 +163,16 @@ const queue = computed(() => {
       break
     }
     case QueueSortType.GuardFirst: {
-      list = list.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      list = list
+        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
+    }
+    case QueueSortType.FansMedalFirst: {
+      list = list.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
     }
   }
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
@@ -420,16 +425,14 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(QUEUE_API_URL + 'update-setting', settings.value)
-      .then((data) => {
-        if (data.code == 200) {
+    await SaveSetting('Queue', settings.value)
+      .then((msg) => {
+        if (msg) {
           message.success('已保存')
+          return true
         } else {
-          message.error('保存失败: ' + data.message)
+          message.error('保存失败: ' + msg)
         }
-      })
-      .catch((err) => {
-        message.error('保存失败')
       })
       .finally(() => {
         isLoading.value = false
@@ -832,6 +835,7 @@ onUnmounted(() => {
               <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
+              <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌等级优先 </NRadioButton>
             </NRadioGroup>
             <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
               倒序
