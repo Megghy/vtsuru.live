@@ -44,7 +44,7 @@ import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import QuestionItem from '@/components/QuestionItems.vue'
-import { ArrowCircleRight12Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
+import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled, } from '@vicons/fluent'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
@@ -218,13 +218,24 @@ onMounted(() => {
               </template>
               收藏
             </NButton>
+            <NPopconfirm @positive-click="useQB.DelQA(item.id)">
+              <template #trigger>
+                <NButton size="small" type="error">
+                  <template #icon>
+                    <NIcon :component="Delete24Filled"/>
+                  </template>
+                  删除
+                </NButton>
+              </template>
+              确认删除这条提问？
+            </NPopconfirm>
             <!-- <NTooltip>
                         <template #trigger>
                           <NButton size="small"> 举报 </NButton>
                         </template>
                         暂时还没写
                       </NTooltip> -->
-            <NButton size="small" @click="useQB.blacklist(item)"> 拉黑 </NButton>
+            <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
           </NSpace>
         </template>
         <template #header-extra="{ item }">

@@ -16,7 +16,7 @@ import {
   TextAlignLeft16Filled,
   TextAlignRight16Filled,
 } from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import { Heart, HeartOutline, Delete24Filled } from '@vicons/ionicons5'
 import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
 import {
   NButton,
@@ -33,6 +33,7 @@ import {
   NInputGroupLabel,
   NInputNumber,
   NModal,
+  NPopconfirm,
   NRadioButton,
   NRadioGroup,
   NScrollbar,

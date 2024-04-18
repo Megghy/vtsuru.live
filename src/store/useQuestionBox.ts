@@ -99,6 +99,22 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         isLoading.value = false
       })
   }
+  async function DelQA(id: number) {
+    await QueryGetAPI(QUESTION_API_URL + 'del', {
+      id: id,
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('删除成功')
+          recieveQuestions.value = recieveQuestions.value.filter((q) => q.id != id)
+        } else {
+          message.error(data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('发生错误: ' + err)
+      })
+  }
   async function GetTags() {
     isLoading.value = true
     await QueryGetAPI<QATagInfo[]>(QUESTION_API_URL + 'get-tags', {
@@ -296,8 +312,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         message.error('拉黑失败: ' + err)
       })
   }
-  async function setCurrentQuestion(item: QAInfo) {
-    const isCurrent = displayQuestion.value?.id == item.id
+  async function setCurrentQuestion(item: QAInfo | undefined) {
+    const isCurrent = displayQuestion.value?.id == item?.id
     if (!isCurrent) {
       displayQuestion.value = item
     } else {
@@ -306,7 +322,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const data = await QueryGetAPI(
         QUESTION_API_URL + 'set-current',
-        isCurrent
+        isCurrent || !item
           ? null
           : {
               id: item.id,
@@ -339,6 +355,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     displayTag,
     GetRecieveQAInfo,
     GetSendQAInfo,
+    DelQA,
     GetTags,
     addTag,
     delTag,
