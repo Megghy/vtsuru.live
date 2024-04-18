@@ -80,7 +80,7 @@ const debouncedInput = refDebounced(searchMusicKeyword, 500)
 
 const batchUpdate_Author = ref<string[]>([])
 const batchUpdate_Tag = ref<string[]>([])
-const batchUpdate_Language = ref<SongLanguage[]>([])
+const batchUpdate_Language = ref<string[]>([])
 const batchUpdate_Option = ref<SongRequestOption>()
 
 const playingSong = ref<SongsInfo>()
@@ -127,6 +127,18 @@ const songSelectOption = [
     value: SongLanguage.Other,
   },
 ]
+const languageSelectOption = computed(() => {
+  const languages = new Set<string>(songSelectOption.map((s) => s.label))
+  songsInternal.value.forEach((s) => {
+    if (s.language) {
+      s.language.forEach((l) => languages.add(l))
+    }
+  })
+  return [...languages].map((t) => ({
+    label: t,
+    value: t,
+  }))
+})
 const tagsSelectOption = computed(() => {
   return new List(songsInternal.value)
     .SelectMany((s) => new List(s?.tags))
@@ -204,14 +216,12 @@ function createColumns(): DataTableColumns<SongsInfo> {
       resizable: true,
       filterOptions: songSelectOption,
       filter(value, row) {
-        return (row.language?.findIndex((t) => t == (value.toString() as unknown as SongLanguage)) ?? -1) > -1
+        return (row.language?.findIndex((t) => t == value) ?? -1) > -1
       },
       render(data) {
         return (data.language?.length ?? 0) > 0
           ? h(NSpace, { size: 5 }, () =>
-              data.language?.map((a) =>
-                h(NTag, { bordered: false, size: 'small' }, () => songSelectOption.find((s) => s.value == a)?.label),
-              ),
+              data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)),
             )
           : null
       },
@@ -705,7 +715,15 @@ onMounted(() => {
         />
       </NFormItem>
       <NFormItem path="language" label="语言">
-        <NSelect v-model:value="updateSongModel.language" multiple :options="songSelectOption" placeholder="可选" />
+        <NSelect
+          v-model:value="updateSongModel.language"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption"
+        />
       </NFormItem>
       <NFormItem path="tags" label="标签">
         <NSelect
@@ -844,7 +862,15 @@ onMounted(() => {
         <NButton @click="batchUpdateTag" type="success"> 更新 </NButton>
       </NTabPane>
       <NTabPane name="language" tab="语言">
-        <NSelect v-model:value="batchUpdate_Language" multiple :options="songSelectOption" placeholder="选择" />
+        <NSelect
+          v-model:value="batchUpdate_Language"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption"
+        />
         <NDivider />
         <NButton @click="batchUpdateLanguage" type="success"> 更新 </NButton>
       </NTabPane>

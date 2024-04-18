@@ -276,7 +276,7 @@ export interface SongsInfo {
   author: string[]
   url: string
   from: SongFrom
-  language: SongLanguage[]
+  language: string[]
   description?: string
   tags?: string[]
   createTime: number

@@ -152,7 +152,18 @@ const songSelectOption = [
     value: SongLanguage.Other,
   },
 ]
-
+const languageSelectOption = computed(() => {
+  const languages = new Set<string>(songSelectOption.map((s) => s.label))
+  songs.value.forEach((s) => {
+    if (s.language) {
+      s.language.forEach((l) => languages.add(l))
+    }
+  })
+  return [...languages].map((t) => ({
+    label: t,
+    value: t,
+  }))
+})
 const uploadFiles = ref<UploadFileInfo[]>([])
 const uploadSongsFromFile = ref<SongsInfo[]>([])
 const uploadSongsOptions = computed(() => {
@@ -424,7 +435,7 @@ function exportData() {
       更新于: format(s.updateTime, 'yyyy-MM-dd HH:mm:ss'),
       描述: s.description,
       来自: from(s.from),
-      语言: s.language.map((l) => songSelectOption.find((o) => o.value == l)?.label).join(','),
+      语言: s.language.join(','),
       标签: s.tags?.join(',') ?? '',
       链接: s.url,
     })),
@@ -500,28 +511,12 @@ function parseExcelFile() {
             break
           case 'language':
           case '语言':
-            switch (value) {
-              case '中文':
-              case '汉语':
-                song.language = [SongLanguage.Chinese]
-                break
-              case '英文':
-              case '英语':
-                song.language = [SongLanguage.English]
-                break
-              case '日文':
-              case '日语':
-                song.language = [SongLanguage.Japanese]
-                break
-              case '法语':
-                song.language = [SongLanguage.French]
-                break
-              case '西语':
-                song.language = [SongLanguage.Spanish]
-                break
-              default:
-                song.language = [SongLanguage.Other]
-            }
+            song.language = value
+              ?.replace('／', '/')
+              .replace('，', ',')
+              .split(/\/|,/)
+              .map((a: string) => a.trim())
+              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
             break
           case 'tags':
           case 'tag':
@@ -643,9 +638,12 @@ onMounted(async () => {
               <NFormItem path="language" label="语言">
                 <NSelect
                   v-model:value="addSongModel.language"
+                  filterable
                   multiple
+                  clearable
+                  tag
+                  placeholder="可选，输入后按回车新增"
                   :options="songSelectOption"
-                  placeholder="可选"
                 />
               </NFormItem>
               <NFormItem path="tags" label="标签">
