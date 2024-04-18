@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
+import { SaveSetting, useAccount } from '@/api/account'
 import { EventDataTypes, SettingPointGiftAllowType, Setting_Point } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
@@ -68,12 +68,12 @@ async function updateSettings() {
     isLoading.value = true
     setting.value.giftPercentMap ??= {}
     try {
-      const data = await QueryPostAPI(POINT_API_URL + 'update-setting', setting.value)
-      if (data.code == 200) {
+      const msg = await SaveSetting('Point', setting.value)
+      if (msg) {
         message.success('已保存')
         return true
       } else {
-        message.error('保存失败: ' + data.message)
+        message.error('保存失败: ' + msg)
       }
     } catch (err) {
       message.error('保存失败: ' + err)

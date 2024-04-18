@@ -53,11 +53,14 @@ const activeItems = computed(() => {
       break
     }
     case QueueSortType.GuardFirst: {
-      list = list.OrderBy((q) => q.user?.guard_level).ThenBy((q) => q.createAt)
+      list = list.OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level)).ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
       list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
+    }
+    case QueueSortType.FansMedalFirst: {
+      list = list.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
     }
   }
   if (settings.value.isReverse) {

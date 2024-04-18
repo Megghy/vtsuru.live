@@ -242,6 +242,7 @@ export enum QueueSortType {
   GuardFirst,
   PaymentFist,
   TimeFirst,
+  FansMedalFirst
 }
 
 export enum QueueGiftFilterType {

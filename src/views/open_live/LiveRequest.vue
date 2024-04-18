@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AddBiliBlackList, SaveEnableFunctions, useAccount } from '@/api/account'
+import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
   DanmakuUserInfo,
   EventDataTypes,
@@ -171,6 +171,9 @@ const songs = computed(() => {
     }
     case QueueSortType.PaymentFist: {
       result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+    }
+    case QueueSortType.FansMedalFirst: {
+      result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
     }
   }
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
@@ -438,16 +441,14 @@ async function onUpdateFunctionEnable() {
 async function updateSettings() {
   if (accountInfo.value) {
     isLoading.value = true
-    await QueryPostAPI(SONG_REQUEST_API_URL + 'update-setting', settings.value)
-      .then((data) => {
-        if (data.code == 200) {
-          //message.success('已保存')
+    await SaveSetting('SongRequest', settings.value)
+      .then((msg) => {
+        if (msg) {
+          message.success('已保存')
+          return true
         } else {
-          message.error('保存失败: ' + data.message)
+          message.error('保存失败: ' + msg)
         }
-      })
-      .catch((err) => {
-        message.error('保存失败')
       })
       .finally(() => {
         isLoading.value = false
@@ -868,6 +869,7 @@ onUnmounted(() => {
               <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
+              <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌等级优先 </NRadioButton>
             </NRadioGroup>
             <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
               倒序

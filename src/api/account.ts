@@ -1,4 +1,4 @@
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { ACCOUNT_API_URL, VTSURU_API_URL } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
 import { isSameDay } from 'date-fns'
@@ -62,6 +62,19 @@ export async function SaveAccountSettings() {
 }
 export async function SaveEnableFunctions(functions: FunctionTypes[]) {
   return await QueryPostAPI(ACCOUNT_API_URL + 'update-enable-functions', functions)
+}
+export async function SaveSetting(
+  name: 'Queue' | 'Point' | 'Index' | 'General' | 'QuestionDisplay' | 'SongRequest' | 'QuestionBox' | 'SendEmail',
+  setting: unknown,
+) {
+  const result = await QueryPostAPIWithParams(
+    ACCOUNT_API_URL + 'update-single-setting',
+    {
+      name,
+    },
+    setting,
+  )
+  return result.message
 }
 export async function UpdateFunctionEnable(func: FunctionTypes) {
   if (ACCOUNT.value) {
