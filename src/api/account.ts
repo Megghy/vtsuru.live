@@ -18,7 +18,12 @@ export async function GetSelfAccount() {
   if (cookie.value) {
     const result = await Self()
     if (result.code == 200) {
-      ACCOUNT.value = result.data
+      if (!ACCOUNT.value) {
+        ACCOUNT.value = result.data
+      } else {
+        result.data.settings = ACCOUNT.value.settings
+        ACCOUNT.value = result.data
+      }
       isLoadingAccount.value = false
       //console.log('[vtsuru] 已获取账户信息')
       if (!isSameDay(new Date(), cookieRefreshDate.value)) {
