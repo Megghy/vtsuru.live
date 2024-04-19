@@ -18,7 +18,7 @@ export async function GetSelfAccount() {
   if (cookie.value) {
     const result = await Self()
     if (result.code == 200) {
-      if (!ACCOUNT.value) {
+      if (!ACCOUNT.value.id) {
         ACCOUNT.value = result.data
       } else {
         result.data.settings = ACCOUNT.value.settings
