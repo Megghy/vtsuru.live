@@ -46,11 +46,12 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
           QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version').then((keepCheckData) => {
             if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
               isHaveNewVersion = true
-              currentVersion = version.data
+              currentVersion = keepCheckData.data
               localStorage.setItem('Version', currentVersion)
               console.log('[vtsuru] 发现新版本: ' + currentVersion)
-              const route = useRoute()
-              if (!route.path.startsWith('/obs')) {
+
+              //@ts-expect-error 这里获取不了
+              if (!window.obsstudio) {
                 const n = notification.info({
                   title: '发现新的版本更新',
                   content: '是否现在刷新?',
