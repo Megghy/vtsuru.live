@@ -180,7 +180,7 @@ const queue = computed(() => {
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     list = list.Reverse()
   }
-  list = list.ThenByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
+  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
 const historySongs = computed(() => {
