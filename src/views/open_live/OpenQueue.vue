@@ -156,10 +156,10 @@ const queue = computed(() => {
           : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
     )
     .Where((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
-    .OrderByDescending((q) => q.from == QueueFrom.Manual)
+    //.OrderByDescending((q) => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      list = list.ThenBy((q) => q.createAt)
+      list = list.OrderBy((q) => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
@@ -169,16 +169,18 @@ const queue = computed(() => {
       break
     }
     case QueueSortType.PaymentFist: {
-      list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
+      list = list.OrderByDescending((q) => q.giftPrice).ThenBy((q) => q.createAt)
+      break
     }
     case QueueSortType.FansMedalFirst: {
-      list = list.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      list = list.OrderByDescending(q => q.user?.fans_medal_wearing_status ? 1 : 0).ThenByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      break
     }
   }
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
     list = list.Reverse()
   }
-  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
+  list = list.ThenByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
 const historySongs = computed(() => {
@@ -267,6 +269,7 @@ async function add(danmaku: EventModel) {
       user: {
         name: danmaku.name,
         uid: danmaku.uid,
+        oid: danmaku.open_id,
         fans_medal_level: danmaku.fans_medal_level,
         fans_medal_name: danmaku.fans_medal_name,
         fans_medal_wearing_status: danmaku.fans_medal_wearing_status,

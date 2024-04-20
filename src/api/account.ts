@@ -9,6 +9,7 @@ import { useRoute } from 'vue-router'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
+const route = useRoute()
 
 const { message } = createDiscreteApi(['message'])
 const cookie = useLocalStorage('JWT_Token', '')
@@ -46,7 +47,6 @@ export async function GetSelfAccount() {
 }
 export function UpdateAccountLoop() {
   setInterval(() => {
-    const route = useRoute()
     if (ACCOUNT.value && route?.name != 'question-display') {
       // 防止在问题详情页刷新
       GetSelfAccount()
