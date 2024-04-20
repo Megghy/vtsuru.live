@@ -9,7 +9,6 @@ import { GetSelfAccount, UpdateAccountLoop, useAccount } from './api/account'
 import { GetNotifactions } from './data/notifactions'
 import router from './router'
 import { useAuthStore } from './store/useAuthStore'
-import { useRoute } from 'vue-router'
 
 const pinia = createPinia()
 
@@ -50,8 +49,10 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
               localStorage.setItem('Version', currentVersion)
               console.log('[vtsuru] 发现新版本: ' + currentVersion)
 
-              //@ts-expect-error 这里获取不了
-              if (!window.obsstudio) {
+              const url = new URL(window.location.href)
+              const path = url.pathname
+
+              if (!path.startsWith('/obs')) {
                 const n = notification.info({
                   title: '发现新的版本更新',
                   content: '是否现在刷新?',
