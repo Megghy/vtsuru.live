@@ -196,7 +196,7 @@ onMounted(async () => {
       立即认证
     </NButton>
   </NAlert>
-  <NCard v-else style="max-width: 600px" embedded hoverable>
+  <NCard v-else style="max-width: 600px; margin: 0 auto;" embedded hoverable>
     <template #header> 你好, {{ useAuth.biliAuth.name }} </template>
     <template #header-extra>
       <NFlex>
@@ -209,41 +209,44 @@ onMounted(async () => {
   <NDivider />
   <NSpin :show="isLoading">
     <NEmpty v-if="goods.length == 0"> 暂无礼物 </NEmpty>
-    <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" x-gap="12" y-gap="8">
-      <NGridItem v-for="item in goods" :key="item.id">
-        <PointGoodsItem :goods="item">
-          <template #footer>
-            <NFlex justify="space-between" align="center">
+    <NFlex justify="center">
+      <PointGoodsItem v-for="item in goods" :key="item.id" :goods="item" content-style="max-width: 300px;height: 365px">
+        <template #footer>
+          <NFlex justify="space-between" align="center">
+            <NTooltip>
+              <template #trigger>
+                <NButton
+                  :disabled="getTooltip(item) != '开始兑换'"
+                  size="small"
+                  type="primary"
+                  @click="onBuyClick(item)"
+                  >兑换</NButton
+                >
+              </template>
+              {{ getTooltip(item) }}
+            </NTooltip>
+            <NFlex style="flex: 1" justify="end">
               <NTooltip>
                 <template #trigger>
-                  <NButton
-                    :disabled="getTooltip(item) != '开始兑换'"
-                    size="small"
-                    type="primary"
-                    @click="onBuyClick(item)"
-                    >兑换</NButton
-                  >
+                  <NText style="size: 34px" :delete="item.canFreeBuy">
+                    🪙
+                    {{ item.price }}
+                  </NText>
                 </template>
-                {{ getTooltip(item) }}
+                {{ item.canFreeBuy ? '你可以免费兑换此礼物' : '付费' }}
               </NTooltip>
-              <NFlex style="flex: 1" justify="end">
-                <NText style="size: 34px">
-                  🪙
-                  {{ item.price }}
-                </NText>
-              </NFlex>
             </NFlex>
-          </template>
-        </PointGoodsItem>
-      </NGridItem>
-    </NGrid>
+          </NFlex>
+        </template>
+      </PointGoodsItem>
+    </NFlex>
   </NSpin>
   <NModal
     v-model:show="showBuyModal"
     v-if="currentGoods"
     preset="card"
     title="确认兑换"
-    style="width: 400px; max-width: 90vw; height: auto"
+    style="width: 500px; max-width: 90vw; height: auto"
   >
     <template #header>
       <NFlex align="baseline">
@@ -295,6 +298,7 @@ onMounted(async () => {
     </NDivider>
     <NButton type="primary" :disabled="!canDoBuy" @click="buyGoods" :loading="isLoading"> 确认兑换 </NButton>
     <NText>
+      <NDivider vertical />
       所需积分: {{ currentGoods.price * buyCount }}
       <NDivider vertical />
       当前积分: {{ currentPoint }}

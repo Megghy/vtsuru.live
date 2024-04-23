@@ -70,6 +70,7 @@ const defaultGoodsModel = {
     status: GoodsStatus.Normal,
     maxBuyCount: 1,
     isAllowRebuy: false,
+    setting: {},
   } as PointGoodsModel,
   fileList: [],
 } as { goods: PointGoodsModel; fileList: UploadFileInfo[] }
@@ -81,6 +82,24 @@ const showAddGoodsModal = ref(false)
 
 const isAllowedPrivacyPolicy = ref(false)
 const isUpdating = ref(false)
+
+const allowedYearOptions = computed(() => {
+  //从2024到现在的年份
+  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => {
+    return {
+      label: item.toString() + '年',
+      value: item,
+    }
+  })
+})
+const allowedMonthOptions = computed(() => {
+  return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => {
+    return {
+      label: item.toString() + '月',
+      value: item + 1,
+    }
+  })
+})
 
 const rules = {
   name: {
@@ -197,13 +216,12 @@ async function updateGoods(e: MouseEvent) {
       if (currentGoodsModel.value.fileList.length > 0) {
         currentGoodsModel.value.goods.cover = await getImageUploadModel(currentGoodsModel.value.fileList)
       }
-      console.log(currentGoodsModel.value.goods)
       await QueryPostAPI<ResponsePointGoodModel>(POINT_API_URL + 'update-goods', currentGoodsModel.value.goods)
         .then((data) => {
           if (data.code == 200) {
             message.success('成功')
             showAddGoodsModal.value = false
-            currentGoodsModel.value.goods = {} as PointGoodsModel
+            currentGoodsModel.value = JSON.parse(JSON.stringify(defaultGoodsModel))
             if (goods.value.find((g) => g.id == data.data.id)) {
               goods.value[goods.value.findIndex((g) => g.id == data.data.id)] = data.data
             } else {
@@ -494,6 +512,59 @@ onMounted(() => {})
           >
             + {{ currentGoodsModel.goods.cover ? '更换' : '上传' }}封面
           </NUpload>
+        </NFormItem>
+        <NFormItem path="goods.guardFree" label="兑换规则">
+          <NFlex vertical>
+            <NCheckbox
+              :checked="currentGoodsModel.goods.setting?.guardFree != undefined"
+              @update:checked="
+                (v) => {
+                  // @ts-ignore
+                  currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
+                }
+              "
+            >
+              允许舰长免费兑换
+              <NTooltip>
+                <template #trigger>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                仅当
+                <NButton type="info" text tag="a" href="/manage/event" target="_blank">舰长和SC</NButton>
+                中存在对应记录时才能生效
+              </NTooltip>
+            </NCheckbox>
+            <NFlex v-if="currentGoodsModel.goods.setting?.guardFree">
+              <NSelect
+                v-model:value="currentGoodsModel.goods.setting.guardFree.year"
+                :options="allowedYearOptions"
+                placeholder="请选择年份"
+              />
+              <NSelect
+                v-model:value="currentGoodsModel.goods.setting.guardFree.month"
+                :options="allowedMonthOptions"
+                placeholder="请选择月份"
+              />
+            </NFlex>
+            <NText>
+              最低兑换等级
+              <NTooltip>
+                <template #trigger>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                仅当
+                <NButton type="info" text tag="a" href="/manage/event" target="_blank">舰长和SC</NButton>
+                中存在对应记录时才能生效
+              </NTooltip>
+            </NText>
+
+            <NRadioGroup v-model:value="currentGoodsModel.goods.setting.allowGuardLevel">
+              <NRadioButton :value="0">不限</NRadioButton>
+              <NRadioButton :value="1">总督</NRadioButton>
+              <NRadioButton :value="2">提督</NRadioButton>
+              <NRadioButton :value="3">舰长</NRadioButton>
+            </NRadioGroup>
+          </NFlex>
         </NFormItem>
         <NFormItem path="goods.type" label="类型">
           <NRadioGroup v-model:value="currentGoodsModel.goods.type">

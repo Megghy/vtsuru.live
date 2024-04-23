@@ -305,7 +305,7 @@ onMounted(async () => {
   <NModal
     v-model:show="showModal"
     preset="card"
-    style="max-width: 1800px; min-width: 400px"
+    style="max-width: 90vw; min-width: 400px; width: 1600px;"
     title="用户详情"
     content-style="padding: 0"
   >
