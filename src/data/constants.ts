@@ -1,7 +1,8 @@
 import DefaultIndexTemplateVue from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
 import { defineAsyncComponent, ref } from 'vue'
 
-const debugAPI = import.meta.env.VITE_DEBUG_API
+const debugAPI =
+  import.meta.env.VITE_API == 'dev' ? import.meta.env.VITE_DEBUG_DEV_API : import.meta.env.VITE_DEBUG_RELEASE_API
 const releseAPI = `https://vtsuru.suki.club/`
 const failoverAPI = `https://failover-api.vtsuru.suki.club/`
 

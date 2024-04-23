@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { GoodsTypes, ResponsePointGoodModel } from '@/api/api-models'
 import { FILE_BASE_URL, IMGUR_URL } from '@/data/constants'
-import { NCard, NEllipsis, NEmpty, NFlex, NImage, NTag, NText } from 'naive-ui'
+import { NAlert, NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui'
+import { VehicleShip20Filled } from '@vicons/fluent'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
+  contentStyle?: string | undefined
 }>()
 const emptyCover = IMGUR_URL + 'None.png'
 </script>
 
 <template>
   <NEmpty v-if="!goods" description="已失效" />
-  <NCard v-else embedded>
+  <NCard v-else embedded :style="props.contentStyle">
     <template #cover>
       <NImage
         :src="goods.cover ? FILE_BASE_URL + goods.cover : emptyCover"
@@ -44,10 +46,18 @@ const emptyCover = IMGUR_URL + 'None.png'
       </NFlex>
     </template>
     <NFlex vertical>
-      <NText :depth="goods.description ? 1 : 3" :italic="!goods.description">
-        {{ goods.description ? goods.description : '暂无描述' }}
-      </NText>
+      <NEllipsis :line-clamp="2">
+        <NText :depth="goods.description ? 1 : 3" :italic="!goods.description">
+          {{ goods.description ? goods.description : '暂无描述' }}
+        </NText>
+      </NEllipsis>
       <NFlex>
+        <NTag v-if="goods.allowGuardLevel > 0"  size="tiny" :color="{ color: '#5f5f5f', textColor: 'gold' }">
+          <template #icon>
+            <NIcon :component="VehicleShip20Filled" />
+          </template>
+          仅限舰长
+        </NTag>
         <NTag v-for="tag in goods.tags" :key="tag" :bordered="false" size="tiny">{{ tag }}</NTag>
       </NFlex>
     </NFlex>

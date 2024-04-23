@@ -48,6 +48,12 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
             <NTimelineItem
               type="info"
               title="功能更新"
+              content="礼物兑换允许上舰用户免费兑换, 以及仅允许上舰用户兑换"
+              time="2024-4-23"
+            />
+            <NTimelineItem
+              type="info"
+              title="功能更新"
               content="积分订单添加导出功能, 允许删除积分用户"
               time="2024-3-22"
             />

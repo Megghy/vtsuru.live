@@ -15,6 +15,12 @@ export enum IndexTypes {
 export enum SongListTypes {
   Default,
 }
+export enum GuardLevel {
+  None = 0,
+  Zongdu = 1,
+  Tidu = 2,
+  Jianzhang = 3,
+}
 export interface UserBasicInfo {
   name: string
   id: number
@@ -242,7 +248,7 @@ export enum QueueSortType {
   GuardFirst,
   PaymentFist,
   TimeFirst,
-  FansMedalFirst
+  FansMedalFirst,
 }
 
 export enum QueueGiftFilterType {
@@ -604,6 +610,10 @@ export enum GoodsTypes {
   Physical,
   Virtual,
 }
+export interface PointGoodsSetting {
+  guardFree?: { year: number; month: number }
+  allowGuardLevel?: GuardLevel
+}
 export interface ResponsePointGoodModel {
   id: number
   name: string
@@ -620,6 +630,10 @@ export interface ResponsePointGoodModel {
   maxBuyCount?: number
   collectUrl?: string
   embedCollectUrl?: boolean
+
+  canFreeBuy: boolean
+  allowGuardLevel: GuardLevel
+  setting: PointGoodsSetting
 }
 export interface ImageUploadModel {
   existImages: string[]
@@ -640,6 +654,8 @@ export interface PointGoodsModel {
   content?: string
   isAllowRebuy: boolean
   maxBuyCount?: number
+
+  setting: PointGoodsSetting
 }
 export interface AddressInfo {
   id?: string
@@ -727,7 +743,7 @@ export enum PointFrom {
   Use,
 }
 
-export interface ResponseUserIndexModel{
+export interface ResponseUserIndexModel {
   notification: string
   videos: VideoCollectVideo[]
   links: {
