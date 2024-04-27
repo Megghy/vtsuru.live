@@ -140,6 +140,11 @@ export async function DelBiliBlackList(id: number): Promise<APIRoot<unknown>> {
     id: id,
   })
 }
+export async function DelBlackList(id: number): Promise<APIRoot<unknown>> {
+  return QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}black-list/del`, {
+    id: id,
+  })
+}
 export function downloadConfigDirect(name: string) {
   return QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
     name: name,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   DelBiliBlackList,
+  DelBlackList,
   SaveAccountSettings,
   SaveEnableFunctions,
   downloadConfigDirect,
@@ -461,13 +462,29 @@ const buttonGroup = computed(() => {
   ])
 })
 
-function unblockUser(id: number) {
+function unblockBiliUser(id: number) {
   DelBiliBlackList(id)
     .then((data) => {
       if (data.code == 200) {
         message.success(`[${id}] 已移除黑名单`)
         if (accountInfo.value) {
           delete accountInfo.value.biliBlackList[id]
+        }
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      message.error(err)
+    })
+}
+function unblockUser(id: number) {
+  DelBlackList(id)
+    .then((data) => {
+      if (data.code == 200) {
+        message.success(`[${id}] 已移除黑名单`)
+        if (accountInfo.value) {
+          accountInfo.value.blackList = accountInfo.value.blackList.filter((u) => u.id != id)
         }
       } else {
         message.error(data.message)
@@ -608,7 +625,20 @@ onMounted(async () => {
                 <NText depth="3">
                   {{ item[0] }}
                 </NText>
-                <NButton type="error" @click="unblockUser(Number(item[0]))" size="small"> 移除 </NButton>
+                <NButton type="error" @click="unblockBiliUser(Number(item[0]))" size="small"> 移除 </NButton>
+              </NSpace>
+            </NListItem>
+          </NList>
+          <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
+            <NListItem v-for="item in accountInfo.blackList" :key="item.id">
+              <NSpace align="center">
+                <NText>
+                  {{ item.name }}
+                </NText>
+                <NText depth="3">
+                  {{ item.id }}
+                </NText>
+                <NButton type="error" @click="unblockUser(Number(item.id))" size="small"> 移除 </NButton>
               </NSpace>
             </NListItem>
           </NList>
