@@ -106,7 +106,7 @@ onMounted(async () => {
 
 <template>
   <NSpin :show="isLoading">
-    <NEmpty v-if="filteredOrders.length == 0" description="暂无订单"></NEmpty>
+    <NEmpty v-if="orders.length == 0" description="暂无订单"></NEmpty>
     <template v-else>
       <br />
       <NFlex>

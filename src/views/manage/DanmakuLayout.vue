@@ -13,8 +13,32 @@ const message = useMessage()
 
 const client = new DanmakuClient(null)
 const isClientLoading = ref(true)
+let bc: BroadcastChannel
 
 onMounted(async () => {
+  if (window.BroadcastChannel) {
+    bc = new BroadcastChannel('vtsuru.danmaku')
+    let isCreated = false
+    bc.onmessage = (event) => {
+      switch (event.data) {
+        case 'ping':
+          bc.postMessage('pong')
+          break
+        case 'pong': //已存在其他客户端
+          if (!isCreated) {
+            isCreated = true
+          }
+          break
+        case 'danmaku':
+          props.component.props?.onDanmaku?.(event.type)
+          break
+      }
+    }
+    bc.postMessage('ping')
+    setTimeout(() => {
+      
+    }, 50);
+  }
   const result = await client.Start()
   if (!result.success) {
     message.error('无法启动弹幕客户端: ' + result.message)
