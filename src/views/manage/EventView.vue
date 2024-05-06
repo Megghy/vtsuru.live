@@ -48,6 +48,7 @@ interface EventModel {
   time: number
   num: number
   price: number
+  uface: string
 }
 
 const accountInfo = useAccount()
@@ -241,7 +242,7 @@ function objectsToCSV(arr: any[]) {
                       lazy
                       borderd
                       :size="64"
-                      :src="AVATAR_URL + item.uid"
+                      :src="item.uid ? AVATAR_URL + item.uid : item.uface"
                       :img-props="{ referrerpolicy: 'no-referrer' }"
                       style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
                     />
