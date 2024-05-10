@@ -318,7 +318,7 @@ onMounted(async () => {
       </NDivider>
       <NFlex align="center" justify="center">
         <NPagination
-          v-if="comments && (comments?.data.length ?? 0) > 0"
+          v-if="comments && (comments?.data?.length ?? 0) > 0"
           v-model:page="pn"
           :item-count="comments?.data.length ?? 0"
           :page-size="ps"
@@ -327,14 +327,14 @@ onMounted(async () => {
         />
       </NFlex>
       <br />
-      <NEmpty v-if="!comments || comments.data.length === 0" description="暂无评论" />
+      <NEmpty v-if="!comments || !comments.data || comments.data.length === 0" description="暂无评论" />
       <NList v-else hoverable bordered size="small">
         <NListItem v-for="item in comments.data" :key="item.id">
           <ForumCommentItem :item="item" :topic="topic" @delete="onDeleteComment" />
         </NListItem>
       </NList>
       <br />
-      <NFlex v-if="(comments?.data.length ?? 0) > 5" align="center" justify="center">
+      <NFlex v-if="(comments?.data?.length ?? 0) > 5" align="center" justify="center">
         <NPagination
           v-if="comments && (comments?.data.length ?? 0) > 0"
           v-model:page="pn"
