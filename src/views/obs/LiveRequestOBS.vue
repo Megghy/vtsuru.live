@@ -155,7 +155,7 @@ onUnmounted(() => {
       <template v-if="singing">
         <img
           class="live-request-processing-avatar"
-          :src="AVATAR_URL + singing?.user?.uid"
+          :src="singing?.user?.face"
           referrerpolicy="no-referrer"
         />
         <p class="live-request-processing-song-name">{{ singing?.songName }}</p>

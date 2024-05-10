@@ -479,6 +479,7 @@ export interface DanmakuUserInfo {
   name: string
   uid: number
   oid: string
+  face: string
   guard_level: number
   fans_medal_level: number
   fans_medal_name: string
