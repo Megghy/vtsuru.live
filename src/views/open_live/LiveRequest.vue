@@ -288,6 +288,7 @@ async function addSong(danmaku: EventModel) {
         name: danmaku.name,
         uid: danmaku.uid,
         oid: danmaku.open_id,
+        face: danmaku.uface,
         fans_medal_level: danmaku.fans_medal_level,
         fans_medal_name: danmaku.fans_medal_name,
         fans_medal_wearing_status: danmaku.fans_medal_wearing_status,

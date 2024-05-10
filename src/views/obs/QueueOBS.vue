@@ -148,7 +148,7 @@ onUnmounted(() => {
     >
       <div class="queue-singing-prefix"></div>
       <template v-if="progressing">
-        <img class="queue-singing-avatar" :src="AVATAR_URL + progressing?.user?.uid" referrerpolicy="no-referrer" />
+        <img class="queue-singing-avatar" :src="progressing?.user?.face" referrerpolicy="no-referrer" />
         <p class="queue-singing-name">{{ progressing?.user?.name }}</p>
       </template>
       <div v-else class="queue-singing-empty">等待中</div>
