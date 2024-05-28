@@ -49,23 +49,28 @@ const activeItems = computed(() => {
     .OrderByDescending((q) => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      list = list.ThenBy((q) => q.createAt)
+      list = list.OrderBy((q) => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
-      list = list.OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level)).ThenBy((q) => q.createAt)
+      list = list
+        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy((q) => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
-      list = list.OrderByDescending((q) => q.giftPrice ?? 0).ThenBy((q) => q.createAt)
+      list = list.OrderByDescending((q) => q.giftPrice).ThenBy((q) => q.createAt)
+      break
     }
     case QueueSortType.FansMedalFirst: {
-      list = list.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      list = list.OrderByDescending(q => q.user?.fans_medal_wearing_status ? 1 : 0).ThenByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      break
     }
   }
   if (settings.value.isReverse) {
     list = list.Reverse()
   }
+  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
 
