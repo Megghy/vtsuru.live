@@ -99,6 +99,30 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
     key: 'id',
   },
   {
+    title: '用户',
+    key: 'user',
+    disabled: () => props.type == 'user',
+    render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
+      return row.instanceOf == 'user'
+        ? ''
+        : h(NTooltip, null, {
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  text: true,
+                  type: 'primary',
+                  tag: 'a',
+                  href: 'https://space.bilibili.com/' + row.customer.userId + '',
+                  target: '_blank',
+                },
+                { default: () => row.customer.name },
+              ),
+            default: () => row.customer.userId,
+          })
+    },
+  },
+  {
     title: '礼物名',
     key: 'giftName',
     render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {

@@ -8,12 +8,14 @@ import { objectsToCSV } from '@/Utils'
 import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
+import { List } from 'linqts'
 import { NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 type OrderFilterSettings = {
   type?: GoodsTypes
   status?: PointOrderStatus
+  customer?: number
   onlyRequireShippingInfo: boolean
 }
 
@@ -34,6 +36,7 @@ const filteredOrders = computed(() => {
     if (filterSettings.value.type != undefined && o.type !== filterSettings.value.type) return false
     if (filterSettings.value.status != undefined && o.status !== filterSettings.value.status) return false
     if (filterSettings.value.onlyRequireShippingInfo && o.trackingNumber) return false
+    if (filterSettings.value.customer && o.customer.userId != filterSettings.value.customer) return false
     return true
   })
 })
@@ -139,6 +142,19 @@ onMounted(async () => {
               { label: '已发货', value: PointOrderStatus.Shipped },
             ]"
             placeholder="订单状态"
+            clearable
+            style="width: 150px"
+          />
+
+          <NSelect
+            v-model:value="filterSettings.customer"
+            :options="
+              new List(orders)
+                .DistinctBy((s) => s.customer.userId)
+                .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
+                .ToArray()
+            "
+            placeholder="用户"
             clearable
             style="width: 150px"
           />
