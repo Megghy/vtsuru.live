@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType, BiliAuthModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
@@ -169,6 +169,25 @@ async function resetName() {
     })
     .catch((err) => {
       message.error('发生错误')
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
+}
+async function resetToken() {
+  isLoading.value = true
+  await QueryPostAPI<string>(ACCOUNT_API_URL + 'reset-token')
+    .then(async (data) => {
+      if (data.code == 200) {
+        message.success('已重新生成 Token')
+
+        accountInfo.value.token = data.data
+      } else {
+        message.error(data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('发生错误: ' + err)
     })
     .finally(() => {
       isLoading.value = false
@@ -394,7 +413,8 @@ onUnmounted(() => {
                 <template #trigger>
                   <NIcon :component="Info24Filled" />
                 </template>
-                用于进行积分兑换等操作, 如果你是主播可以不用管, 并且即使不绑定也可以直接用认证完成给出的链接查看和使用积分
+                用于进行积分兑换等操作, 如果你是主播可以不用管,
+                并且即使不绑定也可以直接用认证完成给出的链接查看和使用积分
               </NTooltip>
             </NTag>
             <NDivider vertical />
@@ -404,7 +424,15 @@ onUnmounted(() => {
         <EventFetcherStatusCard />
         <NAlert title="Token" type="info">
           请注意保管, 这个东西可以完全操作你的账号
-          <NInput type="password" :value="accountInfo?.token" show-password-on="click" status="error" />
+          <NInputGroup>
+            <NInput type="password" :value="accountInfo?.token" show-password-on="click" status="error" />
+            <NPopconfirm @positive-click="resetToken">
+              <template #trigger>
+                <NButton type="error"> 重置 </NButton>
+              </template>
+              确定要重新生成 Token 吗? EventFetcher 等设施将需要重新部署
+            </NPopconfirm>
+          </NInputGroup>
         </NAlert>
       </NSpace>
       <NDivider />
