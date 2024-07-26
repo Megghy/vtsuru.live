@@ -25,6 +25,7 @@ import {
   NList,
   NListItem,
   NModal,
+  NPagination,
   NPopconfirm,
   NScrollbar,
   NSelect,
@@ -44,7 +45,7 @@ import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import QuestionItem from '@/components/QuestionItems.vue'
-import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled, } from '@vicons/fluent'
+import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
@@ -64,6 +65,12 @@ const showSettingCard = ref(true)
 
 const shareCardRef = ref()
 const shareUrl = computed(() => 'https://vtsuru.live/@' + accountInfo.value?.name + '/question-box')
+
+const ps = ref(20)
+const pn = ref(1)
+const pagedQuestions = computed(() =>
+  useQB.recieveQuestionsFiltered.slice((pn.value - 1) * ps.value, pn.value * ps.value),
+)
 
 let isRevieveGetted = false
 let isSendGetted = false
@@ -186,7 +193,6 @@ onMounted(() => {
   <NSpin v-if="useQB.isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0" display-directive="show:lazy">
-      <NDivider vertical />
       <NFlex align="center">
         <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
         <NSelect
@@ -205,45 +211,68 @@ onMounted(() => {
       </NFlex>
       <NDivider style="margin: 10px 0 10px 0" />
       <NEmpty v-if="useQB.recieveQuestionsFiltered.length == 0" description="暂无收到的提问" />
-      <QuestionItem v-else :questions="useQB.recieveQuestionsFiltered">
-        <template #footer="{ item }">
-          <NSpace>
-            <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
-              设为已读
-            </NButton>
-            <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
-            <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
-              <template #icon>
-                <NIcon :component="item.isFavorite ? Heart : HeartOutline" :color="item.isFavorite ? '#dd484f' : ''" />
-              </template>
-              收藏
-            </NButton>
-            <NPopconfirm @positive-click="useQB.DelQA(item.id)">
-              <template #trigger>
-                <NButton size="small" type="error">
-                  <template #icon>
-                    <NIcon :component="Delete24Filled"/>
-                  </template>
-                  删除
-                </NButton>
-              </template>
-              确认删除这条提问？
-            </NPopconfirm>
-            <!-- <NTooltip>
+      <div v-else>
+        <NPagination
+          v-model:page="pn"
+          v-model:page-size="ps"
+          :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper
+          show-size-picker
+          :page-sizes="[20, 50, 100]"
+        />
+        <NDivider style="margin: 10px 0 10px 0" />
+        <QuestionItem :questions="pagedQuestions">
+          <template #footer="{ item }">
+            <NSpace>
+              <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
+                设为已读
+              </NButton>
+              <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
+              <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
+                <template #icon>
+                  <NIcon
+                    :component="item.isFavorite ? Heart : HeartOutline"
+                    :color="item.isFavorite ? '#dd484f' : ''"
+                  />
+                </template>
+                收藏
+              </NButton>
+              <NPopconfirm @positive-click="useQB.DelQA(item.id)">
+                <template #trigger>
+                  <NButton size="small" type="error">
+                    <template #icon>
+                      <NIcon :component="Delete24Filled" />
+                    </template>
+                    删除
+                  </NButton>
+                </template>
+                确认删除这条提问？
+              </NPopconfirm>
+              <!-- <NTooltip>
                         <template #trigger>
                           <NButton size="small"> 举报 </NButton>
                         </template>
                         暂时还没写
                       </NTooltip> -->
-            <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
-          </NSpace>
-        </template>
-        <template #header-extra="{ item }">
-          <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
-            {{ item.answer ? '查看回复' : '回复' }}
-          </NButton>
-        </template>
-      </QuestionItem>
+              <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
+            </NSpace>
+          </template>
+          <template #header-extra="{ item }">
+            <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
+              {{ item.answer ? '查看回复' : '回复' }}
+            </NButton>
+          </template>
+        </QuestionItem>
+        <NDivider style="margin: 10px 0 10px 0" />
+        <NPagination
+          v-model:page="pn"
+          v-model:page-size="ps"
+          :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper
+          show-size-picker
+          :page-sizes="[20, 50, 100]"
+        />
+      </div>
     </NTabPane>
     <NTabPane ref="parentRef" tab="我发送的" name="1" display-directive="show:lazy">
       <NEmpty v-if="useQB.sendQuestions.length == 0" description="暂无发送的提问" />
@@ -362,6 +391,7 @@ onMounted(() => {
       </NSpin>
     </NTabPane>
   </NTabs>
+  <NDivider />
   <NModal preset="card" v-model:show="replyModalVisiable" style="max-width: 90vw; width: 500px">
     <template #header> 回复 </template>
     <NSpace vertical>
