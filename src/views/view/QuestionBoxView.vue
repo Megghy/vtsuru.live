@@ -175,8 +175,8 @@ onUnmounted(() => {
   <div style="max-width: 700px; margin: 0 auto" title="提问">
     <NCard embedded>
       <NSpace vertical>
-        <NCard title="投稿话题 (可选)" size="small">
-          <NSpace v-if="tags.length > 0">
+        <NCard v-if="tags.length > 0" title="投稿话题 (可选)" size="small">
+          <NSpace>
             <NTag
               v-for="tag in tags"
               :key="tag"
@@ -190,16 +190,6 @@ onUnmounted(() => {
           </NSpace>
         </NCard>
         <NSpace align="center" justify="center">
-          <NSelect
-            v-model:value="selectedTag"
-            placeholder="(可选) 要提问的话题"
-            filterable
-            clearable
-            :options="tags.map((s) => ({ label: s, value: s }))"
-            style="width: 200px"
-          >
-            <template #header> 不选的话则是默认话题 </template>
-          </NSelect>
           <NInput
             :disabled="isSelf"
             show-count
