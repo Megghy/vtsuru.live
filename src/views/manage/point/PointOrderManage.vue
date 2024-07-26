@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
 import { GoodsTypes, PointOrderStatus, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { objectsToCSV } from '@/Utils'
@@ -9,7 +9,19 @@ import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
-import { NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui'
+import {
+  DataTableRowKey,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NPopconfirm,
+  NSelect,
+  NSpin,
+  useMessage,
+} from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 type OrderFilterSettings = {
@@ -41,6 +53,7 @@ const filteredOrders = computed(() => {
   })
 })
 const isLoading = ref(false)
+const selectedItem = ref<DataTableRowKey[]>()
 
 async function getOrders() {
   try {
@@ -58,6 +71,21 @@ async function getOrders() {
     isLoading.value = false
   }
   return []
+}
+async function deleteOrder() {
+  try {
+    const data = await QueryPostAPI(POINT_API_URL + 'delete-orders', selectedItem.value)
+    if (data.code == 200) {
+      message.success('删除成功')
+      orders.value = orders.value.filter((o) => !selectedItem.value?.includes(o.id))
+      selectedItem.value = undefined
+    } else {
+      message.error('删除失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('删除失败: ' + err)
+    console.log(err)
+  }
 }
 const statusText = {
   [PointOrderStatus.Completed]: '已完成',
@@ -161,8 +189,16 @@ onMounted(async () => {
           <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo" label="仅包含未填写快递单号的订单" />
         </NFlex>
       </NCard>
-      <NDivider />
-      <PointOrderCard :order="filteredOrders" :goods="goods" type="owner" />
+      <NDivider v-if="(selectedItem?.length ?? 0) == 0" title-placement="left" />
+      <NDivider v-else title-placement="left">
+        <NPopconfirm @positive-click="deleteOrder">
+          <template #trigger>
+            <NButton size="tiny" type="error"> 删除选中的订单 | {{ selectedItem?.length }} </NButton>
+          </template>
+          确定删除吗?
+        </NPopconfirm>
+      </NDivider>
+      <PointOrderCard @selected-item="items => selectedItem = items" :order="filteredOrders" :goods="goods" type="owner" />
     </template>
   </NSpin>
 </template>

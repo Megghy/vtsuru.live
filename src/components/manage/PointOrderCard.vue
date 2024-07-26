@@ -16,6 +16,7 @@ import {
   NButton,
   NDataTable,
   NDivider,
+  NEmpty,
   NFlex,
   NIcon,
   NInput,
@@ -59,6 +60,8 @@ const orderAsOwner = computed(() => {
   return props.order as ResponsePointOrder2OwnerModel[]
 })
 const selectedItem = ref<DataTableRowKey[]>()
+
+const emit = defineEmits(['selectedItem'])
 
 const showDetailModal = ref(false)
 const orderDetail = ref<ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel>()
@@ -350,6 +353,11 @@ onMounted(() => {
     :data="order"
     :pagination="{ showSizePicker: true, pageSizes: [10, 25, 50, 100], defaultPageSize: 10, size: 'small' }"
     size="small"
+    @update:checked-row-keys="keys => emit('selectedItem', keys)"
+  >
+    <template #empty>
+      <NEmpty description="暂无订单" />
+    </template>
   >
   </NDataTable>
   <NModal
