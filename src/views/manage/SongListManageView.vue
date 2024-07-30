@@ -296,6 +296,7 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
       Description: s.description,
       Cover: s.cover,
       Tags: s.tags,
+      Language: s.language,
     })),
   )
 }
