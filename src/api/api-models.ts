@@ -543,6 +543,7 @@ export interface ResponseQueueModel {
   status: QueueStatus
   from: QueueFrom
   giftPrice?: number
+  content?: string
   user?: DanmakuUserInfo
   createAt: number
   finishAt?: number | null

@@ -17,6 +17,7 @@ import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 import { NCard, NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
 import { List } from 'linqts'
+import { isSameDay } from 'date-fns'
 
 const props = defineProps<{
   id?: number
@@ -63,7 +64,10 @@ const activeItems = computed(() => {
       break
     }
     case QueueSortType.FansMedalFirst: {
-      list = list.OrderByDescending(q => q.user?.fans_medal_wearing_status ? 1 : 0).ThenByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      list = list
+        .OrderByDescending((q) => (q.user?.fans_medal_wearing_status ? 1 : 0))
+        .ThenByDescending((q) => q.user?.fans_medal_level ?? 0)
+        .ThenBy((q) => q.createAt)
       break
     }
   }
@@ -198,7 +202,7 @@ onUnmounted(() => {
             </p>
           </span>
 
-        <NDivider v-if="isMoreThanContainer" class="queue-footer-divider" style="margin: 10px 0 10px 0" />
+          <NDivider v-if="isMoreThanContainer" class="queue-footer-divider" style="margin: 10px 0 10px 0" />
         </Vue3Marquee>
       </template>
       <div v-else style="position: relative; top: 20%">

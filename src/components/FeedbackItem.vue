@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-models'
-import { NCard, NTag, NEllipsis, NDivider, NSpin, NText, NSpace, NTooltip, NTime } from 'naive-ui'
+import { NCard, NTag, NEllipsis, NDivider, NSpin, NText, NSpace, NTooltip, NTime, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 
 defineProps<{
@@ -9,7 +9,7 @@ defineProps<{
 </script>
 
 <template>
-  <NCard v-bind:key="item.createAt" size="small" embedded style="min-width: 300px; max-width: 500px">
+  <NCard v-bind:key="item.createAt" size="small" embedded style="width: 400px; height: 150px">
     <template #header>
       <NTag v-if="item.status == FeedbackStatus.Padding" :bordered="false"> 等待 </NTag>
       <NTag v-else-if="item.status == FeedbackStatus.Progressing" type="success">
@@ -77,14 +77,20 @@ defineProps<{
         其他
       </NTag>
     </template>
-    {{ item.message }}
+    <NFlex justify="space-between" align="center" style="height: 100%;">
+      <NEllipsis :line-clamp="item.replyMessage ? 1 : 3">
+        {{ item.message }}
+      </NEllipsis>
+    </NFlex>
     <template v-if="item.replyMessage" #footer>
       <NDivider style="margin: 0px 0 10px 0" />
       <NSpace align="center" :wrap="false">
         <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`"></div>
-        <NText>
-          {{ item.replyMessage }}
-        </NText>
+        <NEllipsis :line-clamp="1">
+          <NText>
+            {{ item.replyMessage }}
+          </NText>
+        </NEllipsis>
       </NSpace>
     </template>
   </NCard>

@@ -30,6 +30,7 @@ import {
 import { computed, h, onMounted, ref } from 'vue'
 import PointUserDetailCard from './PointUserDetailCard.vue'
 import { Info24Filled } from '@vicons/fluent'
+import { objectsToCSV } from '@/Utils'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]
