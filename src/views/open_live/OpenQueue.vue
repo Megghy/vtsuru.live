@@ -156,7 +156,7 @@ const queue = computed(() => {
           : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
     )
     .Where((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish)
-    //.OrderByDescending((q) => q.from == QueueFrom.Manual)
+  //.OrderByDescending((q) => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
       list = list.OrderBy((q) => q.createAt)
@@ -173,7 +173,10 @@ const queue = computed(() => {
       break
     }
     case QueueSortType.FansMedalFirst: {
-      list = list.OrderByDescending(q => q.user?.fans_medal_wearing_status ? 1 : 0).ThenByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      list = list
+        .OrderByDescending((q) => (q.user?.fans_medal_wearing_status ? 1 : 0))
+        .ThenByDescending((q) => q.user?.fans_medal_level ?? 0)
+        .ThenBy((q) => q.createAt)
       break
     }
   }
@@ -908,6 +911,22 @@ onUnmounted(() => {
                       </NText>
                     </template>
                     <NTime :time="queueData.createAt" />
+                  </NTooltip>
+
+                  <NTooltip v-if="queueData.content" content-style="margin: 0">
+                    <template #trigger>
+                      <NText strong style="font-size: 18px">
+                        <NIcon :component="Info24Filled" />
+                      </NText>
+                    </template>
+                    <NCard size="small" :bordered="false">
+                      <template #header>
+                        <span style="font-size: small; color: gray;">
+                          {{ '来自' + (queueData?.from == QueueFrom.Gift ? '礼物' : '弹幕') + ': ' }}
+                        </span>
+                      </template>
+                      {{ queueData?.content }}
+                    </NCard>
                   </NTooltip>
                 </NSpace>
                 <NSpace justify="end" align="center">
