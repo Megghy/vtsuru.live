@@ -189,16 +189,22 @@ onMounted(async () => {
           <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo" label="仅包含未填写快递单号的订单" />
         </NFlex>
       </NCard>
-      <NDivider v-if="(selectedItem?.length ?? 0) == 0" title-placement="left" />
-      <NDivider v-else title-placement="left">
+      <NDivider title-placement="left">
         <NPopconfirm @positive-click="deleteOrder">
           <template #trigger>
-            <NButton size="tiny" type="error"> 删除选中的订单 | {{ selectedItem?.length }} </NButton>
+            <NButton size="tiny" type="error" :disabled="(selectedItem?.length ?? 0) == 0">
+              删除选中的订单 | {{ selectedItem?.length ?? 0 }}
+            </NButton>
           </template>
           确定删除吗?
         </NPopconfirm>
       </NDivider>
-      <PointOrderCard @selected-item="items => selectedItem = items" :order="filteredOrders" :goods="goods" type="owner" />
+      <PointOrderCard
+        @selected-item="(items) => (selectedItem = items)"
+        :order="filteredOrders"
+        :goods="goods"
+        type="owner"
+      />
     </template>
   </NSpin>
 </template>

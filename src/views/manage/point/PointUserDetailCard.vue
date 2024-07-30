@@ -10,6 +10,7 @@ import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
+import { Info24Filled } from '@vicons/fluent'
 import {
   NButton,
   NCard,
