@@ -83,6 +83,7 @@ function getTooltip(goods: ResponsePointGoodModel) {
   if ((currentPoint.value ?? 0) < goods.price) {
     return '当前积分不足'
   } else if (!biliAuth.value.id) return '请先进行账号认证'
+  else if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
   else {
     return '开始兑换'
   }
@@ -230,10 +231,10 @@ onMounted(async () => {
                 <template #trigger>
                   <NText style="size: 34px" :delete="item.canFreeBuy">
                     🪙
-                    {{ item.price }}
+                    {{ item.price > 0 ? item.price : '免费' }}
                   </NText>
                 </template>
-                {{ item.canFreeBuy ? '你可以免费兑换此礼物' : '付费' }}
+                {{ item.canFreeBuy ? '你可以免费兑换此礼物' : '所需积分' }}
               </NTooltip>
             </NFlex>
           </NFlex>

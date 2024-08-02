@@ -37,7 +37,7 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           <NDivider title-placement="left"> 赞助我 </NDivider>
           <iframe
             id="afdian_leaflet_vtsuru"
-            src="https://afdian.net/leaflet?slug=vtsuru"
+            src="https://afdian.com/leaflet?slug=vtsuru"
             width="100%"
             scrolling="no"
             height="200"
