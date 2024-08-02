@@ -28,15 +28,17 @@ const emptyCover = IMGUR_URL + 'None.png'
       <NFlex justify="space-between">
         <NFlex>
           <NText depth="3"> 库存: </NText>
-          <NText v-if="goods.count && goods.count > -1">
+          <NText v-if="goods.count && goods.count > 0">
             {{ goods.count }}
           </NText>
+          <NText v-else-if="goods.count == 0" style="color: #5f5f5f;"> 无 </NText>
           <NText v-else> ∞ </NText>
         </NFlex>
       </NFlex>
     </template>
     <template #header>
-      <NFlex align="center">
+      <NFlex align="center" :size="5">
+        <NTag v-if="goods.count == 0" size="small" type="error" :bordered="false"> 已售完 </NTag>
         <NTag size="small" :bordered="goods.type != GoodsTypes.Physical">
           {{ goods.type == GoodsTypes.Physical ? '实物' : '虚拟' }}
         </NTag>
@@ -52,7 +54,7 @@ const emptyCover = IMGUR_URL + 'None.png'
         </NText>
       </NEllipsis>
       <NFlex>
-        <NTag v-if="goods.allowGuardLevel > 0"  size="tiny" :color="{ color: '#5f5f5f', textColor: 'gold' }">
+        <NTag v-if="goods.allowGuardLevel > 0" size="tiny" :color="{ color: '#5f5f5f', textColor: 'gold' }">
           <template #icon>
             <NIcon :component="VehicleShip20Filled" />
           </template>
