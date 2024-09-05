@@ -64,7 +64,7 @@ function renderIcon(icon: unknown) {
 }
 const menuOptions = ref<MenuOption[]>()
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=${userInfo.value?.biliId}`).then(
+  await fetch(FETCH_API + `https://workers.vrp.moe/api/bilibili/user-info/${userInfo.value?.biliId}`).then(
     async (respone) => {
       const data = await respone.json()
       if (data.code == 0) {
