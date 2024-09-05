@@ -264,7 +264,7 @@ onUnmounted(() => {
           </NCard>
           <template v-if="item.answer" #footer>
             <NSpace align="center" :size="6" :wrap="false">
-              <NAvatar :src="biliInfo.face + '@64w'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NAvatar :src="biliInfo?.face + '@64w'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
               <NDivider vertical />
               <NText style="font-size: 16px">
                 {{ item.answer?.message }}

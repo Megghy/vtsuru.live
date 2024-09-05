@@ -153,4 +153,3 @@ export const Config: TemplateConfig<ConfigType> = {
     </NSpace>
   </template>
 </template>
-import { QueryGetAPI } from '@/api/query' import { USER_INDEX_API_URL } from '@/data/constants'
