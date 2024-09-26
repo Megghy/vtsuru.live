@@ -1,7 +1,7 @@
 /* eslint-disable indent */
+import { apiFail } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
 import { APIRoot, PaginationResponse } from './api-models'
-import { apiFail } from '@/data/constants'
 
 const cookie = useLocalStorage('JWT_Token', '')
 
@@ -62,16 +62,21 @@ export async function QueryGetAPI<T>(
   return await QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers)
 }
 async function QueryGetAPIInternal<T>(urlString: string, params?: any, headers?: [string, string][]) {
-  const url = new URL(urlString)
-  url.search = getParams(params)
-  if (cookie.value) {
-    headers ??= []
-    if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  try {
+    const url = new URL(urlString)
+    url.search = getParams(params)
+    if (cookie.value) {
+      headers ??= []
+      if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
+    }
+    return await QueryAPIInternal<T>(url, {
+      method: 'get',
+      headers: headers,
+    })
+  } catch (err) {
+    console.log(`url:${urlString}, error:${err}`)
+    throw err
   }
-  return await QueryAPIInternal<T>(url, {
-    method: 'get',
-    headers: headers,
-  })
 }
 function getParams(params: any) {
   const urlParams = new URLSearchParams(window.location.search)

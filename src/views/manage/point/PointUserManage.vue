@@ -31,6 +31,7 @@ import { computed, h, onMounted, ref } from 'vue'
 import PointUserDetailCard from './PointUserDetailCard.vue'
 import { Info24Filled } from '@vicons/fluent'
 import { objectsToCSV } from '@/Utils'
+import { format } from 'date-fns'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]
@@ -245,6 +246,22 @@ async function deleteUser(user: ResponsePointUserModel) {
     isLoading.value = false
   }
 }
+function exportData() {
+/*  const text = objectsToCSV(
+    users.value.map((s) => {
+      const gift = props.goods.find((g) => g.id == s.goodsId)
+      return {
+      }
+    }),
+  )
+  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+  const utf8encoder = new TextEncoder()
+  const utf8array = utf8encoder.encode(text)
+  saveAs(
+    new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
+    `用户积分_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
+  )*/
+}
 
 onMounted(async () => {
   await refresh()
@@ -266,6 +283,7 @@ onMounted(async () => {
         <NFlex>
           <NButton type="primary" @click="refresh">刷新</NButton>
           <NButton type="info" @click="showGivePointModal = true">给予/扣除积分</NButton>
+          <NButton type="info" @click="exportData">导出积分数据</NButton>
         </NFlex>
       </template>
       <NFlex align="center">

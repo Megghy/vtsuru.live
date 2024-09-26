@@ -2,37 +2,35 @@
 import { NavigateToNewTab } from '@/Utils'
 import { useAccount } from '@/api/account'
 import {
-  AddressInfo,
-  GoodsTypes,
-  ResponsePointGoodModel,
-  ResponsePointOrder2UserModel,
-  UserInfo,
+AddressInfo,
+GoodsTypes,
+ResponsePointGoodModel,
+ResponsePointOrder2UserModel,
+UserInfo,
 } from '@/api/api-models'
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NInputNumber,
-  NModal,
-  NSelect,
-  NSpin,
-  NTag,
-  NText,
-  NTooltip,
-  SelectOption,
-  useDialog,
-  useMessage,
+NAlert,
+NButton,
+NCard,
+NDivider,
+NEmpty,
+NFlex,
+NForm,
+NFormItem,
+NInputNumber,
+NModal,
+NSelect,
+NSpin,
+NTag,
+NText,
+NTooltip,
+SelectOption,
+useDialog,
+useMessage
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -61,6 +59,15 @@ const buyCount = ref(1)
 const selectedAddress = ref<AddressInfo>()
 const canDoBuy = computed(() => {
   return currentGoods.value && currentGoods.value.price * buyCount.value <= currentPoint.value
+})
+const tags = computed(() => {
+  return Array.from(new Set(goods.value.flatMap((g) => g.tags)))
+})
+const selectedTag = ref<string>()
+const selectedItems = computed(() => {
+  return selectedTag.value
+    ? goods.value.filter((g) => g.tags.includes(selectedTag.value))
+    : goods.value
 })
 
 const addressOptions = computed(() => {
@@ -208,10 +215,23 @@ onMounted(async () => {
     <NText> 你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }} </NText>
   </NCard>
   <NDivider />
+  <NCard size="small" title="标签">
+    <NFlex align="center" justify="center">
+      <NButton v-for="tag in tags"
+          :type="tag == selectedTag ? 'success' : 'default'"
+          @click="selectedTag = selectedTag == tag ? undefined : tag"
+          :borderd="false"
+          style="margin: 4px"
+          size="small">
+          {{ tag }}
+        </NButton>
+    </NFlex>
+  </NCard>
+  <NDivider />
   <NSpin :show="isLoading">
-    <NEmpty v-if="goods.length == 0"> 暂无礼物 </NEmpty>
+    <NEmpty v-if="selectedItems.length == 0"> 暂无礼物 </NEmpty>
     <NFlex justify="center">
-      <PointGoodsItem v-for="item in goods" :key="item.id" :goods="item" content-style="max-width: 300px;height: 365px">
+      <PointGoodsItem v-for="item in selectedItems" :key="item.id" :goods="item" content-style="max-width: 300px;height: 365px">
         <template #footer>
           <NFlex justify="space-between" align="center">
             <NTooltip>
