@@ -15,7 +15,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NTime, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 
@@ -562,6 +562,12 @@ onMounted(async () => {
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
   <NSpin v-else-if="isLoading" show />
   <NCard v-else size="small">
+    <NAlert type="warning">
+      由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
+      <NButton text type="info" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VTsuruEventFetcher </NButton>
+      来帮助本站获取你的数据记录
+    </NAlert>
+    <br />
     <NTooltip trigger="click" placement="bottom">
       <template #trigger>
         <NButton type="info">
@@ -571,13 +577,14 @@ onMounted(async () => {
           关于数据更新
         </NButton>
       </template>
-      更新速度:
       <NSpace vertical>
-        <span>
+        <NText strong>所有数据改为每天更新一次</NText>
+        <NDivider style="margin: 0"/>
+        <NText delete :depth="3">
           粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
-        </span>
-        <span> 舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次 </span>
-        <span> 投稿数据: 500粉以上: 每天一次 </span>
+        </NText>
+        <NText delete :depth="3"> 舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次 </NText>
+        <NText delete :depth="3"> 投稿数据: 500粉以上: 每天一次 </NText>
       </NSpace>
     </NTooltip>
     <br />

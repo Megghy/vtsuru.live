@@ -283,7 +283,7 @@ onMounted(async () => {
         <NFlex>
           <NButton type="primary" @click="refresh">刷新</NButton>
           <NButton type="info" @click="showGivePointModal = true">给予/扣除积分</NButton>
-          <NButton type="info" @click="exportData">导出积分数据</NButton>
+          <NButton type="info" @click="exportData">导出积分数据 (暂未实现)</NButton>
         </NFlex>
       </template>
       <NFlex align="center">

@@ -131,7 +131,7 @@ async function refresh() {
 }
 
 onMounted(async () => {
-  orders.value = await getOrders()
+  await refresh()
 })
 </script>
 
