@@ -55,5 +55,10 @@ const props = defineProps<{
     <NText style="">
       {{ item.question?.message }}
     </NText>
+
+    <template v-if="item.answer">
+      <NDivider style="margin: 10px 0 10px 0" />
+      <NText depth="3"> {{ item.answer.message }} </NText>
+    </template>
   </NCard>
 </template>
