@@ -106,6 +106,7 @@ function getOptions() {
 
   let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
   if (startTime < statisticStartDate) startTime = statisticStartDate
+  startTime = startOfHour(startTime)
   const endTime = new Date()
 
   if (fansHistory.value) {
@@ -117,50 +118,55 @@ function getOptions() {
           : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
         : -1
     let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
-    // 生成完整的小时序列
+    // 生成完整的天序列
     while (currentTime <= endTime) {
-      if (lastFansTimeIndex > -1) {
-        const tempData = fansHistory.value[lastFansTimeIndex]
-        const found = isSameHour(tempData?.time, currentTime) ? tempData : undefined
-        const count = found ? found.count : lastDayCount
-        lastDayCount = count
-        lastFansTimeIndex += found ? 1 : 0
+      const dayEndTime = startOfDay(currentTime).getTime()
+      while (true) {
+        const data = fansHistory.value[lastFansTimeIndex]
+        if (!data) {
+          completeTimeSeries.push({
+            time: currentTime,
+            count: lastDayCount,
+            change: false,
+          })
+          break
+        }
+        if ((fansHistory.value[lastFansTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
+          const changed = data.count != lastDayCount
+          lastDayCount = data.count
 
-        completeTimeSeries.push({
-          time: currentTime,
-          count: count,
-          change: found ? true : false,
-        })
-      } else {
-        completeTimeSeries.push({
-          time: currentTime,
-          count: 0,
-          change: false,
-        })
+          completeTimeSeries.push({
+            time: currentTime,
+            count: lastDayCount,
+            change: changed,
+          })
+          break
+        }
+
+        lastFansTimeIndex++;
       }
 
-      currentTime = addHours(currentTime, 1)
+      currentTime = addDays(currentTime, 1)
     }
     // 计算日增量数据
     let previousDayCount = completeTimeSeries[0].count
-
     completeTimeSeries.forEach((entry, index, array) => {
       if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
         if (index > 0) {
           const dailyIncrement = entry.count - previousDayCount
           fansIncreacement.push({
-            time: startOfHour(array[index - 1].time),
+            time: startOfDay(array[index - 1].time),
             count: dailyIncrement,
-            //timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+            // timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
           })
         }
         previousDayCount = entry.count
       } else if (index === array.length - 1) {
         const dailyIncrement = entry.count - previousDayCount
         fansIncreacement.push({
-          time: startOfHour(entry.time),
+          time: startOfDay(entry.time),
           count: dailyIncrement,
-          //timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
+          // timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
         })
       }
     })
@@ -171,43 +177,60 @@ function getOptions() {
   const guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
   const guards = [] as { time: number; count: number; timeString: string }[]
 
-  // 生成完整的天序列
-  let currentGuardTime = startTime
-  let lastDayGuardCount = 0
-  const completeGuardTimeSeries: {
-    time: Date
-    count: number
-  }[] = []
-  while (currentGuardTime <= endTime) {
-    const found = guardHistory.value?.find((f) => isSameDay(currentGuardTime, f.time))
-    const count = found ? found.count : lastDayGuardCount
-    lastDayGuardCount = count
+  if (guardHistory.value && guardHistory.value.length > 0) {
+    // 生成完整的天序列
+    let currentGuardTime = startTime
+    let lastDayGuardCount = 0
+    const completeGuardTimeSeries: {
+      time: Date
+      count: number
+    }[] = []
+    let lastGuardTimeIndex = 0
+    while (currentGuardTime <= endTime) {
+      const dayEndTime = startOfDay(currentGuardTime).getTime()
+      while (true) {
+        const data = guardHistory.value[lastGuardTimeIndex]
+        if (!data) {
+          completeGuardTimeSeries.push({
+            time: currentGuardTime,
+            count: lastDayGuardCount,
+          })
+          break
+        }
+        if ((guardHistory.value[lastGuardTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
+          lastDayGuardCount = data.count
 
-    completeGuardTimeSeries.push({
-      time: currentGuardTime,
-      count: count,
+          completeGuardTimeSeries.push({
+            time: currentGuardTime,
+            count: lastDayGuardCount,
+          })
+          break
+        }
+
+        lastGuardTimeIndex++;
+      }
+
+      currentGuardTime = addDays(currentGuardTime, 1)
+    }
+
+    completeGuardTimeSeries.forEach((g) => {
+      if (!isSameDay(g.time, new Date(lastDay * 1000))) {
+        guardsIncreacement.push({
+          time: lastDayGuards,
+          count: lastDay == 0 ? 0 : g.count - lastDayGuards,
+          timeString: format(g.time, 'yyyy-MM-dd'),
+        })
+        guards.push({
+          time: g.time.getTime() / 1000,
+          count: g.count,
+          timeString: format(g.time, 'yyyy-MM-dd'),
+        })
+        lastDay = g.time.getTime() / 1000
+        lastDayGuards = g.count
+      }
     })
-
-    currentGuardTime = startOfDay(addDays(currentGuardTime, 1))
   }
 
-  completeGuardTimeSeries.forEach((g) => {
-    if (!isSameDay(g.time, lastDay)) {
-      guardsIncreacement.push({
-        time: lastDayGuards,
-        count: lastDay == 0 ? 0 : g.count - lastDayGuards,
-        //将timeString转换为yyyy-MM-dd HH
-        timeString: format(g.time, 'yyyy-MM-dd'),
-      })
-      guards.push({
-        time: g.time.getTime() / 1000,
-        count: g.count,
-        timeString: format(g.time, 'yyyy-MM-dd'),
-      })
-      lastDay = g.time.getTime() / 1000
-      lastDayGuards = g.count
-    }
-  })
   const upstatViewIncreace: { time: number; value: number }[] = []
   const upstatLikeIncreace: { time: number; value: number }[] = []
   if (upstatHistory.value && upstatHistory.value.length > 0) {
@@ -270,7 +293,7 @@ function getOptions() {
     yAxis: [
       {
         type: 'value',
-        name: '每小时粉丝数',
+        name: '粉丝数',
       },
       {
         type: 'value',
@@ -564,7 +587,8 @@ onMounted(async () => {
   <NCard v-else size="small">
     <NAlert type="warning">
       由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
-      <NButton text type="info" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank"> VTsuruEventFetcher </NButton>
+      <NButton text type="info" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+        VTsuruEventFetcher </NButton>
       来帮助本站获取你的数据记录
     </NAlert>
     <br />
@@ -579,7 +603,7 @@ onMounted(async () => {
       </template>
       <NSpace vertical>
         <NText strong>所有数据改为每天更新一次</NText>
-        <NDivider style="margin: 0"/>
+        <NDivider style="margin: 0" />
         <NText delete :depth="3">
           粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
         </NText>
