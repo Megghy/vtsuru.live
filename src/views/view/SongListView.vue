@@ -1,25 +1,19 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component
-    v-else
-    :is="SongListTemplateMap[componentType ?? '']?.compoent"
-    :user-info="userInfo"
-    :bili-info="biliInfo"
-    :currentData="currentData"
-    :live-request-settings="settings"
-    :live-request-active="songsActive"
-    @request-song="requestSong"
-    v-bind="$attrs"
-  />
+  <component v-else ref="dynamicConfigRef" :config="currentConfig"
+    :is="SongListTemplateMap[componentType ?? '']?.compoent" :user-info="userInfo" :bili-info="biliInfo"
+    :currentData="currentData" :live-request-settings="settings" :live-request-active="songsActive"
+    @request-song="requestSong" v-bind="$attrs" />
 </template>
 
 <script lang="ts" setup>
-import { useAccount } from '@/api/account'
+import { DownloadConfig, downloadConfigDirect, useAccount } from '@/api/account'
 import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
-import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/constants'
+import { TemplateConfig } from '@/data/VTsuruTypes'
+import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap, VTSURU_API_URL } from '@/data/constants'
 import { NSpin, useMessage } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 
 const accountInfo = useAccount()
 
@@ -35,6 +29,21 @@ const componentType = computed(() => {
   return props.template ?? props.userInfo?.extra?.templateTypes['songlist']?.toLowerCase()
 })
 const currentData = ref<SongsInfo[]>()
+const dynamicConfigRef = ref()
+const selectedTemplateConfig = computed(() => {
+  if (dynamicConfigRef.value?.Config) {
+    return dynamicConfigRef.value?.Config as TemplateConfig<any>
+  }
+  return undefined
+})
+const currentConfig = ref()
+watch(
+  () => dynamicConfigRef,
+  () => {
+    getConfig()
+  },
+)
+
 const isLoading = ref(true)
 const message = useMessage()
 
@@ -53,7 +62,7 @@ async function getSongRequestInfo() {
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {}
+  } catch (err) { }
   return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
 async function getSongs() {
@@ -67,6 +76,23 @@ async function getSongs() {
       } else {
         errMessage.value = data.message
         message.error('加载失败: ' + data.message)
+      }
+    })
+    .catch((err) => {
+      message.error('加载失败')
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
+}
+async function getConfig() {
+  isLoading.value = true
+  await DownloadConfig(selectedTemplateConfig.value!.name)
+    .then((data) => {
+      if (data.msg) {
+        message.error('加载失败: ' + data.msg)
+      } else {
+        currentConfig.value = data.data
       }
     })
     .catch((err) => {

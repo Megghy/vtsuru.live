@@ -50,7 +50,7 @@ const props = defineProps<{
   songs: SongsInfo[]
   canEdit?: boolean
   isSelf: boolean
-  extraButtom?: (song: SongsInfo) => VNodeChild[]
+  extraButton?: (song: SongsInfo) => VNodeChild[]
 }>()
 watch(
   () => props.songs,
@@ -380,7 +380,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
                   }),
                 ]
               : null,
-            props.extraButtom?.(data),
+            props.extraButton?.(data),
           ],
         )
       },
