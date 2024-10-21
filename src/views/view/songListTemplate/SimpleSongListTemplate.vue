@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { GetGuardColor } from '@/Utils'
 import { useAccount } from '@/api/account'
-import { FunctionTypes, Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import { FunctionTypes, SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
+import { SongListConfigType } from '@/data/TemplateTypes'
 import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
@@ -28,13 +29,7 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-const props = defineProps<{
-  userInfo: UserInfo | undefined
-  biliInfo: any | undefined
-  songRequestSettings: Setting_LiveRequest
-  songRequestActive: SongRequestInfo[]
-  currentData: SongsInfo[] | undefined
-}>()
+const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 const windowSize = useWindowSize()
 const container = ref()
@@ -51,10 +46,10 @@ const isLrcLoading = ref('')
 const isLoading = ref('')
 
 const tags = computed(() => {
-  if (props.currentData) {
+  if (props.data) {
     return [
       ...new Set(
-        props.currentData
+        props.data
           .map((item) => {
             return item.tags ?? []
           })
@@ -65,10 +60,10 @@ const tags = computed(() => {
   return []
 })
 const authors = computed(() => {
-  if (props.currentData) {
+  if (props.data) {
     return [
       ...new Set(
-        props.currentData
+        props.data
           .map((item) => {
             return item.author ?? []
           })
@@ -79,8 +74,8 @@ const authors = computed(() => {
   return []
 })
 const songs = computed(() => {
-  if (props.currentData) {
-    return props.currentData
+  if (props.data) {
+    return props.data
       .filter((item) => {
         return (
           (!selectedTag.value || item.tags?.includes(selectedTag.value)) &&
@@ -99,8 +94,8 @@ const onScroll = throttle((e: Event) => {
   }
 }, 100)
 function loadMore() {
-  if (props.currentData) {
-    index.value += props.currentData.length > 20 + index.value ? 20 : props.currentData.length - index.value
+  if (props.data) {
+    index.value += props.data.length > 20 + index.value ? 20 : props.data.length - index.value
   }
 }
 </script>
@@ -151,7 +146,7 @@ function loadMore() {
         />
       </NSpace>
     </NCard>
-    <NEmpty v-if="!currentData || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />
+    <NEmpty v-if="!data || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />
     <NScrollbar
       v-else
       ref="container"
@@ -301,7 +296,7 @@ function loadMore() {
       </NGrid>
       <NDivider />
       <NSpace justify="center">
-        <NButton v-if="currentData.length > index" @click="loadMore"> 加载更多 </NButton>
+        <NButton v-if="data.length > index" @click="loadMore"> 加载更多 </NButton>
       </NSpace>
     </NScrollbar>
   </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import SaveCompoent from '@/components/SaveCompoent.vue'
+import { ScheduleConfigType } from '@/data/TemplateTypes'
 import { getWeek, getYear } from 'date-fns'
 import { NDivider, NSelect, NSpace } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
@@ -8,17 +8,13 @@ import { computed, onMounted, ref } from 'vue'
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const table = ref()
 
-const props = defineProps<{
-  userInfo: UserInfo | undefined
-  biliInfo: any | undefined
-  currentData: ScheduleWeekInfo[] | undefined
-}>()
+const props = defineProps<ScheduleConfigType>()
 
 const currentWeek = computed(() => {
-  if (props.currentData?.length == 1) {
-    return props.currentData[0]
+  if (props.data?.length == 1) {
+    return props.data[0]
   }
-  return props.currentData?.find((item) => {
+  return props.data?.find((item) => {
     if (selectedDate.value) {
       return item.year + '-' + item.week === selectedDate.value
     }
@@ -26,7 +22,7 @@ const currentWeek = computed(() => {
   })
 })
 const options = computed(() => {
-  return props.currentData?.map((item) => {
+  return props.data?.map((item) => {
     return {
       label: item.year + '年' + item.week + '周',
       value: item.year + '-' + item.week,

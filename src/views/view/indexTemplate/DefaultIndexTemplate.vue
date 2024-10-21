@@ -47,7 +47,7 @@ function navigate(url: string) {
 
 <script lang="ts">
 export type ConfigType = {
-  cover: string
+  test: string
 }
 export const DefaultConfig = {} as ConfigType
 export const Config: TemplateConfig<ConfigType> = {
@@ -57,19 +57,12 @@ export const Config: TemplateConfig<ConfigType> = {
       name: '封面',
       type: 'image',
       imageLimit: 1,
-      onUploaded: (url, config) => {
-        config.cover = url instanceof String ? (url as string) : url[0]
-      },
+      key: 'cover',
     },
     {
-      name: 'test',
+      name: '测试',
       type: 'string',
-      data: {
-        get: (d) => d.cover,
-        set: (d, v) => {
-          d.cover = v
-        },
-      },
+      key: 'test',
     },
   ],
 }

@@ -2,35 +2,36 @@
 import { NavigateToNewTab } from '@/Utils'
 import { useAccount } from '@/api/account'
 import {
-AddressInfo,
-GoodsTypes,
-ResponsePointGoodModel,
-ResponsePointOrder2UserModel,
-UserInfo,
+  AddressInfo,
+  GoodsTypes,
+  ResponsePointGoodModel,
+  ResponsePointOrder2UserModel,
+  UserInfo,
 } from '@/api/api-models'
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
-NAlert,
-NButton,
-NCard,
-NDivider,
-NEmpty,
-NFlex,
-NForm,
-NFormItem,
-NInputNumber,
-NModal,
-NSelect,
-NSpin,
-NTag,
-NText,
-NTooltip,
-SelectOption,
-useDialog,
-useMessage
+  NAlert,
+  NButton,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NEmpty,
+  NFlex,
+  NForm,
+  NFormItem,
+  NInputNumber,
+  NModal,
+  NSelect,
+  NSpin,
+  NTag,
+  NText,
+  NTooltip,
+  SelectOption,
+  useDialog,
+  useMessage
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -65,10 +66,11 @@ const tags = computed(() => {
 })
 const selectedTag = ref<string>()
 const selectedItems = computed(() => {
-  return selectedTag.value
-    ? goods.value.filter((g) => g.tags.includes(selectedTag.value))
-    : goods.value
+  return goods.value.filter((item) => selectedTag.value ? item.tags.includes(selectedTag.value) : true).filter((item) => !onlyCanBuy.value || getTooltip(item) == '开始兑换').filter((item) => !ignoreGuard.value || item.allowGuardLevel == 0)
 })
+
+const onlyCanBuy = ref(false)
+const ignoreGuard = ref(false)
 
 const addressOptions = computed(() => {
   if (!biliAuth.value.id) return []
@@ -86,7 +88,7 @@ const canBuy = computed(() => {
   if (!biliAuth.value.id) return false
   return true
 })
-function getTooltip(goods: ResponsePointGoodModel) {
+function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积分不足' | '请先进行账号认证' | '库存不足' {
   if ((currentPoint.value ?? 0) < goods.price) {
     return '当前积分不足'
   } else if (!biliAuth.value.id) return '请先进行账号认证'
@@ -215,34 +217,29 @@ onMounted(async () => {
     <NText> 你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }} </NText>
   </NCard>
   <NDivider />
-  <NCard size="small" title="标签">
+  <NCard v-if="tags.length > 0" size="small" title="标签筛选">
     <NFlex align="center" justify="center">
-      <NButton v-for="tag in tags"
-          :type="tag == selectedTag ? 'success' : 'default'"
-          @click="selectedTag = selectedTag == tag ? undefined : tag"
-          :borderd="false"
-          style="margin: 4px"
-          size="small">
-          {{ tag }}
-        </NButton>
+      <NButton v-for="tag in tags" :type="tag == selectedTag ? 'success' : 'default'"
+        @click="selectedTag = selectedTag == tag ? undefined : tag" :borderd="false" style="margin: 4px" size="small">
+        {{ tag }}
+      </NButton>
     </NFlex>
+    <NDivider />
+    <NCheckbox v-model:checked="onlyCanBuy"> 只显示可兑换的礼物 </NCheckbox>
+    <NCheckbox v-model:checked="ignoreGuard"> 忽略需要舰长的礼物 </NCheckbox>
   </NCard>
   <NDivider />
   <NSpin :show="isLoading">
     <NEmpty v-if="selectedItems.length == 0"> 暂无礼物 </NEmpty>
     <NFlex justify="center">
-      <PointGoodsItem v-for="item in selectedItems" :key="item.id" :goods="item" content-style="max-width: 300px;height: 365px">
+      <PointGoodsItem v-for="item in selectedItems" :key="item.id" :goods="item"
+        content-style="max-width: 300px;height: 365px">
         <template #footer>
           <NFlex justify="space-between" align="center">
             <NTooltip>
               <template #trigger>
-                <NButton
-                  :disabled="getTooltip(item) != '开始兑换'"
-                  size="small"
-                  type="primary"
-                  @click="onBuyClick(item)"
-                  >兑换</NButton
-                >
+                <NButton :disabled="getTooltip(item) != '开始兑换'" size="small" type="primary" @click="onBuyClick(item)">兑换
+                </NButton>
               </template>
               {{ getTooltip(item) }}
             </NTooltip>
@@ -262,13 +259,8 @@ onMounted(async () => {
       </PointGoodsItem>
     </NFlex>
   </NSpin>
-  <NModal
-    v-model:show="showBuyModal"
-    v-if="currentGoods"
-    preset="card"
-    title="确认兑换"
-    style="width: 500px; max-width: 90vw; height: auto"
-  >
+  <NModal v-model:show="showBuyModal" v-if="currentGoods" preset="card" title="确认兑换"
+    style="width: 500px; max-width: 90vw; height: auto">
     <template #header>
       <NFlex align="baseline">
         <NTag :type="currentGoods.type == GoodsTypes.Physical ? 'info' : 'default'" :bordered="false">
@@ -281,32 +273,16 @@ onMounted(async () => {
     <template v-if="currentGoods.type == GoodsTypes.Physical">
       <NDivider> 选项 </NDivider>
       <NForm>
-        <NFormItem label="兑换数量" required
-          ><NInputNumber
-            v-model:value="buyCount"
-            :min="1"
-            :max="currentGoods.maxBuyCount ?? 100000"
-            style="max-width: 120px"
-            step="1"
-            :precision="0"
-          />
+        <NFormItem label="兑换数量" required>
+          <NInputNumber v-model:value="buyCount" :min="1" :max="currentGoods.maxBuyCount ?? 100000"
+            style="max-width: 120px" step="1" :precision="0" />
         </NFormItem>
-        <NFormItem
-          v-if="
-            currentGoods.type == GoodsTypes.Physical &&
-            (currentGoods.collectUrl == null || currentGoods.collectUrl == undefined)
-          "
-          label="收货地址"
-          required
-        >
-          <NSelect
-            v-model:show="showAddressSelect"
-            :value="selectedAddress?.id"
-            :options="addressOptions"
-            :render-label="renderLabel"
-            :render-option="renderOption"
-            placeholder="请选择地址"
-          />
+        <NFormItem v-if="
+          currentGoods.type == GoodsTypes.Physical &&
+          (currentGoods.collectUrl == null || currentGoods.collectUrl == undefined)
+        " label="收货地址" required>
+          <NSelect v-model:show="showAddressSelect" :value="selectedAddress?.id" :options="addressOptions"
+            :render-label="renderLabel" :render-option="renderOption" placeholder="请选择地址" />
           &nbsp;
           <NButton size="small" type="info" tag="a" href="/bili-user#settings" target="_blank"> 管理收货地址 </NButton>
         </NFormItem>

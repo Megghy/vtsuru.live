@@ -23,10 +23,11 @@ type DataAccessor<T, V> = {
 }
 
 // 扩展 CommonProps 以包含额外的共有属性
-export type TemplateConfigItemWithType<T, V> = CommonProps & { data: DataAccessor<T, V> }
+export type TemplateConfigItemWithType<T, V> = CommonProps & { data?: DataAccessor<T, V> }
 
 export type TemplateConfigStringItem<T> = TemplateConfigItemWithType<T, string> & {
   type: 'string'
+  key: string //将被保存到指定key中
 }
 export type TemplateConfigStringArrayItem<T> = TemplateConfigItemWithType<T, string[]> & {
   type: 'stringArray'
@@ -42,8 +43,19 @@ export type TemplateConfigRenderItem<T> = TemplateConfigBase & {
   type: 'render'
   render: (arg0: T) => VNode
 }
+
+/**
+ *
+ * @template T - The type of the associated data model.
+ */
 export type TemplateConfigImageItem<T> = TemplateConfigBase & {
-  type: 'image'
-  imageLimit: number
-  onUploaded: (arg0: string | string[], arg1: T) => void
+  type: 'image' // Specifies the type of configuration item as 'image'.
+  imageLimit: number // The maximum number of images allowed.
+  key: string //图片将被保存到指定key中, 类型为字符串数组
+  /**
+   * Callback function triggered upon image upload.
+   * @param {string[]} uploadedImages - The uploaded image or array of images.
+   * @param {T} config - The configuration data model.
+   */
+  onUploaded?: (uploadedImages: string[], config: T) => void
 }

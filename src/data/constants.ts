@@ -70,6 +70,10 @@ export const SongListTemplateMap = {
     name: '简单',
     compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')),
   },
+  traditional: {
+    name: '传统',
+    compoent: defineAsyncComponent(() => import('@/views/view/songListTemplate/TraditionalSongListTemplate.vue')),
+  },
 } as { [key: string]: { name: string; compoent: any } }
 export const IndexTemplateMap = {
   '': { name: '默认', compoent: DefaultIndexTemplateVue },

@@ -55,7 +55,7 @@ import {
   SelectOption,
   useMessage,
 } from 'naive-ui'
-import { computed, h, nextTick, onActivated, onMounted, ref } from 'vue'
+import { computed, h, nextTick, onActivated, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 interface TemplateDefineTypes {
@@ -247,7 +247,6 @@ const selectedTemplateConfig = computed(() => {
   }
   return undefined
 })
-
 const biliUserInfo = ref()
 const settingModalVisiable = ref(false)
 const showAddVideoModal = ref(false)
@@ -547,19 +546,15 @@ onMounted(async () => {
             <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="SaveComboSetting">
               收到新提问时发送邮件
             </NCheckbox>
-            <NCheckbox
-              v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
-              @update:checked="SaveComboSetting"
-            >
+            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
+              @update:checked="SaveComboSetting">
               提问收到回复时发送邮件
             </NCheckbox>
           </NSpace>
           <NDivider> 提问箱 </NDivider>
           <NSpace>
-            <NCheckbox
-              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-              @update:checked="SaveComboSetting"
-            >
+            <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+              @update:checked="SaveComboSetting">
               允许未注册用户提问
             </NCheckbox>
           </NSpace>
@@ -649,28 +644,22 @@ onMounted(async () => {
           <br />
           <NSpace vertical>
             <NSpace align="center">
-              页面 <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" />
+              页面
+              <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" />
             </NSpace>
             <NDivider style="margin: 5px 0 5px 0" title-placement="left"> 模板 </NDivider>
             <div>
               <NSpace>
-                <NSelect
-                  style="width: 150px"
-                  :options="selectedTemplateData.Options"
-                  v-model:value="selectedTemplateData.Selected"
-                />
+                <NSelect style="width: 150px" :options="selectedTemplateData.Options"
+                  v-model:value="selectedTemplateData.Selected" />
                 <component :is="buttonGroup" />
               </NSpace>
               <NDivider />
               <Transition name="fade" mode="out-in">
                 <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
-                  <component
-                    ref="dynamicConfigRef"
-                    :is="selectedComponent"
-                    :user-info="accountInfo"
-                    :bili-info="biliUserInfo"
-                    :current-data="selectedTemplateData.Data"
-                  />
+                  <component ref="dynamicConfigRef" @vue:mounted="getTemplateConfig" :is="selectedComponent"
+                    :user-info="accountInfo" :bili-info="biliUserInfo" :current-data="selectedTemplateData.Data"
+                    :config="selectedTemplateData.Config" />
                 </div>
               </Transition>
             </div>
@@ -679,29 +668,13 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NCard>
-  <NModal
-    preset="card"
-    v-model:show="settingModalVisiable"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="模板设置"
-  >
+  <NModal preset="card" v-model:show="settingModalVisiable" closable style="width: 600px; max-width: 90vw" title="模板设置">
     只是测试, 没用
     <NSpin v-if="!selectedTemplateData.Config" show />
-    <DynamicForm
-      v-else
-      :key="selectedTemplateData.Selected"
-      :configData="selectedTemplateData.Config"
-      :config="selectedTemplateConfig"
-    />
+    <DynamicForm v-else :key="selectedTemplateData.Selected" :configData="selectedTemplateData.Config"
+      :config="selectedTemplateConfig" />
   </NModal>
-  <NModal
-    preset="card"
-    v-model:show="showAddVideoModal"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="添加视频"
-  >
+  <NModal preset="card" v-model:show="showAddVideoModal" closable style="width: 600px; max-width: 90vw" title="添加视频">
     <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
     <NDivider />
     <NButton type="primary" @click="addVideo" :loading="isLoading"> 添加视频 </NButton>
