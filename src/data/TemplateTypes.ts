@@ -9,9 +9,10 @@ import {
 export interface SongListConfigType {
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
-  songRequestSettings: Setting_LiveRequest
-  songRequestActive: SongRequestInfo[]
+  liveRequestSettings: Setting_LiveRequest
+  liveRequestActive: SongRequestInfo[]
   data: SongsInfo[] | undefined
+  config?: any
 }
 export interface SongListConfigTypeWithConfig<T> extends SongListConfigType {
   config?: T

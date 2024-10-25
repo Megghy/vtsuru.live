@@ -1,9 +1,9 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component v-else ref="dynamicConfigRef" :config="currentConfig"
+  <component v-else ref="dynamicConfigRef" :config="selectedTemplateConfig?.name ? currentConfig : undefined"
     :is="SongListTemplateMap[componentType ?? '']?.compoent" :user-info="userInfo" :bili-info="biliInfo"
-    :currentData="currentData" :live-request-settings="settings" :live-request-active="songsActive"
-    @request-song="requestSong" v-bind="$attrs" />
+    :data="currentData" :live-request-settings="settings" :live-request-active="songsActive" @request-song="requestSong"
+    v-bind="$attrs" />
 </template>
 
 <script lang="ts" setup>
@@ -87,6 +87,7 @@ async function getSongs() {
 }
 async function getConfig() {
   isLoading.value = true
+  console.log(selectedTemplateConfig.value!.name)
   await DownloadConfig(selectedTemplateConfig.value!.name)
     .then((data) => {
       if (data.msg) {

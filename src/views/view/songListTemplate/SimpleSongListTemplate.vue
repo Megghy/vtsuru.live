@@ -100,72 +100,52 @@ function loadMore() {
 }
 </script>
 <template>
-  <div
-    :style="{
-      display: 'flex',
-      justifyContent: 'center',
-      flexDirection: windowSize.width.value > 900 ? 'row' : 'column',
-      gap: '10px',
-      width: '100%',
-    }"
-  >
+  <div :style="{
+    display: 'flex',
+    justifyContent: 'center',
+    flexDirection: windowSize.width.value > 900 ? 'row' : 'column',
+    gap: '10px',
+    width: '100%',
+  }">
     <NCard size="small" :style="{ width: windowSize.width.value > 900 ? '400px' : '100%' }">
       <NCollapseTransition>
         <SongPlayer v-if="selectedSong" :song="selectedSong" v-model:is-lrc-loading="isLrcLoading" />
       </NCollapseTransition>
       <NDivider> 标签 </NDivider>
       <NSpace>
-        <NButton
-          v-for="tag in tags"
-          :key="tag"
-          size="small"
-          secondary
+        <NButton v-for="tag in tags" :key="tag" size="small" secondary
           :type="selectedTag == tag ? 'primary' : 'default'"
-          @click="selectedTag == tag ? (selectedTag = '') : (selectedTag = tag)"
-        >
+          @click="selectedTag == tag ? (selectedTag = '') : (selectedTag = tag)">
           {{ tag }}
         </NButton>
       </NSpace>
       <NDivider> 搜索歌曲 </NDivider>
       <NSpace vertical>
         <NInput v-model:value="searchKeyword" placeholder="歌名" clearable />
-        <NSelect
-          v-model:value="selectedAuthor"
-          :options="
-            authors.map((a) => {
-              return { label: a, value: a }
-            })
-          "
-          placeholder="选择歌手"
-          clearable
-        />
+        <NSelect v-model:value="selectedAuthor" :options="authors.map((a) => {
+          return { label: a, value: a }
+        })
+          " placeholder="选择歌手" clearable />
         <NDivider />
-        <LiveRequestOBS
-          v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)"
-          :id="userInfo?.id"
-        />
+        <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)"
+          :id="userInfo?.id" />
       </NSpace>
     </NCard>
     <NEmpty v-if="!data || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />
-    <NScrollbar
-      v-else
-      ref="container"
-      :style="{
-        flexGrow: 1,
-        height: windowSize.width.value > 900 ? '90vh' : '800px',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-      }"
-      @scroll="onScroll"
-    >
+    <NScrollbar v-else ref="container" :style="{
+      flexGrow: 1,
+      height: windowSize.width.value > 900 ? '90vh' : '800px',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+    }" @scroll="onScroll">
       <NGrid cols="1 600:2 900:3 1200:4" x-gap="10" y-gap="10" responsive="self">
         <NGridItem v-for="item in songs" :key="item.key">
           <NCard size="small" style="height: 200px; min-width: 300px">
             <template #header>
               <NSpace :wrap="false" align="center">
                 <div
-                  :style="`border-radius: 4px; background-color: ${item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"
-                ></div>
+                  :style="`border-radius: 4px; background-color: ${item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`">
+                </div>
                 <NEllipsis>
                   {{ item.name }}
                 </NEllipsis>
@@ -174,11 +154,8 @@ function loadMore() {
             <NSpace vertical>
               <NSpace v-if="(item.author?.length ?? 0) > 0" :size="0">
                 <div v-for="(author, index) in item.author" v-bind:key="author">
-                  <NButton
-                    size="small"
-                    text
-                    @click="selectedAuthor == author ? (selectedAuthor = undefined) : (selectedAuthor = author)"
-                  >
+                  <NButton size="small" text
+                    @click="selectedAuthor == author ? (selectedAuthor = undefined) : (selectedAuthor = author)">
                     <NText depth="3" :style="{ color: selectedAuthor == author ? '#82bcd3' : '' }">
                       {{ author }}
                     </NText>
@@ -195,11 +172,9 @@ function loadMore() {
                 <template v-if="item.options">
                   <NSpace>
                     <NTag v-if="item.options?.scMinPrice" size="small" type="error" :bordered="false">
-                      SC | {{ item.options?.scMinPrice }}</NTag
-                    >
+                      SC | {{ item.options?.scMinPrice }}</NTag>
                     <NTag v-if="item.options?.fanMedalMinLevel" size="small" type="info" :bordered="false">
-                      粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag
-                    >
+                      粉丝牌 | {{ item.options?.fanMedalMinLevel }}</NTag>
                     <NTag v-if="item.options?.needZongdu" size="small" :color="{ color: GetGuardColor(1) }">
                       总督
                     </NTag>
@@ -215,12 +190,8 @@ function loadMore() {
               <NSpace align="center" :wrap="false">
                 <NTooltip v-if="item.url">
                   <template #trigger>
-                    <NButton
-                      size="small"
-                      @click="selectedSong = item"
-                      type="success"
-                      :loading="isLrcLoading == item.key"
-                    >
+                    <NButton size="small" @click="selectedSong = item" type="success"
+                      :loading="isLrcLoading == item.key">
                       <template #icon>
                         <NIcon :component="Play24Filled" />
                       </template>
@@ -230,25 +201,20 @@ function loadMore() {
                 </NTooltip>
                 <NTooltip>
                   <template #trigger>
-                    <NButton
-                      size="small"
-                      @click="
-                        () => {
-                          isLoading = item.key
-                          emits('requestSong', item)
-                          isLoading = ''
-                        }
-                      "
-                      :type="songRequestSettings?.allowFromWeb == false || item.options ? 'warning' : 'info'"
-                      :loading="isLoading == item.key"
-                    >
+                    <NButton size="small" @click="() => {
+                        isLoading = item.key
+                        emits('requestSong', item)
+                        isLoading = ''
+                      }
+                      " :type="liveRequestSettings?.allowFromWeb == false || item.options ? 'warning' : 'info'"
+                      :loading="isLoading == item.key">
                       <template #icon>
                         <NIcon :component="CloudAdd20Filled" />
                       </template>
                     </NButton>
                   </template>
                   {{
-                    songRequestSettings?.allowFromWeb == false || item.options
+                    liveRequestSettings?.allowFromWeb == false || item.options
                       ? '点歌 | 用户或此歌曲不允许从网页点歌, 点击后将复制点歌内容到剪切板'
                       : !accountInfo
                         ? '点歌 | 你需要登录后才能点歌'
@@ -263,13 +229,9 @@ function loadMore() {
                     </NButton>
                   </template>
                   <NSpace :wrap="false">
-                    <NButton
-                      v-for="tag in item.tags"
-                      size="tiny"
-                      :key="tag"
+                    <NButton v-for="tag in item.tags" size="tiny" :key="tag"
                       @click="() => (selectedTag == tag ? (selectedTag = '') : (selectedTag = tag))"
-                      :type="selectedTag == tag ? 'primary' : 'default'"
-                    >
+                      :type="selectedTag == tag ? 'primary' : 'default'">
                       <NEllipsis style="max-width: 50px">
                         {{ tag }}
                       </NEllipsis>
@@ -277,13 +239,9 @@ function loadMore() {
                   </NSpace>
                 </NPopover>
                 <NSpace v-else :wrap="false">
-                  <NButton
-                    v-for="tag in item.tags"
-                    size="tiny"
-                    :key="tag"
+                  <NButton v-for="tag in item.tags" size="tiny" :key="tag"
                     @click="() => (selectedTag == tag ? (selectedTag = '') : (selectedTag = tag))"
-                    :type="selectedTag == tag ? 'primary' : 'default'"
-                  >
+                    :type="selectedTag == tag ? 'primary' : 'default'">
                     <NEllipsis style="max-width: 50px">
                       {{ tag }}
                     </NEllipsis>

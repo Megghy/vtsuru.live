@@ -26,8 +26,9 @@ export const Config: TemplateConfig<ConfigType> = {
       name: '封面',
       type: 'image',
       imageLimit: 1,
+      key: 'cover',
       onUploaded: (url, config) => {
-        config.cover = url instanceof String ? (url as string) : url[0]
+        config.cover = url[0]
       },
     },
     {

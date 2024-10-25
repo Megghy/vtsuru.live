@@ -46,26 +46,26 @@ export const Config: TemplateConfig<ConfigType> = {
     alignItems: 'center',
     position: 'relative',
   }">
-    <div style="{
-      height: 100%;
-      width: 100%;
-      min-height: 400px;
-      backdrop-filter: blur(10px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    <div :style="{
+      height: '100%',
+      width: '100%',
+      minHeight: '400px',
+      backdropFilter: 'blur(10px)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
     }">
-    <div style="{
+      <div style="
       border-radius: 20px;
       border: 3px solid var(--pinky-border-color-dark);
       height: 50px;
       width: 400px;
-    }">
-    <div v-for="song in props.data" :key="song.id">
-      {{song.name}}
+    ">
+        <div v-for="song in props.data" :key="song.id">
+          {{ song.name }}
+        </div>
+      </div>
     </div>
-    </div>
-  </div>
   </div>
 </template>
