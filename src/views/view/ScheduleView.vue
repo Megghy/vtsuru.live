@@ -5,7 +5,7 @@
     :is="ScheduleTemplateMap[componentType ?? ''].compoent"
     :bili-info="biliInfo"
     :user-info="userInfo"
-    :currentData="currentData"
+    :data="currentData"
     v-bind="$attrs"
   />
 </template>

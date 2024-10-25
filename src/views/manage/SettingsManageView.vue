@@ -658,7 +658,7 @@ onMounted(async () => {
               <Transition name="fade" mode="out-in">
                 <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
                   <component ref="dynamicConfigRef" @vue:mounted="getTemplateConfig" :is="selectedComponent"
-                    :user-info="accountInfo" :bili-info="biliUserInfo" :current-data="selectedTemplateData.Data"
+                    :user-info="accountInfo" :bili-info="biliUserInfo" :data="selectedTemplateData.Data"
                     :config="selectedTemplateData.Config" />
                 </div>
               </Transition>
