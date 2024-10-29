@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
-import { useLoadingBar } from 'naive-ui'
+import { useLoadingBar, useMessage } from 'naive-ui'
 import { onMounted } from 'vue'
 
 // Setup code
 onMounted(() => {
+  window.$loadingBar = useLoadingBar()
+  window.$message = useMessage()
   const providerStore = useLoadingBarStore()
-  const loadingBar = useLoadingBar()
-  providerStore.setLoadingBar(loadingBar)
+  providerStore.setLoadingBar(window.$loadingBar)
 })
 </script>
 

@@ -13,7 +13,8 @@ export type TemplateConfig<T> = {
   onConfirm?: (arg0: T) => void
 }
 interface TemplateConfigBase {
-  name: string
+  name: string | VNode
+  key: string //将被保存到指定key中
 }
 
 type CommonProps = TemplateConfigBase
@@ -27,7 +28,6 @@ export type TemplateConfigItemWithType<T, V> = CommonProps & { data?: DataAccess
 
 export type TemplateConfigStringItem<T> = TemplateConfigItemWithType<T, string> & {
   type: 'string'
-  key: string //将被保存到指定key中
 }
 export type TemplateConfigStringArrayItem<T> = TemplateConfigItemWithType<T, string[]> & {
   type: 'stringArray'
@@ -51,7 +51,6 @@ export type TemplateConfigRenderItem<T> = TemplateConfigBase & {
 export type TemplateConfigImageItem<T> = TemplateConfigBase & {
   type: 'image' // Specifies the type of configuration item as 'image'.
   imageLimit: number // The maximum number of images allowed.
-  key: string //图片将被保存到指定key中, 类型为字符串数组
   /**
    * Callback function triggered upon image upload.
    * @param {string[]} uploadedImages - The uploaded image or array of images.

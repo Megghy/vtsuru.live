@@ -35,7 +35,7 @@ function onDropdownSelect(key: string) {
         },
       })
       break
-    case 'delete':
+    case 'restore':
       dialog.warning({
         title: '问问',
         content: '确定要恢复这条话题吗？',

@@ -1,11 +1,6 @@
 <template>
-  <NConfigProvider
-    :theme-overrides="themeOverrides"
-    :theme="theme"
-    style="height: 100vh"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
-  >
+  <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN"
+    :date-locale="dateZhCN">
     <NMessageProvider>
       <NNotificationProvider>
         <NDialogProvider>
@@ -36,10 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import ManageLayout from '@/views/ManageLayout.vue'
 import ViewerLayout from '@/views/ViewerLayout.vue'
-import { useStorage } from '@vueuse/core'
 import {
   NConfigProvider,
   NDialogProvider,
@@ -49,17 +42,14 @@ import {
   NMessageProvider,
   NNotificationProvider,
   NSpin,
-  darkTheme,
   dateZhCN,
-  useLoadingBar,
-  useOsTheme,
-  zhCN,
+  zhCN
 } from 'naive-ui'
-import { computed, defineComponent, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { ThemeType } from './api/api-models'
-import OpenLiveLayout from './views/OpenLiveLayout.vue'
 import TempComponent from './components/TempComponent.vue'
+import { theme } from './Utils'
+import OpenLiveLayout from './views/OpenLiveLayout.vue'
 
 const route = useRoute()
 
@@ -82,45 +72,52 @@ const layout = computed(() => {
   }
 })
 
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
-const theme = computed(() => {
-  if (themeType.value == ThemeType.Auto) {
-    var osThemeRef = useOsTheme() //获取当前系统主题
-    return osThemeRef.value === 'dark' ? darkTheme : null
-  } else {
-    return themeType.value == ThemeType.Dark ? darkTheme : null
-  }
-})
+
 
 const themeOverrides = {
   common: {
     //primaryColor: '#9ddddc',
     fontFamily:
-      '"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
+      'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
   },
   // ...
 }
 </script>
 
-<style lang="stylus">
+<style>
+:root {
+  font-feature-settings: 'liga' 1, 'calt' 1;
+}
+
+@supports (font-variation-settings: normal) {
+  :root {
+    font-family: InterVariable, sans-serif;
+  }
+}
+
+/* 进入和离开过渡的样式 */
 .v-enter-from,
 .v-leave-to {
   opacity: 0;
 }
+
 /* 离开和进入过程中的样式 */
 .v-enter-active,
 .v-leave-active {
   /* 添加过渡动画 */
   transition: opacity 0.5s ease;
 }
+
 /* 进入之后和离开之前的样式 */
 .v-enter-to,
 .v-leave-from {
   opacity: 1;
 }
+
 .bounce-enter-active {
   animation: bounce 0.3s;
 }
+
 .bounce-leave-active {
   animation: bounce 0.3s reverse;
 }
@@ -130,14 +127,17 @@ const themeOverrides = {
     transform: scale(1);
     opacity: 0;
   }
+
   60% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
   }
 }
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -152,6 +152,7 @@ const themeOverrides = {
 .scale-leave-active {
   transition: all 0.3s ease;
 }
+
 .scale-enter-from,
 .scale-leave-to {
   opacity: 0;
@@ -162,18 +163,22 @@ const themeOverrides = {
 .slide-leave-active {
   transition: all 0.5s ease-out;
 }
+
 .slide-enter-to {
   position: absolute;
   right: 0;
 }
+
 .slide-enter-from {
   position: absolute;
   right: -100%;
 }
+
 .slide-leave-to {
   position: absolute;
   left: -100%;
 }
+
 .slide-leave-from {
   position: absolute;
   left: 0;
@@ -183,20 +188,24 @@ const themeOverrides = {
 .slide-up-leave-active {
   transition: all 0.5s ease-out;
 }
+
 .slide-up-enter-to {
   position: absolute;
   top: 0;
 }
+
 .slide-up-enter-from {
   position: absolute;
   top: -100%;
 }
+
 .slide-up-leave-to {
   position: absolute;
-  bottom : -100%;
+  bottom: -100%;
 }
+
 .slide-up-leave-from {
   position: absolute;
-  bottom : 0;
+  bottom: 0;
 }
 </style>

@@ -1,16 +1,44 @@
 import { useStorage } from '@vueuse/core'
-import { UploadFileInfo, createDiscreteApi, useOsTheme } from 'naive-ui'
+import {
+  ConfigProviderProps,
+  UploadFileInfo,
+  createDiscreteApi,
+  darkTheme,
+  dateZhCN,
+  useOsTheme,
+  zhCN
+} from 'naive-ui'
 import { ThemeType } from './api/api-models'
 import { computed } from 'vue'
 import { VTSURU_API_URL } from './data/constants'
+import { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
 
 const { message } = createDiscreteApi(['message'])
 
 const osThemeRef = useOsTheme() //获取当前系统主题
+const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+export const theme = computed(() => {
+  if (themeType.value == ThemeType.Auto) {
+    var osThemeRef = useOsTheme() //获取当前系统主题
+    return osThemeRef.value === 'dark' ? darkTheme : null
+  } else {
+    return themeType.value == ThemeType.Dark ? darkTheme : null
+  }
+})
+export const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
+  theme: theme.value,
+  locale: zhCN,
+  dateLocale: dateZhCN,
+  
+}))
+export function createNaiveUIApi(types: DiscreteApiType[]) {
+  return createDiscreteApi(types, {
+    configProviderProps: configProviderPropsRef
+  })
+}
 export function NavigateToNewTab(url: string) {
   window.open(url, '_blank')
 }
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 export const isDarkMode = computed(() => {
   if (themeType.value == ThemeType.Auto) return osThemeRef.value === 'dark'
   else return themeType.value == ThemeType.Dark
@@ -73,22 +101,25 @@ export function downloadImage(imageSrc: string, filename: string) {
   }
   image.src = imageSrc
 }
-export function getBase64(file: File | undefined | null): Promise<string | undefined> {
+export function getBase64(
+  file: File | undefined | null
+): Promise<string | undefined> {
   if (!file) return new Promise((resolve) => resolve(undefined))
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result?.toString().split(',')[1] || undefined)
+    reader.onload = () =>
+      resolve(reader.result?.toString().split(',')[1] || undefined)
     reader.onerror = (error) => reject(error)
   })
 }
 export async function getImageUploadModel(
   files: UploadFileInfo[] | undefined | null,
-  maxSize: number = 10 * 1024 * 1024,
+  maxSize: number = 10 * 1024 * 1024
 ) {
   const result = {
     existImages: [],
-    newImagesBase64: [],
+    newImagesBase64: []
   } as { existImages: string[]; newImagesBase64: string[] }
   if (!files) return result
   for (let i = 0; i < files.length; i++) {
@@ -146,7 +177,11 @@ export class GuidUtils {
     const bytes = new Uint8Array(buffer)
     const guid = bytes.reduce((str, byte, idx) => {
       const pair = byte.toString(16).padStart(2, '0')
-      return str + pair + (idx === 3 || idx === 5 || idx === 7 || idx === 9 ? '-' : '')
+      return (
+        str +
+        pair +
+        (idx === 3 || idx === 5 || idx === 7 || idx === 9 ? '-' : '')
+      )
     }, '')
     return guid
   }
