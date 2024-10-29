@@ -33,6 +33,7 @@ export const Config: TemplateConfig<ConfigType> = {
     },
     {
       name: 'test',
+      key: 'test',
       type: 'render',
       render: (config) => h('div', '1'),
     },

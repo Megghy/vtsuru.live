@@ -135,7 +135,7 @@ defineEmits<{
             <template #trigger>
               <img :src="'https://' + danmaku.msg + `@22h`" referrerpolicy="no-referrer" :style="`max-height: ${height}px;display:inline-flex;`" />
             </template>
-            <img :src="'https://' + danmaku.msg ?? ''" referrerpolicy="no-referrer" />
+            <img :src="'https://' + danmaku.msg" referrerpolicy="no-referrer" />
           </NTooltip>
         </template>
         <template v-else>
