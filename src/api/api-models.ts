@@ -1,3 +1,6 @@
+import { ExtendedDock24Filled } from "@vicons/fluent"
+import { UserConsumptionSetting } from "./models/consumption"
+
 export interface APIRoot<T> {
   code: number
   message: string
@@ -58,6 +61,7 @@ export interface AccountInfo extends UserInfo {
   biliVerifyCode?: string
   bindEmail?: string
   settings: UserSetting
+  consumptionSetting: UserConsumptionSetting
   token: string
 
   biliAuthCode?: string

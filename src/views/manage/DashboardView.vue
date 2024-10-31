@@ -287,19 +287,6 @@ onUnmounted(() => {
 
 <template>
   <NFlex justify="center" align="center" vertical>
-    <NAlert type="warning" title="2024.2.26">
-      近期逸站对开放平台直播弹幕流进行了极为严格的限制, 目前本站服务器只能连接个位数的直播间, 这使得在不使用
-      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-      的情况下获取弹幕数据几乎不可能实现.
-      <br />
-      在这种情况下建议有相关功能需求的用户 (如直播记录, 积分等) 部署
-      <NButton tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-      以获得完整的功能体验
-    </NAlert>
     <NTabs type="segment" animated v-if="accountInfo" style="width: 100%;">
       <NTabPane name="info" tab="个人信息" style="width: 100%;" display-directive="show:lazy">
         <NFlex justify="center" align="center">

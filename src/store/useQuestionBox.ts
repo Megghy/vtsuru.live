@@ -50,7 +50,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   let isRevieveGetted = false
   //const isSendGetted = false
 
-  const message = useMessage()
+  const message = window.$message
 
   async function GetRecieveQAInfo() {
     isLoading.value = true
