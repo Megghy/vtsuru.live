@@ -5,9 +5,11 @@ import { QUESTION_API_URL } from '@/data/constants'
 import { useRouteQuery } from '@vueuse/router'
 import { onMounted, onUnmounted, ref } from 'vue'
 import QuestionDisplayCard from '../manage/QuestionDisplayCard.vue'
+import { useWebRTC } from '@/store/useRTC'
 
 const hash = ref('')
 const token = useRouteQuery('token')
+const rtc = useWebRTC().Init('slave')
 
 const question = ref<QAInfo>()
 const setting = ref<Setting_QuestionDisplay>({} as Setting_QuestionDisplay)

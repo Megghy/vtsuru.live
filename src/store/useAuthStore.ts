@@ -36,6 +36,7 @@ export const useAuthStore = defineStore('BiliAuth', () => {
   async function getAuthInfo() {
     try {
       isLoading.value = true
+      if(!currentToken.value) return
       await QueryBiliAuthGetAPI<BiliAuthModel>(BILI_AUTH_API_URL + 'info').then((data) => {
         if (data.code == 200) {
           biliAuth.value = data.data

@@ -2,6 +2,7 @@
 import { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/data/constants'
+import { useWebRTC } from '@/store/useRTC'
 import { useElementSize } from '@vueuse/core'
 import { NDivider, NEmpty, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -22,6 +23,7 @@ const route = useRoute()
 const currentId = computed(() => {
   return props.id ?? route.query.id
 })
+const rtc = useWebRTC().Init('slave')
 
 const listContainerRef = ref()
 const footerRef = ref()

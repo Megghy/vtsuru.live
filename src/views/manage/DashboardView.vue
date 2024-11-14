@@ -486,6 +486,8 @@ onUnmounted(() => {
         </NTooltip>
       </NInputGroup>
     </NSpace>
+
+    <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
     <template #footer>
       <NButton @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()" type="success"
         :loading="!token || isLoading">
@@ -522,5 +524,4 @@ onUnmounted(() => {
       <NButton @click="BindBiliAuth()" type="success" :loading="isLoading" :disabled="!biliAuthText"> 确定 </NButton>
     </template>
   </NModal>
-  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
 </template>

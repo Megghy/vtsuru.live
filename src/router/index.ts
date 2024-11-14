@@ -97,7 +97,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/:pathMatch(.*)*',
     name: 'notfound',
-    component: import('@/views/NotfoundView.vue'),
+    component: () => import('@/views/NotfoundView.vue'),
     meta: {
       title: '页面不存在',
     },
