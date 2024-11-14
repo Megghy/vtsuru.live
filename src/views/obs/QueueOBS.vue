@@ -18,6 +18,7 @@ import { Vue3Marquee } from 'vue3-marquee'
 import { NCard, NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
 import { List } from 'linqts'
 import { isSameDay } from 'date-fns'
+import { useWebRTC } from '@/store/useRTC'
 
 const props = defineProps<{
   id?: number
@@ -28,6 +29,7 @@ const route = useRoute()
 const currentId = computed(() => {
   return props.id ?? route.query.id
 })
+const rtc = useWebRTC().Init('slave')
 
 const listContainerRef = ref()
 const footerRef = ref()

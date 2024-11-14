@@ -36,7 +36,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <NTabs animated type="line">
+  <div v-if="true">
+    WIP...
+  </div>
+  <NTabs v-else animated type="line">
     <NTabPane name="弹幕储存" tab="弹幕储存">
       <template #tab>
         <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
