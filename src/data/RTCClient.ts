@@ -99,11 +99,14 @@ abstract class BaseRTCClient {
   }
   public processData(conn: DataConnection, data: RTCData) {
     //console.log(data)
-    if (data.Key == 'Heartbeat') { // 心跳
+    if (data.Key == 'Heartbeat') {
+      // 心跳
       return
-    } else if (data.Key == 'VTsuru.RTCEvent.On') { // 添加事件
+    } else if (data.Key == 'VTsuru.RTCEvent.On') {
+      // 添加事件
       this.handledEvents[conn.peer].push(data.Data)
-    } else if (data.Key == 'VTsuru.RTCEvent.Off') { // 移除事件
+    } else if (data.Key == 'VTsuru.RTCEvent.Off') {
+      // 移除事件
       const i = this.handledEvents[conn.peer].indexOf(data.Data)
       if (i > -1) {
         this.handledEvents[conn.peer].splice(i, 1)
@@ -127,12 +130,14 @@ abstract class BaseRTCClient {
     )
   }
 
-  public Init() {
+  public async Init() {
     if (!this.isInited) {
       this.isInited = true
+      await this.vhub.on('RTCOffline', (id: string) =>
+        this.onConnectionClose(id)
+      )
       this.connectRTC()
     }
-    this.vhub.on('RTCOffline', (id: string) => this.onConnectionClose(id))
     return this
   }
 }
@@ -170,8 +175,8 @@ export class SlaveRTCClient extends BaseRTCClient {
     c?.on('data', (data) => this.processData(c, data as RTCData))
     c?.on('close', () => this.onConnectionClose(c.peer))
   }
-  public Init() {
-    super.Init()
+  public async Init() {
+    await super.Init()
     this.vhub?.on('MasterOnline', (data: string) => this.connectToMaster(data))
     setTimeout(() => {
       this.connectToAllMaster()

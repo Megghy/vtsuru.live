@@ -39,6 +39,6 @@ function mount() {
     </template>
 
     <NInput v-model:value="customCss" placeholder="css" @update:value="s => danmujiRef?.setCss(s.toString())" />
-    <DanmujiOBS ref="danmujiRef" :customCss="customCss" style="width: 400px;height: 700px;" />
+    <DanmujiOBS ref="danmujiRef" :customCss="customCss" style="width: 400px;height: 700px;"  :isOBS="false" />
   </div>
 </template>

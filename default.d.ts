@@ -1,4 +1,5 @@
 import { LoadingBarProviderInst, MessageProviderInst } from "naive-ui"
+import { useRoute } from "vue-router"
 
 declare module 'vue3-aplayer' {
   const content: any
@@ -17,5 +18,6 @@ declare global {
   interface Window {
     $message: MessageProviderInst,
     $loadingBar: LoadingBarProviderInst
+    $route: ReturnType<typeof useRoute>
   }
 }

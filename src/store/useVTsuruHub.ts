@@ -13,14 +13,16 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
   const signalRClient = ref<signalR.HubConnection>()
   const isInited = ref(false)
   const isIniting = ref(false)
-  let token = ''
+  const accountInfo = useAccount()
 
   async function connectSignalR() {
     if (isIniting.value) return
     isIniting.value = true
+    while (!accountInfo.value.id || accountInfo.value.id < 1)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     //console.log('[Components-Event] 正在连接到 VTsuru 服务器...')
     const connection = new HubConnectionBuilder()
-      .withUrl(BASE_HUB_URL + 'main?token=' + token, {
+      .withUrl(BASE_HUB_URL + 'main?token=' + accountInfo.value.token, {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
         logger: LogLevel.Error
@@ -91,9 +93,8 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     signalRClient.value?.onreconnected(listener)
   }
 
-  function Init(_token: string) {
-    token = _token
-    if (!isInited.value) {
+  function Init() {
+    if (!isInited.value && !isIniting.value) {
       connectSignalR()
     }
     return useVTsuruHub()

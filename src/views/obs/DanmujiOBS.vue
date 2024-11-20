@@ -17,6 +17,8 @@ import { useWebRTC } from '@/store/useRTC';
 import { QueryGetAPI } from '@/api/query';
 import { OPEN_LIVE_API_URL, VTSURU_API_URL } from '@/data/constants';
 import { CustomChart } from 'echarts/charts';
+import { useRoute } from 'vue-router';
+import { NAlert } from 'naive-ui';
 
 export interface DanmujiConfig {
   minGiftPrice: number,
@@ -42,15 +44,16 @@ export interface DanmujiConfig {
 }
 
 defineExpose({ setCss })
-const props = defineProps<{
+const { customCss, isOBS = true } = defineProps<{
   customCss?: string
+  isOBS?: boolean
 }>()
 
 const messageRender = ref()
 const client = await useDanmakuClient().initClient()
 const pronunciationConverter = new pronunciation.PronunciationConverter()
 const accountInfo = useAccount()
-
+const route = useRoute()
 
 const defaultConfig: DanmujiConfig = {
   minGiftPrice: 0.1,
@@ -389,7 +392,7 @@ onMounted(async () => {
       config.value = result.data as DanmujiConfig
       break
     }
-    else {
+    else if (result.status == 'error') {
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
@@ -406,5 +409,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <MessageRender ref="messageRender" :customCss="customCss" :showGiftName="config.showGiftName" style="height: 100%; width: 100%"/>
+  <NAlert v-if="!$route.query.token && isOBS" type="error"> 未携带token参数 </NAlert>
+  <MessageRender v-else ref="messageRender" :customCss="customCss" :showGiftName="config.showGiftName"
+    style="height: 100%; width: 100%" />
 </template>

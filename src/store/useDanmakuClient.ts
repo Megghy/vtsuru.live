@@ -1,3 +1,4 @@
+import { useAccount } from '@/api/account'
 import DanmakuClient, { AuthInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -18,6 +19,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     () => status.value === 'running' || status.value === 'listening'
   )
   const authInfo = ref<RoomAuthInfo>()
+  const accountInfo = useAccount()
 
   let existOtherClient = false
   let isInitializing = false
@@ -75,7 +77,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
         async (lock) => {
           if (lock) {
             status.value = 'initializing'
-            bc = new BroadcastChannel('vtsuru.danmaku')
+            bc = new BroadcastChannel('vtsuru.danmaku.' + accountInfo.value?.id)
             bc.onmessage = (event) => {
               const message: BCMessage = event.data as BCMessage
               const data = message.data ? JSON.parse(message.data) : {}
@@ -83,7 +85,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
                 case 'check-client':
                   sendBCMessage('response-client-status', {
                     status: status.value,
-                    auth: authInfo.value
+                    auth: authInfo.value,
                   })
                   break
                 case 'response-client-status':
