@@ -101,7 +101,6 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
     //加载其他数据
     await GetSelfAccount()
     const account = useAccount()
-    const vhub = useVTsuruHub().Init(account.value.token)
     const useAuth = useAuthStore()
     if (account.value.id) {
       if (account.value.biliUserAuthInfo && !useAuth.currentToken) {

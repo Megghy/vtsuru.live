@@ -9,7 +9,9 @@ export const useWebRTC = defineStore('WebRTC', () => {
   const accountInfo = useAccount()
   let isInitializing = false
 
-  function Init(type: 'master' | 'slave'): MasterRTCClient | SlaveRTCClient | undefined {
+  function Init(
+    type: 'master' | 'slave'
+  ): MasterRTCClient | SlaveRTCClient | undefined {
     if (isInitializing) {
       return
     }
@@ -30,7 +32,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
                   accountInfo.value.id.toString(),
                   accountInfo.value.token
                 )
-                masterClient.value.Init()
+                await masterClient.value.Init()
                 return masterClient
               }
             } else {
@@ -41,7 +43,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
                   accountInfo.value.id?.toString(),
                   accountInfo.value.token
                 )
-                slaveClient.value.Init()
+                await slaveClient.value.Init()
                 return slaveClient
               }
             }
