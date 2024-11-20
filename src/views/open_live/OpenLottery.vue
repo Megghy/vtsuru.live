@@ -2,8 +2,9 @@
 import { useAccount } from '@/api/account'
 import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import DanmakuClient, { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
+import { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 import { LOTTERY_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Delete24Filled, Info24Filled } from '@vicons/fluent'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
@@ -83,6 +84,7 @@ const route = useRoute()
 const message = useMessage()
 const accountInfo = useAccount()
 const notification = useNotification()
+const client = useDanmakuClient()
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
@@ -94,9 +96,8 @@ const showModal = ref(false)
 const showOBSModal = ref(false)
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
 }>()
 
 async function getUsers() {
@@ -327,16 +328,16 @@ onMounted(async () => {
       message.info('从历史记录中加载 ' + users.length + ' 位用户')
     }
   }
-  props.client?.on('danmaku', onDanmaku)
-  props.client?.on('gift', onGift)
+  client?.on('danmaku', onDanmaku)
+  client?.on('gift', onGift)
   timer = setInterval(updateUsers, 1000 * 10)
 })
 onUnmounted(() => {
   if (timer) {
     clearInterval(timer)
   }
-  props.client?.off('danmaku', onDanmaku)
-  props.client?.off('gift', onGift)
+  client?.off('danmaku', onDanmaku)
+  client?.off('gift', onGift)
 })
 </script>
 
@@ -488,7 +489,7 @@ onUnmounted(() => {
             :loading="isLottering"
             :disabled="isStartLottery || isLotteried"
             data-umami-event="Open-Live Use Lottery"
-            :data-umami-event-uid="client?.roomAuthInfo?.value?.anchor_info?.uid"
+            :data-umami-event-uid="client?.authInfo?.anchor_info?.uid"
           >
             进行抽取
           </NButton>

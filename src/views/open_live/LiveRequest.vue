@@ -5,18 +5,18 @@ import {
   EventDataTypes,
   EventModel,
   FunctionTypes,
+  QueueSortType,
   Setting_LiveRequest,
   SongRequestFrom,
   SongRequestInfo,
   SongRequestStatus,
-  SongsInfo,
-  QueueGiftFilterType,
-  QueueSortType,
+  SongsInfo
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import SongPlayer from '@/components/SongPlayer.vue'
-import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
+import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { SONG_REQUEST_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
   Checkmark12Regular,
   Delete24Filled,
@@ -54,7 +54,6 @@ import {
   NPopconfirm,
   NRadioButton,
   NRadioGroup,
-  NSelect,
   NSpace,
   NSpin,
   NSwitch,
@@ -66,7 +65,7 @@ import {
   NTooltip,
   NUl,
   useMessage,
-  useNotification,
+  useNotification
 } from 'naive-ui'
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -105,6 +104,7 @@ const route = useRoute()
 const accountInfo = useAccount()
 const message = useMessage()
 const notice = useNotification()
+const client = await useDanmakuClient().initClient()
 
 const isWarnMessageAutoClose = useStorage('SongRequest.Settings.WarnMessageAutoClose', false)
 const volumn = useStorage('Settings.Volumn', 0.5)
@@ -129,9 +129,8 @@ const settings = computed({
 const selectedSong = ref<SongsInfo>()
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
   isOpenLive?: boolean
 }>()
 
@@ -763,8 +762,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.songRequest
   }
-  props.client.onEvent('danmaku', onGetDanmaku)
-  props.client.onEvent('sc', onGetSC)
+  client.onEvent('danmaku', onGetDanmaku)
+  client.onEvent('sc', onGetSC)
   init()
 })
 onActivated(() => {
@@ -787,8 +786,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
-  props.client.offEvent('danmaku', onGetDanmaku)
-  props.client.offEvent('sc', onGetSC)
+  client.offEvent('danmaku', onGetDanmaku)
+  client.offEvent('sc', onGetSC)
   dispose()
 })
 </script>

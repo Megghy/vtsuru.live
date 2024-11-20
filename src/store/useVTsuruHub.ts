@@ -10,17 +10,17 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useVTsuruHub = defineStore('VTsuruHub', () => {
-  const accountInfo = useAccount()
   const signalRClient = ref<signalR.HubConnection>()
   const isInited = ref(false)
   const isIniting = ref(false)
+  let token = ''
 
   async function connectSignalR() {
     if (isIniting.value) return
     isIniting.value = true
     //console.log('[Components-Event] 正在连接到 VTsuru 服务器...')
     const connection = new HubConnectionBuilder()
-      .withUrl(BASE_HUB_URL + 'main?token=' + accountInfo.value.token, {
+      .withUrl(BASE_HUB_URL + 'main?token=' + token, {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
         logger: LogLevel.Error
@@ -91,7 +91,8 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     signalRClient.value?.onreconnected(listener)
   }
 
-  function Init() {
+  function Init(_token: string) {
+    token = _token
     if (!isInited.value) {
       connectSignalR()
     }

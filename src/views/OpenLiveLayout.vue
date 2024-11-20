@@ -2,6 +2,7 @@
 import { isDarkMode } from '@/Utils'
 import { ThemeType } from '@/api/api-models'
 import DanmakuClient, { AuthInfo } from '@/data/DanmakuClient'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent'
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
@@ -38,7 +39,7 @@ const sider = ref()
 const { width } = useElementSize(sider)
 
 const authInfo = ref<AuthInfo>()
-const client = ref<DanmakuClient>()
+const danmakuClient = useDanmakuClient()
 
 const menuOptions = [
   {
@@ -110,18 +111,12 @@ const danmakuClientError = ref<string>()
 onMounted(async () => {
   authInfo.value = route.query as unknown as AuthInfo
   if (authInfo.value?.Code) {
-    client.value = new DanmakuClient(authInfo.value)
-    const result = await client.value.Start()
-    if (!result.success) {
-      message.error('无法启动弹幕客户端: ' + result.message)
-      danmakuClientError.value = result.message
-    }
+    danmakuClient.initClient(authInfo.value)
   } else {
     message.error('你不是从幻星平台访问此页面, 或未提供对应参数, 无法使用此功能')
   }
 })
 onUnmounted(() => {
-  client.value?.Stop()
 })
 </script>
 
@@ -150,8 +145,8 @@ onUnmounted(() => {
       <NPageHeader :subtitle="($route.meta.title as string) ?? ''">
         <template #extra>
           <NSpace align="center">
-            <NTag :type="client?.roomAuthInfo.value ? 'success' : 'warning'">
-              {{ client?.roomAuthInfo.value ? `已连接 | ${client.roomAuthInfo.value?.anchor_info.uname}` : '未连接' }}
+            <NTag :type="danmakuClient.connected ? 'success' : 'warning'">
+              {{ danmakuClient.connected ? `已连接 | ${danmakuClient.authInfo?.anchor_info?.uname}` : '未连接' }}
             </NTag>
             <NSwitch
               :default-value="!isDarkMode"
@@ -190,10 +185,10 @@ onUnmounted(() => {
         style="height: 100%"
       >
         <Transition>
-          <div v-if="client?.roomAuthInfo" style="margin-top: 8px">
+          <div v-if="danmakuClient.authInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
               <NAvatar
-                :src="client?.roomAuthInfo.value?.anchor_info.uface"
+                :src="danmakuClient.authInfo?.anchor_info?.uface"
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 round
                 bordered
@@ -203,7 +198,7 @@ onUnmounted(() => {
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
-                  {{ client?.roomAuthInfo.value?.anchor_info.uname }}
+                  {{ danmakuClient.authInfo?.anchor_info?.uname }}
                 </NText>
               </NEllipsis>
             </NSpace>
@@ -226,9 +221,9 @@ onUnmounted(() => {
         <NAlert v-if="danmakuClientError" type="error" title="无法启动弹幕客户端">
           {{ danmakuClientError }}
         </NAlert>
-        <RouterView v-if="client?.roomAuthInfo.value" v-slot="{ Component }">
+        <RouterView v-if="danmakuClient.authInfo" v-slot="{ Component }">
           <KeepAlive>
-            <component :is="Component" :room-info="client?.roomAuthInfo" :client="client" :code="authInfo.Code" />
+            <component :is="Component" :room-info="danmakuClient.authInfo" :code="authInfo.Code" />
           </KeepAlive>
         </RouterView>
         <template v-else>

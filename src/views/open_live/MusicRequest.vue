@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
-import { DanmakuUserInfo, EventModel, FunctionTypes, SongFrom, SongsInfo } from '@/api/api-models'
+import { DanmakuUserInfo, EventModel, SongFrom, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
+import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { MusicRequestSettings, useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
@@ -40,9 +41,9 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
-import { useRoute } from 'vue-router'
 
 type Music = {
   id: number
@@ -64,11 +65,11 @@ const settings = computed(() => {
 })
 const cooldown = useStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
 const musicRquestStore = useMusicRequestProvider()
+const client = await useDanmakuClient().initClient()
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
   isOpenLive?: boolean
 }>()
 
@@ -355,7 +356,7 @@ function updateWaiting() {
 
 let timer: number
 onMounted(async () => {
-  props.client.onEvent('danmaku', onGetEvent)
+  client.onEvent('danmaku', onGetEvent)
   if (musicRquestStore.originMusics.length == 0) {
     musicRquestStore.originMusics = await get()
   }
@@ -373,7 +374,7 @@ onMounted(async () => {
   timer = setInterval(updateWaiting, 2000)
 })
 onUnmounted(() => {
-  props.client.offEvent('danmaku', onGetEvent)
+  client.offEvent('danmaku', onGetEvent)
   if (timer) {
     clearInterval(timer)
   }

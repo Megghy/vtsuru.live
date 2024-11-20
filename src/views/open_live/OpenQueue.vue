@@ -14,16 +14,17 @@ import {
   Setting_Queue,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
+import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { QUEUE_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
   Checkmark12Regular,
   ClipboardTextLtr24Filled,
   Delete24Filled,
   Dismiss16Filled,
+  Info24Filled,
   PeopleQueue24Filled,
   PresenceBlocked16Regular,
-  Info24Filled,
 } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
@@ -112,6 +113,7 @@ const route = useRoute()
 const accountInfo = useAccount()
 const message = useMessage()
 const notice = useNotification()
+const client = useDanmakuClient()
 
 const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false)
 const isReverse = useStorage('Queue.Settings.Reverse', false)
@@ -138,9 +140,8 @@ const settings = computed({
 })
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
   isOpenLive?: boolean
 }>()
 
@@ -730,8 +731,8 @@ onMounted(() => {
   if (accountInfo.value) {
     settings.value = accountInfo.value.settings.queue
   }
-  props.client.onEvent('danmaku', onGetDanmaku)
-  props.client.onEvent('gift', onGetGift)
+  client.onEvent('danmaku', onGetDanmaku)
+  client.onEvent('gift', onGetGift)
   init()
 })
 onActivated(() => {
@@ -754,8 +755,8 @@ onDeactivated(() => {
   dispose()
 })
 onUnmounted(() => {
-  props.client.offEvent('danmaku', onGetDanmaku)
-  props.client.offEvent('gift', onGetGift)
+  client.offEvent('danmaku', onGetDanmaku)
+  client.offEvent('gift', onGetGift)
   dispose()
 })
 </script>

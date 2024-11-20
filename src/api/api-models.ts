@@ -72,7 +72,7 @@ export interface AccountInfo extends UserInfo {
   nextSendEmailTime?: number
   isServerFetcherOnline: boolean
   blackList: UserBasicInfo[]
-  biliBlackList: { [key: number]: string }
+  biliBlackList: { [key: string]: string }
   streamerInfo?: StreamerModel
   biliUserAuthInfo?: BiliAuthModel
 }

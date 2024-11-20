@@ -8,6 +8,7 @@ import { FETCH_API, SONG_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
 import { ArchiveOutline } from '@vicons/ionicons5'
 import { format } from 'date-fns'
+// @ts-ignore
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
@@ -129,27 +130,27 @@ const addSongRules: FormRules = {
 const songSelectOption = [
   {
     label: '中文',
-    value: SongLanguage.Chinese,
+    value: '中文',
   },
   {
     label: '日语',
-    value: SongLanguage.Japanese,
+    value: '日语',
   },
   {
     label: '英语',
-    value: SongLanguage.English,
+    value: '英语',
   },
   {
     label: '法语',
-    value: SongLanguage.French,
+    value: '法语',
   },
   {
     label: '西语',
-    value: SongLanguage.Spanish,
+    value: '西语',
   },
   {
     label: '其他',
-    value: SongLanguage.Other,
+    value: '其他',
   },
 ]
 const languageSelectOption = computed(() => {

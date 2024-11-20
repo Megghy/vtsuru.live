@@ -3,8 +3,9 @@ import { copyToClipboard } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { EventDataTypes, EventModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
+import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { FETCH_API, VTSURU_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Info24Filled, Mic24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
@@ -44,9 +45,8 @@ import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
   isOpenLive?: boolean
 }>()
 
@@ -74,6 +74,7 @@ type SpeechInfo = {
 const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
+const client = useDanmakuClient()
 const settings = useStorage<SpeechSettings>('Setting.Speech', {
   speechInfo: {
     volume: 1,
@@ -110,6 +111,8 @@ const speechSynthesisInfo = ref<{
 }>()
 const languageDisplayName = new Intl.DisplayNames(['zh'], { type: 'language' })
 const voiceOptions = computed(() => {
+  const status = EasySpeech.status()
+  if (status.status != 'init: complete') return []
   return new List(EasySpeech.voices())
     .Select((v) => {
       return {
@@ -556,22 +559,23 @@ function testAPI() {
 
 let speechQueueTimer: number
 onMounted(() => {
+  EasySpeech.init({ maxTimeout: 5000, interval: 250 })
   speechSynthesisInfo.value = EasySpeech.detect()
   speechQueueTimer = setInterval(() => {
     speak()
   }, 250)
 
-  props.client.onEvent('danmaku', onGetEvent)
-  props.client.onEvent('sc', onGetEvent)
-  props.client.onEvent('guard', onGetEvent)
-  props.client.onEvent('gift', onGetEvent)
+  client.onEvent('danmaku', onGetEvent)
+  client.onEvent('sc', onGetEvent)
+  client.onEvent('guard', onGetEvent)
+  client.onEvent('gift', onGetEvent)
 })
 onUnmounted(() => {
   clearInterval(speechQueueTimer)
-  props.client.offEvent('danmaku', onGetEvent)
-  props.client.offEvent('sc', onGetEvent)
-  props.client.offEvent('guard', onGetEvent)
-  props.client.offEvent('gift', onGetEvent)
+  client.offEvent('danmaku', onGetEvent)
+  client.offEvent('sc', onGetEvent)
+  client.offEvent('guard', onGetEvent)
+  client.offEvent('gift', onGetEvent)
 })
 </script>
 
@@ -594,37 +598,24 @@ onUnmounted(() => {
       </NAlert>
       <NAlert type="info" closeable>
         当在后台运行时请关闭浏览器的 页面休眠/内存节省功能. Chrome:
-        <NButton
-          tag="a"
-          type="info"
+        <NButton tag="a" type="info"
           href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
-          target="_blank"
-          text
-        >
+          target="_blank" text>
           让特定网站保持活动状态
         </NButton>
         Edge:
 
-        <NButton
-          tag="a"
-          type="info"
+        <NButton tag="a" type="info"
           href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
-          target="_blank"
-          text
-        >
+          target="_blank" text>
           永远不想进入睡眠状态的网站
         </NButton>
       </NAlert>
     </NSpace>
     <br />
     <NSpace align="center">
-      <NButton
-        @click="canSpeech ? stopSpeech() : startSpeech()"
-        :type="canSpeech ? 'error' : 'primary'"
-        data-umami-event="Use TTS"
-        :data-umami-event-uid="accountInfo?.id"
-        size="large"
-      >
+      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'"
+        data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id" size="large">
         {{ canSpeech ? '停止监听' : '开始监听' }}
       </NButton>
       <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small">
@@ -652,12 +643,8 @@ onUnmounted(() => {
         </NTooltip>
         <NTooltip v-else>
           <template #trigger>
-            <NButton
-              circle
-              :disabled="!isSpeaking"
-              @click="cancelSpeech"
-              :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`"
-            >
+            <NButton circle :disabled="!isSpeaking" @click="cancelSpeech"
+              :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
               <template #icon>
                 <NIcon :component="Mic24Filled" :color="isSpeaking ? 'green' : 'gray'" />
               </template>
@@ -665,7 +652,9 @@ onUnmounted(() => {
           </template>
           {{ isSpeaking ? '取消朗读' : '未朗读' }}
         </NTooltip>
-        <NText depth="3"> 队列: {{ speakQueue.length }} <NDivider vertical /> 已读: {{ readedDanmaku }} 条 </NText>
+        <NText depth="3"> 队列: {{ speakQueue.length }}
+          <NDivider vertical /> 已读: {{ readedDanmaku }} 条
+        </NText>
         <NCollapse :default-expanded-names="['1']">
           <NCollapseItem title="队列" name="1">
             <NEmpty v-if="speakQueue.length == 0"> 暂无 </NEmpty>
@@ -676,19 +665,11 @@ onUnmounted(() => {
                   <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small">
                     取消
                   </NButton>
-                  <NTag
-                    v-if="item.data.type == EventDataTypes.Gift && item.combineCount"
-                    type="info"
-                    size="small"
-                    style="animation: animated-border 2.5s infinite"
-                  >
-                    连续赠送中</NTag
-                  >
-                  <NTag
-                    v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay"
-                    type="success"
-                    size="small"
-                  >
+                  <NTag v-if="item.data.type == EventDataTypes.Gift && item.combineCount" type="info" size="small"
+                    style="animation: animated-border 2.5s infinite">
+                    连续赠送中</NTag>
+                  <NTag v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay" type="success"
+                    size="small">
                     等待连续赠送检查
                   </NTag>
                   <span>
@@ -727,11 +708,8 @@ onUnmounted(() => {
     </NDivider>
     <Transition name="fade" mode="out-in">
       <NSpace v-if="settings.voiceType == 'local'" vertical>
-        <NSelect
-          v-model:value="settings.speechInfo.voice"
-          :options="voiceOptions"
-          :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })"
-        />
+        <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions"
+          :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
         <span style="width: 100%">
           <NText> 音量 </NText>
           <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
@@ -792,19 +770,13 @@ onUnmounted(() => {
           </NSpace>
           <br />
           <NInputGroup>
-            <NSelect
-              v-model:value="settings.voiceAPISchemeType"
-              :options="[
-                { label: 'https://', value: 'https' },
-                { label: 'http://', value: 'http' },
-              ]"
-              style="width: 110px"
-            />
-            <NInput
-              v-model:value="settings.voiceAPI"
+            <NSelect v-model:value="settings.voiceAPISchemeType" :options="[
+              { label: 'https://', value: 'https' },
+              { label: 'http://', value: 'http' },
+            ]" style="width: 110px" />
+            <NInput v-model:value="settings.voiceAPI"
               placeholder="API 地址, 例如 xxx.com/voice/bert-vits2?text={{text}}&id=0 (前面不要带https://)"
-              :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'"
-            />
+              :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'" />
             <NButton @click="testAPI" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
           </NInputGroup>
           <br /><br />
@@ -824,23 +796,12 @@ onUnmounted(() => {
             </NAlert>
             <span style="width: 100%">
               <NText> 音量 </NText>
-              <NSlider
-                style="min-width: 200px"
-                v-model:value="settings.speechInfo.volume"
-                :min="0"
-                :max="1"
-                :step="0.01"
-              />
+              <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1"
+                :step="0.01" />
             </span>
           </NSpace>
-          <audio
-            ref="apiAudio"
-            :src="apiAudioSrc"
-            :volume="settings.speechInfo.volume"
-            @ended="cancelSpeech"
-            @canplay="isApiAudioLoading = false"
-            @error="onAPIError"
-          ></audio>
+          <audio ref="apiAudio" :src="apiAudioSrc" :volume="settings.speechInfo.volume" @ended="cancelSpeech"
+            @canplay="isApiAudioLoading = false" @error="onAPIError"></audio>
         </div>
       </template>
     </Transition>
@@ -856,13 +817,8 @@ onUnmounted(() => {
     <NSpace vertical>
       <NSpace>
         支持的变量:
-        <NButton
-          size="tiny"
-          secondary
-          v-for="item in Object.values(templateConstants)"
-          :key="item.name"
-          @click="copyToClipboard(item.words)"
-        >
+        <NButton size="tiny" secondary v-for="item in Object.values(templateConstants)" :key="item.name"
+          @click="copyToClipboard(item.words)">
           {{ item.words }} | {{ item.name }}
         </NButton>
       </NSpace>
@@ -889,14 +845,10 @@ onUnmounted(() => {
     </NSpace>
     <NDivider> 设置 </NDivider>
     <NSpace align="center">
-      <NCheckbox
-        :checked="settings.combineGiftDelay != undefined"
-        @update:checked="
-          (checked: boolean) => {
-            settings.combineGiftDelay = checked ? 2 : undefined
-          }
-        "
-      >
+      <NCheckbox :checked="settings.combineGiftDelay != undefined" @update:checked="(checked: boolean) => {
+          settings.combineGiftDelay = checked ? 2 : undefined
+        }
+        ">
         是否启用礼物合并
         <NTooltip>
           <template #trigger>
@@ -909,14 +861,10 @@ onUnmounted(() => {
       </NCheckbox>
       <NInputGroup v-if="settings.combineGiftDelay" style="width: 200px">
         <NInputGroupLabel> 送礼间隔 (秒) </NInputGroupLabel>
-        <NInputNumber
-          v-model:value="settings.combineGiftDelay"
-          @update:value="
-            (value) => {
-              if (!value || value <= 0) settings.combineGiftDelay = undefined
-            }
-          "
-        />
+        <NInputNumber v-model:value="settings.combineGiftDelay" @update:value="(value) => {
+            if (!value || value <= 0) settings.combineGiftDelay = undefined
+          }
+          " />
       </NInputGroup>
       <NCheckbox v-model:checked="settings.splitText">
         启用句子拆分
