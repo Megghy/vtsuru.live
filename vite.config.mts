@@ -14,7 +14,12 @@ export default defineConfig({
         propsDestructure: true,
         defineModel: true
       },
-      include: [/\.vue$/, /\.md$/]
+      include: [/\.vue$/, /\.md$/],
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('yt-')
+        }
+      }
     }),
     svgLoader(),
     vueJsx(),
@@ -34,5 +39,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
-  }
+  },
 })

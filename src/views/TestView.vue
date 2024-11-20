@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account';
 import { MasterRTCClient, SlaveRTCClient } from '@/data/RTCClient';
+import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { useWebRTC } from '@/store/useRTC';
 import { NButton, NInput, NSpin } from 'naive-ui';
-import { LogLevel, Peer } from 'peerjs';
-import { computed, onMounted, Ref, ref } from 'vue';
+import { computed, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import DanmujiOBS from './obs/DanmujiOBS.vue';
 
 const target = ref('');
 const accountInfo = useAccount()
@@ -15,11 +16,15 @@ const inputMsg = ref('')
 const isMaster = computed(() => {
   return route.query.slave == null || route.query.slave == undefined
 })
+const dc = useDanmakuClient()
+const customCss = ref('')
 
-let rtc: Ref<MasterRTCClient | undefined, MasterRTCClient | undefined> | Ref<SlaveRTCClient | undefined, SlaveRTCClient | undefined>
+let rtc: Ref<MasterRTCClient | SlaveRTCClient | undefined> = ref()
+const danmujiRef = ref()
 
 function mount() {
-  rtc = useWebRTC().Init(isMaster.value ? 'master' : 'slave')
+  rtc.value = useWebRTC().Init(isMaster.value ? 'master' : 'slave')
+  dc.initClient()
 }
 </script>
 
@@ -32,5 +37,8 @@ function mount() {
       <NInput v-model:value="inputMsg" />
       <NButton @click="rtc.send('test', inputMsg)"> 发送 </NButton>
     </template>
+
+    <NInput v-model:value="customCss" placeholder="css" @update:value="s => danmujiRef?.setCss(s.toString())" />
+    <DanmujiOBS ref="danmujiRef" :customCss="customCss" style="width: 400px;height: 700px;" />
   </div>
 </template>

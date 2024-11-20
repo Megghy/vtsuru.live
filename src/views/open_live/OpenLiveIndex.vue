@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import DanmakuClient, { RoomAuthInfo } from '@/data/DanmakuClient'
-import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui'
+import { useAccount } from '@/api/account';
+import { RoomAuthInfo } from '@/data/DanmakuClient';
+import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui';
 
 const props = defineProps<{
-  client: DanmakuClient
-  roomInfo: RoomAuthInfo
-  code: string | undefined
+  roomInfo?: RoomAuthInfo
+  code?: string | undefined
 }>()
 
 const accountInfo = useAccount()

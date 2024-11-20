@@ -1,22 +1,15 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import DanmakuClient from '@/data/DanmakuClient'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { NAlert } from 'naive-ui'
-import { onMounted, onUnmounted } from 'vue'
 import OpenLottery from '../open_live/OpenLottery.vue'
 
 const accountInfo = useAccount()
-const client = new DanmakuClient(null)
+const client = await useDanmakuClient().initClient()
 
-onMounted(() => {
-  client.Start()
-})
-onUnmounted(() => {
-  client.Stop()
-})
 </script>
 
 <template>
   <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
-  <OpenLottery v-else :client="client" :room-info="client.roomAuthInfo.value" :code="accountInfo?.biliAuthCode" />
+  <OpenLottery v-else :room-info="client.authInfo!" :code="accountInfo?.biliAuthCode" />
 </template>

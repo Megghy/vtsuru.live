@@ -260,7 +260,7 @@ const addLinkUrl = ref('')
 const linkKey = ref(0)
 
 async function RequestBiliUserData() {
-  await fetch(FETCH_API + `https://account.bilibili.com/api/member/getCardByMid?mid=10021741`).then(async (respone) => {
+  await fetch(FETCH_API + `https://workers.vrp.moe/api/bilibili/user-info/10021741`).then(async (respone) => {
     const data = await respone.json()
     if (data.code == 0) {
       biliUserInfo.value = data.card
@@ -657,7 +657,7 @@ onMounted(async () => {
               <NDivider />
               <Transition name="fade" mode="out-in">
                 <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
-                  <component ref="dynamicConfigRef" @vue:mounted="getTemplateConfig" :is="selectedComponent"
+                  <component ref="dynamicConfigRef"  @vue:mounted="getTemplateConfig" :is="selectedComponent"
                     :user-info="accountInfo" :bili-info="biliUserInfo" :data="selectedTemplateData.Data"
                     :config="selectedTemplateData.Config" />
                 </div>

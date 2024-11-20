@@ -1,10 +1,10 @@
 import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+// @ts-expect-error 忽略js错误
 import ChatClientDirectOpenLive from '@/data/chat/ChatClientDirectOpenLive.js'
-import { ref } from 'vue'
+import { GuidUtils } from '@/Utils'
 import { clearInterval, setInterval } from 'worker-timers'
 import { OPEN_LIVE_API_URL } from './constants'
-import { GuidUtils } from '@/Utils'
 
 export interface DanmakuInfo {
   room_id: number
@@ -71,7 +71,7 @@ export interface SCInfo {
   fans_medal_name: string // 对应房间勋章名字  (新增)
   fans_medal_wearing_status: boolean // 该房间粉丝勋章佩戴情况   (新增)
 }
-interface GuardInfo {
+export interface GuardInfo {
   user_info: {
     uid: number // 用户uid
     open_id: string
@@ -139,6 +139,7 @@ interface AnchorInfo {
    * 主播uid
    */
   uid: number
+  open_id: string
 }
 export interface RoomAuthInfo {
   /**
@@ -154,7 +155,7 @@ export interface RoomAuthInfo {
    */
   anchor_info: AnchorInfo
 }
-interface DanmakuEventsMap {
+export interface DanmakuEventsMap {
   danmaku: (arg1: DanmakuInfo, arg2?: any) => void
   gift: (arg1: GiftInfo, arg2?: any) => void
   sc: (arg1: SCInfo, arg2?: any) => void
@@ -172,12 +173,12 @@ export default class DanmakuClient {
   private isStarting = false
 
   public authInfo: AuthInfo | null
-  public roomAuthInfo = ref<RoomAuthInfo>({} as RoomAuthInfo)
+  public roomAuthInfo: RoomAuthInfo | undefined
   public authCode: string | undefined
 
   public isRunning: boolean = false
 
-  private events: {
+  public events: {
     danmaku: ((arg1: DanmakuInfo, arg2?: any) => void)[]
     gift: ((arg1: GiftInfo, arg2?: any) => void)[]
     sc: ((arg1: SCInfo, arg2?: any) => void)[]
@@ -188,9 +189,9 @@ export default class DanmakuClient {
     gift: [],
     sc: [],
     guard: [],
-    all: [],
+    all: []
   }
-  private eventsAsModel: {
+  public eventsAsModel: {
     danmaku: ((arg1: EventModel, arg2?: any) => void)[]
     gift: ((arg1: EventModel, arg2?: any) => void)[]
     sc: ((arg1: EventModel, arg2?: any) => void)[]
@@ -201,20 +202,20 @@ export default class DanmakuClient {
     gift: [],
     sc: [],
     guard: [],
-    all: [],
+    all: []
   }
 
   public async Start(): Promise<{ success: boolean; message: string }> {
     if (this.isRunning) {
       return {
-        success: false,
-        message: '弹幕客户端已启动',
+        success: true,
+        message: '弹幕客户端已启动'
       }
     }
     if (this.isStarting) {
       return {
         success: false,
-        message: '弹幕客户端正在启动',
+        message: '弹幕客户端正在启动'
       }
     }
     this.isStarting = true
@@ -233,7 +234,7 @@ export default class DanmakuClient {
         console.warn('[OPEN-LIVE] 弹幕客户端已被启动过')
         return {
           success: false,
-          message: '弹幕客户端已被启动过',
+          message: '弹幕客户端已被启动过'
         }
       }
     } finally {
@@ -260,14 +261,14 @@ export default class DanmakuClient {
       gift: [],
       sc: [],
       guard: [],
-      all: [],
+      all: []
     }
     this.eventsAsModel = {
       danmaku: [],
       gift: [],
       sc: [],
       guard: [],
-      all: [],
+      all: []
     }
   }
   private sendHeartbeat() {
@@ -277,7 +278,10 @@ export default class DanmakuClient {
       return
     }
     const query = this.authInfo
-      ? QueryPostAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat', this.authInfo)
+      ? QueryPostAPI<OpenLiveInfo>(
+          OPEN_LIVE_API_URL + 'heartbeat',
+          this.authInfo
+        )
       : QueryGetAPI<OpenLiveInfo>(OPEN_LIVE_API_URL + 'heartbeat-internal')
     query.then((data) => {
       if (data.code != 200) {
@@ -289,7 +293,7 @@ export default class DanmakuClient {
     })
   }
 
-  private onRawMessage = (command: any) => {
+  public onRawMessage = (command: any) => {
     this.eventsAsModel.all?.forEach((d) => {
       d(command)
     })
@@ -298,7 +302,7 @@ export default class DanmakuClient {
     })
   }
 
-  private onDanmaku = (command: any) => {
+  public onDanmaku = (command: any) => {
     const data = command.data as DanmakuInfo
 
     this.events.danmaku?.forEach((d) => {
@@ -321,13 +325,13 @@ export default class DanmakuClient {
           emoji: data.dm_type == 1 ? data.emoji_img_url : undefined,
           uface: data.uface,
           open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid)
         },
-        command,
+        command
       )
     })
   }
-  private onGift = (command: any) => {
+  public onGift = (command: any) => {
     const data = command.data as GiftInfo
     const price = (data.price * data.gift_num) / 1000
     this.events.gift?.forEach((d) => {
@@ -349,13 +353,13 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.uface,
           open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid)
         },
-        command,
+        command
       )
     })
   }
-  private onSC = (command: any) => {
+  public onSC = (command: any) => {
     const data = command.data as SCInfo
     this.events.sc?.forEach((d) => {
       d(data, command)
@@ -376,13 +380,13 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.uface,
           open_id: data.open_id,
-          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+          ouid: data.open_id ?? GuidUtils.numToGuid(data.uid)
         },
-        command,
+        command
       )
     })
   }
-  private onGuard = (command: any) => {
+  public onGuard = (command: any) => {
     const data = command.data as GuardInfo
     this.events.guard?.forEach((d) => {
       d(data, command)
@@ -393,7 +397,14 @@ export default class DanmakuClient {
           type: EventDataTypes.Guard,
           name: data.user_info.uname,
           uid: data.user_info.uid,
-          msg: data.guard_level == 1 ? '总督' : data.guard_level == 2 ? '提督' : data.guard_level == 3 ? '舰长' : '',
+          msg:
+            data.guard_level == 1
+              ? '总督'
+              : data.guard_level == 2
+                ? '提督'
+                : data.guard_level == 3
+                  ? '舰长'
+                  : '',
           price: 0,
           num: data.guard_num,
           time: data.timestamp,
@@ -403,9 +414,10 @@ export default class DanmakuClient {
           fans_medal_wearing_status: data.fans_medal_wearing_status,
           uface: data.user_info.uface,
           open_id: data.user_info.open_id,
-          ouid: data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid),
+          ouid:
+            data.user_info.open_id ?? GuidUtils.numToGuid(data.user_info.uid)
         },
-        command,
+        command
       )
     })
   }
@@ -413,26 +425,47 @@ export default class DanmakuClient {
   public on(eventName: 'gift', listener: DanmakuEventsMap['gift']): this
   public on(eventName: 'sc', listener: DanmakuEventsMap['sc']): this
   public on(eventName: 'guard', listener: DanmakuEventsMap['guard']): this
-  public on(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+  public on(
+    eventName: 'danmaku' | 'gift' | 'sc' | 'guard',
+    listener: (...args: any[]) => void
+  ): this {
     if (!this.events[eventName]) {
       this.events[eventName] = []
     }
     this.events[eventName].push(listener)
     return this
   }
-  public onEvent(eventName: 'danmaku', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'gift', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'sc', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'guard', listener: (arg1: EventModel, arg2?: any) => void): this
+  public onEvent(
+    eventName: 'danmaku',
+    listener: (arg1: EventModel, arg2?: any) => void
+  ): this
+  public onEvent(
+    eventName: 'gift',
+    listener: (arg1: EventModel, arg2?: any) => void
+  ): this
+  public onEvent(
+    eventName: 'sc',
+    listener: (arg1: EventModel, arg2?: any) => void
+  ): this
+  public onEvent(
+    eventName: 'guard',
+    listener: (arg1: EventModel, arg2?: any) => void
+  ): this
   public onEvent(eventName: 'all', listener: (arg1: any) => void): this
-  public onEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard' | 'all', listener: (...args: any[]) => void): this {
+  public onEvent(
+    eventName: 'danmaku' | 'gift' | 'sc' | 'guard' | 'all',
+    listener: (...args: any[]) => void
+  ): this {
     if (!this.eventsAsModel[eventName]) {
       this.eventsAsModel[eventName] = []
     }
     this.eventsAsModel[eventName].push(listener)
     return this
   }
-  public off(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+  public off(
+    eventName: 'danmaku' | 'gift' | 'sc' | 'guard',
+    listener: (...args: any[]) => void
+  ): this {
     if (this.events[eventName]) {
       const index = this.events[eventName].indexOf(listener)
       if (index > -1) {
@@ -441,7 +474,10 @@ export default class DanmakuClient {
     }
     return this
   }
-  public offEvent(eventName: 'danmaku' | 'gift' | 'sc' | 'guard', listener: (...args: any[]) => void): this {
+  public offEvent(
+    eventName: 'danmaku' | 'gift' | 'sc' | 'guard',
+    listener: (...args: any[]) => void
+  ): this {
     if (this.eventsAsModel[eventName]) {
       const index = this.eventsAsModel[eventName].indexOf(listener)
       if (index > -1) {
@@ -457,43 +493,46 @@ export default class DanmakuClient {
       //chatClient.msgHandler = this;
       chatClient.CMD_CALLBACK_MAP = this.CMD_CALLBACK_MAP
       chatClient.start()
-      this.roomAuthInfo.value = auth.data
+      this.roomAuthInfo = auth.data as RoomAuthInfo
       this.client = chatClient
       console.log('[OPEN-LIVE] 已连接房间: ' + auth.data.anchor_info.room_id)
       return {
         success: true,
-        message: '',
+        message: ''
       }
     } else {
       console.log('[OPEN-LIVE] 无法开启场次: ' + auth.message)
       return {
         success: false,
-        message: auth.message,
+        message: auth.message
       }
     }
   }
-  private async getAuthInfo(): Promise<{ data: OpenLiveInfo | null; message: string }> {
+  private async getAuthInfo(): Promise<{
+    data: OpenLiveInfo | null
+    message: string
+  }> {
     try {
       const data = await QueryPostAPI<OpenLiveInfo>(
         OPEN_LIVE_API_URL + 'start',
-        this.authInfo?.Code ? this.authInfo : undefined,
+        this.authInfo?.Code ? this.authInfo : undefined
       )
       if (data.code == 200) {
         console.log('[OPEN-LIVE] 已获取场次信息')
         return {
           data: data.data,
-          message: '',
+          message: ''
         }
       } else {
         return {
           data: null,
-          message: data.message,
+          message: data.message
         }
       }
     } catch (err) {
       return {
         data: null,
-        message: err?.toString() || '未知错误',
+        message: err?.toString() || '未知错误'
       }
     }
   }
@@ -503,6 +542,6 @@ export default class DanmakuClient {
     LIVE_OPEN_PLATFORM_SEND_GIFT: this.onGift.bind(this),
     LIVE_OPEN_PLATFORM_SUPER_CHAT: this.onSC.bind(this),
     LIVE_OPEN_PLATFORM_GUARD: this.onGuard.bind(this),
-    RAW_MESSAGE: this.onRawMessage.bind(this),
+    RAW_MESSAGE: this.onRawMessage.bind(this)
   }
 }
