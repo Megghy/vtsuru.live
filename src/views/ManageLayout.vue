@@ -49,6 +49,7 @@ import {
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+// @ts-ignore
 import APlayer from 'vue3-aplayer'
 import DanmakuLayout from './manage/DanmakuLayout.vue'
 

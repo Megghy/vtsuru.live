@@ -287,7 +287,7 @@ onUnmounted(() => {
 
 <template>
   <NFlex justify="center" align="center" vertical>
-    <NTabs type="segment" animated v-if="accountInfo" style="width: 100%;">
+    <NTabs type="segment" animated v-if="accountInfo" style="width: 100%;" :default-value="$route.query.tab?.toString() ?? 'info'">
       <NTabPane name="info" tab="个人信息" style="width: 100%;" display-directive="show:lazy">
         <NFlex justify="center" align="center">
           <NCard embedded style="width: 100%;max-width: 800px;">

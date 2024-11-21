@@ -596,7 +596,7 @@ onMounted(async () => {
     >
       刷新
     </NButton>
-    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'songlist' } })">
+    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })">
       修改模板
     </NButton>
   </NSpace>

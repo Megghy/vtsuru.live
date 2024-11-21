@@ -36,6 +36,7 @@ export const Config: TemplateConfig<ConfigType> = {
 </script>
 
 <template>
+  WIP...
   <div :style="{
     backgroundImage: `${props.config?.background ? 'url(' + FILE_BASE_URL + props.config?.background[0] + ')' : ''}`,
     height: '100%', 'max-width': '100%',
