@@ -234,7 +234,7 @@ const templateOptions = [
   },
 ] as SelectOption[]
 const selectedOption = ref(route.query.template?.toString() ?? 'index')
-const selectedTab = ref(route.query.tab?.toString() ?? 'general')
+const selectedTab = ref(route.query.setting?.toString() ?? 'general')
 
 const dynamicConfigRef = ref()
 const selectedTemplateData = computed(() => templates.value[selectedOption.value])
@@ -513,7 +513,7 @@ async function getIndexInfo() {
 
 onActivated(() => {
   if (route.query.tab) {
-    selectedTab.value = route.query.tab.toString()
+    selectedTab.value = route.query.setting?.toString() ?? 'general'
   }
   if (route.query.template) {
     selectedOption.value = route.query.template.toString()
@@ -522,17 +522,14 @@ onActivated(() => {
 onMounted(async () => {
   await RequestBiliUserData()
   indexDisplayInfo.value = await getIndexInfo()
-  if (route.query.tab) {
-    message.info('已切换到指定面板, 在页面下方')
-  }
 })
 </script>
 
 <template>
   <NCard title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
     <NSpin :show="isSaving">
-      <NTabs v-model:value="selectedTab">
-        <NTabPane tab="常规" name="general">
+      <NTabs v-model:value="selectedTab" :default-value="$route.query.setting?.toString() ?? 'general'">
+        <NTabPane tab="常规" name="general" display-directive="show:lazy">
           <NDivider style="margin: 0"> 启用功能 </NDivider>
           <NCheckboxGroup v-model:value="accountInfo.settings.enableFunctions" @update:value="SaveComboGroupSetting">
             <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
@@ -559,7 +556,7 @@ onMounted(async () => {
             </NCheckbox>
           </NSpace>
         </NTabPane>
-        <NTabPane tab="主页" name="index">
+        <NTabPane tab="主页" name="index" display-directive="show:lazy">
           <NDivider> 通知 </NDivider>
           <NInput v-model:value="accountInfo.settings.index.notification" type="textarea" />
           <br /><br />
@@ -610,7 +607,7 @@ onMounted(async () => {
             </NFlex>
           </NModal>
         </NTabPane>
-        <NTabPane tab="黑名单" name="blacklist">
+        <NTabPane tab="黑名单" name="blacklist" display-directive="show:lazy">
           <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
             <NListItem v-for="item in Object.entries(accountInfo.biliBlackList)" :key="item[0]">
               <NSpace align="center">
@@ -639,7 +636,7 @@ onMounted(async () => {
           </NList>
           <NEmpty v-else />
         </NTabPane>
-        <NTabPane tab="模板" name="template">
+        <NTabPane tab="模板" name="template" display-directive="show:lazy">
           <NAlert type="success"> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </NAlert>
           <br />
           <NSpace vertical>
@@ -657,7 +654,7 @@ onMounted(async () => {
               <NDivider />
               <Transition name="fade" mode="out-in">
                 <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
-                  <component ref="dynamicConfigRef"  @vue:mounted="getTemplateConfig" :is="selectedComponent"
+                  <component ref="dynamicConfigRef" @vue:mounted="getTemplateConfig" :is="selectedComponent"
                     :user-info="accountInfo" :bili-info="biliUserInfo" :data="selectedTemplateData.Data"
                     :config="selectedTemplateData.Config" />
                 </div>
