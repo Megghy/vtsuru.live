@@ -229,6 +229,7 @@ export interface Setting_QuestionDisplay {
 
   borderColor?: string
   borderWidth?: number
+  syncScroll: boolean
 
   currentQuestion?: number
 }

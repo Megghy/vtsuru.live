@@ -15,7 +15,7 @@ import {
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { RoomAuthInfo } from '@/data/DanmakuClient'
-import { SONG_REQUEST_API_URL } from '@/data/constants'
+import { CURRENT_HOST, SONG_REQUEST_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
   Checkmark12Regular,
@@ -633,24 +633,24 @@ const columns = [
         () => [
           data.status == SongRequestStatus.Finish || data.status == SongRequestStatus.Cancel
             ? h(NTooltip, null, {
-                trigger: () =>
-                  h(
-                    NButton,
-                    {
-                      size: 'small',
-                      type: 'info',
-                      circle: true,
-                      loading: isLoading.value,
-                      onClick: () => {
-                        updateSongStatus(data, SongRequestStatus.Waiting)
-                      },
+              trigger: () =>
+                h(
+                  NButton,
+                  {
+                    size: 'small',
+                    type: 'info',
+                    circle: true,
+                    loading: isLoading.value,
+                    onClick: () => {
+                      updateSongStatus(data, SongRequestStatus.Waiting)
                     },
-                    {
-                      icon: () => h(NIcon, { component: ReloadCircleSharp }),
-                    },
-                  ),
-                default: () => '重新放回等待列表',
-              })
+                  },
+                  {
+                    icon: () => h(NIcon, { component: ReloadCircleSharp }),
+                  },
+                ),
+              default: () => '重新放回等待列表',
+            })
             : undefined,
           h(
             NPopconfirm,
@@ -731,7 +731,7 @@ async function updateActive() {
       message.error('无法获取点播队列: ' + data.message)
       return []
     }
-  } catch (err) {}
+  } catch (err) { }
 }
 function blockUser(item: SongRequestInfo) {
   if (item.from != SongRequestFrom.Danmaku) {
@@ -793,15 +793,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
-    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? 'success' : 'warning'"
-    v-if="accountInfo.id"
-  >
+  <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? 'success' : 'warning'"
+    v-if="accountInfo.id">
     启用弹幕点播功能
-    <NSwitch
-      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
-      @update:value="onUpdateFunctionEnable"
-    />
+    <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
+      @update:value="onUpdateFunctionEnable" />
 
     <br />
     <NText depth="3">
@@ -812,11 +808,7 @@ onUnmounted(() => {
       则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 !(部署了则不影响)
     </NText>
   </NAlert>
-  <NAlert
-    type="warning"
-    v-else
-    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑"
-  >
+  <NAlert type="warning" v-else title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑">
     <NButton tag="a" href="/manage" target="_blank" type="primary"> 前往登录或注册 </NButton>
   </NAlert>
   <br />
@@ -832,11 +824,8 @@ onUnmounted(() => {
   </NCard>
   <br />
   <NCard>
-    <NTabs
-      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
-      animated
-      display-directive="show:lazy"
-    >
+    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)" animated
+      display-directive="show:lazy">
       <NTabPane name="list" tab="列表">
         <NCard size="small">
           <NSpace align="center">
@@ -861,12 +850,8 @@ onUnmounted(() => {
               <NInput placeholder="手动添加" v-model:value="newSongName" />
               <NButton type="primary" @click="addSongManual"> 添加 </NButton>
             </NInputGroup>
-            <NRadioGroup
-              v-model:value="settings.sortType"
-              :disabled="!configCanEdit"
-              @update:value="updateSettings"
-              type="button"
-            >
+            <NRadioGroup v-model:value="settings.sortType" :disabled="!configCanEdit" @update:value="updateSettings"
+              type="button">
               <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
               <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
@@ -893,17 +878,13 @@ onUnmounted(() => {
         </Transition>
         <NList v-if="activeSongs.length > 0" :show-divider="false" hoverable>
           <NListItem v-for="song in activeSongs" :key="song.id" style="padding: 5px">
-            <NCard
-              embedded
-              size="small"
-              content-style="padding: 5px;"
-              :style="`${song.status == SongRequestStatus.Singing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`"
-            >
+            <NCard embedded size="small" content-style="padding: 5px;"
+              :style="`${song.status == SongRequestStatus.Singing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
               <NSpace justify="space-between" align="center" style="height: 100%; margin: 0 5px 0 5px">
                 <NSpace align="center">
                   <div
-                    :style="`border-radius: 4px; background-color: ${song.status == SongRequestStatus.Singing ? '#75c37f' : '#577fb8'}; width: 10px; height: 20px`"
-                  ></div>
+                    :style="`border-radius: 4px; background-color: ${song.status == SongRequestStatus.Singing ? '#75c37f' : '#577fb8'}; width: 10px; height: 20px`">
+                  </div>
                   <NText strong style="font-size: 18px">
                     {{ song.songName }}
                   </NText>
@@ -922,12 +903,10 @@ onUnmounted(() => {
                       {{ song.user?.uid }}
                     </NTooltip>
                   </template>
-                  <NSpace
-                    v-if="
-                      (song.from == SongRequestFrom.Danmaku || song.from == SongRequestFrom.SC) &&
-                      song.user?.fans_medal_wearing_status
-                    "
-                  >
+                  <NSpace v-if="
+                    (song.from == SongRequestFrom.Danmaku || song.from == SongRequestFrom.SC) &&
+                    song.user?.fans_medal_wearing_status
+                  ">
                     <NTag size="tiny" round>
                       <NTag size="tiny" round :bordered="false">
                         <NText depth="3">
@@ -939,26 +918,16 @@ onUnmounted(() => {
                       </span>
                     </NTag>
                   </NSpace>
-                  <NTag
-                    v-if="(song.user?.guard_level ?? 0) > 0"
-                    size="small"
-                    :bordered="false"
-                    :color="{ textColor: 'white', color: GetGuardColor(song.user?.guard_level) }"
-                  >
+                  <NTag v-if="(song.user?.guard_level ?? 0) > 0" size="small" :bordered="false"
+                    :color="{ textColor: 'white', color: GetGuardColor(song.user?.guard_level) }">
                     {{ song.user?.guard_level == 1 ? '总督' : song.user?.guard_level == 2 ? '提督' : '舰长' }}
                   </NTag>
-                  <NTag
-                    v-if="song.from == SongRequestFrom.SC"
-                    size="small"
-                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }"
-                  >
+                  <NTag v-if="song.from == SongRequestFrom.SC" size="small"
+                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }">
                     SC | {{ song.price }}
                   </NTag>
-                  <NTag
-                    v-if="song.from == SongRequestFrom.Gift"
-                    size="small"
-                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }"
-                  >
+                  <NTag v-if="song.from == SongRequestFrom.Gift" size="small"
+                    :color="{ textColor: 'white', color: GetSCColor(song.price ?? 0) }">
                     Gift | {{ song.price }}
                   </NTag>
                   <NTooltip>
@@ -973,13 +942,8 @@ onUnmounted(() => {
                 <NSpace justify="end" align="center">
                   <NTooltip v-if="song.song">
                     <template #trigger>
-                      <NButton
-                        circle
-                        type="success"
-                        style="height: 30px; width: 30px"
-                        :loading="isLrcLoading == song?.song?.key"
-                        @click="selectedSong = song.song"
-                      >
+                      <NButton circle type="success" style="height: 30px; width: 30px"
+                        :loading="isLrcLoading == song?.song?.key" @click="selectedSong = song.song">
                         <template #icon>
                           <NIcon :component="Play24Filled" />
                         </template>
@@ -989,25 +953,17 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton
-                        circle
-                        type="primary"
-                        style="height: 30px; width: 30px"
-                        :disabled="
-                          songs.findIndex((s) => s.id != song.id && s.status == SongRequestStatus.Singing) > -1
-                        "
-                        @click="
+                      <NButton circle type="primary" style="height: 30px; width: 30px" :disabled="songs.findIndex((s) => s.id != song.id && s.status == SongRequestStatus.Singing) > -1
+                        " @click="
                           updateSongStatus(
                             song,
                             song.status == SongRequestStatus.Singing
                               ? SongRequestStatus.Waiting
                               : SongRequestStatus.Singing,
                           )
-                        "
+                          "
                         :style="`animation: ${song.status == SongRequestStatus.Waiting ? '' : 'loading 5s linear infinite'}`"
-                        :secondary="song.status == SongRequestStatus.Singing"
-                        :loading="isLoading"
-                      >
+                        :secondary="song.status == SongRequestStatus.Singing" :loading="isLoading">
                         <template #icon>
                           <NIcon :component="Mic24Filled" />
                         </template>
@@ -1023,13 +979,8 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton
-                        circle
-                        type="success"
-                        style="height: 30px; width: 30px"
-                        :loading="isLoading"
-                        @click="updateSongStatus(song, SongRequestStatus.Finish)"
-                      >
+                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLoading"
+                        @click="updateSongStatus(song, SongRequestStatus.Finish)">
                         <template #icon>
                           <NIcon :component="Checkmark12Regular" />
                         </template>
@@ -1054,13 +1005,8 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton
-                        circle
-                        type="error"
-                        style="height: 30px; width: 30px"
-                        :loading="isLoading"
-                        @click="updateSongStatus(song, SongRequestStatus.Cancel)"
-                      >
+                      <NButton circle type="error" style="height: 30px; width: 30px" :loading="isLoading"
+                        @click="updateSongStatus(song, SongRequestStatus.Cancel)">
                         <template #icon>
                           <NIcon :component="Dismiss16Filled" />
                         </template>
@@ -1096,20 +1042,14 @@ onUnmounted(() => {
             </NInputGroup>
           </NSpace>
         </NCard>
-        <NDataTable
-          size="small"
-          ref="table"
-          :columns="columns"
-          :data="songs"
-          :pagination="{
-            itemCount: songs.length,
-            pageSizes: [20, 50, 100],
-            showSizePicker: true,
-            prefix({ itemCount }) {
-              return `共 ${itemCount} 条记录`
-            },
-          }"
-        />
+        <NDataTable size="small" ref="table" :columns="columns" :data="songs" :pagination="{
+          itemCount: songs.length,
+          pageSizes: [20, 50, 100],
+          showSizePicker: true,
+          prefix({ itemCount }) {
+            return `共 ${itemCount} 条记录`
+          },
+        }" />
       </NTabPane>
       <NTabPane name="setting" tab="设置">
         <NSpin :show="isLoading">
@@ -1132,26 +1072,17 @@ onUnmounted(() => {
               <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
             </NInputGroup>
             <NSpace align="center">
-              <NCheckbox
-                v-model:checked="settings.enableOnStreaming"
-                @update:checked="updateSettings"
-                :disabled="!configCanEdit"
-              >
+              <NCheckbox v-model:checked="settings.enableOnStreaming" @update:checked="updateSettings"
+                :disabled="!configCanEdit">
                 仅在直播时才允许加入
               </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.allowAllDanmaku"
-                @update:checked="updateSettings"
-                :disabled="!configCanEdit"
-              >
+              <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="updateSettings"
+                :disabled="!configCanEdit">
                 允许所有弹幕点播
               </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
-                <NCheckbox
-                  v-model:checked="settings.needWearFanMedal"
-                  @update:checked="updateSettings"
-                  :disabled="!configCanEdit"
-                >
+                <NCheckbox v-model:checked="settings.needWearFanMedal" @update:checked="updateSettings"
+                  :disabled="!configCanEdit">
                   需要拥有粉丝牌
                 </NCheckbox>
                 <NInputGroup v-if="settings.needWearFanMedal" style="width: 250px">
@@ -1159,28 +1090,16 @@ onUnmounted(() => {
                   <NInputNumber v-model:value="settings.fanMedalMinLevel" :disabled="!configCanEdit" />
                   <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
                 </NInputGroup>
-                <NCheckbox
-                  v-if="!settings.allowAllDanmaku"
-                  v-model:checked="settings.needJianzhang"
-                  @update:checked="updateSettings"
-                  :disabled="!configCanEdit"
-                >
+                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needJianzhang"
+                  @update:checked="updateSettings" :disabled="!configCanEdit">
                   只允许舰长
                 </NCheckbox>
-                <NCheckbox
-                  v-if="!settings.allowAllDanmaku"
-                  v-model:checked="settings.needTidu"
-                  @update:checked="updateSettings"
-                  :disabled="!configCanEdit"
-                >
+                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needTidu"
+                  @update:checked="updateSettings" :disabled="!configCanEdit">
                   只允许提督
                 </NCheckbox>
-                <NCheckbox
-                  v-if="!settings.allowAllDanmaku"
-                  v-model:checked="settings.needZongdu"
-                  @update:checked="updateSettings"
-                  :disabled="!configCanEdit"
-                >
+                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needZongdu"
+                  @update:checked="updateSettings" :disabled="!configCanEdit">
                   只允许总督
                 </NCheckbox>
               </template>
@@ -1190,11 +1109,8 @@ onUnmounted(() => {
                 允许通过 SuperChat 点播
               </NCheckbox>
               <span v-if="settings.allowSC">
-                <NCheckbox
-                  v-model:checked="settings.allowSC"
-                  @update:checked="updateSettings"
-                  :disabled="!configCanEdit"
-                >
+                <NCheckbox v-model:checked="settings.allowSC" @update:checked="updateSettings"
+                  :disabled="!configCanEdit">
                   SC 点播无视限制
                 </NCheckbox>
                 <NTooltip>
@@ -1273,29 +1189,20 @@ onUnmounted(() => {
             </NSpace> -->
             <NDivider> 点歌 </NDivider>
             <NSpace>
-              <NCheckbox
-                v-model:checked="settings.onlyAllowSongList"
-                @update:checked="updateSettings"
-                :disabled="!configCanEdit"
-              >
+              <NCheckbox v-model:checked="settings.onlyAllowSongList" @update:checked="updateSettings"
+                :disabled="!configCanEdit">
                 仅允许点
                 <NButton text tag="a" href="/manage/song-list" target="_blank" type="info"> 歌单 </NButton>
                 内的歌曲
               </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.allowFromWeb"
-                @update:checked="updateSettings"
-                :disabled="!configCanEdit"
-              >
+              <NCheckbox v-model:checked="settings.allowFromWeb" @update:checked="updateSettings"
+                :disabled="!configCanEdit">
                 允许通过网页点歌
               </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
-            <NCheckbox
-              v-model:checked="settings.enableCooldown"
-              @update:checked="updateSettings"
-              :disabled="!configCanEdit"
-            >
+            <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings"
+              :disabled="!configCanEdit">
               启用点播冷却
             </NCheckbox>
             <NSpace v-if="settings.enableCooldown">
@@ -1329,25 +1236,16 @@ onUnmounted(() => {
                   <NButton @click="updateSettings" type="primary">确定</NButton>
                 </template>
               </NInputGroup>
-              <NCheckbox
-                v-model:checked="settings.showRequireInfo"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
+              <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit"
+                @update:checked="updateSettings">
                 显示底部的需求信息
               </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.showUserName"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
+              <NCheckbox v-model:checked="settings.showUserName" :disabled="!configCanEdit"
+                @update:checked="updateSettings">
                 显示点播用户名
               </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.showFanMadelInfo"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
+              <NCheckbox v-model:checked="settings.showFanMadelInfo" :disabled="!configCanEdit"
+                @update:checked="updateSettings">
                 显示点播用户粉丝牌
               </NCheckbox>
             </NSpace>
@@ -1368,7 +1266,7 @@ onUnmounted(() => {
       <LiveRequestOBS :id="accountInfo?.id" />
     </div>
     <br />
-    <NInput :value="'https://vtsuru.live/obs/live-request?id=' + accountInfo?.id" />
+    <NInput :value="`${CURRENT_HOST}obs/live-request?id=` + accountInfo?.id" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">
@@ -1385,15 +1283,18 @@ onUnmounted(() => {
 
 <style>
 @keyframes loading {
+
   /*以百分比来规定改变发生的时间 也可以通过"from"和"to",等价于0% 和 100%*/
   0% {
     /*rotate(2D旋转) scale(放大或者缩小) translate(移动) skew(翻转)*/
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
+
 @keyframes animated-border {
   0% {
     box-shadow: 0 0 0px #589580;
@@ -1403,6 +1304,7 @@ onUnmounted(() => {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0);
   }
 }
+
 @keyframes animated-border-round {
   0% {
     box-shadow: 0 0 0px #589580;

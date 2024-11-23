@@ -26,9 +26,11 @@ import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
   NBackTop,
+  NBadge,
   NButton,
   NCountdown,
   NDivider,
+  NFlex,
   NIcon,
   NLayout,
   NLayoutContent,
@@ -320,6 +322,23 @@ const menuOptions = [
     children: [
       {
         label: () =>
+          h(NBadge, { value: '新', offset: [15, 12], type: 'info' }, () => h(NTooltip, {}, {
+            trigger: () => h(
+              RouterLink,
+              {
+                to: {
+                  name: 'manage-danmuji',
+                },
+              },
+              { default: () => '弹幕机' },
+            ),
+            default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
+          })),
+        key: 'manage-danmuji',
+        icon: renderIcon(Lottery24Filled),
+      },
+      {
+        label: () =>
           h(
             RouterLink,
             {
@@ -464,12 +483,8 @@ onMounted(() => {
         </template>
         <template #extra>
           <NSpace align="center" justify="center">
-            <NSwitch
-              :default-value="!isDarkMode"
-              @update:value="
-                (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
-              "
-            >
+            <NSwitch :default-value="!isDarkMode" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
+              ">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -477,12 +492,8 @@ onMounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton
-              size="small"
-              style="right: 0px; position: relative"
-              type="primary"
-              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"
-            >
+            <NButton size="small" style="right: 0px; position: relative" type="primary"
+              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })">
               回到展示页
             </NButton>
           </NSpace>
@@ -490,17 +501,8 @@ onMounted(() => {
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider
-        ref="sider"
-        bordered
-        show-trigger
-        collapse-mode="width"
-        :default-collapsed="windowWidth < 750"
-        :collapsed-width="64"
-        :width="180"
-        :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none', style: {} }"
-      >
+      <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750"
+        :collapsed-width="64" :width="180" :native-scrollbar="false" :scrollbar-props="{ trigger: 'none', style: {} }">
         <NSpace vertical style="margin-top: 16px" align="center">
           <NSpace justify="center">
             <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
@@ -527,14 +529,9 @@ onMounted(() => {
             <template v-if="width >= 180"> 认证用户主页 </template>
           </NButton>
         </NSpace>
-        <NMenu
-          style="margin-top: 12px"
-          :disabled="accountInfo?.isEmailVerified != true"
-          :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-        />
+        <NMenu style="margin-top: 12px" :disabled="accountInfo?.isEmailVerified != true"
+          :default-value="($route.meta.parent as string) ?? $route.name?.toString()" :collapsed-width="64"
+          :collapsed-icon-size="22" :options="menuOptions" />
         <NSpace v-if="width > 150" justify="center" align="center" vertical>
           <NText depth="3">
             有更多功能建议请
@@ -544,10 +541,18 @@ onMounted(() => {
             <NButton text type="info" @click="$router.push({ name: 'about' })"> 关于本站 </NButton>
           </NText>
         </NSpace>
+        <NDivider style="margin-bottom: 8px;" />
+        <NFlex justify="center" align="center">
+          <NText
+            :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'};visibility: ${width < 180 ? 'hidden' : 'visible'}`">
+            By Megghy
+          </NText>
+        </NFlex>
       </NLayoutSider>
       <NLayout>
         <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
-          <NLayoutContent style="box-sizing: border-box; padding: 20px; min-width: 300px; height: 100%">
+          <NLayoutContent
+            :style="`box-sizing: border-box; padding: 20px; min-width: 300px; height: calc(100vh - 50px - ${aplayerHeight}px);`">
             <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
               <KeepAlive>
                 <Suspense>
@@ -566,11 +571,8 @@ onMounted(() => {
                   <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail">
                     重新发送验证邮件
                   </NButton>
-                  <NCountdown
-                    v-if="!canResendEmail"
-                    :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                    @finish="canResendEmail = true"
-                  />
+                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                    @finish="canResendEmail = true" />
 
                   <NPopconfirm @positive-click="logout" size="small">
                     <template #trigger>
@@ -586,21 +588,12 @@ onMounted(() => {
         </NScrollbar>
         <NLayoutFooter :style="`height: ${aplayerHeight}px;overflow: auto`">
           <div style="display: flex; align-items: center; margin: 0 10px 0 10px">
-            <APlayer
-              v-if="musicRquestStore.aplayerMusics.length > 0"
-              ref="aplayer"
-              :list="musicRquestStore.aplayerMusics"
-              v-model:music="musicRquestStore.currentMusic"
-              v-model:volume="musicRquestStore.settings.volume"
-              v-model:shuffle="musicRquestStore.settings.shuffle"
-              v-model:repeat="musicRquestStore.settings.repeat"
-              :listMaxHeight="'200'"
-              mutex
-              listFolded
-              @ended="musicRquestStore.onMusicEnd"
-              @play="musicRquestStore.onMusicPlay"
-              style="flex: 1; min-width: 400px"
-            />
+            <APlayer v-if="musicRquestStore.aplayerMusics.length > 0" ref="aplayer"
+              :list="musicRquestStore.aplayerMusics" v-model:music="musicRquestStore.currentMusic"
+              v-model:volume="musicRquestStore.settings.volume" v-model:shuffle="musicRquestStore.settings.shuffle"
+              v-model:repeat="musicRquestStore.settings.repeat" :listMaxHeight="'200'" mutex listFolded
+              @ended="musicRquestStore.onMusicEnd" @play="musicRquestStore.onMusicPlay"
+              style="flex: 1; min-width: 400px" />
             <NSpace vertical>
               <NTag :bordered="false" type="info" size="small">
                 队列: {{ musicRquestStore.waitingMusics.length }}
@@ -613,8 +606,7 @@ onMounted(() => {
     </NLayout>
   </NLayout>
   <template v-else>
-    <NLayoutContent
-      style="
+    <NLayoutContent style="
         display: flex;
         justify-content: center;
         align-items: center;
@@ -622,8 +614,7 @@ onMounted(() => {
         padding: 50px;
         height: 100%;
         box-sizing: border-box;
-      "
-    >
+      ">
       <template v-if="!isLoadingAccount">
         <NSpace vertical justify="center" align="center">
           <NText> 请登录或注册后使用 </NText>

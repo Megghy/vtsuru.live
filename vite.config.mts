@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
 import Markdown from 'unplugin-vue-markdown/vite'
 import caddyTls from './plugins/vite-plugin-caddy'
+import ViteMonacoPlugin from 'vite-plugin-monaco-editor'
 
 export default defineConfig({
   plugins: [
@@ -26,7 +27,8 @@ export default defineConfig({
     Markdown({
       /* options */
     }),
-    caddyTls()
+    caddyTls(),
+    ViteMonacoPlugin({ languageWorkers: ['css'] })
   ],
   resolve: {
     alias: {
@@ -39,5 +41,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
-  },
+  }
 })

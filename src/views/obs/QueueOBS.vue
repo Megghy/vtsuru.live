@@ -29,7 +29,7 @@ const route = useRoute()
 const currentId = computed(() => {
   return props.id ?? route.query.id
 })
-const rtc = useWebRTC().Init('slave')
+const rtc = await useWebRTC().Init('slave')
 
 const listContainerRef = ref()
 const footerRef = ref()

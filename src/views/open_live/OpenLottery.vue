@@ -3,7 +3,7 @@ import { useAccount } from '@/api/account'
 import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
-import { LOTTERY_API_URL } from '@/data/constants'
+import { CURRENT_HOST, LOTTERY_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Delete24Filled, Info24Filled } from '@vicons/fluent'
 import { useLocalStorage, useStorage } from '@vueuse/core'
@@ -108,7 +108,7 @@ async function getUsers() {
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {}
+  } catch (err) { }
   return null
 }
 function updateUsers() {
@@ -181,7 +181,7 @@ function startLottery() {
             if (currentUsers.value.length > lotteryOption.value.resultCount) {
               console.log(
                 `[${currentUsers.value.length}] 移除` +
-                  currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
+                currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
               )
               setTimeout(() => {
                 removeSingleUser()
@@ -199,7 +199,7 @@ function startLottery() {
             while (currentUsers.value.length > lotteryOption.value.resultCount) {
               console.log(
                 `[${currentUsers.value.length}] 移除` +
-                  currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
+                currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
               )
             }
             onFinishLottery()
@@ -210,7 +210,7 @@ function startLottery() {
             while (currentUsers.value.length > half) {
               console.log(
                 `[${currentUsers.value.length}] 移除` +
-                  currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
+                currentUsers.value.splice(getRandomInt(currentUsers.value.length), 1)[0].name,
               )
             }
           }
@@ -342,12 +342,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NResult
-    v-if="!code && !accountInfo"
-    status="403"
-    title="403"
-    description="该页面只能从幻星平台访问或者注册用户使用"
-  />
+  <NResult v-if="!code && !accountInfo" status="403" title="403" description="该页面只能从幻星平台访问或者注册用户使用" />
   <template v-else>
     <NCard>
       <template #header>
@@ -391,13 +386,8 @@ onUnmounted(() => {
           <NCollapseTransition>
             <NInputGroup v-if="lotteryOption.needFanMedal" style="max-width: 200px">
               <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="lotteryOption.fanCardLevel"
-                min="1"
-                max="50"
-                :default-value="1"
-                :disabled="isLottering || isStartLottery"
-              />
+              <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1"
+                :disabled="isLottering || isStartLottery" />
             </NInputGroup>
           </NCollapseTransition>
           <template v-if="lotteryOption.type == 'danmaku'">
@@ -405,21 +395,14 @@ onUnmounted(() => {
               <template #trigger>
                 <NInputGroup style="max-width: 250px">
                   <NInputGroupLabel> 弹幕内容 </NInputGroupLabel>
-                  <NInput
-                    :disabled="isStartLottery"
-                    v-model:value="lotteryOption.danmakuKeyword"
-                    placeholder="留空则任何弹幕都可以"
-                  />
+                  <NInput :disabled="isStartLottery" v-model:value="lotteryOption.danmakuKeyword"
+                    placeholder="留空则任何弹幕都可以" />
                 </NInputGroup>
               </template>
               符合规则的弹幕才会被添加到抽奖队列中
             </NTooltip>
-            <NRadioGroup
-              v-model:value="lotteryOption.danmakuFilterType"
-              name="判定类型"
-              :disabled="isLottering"
-              size="small"
-            >
+            <NRadioGroup v-model:value="lotteryOption.danmakuFilterType" name="判定类型" :disabled="isLottering"
+              size="small">
               <NRadioButton :disabled="isStartLottery" value="all"> 完全一致 </NRadioButton>
               <NRadioButton :disabled="isStartLottery" value="contains"> 包含 </NRadioButton>
               <NRadioButton :disabled="isStartLottery" value="regex"> 正则 </NRadioButton>
@@ -428,11 +411,8 @@ onUnmounted(() => {
           <template v-else-if="lotteryOption.type == 'gift'">
             <NInputGroup style="max-width: 250px">
               <NInputGroupLabel> 最低价格 </NInputGroupLabel>
-              <NInputNumber
-                :disabled="isStartLottery"
-                v-model:value="lotteryOption.giftMinPrice"
-                placeholder="留空则不限制"
-              />
+              <NInputNumber :disabled="isStartLottery" v-model:value="lotteryOption.giftMinPrice"
+                placeholder="留空则不限制" />
             </NInputGroup>
             <NInputGroup style="max-width: 200px">
               <NInputGroupLabel> 礼物名称 </NInputGroupLabel>
@@ -467,12 +447,8 @@ onUnmounted(() => {
       </NCard>
       <NCard v-if="originUsers" size="small">
         <NSpace justify="center" align="center">
-          <NButton
-            type="primary"
-            @click="continueLottery"
-            :loading="isStartLottery"
-            :disabled="isStartLottery || isLotteried || !client"
-          >
+          <NButton type="primary" @click="continueLottery" :loading="isStartLottery"
+            :disabled="isStartLottery || isLotteried || !client">
             开始
           </NButton>
           <NButton type="warning" :disabled="!isStartLottery" @click="pause"> 停止 </NButton>
@@ -482,15 +458,9 @@ onUnmounted(() => {
           <template v-if="isStartLottery"> 进行抽取前需要先停止 </template>
         </NDivider>
         <NSpace justify="center">
-          <NButton
-            type="primary"
-            secondary
-            @click="startLottery"
-            :loading="isLottering"
-            :disabled="isStartLottery || isLotteried"
-            data-umami-event="Open-Live Use Lottery"
-            :data-umami-event-uid="client?.authInfo?.anchor_info?.uid"
-          >
+          <NButton type="primary" secondary @click="startLottery" :loading="isLottering"
+            :disabled="isStartLottery || isLotteried" data-umami-event="Open-Live Use Lottery"
+            :data-umami-event-uid="client?.authInfo?.anchor_info?.uid">
             进行抽取
           </NButton>
           <NButton type="info" secondary :disabled="isStartLottery || isLottering || !isLotteried" @click="reset">
@@ -503,15 +473,8 @@ onUnmounted(() => {
             <NCard size="small" :title="item.name" style="height: 155px" embedded>
               <template #header>
                 <NSpace align="center" vertical :size="5">
-                  <NAvatar
-                    round
-                    lazy
-                    borderd
-                    :size="64"
-                    :src="item.avatar + '@64w_64h'"
-                    :img-props="{ referrerpolicy: 'no-referrer' }"
-                    style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
-                  />
+                  <NAvatar round lazy borderd :size="64" :src="item.avatar + '@64w_64h'"
+                    :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
                   <NSpace v-if="item.fans_medal_wearing_status">
                     <NTag size="tiny" round>
                       <NTag size="tiny" round :bordered="false">
@@ -526,12 +489,8 @@ onUnmounted(() => {
                   {{ item.name }}
                 </NSpace>
 
-                <NButton
-                  style="position: absolute; right: 5px; top: 5px; color: #753e3e"
-                  @click="removeUser(item)"
-                  size="small"
-                  circle
-                >
+                <NButton style="position: absolute; right: 5px; top: 5px; color: #753e3e" @click="removeUser(item)"
+                  size="small" circle>
                   <template #icon>
                     <NIcon :component="Delete24Filled" />
                   </template>
@@ -572,21 +531,15 @@ onUnmounted(() => {
     </NScrollbar>
     <NEmpty v-else description="暂无记录" />
   </NModal>
-  <NModal
-    v-model:show="showOBSModal"
-    preset="card"
-    title="OBS 组件"
-    style="max-width: 90%; width: 800px; max-height: 90vh"
-    closable
-    content-style="overflow: auto"
-  >
+  <NModal v-model:show="showOBSModal" preset="card" title="OBS 组件"
+    style="max-width: 90%; width: 800px; max-height: 90vh" closable content-style="overflow: auto">
     <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
     <NDivider> 浏览 </NDivider>
     <div style="height: 400px; width: 250px; position: relative; margin: 0 auto">
       <LiveLotteryOBS :code="code" />
     </div>
     <br />
-    <NInput :value="'https://vtsuru.live/obs/live-lottery?code=' + code" />
+    <NInput :value="`${CURRENT_HOST}obs/live-lottery?code=` + code" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">

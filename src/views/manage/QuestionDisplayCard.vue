@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QAInfo, QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
-import { useDebounceFn, useStorage } from '@vueuse/core'
+import { useDebounceFn, useScroll, useStorage } from '@vueuse/core'
 
 const props = defineProps<{
   question: QAInfo | undefined
@@ -10,6 +10,9 @@ const props = defineProps<{
   showGreenBorder?: boolean
   css?: string
 }>()
+defineExpose({ setScroll, setScrollTop })
+const emit = defineEmits<{ scroll: [value: { clientHeight: number, scrollHeight: number, scrollTop: number }] }>()
+
 let styleElement: HTMLStyleElement
 const cssDebounce = useDebounceFn(() => {
   if (styleElement) {
@@ -18,6 +21,10 @@ const cssDebounce = useDebounceFn(() => {
   }
 }, 1000)
 watch(() => props.css, cssDebounce)
+
+const contentRef = ref()
+const { x, y, isScrolling, arrivedState, directions } = useScroll(contentRef)
+
 
 const align = computed(() => {
   switch (props.setting.align) {
@@ -30,6 +37,28 @@ const align = computed(() => {
   }
   return 'left'
 })
+function setScrollTop(top: number) {
+  contentRef.value?.scrollTo({
+    top: top,
+    behavior: 'smooth',
+  })
+}
+function setScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
+  if (contentRef.value.clientHeight == contentRef.value.scrollHeight) {
+    setScrollTop(value.scrollTop)
+  } else {
+    const scrollRatio1 = value.scrollTop / (value.scrollHeight - value.clientHeight);
+    const scrollTop = scrollRatio1 * (contentRef.value.scrollHeight - contentRef.value.clientHeight);
+    setScrollTop(scrollTop)
+  }
+}
+function scrollCallback(e: Event) {
+  emit('scroll', {
+    clientHeight: contentRef.value?.clientHeight ?? 0,
+    scrollHeight: contentRef.value?.scrollHeight ?? 0,
+    scrollTop: contentRef.value?.scrollTop ?? 0
+  })
+}
 
 onMounted(() => {
   // 创建<style>元素并添加到<head>中
@@ -37,62 +66,50 @@ onMounted(() => {
   // 可能需要对 userStyleString 做安全处理以避免XSS攻击
   styleElement.textContent = props.css ?? ''
   document.head.appendChild(styleElement)
+
+  contentRef.value?.addEventListener('scroll', scrollCallback)
 })
 onUnmounted(() => {
   if (styleElement && styleElement.parentNode) {
     styleElement.parentNode.removeChild(styleElement)
   }
+  contentRef.value?.removeEventListener('scroll', scrollCallback)
 })
 </script>
 
 <template>
-  <div
-    class="question-display-root"
-    :style="{
-      backgroundColor: '#' + setting.borderColor,
-      borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
-      borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
-      borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
-    }"
-    :display="question ? 1 : 0"
-  >
+  <div class="question-display-root" :style="{
+    backgroundColor: '#' + setting.borderColor,
+    borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
+    borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
+    borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
+  }" :display="question ? 1 : 0">
     <Transition name="scale" mode="out-in">
-      <div
-        v-if="setting.showUserName && question"
-        class="question-display-user-name"
-        :style="{
-          color: '#' + setting.nameFontColor,
-          fontSize: setting.nameFontSize + 'px',
-          fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
-          fontFamily: setting.nameFont,
-        }"
-      >
+      <div v-if="setting.showUserName && question" class="question-display-user-name" :style="{
+        color: '#' + setting.nameFontColor,
+        fontSize: setting.nameFontSize + 'px',
+        fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
+        fontFamily: setting.nameFont,
+      }">
         {{ question?.sender?.name ?? '匿名用户' }}
       </div>
     </Transition>
-    <div
-      class="question-display-content"
-      :style="{
-        color: '#' + setting.fontColor,
-        backgroundColor: '#' + setting.backgroundColor,
-        fontSize: setting.fontSize + 'px',
-        fontWeight: setting.fontWeight ? setting.fontWeight : undefined,
-        textAlign: align,
-        fontFamily: setting.font,
-      }"
-      :is-empty="question ? 0 : 1"
-    >
+    <div class="question-display-content" @scroll="scrollCallback" ref="contentRef" :style="{
+      color: '#' + setting.fontColor,
+      backgroundColor: '#' + setting.backgroundColor,
+      fontSize: setting.fontSize + 'px',
+      fontWeight: setting.fontWeight ? setting.fontWeight : undefined,
+      textAlign: align,
+      fontFamily: setting.font,
+    }" :is-empty="question ? 0 : 1">
       <Transition name="fade" mode="out-in">
         <template v-if="question">
           <div>
             <div class="question-display-text">
               {{ question?.question.message }}
             </div>
-            <img
-              class="question-display-image"
-              v-if="setting.showImage && question?.question.image"
-              :src="question?.question.image"
-            />
+            <img class="question-display-image" v-if="setting.showImage && question?.question.image"
+              :src="question?.question.image" />
           </div>
         </template>
         <div v-else class="question-display-loading loading" :style="{ color: '#' + setting.fontColor }">
@@ -118,6 +135,7 @@ onUnmounted(() => {
   box-sizing: border-box;
   transition: all 0.3s ease;
 }
+
 .question-display-content {
   border-radius: 10px;
   display: flex;
@@ -127,6 +145,7 @@ onUnmounted(() => {
   padding: 24px;
   overflow: auto;
 }
+
 .question-display-user-name {
   text-align: center;
   margin: 5px;
@@ -134,9 +153,11 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .question-display-text {
   min-height: 50px;
 }
+
 .question-display-image {
   max-width: 40%;
   max-height: 40%;
@@ -172,7 +193,7 @@ onUnmounted(() => {
 
 <style scoped>
 .loading,
-.loading > div {
+.loading>div {
   position: relative;
   box-sizing: border-box;
 }
@@ -187,7 +208,7 @@ onUnmounted(() => {
   color: #333;
 }
 
-.loading > div {
+.loading>div {
   display: inline-block;
   float: none;
   background-color: currentColor;
@@ -199,18 +220,18 @@ onUnmounted(() => {
   height: 10px;
 }
 
-.loading > div {
+.loading>div {
   width: 10px;
   height: 10px;
   border-radius: 100%;
 }
 
-.loading > div:first-child {
+.loading>div:first-child {
   transform: translateX(0%);
   animation: ball-newton-cradle-left 1.5s 0s ease-out infinite;
 }
 
-.loading > div:last-child {
+.loading>div:last-child {
   transform: translateX(0%);
   animation: ball-newton-cradle-right 1.5s 0s ease-out infinite;
 }
@@ -220,7 +241,7 @@ onUnmounted(() => {
   height: 4px;
 }
 
-.loading.la-sm > div {
+.loading.la-sm>div {
   width: 4px;
   height: 4px;
 }
@@ -230,7 +251,7 @@ onUnmounted(() => {
   height: 20px;
 }
 
-.loading.la-2x > div {
+.loading.la-2x>div {
   width: 20px;
   height: 20px;
 }
@@ -240,7 +261,7 @@ onUnmounted(() => {
   height: 30px;
 }
 
-.loading.la-3x > div {
+.loading.la-3x>div {
   width: 30px;
   height: 30px;
 }
@@ -270,11 +291,12 @@ onUnmounted(() => {
     transform: translateX(0%);
   }
 }
-.loading > div:first-child {
+
+.loading>div:first-child {
   animation: ball-newton-cradle-left 1.5s 0s ease-in-out infinite;
 }
 
-.loading > div:last-child {
+.loading>div:last-child {
   animation: ball-newton-cradle-right 1.5s 0s ease-in-out infinite;
 }
 </style>

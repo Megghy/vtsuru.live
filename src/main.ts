@@ -13,13 +13,6 @@ import { useVTsuruHub } from './store/useVTsuruHub'
 
 const pinia = createPinia()
 
-const app = createApp(App)
-app.use(router).use(pinia).mount('#app')
-
-let currentVersion: string
-let isHaveNewVersion = false
-
-const { notification } = createDiscreteApi(['notification'])
 QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
   .then((version) => {
     if (version.code == 200) {
@@ -99,6 +92,7 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
   })
   .finally(async () => {
     //加载其他数据
+    InitTTS()
     await GetSelfAccount()
     const account = useAccount()
     const useAuth = useAuthStore()
@@ -110,8 +104,16 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
     useAuth.getAuthInfo()
     GetNotifactions()
     UpdateAccountLoop()
-    InitTTS()
   })
+
+const app = createApp(App)
+app.use(router).use(pinia).mount('#app')
+
+let currentVersion: string
+let isHaveNewVersion = false
+
+const { notification } = createDiscreteApi(['notification'])
+
 function InitTTS() {
   try {
     const result = EasySpeech.detect()

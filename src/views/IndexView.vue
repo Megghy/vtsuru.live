@@ -130,7 +130,7 @@ const iconColor = 'white'
                 </NButton>
               </NSpace>
             </NSpace>
-            <NButton size="large" @click="$router.push('/user/Megghy')"> 展示 </NButton>
+            <NButton size="large" @click="$router.push('/@Megghy')"> 展示 </NButton>
             <NButton
               size="large"
               tag="a"

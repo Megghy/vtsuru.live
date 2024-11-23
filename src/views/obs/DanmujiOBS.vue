@@ -76,7 +76,7 @@ const defaultConfig: DanmujiConfig = {
 } as DanmujiConfig
 let textEmoticons: { keyword: string, url: string }[] = []
 const config = ref<DanmujiConfig>(JSON.parse(JSON.stringify(defaultConfig)))
-const rtc = useWebRTC().Init('slave')
+const rtc = await useWebRTC().Init('slave')
 
 const emoticonsTrie = computed(() => {
   let res = new trie.Trie()

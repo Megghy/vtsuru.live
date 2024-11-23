@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account';
-import { MasterRTCClient, SlaveRTCClient } from '@/data/RTCClient';
+import { BaseRTCClient, MasterRTCClient, SlaveRTCClient } from '@/data/RTCClient';
 import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { useWebRTC } from '@/store/useRTC';
 import { NButton, NInput, NSpin } from 'naive-ui';
@@ -19,11 +19,11 @@ const isMaster = computed(() => {
 const dc = useDanmakuClient()
 const customCss = ref('')
 
-let rtc: Ref<MasterRTCClient | SlaveRTCClient | undefined> = ref()
+let rtc= useWebRTC()
 const danmujiRef = ref()
 
-function mount() {
-  rtc.value = useWebRTC().Init(isMaster.value ? 'master' : 'slave')
+async function mount() {
+  rtc.Init(isMaster.value ? 'master' : 'slave')
   dc.initClient()
 }
 </script>
