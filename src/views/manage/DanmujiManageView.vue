@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NFlex, NInput } from 'naive-ui';
+import { NAlert, NFlex, NInput } from 'naive-ui';
 import DanmujiOBS from '../obs/DanmujiOBS.vue';
 import { useAccount } from '@/api/account';
 import MonacoEditorComponent from '@/components/MonacoEditorComponent.vue';
@@ -13,6 +13,7 @@ const css = ref('')
 <template>
   <NFlex wrap style="height: 100%">
     <NFlex style="flex: 1;" vertical>
+      <NAlert type="error"> 未完成</NAlert>
       <NInput :allowInput="() => false" :value="`${CURRENT_HOST}obs/danmuji?token=${accountInfo.token}`" />
       <MonacoEditorComponent language="css" :height="500" v-model:value="css" />
     </NFlex>

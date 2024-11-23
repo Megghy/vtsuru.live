@@ -7,6 +7,19 @@ import svgLoader from 'vite-svg-loader'
 import Markdown from 'unplugin-vue-markdown/vite'
 import caddyTls from './plugins/vite-plugin-caddy'
 import ViteMonacoPlugin from 'vite-plugin-monaco-editor'
+import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
+
+const isObjectWithDefaultFunction = (
+  module: unknown
+): module is { default: typeof monacoEditorPluginModule } =>
+  module != null &&
+  typeof module === 'object' &&
+  'default' in module &&
+  typeof module.default === 'function'
+
+const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
+  ? monacoEditorPluginModule.default
+  : monacoEditorPluginModule
 
 export default defineConfig({
   plugins: [
@@ -28,7 +41,7 @@ export default defineConfig({
       /* options */
     }),
     caddyTls(),
-    ViteMonacoPlugin({ languageWorkers: ['css'] })
+    monacoEditorPlugin({ languageWorkers: ['css'] })
   ],
   resolve: {
     alias: {

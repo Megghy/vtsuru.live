@@ -32,7 +32,6 @@ async function mount() {
   <NSpin show v-if="!accountInfo.id" />
   <div v-else @vue:mounted="mount">
     master: {{ isMaster }}
-    {{ rtc?.peer?.id }}
     <template v-if="isMaster">
       <NInput v-model:value="inputMsg" />
       <NButton @click="rtc.send('test', inputMsg)"> 发送 </NButton>
