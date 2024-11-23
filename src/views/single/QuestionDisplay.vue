@@ -2,11 +2,11 @@
 <script setup lang="ts">
 import { SaveSetting, useAccount } from '@/api/account'
 import { QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionItems from '@/components/QuestionItems.vue'
-import { QUESTION_API_URL } from '@/data/constants'
+import { CURRENT_HOST } from '@/data/constants'
 import { useQuestionBox } from '@/store/useQuestionBox'
+import { useWebRTC } from '@/store/useRTC'
 import QuestionDisplayCard from '@/views/manage/QuestionDisplayCard.vue'
 import {
   ArrowCircleLeft12Filled,
@@ -16,8 +16,8 @@ import {
   TextAlignLeft16Filled,
   TextAlignRight16Filled,
 } from '@vicons/fluent'
-import { Heart, HeartOutline, Delete24Filled } from '@vicons/ionicons5'
-import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
+import { Heart, HeartOutline } from '@vicons/ionicons5'
+import { useDebounceFn, useElementSize, useStorage, useThrottleFn } from '@vueuse/core'
 import {
   NButton,
   NCard,
@@ -33,13 +33,12 @@ import {
   NInputGroupLabel,
   NInputNumber,
   NModal,
-  NPopconfirm,
   NRadioButton,
   NRadioGroup,
   NScrollbar,
   NSelect,
   NTooltip,
-  useMessage,
+  useMessage
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -47,6 +46,7 @@ const message = useMessage()
 const accountInfo = useAccount()
 const defaultSettings = {} as Setting_QuestionDisplay
 const useQB = useQuestionBox()
+const rtc = await useWebRTC().Init('master')
 
 const showSettingDrawer = ref(false)
 const showGreenBorder = ref(false)
@@ -70,6 +70,11 @@ watch([cardSize.width, cardSize.height], () => {
     debouncedSize()
   }
 })
+const scrollInfo = ref<{ clientHeight: number; scrollHeight: number; scrollTop: number }>()
+const debouncedScroll = useDebounceFn(() => {
+  rtc?.send('function.question.sync-scroll', scrollInfo.value)
+}, 200)
+
 
 const setting = computed({
   get: () => {
@@ -126,6 +131,13 @@ async function loadFonts() {
     message.error('你的浏览器不支持获取字体列表')
   }
 }
+function syncScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
+  if (!setting.value.syncScroll) {
+    return
+  }
+  scrollInfo.value = value
+  debouncedScroll()
+}
 
 onMounted(() => {
   useQB.GetRecieveQAInfo()
@@ -144,14 +156,8 @@ onMounted(() => {
           <NButton @click="$router.push({ name: 'manage-questionBox' })" size="tiny" secondary> 回到控制台 </NButton>
         </template>
         <NFlex align="center">
-          <NSelect
-            v-model:value="useQB.displayTag"
-            placeholder="选择当前话题"
-            filterable
-            clearable
-            :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
-            style="width: 200px"
-          />
+          <NSelect v-model:value="useQB.displayTag" placeholder="选择当前话题" filterable clearable
+            :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))" style="width: 200px" />
           <NButton @click="useQB.GetRecieveQAInfo" type="primary"> 刷新 </NButton>
           <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
           <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
@@ -170,7 +176,7 @@ onMounted(() => {
               </NButton>
             </NFlex>
           </template>
-          <QuestionItem :item="useQB.displayQuestion" />
+          <QuestionItem :item="useQB.displayQuestion" style="max-height: 200px;overflow-y: auto" />
         </NCard>
         <NDivider style="margin: 10px 0 10px 0" />
       </template>
@@ -181,18 +187,12 @@ onMounted(() => {
             <NFlex>
               <NTooltip>
                 <template #trigger>
-                  <NButton
-                    @click="useQB.setCurrentQuestion(item)"
-                    size="small"
+                  <NButton @click="useQB.setCurrentQuestion(item)" size="small"
                     :type="item.id != useQB.displayQuestion?.id ? 'default' : 'primary'"
-                    :secondary="item.id != useQB.displayQuestion?.id"
-                  >
+                    :secondary="item.id != useQB.displayQuestion?.id">
                     <template #icon>
-                      <NIcon
-                        :component="
-                          item.id != useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
-                        "
-                      />
+                      <NIcon :component="item.id != useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
+                        " />
                     </template>
                   </NButton>
                 </template>
@@ -201,15 +201,11 @@ onMounted(() => {
               <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success" secondary>
                 设为已读
               </NButton>
-              <NButton v-else size="small" @click="useQB.read(item, false)" type="warning" secondary
-                >重设为未读</NButton
-              >
+              <NButton v-else size="small" @click="useQB.read(item, false)" type="warning" secondary>重设为未读</NButton>
               <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
                 <template #icon>
-                  <NIcon
-                    :component="item.isFavorite ? Heart : HeartOutline"
-                    :color="item.isFavorite ? '#dd484f' : ''"
-                  />
+                  <NIcon :component="item.isFavorite ? Heart : HeartOutline"
+                    :color="item.isFavorite ? '#dd484f' : ''" />
                 </template>
                 收藏
               </NButton>
@@ -218,7 +214,7 @@ onMounted(() => {
         </QuestionItems>
       </NScrollbar>
     </NFlex>
-    <NCard style="min-height: 600px">
+    <NCard style="min-height: 600px; min-width: 50vw;">
       <NFlex vertical :size="0" style="height: 100%">
         <NFlex align="center">
           <NButton @click="showSettingDrawer = true" type="primary"> 打开设置 </NButton>
@@ -230,6 +226,16 @@ onMounted(() => {
                 <NIcon :component="Info24Filled" />
               </template>
               用于使用 OBS 直接捕获浏览器窗口时消除背景
+            </NTooltip>
+          </NCheckbox>
+
+          <NCheckbox v-model:checked="setting.syncScroll" @update:checked="updateSettings">
+            同步滚动
+            <NTooltip>
+              <template #trigger>
+                <NIcon :component="Info24Filled" />
+              </template>
+              实验性功能, 当前页面组件内容滚动时也会同步到OBS组件, 当组件大小不同时可能会发生无法预料的问题
             </NTooltip>
           </NCheckbox>
           <template v-if="useQB.displayQuestion">
@@ -247,18 +253,15 @@ onMounted(() => {
           </NTooltip>
         </NDivider>
         <NFlex justify="center" align="center" style="height: 100%">
-          <div
-            ref="cardRef"
-            class="resize-box"
-            :style="{
-              border: showGreenBorder ? '24px solid green' : '',
-              background: showGreenBorder ? 'green' : '',
-              padding: '10px',
-              width: savedCardSize.width + 'px',
-              height: savedCardSize.height + 'px',
-            }"
-          >
-            <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" :css="customCss" />
+          <div ref="cardRef" class="resize-box" :style="{
+            border: showGreenBorder ? '24px solid green' : '',
+            background: showGreenBorder ? 'green' : '',
+            padding: '10px',
+            width: savedCardSize.width + 'px',
+            height: savedCardSize.height + 'px',
+          }">
+            <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" :css="customCss"
+              @scroll="syncScroll" />
           </div>
         </NFlex>
       </NFlex>
@@ -303,23 +306,13 @@ onMounted(() => {
             </NInputGroup>
             <NInputGroup style="max-width: 300px">
               <NInputGroupLabel>字重</NInputGroupLabel>
-              <NInputNumber
-                v-model:value="setting.fontWeight"
-                :min="1"
-                :max="10000"
-                step="100"
-                placeholder="只有部分字体支持"
-              />
+              <NInputNumber v-model:value="setting.fontWeight" :min="1" :max="10000" step="100"
+                placeholder="只有部分字体支持" />
               <NButton @click="updateSettings" type="info">保存</NButton>
             </NInputGroup>
             <NFlex>
-              <NSelect
-                v-model:value="setting.font"
-                :options="fontsOptions"
-                filterable
-                @update:value="updateSettings"
-                placeholder="选择内容字体"
-              />
+              <NSelect v-model:value="setting.font" :options="fontsOptions" filterable @update:value="updateSettings"
+                placeholder="选择内容字体" />
               <NTooltip>
                 <template #trigger>
                   <NButton @click="loadFonts" type="info" secondary> 获取字体列表 </NButton>
@@ -330,51 +323,27 @@ onMounted(() => {
             <NFlex justify="space-around" style="width: 100%">
               <NFlex style="min-width: 80px">
                 字体颜色
-                <NColorPicker
-                  :value="setting.fontColor ? '#' + setting.fontColor : undefined"
-                  show-preview
-                  :modes="['hex']"
-                  :actions="['clear', 'confirm']"
-                  :show-alpha="false"
-                  @update:value="
-                    (c: string | null | undefined) => {
-                      setting.fontColor = c?.replace('#', '')
-                    }
-                  "
-                  @confirm="updateSettings"
-                />
+                <NColorPicker :value="setting.fontColor ? '#' + setting.fontColor : undefined" show-preview
+                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                    setting.fontColor = c?.replace('#', '')
+                  }
+                    " @confirm="updateSettings" />
               </NFlex>
               <NFlex style="min-width: 80px">
                 背景颜色
-                <NColorPicker
-                  :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined"
-                  show-preview
-                  :modes="['hex']"
-                  :actions="['clear', 'confirm']"
-                  :show-alpha="false"
-                  @update:value="
-                    (c: string | null | undefined) => {
-                      setting.backgroundColor = c?.replace('#', '')
-                    }
-                  "
-                  @confirm="updateSettings"
-                />
+                <NColorPicker :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined" show-preview
+                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                    setting.backgroundColor = c?.replace('#', '')
+                  }
+                    " @confirm="updateSettings" />
               </NFlex>
               <NFlex style="min-width: 80px">
                 边框颜色
-                <NColorPicker
-                  :value="setting.borderColor ? '#' + setting.borderColor : undefined"
-                  show-preview
-                  :modes="['hex']"
-                  :actions="['clear', 'confirm']"
-                  :show-alpha="false"
-                  @update:value="
-                    (c: string | null | undefined) => {
-                      setting.borderColor = c?.replace('#', '')
-                    }
-                  "
-                  @confirm="updateSettings"
-                />
+                <NColorPicker :value="setting.borderColor ? '#' + setting.borderColor : undefined" show-preview
+                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                    setting.borderColor = c?.replace('#', '')
+                  }
+                    " @confirm="updateSettings" />
               </NFlex>
             </NFlex>
           </NFlex>
@@ -388,23 +357,13 @@ onMounted(() => {
             </NInputGroup>
             <NInputGroup style="max-width: 300px">
               <NInputGroupLabel>字重</NInputGroupLabel>
-              <NInputNumber
-                v-model:value="setting.nameFontWeight"
-                :min="1"
-                :max="10000"
-                step="100"
-                placeholder="只有部分字体支持"
-              />
+              <NInputNumber v-model:value="setting.nameFontWeight" :min="1" :max="10000" step="100"
+                placeholder="只有部分字体支持" />
               <NButton @click="updateSettings" type="info">保存</NButton>
             </NInputGroup>
             <NFlex>
-              <NSelect
-                v-model:value="setting.nameFont"
-                :options="fontsOptions"
-                filterable
-                @update:value="updateSettings"
-                placeholder="选择用户名字体"
-              />
+              <NSelect v-model:value="setting.nameFont" :options="fontsOptions" filterable
+                @update:value="updateSettings" placeholder="选择用户名字体" />
               <NTooltip>
                 <template #trigger>
                   <NButton @click="loadFonts" type="info" secondary> 获取字体列表 </NButton>
@@ -414,19 +373,11 @@ onMounted(() => {
             </NFlex>
             <NFlex style="min-width: 80px">
               字体颜色
-              <NColorPicker
-                :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined"
-                show-preview
-                :modes="['hex']"
-                :actions="['clear', 'confirm']"
-                :show-alpha="false"
-                @update:value="
-                  (c: string | null | undefined) => {
-                    setting.nameFontColor = c?.replace('#', '')
-                  }
-                "
-                @confirm="updateSettings"
-              />
+              <NColorPicker :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined" show-preview
+                :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                  setting.nameFontColor = c?.replace('#', '')
+                }
+                  " @confirm="updateSettings" />
             </NFlex>
           </NFlex>
         </NCard>
@@ -443,24 +394,16 @@ onMounted(() => {
       </NFlex>
     </NDrawerContent>
   </NDrawer>
-  <NModal
-    preset="card"
-    v-model:show="showOBSModal"
-    closable
-    style="max-width: 90vw; width: auto"
-    title="OBS组件"
-    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column"
-  >
-    <div
-      :style="{
-        width: savedCardSize.width + 'px',
-        height: savedCardSize.height + 'px',
-      }"
-    >
+  <NModal preset="card" v-model:show="showOBSModal" closable style="max-width: 90vw; width: auto" title="OBS组件"
+    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column">
+    <div :style="{
+      width: savedCardSize.width + 'px',
+      height: savedCardSize.height + 'px',
+    }">
       <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" />
     </div>
     <NDivider />
-    <NInput readonly :value="'https://vtsuru.live/obs/question-display?token=' + accountInfo?.token" />
+    <NInput readonly :value="`${CURRENT_HOST}obs/question-display?token=` + accountInfo?.token" />
   </NModal>
 </template>
 
@@ -476,6 +419,7 @@ onMounted(() => {
   overflow-y: hidden;
   padding: 10px;
 }
+
 .n-drawer-mask {
   background-color: rgba(0, 0, 0, 0);
 }

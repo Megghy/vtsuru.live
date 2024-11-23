@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { copyToClipboard, downloadImage } from '@/Utils'
 import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
-import { FunctionTypes, QAInfo } from '@/api/api-models'
+import { FunctionTypes, QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { QUESTION_API_URL } from '@/data/constants'
+import { CURRENT_HOST, QUESTION_API_URL } from '@/data/constants'
 import router from '@/router'
 import { Heart, HeartOutline, SwapHorizontal } from '@vicons/ionicons5'
+// @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import {
@@ -47,6 +48,8 @@ import { useRoute } from 'vue-router'
 import QuestionItem from '@/components/QuestionItems.vue'
 import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { useQuestionBox } from '@/store/useQuestionBox'
+import { useStorage } from '@vueuse/core'
+import QuestionDisplayCard from './QuestionDisplayCard.vue'
 
 const accountInfo = useAccount()
 const route = useRoute()
@@ -62,15 +65,34 @@ const replyMessage = ref()
 const addTagName = ref('')
 
 const showSettingCard = ref(true)
+const showOBSModal = ref(false)
+const defaultSettings = {} as Setting_QuestionDisplay
+const setting = computed({
+  get: () => {
+    if (accountInfo.value && accountInfo.value.settings) {
+      return accountInfo.value.settings.questionDisplay
+    }
+    return defaultSettings
+  },
+  set: (value) => {
+    if (accountInfo.value) {
+      accountInfo.value.settings.questionDisplay = value
+    }
+  },
+})
 
 const shareCardRef = ref()
-const shareUrl = computed(() => 'https://vtsuru.live/@' + accountInfo.value?.name + '/question-box')
+const shareUrl = computed(() => `${CURRENT_HOST}@` + accountInfo.value?.name + '/question-box')
 
 const ps = ref(20)
 const pn = ref(1)
 const pagedQuestions = computed(() =>
   useQB.recieveQuestionsFiltered.slice((pn.value - 1) * ps.value, pn.value * ps.value),
 )
+const savedCardSize = useStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', {
+  width: 400,
+  height: 400,
+})
 
 let isRevieveGetted = false
 let isSendGetted = false
@@ -168,26 +190,20 @@ onMounted(() => {
 
 <template>
   <NSpace align="center">
-    <NAlert
-      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
-      style="max-width: 200px"
-    >
+    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
+      style="max-width: 200px">
       启用提问箱
       <NDivider vertical />
-      <NSwitch
-        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.QuestionBox)"
-        @update:value="setFunctionEnable"
-      />
+      <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.QuestionBox)"
+        @update:value="setFunctionEnable" />
     </NAlert>
     <NButton type="primary" @click="refresh"> 刷新 </NButton>
     <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
-    <NButton
-      type="primary"
-      @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
-      secondary
-    >
+    <NButton type="primary" @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+      secondary>
       前往提问页
     </NButton>
+    <NButton @click="showOBSModal = true" type="primary" secondary> 预览OBS组件 </NButton>
   </NSpace>
   <NDivider style="margin: 10px 0 10px 0" />
   <NSpin v-if="useQB.isLoading" show />
@@ -195,15 +211,11 @@ onMounted(() => {
     <NTabPane tab="我收到的" name="0" display-directive="show:lazy">
       <NFlex align="center">
         <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
-        <NSelect
-          v-model:value="useQB.displayTag"
-          placeholder="选择当前话题"
-          filterable
-          clearable
-          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
-          style="width: 200px"
-        >
-          <template #header> <NText strong depth="3"> 在设置选项卡中添加或删除话题 </NText> </template>
+        <NSelect v-model:value="useQB.displayTag" placeholder="选择当前话题" filterable clearable
+          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))" style="width: 200px">
+          <template #header>
+            <NText strong depth="3"> 在设置选项卡中添加或删除话题 </NText>
+          </template>
         </NSelect>
         <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
         <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
@@ -212,14 +224,8 @@ onMounted(() => {
       <NDivider style="margin: 10px 0 10px 0" />
       <NEmpty v-if="useQB.recieveQuestionsFiltered.length == 0" description="暂无收到的提问" />
       <div v-else>
-        <NPagination
-          v-model:page="pn"
-          v-model:page-size="ps"
-          :item-count="useQB.recieveQuestionsFiltered.length"
-          show-quick-jumper
-          show-size-picker
-          :page-sizes="[20, 50, 100]"
-        />
+        <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
         <NDivider style="margin: 10px 0 10px 0" />
         <QuestionItem :questions="pagedQuestions">
           <template #footer="{ item }">
@@ -230,10 +236,8 @@ onMounted(() => {
               <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
               <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
                 <template #icon>
-                  <NIcon
-                    :component="item.isFavorite ? Heart : HeartOutline"
-                    :color="item.isFavorite ? '#dd484f' : ''"
-                  />
+                  <NIcon :component="item.isFavorite ? Heart : HeartOutline"
+                    :color="item.isFavorite ? '#dd484f' : ''" />
                 </template>
                 收藏
               </NButton>
@@ -264,14 +268,8 @@ onMounted(() => {
           </template>
         </QuestionItem>
         <NDivider style="margin: 10px 0 10px 0" />
-        <NPagination
-          v-model:page="pn"
-          v-model:page-size="ps"
-          :item-count="useQB.recieveQuestionsFiltered.length"
-          show-quick-jumper
-          show-size-picker
-          :page-sizes="[20, 50, 100]"
-        />
+        <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
       </div>
     </NTabPane>
     <NTabPane ref="parentRef" tab="我发送的" name="1" display-directive="show:lazy">
@@ -320,10 +318,8 @@ onMounted(() => {
     <NTabPane tab="设置" name="2" display-directive="show:lazy">
       <NDivider> 设定 </NDivider>
       <NSpin :show="useQB.isLoading">
-        <NCheckbox
-          v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-          @update:checked="saveSettings"
-        >
+        <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+          @update:checked="saveSettings">
           允许未注册用户进行提问
         </NCheckbox>
         <NDivider>
@@ -395,14 +391,7 @@ onMounted(() => {
   <NModal preset="card" v-model:show="replyModalVisiable" style="max-width: 90vw; width: 500px">
     <template #header> 回复 </template>
     <NSpace vertical>
-      <NInput
-        placeholder="请输入回复"
-        type="textarea"
-        v-model:value="replyMessage"
-        maxlength="1000"
-        show-count
-        clearable
-      />
+      <NInput placeholder="请输入回复" type="textarea" v-model:value="replyMessage" maxlength="1000" show-count clearable />
       <NSpin :show="useQB.isChangingPublic">
         <NCheckbox @update:checked="(v) => useQB.setPublic(v)" :default-checked="useQB.currentQuestion?.isPublic">
           公开可见
@@ -410,12 +399,8 @@ onMounted(() => {
       </NSpin>
     </NSpace>
     <NDivider style="margin: 10px 0 10px 0" />
-    <NButton
-      :loading="useQB.isRepling"
-      @click="useQB.reply(useQB.currentQuestion?.id ?? -1, replyMessage)"
-      type="primary"
-      :secondary="useQB.currentQuestion?.answer ? true : false"
-    >
+    <NButton :loading="useQB.isRepling" @click="useQB.reply(useQB.currentQuestion?.id ?? -1, replyMessage)"
+      type="primary" :secondary="useQB.currentQuestion?.answer ? true : false">
       {{ useQB.currentQuestion?.answer ? '修改' : '发送' }}
     </NButton>
   </NModal>
@@ -428,15 +413,8 @@ onMounted(() => {
       </NText>
       <NDivider class="share-card divider-1" />
       <NText class="share-card site"> VTSURU.LIVE </NText>
-      <QrcodeVue
-        class="share-card qrcode"
-        :value="shareUrl"
-        level="Q"
-        :size="100"
-        background="#00000000"
-        foreground="#ffffff"
-        :margin="1"
-      />
+      <QrcodeVue class="share-card qrcode" :value="shareUrl" level="Q" :size="100" background="#00000000"
+        foreground="#ffffff" :margin="1" />
     </div>
     <NDivider style="margin: 10px" />
     <NInputGroup>
@@ -448,6 +426,25 @@ onMounted(() => {
       <NButton type="primary" @click="saveShareImage"> 保存卡片 </NButton>
       <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
     </NSpace>
+  </NModal>
+
+  <NModal preset="card" v-model:show="showOBSModal" closable style="max-width: 90vw; width: auto" title="OBS组件"
+    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column">
+    <NAlert type="info">
+      操作显示的内容请前往
+      <NButton text @click="$router.push({ name: 'question-display' })"> 展示管理页 </NButton>
+    </NAlert>
+    <br />
+    <div :style="{
+      width: savedCardSize.width + 'px',
+      height: savedCardSize.height + 'px',
+    }">
+      <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" />
+    </div>
+    <NDivider />
+    <NInput readonly :value="CURRENT_HOST + 'obs/question-display?token=' + accountInfo?.token" />
+    <NDivider />
+    <NButton type="primary" @click="$router.push({ name: 'question-display' })"> 前往展示管理页 </NButton>
   </NModal>
 </template>
 
@@ -463,6 +460,7 @@ onMounted(() => {
   border-radius: 10px;
   background: linear-gradient(to right, #66bea3, #9179be);
 }
+
 .share-card.qrcode {
   position: absolute;
   right: 10px;
@@ -470,6 +468,7 @@ onMounted(() => {
   border-radius: 4px;
   background: linear-gradient(to right, #3d554e, #503e74);
 }
+
 .share-card.title {
   position: absolute;
   font-size: 80px;
@@ -478,6 +477,7 @@ onMounted(() => {
   color: #e6e6e662;
   font-weight: 550;
 }
+
 /* .share-card.type {
   position: absolute;
   font-size: 20px;
@@ -494,6 +494,7 @@ onMounted(() => {
   font-weight: 550;
   color: #e6e6e662;
 }
+
 .share-card.name {
   position: absolute;
   font-size: 30px;
@@ -505,6 +506,7 @@ onMounted(() => {
   color: #e6e6e6;
   font-weight: 550;
 }
+
 .share-card.site {
   position: absolute;
   font-size: 12px;
@@ -513,6 +515,7 @@ onMounted(() => {
   color: #e6e6e6a4;
   font-weight: 550;
 }
+
 .share-card.divider-1 {
   position: absolute;
   width: 400px;

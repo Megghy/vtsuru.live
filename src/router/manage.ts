@@ -8,8 +8,8 @@ export default //管理页面
       name: 'manage-index',
       component: () => import('@/views/manage/DashboardView.vue'),
       meta: {
-        title: '面板',
-      },
+        title: '面板'
+      }
     },
     {
       path: 'song-list',
@@ -17,8 +17,8 @@ export default //管理页面
       component: () => import('@/views/manage/SongListManageView.vue'),
       meta: {
         title: '歌单',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'question-box',
@@ -26,8 +26,8 @@ export default //管理页面
       component: () => import('@/views/manage/QuestionBoxManageView.vue'),
       meta: {
         title: '提问箱',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'lottery',
@@ -35,8 +35,8 @@ export default //管理页面
       component: () => import('@/views/manage/LotteryView.vue'),
       meta: {
         title: '动态抽奖',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'history',
@@ -44,8 +44,8 @@ export default //管理页面
       component: () => import('@/views/manage/HistoryView.vue'),
       meta: {
         title: '数据跟踪',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'schedule',
@@ -53,8 +53,8 @@ export default //管理页面
       component: () => import('@/views/manage/ScheduleManageView.vue'),
       meta: {
         title: '日程',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'event',
@@ -62,8 +62,8 @@ export default //管理页面
       component: () => import('@/views/manage/EventView.vue'),
       meta: {
         title: '事件记录',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'video-collect',
@@ -71,8 +71,8 @@ export default //管理页面
       component: () => import('@/views/manage/VideoCollectManageView.vue'),
       meta: {
         title: '视频征集',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'video-collect/:id',
@@ -80,8 +80,8 @@ export default //管理页面
       component: () => import('@/views/manage/VideoCollectDetailView.vue'),
       meta: {
         title: '详情 · 视频征集',
-        parent: 'manage-videoCollect',
-      },
+        parent: 'manage-videoCollect'
+      }
     },
     {
       path: 'live-lottery',
@@ -90,8 +90,8 @@ export default //管理页面
       meta: {
         title: '直播抽奖',
         keepAlive: true,
-        danmaku: true,
-      },
+        danmaku: true
+      }
     },
     {
       path: 'queue',
@@ -100,8 +100,8 @@ export default //管理页面
       meta: {
         title: '排队',
         keepAlive: true,
-        danmaku: true,
-      },
+        danmaku: true
+      }
     },
     {
       path: 'speech',
@@ -110,8 +110,8 @@ export default //管理页面
       meta: {
         title: '读弹幕',
         keepAlive: true,
-        danmaku: true,
-      },
+        danmaku: true
+      }
     },
     {
       path: 'live-request',
@@ -120,8 +120,8 @@ export default //管理页面
       meta: {
         title: '点播',
         keepAlive: true,
-        danmaku: true,
-      },
+        danmaku: true
+      }
     },
     {
       path: 'music-request',
@@ -130,8 +130,19 @@ export default //管理页面
       meta: {
         title: '点歌',
         keepAlive: true,
+        danmaku: true
+      }
+    },
+    {
+      path: 'danmuji',
+      name: 'manage-danmuji',
+      component: () => import('@/views/manage/DanmujiManageView.vue'),
+      meta: {
+        title: '点歌',
+        keepAlive: true,
         danmaku: true,
-      },
+        isNew: true
+      }
     },
     {
       path: 'live',
@@ -139,40 +150,40 @@ export default //管理页面
       component: () => import('@/views/manage/LiveManager.vue'),
       meta: {
         title: '直播记录',
-        keepAlive: true,
-      },
+        keepAlive: true
+      }
     },
     {
       path: 'live/:id',
       name: 'manage-liveDetail',
       component: () => import('@/views/manage/LiveDetailManage.vue'),
       meta: {
-        title: '直播详情',
-      },
+        title: '直播详情'
+      }
     },
     {
       path: 'feedback',
       name: 'manage-feedback',
       component: () => import('@/views/FeedbackManage.vue'),
       meta: {
-        title: '反馈',
-      },
+        title: '反馈'
+      }
     },
     {
       path: 'point',
       name: 'manage-point',
       component: () => import('@/views/manage/point/PointManage.vue'),
       meta: {
-        title: '积分',
-      },
+        title: '积分'
+      }
     },
     {
       path: 'forum',
       name: 'manage-forum',
       component: () => import('@/views/manage/ForumManage.vue'),
       meta: {
-        title: '粉丝讨论区',
-      },
-    },
-  ],
+        title: '粉丝讨论区'
+      }
+    }
+  ]
 }

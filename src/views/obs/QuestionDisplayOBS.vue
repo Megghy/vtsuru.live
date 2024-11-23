@@ -9,10 +9,12 @@ import { useWebRTC } from '@/store/useRTC'
 
 const hash = ref('')
 const token = useRouteQuery('token')
-const rtc = useWebRTC().Init('slave')
+const rtc = await useWebRTC().Init('slave')
 
 const question = ref<QAInfo>()
 const setting = ref<Setting_QuestionDisplay>({} as Setting_QuestionDisplay)
+
+const cardRef = ref()
 
 async function checkIfChanged() {
   try {
@@ -45,6 +47,9 @@ async function getQuestionAndSetting() {
     console.log(err)
   }
 }
+function handleScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
+  cardRef.value?.setScroll(value)
+}
 
 const visiable = ref(true)
 const active = ref(true)
@@ -66,12 +71,16 @@ onMounted(() => {
       active.value = a
     }
   }
+
+  rtc?.on('function.question.sync-scroll', handleScroll)
 })
 onUnmounted(() => {
   clearInterval(timer)
+
+  rtc?.off('function.question.sync-scroll', handleScroll)
 })
 </script>
 
 <template>
-  <QuestionDisplayCard :question="question" :setting="setting" />
+  <QuestionDisplayCard ref="cardRef" :question="question" :setting="setting" />
 </template>

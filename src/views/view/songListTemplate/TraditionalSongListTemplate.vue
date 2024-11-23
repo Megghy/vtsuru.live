@@ -4,17 +4,17 @@ import { SongListConfigType, SongListConfigTypeWithConfig } from '@/data/Templat
 import { TemplateConfig } from '@/data/VTsuruTypes';
 import { FILE_BASE_URL } from '@/data/constants';
 
-const props = defineProps<SongListConfigTypeWithConfig<ConfigType>>()
+const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
 defineExpose({ Config, DefaultConfig })
 </script>
 
 <script lang="ts">
-export type ConfigType = {
+export type TraditionalConfigType = {
   background: string[],
   notice: string,
 }
-export const DefaultConfig = {} as ConfigType
-export const Config: TemplateConfig<ConfigType> = {
+export const DefaultConfig = {} as TraditionalConfigType
+export const Config: TemplateConfig<TraditionalConfigType> = {
   name: 'Template.SongList.Traditional',
   items: [
     {

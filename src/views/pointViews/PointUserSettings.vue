@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AddressInfo } from '@/api/api-models'
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
-import { POINT_API_URL, THINGS_URL } from '@/data/constants'
+import { CURRENT_HOST, POINT_API_URL, THINGS_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useStorage } from '@vueuse/core'
 import {
@@ -242,16 +242,11 @@ function logout() {
                 <NListItem v-for="address in biliAuth.address" :key="address.id">
                   <AddressDisplay :address="address">
                     <template #actions>
-                      <NButton
-                        size="small"
-                        @click="
-                          () => {
-                            currentAddress = address
-                            showAddressModal = true
-                          }
-                        "
-                        type="info"
-                      >
+                      <NButton size="small" @click="() => {
+                        currentAddress = address
+                        showAddressModal = true
+                      }
+                        " type="info">
                         修改
                       </NButton>
                       <NPopconfirm @positive-click="() => deleteAddress(address?.id ?? '')">
@@ -267,7 +262,7 @@ function logout() {
             </NFlex>
           </NCollapseItem>
           <NCollapseItem title="登录链接" name="2">
-            <NInput type="textarea" :value="'https://vtsuru.live/bili-user?auth=' + useAuth.biliToken" readonly />
+            <NInput type="textarea" :value="`${CURRENT_HOST}bili-user?auth=` + useAuth.biliToken" readonly />
           </NCollapseItem>
         </NCollapse>
       </NCard>
@@ -285,72 +280,40 @@ function logout() {
           <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">
             <NFlex align="center">
               <NTag v-if="useAuth.biliToken == item.token" type="info"> 当前账号 </NTag>
-              {{ item.name }} <NDivider vertical style="margin: 0" /><NText depth="3"> {{ item.uId }} </NText>
+              {{ item.name }}
+              <NDivider vertical style="margin: 0" />
+              <NText depth="3"> {{ item.uId }} </NText>
             </NFlex>
           </NListItem>
         </NList>
       </NCard>
     </NFlex>
   </NSpin>
-  <NModal
-    v-model:show="showAddressModal"
-    preset="card"
-    style="width: 800px; max-width: 90vw; height: auto"
-    title="添加/更新地址"
-  >
+  <NModal v-model:show="showAddressModal" preset="card" style="width: 800px; max-width: 90vw; height: auto"
+    title="添加/更新地址">
     <NSpin v-if="currentAddress" :show="isLoading">
       <NForm ref="formRef" :model="currentAddress" :rules="rules">
         <NFormItem label="地址" path="area" required>
           <NFlex style="width: 100%">
-            <NSelect
-              v-model:value="currentAddress.province"
-              :options="provinceOptions"
-              @update:value="onAreaSelectChange(0)"
-              placeholder="请选择省"
-              style="width: 100px"
-              filterable
-            />
-            <NSelect
-              v-model:value="currentAddress.city"
-              :key="currentAddress.province"
-              :options="cityOptions(currentAddress.province)"
-              :disabled="!currentAddress?.province"
-              @update:value="onAreaSelectChange(1)"
-              placeholder="请选择市"
-              style="width: 100px"
-              filterable
-            />
-            <NSelect
-              v-model:value="currentAddress.district"
-              :key="currentAddress.city"
-              :options="districtOptions(currentAddress.province, currentAddress.city)"
-              :disabled="!currentAddress?.city"
-              @update:value="onAreaSelectChange(2)"
-              placeholder="请选择区"
-              style="width: 100px"
-              filterable
-            />
-            <NSelect
-              v-model:value="currentAddress.street"
-              :key="currentAddress.district"
+            <NSelect v-model:value="currentAddress.province" :options="provinceOptions"
+              @update:value="onAreaSelectChange(0)" placeholder="请选择省" style="width: 100px" filterable />
+            <NSelect v-model:value="currentAddress.city" :key="currentAddress.province"
+              :options="cityOptions(currentAddress.province)" :disabled="!currentAddress?.province"
+              @update:value="onAreaSelectChange(1)" placeholder="请选择市" style="width: 100px" filterable />
+            <NSelect v-model:value="currentAddress.district" :key="currentAddress.city"
+              :options="districtOptions(currentAddress.province, currentAddress.city)" :disabled="!currentAddress?.city"
+              @update:value="onAreaSelectChange(2)" placeholder="请选择区" style="width: 100px" filterable />
+            <NSelect v-model:value="currentAddress.street" :key="currentAddress.district"
               :options="streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)"
-              :disabled="!currentAddress?.district"
-              placeholder="请选择街道"
-              style="width: 150px"
-              filterable
-            />
+              :disabled="!currentAddress?.district" placeholder="请选择街道" style="width: 150px" filterable />
           </NFlex>
         </NFormItem>
         <NFormItem label="详细地址" path="address" required>
           <NInput v-model:value="currentAddress.address" placeholder="详细地址" type="textarea" />
         </NFormItem>
         <NFormItem label="联系电话" path="phone" required>
-          <NInputNumber
-            v-model:value="currentAddress.phone"
-            placeholder="联系电话"
-            :show-button="false"
-            style="width: 200px"
-          />
+          <NInputNumber v-model:value="currentAddress.phone" placeholder="联系电话" :show-button="false"
+            style="width: 200px" />
         </NFormItem>
         <NFormItem label="联系人" path="name" required>
           <NInput v-model:value="currentAddress.name" placeholder="联系人" style="max-width: 150px" />
@@ -365,12 +328,10 @@ function logout() {
       </NForm>
     </NSpin>
   </NModal>
-  <NModal
-    v-model:show="showAgreementModal"
-    title="用户协议"
-    preset="card"
-    style="width: 800px; max-width: 90vw; height: 90vh"
-  >
-    <NScrollbar style="height: 80vh"> <UserAgreement /></NScrollbar>
+  <NModal v-model:show="showAgreementModal" title="用户协议" preset="card"
+    style="width: 800px; max-width: 90vw; height: 90vh">
+    <NScrollbar style="height: 80vh">
+      <UserAgreement />
+    </NScrollbar>
   </NModal>
 </template>

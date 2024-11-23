@@ -3,7 +3,7 @@ import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { DanmakuUserInfo, EventModel, SongFrom, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { RoomAuthInfo } from '@/data/DanmakuClient'
-import { MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
+import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { MusicRequestSettings, useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useStorage } from '@vueuse/core'
@@ -103,10 +103,10 @@ const neteaseSongListId = computed(() => {
         return Number(match[1])
       }
     }
-  } catch (err) {}
+  } catch (err) { }
   try {
     return Number(neteaseIdInput.value)
-  } catch {}
+  } catch { }
   return null
 })
 const neteaseSongs = ref<SongsInfo[]>([])
@@ -149,7 +149,7 @@ async function searchMusic(keyword: string) {
   }
   return undefined
 }
-function switchTo() {}
+function switchTo() { }
 async function getNeteaseSongList() {
   isLoading.value = true
   await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
@@ -387,14 +387,9 @@ onUnmounted(() => {
   </NSpace>
   <NDivider />
   <NSpace align="center">
-    <NButton
-      @click="listening ? stopListen() : startListen()"
-      :type="listening ? 'error' : 'primary'"
-      :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }"
-      data-umami-event="Use Music Request"
-      :data-umami-event-uid="accountInfo?.biliId"
-      size="large"
-    >
+    <NButton @click="listening ? stopListen() : startListen()" :type="listening ? 'error' : 'primary'"
+      :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }" data-umami-event="Use Music Request"
+      :data-umami-event-uid="accountInfo?.biliId" size="large">
       {{ listening ? '停止监听' : '开始监听' }}
     </NButton>
     <NButton @click="showOBSModal = true" type="info" size="small"> OBS组件 </NButton>
@@ -420,12 +415,8 @@ onUnmounted(() => {
             <NButton @click="musicRquestStore.playMusic(item.music)" type="primary" secondary size="small">
               播放
             </NButton>
-            <NButton
-              @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
-              type="error"
-              secondary
-              size="small"
-            >
+            <NButton @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
+              type="error" secondary size="small">
               取消
             </NButton>
             <NButton @click="blockMusic(item.music)" type="warning" secondary size="small"> 拉黑 </NButton>
@@ -455,26 +446,18 @@ onUnmounted(() => {
             <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
             <NInput v-model:value="settings.orderPrefix" />
           </NInputGroup>
-          <NCheckbox
-            :checked="settings.orderCooldown != undefined"
-            @update:checked="
-              (checked: boolean) => {
-                settings.orderCooldown = checked ? 300 : undefined
-              }
-            "
-          >
+          <NCheckbox :checked="settings.orderCooldown != undefined" @update:checked="(checked: boolean) => {
+            settings.orderCooldown = checked ? 300 : undefined
+          }
+            ">
             是否启用点歌冷却
           </NCheckbox>
           <NInputGroup v-if="settings.orderCooldown" style="width: 200px">
             <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="settings.orderCooldown"
-              @update:value="
-                (value) => {
-                  if (!value || value <= 0) settings.orderCooldown = undefined
-                }
-              "
-            />
+            <NInputNumber v-model:value="settings.orderCooldown" @update:value="(value) => {
+              if (!value || value <= 0) settings.orderCooldown = undefined
+            }
+              " />
           </NInputGroup>
         </NSpace>
         <NSpace>
@@ -488,13 +471,9 @@ onUnmounted(() => {
             </template>
             获取和修改输出设备需要打开麦克风权限
           </NTooltip>
-          <NSelect
-            v-model:value="settings.deviceId"
-            :options="deviceList"
-            :fallback-option="() => ({ label: '未选择', value: '' })"
-            style="min-width: 200px"
-            @update:value="musicRquestStore.setSinkId"
-          />
+          <NSelect v-model:value="settings.deviceId" :options="deviceList"
+            :fallback-option="() => ({ label: '未选择', value: '' })" style="min-width: 200px"
+            @update:value="musicRquestStore.setSinkId" />
         </NSpace>
       </NSpace>
     </NTabPane>
@@ -532,12 +511,8 @@ onUnmounted(() => {
       <NList>
         <NListItem v-for="item in settings.blacklist" :key="item">
           <NSpace align="center" style="width: 100%">
-            <NButton
-              @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)"
-              type="error"
-              secondary
-              size="small"
-            >
+            <NButton @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)" type="error" secondary
+              size="small">
               删除
             </NButton>
             <NText> {{ item }} </NText>
@@ -548,14 +523,8 @@ onUnmounted(() => {
   </NTabs>
   <NDivider style="height: 100px" />
   <NModal v-model:show="showNeteaseModal" preset="card" :title="`获取歌单`" style="max-width: 600px">
-    <NInput
-      clearable
-      style="width: 100%"
-      autosize
-      :status="neteaseSongListId ? 'success' : 'error'"
-      v-model:value="neteaseIdInput"
-      placeholder="直接输入歌单Id或者网页链接"
-    >
+    <NInput clearable style="width: 100%" autosize :status="neteaseSongListId ? 'success' : 'error'"
+      v-model:value="neteaseIdInput" placeholder="直接输入歌单Id或者网页链接">
       <template #suffix>
         <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
       </template>
@@ -566,13 +535,8 @@ onUnmounted(() => {
     </NButton>
     <template v-if="neteaseSongsOptions.length > 0">
       <NDivider style="margin: 10px" />
-      <NTransfer
-        style="height: 500px"
-        ref="transfer"
-        v-model:value="selectedNeteaseSongs"
-        :options="neteaseSongsOptions"
-        source-filterable
-      />
+      <NTransfer style="height: 500px" ref="transfer" v-model:value="selectedNeteaseSongs"
+        :options="neteaseSongsOptions" source-filterable />
       <NDivider style="margin: 10px" />
       <NButton type="primary" @click="addNeteaseSongs" :loading="isLoading">
         添加到歌单 | {{ selectedNeteaseSongs.length }} 首
@@ -586,7 +550,7 @@ onUnmounted(() => {
       <MusicRequestOBS :id="accountInfo?.id" />
     </div>
     <br />
-    <NInput :value="'https://vtsuru.live/obs/music-request?id=' + accountInfo?.id" />
+    <NInput :value="`${CURRENT_HOST}obs/music-request?id=` + accountInfo?.id" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">
@@ -606,6 +570,7 @@ onUnmounted(() => {
   max-height: 300px;
   overflow-y: auto;
 }
+
 @keyframes animated-border {
   0% {
     box-shadow: 0 0 0px #589580;

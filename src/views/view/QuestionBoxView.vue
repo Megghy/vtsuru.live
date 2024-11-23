@@ -193,7 +193,7 @@ onUnmounted(() => {
           <NInput
             :disabled="isSelf"
             show-count
-            maxlength="1000"
+            maxlength="5000"
             type="textarea"
             :count-graphemes="countGraphemes"
             v-model:value="questionMessage"

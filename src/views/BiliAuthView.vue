@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { GetSelfAccount, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
-import { BILI_API_URL, BILI_AUTH_API_URL } from '@/data/constants'
+import { BILI_API_URL, BILI_AUTH_API_URL, CURRENT_HOST } from '@/data/constants'
 import { useStorage } from '@vueuse/core'
 import { randomUUID } from 'crypto'
 import {
@@ -187,7 +187,7 @@ onMounted(async () => {
             <NText> 你的登陆链接为: </NText>
             <NInputGroup>
               <NInput
-                :value="`https://vtsuru.live/bili-user?auth=${currentToken}`"
+                :value="`${CURRENT_HOST}bili-user?auth=${currentToken}`"
                 type="textarea"
                 :allow-input="() => false"
               />

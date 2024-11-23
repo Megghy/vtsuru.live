@@ -11,7 +11,7 @@ export interface RTCData {
   Data: any
 }
 
-abstract class BaseRTCClient {
+export abstract class BaseRTCClient {
   constructor(user: string, pass: string) {
     this.user = user
     this.pass = pass

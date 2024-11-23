@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { VideoCollectTable } from '@/api/api-models'
+import { CURRENT_HOST } from '@/data/constants';
 import router from '@/router'
 import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
 import {
@@ -28,7 +29,7 @@ const renderCountdown: CountdownProps['render'] = (info: { hours: number; minute
 function onClick() {
   if (props.canClick == true) {
     if (props.from == 'user') {
-      window.open('https://vtsuru.live/video-collect/' + props.item.shortId, '_blank')
+      window.open(`${CURRENT_HOST}video-collect/` + props.item.shortId, '_blank')
     } else {
       router.push({ name: 'manage-videoCollect-Detail', params: { id: props.item.id } })
     }

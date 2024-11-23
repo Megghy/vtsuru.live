@@ -111,8 +111,6 @@ const speechSynthesisInfo = ref<{
 }>()
 const languageDisplayName = new Intl.DisplayNames(['zh'], { type: 'language' })
 const voiceOptions = computed(() => {
-  const status = EasySpeech.status()
-  if (status.status != 'init: complete') return []
   return new List(EasySpeech.voices())
     .Select((v) => {
       return {

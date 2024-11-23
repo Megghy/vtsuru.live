@@ -72,7 +72,8 @@ export const Config: TemplateConfig<ConfigType> = {
   <NDivider />
   <template v-if="userInfo?.biliId">
     <template v-if="userInfo?.id == accountInfo?.id">
-      <NButton type="primary" @click="$router.push({ name: 'manage-index', query: { tab: 'index' } })">
+      <NButton type="primary"
+        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })">
         自定义个人主页
       </NButton>
       <NDivider />
@@ -85,17 +86,10 @@ export const Config: TemplateConfig<ConfigType> = {
     </template>
 
     <NSpace justify="center" align="center" vertical>
-      <NAvatar
-        v-if="biliInfo"
-        :src="biliInfo?.face"
-        :size="width > 750 ? 175 : 100"
-        round
-        bordered
-        :img-props="{
-          referrerpolicy: 'no-referrer',
-        }"
-        :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
-      />
+      <NAvatar v-if="biliInfo" :src="biliInfo?.face" :size="width > 750 ? 175 : 100" round bordered :img-props="{
+        referrerpolicy: 'no-referrer',
+      }"
+        :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }" />
       <NSpace align="baseline" justify="center">
         <NText strong style="font-size: 32px"> {{ biliInfo?.name }} </NText>
         <NText strong style="font-size: 20px" depth="3"> ({{ userInfo?.name }}) </NText>
@@ -116,15 +110,8 @@ export const Config: TemplateConfig<ConfigType> = {
       <temlate v-if="Object.keys(indexInfo.links || {}).length > 0">
         <NFlex align="center">
           <NDivider vertical />
-          <NButton
-            type="info"
-            secondary
-            tag="a"
-            :href="link[1]"
-            target="_blank"
-            v-for="link in Object.entries(indexInfo.links || {})"
-            :key="link[0] + link[1]"
-          >
+          <NButton type="info" secondary tag="a" :href="link[1]" target="_blank"
+            v-for="link in Object.entries(indexInfo.links || {})" :key="link[0] + link[1]">
             {{ link[0] }}
           </NButton>
         </NFlex>
