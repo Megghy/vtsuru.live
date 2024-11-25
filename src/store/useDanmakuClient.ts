@@ -78,6 +78,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
           if (lock) {
             status.value = 'initializing'
             bc = new BroadcastChannel('vtsuru.danmaku.' + accountInfo.value?.id)
+            console.log('[DanmakuClient] 创建 BroadcastChannel: ' + bc.name)  
             bc.onmessage = (event) => {
               const message: BCMessage = event.data as BCMessage
               const data = message.data ? JSON.parse(message.data) : {}
