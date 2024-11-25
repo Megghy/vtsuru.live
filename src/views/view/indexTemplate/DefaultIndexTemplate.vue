@@ -107,7 +107,7 @@ export const Config: TemplateConfig<ConfigType> = {
       <NButton type="primary" secondary @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)">
         直播间
       </NButton>
-      <temlate v-if="Object.keys(indexInfo.links || {}).length > 0">
+      <template v-if="Object.keys(indexInfo.links || {}).length > 0">
         <NFlex align="center">
           <NDivider vertical />
           <NButton type="info" secondary tag="a" :href="link[1]" target="_blank"
@@ -115,7 +115,7 @@ export const Config: TemplateConfig<ConfigType> = {
             {{ link[0] }}
           </NButton>
         </NFlex>
-      </temlate>
+      </template>
     </NSpace>
     <template v-if="indexInfo.videos?.length || 0 > 0">
       <NDivider>
