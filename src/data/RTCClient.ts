@@ -71,9 +71,9 @@ export abstract class BaseRTCClient {
       secure: true,
       config: {
         iceServers: [
-          { urls: 'stun:turn.suki.club' },
+          { url: 'stun:turn.suki.club' },
           {
-            urls: 'turn:turn.suki.club',
+            url: 'turn:turn.suki.club',
             username: this.user,
             credential: this.pass
           }
@@ -172,6 +172,7 @@ export class SlaveRTCClient extends BaseRTCClient {
           id
       )
     })
+    c?.on('error', (err) => console.error(err))
     c?.on('data', (data) => this.processData(c, data as RTCData))
     c?.on('close', () => this.onConnectionClose(c.peer))
   }
