@@ -256,7 +256,11 @@ async function addSong(danmaku: EventModel) {
     `[OPEN-LIVE-LIVE-REQUEST] 收到 [${danmaku.name}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
   )
   if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
-    message.info('当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入')
+    notice.info({
+      title: `${danmaku.name} 点播失败`,
+      description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',
+      meta: () => h(NTime, { type: 'relative', time: Date.now(), key: updateKey.value }),
+    })
     return
   }
   if (accountInfo.value) {
@@ -940,7 +944,7 @@ onUnmounted(() => {
                   </NTooltip>
                 </NSpace>
                 <NSpace justify="end" align="center">
-                  <NTooltip v-if="song.song">
+                  <NTooltip v-if="song.song?.url">
                     <template #trigger>
                       <NButton circle type="success" style="height: 30px; width: 30px"
                         :loading="isLrcLoading == song?.song?.key" @click="selectedSong = song.song">

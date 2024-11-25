@@ -4,6 +4,7 @@ import { QueryGetAPI } from '@/api/query'
 import { SONG_API_URL } from '@/data/constants'
 import { NEmpty } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+// @ts-ignore
 import APlayer from 'vue3-aplayer'
 
 const props = defineProps<{
