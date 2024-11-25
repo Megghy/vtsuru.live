@@ -85,6 +85,7 @@ const batchUpdate_Option = ref<SongRequestOption>()
 
 const playingSong = ref<SongsInfo>()
 const isLrcLoading = ref<string>()
+const isLoading = ref(false)
 
 const formRef = ref<FormInst | null>(null)
 const updateSongRules: FormRules = {
@@ -104,27 +105,31 @@ const updateSongRules: FormRules = {
 const songSelectOption = [
   {
     label: '中文',
-    value: SongLanguage.Chinese,
+    value: '中文',
   },
   {
     label: '日语',
-    value: SongLanguage.Japanese,
+    value: '日语',
   },
   {
     label: '英语',
-    value: SongLanguage.English,
+    value: '英语',
+  },
+  {
+    label: '韩语',
+    value: '韩语',
   },
   {
     label: '法语',
-    value: SongLanguage.French,
+    value: '法语',
   },
   {
     label: '西语',
-    value: SongLanguage.Spanish,
+    value: '西语',
   },
   {
     label: '其他',
-    value: SongLanguage.Other,
+    value: '其他',
   },
 ]
 const languageSelectOption = computed(() => {
@@ -221,8 +226,8 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         return (data.language?.length ?? 0) > 0
           ? h(NSpace, { size: 5 }, () =>
-              data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)),
-            )
+            data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)),
+          )
           : null
       },
     },
@@ -241,41 +246,41 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         return data.options
           ? h(NSpace, {}, () => [
-              data.options?.needJianzhang
-                ? h(
-                    NTag,
-                    { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' },
-                    () => '舰长',
-                  )
-                : null,
-              data.options?.needTidu
-                ? h(
-                    NTag,
-                    { color: { textColor: 'white', color: GetGuardColor(2), borderColor: 'white' }, size: 'small' },
-                    () => '提督',
-                  )
-                : null,
-              data.options?.needZongdu
-                ? h(
-                    NTag,
-                    { color: { textColor: 'white', color: GetGuardColor(1), borderColor: 'white' }, size: 'small' },
-                    () => '总督',
-                  )
-                : null,
-              data.options?.scMinPrice
-                ? h(
-                    NTag,
-                    {
-                      color: { textColor: 'white', color: GetSCColor(data.options.scMinPrice), borderColor: 'white' },
-                      size: 'small',
-                    },
-                    () => 'SC | ' + data.options?.scMinPrice,
-                  )
-                : null,
-              data.options?.fanMedalMinLevel
-                ? h(NTag, { type: 'info', size: 'small' }, () => '粉丝牌 | ' + data.options?.fanMedalMinLevel)
-                : null,
-            ])
+            data.options?.needJianzhang
+              ? h(
+                NTag,
+                { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' },
+                () => '舰长',
+              )
+              : null,
+            data.options?.needTidu
+              ? h(
+                NTag,
+                { color: { textColor: 'white', color: GetGuardColor(2), borderColor: 'white' }, size: 'small' },
+                () => '提督',
+              )
+              : null,
+            data.options?.needZongdu
+              ? h(
+                NTag,
+                { color: { textColor: 'white', color: GetGuardColor(1), borderColor: 'white' }, size: 'small' },
+                () => '总督',
+              )
+              : null,
+            data.options?.scMinPrice
+              ? h(
+                NTag,
+                {
+                  color: { textColor: 'white', color: GetSCColor(data.options.scMinPrice), borderColor: 'white' },
+                  size: 'small',
+                },
+                () => 'SC | ' + data.options?.scMinPrice,
+              )
+              : null,
+            data.options?.fanMedalMinLevel
+              ? h(NTag, { type: 'info', size: 'small' }, () => '粉丝牌 | ' + data.options?.fanMedalMinLevel)
+              : null,
+          ])
           : null
       },
     },
@@ -308,77 +313,77 @@ function createColumns(): DataTableColumns<SongsInfo> {
           () => [
             GetPlayButton(data),
             data.url?.endsWith('mp3') ||
-            data.url?.endsWith('flac') ||
-            data.url?.endsWith('ogg') ||
-            data.url?.endsWith('wav') ||
-            data.url?.endsWith('m4a')
+              data.url?.endsWith('flac') ||
+              data.url?.endsWith('ogg') ||
+              data.url?.endsWith('wav') ||
+              data.url?.endsWith('m4a')
               ? h(NTooltip, null, {
+                trigger: () =>
+                  h(
+                    NButton,
+                    {
+                      type: 'primary',
+                      size: 'small',
+                      circle: true,
+                      loading: isLrcLoading.value == data.key,
+                      onClick: () => {
+                        playingSong.value = data
+                      },
+                    },
+                    {
+                      icon: () => h(NIcon, { component: Play24Filled }),
+                    },
+                  ),
+                default: () => '试听',
+              })
+              : null,
+            props.isSelf
+              ? [
+                h(NTooltip, null, {
                   trigger: () =>
                     h(
                       NButton,
                       {
-                        type: 'primary',
                         size: 'small',
                         circle: true,
-                        loading: isLrcLoading.value == data.key,
+                        secondary: true,
                         onClick: () => {
-                          playingSong.value = data
+                          updateSongModel.value = JSON.parse(JSON.stringify(data))
+                          showModal.value = true
                         },
                       },
                       {
-                        icon: () => h(NIcon, { component: Play24Filled }),
+                        icon: () => h(NIcon, { component: NotepadEdit20Filled }),
                       },
                     ),
-                  default: () => '试听',
-                })
-              : null,
-            props.isSelf
-              ? [
-                  h(NTooltip, null, {
-                    trigger: () =>
-                      h(
-                        NButton,
-                        {
-                          size: 'small',
-                          circle: true,
-                          secondary: true,
-                          onClick: () => {
-                            updateSongModel.value = JSON.parse(JSON.stringify(data))
-                            showModal.value = true
-                          },
-                        },
-                        {
-                          icon: () => h(NIcon, { component: NotepadEdit20Filled }),
-                        },
-                      ),
-                    default: () => '修改',
-                  }),
-                  h(NTooltip, null, {
-                    trigger: () =>
-                      h(
-                        NPopconfirm,
-                        {
-                          onPositiveClick: () => delSong(data),
-                        },
-                        {
-                          trigger: () =>
-                            h(
-                              NButton,
-                              {
-                                type: 'error',
-                                size: 'small',
-                                circle: true,
-                              },
-                              {
-                                icon: () => h(NIcon, { component: Delete24Filled }),
-                              },
-                            ),
-                          default: () => '确认删除该歌曲？',
-                        },
-                      ),
-                    default: () => '删除',
-                  }),
-                ]
+                  default: () => '修改',
+                }),
+                h(NTooltip, null, {
+                  trigger: () =>
+                    h(
+                      NPopconfirm,
+                      {
+                        onPositiveClick: () => delSong(data),
+                      },
+                      {
+                        trigger: () =>
+                          h(
+                            NButton,
+                            {
+                              type: 'error',
+                              size: 'small',
+                              circle: true,
+                            },
+                            {
+                              icon: () => h(NIcon, { component: Delete24Filled }),
+                            },
+                          ),
+                        default: () => '确认删除该歌曲？',
+                      },
+                    ),
+                  default: () => '删除',
+                }),
+              ]
               : null,
             props.extraButton?.(data),
           ],
@@ -434,23 +439,23 @@ function GetPlayButton(song: SongsInfo) {
     case SongFrom.Custom:
       return song.url
         ? h(NTooltip, null, {
-            trigger: () =>
-              h(
-                NButton,
-                {
-                  size: 'small',
-                  color: '#6b95bd',
-                  ghost: true,
-                  onClick: () => {
-                    window.open(song.url)
-                  },
+          trigger: () =>
+            h(
+              NButton,
+              {
+                size: 'small',
+                color: '#6b95bd',
+                ghost: true,
+                onClick: () => {
+                  window.open(song.url)
                 },
-                {
-                  icon: () => h(NIcon, { component: SquareArrowForward24Filled }),
-                },
-              ),
-            default: () => '打开链接',
-          })
+              },
+              {
+                icon: () => h(NIcon, { component: SquareArrowForward24Filled }),
+              },
+            ),
+          default: () => '打开链接',
+        })
         : null
   }
 }
@@ -462,6 +467,11 @@ function renderCell(value: string | number) {
 }
 
 async function updateSong() {
+  if (props.songs.some((s) => s.name == updateSongModel.value.name)) {
+    message.error('已存在相同名称的歌曲')
+    return
+  }
+  isLoading.value = true
   await QueryPostAPI<SongsInfo>(SONG_API_URL + 'update', {
     key: updateSongModel.value.key,
     song: updateSongModel.value,
@@ -473,6 +483,8 @@ async function updateSong() {
     } else {
       message.error('未能更新歌曲信息: ' + data.message)
     }
+  }).finally(() => {
+    isLoading.value = false
   })
 }
 async function delSong(song: SongsInfo) {
@@ -489,6 +501,7 @@ async function delSong(song: SongsInfo) {
 }
 async function delBatchSong() {
   const ids = selectedColumn.value.map((s) => s.toString())
+  isLoading.value = true
   await QueryPostAPI<SongsInfo>(SONG_API_URL + 'del-batch', ids).then((data) => {
     if (data.code == 200) {
       songsInternal.value = songsInternal.value.filter((s) => !ids.includes(s.key))
@@ -498,6 +511,8 @@ async function delBatchSong() {
     } else {
       message.error('未能删除歌曲: ' + data.message)
     }
+  }).finally(() => {
+    isLoading.value = false
   })
 }
 function GetSCColor(price: number): string {
@@ -532,6 +547,7 @@ function batchUpdateAuthor() {
     message.error('请先选择歌曲')
     return
   }
+  isLoading.value = true
   QueryPostAPI<SongsInfo[]>(SONG_API_URL + 'update-batch-author', {
     ids: selectedColumn.value.map((s) => s.toString()),
     data: batchUpdate_Author.value,
@@ -551,6 +567,8 @@ function batchUpdateAuthor() {
     })
     .catch((err) => {
       message.error('未能更新歌曲: ' + err)
+    }).finally(() => {
+      isLoading.value = false
     })
 }
 function batchUpdateTag() {
@@ -558,6 +576,7 @@ function batchUpdateTag() {
     message.error('请先选择歌曲')
     return
   }
+  isLoading.value = true
   QueryPostAPI<SongsInfo[]>(SONG_API_URL + 'update-batch-tag', {
     ids: selectedColumn.value.map((s) => s.toString()),
     data: batchUpdate_Tag.value,
@@ -577,6 +596,8 @@ function batchUpdateTag() {
     })
     .catch((err) => {
       message.error('未能更新歌曲: ' + err)
+    }).finally(() => {
+      isLoading.value = false
     })
 }
 function batchUpdateLanguage() {
@@ -584,6 +605,7 @@ function batchUpdateLanguage() {
     message.error('请先选择歌曲')
     return
   }
+  isLoading.value = true
   QueryPostAPI<SongsInfo[]>(SONG_API_URL + 'update-batch-language', {
     ids: selectedColumn.value.map((s) => s.toString()),
     data: batchUpdate_Language.value,
@@ -603,6 +625,8 @@ function batchUpdateLanguage() {
     })
     .catch((err) => {
       message.error('未能更新歌曲: ' + err)
+    }).finally(() => {
+      isLoading.value = false
     })
 }
 function batchUpdateOption() {
@@ -610,6 +634,7 @@ function batchUpdateOption() {
     message.error('请先选择歌曲')
     return
   }
+  isLoading.value = true
   QueryPostAPI<SongsInfo[]>(SONG_API_URL + 'update-batch-option', {
     ids: selectedColumn.value.map((s) => s.toString()),
     data: batchUpdate_Option.value ? batchUpdate_Option.value : null,
@@ -629,6 +654,8 @@ function batchUpdateOption() {
     })
     .catch((err) => {
       message.error('未能更新歌曲: ' + err)
+    }).finally(() => {
+      isLoading.value = false
     })
 }
 
@@ -644,21 +671,10 @@ onMounted(() => {
   <NCard embedded size="small">
     <NSpace>
       <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="width: 150px" />
-      <NSelect
-        placeholder="选择歌手"
-        v-model:value="authorColumn.filterOptionValue"
-        :options="authorsOptions"
-        clearable
-        filterable
-        size="small"
-        style="width: 150px"
-      />
-      <NButton
-        v-if="authorColumn.filterOptionValue"
-        type="error"
-        @click="authorColumn.filterOptionValue = null"
-        size="small"
-      >
+      <NSelect placeholder="选择歌手" v-model:value="authorColumn.filterOptionValue" :options="authorsOptions" clearable
+        filterable size="small" style="width: 150px" />
+      <NButton v-if="authorColumn.filterOptionValue" type="error" @click="authorColumn.filterOptionValue = null"
+        size="small">
         清除歌手选择
       </NButton>
     </NSpace>
@@ -674,19 +690,14 @@ onMounted(() => {
     批量编辑
   </NButton>
   <NDivider style="margin: 5px 0 5px 0" />
-  <NDataTable
-    v-model:checked-row-keys="selectedColumn"
-    size="small"
-    :columns="columns"
-    :data="songsComputed"
+  <NDataTable v-model:checked-row-keys="selectedColumn" size="small" :columns="columns" :data="songsComputed"
     :pagination="{
       itemCount: songsInternal.length,
       defaultPageSize: 25,
       pageSizes: [25, 50, 200],
       size: 'small',
       showSizePicker: true,
-    }"
-  />
+    }" />
   <NModal v-model:show="showModal" style="max-width: 600px" preset="card">
     <template #header> 修改信息 </template>
     <NForm ref="formRef" :rules="updateSongRules" :model="updateSongModel" :render-cell="renderCell">
@@ -694,47 +705,20 @@ onMounted(() => {
         <NInput v-model:value="updateSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
       </NFormItem>
       <NFormItem path="author" label="作者">
-        <NSelect
-          v-model:value="updateSongModel.author"
-          filterable
-          multiple
-          tag
-          placeholder="输入，按回车确认"
-          :options="authorsOptions"
-        />
+        <NSelect v-model:value="updateSongModel.author" filterable multiple tag placeholder="输入，按回车确认"
+          :options="authorsOptions" />
       </NFormItem>
       <NFormItem path="description" label="备注">
-        <NInput
-          v-model:value="updateSongModel.description"
-          placeholder="可选"
-          :maxlength="250"
-          show-count
-          autosize
-          style="min-width: 300px"
-          clearable
-        />
+        <NInput v-model:value="updateSongModel.description" placeholder="可选" :maxlength="250" show-count autosize
+          style="min-width: 300px" clearable />
       </NFormItem>
       <NFormItem path="language" label="语言">
-        <NSelect
-          v-model:value="updateSongModel.language"
-          filterable
-          multiple
-          clearable
-          tag
-          placeholder="可选，输入后按回车新增"
-          :options="languageSelectOption"
-        />
+        <NSelect v-model:value="updateSongModel.language" filterable multiple clearable tag placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption" />
       </NFormItem>
       <NFormItem path="tags" label="标签">
-        <NSelect
-          v-model:value="updateSongModel.tags"
-          filterable
-          multiple
-          clearable
-          tag
-          placeholder="可选，按回车确认"
-          :options="tagsSelectOption"
-        />
+        <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认"
+          :options="tagsSelectOption" />
       </NFormItem>
       <NFormItem path="options">
         <template #label>
@@ -747,20 +731,16 @@ onMounted(() => {
           </NTooltip>
         </template>
         <NSpace vertical>
-          <NCheckbox
-            :checked="updateSongModel.options != undefined"
-            @update:checked="
-              (checked: boolean) => {
-                updateSongModel.options = checked
-                  ? ({
-                      needJianzhang: false,
-                      needTidu: false,
-                      needZongdu: false,
-                    } as SongRequestOption)
-                  : undefined
-              }
-            "
-          >
+          <NCheckbox :checked="updateSongModel.options != undefined" @update:checked="(checked: boolean) => {
+              updateSongModel.options = checked
+                ? ({
+                  needJianzhang: false,
+                  needTidu: false,
+                  needZongdu: false,
+                } as SongRequestOption)
+                : undefined
+            }
+            ">
             是否启用
           </NCheckbox>
           <template v-if="updateSongModel.options != undefined">
@@ -770,14 +750,10 @@ onMounted(() => {
               <NCheckbox v-model:checked="updateSongModel.options.needZongdu"> 需要总督 </NCheckbox>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox
-                :checked="updateSongModel.options.scMinPrice != undefined"
-                @update:checked="
-                  (checked: boolean) => {
-                    if (updateSongModel.options) updateSongModel.options.scMinPrice = checked ? 30 : undefined
-                  }
-                "
-              >
+              <NCheckbox :checked="updateSongModel.options.scMinPrice != undefined" @update:checked="(checked: boolean) => {
+                  if (updateSongModel.options) updateSongModel.options.scMinPrice = checked ? 30 : undefined
+                }
+                ">
                 需要SC
               </NCheckbox>
               <NInputGroup v-if="updateSongModel.options?.scMinPrice" style="width: 200px">
@@ -786,14 +762,10 @@ onMounted(() => {
               </NInputGroup>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox
-                :checked="updateSongModel.options.fanMedalMinLevel != undefined"
-                @update:checked="
-                  (checked: boolean) => {
-                    if (updateSongModel.options) updateSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                  }
-                "
-              >
+              <NCheckbox :checked="updateSongModel.options.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
+                  if (updateSongModel.options) updateSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                }
+                ">
                 需要粉丝牌
                 <NTooltip>
                   <template #trigger>
@@ -811,22 +783,15 @@ onMounted(() => {
         </NSpace>
       </NFormItem>
       <NFormItem path="url" label="链接">
-        <NInput
-          v-model:value="updateSongModel.url"
-          placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
-          :disabled="updateSongModel.from != SongFrom.Custom"
-        />
+        <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
+          :disabled="updateSongModel.from != SongFrom.Custom" />
       </NFormItem>
     </NForm>
     <NDivider style="margin: 10px" />
-    <NButton @click="updateSong" type="success"> 更新 </NButton>
+    <NButton @click="updateSong" type="success" :loading="isLoading"> 更新 </NButton>
   </NModal>
-  <NModal
-    v-model:show="showBatchModal"
-    preset="card"
-    :title="`批量编辑 | 已选择: ${selectedColumn.length}`"
-    style="max-width: 600px"
-  >
+  <NModal v-model:show="showBatchModal" preset="card" :title="`批量编辑 | 已选择: ${selectedColumn.length}`"
+    style="max-width: 600px">
     <NTabs>
       <NTabPane name="delete" tab="删除">
         <NPopconfirm @positive-click="delBatchSong">
@@ -837,59 +802,35 @@ onMounted(() => {
         </NPopconfirm>
       </NTabPane>
       <NTabPane name="author" tab="作者">
-        <NSelect
-          v-model:value="batchUpdate_Author"
-          filterable
-          multiple
-          tag
-          placeholder="输入后按回车新增"
-          :options="authorsOptions"
-        />
+        <NSelect v-model:value="batchUpdate_Author" filterable multiple tag placeholder="输入后按回车新增"
+          :options="authorsOptions" />
         <NDivider />
-        <NButton @click="batchUpdateAuthor" type="success"> 更新 </NButton>
+        <NButton @click="batchUpdateAuthor" type="success" :loading="isLoading"> 更新 </NButton>
       </NTabPane>
       <NTabPane name="tag" tab="标签">
-        <NSelect
-          v-model:value="batchUpdate_Tag"
-          filterable
-          multiple
-          clearable
-          tag
-          placeholder="可选，按回车确认"
-          :options="tagsSelectOption"
-        />
+        <NSelect v-model:value="batchUpdate_Tag" filterable multiple clearable tag placeholder="可选，按回车确认"
+          :options="tagsSelectOption" />
         <NDivider />
-        <NButton @click="batchUpdateTag" type="success"> 更新 </NButton>
+        <NButton @click="batchUpdateTag" type="success" :loading="isLoading"> 更新 </NButton>
       </NTabPane>
       <NTabPane name="language" tab="语言">
-        <NSelect
-          v-model:value="batchUpdate_Language"
-          filterable
-          multiple
-          clearable
-          tag
-          placeholder="可选，输入后按回车新增"
-          :options="languageSelectOption"
-        />
+        <NSelect v-model:value="batchUpdate_Language" filterable multiple clearable tag placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption" />
         <NDivider />
-        <NButton @click="batchUpdateLanguage" type="success"> 更新 </NButton>
+        <NButton @click="batchUpdateLanguage" type="success" :loading="isLoading"> 更新 </NButton>
       </NTabPane>
       <NTabPane name="option" tab="点歌选项">
         <NSpace vertical>
-          <NCheckbox
-            :checked="batchUpdate_Option != undefined"
-            @update:checked="
-              (checked: boolean) => {
-                batchUpdate_Option = checked
-                  ? ({
-                      needJianzhang: false,
-                      needTidu: false,
-                      needZongdu: false,
-                    } as SongRequestOption)
-                  : undefined
-              }
-            "
-          >
+          <NCheckbox :checked="batchUpdate_Option != undefined" @update:checked="(checked: boolean) => {
+              batchUpdate_Option = checked
+                ? ({
+                  needJianzhang: false,
+                  needTidu: false,
+                  needZongdu: false,
+                } as SongRequestOption)
+                : undefined
+            }
+            ">
             是否启用
           </NCheckbox>
           <template v-if="batchUpdate_Option != undefined">
@@ -899,14 +840,10 @@ onMounted(() => {
               <NCheckbox v-model:checked="batchUpdate_Option.needZongdu"> 需要总督 </NCheckbox>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox
-                :checked="batchUpdate_Option.scMinPrice != undefined"
-                @update:checked="
-                  (checked: boolean) => {
-                    if (batchUpdate_Option) batchUpdate_Option.scMinPrice = checked ? 30 : undefined
-                  }
-                "
-              >
+              <NCheckbox :checked="batchUpdate_Option.scMinPrice != undefined" @update:checked="(checked: boolean) => {
+                  if (batchUpdate_Option) batchUpdate_Option.scMinPrice = checked ? 30 : undefined
+                }
+                ">
                 需要SC
               </NCheckbox>
               <NInputGroup v-if="batchUpdate_Option?.scMinPrice" style="width: 200px">
@@ -915,14 +852,10 @@ onMounted(() => {
               </NInputGroup>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox
-                :checked="batchUpdate_Option.fanMedalMinLevel != undefined"
-                @update:checked="
-                  (checked: boolean) => {
-                    if (batchUpdate_Option) batchUpdate_Option.fanMedalMinLevel = checked ? 5 : undefined
-                  }
-                "
-              >
+              <NCheckbox :checked="batchUpdate_Option.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
+                  if (batchUpdate_Option) batchUpdate_Option.fanMedalMinLevel = checked ? 5 : undefined
+                }
+                ">
                 需要粉丝牌
                 <NTooltip>
                   <template #trigger>
@@ -939,7 +872,7 @@ onMounted(() => {
           </template>
         </NSpace>
         <NDivider />
-        <NButton @click="batchUpdateOption" type="success"> 更新 </NButton>
+        <NButton @click="batchUpdateOption" type="success" :loading="isLoading"> 更新 </NButton>
       </NTabPane>
     </NTabs>
   </NModal>
@@ -949,6 +882,7 @@ onMounted(() => {
 .netease path:nth-child(2) {
   fill: #c20c0c;
 }
+
 .fivesing:first-child {
   fill: #00bbb3;
 }

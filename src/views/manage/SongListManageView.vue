@@ -177,6 +177,10 @@ const uploadSongsOptions = computed(() => {
 const selecteduploadSongs = ref<string[]>([])
 
 async function addCustomSong() {
+  if (songs.value.findIndex((s) => s.name == addSongModel.value.name) > -1) {
+    message.error('已存在相同名称的歌曲')
+    return
+  }
   isModalLoading.value = true
   formRef.value
     ?.validate()
@@ -614,6 +618,7 @@ onMounted(async () => {
                   autosize
                   style="min-width: 200px"
                   placeholder="就是歌曲名称"
+                  :status="songs.findIndex((s) => s.name == addSongModel.name) > -1 ? 'error' : 'success'"
                 />
               </NFormItem>
               <NFormItem path="author" label="作者">
