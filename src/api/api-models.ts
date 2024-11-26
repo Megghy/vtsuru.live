@@ -123,6 +123,7 @@ export interface UserSetting {
   scheduleTemplate: string | null
 }
 export interface Setting_Index {
+  allowDisplayInIndex: boolean
   videos: string[]
   notification: string
   links: {
