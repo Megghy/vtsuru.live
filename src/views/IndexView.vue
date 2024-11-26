@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { QueryGetAPI } from '@/api/query'
+import { VTSURU_API_URL } from '@/data/constants'
 import vtb from '@/svgs/ic_vtuber.svg'
 import {
   BookCoins20Filled,
+  Info24Filled,
   Lottery24Filled,
   MoneyOff24Filled,
   MoreHorizontal24Filled,
@@ -11,7 +14,9 @@ import {
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NDivider, NEllipsis, NGradientText, NGrid, NGridItem, NIcon, NSpace, NText } from 'naive-ui'
+import { NButton, NCard, NDivider, NEllipsis, NFlex, NGradientText, NGrid, NGridItem, NIcon, NNumberAnimation, NSpace, NText, NTooltip } from 'naive-ui'
+import { onMounted, ref } from 'vue'
+import { stream } from 'xlsx'
 
 const { width } = useWindowSize()
 
@@ -92,8 +97,20 @@ const functions = [
     icon: MoreHorizontal24Filled,
   },
 ]
+type IndexDataType = {
+  userCount: number
+  streamers: { name: string, uname: string, avatar: string, uid: number, roomId: number }[]
+}
 
 const iconColor = 'white'
+const indexData = ref<IndexDataType>()
+
+onMounted(async () => {
+  const data = await QueryGetAPI<IndexDataType>(VTSURU_API_URL + 'get-index-data')
+  if (data.code == 200) {
+    indexData.value = data.data
+  }
+})
 </script>
 
 <template>
@@ -102,15 +119,11 @@ const iconColor = 'white'
       <NSpace justify="center" align="center" :size="width > 700 ? 50 : 0">
         <vtb />
         <NSpace vertical justify="center">
-          <NGradientText
-            size="3rem"
-            :gradient="{
-              deg: 180,
-              from: '#e5e5e5',
-              to: '#c2ebeb',
-            }"
-            style="font-weight: 700"
-          >
+          <NGradientText size="3rem" :gradient="{
+            deg: 180,
+            from: '#e5e5e5',
+            to: '#c2ebeb',
+          }" style="font-weight: 700">
             VTSURU.LIVE
           </NGradientText>
           <NText style="font-size: 1.5em; font-weight: 500; color: white"> 一个给主播提供便利功能的网站 😊 </NText>
@@ -131,13 +144,8 @@ const iconColor = 'white'
               </NSpace>
             </NSpace>
             <NButton size="large" @click="$router.push('/@Megghy')"> 展示 </NButton>
-            <NButton
-              size="large"
-              tag="a"
-              href="https://play-live.bilibili.com/details/1698742711771"
-              target="_blank"
-              color="#ff778f"
-            >
+            <NButton size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank"
+              color="#ff778f">
               幻星平台
             </NButton>
             <NButton type="info" size="large" @click="$router.push({ name: 'about' })"> 关于 </NButton>
@@ -145,7 +153,13 @@ const iconColor = 'white'
         </NSpace>
       </NSpace>
 
-      <NDivider style="width: 90vw" />
+      <NDivider style="width: 90vw">
+        <NText :depth="3">
+          本站用户
+        </NText>
+        <NDivider vertical />
+        <NNumberAnimation :from="0" :to="indexData?.userCount" show-separator />
+      </NDivider>
       <NGrid cols="1 s:2 m:3 l:4 xl:5 2xl:5" x-gap="50" y-gap="50" style="max-width: 80vw" responsive="screen">
         <NGridItem v-for="item in functions" :key="item.name">
           <NSpace align="end" :wrap="false">
@@ -157,17 +171,45 @@ const iconColor = 'white'
           <NText class="index-feature content"> {{ item.desc }} </NText>
         </NGridItem>
       </NGrid>
+      <NDivider style="width: 90vw">
+        正在使用本站的主播们
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          随机展示不分先后, 仅粉丝数大于500的主播
+        </NTooltip>
+      </NDivider>
+      <NFlex v-if="indexData" vertical style="max-width: 80vw;">
+        <NFlex align="center" justify="center" :size="32">
+          <NFlex v-for="streamer in indexData?.streamers" style="display: flex;" align="center" justify="center">
+            <div>
+              <img :src="streamer.avatar + '@64w'" referrerpolicy="no-referrer" height="32"
+                style="border-radius: 50%;" />
+            </div>
+            <NButton tag="a" :href="'@' + streamer.name" text>
+              {{ streamer.uname || streamer.name }}
+            </NButton>
+          </NFlex>
+        </NFlex>
+        <NText>
+          还有更多...
+        </NText>
+        <NText depth="3">
+          如果你不想要被展示在主页, 请前往
+          <NButton text @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })">
+            这里
+          </NButton>
+          进行设置
+        </NText>
+      </NFlex>
+      <NDivider style="width: 90vw" />
     </NSpace>
     <NSpace style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw" justify="center">
       <span style="color: white">
         BY
-        <NButton
-          tag="a"
-          href="https://space.bilibili.com/10021741"
-          target="_blank"
-          text
-          style="color: rgb(215, 245, 230)"
-        >
+        <NButton tag="a" href="https://space.bilibili.com/10021741" target="_blank" text
+          style="color: rgb(215, 245, 230)">
           Megghy
         </NButton>
       </span>

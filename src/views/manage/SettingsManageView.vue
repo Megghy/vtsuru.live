@@ -4,6 +4,7 @@ import {
   DelBlackList,
   SaveAccountSettings,
   SaveEnableFunctions,
+  SaveSetting,
   downloadConfigDirect,
   useAccount,
 } from '@/api/account'
@@ -510,6 +511,10 @@ async function getIndexInfo() {
     isLoading.value = false
   }
 }
+async function updateUserIndexSettings() {
+  await SaveSetting('Index', accountInfo.value.settings.index)
+  message.success('已保存')
+}
 
 onActivated(() => {
   if (route.query.tab) {
@@ -522,6 +527,7 @@ onActivated(() => {
 onMounted(async () => {
   await RequestBiliUserData()
   indexDisplayInfo.value = await getIndexInfo()
+  accountInfo.value.settings.index.allowDisplayInIndex = accountInfo.value.settings.index.allowDisplayInIndex ?? true
 })
 </script>
 
@@ -557,6 +563,11 @@ onMounted(async () => {
           </NSpace>
         </NTabPane>
         <NTabPane tab="主页" name="index" display-directive="show:lazy">
+          <NDivider> 常规 </NDivider>
+          <NCheckbox v-model:checked="accountInfo.settings.index.allowDisplayInIndex" type="textarea" @update:checked="updateUserIndexSettings">
+            允许显示在网站主页
+          </NCheckbox>
+          <br /><br />
           <NDivider> 通知 </NDivider>
           <NInput v-model:value="accountInfo.settings.index.notification" type="textarea" />
           <br /><br />
