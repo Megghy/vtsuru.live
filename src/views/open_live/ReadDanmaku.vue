@@ -394,7 +394,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
   text = text
     .replace(
       templateConstants.name.regex,
-      settings.value.voiceType == 'api' && settings.value.splitText ? `\'${data.name}\'` : data.name,
+      settings.value.voiceType == 'api' && settings.value.splitText ? `'${data.name}'` : data.name,
     )
     .replace(templateConstants.count.regex, data.num.toString())
     .replace(templateConstants.price.regex, data.price.toString())
