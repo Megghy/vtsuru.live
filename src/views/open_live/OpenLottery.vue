@@ -2,7 +2,6 @@
 import { useAccount } from '@/api/account'
 import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClient'
 import { CURRENT_HOST, LOTTERY_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Delete24Filled, Info24Filled } from '@vicons/fluent'
@@ -45,6 +44,7 @@ import {
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
+import { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 interface LotteryOption {
   resultCount: number

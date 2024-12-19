@@ -2,12 +2,11 @@
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
-import { defineConfig } from 'vite'
-import svgLoader from 'vite-svg-loader'
 import Markdown from 'unplugin-vue-markdown/vite'
-import caddyTls from './plugins/vite-plugin-caddy'
-import ViteMonacoPlugin from 'vite-plugin-monaco-editor'
+import { defineConfig } from 'vite'
 import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
+import svgLoader from 'vite-svg-loader'
+import caddyTls from './plugins/vite-plugin-caddy'
 
 const isObjectWithDefaultFunction = (
   module: unknown
@@ -43,6 +42,9 @@ export default defineConfig({
     caddyTls(),
     monacoEditorPlugin({ languageWorkers: ['css'] })
   ],
+  server: {
+    port: 51000
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')

@@ -5,7 +5,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient';
 // @ts-ignore
 import * as constants from './blivechat/constants';
 // @ts-ignore
-import * as chatModels from './blivechat/models';
+import * as chatModels from '../../data/chat/models';
 // @ts-ignore
 import * as pronunciation from './blivechat/utils/pronunciation'
 // @ts-ignore

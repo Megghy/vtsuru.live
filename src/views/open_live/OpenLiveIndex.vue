@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account';
-import { RoomAuthInfo } from '@/data/DanmakuClient';
+import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient';
 import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui';
 
 const props = defineProps<{

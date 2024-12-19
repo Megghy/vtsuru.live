@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import * as models from './models'
+import * as models from '../../../data/chat/models'
 
 export default {
   name: 'ImgShadow',

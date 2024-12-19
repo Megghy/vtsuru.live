@@ -2,7 +2,6 @@
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { DanmakuUserInfo, EventModel, SongFrom, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { MusicRequestSettings, useMusicRequestProvider } from '@/store/useMusicRequest'
@@ -44,6 +43,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
+import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 type Music = {
   id: number
