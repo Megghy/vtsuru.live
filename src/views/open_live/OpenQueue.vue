@@ -14,7 +14,6 @@ import {
   Setting_Queue,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { CURRENT_HOST, QUEUE_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
@@ -70,6 +69,7 @@ import {
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import QueueOBS from '../obs/QueueOBS.vue'
+import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 const defaultSettings = {
   keyword: '排队',

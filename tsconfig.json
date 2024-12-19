@@ -14,25 +14,20 @@
     "baseUrl": ".",
     "types": ["node"],
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable",
-      "scripthost"
-    ]
+    "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
-, "env.d.ts", "default.d.ts", "src/data/chat/ChatClientDirectOpenLive.js", "src/views/obs/blivechat/models.js"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "tests/**/*.tsx",
+    "env.d.ts",
+    "default.d.ts",
+    "src/data/chat/ChatClientDirectOpenLive.js",
+    "src/data/chat/models.js"
+  ],
+  "exclude": ["node_modules"]
 }

@@ -1,8 +1,4 @@
 import { useAccount } from '@/api/account'
-import OpenLiveClient, {
-  AuthInfo,
-  RoomAuthInfo
-} from '@/data/DanmakuClients/OpenLiveClient'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -11,10 +7,10 @@ export interface BCMessage {
   data: string
 }
 
-export const useDanmakuClient = defineStore('DanmakuClient', () => {
-  const danmakuClient = ref<OpenLiveClient>(new OpenLiveClient())
+export const useDirectDanmakuClient = defineStore('DirectDanmakuClient', () => {
+  const danmakuClient = ref<OpenLiveClient>(new OpenLiveClient(null))
   let bc: BroadcastChannel
-  const isOwnedDanmakuClient = ref(false)
+  const isOwnedDirectDanmakuClient = ref(false)
   const status = ref<'waiting' | 'initializing' | 'listening' | 'running'>(
     'waiting'
   )
@@ -80,10 +76,8 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
         async (lock) => {
           if (lock) {
             status.value = 'initializing'
-            bc = new BroadcastChannel(
-              'vtsuru.danmaku.open-live' + accountInfo.value?.id
-            )
-            console.log('[DanmakuClient] 创建 BroadcastChannel: ' + bc.name)
+            bc = new BroadcastChannel('vtsuru.danmaku.open-live' + accountInfo.value?.id)
+            console.log('[DirectDanmakuClient] 创建 BroadcastChannel: ' + bc.name)
             bc.onmessage = (event) => {
               const message: BCMessage = event.data as BCMessage
               const data = message.data ? JSON.parse(message.data) : {}
@@ -91,7 +85,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
                 case 'check-client':
                   sendBCMessage('response-client-status', {
                     status: status.value,
-                    auth: authInfo.value
+                    auth: authInfo.value,
                   })
                   break
                 case 'response-client-status':
@@ -128,15 +122,15 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
                   break
               }
             }
-            console.log('[DanmakuClient] 正在检查客户端状态...')
+            console.log('[DirectDanmakuClient] 正在检查客户端状态...')
             sendBCMessage('check-client')
             setTimeout(() => {
               if (!connected.value) {
-                isOwnedDanmakuClient.value = true
+                isOwnedDirectDanmakuClient.value = true
                 initClientInternal(auth)
               } else {
                 console.log(
-                  '[DanmakuClient] 已存在其他页面弹幕客户端, 开始监听 BroadcastChannel...'
+                  '[DirectDanmakuClient] 已存在其他页面弹幕客户端, 开始监听 BroadcastChannel...'
                 )
               }
 
@@ -147,7 +141,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       )
     }
     isInitializing = false
-    return useDanmakuClient()
+    return useDirectDanmakuClient()
   }
   function sendBCMessage(type: string, data?: any) {
     bc.postMessage({
@@ -156,11 +150,11 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     })
   }
   function checkClientStatus() {
-    if (!existOtherClient && !isOwnedDanmakuClient.value) {
+    if (!existOtherClient && !isOwnedDirectDanmakuClient.value) {
       //当不存在其他客户端, 且自己不是弹幕客户端
       //则自己成为新的弹幕客户端
       if (status.value != 'initializing') {
-        console.log('[DanmakuClient] 其他 Client 离线, 开始初始化...')
+        console.log('[DirectDanmakuClient] 其他 Client 离线, 开始初始化...')
         initClientInternal()
       }
     } else {
@@ -179,11 +173,11 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       async (lock) => {
         if (lock) {
           // 有锁
-          isOwnedDanmakuClient.value = true
+          isOwnedDirectDanmakuClient.value = true
           const events = danmakuClient.value.events
           const eventsAsModel = danmakuClient.value.eventsAsModel
 
-          danmakuClient.value = new OpenLiveClient(auth)
+          danmakuClient.value = new OpenLiveClient(auth || null)
 
           danmakuClient.value.events = events
           danmakuClient.value.eventsAsModel = eventsAsModel
@@ -192,18 +186,18 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
             if (result.success) {
               authInfo.value = danmakuClient.value.roomAuthInfo
               status.value = 'running'
-              console.log('[DanmakuClient] 初始化成功')
+              console.log('[DirectDanmakuClient] 初始化成功')
               sendBCMessage('response-client-status', {
                 status: 'running',
                 auth: authInfo.value
               })
-              danmakuClient.value.on('all', (data) => {
+              danmakuClient.value.onEvent('all', (data) => {
                 sendBCMessage('on-danmaku', data)
               })
               return true
             } else {
               console.log(
-                '[DanmakuClient] 初始化失败, 5秒后重试: ' + result.message
+                '[DirectDanmakuClient] 初始化失败, 5秒后重试: ' + result.message
               )
               return false
             }
@@ -217,9 +211,9 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
           }
         } else {
           // 无锁
-          console.log('[DanmakuClient] 正在等待其他页面弹幕客户端初始化...')
+          console.log('[DirectDanmakuClient] 正在等待其他页面弹幕客户端初始化...')
           status.value = 'listening'
-          isOwnedDanmakuClient.value = false
+          isOwnedDirectDanmakuClient.value = false
         }
       }
     )
@@ -227,7 +221,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
 
   return {
     danmakuClient,
-    isOwnedDanmakuClient,
+    isOwnedDirectDanmakuClient,
     status,
     connected,
     authInfo,

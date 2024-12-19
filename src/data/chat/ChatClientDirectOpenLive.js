@@ -1,4 +1,5 @@
 import ChatClientOfficialBase, * as base from './ChatClientOfficialBase'
+import { processAvatarUrl } from './models'
 
 export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
   constructor(authInfo) {
@@ -49,7 +50,7 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
     }
 
     data = {
-      avatarUrl: chat.processAvatarUrl(data.uface),
+      avatarUrl: processAvatarUrl(data.uface),
       timestamp: data.timestamp,
       authorName: data.uname,
       authorType: authorType,
@@ -79,7 +80,7 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
 
     data = {
       id: data.msg_id,
-      avatarUrl: chat.processAvatarUrl(data.uface),
+      avatarUrl: processAvatarUrl(data.uface),
       timestamp: data.timestamp,
       authorName: data.uname,
       totalCoin: data.price,
@@ -97,7 +98,7 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
     let data = command.data
     data = {
       id: data.msg_id,
-      avatarUrl: chat.processAvatarUrl(data.user_info.uface),
+      avatarUrl: processAvatarUrl(data.user_info.uface),
       timestamp: data.timestamp,
       authorName: data.user_info.uname,
       privilegeType: data.guard_level,
@@ -113,7 +114,7 @@ export default class ChatClientDirectOpenLive extends ChatClientOfficialBase {
     let data = command.data
     data = {
       id: data.message_id.toString(),
-      avatarUrl: chat.processAvatarUrl(data.uface),
+      avatarUrl: processAvatarUrl(data.uface),
       timestamp: data.start_time,
       authorName: data.uname,
       price: data.rmb,

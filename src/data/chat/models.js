@@ -1,7 +1,23 @@
-import { getUuid4Hex } from './utils'
-import * as constants from './constants'
+import { getUuid4Hex } from '../../views/obs/blivechat/utils'
+import * as constants from '../../views/obs/blivechat/constants'
 
-export const DEFAULT_AVATAR_URL = 'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
+export function getDefaultMsgHandler() {
+  let dummyFunc = () => {}
+  return {
+    onAddText: dummyFunc,
+    onAddGift: dummyFunc,
+    onAddMember: dummyFunc,
+    onAddSuperChat: dummyFunc,
+    onDelSuperChat: dummyFunc,
+    onUpdateTranslation: dummyFunc,
+
+    onFatalError: dummyFunc,
+    onDebugMsg: dummyFunc
+  }
+}
+
+export const DEFAULT_AVATAR_URL =
+  'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
 
 export class AddTextMsg {
   constructor({
@@ -123,4 +139,12 @@ export class DebugMsg {
   constructor({ content = '' } = {}) {
     this.content = content
   }
+}
+export function processAvatarUrl(avatarUrl) {
+  // 去掉协议，兼容HTTP、HTTPS
+  let m = avatarUrl.match(/(?:https?:)?(.*)/)
+  if (m) {
+    avatarUrl = m[1]
+  }
+  return avatarUrl
 }

@@ -12,7 +12,7 @@ import { useElementSize } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
-import { NCard, NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
+import { NCard, NDivider, NEmpty, NMessageProvider, NSpace, NText, useMessage } from 'naive-ui'
 import { List } from 'linqts'
 
 const props = defineProps<{
@@ -25,6 +25,7 @@ const currentId = computed(() => {
   return props.id ?? route.query.id
 })
 
+const cardRef = ref()
 const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)
 const itemHeight = 40
@@ -140,7 +141,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="live-request-background" v-bind="$attrs">
+  <NMessageProvider :to="cardRef" />
+  <div ref="cardRef" class="live-request-background" v-bind="$attrs">
     <p class="live-request-header">{{ settings.obsTitle ?? '点播' }}</p>
     <NDivider class="live-request-divider">
       <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 条</p>
