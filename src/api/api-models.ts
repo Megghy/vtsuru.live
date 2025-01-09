@@ -165,6 +165,7 @@ export interface Setting_LiveRequest {
   showUserName: boolean
   showFanMadelInfo: boolean
   obsTitle: string
+  obsTitleToday: string
 
   isReverse: boolean
 }
