@@ -16,7 +16,15 @@ export default {
       alias: 'song-request',
       component: () => import('@/views/obs/LiveRequestOBS.vue'),
       meta: {
-        title: '弹幕点歌 (歌势'
+        title: '弹幕点播'
+      }
+    },
+    {
+      path: 'live-request-today',
+      name: 'obs-live-request-today',
+      component: () => import('@/views/obs/LiveRequestProcessedOBS.vue'),
+      meta: {
+        title: '弹幕点播-今日'
       }
     },
     {
