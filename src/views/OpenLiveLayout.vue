@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { isDarkMode } from '@/Utils'
 import { ThemeType } from '@/api/api-models'
-import DanmakuClient, { AuthInfo } from '@/data/DanmakuClient'
+import { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent'
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
@@ -39,7 +39,7 @@ const sider = ref()
 const { width } = useElementSize(sider)
 
 const authInfo = ref<AuthInfo>()
-const danmakuClient = useDanmakuClient()
+const danmakuClient = await useDanmakuClient().initClient()
 
 const menuOptions = [
   {
@@ -125,13 +125,8 @@ onUnmounted(() => {
     <NResult status="error" title="无效访问">
       <template #footer>
         请前往
-        <NButton
-          text
-          type="primary"
-          tag="a"
-          href="https://play-live.bilibili.com/details/1698742711771"
-          target="_blank"
-        >
+        <NButton text type="primary" tag="a" href="https://play-live.bilibili.com/details/1698742711771"
+          target="_blank">
           幻星平台 | VTsuru
         </NButton>
         并点击 获取 , 再点击 获取 H5 插件链接来获取可用链接
@@ -148,12 +143,8 @@ onUnmounted(() => {
             <NTag :type="danmakuClient.connected ? 'success' : 'warning'">
               {{ danmakuClient.connected ? `已连接 | ${danmakuClient.authInfo?.anchor_info?.uname}` : '未连接' }}
             </NTag>
-            <NSwitch
-              :default-value="!isDarkMode"
-              @update:value="
-                (value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
-              "
-            >
+            <NSwitch :default-value="!isDarkMode" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
+              ">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -173,29 +164,15 @@ onUnmounted(() => {
       </NPageHeader>
     </NLayoutHeader>
     <NLayout has-sider style="height: calc(100vh - 45px - 30px)">
-      <NLayoutSider
-        bordered
-        ref="sider"
-        show-trigger
-        default-collapsed
-        collapse-mode="width"
-        :collapsed-width="64"
-        :width="180"
-        :native-scrollbar="false"
-        style="height: 100%"
-      >
+      <NLayoutSider bordered ref="sider" show-trigger default-collapsed collapse-mode="width" :collapsed-width="64"
+        :width="180" :native-scrollbar="false" style="height: 100%">
         <Transition>
           <div v-if="danmakuClient.authInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
-              <NAvatar
-                :src="danmakuClient.authInfo?.anchor_info?.uface"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                round
-                bordered
-                :style="{
+              <NAvatar :src="danmakuClient.authInfo?.anchor_info?.uface" :img-props="{ referrerpolicy: 'no-referrer' }"
+                round bordered :style="{
                   boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
-                }"
-              />
+                }" />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
                   {{ danmakuClient.authInfo?.anchor_info?.uname }}
@@ -204,12 +181,8 @@ onUnmounted(() => {
             </NSpace>
           </div>
         </Transition>
-        <NMenu
-          :default-value="$route.name?.toString()"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-        />
+        <NMenu :default-value="$route.name?.toString()" :collapsed-width="64" :collapsed-icon-size="22"
+          :options="menuOptions" />
         <NSpace justify="center">
           <NText depth="3" v-if="width > 150">
             有更多功能建议请

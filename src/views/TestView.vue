@@ -16,7 +16,7 @@ const inputMsg = ref('')
 const isMaster = computed(() => {
   return route.query.slave == null || route.query.slave == undefined
 })
-const dc = useDanmakuClient()
+const dc = await useDanmakuClient().initClient()
 const customCss = ref('')
 
 let rtc= useWebRTC()

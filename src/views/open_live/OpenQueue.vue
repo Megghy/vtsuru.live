@@ -113,7 +113,7 @@ const route = useRoute()
 const accountInfo = useAccount()
 const message = useMessage()
 const notice = useNotification()
-const client = useDanmakuClient()
+const client = await useDanmakuClient().initClient()
 
 const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false)
 const isReverse = useStorage('Queue.Settings.Reverse', false)
