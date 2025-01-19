@@ -84,7 +84,7 @@ const route = useRoute()
 const message = useMessage()
 const accountInfo = useAccount()
 const notification = useNotification()
-const client = useDanmakuClient()
+const client = await useDanmakuClient().initClient()
 
 const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
 const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
