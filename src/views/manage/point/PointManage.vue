@@ -262,13 +262,13 @@ function onUpdateClick(item: ResponsePointGoodModel) {
     },
     fileList: item.cover
       ? [
-          {
-            id: item.cover ?? 'cover',
-            thumbnailUrl: FILE_BASE_URL + item.cover,
-            name: '封面',
-            status: 'finished',
-          },
-        ]
+        {
+          id: item.cover ?? 'cover',
+          thumbnailUrl: FILE_BASE_URL + item.cover,
+          name: '封面',
+          status: 'finished',
+        },
+      ]
       : [],
   }
   isAllowedPrivacyPolicy.value = true
@@ -348,20 +348,19 @@ function onModalOpen() {
 function resetGoods() {
   currentGoodsModel.value = JSON.parse(JSON.stringify(defaultGoodsModel))
 }
-function responseGoodsToModel(goods: ResponsePointGoodModel) {}
+function responseGoodsToModel(goods: ResponsePointGoodModel) { }
 
-onMounted(() => {})
+onMounted(() => { })
 </script>
 
 <template>
   <NFlex>
-    <NAlert :type="
-        accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-          ? 'success'
-          : 'warning'
+    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+        ? 'success'
+        : 'warning'
       " style="min-width: 400px">
       启用
-      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/ohulp2torghlqqn8" target="_blank">
+      <NButton text type="primary" tag="a" href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co" target="_blank">
         积分系统
       </NButton>
       <NDivider vertical />
@@ -370,8 +369,7 @@ onMounted(() => {})
       <br />
       <NText depth="3">
         此功能需要部署
-        <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
-          target="_blank">
+        <NButton text type="primary" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
           VtsuruEventFetcher
         </NButton>
         , 否则将无法记录各种事件
@@ -481,11 +479,11 @@ onMounted(() => {})
         <NFormItem path="goods.guardFree" label="兑换规则">
           <NFlex vertical>
             <NCheckbox :checked="currentGoodsModel.goods.setting?.guardFree != undefined" @update:checked="
-                (v) => {
-                  // @ts-ignore
-                  currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
-                }
-              ">
+              (v) => {
+                // @ts-ignore
+                currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
+              }
+            ">
               允许舰长免费兑换
               <NTooltip>
                 <template #trigger>

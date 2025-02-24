@@ -793,7 +793,7 @@ onMounted(async () => {
           <NTabPane name="file" tab="从文件导入">
             <NAlert type="info">
               Excel 文件格式详见:
-              <NButton type="info" tag="a" href="https://www.yuque.com/megghy/dez70g/ngrqwkiegrh593w5" target="_blank"
+              <NButton type="info" tag="a" href="https://www.wolai.com/hZWizjCnAdc6hDdntuWgcU" target="_blank"
                 size="tiny">
                 此页面
               </NButton>

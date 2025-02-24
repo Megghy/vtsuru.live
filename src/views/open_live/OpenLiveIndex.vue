@@ -49,28 +49,16 @@ const accountInfo = useAccount()
     </NCard>
   </NSpace>
   <br />
-  <NAlert
-    v-if="accountInfo?.eventFetcherState?.online != true"
-    type="warning"
-    title="可用性警告"
-    style="max-width: 600px; margin: 0 auto"
-  >
+  <NAlert v-if="accountInfo?.eventFetcherState?.online != true" type="warning" title="可用性警告"
+    style="max-width: 600px; margin: 0 auto">
     当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见
-    <NButton text tag="a" href="https://developer.chrome.com/blog/background_tabs/" target="_blank" type="info"
-      >此文章</NButton
-    >), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件
+    <NButton text tag="a" href="https://developer.chrome.com/blog/background_tabs/" target="_blank" type="info">此文章
+    </NButton>), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件
     <br />
     为避免这种情况, 建议注册本站账后使用
-    <NButton
-      type="primary"
-      text
-      size="tiny"
-      tag="a"
-      href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
-      target="_blank"
-    >
-      VtsuruEventFetcher </NButton
-    >, 否则请在使用功能时尽量保持网页在前台运行
+    <NButton type="primary" text size="tiny" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+      target="_blank">
+      VtsuruEventFetcher </NButton>, 否则请在使用功能时尽量保持网页在前台运行
   </NAlert>
   <NDivider> 还有更多 </NDivider>
   <NSpace justify="center" align="center" vertical>
