@@ -113,7 +113,7 @@ async function updateGift() {
 <template>
   <NAlert v-if="!accountInfo.eventFetcherState.online" type="warning">
     由于你尚未部署
-    <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+    <NButton text type="primary" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
       VtsuruEventFetcher
     </NButton>
     , 以下选项设置了也没用
@@ -160,8 +160,7 @@ async function updateGift() {
           <NInputGroup style="width: 280px" :disabled="!canEdit">
             <NInputGroupLabel> SC转换倍率 </NInputGroupLabel>
             <NInputNumber v-model:value="setting.scPointPercent" :disabled="!canEdit" min="0" step="0.01" max="1" />
-            <NButton @click="updateSettings" type="info" :disabled="!canEdit"
-              >确定
+            <NButton @click="updateSettings" type="info" :disabled="!canEdit">确定
               <NTooltip>
                 <template #trigger>
                   <NIcon :component="Info24Filled" />
@@ -204,12 +203,9 @@ async function updateGift() {
                   <NFlex align="center">
                     <NTag :bordered="false" size="small" type="success"> {{ item[0] }} </NTag>
                     <NInputGroup style="width: 200px" :disabled="!canEdit">
-                      <NInputNumber
-                        :value="setting.giftPercentMap[item[0]]"
-                        @update:value="(v) => (setting.giftPercentMap[item[0]] = v ?? 0)"
-                        :disabled="!canEdit"
-                        min="0"
-                      />
+                      <NInputNumber :value="setting.giftPercentMap[item[0]]"
+                        @update:value="(v) => (setting.giftPercentMap[item[0]] = v ?? 0)" :disabled="!canEdit"
+                        min="0" />
                       <NButton @click="updateSettings" type="info" :disabled="!canEdit">确定</NButton>
                     </NInputGroup>
                     <NPopconfirm @positive-click="deleteGift(item[0])">

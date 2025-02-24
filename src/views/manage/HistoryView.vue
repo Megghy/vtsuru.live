@@ -587,7 +587,7 @@ onMounted(async () => {
   <NCard v-else size="small">
     <NAlert type="warning">
       由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
-      <NButton text type="info" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+      <NButton text type="info" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
         VTsuruEventFetcher </NButton>
       来帮助本站获取你的数据记录
     </NAlert>

@@ -806,7 +806,7 @@ onUnmounted(() => {
     <br />
     <NText depth="3">
       如果没有部署
-      <NButton text type="primary" tag="a" href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p" target="_blank">
+      <NButton text type="primary" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
         VtsuruEventFetcher
       </NButton>
       则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 !(部署了则不影响)
@@ -837,7 +837,7 @@ onUnmounted(() => {
               <template #icon>
                 <NIcon :component="PeopleQueue24Filled" />
               </template>
-              队列 | {{ activeSongs.filter((s) => s.status == SongRequestStatus.Waiting).length }}
+              队列 | {{activeSongs.filter((s) => s.status == SongRequestStatus.Waiting).length}}
             </NTag>
             <NTag type="success" :bordered="false">
               <template #icon>

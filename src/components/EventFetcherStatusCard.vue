@@ -35,13 +35,7 @@ const status = computed(() => {
         <br />
         事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
         <br />
-        <NButton
-          type="info"
-          size="small"
-          tag="a"
-          href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
-          target="_blank"
-        >
+        <NButton type="info" size="small" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
           关于 EVENT-FETCHER
         </NButton>
       </NTooltip>
@@ -88,13 +82,7 @@ const status = computed(() => {
     </NTag>
     <template v-if="!state.online">
       <NDivider vertical />
-      <NButton
-        type="info"
-        size="tiny"
-        tag="a"
-        href="https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p"
-        target="_blank"
-      >
+      <NButton type="info" size="tiny" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
         关于 EVENT-FETCHER
       </NButton>
     </template>

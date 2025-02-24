@@ -271,7 +271,7 @@ const menuOptions = [
                               text: true,
                               size: 'small',
                               tag: 'a',
-                              href: 'https://www.yuque.com/megghy/dez70g/vfvcyv3024xvaa1p',
+                              href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
                               target: '_blank',
                             },
                             () => 'VtsuruEventFetcher',
