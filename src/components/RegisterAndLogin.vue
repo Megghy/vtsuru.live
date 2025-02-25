@@ -216,26 +216,16 @@ onUnmounted(() => {
       <NAlert type="warning"> 你已经登录 </NAlert>
     </template>
     <template v-else>
-      <NTabs
-        v-model:value="selectedTab"
-        size="large"
-        animated
-        pane-wrapper-style="margin: 0 -4px"
-        pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
-        style="min-width: 300px"
-      >
+      <NTabs v-model:value="selectedTab" size="large" animated pane-wrapper-style="margin: 0 -4px"
+        pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;" style="min-width: 300px">
         <NTabPane name="login" tab="登陆">
           <NForm ref="formRef" :rules="loginRules" :model="loginModel">
             <NFormItem path="account" label="用户名或邮箱">
               <NInput v-model:value="loginModel.account" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput
-                v-model:value="loginModel.password"
-                type="password"
-                @input="onPasswordInput"
-                @keydown.enter="onLoginButtonClick"
-              />
+              <NInput v-model:value="loginModel.password" type="password" @input="onPasswordInput"
+                @keydown.enter="onLoginButtonClick" />
             </NFormItem>
           </NForm>
           <NButton text secondary style="margin-left: 5px; color: gray" @click="onForgetPasswordClick">
@@ -254,22 +244,12 @@ onUnmounted(() => {
               <NInput v-model:value="registerModel.email" placeholder="就是邮箱, 没收到的话请检查垃圾箱" />
             </NFormItem>
             <NFormItem path="password" label="密码">
-              <NInput
-                v-model:value="registerModel.password"
-                type="password"
-                @input="onPasswordInput"
-                @keydown.enter.prevent
-                placeholder="输入密码, 需要包含英文和数字"
-              />
+              <NInput v-model:value="registerModel.password" type="password" @input="onPasswordInput"
+                @keydown.enter.prevent placeholder="输入密码, 需要包含英文和数字" />
             </NFormItem>
             <NFormItem ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
-              <NInput
-                v-model:value="registerModel.reenteredPassword"
-                :disabled="!registerModel.password"
-                type="password"
-                @keydown.enter="onRegisterButtonClick"
-                placeholder="再次输入密码"
-              />
+              <NInput v-model:value="registerModel.reenteredPassword" :disabled="!registerModel.password"
+                type="password" @keydown.enter="onRegisterButtonClick" placeholder="再次输入密码" />
             </NFormItem>
           </NForm>
           <NSpace vertical justify="center" align="center">
@@ -289,7 +269,8 @@ onUnmounted(() => {
           </NSpace>
         </NTabPane>
       </NTabs>
+      <br />
+      <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
     </template>
   </NCard>
-  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
 </template>

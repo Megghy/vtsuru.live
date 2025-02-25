@@ -3,7 +3,7 @@ import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
-import { addDays, addHours, format, isSameDay, isSameHour, startOfDay, startOfHour } from 'date-fns'
+import { addDays, addHours, endOfDay, format, isSameDay, isSameHour, startOfDay, startOfHour } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -97,30 +97,28 @@ function isSameDaySimple(time1: number, time2: number) {
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
 function getOptions() {
-  const fansIncreacement = [] as { time: Date; count: number }[]
-  const completeTimeSeries: {
-    time: Date
-    count: number
-    change: boolean
-  }[] = []
+  // 用于存储粉丝增量数据
+  const fansIncreacement: { time: Date; count: number }[] = []
+  // 用于存储完整的时间序列数据，包括时间、粉丝数、是否变化
+  const completeTimeSeries: { time: Date; count: number; change: boolean }[] = []
 
   let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
-  if (startTime < statisticStartDate) startTime = statisticStartDate
-  startTime = startOfHour(startTime)
+  startTime = startTime < statisticStartDate ? statisticStartDate : startTime // 确保开始时间不早于统计开始时间
+  startTime = startOfDay(startTime) // 将开始时间调整到整点
   const endTime = new Date()
 
   if (fansHistory.value) {
     let currentTime = startTime
-    let lastFansTimeIndex =
-      fansHistory.value.length > 0
-        ? fansHistory.value[0].time >= statisticStartDateTime
-          ? 0
-          : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
-        : -1
+    let lastFansTimeIndex = fansHistory.value.length > 0
+      ? fansHistory.value[0].time >= statisticStartDateTime
+        ? 0
+        : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
+      : -1
     let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
-    // 生成完整的天序列
+
+    // 生成完整的天序列数据
     while (currentTime <= endTime) {
-      const dayEndTime = startOfDay(currentTime).getTime()
+      const dayEndTime = endOfDay(currentTime).getTime()
       while (true) {
         const data = fansHistory.value[lastFansTimeIndex]
         if (!data) {
@@ -131,8 +129,9 @@ function getOptions() {
           })
           break
         }
+        // 如果下一个数据的时间大于当前天的结束时间
         if ((fansHistory.value[lastFansTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-          const changed = data.count != lastDayCount
+          const changed = data.count !== lastDayCount
           lastDayCount = data.count
 
           completeTimeSeries.push({
@@ -143,12 +142,13 @@ function getOptions() {
           break
         }
 
-        lastFansTimeIndex++;
+        lastFansTimeIndex++
       }
 
-      currentTime = addDays(currentTime, 1)
+      currentTime = addDays(currentTime, 1) // 移动到下一天
     }
-    // 计算日增量数据
+
+    // 计算粉丝增量数据
     let previousDayCount = completeTimeSeries[0].count
     completeTimeSeries.forEach((entry, index, array) => {
       if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
@@ -157,7 +157,6 @@ function getOptions() {
           fansIncreacement.push({
             time: startOfDay(array[index - 1].time),
             count: dailyIncrement,
-            // timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
           })
         }
         previousDayCount = entry.count
@@ -166,7 +165,6 @@ function getOptions() {
         fansIncreacement.push({
           time: startOfDay(entry.time),
           count: dailyIncrement,
-          // timeString: format(array[index - 1].time, 'yyyy-MM-dd'),
         })
       }
     })
@@ -174,20 +172,19 @@ function getOptions() {
 
   let lastDayGuards = 0
   let lastDay = 0
-  const guardsIncreacement = [] as { time: number; count: number; timeString: string }[]
-  const guards = [] as { time: number; count: number; timeString: string }[]
+  const guardsIncreacement: { time: number; count: number; timeString: string }[] = []
+  const guards: { time: number; count: number; timeString: string }[] = []
 
+  // 处理舰长历史数据
   if (guardHistory.value && guardHistory.value.length > 0) {
-    // 生成完整的天序列
     let currentGuardTime = startTime
     let lastDayGuardCount = 0
-    const completeGuardTimeSeries: {
-      time: Date
-      count: number
-    }[] = []
+    const completeGuardTimeSeries: { time: Date; count: number }[] = []
     let lastGuardTimeIndex = 0
+
+    // 生成完整的舰长天序列
     while (currentGuardTime <= endTime) {
-      const dayEndTime = startOfDay(currentGuardTime).getTime()
+      const dayEndTime = endOfDay(currentGuardTime).getTime()
       while (true) {
         const data = guardHistory.value[lastGuardTimeIndex]
         if (!data) {
@@ -197,9 +194,9 @@ function getOptions() {
           })
           break
         }
+
         if ((guardHistory.value[lastGuardTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
           lastDayGuardCount = data.count
-
           completeGuardTimeSeries.push({
             time: currentGuardTime,
             count: lastDayGuardCount,
@@ -207,17 +204,18 @@ function getOptions() {
           break
         }
 
-        lastGuardTimeIndex++;
+        lastGuardTimeIndex++
       }
 
-      currentGuardTime = addDays(currentGuardTime, 1)
+      currentGuardTime = addDays(currentGuardTime, 1) // 移动到下一天
     }
 
+    // 计算守护增量数据
     completeGuardTimeSeries.forEach((g) => {
       if (!isSameDay(g.time, new Date(lastDay * 1000))) {
         guardsIncreacement.push({
           time: lastDayGuards,
-          count: lastDay == 0 ? 0 : g.count - lastDayGuards,
+          count: lastDay === 0 ? 0 : g.count - lastDayGuards,
           timeString: format(g.time, 'yyyy-MM-dd'),
         })
         guards.push({
@@ -233,11 +231,13 @@ function getOptions() {
 
   const upstatViewIncreace: { time: number; value: number }[] = []
   const upstatLikeIncreace: { time: number; value: number }[] = []
+
+  // 处理upstat历史数据
   if (upstatHistory.value && upstatHistory.value.length > 0) {
     let lastUpstatView = upstatHistory.value[0].stats.views
     let lastUpstatLike = upstatHistory.value[0].stats.likes
 
-    upstatHistory.value?.forEach((u) => {
+    upstatHistory.value.forEach((u) => {
       upstatViewIncreace.push({
         time: u.time,
         value: u.stats.views - lastUpstatView,
@@ -251,7 +251,7 @@ function getOptions() {
     })
   }
   const chartData = {
-    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd HH:mm')),
+    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
     hourlyCounts: completeTimeSeries.map((entry) => entry.count),
     dailyIncrements: fansIncreacement.map((entry) => {
       return {
