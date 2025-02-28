@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { QAInfo } from '@/api/api-models'
-import { NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { useQuestionBox } from '@/store/useQuestionBox';
+import { NButton, NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { ref } from 'vue';
 
 const props = defineProps<{
   item: QAInfo
 }>()
+const useQA = useQuestionBox()
+
+const isViolation = props.item.reviewResult?.isApproved == false
+const showContent = ref(!isViolation)
 </script>
 
 <template>
@@ -15,7 +21,7 @@ const props = defineProps<{
           <NTag type="warning" size="tiny"> 未读 </NTag>
           <NDivider vertical />
         </template>
-        <NText :depth="item.isAnonymous ? 3 : 1" style="margin-top: 3px">
+        <NText :depth="item.isAnonymous ? 3 : 1" style="">
           {{ item.isAnonymous ? '匿名用户' : item.sender?.name }}
         </NText>
         <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false" style="margin-left: 5px">
@@ -39,6 +45,25 @@ const props = defineProps<{
             <NTime :time="item.sendAt" />
           </NTooltip>
         </NText>
+        <template v-if="item.reviewResult && item.reviewResult.violationType?.length > 0">
+          <NDivider vertical />
+          <NFlex size="small">
+            <NTag v-for="v in item.reviewResult.violationType" size="small" type="error" :bordered="false">
+              {{ useQA.getViolationString(v) }}
+            </NTag>
+          </NFlex>
+        </template>
+        <template v-if="item.reviewResult && item.reviewResult.saftyScore">
+          <NDivider vertical />
+          <NTooltip>
+            <template #trigger>
+              <NTag size="small" :color="{ color: '#af2525', textColor: 'white', borderColor: 'white' }">
+                得分: {{ item.reviewResult.saftyScore }}
+              </NTag>
+            </template>
+            审查得分, 满分100, 越低代表消息越8行
+          </NTooltip>
+        </template>
       </NFlex>
     </template>
     <template #footer>
@@ -52,8 +77,13 @@ const props = defineProps<{
       <br />
     </template>
 
-    <NText style="">
-      {{ item.question?.message }}
+    <NText :style="{ filter: showContent ? '' : 'blur(3.7px)', cursor: showContent ? '' : 'pointer' }">
+      <NButton v-if="isViolation" @click="showContent = !showContent" size="small" text>
+        {{ item.question?.message }}
+      </NButton>
+      <template v-else>
+        {{ item.question?.message }}
+      </template>
     </NText>
 
     <template v-if="item.answer">

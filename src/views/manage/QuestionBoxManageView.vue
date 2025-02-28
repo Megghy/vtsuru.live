@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { copyToClipboard, downloadImage } from '@/Utils'
-import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes, QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { CURRENT_HOST, QUESTION_API_URL } from '@/data/constants'
+import { CURRENT_HOST } from '@/data/constants'
 import router from '@/router'
-import { Heart, HeartOutline, SwapHorizontal } from '@vicons/ionicons5'
+import { Heart, HeartOutline, TrashBin } from '@vicons/ionicons5'
+import QuestionItem from '@/components/QuestionItem.vue'
+import QuestionItems from '@/components/QuestionItems.vue'
+import { useQuestionBox } from '@/store/useQuestionBox'
+import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
+import { useAsyncQueue, useStorage } from '@vueuse/core'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import {
-  NAffix,
   NAlert,
   NButton,
   NCard,
@@ -28,11 +31,10 @@ import {
   NModal,
   NPagination,
   NPopconfirm,
-  NScrollbar,
   NSelect,
+  NSlider,
   NSpace,
   NSpin,
-  NSplit,
   NSwitch,
   NTabPane,
   NTabs,
@@ -40,15 +42,11 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage,
+  useMessage
 } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import QuestionItem from '@/components/QuestionItems.vue'
-import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
-import { useQuestionBox } from '@/store/useQuestionBox'
-import { useStorage } from '@vueuse/core'
 import QuestionDisplayCard from './QuestionDisplayCard.vue'
 
 const accountInfo = useAccount()
@@ -96,6 +94,33 @@ const savedCardSize = useStorage<{ width: number; height: number }>('Settings.Qu
 
 let isRevieveGetted = false
 let isSendGetted = false
+
+const tempSaftyLevel = ref(accountInfo.value?.settings?.questionBox?.saftyLevel)
+const remarkLevel = {
+  0: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
+    '无',
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#c2e77f' }), default: () => '完全关闭内容审查机制，用户可自由提问，系统不会进行任何内容过滤' }),
+  ]),
+  1: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
+    '宽松',
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#e1d776' }), default: () => '基础内容审查，仅过滤极端攻击性、暴力或违法内容，保留大部分用户提问 (得分 > 30)' }),
+  ]),
+  2: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
+    '一般',
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#ef956d' }), default: () => '适度内容审查，就比较一般 (得分 > 60)' }),
+  ]),
+  3: () => h(NFlex, { align: 'center', justify: 'center', size: 3, wrap: false }, () => [
+    '严格',
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#ea6262' }), default: () => '最高级别内容审查，禁止任何嘴臭 (得分 > 90)' }),
+  ]),
+}
+const remarkLevelString: { [key: number]: string } = {
+  0: '无',
+  1: '宽松',
+  2: '一般',
+  3: '严格',
+}
+
 async function onTabChange(value: string) {
   return
 
@@ -146,7 +171,7 @@ function saveQRCode() {
   downloadImage(`https://api.qrserver.com/v1/create-qr-code/?data=${shareUrl.value}`, 'vtsuru-提问箱二维码.png')
 }
 async function saveSettings() {
-  useQB.isLoading = true
+  //useQB.isLoading = true
   await SaveSetting('QuestionBox', accountInfo.value.settings.questionBox)
     .then((msg) => {
       if (msg) {
@@ -157,7 +182,7 @@ async function saveSettings() {
       }
     })
     .finally(() => {
-      useQB.isLoading = false
+      //useQB.isLoading = false
     })
 }
 
@@ -204,8 +229,23 @@ onMounted(() => {
       前往提问页
     </NButton>
     <NButton @click="showOBSModal = true" type="primary" secondary> 预览OBS组件 </NButton>
+    <NAlert type="success" style="max-width: 550px;" closable>
+      2025.3.1 本站已支持内容审查, 可前往提问箱设置页进行开启
+      <NTooltip>
+        <template #trigger>
+          <NIcon :component="Info24Filled" />
+        </template>
+        新功能还不稳定, 如果启用后遇到任何问题请向我反馈
+      </NTooltip>
+    </NAlert>
   </NSpace>
   <NDivider style="margin: 10px 0 10px 0" />
+  <template v-if="useQB.reviewing > 0">
+    <NAlert type="warning" title="有提问正在审核中">
+      还剩余 {{ useQB.reviewing }} 条
+    </NAlert>
+    <NDivider style="margin: 10px 0 10px 0" />
+  </template>
   <NSpin v-if="useQB.isLoading" show />
   <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
     <NTabPane tab="我收到的" name="0" display-directive="show:lazy">
@@ -227,7 +267,7 @@ onMounted(() => {
         <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
           show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
         <NDivider style="margin: 10px 0 10px 0" />
-        <QuestionItem :questions="pagedQuestions">
+        <QuestionItems :questions="pagedQuestions">
           <template #footer="{ item }">
             <NSpace>
               <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
@@ -250,7 +290,7 @@ onMounted(() => {
                     删除
                   </NButton>
                 </template>
-                确认删除这条提问？
+                确认删除这条提问？ 删除后无法恢复
               </NPopconfirm>
               <!-- <NTooltip>
                         <template #trigger>
@@ -266,7 +306,7 @@ onMounted(() => {
               {{ item.answer ? '查看回复' : '回复' }}
             </NButton>
           </template>
-        </QuestionItem>
+        </QuestionItems>
         <NDivider style="margin: 10px 0 10px 0" />
         <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
           show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
@@ -315,13 +355,60 @@ onMounted(() => {
         </NListItem>
       </NList>
     </NTabPane>
-    <NTabPane tab="设置" name="2" display-directive="show:lazy">
+    <NTabPane tab="垃圾站" name="2" display-directive="show:lazy">
+      <template #prefix>
+        <NIcon :component="TrashBin" />
+      </template>
+      <NEmpty v-if="useQB.trashQuestions.length == 0" description="暂无被过滤的提问" />
+      <NList v-else>
+        <NListItem v-for="question in useQB.trashQuestions" :key="question.id">
+          <QuestionItem :item="question">
+            <template #footer="{ item }">
+              <NSpace>
+                <NPopconfirm @positive-click="useQB.DelQA(item.id)">
+                  <template #trigger>
+                    <NButton size="small" type="error">
+                      <template #icon>
+                        <NIcon :component="Delete24Filled" />
+                      </template>
+                      删除
+                    </NButton>
+                  </template>
+                  确认删除这条提问？ 删除后无法恢复
+                </NPopconfirm>
+                <!-- <NTooltip>
+                        <template #trigger>
+                          <NButton size="small"> 举报 </NButton>
+                        </template>
+                        暂时还没写
+                      </NTooltip> -->
+                <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
+              </NSpace>
+            </template>
+            <template #header-extra="{ item }">
+              <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
+                {{ item.answer ? '查看回复' : '回复' }}
+              </NButton>
+            </template>
+          </QuestionItem>
+        </NListItem>
+      </NList>
+    </NTabPane>
+    <NTabPane tab="设置" name="3" display-directive="show:lazy">
       <NDivider> 设定 </NDivider>
       <NSpin :show="useQB.isLoading">
         <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
           @update:checked="saveSettings">
           允许未注册用户进行提问
         </NCheckbox>
+        <NDivider> 内容审查
+          <NDivider vertical />
+          <NTag type="success" :bordered="false" size="tiny">新</NTag>
+        </NDivider>
+        <NSlider v-model:value="tempSaftyLevel"
+          @dragend="() => { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveSettings() }"
+          :marks="remarkLevel" step="mark" :max="3" style="max-width: 80%; margin: 0 auto"
+          :format-tooltip="(v) => remarkLevelString[v]" />
         <NDivider>
           标签
           <NTooltip>

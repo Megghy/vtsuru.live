@@ -100,7 +100,7 @@ function getOptions() {
   // 用于存储粉丝增量数据
   const fansIncreacement: { time: Date; count: number }[] = []
   // 用于存储完整的时间序列数据，包括时间、粉丝数、是否变化
-  const completeTimeSeries: { time: Date; count: number; change: boolean }[] = []
+  const completeTimeSeries: { time: Date; count: number; change: boolean, exist: boolean }[] = []
 
   let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
   startTime = startTime < statisticStartDate ? statisticStartDate : startTime // 确保开始时间不早于统计开始时间
@@ -126,6 +126,7 @@ function getOptions() {
             time: currentTime,
             count: lastDayCount,
             change: false,
+            exist: false,
           })
           break
         }
@@ -138,6 +139,7 @@ function getOptions() {
             time: currentTime,
             count: lastDayCount,
             change: changed,
+            exist: true,
           })
           break
         }
@@ -274,7 +276,7 @@ function getOptions() {
         let str = ''
         for (var i = 0; i < param.length; i++) {
           const status =
-            param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].change ? '' : '(未获取)') : ''
+            param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
           const statusHtml = status == '' ? '' : '&nbsp;<span style="color:gray">' + status + '</span>'
           str += param[i].marker + param[i].seriesName + '：' + param[i].data + statusHtml + '<br>'
         }
