@@ -10,6 +10,7 @@ import { GetNotifactions } from './data/notifactions'
 import router from './router'
 import { useAuthStore } from './store/useAuthStore'
 import { useVTsuruHub } from './store/useVTsuruHub'
+import { useNotificationStore } from './store/useNotificationStore'
 
 const pinia = createPinia()
 
@@ -113,6 +114,8 @@ let currentVersion: string
 let isHaveNewVersion = false
 
 const { notification } = createDiscreteApi(['notification'])
+
+useNotificationStore().init()
 
 function InitTTS() {
   try {

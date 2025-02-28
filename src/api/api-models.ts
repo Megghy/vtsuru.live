@@ -104,8 +104,16 @@ export interface Setting_SendEmail {
   recieveQA: boolean
   recieveQAReply: boolean
 }
+export enum SaftyLevels {
+  Disabled,
+  Low,
+  Medium,
+  High
+}
 export interface Setting_QuestionBox {
   allowUnregistedUser: boolean
+
+  saftyLevel: SaftyLevels
 }
 export interface UserSetting {
   sendEmail: Setting_SendEmail
@@ -326,6 +334,21 @@ export interface NotifactionInfo {
   message: string
   type: LevelTypes
 }
+//SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
+export enum ViolationTypes {
+  SENSITIVE_TERM,
+  HATE,
+  VIOLENCE,
+  PORNOGRAPHY,
+  POLITICS,
+  ADVERTISING,
+  AGGRESSION,
+}
+export type QAReviewInfo = {
+  isApproved: boolean
+  saftyScore: number
+  violationType: ViolationTypes[]
+}
 export interface QAInfo {
   id: number
   sender: UserBasicInfo
@@ -340,6 +363,7 @@ export interface QAInfo {
   isAnonymous: boolean
 
   tag?: string
+  reviewResult?: QAReviewInfo
 }
 export interface LotteryUserInfo {
   name: string

@@ -1,5 +1,5 @@
 import { useAccount } from '@/api/account'
-import { QAInfo } from '@/api/api-models'
+import { QAInfo, ViolationTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
 import { List } from 'linqts'
@@ -12,6 +12,8 @@ export type QATagInfo = {
   createAt: number
   visiable: boolean
 }
+//SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION, EMOTIONAL
+
 export const useQuestionBox = defineStore('QuestionBox', () => {
   const isLoading = ref(false)
   const isRepling = ref(false)
@@ -21,7 +23,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   const recieveQuestions = ref<QAInfo[]>([])
   const sendQuestions = ref<QAInfo[]>([])
+  const trashQuestions = ref<QAInfo[]>([])
   const tags = ref<QATagInfo[]>([])
+  const reviewing = ref(0)
 
   const onlyFavorite = ref(false)
   const onlyPublic = ref(false)
@@ -54,18 +58,31 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   async function GetRecieveQAInfo() {
     isLoading.value = true
-    await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-recieve')
+    await QueryGetAPI<{ questions: QAInfo[]; reviewCount: number }>(
+      QUESTION_API_URL + 'get-recieve'
+    )
       .then((data) => {
         if (data.code == 200) {
-          if (data.data.length > 0) {
-            recieveQuestions.value = new List(data.data)
+          if (data.data.questions.length > 0) {
+            recieveQuestions.value = new List(data.data.questions)
               .OrderBy((d) => d.isReaded)
               //.ThenByDescending(d => d.isFavorite)
+              .Where(
+                (d) => !d.reviewResult || d.reviewResult.isApproved == true
+              ) //只显示审核通过的
               .ThenByDescending((d) => d.sendAt)
               .ToArray()
-            const displayId = accountInfo.value?.settings.questionDisplay.currentQuestion
+            reviewing.value = data.data.reviewCount
+            trashQuestions.value = data.data.questions.filter(
+              (d) => d.reviewResult && d.reviewResult.isApproved == false
+            )
+
+            const displayId =
+              accountInfo.value?.settings.questionDisplay.currentQuestion
             if (displayId && displayQuestion.value?.id != displayId) {
-              displayQuestion.value = recieveQuestions.value.find((q) => q.id == displayId)
+              displayQuestion.value = recieveQuestions.value.find(
+                (q) => q.id == displayId
+              )
             }
           }
           //message.success('共收取 ' + data.data.length + ' 条提问')
@@ -101,12 +118,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
   async function DelQA(id: number) {
     await QueryGetAPI(QUESTION_API_URL + 'del', {
-      id: id,
+      id: id
     })
       .then((data) => {
         if (data.code == 200) {
           message.success('删除成功')
-          recieveQuestions.value = recieveQuestions.value.filter((q) => q.id != id)
+          recieveQuestions.value = recieveQuestions.value.filter(
+            (q) => q.id != id
+          )
         } else {
           message.error(data.message)
         }
@@ -118,7 +137,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function GetTags() {
     isLoading.value = true
     await QueryGetAPI<QATagInfo[]>(QUESTION_API_URL + 'get-tags', {
-      id: accountInfo.value?.id,
+      id: accountInfo.value?.id
     })
       .then((data) => {
         if (data.code == 200) {
@@ -134,6 +153,25 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         isLoading.value = false
       })
   }
+  function getViolationString(violation: ViolationTypes) {
+    //SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
+    switch (violation) {
+      case ViolationTypes.SENSITIVE_TERM:
+        return '敏感词'
+      case ViolationTypes.HATE:
+        return '辱骂'
+      case ViolationTypes.VIOLENCE:
+        return '暴力'
+      case ViolationTypes.PORNOGRAPHY:
+        return '色情'
+      case ViolationTypes.POLITICS:
+        return '政治'
+      case ViolationTypes.ADVERTISING:
+        return '广告'
+      case ViolationTypes.AGGRESSION:
+        return '攻击性'
+    }
+  }
   async function addTag(tag: string) {
     if (!tag) {
       message.warning('请输入标签')
@@ -144,7 +182,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       return
     }
     await QueryGetAPI(QUESTION_API_URL + 'add-tag', {
-      tag: tag,
+      tag: tag
     })
       .then((data) => {
         if (data.code == 200) {
@@ -168,7 +206,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       return
     }
     await QueryGetAPI(QUESTION_API_URL + 'del-tag', {
-      tag: tag,
+      tag: tag
     })
       .then((data) => {
         if (data.code == 200) {
@@ -193,7 +231,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
     await QueryGetAPI(QUESTION_API_URL + 'update-tag-visiable', {
       tag: tag,
-      visiable: visiable,
+      visiable: visiable
     })
       .then((data) => {
         if (data.code == 200) {
@@ -211,7 +249,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     isRepling.value = true
     await QueryPostAPI<QAInfo>(QUESTION_API_URL + 'reply', {
       Id: id,
-      Message: msg,
+      Message: msg
     })
       .then((data) => {
         if (data.code == 200) {
@@ -236,7 +274,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function read(question: QAInfo, read: boolean) {
     await QueryGetAPI(QUESTION_API_URL + 'read', {
       id: question.id,
-      read: read ? 'true' : 'false',
+      read: read ? 'true' : 'false'
     })
       .then((data) => {
         if (data.code == 200) {
@@ -255,7 +293,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function favorite(question: QAInfo, fav: boolean) {
     await QueryGetAPI(QUESTION_API_URL + 'favorite', {
       id: question.id,
-      favorite: fav,
+      favorite: fav
     })
       .then((data) => {
         if (data.code == 200) {
@@ -272,7 +310,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     isChangingPublic.value = true
     await QueryGetAPI(QUESTION_API_URL + 'public', {
       id: currentQuestion.value?.id,
-      public: pub,
+      public: pub
     })
       .then((data) => {
         if (data.code == 200) {
@@ -291,12 +329,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
   async function blacklist(question: QAInfo) {
     await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
-      id: question.sender.id,
+      id: question.sender.id
     })
       .then(async (data) => {
         if (data.code == 200) {
           await QueryGetAPI(QUESTION_API_URL + 'del', {
-            id: question.id,
+            id: question.id
           }).then((data) => {
             if (data.code == 200) {
               message.success('已拉黑 ' + question.sender.name)
@@ -325,8 +363,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         isCurrent || !item
           ? null
           : {
-              id: item.id,
-            },
+              id: item.id
+            }
       )
       if (data.code == 200) {
         //message.success('设置成功')
@@ -347,6 +385,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     recieveQuestions,
     recieveQuestionsFiltered,
     sendQuestions,
+    trashQuestions,
+    reviewing,
     tags,
     onlyFavorite,
     onlyPublic,
@@ -366,5 +406,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     setPublic,
     blacklist,
     setCurrentQuestion,
+    getViolationString
   }
 })
