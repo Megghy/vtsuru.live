@@ -4,9 +4,12 @@ import {
   MasterRTCClient,
   SlaveRTCClient
 } from '@/data/RTCClient'
+import { Router24Regular } from '@vicons/fluent'
+import { useStorage } from '@vueuse/core'
 import { nonFunctionArgSeparator } from 'html2canvas/dist/types/css/syntax/parser'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 export const useWebRTC = defineStore('WebRTC', () => {
   const client = ref<BaseRTCClient>()
@@ -24,7 +27,8 @@ export const useWebRTC = defineStore('WebRTC', () => {
   function send(event: string, data: any) {
     client.value?.send(event, data)
   }
-
+  const cookie = useStorage('JWT_Token', '')
+  const route = useRoute()
   async function Init(type: 'master' | 'slave') {
     if (isInitializing) {
       return useWebRTC()
@@ -33,11 +37,13 @@ export const useWebRTC = defineStore('WebRTC', () => {
       isInitializing = true
       await navigator.locks.request(
         'rtcClientInit',
-        {
-          ifAvailable: true
-        },
+        { ifAvailable: true },
         async (lock) => {
           if (lock) {
+            if (!cookie.value && !route.query.token) {
+              console.log('[RTC] 未登录, 跳过RTC初始化')
+              return
+            }
             while (!accountInfo.value.id) {
               await new Promise((resolve) => setTimeout(resolve, 500))
             }
@@ -71,12 +77,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
     }
   }
 
-  return {
-    Init,
-    send,
-    on,
-    off
-  }
+  return { Init, send, on, off }
 })
 
 if (import.meta.hot) {

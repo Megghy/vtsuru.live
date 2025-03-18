@@ -1,14 +1,11 @@
 import mitt, { Emitter } from 'mitt'
 import { Music } from './store/useMusicRequest'
 
-declare type MittType<T = any> = {
-  onOpenTemplateSettings: {
-    template: string
-  }
-  onMusicRequestPlayerEnded: {
-    music: Music
-  }
+export declare type MittType<T = any> = {
+  onOpenTemplateSettings: { template: string }
+  onMusicRequestPlayerEnded: { music: Music }
   onMusicRequestPlayNextWaitingMusic: never
+  onOBSComponentUpdate: never
 }
 // 类型
 const emitter: Emitter<MittType> = mitt<MittType>()

@@ -306,6 +306,34 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         message.error('修改失败: ' + err)
       })
   }
+  async function approve(question: QAInfo, approve: boolean) {
+    if (!approve) {
+      message.error('暂时不支持取消审核')
+      return
+    }
+    await QueryGetAPI(QUESTION_API_URL + 'approve', {
+      id: question.id,
+      approve: approve ? 'true' : 'false'
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          question.reviewResult = undefined
+          const trashIndex = trashQuestions.value.findIndex(
+            (q) => q.id == question.id
+          )
+          if (trashIndex > -1) {
+            trashQuestions.value.splice(trashIndex, 1)
+          }
+          recieveQuestions.value.unshift(question)
+          message.success('已标记为审核通过')
+        } else {
+          message.error('修改失败: ' + data.message)
+        }
+      })
+      .catch((err) => {
+        message.error('修改失败: ' + err)
+      })
+  }
   async function setPublic(pub: boolean) {
     isChangingPublic.value = true
     await QueryGetAPI(QUESTION_API_URL + 'public', {

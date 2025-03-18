@@ -7,6 +7,12 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import QuestionDisplayCard from '../manage/QuestionDisplayCard.vue'
 import { useWebRTC } from '@/store/useRTC'
 
+const props = defineProps<{
+  id?: number,
+  active: boolean,
+  visible: boolean,
+}>()
+
 const hash = ref('')
 const token = useRouteQuery('token')
 const rtc = await useWebRTC().Init('slave')
@@ -50,33 +56,16 @@ async function getQuestionAndSetting() {
 function handleScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
   cardRef.value?.setScroll(value)
 }
-
-const visiable = ref(true)
-const active = ref(true)
 let timer: any
 onMounted(() => {
-  timer = setInterval(() => {
-    if (!visiable.value || !active.value) return
+  window.$mitt.on('onOBSComponentUpdate', () => {
     checkIfChanged()
-  }, 1000)
-
-  //@ts-expect-error 这里获取不了
-  if (window.obsstudio) {
-    //@ts-expect-error 这里获取不了
-    window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-      visiable.value = visibility
-    }
-    //@ts-expect-error 这里获取不了
-    window.obsstudio.onActiveChange = function (a: boolean) {
-      active.value = a
-    }
-  }
+  })
 
   rtc?.on('function.question.sync-scroll', handleScroll)
 })
 onUnmounted(() => {
-  clearInterval(timer)
-
+  window.$mitt.off('onOBSComponentUpdate')
   rtc?.off('function.question.sync-scroll', handleScroll)
 })
 </script>

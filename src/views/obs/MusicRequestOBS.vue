@@ -15,7 +15,9 @@ type WaitMusicInfo = {
 }
 
 const props = defineProps<{
-  id?: number
+  id?: number,
+  active: boolean,
+  visible: boolean,
 }>()
 
 const message = useMessage()
@@ -68,19 +70,12 @@ const active = ref(true)
 let timer: any
 onMounted(() => {
   update()
-  timer = setInterval(update, 2000)
-
-  //@ts-expect-error 这里获取不了
-  window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-    visiable.value = visibility
-  }
-  //@ts-expect-error 这里获取不了
-  window.obsstudio.onActiveChange = function (a: boolean) {
-    active.value = a
-  }
+  window.$mitt.on('onOBSComponentUpdate', () => {
+    update()
+  })
 })
 onUnmounted(() => {
-  clearInterval(timer)
+  window.$mitt.off('onOBSComponentUpdate')
 })
 </script>
 

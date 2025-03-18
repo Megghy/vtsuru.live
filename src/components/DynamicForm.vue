@@ -90,7 +90,7 @@ onMounted(() => {
 <template>
   <NEmpty v-if="!config" description="此模板不支持配置" />
   <NForm v-else>
-    <NFormItem v-for="item in config.items" :key="item.name" :label="item.name">
+    <NFormItem v-for="item in config.items" :key="item.name.toString()" :label="item.name.toString()">
       <component v-if="item.type == 'render'" :is="item.render(configData)"></component>
       <template v-else-if="item.type == 'string'">
         <NInput v-if="item.data" :value="configData[item.key]" @update:value="configData[item.key] = $event" />

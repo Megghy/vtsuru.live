@@ -11,6 +11,10 @@ import router from './router'
 import { useAuthStore } from './store/useAuthStore'
 import { useVTsuruHub } from './store/useVTsuruHub'
 import { useNotificationStore } from './store/useNotificationStore'
+import HyperDX from '@hyperdx/browser'
+import mitt from 'mitt'
+import { MittType } from './mitt'
+import emitter from './mitt'
 
 const pinia = createPinia()
 
@@ -92,6 +96,13 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
     console.log('默认API调用失败, 切换至故障转移节点')
   })
   .finally(async () => {
+    HyperDX.init({
+      apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
+      service: 'vtsuru.live',
+      tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
+      consoleCapture: true, // Capture console logs (default false)
+      advancedNetworkCapture: true // Capture full HTTP request/response headers and bodies (default false)
+    })
     //加载其他数据
     InitTTS()
     await GetSelfAccount()
@@ -101,6 +112,10 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
       if (account.value.biliUserAuthInfo && !useAuth.currentToken) {
         useAuth.currentToken = account.value.biliUserAuthInfo.token
       }
+      HyperDX.setGlobalAttributes({
+        userId: account.value.id.toString(),
+        userName: account.value.name
+      })
     }
     useAuth.getAuthInfo()
     GetNotifactions()
@@ -116,6 +131,8 @@ let isHaveNewVersion = false
 const { notification } = createDiscreteApi(['notification'])
 
 useNotificationStore().init()
+
+window.$mitt = emitter
 
 function InitTTS() {
   try {
