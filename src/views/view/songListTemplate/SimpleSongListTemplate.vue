@@ -127,8 +127,7 @@ function loadMore() {
         })
           " placeholder="选择歌手" clearable />
         <NDivider />
-        <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)"
-          :id="userInfo?.id" />
+        <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)" />
       </NSpace>
     </NCard>
     <NEmpty v-if="!data || songs?.length == 0" description="暂无曲目" style="max-width: 0 auto" />

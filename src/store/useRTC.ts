@@ -4,9 +4,7 @@ import {
   MasterRTCClient,
   SlaveRTCClient
 } from '@/data/RTCClient'
-import { Router24Regular } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
-import { nonFunctionArgSeparator } from 'html2canvas/dist/types/css/syntax/parser'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
