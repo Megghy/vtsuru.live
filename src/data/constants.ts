@@ -36,6 +36,7 @@ export const BASE_HUB_URL =
 export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0'
 
 export const CURRENT_HOST = `${window.location.protocol}//${window.location.host}/`
+export const CN_HOST = 'https://cn.vtsuru.suki.club/'
 
 export const USER_API_URL = BASE_API_URL + 'user/'
 export const ACCOUNT_API_URL = BASE_API_URL + 'account/'

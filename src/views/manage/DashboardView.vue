@@ -3,7 +3,7 @@ import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType, BiliAuthModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { ACCOUNT_API_URL, CN_HOST, TURNSTILE_KEY } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
 import { useLocalStorage } from '@vueuse/core'
@@ -286,8 +286,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NFlex justify="center" align="center" vertical>
-    <NTabs type="segment" animated v-if="accountInfo" style="width: 100%;" :default-value="$route.query.tab?.toString() ?? 'info'">
+  <NAlert type="success" style="width: 100%; ">
+    本站新增国内镜像: {{ CN_HOST }}, 访问更快
+  </NAlert>
+  <NDivider />
+  <NFlex justify="center" align="center" vertical style="margin: 0 auto; max-width: 1500px;">
+    <NTabs type="segment" animated v-if="accountInfo" style="width: 100%;"
+      :default-value="$route.query.tab?.toString() ?? 'info'">
       <NTabPane name="info" tab="个人信息" style="width: 100%;" display-directive="show:lazy">
         <NFlex justify="center" align="center">
           <NCard embedded style="width: 100%;max-width: 800px;">

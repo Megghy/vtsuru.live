@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { objectsToCSV } from '@/Utils'
+import { copyToClipboard, objectsToCSV } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SongList from '@/components/SongList.vue'
-import { FETCH_API, SONG_API_URL } from '@/data/constants'
+import { CN_HOST, CURRENT_HOST, FETCH_API, SONG_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
 import { ArchiveOutline } from '@vicons/ionicons5'
+import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
@@ -57,6 +58,8 @@ const showModal = ref(false)
 const neteaseIdInput = ref()
 const fivesingSearchInput = ref()
 const isModalLoading = ref(false)
+
+const useCNUrl = useStorage('Settings.UseCNUrl', false)
 
 const onlyResetNameOnAdded = ref(true)
 
@@ -600,15 +603,15 @@ onMounted(async () => {
     </NAlert>
     <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
     <NButton @click="exportData" type="primary" secondary> 导出为 CSV </NButton>
-    <NButton @click="$router.push({ name: 'manage-liveRequest' })" secondary> 前往点歌页 </NButton>
+    <NButton @click="$router.push({ name: 'manage-liveRequest' })" secondary> 前往点播管理页 </NButton>
     <NButton @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })" secondary>
-      前往展示页
+      前往歌单展示页
     </NButton>
     <NButton :loading="isLoading" @click="() => {
-        getSongs()
-        message.success('完成')
-      }
-      ">
+      getSongs()
+      message.success('完成')
+    }
+    ">
       刷新
     </NButton>
     <NButton
@@ -616,6 +619,17 @@ onMounted(async () => {
       修改模板
     </NButton>
   </NSpace>
+  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    歌单展示页链接
+  </NDivider>
+  <NFlex align="center">
+    <NInputGroup style="max-width: 400px;">
+      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
+      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`)">
+        复制 </NButton>
+    </NInputGroup>
+    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+  </NFlex>
   <NDivider style="margin: 16px 0 16px 0" />
   <NModal v-model:show="showModal" style="max-width: 1000px" preset="card" :key="showModalRenderKey">
     <template #header> 添加歌曲 </template>
@@ -659,15 +673,15 @@ onMounted(async () => {
                 </template>
                 <NSpace vertical>
                   <NCheckbox :checked="addSongModel.options != undefined" @update:checked="(checked: boolean) => {
-                      addSongModel.options = checked
-                        ? ({
-                          needJianzhang: false,
-                          needTidu: false,
-                          needZongdu: false,
-                        } as SongRequestOption)
-                        : undefined
-                    }
-                    ">
+                    addSongModel.options = checked
+                      ? ({
+                        needJianzhang: false,
+                        needTidu: false,
+                        needZongdu: false,
+                      } as SongRequestOption)
+                      : undefined
+                  }
+                  ">
                     是否启用
                   </NCheckbox>
                   <template v-if="addSongModel.options != undefined">
@@ -678,9 +692,9 @@ onMounted(async () => {
                     </NSpace>
                     <NSpace align="center">
                       <NCheckbox :checked="addSongModel.options.scMinPrice != undefined" @update:checked="(checked: boolean) => {
-                          if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                        }
-                        ">
+                        if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
+                      }
+                      ">
                         需要SC
                       </NCheckbox>
                       <NInputGroup v-if="addSongModel.options?.scMinPrice" style="width: 200px">
@@ -690,9 +704,9 @@ onMounted(async () => {
                     </NSpace>
                     <NSpace align="center">
                       <NCheckbox :checked="addSongModel.options.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
-                          if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                        }
-                        ">
+                        if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                      }
+                      ">
                         需要粉丝牌
                         <NTooltip>
                           <template #trigger>
