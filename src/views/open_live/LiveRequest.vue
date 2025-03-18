@@ -14,8 +14,8 @@ import {
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import SongPlayer from '@/components/SongPlayer.vue'
-import { RoomAuthInfo } from '@/data/DanmakuClient'
 import { CURRENT_HOST, SONG_REQUEST_API_URL } from '@/data/constants'
+import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
   Checkmark12Regular,

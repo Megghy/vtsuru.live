@@ -8,36 +8,54 @@ const cookie = useLocalStorage('JWT_Token', '')
 export async function QueryPostAPI<T>(
   urlString: string,
   body?: unknown,
-  headers?: [string, string][],
+  headers?: [string, string][]
 ): Promise<APIRoot<T>> {
-  return await QueryPostAPIWithParams<T>(urlString, undefined, body, 'application/json', headers)
+  return await QueryPostAPIWithParams<T>(
+    urlString,
+    undefined,
+    body,
+    'application/json',
+    headers
+  )
 }
 export async function QueryPostAPIWithParams<T>(
   urlString: string,
   params?: any,
   body?: any,
   contentType?: string,
-  headers?: [string, string][],
+  headers?: [string, string][]
 ): Promise<APIRoot<T>> {
-  return await QueryPostAPIWithParamsInternal<APIRoot<T>>(urlString, params, body, contentType, headers)
+  return await QueryPostAPIWithParamsInternal<APIRoot<T>>(
+    urlString,
+    params,
+    body,
+    contentType,
+    headers
+  )
 }
 async function QueryPostAPIWithParamsInternal<T>(
   urlString: string,
   params?: any,
   body?: any,
   contentType: string = 'application/json',
-  headers: [string, string][] = [],
+  headers: [string, string][] = []
 ) {
   const url = new URL(urlString)
   url.search = getParams(params)
   headers ??= []
-  if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
+  let h = {} as {
+    [key: string]: string
+  }
+  headers.forEach(header => {
+    h[header[0]] = header[1]
+  });
+  if (cookie.value) h['Authorization'] = `Bearer ${cookie.value}`
 
-  if (contentType) headers?.push(['Content-Type', contentType])
+  h['Content-Type'] = contentType
   return await QueryAPIInternal<T>(url, {
     method: 'post',
-    headers: headers,
-    body: typeof body === 'string' ? body : JSON.stringify(body),
+    headers: h,
+    body: typeof body === 'string' ? body : JSON.stringify(body)
   })
 }
 async function QueryAPIInternal<T>(url: URL, init: RequestInit) {
@@ -57,21 +75,31 @@ async function QueryAPIInternal<T>(url: URL, init: RequestInit) {
 export async function QueryGetAPI<T>(
   urlString: string,
   params?: any,
-  headers?: [string, string][],
+  headers?: [string, string][]
 ): Promise<APIRoot<T>> {
   return await QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers)
 }
-async function QueryGetAPIInternal<T>(urlString: string, params?: any, headers?: [string, string][]) {
+async function QueryGetAPIInternal<T>(
+  urlString: string,
+  params?: any,
+  headers?: [string, string][]
+) {
   try {
     const url = new URL(urlString)
     url.search = getParams(params)
+    headers ??= []
+    let h = {} as {
+      [key: string]: string
+    }
+    headers.forEach((header) => {
+      h[header[0]] = header[1]
+    })
     if (cookie.value) {
-      headers ??= []
-      if (cookie.value) headers?.push(['Authorization', `Bearer ${cookie.value}`])
+      h['Authorization'] = `Bearer ${cookie.value}`
     }
     return await QueryAPIInternal<T>(url, {
       method: 'get',
-      headers: headers,
+      headers: h
     })
   } catch (err) {
     console.log(`url:${urlString}, error:${err}`)
@@ -101,10 +129,20 @@ function getParams(params: any) {
   }
   return resultParams.toString()
 }
-export async function QueryPostPaginationAPI<T>(url: string, body?: unknown): Promise<PaginationResponse<T>> {
-  return await QueryPostAPIWithParamsInternal<PaginationResponse<T>>(url, undefined, body)
+export async function QueryPostPaginationAPI<T>(
+  url: string,
+  body?: unknown
+): Promise<PaginationResponse<T>> {
+  return await QueryPostAPIWithParamsInternal<PaginationResponse<T>>(
+    url,
+    undefined,
+    body
+  )
 }
-export async function QueryGetPaginationAPI<T>(urlString: string, params?: unknown): Promise<PaginationResponse<T>> {
+export async function QueryGetPaginationAPI<T>(
+  urlString: string,
+  params?: unknown
+): Promise<PaginationResponse<T>> {
   return await QueryGetAPIInternal<PaginationResponse<T>>(urlString, params)
 }
 export function GetHeaders(): [string, string][] {

@@ -7,17 +7,15 @@
           <NLoadingBarProvider>
             <Suspense>
               <TempComponent>
-                <NLayoutContent style="height: 100%" v-if="layout != 'obs'">
-                  <NElement>
-                    <ViewerLayout v-if="layout == 'viewer'" />
-                    <ManageLayout v-else-if="layout == 'manage'" />
-                    <OpenLiveLayout v-else-if="layout == 'open-live'" />
-                    <template v-else-if="layout == ''">
-                      <RouterView />
-                    </template>
-                  </NElement>
-                </NLayoutContent>
-                <RouterView v-else />
+                <NElement>
+                  <ViewerLayout v-if="layout == 'viewer'" />
+                  <ManageLayout v-else-if="layout == 'manage'" />
+                  <OpenLiveLayout v-else-if="layout == 'open-live'" />
+                  <OBSLayout v-else-if="layout == 'obs'" />
+                  <template v-else-if="layout == ''">
+                    <RouterView />
+                  </template>
+                </NElement>
               </TempComponent>
               <template #fallback>
                 <NSpin size="large" show />
@@ -50,6 +48,7 @@ import { useRoute } from 'vue-router'
 import TempComponent from './components/TempComponent.vue'
 import { theme } from './Utils'
 import OpenLiveLayout from './views/OpenLiveLayout.vue'
+import OBSLayout from './views/OBSLayout.vue'
 
 const route = useRoute()
 

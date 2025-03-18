@@ -17,7 +17,9 @@ import { List } from 'linqts'
 import { useWebRTC } from '@/store/useRTC'
 
 const props = defineProps<{
-  id?: number
+  id?: number,
+  active?: boolean,
+  visible?: boolean,
 }>()
 
 const message = useMessage()
@@ -117,7 +119,7 @@ async function update() {
   }
 }
 async function onAddedItem() {
-  
+
 }
 
 const direction = ref<'normal' | 'reverse'>('normal')
@@ -127,25 +129,16 @@ const active = ref(true)
 let timer: any
 onMounted(() => {
   update()
-  timer = setInterval(() => update(), 2000)
-
   // 接收点播结果消息
   rtc.on('function.live-request.add', () => update())
 
-  //@ts-expect-error 这里获取不了
-  if (window.obsstudio) {
-    //@ts-expect-error 这里获取不了
-    window.obsstudio.onVisibilityChange = function (visibility: boolean) {
-      visiable.value = visibility
-    }
-    //@ts-expect-error 这里获取不了
-    window.obsstudio.onActiveChange = function (a: boolean) {
-      active.value = a
-    }
-  }
+  window.$mitt.on('onOBSComponentUpdate', () => {
+    update()
+  })
 })
 onUnmounted(() => {
-  clearInterval(timer)
+  window.$mitt.off('onOBSComponentUpdate')
+  rtc.off('function.live-request.add', () => update())
 })
 </script>
 

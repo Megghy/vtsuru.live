@@ -10,7 +10,6 @@ import * as chatModels from '../../data/chat/models';
 import * as pronunciation from './blivechat/utils/pronunciation'
 // @ts-ignore
 import * as trie from './blivechat/utils/trie'
-import { DanmakuInfo, GiftInfo, GuardInfo, SCInfo } from '@/data/DanmakuClient';
 import { EventModel } from '@/api/api-models';
 import { DownloadConfig, useAccount } from '@/api/account';
 import { useWebRTC } from '@/store/useRTC';
@@ -19,6 +18,7 @@ import { OPEN_LIVE_API_URL, VTSURU_API_URL } from '@/data/constants';
 import { CustomChart } from 'echarts/charts';
 import { useRoute } from 'vue-router';
 import { NAlert } from 'naive-ui';
+import { DanmakuInfo, GiftInfo, GuardInfo, SCInfo } from '@/data/DanmakuClients/OpenLiveClient';
 
 export interface DanmujiConfig {
   minGiftPrice: number,
@@ -46,7 +46,9 @@ export interface DanmujiConfig {
 defineExpose({ setCss })
 const { customCss, isOBS = true } = defineProps<{
   customCss?: string
-  isOBS?: boolean
+  isOBS?: boolean,
+  active: boolean,
+  visible: boolean,
 }>()
 
 const messageRender = ref()

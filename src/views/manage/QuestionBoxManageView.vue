@@ -383,6 +383,7 @@ onMounted(() => {
                         暂时还没写
                       </NTooltip> -->
                 <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
+                <NButton size="small" @click="useQB.blacklist(item)" type="primary"> 标记为正常 </NButton>
               </NSpace>
             </template>
             <template #header-extra="{ item }">
