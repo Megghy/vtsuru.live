@@ -12,10 +12,15 @@ import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { TemplateConfig } from '@/data/VTsuruTypes'
 import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap, VTSURU_API_URL } from '@/data/constants'
+import { useStorage } from '@vueuse/core'
+import { addSeconds } from 'date-fns'
 import { NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch, watchEffect } from 'vue'
 
 const accountInfo = useAccount()
+const nextRequestTime = useStorage('SongList.NextRequestTime', new Date())
+
+const minRequestTime = 30
 
 const props = defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,15 +109,22 @@ async function getConfig() {
     })
 }
 async function requestSong(song: SongsInfo) {
-  if (song.options || !settings.value.allowFromWeb) {
+  if (song.options || !settings.value.allowFromWeb || (settings.value.allowFromWeb && !settings.value.allowAnonymousFromWeb)) {
     navigator.clipboard.writeText(`${settings.value.orderPrefix} ${song.name}`)
-    if (!accountInfo.value) {
+    if (!settings.value.allowAnonymousFromWeb) {
+      message.warning('主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点歌弹幕已复制到剪切板')
+    }
+    else if (!accountInfo.value.id) {
       message.warning('要从网页点歌请先登录, 点歌弹幕已复制到剪切板')
     } else {
       message.success('复制成功')
     }
   } else {
     if (props.userInfo) {
+      if (!accountInfo.value.id && nextRequestTime.value > new Date()) {
+        message.warning('距离点歌冷却还有' + (nextRequestTime.value.getTime() - new Date().getTime()) / 1000 + '秒')
+        return
+      }
       try {
         const data = await QueryPostAPIWithParams(SONG_REQUEST_API_URL + 'add-from-web', {
           target: props.userInfo?.id,
@@ -121,6 +133,7 @@ async function requestSong(song: SongsInfo) {
 
         if (data.code == 200) {
           message.success('点歌成功')
+          nextRequestTime.value = addSeconds(new Date(), minRequestTime)
         } else {
           message.error('点歌失败: ' + data.message)
         }

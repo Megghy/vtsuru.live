@@ -96,13 +96,15 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
     console.log('默认API调用失败, 切换至故障转移节点')
   })
   .finally(async () => {
-    HyperDX.init({
-      apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
-      service: 'vtsuru.live',
-      tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
-      consoleCapture: true, // Capture console logs (default false)
-      advancedNetworkCapture: true // Capture full HTTP request/response headers and bodies (default false)
-    })
+    if (process.env.NODE_ENV !== 'development') {
+      HyperDX.init({
+        apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
+        service: 'vtsuru.live',
+        tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
+        consoleCapture: true, // Capture console logs (default false)
+        advancedNetworkCapture: true // Capture full HTTP request/response headers and bodies (default false)
+      })
+    }
     //加载其他数据
     InitTTS()
     await GetSelfAccount()

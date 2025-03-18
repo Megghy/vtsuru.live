@@ -1,5 +1,5 @@
-import { ExtendedDock24Filled } from "@vicons/fluent"
-import { UserConsumptionSetting } from "./models/consumption"
+import { ExtendedDock24Filled } from '@vicons/fluent'
+import { UserConsumptionSetting } from './models/consumption'
 
 export interface APIRoot<T> {
   code: number
@@ -13,16 +13,16 @@ export interface PaginationResponse<T> extends APIRoot<T> {
   more: boolean
 }
 export enum IndexTypes {
-  Default,
+  Default
 }
 export enum SongListTypes {
-  Default,
+  Default
 }
 export enum GuardLevel {
   None = 0,
   Zongdu = 1,
   Tidu = 2,
-  Jianzhang = 3,
+  Jianzhang = 3
 }
 export interface UserBasicInfo {
   name: string
@@ -53,7 +53,7 @@ export interface EventFetcherStateModel {
 export enum EventFetcherType {
   Application,
   OBS,
-  Server,
+  Server
 }
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
@@ -98,7 +98,7 @@ export enum BiliAuthCodeStatusType {
   NotBind,
   Active,
   Notfound,
-  Inactive,
+  Inactive
 }
 export interface Setting_SendEmail {
   recieveQA: boolean
@@ -134,9 +134,7 @@ export interface Setting_Index {
   allowDisplayInIndex: boolean
   videos: string[]
   notification: string
-  links: {
-    [key: string]: string
-  }
+  links: { [key: string]: string }
 }
 export interface Setting_LiveRequest {
   orderPrefix: string
@@ -146,6 +144,7 @@ export interface Setting_LiveRequest {
   queueMaxSize: number
   allowAllDanmaku: boolean
   allowFromWeb: boolean
+  allowAnonymousFromWeb: boolean
   needWearFanMedal: boolean
   needJianzhang: boolean
   needTidu: boolean
@@ -247,28 +246,28 @@ export interface Setting_QuestionDisplay {
 export enum QuestionDisplayAlign {
   Left,
   Right,
-  Center,
+  Center
 }
 export enum SettingPointGiftAllowType {
   All,
-  WhiteList,
+  WhiteList
 }
 export enum KeywordMatchType {
   Full,
   Contains,
-  Regex,
+  Regex
 }
 
 export enum QueueSortType {
   GuardFirst,
   PaymentFist,
   TimeFirst,
-  FansMedalFirst,
+  FansMedalFirst
 }
 
 export enum QueueGiftFilterType {
   Or,
-  And,
+  And
 }
 export enum FunctionTypes {
   SongList,
@@ -277,7 +276,7 @@ export enum FunctionTypes {
   SongRequest,
   Queue,
   Point,
-  VideoCollect,
+  VideoCollect
 }
 export interface SongAuthorInfo {
   name: string
@@ -287,7 +286,7 @@ export enum SongFrom {
   Custom,
   Netease,
   FiveSing,
-  Kugou,
+  Kugou
 }
 export interface SongsInfo {
   id: number
@@ -319,13 +318,13 @@ export enum SongLanguage {
   Japanese, // 日文
   Spanish, // 西班牙文
   French, // 法文
-  Other, //其他
+  Other //其他
 }
 export enum LevelTypes {
   Info,
   Success,
   Warn,
-  Error,
+  Error
 }
 export interface NotifactionInfo {
   id: string
@@ -342,7 +341,7 @@ export enum ViolationTypes {
   PORNOGRAPHY,
   POLITICS,
   ADVERTISING,
-  AGGRESSION,
+  AGGRESSION
 }
 export type QAReviewInfo = {
   isApproved: boolean
@@ -396,7 +395,7 @@ export interface ScheduleDayInfo {
 export enum ThemeType {
   Auto = 'auto',
   Light = 'light',
-  Dark = 'dark',
+  Dark = 'dark'
 }
 export interface VideoCollectCreateModel {
   id?: string
@@ -430,12 +429,12 @@ export interface VideoCollectVideo {
 }
 export enum VideoFrom {
   Collect,
-  Spam,
+  Spam
 }
 export enum VideoStatus {
   Pending,
   Accepted,
-  Rejected,
+  Rejected
 }
 export interface VideoSender {
   sendAt: number
@@ -487,7 +486,7 @@ export interface OpenLiveLotteryUserInfo {
 }
 export enum OpenLiveLotteryType {
   Waiting,
-  Result,
+  Result
 }
 export interface UpdateLiveLotteryUsersModel {
   users: OpenLiveLotteryUserInfo[]
@@ -522,26 +521,26 @@ export enum SongRequestFrom {
   Danmaku,
   SC,
   Web,
-  Gift,
+  Gift
 }
 export enum QueueFrom {
   Manual,
   Danmaku,
   Gift,
-  Web,
+  Web
 }
 
 export enum SongRequestStatus {
   Waiting,
   Singing,
   Finish,
-  Cancel,
+  Cancel
 }
 export enum QueueStatus {
   Waiting,
   Progressing,
   Finish,
-  Cancel,
+  Cancel
 }
 export interface EventModel {
   type: EventDataTypes
@@ -567,7 +566,7 @@ export enum EventDataTypes {
   Message,
   Like,
   SCDel,
-  Enter,
+  Enter
 }
 export interface ResponseQueueModel {
   id: number
@@ -620,7 +619,7 @@ export enum FeedbackType {
   Opinion,
   Bug,
   FunctionRequest,
-  Other,
+  Other
 }
 export enum FeedbackStatus {
   Padding,
@@ -628,7 +627,7 @@ export enum FeedbackStatus {
   Finish,
   Todo,
   Reject,
-  Developing,
+  Developing
 }
 export interface TagInfo {
   name: string
@@ -637,11 +636,11 @@ export interface TagInfo {
 export enum GoodsStatus {
   Normal, // 商品正常
   //OutOfStock,  // 商品无货
-  Discontinued, // 商品下架
+  Discontinued // 商品下架
 }
 export enum GoodsTypes {
   Physical,
-  Virtual,
+  Virtual
 }
 export interface PointGoodsSetting {
   guardFree?: { year: number; month: number }
@@ -757,7 +756,7 @@ export interface ResponsePointOrder2UserModel {
 export enum PointOrderStatus {
   Pending, // 订单正在等待处理
   Shipped, // 订单已发货
-  Completed, // 订单已完成
+  Completed // 订单已完成
 }
 export interface ResponsePointHisrotyModel {
   point: number
@@ -773,13 +772,11 @@ export interface ResponsePointHisrotyModel {
 export enum PointFrom {
   Danmaku,
   Manual,
-  Use,
+  Use
 }
 
 export interface ResponseUserIndexModel {
   notification: string
   videos: VideoCollectVideo[]
-  links: {
-    [key: string]: string
-  }
+  links: { [key: string]: string }
 }
