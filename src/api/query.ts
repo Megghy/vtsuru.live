@@ -43,7 +43,7 @@ async function QueryPostAPIWithParamsInternal<T>(
 ) {
   let url: URL
   try {
-    url = new URL(urlString)
+    url = new URL(urlString.toString())
   } catch (e) {
     console.error('尝试解析API地址失败: ' + urlString, e)
     return {
@@ -97,7 +97,7 @@ async function QueryGetAPIInternal<T>(
   try {
     let url: URL
     try {
-      url = new URL(urlString)
+      url = new URL(urlString.toString())
     } catch (e) {
       console.error('尝试解析API地址失败: ' + urlString, e)
       return {
