@@ -611,7 +611,7 @@ onMounted(() => {
         align-items: center;
         flex-direction: column;
         padding: 50px;
-        height: 100%;
+        height: 100vh;
         box-sizing: border-box;
       ">
       <template v-if="!isLoadingAccount">
