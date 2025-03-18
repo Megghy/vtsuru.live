@@ -1203,6 +1203,10 @@ onUnmounted(() => {
                 :disabled="!configCanEdit">
                 允许通过网页点歌
               </NCheckbox>
+              <NCheckbox v-if="settings.allowFromWeb" v-model:checked="settings.allowAnonymousFromWeb" @update:checked="updateSettings"
+                :disabled="!configCanEdit">
+                允许匿名通过网页点歌
+              </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
             <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings"

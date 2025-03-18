@@ -35,6 +35,8 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
             height="200" frameborder="0"></iframe>
           <NDivider title-placement="left"> 更新日志 </NDivider>
           <NTimeline>
+            <NTimelineItem type="info" title="功能添加" content="点歌允许从网页匿名点歌" time="2025-3-18" />
+            <NTimelineItem type="success" title="功能添加" content="棉花糖添加内容审查功能" time="2025-3-2" />
             <NTimelineItem type="info" title="功能更新" content="允许棉花糖设置页滚动条进度同步到obs组件" time="2024-11-23" />
             <NTimelineItem type="info" title="功能更新" content="礼物兑换允许上舰用户免费兑换, 以及仅允许上舰用户兑换" time="2024-4-23" />
             <NTimelineItem type="info" title="功能更新" content="积分订单添加导出功能, 允许删除积分用户" time="2024-3-22" />
