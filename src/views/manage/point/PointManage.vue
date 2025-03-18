@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { getImageUploadModel } from '@/Utils'
+import { copyToClipboard, getImageUploadModel } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes, GoodsStatus, GoodsTypes, PointGoodsModel, ResponsePointGoodModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
-import { FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
+import { CN_HOST, CURRENT_HOST, FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { Info24Filled } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
@@ -25,6 +25,7 @@ import {
   NImage,
   NInput,
   NInputNumber,
+  NInputGroup,
   NModal,
   NPopconfirm,
   NRadioButton,
@@ -45,6 +46,7 @@ import { computed, onMounted, ref } from 'vue'
 import PointOrderManage from './PointOrderManage.vue'
 import PointSettings from './PointSettings.vue'
 import PointUserManage from './PointUserManage.vue'
+import { useStorage } from '@vueuse/core'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -82,6 +84,8 @@ const showAddGoodsModal = ref(false)
 
 const isAllowedPrivacyPolicy = ref(false)
 const isUpdating = ref(false)
+
+const useCNUrl = useStorage('Settings.UseCNUrl', false)
 
 const allowedYearOptions = computed(() => {
   //从2024到现在的年份
@@ -376,6 +380,17 @@ onMounted(() => { })
       </NText>
     </NAlert>
     <EventFetcherStatusCard />
+  </NFlex>
+  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    礼物展示页链接
+  </NDivider>
+  <NFlex align="center">
+    <NInputGroup style="max-width: 400px;">
+      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/point`" readonly />
+      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/point`)">
+        复制 </NButton>
+    </NInputGroup>
+    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
   </NFlex>
   <NDivider />
   <NTabs animated v-model:value="hash">

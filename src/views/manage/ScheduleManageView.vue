@@ -3,14 +3,18 @@ import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes, ScheduleWeekInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ScheduleList from '@/components/ScheduleList.vue'
-import { SCHEDULE_API_URL } from '@/data/constants'
+import { CN_HOST, CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
+import { copyToClipboard } from '@/Utils'
+import { useStorage } from '@vueuse/core'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
   NAlert,
   NBadge,
   NButton,
+  NCheckbox,
   NColorPicker,
   NDivider,
+  NFlex,
   NInput,
   NInputGroup,
   NInputGroupLabel,
@@ -129,6 +133,8 @@ const showAddModal = ref(false)
 const showCopyModal = ref(false)
 const updateScheduleModel = ref<ScheduleWeekInfo>({} as ScheduleWeekInfo)
 const selectedExistTag = ref()
+
+const useCNUrl = useStorage('Settings.UseCNUrl', false)
 
 const selectedDay = ref(0)
 const selectedScheduleYear = ref(new Date().getFullYear())
@@ -277,7 +283,17 @@ onMounted(() => {
     <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
       修改模板
     </NButton>
-  </NSpace>
+  </NSpace><NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    日程表展示页链接
+  </NDivider>
+  <NFlex align="center">
+    <NInputGroup style="max-width: 400px;">
+      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
+      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/schedule`)">
+        复制 </NButton>
+    </NInputGroup>
+    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+  </NFlex>
   <NDivider />
   <NModal v-model:show="showAddModal" style="width: 600px; max-width: 90vw" preset="card" title="添加周程">
     <NSpace vertical>

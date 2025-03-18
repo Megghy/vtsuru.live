@@ -2,7 +2,7 @@
 import { copyToClipboard, downloadImage } from '@/Utils'
 import { DisableFunction, EnableFunction, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes, QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { CURRENT_HOST } from '@/data/constants'
+import { CN_HOST, CURRENT_HOST } from '@/data/constants'
 import router from '@/router'
 import { Heart, HeartOutline, TrashBin } from '@vicons/ionicons5'
 import QuestionItem from '@/components/QuestionItem.vue'
@@ -62,6 +62,8 @@ const shareModalVisiable = ref(false)
 const replyMessage = ref()
 const addTagName = ref('')
 
+const useCNUrl = useStorage('Settings.UseCNUrl', false)
+
 const showSettingCard = ref(true)
 const showOBSModal = ref(false)
 const defaultSettings = {} as Setting_QuestionDisplay
@@ -81,6 +83,7 @@ const setting = computed({
 
 const shareCardRef = ref()
 const shareUrl = computed(() => `${CURRENT_HOST}@` + accountInfo.value?.name + '/question-box')
+const shareUrlCN = computed(() => CN_HOST + accountInfo.value?.name + '/question-box')
 
 const ps = ref(20)
 const pn = ref(1)
@@ -239,6 +242,17 @@ onMounted(() => {
       </NTooltip>
     </NAlert>
   </NSpace>
+  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    提问页链接
+  </NDivider>
+  <NFlex align="center">
+    <NInputGroup style="max-width: 400px;">
+      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`" readonly />
+      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`)">
+        复制 </NButton>
+    </NInputGroup>
+    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+  </NFlex>
   <NDivider style="margin: 10px 0 10px 0" />
   <template v-if="useQB.reviewing > 0">
     <NAlert type="warning" title="有提问正在审核中">
@@ -506,8 +520,13 @@ onMounted(() => {
     </div>
     <NDivider style="margin: 10px" />
     <NInputGroup>
-      <NInput :value="shareUrl" />
+      <NInput :value="shareUrl" readonly/>
       <NButton secondary @click="copyToClipboard(shareUrl)"> 复制 </NButton>
+    </NInputGroup>
+    <NDivider style="margin: 10px"> 国内镜像 (访问更快) </NDivider>
+    <NInputGroup>
+      <NInput :value="shareUrlCN" readonly />
+      <NButton secondary @click="copyToClipboard(shareUrlCN)"> 复制 </NButton>
     </NInputGroup>
     <br /><br />
     <NSpace justify="center">
