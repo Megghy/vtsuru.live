@@ -20,7 +20,7 @@ function onGetDanmaku(data: any) {
 
 let timer: any
 onMounted(async () => {
-  if (window.parent) { //当是客户端组件时不自动启动, 需要客户端来启动以获取启动响应
+  if (window.frameElement) { //当是客户端组件时不自动启动, 需要客户端来启动以获取启动响应
     console.log('[web-fetcher-iframe] 当前为客户端组件')
 
     rpc = new RPC({
