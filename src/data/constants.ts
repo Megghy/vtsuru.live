@@ -18,7 +18,7 @@ export const BASE_URL = {
   toString: () => (process.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releseAPI),
 }
 export const BASE_API_URL = {
-  toString: () => BASE_URL + 'api/',
+  toString: () => BASE_URL.toString() + 'api/',
 }
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const BASE_HUB_URL = {
