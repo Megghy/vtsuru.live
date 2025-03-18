@@ -25,6 +25,7 @@ export async function QueryPostAPIWithParams<T>(
   contentType?: string,
   headers?: [string, string][]
 ): Promise<APIRoot<T>> {
+  // @ts-expect-error 忽略
   return await QueryPostAPIWithParamsInternal<APIRoot<T>>(
     urlString,
     params,
@@ -40,15 +41,23 @@ async function QueryPostAPIWithParamsInternal<T>(
   contentType: string = 'application/json',
   headers: [string, string][] = []
 ) {
-  const url = new URL(urlString)
+  let url: URL
+  try {
+    url = new URL(urlString)
+  } catch (e) {
+    console.error('尝试解析API地址失败: ' + urlString, e)
+    return {
+      code: 400,
+      message: '无效的API地址: ' + urlString,
+      data: {} as T
+    }
+  }
   url.search = getParams(params)
   headers ??= []
-  let h = {} as {
-    [key: string]: string
-  }
-  headers.forEach(header => {
+  let h = {} as { [key: string]: string }
+  headers.forEach((header) => {
     h[header[0]] = header[1]
-  });
+  })
   if (cookie.value) h['Authorization'] = `Bearer ${cookie.value}`
 
   h['Content-Type'] = contentType
@@ -77,6 +86,7 @@ export async function QueryGetAPI<T>(
   params?: any,
   headers?: [string, string][]
 ): Promise<APIRoot<T>> {
+  // @ts-expect-error 忽略
   return await QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers)
 }
 async function QueryGetAPIInternal<T>(
@@ -85,22 +95,27 @@ async function QueryGetAPIInternal<T>(
   headers?: [string, string][]
 ) {
   try {
-    const url = new URL(urlString)
+    let url: URL
+    try {
+      url = new URL(urlString)
+    } catch (e) {
+      console.error('尝试解析API地址失败: ' + urlString, e)
+      return {
+        code: 400,
+        message: '无效的API地址: ' + urlString,
+        data: {} as T
+      }
+    }
     url.search = getParams(params)
     headers ??= []
-    let h = {} as {
-      [key: string]: string
-    }
+    let h = {} as { [key: string]: string }
     headers.forEach((header) => {
       h[header[0]] = header[1]
     })
     if (cookie.value) {
       h['Authorization'] = `Bearer ${cookie.value}`
     }
-    return await QueryAPIInternal<T>(url, {
-      method: 'get',
-      headers: h
-    })
+    return await QueryAPIInternal<T>(url, { method: 'get', headers: h })
   } catch (err) {
     console.log(`url:${urlString}, error:${err}`)
     throw err
@@ -133,6 +148,7 @@ export async function QueryPostPaginationAPI<T>(
   url: string,
   body?: unknown
 ): Promise<PaginationResponse<T>> {
+  // @ts-expect-error 忽略
   return await QueryPostAPIWithParamsInternal<PaginationResponse<T>>(
     url,
     undefined,
@@ -143,6 +159,7 @@ export async function QueryGetPaginationAPI<T>(
   urlString: string,
   params?: unknown
 ): Promise<PaginationResponse<T>> {
+  // @ts-expect-error 忽略
   return await QueryGetAPIInternal<PaginationResponse<T>>(urlString, params)
 }
 export function GetHeaders(): [string, string][] {

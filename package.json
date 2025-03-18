@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hyperdx/browser": "^0.21.2",
+    "@hyperdx/cli": "^0.1.0",
     "@microsoft/signalr": "^8.0.7",
     "@microsoft/signalr-protocol-msgpack": "^8.0.7",
     "@mixer/postmessage-rpc": "^1.1.4",

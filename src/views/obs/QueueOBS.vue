@@ -20,8 +20,8 @@ import { Vue3Marquee } from 'vue3-marquee'
 
 const props = defineProps<{
   id?: number,
-  active: boolean,
-  visible: boolean,
+  active?: boolean,
+  visible?: boolean,
 }>()
 
 const message = useMessage()

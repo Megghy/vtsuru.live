@@ -23,15 +23,10 @@ const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
 export default defineConfig({
   plugins: [
     vue({
-      script: {
-        propsDestructure: true,
-        defineModel: true
-      },
+      script: { propsDestructure: true, defineModel: true },
       include: [/\.vue$/, /\.md$/],
       template: {
-        compilerOptions: {
-          isCustomElement: (tag) => tag.startsWith('yt-')
-        }
+        compilerOptions: { isCustomElement: (tag) => tag.startsWith('yt-') }
       }
     }),
     svgLoader(),
@@ -42,19 +37,11 @@ export default defineConfig({
     caddyTls(),
     monacoEditorPlugin({ languageWorkers: ['css'] })
   ],
-  server: {
-    port: 51000
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
-  },
-  define: {
-    'process.env': {},
-    global: 'window'
-  },
+  server: { port: 51000 },
+  resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
+  define: { 'process.env': {}, global: 'window' },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
-  }
+  },
+  build: { sourcemap: true }
 })

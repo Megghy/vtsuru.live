@@ -47,8 +47,8 @@ defineExpose({ setCss })
 const { customCss, isOBS = true } = defineProps<{
   customCss?: string
   isOBS?: boolean,
-  active: boolean,
-  visible: boolean,
+  active?: boolean,
+  visible?: boolean,
 }>()
 
 const messageRender = ref()

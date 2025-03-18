@@ -88,8 +88,13 @@ async function get() {
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {}
-  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+  } catch (err) {
+    console.log(err)
+  }
+  return {
+    songs: [],
+    setting: {} as Setting_LiveRequest,
+  } as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
 }
 const allowGuardTypes = computed(() => {
   const types = []
@@ -148,19 +153,12 @@ onUnmounted(() => {
     <NDivider class="live-request-divider">
       <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 条</p>
     </NDivider>
-    <div
-      class="live-request-processing-container"
-      :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1"
-      :from="singing?.from as number"
-      :status="singing?.status as number"
-    >
+    <div class="live-request-processing-container"
+      :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1" :from="singing?.from as number"
+      :status="singing?.status as number">
       <div class="live-request-processing-prefix"></div>
       <template v-if="singing">
-        <img
-          class="live-request-processing-avatar"
-          :src="singing?.user?.face"
-          referrerpolicy="no-referrer"
-        />
+        <img class="live-request-processing-avatar" :src="singing?.user?.face" referrerpolicy="no-referrer" />
         <p class="live-request-processing-song-name">{{ singing?.songName }}</p>
         <p class="live-request-processing-name">{{ singing?.user?.name }}</p>
       </template>
@@ -169,22 +167,10 @@ onUnmounted(() => {
     </div>
     <div class="live-request-content" ref="listContainerRef">
       <template v-if="activeSongs.length > 0">
-        <Vue3Marquee
-          class="live-request-list"
-          :key="key"
-          vertical
-          :duration="20"
-          :pause="!isMoreThanContainer"
-          :style="`height: ${height}px;width: ${width}px;`"
-        >
-          <div
-            class="live-request-list-item"
-            :from="song.from as number"
-            :status="song.status as number"
-            v-for="(song, index) in activeSongs"
-            :key="song.id"
-            :style="`height: ${itemHeight}px`"
-          >
+        <Vue3Marquee class="live-request-list" :key="key" vertical :duration="20" :pause="!isMoreThanContainer"
+          :style="`height: ${height}px;width: ${width}px;`">
+          <div class="live-request-list-item" :from="song.from as number" :status="song.status as number"
+            v-for="(song, index) in activeSongs" :key="song.id" :style="`height: ${itemHeight}px`">
             <div class="live-request-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
@@ -194,11 +180,8 @@ onUnmounted(() => {
             <p v-if="settings.showUserName" class="live-request-list-item-name">
               {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
             </p>
-            <div
-              v-if="settings.showFanMadelInfo"
-              class="live-request-list-item-level"
-              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
-            >
+            <div v-if="settings.showFanMadelInfo" class="live-request-list-item-level"
+              :has-level="(song.user?.fans_medal_level ?? 0) > 0">
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
@@ -210,13 +193,8 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="live-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
-      <Vue3Marquee
-        :key="key"
-        ref="footerListRef"
-        class="live-request-footer-marquee"
-        :duration="10"
-        animate-on-overflow-only
-      >
+      <Vue3Marquee :key="key" ref="footerListRef" class="live-request-footer-marquee" :duration="10"
+        animate-on-overflow-only>
         <span class="live-request-tag" type="prefix">
           <div class="live-request-tag-key">前缀</div>
           <div class="live-request-tag-value">
@@ -264,6 +242,7 @@ onUnmounted(() => {
   border-radius: 10px;
   color: white;
 }
+
 .live-request-header {
   margin: 0;
   color: #fff;
@@ -276,17 +255,20 @@ onUnmounted(() => {
     0 0 30px #61606086,
     0 0 40px rgba(64, 156, 179, 0.555);
 }
+
 .live-request-header-count {
   color: #ffffffbd;
   text-align: center;
   font-size: 14px;
 }
+
 .live-request-divider {
   margin: 0 auto;
   margin-top: -15px;
   margin-bottom: -15px;
   width: 90%;
 }
+
 .live-request-processing-container {
   height: 35px;
   margin: 0 10px 0 10px;
@@ -294,34 +276,41 @@ onUnmounted(() => {
   align-items: center;
   gap: 10px;
 }
+
 .live-request-processing-empty {
   font-weight: bold;
   font-style: italic;
   color: #ffffffbe;
 }
+
 .live-request-processing-prefix {
   border: 2px solid rgb(231, 231, 231);
   height: 30px;
   width: 10px;
   border-radius: 10px;
 }
+
 .live-request-processing-container[singing='true'] .live-request-processing-prefix {
   background-color: #75c37f;
   animation: animated-border 3s linear infinite;
 }
+
 .live-request-processing-container[singing='false'] .live-request-processing-prefix {
   background-color: #c37575;
 }
+
 .live-request-processing-avatar {
   height: 30px;
   border-radius: 50%;
   /* 添加无限旋转动画 */
   animation: rotate 20s linear infinite;
 }
+
 /* 网页点歌 */
 .live-request-processing-container[from='3'] .live-request-processing-avatar {
   display: none;
 }
+
 .live-request-processing-song-name {
   font-size: large;
   font-weight: bold;
@@ -329,21 +318,26 @@ onUnmounted(() => {
   white-space: nowrap;
   max-width: 80%;
 }
+
 .live-request-processing-name {
   font-size: 12px;
   font-style: italic;
 }
+
 @keyframes rotate {
   0% {
     transform: rotate(0);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
+
 .n-divider__line {
   background-color: #ffffffd5;
 }
+
 .live-request-content {
   background-color: #0f0f0f4f;
   margin: 10px;
@@ -352,9 +346,11 @@ onUnmounted(() => {
   border-radius: 10px;
   overflow-x: hidden;
 }
+
 .marquee {
   justify-items: left;
 }
+
 .live-request-list-item {
   display: flex;
   width: 100%;
@@ -364,6 +360,7 @@ onUnmounted(() => {
   justify-content: left;
   gap: 10px;
 }
+
 .live-request-list-item-song-name {
   font-size: 18px;
   font-weight: bold;
@@ -380,13 +377,13 @@ onUnmounted(() => {
   color: #d2d8d6;
   font-size: 12px;
 }
+
 .live-request-list-item[from='0'] .live-request-list-item-avatar {
   display: none;
 }
 
 /* 弹幕点歌 */
-.live-request-list-item[from='1'] {
-}
+.live-request-list-item[from='1'] {}
 
 .live-request-list-item-name {
   font-style: italic;
@@ -397,6 +394,7 @@ onUnmounted(() => {
 
   margin-left: auto;
 }
+
 .live-request-list-item-index {
   text-align: center;
   height: 18px;
@@ -407,6 +405,7 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+
 .live-request-list-item-level {
   text-align: center;
   height: 18px;
@@ -417,9 +416,11 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+
 .live-request-list-item-level[has-level='false'] {
   display: none;
 }
+
 .live-request-footer {
   margin: 0 5px 5px 5px;
   height: 60px;
@@ -428,6 +429,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
 }
+
 .live-request-tag {
   display: flex;
   margin: 5px 0 5px 5px;
@@ -440,30 +442,36 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: left;
 }
+
 .live-request-tag-key {
   font-style: italic;
   color: rgb(211, 211, 211);
   font-size: 12px;
 }
+
 .live-request-tag-value {
   font-size: 14px;
 }
+
 .live-request-list-item-index[index='1'] {
   background-color: #ebc34c;
   color: white;
   font-weight: bold;
   text-shadow: 0 0 6px #ebc34c;
 }
+
 .live-request-list-item-index[index='2'] {
   background-color: #c0c0c0;
   color: white;
   font-weight: bold;
 }
+
 .live-request-list-item-index[index='3'] {
   background-color: #b87333;
   color: white;
   font-weight: bold;
 }
+
 @keyframes animated-border {
   0% {
     box-shadow: 0 0 0px #589580;
