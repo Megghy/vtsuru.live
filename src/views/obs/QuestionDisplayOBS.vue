@@ -9,8 +9,8 @@ import { useWebRTC } from '@/store/useRTC'
 
 const props = defineProps<{
   id?: number,
-  active: boolean,
-  visible: boolean,
+  active?: boolean,
+  visible?: boolean,
 }>()
 
 const hash = ref('')

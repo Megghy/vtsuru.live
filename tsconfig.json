@@ -10,7 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
     "allowJs": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "baseUrl": ".",
     "types": ["node"],
     "paths": {

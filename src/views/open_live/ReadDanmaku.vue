@@ -283,7 +283,15 @@ function speakFromAPI(text: string) {
     .trim()
     .replace(/^(?:https?:\/\/)/, '')
     .replace(/\{\{\s*text\s*\}\}/, encodeURIComponent(text))}`
-  const tempURL = new URL(url)
+  let tempURL: URL
+  try {
+    tempURL = new URL(url)
+  } catch (err) {
+    console.log(err)
+    message.error('无效的API地址: ' + url)
+    cancelSpeech()
+    return
+  }
   if (isVtsuruVoiceAPI.value) {
     tempURL.searchParams.set('vtsuruId', accountInfo.value?.id.toString() ?? '-1')
     url = tempURL.toString()
@@ -844,9 +852,9 @@ onUnmounted(() => {
     <NDivider> 设置 </NDivider>
     <NSpace align="center">
       <NCheckbox :checked="settings.combineGiftDelay != undefined" @update:checked="(checked: boolean) => {
-          settings.combineGiftDelay = checked ? 2 : undefined
-        }
-        ">
+        settings.combineGiftDelay = checked ? 2 : undefined
+      }
+      ">
         是否启用礼物合并
         <NTooltip>
           <template #trigger>
@@ -860,9 +868,9 @@ onUnmounted(() => {
       <NInputGroup v-if="settings.combineGiftDelay" style="width: 200px">
         <NInputGroupLabel> 送礼间隔 (秒) </NInputGroupLabel>
         <NInputNumber v-model:value="settings.combineGiftDelay" @update:value="(value) => {
-            if (!value || value <= 0) settings.combineGiftDelay = undefined
-          }
-          " />
+          if (!value || value <= 0) settings.combineGiftDelay = undefined
+        }
+        " />
       </NInputGroup>
       <NCheckbox v-model:checked="settings.splitText">
         启用句子拆分

@@ -16,8 +16,8 @@ type WaitMusicInfo = {
 
 const props = defineProps<{
   id?: number,
-  active: boolean,
-  visible: boolean,
+  active?: boolean,
+  visible?: boolean,
 }>()
 
 const message = useMessage()
@@ -52,7 +52,7 @@ async function get() {
     if (data.code == 200) {
       return data.data
     }
-  } catch (err) {}
+  } catch (err) { }
   return originSongs.value
 }
 const isMoreThanContainer = computed(() => {
@@ -85,18 +85,13 @@ onUnmounted(() => {
     <NDivider class="music-request-divider">
       <p class="music-request-header-count">已有 {{ originSongs.waiting.length ?? 0 }} 首</p>
     </NDivider>
-    <div
-      class="music-request-singing-container"
-      :playing="originSongs.playing ? 'true' : 'false'"
-      :from="originSongs.playing?.music.from ?? -1"
-    >
+    <div class="music-request-singing-container" :playing="originSongs.playing ? 'true' : 'false'"
+      :from="originSongs.playing?.music.from ?? -1">
       <div class="music-request-singing-prefix"></div>
       <template v-if="originSongs.playing">
-        <img
-          class="music-request-singing-avatar"
+        <img class="music-request-singing-avatar"
           :src="originSongs.playing.music.cover ?? AVATAR_URL + originSongs.playing.from?.uid"
-          referrerpolicy="no-referrer"
-        />
+          referrerpolicy="no-referrer" />
         <p class="music-request-singing-song-name">{{ originSongs.playing.music.name }}</p>
         <p class="music-request-singing-name">{{ originSongs.playing.from?.name }}</p>
       </template>
@@ -105,21 +100,10 @@ onUnmounted(() => {
     </div>
     <div class="music-request-content" ref="listContainerRef">
       <template v-if="originSongs.waiting.length > 0">
-        <Vue3Marquee
-          class="music-request-list"
-          :key="key"
-          vertical
-          :pause="!isMoreThanContainer"
-          :duration="20"
-          :style="`height: ${height}px;width: ${width}px;`"
-        >
-          <span
-            class="music-request-list-item"
-            :from="item.music.from as number"
-            v-for="(item, index) in originSongs.waiting"
-            :key="item.music.id"
-            :style="`height: ${itemHeight}px`"
-          >
+        <Vue3Marquee class="music-request-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`">
+          <span class="music-request-list-item" :from="item.music.from as number"
+            v-for="(item, index) in originSongs.waiting" :key="item.music.id" :style="`height: ${itemHeight}px`">
             <div class="music-request-list-item-index" :index="index + 1">
               {{ index + 1 }}
             </div>
@@ -149,6 +133,7 @@ onUnmounted(() => {
   border-radius: 10px;
   color: white;
 }
+
 .music-request-header {
   margin: 0;
   color: #fff;
@@ -161,17 +146,20 @@ onUnmounted(() => {
     0 0 30px #61606086,
     0 0 40px rgba(64, 156, 179, 0.555);
 }
+
 .music-request-header-count {
   color: #ffffffbd;
   text-align: center;
   font-size: 14px;
 }
+
 .music-request-divider {
   margin: 0 auto;
   margin-top: -15px;
   margin-bottom: -15px;
   width: 90%;
 }
+
 .music-request-singing-container {
   height: 35px;
   margin: 0 10px 0 10px;
@@ -179,34 +167,41 @@ onUnmounted(() => {
   align-items: center;
   gap: 10px;
 }
+
 .music-request-singing-empty {
   font-weight: bold;
   font-style: italic;
   color: #ffffffbe;
 }
+
 .music-request-singing-prefix {
   border: 2px solid rgb(231, 231, 231);
   height: 30px;
   width: 10px;
   border-radius: 10px;
 }
+
 .music-request-singing-container[playing='true'] .music-request-singing-prefix {
   background-color: #75c37f;
   animation: animated-border 3s linear infinite;
 }
+
 .music-request-singing-container[playing='false'] .music-request-singing-prefix {
   background-color: #c37575;
 }
+
 .music-request-singing-avatar {
   height: 30px;
   border-radius: 50%;
   /* 添加无限旋转动画 */
   animation: rotate 20s linear infinite;
 }
+
 /* 网页点歌 */
 .music-request-singing-container[from='3'] .music-request-singing-avatar {
   display: none;
 }
+
 .music-request-singing-song-name {
   font-size: large;
   font-weight: bold;
@@ -214,21 +209,26 @@ onUnmounted(() => {
   white-space: nowrap;
   max-width: 80%;
 }
+
 .music-request-singing-name {
   font-size: 12px;
   font-style: italic;
 }
+
 @keyframes rotate {
   0% {
     transform: rotate(0);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
+
 .n-divider__line {
   background-color: #ffffffd5;
 }
+
 .music-request-content {
   background-color: #0f0f0f4f;
   margin: 10px;
@@ -237,9 +237,11 @@ onUnmounted(() => {
   border-radius: 10px;
   overflow-x: hidden;
 }
+
 .marquee {
   justify-items: left;
 }
+
 .music-request-list-item {
   display: flex;
   width: 100%;
@@ -249,6 +251,7 @@ onUnmounted(() => {
   justify-content: left;
   gap: 10px;
 }
+
 .music-request-list-item-song-name {
   font-size: 18px;
   font-weight: bold;
@@ -265,13 +268,13 @@ onUnmounted(() => {
   color: #d2d8d6;
   font-size: 12px;
 }
+
 .music-request-list-item[from='0'] .music-request-list-item-avatar {
   display: none;
 }
 
 /* 弹幕点歌 */
-.music-request-list-item[from='1'] {
-}
+.music-request-list-item[from='1'] {}
 
 .music-request-list-item-name {
   font-style: italic;
@@ -282,6 +285,7 @@ onUnmounted(() => {
 
   margin-left: auto;
 }
+
 .music-request-list-item-index {
   text-align: center;
   height: 18px;
@@ -292,6 +296,7 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+
 .music-request-list-item-level {
   text-align: center;
   height: 18px;
@@ -302,9 +307,11 @@ onUnmounted(() => {
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
+
 .music-request-list-item-level[has-level='false'] {
   display: none;
 }
+
 .music-request-tag {
   display: flex;
   margin: 5px 0 5px 5px;
@@ -317,14 +324,17 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: left;
 }
+
 .music-request-tag-key {
   font-style: italic;
   color: rgb(211, 211, 211);
   font-size: 12px;
 }
+
 .music-request-tag-value {
   font-size: 14px;
 }
+
 @keyframes animated-border {
   0% {
     box-shadow: 0 0 0px #589580;
