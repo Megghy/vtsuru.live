@@ -200,6 +200,8 @@ onUnmounted(() => {
           </KeepAlive>
         </RouterView>
         <template v-else>
+
+          {{  }}
           <NAlert type="info" title="正在请求弹幕客户端认证信息...">
             <NSpin show />
           </NAlert>

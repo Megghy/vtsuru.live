@@ -1,8 +1,6 @@
 import { useAccount } from '@/api/account'
-import OpenLiveClient, {
-  AuthInfo,
-  RoomAuthInfo
-} from '@/data/DanmakuClients/OpenLiveClient'
+import { OpenLiveInfo } from '@/api/api-models'
+import OpenLiveClient, { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -21,7 +19,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   const connected = computed(
     () => status.value === 'running' || status.value === 'listening'
   )
-  const authInfo = ref<RoomAuthInfo>()
+  const authInfo = ref<OpenLiveInfo>()
   const accountInfo = useAccount()
 
   let existOtherClient = false
