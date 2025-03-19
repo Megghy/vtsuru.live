@@ -158,7 +158,7 @@ onMounted(async () => {
           关于
         </NFlex>
       </template>
-      <NDescriptions label-placement="left" bordered size="small">
+      <NDescriptions label-placement="left" bordered size="small" :column="2">
         <NDescriptionsItem label="用户名">
           {{ user.info.name }}
         </NDescriptionsItem>

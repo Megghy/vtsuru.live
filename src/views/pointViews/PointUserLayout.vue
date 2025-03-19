@@ -129,7 +129,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NLayout>
+  <NLayout style="height: 100vh">
     <NSpin v-if="useAuth.isLoading && useAuth.currentToken" :show="useAuth.isLoading" />
     <NLayoutContent
       v-else-if="(!useAuth.currentToken && useAuth.biliTokens.length > 0) || useAuth.isInvalid"
@@ -167,8 +167,8 @@ onMounted(async () => {
         <NFlex align="center" justify="center">
           <div style="max-width: 95vw; width: 1200px">
             <NCard title="我的信息">
-              <NDescriptions label-placement="left" bordered size="small">
-                <NDescriptionsItem label="用户名">
+              <NDescriptions label-placement="left" bordered size="small" :column="2">
+                <NDescriptionsItem label="用户名" style="min-width: 100px;">
                   {{ biliAuth.name ?? '未知' }}
                 </NDescriptionsItem>
                 <NDescriptionsItem label="UserId">
