@@ -386,8 +386,8 @@ onMounted(() => { })
   </NDivider>
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
-      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/point`" readonly />
-      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/point`)">
+      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
+      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`)">
         复制 </NButton>
     </NInputGroup>
     <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>

@@ -49,6 +49,7 @@ export default [
   {
     path: 'goods',
     name: 'user-goods',
+    alias: 'point',
     component: () => import('@/views/pointViews/PointGoodsView.vue'),
     meta: {
       title: '积分兑换',
