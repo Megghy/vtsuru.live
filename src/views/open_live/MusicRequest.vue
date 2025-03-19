@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
-import { DanmakuUserInfo, EventModel, SongFrom, SongsInfo } from '@/api/api-models'
+import { DanmakuUserInfo, EventModel, OpenLiveInfo, SongFrom, SongsInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -43,7 +43,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
-import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 type Music = {
   id: number
@@ -68,7 +67,7 @@ const musicRquestStore = useMusicRequestProvider()
 const client = await useDanmakuClient().initClient()
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
 }>()

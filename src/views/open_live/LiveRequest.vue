@@ -5,6 +5,7 @@ import {
   EventDataTypes,
   EventModel,
   FunctionTypes,
+  OpenLiveInfo,
   QueueSortType,
   Setting_LiveRequest,
   SongRequestFrom,
@@ -15,7 +16,6 @@ import {
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { CURRENT_HOST, SONG_REQUEST_API_URL } from '@/data/constants'
-import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import {
   Checkmark12Regular,
@@ -129,7 +129,7 @@ const settings = computed({
 const selectedSong = ref<SongsInfo>()
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
 }>()

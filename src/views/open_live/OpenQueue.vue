@@ -6,6 +6,7 @@ import {
   EventModel,
   FunctionTypes,
   KeywordMatchType,
+  OpenLiveInfo,
   QueueFrom,
   QueueGiftFilterType,
   QueueSortType,
@@ -69,7 +70,6 @@ import {
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import QueueOBS from '../obs/QueueOBS.vue'
-import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 const defaultSettings = {
   keyword: '排队',
@@ -140,7 +140,7 @@ const settings = computed({
 })
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
 }>()
