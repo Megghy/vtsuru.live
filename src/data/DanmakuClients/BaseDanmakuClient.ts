@@ -59,6 +59,7 @@ export default abstract class BaseDanmakuClient {
       }
     } catch (err) {
       console.error(err)
+      this.state = 'disconnected'
       return {
         success: false,
         message: err ? err.toString() : '未知错误'
