@@ -39,7 +39,7 @@ const sider = ref()
 const { width } = useElementSize(sider)
 
 const authInfo = ref<AuthInfo>()
-const danmakuClient = await useDanmakuClient().initClient()
+const danmakuClient = await useDanmakuClient()
 
 const menuOptions = [
   {
