@@ -105,7 +105,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
                   }
                   break
                 case 'on-danmaku':
-                  const danmaku = JSON.parse(data)
+                  const danmaku = typeof data === 'string' ? JSON.parse(data) : data
                   switch (danmaku.cmd) {
                     case 'LIVE_OPEN_PLATFORM_DM':
                       danmakuClient.value.onDanmaku(danmaku)
