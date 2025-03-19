@@ -18,7 +18,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
   private timer: any | undefined
 
   public authInfo: AuthInfo | undefined
-  public roomAuthInfo: RoomAuthInfo | undefined
+  public roomAuthInfo: OpenLiveInfo | undefined
   public authCode: string | undefined
 
   public events: {
@@ -70,6 +70,8 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           `[${this.type}] 已连接房间: ${auth.data?.anchor_info.room_id}`
         )
       })
+
+      this.roomAuthInfo = auth.data
 
       return await super.initClientInner(chatClient)
     } else {
@@ -368,66 +370,6 @@ export interface AuthInfo {
   Mid: string
   Caller: string
   CodeSign: string
-}
-/**
- * 场次信息
- */
-interface GameInfo {
-  /**
-   * 场次id,心跳key(心跳保持20s-60s)调用一次,超过60s无心跳自动关闭,长连停止推送消息
-   */
-  game_id: string
-}
-
-/**
- * 长连信息
- */
-interface WebsocketInfo {
-  /**
-   * 长连使用的请求json体 第三方无需关注内容,建立长连时使用即可
-   */
-  auth_body: string
-  /**
-   * wss 长连地址
-   */
-  wss_link: string[]
-}
-
-/**
- * 主播信息
- */
-interface AnchorInfo {
-  /**
-   * 主播房间号
-   */
-  room_id: number
-  /**
-   * 主播昵称
-   */
-  uname: string
-  /**
-   * 主播头像
-   */
-  uface: string
-  /**
-   * 主播uid
-   */
-  uid: number
-  open_id: string
-}
-export interface RoomAuthInfo {
-  /**
-   * 场次信息
-   */
-  game_info: GameInfo
-  /**
-   * 长连信息
-   */
-  websocket_info: WebsocketInfo
-  /**
-   * 主播信息
-   */
-  anchor_info: AnchorInfo
 }
 export interface DanmakuEventsMap {
   danmaku: (arg1: DanmakuInfo, arg2?: any) => void
