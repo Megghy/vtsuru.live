@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { copyToClipboard } from '@/Utils'
 import { useAccount } from '@/api/account'
-import { EventDataTypes, EventModel } from '@/api/api-models'
+import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
 import { FETCH_API, VTSURU_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Info24Filled, Mic24Filled } from '@vicons/fluent'
@@ -45,7 +44,7 @@ import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
 }>()

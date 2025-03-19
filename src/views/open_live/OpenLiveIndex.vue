@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account';
-import { RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient';
+import { OpenLiveInfo } from '@/api/api-models';
 import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui';
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
 }>()
 

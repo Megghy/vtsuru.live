@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
+import { OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { CURRENT_HOST, LOTTERY_API_URL } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -44,7 +44,7 @@ import {
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
-import { DanmakuInfo, GiftInfo, RoomAuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
+import { DanmakuInfo, GiftInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 interface LotteryOption {
   resultCount: number
@@ -96,7 +96,7 @@ const showModal = ref(false)
 const showOBSModal = ref(false)
 
 const props = defineProps<{
-  roomInfo?: RoomAuthInfo
+  roomInfo?: OpenLiveInfo
   code?: string | undefined
 }>()
 

@@ -287,7 +287,7 @@ onUnmounted(() => {
 
 <template>
   <NAlert type="success" style="width: 100%; ">
-    本站新增国内镜像: {{ CN_HOST }}, 访问更快
+    本站新增国内镜像: <NButton text tag="a" :href="CN_HOST" target="_blank">{{ CN_HOST }}</NButton>, 访问更快
   </NAlert>
   <NDivider />
   <NFlex justify="center" align="center" vertical style="margin: 0 auto; max-width: 1500px;">
@@ -472,7 +472,7 @@ onUnmounted(() => {
       <NButton @click="resetName" type="warning" :loading="isLoading"> 确定修改 </NButton>
     </template>
   </NModal>
-  <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%">
+  <NModal v-model:show="bindBiliCodeModalVisiable" preset="card" title="绑定/更新身份码" style="width: 400px; max-width: 90%" >
     <NSpace vertical>
       <NInputGroup>
         <NInput v-model:value="biliCode" placeholder="身份码" />
@@ -491,7 +491,7 @@ onUnmounted(() => {
         </NTooltip>
       </NInputGroup>
     </NSpace>
-
+    <NDivider />
     <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
     <template #footer>
       <NButton @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()" type="success"
