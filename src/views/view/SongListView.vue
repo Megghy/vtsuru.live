@@ -80,11 +80,11 @@ async function getSongs() {
         currentData.value = data.data
       } else {
         errMessage.value = data.message
-        message.error('加载失败: ' + data.message)
+        message.error('加载歌单失败: ' + data.message)
       }
     })
     .catch((err) => {
-      message.error('加载失败')
+      message.error('加载失败: ' + err)
     })
     .finally(() => {
       isLoading.value = false
@@ -102,7 +102,7 @@ async function getConfig() {
       }
     })
     .catch((err) => {
-      message.error('加载失败')
+      message.error('加载失败: ' + err)
     })
     .finally(() => {
       isLoading.value = false
@@ -154,9 +154,11 @@ onMounted(async () => {
           songsActive.value = r.songs
           settings.value = r.setting
         }
-      }, 1000)
+        await getConfig()
+      }, 300)
     } catch (err) {
-      message.error('加载失败')
+      message.error('加载失败: ' + err)
+      console.error(err)
     }
   } else {
     currentData.value = props.fakeData

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models';
-import { SongListConfigType, SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
+import { SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
 import { TemplateConfig } from '@/data/VTsuruTypes';
 import { FILE_BASE_URL } from '@/data/constants';
 

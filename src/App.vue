@@ -7,15 +7,15 @@
           <NLoadingBarProvider>
             <Suspense>
               <TempComponent>
-                <NElement>
+                <NLayoutContent>
                   <ViewerLayout v-if="layout == 'viewer'" />
                   <ManageLayout v-else-if="layout == 'manage'" />
                   <OpenLiveLayout v-else-if="layout == 'open-live'" />
                   <OBSLayout v-else-if="layout == 'obs'" />
-                  <template v-else-if="layout == ''">
+                  <template v-else>
                     <RouterView />
                   </template>
-                </NElement>
+                </NLayoutContent>
               </TempComponent>
               <template #fallback>
                 <NSpin size="large" show />

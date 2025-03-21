@@ -116,7 +116,7 @@ QueryGetAPI<string>(BASE_API_URL + 'vtsuru/version')
       }
       HyperDX.setGlobalAttributes({
         userId: account.value.id.toString(),
-        userName: account.value.name
+        userName: account.value.name,
       })
     }
     useAuth.getAuthInfo()

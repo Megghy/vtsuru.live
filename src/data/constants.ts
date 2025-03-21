@@ -16,15 +16,13 @@ export const IMGUR_URL = FILE_BASE_URL + '/imgur/'
 export const THINGS_URL = FILE_BASE_URL + '/things/'
 export const apiFail = ref(false)
 
-export const BASE_URL = {
-  toString: () =>
-    process.env.NODE_ENV === 'development'
-      ? debugAPI
-      : apiFail.value
-        ? failoverAPI
-        : releseAPI
-}
-export const BASE_API_URL = BASE_URL.toString() + 'api/'
+export const BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? debugAPI
+    : apiFail.value
+      ? failoverAPI
+      : releseAPI
+export const BASE_API_URL = BASE_URL + 'api/'
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const BASE_HUB_URL =
   (process.env.NODE_ENV === 'development'

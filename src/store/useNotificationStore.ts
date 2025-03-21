@@ -16,6 +16,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const isInited = ref(false)
 
   async function updateUnread() {
+    return // 暂时没写这部分相关逻辑
     try {
       const result = await QueryGetAPI<NotificationData[]>(
         NOTIFACTION_API_URL + 'get-unread'

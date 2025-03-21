@@ -284,7 +284,7 @@ onMounted(() => {
         <QuestionItems :questions="pagedQuestions">
           <template #footer="{ item }">
             <NSpace>
-              <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success">
+              <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="info">
                 设为已读
               </NButton>
               <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
