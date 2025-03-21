@@ -273,10 +273,10 @@ onMounted(async () => {
         style="height: 100%"
       >
         <Transition>
-          <div v-if="biliUserInfo" style="margin-top: 8px">
+          <div v-if="accountInfo.streamerInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
               <NAvatar
-                :src="biliUserInfo.face"
+                :src="accountInfo.streamerInfo.faceUrl"
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 round
                 bordered
@@ -286,7 +286,7 @@ onMounted(async () => {
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
-                  {{ biliUserInfo.name }}
+                  {{ accountInfo.streamerInfo.name }}
                 </NText>
               </NEllipsis>
             </NSpace>

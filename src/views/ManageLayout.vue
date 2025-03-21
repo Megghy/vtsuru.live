@@ -30,6 +30,7 @@ import {
   NButton,
   NCountdown,
   NDivider,
+  NElement,
   NFlex,
   NIcon,
   NLayout,
@@ -483,7 +484,7 @@ onMounted(() => {
         <template #extra>
           <NSpace align="center" justify="center">
             <NSwitch :default-value="!isDarkMode" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
-              ">
+            ">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -550,39 +551,40 @@ onMounted(() => {
       </NLayoutSider>
       <NLayout>
         <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
-          <NLayoutContent
-            :style="`box-sizing: border-box; padding: 20px; min-width: 300px; height: calc(100vh - 50px - ${aplayerHeight}px);`">
-            <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
-              <KeepAlive>
-                <Suspense>
-                  <component :is="Component" />
-                  <template #fallback>
-                    <NSpin show />
-                  </template>
-                </Suspense>
-              </KeepAlive>
-            </RouterView>
-            <template v-else>
-              <NAlert type="info">
-                请进行邮箱验证
-                <br /><br />
-                <NSpace>
-                  <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail">
-                    重新发送验证邮件
-                  </NButton>
-                  <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                    @finish="canResendEmail = true" />
-
-                  <NPopconfirm @positive-click="logout" size="small">
-                    <template #trigger>
-                      <NButton type="error"> 登出 </NButton>
+          <NLayoutContent content-style="margin: 12px">
+            <NElement>
+              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
+                <KeepAlive>
+                  <Suspense>
+                    <component :is="Component" />
+                    <template #fallback>
+                      <NSpin show />
                     </template>
-                    确定登出?
-                  </NPopconfirm>
-                </NSpace>
-              </NAlert>
-            </template>
-            <NBackTop />
+                  </Suspense>
+                </KeepAlive>
+              </RouterView>
+              <template v-else>
+                <NAlert type="info">
+                  请进行邮箱验证
+                  <br /><br />
+                  <NSpace>
+                    <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail">
+                      重新发送验证邮件
+                    </NButton>
+                    <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                      @finish="canResendEmail = true" />
+
+                    <NPopconfirm @positive-click="logout" size="small">
+                      <template #trigger>
+                        <NButton type="error"> 登出 </NButton>
+                      </template>
+                      确定登出?
+                    </NPopconfirm>
+                  </NSpace>
+                </NAlert>
+              </template>
+              <NBackTop />
+            </NElement>
           </NLayoutContent>
         </NScrollbar>
         <NLayoutFooter :style="`height: ${aplayerHeight}px;overflow: auto`">
