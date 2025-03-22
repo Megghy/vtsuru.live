@@ -91,8 +91,8 @@ async function getSongs() {
     })
 }
 async function getConfig() {
+  if(!selectedTemplateConfig.value) return
   isLoading.value = true
-  console.log(selectedTemplateConfig.value!.name)
   await DownloadConfig(selectedTemplateConfig.value!.name)
     .then((data) => {
       if (data.msg) {
