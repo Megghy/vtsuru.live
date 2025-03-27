@@ -36,10 +36,26 @@ async function VerifyAccount() {
 <template>
   <NLayoutContent style="height: 100vh">
     <div style="display: flex; align-items: center; justify-content: center; height: 100%">
-      <NCard embedded style="max-width: 500px">
-        <template #header> 激活账户 </template>
-        <NSpace justify="center" align="center" vertical>
-          <NButton @click="VerifyAccount" type="primary" size="large" :loading="isLoading"> 进行账户激活 </NButton>
+      <NCard
+        embedded
+        style="max-width: 500px"
+      >
+        <template #header>
+          激活账户
+        </template>
+        <NSpace
+          justify="center"
+          align="center"
+          vertical
+        >
+          <NButton
+            type="primary"
+            size="large"
+            :loading="isLoading"
+            @click="VerifyAccount"
+          >
+            进行账户激活
+          </NButton>
         </NSpace>
       </NCard>
     </div>

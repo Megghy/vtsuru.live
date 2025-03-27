@@ -23,5 +23,11 @@ function reset() {
 </script>
 
 <template>
-  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+  <VueTurnstile
+    ref="turnstile"
+    v-model="token"
+    :site-key="TURNSTILE_KEY"
+    theme="auto"
+    style="text-align: center"
+  />
 </template>

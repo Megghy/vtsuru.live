@@ -44,11 +44,29 @@ function changePassword() {
 
 <template>
   <NLayoutContent style="height: 100vh; position: relative">
-    <NCard style="max-width: 90%; width: 400px; top: 40%; margin: 0 auto" title="修改密码" embedded>
+    <NCard
+      style="max-width: 90%; width: 400px; top: 40%; margin: 0 auto"
+      title="修改密码"
+      embedded
+    >
       <NSpace vertical>
-        <NInput v-model:value="password" type="password" placeholder="新密码" />
-        <NInput v-model:value="password2" type="password" placeholder="确认密码" />
-        <NButton type="primary" :loading="isLoading" @click="changePassword"> 修改密码 </NButton>
+        <NInput
+          v-model:value="password"
+          type="password"
+          placeholder="新密码"
+        />
+        <NInput
+          v-model:value="password2"
+          type="password"
+          placeholder="确认密码"
+        />
+        <NButton
+          type="primary"
+          :loading="isLoading"
+          @click="changePassword"
+        >
+          修改密码
+        </NButton>
       </NSpace>
     </NCard>
   </NLayoutContent>

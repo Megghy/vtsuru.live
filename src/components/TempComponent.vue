@@ -20,8 +20,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpin v-if="($route.query.token || cookie) && accountInfo.id < 1" style="margin: 0 auto;" />
-  <div v-else style="height: 100vh">
-    <slot></slot>
+  <NSpin
+    v-if="($route.query.token || cookie) && accountInfo.id < 1"
+    style="margin: 0 auto;"
+  />
+  <div
+    v-else
+    style="height: 100vh"
+  >
+    <slot />
   </div>
 </template>

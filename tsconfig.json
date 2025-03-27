@@ -12,7 +12,7 @@
     "allowJs": false,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["node"],
+    "types": ["node", "vue-vine/types/macros"],
     "paths": {
       "@/*": ["src/*"]
     },
@@ -27,7 +27,7 @@
     "env.d.ts",
     "default.d.ts",
     "src/data/chat/ChatClientDirectOpenLive.js",
-    "src/data/chat/models.js"
+    "src/data/chat/models.js",
   ],
   "exclude": ["node_modules"]
 }

@@ -33,7 +33,11 @@ onUnmounted(() => {
     <RouterView v-slot="{ Component }">
       <KeepAlive>
         <Suspense>
-          <component :is="Component" :active :visible />
+          <component
+            :is="Component"
+            :active
+            :visible
+          />
           <template #fallback>
             <NSpin show />
           </template>

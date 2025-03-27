@@ -54,12 +54,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lottery-background" v-bind="$attrs">
-    <p class="lottery-header">抽奖</p>
-    <NDivider v-if="result.type == OpenLiveLotteryType.Waiting" class="lottery-divider">
-      <p class="lottery-header-count">已有 {{ users?.length ?? 0 }} 人</p>
+  <div
+    class="lottery-background"
+    v-bind="$attrs"
+  >
+    <p class="lottery-header">
+      抽奖
+    </p>
+    <NDivider
+      v-if="result.type == OpenLiveLotteryType.Waiting"
+      class="lottery-divider"
+    >
+      <p class="lottery-header-count">
+        已有 {{ users?.length ?? 0 }} 人
+      </p>
     </NDivider>
-    <div class="lottery-content" ref="listContainerRef">
+    <div
+      ref="listContainerRef"
+      class="lottery-content"
+    >
       <template v-if="users.length > 0">
         <Vue3Marquee
           v-if="result.type == OpenLiveLotteryType.Waiting"
@@ -69,25 +82,38 @@ onUnmounted(() => {
           :style="`height: ${height}px;`"
         >
           <span
-            class="lottery-list-item"
-            :id="index.toString()"
             v-for="(user, index) in users"
+            :id="index.toString()"
             :key="user.uId"
+            class="lottery-list-item"
             style="height: 50px"
           >
-            <img class="lottery-avatar" :src="user.avatar + '@30h'" referrerpolicy="no-referrer" />
+            <img
+              class="lottery-avatar"
+              :src="user.avatar + '@30h'"
+              referrerpolicy="no-referrer"
+            >
             <div>
               <p class="lottery-name">{{ user.name }}</p>
             </div>
           </span>
         </Vue3Marquee>
       </template>
-      <div v-else style="position: relative; top: 20%">
+      <div
+        v-else
+        style="position: relative; top: 20%"
+      >
         <NEmpty description="暂无人参与" />
       </div>
       <template v-if="result.type == OpenLiveLotteryType.Result">
-        <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">结果</p>
-        <Vue3Marquee v-if="100 * result.resultUsers.length > width" justify="center" style="height: 100px">
+        <p style="text-align: center; font-size: 20px; margin: 0; font-weight: bold; color: #eeabab">
+          结果
+        </p>
+        <Vue3Marquee
+          v-if="100 * result.resultUsers.length > width"
+          justify="center"
+          style="height: 100px"
+        >
           <div
             v-for="user in result.resultUsers"
             :key="user.uId"
@@ -111,7 +137,7 @@ onUnmounted(() => {
                 style="border-radius: 50%"
                 :src="user.avatar + '@50h_50w'"
                 referrerpolicy="no-referrer"
-              />
+              >
               <NText style="font-size: large">
                 {{ user.name }}
               </NText>
@@ -141,7 +167,7 @@ onUnmounted(() => {
               style="border-radius: 50%"
               :src="user.avatar + '@50h_50w'"
               referrerpolicy="no-referrer"
-            />
+            >
             <NText style="font-size: large; margin-top: 10px">
               {{ user.name }}
             </NText>

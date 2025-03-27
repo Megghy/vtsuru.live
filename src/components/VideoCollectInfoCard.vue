@@ -38,34 +38,61 @@ function onClick() {
 </script>
 
 <template>
-  <NCard size="small" style="width: 100%; max-width: 70vw; cursor: pointer" @click="onClick" embedded hoverable :bordered="bordered">
+  <NCard
+    size="small"
+    style="width: 100%; max-width: 70vw; cursor: pointer"
+    embedded
+    hoverable
+    :bordered="bordered"
+    @click="onClick"
+  >
     <template #header>
       <NSpace :size="5">
-        <NTag v-if="item.isFinish" size="small"> 已结束 </NTag>
-        <NTag v-else type="success" size="small"> 进行中 </NTag>
+        <NTag
+          v-if="item.isFinish"
+          size="small"
+        >
+          已结束
+        </NTag>
+        <NTag
+          v-else
+          type="success"
+          size="small"
+        >
+          进行中
+        </NTag>
         <NDivider vertical />
         {{ item.name }}
       </NSpace>
     </template>
     <template #header-extra>
-      <slot name="header-extra"></slot>
+      <slot name="header-extra" />
     </template>
-    <NText depth="3" style="font-size: 13px">
+    <NText
+      depth="3"
+      style="font-size: 13px"
+    >
       <NTime :time="item.createAt" />
     </NText>
-    <br />
-    <NText depth="3" style="font-size: 13px">
+    <br>
+    <NText
+      depth="3"
+      style="font-size: 13px"
+    >
       结束:
       <NTime :time="item.endAt" />
     </NText>
-    <br />
+    <br>
     <NText depth="3">
       <NEllipsis>
         {{ item.description }}
       </NEllipsis>
     </NText>
     <template #footer>
-      <NSpace :size="5" align="center">
+      <NSpace
+        :size="5"
+        align="center"
+      >
         <NSpace>
           <NIcon :component="NumberRow24Regular" />
           <NTooltip>
@@ -82,7 +109,10 @@ function onClick() {
             <NTooltip>
               <template #trigger>
                 <NText depth="3">
-                  剩余 <NCountdown :duration="item.endAt - Date.now()" :render="renderCountdown" />
+                  剩余 <NCountdown
+                    :duration="item.endAt - Date.now()"
+                    :render="renderCountdown"
+                  />
                 </NText>
               </template>
               结束于 <NTime :time="item.endAt" />

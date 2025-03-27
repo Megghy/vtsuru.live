@@ -37,7 +37,15 @@ onMounted(async () => {
 
 <template>
   <NSpin :show="isLoading">
-    <NEmpty v-if="orders.length == 0" description="暂无订单" />
-    <PointOrderCard v-else :order="orders" :loading="isLoading" type="user" />
+    <NEmpty
+      v-if="orders.length == 0"
+      description="暂无订单"
+    />
+    <PointOrderCard
+      v-else
+      :order="orders"
+      :loading="isLoading"
+      type="user"
+    />
   </NSpin>
 </template>

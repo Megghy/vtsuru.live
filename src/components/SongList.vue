@@ -668,57 +668,152 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard embedded size="small">
+  <NCard
+    embedded
+    size="small"
+  >
     <NSpace>
-      <NInput placeholder="搜索歌曲" v-model:value="searchMusicKeyword" size="small" style="width: 150px" />
-      <NSelect placeholder="选择歌手" v-model:value="authorColumn.filterOptionValue" :options="authorsOptions" clearable
-        filterable size="small" style="width: 150px" />
-      <NButton v-if="authorColumn.filterOptionValue" type="error" @click="authorColumn.filterOptionValue = null"
-        size="small">
+      <NInput
+        v-model:value="searchMusicKeyword"
+        placeholder="搜索歌曲"
+        size="small"
+        style="width: 150px"
+      />
+      <NSelect
+        v-model:value="authorColumn.filterOptionValue"
+        placeholder="选择歌手"
+        :options="authorsOptions"
+        clearable
+        filterable
+        size="small"
+        style="width: 150px"
+      />
+      <NButton
+        v-if="authorColumn.filterOptionValue"
+        type="error"
+        size="small"
+        @click="authorColumn.filterOptionValue = null"
+      >
         清除歌手选择
       </NButton>
     </NSpace>
   </NCard>
-  <NDivider style="margin: 5px 0 5px 0"> 共 {{ songsComputed.length }} 首 </NDivider>
+  <NDivider style="margin: 5px 0 5px 0">
+    共 {{ songsComputed.length }} 首
+  </NDivider>
   <Transition>
-    <div v-if="playingSong" class="song-list">
-      <SongPlayer :song="playingSong" v-model:is-lrc-loading="isLrcLoading" />
+    <div
+      v-if="playingSong"
+      class="song-list"
+    >
+      <SongPlayer
+        v-model:is-lrc-loading="isLrcLoading"
+        :song="playingSong"
+      />
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>
-  <NButton :disabled="selectedColumn.length <= 1 && isSelf" type="info" @click="showBatchModal = true" size="small">
+  <NButton
+    :disabled="selectedColumn.length <= 1 && isSelf"
+    type="info"
+    size="small"
+    @click="showBatchModal = true"
+  >
     批量编辑
   </NButton>
   <NDivider style="margin: 5px 0 5px 0" />
-  <NDataTable v-model:checked-row-keys="selectedColumn" size="small" :columns="columns" :data="songsComputed"
+  <NDataTable
+    v-model:checked-row-keys="selectedColumn"
+    size="small"
+    :columns="columns"
+    :data="songsComputed"
     :pagination="{
       itemCount: songsInternal.length,
       defaultPageSize: 25,
       pageSizes: [25, 50, 200],
       size: 'small',
       showSizePicker: true,
-    }" />
-  <NModal v-model:show="showModal" style="max-width: 600px" preset="card">
-    <template #header> 修改信息 </template>
-    <NForm ref="formRef" :rules="updateSongRules" :model="updateSongModel" :render-cell="renderCell">
-      <NFormItem path="name" label="名称">
-        <NInput v-model:value="updateSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称" />
+    }"
+  />
+  <NModal
+    v-model:show="showModal"
+    style="max-width: 600px"
+    preset="card"
+  >
+    <template #header>
+      修改信息
+    </template>
+    <NForm
+      ref="formRef"
+      :rules="updateSongRules"
+      :model="updateSongModel"
+      :render-cell="renderCell"
+    >
+      <NFormItem
+        path="name"
+        label="名称"
+      >
+        <NInput
+          v-model:value="updateSongModel.name"
+          autosize
+          style="min-width: 200px"
+          placeholder="就是歌曲名称"
+        />
       </NFormItem>
-      <NFormItem path="author" label="作者">
-        <NSelect v-model:value="updateSongModel.author" filterable multiple tag placeholder="输入，按回车确认"
-          :options="authorsOptions" />
+      <NFormItem
+        path="author"
+        label="作者"
+      >
+        <NSelect
+          v-model:value="updateSongModel.author"
+          filterable
+          multiple
+          tag
+          placeholder="输入，按回车确认"
+          :options="authorsOptions"
+        />
       </NFormItem>
-      <NFormItem path="description" label="备注">
-        <NInput v-model:value="updateSongModel.description" placeholder="可选" :maxlength="250" show-count autosize
-          style="min-width: 300px" clearable />
+      <NFormItem
+        path="description"
+        label="备注"
+      >
+        <NInput
+          v-model:value="updateSongModel.description"
+          placeholder="可选"
+          :maxlength="250"
+          show-count
+          autosize
+          style="min-width: 300px"
+          clearable
+        />
       </NFormItem>
-      <NFormItem path="language" label="语言">
-        <NSelect v-model:value="updateSongModel.language" filterable multiple clearable tag placeholder="可选，输入后按回车新增"
-          :options="languageSelectOption" />
+      <NFormItem
+        path="language"
+        label="语言"
+      >
+        <NSelect
+          v-model:value="updateSongModel.language"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption"
+        />
       </NFormItem>
-      <NFormItem path="tags" label="标签">
-        <NSelect v-model:value="updateSongModel.tags" filterable multiple clearable tag placeholder="可选，按回车确认"
-          :options="tagsSelectOption" />
+      <NFormItem
+        path="tags"
+        label="标签"
+      >
+        <NSelect
+          v-model:value="updateSongModel.tags"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，按回车确认"
+          :options="tagsSelectOption"
+        />
       </NFormItem>
       <NFormItem path="options">
         <template #label>
@@ -731,7 +826,9 @@ onMounted(() => {
           </NTooltip>
         </template>
         <NSpace vertical>
-          <NCheckbox :checked="updateSongModel.options != undefined" @update:checked="(checked: boolean) => {
+          <NCheckbox
+            :checked="updateSongModel.options != undefined"
+            @update:checked="(checked: boolean) => {
               updateSongModel.options = checked
                 ? ({
                   needJianzhang: false,
@@ -740,32 +837,51 @@ onMounted(() => {
                 } as SongRequestOption)
                 : undefined
             }
-            ">
+            "
+          >
             是否启用
           </NCheckbox>
           <template v-if="updateSongModel.options != undefined">
             <NSpace>
-              <NCheckbox v-model:checked="updateSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
-              <NCheckbox v-model:checked="updateSongModel.options.needTidu"> 需要提督 </NCheckbox>
-              <NCheckbox v-model:checked="updateSongModel.options.needZongdu"> 需要总督 </NCheckbox>
+              <NCheckbox v-model:checked="updateSongModel.options.needJianzhang">
+                需要舰长
+              </NCheckbox>
+              <NCheckbox v-model:checked="updateSongModel.options.needTidu">
+                需要提督
+              </NCheckbox>
+              <NCheckbox v-model:checked="updateSongModel.options.needZongdu">
+                需要总督
+              </NCheckbox>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox :checked="updateSongModel.options.scMinPrice != undefined" @update:checked="(checked: boolean) => {
+              <NCheckbox
+                :checked="updateSongModel.options.scMinPrice != undefined"
+                @update:checked="(checked: boolean) => {
                   if (updateSongModel.options) updateSongModel.options.scMinPrice = checked ? 30 : undefined
                 }
-                ">
+                "
+              >
                 需要SC
               </NCheckbox>
-              <NInputGroup v-if="updateSongModel.options?.scMinPrice" style="width: 200px">
+              <NInputGroup
+                v-if="updateSongModel.options?.scMinPrice"
+                style="width: 200px"
+              >
                 <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-                <NInputNumber v-model:value="updateSongModel.options.scMinPrice" min="30" />
+                <NInputNumber
+                  v-model:value="updateSongModel.options.scMinPrice"
+                  min="30"
+                />
               </NInputGroup>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox :checked="updateSongModel.options.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
+              <NCheckbox
+                :checked="updateSongModel.options.fanMedalMinLevel != undefined"
+                @update:checked="(checked: boolean) => {
                   if (updateSongModel.options) updateSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
                 }
-                ">
+                "
+              >
                 需要粉丝牌
                 <NTooltip>
                   <template #trigger>
@@ -774,54 +890,133 @@ onMounted(() => {
                   这个即使不开也会遵循全局点歌设置的粉丝牌等级
                 </NTooltip>
               </NCheckbox>
-              <NInputGroup v-if="updateSongModel.options?.fanMedalMinLevel" style="width: 200px">
+              <NInputGroup
+                v-if="updateSongModel.options?.fanMedalMinLevel"
+                style="width: 200px"
+              >
                 <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-                <NInputNumber v-model:value="updateSongModel.options.fanMedalMinLevel" min="0" />
+                <NInputNumber
+                  v-model:value="updateSongModel.options.fanMedalMinLevel"
+                  min="0"
+                />
               </NInputGroup>
             </NSpace>
           </template>
         </NSpace>
       </NFormItem>
-      <NFormItem path="url" label="链接">
-        <NInput v-model:value="updateSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
-          :disabled="updateSongModel.from != SongFrom.Custom" />
+      <NFormItem
+        path="url"
+        label="链接"
+      >
+        <NInput
+          v-model:value="updateSongModel.url"
+          placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
+          :disabled="updateSongModel.from != SongFrom.Custom"
+        />
       </NFormItem>
     </NForm>
     <NDivider style="margin: 10px" />
-    <NButton @click="updateSong" type="success" :loading="isLoading"> 更新 </NButton>
+    <NButton
+      type="success"
+      :loading="isLoading"
+      @click="updateSong"
+    >
+      更新
+    </NButton>
   </NModal>
-  <NModal v-model:show="showBatchModal" preset="card" :title="`批量编辑 | 已选择: ${selectedColumn.length}`"
-    style="max-width: 600px">
+  <NModal
+    v-model:show="showBatchModal"
+    preset="card"
+    :title="`批量编辑 | 已选择: ${selectedColumn.length}`"
+    style="max-width: 600px"
+  >
     <NTabs>
-      <NTabPane name="delete" tab="删除">
+      <NTabPane
+        name="delete"
+        tab="删除"
+      >
         <NPopconfirm @positive-click="delBatchSong">
           <template #trigger>
-            <NButton type="error"> 批量删除 </NButton>
+            <NButton type="error">
+              批量删除
+            </NButton>
           </template>
           <span> 确定删除 {{ selectedColumn.length }} 首曲目吗？ </span>
         </NPopconfirm>
       </NTabPane>
-      <NTabPane name="author" tab="作者">
-        <NSelect v-model:value="batchUpdate_Author" filterable multiple tag placeholder="输入后按回车新增"
-          :options="authorsOptions" />
+      <NTabPane
+        name="author"
+        tab="作者"
+      >
+        <NSelect
+          v-model:value="batchUpdate_Author"
+          filterable
+          multiple
+          tag
+          placeholder="输入后按回车新增"
+          :options="authorsOptions"
+        />
         <NDivider />
-        <NButton @click="batchUpdateAuthor" type="success" :loading="isLoading"> 更新 </NButton>
+        <NButton
+          type="success"
+          :loading="isLoading"
+          @click="batchUpdateAuthor"
+        >
+          更新
+        </NButton>
       </NTabPane>
-      <NTabPane name="tag" tab="标签">
-        <NSelect v-model:value="batchUpdate_Tag" filterable multiple clearable tag placeholder="可选，按回车确认"
-          :options="tagsSelectOption" />
+      <NTabPane
+        name="tag"
+        tab="标签"
+      >
+        <NSelect
+          v-model:value="batchUpdate_Tag"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，按回车确认"
+          :options="tagsSelectOption"
+        />
         <NDivider />
-        <NButton @click="batchUpdateTag" type="success" :loading="isLoading"> 更新 </NButton>
+        <NButton
+          type="success"
+          :loading="isLoading"
+          @click="batchUpdateTag"
+        >
+          更新
+        </NButton>
       </NTabPane>
-      <NTabPane name="language" tab="语言">
-        <NSelect v-model:value="batchUpdate_Language" filterable multiple clearable tag placeholder="可选，输入后按回车新增"
-          :options="languageSelectOption" />
+      <NTabPane
+        name="language"
+        tab="语言"
+      >
+        <NSelect
+          v-model:value="batchUpdate_Language"
+          filterable
+          multiple
+          clearable
+          tag
+          placeholder="可选，输入后按回车新增"
+          :options="languageSelectOption"
+        />
         <NDivider />
-        <NButton @click="batchUpdateLanguage" type="success" :loading="isLoading"> 更新 </NButton>
+        <NButton
+          type="success"
+          :loading="isLoading"
+          @click="batchUpdateLanguage"
+        >
+          更新
+        </NButton>
       </NTabPane>
-      <NTabPane name="option" tab="点歌选项">
+      <NTabPane
+        name="option"
+        tab="点歌选项"
+      >
         <NSpace vertical>
-          <NCheckbox :checked="batchUpdate_Option != undefined" @update:checked="(checked: boolean) => {
+          <NCheckbox
+            :checked="batchUpdate_Option != undefined"
+            @update:checked="(checked: boolean) => {
               batchUpdate_Option = checked
                 ? ({
                   needJianzhang: false,
@@ -830,32 +1025,51 @@ onMounted(() => {
                 } as SongRequestOption)
                 : undefined
             }
-            ">
+            "
+          >
             是否启用
           </NCheckbox>
           <template v-if="batchUpdate_Option != undefined">
             <NSpace>
-              <NCheckbox v-model:checked="batchUpdate_Option.needJianzhang"> 需要舰长 </NCheckbox>
-              <NCheckbox v-model:checked="batchUpdate_Option.needTidu"> 需要提督 </NCheckbox>
-              <NCheckbox v-model:checked="batchUpdate_Option.needZongdu"> 需要总督 </NCheckbox>
+              <NCheckbox v-model:checked="batchUpdate_Option.needJianzhang">
+                需要舰长
+              </NCheckbox>
+              <NCheckbox v-model:checked="batchUpdate_Option.needTidu">
+                需要提督
+              </NCheckbox>
+              <NCheckbox v-model:checked="batchUpdate_Option.needZongdu">
+                需要总督
+              </NCheckbox>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox :checked="batchUpdate_Option.scMinPrice != undefined" @update:checked="(checked: boolean) => {
+              <NCheckbox
+                :checked="batchUpdate_Option.scMinPrice != undefined"
+                @update:checked="(checked: boolean) => {
                   if (batchUpdate_Option) batchUpdate_Option.scMinPrice = checked ? 30 : undefined
                 }
-                ">
+                "
+              >
                 需要SC
               </NCheckbox>
-              <NInputGroup v-if="batchUpdate_Option?.scMinPrice" style="width: 200px">
+              <NInputGroup
+                v-if="batchUpdate_Option?.scMinPrice"
+                style="width: 200px"
+              >
                 <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-                <NInputNumber v-model:value="batchUpdate_Option.scMinPrice" min="30" />
+                <NInputNumber
+                  v-model:value="batchUpdate_Option.scMinPrice"
+                  min="30"
+                />
               </NInputGroup>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox :checked="batchUpdate_Option.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
+              <NCheckbox
+                :checked="batchUpdate_Option.fanMedalMinLevel != undefined"
+                @update:checked="(checked: boolean) => {
                   if (batchUpdate_Option) batchUpdate_Option.fanMedalMinLevel = checked ? 5 : undefined
                 }
-                ">
+                "
+              >
                 需要粉丝牌
                 <NTooltip>
                   <template #trigger>
@@ -864,15 +1078,27 @@ onMounted(() => {
                   这个即使不开也会遵循全局点歌设置的粉丝牌等级
                 </NTooltip>
               </NCheckbox>
-              <NInputGroup v-if="batchUpdate_Option?.fanMedalMinLevel" style="width: 200px">
+              <NInputGroup
+                v-if="batchUpdate_Option?.fanMedalMinLevel"
+                style="width: 200px"
+              >
                 <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-                <NInputNumber v-model:value="batchUpdate_Option.fanMedalMinLevel" min="0" />
+                <NInputNumber
+                  v-model:value="batchUpdate_Option.fanMedalMinLevel"
+                  min="0"
+                />
               </NInputGroup>
             </NSpace>
           </template>
         </NSpace>
         <NDivider />
-        <NButton @click="batchUpdateOption" type="success" :loading="isLoading"> 更新 </NButton>
+        <NButton
+          type="success"
+          :loading="isLoading"
+          @click="batchUpdateOption"
+        >
+          更新
+        </NButton>
       </NTabPane>
     </NTabs>
   </NModal>

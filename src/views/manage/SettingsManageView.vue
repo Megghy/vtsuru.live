@@ -532,67 +532,145 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NCard title="设置" :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`">
+  <NCard
+    title="设置"
+    :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`"
+  >
     <NSpin :show="isSaving">
-      <NTabs v-model:value="selectedTab" :default-value="$route.query.setting?.toString() ?? 'general'">
-        <NTabPane tab="常规" name="general" display-directive="show:lazy">
-          <NDivider style="margin: 0"> 启用功能 </NDivider>
-          <NCheckboxGroup v-model:value="accountInfo.settings.enableFunctions" @update:value="SaveComboGroupSetting">
-            <NCheckbox :value="FunctionTypes.SongList"> 歌单 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.QuestionBox"> 提问箱(棉花糖 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Schedule"> 日程 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.SongRequest"> 点歌 </NCheckbox>
-            <NCheckbox :value="FunctionTypes.Queue"> 排队 </NCheckbox>
+      <NTabs
+        v-model:value="selectedTab"
+        :default-value="$route.query.setting?.toString() ?? 'general'"
+      >
+        <NTabPane
+          tab="常规"
+          name="general"
+          display-directive="show:lazy"
+        >
+          <NDivider style="margin: 0">
+            启用功能
+          </NDivider>
+          <NCheckboxGroup
+            v-model:value="accountInfo.settings.enableFunctions"
+            @update:value="SaveComboGroupSetting"
+          >
+            <NCheckbox :value="FunctionTypes.SongList">
+              歌单
+            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.QuestionBox">
+              提问箱(棉花糖
+            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.Schedule">
+              日程
+            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.SongRequest">
+              点歌
+            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.Queue">
+              排队
+            </NCheckbox>
           </NCheckboxGroup>
           <NDivider> 通知 </NDivider>
           <NSpace>
-            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="SaveComboSetting">
+            <NCheckbox
+              v-model:checked="accountInfo.settings.sendEmail.recieveQA"
+              @update:checked="SaveComboSetting"
+            >
               收到新提问时发送邮件
             </NCheckbox>
-            <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
-              @update:checked="SaveComboSetting">
+            <NCheckbox
+              v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
+              @update:checked="SaveComboSetting"
+            >
               提问收到回复时发送邮件
             </NCheckbox>
           </NSpace>
           <NDivider> 提问箱 </NDivider>
           <NSpace>
-            <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-              @update:checked="SaveComboSetting">
+            <NCheckbox
+              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+              @update:checked="SaveComboSetting"
+            >
               允许未注册用户提问
             </NCheckbox>
           </NSpace>
         </NTabPane>
-        <NTabPane tab="主页" name="index" display-directive="show:lazy">
+        <NTabPane
+          tab="主页"
+          name="index"
+          display-directive="show:lazy"
+        >
           <NDivider> 常规 </NDivider>
-          <NCheckbox v-model:checked="accountInfo.settings.index.allowDisplayInIndex" type="textarea" @update:checked="updateUserIndexSettings">
+          <NCheckbox
+            v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
+            type="textarea"
+            @update:checked="updateUserIndexSettings"
+          >
             允许显示在网站主页
           </NCheckbox>
-          <br /><br />
+          <br><br>
           <NDivider> 通知 </NDivider>
-          <NInput v-model:value="accountInfo.settings.index.notification" type="textarea" />
-          <br /><br />
-          <NButton type="primary" @click="updateIndexSettings"> 保存 </NButton>
+          <NInput
+            v-model:value="accountInfo.settings.index.notification"
+            type="textarea"
+          />
+          <br><br>
+          <NButton
+            type="primary"
+            @click="updateIndexSettings"
+          >
+            保存
+          </NButton>
           <NDivider> 展示视频 </NDivider>
-          <NButton type="primary" @click="showAddVideoModal = true"> 添加视频 </NButton>
-          <br /><br />
+          <NButton
+            type="primary"
+            @click="showAddVideoModal = true"
+          >
+            添加视频
+          </NButton>
+          <br><br>
           <NEmpty v-if="accountInfo.settings.index.videos.length == 0" />
           <NFlex v-else>
-            <NCard v-for="item in indexDisplayInfo?.videos ?? []" :key="item.id" style="width: 300px">
+            <NCard
+              v-for="item in indexDisplayInfo?.videos ?? []"
+              :key="item.id"
+              style="width: 300px"
+            >
               <SimpleVideoCard :video="item" />
               <template #footer>
-                <NButton type="warning" @click="removeVideo(item.id)"> 删除 </NButton>
+                <NButton
+                  type="warning"
+                  @click="removeVideo(item.id)"
+                >
+                  删除
+                </NButton>
               </template>
             </NCard>
           </NFlex>
           <NDivider> 其他链接 </NDivider>
-          <NButton type="primary" @click="showAddLinkModal = true"> 添加链接 </NButton>
-          <br /><br />
+          <NButton
+            type="primary"
+            @click="showAddLinkModal = true"
+          >
+            添加链接
+          </NButton>
+          <br><br>
           <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length == 0" />
-          <NFlex v-else :key="linkKey">
-            <NFlex v-for="item in Object.entries(indexDisplayInfo?.links ?? {})" :key="item[0]" align="center">
+          <NFlex
+            v-else
+            :key="linkKey"
+          >
+            <NFlex
+              v-for="item in Object.entries(indexDisplayInfo?.links ?? {})"
+              :key="item[0]"
+              align="center"
+            >
               <NTooltip>
                 <template #trigger>
-                  <NTag :bordered="false" size="small" type="info">
+                  <NTag
+                    :bordered="false"
+                    size="small"
+                    type="info"
+                  >
                     {{ item[0] }}
                   </NTag>
                 </template>
@@ -600,7 +678,10 @@ onMounted(async () => {
               </NTooltip>
               <NPopconfirm @positive-click="removeLink(item[0])">
                 <template #trigger>
-                  <NButton type="error" text>
+                  <NButton
+                    type="error"
+                    text
+                  >
                     <template #icon>
                       <NIcon :component="Delete24Regular" />
                     </template>
@@ -610,17 +691,40 @@ onMounted(async () => {
               </NPopconfirm>
             </NFlex>
           </NFlex>
-          <NModal v-model:show="showAddLinkModal" :show-icon="false" preset="dialog" title="添加链接">
+          <NModal
+            v-model:show="showAddLinkModal"
+            :show-icon="false"
+            preset="dialog"
+            title="添加链接"
+          >
             <NFlex vertical>
-              <NInput v-model:value="addLinkName" placeholder="链接名称" />
-              <NInput v-model:value="addLinkUrl" placeholder="链接地址" />
-              <NButton type="primary" @click="addLink"> 添加 </NButton>
+              <NInput
+                v-model:value="addLinkName"
+                placeholder="链接名称"
+              />
+              <NInput
+                v-model:value="addLinkUrl"
+                placeholder="链接地址"
+              />
+              <NButton
+                type="primary"
+                @click="addLink"
+              >
+                添加
+              </NButton>
             </NFlex>
           </NModal>
         </NTabPane>
-        <NTabPane tab="黑名单" name="blacklist" display-directive="show:lazy">
+        <NTabPane
+          tab="黑名单"
+          name="blacklist"
+          display-directive="show:lazy"
+        >
           <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
-            <NListItem v-for="item in Object.entries(accountInfo.biliBlackList)" :key="item[0]">
+            <NListItem
+              v-for="item in Object.entries(accountInfo.biliBlackList)"
+              :key="item[0]"
+            >
               <NSpace align="center">
                 <NText>
                   {{ item[1] }}
@@ -628,12 +732,21 @@ onMounted(async () => {
                 <NText depth="3">
                   {{ item[0] }}
                 </NText>
-                <NButton type="error" @click="unblockBiliUser(Number(item[0]))" size="small"> 移除 </NButton>
+                <NButton
+                  type="error"
+                  size="small"
+                  @click="unblockBiliUser(Number(item[0]))"
+                >
+                  移除
+                </NButton>
               </NSpace>
             </NListItem>
           </NList>
           <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
-            <NListItem v-for="item in accountInfo.blackList" :key="item.id">
+            <NListItem
+              v-for="item in accountInfo.blackList"
+              :key="item.id"
+            >
               <NSpace align="center">
                 <NText>
                   {{ item.name }}
@@ -641,33 +754,69 @@ onMounted(async () => {
                 <NText depth="3">
                   {{ item.id }}
                 </NText>
-                <NButton type="error" @click="unblockUser(Number(item.id))" size="small"> 移除 </NButton>
+                <NButton
+                  type="error"
+                  size="small"
+                  @click="unblockUser(Number(item.id))"
+                >
+                  移除
+                </NButton>
               </NSpace>
             </NListItem>
           </NList>
           <NEmpty v-else />
         </NTabPane>
-        <NTabPane tab="模板" name="template" display-directive="show:lazy">
-          <NAlert type="success"> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </NAlert>
-          <br />
+        <NTabPane
+          tab="模板"
+          name="template"
+          display-directive="show:lazy"
+        >
+          <NAlert type="success">
+            如果有合适的设计稿或者想法可以给我说然后做成模板捏
+          </NAlert>
+          <br>
           <NSpace vertical>
             <NSpace align="center">
               页面
-              <NSelect :options="templateOptions" v-model:value="selectedOption" style="width: 150px" />
+              <NSelect
+                v-model:value="selectedOption"
+                :options="templateOptions"
+                style="width: 150px"
+              />
             </NSpace>
-            <NDivider style="margin: 5px 0 5px 0" title-placement="left"> 模板 </NDivider>
+            <NDivider
+              style="margin: 5px 0 5px 0"
+              title-placement="left"
+            >
+              模板
+            </NDivider>
             <div>
               <NSpace>
-                <NSelect style="width: 150px" :options="selectedTemplateData.Options"
-                  v-model:value="selectedTemplateData.Selected" />
+                <NSelect
+                  v-model:value="selectedTemplateData.Selected"
+                  style="width: 150px"
+                  :options="selectedTemplateData.Options"
+                />
                 <component :is="buttonGroup" />
               </NSpace>
               <NDivider />
-              <Transition name="fade" mode="out-in">
-                <div v-if="selectedComponent" :key="selectedTemplateData.Selected">
-                  <component ref="dynamicConfigRef" @vue:mounted="getTemplateConfig" :is="selectedComponent"
-                    :user-info="accountInfo" :bili-info="biliUserInfo" :data="selectedTemplateData.Data"
-                    :config="selectedTemplateData.Config" />
+              <Transition
+                name="fade"
+                mode="out-in"
+              >
+                <div
+                  v-if="selectedComponent"
+                  :key="selectedTemplateData.Selected"
+                >
+                  <component
+                    :is="selectedComponent"
+                    ref="dynamicConfigRef"
+                    :user-info="accountInfo"
+                    :bili-info="biliUserInfo"
+                    :data="selectedTemplateData.Data"
+                    :config="selectedTemplateData.Config"
+                    @vue:mounted="getTemplateConfig"
+                  />
                 </div>
               </Transition>
             </div>
@@ -676,15 +825,43 @@ onMounted(async () => {
       </NTabs>
     </NSpin>
   </NCard>
-  <NModal preset="card" v-model:show="settingModalVisiable" closable style="width: 600px; max-width: 90vw" title="模板设置">
+  <NModal
+    v-model:show="settingModalVisiable"
+    preset="card"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="模板设置"
+  >
     只是测试, 没用
-    <NSpin v-if="!selectedTemplateData.Config" show />
-    <DynamicForm v-else :key="selectedTemplateData.Selected" :configData="selectedTemplateData.Config"
-      :config="selectedTemplateConfig" />
+    <NSpin
+      v-if="!selectedTemplateData.Config"
+      show
+    />
+    <DynamicForm
+      v-else
+      :key="selectedTemplateData.Selected"
+      :config-data="selectedTemplateData.Config"
+      :config="selectedTemplateConfig"
+    />
   </NModal>
-  <NModal preset="card" v-model:show="showAddVideoModal" closable style="width: 600px; max-width: 90vw" title="添加视频">
-    <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
+  <NModal
+    v-model:show="showAddVideoModal"
+    preset="card"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="添加视频"
+  >
+    <NInput
+      v-model:value="addVideoUrl"
+      placeholder="请输入视频链接"
+    />
     <NDivider />
-    <NButton type="primary" @click="addVideo" :loading="isLoading"> 添加视频 </NButton>
+    <NButton
+      type="primary"
+      :loading="isLoading"
+      @click="addVideo"
+    >
+      添加视频
+    </NButton>
   </NModal>
 </template>

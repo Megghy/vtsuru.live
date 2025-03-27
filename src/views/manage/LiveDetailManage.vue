@@ -51,9 +51,15 @@ onActivated(async () => {
 </script>
 
 <template>
-  <NSpin v-if="isLoading" show />
+  <NSpin
+    v-if="isLoading"
+    show
+  />
   <template v-else>
-    <NButton @click="router.push({ name: 'manage-live' })" text>
+    <NButton
+      text
+      @click="router.push({ name: 'manage-live' })"
+    >
       {{ '< 返回' }}
     </NButton>
     <DanmakuContainer
@@ -71,6 +77,9 @@ onActivated(async () => {
       :item-range="100"
       :item-height="25"
     />
-    <NEmpty v-else description="无数据" />
+    <NEmpty
+      v-else
+      description="无数据"
+    />
   </template>
 </template>

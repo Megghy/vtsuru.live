@@ -51,9 +51,19 @@ onMounted(() => {
 <template>
   <NSpin :show="isLoading">
     <NCard size="small">
-      <NEmpty v-if="!currentUser.id" :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'" />
-      <NFlex v-else align="center">
-        <NAvatar round :src="getUserAvatarUrl(currentUser.id)" :img-props="{ referrerpolicy: 'no-referrer' }" />
+      <NEmpty
+        v-if="!currentUser.id"
+        :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'"
+      />
+      <NFlex
+        v-else
+        align="center"
+      >
+        <NAvatar
+          round
+          :src="getUserAvatarUrl(currentUser.id)"
+          :img-props="{ referrerpolicy: 'no-referrer' }"
+        />
         <NDivider vertical />
         <NText>
           {{ currentUser.name }}

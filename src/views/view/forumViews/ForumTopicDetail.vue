@@ -57,7 +57,6 @@ type PostReplyModel = {
 }
 
 const { biliInfo, userInfo } = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
 }>()
@@ -169,14 +168,32 @@ onMounted(async () => {
 </script>
 
 <template>
-  <template v-if="!topic.id"> </template>
+  <template v-if="!topic.id" />
   <template v-else>
-    <div size="small" embedded style="max-width: 1500px; margin: 0 auto">
+    <div
+      size="small"
+      embedded
+      style="max-width: 1500px; margin: 0 auto"
+    >
       <NBackTop />
-      <NBadge class="back-forum-badge" style="width: 100%; left: 0" type="info" :offset="[3, 3]">
+      <NBadge
+        class="back-forum-badge"
+        style="width: 100%; left: 0"
+        type="info"
+        :offset="[3, 3]"
+      >
         <NCard size="small">
-          <NFlex align="center" :wrap="false">
-            <NTag v-if="topic.isDeleted" type="warning" :bordered="false"> 已删除 </NTag>
+          <NFlex
+            align="center"
+            :wrap="false"
+          >
+            <NTag
+              v-if="topic.isDeleted"
+              type="warning"
+              :bordered="false"
+            >
+              已删除
+            </NTag>
             <NText style="font-size: large; font-weight: bold; text-align: center; width: 100%">
               <NEllipsis style="width: 100%">
                 {{ topic.title }}
@@ -187,9 +204,15 @@ onMounted(async () => {
         <template #value>
           <NTooltip>
             <template #trigger>
-              <NButton text @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })">
+              <NButton
+                text
+                @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
+              >
                 <template #icon>
-                  <NIcon :component="ArrowCircleLeft12Regular" color="white" />
+                  <NIcon
+                    :component="ArrowCircleLeft12Regular"
+                    color="white"
+                  />
                 </template>
               </NButton>
             </template>
@@ -197,9 +220,15 @@ onMounted(async () => {
           </NTooltip>
         </template>
       </NBadge>
-      <NCard content-style="padding: 0 12px 0 12px;" embedded>
+      <NCard
+        content-style="padding: 0 12px 0 12px;"
+        embedded
+      >
         <template #header>
-          <NFlex align="center" :size="5">
+          <NFlex
+            align="center"
+            :size="5"
+          >
             <NAvatar
               :src="VTSURU_API_URL + 'user-face/' + topic?.user?.id + '?size=64'"
               :img-props="{ referrerpolicy: 'no-referrer' }"
@@ -212,7 +241,10 @@ onMounted(async () => {
           <NTooltip>
             <template #trigger>
               <NText depth="3">
-                <NTime :time="topic.createAt" type="relative" />
+                <NTime
+                  :time="topic.createAt"
+                  type="relative"
+                />
               </NText>
             </template>
             <NTime :time="topic.createAt" />
@@ -228,7 +260,11 @@ onMounted(async () => {
           <NFlex>
             <NTooltip>
               <template #trigger>
-                <NButton size="small" :bordered="topic.isLiked" text>
+                <NButton
+                  size="small"
+                  :bordered="topic.isLiked"
+                  text
+                >
                   <template #icon>
                     <NIcon :component="Eye24Regular" />
                   </template>
@@ -241,6 +277,11 @@ onMounted(async () => {
               <template #trigger>
                 <NButton
                   size="small"
+                  :bordered="topic.isLiked"
+                  secondary
+                  :type="topic.isLiked ? 'primary' : 'default'"
+                  :loading="useForum.isLikeLoading"
+                  :disabled="!canOprate"
                   @click="
                     useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
                       if (success) {
@@ -249,14 +290,12 @@ onMounted(async () => {
                       }
                     })
                   "
-                  :bordered="topic.isLiked"
-                  secondary
-                  :type="topic.isLiked ? 'primary' : 'default'"
-                  :loading="useForum.isLikeLoading"
-                  :disabled="!canOprate"
                 >
                   <template #icon>
-                    <NIcon :component="topic.isLiked ? Heart : HeartOutline" :color="topic.isLiked ? '#dd484f' : ''" />
+                    <NIcon
+                      :component="topic.isLiked ? Heart : HeartOutline"
+                      :color="topic.isLiked ? '#dd484f' : ''"
+                    />
                   </template>
                   {{ topic.likeCount }}
                 </NButton>
@@ -265,7 +304,12 @@ onMounted(async () => {
             </NTooltip>
             <NTooltip>
               <template #trigger>
-                <NButton size="small" @click="showCommentModal = true" secondary :disabled="!canOprate">
+                <NButton
+                  size="small"
+                  secondary
+                  :disabled="!canOprate"
+                  @click="showCommentModal = true"
+                >
                   <template #icon>
                     <NIcon :component="Comment24Regular" />
                   </template>
@@ -274,12 +318,19 @@ onMounted(async () => {
               </template>
               评论
             </NTooltip>
-            <NFlex style="flex: 1" justify="end">
+            <NFlex
+              style="flex: 1"
+              justify="end"
+            >
               <NTooltip v-if="topic?.user?.id === accountInfo.id || topic.isAdmin">
                 <template #trigger>
                   <NPopconfirm @positive-click="delTopic(topic.id)">
                     <template #trigger>
-                      <NButton size="small" text :disabled="!canOprate">
+                      <NButton
+                        size="small"
+                        text
+                        :disabled="!canOprate"
+                      >
                         <template #icon>
                           <NIcon
                             :component="Delete24Filled"
@@ -297,9 +348,16 @@ onMounted(async () => {
                 <template #trigger>
                   <NPopconfirm @positive-click="restoreTopic(topic.id)">
                     <template #trigger>
-                      <NButton size="small" text :disabled="!canOprate">
+                      <NButton
+                        size="small"
+                        text
+                        :disabled="!canOprate"
+                      >
                         <template #icon>
-                          <NIcon :component="SyncCircleSharp" color="#7f7f7f" />
+                          <NIcon
+                            :component="SyncCircleSharp"
+                            color="#7f7f7f"
+                          />
                         </template>
                       </NButton>
                     </template>
@@ -311,12 +369,24 @@ onMounted(async () => {
             </NFlex>
           </NFlex>
         </template>
-        <div class="editor-content-view" v-html="topic.content"></div>
+        <div
+          class="editor-content-view"
+          v-html="topic.content"
+        />
       </NCard>
       <NDivider>
-        <NButton @click="showCommentModal = true" type="primary" :disabled="!canOprate">发送评论</NButton>
+        <NButton
+          type="primary"
+          :disabled="!canOprate"
+          @click="showCommentModal = true"
+        >
+          发送评论
+        </NButton>
       </NDivider>
-      <NFlex align="center" justify="center">
+      <NFlex
+        align="center"
+        justify="center"
+      >
         <NPagination
           v-if="comments && (comments?.data?.length ?? 0) > 0"
           v-model:page="pn"
@@ -326,15 +396,34 @@ onMounted(async () => {
           @update:page="refreshComments"
         />
       </NFlex>
-      <br />
-      <NEmpty v-if="!comments || !comments.data || comments.data.length === 0" description="暂无评论" />
-      <NList v-else hoverable bordered size="small">
-        <NListItem v-for="item in comments.data" :key="item.id">
-          <ForumCommentItem :item="item" :topic="topic" @delete="onDeleteComment" />
+      <br>
+      <NEmpty
+        v-if="!comments || !comments.data || comments.data.length === 0"
+        description="暂无评论"
+      />
+      <NList
+        v-else
+        hoverable
+        bordered
+        size="small"
+      >
+        <NListItem
+          v-for="item in comments.data"
+          :key="item.id"
+        >
+          <ForumCommentItem
+            :item="item"
+            :topic="topic"
+            @delete="onDeleteComment"
+          />
         </NListItem>
       </NList>
-      <br />
-      <NFlex v-if="(comments?.data?.length ?? 0) > 5" align="center" justify="center">
+      <br>
+      <NFlex
+        v-if="(comments?.data?.length ?? 0) > 5"
+        align="center"
+        justify="center"
+      >
         <NPagination
           v-if="comments && (comments?.data.length ?? 0) > 0"
           v-model:page="pn"
@@ -347,15 +436,41 @@ onMounted(async () => {
       <NDivider />
     </div>
   </template>
-  <NModal v-model:show="showCommentModal" preset="card" style="width: 1000px; max-width: 90vw; height: auto">
-    <template #header> 发送评论 </template>
-    <VEditor v-model:value="currentCommentContent.content" :max-length="1111" ref="editorRef" />
-    <NButton type="primary" @click="postComment" :loading="!token || useForum.isLoading"> 发布 </NButton>
+  <NModal
+    v-model:show="showCommentModal"
+    preset="card"
+    style="width: 1000px; max-width: 90vw; height: auto"
+  >
+    <template #header>
+      发送评论
+    </template>
+    <VEditor
+      ref="editorRef"
+      v-model:value="currentCommentContent.content"
+      :max-length="1111"
+    />
+    <NButton
+      type="primary"
+      :loading="!token || useForum.isLoading"
+      @click="postComment"
+    >
+      发布
+    </NButton>
   </NModal>
-  <NModal v-model:show="useForum.showReplyModal" preset="card" style="width: 1000px; max-width: 90vw; height: auto">
-    <template #header> 发送回复 </template>
+  <NModal
+    v-model:show="useForum.showReplyModal"
+    preset="card"
+    style="width: 1000px; max-width: 90vw; height: auto"
+  >
+    <template #header>
+      发送回复
+    </template>
     <template v-if="useForum.replyingReply">
-      <NCard size="small" title="正在回复" embedded>
+      <NCard
+        size="small"
+        title="正在回复"
+        embedded
+      >
         <ForumReplyItem
           v-if="useForum.replyingReply && useForum.replyingComment"
           :item="useForum.replyingReply"
@@ -374,9 +489,18 @@ onMounted(async () => {
       show-count
     />
     <NDivider />
-    <NButton type="primary" @click="postReply" :loading="!token || useForum.isLoading"> 发布 </NButton>
+    <NButton
+      type="primary"
+      :loading="!token || useForum.isLoading"
+      @click="postReply"
+    >
+      发布
+    </NButton>
   </NModal>
-  <TurnstileVerify ref="turnstile" v-model="token" />
+  <TurnstileVerify
+    ref="turnstile"
+    v-model="token"
+  />
 </template>
 
 <style>

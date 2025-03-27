@@ -83,27 +83,79 @@ onUnmounted(() => {
 <template>
   <NLayoutContent style="position: relative; height: 100vh">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
-      <NResult v-if="!table" status="404" title="指定收集表不存在" description="检查一下你输入的链接吧" />
-      <NCard v-else style="width: 500px; max-width: 90vw">
+      <NResult
+        v-if="!table"
+        status="404"
+        title="指定收集表不存在"
+        description="检查一下你输入的链接吧"
+      />
+      <NCard
+        v-else
+        style="width: 500px; max-width: 90vw"
+      >
         <template #header>
           视频征集
           <NDivider vertical />
-          <NButton text @click="$router.push({ name: 'user-index', params: { id: table.owner?.name } })">
-            <NText depth="3" style="font-size: 14px">{{ table.owner?.name }}</NText>
+          <NButton
+            text
+            @click="$router.push({ name: 'user-index', params: { id: table.owner?.name } })"
+          >
+            <NText
+              depth="3"
+              style="font-size: 14px"
+            >
+              {{ table.owner?.name }}
+            </NText>
           </NButton>
         </template>
-        <VideoCollectInfoCard :item="table" :canClick="false" from="user" />
+        <VideoCollectInfoCard
+          :item="table"
+          :can-click="false"
+          from="user"
+        />
         <NDivider />
-        <NAlert v-if="table.isFinish" type="error" title="该征集表已截止" />
-        <NSpace v-else vertical>
-          <NInput v-model:value="addModel.video" placeholder="B站视频链接或BVID" />
-          <NInput v-model:value="addModel.name" placeholder="(选填) 推荐人" />
-          <NInputNumber v-model:value="addModel.uid" placeholder="(选填) 推荐人UId" :show-button="false" />
-          <NInput v-model:value="addModel.description" placeholder="(选填) 推荐理由" />
-          <NButton @click="add" type="primary" :loading="isLoading || !token"> 推荐视频 </NButton>
+        <NAlert
+          v-if="table.isFinish"
+          type="error"
+          title="该征集表已截止"
+        />
+        <NSpace
+          v-else
+          vertical
+        >
+          <NInput
+            v-model:value="addModel.video"
+            placeholder="B站视频链接或BVID"
+          />
+          <NInput
+            v-model:value="addModel.name"
+            placeholder="(选填) 推荐人"
+          />
+          <NInputNumber
+            v-model:value="addModel.uid"
+            placeholder="(选填) 推荐人UId"
+            :show-button="false"
+          />
+          <NInput
+            v-model:value="addModel.description"
+            placeholder="(选填) 推荐理由"
+          />
+          <NButton
+            type="primary"
+            :loading="isLoading || !token"
+            @click="add"
+          >
+            推荐视频
+          </NButton>
         </NSpace>
       </NCard>
-      <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+      <VueTurnstile
+        ref="turnstile"
+        v-model="token"
+        :site-key="TURNSTILE_KEY"
+        theme="auto"
+        style="text-align: center"
+      />
     </div>
   </NLayoutContent>
 </template>

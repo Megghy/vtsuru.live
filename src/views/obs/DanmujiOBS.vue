@@ -1,24 +1,21 @@
 <script setup lang="ts">
+import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import MessageRender from './blivechat/MessageRender.vue';
-import { useDanmakuClient } from '@/store/useDanmakuClient';
 // @ts-ignore
 import * as constants from './blivechat/constants';
 // @ts-ignore
-import * as chatModels from '../../data/chat/models';
+import * as pronunciation from './blivechat/utils/pronunciation';
 // @ts-ignore
-import * as pronunciation from './blivechat/utils/pronunciation'
-// @ts-ignore
-import * as trie from './blivechat/utils/trie'
-import { EventModel } from '@/api/api-models';
 import { DownloadConfig, useAccount } from '@/api/account';
-import { useWebRTC } from '@/store/useRTC';
 import { QueryGetAPI } from '@/api/query';
-import { OPEN_LIVE_API_URL, VTSURU_API_URL } from '@/data/constants';
-import { CustomChart } from 'echarts/charts';
-import { useRoute } from 'vue-router';
-import { NAlert } from 'naive-ui';
+import { VTSURU_API_URL } from '@/data/constants';
 import { DanmakuInfo, GiftInfo, GuardInfo, SCInfo } from '@/data/DanmakuClients/OpenLiveClient';
+import { useWebRTC } from '@/store/useRTC';
+import { NAlert } from 'naive-ui';
+import { useRoute } from 'vue-router';
+// @ts-ignore
+import * as trie from './blivechat/utils/trie';
 
 export interface DanmujiConfig {
   minGiftPrice: number,
@@ -411,7 +408,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert v-if="!$route.query.token && isOBS" type="error"> 未携带token参数 </NAlert>
-  <MessageRender v-else ref="messageRender" :customCss="customCss" :showGiftName="config.showGiftName"
-    style="height: 100%; width: 100%" />
+  <NAlert
+    v-if="!$route.query.token && isOBS"
+    type="error"
+  >
+    未携带token参数
+  </NAlert>
+  <MessageRender
+    v-else
+    ref="messageRender"
+    :custom-css="customCss"
+    :show-gift-name="config.showGiftName"
+    style="height: 100%; width: 100%"
+  />
 </template>

@@ -100,20 +100,23 @@ defineExpose({
 </script>
 
 <template>
-  <div :class="{ 'dark-theme': isDarkMode }" style="border: 1px solid #ccc">
+  <div
+    :class="{ 'dark-theme': isDarkMode }"
+    style="border: 1px solid #ccc"
+  >
     <Toolbar
       ref="toolbarRef"
       style="border-bottom: 1px solid #ccc"
       :editor="editorRef"
-      :defaultConfig="toolbarConfig"
+      :default-config="toolbarConfig"
       :mode="mode"
     />
     <Editor
-      style="height: 500px; overflow-y: hidden"
       v-model="value"
-      :defaultConfig="editorConfig"
+      style="height: 500px; overflow-y: hidden"
+      :default-config="editorConfig"
       :mode="mode"
-      @onCreated="handleCreated"
+      @on-created="handleCreated"
     />
   </div>
 </template>

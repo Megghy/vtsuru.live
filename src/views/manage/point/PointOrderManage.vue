@@ -137,17 +137,35 @@ onMounted(async () => {
 
 <template>
   <NSpin :show="isLoading">
-    <NEmpty v-if="orders.length == 0" description="暂无订单"></NEmpty>
+    <NEmpty
+      v-if="orders.length == 0"
+      description="暂无订单"
+    />
     <template v-else>
-      <br />
+      <br>
       <NFlex>
-        <NButton @click="refresh">刷新</NButton>
-        <NButton @click="exportData" secondary type="info">导出数据</NButton>
+        <NButton @click="refresh">
+          刷新
+        </NButton>
+        <NButton
+          secondary
+          type="info"
+          @click="exportData"
+        >
+          导出数据
+        </NButton>
       </NFlex>
       <NDivider />
-      <NCard size="small" title="筛选订单">
+      <NCard
+        size="small"
+        title="筛选订单"
+      >
         <template #header-extra>
-          <NButton @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))" size="small" type="warning">
+          <NButton
+            size="small"
+            type="warning"
+            @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
+          >
             重置
           </NButton>
         </template>
@@ -186,13 +204,20 @@ onMounted(async () => {
             clearable
             style="width: 150px"
           />
-          <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo" label="仅包含未填写快递单号的订单" />
+          <NCheckbox
+            v-model:checked="filterSettings.onlyRequireShippingInfo"
+            label="仅包含未填写快递单号的订单"
+          />
         </NFlex>
       </NCard>
       <NDivider title-placement="left">
         <NPopconfirm @positive-click="deleteOrder">
           <template #trigger>
-            <NButton size="tiny" type="error" :disabled="(selectedItem?.length ?? 0) == 0">
+            <NButton
+              size="tiny"
+              type="error"
+              :disabled="(selectedItem?.length ?? 0) == 0"
+            >
               删除选中的订单 | {{ selectedItem?.length ?? 0 }}
             </NButton>
           </template>
@@ -200,10 +225,10 @@ onMounted(async () => {
         </NPopconfirm>
       </NDivider>
       <PointOrderCard
-        @selected-item="(items) => (selectedItem = items)"
         :order="filteredOrders"
         :goods="goods"
         type="owner"
+        @selected-item="(items) => (selectedItem = items)"
       />
     </template>
   </NSpin>

@@ -29,15 +29,32 @@ async function mount() {
 </script>
 
 <template>
-  <NSpin show v-if="!accountInfo.id" />
-  <div v-else @vue:mounted="mount">
+  <NSpin
+    v-if="!accountInfo.id"
+    show
+  />
+  <div
+    v-else
+    @vue:mounted="mount"
+  >
     master: {{ isMaster }}
     <template v-if="isMaster">
       <NInput v-model:value="inputMsg" />
-      <NButton @click="rtc.send('test', inputMsg)"> 发送 </NButton>
+      <NButton @click="rtc.send('test', inputMsg)">
+        发送
+      </NButton>
     </template>
 
-    <NInput v-model:value="customCss" placeholder="css" @update:value="s => danmujiRef?.setCss(s.toString())" />
-    <DanmujiOBS ref="danmujiRef" :customCss="customCss" style="width: 400px;height: 700px;"  :isOBS="false" />
+    <NInput
+      v-model:value="customCss"
+      placeholder="css"
+      @update:value="s => danmujiRef?.setCss(s.toString())"
+    />
+    <DanmujiOBS
+      ref="danmujiRef"
+      :custom-css="customCss"
+      style="width: 400px;height: 700px;"
+      :is-o-b-s="false"
+    />
   </div>
 </template>

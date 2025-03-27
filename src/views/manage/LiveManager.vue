@@ -43,35 +43,51 @@ function OnClickCover(live: ResponseLiveInfoModel) {
 </script>
 
 <template>
-  <NSpace vertical>
-    <NAlert type="error" title="2024.2.26">
-      近期逸站对开放平台直播弹幕流进行了极为严格的限制, 目前本站服务器只能连接个位数的直播间, 这使得在不使用
-      <NButton tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-      的情况下获取弹幕数据几乎不可能实现.
-      <br />
-      在这种情况下如果你还需要记录直播弹幕请跟随上面链接里的教程部署
-      <NButton tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-      , 否则只能记录直播的时间而不包含弹幕
-    </NAlert>
-
+  <NSpace
+    vertical
+    justify="center"
+    align="center"
+  >
+    <EventFetcherAlert />
     <EventFetcherStatusCard />
   </NSpace>
   <NDivider />
-  <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
+  <NAlert
+    v-if="accountInfo?.isBiliVerified != true"
+    type="info"
+  >
+    尚未进行Bilibili认证
+  </NAlert>
   <template v-else>
-    <NSpace vertical justify="center" align="center">
-      <NPagination v-model:page="page" v-model:page-size="pageSize" show-quick-jumper show-size-picker
-        :page-sizes="[10, 20, 30, 40]" :item-count="lives.length" />
+    <NSpace
+      vertical
+      justify="center"
+      align="center"
+    >
+      <NPagination
+        v-model:page="page"
+        v-model:page-size="pageSize"
+        show-quick-jumper
+        show-size-picker
+        :page-sizes="[10, 20, 30, 40]"
+        :item-count="lives.length"
+      />
     </NSpace>
     <NDivider />
-    <NList bordered hoverable clickable>
-      <NListItem @click="OnClickCover(live)" v-for="live in lives.slice((page - 1) * pageSize, page * pageSize)"
-        v-bind:key="live.liveId">
-        <LiveInfoContainer :live="live" :key="live.liveId" />
+    <NList
+      bordered
+      hoverable
+      clickable
+    >
+      <NListItem
+        v-for="live in lives.slice((page - 1) * pageSize, page * pageSize)"
+        :key="live.liveId"
+        @click="OnClickCover(live)"
+      >
+        <LiveInfoContainer
+          :key="live.liveId"
+          :live="live"
+        />
       </NListItem>
     </NList>
   </template>

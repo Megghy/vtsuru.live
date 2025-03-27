@@ -21,7 +21,7 @@ import {
   VehicleShip24Filled,
   VideoAdd20Filled,
 } from '@vicons/fluent'
-import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, Eye } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
@@ -108,6 +108,36 @@ const menuOptions = [
         RouterLink,
         {
           to: {
+            name: 'manage-live',
+          },
+        },
+        { default: () => '直播记录' },
+      ),
+    key: 'manage-live',
+    disabled: accountInfo.value?.isEmailVerified == false,
+    icon: renderIcon(Live24Filled),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
+            name: 'manage-analyze',
+          },
+        },
+        { default: () => '直播数据' },
+      ),
+    key: 'manage-analyze',
+    disabled: accountInfo.value?.isEmailVerified == false,
+    icon: renderIcon(Eye),
+  },
+  {
+    label: () =>
+      h(
+        RouterLink,
+        {
+          to: {
             name: 'manage-event',
           },
         },
@@ -131,21 +161,6 @@ const menuOptions = [
     key: 'manage-point',
     disabled: accountInfo.value?.isEmailVerified == false,
     icon: renderIcon(BookCoins20Filled),
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: {
-            name: 'manage-live',
-          },
-        },
-        { default: () => '直播记录' },
-      ),
-    key: 'manage-live',
-    disabled: accountInfo.value?.isEmailVerified == false,
-    icon: renderIcon(Live24Filled),
   },
   {
     label: () =>
@@ -475,16 +490,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <NLayout v-if="accountInfo.id" style="height: 100vh">
-    <NLayoutHeader bordered style="height: 50px; padding: 10px 15px 5px 15px">
+  <NLayout
+    v-if="accountInfo.id"
+    style="height: 100vh"
+  >
+    <NLayoutHeader
+      bordered
+      style="height: 50px; padding: 10px 15px 5px 15px"
+    >
       <NPageHeader>
         <template #title>
-          <NText strong style="font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"> VTSURU CENTER </NText>
+          <NText
+            strong
+            style="font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"
+          >
+            VTSURU CENTER
+          </NText>
         </template>
         <template #extra>
-          <NSpace align="center" justify="center">
-            <NSwitch :default-value="!isDarkMode" @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
-            ">
+          <NSpace
+            align="center"
+            justify="center"
+          >
+            <NSwitch
+              :default-value="!isDarkMode"
+              @update:value="(value: string & number & boolean) => (themeType = value ? ThemeType.Light : ThemeType.Dark)
+              "
+            >
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -492,24 +524,50 @@ onMounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton size="small" style="right: 0px; position: relative" type="primary"
-              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })">
+            <NButton
+              size="small"
+              style="right: 0px; position: relative"
+              type="primary"
+              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"
+            >
               回到展示页
             </NButton>
           </NSpace>
         </template>
       </NPageHeader>
     </NLayoutHeader>
-    <NLayout has-sider style="height: calc(100vh - 50px)">
-      <NLayoutSider ref="sider" bordered show-trigger collapse-mode="width" :default-collapsed="windowWidth < 750"
-        :collapsed-width="64" :width="180" :native-scrollbar="false" :scrollbar-props="{ trigger: 'none', style: {} }">
-        <NSpace vertical style="margin-top: 16px" align="center">
+    <NLayout
+      has-sider
+      style="height: calc(100vh - 50px)"
+    >
+      <NLayoutSider
+        ref="sider"
+        bordered
+        show-trigger
+        collapse-mode="width"
+        :default-collapsed="windowWidth < 750"
+        :collapsed-width="64"
+        :width="180"
+        :native-scrollbar="false"
+        :scrollbar-props="{ trigger: 'none', style: {} }"
+      >
+        <NSpace
+          vertical
+          style="margin-top: 16px"
+          align="center"
+        >
           <NSpace justify="center">
-            <NButton @click="$router.push({ name: 'manage-index' })" type="info" style="width: 100%">
+            <NButton
+              type="info"
+              style="width: 100%"
+              @click="$router.push({ name: 'manage-index' })"
+            >
               <template #icon>
                 <NIcon :component="BrowsersOutline" />
               </template>
-              <template v-if="width >= 180"> 面板 </template>
+              <template v-if="width >= 180">
+                面板
+              </template>
             </NButton>
             <NTooltip v-if="width >= 180">
               <template #trigger>
@@ -522,38 +580,74 @@ onMounted(() => {
               反馈
             </NTooltip>
           </NSpace>
-          <NButton v-if="accountInfo.biliUserAuthInfo" @click="gotoAuthPage()" type="info" secondary>
+          <NButton
+            v-if="accountInfo.biliUserAuthInfo"
+            type="info"
+            secondary
+            @click="gotoAuthPage()"
+          >
             <template #icon>
               <NIcon :component="Person48Filled" />
             </template>
-            <template v-if="width >= 180"> 认证用户主页 </template>
+            <template v-if="width >= 180">
+              认证用户主页
+            </template>
           </NButton>
         </NSpace>
-        <NMenu style="margin-top: 12px" :disabled="accountInfo?.isEmailVerified != true"
-          :default-value="($route.meta.parent as string) ?? $route.name?.toString()" :collapsed-width="64"
-          :collapsed-icon-size="22" :options="menuOptions" />
-        <NSpace v-if="width > 150" justify="center" align="center" vertical>
+        <NMenu
+          style="margin-top: 12px"
+          :disabled="accountInfo?.isEmailVerified != true"
+          :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+        />
+        <NSpace
+          v-if="width > 150"
+          justify="center"
+          align="center"
+          vertical
+        >
           <NText depth="3">
             有更多功能建议请
-            <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })"> 反馈 </NButton>
+            <NButton
+              text
+              type="info"
+              @click="$router.push({ name: 'manage-feedback' })"
+            >
+              反馈
+            </NButton>
           </NText>
           <NText depth="3">
-            <NButton text type="info" @click="$router.push({ name: 'about' })"> 关于本站 </NButton>
+            <NButton
+              text
+              type="info"
+              @click="$router.push({ name: 'about' })"
+            >
+              关于本站
+            </NButton>
           </NText>
         </NSpace>
         <NDivider style="margin-bottom: 8px;" />
-        <NFlex justify="center" align="center">
+        <NFlex
+          justify="center"
+          align="center"
+        >
           <NText
-            :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'};visibility: ${width < 180 ? 'hidden' : 'visible'}`">
+            :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'};visibility: ${width < 180 ? 'hidden' : 'visible'}`"
+          >
             By Megghy
           </NText>
         </NFlex>
       </NLayoutSider>
       <NLayout>
         <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
-          <NLayoutContent content-style="margin: 12px">
+          <NLayoutContent content-style="margin: 12px; margin-right: 16px">
             <NElement>
-              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
+              <RouterView
+                v-if="accountInfo?.isEmailVerified"
+                v-slot="{ Component }"
+              >
                 <KeepAlive>
                   <Suspense>
                     <component :is="Component" />
@@ -566,17 +660,30 @@ onMounted(() => {
               <template v-else>
                 <NAlert type="info">
                   请进行邮箱验证
-                  <br /><br />
+                  <br><br>
                   <NSpace>
-                    <NButton size="small" type="info" :disabled="!canResendEmail" @click="resendEmail">
+                    <NButton
+                      size="small"
+                      type="info"
+                      :disabled="!canResendEmail"
+                      @click="resendEmail"
+                    >
                       重新发送验证邮件
                     </NButton>
-                    <NCountdown v-if="!canResendEmail" :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                      @finish="canResendEmail = true" />
+                    <NCountdown
+                      v-if="!canResendEmail"
+                      :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                      @finish="canResendEmail = true"
+                    />
 
-                    <NPopconfirm @positive-click="logout" size="small">
+                    <NPopconfirm
+                      size="small"
+                      @positive-click="logout"
+                    >
                       <template #trigger>
-                        <NButton type="error"> 登出 </NButton>
+                        <NButton type="error">
+                          登出
+                        </NButton>
                       </template>
                       确定登出?
                     </NPopconfirm>
@@ -589,17 +696,36 @@ onMounted(() => {
         </NScrollbar>
         <NLayoutFooter :style="`height: ${aplayerHeight}px;overflow: auto`">
           <div style="display: flex; align-items: center; margin: 0 10px 0 10px">
-            <APlayer v-if="musicRquestStore.aplayerMusics.length > 0" ref="aplayer"
-              :list="musicRquestStore.aplayerMusics" v-model:music="musicRquestStore.currentMusic"
-              v-model:volume="musicRquestStore.settings.volume" v-model:shuffle="musicRquestStore.settings.shuffle"
-              v-model:repeat="musicRquestStore.settings.repeat" :listMaxHeight="'200'" mutex listFolded
-              @ended="musicRquestStore.onMusicEnd" @play="musicRquestStore.onMusicPlay"
-              style="flex: 1; min-width: 400px" />
+            <APlayer
+              v-if="musicRquestStore.aplayerMusics.length > 0"
+              ref="aplayer"
+              v-model:music="musicRquestStore.currentMusic"
+              v-model:volume="musicRquestStore.settings.volume"
+              v-model:shuffle="musicRquestStore.settings.shuffle"
+              v-model:repeat="musicRquestStore.settings.repeat"
+              :list="musicRquestStore.aplayerMusics"
+              :list-max-height="'200'"
+              mutex
+              list-folded
+              style="flex: 1; min-width: 400px"
+              @ended="musicRquestStore.onMusicEnd"
+              @play="musicRquestStore.onMusicPlay"
+            />
             <NSpace vertical>
-              <NTag :bordered="false" type="info" size="small">
+              <NTag
+                :bordered="false"
+                type="info"
+                size="small"
+              >
                 队列: {{ musicRquestStore.waitingMusics.length }}
               </NTag>
-              <NButton size="small" type="info" @click="onNextMusic"> 下一首 </NButton>
+              <NButton
+                size="small"
+                type="info"
+                @click="onNextMusic"
+              >
+                下一首
+              </NButton>
             </NSpace>
           </div>
         </NLayoutFooter>
@@ -607,7 +733,8 @@ onMounted(() => {
     </NLayout>
   </NLayout>
   <template v-else>
-    <NLayoutContent style="
+    <NLayoutContent
+      style="
         display: flex;
         justify-content: center;
         align-items: center;
@@ -615,17 +742,32 @@ onMounted(() => {
         padding: 50px;
         height: 100vh;
         box-sizing: border-box;
-      ">
+      "
+    >
       <template v-if="!isLoadingAccount">
-        <NSpace vertical justify="center" align="center">
+        <NSpace
+          vertical
+          justify="center"
+          align="center"
+        >
           <NText> 请登录或注册后使用 </NText>
-          <NButton tag="a" href="/"> 回到主页 </NButton>
+          <NButton
+            tag="a"
+            href="/"
+          >
+            回到主页
+          </NButton>
         </NSpace>
         <NDivider />
         <RegisterAndLogin style="max-width: 500px; min-width: 350px" />
       </template>
       <template v-else>
-        <NSpin :loading="isLoadingAccount" style="overflow: hidden"> 正在请求账户数据... </NSpin>
+        <NSpin
+          :loading="isLoadingAccount"
+          style="overflow: hidden"
+        >
+          正在请求账户数据...
+        </NSpin>
       </template>
     </NLayoutContent>
   </template>

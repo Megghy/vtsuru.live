@@ -762,91 +762,181 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue) ? 'success' : 'warning'"
-    v-if="accountInfo.id">
+  <NAlert
+    v-if="accountInfo.id"
+    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue) ? 'success' : 'warning'"
+  >
     启用弹幕队列功能
-    <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
-      @update:value="onUpdateFunctionEnable" />
+    <NSwitch
+      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
+      @update:value="onUpdateFunctionEnable"
+    />
 
-    <br />
+    <br>
     <NText depth="3">
       如果没有部署
-      <NButton text type="primary" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
+      <NButton
+        text
+        type="primary"
+        tag="a"
+        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+        target="_blank"
+      >
         VtsuruEventFetcher
       </NButton>
       则其需要保持此页面开启才能使用, 也不要同时开多个页面, 会导致重复 !(部署了则不影响)
     </NText>
   </NAlert>
-  <NAlert type="warning" v-else title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑">
-    <NButton tag="a" href="/manage" target="_blank" type="primary"> 前往登录或注册 </NButton>
+  <NAlert
+    v-else
+    type="warning"
+    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑"
+  >
+    <NButton
+      tag="a"
+      href="/manage"
+      target="_blank"
+      type="primary"
+    >
+      前往登录或注册
+    </NButton>
   </NAlert>
-  <br />
+  <br>
   <NCard size="small">
     <NSpace align="center">
       <NTooltip>
         <template #trigger>
-          <NButton @click="showOBSModal = true" type="primary" :disabled="!accountInfo"> OBS 组件 </NButton>
+          <NButton
+            type="primary"
+            :disabled="!accountInfo"
+            @click="showOBSModal = true"
+          >
+            OBS 组件
+          </NButton>
         </template>
         {{ configCanEdit ? '' : '登陆后才可以使用此功能' }}
       </NTooltip>
     </NSpace>
   </NCard>
-  <br />
+  <br>
   <NCard>
-    <NTabs v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)" animated
-      display-directive="show:lazy">
-      <NTabPane name="list" tab="列表">
+    <NTabs
+      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
+      animated
+      display-directive="show:lazy"
+    >
+      <NTabPane
+        name="list"
+        tab="列表"
+      >
         <NCard size="small">
           <NSpace align="center">
-            <NTag type="success" :bordered="false">
+            <NTag
+              type="success"
+              :bordered="false"
+            >
               <template #icon>
                 <NIcon :component="PeopleQueue24Filled" />
               </template>
-              队列 | {{queue.filter((s) => s.status == QueueStatus.Waiting).length}}
+              队列 | {{ queue.filter((s) => s.status == QueueStatus.Waiting).length }}
             </NTag>
-            <NTag type="success" :bordered="false">
+            <NTag
+              type="success"
+              :bordered="false"
+            >
               <template #icon>
                 <NIcon :component="Checkmark12Regular" />
               </template>
               今日已处理 |
-              {{queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length}}
+              {{ queue.filter((s) => s.status == QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }}
               位
             </NTag>
             <NInputGroup>
-              <NInput placeholder="手动添加" v-model:value="newQueueName" />
-              <NButton type="primary" @click="addManual"> 添加 </NButton>
+              <NInput
+                v-model:value="newQueueName"
+                placeholder="手动添加"
+              />
+              <NButton
+                type="primary"
+                @click="addManual"
+              >
+                添加
+              </NButton>
             </NInputGroup>
             <NPopconfirm @positive-click="deactiveAllSongs">
               <template #trigger>
-                <NButton type="error"> 全部取消 </NButton>
+                <NButton type="error">
+                  全部取消
+                </NButton>
               </template>
               确定全部取消吗?
             </NPopconfirm>
-            <NRadioGroup v-model:value="settings.sortType" :disabled="!configCanEdit" @update:value="updateSettings"
-              type="button">
-              <NRadioButton :value="QueueSortType.TimeFirst"> 加入时间优先 </NRadioButton>
-              <NRadioButton :value="QueueSortType.PaymentFist"> 付费价格优先 </NRadioButton>
-              <NRadioButton :value="QueueSortType.GuardFirst"> 舰长优先 (按等级) </NRadioButton>
-              <NRadioButton :value="QueueSortType.FansMedalFirst"> 粉丝牌等级优先 </NRadioButton>
+            <NRadioGroup
+              v-model:value="settings.sortType"
+              :disabled="!configCanEdit"
+              type="button"
+              @update:value="updateSettings"
+            >
+              <NRadioButton :value="QueueSortType.TimeFirst">
+                加入时间优先
+              </NRadioButton>
+              <NRadioButton :value="QueueSortType.PaymentFist">
+                付费价格优先
+              </NRadioButton>
+              <NRadioButton :value="QueueSortType.GuardFirst">
+                舰长优先 (按等级)
+              </NRadioButton>
+              <NRadioButton :value="QueueSortType.FansMedalFirst">
+                粉丝牌等级优先
+              </NRadioButton>
             </NRadioGroup>
-            <NCheckbox v-if="configCanEdit" v-model:checked="settings.isReverse" @update:checked="updateSettings">
+            <NCheckbox
+              v-if="configCanEdit"
+              v-model:checked="settings.isReverse"
+              @update:checked="updateSettings"
+            >
               倒序
             </NCheckbox>
-            <NCheckbox v-else v-model:checked="isReverse"> 倒序 </NCheckbox>
+            <NCheckbox
+              v-else
+              v-model:checked="isReverse"
+            >
+              倒序
+            </NCheckbox>
           </NSpace>
         </NCard>
         <NDivider> 共 {{ queue.length }} 人 </NDivider>
-        <NList v-if="queue.length > 0" :show-divider="false" hoverable>
-          <NListItem v-for="(queueData, index) in queue" :key="queueData.id" style="padding: 5px">
-            <NCard embedded size="small" content-style="padding: 5px;"
-              :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`">
-              <NSpace justify="space-between" align="center" style="height: 100%; margin: 0 5px 0 5px">
+        <NList
+          v-if="queue.length > 0"
+          :show-divider="false"
+          hoverable
+        >
+          <NListItem
+            v-for="(queueData, index) in queue"
+            :key="queueData.id"
+            style="padding: 5px"
+          >
+            <NCard
+              embedded
+              size="small"
+              content-style="padding: 5px;"
+              :style="`${queueData.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : ''};height: 100%;`"
+            >
+              <NSpace
+                justify="space-between"
+                align="center"
+                style="height: 100%; margin: 0 5px 0 5px"
+              >
                 <NSpace align="center">
                   <div
-                    :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;color: white;`">
+                    :style="`border-radius: 4px; background-color: ${queueData.status == QueueStatus.Progressing ? '#75c37f' : '#577fb8'}; width: 20px; height: 20px;text-align: center;color: white;`"
+                  >
                     {{ index + 1 }}
                   </div>
-                  <NText strong style="font-size: 18px">
+                  <NText
+                    strong
+                    style="font-size: 18px"
+                  >
                     <NTooltip>
                       <template #trigger>
                         {{ queueData.user?.name }}
@@ -855,14 +945,28 @@ onUnmounted(() => {
                     </NTooltip>
                   </NText>
                   <template v-if="queueData.from == QueueFrom.Manual">
-                    <NTag size="small" :bordered="false"> 手动添加 </NTag>
+                    <NTag
+                      size="small"
+                      :bordered="false"
+                    >
+                      手动添加
+                    </NTag>
                   </template>
-                  <NSpace v-if="
-                    (queueData.from == QueueFrom.Danmaku || queueData.from == QueueFrom.Gift) &&
-                    queueData.user?.fans_medal_wearing_status
-                  ">
-                    <NTag size="tiny" round>
-                      <NTag size="tiny" round :bordered="false">
+                  <NSpace
+                    v-if="
+                      (queueData.from == QueueFrom.Danmaku || queueData.from == QueueFrom.Gift) &&
+                        queueData.user?.fans_medal_wearing_status
+                    "
+                  >
+                    <NTag
+                      size="tiny"
+                      round
+                    >
+                      <NTag
+                        size="tiny"
+                        round
+                        :bordered="false"
+                      >
                         <NText depth="3">
                           {{ queueData.user?.fans_medal_level }}
                         </NText>
@@ -872,29 +976,51 @@ onUnmounted(() => {
                       </span>
                     </NTag>
                   </NSpace>
-                  <NTag v-if="(queueData.user?.guard_level ?? 0) > 0" size="small" :bordered="false"
-                    :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }">
+                  <NTag
+                    v-if="(queueData.user?.guard_level ?? 0) > 0"
+                    size="small"
+                    :bordered="false"
+                    :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }"
+                  >
                     {{ queueData.user?.guard_level == 1 ? '总督' : queueData.user?.guard_level == 2 ? '提督' : '舰长' }}
                   </NTag>
-                  <NTag v-if="(queueData.giftPrice ?? 0) > 0" size="small" :bordered="false" type="error">
+                  <NTag
+                    v-if="(queueData.giftPrice ?? 0) > 0"
+                    size="small"
+                    :bordered="false"
+                    type="error"
+                  >
                     付费 | {{ queueData.giftPrice }}
                   </NTag>
                   <NTooltip>
                     <template #trigger>
                       <NText style="font-size: small">
-                        <NTime :time="queueData.createAt" type="relative" :key="updateKey" />
+                        <NTime
+                          :key="updateKey"
+                          :time="queueData.createAt"
+                          type="relative"
+                        />
                       </NText>
                     </template>
                     <NTime :time="queueData.createAt" />
                   </NTooltip>
 
-                  <NTooltip v-if="queueData.content" content-style="margin: 0">
+                  <NTooltip
+                    v-if="queueData.content"
+                    content-style="margin: 0"
+                  >
                     <template #trigger>
-                      <NText strong style="font-size: 18px">
+                      <NText
+                        strong
+                        style="font-size: 18px"
+                      >
                         <NIcon :component="Info24Filled" />
                       </NText>
                     </template>
-                    <NCard size="small" :bordered="false">
+                    <NCard
+                      size="small"
+                      :bordered="false"
+                    >
                       <template #header>
                         <span style="font-size: small; color: gray;">
                           {{ '来自' + (queueData?.from == QueueFrom.Gift ? '礼物' : '弹幕') + ': ' }}
@@ -904,18 +1030,28 @@ onUnmounted(() => {
                     </NCard>
                   </NTooltip>
                 </NSpace>
-                <NSpace justify="end" align="center">
+                <NSpace
+                  justify="end"
+                  align="center"
+                >
                   <NTooltip>
                     <template #trigger>
-                      <NButton circle type="primary" style="height: 30px; width: 30px" :disabled="queue.findIndex((s) => s.id != queueData.id && s.status == QueueStatus.Progressing) > -1
-                        " @click="
+                      <NButton
+                        circle
+                        type="primary"
+                        style="height: 30px; width: 30px"
+                        :disabled="queue.findIndex((s) => s.id != queueData.id && s.status == QueueStatus.Progressing) > -1
+                        "
+                        :style="`animation: ${queueData.status == QueueStatus.Waiting ? '' : 'loading 5s linear infinite'}`"
+                        :secondary="queueData.status == QueueStatus.Progressing"
+                        :loading="isLoading"
+                        @click="
                           updateStatus(
                             queueData,
                             queueData.status == QueueStatus.Progressing ? QueueStatus.Waiting : QueueStatus.Progressing,
                           )
-                          "
-                        :style="`animation: ${queueData.status == QueueStatus.Waiting ? '' : 'loading 5s linear infinite'}`"
-                        :secondary="queueData.status == QueueStatus.Progressing" :loading="isLoading">
+                        "
+                      >
                         <template #icon>
                           <NIcon :component="ClipboardTextLtr24Filled" />
                         </template>
@@ -931,8 +1067,13 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton circle type="success" style="height: 30px; width: 30px" :loading="isLoading"
-                        @click="updateStatus(queueData, QueueStatus.Finish)">
+                      <NButton
+                        circle
+                        type="success"
+                        style="height: 30px; width: 30px"
+                        :loading="isLoading"
+                        @click="updateStatus(queueData, QueueStatus.Finish)"
+                      >
                         <template #icon>
                           <NIcon :component="Checkmark12Regular" />
                         </template>
@@ -944,7 +1085,12 @@ onUnmounted(() => {
                     <template #trigger>
                       <NPopconfirm @positive-click="blockUser(queueData)">
                         <template #trigger>
-                          <NButton circle type="warning" style="height: 30px; width: 30px" :loading="isLoading">
+                          <NButton
+                            circle
+                            type="warning"
+                            style="height: 30px; width: 30px"
+                            :loading="isLoading"
+                          >
                             <template #icon>
                               <NIcon :component="PresenceBlocked16Regular" />
                             </template>
@@ -957,8 +1103,13 @@ onUnmounted(() => {
                   </NTooltip>
                   <NTooltip>
                     <template #trigger>
-                      <NButton circle type="error" style="height: 30px; width: 30px" :loading="isLoading"
-                        @click="updateStatus(queueData, QueueStatus.Cancel)">
+                      <NButton
+                        circle
+                        type="error"
+                        style="height: 30px; width: 30px"
+                        :loading="isLoading"
+                        @click="updateStatus(queueData, QueueStatus.Cancel)"
+                      >
                         <template #icon>
                           <NIcon :component="Dismiss16Filled" />
                         </template>
@@ -971,31 +1122,51 @@ onUnmounted(() => {
             </NCard>
           </NListItem>
         </NList>
-        <NEmpty v-else description="暂无用户" />
+        <NEmpty
+          v-else
+          description="暂无用户"
+        />
       </NTabPane>
-      <NTabPane name="history" tab="历史">
+      <NTabPane
+        name="history"
+        tab="历史"
+      >
         <NCard size="small">
           <NSpace>
             <NInputGroup style="width: 300px">
               <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-              <NInput v-model:value="filterName" clearable>
+              <NInput
+                v-model:value="filterName"
+                clearable
+              >
                 <template #suffix>
-                  <NCheckbox v-model:checked="filterNameContains"> 包含 </NCheckbox>
+                  <NCheckbox v-model:checked="filterNameContains">
+                    包含
+                  </NCheckbox>
                 </template>
               </NInput>
             </NInputGroup>
           </NSpace>
         </NCard>
-        <NDataTable size="small" ref="table" :columns="columns" :data="originQueue" :pagination="{
-          itemCount: originQueue.length,
-          pageSizes: [20, 50, 100],
-          showSizePicker: true,
-          prefix({ itemCount }) {
-            return `共 ${itemCount} 条记录`
-          },
-        }" />
+        <NDataTable
+          ref="table"
+          size="small"
+          :columns="columns"
+          :data="originQueue"
+          :pagination="{
+            itemCount: originQueue.length,
+            pageSizes: [20, 50, 100],
+            showSizePicker: true,
+            prefix({ itemCount }) {
+              return `共 ${itemCount} 条记录`
+            },
+          }"
+        />
       </NTabPane>
-      <NTabPane name="setting" tab="设置">
+      <NTabPane
+        name="setting"
+        tab="设置"
+      >
         <NSpin :show="isLoading">
           <NDivider> 规则 </NDivider>
           <NSpace vertical>
@@ -1004,77 +1175,164 @@ onUnmounted(() => {
                 <NInputGroupLabel> 加入队列关键词 </NInputGroupLabel>
                 <template v-if="configCanEdit">
                   <NInput v-model:value="settings.keyword" />
-                  <NButton @click="updateSettings" type="primary">确定</NButton>
+                  <NButton
+                    type="primary"
+                    @click="updateSettings"
+                  >
+                    确定
+                  </NButton>
                 </template>
-                <NInput v-else v-model:value="defaultKeyword" />
+                <NInput
+                  v-else
+                  v-model:value="defaultKeyword"
+                />
               </NInputGroup>
-              <NRadioGroup v-model:value="settings.matchType" :disabled="!configCanEdit" @update:value="updateSettings"
-                type="button">
-                <NRadioButton :value="KeywordMatchType.Full"> 完全一致 </NRadioButton>
-                <NRadioButton :value="KeywordMatchType.Contains"> 包含 </NRadioButton>
-                <NRadioButton :value="KeywordMatchType.Regex"> 正则 </NRadioButton>
+              <NRadioGroup
+                v-model:value="settings.matchType"
+                :disabled="!configCanEdit"
+                type="button"
+                @update:value="updateSettings"
+              >
+                <NRadioButton :value="KeywordMatchType.Full">
+                  完全一致
+                </NRadioButton>
+                <NRadioButton :value="KeywordMatchType.Contains">
+                  包含
+                </NRadioButton>
+                <NRadioButton :value="KeywordMatchType.Regex">
+                  正则
+                </NRadioButton>
               </NRadioGroup>
             </NSpace>
             <NInputGroup style="width: 250px">
               <NInputGroupLabel> 最大队列长度 </NInputGroupLabel>
-              <NInputNumber v-model:value="settings.queueMaxSize" :disabled="!configCanEdit" min="0" max="1000" />
-              <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+              <NInputNumber
+                v-model:value="settings.queueMaxSize"
+                :disabled="!configCanEdit"
+                min="0"
+                max="1000"
+              />
+              <NButton
+                type="info"
+                :disabled="!configCanEdit"
+                @click="updateSettings"
+              >
+                确定
+              </NButton>
             </NInputGroup>
             <NSpace align="center">
-              <NCheckbox v-model:checked="settings.enableOnStreaming" @update:checked="updateSettings"
-                :disabled="!configCanEdit">
+              <NCheckbox
+                v-model:checked="settings.enableOnStreaming"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
                 仅在直播时才允许加入
               </NCheckbox>
-              <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="updateSettings"
-                :disabled="!configCanEdit">
+              <NCheckbox
+                v-model:checked="settings.allowAllDanmaku"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
                 允许所有用户加入
               </NCheckbox>
               <template v-if="!settings.allowAllDanmaku">
                 <NInputGroup style="width: 270px">
                   <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-                  <NInputNumber v-model:value="settings.fanMedalMinLevel" :disabled="!configCanEdit" min="0" />
-                  <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                  <NInputNumber
+                    v-model:value="settings.fanMedalMinLevel"
+                    :disabled="!configCanEdit"
+                    min="0"
+                  />
+                  <NButton
+                    type="info"
+                    :disabled="!configCanEdit"
+                    @click="updateSettings"
+                  >
+                    确定
+                  </NButton>
                 </NInputGroup>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needJianzhang"
-                  @update:checked="updateSettings" :disabled="!configCanEdit">
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needJianzhang"
+                  :disabled="!configCanEdit"
+                  @update:checked="updateSettings"
+                >
                   允许舰长
                 </NCheckbox>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needTidu"
-                  @update:checked="updateSettings" :disabled="!configCanEdit">
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needTidu"
+                  :disabled="!configCanEdit"
+                  @update:checked="updateSettings"
+                >
                   允许提督
                 </NCheckbox>
-                <NCheckbox v-if="!settings.allowAllDanmaku" v-model:checked="settings.needZongdu"
-                  @update:checked="updateSettings" :disabled="!configCanEdit">
+                <NCheckbox
+                  v-if="!settings.allowAllDanmaku"
+                  v-model:checked="settings.needZongdu"
+                  :disabled="!configCanEdit"
+                  @update:checked="updateSettings"
+                >
                   允许总督
                 </NCheckbox>
               </template>
             </NSpace>
             <NSpace align="center">
-              <NCheckbox v-model:checked="settings.allowGift" @update:checked="updateSettings"
-                :disabled="!configCanEdit">
+              <NCheckbox
+                v-model:checked="settings.allowGift"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
                 允许通过发送礼物加入队列
               </NCheckbox>
               <template v-if="settings.allowGift">
-                <NInputGroup v-if="settings.allowGift" style="width: 250px">
+                <NInputGroup
+                  v-if="settings.allowGift"
+                  style="width: 250px"
+                >
                   <NInputGroupLabel> 最低价格 </NInputGroupLabel>
-                  <NInputNumber v-model:value="settings.minGiftPrice" :disabled="!configCanEdit" />
-                  <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                  <NInputNumber
+                    v-model:value="settings.minGiftPrice"
+                    :disabled="!configCanEdit"
+                  />
+                  <NButton
+                    type="info"
+                    :disabled="!configCanEdit"
+                    @click="updateSettings"
+                  >
+                    确定
+                  </NButton>
                 </NInputGroup>
                 <NSpace align="center">
                   礼物名
-                  <NSelect style="width: 250px" v-model:value="settings.giftNames" :disabled="!configCanEdit" filterable
-                    multiple tag placeholder="礼物名称，按回车确认" :show-arrow="false" :show="false"
-                    @update:value="updateSettings" />
+                  <NSelect
+                    v-model:value="settings.giftNames"
+                    style="width: 250px"
+                    :disabled="!configCanEdit"
+                    filterable
+                    multiple
+                    tag
+                    placeholder="礼物名称，按回车确认"
+                    :show-arrow="false"
+                    :show="false"
+                    @update:value="updateSettings"
+                  />
                 </NSpace>
                 <span>
-                  <NRadioGroup v-model:value="settings.giftFilterType" :disabled="!configCanEdit"
-                    @update:value="updateSettings">
+                  <NRadioGroup
+                    v-model:value="settings.giftFilterType"
+                    :disabled="!configCanEdit"
+                    @update:value="updateSettings"
+                  >
                     <NRadioButton :value="QueueGiftFilterType.And"> 需同时满足礼物名和价格 </NRadioButton>
                     <NRadioButton :value="QueueGiftFilterType.Or"> 礼物名/价格 二选一 </NRadioButton>
                   </NRadioGroup>
                 </span>
-                <NCheckbox v-model:checked="settings.sendGiftDirectJoin" @update:checked="updateSettings"
-                  :disabled="!configCanEdit">
+                <NCheckbox
+                  v-model:checked="settings.sendGiftDirectJoin"
+                  :disabled="!configCanEdit"
+                  @update:checked="updateSettings"
+                >
                   赠送礼物后自动加入队列
                   <NTooltip>
                     <template #trigger>
@@ -1084,78 +1342,152 @@ onUnmounted(() => {
                   </NTooltip>
                 </NCheckbox>
 
-                <NCheckbox v-model:checked="settings.sendGiftIgnoreLimit" @update:checked="updateSettings"
-                  :disabled="!configCanEdit">
+                <NCheckbox
+                  v-model:checked="settings.sendGiftIgnoreLimit"
+                  :disabled="!configCanEdit"
+                  @update:checked="updateSettings"
+                >
                   赠送礼物后无视用户等级限制
                 </NCheckbox>
               </template>
-              <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="updateSettings"
-                :disabled="!configCanEdit">
+              <NCheckbox
+                v-model:checked="settings.allowIncreasePaymentBySendGift"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
                 在队列中时允许继续发送礼物累计付费量 (仅限上方设定的礼物)
               </NCheckbox>
-              <NCheckbox v-if="settings.allowIncreasePaymentBySendGift"
-                v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="updateSettings"
-                :disabled="!configCanEdit">
+              <NCheckbox
+                v-if="settings.allowIncreasePaymentBySendGift"
+                v-model:checked="settings.allowIncreaseByAnyPayment"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
                 允许发送任意礼物来叠加付费量
               </NCheckbox>
             </NSpace>
             <NDivider> 冷却 (单位: 秒) </NDivider>
-            <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="updateSettings"
-              :disabled="!configCanEdit">
+            <NCheckbox
+              v-model:checked="settings.enableCooldown"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
               启用排队冷却
             </NCheckbox>
             <NSpace v-if="settings.enableCooldown">
               <NInputGroup style="width: 250px">
                 <NInputGroupLabel> 普通弹幕 </NInputGroupLabel>
-                <NInputNumber v-model:value="settings.cooldownSecond" :disabled="!configCanEdit" />
-                <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                <NInputNumber
+                  v-model:value="settings.cooldownSecond"
+                  :disabled="!configCanEdit"
+                />
+                <NButton
+                  type="info"
+                  :disabled="!configCanEdit"
+                  @click="updateSettings"
+                >
+                  确定
+                </NButton>
               </NInputGroup>
               <NInputGroup style="width: 220px">
                 <NInputGroupLabel> 舰长 </NInputGroupLabel>
-                <NInputNumber v-model:value="settings.jianzhangCooldownSecond" :disabled="!configCanEdit" />
-                <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                <NInputNumber
+                  v-model:value="settings.jianzhangCooldownSecond"
+                  :disabled="!configCanEdit"
+                />
+                <NButton
+                  type="info"
+                  :disabled="!configCanEdit"
+                  @click="updateSettings"
+                >
+                  确定
+                </NButton>
               </NInputGroup>
               <NInputGroup style="width: 220px">
                 <NInputGroupLabel> 提督 </NInputGroupLabel>
-                <NInputNumber v-model:value="settings.tiduCooldownSecond" :disabled="!configCanEdit" />
-                <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                <NInputNumber
+                  v-model:value="settings.tiduCooldownSecond"
+                  :disabled="!configCanEdit"
+                />
+                <NButton
+                  type="info"
+                  :disabled="!configCanEdit"
+                  @click="updateSettings"
+                >
+                  确定
+                </NButton>
               </NInputGroup>
               <NInputGroup style="width: 220px">
                 <NInputGroupLabel> 总督 </NInputGroupLabel>
-                <NInputNumber v-model:value="settings.zongduCooldownSecond" :disabled="!configCanEdit" />
-                <NButton @click="updateSettings" type="info" :disabled="!configCanEdit">确定</NButton>
+                <NInputNumber
+                  v-model:value="settings.zongduCooldownSecond"
+                  :disabled="!configCanEdit"
+                />
+                <NButton
+                  type="info"
+                  :disabled="!configCanEdit"
+                  @click="updateSettings"
+                >
+                  确定
+                </NButton>
               </NInputGroup>
             </NSpace>
             <NDivider> OBS </NDivider>
-            <NCheckbox v-model:checked="settings.showRequireInfo" :disabled="!configCanEdit"
-              @update:checked="updateSettings">
+            <NCheckbox
+              v-model:checked="settings.showRequireInfo"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
               显示底部的需求信息
             </NCheckbox>
-            <NCheckbox v-model:checked="settings.showPayment" :disabled="!configCanEdit"
-              @update:checked="updateSettings">
+            <NCheckbox
+              v-model:checked="settings.showPayment"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
               显示付费信息
             </NCheckbox>
-            <NCheckbox v-model:checked="settings.showFanMadelInfo" :disabled="!configCanEdit"
-              @update:checked="updateSettings">
+            <NCheckbox
+              v-model:checked="settings.showFanMadelInfo"
+              :disabled="!configCanEdit"
+              @update:checked="updateSettings"
+            >
               显示用户粉丝牌
             </NCheckbox>
             <NDivider> 其他 </NDivider>
-            <NCheckbox v-model:checked="isWarnMessageAutoClose"> 自动关闭加入队列失败时的提示消息 </NCheckbox>
+            <NCheckbox v-model:checked="isWarnMessageAutoClose">
+              自动关闭加入队列失败时的提示消息
+            </NCheckbox>
           </NSpace>
         </NSpin>
       </NTabPane>
     </NTabs>
     <template v-else>
-      <NAlert title="未启用" type="error"> 请先启用弹幕排队功能 </NAlert>
+      <NAlert
+        title="未启用"
+        type="error"
+      >
+        请先启用弹幕排队功能
+      </NAlert>
     </template>
   </NCard>
-  <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">
-    <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
+  <NModal
+    v-model:show="showOBSModal"
+    title="OBS组件"
+    preset="card"
+    style="width: 800px"
+  >
+    <NAlert
+      title="这是什么?  "
+      type="info"
+    >
+      将等待队列以及结果显示在OBS中
+    </NAlert>
     <NDivider> 浏览 </NDivider>
     <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
       <QueueOBS :id="accountInfo?.id" />
     </div>
-    <br />
+    <br>
     <NInput :value="`${CURRENT_HOST}obs/queue?id=` + accountInfo?.id" />
     <NDivider />
     <NCollapse>

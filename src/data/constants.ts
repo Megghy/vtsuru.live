@@ -9,6 +9,7 @@ const releseAPI = `https://vtsuru.suki.club/`
 const failoverAPI = `https://failover-api.vtsuru.suki.club/`
 
 export const isBackendUsable = ref(true)
+export const isDev = import.meta.env.MODE === 'development'
 
 export const AVATAR_URL = 'https://workers.vrp.moe/api/bilibili/avatar/'
 export const FILE_BASE_URL = 'https://files.vtsuru.live'
@@ -58,6 +59,7 @@ export const POINT_API_URL = BASE_API_URL + 'point/'
 export const BILI_AUTH_API_URL = BASE_API_URL + 'bili-auth/'
 export const FORUM_API_URL = BASE_API_URL + 'forum/'
 export const USER_INDEX_API_URL = BASE_API_URL + 'user-index/'
+export const ANALYZE_API_URL = BASE_API_URL + 'analyze/'
 
 export const ScheduleTemplateMap = {
   '': {

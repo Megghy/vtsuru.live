@@ -78,45 +78,72 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="question-display-root" :style="{
-    backgroundColor: '#' + setting.borderColor,
-    borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
-    borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
-    borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
-  }" :display="question ? 1 : 0">
-    <Transition name="scale" mode="out-in">
-      <div v-if="setting.showUserName && question" class="question-display-user-name" :style="{
-        color: '#' + setting.nameFontColor,
-        fontSize: setting.nameFontSize + 'px',
-        fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
-        fontFamily: setting.nameFont,
-      }">
+  <div
+    class="question-display-root"
+    :style="{
+      backgroundColor: '#' + setting.borderColor,
+      borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
+      borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
+      borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
+    }"
+    :display="question ? 1 : 0"
+  >
+    <Transition
+      name="scale"
+      mode="out-in"
+    >
+      <div
+        v-if="setting.showUserName && question"
+        class="question-display-user-name"
+        :style="{
+          color: '#' + setting.nameFontColor,
+          fontSize: setting.nameFontSize + 'px',
+          fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
+          fontFamily: setting.nameFont,
+        }"
+      >
         {{ question?.sender?.name ?? '匿名用户' }}
       </div>
     </Transition>
-    <div class="question-display-content" @scroll="scrollCallback" ref="contentRef" :style="{
-      color: '#' + setting.fontColor,
-      backgroundColor: '#' + setting.backgroundColor,
-      fontSize: setting.fontSize + 'px',
-      fontWeight: setting.fontWeight ? setting.fontWeight : undefined,
-      textAlign: align,
-      fontFamily: setting.font,
-    }" :is-empty="question ? 0 : 1">
-      <Transition name="fade" mode="out-in">
+    <div
+      ref="contentRef"
+      class="question-display-content"
+      :style="{
+        color: '#' + setting.fontColor,
+        backgroundColor: '#' + setting.backgroundColor,
+        fontSize: setting.fontSize + 'px',
+        fontWeight: setting.fontWeight ? setting.fontWeight : undefined,
+        textAlign: align,
+        fontFamily: setting.font,
+      }"
+      :is-empty="question ? 0 : 1"
+      @scroll="scrollCallback"
+    >
+      <Transition
+        name="fade"
+        mode="out-in"
+      >
         <template v-if="question">
           <div>
             <div class="question-display-text">
               {{ question?.question.message }}
             </div>
-            <img class="question-display-image" v-if="setting.showImage && question?.question.image"
-              :src="question?.question.image" />
+            <img
+              v-if="setting.showImage && question?.question.image"
+              class="question-display-image"
+              :src="question?.question.image"
+            >
           </div>
         </template>
-        <div v-else class="question-display-loading loading" :style="{ color: '#' + setting.fontColor }">
-          <div :style="{ color: '#' + setting.fontColor }"></div>
-          <div></div>
-          <div></div>
-          <div></div>
+        <div
+          v-else
+          class="question-display-loading loading"
+          :style="{ color: '#' + setting.fontColor }"
+        >
+          <div :style="{ color: '#' + setting.fontColor }" />
+          <div />
+          <div />
+          <div />
         </div>
       </Transition>
     </div>

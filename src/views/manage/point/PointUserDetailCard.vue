@@ -148,36 +148,63 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NCard :bordered="false" content-style="padding-top: 0">
+  <NCard
+    :bordered="false"
+    content-style="padding-top: 0"
+  >
     <NCard :title="`用户信息 | ${user.isAuthed ? '已认证' : '未认证'}`">
       <template #header>
         <NFlex align="center">
-          <NTag :bordered="false" :type="user.isAuthed ? 'success' : 'error'" size="small">
+          <NTag
+            :bordered="false"
+            :type="user.isAuthed ? 'success' : 'error'"
+            size="small"
+          >
             {{ user.isAuthed ? '已认证' : '未认证' }}
           </NTag>
           关于
         </NFlex>
       </template>
-      <NDescriptions label-placement="left" bordered size="small" :column="2">
+      <NDescriptions
+        label-placement="left"
+        bordered
+        size="small"
+        :column="2"
+      >
         <NDescriptionsItem label="用户名">
           {{ user.info.name }}
         </NDescriptionsItem>
-        <NDescriptionsItem v-if="user.info.userId > 0" label="UId">
+        <NDescriptionsItem
+          v-if="user.info.userId > 0"
+          label="UId"
+        >
           {{ user.info.userId }}
         </NDescriptionsItem>
-        <NDescriptionsItem v-if="user.info.openId != '00000000-0000-0000-0000-000000000000'" label="OpenId">
+        <NDescriptionsItem
+          v-if="user.info.openId != '00000000-0000-0000-0000-000000000000'"
+          label="OpenId"
+        >
           {{ user.info.openId }}
         </NDescriptionsItem>
         <NDescriptionsItem label="积分">
           {{ user.point }}
         </NDescriptionsItem>
-        <NDescriptionsItem v-if="user.isAuthed" label="认证时间">
+        <NDescriptionsItem
+          v-if="user.isAuthed"
+          label="认证时间"
+        >
           <NTime :time="user.info.createAt" />
         </NDescriptionsItem>
       </NDescriptions>
       <template #footer>
         <NFlex>
-          <NButton type="primary" @click="showAddPointModal = true" size="small"> 给予/扣除积分 </NButton>
+          <NButton
+            type="primary"
+            size="small"
+            @click="showAddPointModal = true"
+          >
+            给予/扣除积分
+          </NButton>
         </NFlex>
       </template>
     </NCard>
@@ -186,17 +213,36 @@ onMounted(async () => {
       <template v-if="orders.length == 0">
         <NEmpty description="暂无订单" />
       </template>
-      <PointOrderCard v-else :order="orders" type="owner" :goods="goods" />
+      <PointOrderCard
+        v-else
+        :order="orders"
+        type="owner"
+        :goods="goods"
+      />
     </NSpin>
     <NDivider> 积分历史 </NDivider>
     <NSpin :show="isLoading">
       <PointHistoryCard :histories="pointHistory" />
     </NSpin>
-    <NModal v-model:show="showAddPointModal" preset="card" style="width: 500px; max-width: 90vw; height: auto">
-      <template #header> 给予/扣除积分 </template>
+    <NModal
+      v-model:show="showAddPointModal"
+      preset="card"
+      style="width: 500px; max-width: 90vw; height: auto"
+    >
+      <template #header>
+        给予/扣除积分
+      </template>
       <NFlex vertical>
-        <NFlex align="center" :wrap="false">
-          <NInputNumber v-model:value="addPointCount" type="number" placeholder="负数为扣除" style="max-width: 120px" />
+        <NFlex
+          align="center"
+          :wrap="false"
+        >
+          <NInputNumber
+            v-model:value="addPointCount"
+            type="number"
+            placeholder="负数为扣除"
+            style="max-width: 120px"
+          />
 
           <NTooltip>
             <template #trigger>
@@ -205,8 +251,18 @@ onMounted(async () => {
             负数为扣除
           </NTooltip>
         </NFlex>
-        <NInput placeholder="请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
-        <NButton type="primary" @click="givePoint" :loading="isLoading">
+        <NInput
+          v-model:value="addPointReason"
+          placeholder="请输入备注"
+          :maxlength="100"
+          show-count
+          clearable
+        />
+        <NButton
+          type="primary"
+          :loading="isLoading"
+          @click="givePoint"
+        >
           {{ addPointCount > 0 ? '给予' : '扣除' }}
         </NButton>
       </NFlex>

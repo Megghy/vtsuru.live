@@ -27,7 +27,6 @@ import ForumCommentItem from './ForumCommentItem.vue'
 import { useAccount } from '@/api/account'
 
 const { biliInfo, userInfo } = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
 }>()
@@ -102,22 +101,57 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert v-if="!forumInfo" type="error"> 用户未创建粉丝讨论区 </NAlert>
+  <NAlert
+    v-if="!forumInfo"
+    type="error"
+  >
+    用户未创建粉丝讨论区
+  </NAlert>
   <NCard
     v-else-if="
       (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply) ||
-      forumInfo.settings.allowedViewerLevel > forumInfo.level
+        forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
   >
-    <NAlert type="warning"> 你需要成为成员才能访问 {{ forumInfo.name }} </NAlert>
-    <br />
-    <NAlert v-if="forumInfo.isApplied" type="success"> 已申请, 正在等待管理员审核 </NAlert>
-    <NCard v-else title="加入该讨论区">
-      <NAlert v-if="!accountInfo.id" type="error"> 需要登录后才能够加入 </NAlert>
-      <NAlert v-else-if="forumInfo.settings.requireApply" type="warning"> 申请需要审核 </NAlert>
-      <NAlert v-else type="success"> 该讨论区可直接加入 </NAlert>
+    <NAlert type="warning">
+      你需要成为成员才能访问 {{ forumInfo.name }}
+    </NAlert>
+    <br>
+    <NAlert
+      v-if="forumInfo.isApplied"
+      type="success"
+    >
+      已申请, 正在等待管理员审核
+    </NAlert>
+    <NCard
+      v-else
+      title="加入该讨论区"
+    >
+      <NAlert
+        v-if="!accountInfo.id"
+        type="error"
+      >
+        需要登录后才能够加入
+      </NAlert>
+      <NAlert
+        v-else-if="forumInfo.settings.requireApply"
+        type="warning"
+      >
+        申请需要审核
+      </NAlert>
+      <NAlert
+        v-else
+        type="success"
+      >
+        该讨论区可直接加入
+      </NAlert>
       <NDivider />
-      <NButton type="primary" @click="ApplyToForum" :loading="useForum.isLoading" :disabled="!accountInfo.id">
+      <NButton
+        type="primary"
+        :loading="useForum.isLoading"
+        :disabled="!accountInfo.id"
+        @click="ApplyToForum"
+      >
         {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
       </NButton>
     </NCard>
@@ -127,41 +161,90 @@ onUnmounted(() => {
       <NCard size="small">
         <template #header>
           <NFlex justify="center">
-            <NText style="font-size: large">{{ forumInfo.name }}</NText>
+            <NText style="font-size: large">
+              {{ forumInfo.name }}
+            </NText>
           </NFlex>
         </template>
       </NCard>
       <NFlex>
         <NCard style="max-width: 300px">
           <NFlex vertical>
-            <NButton @click="showPostTopicModal = true"> 发布话题 </NButton>
-            <NCard v-if="forumInfo.isAdmin" size="small" title="管理员">
-              
-            </NCard>
+            <NButton @click="showPostTopicModal = true">
+              发布话题
+            </NButton>
+            <NCard
+              v-if="forumInfo.isAdmin"
+              size="small"
+              title="管理员"
+            />
           </NFlex>
         </NCard>
-        <NList bordered style="flex: 1" size="small" hoverable clickable>
-          <NListItem v-for="item in topics?.data ?? []" :key="item.id">
-            <a :href="`${$route.path}/topic/${item.id}`" target="_blank">
-              <ForumPreviewItem :item="item" :forum="forumInfo" />
+        <NList
+          bordered
+          style="flex: 1"
+          size="small"
+          hoverable
+          clickable
+        >
+          <NListItem
+            v-for="item in topics?.data ?? []"
+            :key="item.id"
+          >
+            <a
+              :href="`${$route.path}/topic/${item.id}`"
+              target="_blank"
+            >
+              <ForumPreviewItem
+                :item="item"
+                :forum="forumInfo"
+              />
             </a>
           </NListItem>
         </NList>
       </NFlex>
     </NFlex>
-    <NModal preset="card" v-model:show="showPostTopicModal" style="width: 800px; max-width: 95%">
+    <NModal
+      v-model:show="showPostTopicModal"
+      preset="card"
+      style="width: 800px; max-width: 95%"
+    >
       <template #header>
         发布话题
         <NDivider vertical />
-        <NText depth="3" style="font-size: small"> 保存于 <NTime :time="lastBackupTopic" format="HH:mm:ss" /> </NText>
+        <NText
+          depth="3"
+          style="font-size: small"
+        >
+          保存于 <NTime
+            :time="lastBackupTopic"
+            format="HH:mm:ss"
+          />
+        </NText>
       </template>
       <NFlex vertical>
-        <NInput v-model:value="currentPostTopicModel.title" placeholder="标题" />
-        <VEditor v-model:value="currentPostTopicModel.content" :max-length="2333" ref="editor" />
-        <NButton type="primary" @click="postTopic" :loading="!token || useForum.isLoading"> 发布 </NButton>
+        <NInput
+          v-model:value="currentPostTopicModel.title"
+          placeholder="标题"
+        />
+        <VEditor
+          ref="editor"
+          v-model:value="currentPostTopicModel.content"
+          :max-length="2333"
+        />
+        <NButton
+          type="primary"
+          :loading="!token || useForum.isLoading"
+          @click="postTopic"
+        >
+          发布
+        </NButton>
       </NFlex>
     </NModal>
-    <TurnstileVerify ref="turnstile" v-model="token" />
+    <TurnstileVerify
+      ref="turnstile"
+      v-model="token"
+    />
   </template>
 </template>
 

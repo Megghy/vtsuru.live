@@ -88,22 +88,52 @@ onMounted(() => {
 </script>
 
 <template>
-  <NEmpty v-if="!config" description="此模板不支持配置" />
+  <NEmpty
+    v-if="!config"
+    description="此模板不支持配置"
+  />
   <NForm v-else>
-    <NFormItem v-for="item in config.items" :key="item.name.toString()" :label="item.name.toString()">
-      <component v-if="item.type == 'render'" :is="item.render(configData)"></component>
+    <NFormItem
+      v-for="item in config.items"
+      :key="item.name.toString()"
+      :label="item.name.toString()"
+    >
+      <component
+        :is="item.render(configData)"
+        v-if="item.type == 'render'"
+      />
       <template v-else-if="item.type == 'string'">
-        <NInput v-if="item.data" :value="configData[item.key]" @update:value="configData[item.key] = $event" />
-        <NInput v-else v-model:value="configData[item.key]" />
+        <NInput
+          v-if="item.data"
+          :value="configData[item.key]"
+          @update:value="configData[item.key] = $event"
+        />
+        <NInput
+          v-else
+          v-model:value="configData[item.key]"
+        />
       </template>
-      <NUpload v-else-if="item.type == 'image'" accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico" list-type="image-card"
-        :default-upload="false" v-model:file-list="fileList[item.key]"
-        @update:file-list="file => OnFileListChange(item.key, file)" :max="item.imageLimit" im>
+      <NUpload
+        v-else-if="item.type == 'image'"
+        v-model:file-list="fileList[item.key]"
+        accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+        list-type="image-card"
+        :default-upload="false"
+        :max="item.imageLimit"
+        im
+        @update:file-list="file => OnFileListChange(item.key, file)"
+      >
         上传图片
       </NUpload>
     </NFormItem>
     <NFormItem>
-      <NButton type="primary" @click="onSubmit" :loading="isUploading" >提交</NButton>
+      <NButton
+        type="primary"
+        :loading="isUploading"
+        @click="onSubmit"
+      >
+        提交
+      </NButton>
     </NFormItem>
   </NForm>
 </template>

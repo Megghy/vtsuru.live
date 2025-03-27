@@ -218,21 +218,49 @@ onMounted(() => {
 
 <template>
   <NSpace align="center">
-    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
-      style="max-width: 200px">
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
+      style="max-width: 200px"
+    >
       启用提问箱
       <NDivider vertical />
-      <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.QuestionBox)"
-        @update:value="setFunctionEnable" />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.QuestionBox)"
+        @update:value="setFunctionEnable"
+      />
     </NAlert>
-    <NButton type="primary" @click="refresh"> 刷新 </NButton>
-    <NButton type="primary" @click="shareModalVisiable = true" secondary> 分享 </NButton>
-    <NButton type="primary" @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
-      secondary>
+    <NButton
+      type="primary"
+      @click="refresh"
+    >
+      刷新
+    </NButton>
+    <NButton
+      type="primary"
+      secondary
+      @click="shareModalVisiable = true"
+    >
+      分享
+    </NButton>
+    <NButton
+      type="primary"
+      secondary
+      @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+    >
       前往提问页
     </NButton>
-    <NButton @click="showOBSModal = true" type="primary" secondary> 预览OBS组件 </NButton>
-    <NAlert type="success" style="max-width: 550px;" closable>
+    <NButton
+      type="primary"
+      secondary
+      @click="showOBSModal = true"
+    >
+      预览OBS组件
+    </NButton>
+    <NAlert
+      type="success"
+      style="max-width: 550px;"
+      closable
+    >
       2025.3.1 本站已支持内容审查, 可前往提问箱设置页进行开启
       <NTooltip>
         <template #trigger>
@@ -242,62 +270,140 @@ onMounted(() => {
       </NTooltip>
     </NAlert>
   </NSpace>
-  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+  <NDivider
+    style="margin: 16px 0 16px 0"
+    title-placement="left"
+  >
     提问页链接
   </NDivider>
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
-      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`" readonly />
-      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`)">
-        复制 </NButton>
+      <NInput
+        :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`"
+        readonly
+      />
+      <NButton
+        secondary
+        @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/question-box`)"
+      >
+        复制
+      </NButton>
     </NInputGroup>
-    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+    <NCheckbox v-model:checked="useCNUrl">
+      使用国内镜像(访问更快)
+    </NCheckbox>
   </NFlex>
   <NDivider style="margin: 10px 0 10px 0" />
   <template v-if="useQB.reviewing > 0">
-    <NAlert type="warning" title="有提问正在审核中">
+    <NAlert
+      type="warning"
+      title="有提问正在审核中"
+    >
       还剩余 {{ useQB.reviewing }} 条
     </NAlert>
     <NDivider style="margin: 10px 0 10px 0" />
   </template>
-  <NSpin v-if="useQB.isLoading" show />
-  <NTabs v-else animated @update:value="onTabChange" v-model:value="selectedTabItem">
-    <NTabPane tab="我收到的" name="0" display-directive="show:lazy">
+  <NSpin
+    v-if="useQB.isLoading"
+    show
+  />
+  <NTabs
+    v-else
+    v-model:value="selectedTabItem"
+    animated
+    @update:value="onTabChange"
+  >
+    <NTabPane
+      tab="我收到的"
+      name="0"
+      display-directive="show:lazy"
+    >
       <NFlex align="center">
-        <NButton @click="$router.push({ name: 'question-display' })" type="primary"> 打开展示页 </NButton>
-        <NSelect v-model:value="useQB.displayTag" placeholder="选择当前话题" filterable clearable
-          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))" style="width: 200px">
+        <NButton
+          type="primary"
+          @click="$router.push({ name: 'question-display' })"
+        >
+          打开展示页
+        </NButton>
+        <NSelect
+          v-model:value="useQB.displayTag"
+          placeholder="选择当前话题"
+          filterable
+          clearable
+          :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
+          style="width: 200px"
+        >
           <template #header>
-            <NText strong depth="3"> 在设置选项卡中添加或删除话题 </NText>
+            <NText
+              strong
+              depth="3"
+            >
+              在设置选项卡中添加或删除话题
+            </NText>
           </template>
         </NSelect>
-        <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
-        <NCheckbox v-model:checked="useQB.onlyPublic"> 只显示公开 </NCheckbox>
-        <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
+        <NCheckbox v-model:checked="useQB.onlyFavorite">
+          只显示收藏
+        </NCheckbox>
+        <NCheckbox v-model:checked="useQB.onlyPublic">
+          只显示公开
+        </NCheckbox>
+        <NCheckbox v-model:checked="useQB.onlyUnread">
+          只显示未读
+        </NCheckbox>
       </NFlex>
       <NDivider style="margin: 10px 0 10px 0" />
-      <NEmpty v-if="useQB.recieveQuestionsFiltered.length == 0" description="暂无收到的提问" />
+      <NEmpty
+        v-if="useQB.recieveQuestionsFiltered.length == 0"
+        description="暂无收到的提问"
+      />
       <div v-else>
-        <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
-          show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
+        <NPagination
+          v-model:page="pn"
+          v-model:page-size="ps"
+          :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper
+          show-size-picker
+          :page-sizes="[20, 50, 100]"
+        />
         <NDivider style="margin: 10px 0 10px 0" />
         <QuestionItems :questions="pagedQuestions">
           <template #footer="{ item }">
             <NSpace>
-              <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="info">
+              <NButton
+                v-if="!item.isReaded"
+                size="small"
+                type="info"
+                @click="useQB.read(item, true)"
+              >
                 设为已读
               </NButton>
-              <NButton v-else size="small" @click="useQB.read(item, false)" type="warning">重设为未读</NButton>
-              <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
+              <NButton
+                v-else
+                size="small"
+                type="warning"
+                @click="useQB.read(item, false)"
+              >
+                重设为未读
+              </NButton>
+              <NButton
+                size="small"
+                @click="useQB.favorite(item, !item.isFavorite)"
+              >
                 <template #icon>
-                  <NIcon :component="item.isFavorite ? Heart : HeartOutline"
-                    :color="item.isFavorite ? '#dd484f' : ''" />
+                  <NIcon
+                    :component="item.isFavorite ? Heart : HeartOutline"
+                    :color="item.isFavorite ? '#dd484f' : ''"
+                  />
                 </template>
                 收藏
               </NButton>
               <NPopconfirm @positive-click="useQB.DelQA(item.id)">
                 <template #trigger>
-                  <NButton size="small" type="error">
+                  <NButton
+                    size="small"
+                    type="error"
+                  >
                     <template #icon>
                       <NIcon :component="Delete24Filled" />
                     </template>
@@ -312,76 +418,145 @@ onMounted(() => {
                         </template>
                         暂时还没写
                       </NTooltip> -->
-              <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
+              <NButton
+                size="small"
+                type="warning"
+                @click="useQB.blacklist(item)"
+              >
+                拉黑
+              </NButton>
             </NSpace>
           </template>
           <template #header-extra="{ item }">
-            <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
+            <NButton
+              :type="item.isReaded ? 'default' : 'info'"
+              :secondary="item.isReaded"
+              @click="onOpenModal(item)"
+            >
               {{ item.answer ? '查看回复' : '回复' }}
             </NButton>
           </template>
         </QuestionItems>
         <NDivider style="margin: 10px 0 10px 0" />
-        <NPagination v-model:page="pn" v-model:page-size="ps" :item-count="useQB.recieveQuestionsFiltered.length"
-          show-quick-jumper show-size-picker :page-sizes="[20, 50, 100]" />
+        <NPagination
+          v-model:page="pn"
+          v-model:page-size="ps"
+          :item-count="useQB.recieveQuestionsFiltered.length"
+          show-quick-jumper
+          show-size-picker
+          :page-sizes="[20, 50, 100]"
+        />
       </div>
     </NTabPane>
-    <NTabPane ref="parentRef" tab="我发送的" name="1" display-directive="show:lazy">
-      <NEmpty v-if="useQB.sendQuestions.length == 0" description="暂无发送的提问" />
+    <NTabPane
+      ref="parentRef"
+      tab="我发送的"
+      name="1"
+      display-directive="show:lazy"
+    >
+      <NEmpty
+        v-if="useQB.sendQuestions.length == 0"
+        description="暂无发送的提问"
+      />
       <NList v-else>
-        <NListItem v-for="item in useQB.sendQuestions" :key="item.id">
-          <NCard hoverable size="small">
+        <NListItem
+          v-for="item in useQB.sendQuestions"
+          :key="item.id"
+        >
+          <NCard
+            hoverable
+            size="small"
+          >
             <template #header>
-              <NSpace :size="0" align="center">
+              <NSpace
+                :size="0"
+                align="center"
+              >
                 发给
                 <NDivider vertical />
-                <NButton text type="info" @click="router.push('/user/' + item.target.id)">
+                <NButton
+                  text
+                  type="info"
+                  @click="router.push('/user/' + item.target.id)"
+                >
                   {{ item.target.name }}
                 </NButton>
                 <NDivider vertical />
-                <NText depth="3" style="font-size: small">
+                <NText
+                  depth="3"
+                  style="font-size: small"
+                >
                   <NTooltip>
                     <template #trigger>
-                      <NTime :time="item.sendAt" :to="Date.now()" type="relative" />
+                      <NTime
+                        :time="item.sendAt"
+                        :to="Date.now()"
+                        type="relative"
+                      />
                     </template>
                     <NTime />
                   </NTooltip>
                 </NText>
               </NSpace>
             </template>
-            <template v-if="item.answer" #footer>
+            <template
+              v-if="item.answer"
+              #footer
+            >
               <NDivider style="margin: 0" />
-              <NCard :bordered="false" size="small">
+              <NCard
+                :bordered="false"
+                size="small"
+              >
                 <template #header>
                   <NSpace align="center">
-                    <NText depth="3"> 回复 </NText>
+                    <NText depth="3">
+                      回复
+                    </NText>
                   </NSpace>
                 </template>
                 {{ item.answer.message }}
               </NCard>
             </template>
             <template v-if="item.question?.image">
-              <NImage :src="item.question.image" height="100" lazy />
-              <br />
+              <NImage
+                :src="item.question.image"
+                height="100"
+                lazy
+              />
+              <br>
             </template>
             {{ item.question?.message }}
           </NCard>
         </NListItem>
       </NList>
     </NTabPane>
-    <NTabPane tab="垃圾站" name="2" display-directive="show:lazy">
+    <NTabPane
+      tab="垃圾站"
+      name="2"
+      display-directive="show:lazy"
+    >
       <template #prefix>
         <NIcon :component="TrashBin" />
       </template>
-      <NEmpty v-if="useQB.trashQuestions.length == 0" description="暂无被过滤的提问" />
+      <NEmpty
+        v-if="useQB.trashQuestions.length == 0"
+        description="暂无被过滤的提问"
+      />
       <NList v-else>
-        <NListItem v-for="question in useQB.trashQuestions" :key="question.id">
+        <NListItem
+          v-for="question in useQB.trashQuestions"
+          :key="question.id"
+        >
           <QuestionItem :item="question">
             <template #footer="{ item }">
               <NSpace>
                 <NPopconfirm @positive-click="useQB.DelQA(item.id)">
                   <template #trigger>
-                    <NButton size="small" type="error">
+                    <NButton
+                      size="small"
+                      type="error"
+                    >
                       <template #icon>
                         <NIcon :component="Delete24Filled" />
                       </template>
@@ -396,12 +571,28 @@ onMounted(() => {
                         </template>
                         暂时还没写
                       </NTooltip> -->
-                <NButton size="small" @click="useQB.blacklist(item)" type="warning"> 拉黑 </NButton>
-                <NButton size="small" @click="useQB.blacklist(item)" type="primary"> 标记为正常 </NButton>
+                <NButton
+                  size="small"
+                  type="warning"
+                  @click="useQB.blacklist(item)"
+                >
+                  拉黑
+                </NButton>
+                <NButton
+                  size="small"
+                  type="primary"
+                  @click="useQB.blacklist(item)"
+                >
+                  标记为正常
+                </NButton>
               </NSpace>
             </template>
             <template #header-extra="{ item }">
-              <NButton @click="onOpenModal(item)" :type="item.isReaded ? 'default' : 'info'" :secondary="item.isReaded">
+              <NButton
+                :type="item.isReaded ? 'default' : 'info'"
+                :secondary="item.isReaded"
+                @click="onOpenModal(item)"
+              >
                 {{ item.answer ? '查看回复' : '回复' }}
               </NButton>
             </template>
@@ -409,21 +600,39 @@ onMounted(() => {
         </NListItem>
       </NList>
     </NTabPane>
-    <NTabPane tab="设置" name="3" display-directive="show:lazy">
+    <NTabPane
+      tab="设置"
+      name="3"
+      display-directive="show:lazy"
+    >
       <NDivider> 设定 </NDivider>
       <NSpin :show="useQB.isLoading">
-        <NCheckbox v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-          @update:checked="saveSettings">
+        <NCheckbox
+          v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+          @update:checked="saveSettings"
+        >
           允许未注册用户进行提问
         </NCheckbox>
-        <NDivider> 内容审查
+        <NDivider>
+          内容审查
           <NDivider vertical />
-          <NTag type="success" :bordered="false" size="tiny">新</NTag>
+          <NTag
+            type="success"
+            :bordered="false"
+            size="tiny"
+          >
+            新
+          </NTag>
         </NDivider>
-        <NSlider v-model:value="tempSaftyLevel"
+        <NSlider
+          v-model:value="tempSaftyLevel"
+          :marks="remarkLevel"
+          step="mark"
+          :max="3"
+          style="max-width: 80%; margin: 0 auto"
+          :format-tooltip="(v) => remarkLevelString[v]"
           @dragend="() => { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveSettings() }"
-          :marks="remarkLevel" step="mark" :max="3" style="max-width: 80%; margin: 0 auto"
-          :format-tooltip="(v) => remarkLevelString[v]" />
+        />
         <NDivider>
           标签
           <NTooltip>
@@ -436,27 +645,57 @@ onMounted(() => {
         <NFlex>
           <NInputGroup style="max-width: 400px">
             <NInputGroupLabel> 标签名称 </NInputGroupLabel>
-            <NInput v-model:value="addTagName" placeholder="就是名称" maxlength="30" show-count clearable />
-            <NButton type="primary" @click="useQB.addTag(addTagName)"> 添加 </NButton>
+            <NInput
+              v-model:value="addTagName"
+              placeholder="就是名称"
+              maxlength="30"
+              show-count
+              clearable
+            />
+            <NButton
+              type="primary"
+              @click="useQB.addTag(addTagName)"
+            >
+              添加
+            </NButton>
           </NInputGroup>
         </NFlex>
-        <br />
-        <NEmpty v-if="useQB.tags.length == 0" description="暂无标签" />
+        <br>
+        <NEmpty
+          v-if="useQB.tags.length == 0"
+          description="暂无标签"
+        />
         <NFlex v-else>
           <NList bordered>
-            <NListItem v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)" :key="item.name">
+            <NListItem
+              v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)"
+              :key="item.name"
+            >
               <NFlex align="center">
-                <NTag :bordered="false" size="small" :type="item.visiable ? 'success' : 'error'">
+                <NTag
+                  :bordered="false"
+                  size="small"
+                  :type="item.visiable ? 'success' : 'error'"
+                >
                   {{ item.name }}
                 </NTag>
                 <NTooltip>
                   <template #trigger>
                     <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
                       <template #trigger>
-                        <NButton :type="item.visiable ? 'success' : 'error'" text>
+                        <NButton
+                          :type="item.visiable ? 'success' : 'error'"
+                          text
+                        >
                           <template #icon>
-                            <NIcon v-if="item.visiable" :component="Eye24Filled" />
-                            <NIcon v-else :component="EyeOff24Filled" />
+                            <NIcon
+                              v-if="item.visiable"
+                              :component="Eye24Filled"
+                            />
+                            <NIcon
+                              v-else
+                              :component="EyeOff24Filled"
+                            />
                           </template>
                         </NButton>
                       </template>
@@ -467,7 +706,10 @@ onMounted(() => {
                 </NTooltip>
                 <NPopconfirm @positive-click="useQB.delTag(item.name)">
                   <template #trigger>
-                    <NButton type="error" text>
+                    <NButton
+                      type="error"
+                      text
+                    >
                       <template #icon>
                         <NIcon :component="Delete24Regular" />
                       </template>
@@ -480,78 +722,177 @@ onMounted(() => {
           </NList>
         </NFlex>
         <NDivider> 通知 </NDivider>
-        <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQA" @update:checked="saveSettings">
+        <NCheckbox
+          v-model:checked="accountInfo.settings.sendEmail.recieveQA"
+          @update:checked="saveSettings"
+        >
           收到新提问时发送邮件
         </NCheckbox>
-        <NCheckbox v-model:checked="accountInfo.settings.sendEmail.recieveQAReply" @update:checked="saveSettings">
+        <NCheckbox
+          v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
+          @update:checked="saveSettings"
+        >
           提问后收到回复时发送邮件
         </NCheckbox>
       </NSpin>
     </NTabPane>
   </NTabs>
   <NDivider />
-  <NModal preset="card" v-model:show="replyModalVisiable" style="max-width: 90vw; width: 500px">
-    <template #header> 回复 </template>
+  <NModal
+    v-model:show="replyModalVisiable"
+    preset="card"
+    style="max-width: 90vw; width: 500px"
+  >
+    <template #header>
+      回复
+    </template>
     <NSpace vertical>
-      <NInput placeholder="请输入回复" type="textarea" v-model:value="replyMessage" maxlength="1000" show-count clearable />
+      <NInput
+        v-model:value="replyMessage"
+        placeholder="请输入回复"
+        type="textarea"
+        maxlength="1000"
+        show-count
+        clearable
+      />
       <NSpin :show="useQB.isChangingPublic">
-        <NCheckbox @update:checked="(v) => useQB.setPublic(v)" :default-checked="useQB.currentQuestion?.isPublic">
+        <NCheckbox
+          :default-checked="useQB.currentQuestion?.isPublic"
+          @update:checked="(v) => useQB.setPublic(v)"
+        >
           公开可见
         </NCheckbox>
       </NSpin>
     </NSpace>
     <NDivider style="margin: 10px 0 10px 0" />
-    <NButton :loading="useQB.isRepling" @click="useQB.reply(useQB.currentQuestion?.id ?? -1, replyMessage)"
-      type="primary" :secondary="useQB.currentQuestion?.answer ? true : false">
+    <NButton
+      :loading="useQB.isRepling"
+      type="primary"
+      :secondary="useQB.currentQuestion?.answer ? true : false"
+      @click="useQB.reply(useQB.currentQuestion?.id ?? -1, replyMessage)"
+    >
       {{ useQB.currentQuestion?.answer ? '修改' : '发送' }}
     </NButton>
   </NModal>
-  <NModal v-model:show="shareModalVisiable" preset="card" title="分享" style="width: 600px">
-    <div ref="shareCardRef" class="share-card container">
-      <NText class="share-card title"> 向我提问 </NText>
-      <NText class="share-card type"> 提 问 箱 </NText>
+  <NModal
+    v-model:show="shareModalVisiable"
+    preset="card"
+    title="分享"
+    style="width: 600px"
+  >
+    <div
+      ref="shareCardRef"
+      class="share-card container"
+    >
+      <NText class="share-card title">
+        向我提问
+      </NText>
+      <NText class="share-card type">
+        提 问 箱
+      </NText>
       <NText class="share-card name">
         {{ accountInfo?.name }}
       </NText>
       <NDivider class="share-card divider-1" />
-      <NText class="share-card site"> VTSURU.LIVE </NText>
-      <QrcodeVue class="share-card qrcode" :value="shareUrl" level="Q" :size="100" background="#00000000"
-        foreground="#ffffff" :margin="1" />
+      <NText class="share-card site">
+        VTSURU.LIVE
+      </NText>
+      <QrcodeVue
+        class="share-card qrcode"
+        :value="shareUrl"
+        level="Q"
+        :size="100"
+        background="#00000000"
+        foreground="#ffffff"
+        :margin="1"
+      />
     </div>
     <NDivider style="margin: 10px" />
     <NInputGroup>
-      <NInput :value="shareUrl" readonly/>
-      <NButton secondary @click="copyToClipboard(shareUrl)"> 复制 </NButton>
+      <NInput
+        :value="shareUrl"
+        readonly
+      />
+      <NButton
+        secondary
+        @click="copyToClipboard(shareUrl)"
+      >
+        复制
+      </NButton>
     </NInputGroup>
-    <NDivider style="margin: 10px"> 国内镜像 (访问更快) </NDivider>
+    <NDivider style="margin: 10px">
+      国内镜像 (访问更快)
+    </NDivider>
     <NInputGroup>
-      <NInput :value="shareUrlCN" readonly />
-      <NButton secondary @click="copyToClipboard(shareUrlCN)"> 复制 </NButton>
+      <NInput
+        :value="shareUrlCN"
+        readonly
+      />
+      <NButton
+        secondary
+        @click="copyToClipboard(shareUrlCN)"
+      >
+        复制
+      </NButton>
     </NInputGroup>
-    <br /><br />
+    <br><br>
     <NSpace justify="center">
-      <NButton type="primary" @click="saveShareImage"> 保存卡片 </NButton>
-      <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
+      <NButton
+        type="primary"
+        @click="saveShareImage"
+      >
+        保存卡片
+      </NButton>
+      <NButton
+        type="primary"
+        @click="saveQRCode"
+      >
+        保存二维码
+      </NButton>
     </NSpace>
   </NModal>
 
-  <NModal preset="card" v-model:show="showOBSModal" closable style="max-width: 90vw; width: auto" title="OBS组件"
-    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column">
+  <NModal
+    v-model:show="showOBSModal"
+    preset="card"
+    closable
+    style="max-width: 90vw; width: auto"
+    title="OBS组件"
+    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column"
+  >
     <NAlert type="info">
       操作显示的内容请前往
-      <NButton text @click="$router.push({ name: 'question-display' })"> 展示管理页 </NButton>
+      <NButton
+        text
+        @click="$router.push({ name: 'question-display' })"
+      >
+        展示管理页
+      </NButton>
     </NAlert>
-    <br />
-    <div :style="{
-      width: savedCardSize.width + 'px',
-      height: savedCardSize.height + 'px',
-    }">
-      <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" />
+    <br>
+    <div
+      :style="{
+        width: savedCardSize.width + 'px',
+        height: savedCardSize.height + 'px',
+      }"
+    >
+      <QuestionDisplayCard
+        :question="useQB.displayQuestion"
+        :setting="setting"
+      />
     </div>
     <NDivider />
-    <NInput readonly :value="CURRENT_HOST + 'obs/question-display?token=' + accountInfo?.token" />
+    <NInput
+      readonly
+      :value="CURRENT_HOST + 'obs/question-display?token=' + accountInfo?.token"
+    />
     <NDivider />
-    <NButton type="primary" @click="$router.push({ name: 'question-display' })"> 前往展示管理页 </NButton>
+    <NButton
+      type="primary"
+      @click="$router.push({ name: 'question-display' })"
+    >
+      前往展示管理页
+    </NButton>
   </NModal>
 </template>
 

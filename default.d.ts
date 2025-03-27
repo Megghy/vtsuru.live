@@ -1,5 +1,6 @@
-import { LoadingBarProviderInst, MessageProviderInst } from 'naive-ui'
-import { useRoute } from 'vue-router'
+
+import type { LoadingBarProviderInst, MessageProviderInst } from 'naive-ui'
+import type { useRoute } from 'vue-router'
 
 declare module 'vue3-aplayer' {
   const content: any

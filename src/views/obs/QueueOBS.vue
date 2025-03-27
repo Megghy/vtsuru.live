@@ -132,86 +132,169 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="queue-background" v-bind="$attrs">
-    <p class="queue-header">排队</p>
+  <div
+    class="queue-background"
+    v-bind="$attrs"
+  >
+    <p class="queue-header">
+      排队
+    </p>
     <NDivider class="queue-divider">
-      <p class="queue-header-count">已有 {{ activeItems.length ?? 0 }} 人</p>
+      <p class="queue-header-count">
+        已有 {{ activeItems.length ?? 0 }} 人
+      </p>
     </NDivider>
-    <div class="queue-singing-container" :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1"
-      :from="progressing?.from as number" :status="progressing?.status as number">
-      <div class="queue-singing-prefix"></div>
+    <div
+      class="queue-singing-container"
+      :singing="queue.findIndex((s) => s.status == QueueStatus.Progressing) > -1"
+      :from="progressing?.from as number"
+      :status="progressing?.status as number"
+    >
+      <div class="queue-singing-prefix" />
       <template v-if="progressing">
-        <img class="queue-singing-avatar" :src="progressing?.user?.face" referrerpolicy="no-referrer" />
-        <p class="queue-singing-name">{{ progressing?.user?.name }}</p>
+        <img
+          class="queue-singing-avatar"
+          :src="progressing?.user?.face"
+          referrerpolicy="no-referrer"
+        >
+        <p class="queue-singing-name">
+          {{ progressing?.user?.name }}
+        </p>
       </template>
-      <div v-else class="queue-singing-empty">等待中</div>
-      <div class="queue-singing-suffix"></div>
+      <div
+        v-else
+        class="queue-singing-empty"
+      >
+        等待中
+      </div>
+      <div class="queue-singing-suffix" />
     </div>
-    <div class="queue-content" ref="listContainerRef">
+    <div
+      ref="listContainerRef"
+      class="queue-content"
+    >
       <template v-if="activeItems.length > 0">
-        <Vue3Marquee class="queue-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20"
-          :style="`height: ${height}px;width: ${width}px;`">
-          <span class="queue-list-item" :from="item.from as number" :status="item.status as number"
-            :payment="item.giftPrice ?? 0" v-for="(item, index) in activeItems" :key="item.id"
-            :style="`height: ${itemHeight}px`">
-            <div class="queue-list-item-index" :index="index + 1">
+        <Vue3Marquee
+          :key="key"
+          class="queue-list"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <span
+            v-for="(item, index) in activeItems"
+            :key="item.id"
+            class="queue-list-item"
+            :from="item.from as number"
+            :status="item.status as number"
+            :payment="item.giftPrice ?? 0"
+            :style="`height: ${itemHeight}px`"
+          >
+            <div
+              class="queue-list-item-index"
+              :index="index + 1"
+            >
               {{ index + 1 }}
             </div>
-            <div v-if="settings.showFanMadelInfo" class="queue-list-item-level"
-              :has-level="(item.user?.fans_medal_level ?? 0) > 0">
+            <div
+              v-if="settings.showFanMadelInfo"
+              class="queue-list-item-level"
+              :has-level="(item.user?.fans_medal_level ?? 0) > 0"
+            >
               {{ `${item.user?.fans_medal_name} ${item.user?.fans_medal_level}` }}
             </div>
             <div class="queue-list-item-user-name">
               {{ item.user?.name }}
             </div>
-            <p v-if="settings.showPayment" class="queue-list-item-payment">
+            <p
+              v-if="settings.showPayment"
+              class="queue-list-item-payment"
+            >
               {{
                 item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice
               }}
             </p>
           </span>
 
-          <NDivider v-if="isMoreThanContainer" class="queue-footer-divider" style="margin: 10px 0 10px 0" />
+          <NDivider
+            v-if="isMoreThanContainer"
+            class="queue-footer-divider"
+            style="margin: 10px 0 10px 0"
+          />
         </Vue3Marquee>
       </template>
-      <div v-else style="position: relative; top: 20%">
-        <NEmpty class="queue-empty" description="暂无人排队" />
+      <div
+        v-else
+        style="position: relative; top: 20%"
+      >
+        <NEmpty
+          class="queue-empty"
+          description="暂无人排队"
+        />
       </div>
     </div>
-    <div class="queue-footer" ref="footerRef" v-if="settings.showRequireInfo">
-      <Vue3Marquee :key="key" ref="footerListRef" class="queue-footer-marquee"
-        :pause="footerSize.width < footerListSize.width" :duration="20">
-        <span class="queue-tag" type="prefix">
+    <div
+      v-if="settings.showRequireInfo"
+      ref="footerRef"
+      class="queue-footer"
+    >
+      <Vue3Marquee
+        :key="key"
+        ref="footerListRef"
+        class="queue-footer-marquee"
+        :pause="footerSize.width < footerListSize.width"
+        :duration="20"
+      >
+        <span
+          class="queue-tag"
+          type="prefix"
+        >
           <div class="queue-tag-key">关键词</div>
           <div class="queue-tag-value">
             {{ settings.keyword }}
           </div>
         </span>
-        <span class="queue-tag" type="prefix">
+        <span
+          class="queue-tag"
+          type="prefix"
+        >
           <div class="queue-tag-key">允许</div>
           <div class="queue-tag-value">
             {{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join(',') : '无' }}
           </div>
         </span>
-        <span class="queue-tag" type="gift">
+        <span
+          class="queue-tag"
+          type="gift"
+        >
           <div class="queue-tag-key">通过礼物</div>
           <div class="queue-tag-value">
             {{ settings.allowGift ? '允许' : '不允许' }}
           </div>
         </span>
-        <span class="queue-tag" type="gift-price">
+        <span
+          class="queue-tag"
+          type="gift-price"
+        >
           <div class="queue-tag-key">最低价格</div>
           <div class="queue-tag-value">
             {{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}
           </div>
         </span>
-        <span class="queue-tag" type="gift-type">
+        <span
+          class="queue-tag"
+          type="gift-type"
+        >
           <div class="queue-tag-key">礼物名</div>
           <div class="queue-tag-value">
             {{ settings.giftNames ? settings.giftNames.join(', ') : '无' }}
           </div>
         </span>
-        <span class="queue-tag" type="fan-madel">
+        <span
+          class="queue-tag"
+          type="fan-madel"
+        >
           <div class="queue-tag-key">粉丝牌</div>
           <div class="queue-tag-value">
             {{

@@ -594,72 +594,181 @@ onMounted(async () => {
 
 <template>
   <NSpace align="center">
-    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
-      style="max-width: 200px">
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
+      style="max-width: 200px"
+    >
       启用歌单
       <NDivider vertical />
-      <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongList)"
-        @update:value="setFunctionEnable" />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongList)"
+        @update:value="setFunctionEnable"
+      />
     </NAlert>
-    <NButton @click="showModal = true" type="primary"> 添加歌曲 </NButton>
-    <NButton @click="exportData" type="primary" secondary> 导出为 CSV </NButton>
-    <NButton @click="$router.push({ name: 'manage-liveRequest' })" secondary> 前往点播管理页 </NButton>
-    <NButton @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })" secondary>
+    <NButton
+      type="primary"
+      @click="showModal = true"
+    >
+      添加歌曲
+    </NButton>
+    <NButton
+      type="primary"
+      secondary
+      @click="exportData"
+    >
+      导出为 CSV
+    </NButton>
+    <NButton
+      secondary
+      @click="$router.push({ name: 'manage-liveRequest' })"
+    >
+      前往点播管理页
+    </NButton>
+    <NButton
+      secondary
+      @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })"
+    >
       前往歌单展示页
     </NButton>
-    <NButton :loading="isLoading" @click="() => {
-      getSongs()
-      message.success('完成')
-    }
-    ">
+    <NButton
+      :loading="isLoading"
+      @click="() => {
+        getSongs()
+        message.success('完成')
+      }
+      "
+    >
       刷新
     </NButton>
     <NButton
-      @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })">
+      @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
+    >
       修改模板
     </NButton>
   </NSpace>
-  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+  <NDivider
+    style="margin: 16px 0 16px 0"
+    title-placement="left"
+  >
     歌单展示页链接
   </NDivider>
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
-      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
-      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`)">
-        复制 </NButton>
+      <NInput
+        :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`"
+        readonly
+      />
+      <NButton
+        secondary
+        @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`)"
+      >
+        复制
+      </NButton>
     </NInputGroup>
-    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+    <NCheckbox v-model:checked="useCNUrl">
+      使用国内镜像(访问更快)
+    </NCheckbox>
   </NFlex>
   <NDivider style="margin: 16px 0 16px 0" />
-  <NModal v-model:show="showModal" style="max-width: 1000px" preset="card" :key="showModalRenderKey">
-    <template #header> 添加歌曲 </template>
+  <NModal
+    :key="showModalRenderKey"
+    v-model:show="showModal"
+    style="max-width: 1000px"
+    preset="card"
+  >
+    <template #header>
+      添加歌曲
+    </template>
     <NScrollbar style="max-height: 80vh">
       <NSpin :show="isModalLoading">
-        <NTabs default-value="custom" animated>
-          <NTabPane name="custom" tab="手动录入">
-            <NForm ref="formRef" :rules="addSongRules" :model="addSongModel">
-              <NFormItem path="name" label="名称">
-                <NInput v-model:value="addSongModel.name" autosize style="min-width: 200px" placeholder="就是歌曲名称"
-                  :status="songs.findIndex((s) => s.name == addSongModel.name) > -1 ? 'error' : 'success'" />
+        <NTabs
+          default-value="custom"
+          animated
+        >
+          <NTabPane
+            name="custom"
+            tab="手动录入"
+          >
+            <NForm
+              ref="formRef"
+              :rules="addSongRules"
+              :model="addSongModel"
+            >
+              <NFormItem
+                path="name"
+                label="名称"
+              >
+                <NInput
+                  v-model:value="addSongModel.name"
+                  autosize
+                  style="min-width: 200px"
+                  placeholder="就是歌曲名称"
+                  :status="songs.findIndex((s) => s.name == addSongModel.name) > -1 ? 'error' : 'success'"
+                />
               </NFormItem>
-              <NFormItem path="author" label="作者 (可多选)">
-                <NSelect v-model:value="addSongModel.author" :options="authors" filterable multiple tag
-                  placeholder="输入后按回车新增" />
+              <NFormItem
+                path="author"
+                label="作者 (可多选)"
+              >
+                <NSelect
+                  v-model:value="addSongModel.author"
+                  :options="authors"
+                  filterable
+                  multiple
+                  tag
+                  placeholder="输入后按回车新增"
+                />
               </NFormItem>
-              <NFormItem path="description" label="备注">
-                <NInput v-model:value="addSongModel.description" placeholder="可选" :maxlength="250" show-count autosize
-                  style="min-width: 300px" clearable />
+              <NFormItem
+                path="description"
+                label="备注"
+              >
+                <NInput
+                  v-model:value="addSongModel.description"
+                  placeholder="可选"
+                  :maxlength="250"
+                  show-count
+                  autosize
+                  style="min-width: 300px"
+                  clearable
+                />
               </NFormItem>
-              <NFormItem path="language" label="语言 (可多选)">
-                <NSelect v-model:value="addSongModel.language" filterable multiple clearable tag
-                  placeholder="可选，输入后按回车新增" :options="songSelectOption" />
+              <NFormItem
+                path="language"
+                label="语言 (可多选)"
+              >
+                <NSelect
+                  v-model:value="addSongModel.language"
+                  filterable
+                  multiple
+                  clearable
+                  tag
+                  placeholder="可选，输入后按回车新增"
+                  :options="songSelectOption"
+                />
               </NFormItem>
-              <NFormItem path="tags" label="标签 (可多选)">
-                <NSelect v-model:value="addSongModel.tags" filterable multiple clearable tag placeholder="可选，输入后按回车新增"
-                  :options="tags" />
+              <NFormItem
+                path="tags"
+                label="标签 (可多选)"
+              >
+                <NSelect
+                  v-model:value="addSongModel.tags"
+                  filterable
+                  multiple
+                  clearable
+                  tag
+                  placeholder="可选，输入后按回车新增"
+                  :options="tags"
+                />
               </NFormItem>
-              <NFormItem path="url" label="链接">
-                <NInput v-model:value="addSongModel.url" placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开" />
+              <NFormItem
+                path="url"
+                label="链接"
+              >
+                <NInput
+                  v-model:value="addSongModel.url"
+                  placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
+                />
               </NFormItem>
               <NFormItem path="options">
                 <template #label>
@@ -672,41 +781,62 @@ onMounted(async () => {
                   </NTooltip>
                 </template>
                 <NSpace vertical>
-                  <NCheckbox :checked="addSongModel.options != undefined" @update:checked="(checked: boolean) => {
-                    addSongModel.options = checked
-                      ? ({
-                        needJianzhang: false,
-                        needTidu: false,
-                        needZongdu: false,
-                      } as SongRequestOption)
-                      : undefined
-                  }
-                  ">
+                  <NCheckbox
+                    :checked="addSongModel.options != undefined"
+                    @update:checked="(checked: boolean) => {
+                      addSongModel.options = checked
+                        ? ({
+                          needJianzhang: false,
+                          needTidu: false,
+                          needZongdu: false,
+                        } as SongRequestOption)
+                        : undefined
+                    }
+                    "
+                  >
                     是否启用
                   </NCheckbox>
                   <template v-if="addSongModel.options != undefined">
                     <NSpace>
-                      <NCheckbox v-model:checked="addSongModel.options.needJianzhang"> 需要舰长 </NCheckbox>
-                      <NCheckbox v-model:checked="addSongModel.options.needTidu"> 需要提督 </NCheckbox>
-                      <NCheckbox v-model:checked="addSongModel.options.needZongdu"> 需要总督 </NCheckbox>
+                      <NCheckbox v-model:checked="addSongModel.options.needJianzhang">
+                        需要舰长
+                      </NCheckbox>
+                      <NCheckbox v-model:checked="addSongModel.options.needTidu">
+                        需要提督
+                      </NCheckbox>
+                      <NCheckbox v-model:checked="addSongModel.options.needZongdu">
+                        需要总督
+                      </NCheckbox>
                     </NSpace>
                     <NSpace align="center">
-                      <NCheckbox :checked="addSongModel.options.scMinPrice != undefined" @update:checked="(checked: boolean) => {
-                        if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                      }
-                      ">
+                      <NCheckbox
+                        :checked="addSongModel.options.scMinPrice != undefined"
+                        @update:checked="(checked: boolean) => {
+                          if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
+                        }
+                        "
+                      >
                         需要SC
                       </NCheckbox>
-                      <NInputGroup v-if="addSongModel.options?.scMinPrice" style="width: 200px">
+                      <NInputGroup
+                        v-if="addSongModel.options?.scMinPrice"
+                        style="width: 200px"
+                      >
                         <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
-                        <NInputNumber v-model:value="addSongModel.options.scMinPrice" min="30" />
+                        <NInputNumber
+                          v-model:value="addSongModel.options.scMinPrice"
+                          min="30"
+                        />
                       </NInputGroup>
                     </NSpace>
                     <NSpace align="center">
-                      <NCheckbox :checked="addSongModel.options.fanMedalMinLevel != undefined" @update:checked="(checked: boolean) => {
-                        if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                      }
-                      ">
+                      <NCheckbox
+                        :checked="addSongModel.options.fanMedalMinLevel != undefined"
+                        @update:checked="(checked: boolean) => {
+                          if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
+                        }
+                        "
+                      >
                         需要粉丝牌
                         <NTooltip>
                           <template #trigger>
@@ -715,9 +845,15 @@ onMounted(async () => {
                           这个即使不开也会遵循全局点歌设置的粉丝牌等级
                         </NTooltip>
                       </NCheckbox>
-                      <NInputGroup v-if="addSongModel.options?.fanMedalMinLevel" style="width: 200px">
+                      <NInputGroup
+                        v-if="addSongModel.options?.fanMedalMinLevel"
+                        style="width: 200px"
+                      >
                         <NInputGroupLabel> 最低等级 </NInputGroupLabel>
-                        <NInputNumber v-model:value="addSongModel.options.fanMedalMinLevel" min="0" />
+                        <NInputNumber
+                          v-model:value="addSongModel.options.fanMedalMinLevel"
+                          min="0"
+                        />
                       </NInputGroup>
                     </NSpace>
                   </template>
@@ -725,42 +861,104 @@ onMounted(async () => {
               </NFormItem>
             </NForm>
             <NFlex align="center">
-              <NButton type="primary" @click="addCustomSong"> 添加 </NButton>
-              <NButton type="warning" @click="resetAddingSong()"> 还原 </NButton>
-              <NButton type="warning" @click="resetAddingSong(true)"> 还原(仅歌名和备注) </NButton>
-              <NCheckbox v-model:checked="onlyResetNameOnAdded"> 添加完成时仅重置歌名和备注 </NCheckbox>
+              <NButton
+                type="primary"
+                @click="addCustomSong"
+              >
+                添加
+              </NButton>
+              <NButton
+                type="warning"
+                @click="resetAddingSong()"
+              >
+                还原
+              </NButton>
+              <NButton
+                type="warning"
+                @click="resetAddingSong(true)"
+              >
+                还原(仅歌名和备注)
+              </NButton>
+              <NCheckbox v-model:checked="onlyResetNameOnAdded">
+                添加完成时仅重置歌名和备注
+              </NCheckbox>
             </NFlex>
           </NTabPane>
-          <NTabPane name="netease" tab="从网易云歌单导入">
-            <NInput clearable style="width: 100%" autosize :status="neteaseSongListId ? 'success' : 'error'"
-              v-model:value="neteaseIdInput" placeholder="直接输入歌单Id或者网页链接">
+          <NTabPane
+            name="netease"
+            tab="从网易云歌单导入"
+          >
+            <NInput
+              v-model:value="neteaseIdInput"
+              clearable
+              style="width: 100%"
+              autosize
+              :status="neteaseSongListId ? 'success' : 'error'"
+              placeholder="直接输入歌单Id或者网页链接"
+            >
               <template #suffix>
-                <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
+                <NTag
+                  v-if="neteaseSongListId"
+                  type="success"
+                  size="small"
+                >
+                  歌单Id: {{ neteaseSongListId }}
+                </NTag>
               </template>
             </NInput>
             <NDivider style="margin: 10px" />
-            <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId"> 获取 </NButton>
+            <NButton
+              type="primary"
+              :disabled="!neteaseSongListId"
+              @click="getNeteaseSongList"
+            >
+              获取
+            </NButton>
             <template v-if="neteaseSongsOptions.length > 0">
               <NDivider style="margin: 10px" />
-              <NTransfer style="height: 500px" ref="transfer" v-model:value="selectedNeteaseSongs"
-                :options="neteaseSongsOptions" source-filterable />
+              <NTransfer
+                ref="transfer"
+                v-model:value="selectedNeteaseSongs"
+                style="height: 500px"
+                :options="neteaseSongsOptions"
+                source-filterable
+              />
               <NDivider style="margin: 10px" />
-              <NButton type="primary" @click="addNeteaseSongs">
+              <NButton
+                type="primary"
+                @click="addNeteaseSongs"
+              >
                 添加到歌单 | {{ selectedNeteaseSongs.length }} 首
               </NButton>
             </template>
           </NTabPane>
-          <NTabPane name="5sing" tab="从5sing搜索">
-            <NInput clearable style="width: 100%" autosize v-model:value="fivesingSearchInput" placeholder="输入要搜索的歌名"
-              maxlength="15" />
+          <NTabPane
+            name="5sing"
+            tab="从5sing搜索"
+          >
+            <NInput
+              v-model:value="fivesingSearchInput"
+              clearable
+              style="width: 100%"
+              autosize
+              placeholder="输入要搜索的歌名"
+              maxlength="15"
+            />
             <NDivider style="margin: 10px" />
-            <NButton type="primary" @click="getFivesingSearchList(true)" :disabled="!fivesingSearchInput">
+            <NButton
+              type="primary"
+              :disabled="!fivesingSearchInput"
+              @click="getFivesingSearchList(true)"
+            >
               搜索
             </NButton>
             <template v-if="fivesingResults.length > 0">
               <NDivider style="margin: 10px" />
               <div style="overflow-x: auto">
-                <NTable size="small" style="overflow-x: auto">
+                <NTable
+                  size="small"
+                  style="overflow-x: auto"
+                >
                   <thead>
                     <tr>
                       <th>名称</th>
@@ -770,28 +968,47 @@ onMounted(async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="song in fivesingResults" v-bind:key="song.id">
+                    <tr
+                      v-for="song in fivesingResults"
+                      :key="song.id"
+                    >
                       <td>{{ song.name }}</td>
                       <td>
                         <NSpace>
-                          <NTag size="small" v-for="author in song.author" :key="author">
+                          <NTag
+                            v-for="author in song.author"
+                            :key="author"
+                            size="small"
+                          >
                             {{ author }}
                           </NTag>
                         </NSpace>
                       </td>
                       <td style="display: flex; justify-content: flex-end">
                         <!-- 在这里播放song.url链接中的音频 -->
-                        <NButton size="small" v-if="!song.url" @click="playFivesingSong(song)"
-                          :loading="isGettingFivesingSongPlayUrl == song.id">
+                        <NButton
+                          v-if="!song.url"
+                          size="small"
+                          :loading="isGettingFivesingSongPlayUrl == song.id"
+                          @click="playFivesingSong(song)"
+                        >
                           试听
                         </NButton>
-                        <audio v-else controls style="max-height: 30px">
-                          <source :src="song.url" />
+                        <audio
+                          v-else
+                          controls
+                          style="max-height: 30px"
+                        >
+                          <source :src="song.url">
                         </audio>
                       </td>
                       <td>
-                        <NButton size="small" color="green" @click="addFingsingSongs(song)"
-                          :disabled="songs.findIndex((s) => s.from == SongFrom.FiveSing && s.id == song.id) > -1">
+                        <NButton
+                          size="small"
+                          color="green"
+                          :disabled="songs.findIndex((s) => s.from == SongFrom.FiveSing && s.id == song.id) > -1"
+                          @click="addFingsingSongs(song)"
+                        >
                           添加
                         </NButton>
                       </td>
@@ -799,48 +1016,99 @@ onMounted(async () => {
                   </tbody>
                 </NTable>
               </div>
-              <br />
-              <NPagination v-model:page="fivesingCurrentPage" :page-count="fivesingTotalPageCount" simple
-                @update-page="getFivesingSearchList(false)" />
+              <br>
+              <NPagination
+                v-model:page="fivesingCurrentPage"
+                :page-count="fivesingTotalPageCount"
+                simple
+                @update-page="getFivesingSearchList(false)"
+              />
             </template>
           </NTabPane>
-          <NTabPane name="file" tab="从文件导入">
+          <NTabPane
+            name="file"
+            tab="从文件导入"
+          >
             <NAlert type="info">
               Excel 文件格式详见:
-              <NButton type="info" tag="a" href="https://www.wolai.com/hZWizjCnAdc6hDdntuWgcU" target="_blank"
-                size="tiny">
+              <NButton
+                type="info"
+                tag="a"
+                href="https://www.wolai.com/hZWizjCnAdc6hDdntuWgcU"
+                target="_blank"
+                size="tiny"
+              >
                 此页面
               </NButton>
             </NAlert>
-            <NUpload v-model:file-list="uploadFiles" :default-upload="false" :max="1" directory-dnd
-              @before-upload="beforeUpload">
+            <NUpload
+              v-model:file-list="uploadFiles"
+              :default-upload="false"
+              :max="1"
+              directory-dnd
+              @before-upload="beforeUpload"
+            >
               <NUploadDragger>
                 <div style="margin-bottom: 12px">
-                  <NIcon size="48" :depth="3">
+                  <NIcon
+                    size="48"
+                    :depth="3"
+                  >
                     <ArchiveOutline />
                   </NIcon>
                 </div>
-                <NText style="font-size: 16px"> 点击或者拖动文件到该区域来上传 </NText>
-                <NP depth="3" style="margin: 8px 0 0 0"> 仅限 Excel 文件(.xlsx和.xls) 以及 csv 文件 </NP>
+                <NText style="font-size: 16px">
+                  点击或者拖动文件到该区域来上传
+                </NText>
+                <NP
+                  depth="3"
+                  style="margin: 8px 0 0 0"
+                >
+                  仅限 Excel 文件(.xlsx和.xls) 以及 csv 文件
+                </NP>
               </NUploadDragger>
             </NUpload>
-            <NButton type="primary" @click="parseExcelFile"> 解析 </NButton>
+            <NButton
+              type="primary"
+              @click="parseExcelFile"
+            >
+              解析
+            </NButton>
             <template v-if="uploadSongsOptions.length > 0">
               <NDivider style="margin: 10px" />
-              <NButton type="primary" @click="addUploadFileSong">
+              <NButton
+                type="primary"
+                @click="addUploadFileSong"
+              >
                 添加到歌单 | {{ selecteduploadSongs.length }} 首
               </NButton>
               <NDivider style="margin: 10px" />
-              <NTransfer style="height: 400px" v-model:value="selecteduploadSongs" :options="uploadSongsOptions"
-                source-filterable />
+              <NTransfer
+                v-model:value="selecteduploadSongs"
+                style="height: 400px"
+                :options="uploadSongsOptions"
+                source-filterable
+              />
             </template>
           </NTabPane>
-          <NTabPane name="directory" tab="从文件夹读取"> 开发中... </NTabPane>
+          <NTabPane
+            name="directory"
+            tab="从文件夹读取"
+          >
+            开发中...
+          </NTabPane>
         </NTabs>
       </NSpin>
     </NScrollbar>
   </NModal>
-  <NSpin v-if="isLoading" show />
-  <SongList v-else :songs="songs" is-self />
+  <NSpin
+    v-if="isLoading"
+    show
+  />
+  <SongList
+    v-else
+    :songs="songs"
+    is-self
+  />
   <NDivider />
 </template>

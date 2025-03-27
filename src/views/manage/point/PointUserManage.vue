@@ -269,25 +269,52 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpin :show="isLoading" style="min-height: 200px; min-width: 200px">
+  <NSpin
+    :show="isLoading"
+    style="min-height: 200px; min-width: 200px"
+  >
     <NCard title="设置">
       <template #header-extra>
         <NPopconfirm @positive-click="settings = JSON.parse(JSON.stringify(defaultSettings))">
           <template #trigger>
-            <NButton size="small" type="warning">恢复默认</NButton>
+            <NButton
+              size="small"
+              type="warning"
+            >
+              恢复默认
+            </NButton>
           </template>
           <span>确定要恢复默认设置吗?</span>
         </NPopconfirm>
       </template>
       <template #footer>
         <NFlex>
-          <NButton type="primary" @click="refresh">刷新</NButton>
-          <NButton type="info" @click="showGivePointModal = true">给予/扣除积分</NButton>
-          <NButton type="info" @click="exportData">导出积分数据 (暂未实现)</NButton>
+          <NButton
+            type="primary"
+            @click="refresh"
+          >
+            刷新
+          </NButton>
+          <NButton
+            type="info"
+            @click="showGivePointModal = true"
+          >
+            给予/扣除积分
+          </NButton>
+          <NButton
+            type="info"
+            @click="exportData"
+          >
+            导出积分数据 (暂未实现)
+          </NButton>
         </NFlex>
       </template>
       <NFlex align="center">
-        <NFlex :wrap="false" align="center" :size="5">
+        <NFlex
+          :wrap="false"
+          align="center"
+          :size="5"
+        >
           <NInput
             v-model:value="settings.searchKeyword"
             placeholder="搜索用户 (用户名或uid)"
@@ -300,11 +327,13 @@ onMounted(async () => {
             </template>
             1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户
             (因为开放平台提供的是OpenId, 不通用)
-            <br/>
+            <br>
             2. 用户名只会保持在首条记录出现时的用户名, 即用户更换用户名之后这里也只会保持不变
           </NTooltip>
         </NFlex>
-        <NCheckbox v-model:checked="settings.onlyAuthed"> 只显示已认证用户 </NCheckbox>
+        <NCheckbox v-model:checked="settings.onlyAuthed">
+          只显示已认证用户
+        </NCheckbox>
       </NFlex>
     </NCard>
     <NDivider />
@@ -329,29 +358,56 @@ onMounted(async () => {
     content-style="padding: 0"
   >
     <NScrollbar style="max-height: 80vh">
-      <PointUserDetailCard v-if="currentUser" :user="currentUser" :authInfo="currentUser.info" :goods="goods" />
+      <PointUserDetailCard
+        v-if="currentUser"
+        :user="currentUser"
+        :auth-info="currentUser.info"
+        :goods="goods"
+      />
     </NScrollbar>
   </NModal>
-  <NModal v-model:show="showGivePointModal" preset="card" style="max-width: 500px" title="给予/扣除积分">
+  <NModal
+    v-model:show="showGivePointModal"
+    preset="card"
+    style="max-width: 500px"
+    title="给予/扣除积分"
+  >
     <NFlex vertical>
-      <NFlex :wrap="false" align="center" :size="0">
+      <NFlex
+        :wrap="false"
+        align="center"
+        :size="0"
+      >
         <NInputGroup style="max-width: 300px">
           <NInputGroupLabel> 目标用户 </NInputGroupLabel>
-          <NInputNumber v-model:value="addPointTarget" type="number" placeholder="请输入目标用户UId" min="0" />
+          <NInputNumber
+            v-model:value="addPointTarget"
+            type="number"
+            placeholder="请输入目标用户UId"
+            min="0"
+          />
         </NInputGroup>
         <NTooltip>
           <template #trigger>
             <NIcon :component="Info24Filled" />
           </template>
           如果目标用户没在直播间发言过则无法显示用户名, 不过不影响使用
-          <br />
+          <br>
           因为uid和b站提供的openid不兼容, 未认证用户可能会出现两个记录, 不过在认证完成后会合并成一个
         </NTooltip>
       </NFlex>
-      <NFlex :wrap="false" align="center" :size="5">
+      <NFlex
+        :wrap="false"
+        align="center"
+        :size="5"
+      >
         <NInputGroup style="max-width: 220px">
           <NInputGroupLabel> 积分数量 </NInputGroupLabel>
-          <NInputNumber v-model:value="addPointCount" type="number" placeholder="输入要给予的积分" />
+          <NInputNumber
+            v-model:value="addPointCount"
+            type="number"
+            placeholder="输入要给予的积分"
+          />
         </NInputGroup>
         <NTooltip>
           <template #trigger>
@@ -360,8 +416,18 @@ onMounted(async () => {
           负数为扣除
         </NTooltip>
       </NFlex>
-      <NInput placeholder="(选填) 请输入备注" v-model:value="addPointReason" :maxlength="100" show-count clearable />
-      <NButton type="primary" @click="givePoint" :loading="isLoading">
+      <NInput
+        v-model:value="addPointReason"
+        placeholder="(选填) 请输入备注"
+        :maxlength="100"
+        show-count
+        clearable
+      />
+      <NButton
+        type="primary"
+        :loading="isLoading"
+        @click="givePoint"
+      >
         {{ addPointCount > 0 ? '给予' : '扣除' }}
       </NButton>
     </NFlex>

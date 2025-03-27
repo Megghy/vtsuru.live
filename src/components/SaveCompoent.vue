@@ -26,7 +26,7 @@ function saveCompoent() {
   }).then((canvas) => {
     canvas.toBlob(
       (data) => {
-        saveAs(data, props.fileName + '.png')
+        saveAs(data!, props.fileName + '.png')
       },
       'image/png',
       1,
@@ -36,5 +36,11 @@ function saveCompoent() {
 </script>
 
 <template>
-  <NButton type="primary" secondary @click="saveCompoent"> {{ buttonText ?? '保存为图片' }} </NButton>
+  <NButton
+    type="primary"
+    secondary
+    @click="saveCompoent"
+  >
+    {{ buttonText ?? '保存为图片' }}
+  </NButton>
 </template>

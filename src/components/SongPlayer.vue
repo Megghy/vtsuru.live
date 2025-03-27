@@ -119,6 +119,14 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 </script>
 
 <template>
-  <NEmpty v-if="!aplayerMusic.src" :description="props.isLrcLoading ? '歌词加载中...' : '暂无歌曲'" />
-  <APlayer v-else :music="aplayerMusic" autoplay :showLrc="aplayerMusic?.lrc && aplayerMusic.lrc.length > 0" />
+  <NEmpty
+    v-if="!aplayerMusic.src"
+    :description="props.isLrcLoading ? '歌词加载中...' : '暂无歌曲'"
+  />
+  <APlayer
+    v-else
+    :music="aplayerMusic"
+    autoplay
+    :show-lrc="aplayerMusic?.lrc && aplayerMusic.lrc.length > 0"
+  />
 </template>

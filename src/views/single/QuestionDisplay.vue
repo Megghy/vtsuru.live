@@ -149,34 +149,82 @@ onMounted(() => {
 </script>
 
 <template>
-  <NFlex :wrap="false" style="margin: 20px">
-    <NFlex style="height: calc(100vh - 40px)" :wrap="false" vertical>
-      <NCard size="small" title="内容设置">
+  <NFlex
+    :wrap="false"
+    style="margin: 20px"
+  >
+    <NFlex
+      style="height: calc(100vh - 40px)"
+      :wrap="false"
+      vertical
+    >
+      <NCard
+        size="small"
+        title="内容设置"
+      >
         <template #header-extra>
-          <NButton @click="$router.push({ name: 'manage-questionBox' })" size="tiny" secondary> 回到控制台 </NButton>
+          <NButton
+            size="tiny"
+            secondary
+            @click="$router.push({ name: 'manage-questionBox' })"
+          >
+            回到控制台
+          </NButton>
         </template>
         <NFlex align="center">
-          <NSelect v-model:value="useQB.displayTag" placeholder="选择当前话题" filterable clearable
-            :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))" style="width: 200px" />
-          <NButton @click="useQB.GetRecieveQAInfo" type="primary"> 刷新 </NButton>
-          <NCheckbox v-model:checked="useQB.onlyFavorite"> 只显示收藏 </NCheckbox>
-          <NCheckbox v-model:checked="useQB.onlyUnread"> 只显示未读 </NCheckbox>
+          <NSelect
+            v-model:value="useQB.displayTag"
+            placeholder="选择当前话题"
+            filterable
+            clearable
+            :options="useQB.tags.map((s) => ({ label: s.name, value: s.name }))"
+            style="width: 200px"
+          />
+          <NButton
+            type="primary"
+            @click="useQB.GetRecieveQAInfo"
+          >
+            刷新
+          </NButton>
+          <NCheckbox v-model:checked="useQB.onlyFavorite">
+            只显示收藏
+          </NCheckbox>
+          <NCheckbox v-model:checked="useQB.onlyUnread">
+            只显示未读
+          </NCheckbox>
         </NFlex>
       </NCard>
       <template v-if="useQB.displayQuestion">
         <NDivider style="margin: 10px 0 10px 0" />
-        <NCard size="small" title="当前展示" embedded>
+        <NCard
+          size="small"
+          title="当前展示"
+          embedded
+        >
           <template #header-extra>
             <NFlex>
-              <NButton @click="useQB.setCurrentQuestion(useQB.displayQuestion)" size="small" secondary type="info">
+              <NButton
+                size="small"
+                secondary
+                type="info"
+                @click="useQB.setCurrentQuestion(useQB.displayQuestion)"
+              >
                 取消展示
               </NButton>
-              <NButton @click="useQB.read(useQB.displayQuestion, true)" size="small" secondary type="success">
+              <NButton
+                size="small"
+                secondary
+                type="success"
+                @click="useQB.read(useQB.displayQuestion, true)"
+              >
                 已读
               </NButton>
             </NFlex>
           </template>
-          <QuestionItem :item="useQB.displayQuestion" style="max-height: 200px;overflow-y: auto" />
+          <QuestionItem
+            :item="useQB.displayQuestion"
+            style="max-height: 200px;overflow-y: auto"
+          />
         </NCard>
         <NDivider style="margin: 10px 0 10px 0" />
       </template>
@@ -187,25 +235,49 @@ onMounted(() => {
             <NFlex>
               <NTooltip>
                 <template #trigger>
-                  <NButton @click="useQB.setCurrentQuestion(item)" size="small"
+                  <NButton
+                    size="small"
                     :type="item.id != useQB.displayQuestion?.id ? 'default' : 'primary'"
-                    :secondary="item.id != useQB.displayQuestion?.id">
+                    :secondary="item.id != useQB.displayQuestion?.id"
+                    @click="useQB.setCurrentQuestion(item)"
+                  >
                     <template #icon>
-                      <NIcon :component="item.id != useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
-                        " />
+                      <NIcon
+                        :component="item.id != useQB.displayQuestion?.id ? ArrowCircleRight12Filled : ArrowCircleLeft12Filled
+                        "
+                      />
                     </template>
                   </NButton>
                 </template>
                 {{ item.id == useQB.displayQuestion?.id ? '取消' : '' }}设为当前展示的提问
               </NTooltip>
-              <NButton v-if="!item.isReaded" size="small" @click="useQB.read(item, true)" type="success" secondary>
+              <NButton
+                v-if="!item.isReaded"
+                size="small"
+                type="success"
+                secondary
+                @click="useQB.read(item, true)"
+              >
                 设为已读
               </NButton>
-              <NButton v-else size="small" @click="useQB.read(item, false)" type="warning" secondary>重设为未读</NButton>
-              <NButton size="small" @click="useQB.favorite(item, !item.isFavorite)">
+              <NButton
+                v-else
+                size="small"
+                type="warning"
+                secondary
+                @click="useQB.read(item, false)"
+              >
+                重设为未读
+              </NButton>
+              <NButton
+                size="small"
+                @click="useQB.favorite(item, !item.isFavorite)"
+              >
                 <template #icon>
-                  <NIcon :component="item.isFavorite ? Heart : HeartOutline"
-                    :color="item.isFavorite ? '#dd484f' : ''" />
+                  <NIcon
+                    :component="item.isFavorite ? Heart : HeartOutline"
+                    :color="item.isFavorite ? '#dd484f' : ''"
+                  />
                 </template>
                 收藏
               </NButton>
@@ -215,10 +287,25 @@ onMounted(() => {
       </NScrollbar>
     </NFlex>
     <NCard style="min-height: 600px; min-width: 50vw;">
-      <NFlex vertical :size="0" style="height: 100%">
+      <NFlex
+        vertical
+        :size="0"
+        style="height: 100%"
+      >
         <NFlex align="center">
-          <NButton @click="showSettingDrawer = true" type="primary"> 打开设置 </NButton>
-          <NButton @click="showOBSModal = true" type="primary" secondary> 预览OBS组件 </NButton>
+          <NButton
+            type="primary"
+            @click="showSettingDrawer = true"
+          >
+            打开设置
+          </NButton>
+          <NButton
+            type="primary"
+            secondary
+            @click="showOBSModal = true"
+          >
+            预览OBS组件
+          </NButton>
           <NCheckbox v-model:checked="showGreenBorder">
             显示边框
             <NTooltip>
@@ -229,7 +316,10 @@ onMounted(() => {
             </NTooltip>
           </NCheckbox>
 
-          <NCheckbox v-model:checked="setting.syncScroll" @update:checked="updateSettings">
+          <NCheckbox
+            v-model:checked="setting.syncScroll"
+            @update:checked="updateSettings"
+          >
             同步滚动
             <NTooltip>
               <template #trigger>
@@ -240,7 +330,12 @@ onMounted(() => {
           </NCheckbox>
           <template v-if="useQB.displayQuestion">
             <NDivider vertical />
-            <NButton @click="useQB.read(useQB.displayQuestion, true)" type="success"> 将当前问题设为已读 </NButton>
+            <NButton
+              type="success"
+              @click="useQB.read(useQB.displayQuestion, true)"
+            >
+              将当前问题设为已读
+            </NButton>
           </template>
         </NFlex>
         <NDivider style="margin-top: 10px">
@@ -252,27 +347,50 @@ onMounted(() => {
             宽x高, 展示框右下角可以调整尺寸. 如果用的 OBS 组件的话尺寸不会同步到obs, 得你自己调
           </NTooltip>
         </NDivider>
-        <NFlex justify="center" align="center" style="height: 100%">
-          <div ref="cardRef" class="resize-box" :style="{
-            border: showGreenBorder ? '24px solid green' : '',
-            background: showGreenBorder ? 'green' : '',
-            padding: '10px',
-            width: savedCardSize.width + 'px',
-            height: savedCardSize.height + 'px',
-          }">
-            <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" :css="customCss"
-              @scroll="syncScroll" />
+        <NFlex
+          justify="center"
+          align="center"
+          style="height: 100%"
+        >
+          <div
+            ref="cardRef"
+            class="resize-box"
+            :style="{
+              border: showGreenBorder ? '24px solid green' : '',
+              background: showGreenBorder ? 'green' : '',
+              padding: '10px',
+              width: savedCardSize.width + 'px',
+              height: savedCardSize.height + 'px',
+            }"
+          >
+            <QuestionDisplayCard
+              :question="useQB.displayQuestion"
+              :setting="setting"
+              :css="customCss"
+              @scroll="syncScroll"
+            />
           </div>
         </NFlex>
       </NFlex>
     </NCard>
   </NFlex>
-  <NDrawer v-model:show="showSettingDrawer" :title="`设置`" :width="400" placement="left">
-    <NDrawerContent title="设置" closable>
+  <NDrawer
+    v-model:show="showSettingDrawer"
+    :title="`设置`"
+    :width="400"
+    placement="left"
+  >
+    <NDrawerContent
+      title="设置"
+      closable
+    >
       <NFlex>
         <NTooltip>
           <template #trigger>
-            <NRadioGroup v-model:value="setting.align" @update:value="updateSettings">
+            <NRadioGroup
+              v-model:value="setting.align"
+              @update:value="updateSettings"
+            >
               <NRadioButton :value="QuestionDisplayAlign.Left">
                 <NIcon :component="TextAlignLeft16Filled" />
               </NRadioButton>
@@ -287,97 +405,211 @@ onMounted(() => {
           文字对齐
         </NTooltip>
         <NFlex>
-          <NCheckbox v-model:checked="setting.showImage" @update:checked="updateSettings"> 显示图片 </NCheckbox>
-          <NCheckbox v-model:checked="setting.showUserName" @update:checked="updateSettings">
+          <NCheckbox
+            v-model:checked="setting.showImage"
+            @update:checked="updateSettings"
+          >
+            显示图片
+          </NCheckbox>
+          <NCheckbox
+            v-model:checked="setting.showUserName"
+            @update:checked="updateSettings"
+          >
             显示投稿用户名
           </NCheckbox>
         </NFlex>
-        <NCard size="small" title="内容设置">
+        <NCard
+          size="small"
+          title="内容设置"
+        >
           <NFlex>
             <NInputGroup style="max-width: 230px">
               <NInputGroupLabel>字体大小</NInputGroupLabel>
-              <NInputNumber v-model:value="setting.fontSize" :min="1" :max="1000" />
-              <NButton @click="updateSettings" type="info">保存</NButton>
+              <NInputNumber
+                v-model:value="setting.fontSize"
+                :min="1"
+                :max="1000"
+              />
+              <NButton
+                type="info"
+                @click="updateSettings"
+              >
+                保存
+              </NButton>
             </NInputGroup>
             <NInputGroup style="max-width: 230px">
               <NInputGroupLabel>边框宽度</NInputGroupLabel>
-              <NInputNumber v-model:value="setting.borderWidth" :min="1" :max="1000" />
-              <NButton @click="updateSettings" type="info">保存</NButton>
+              <NInputNumber
+                v-model:value="setting.borderWidth"
+                :min="1"
+                :max="1000"
+              />
+              <NButton
+                type="info"
+                @click="updateSettings"
+              >
+                保存
+              </NButton>
             </NInputGroup>
             <NInputGroup style="max-width: 300px">
               <NInputGroupLabel>字重</NInputGroupLabel>
-              <NInputNumber v-model:value="setting.fontWeight" :min="1" :max="10000" step="100"
-                placeholder="只有部分字体支持" />
-              <NButton @click="updateSettings" type="info">保存</NButton>
+              <NInputNumber
+                v-model:value="setting.fontWeight"
+                :min="1"
+                :max="10000"
+                step="100"
+                placeholder="只有部分字体支持"
+              />
+              <NButton
+                type="info"
+                @click="updateSettings"
+              >
+                保存
+              </NButton>
             </NInputGroup>
             <NFlex>
-              <NSelect v-model:value="setting.font" :options="fontsOptions" filterable @update:value="updateSettings"
-                placeholder="选择内容字体" />
+              <NSelect
+                v-model:value="setting.font"
+                :options="fontsOptions"
+                filterable
+                placeholder="选择内容字体"
+                @update:value="updateSettings"
+              />
               <NTooltip>
                 <template #trigger>
-                  <NButton @click="loadFonts" type="info" secondary> 获取字体列表 </NButton>
+                  <NButton
+                    type="info"
+                    secondary
+                    @click="loadFonts"
+                  >
+                    获取字体列表
+                  </NButton>
                 </template>
                 如果选用了本地字体且使用了obs组件的话请确保运行obs的电脑上也有这个字体
               </NTooltip>
             </NFlex>
-            <NFlex justify="space-around" style="width: 100%">
+            <NFlex
+              justify="space-around"
+              style="width: 100%"
+            >
               <NFlex style="min-width: 80px">
                 字体颜色
-                <NColorPicker :value="setting.fontColor ? '#' + setting.fontColor : undefined" show-preview
-                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                <NColorPicker
+                  :value="setting.fontColor ? '#' + setting.fontColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="(c: string | null | undefined) => {
                     setting.fontColor = c?.replace('#', '')
                   }
-                    " @confirm="updateSettings" />
+                  "
+                  @confirm="updateSettings"
+                />
               </NFlex>
               <NFlex style="min-width: 80px">
                 背景颜色
-                <NColorPicker :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined" show-preview
-                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                <NColorPicker
+                  :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="(c: string | null | undefined) => {
                     setting.backgroundColor = c?.replace('#', '')
                   }
-                    " @confirm="updateSettings" />
+                  "
+                  @confirm="updateSettings"
+                />
               </NFlex>
               <NFlex style="min-width: 80px">
                 边框颜色
-                <NColorPicker :value="setting.borderColor ? '#' + setting.borderColor : undefined" show-preview
-                  :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+                <NColorPicker
+                  :value="setting.borderColor ? '#' + setting.borderColor : undefined"
+                  show-preview
+                  :modes="['hex']"
+                  :actions="['clear', 'confirm']"
+                  :show-alpha="false"
+                  @update:value="(c: string | null | undefined) => {
                     setting.borderColor = c?.replace('#', '')
                   }
-                    " @confirm="updateSettings" />
+                  "
+                  @confirm="updateSettings"
+                />
               </NFlex>
             </NFlex>
           </NFlex>
         </NCard>
-        <NCard size="small" title="用户名设置">
+        <NCard
+          size="small"
+          title="用户名设置"
+        >
           <NFlex>
             <NInputGroup style="max-width: 230px">
               <NInputGroupLabel>字体大小</NInputGroupLabel>
-              <NInputNumber v-model:value="setting.nameFontSize" :min="1" :max="1000" />
-              <NButton @click="updateSettings" type="info">保存</NButton>
+              <NInputNumber
+                v-model:value="setting.nameFontSize"
+                :min="1"
+                :max="1000"
+              />
+              <NButton
+                type="info"
+                @click="updateSettings"
+              >
+                保存
+              </NButton>
             </NInputGroup>
             <NInputGroup style="max-width: 300px">
               <NInputGroupLabel>字重</NInputGroupLabel>
-              <NInputNumber v-model:value="setting.nameFontWeight" :min="1" :max="10000" step="100"
-                placeholder="只有部分字体支持" />
-              <NButton @click="updateSettings" type="info">保存</NButton>
+              <NInputNumber
+                v-model:value="setting.nameFontWeight"
+                :min="1"
+                :max="10000"
+                step="100"
+                placeholder="只有部分字体支持"
+              />
+              <NButton
+                type="info"
+                @click="updateSettings"
+              >
+                保存
+              </NButton>
             </NInputGroup>
             <NFlex>
-              <NSelect v-model:value="setting.nameFont" :options="fontsOptions" filterable
-                @update:value="updateSettings" placeholder="选择用户名字体" />
+              <NSelect
+                v-model:value="setting.nameFont"
+                :options="fontsOptions"
+                filterable
+                placeholder="选择用户名字体"
+                @update:value="updateSettings"
+              />
               <NTooltip>
                 <template #trigger>
-                  <NButton @click="loadFonts" type="info" secondary> 获取字体列表 </NButton>
+                  <NButton
+                    type="info"
+                    secondary
+                    @click="loadFonts"
+                  >
+                    获取字体列表
+                  </NButton>
                 </template>
                 如果选用了本地字体且使用了obs组件的话请确保运行obs的电脑上也有这个字体
               </NTooltip>
             </NFlex>
             <NFlex style="min-width: 80px">
               字体颜色
-              <NColorPicker :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined" show-preview
-                :modes="['hex']" :actions="['clear', 'confirm']" :show-alpha="false" @update:value="(c: string | null | undefined) => {
+              <NColorPicker
+                :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined"
+                show-preview
+                :modes="['hex']"
+                :actions="['clear', 'confirm']"
+                :show-alpha="false"
+                @update:value="(c: string | null | undefined) => {
                   setting.nameFontColor = c?.replace('#', '')
                 }
-                  " @confirm="updateSettings" />
+                "
+                @confirm="updateSettings"
+              />
             </NFlex>
           </NFlex>
         </NCard>
@@ -390,20 +622,39 @@ onMounted(() => {
             只会在当前页面生效, 要想在OBS中也生效的话需要自己粘贴到创建浏览器源时的css栏中
           </NTooltip>
         </NDivider>
-        <NInput type="textarea" v-model:value="customCss" placeholder="写上css" style="max-height: 500px" />
+        <NInput
+          v-model:value="customCss"
+          type="textarea"
+          placeholder="写上css"
+          style="max-height: 500px"
+        />
       </NFlex>
     </NDrawerContent>
   </NDrawer>
-  <NModal preset="card" v-model:show="showOBSModal" closable style="max-width: 90vw; width: auto" title="OBS组件"
-    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column">
-    <div :style="{
-      width: savedCardSize.width + 'px',
-      height: savedCardSize.height + 'px',
-    }">
-      <QuestionDisplayCard :question="useQB.displayQuestion" :setting="setting" />
+  <NModal
+    v-model:show="showOBSModal"
+    preset="card"
+    closable
+    style="max-width: 90vw; width: auto"
+    title="OBS组件"
+    content-style="display: flex; align-items: center; justify-content: center; flex-direction: column"
+  >
+    <div
+      :style="{
+        width: savedCardSize.width + 'px',
+        height: savedCardSize.height + 'px',
+      }"
+    >
+      <QuestionDisplayCard
+        :question="useQB.displayQuestion"
+        :setting="setting"
+      />
     </div>
     <NDivider />
-    <NInput readonly :value="`${CURRENT_HOST}obs/question-display?token=` + accountInfo?.token" />
+    <NInput
+      readonly
+      :value="`${CURRENT_HOST}obs/question-display?token=` + accountInfo?.token"
+    />
   </NModal>
 </template>
 

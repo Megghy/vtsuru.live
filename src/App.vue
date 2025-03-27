@@ -1,6 +1,65 @@
+<script setup lang="ts">
+import ManageLayout from '@/views/ManageLayout.vue'
+import ViewerLayout from '@/views/ViewerLayout.vue'
+import {
+  dateZhCN,
+  NConfigProvider,
+  NDialogProvider,
+  NElement,
+  NLayoutContent,
+  NLoadingBarProvider,
+  NMessageProvider,
+  NNotificationProvider,
+  NSpin,
+  zhCN,
+} from 'naive-ui'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import TempComponent from './components/TempComponent.vue'
+import { theme } from './Utils'
+import OBSLayout from './views/OBSLayout.vue'
+import OpenLiveLayout from './views/OpenLiveLayout.vue'
+
+const route = useRoute()
+
+const layout = computed(() => {
+  if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
+    document.title = `${route.meta.title} · ${route.params.id} · VTsuru`
+    return 'viewer'
+  }
+  else if (route.path.startsWith('/manage')) {
+    document.title = `${route.meta.title} · 管理 · VTsuru`
+    return 'manage'
+  }
+  else if (route.path.startsWith('/open-live')) {
+    document.title = `${route.meta.title} · 开放平台 · VTsuru`
+    return 'open-live'
+  }
+  else if (route.path.startsWith('/obs')) {
+    document.title = `${route.meta.title} · OBS · VTsuru`
+    return 'obs'
+  }
+  else {
+    document.title = `${route.meta.title} · VTsuru`
+    return ''
+  }
+})
+
+const themeOverrides = {
+  common: {
+    // primaryColor: '#9ddddc',
+    fontFamily:
+      'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
+  },
+  // ...
+}
+</script>
+
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN"
-    :date-locale="dateZhCN">
+  <NConfigProvider
+    :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN"
+    :date-locale="dateZhCN"
+  >
     <NMessageProvider>
       <NNotificationProvider>
         <NDialogProvider>
@@ -27,61 +86,6 @@
     </NMessageProvider>
   </NConfigProvider>
 </template>
-
-<script setup lang="ts">
-import ManageLayout from '@/views/ManageLayout.vue'
-import ViewerLayout from '@/views/ViewerLayout.vue'
-import {
-  NConfigProvider,
-  NDialogProvider,
-  NElement,
-  NLayoutContent,
-  NLoadingBarProvider,
-  NMessageProvider,
-  NNotificationProvider,
-  NSpin,
-  dateZhCN,
-  zhCN
-} from 'naive-ui'
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import TempComponent from './components/TempComponent.vue'
-import { theme } from './Utils'
-import OpenLiveLayout from './views/OpenLiveLayout.vue'
-import OBSLayout from './views/OBSLayout.vue'
-
-const route = useRoute()
-
-const layout = computed(() => {
-  if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
-    document.title = route.meta.title + ' · ' + route.params.id + ' · VTsuru'
-    return 'viewer'
-  } else if (route.path.startsWith('/manage')) {
-    document.title = route.meta.title + ' · 管理 · VTsuru'
-    return 'manage'
-  } else if (route.path.startsWith('/open-live')) {
-    document.title = route.meta.title + ' · 开放平台 · VTsuru'
-    return 'open-live'
-  } else if (route.path.startsWith('/obs')) {
-    document.title = route.meta.title + ' · OBS · VTsuru'
-    return 'obs'
-  } else {
-    document.title = route.meta.title + ' · VTsuru'
-    return ''
-  }
-})
-
-
-
-const themeOverrides = {
-  common: {
-    //primaryColor: '#9ddddc',
-    fontFamily:
-      'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
-  },
-  // ...
-}
-</script>
 
 <style>
 :root {
