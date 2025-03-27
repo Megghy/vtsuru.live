@@ -1,5 +1,9 @@
 <template>
-  <component :is="componentType" :user-info="userInfo" :bili-info="biliInfo" />
+  <component
+    :is="componentType"
+    :user-info="userInfo"
+    :bili-info="biliInfo"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -8,7 +12,6 @@ import DefaultIndexTemplate from '@/views/view/indexTemplate/DefaultIndexTemplat
 import { computed } from 'vue'
 
 const props = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
   template?: string | undefined

@@ -36,33 +36,42 @@ export const Config: TemplateConfig<TraditionalConfigType> = {
 
 <template>
   WIP...
-  <div :style="{
-    backgroundImage: `${props.config?.background ? 'url(' + FILE_BASE_URL + props.config?.background[0] + ')' : ''}`,
-    height: '100%', 'max-width': '100%',
-    minHeight: '400px',
-    backgroundSize: 'cover',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  }">
-    <div :style="{
-      height: '100%',
-      width: '100%',
+  <div
+    :style="{
+      backgroundImage: `${props.config?.background ? 'url(' + FILE_BASE_URL + props.config?.background[0] + ')' : ''}`,
+      height: '100%', 'max-width': '100%',
       minHeight: '400px',
-      backdropFilter: 'blur(10px)',
+      backgroundSize: 'cover',
       display: 'flex',
-      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-    }">
-      <div style="
+      position: 'relative',
+    }"
+  >
+    <div
+      :style="{
+        height: '100%',
+        width: '100%',
+        minHeight: '400px',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }"
+    >
+      <div
+        style="
       border-radius: 20px;
       border: 3px solid var(--pinky-border-color-dark);
       height: 50px;
       width: 400px;
-    ">
-        <div v-for="song in props.data" :key="song.id">
+    "
+      >
+        <div
+          v-for="song in props.data"
+          :key="song.id"
+        >
           {{ song.name }}
         </div>
       </div>

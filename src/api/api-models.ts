@@ -34,6 +34,7 @@ export interface UserInfo extends UserBasicInfo {
   biliId?: number
   biliRoomId?: number
   canRequestSong: boolean
+  streamerInfo?: BaseStreamerModel
   extra?: {
     enableFunctions: FunctionTypes[]
     isInBlackList: boolean
@@ -61,8 +62,9 @@ export interface AccountInfo extends UserInfo {
   biliVerifyCode?: string
   bindEmail?: string
   settings: UserSetting
-  consumptionSetting: UserConsumptionSetting
+  consumptionSettings: UserConsumptionSetting
   token: string
+  point: number
 
   biliAuthCode?: string
   biliAuthCodeStatus: BiliAuthCodeStatusType
@@ -76,7 +78,7 @@ export interface AccountInfo extends UserInfo {
   streamerInfo?: StreamerModel
   biliUserAuthInfo?: BiliAuthModel
 }
-export interface StreamerModel {
+export interface BaseStreamerModel {
   name: string
   uId: number
   roomId: number
@@ -87,12 +89,14 @@ export interface StreamerModel {
   area: string
   parentArea: string
   lastStreamAt: number
+  isStreaming: boolean
+}
+export interface StreamerModel extends BaseStreamerModel {
   totalDanmakuCount: number
   totalIncome: number
   totalStreamCount: number
   totalStreamTime: number
   lastDanmakuCount: number
-  isStreaming: boolean
 }
 export enum BiliAuthCodeStatusType {
   NotBind,
@@ -466,6 +470,7 @@ export interface AnchorInfo {
   uname: string
   uface: string
   uid: number
+  open_id: string
 }
 
 export interface OpenLiveInfo {

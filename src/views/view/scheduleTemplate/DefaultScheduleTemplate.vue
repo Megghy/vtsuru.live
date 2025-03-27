@@ -11,6 +11,11 @@ defineProps<ScheduleConfigType>()
 
 <template>
   <NDivider style="margin-top: 10px" />
-  <ScheduleList v-if="data" :schedules="data ?? []" :is-self="false" v-bind="$attrs" />
+  <ScheduleList
+    v-if="data"
+    :schedules="data ?? []"
+    :is-self="false"
+    v-bind="$attrs"
+  />
   <NDivider />
 </template>

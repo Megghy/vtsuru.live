@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript"
+  ],
+  "categories": {
+    "correctness": "off"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true
+  },
+  "rules": {
+
+  },
+
+  "overrides": [
+    {
+      "files": [
+        "**/*.js",
+        "**/*.jsx"
+      ],
+      "rules": {
+        "no-console": "off",
+        "no-debugger": "off",
+        "vue/no-mutating-props": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-var-requires": "warn"
+      }
+    },
+    {
+      "files": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.vue"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "vue/no-mutating-props": "off"
+      }
+    }
+  ]
+}

@@ -86,55 +86,115 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NAlert v-if="accountInfo?.isBiliVerified" type="success"> 你已通过验证 </NAlert>
-  <NAlert v-else-if="!accountInfo">尚未登录</NAlert>
-  <NCard embedded v-else>
-    <template #header> Bilibili 身份验证 </template>
+  <NAlert
+    v-if="accountInfo?.isBiliVerified"
+    type="success"
+  >
+    你已通过验证
+  </NAlert>
+  <NAlert v-else-if="!accountInfo">
+    尚未登录
+  </NAlert>
+  <NCard
+    v-else
+    embedded
+  >
+    <template #header>
+      Bilibili 身份验证
+    </template>
     <template v-if="isStart">
-      <NSpace vertical justify="center" align="center">
+      <NSpace
+        vertical
+        justify="center"
+        align="center"
+      >
         <template v-if="!timeOut">
           <NSpin />
           <span> 剩余 <NCountdown :duration="timeLeft - Date.now()" /> </span>
         </template>
-        <NAlert v-else type="error">
+        <NAlert
+          v-else
+          type="error"
+        >
           认证超时
           <NButton
+            type="info"
             @click="
               () => {
                 isStart = false
                 timeOut = false
               }
             "
-            type="info"
           >
             重新开始
           </NButton>
         </NAlert>
         <NInputGroup>
-          <NInput :allow-input="() => false" v-model:value="accountInfo.biliVerifyCode" />
-          <NButton @click="copyCode"> 复制认证码 </NButton>
+          <NInput
+            v-model:value="accountInfo.biliVerifyCode"
+            :allow-input="() => false"
+          />
+          <NButton @click="copyCode">
+            复制认证码
+          </NButton>
         </NInputGroup>
-        <NButton v-if="roomId" type="primary" tag="a" :href="'https://live.bilibili.com/' + roomId" target="_blank">
+        <NButton
+          v-if="roomId"
+          type="primary"
+          tag="a"
+          :href="'https://live.bilibili.com/' + roomId"
+          target="_blank"
+        >
           前往直播间
         </NButton>
       </NSpace>
     </template>
     <template v-else>
-      <NSpace vertical justify="center" align="center">
+      <NSpace
+        vertical
+        justify="center"
+        align="center"
+      >
         <NAlert type="info">
           <NText>
             请在点击
-            <NText type="primary" strong> 开始认证 </NText>
+            <NText
+              type="primary"
+              strong
+            >
+              开始认证
+            </NText>
             后2分钟之内使用
-            <NText strong type="primary"> 需要认证的账户 </NText>
+            <NText
+              strong
+              type="primary"
+            >
+              需要认证的账户
+            </NText>
             在自己的直播间内发送
-            <NButton type="info" text @click="copyCode">
+            <NButton
+              type="info"
+              text
+              @click="copyCode"
+            >
               {{ accountInfo?.biliVerifyCode }}
             </NButton>
           </NText>
         </NAlert>
-        <NInputNumber size="small" placeholder="输入用户UId" v-model:value="uId" :min="1" :show-button="false" />
-        <NButton size="large" type="primary" @click="onStartVerify"> 开始认证 </NButton>
+        <NInputNumber
+          v-model:value="uId"
+          size="small"
+          placeholder="输入用户UId"
+          :min="1"
+          :show-button="false"
+        />
+        <NButton
+          size="large"
+          type="primary"
+          @click="onStartVerify"
+        >
+          开始认证
+        </NButton>
       </NSpace>
     </template>
   </NCard>

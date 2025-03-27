@@ -11,15 +11,37 @@ const css = ref('')
 </script>
 
 <template>
-  <NFlex wrap style="height: 100%">
-    <NFlex style="flex: 1;" vertical>
-      <NAlert type="error"> 未完成</NAlert>
-      <NInput :allowInput="() => false" :value="`${CURRENT_HOST}obs/danmuji?token=${accountInfo.token}`" />
-      <MonacoEditorComponent language="css" :height="500" v-model:value="css" />
+  <NFlex
+    wrap
+    style="height: 100%"
+  >
+    <NFlex
+      style="flex: 1;"
+      vertical
+    >
+      <NAlert type="error">
+        未完成
+      </NAlert>
+      <NInput
+        :allow-input="() => false"
+        :value="`${CURRENT_HOST}obs/danmuji?token=${accountInfo.token}`"
+      />
+      <MonacoEditorComponent
+        v-model:value="css"
+        language="css"
+        :height="500"
+      />
     </NFlex>
-    <div class="danmuji-obs" style="width: 300px; height: calc(100% - 2px); min-height: 500px;border: 1px solid #adadad;border-radius: 8px;
-      overflow: hidden;">
-      <DanmujiOBS :isOBS="false" style="height: 100%; width: 100%;" :customCss="css" />
+    <div
+      class="danmuji-obs"
+      style="width: 300px; height: calc(100% - 2px); min-height: 500px;border: 1px solid #adadad;border-radius: 8px;
+      overflow: hidden;"
+    >
+      <DanmujiOBS
+        :is-o-b-s="false"
+        style="height: 100%; width: 100%;"
+        :custom-css="css"
+      />
     </div>
   </NFlex>
 </template>

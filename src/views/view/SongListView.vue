@@ -1,9 +1,21 @@
 <template>
-  <NSpin v-if="isLoading" show />
-  <component v-else ref="dynamicConfigRef" :config="selectedTemplateConfig?.name ? currentConfig : undefined"
-    :is="SongListTemplateMap[componentType ?? '']?.compoent" :user-info="userInfo" :bili-info="biliInfo"
-    :data="currentData" :live-request-settings="settings" :live-request-active="songsActive" @request-song="requestSong"
-    v-bind="$attrs" />
+  <NSpin
+    v-if="isLoading"
+    show
+  />
+  <component
+    :is="SongListTemplateMap[componentType ?? '']?.compoent"
+    v-else
+    ref="dynamicConfigRef"
+    :config="selectedTemplateConfig?.name ? currentConfig : undefined"
+    :user-info="userInfo"
+    :bili-info="biliInfo"
+    :data="currentData"
+    :live-request-settings="settings"
+    :live-request-active="songsActive"
+    v-bind="$attrs"
+    @request-song="requestSong"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -23,7 +35,6 @@ const nextRequestTime = useStorage('SongList.NextRequestTime', new Date())
 const minRequestTime = 30
 
 const props = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
   template?: string | undefined

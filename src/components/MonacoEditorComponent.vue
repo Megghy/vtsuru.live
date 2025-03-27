@@ -1,5 +1,8 @@
 <template>
-  <div ref="editorContainer" :style="`height: ${height}px;`"></div>
+  <div
+    ref="editorContainer"
+    :style="`height: ${height}px;`"
+  />
 </template>
 
 <script setup lang="ts">

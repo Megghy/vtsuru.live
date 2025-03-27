@@ -346,22 +346,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSkeleton v-if="isLoading"> </NSkeleton>
-  <NSpin v-else :show="processing">
+  <NSkeleton v-if="isLoading" />
+  <NSpin
+    v-else
+    :show="processing"
+  >
     <NModal
       v-model:show="showModal"
-      @after-leave="userDanmakus = undefined"
       preset="card"
       :style="'width: 600px;max-width: 90vw;max-height: 90vh;'"
       content-style="overflow-y: auto"
+      @after-leave="userDanmakus = undefined"
     >
       <template #header>
         {{ userDanmakus?.[0].uName }}
       </template>
       <template #header-extra>
-        <NSwitch v-model:value="modalShowTools" size="small">
-          <template #checked> 显示 </template>
-          <template #unchecked> 隐藏 </template>
+        <NSwitch
+          v-model:value="modalShowTools"
+          size="small"
+        >
+          <template #checked>
+            显示
+          </template>
+          <template #unchecked>
+            隐藏
+          </template>
           <template #icon>
             <NIcon :component="Wrench24Filled" />
           </template>
@@ -377,13 +387,29 @@ onMounted(() => {
         to="space"
       />
     </NModal>
-    <NModal v-model:show="showExportModal" preset="card" style="width: 500px; max-width: 90vw; height: auto">
-      <template #header> 导出 </template>
+    <NModal
+      v-model:show="showExportModal"
+      preset="card"
+      style="width: 500px; max-width: 90vw; height: auto"
+    >
+      <template #header>
+        导出
+      </template>
       <NSpin :show="isExporting">
-        <NSpace vertical align="center">
-          <NRadioGroup v-model:value="exportType" style="margin: 0 auto">
-            <NRadioButton value="json"> Json </NRadioButton>
-            <NRadioButton value="xml"> XML </NRadioButton>
+        <NSpace
+          vertical
+          align="center"
+        >
+          <NRadioGroup
+            v-model:value="exportType"
+            style="margin: 0 auto"
+          >
+            <NRadioButton value="json">
+              Json
+            </NRadioButton>
+            <NRadioButton value="xml">
+              XML
+            </NRadioButton>
             <NRadioButton value="csv">
               CSV
               <NTooltip>
@@ -396,44 +422,94 @@ onMounted(() => {
               </NTooltip>
             </NRadioButton>
           </NRadioGroup>
-          <NButton type="primary" size="large" @click="Export"> 导出 </NButton>
-          <span></span>
+          <NButton
+            type="primary"
+            size="large"
+            @click="Export"
+          >
+            导出
+          </NButton>
+          <span />
           <NCollapse>
-            <NCollapseItem title="关于" name="1">
+            <NCollapseItem
+              title="关于"
+              name="1"
+            >
               <div>
-                文件名格式: {<NTooltip><template #trigger>生成时间</template>Unix</NTooltip>}_{<NTooltip
-                  ><template #trigger>开始时间</template>Unix: {{ currentLive.startAt }} </NTooltip
-                >}_{<NTooltip><template #trigger>直播间标题</template>' _ ' 将被转义为 ' - '</NTooltip>}_{<NTooltip
-                  ><template #trigger>用户名</template>{{ accountInfo?.name }}</NTooltip
-                >}.{{ exportType }}
-                <br />
+                文件名格式: {<NTooltip>
+                  <template #trigger>
+                    生成时间
+                  </template>Unix
+                </NTooltip>}_{<NTooltip>
+                  <template #trigger>
+                    开始时间
+                  </template>Unix: {{ currentLive.startAt }}
+                </NTooltip>}_{<NTooltip>
+                  <template #trigger>
+                    直播间标题
+                  </template>' _ ' 将被转义为 ' - '
+                </NTooltip>}_{<NTooltip>
+                  <template #trigger>
+                    用户名
+                  </template>{{ accountInfo?.name }}
+                </NTooltip>}.{{ exportType }}
+                <br>
                 弹幕Type对应:
-                <br />● 0 : 上舰 <br />● 1: sc <br />● 2: 礼物 <br />● 3: 弹幕
+                <br>● 0 : 上舰 <br>● 1: sc <br>● 2: 礼物 <br>● 3: 弹幕
               </div>
             </NCollapseItem>
           </NCollapse>
-          <span style="color: gray"> </span>
+          <span style="color: gray" />
         </NSpace>
       </NSpin>
     </NModal>
-    <NCard style="height: 100%" embedded :bordered="bordered" content-style="padding: 12px">
+    <NCard
+      style="height: 100%"
+      embedded
+      :bordered="bordered"
+      content-style="padding: 12px"
+    >
       <template #header>
-        <slot name="header"> </slot>
+        <slot name="header" />
       </template>
       <template #header-extra>
-        <slot name="header-extra"> </slot>
+        <slot name="header-extra" />
       </template>
       <template v-if="showLiveInfo">
-        <LiveInfoContainer :live="currentLive" :show-liver="showLiver" show-area :show-statistic="showStatistic" />
-        <NDivider title-placement="left" style="font-size: 12px" v-if="toolsVisiable">
-          <NSwitch v-if="showRank" v-model:value="isRanking" @update-value="OnRank" size="small">
-            <template #checked> 排行 </template>
-            <template #unchecked> 弹幕 </template>
+        <LiveInfoContainer
+          :live="currentLive"
+          :show-liver="showLiver"
+          show-area
+          :show-statistic="showStatistic"
+        />
+        <NDivider
+          v-if="toolsVisiable"
+          title-placement="left"
+          style="font-size: 12px"
+        >
+          <NSwitch
+            v-if="showRank"
+            v-model:value="isRanking"
+            size="small"
+            @update-value="OnRank"
+          >
+            <template #checked>
+              排行
+            </template>
+            <template #unchecked>
+              弹幕
+            </template>
           </NSwitch>
-          <NDivider v-if="showRank && !isRanking" vertical />
+          <NDivider
+            v-if="showRank && !isRanking"
+            vertical
+          />
           <Transition>
             <span v-if="!isRanking">
-              <NSwitch v-model:value="innerShowTools" size="small">
+              <NSwitch
+                v-model:value="innerShowTools"
+                size="small"
+              >
                 <template #checked> 工具 </template>
                 <template #unchecked> 工具 </template>
                 <template #icon>
@@ -441,23 +517,48 @@ onMounted(() => {
                 </template>
               </NSwitch>
             </span>
-            <span v-else></span>
+            <span v-else />
           </Transition>
         </NDivider>
-        <br v-else />
+        <br v-else>
       </template>
       <NCollapseTransition :show="innerShowTools && !isRanking">
-        <NSpace vertical style="padding-bottom: 16px">
+        <NSpace
+          vertical
+          style="padding-bottom: 16px"
+        >
           <NSpace align="center">
-            <NButton type="primary" size="small" @click="showExportModal = true" @update:value="UpdateDanmakus">
+            <NButton
+              type="primary"
+              size="small"
+              @click="showExportModal = true"
+              @update:value="UpdateDanmakus"
+            >
               导出
             </NButton>
-            <NCheckbox v-model:checked="orderDecreasing" @update:checked="UpdateDanmakus"> 降序 </NCheckbox>
+            <NCheckbox
+              v-model:checked="orderDecreasing"
+              @update:checked="UpdateDanmakus"
+            >
+              降序
+            </NCheckbox>
             <NCollapseTransition :show="filterSelected.includes(EventDataTypes.Message)">
-              <NCheckbox v-model:checked="hideEmoji" @update:checked="UpdateDanmakus"> 隐藏表情 </NCheckbox>
+              <NCheckbox
+                v-model:checked="hideEmoji"
+                @update:checked="UpdateDanmakus"
+              >
+                隐藏表情
+              </NCheckbox>
             </NCollapseTransition>
-            <NCheckbox v-model:checked="hideAvatar"> 隐藏头像 </NCheckbox>
-            <NCheckbox v-model:checked="orderByPrice" @update:checked="UpdateDanmakus"> 按价格排序 </NCheckbox>
+            <NCheckbox v-model:checked="hideAvatar">
+              隐藏头像
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="orderByPrice"
+              @update:checked="UpdateDanmakus"
+            >
+              按价格排序
+            </NCheckbox>
           </NSpace>
           <NSpace align="center">
             <NInput
@@ -472,8 +573,18 @@ onMounted(() => {
                 <NIcon :component="Search24Filled" />
               </template>
             </NInput>
-            <NCheckbox v-model:checked="enableRegex" @update:checked="UpdateDanmakus"> 正则 </NCheckbox>
-            <NCheckbox v-model:checked="deselect" @update:checked="UpdateDanmakus"> 反选 </NCheckbox>
+            <NCheckbox
+              v-model:checked="enableRegex"
+              @update:checked="UpdateDanmakus"
+            >
+              正则
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="deselect"
+              @update:checked="UpdateDanmakus"
+            >
+              反选
+            </NCheckbox>
           </NSpace>
           <NSpace align="center">
             <NInputNumber
@@ -489,31 +600,96 @@ onMounted(() => {
                 <NIcon :component="Money20Regular" />
               </template>
             </NInputNumber>
-            <NTag size="small" checkable :checked="price == 0.1" @update-checked="ChangePrice(0.1)"> 0.1 </NTag>
-            <NTag size="small" checkable :checked="price == 1" @update-checked="ChangePrice(1)"> 1 </NTag>
-            <NTag size="small" checkable :checked="price == 9.9" @update-checked="ChangePrice(9.9)"> 9.9 </NTag>
-            <NTag size="small" checkable :checked="price == 30" @update-checked="ChangePrice(30)"> 30 </NTag>
-            <NTag size="small" checkable :checked="price == 100" @update-checked="ChangePrice(100)"> 100 </NTag>
+            <NTag
+              size="small"
+              checkable
+              :checked="price == 0.1"
+              @update-checked="ChangePrice(0.1)"
+            >
+              0.1
+            </NTag>
+            <NTag
+              size="small"
+              checkable
+              :checked="price == 1"
+              @update-checked="ChangePrice(1)"
+            >
+              1
+            </NTag>
+            <NTag
+              size="small"
+              checkable
+              :checked="price == 9.9"
+              @update-checked="ChangePrice(9.9)"
+            >
+              9.9
+            </NTag>
+            <NTag
+              size="small"
+              checkable
+              :checked="price == 30"
+              @update-checked="ChangePrice(30)"
+            >
+              30
+            </NTag>
+            <NTag
+              size="small"
+              checkable
+              :checked="price == 100"
+              @update-checked="ChangePrice(100)"
+            >
+              100
+            </NTag>
           </NSpace>
-          <NCheckboxGroup v-model:value="filterSelected" @update:value="UpdateDanmakus">
+          <NCheckboxGroup
+            v-model:value="filterSelected"
+            @update:value="UpdateDanmakus"
+          >
             <NSpace>
-              <NCheckbox :value="EventDataTypes.Message" label="弹幕" />
-              <NCheckbox :value="EventDataTypes.Gift" label="礼物" />
-              <NCheckbox :value="EventDataTypes.Guard" label="舰长" />
-              <NCheckbox :value="EventDataTypes.SC" label="Superchat" />
+              <NCheckbox
+                :value="EventDataTypes.Message"
+                label="弹幕"
+              />
+              <NCheckbox
+                :value="EventDataTypes.Gift"
+                label="礼物"
+              />
+              <NCheckbox
+                :value="EventDataTypes.Guard"
+                label="舰长"
+              />
+              <NCheckbox
+                :value="EventDataTypes.SC"
+                label="Superchat"
+              />
 
-              <NCheckbox v-if="existEnterMessage" :value="EventDataTypes.Enter" label="入场" />
+              <NCheckbox
+                v-if="existEnterMessage"
+                :value="EventDataTypes.Enter"
+                label="入场"
+              />
             </NSpace>
           </NCheckboxGroup>
         </NSpace>
-        <NDivider style="margin-top: 0px; margin-bottom: 12px" title-placement="left">
-          <NTag style="font-size: 12px" size="small">
+        <NDivider
+          style="margin-top: 0px; margin-bottom: 12px"
+          title-placement="left"
+        >
+          <NTag
+            style="font-size: 12px"
+            size="small"
+          >
             {{ danmakus.length }}
             {{ danmakus.length != currentDanmakus.length ? `/ ${currentDanmakus.length}` : '' }}
             条
           </NTag>
           <NDivider vertical />
-          <NTag style="font-size: 12px" size="small" type="error" :bordered="false">
+          <NTag
+            style="font-size: 12px"
+            size="small"
+            type="error"
+            :bordered="false"
+          >
             💰
             {{ RoundNumber(danmakus.reduce((a, b) => a + (b.price && b.price > 0 ? b.price : 0), 0)) }}
           </NTag>
@@ -531,55 +707,77 @@ onMounted(() => {
               <DanmakuItem
                 :danmaku="item"
                 :account-info="accountInfo"
-                @on-click-name="OnNameClick"
                 :show-name="showName"
                 :show-avatar="!hideAvatar"
                 :height="itemHeight"
+                @on-click-name="OnNameClick"
               />
             </p>
           </template>
         </SimpleVirtualList>
         <p
-          v-else
           v-for="item in danmakus"
+          v-else
+          :key="item.id"
           :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`"
-          v-bind:key="item.id"
         >
           <DanmakuItem
             :danmaku="item"
             :account-info="accountInfo"
-            @on-click-name="OnNameClick"
             :show-name="showName"
             :show-avatar="!hideAvatar"
             :height="itemHeight"
+            @on-click-name="OnNameClick"
           />
         </p>
       </div>
       <div v-if="isRanking">
         <NRadioGroup
           v-model:value="rankType"
+          size="small"
           @update:value="
             (type) => {
               OnRankDirect(type, false)
             }
           "
-          size="small"
         >
-          <NRadioButton :value="RankType.Danmaku"> 弹幕 </NRadioButton>
-          <NRadioButton :value="RankType.Paid"> 付费 </NRadioButton>
+          <NRadioButton :value="RankType.Danmaku">
+            弹幕
+          </NRadioButton>
+          <NRadioButton :value="RankType.Paid">
+            付费
+          </NRadioButton>
         </NRadioGroup>
         <NDivider />
-        <NList :show-divider="false" style="background-color: rgba(255, 255, 255, 0)">
-          <NListItem v-for="user in currentRankInfo" v-bind:key="user.ouId">
+        <NList
+          :show-divider="false"
+          style="background-color: rgba(255, 255, 255, 0)"
+        >
+          <NListItem
+            v-for="user in currentRankInfo"
+            :key="user.ouId"
+          >
             <span style="display: flex; align-items: center">
-              <NAvatar round size="small" :style="GetRankIndexColor(user.Index)">
+              <NAvatar
+                round
+                size="small"
+                :style="GetRankIndexColor(user.Index)"
+              >
                 {{ user.Index }}
               </NAvatar>
               <NDivider vertical />
-              <NButton text type="info" @click="OnNameClick(accountInfo?.biliId ?? 0, user.ouId)">
+              <NButton
+                text
+                type="info"
+                @click="OnNameClick(accountInfo?.biliId ?? 0, user.ouId)"
+              >
                 <NTooltip v-if="user.uName == accountInfo?.name">
                   <template #trigger>
-                    <NTag size="small" type="warning" style="cursor: pointer">
+                    <NTag
+                      size="small"
+                      type="warning"
+                      style="cursor: pointer"
+                    >
                       {{ user.uName }}
                     </NTag>
                   </template>
@@ -592,7 +790,11 @@ onMounted(() => {
               <NDivider vertical />
               <span v-if="rankType == RankType.Danmaku"> {{ user.Danmakus }} 条 </span>
               <span v-else-if="rankType == RankType.Paid">
-                <NTag size="small" type="error" :bordered="false">
+                <NTag
+                  size="small"
+                  type="error"
+                  :bordered="false"
+                >
                   <NIcon :component="Money24Regular" />
                   {{ RoundNumber(user.Paid) }}
                 </NTag>

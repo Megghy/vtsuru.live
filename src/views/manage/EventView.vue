@@ -167,48 +167,75 @@ function objectsToCSV(arr: any[]) {
 
 <template>
   <NSpace vertical>
-    <NAlert v-if="!accountInfo?.isBiliVerified" type="warning">
-      使用此功能前你需要先<NButton type="info" text @click="$router.push({ name: 'manage-biliVerify' })">认证Bilibili账号</NButton>
-    </NAlert>
-    <NAlert type="error" title="2024.2.26">
-      近期逸站对开放平台直播弹幕流进行了极为严格的限制, 目前本站服务器只能连接个位数的直播间, 这使得在不使用
-      <NButton tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-      的情况下获取弹幕数据几乎不可能实现.
-      <br />
-      在这种情况下如果你还需要记录上舰, SC等事件请跟随链接里的教程部署
-      <NButton tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" type="primary" text>
-        VtsuruEventFetcher
-      </NButton>
-    </NAlert>
+    <EventFetcherAlert />
     <EventFetcherStatusCard />
   </NSpace>
   <NDivider />
-  <NCard size="small" style="witdh: 100%">
+  <NCard
+    size="small"
+    style="witdh: 100%"
+  >
     <template v-if="accountInfo?.isBiliVerified">
-      <NSpace justify="center" align="center">
-        <NDatePicker v-model:value="selectedDate" @update:value="onDateChange" type="datetimerange"
-          :shortcuts="rangeShortcuts" start-placeholder="开始时间" end-placeholder="结束时间" />
+      <NSpace
+        justify="center"
+        align="center"
+      >
+        <NDatePicker
+          v-model:value="selectedDate"
+          type="datetimerange"
+          :shortcuts="rangeShortcuts"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          @update:value="onDateChange"
+        />
         <NRadioGroup v-model:value="selectedType">
-          <NRadioButton :value="EventType.Guard">舰长</NRadioButton>
-          <NRadioButton :value="EventType.SC">Superchat</NRadioButton>
+          <NRadioButton :value="EventType.Guard">
+            舰长
+          </NRadioButton>
+          <NRadioButton :value="EventType.SC">
+            Superchat
+          </NRadioButton>
         </NRadioGroup>
-        <NButton @click="onDateChange" type="primary" :loading="isLoading"> 刷新 </NButton>
+        <NButton
+          type="primary"
+          :loading="isLoading"
+          @click="onDateChange"
+        >
+          刷新
+        </NButton>
       </NSpace>
-      <br />
-      <NCard title="导出" size="small">
+      <br>
+      <NCard
+        title="导出"
+        size="small"
+      >
         <NSpace>
-          <NRadioGroup v-model:value="exportType" style="margin: 0 auto">
-            <NRadioButton value="csv"> CSV </NRadioButton>
-            <NRadioButton value="json"> Json </NRadioButton>
+          <NRadioGroup
+            v-model:value="exportType"
+            style="margin: 0 auto"
+          >
+            <NRadioButton value="csv">
+              CSV
+            </NRadioButton>
+            <NRadioButton value="json">
+              Json
+            </NRadioButton>
           </NRadioGroup>
-          <NButton @click="exportData" type="primary"> 导出 </NButton>
+          <NButton
+            type="primary"
+            @click="exportData"
+          >
+            导出
+          </NButton>
         </NSpace>
       </NCard>
       <NDivider> 共 {{ selectedEvents.length }} 条 </NDivider>
       <NSpin :show="isLoading">
-        <NRadioGroup v-model:value="displayMode" style="display: flex; justify-content: center" size="small">
+        <NRadioGroup
+          v-model:value="displayMode"
+          style="display: flex; justify-content: center"
+          size="small"
+        >
           <NRadioButton value="grid">
             <NIcon :component="Grid28Filled" />
           </NRadioButton>
@@ -216,30 +243,69 @@ function objectsToCSV(arr: any[]) {
             <NIcon :component="List16Filled" />
           </NRadioButton>
         </NRadioGroup>
-        <br />
-        <Transition mode="out-in" name="fade" appear>
+        <br>
+        <Transition
+          mode="out-in"
+          name="fade"
+          appear
+        >
           <div v-if="displayMode == 'grid'">
-            <NGrid cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
-              <NGridItem v-for="item in selectedEvents" v-bind:key="item.time">
-                <NCard size="small" :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`" embedded
-                  hoverable>
-                  <NSpace align="center" vertical :size="5">
-                    <NAvatar round lazy borderd :size="64" :src="item.uid ? AVATAR_URL + item.uid : item.uface"
-                      :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+            <NGrid
+              cols="1 500:2 800:3 1000:4"
+              :x-gap="12"
+              :y-gap="8"
+            >
+              <NGridItem
+                v-for="item in selectedEvents"
+                :key="item.time"
+              >
+                <NCard
+                  size="small"
+                  :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`"
+                  embedded
+                  hoverable
+                >
+                  <NSpace
+                    align="center"
+                    vertical
+                    :size="5"
+                  >
+                    <NAvatar
+                      round
+                      lazy
+                      borderd
+                      :size="64"
+                      :src="item.uid ? AVATAR_URL + item.uid : item.uface"
+                      :img-props="{ referrerpolicy: 'no-referrer' }"
+                      style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
+                    />
                     <NSpace>
-                      <NTag size="tiny" v-if="selectedType == EventType.Guard" :bordered="false"> {{ item.msg }} </NTag>
-                      <NTag size="tiny" round :color="{
-                        color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
-                        textColor: 'white',
-                        borderColor: isDarkMode ? 'white' : '#00000000',
-                      }">
+                      <NTag
+                        v-if="selectedType == EventType.Guard"
+                        size="tiny"
+                        :bordered="false"
+                      >
+                        {{ item.msg }}
+                      </NTag>
+                      <NTag
+                        size="tiny"
+                        round
+                        :color="{
+                          color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                          textColor: 'white',
+                          borderColor: isDarkMode ? 'white' : '#00000000',
+                        }"
+                      >
                         {{ item.price }}
                       </NTag>
                     </NSpace>
                     <NText>
                       {{ item.name }}
                     </NText>
-                    <NText depth="3" style="font-size: small">
+                    <NText
+                      depth="3"
+                      style="font-size: small"
+                    >
                       <NTime :time="item.time" />
                     </NText>
                     <NEllipsis v-if="selectedType == EventType.SC">
@@ -256,30 +322,43 @@ function objectsToCSV(arr: any[]) {
                 <th>用户名</th>
                 <th>UId</th>
                 <th>时间</th>
-                <th v-if="selectedType == EventType.Guard">类型</th>
+                <th v-if="selectedType == EventType.Guard">
+                  类型
+                </th>
                 <th>价格</th>
-                <th v-if="selectedType == EventType.SC">内容</th>
+                <th v-if="selectedType == EventType.SC">
+                  内容
+                </th>
               </tr>
             </thead>
-            <tbody v-for="item in selectedEvents" v-bind:key="item.time">
+            <tbody
+              v-for="item in selectedEvents"
+              :key="item.time"
+            >
               <tr>
                 <td>{{ item.name }}</td>
                 <td>{{ item.uid }}</td>
                 <td>
                   <NTime :time="item.time" />
                 </td>
-                <td v-if="selectedType == EventType.Guard">{{ item.msg }}</td>
+                <td v-if="selectedType == EventType.Guard">
+                  {{ item.msg }}
+                </td>
                 <td>
-                  <NTag :color="{
-                    color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
-                    textColor: 'white',
-                    borderColor: 'white',
-                  }">
+                  <NTag
+                    :color="{
+                      color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                      textColor: 'white',
+                      borderColor: 'white',
+                    }"
+                  >
                     {{ item.price }}
                   </NTag>
                 </td>
                 <td v-if="selectedType == EventType.SC">
-                  <NEllipsis style="max-width: 300px">{{ item.msg }}</NEllipsis>
+                  <NEllipsis style="max-width: 300px">
+                    {{ item.msg }}
+                  </NEllipsis>
                 </td>
               </tr>
             </tbody>
@@ -289,7 +368,10 @@ function objectsToCSV(arr: any[]) {
     </template>
     <template v-else>
       <NCollapse :default-expanded-names="['1']">
-        <NCollapseItem title="这是什么?" name="1">
+        <NCollapseItem
+          title="这是什么?"
+          name="1"
+        >
           可以查看曾经收到的Superchat以及上舰记录, 并导出为 CSV 之类的表格
         </NCollapseItem>
         <NCollapseItem title="可以直接用吗">
@@ -298,7 +380,7 @@ function objectsToCSV(arr: any[]) {
         </NCollapseItem>
         <NCollapseItem title="有没有什么要求?">
           关于环境的话理论上能够运行 Docker 或者 Node.js 的环境都能可以
-          <br /><br />
+          <br><br>
           此外, 你至少需要以下技能之一:
           <NUl>
             <NLi>了解并能够使用 Docker 容器</NLi>
@@ -316,7 +398,12 @@ function objectsToCSV(arr: any[]) {
       </NCollapse>
       <NDivider style="margin-bottom: 10px" />
       <NSpace justify="center">
-        <NButton tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" type="primary">
+        <NButton
+          tag="a"
+          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+          type="primary"
+        >
           部署指南
         </NButton>
       </NSpace>

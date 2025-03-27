@@ -29,26 +29,61 @@ const emit = defineEmits<{
 
 <template>
   <NEmpty v-if="(schedules?.length ?? 0) == 0" />
-  <NList v-else style="padding: 0" bordered>
-    <NListItem v-for="item in schedules" v-bind:key="item.year + ' ' + item.week" style="padding: 0">
-      <NCard size="small" :bordered="false">
+  <NList
+    v-else
+    style="padding: 0"
+    bordered
+  >
+    <NListItem
+      v-for="item in schedules"
+      :key="item.year + ' ' + item.week"
+      style="padding: 0"
+    >
+      <NCard
+        size="small"
+        :bordered="false"
+      >
         <template #header>
           <NText> {{ item.year }}年第{{ item.week }}周 </NText>
         </template>
-        <template v-if="isSelf" #header-extra>
+        <template
+          v-if="isSelf"
+          #header-extra
+        >
           <NSpace>
-            <NButton size="small" @click="emit('onUpdate', item)"> 编辑 </NButton>
-            <NButton size="small" @click="emit('onCopy', item)"> 复制 </NButton>
+            <NButton
+              size="small"
+              @click="emit('onUpdate', item)"
+            >
+              编辑
+            </NButton>
+            <NButton
+              size="small"
+              @click="emit('onCopy', item)"
+            >
+              复制
+            </NButton>
             <NPopconfirm @positive-click="emit('onDelete', item)">
               <template #trigger>
-                <NButton size="small" type="error"> 删除 </NButton>
+                <NButton
+                  size="small"
+                  type="error"
+                >
+                  删除
+                </NButton>
               </template>
               确定删除?
             </NPopconfirm>
           </NSpace>
         </template>
-        <NGrid x-gap="8" cols="1 1200:7">
-          <NGridItem v-for="(day, index) in item.days" v-bind:key="index">
+        <NGrid
+          x-gap="8"
+          cols="1 1200:7"
+        >
+          <NGridItem
+            v-for="(day, index) in item.days"
+            :key="index"
+          >
             <NCard
               size="small"
               :style="{ height: '65px', backgroundColor: day.tagColor + '1f' }"
@@ -59,7 +94,11 @@ const emit = defineEmits<{
               <template #header-extra>
                 <template v-if="day.tag">
                   <NSpace :size="5">
-                    <NBadge v-if="day.tagColor" dot :color="day.tagColor" />
+                    <NBadge
+                      v-if="day.tagColor"
+                      dot
+                      :color="day.tagColor"
+                    />
                     <NEllipsis>
                       <NText :style="{ color: day.tagColor }">
                         {{ day.tag }}
@@ -68,12 +107,26 @@ const emit = defineEmits<{
                   </NSpace>
                 </template>
                 <template v-else>
-                  <NText depth="3" style="font-size: 11px" italic> 休息 </NText>
+                  <NText
+                    depth="3"
+                    style="font-size: 11px"
+                    italic
+                  >
+                    休息
+                  </NText>
                 </template>
               </template>
               <template #header>
-                <NText :depth="3" style="font-size: 12px" strong :italic="!day.tag">
-                  <NTime :time="getDateFromWeek(item.year, item.week, index)" format="MM/dd" />
+                <NText
+                  :depth="3"
+                  style="font-size: 12px"
+                  strong
+                  :italic="!day.tag"
+                >
+                  <NTime
+                    :time="getDateFromWeek(item.year, item.week, index)"
+                    format="MM/dd"
+                  />
                   {{ weekdays[index] }}
                   {{ day.time }}
                 </NText>
@@ -91,5 +144,5 @@ const emit = defineEmits<{
       </NCard>
     </NListItem>
   </NList>
-  <NGrid v-if="width > 1000"> </NGrid>
+  <NGrid v-if="width > 1000" />
 </template>

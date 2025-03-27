@@ -9,21 +9,59 @@ defineProps<{
 </script>
 
 <template>
-  <NCard v-bind:key="item.createAt" size="small" embedded style="width: 400px; height: 150px">
+  <NCard
+    :key="item.createAt"
+    size="small"
+    embedded
+    style="width: 400px; height: 150px"
+  >
     <template #header>
-      <NTag v-if="item.status == FeedbackStatus.Padding" :bordered="false"> 等待 </NTag>
-      <NTag v-else-if="item.status == FeedbackStatus.Progressing" type="success">
+      <NTag
+        v-if="item.status == FeedbackStatus.Padding"
+        :bordered="false"
+      >
+        等待
+      </NTag>
+      <NTag
+        v-else-if="item.status == FeedbackStatus.Progressing"
+        type="success"
+      >
         <template #icon>
           <NSpin :size="12" />
         </template>
         处理中
       </NTag>
-      <NTag v-else-if="item.status == FeedbackStatus.Finish" :bordered="false" type="primary"> 已完成 </NTag>
-      <NTag v-else-if="item.status == FeedbackStatus.Todo" :bordered="false" type="info"> 计划中 </NTag>
-      <NTag v-else-if="item.status == FeedbackStatus.Reject" :bordered="false" type="error"> 搁置 </NTag>
-      <NTag v-else-if="item.status == FeedbackStatus.Developing" type="warning"> 开发中 </NTag>
+      <NTag
+        v-else-if="item.status == FeedbackStatus.Finish"
+        :bordered="false"
+        type="primary"
+      >
+        已完成
+      </NTag>
+      <NTag
+        v-else-if="item.status == FeedbackStatus.Todo"
+        :bordered="false"
+        type="info"
+      >
+        计划中
+      </NTag>
+      <NTag
+        v-else-if="item.status == FeedbackStatus.Reject"
+        :bordered="false"
+        type="error"
+      >
+        搁置
+      </NTag>
+      <NTag
+        v-else-if="item.status == FeedbackStatus.Developing"
+        type="warning"
+      >
+        开发中
+      </NTag>
       <NDivider vertical />
-      <NTag v-if="!item.userName"> 匿名 </NTag>
+      <NTag v-if="!item.userName">
+        匿名
+      </NTag>
       <template v-else>
         <NEllipsis>
           {{ item.userName }}
@@ -32,8 +70,14 @@ defineProps<{
       <NDivider vertical />
       <NTooltip>
         <template #trigger>
-          <NText depth="3" style="font-size: small">
-            <NTime :time="item.createAt" type="relative" />
+          <NText
+            depth="3"
+            style="font-size: small"
+          >
+            <NTime
+              :time="item.createAt"
+              type="relative"
+            />
           </NText>
         </template>
         <NTime :time="item.createAt" />
@@ -77,15 +121,25 @@ defineProps<{
         其他
       </NTag>
     </template>
-    <NFlex justify="space-between" align="center" style="height: 100%;">
+    <NFlex
+      justify="space-between"
+      align="center"
+      style="height: 100%;"
+    >
       <NEllipsis :line-clamp="item.replyMessage ? 1 : 3">
         {{ item.message }}
       </NEllipsis>
     </NFlex>
-    <template v-if="item.replyMessage" #footer>
+    <template
+      v-if="item.replyMessage"
+      #footer
+    >
       <NDivider style="margin: 0px 0 10px 0" />
-      <NSpace align="center" :wrap="false">
-        <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`"></div>
+      <NSpace
+        align="center"
+        :wrap="false"
+      >
+        <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`" />
         <NEllipsis :line-clamp="1">
           <NText>
             {{ item.replyMessage }}

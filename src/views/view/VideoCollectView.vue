@@ -7,7 +7,6 @@ import { NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 const props = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo
   template?: string | undefined
@@ -42,10 +41,21 @@ async function get() {
 <template>
   <NSpin :show="isLoading">
     <NFlex justify="center">
-      <NEmpty v-if="videoTables.length == 0" description="没有正在进行的征集表" />
+      <NEmpty
+        v-if="videoTables.length == 0"
+        description="没有正在进行的征集表"
+      />
       <NList v-else>
-        <NListItem v-for="item in videoTables" :key="item.id">
-          <VideoCollectInfoCard :item="item" canClick style="width: 500px; max-width: 70vw" from="user" />
+        <NListItem
+          v-for="item in videoTables"
+          :key="item.id"
+        >
+          <VideoCollectInfoCard
+            :item="item"
+            can-click
+            style="width: 500px; max-width: 70vw"
+            from="user"
+          />
         </NListItem>
       </NList>
     </NFlex>

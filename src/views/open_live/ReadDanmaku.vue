@@ -585,60 +585,110 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis" type="error">
+  <NAlert
+    v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis"
+    type="error"
+  >
     你的浏览器不支持语音功能
   </NAlert>
   <template v-else>
     <NSpace vertical>
-      <NAlert v-if="settings.voiceType == 'local'" type="info" closeable>
+      <NAlert
+        v-if="settings.voiceType == 'local'"
+        type="info"
+        closeable
+      >
         建议在 Edge 浏览器使用
         <NTooltip>
           <template #trigger>
-            <NText strong italic type="primary">Microsoft 某某 Online (Nature)</NText>
+            <NText
+              strong
+              italic
+              type="primary"
+            >
+              Microsoft 某某 Online (Nature)
+            </NText>
           </template>
           例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland), 各种营销号就用的这些配音
         </NTooltip>
         系列语音, 效果要好
-        <NText strong>很多很多</NText>
+        <NText strong>
+          很多很多
+        </NText>
       </NAlert>
-      <NAlert type="info" closeable>
+      <NAlert
+        type="info"
+        closeable
+      >
         当在后台运行时请关闭浏览器的 页面休眠/内存节省功能. Chrome:
-        <NButton tag="a" type="info"
+        <NButton
+          tag="a"
+          type="info"
           href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
-          target="_blank" text>
+          target="_blank"
+          text
+        >
           让特定网站保持活动状态
         </NButton>
         Edge:
 
-        <NButton tag="a" type="info"
+        <NButton
+          tag="a"
+          type="info"
           href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
-          target="_blank" text>
+          target="_blank"
+          text
+        >
           永远不想进入睡眠状态的网站
         </NButton>
       </NAlert>
     </NSpace>
-    <br />
+    <br>
     <NSpace align="center">
-      <NButton @click="canSpeech ? stopSpeech() : startSpeech()" :type="canSpeech ? 'error' : 'primary'"
-        data-umami-event="Use TTS" :data-umami-event-uid="accountInfo?.id" size="large">
+      <NButton
+        :type="canSpeech ? 'error' : 'primary'"
+        data-umami-event="Use TTS"
+        :data-umami-event-uid="accountInfo?.id"
+        size="large"
+        @click="canSpeech ? stopSpeech() : startSpeech()"
+      >
         {{ canSpeech ? '停止监听' : '开始监听' }}
       </NButton>
-      <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small">
+      <NButton
+        type="primary"
+        secondary
+        :disabled="!accountInfo"
+        size="small"
+        @click="uploadConfig"
+      >
         保存配置到服务器
       </NButton>
       <NPopconfirm @positive-click="downloadConfig">
         <template #trigger>
-          <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
+          <NButton
+            type="primary"
+            secondary
+            :disabled="!accountInfo"
+            size="small"
+          >
+            从服务器获取配置
+          </NButton>
         </template>
         这将覆盖当前设置, 确定?
       </NPopconfirm>
     </NSpace>
     <template v-if="canSpeech">
       <NDivider> 状态 </NDivider>
-      <NSpace vertical align="center">
+      <NSpace
+        vertical
+        align="center"
+      >
         <NTooltip v-if="settings.voiceType == 'api' && isApiAudioLoading">
           <template #trigger>
-            <NButton circle @click="cancelSpeech">
+            <NButton
+              circle
+              @click="cancelSpeech"
+            >
               <template #icon>
                 <NSpin show />
               </template>
@@ -648,40 +698,96 @@ onUnmounted(() => {
         </NTooltip>
         <NTooltip v-else>
           <template #trigger>
-            <NButton circle :disabled="!isSpeaking" @click="cancelSpeech"
-              :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`">
+            <NButton
+              circle
+              :disabled="!isSpeaking"
+              :style="`animation: ${isSpeaking ? 'animated-border 2.5s infinite;' : ''}`"
+              @click="cancelSpeech"
+            >
               <template #icon>
-                <NIcon :component="Mic24Filled" :color="isSpeaking ? 'green' : 'gray'" />
+                <NIcon
+                  :component="Mic24Filled"
+                  :color="isSpeaking ? 'green' : 'gray'"
+                />
               </template>
             </NButton>
           </template>
           {{ isSpeaking ? '取消朗读' : '未朗读' }}
         </NTooltip>
-        <NText depth="3"> 队列: {{ speakQueue.length }}
+        <NText depth="3">
+          队列: {{ speakQueue.length }}
           <NDivider vertical /> 已读: {{ readedDanmaku }} 条
         </NText>
         <NCollapse :default-expanded-names="['1']">
-          <NCollapseItem title="队列" name="1">
-            <NEmpty v-if="speakQueue.length == 0"> 暂无 </NEmpty>
-            <NList v-else size="small" bordered>
-              <NListItem v-for="item in speakQueue" :key="item.data.time">
+          <NCollapseItem
+            title="队列"
+            name="1"
+          >
+            <NEmpty v-if="speakQueue.length == 0">
+              暂无
+            </NEmpty>
+            <NList
+              v-else
+              size="small"
+              bordered
+            >
+              <NListItem
+                v-for="item in speakQueue"
+                :key="item.data.time"
+              >
                 <NSpace align="center">
-                  <NButton @click="forceSpeak(item.data)" type="primary" secondary size="small"> 读 </NButton>
-                  <NButton @click="speakQueue.splice(speakQueue.indexOf(item), 1)" type="error" secondary size="small">
+                  <NButton
+                    type="primary"
+                    secondary
+                    size="small"
+                    @click="forceSpeak(item.data)"
+                  >
+                    读
+                  </NButton>
+                  <NButton
+                    type="error"
+                    secondary
+                    size="small"
+                    @click="speakQueue.splice(speakQueue.indexOf(item), 1)"
+                  >
                     取消
                   </NButton>
-                  <NTag v-if="item.data.type == EventDataTypes.Gift && item.combineCount" type="info" size="small"
-                    style="animation: animated-border 2.5s infinite">
-                    连续赠送中</NTag>
-                  <NTag v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay" type="success"
-                    size="small">
+                  <NTag
+                    v-if="item.data.type == EventDataTypes.Gift && item.combineCount"
+                    type="info"
+                    size="small"
+                    style="animation: animated-border 2.5s infinite"
+                  >
+                    连续赠送中
+                  </NTag>
+                  <NTag
+                    v-else-if="item.data.type == EventDataTypes.Gift && settings.combineGiftDelay"
+                    type="success"
+                    size="small"
+                  >
                     等待连续赠送检查
                   </NTag>
                   <span>
-                    <NTag v-if="item.data.type == EventDataTypes.Message" type="success" size="small"> 弹幕</NTag>
-                    <NTag v-else-if="item.data.type == EventDataTypes.Gift" type="success" size="small"> 礼物</NTag>
-                    <NTag v-else-if="item.data.type == EventDataTypes.Guard" type="success" size="small"> 舰长</NTag>
-                    <NTag v-else-if="item.data.type == EventDataTypes.SC" type="success" size="small"> SC</NTag>
+                    <NTag
+                      v-if="item.data.type == EventDataTypes.Message"
+                      type="success"
+                      size="small"
+                    > 弹幕</NTag>
+                    <NTag
+                      v-else-if="item.data.type == EventDataTypes.Gift"
+                      type="success"
+                      size="small"
+                    > 礼物</NTag>
+                    <NTag
+                      v-else-if="item.data.type == EventDataTypes.Guard"
+                      type="success"
+                      size="small"
+                    > 舰长</NTag>
+                    <NTag
+                      v-else-if="item.data.type == EventDataTypes.SC"
+                      type="success"
+                      size="small"
+                    > SC</NTag>
                   </span>
                   <NText>
                     {{ item.data.name }}
@@ -697,8 +803,13 @@ onUnmounted(() => {
       </NSpace>
     </template>
     <NDivider>
-      <NRadioGroup v-model:value="settings.voiceType" size="small">
-        <NRadioButton value="local">本地</NRadioButton>
+      <NRadioGroup
+        v-model:value="settings.voiceType"
+        size="small"
+      >
+        <NRadioButton value="local">
+          本地
+        </NRadioButton>
         <NRadioButton value="api">
           API
 
@@ -711,27 +822,57 @@ onUnmounted(() => {
         </NRadioButton>
       </NRadioGroup>
     </NDivider>
-    <Transition name="fade" mode="out-in">
-      <NSpace v-if="settings.voiceType == 'local'" vertical>
-        <NSelect v-model:value="settings.speechInfo.voice" :options="voiceOptions"
-          :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })" />
+    <Transition
+      name="fade"
+      mode="out-in"
+    >
+      <NSpace
+        v-if="settings.voiceType == 'local'"
+        vertical
+      >
+        <NSelect
+          v-model:value="settings.speechInfo.voice"
+          :options="voiceOptions"
+          :fallback-option="() => ({ label: '未选择, 将使用默认语音', value: '' })"
+        />
         <span style="width: 100%">
           <NText> 音量 </NText>
-          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1" :step="0.01" />
+          <NSlider
+            v-model:value="settings.speechInfo.volume"
+            style="min-width: 200px"
+            :min="0"
+            :max="1"
+            :step="0.01"
+          />
         </span>
         <span style="width: 100%">
           <NText> 音调 </NText>
-          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.pitch" :min="0" :max="2" :step="0.01" />
+          <NSlider
+            v-model:value="settings.speechInfo.pitch"
+            style="min-width: 200px"
+            :min="0"
+            :max="2"
+            :step="0.01"
+          />
         </span>
         <span style="width: 100%">
           <NText> 语速 </NText>
-          <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.rate" :min="0" :max="2" :step="0.01" />
+          <NSlider
+            v-model:value="settings.speechInfo.rate"
+            style="min-width: 200px"
+            :min="0"
+            :max="2"
+            :step="0.01"
+          />
         </span>
       </NSpace>
       <template v-else>
         <div>
           <NCollapse>
-            <NCollapseItem title="要求 👀 " name="1">
+            <NCollapseItem
+              title="要求 👀 "
+              name="1"
+            >
               <NUl>
                 <NLi> 直接返回音频数据 (wav, mp3, m4a etc.) </NLi>
                 <NLi>
@@ -746,49 +887,88 @@ onUnmounted(() => {
                 <NLi> 指定API可以被外部访问 (除非你本地部署并且启用了https) </NLi>
               </NUl>
               推荐项目, 可以用于本地部署:
-              <NButton text type="info" tag="a" href="https://github.com/Artrajz/vits-simple-api" target="_blank">
+              <NButton
+                text
+                type="info"
+                tag="a"
+                href="https://github.com/Artrajz/vits-simple-api"
+                target="_blank"
+              >
                 vits-simple-api
               </NButton>
             </NCollapseItem>
           </NCollapse>
-          <br />
+          <br>
           <NSpace vertical>
             <NAlert type="info">
               地址中的
-              <NButton @click="copyToClipboard('{{text}}')" size="tiny" :bordered="false" type="primary" secondary>
+              <NButton
+                size="tiny"
+                :bordered="false"
+                type="primary"
+                secondary
+                @click="copyToClipboard('{{text}}')"
+              >
                 {{ '\{\{ text \}\}' }}
               </NButton>
               将被替换为要念的文本
             </NAlert>
-            <NAlert v-if="isVtsuruVoiceAPI" type="success" closable>
+            <NAlert
+              v-if="isVtsuruVoiceAPI"
+              type="success"
+              closable
+            >
               看起来你正在使用本站提供的测试API (voice.vtsuru.live), 这个接口将会返回
-              <NButton text type="info" tag="a" href="https://space.bilibili.com/5859321" target="_blank">
+              <NButton
+                text
+                type="info"
+                tag="a"
+                href="https://space.bilibili.com/5859321"
+                target="_blank"
+              >
                 Xz乔希
               </NButton>
               训练的
               <NTooltip>
-                <template #trigger> Taffy </template>
+                <template #trigger>
+                  Taffy
+                </template>
                 链接里的 id 改成 0 会变成莲莲捏🥰
               </NTooltip>
               模型结果, 不支持部分英文, 仅用于测试, 用的人多的时候会比较慢, 不保证可用性. 侵删
             </NAlert>
           </NSpace>
-          <br />
+          <br>
           <NInputGroup>
-            <NSelect v-model:value="settings.voiceAPISchemeType" :options="[
-              { label: 'https://', value: 'https' },
-              { label: 'http://', value: 'http' },
-            ]" style="width: 110px" />
-            <NInput v-model:value="settings.voiceAPI"
+            <NSelect
+              v-model:value="settings.voiceAPISchemeType"
+              :options="[
+                { label: 'https://', value: 'https' },
+                { label: 'http://', value: 'http' },
+              ]"
+              style="width: 110px"
+            />
+            <NInput
+              v-model:value="settings.voiceAPI"
               placeholder="API 地址, 例如 xxx.com/voice/bert-vits2?text={{text}}&id=0 (前面不要带https://)"
-              :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'" />
-            <NButton @click="testAPI" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
+              :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : 'success'"
+            />
+            <NButton
+              type="info"
+              :loading="isApiAudioLoading"
+              @click="testAPI"
+            >
+              测试
+            </NButton>
           </NInputGroup>
-          <br /><br />
+          <br><br>
           <NSpace vertical>
-            <NAlert v-if="settings.voiceAPISchemeType == 'http'" type="info">
+            <NAlert
+              v-if="settings.voiceAPISchemeType == 'http'"
+              type="info"
+            >
               不使用https的话默认将会使用 cloudflare workers 进行代理, 会慢很多
-              <br />
+              <br>
               <NCheckbox v-model:checked="settings.useAPIDirectly">
                 不使用代理
                 <NTooltip>
@@ -801,12 +981,23 @@ onUnmounted(() => {
             </NAlert>
             <span style="width: 100%">
               <NText> 音量 </NText>
-              <NSlider style="min-width: 200px" v-model:value="settings.speechInfo.volume" :min="0" :max="1"
-                :step="0.01" />
+              <NSlider
+                v-model:value="settings.speechInfo.volume"
+                style="min-width: 200px"
+                :min="0"
+                :max="1"
+                :step="0.01"
+              />
             </span>
           </NSpace>
-          <audio ref="apiAudio" :src="apiAudioSrc" :volume="settings.speechInfo.volume" @ended="cancelSpeech"
-            @canplay="isApiAudioLoading = false" @error="onAPIError"></audio>
+          <audio
+            ref="apiAudio"
+            :src="apiAudioSrc"
+            :volume="settings.speechInfo.volume"
+            @ended="cancelSpeech"
+            @canplay="isApiAudioLoading = false"
+            @error="onAPIError"
+          />
         </div>
       </template>
     </Transition>
@@ -822,54 +1013,104 @@ onUnmounted(() => {
     <NSpace vertical>
       <NSpace>
         支持的变量:
-        <NButton size="tiny" secondary v-for="item in Object.values(templateConstants)" :key="item.name"
-          @click="copyToClipboard(item.words)">
+        <NButton
+          v-for="item in Object.values(templateConstants)"
+          :key="item.name"
+          size="tiny"
+          secondary
+          @click="copyToClipboard(item.words)"
+        >
           {{ item.words }} | {{ item.name }}
         </NButton>
       </NSpace>
       <NInputGroup>
         <NInputGroupLabel> 弹幕模板 </NInputGroupLabel>
-        <NInput v-model:value="settings.danmakuTemplate" placeholder="弹幕消息" />
-        <NButton @click="test(EventDataTypes.Message)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
+        <NInput
+          v-model:value="settings.danmakuTemplate"
+          placeholder="弹幕消息"
+        />
+        <NButton
+          type="info"
+          :loading="isApiAudioLoading"
+          @click="test(EventDataTypes.Message)"
+        >
+          测试
+        </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> 礼物模板 </NInputGroupLabel>
-        <NInput v-model:value="settings.giftTemplate" placeholder="礼物消息" />
-        <NButton @click="test(EventDataTypes.Gift)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
+        <NInput
+          v-model:value="settings.giftTemplate"
+          placeholder="礼物消息"
+        />
+        <NButton
+          type="info"
+          :loading="isApiAudioLoading"
+          @click="test(EventDataTypes.Gift)"
+        >
+          测试
+        </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> SC模板 </NInputGroupLabel>
-        <NInput v-model:value="settings.scTemplate" placeholder="SC消息" />
-        <NButton @click="test(EventDataTypes.SC)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
+        <NInput
+          v-model:value="settings.scTemplate"
+          placeholder="SC消息"
+        />
+        <NButton
+          type="info"
+          :loading="isApiAudioLoading"
+          @click="test(EventDataTypes.SC)"
+        >
+          测试
+        </NButton>
       </NInputGroup>
       <NInputGroup>
         <NInputGroupLabel> 上舰模板 </NInputGroupLabel>
-        <NInput v-model:value="settings.guardTemplate" placeholder="上舰消息" />
-        <NButton @click="test(EventDataTypes.Guard)" type="info" :loading="isApiAudioLoading"> 测试 </NButton>
+        <NInput
+          v-model:value="settings.guardTemplate"
+          placeholder="上舰消息"
+        />
+        <NButton
+          type="info"
+          :loading="isApiAudioLoading"
+          @click="test(EventDataTypes.Guard)"
+        >
+          测试
+        </NButton>
       </NInputGroup>
     </NSpace>
     <NDivider> 设置 </NDivider>
     <NSpace align="center">
-      <NCheckbox :checked="settings.combineGiftDelay != undefined" @update:checked="(checked: boolean) => {
-        settings.combineGiftDelay = checked ? 2 : undefined
-      }
-      ">
+      <NCheckbox
+        :checked="settings.combineGiftDelay != undefined"
+        @update:checked="(checked: boolean) => {
+          settings.combineGiftDelay = checked ? 2 : undefined
+        }
+        "
+      >
         是否启用礼物合并
         <NTooltip>
           <template #trigger>
             <NIcon :component="Info24Filled" />
           </template>
           在指定时间内连续送相同礼物会等停止送礼物之后才会念
-          <br />
+          <br>
           这也会导致送的礼物会等待指定时间之后才会念, 即使没有连续赠送
         </NTooltip>
       </NCheckbox>
-      <NInputGroup v-if="settings.combineGiftDelay" style="width: 200px">
+      <NInputGroup
+        v-if="settings.combineGiftDelay"
+        style="width: 200px"
+      >
         <NInputGroupLabel> 送礼间隔 (秒) </NInputGroupLabel>
-        <NInputNumber v-model:value="settings.combineGiftDelay" @update:value="(value) => {
-          if (!value || value <= 0) settings.combineGiftDelay = undefined
-        }
-        " />
+        <NInputNumber
+          v-model:value="settings.combineGiftDelay"
+          @update:value="(value) => {
+            if (!value || value <= 0) settings.combineGiftDelay = undefined
+          }
+          "
+        />
       </NInputGroup>
       <NCheckbox v-model:checked="settings.splitText">
         启用句子拆分
@@ -878,9 +1119,9 @@ onUnmounted(() => {
             <NIcon :component="Info24Filled" />
           </template>
           仅API方式可用, 为英文用户名用引号包裹起来, 并将所有大写单词拆分成单个单词, 以防止部分单词念不出来
-          <br />
+          <br>
           例: 原文: Megghy 说: UPPERCASE单词,word.
-          <br />
+          <br>
           结果: 'Megghy' 说: U P P E R C A S E 单词,word.
         </NTooltip>
       </NCheckbox>

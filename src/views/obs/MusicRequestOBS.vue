@@ -59,15 +59,11 @@ const isMoreThanContainer = computed(() => {
   return originSongs.value.waiting.length * itemHeight > height.value
 })
 async function update() {
-  if (!visiable.value || !active.value) return
   const r = await get()
   if (r) {
     originSongs.value = r
   }
 }
-const visiable = ref(true)
-const active = ref(true)
-let timer: any
 onMounted(() => {
   update()
   window.$mitt.on('onOBSComponentUpdate', () => {
@@ -80,31 +76,69 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="music-request-background" v-bind="$attrs">
-    <p class="music-request-header">点歌</p>
+  <div
+    class="music-request-background"
+    v-bind="$attrs"
+  >
+    <p class="music-request-header">
+      点歌
+    </p>
     <NDivider class="music-request-divider">
-      <p class="music-request-header-count">已有 {{ originSongs.waiting.length ?? 0 }} 首</p>
+      <p class="music-request-header-count">
+        已有 {{ originSongs.waiting.length ?? 0 }} 首
+      </p>
     </NDivider>
-    <div class="music-request-singing-container" :playing="originSongs.playing ? 'true' : 'false'"
-      :from="originSongs.playing?.music.from ?? -1">
-      <div class="music-request-singing-prefix"></div>
+    <div
+      class="music-request-singing-container"
+      :playing="originSongs.playing ? 'true' : 'false'"
+      :from="originSongs.playing?.music.from ?? -1"
+    >
+      <div class="music-request-singing-prefix" />
       <template v-if="originSongs.playing">
-        <img class="music-request-singing-avatar"
+        <img
+          class="music-request-singing-avatar"
           :src="originSongs.playing.music.cover ?? AVATAR_URL + originSongs.playing.from?.uid"
-          referrerpolicy="no-referrer" />
-        <p class="music-request-singing-song-name">{{ originSongs.playing.music.name }}</p>
-        <p class="music-request-singing-name">{{ originSongs.playing.from?.name }}</p>
+          referrerpolicy="no-referrer"
+        >
+        <p class="music-request-singing-song-name">
+          {{ originSongs.playing.music.name }}
+        </p>
+        <p class="music-request-singing-name">
+          {{ originSongs.playing.from?.name }}
+        </p>
       </template>
-      <div v-else class="music-request-singing-empty">暂无点歌</div>
-      <div class="music-request-singing-suffix"></div>
+      <div
+        v-else
+        class="music-request-singing-empty"
+      >
+        暂无点歌
+      </div>
+      <div class="music-request-singing-suffix" />
     </div>
-    <div class="music-request-content" ref="listContainerRef">
+    <div
+      ref="listContainerRef"
+      class="music-request-content"
+    >
       <template v-if="originSongs.waiting.length > 0">
-        <Vue3Marquee class="music-request-list" :key="key" vertical :pause="!isMoreThanContainer" :duration="20"
-          :style="`height: ${height}px;width: ${width}px;`">
-          <span class="music-request-list-item" :from="item.music.from as number"
-            v-for="(item, index) in originSongs.waiting" :key="item.music.id" :style="`height: ${itemHeight}px`">
-            <div class="music-request-list-item-index" :index="index + 1">
+        <Vue3Marquee
+          :key="key"
+          class="music-request-list"
+          vertical
+          :pause="!isMoreThanContainer"
+          :duration="20"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <span
+            v-for="(item, index) in originSongs.waiting"
+            :key="item.music.id"
+            class="music-request-list-item"
+            :from="item.music.from as number"
+            :style="`height: ${itemHeight}px`"
+          >
+            <div
+              class="music-request-list-item-index"
+              :index="index + 1"
+            >
               {{ index + 1 }}
             </div>
             <div class="music-request-list-item-song-name">
@@ -114,8 +148,14 @@ onUnmounted(() => {
           </span>
         </Vue3Marquee>
       </template>
-      <div v-else style="position: relative; top: 20%">
-        <NEmpty class="music-request-empty" description="暂无人点歌" />
+      <div
+        v-else
+        style="position: relative; top: 20%"
+      >
+        <NEmpty
+          class="music-request-empty"
+          description="暂无人点歌"
+        />
       </div>
     </div>
   </div>

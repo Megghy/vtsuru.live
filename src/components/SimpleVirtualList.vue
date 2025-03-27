@@ -74,10 +74,24 @@ const height = computed(() => {
 </script>
 
 <template>
-  <NScrollbar ref="scrollerInstRef" :style="'height:' + height" :container="scrollContainer" :content="scrollContent" trigger="none">
-    <VVirtualList ref="vlInstRef" :items="items" :item-size="defaultSize" item-resizable key-field="id" :show-scrollbar="false" @scroll="syncVLScroller">
+  <NScrollbar
+    ref="scrollerInstRef"
+    :style="'height:' + height"
+    :container="scrollContainer"
+    :content="scrollContent"
+    trigger="none"
+  >
+    <VVirtualList
+      ref="vlInstRef"
+      :items="items"
+      :item-size="defaultSize"
+      item-resizable
+      key-field="id"
+      :show-scrollbar="false"
+      @scroll="syncVLScroller"
+    >
       <template #default="{ item }">
-        <slot :item="item"> </slot>
+        <slot :item="item" />
       </template>
     </VVirtualList>
   </NScrollbar>

@@ -130,45 +130,104 @@ onMounted(async () => {
 
 <template>
   <NLayout style="height: 100vh">
-    <NSpin v-if="useAuth.isLoading && useAuth.currentToken" :show="useAuth.isLoading" />
+    <NSpin
+      v-if="useAuth.isLoading && useAuth.currentToken"
+      :show="useAuth.isLoading"
+    />
     <NLayoutContent
       v-else-if="(!useAuth.currentToken && useAuth.biliTokens.length > 0) || useAuth.isInvalid"
       style="height: 100vh; padding: 50px"
     >
-      <NAlert v-if="useAuth.isInvalid" type="error"> 当前登录的 Bilibili 账号已失效 </NAlert>
-      <NCard title="选择B站账号" embedded>
+      <NAlert
+        v-if="useAuth.isInvalid"
+        type="error"
+      >
+        当前登录的 Bilibili 账号已失效
+      </NAlert>
+      <NCard
+        title="选择B站账号"
+        embedded
+      >
         <template #header-extra>
-          <NButton type="primary" @click="$router.push({ name: 'bili-auth' })" size="small" secondary
-            >认证其他账号</NButton
+          <NButton
+            type="primary"
+            size="small"
+            secondary
+            @click="$router.push({ name: 'bili-auth' })"
           >
+            认证其他账号
+          </NButton>
         </template>
-        <NList clickable bordered>
-          <NListItem v-for="item in useAuth.biliTokens" :key="item.token" @click="switchAuth(item.token)">
-            <NFlex align="center"> {{ item.name }} - {{ item.uId }} </NFlex>
+        <NList
+          clickable
+          bordered
+        >
+          <NListItem
+            v-for="item in useAuth.biliTokens"
+            :key="item.token"
+            @click="switchAuth(item.token)"
+          >
+            <NFlex align="center">
+              {{ item.name }} - {{ item.uId }}
+            </NFlex>
           </NListItem>
         </NList>
       </NCard>
     </NLayoutContent>
-    <NLayoutContent v-else-if="!useAuth.currentToken" style="height: 100vh">
-      <NAlert v-if="useAuth.isInvalid" type="error"> 当前登录的 Bilibili 账号已失效 </NAlert>
-      <NResult status="error" title="你还未进行过B站账户验证" description="请先进行认证" style="padding-top: 64px">
+    <NLayoutContent
+      v-else-if="!useAuth.currentToken"
+      style="height: 100vh"
+    >
+      <NAlert
+        v-if="useAuth.isInvalid"
+        type="error"
+      >
+        当前登录的 Bilibili 账号已失效
+      </NAlert>
+      <NResult
+        status="error"
+        title="你还未进行过B站账户验证"
+        description="请先进行认证"
+        style="padding-top: 64px"
+      >
         <template #footer>
-          <NButton type="primary" @click="$router.push({ name: 'bili-auth' })">去认证</NButton>
+          <NButton
+            type="primary"
+            @click="$router.push({ name: 'bili-auth' })"
+          >
+            去认证
+          </NButton>
         </template>
       </NResult>
     </NLayoutContent>
     <template v-else>
-      <NLayoutHeader style="padding: 10px" bordered>
+      <NLayoutHeader
+        style="padding: 10px"
+        bordered
+      >
         <NFlex justify="center">
-          <NText style="font-size: 24px"> 认证用户个人中心 </NText>
+          <NText style="font-size: 24px">
+            认证用户个人中心
+          </NText>
         </NFlex>
       </NLayoutHeader>
       <NLayoutContent content-style="padding: 24px;">
-        <NFlex align="center" justify="center">
+        <NFlex
+          align="center"
+          justify="center"
+        >
           <div style="max-width: 95vw; width: 1200px">
             <NCard title="我的信息">
-              <NDescriptions label-placement="left" bordered size="small" :column="2">
-                <NDescriptionsItem label="用户名" style="min-width: 100px;">
+              <NDescriptions
+                label-placement="left"
+                bordered
+                size="small"
+                :column="2"
+              >
+                <NDescriptionsItem
+                  label="用户名"
+                  style="min-width: 100px;"
+                >
                   {{ biliAuth.name ?? '未知' }}
                 </NDescriptionsItem>
                 <NDescriptionsItem label="UserId">
@@ -180,10 +239,27 @@ onMounted(async () => {
               </NDescriptions>
             </NCard>
             <NDivider />
-            <NTabs v-if="hash" v-model:value="hash" default-value="points" animated>
-              <NTabPane name="points" tab="我的积分" display-directive="show:lazy" @vue:mounted="onAllPointPaneMounted">
+            <NTabs
+              v-if="hash"
+              v-model:value="hash"
+              default-value="points"
+              animated
+            >
+              <NTabPane
+                name="points"
+                tab="我的积分"
+                display-directive="show:lazy"
+                @vue:mounted="onAllPointPaneMounted"
+              >
                 <NDivider style="margin-top: 10px" />
-                <NButton style="margin-bottom: 10px" @click="getAllPoints()" size="small" type="primary">刷新</NButton>
+                <NButton
+                  style="margin-bottom: 10px"
+                  size="small"
+                  type="primary"
+                  @click="getAllPoints()"
+                >
+                  刷新
+                </NButton>
                 <NDivider />
                 <NFlex justify="center">
                   <NDataTable
@@ -196,15 +272,27 @@ onMounted(async () => {
                   />
                 </NFlex>
               </NTabPane>
-              <NTabPane name="orders" tab="我的订单" display-directive="show:lazy">
+              <NTabPane
+                name="orders"
+                tab="我的订单"
+                display-directive="show:lazy"
+              >
                 <NDivider style="margin-top: 10px" />
                 <PointOrderView />
               </NTabPane>
-              <NTabPane name="histories" tab="积分记录" display-directive="show:lazy">
+              <NTabPane
+                name="histories"
+                tab="积分记录"
+                display-directive="show:lazy"
+              >
                 <NDivider style="margin-top: 10px" />
                 <PointUserHistoryView />
               </NTabPane>
-              <NTabPane name="settings" tab="设置" display-directive="show:lazy">
+              <NTabPane
+                name="settings"
+                tab="设置"
+                display-directive="show:lazy"
+              >
                 <NDivider style="margin-top: 10px" />
                 <PointUserSettings />
               </NTabPane>

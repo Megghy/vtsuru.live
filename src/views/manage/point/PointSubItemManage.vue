@@ -4,5 +4,5 @@ import { computed, onMounted, ref } from 'vue'
 </script>
 
 <template>
-1
+  1
 </template>

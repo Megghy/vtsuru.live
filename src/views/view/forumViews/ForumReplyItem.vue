@@ -28,13 +28,24 @@ const emits = defineEmits<{
 </script>
 
 <template>
-  <NFlex align="center" class="forum-reply-item">
-    <NFlex :wrap="false" align="center">
+  <NFlex
+    align="center"
+    class="forum-reply-item"
+  >
+    <NFlex
+      :wrap="false"
+      align="center"
+    >
       <NTooltip v-if="replyTo">
         <template #trigger>
           <NIcon :component="ArrowReply16Filled" />
         </template>
-        <ForumReplyItem :item="replyTo" :comment="comment" :topic="topic" :show-reply-button="false" />
+        <ForumReplyItem
+          :item="replyTo"
+          :comment="comment"
+          :topic="topic"
+          :show-reply-button="false"
+        />
       </NTooltip>
       <NAvatar
         :src="getUserAvatarUrl(item.user.id)"
@@ -43,16 +54,31 @@ const emits = defineEmits<{
         round
         style="margin-top: -3px; min-width: 28px; min-height: 28px"
       />
-      <NText strong depth="3" style="white-space: nowrap">
+      <NText
+        strong
+        depth="3"
+        style="white-space: nowrap"
+      >
         {{ item.user.name }}
       </NText>
     </NFlex>
     {{ item.content }}
-    <NFlex justify="end" align="center" :wrap="false" style="flex: 1">
+    <NFlex
+      justify="end"
+      align="center"
+      :wrap="false"
+      style="flex: 1"
+    >
       <NTooltip>
         <template #trigger>
-          <NText depth="3" style="font-size: small; min-width: 50px">
-            <NTime :time="item.sendAt" type="relative" />
+          <NText
+            depth="3"
+            style="font-size: small; min-width: 50px"
+          >
+            <NTime
+              :time="item.sendAt"
+              type="relative"
+            />
           </NText>
         </template>
         <NTime :time="item.sendAt" />
@@ -61,10 +87,10 @@ const emits = defineEmits<{
         <template #trigger>
           <NButton
             size="tiny"
-            @click="useForum.SetReplyingComment(comment, item)"
             round
             secondary
             :disabled="!canOprate"
+            @click="useForum.SetReplyingComment(comment, item)"
           >
             <template #icon>
               <NIcon :component="ArrowReply16Filled" />

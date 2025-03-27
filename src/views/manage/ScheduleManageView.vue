@@ -3,8 +3,9 @@ import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes, ScheduleWeekInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ScheduleList from '@/components/ScheduleList.vue'
-import { CN_HOST, CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
+import { BASE_API_URL, CN_HOST, CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
 import { copyToClipboard } from '@/Utils'
+import { TagQuestionMark16Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
@@ -24,6 +25,7 @@ import {
   NSpin,
   NSwitch,
   NTimePicker,
+  NTooltip,
   useMessage,
 } from 'naive-ui'
 import { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
@@ -268,114 +270,114 @@ onMounted(() => {
 
 <template>
   <NSpace align="center">
-    <NAlert
-      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
-      style="max-width: 200px"
-    >
+    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
+      style="max-width: 200px">
       启用日程表
       <NDivider vertical />
-      <NSwitch
-        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Schedule)"
-        @update:value="setFunctionEnable"
-      />
+      <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Schedule)"
+        @update:value="setFunctionEnable" />
     </NAlert>
-    <NButton @click="showAddModal = true" type="primary"> 添加周程 </NButton>
+    <NButton type="primary" @click="showAddModal = true">
+      添加周程
+    </NButton>
     <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
       修改模板
     </NButton>
-  </NSpace><NDivider style="margin: 16px 0 16px 0" title-placement="left">
+  </NSpace>
+  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
     日程表展示页链接
   </NDivider>
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
       <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
       <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/schedule`)">
-        复制 </NButton>
+        复制
+      </NButton>
     </NInputGroup>
-    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+    <NCheckbox v-model:checked="useCNUrl">
+      使用国内镜像(访问更快)
+    </NCheckbox>
+  </NFlex>
+  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    订阅链接
+    <NTooltip>
+      <template #trigger>
+        <NIcon>
+          <TagQuestionMark16Filled />
+        </NIcon>
+      </template>
+      通过订阅链接可以订阅日程表到日历软件中
+    </NTooltip>
+  </NDivider>
+  <NFlex align="center">
+    <NInputGroup style="max-width: 400px;">
+      <NInput :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`" readonly />
+      <NButton secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)">
+        复制
+      </NButton>
+    </NInputGroup>
   </NFlex>
   <NDivider />
   <NModal v-model:show="showAddModal" style="width: 600px; max-width: 90vw" preset="card" title="添加周程">
     <NSpace vertical>
       年份
-      <NSelect :options="yearOptions" v-model:value="selectedScheduleYear" />
+      <NSelect v-model:value="selectedScheduleYear" :options="yearOptions" />
       第几周
-      <NSelect :options="weekOptions" v-model:value="selectedScheduleWeek" />
+      <NSelect v-model:value="selectedScheduleWeek" :options="weekOptions" />
     </NSpace>
     <NDivider />
-    <NButton @click="addSchedule" :loading="isFetching"> 添加 </NButton>
+    <NButton :loading="isFetching" @click="addSchedule">
+      添加
+    </NButton>
   </NModal>
   <NModal v-model:show="showCopyModal" style="width: 600px; max-width: 90vw" preset="card" title="复制周程">
-    <NAlert type="info"> 复制为 </NAlert>
+    <NAlert type="info">
+      复制为
+    </NAlert>
     <NSpace vertical>
       年份
-      <NSelect :options="yearOptions" v-model:value="selectedScheduleYear" />
+      <NSelect v-model:value="selectedScheduleYear" :options="yearOptions" />
       第几周
-      <NSelect :options="weekOptions" v-model:value="selectedScheduleWeek" />
+      <NSelect v-model:value="selectedScheduleWeek" :options="weekOptions" />
     </NSpace>
     <NDivider />
-    <NButton @click="onCopySchedule" :loading="isFetching"> 复制 </NButton>
+    <NButton :loading="isFetching" @click="onCopySchedule">
+      复制
+    </NButton>
   </NModal>
   <NModal v-model:show="showUpdateModal" style="width: 600px; max-width: 90vw" preset="card" title="编辑周程">
-    <NSelect :options="dayOptions" v-model:value="selectedDay" />
+    <NSelect v-model:value="selectedDay" :options="dayOptions" />
     <NDivider />
     <template v-if="updateScheduleModel">
       <NSpace vertical>
         <NSpace>
           <NInputGroup>
-            <NInputGroupLabel type="primary"> 标签 </NInputGroupLabel>
-            <NInput
-              v-model:value="updateScheduleModel.days[selectedDay].tag"
-              placeholder="标签 | 留空视为无安排"
-              style="max-width: 300px"
-              maxlength="10"
-              show-count
-            />
+            <NInputGroupLabel type="primary">
+              标签
+            </NInputGroupLabel>
+            <NInput v-model:value="updateScheduleModel.days[selectedDay].tag" placeholder="标签 | 留空视为无安排"
+              style="max-width: 300px" maxlength="10" show-count />
           </NInputGroup>
-          <NSelect
-            v-model:value="selectedExistTag"
-            @update:value="onSelectChange"
-            :options="existTagOptions"
-            filterable
-            clearable
-            placeholder="使用过的标签"
-            style="max-width: 150px"
-            :render-option="renderOption"
-          />
+          <NSelect v-model:value="selectedExistTag" :options="existTagOptions" filterable clearable placeholder="使用过的标签"
+            style="max-width: 150px" :render-option="renderOption" @update:value="onSelectChange" />
         </NSpace>
         <NInputGroup>
           <NInputGroupLabel> 内容 </NInputGroupLabel>
-          <NInput
-            v-model:value="updateScheduleModel.days[selectedDay].title"
-            placeholder="内容"
-            style="max-width: 200px"
-            maxlength="30"
-            show-count
-          />
+          <NInput v-model:value="updateScheduleModel.days[selectedDay].title" placeholder="内容" style="max-width: 200px"
+            maxlength="30" show-count />
         </NInputGroup>
-        <NTimePicker
-          default-formatted-value="20:00"
-          v-model:formatted-value="updateScheduleModel.days[selectedDay].time"
-          format="HH:mm"
-        />
-        <NColorPicker
-          v-model:value="updateScheduleModel.days[selectedDay].tagColor"
-          :swatches="['#FFFFFF', '#18A058', '#2080F0', '#F0A020', 'rgba(208, 48, 80, 1)']"
-          default-value="#61B589"
-          :show-alpha="false"
-          :modes="['hex']"
-        />
-        <NButton @click="onUpdateSchedule()" :loading="isFetching"> 保存 </NButton>
+        <NTimePicker v-model:formatted-value="updateScheduleModel.days[selectedDay].time"
+          default-formatted-value="20:00" format="HH:mm" />
+        <NColorPicker v-model:value="updateScheduleModel.days[selectedDay].tagColor"
+          :swatches="['#FFFFFF', '#18A058', '#2080F0', '#F0A020', 'rgba(208, 48, 80, 1)']" default-value="#61B589"
+          :show-alpha="false" :modes="['hex']" />
+        <NButton :loading="isFetching" @click="onUpdateSchedule()">
+          保存
+        </NButton>
       </NSpace>
     </template>
   </NModal>
   <NSpin v-if="isLoading" show />
-  <ScheduleList
-    v-else
-    :schedules="schedules ?? []"
-    @on-update="onOpenUpdateModal"
-    @on-delete="onDeleteSchedule"
-    @on-copy="onOpenCopyModal"
-    is-self
-  />
+  <ScheduleList v-else :schedules="schedules ?? []" is-self @on-update="onOpenUpdateModal" @on-delete="onDeleteSchedule"
+    @on-copy="onOpenCopyModal" />
 </template>

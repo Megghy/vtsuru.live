@@ -10,7 +10,7 @@ export const useConsumptionSettingStore = defineStore(
   () => {
     const accountInfo = useAccount()
     const consumptionSetting = computed<UserConsumptionSetting>(() => {
-      return accountInfo.value.consumptionSetting
+      return accountInfo.value.consumptionSettings
     })
     const consumptionTypeMap = {
       [ConsumptionTypes.DanmakuStorage]: {

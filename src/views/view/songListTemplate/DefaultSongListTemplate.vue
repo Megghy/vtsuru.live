@@ -56,11 +56,19 @@ const buttons = (song: SongsInfo) => [
 
 <template>
   <NDivider style="margin-top: 10px" />
-  <SongList v-if="data" :songs="data ?? []" :is-self="accountInfo?.id == userInfo?.id" :extraButton="buttons"
-    v-bind="$attrs" />
+  <SongList
+    v-if="data"
+    :songs="data ?? []"
+    :is-self="accountInfo?.id == userInfo?.id"
+    :extra-button="buttons"
+    v-bind="$attrs"
+  />
   <NCollapse v-if="userInfo?.canRequestSong">
     <NCollapseItem title="点歌列表">
-      <NCard size="small" embedded>
+      <NCard
+        size="small"
+        embedded
+      >
         <div style="height: 400px; width: 700px; max-width: 100%; position: relative; margin: 0 auto">
           <LiveRequestOBS :id="userInfo?.id" />
         </div>

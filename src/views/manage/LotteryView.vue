@@ -183,7 +183,7 @@ async function getForwardUsers() {
       if (data.code == 200) {
         data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
         data.data.total = data.data.users.length
-        
+
         originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
         forwardUsers.value = data.data
         isCommentCountDown.value = false
@@ -329,9 +329,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard size="medium" embedded title="动态抽奖">
+  <NCard
+    size="medium"
+    embedded
+    title="动态抽奖"
+  >
     <template #header-extra>
-      <NButton @click="showModal = true"> 历史记录 </NButton>
+      <NButton @click="showModal = true">
+        历史记录
+      </NButton>
     </template>
     <NInput
       v-model:value="inputDynamic"
@@ -340,28 +346,59 @@ onUnmounted(() => {
       :disabled="isLoading || isLottering"
     />
     <NDivider style="margin: 10px 0 10px 0" />
-    <NCard size="small" embedded title="选项">
+    <NCard
+      size="small"
+      embedded
+      title="选项"
+    >
       <template #header-extra>
-        <NButton size="small" secondary @click="lotteryOption = defaultOption"> 恢复默认 </NButton>
+        <NButton
+          size="small"
+          secondary
+          @click="lotteryOption = defaultOption"
+        >
+          恢复默认
+        </NButton>
       </template>
       <NSpace justify="center">
-        <NRadioGroup v-model:value="currentType" name="用户类型" :disabled="isLottering">
-          <NRadioButton value="comment"> 评论 </NRadioButton>
-          <NRadioButton value="forward"> 转发 </NRadioButton>
+        <NRadioGroup
+          v-model:value="currentType"
+          name="用户类型"
+          :disabled="isLottering"
+        >
+          <NRadioButton value="comment">
+            评论
+          </NRadioButton>
+          <NRadioButton value="forward">
+            转发
+          </NRadioButton>
         </NRadioGroup>
       </NSpace>
-      <NDivider style="margin: 10px 0 10px 0"></NDivider>
+      <NDivider style="margin: 10px 0 10px 0" />
       <NSpace align="center">
         <NInputGroup style="max-width: 200px">
           <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
-          <NInputNumber v-model:value="lotteryOption.resultCount" placeholder="" min="1" />
+          <NInputNumber
+            v-model:value="lotteryOption.resultCount"
+            placeholder=""
+            min="1"
+          />
         </NInputGroup>
-        <NCheckbox v-model:checked="lotteryOption.needVIP"> 需要大会员 </NCheckbox>
+        <NCheckbox v-model:checked="lotteryOption.needVIP">
+          需要大会员
+        </NCheckbox>
         <template v-if="currentType == 'comment'">
-          <NCheckbox v-model:checked="lotteryOption.needCharge"> 需要充电 </NCheckbox>
-          <NCheckbox v-model:checked="lotteryOption.needFanCard"> 需要粉丝牌 </NCheckbox>
+          <NCheckbox v-model:checked="lotteryOption.needCharge">
+            需要充电
+          </NCheckbox>
+          <NCheckbox v-model:checked="lotteryOption.needFanCard">
+            需要粉丝牌
+          </NCheckbox>
           <NCollapseTransition>
-            <NInputGroup v-if="lotteryOption.needFanCard" style="max-width: 200px">
+            <NInputGroup
+              v-if="lotteryOption.needFanCard"
+              style="max-width: 200px"
+            >
               <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
               <NInputNumber
                 v-model:value="lotteryOption.fanCardLevel"
@@ -373,19 +410,31 @@ onUnmounted(() => {
             </NInputGroup>
           </NCollapseTransition>
         </template>
-        <NRadioGroup v-model:value="lotteryOption.lotteryType" name="抽取类型" size="small" :disabled="isLottering">
-          <NRadioButton value="single"> 单个 </NRadioButton>
-          <NRadioButton value="half"> 减半 </NRadioButton>
+        <NRadioGroup
+          v-model:value="lotteryOption.lotteryType"
+          name="抽取类型"
+          size="small"
+          :disabled="isLottering"
+        >
+          <NRadioButton value="single">
+            单个
+          </NRadioButton>
+          <NRadioButton value="half">
+            减半
+          </NRadioButton>
         </NRadioGroup>
       </NSpace>
     </NCard>
-    <br />
-    <NSpace justify="center" align="center">
+    <br>
+    <NSpace
+      justify="center"
+      align="center"
+    >
       <NButton
         :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering"
         :loading="!token || isLoading"
-        @click="onGet"
         type="primary"
+        @click="onGet"
       >
         加载用户
       </NButton>
@@ -395,20 +444,51 @@ onUnmounted(() => {
         @finish="isCommentCountDown = true"
       />
     </NSpace>
-    <br />
-    <NCard v-if="currentUsers" size="small">
+    <br>
+    <NCard
+      v-if="currentUsers"
+      size="small"
+    >
       <NSpace justify="center">
-        <NButton type="primary" @click="startLottery" :loading="isLottering" :disabled="isLotteried">
+        <NButton
+          type="primary"
+          :loading="isLottering"
+          :disabled="isLotteried"
+          @click="startLottery"
+        >
           开始抽取
         </NButton>
-        <NButton type="info" :disabled="isLottering || !isLotteried" @click="reset"> 重置 </NButton>
+        <NButton
+          type="info"
+          :disabled="isLottering || !isLotteried"
+          @click="reset"
+        >
+          重置
+        </NButton>
       </NSpace>
-      <NDivider style="margin: 10px 0 10px 0"> 共 {{ validUsers?.length }} 人</NDivider>
-      <NGrid cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
-        <NGridItem v-for="item in validUsers" v-bind:key="item.uId">
-          <NCard size="small" :title="item.name" style="height: 155px">
+      <NDivider style="margin: 10px 0 10px 0">
+        共 {{ validUsers?.length }} 人
+      </NDivider>
+      <NGrid
+        cols="1 500:2 800:3 1000:4"
+        :x-gap="12"
+        :y-gap="8"
+      >
+        <NGridItem
+          v-for="item in validUsers"
+          :key="item.uId"
+        >
+          <NCard
+            size="small"
+            :title="item.name"
+            style="height: 155px"
+          >
             <template #header>
-              <NSpace align="center" vertical :size="5">
+              <NSpace
+                align="center"
+                vertical
+                :size="5"
+              >
                 <NAvatar
                   round
                   lazy
@@ -440,8 +520,16 @@ onUnmounted(() => {
                     </template>
                     用户等级
                   </NTooltip>
-                  <NTag v-if="item.card" size="tiny" round>
-                    <NTag size="tiny" round :bordered="false">
+                  <NTag
+                    v-if="item.card"
+                    size="tiny"
+                    round
+                  >
+                    <NTag
+                      size="tiny"
+                      round
+                      :bordered="false"
+                    >
                       {{ item.card.level }}
                     </NTag>
                     <span style="color: #577fb8">
@@ -457,35 +545,79 @@ onUnmounted(() => {
       </NGrid>
     </NCard>
   </NCard>
-  <NModal v-model:show="showModal" preset="card" title="抽奖结果" style="max-width: 90%; width: 800px" closable>
+  <NModal
+    v-model:show="showModal"
+    preset="card"
+    title="抽奖结果"
+    style="max-width: 90%; width: 800px"
+    closable
+  >
     <template #header-extra>
-      <NButton type="error" size="small" @click="lotteryHistory = []"> 清空 </NButton>
+      <NButton
+        type="error"
+        size="small"
+        @click="lotteryHistory = []"
+      >
+        清空
+      </NButton>
     </template>
-    <NScrollbar v-if="lotteryHistory.length > 0" style="max-height: 80vh">
+    <NScrollbar
+      v-if="lotteryHistory.length > 0"
+      style="max-height: 80vh"
+    >
       <NList>
-        <NListItem v-for="item in lotteryHistory" :key="item.time">
+        <NListItem
+          v-for="item in lotteryHistory"
+          :key="item.time"
+        >
           <NCard size="small">
             <template #header>
               <NTime :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton type="error" size="small" @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)">
+              <NButton
+                type="error"
+                size="small"
+                @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"
+              >
                 删除
               </NButton>
             </template>
             <NSpace vertical>
-              <NSpace v-for="user in item.users" :key="user.uId">
-                <NAvatar round lazy :src="user.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NSpace
+                v-for="user in item.users"
+                :key="user.uId"
+              >
+                <NAvatar
+                  round
+                  lazy
+                  :src="user.avatar + '@64w_64h'"
+                  :img-props="{ referrerpolicy: 'no-referrer' }"
+                />
                 {{ user.name }}
               </NSpace>
             </NSpace>
             <NDivider style="margin: 10px 0 10px 0" />
-            <NButton secondary @click="NavigateToNewTab(item.url)"> 目标动态 </NButton>
+            <NButton
+              secondary
+              @click="NavigateToNewTab(item.url)"
+            >
+              目标动态
+            </NButton>
           </NCard>
         </NListItem>
       </NList>
     </NScrollbar>
-    <NEmpty v-else description="暂无记录" />
+    <NEmpty
+      v-else
+      description="暂无记录"
+    />
   </NModal>
-  <VueTurnstile ref="turnstile" :site-key="TURNSTILE_KEY" v-model="token" theme="auto" style="text-align: center" />
+  <VueTurnstile
+    ref="turnstile"
+    v-model="token"
+    :site-key="TURNSTILE_KEY"
+    theme="auto"
+    style="text-align: center"
+  />
 </template>

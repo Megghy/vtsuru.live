@@ -58,7 +58,7 @@ const songs = computed(() => {
     }
   }
   if (settings.value.isReverse) {
-    // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+
     return result.Reverse().ToArray()
   } else {
     return result.ToArray()
@@ -110,7 +110,6 @@ const allowGuardTypes = computed(() => {
   return types
 })
 async function update() {
-  if (!visiable.value || !active.value) return
   const r = await get()
   if (r) {
     const isCountChange = originSongs.value.length != r.songs.length
@@ -129,9 +128,6 @@ async function onAddedItem() {
 
 const direction = ref<'normal' | 'reverse'>('normal')
 
-const visiable = ref(true)
-const active = ref(true)
-let timer: any
 onMounted(() => {
   update()
   // 接收点播结果消息
@@ -148,72 +144,151 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="cardRef" class="live-request-background" v-bind="$attrs">
-    <p class="live-request-header">{{ settings.obsTitle ?? '点播' }}</p>
+  <div
+    ref="cardRef"
+    class="live-request-background"
+    v-bind="$attrs"
+  >
+    <p class="live-request-header">
+      {{ settings.obsTitle ?? '点播' }}
+    </p>
     <NDivider class="live-request-divider">
-      <p class="live-request-header-count">已有 {{ activeSongs.length ?? 0 }} 条</p>
+      <p class="live-request-header-count">
+        已有 {{ activeSongs.length ?? 0 }} 条
+      </p>
     </NDivider>
-    <div class="live-request-processing-container"
-      :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1" :from="singing?.from as number"
-      :status="singing?.status as number">
-      <div class="live-request-processing-prefix"></div>
+    <div
+      class="live-request-processing-container"
+      :singing="songs.findIndex((s) => s.status == SongRequestStatus.Singing) > -1"
+      :from="singing?.from as number"
+      :status="singing?.status as number"
+    >
+      <div class="live-request-processing-prefix" />
       <template v-if="singing">
-        <img class="live-request-processing-avatar" :src="singing?.user?.face" referrerpolicy="no-referrer" />
-        <p class="live-request-processing-song-name">{{ singing?.songName }}</p>
-        <p class="live-request-processing-name">{{ singing?.user?.name }}</p>
+        <img
+          class="live-request-processing-avatar"
+          :src="singing?.user?.face"
+          referrerpolicy="no-referrer"
+        >
+        <p class="live-request-processing-song-name">
+          {{ singing?.songName }}
+        </p>
+        <p class="live-request-processing-name">
+          {{ singing?.user?.name }}
+        </p>
       </template>
-      <div v-else class="live-request-processing-empty">暂无</div>
-      <div class="live-request-processing-suffix"></div>
+      <div
+        v-else
+        class="live-request-processing-empty"
+      >
+        暂无
+      </div>
+      <div class="live-request-processing-suffix" />
     </div>
-    <div class="live-request-content" ref="listContainerRef">
+    <div
+      ref="listContainerRef"
+      class="live-request-content"
+    >
       <template v-if="activeSongs.length > 0">
-        <Vue3Marquee class="live-request-list" :key="key" vertical :duration="20" :pause="!isMoreThanContainer"
-          :style="`height: ${height}px;width: ${width}px;`">
-          <div class="live-request-list-item" :from="song.from as number" :status="song.status as number"
-            v-for="(song, index) in activeSongs" :key="song.id" :style="`height: ${itemHeight}px`">
-            <div class="live-request-list-item-index" :index="index + 1">
+        <Vue3Marquee
+          :key="key"
+          class="live-request-list"
+          vertical
+          :duration="20"
+          :pause="!isMoreThanContainer"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <div
+            v-for="(song, index) in activeSongs"
+            :key="song.id"
+            class="live-request-list-item"
+            :from="song.from as number"
+            :status="song.status as number"
+            :style="`height: ${itemHeight}px`"
+          >
+            <div
+              class="live-request-list-item-index"
+              :index="index + 1"
+            >
               {{ index + 1 }}
             </div>
             <div class="live-request-list-item-song-name">
               {{ song.songName }}
             </div>
-            <p v-if="settings.showUserName" class="live-request-list-item-name">
+            <p
+              v-if="settings.showUserName"
+              class="live-request-list-item-name"
+            >
               {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
             </p>
-            <div v-if="settings.showFanMadelInfo" class="live-request-list-item-level"
-              :has-level="(song.user?.fans_medal_level ?? 0) > 0">
+            <div
+              v-if="settings.showFanMadelInfo"
+              class="live-request-list-item-level"
+              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
+            >
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
-          <NDivider v-if="isMoreThanContainer" class="live-request-footer-divider" style="margin: 10px 0 10px 0" />
+          <NDivider
+            v-if="isMoreThanContainer"
+            class="live-request-footer-divider"
+            style="margin: 10px 0 10px 0"
+          />
         </Vue3Marquee>
       </template>
-      <div v-else style="position: relative; top: 20%">
-        <NEmpty class="live-request-empty" description="暂无人点播" />
+      <div
+        v-else
+        style="position: relative; top: 20%"
+      >
+        <NEmpty
+          class="live-request-empty"
+          description="暂无人点播"
+        />
       </div>
     </div>
-    <div class="live-request-footer" v-if="settings.showRequireInfo" ref="footerRef">
-      <Vue3Marquee :key="key" ref="footerListRef" class="live-request-footer-marquee" :duration="10"
-        animate-on-overflow-only>
-        <span class="live-request-tag" type="prefix">
+    <div
+      v-if="settings.showRequireInfo"
+      ref="footerRef"
+      class="live-request-footer"
+    >
+      <Vue3Marquee
+        :key="key"
+        ref="footerListRef"
+        class="live-request-footer-marquee"
+        :duration="10"
+        animate-on-overflow-only
+      >
+        <span
+          class="live-request-tag"
+          type="prefix"
+        >
           <div class="live-request-tag-key">前缀</div>
           <div class="live-request-tag-value">
             {{ settings.orderPrefix }}
           </div>
         </span>
-        <span class="live-request-tag" type="prefix">
+        <span
+          class="live-request-tag"
+          type="prefix"
+        >
           <div class="live-request-tag-key">允许</div>
           <div class="live-request-tag-value">
             {{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join(',') : '无' }}
           </div>
         </span>
-        <span class="live-request-tag" type="sc">
+        <span
+          class="live-request-tag"
+          type="sc"
+        >
           <div class="live-request-tag-key">SC点歌</div>
           <div class="live-request-tag-value">
             {{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}
           </div>
         </span>
-        <span class="live-request-tag" type="fan-madel">
+        <span
+          class="live-request-tag"
+          type="fan-madel"
+        >
           <div class="live-request-tag-key">粉丝牌</div>
           <div class="live-request-tag-value">
             {{

@@ -184,6 +184,14 @@ export default //管理页面
       meta: {
         title: '粉丝讨论区'
       }
+    },
+    {
+      path: 'analyze',
+      name: 'manage-analyze',
+      component: () => import('@/views/manage/AnalyzeView.vue'),
+      meta: {
+        title: '数据分析'
+      }
     }
   ]
 }

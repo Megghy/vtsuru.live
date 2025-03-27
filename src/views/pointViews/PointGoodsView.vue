@@ -199,54 +199,121 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NAlert v-if="!useAuth.isAuthed" type="warning">
+  <NAlert
+    v-if="!useAuth.isAuthed"
+    type="warning"
+  >
     你尚未进行 Bilibili 账号认证, 无法兑换积分
-    <br />
-    <NButton type="primary" @click="$router.push({ name: 'bili-auth' })" size="small" style="margin-top: 12px">
+    <br>
+    <NButton
+      type="primary"
+      size="small"
+      style="margin-top: 12px"
+      @click="$router.push({ name: 'bili-auth' })"
+    >
       立即认证
     </NButton>
   </NAlert>
-  <NCard v-else style="max-width: 600px; margin: 0 auto;" embedded hoverable>
-    <template #header> 你好, {{ useAuth.biliAuth.name }} </template>
+  <NCard
+    v-else
+    style="max-width: 600px; margin: 0 auto;"
+    embedded
+    hoverable
+  >
+    <template #header>
+      你好, {{ useAuth.biliAuth.name }}
+    </template>
     <template #header-extra>
       <NFlex>
-        <NButton type="info" @click="gotoAuthPage" secondary size="small"> 前往认证用户中心 </NButton>
-        <NButton @click="NavigateToNewTab('/bili-user#settings')" secondary size="small"> 切换账号 </NButton>
+        <NButton
+          type="info"
+          secondary
+          size="small"
+          @click="gotoAuthPage"
+        >
+          前往认证用户中心
+        </NButton>
+        <NButton
+          secondary
+          size="small"
+          @click="NavigateToNewTab('/bili-user#settings')"
+        >
+          切换账号
+        </NButton>
       </NFlex>
     </template>
     <NText> 你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }} </NText>
   </NCard>
   <NDivider />
-  <NCard v-if="tags.length > 0" size="small" title="标签筛选">
-    <NFlex align="center" justify="center">
-      <NButton v-for="tag in tags" :type="tag == selectedTag ? 'success' : 'default'"
-        @click="selectedTag = selectedTag == tag ? undefined : tag" :borderd="false" style="margin: 4px" size="small">
+  <NCard
+    v-if="tags.length > 0"
+    size="small"
+    title="标签筛选"
+  >
+    <NFlex
+      align="center"
+      justify="center"
+    >
+      <NButton
+        v-for="tag in tags"
+        :key="tag"
+        :type="tag == selectedTag ? 'success' : 'default'"
+        :borderd="false"
+        style="margin: 4px"
+        size="small"
+        @click="selectedTag = selectedTag == tag ? undefined : tag"
+      >
         {{ tag }}
       </NButton>
     </NFlex>
     <NDivider />
-    <NCheckbox v-model:checked="onlyCanBuy"> 只显示可兑换的礼物 </NCheckbox>
-    <NCheckbox v-model:checked="ignoreGuard"> 忽略需要舰长的礼物 </NCheckbox>
+    <NCheckbox v-model:checked="onlyCanBuy">
+      只显示可兑换的礼物
+    </NCheckbox>
+    <NCheckbox v-model:checked="ignoreGuard">
+      忽略需要舰长的礼物
+    </NCheckbox>
   </NCard>
   <NDivider />
   <NSpin :show="isLoading">
-    <NEmpty v-if="selectedItems.length == 0"> 暂无礼物 </NEmpty>
+    <NEmpty v-if="selectedItems.length == 0">
+      暂无礼物
+    </NEmpty>
     <NFlex justify="center">
-      <PointGoodsItem v-for="item in selectedItems" :key="item.id" :goods="item"
-        content-style="max-width: 300px;height: 365px">
+      <PointGoodsItem
+        v-for="item in selectedItems"
+        :key="item.id"
+        :goods="item"
+        content-style="max-width: 300px;height: 365px"
+      >
         <template #footer>
-          <NFlex justify="space-between" align="center">
+          <NFlex
+            justify="space-between"
+            align="center"
+          >
             <NTooltip>
               <template #trigger>
-                <NButton :disabled="getTooltip(item) != '开始兑换'" size="small" type="primary" @click="onBuyClick(item)">兑换
+                <NButton
+                  :disabled="getTooltip(item) != '开始兑换'"
+                  size="small"
+                  type="primary"
+                  @click="onBuyClick(item)"
+                >
+                  兑换
                 </NButton>
               </template>
               {{ getTooltip(item) }}
             </NTooltip>
-            <NFlex style="flex: 1" justify="end">
+            <NFlex
+              style="flex: 1"
+              justify="end"
+            >
               <NTooltip>
                 <template #trigger>
-                  <NText style="size: 34px" :delete="item.canFreeBuy">
+                  <NText
+                    style="size: 34px"
+                    :delete="item.canFreeBuy"
+                  >
                     🪙
                     {{ item.price > 0 ? item.price : '免费' }}
                   </NText>
@@ -259,32 +326,70 @@ onMounted(async () => {
       </PointGoodsItem>
     </NFlex>
   </NSpin>
-  <NModal v-model:show="showBuyModal" v-if="currentGoods" preset="card" title="确认兑换"
-    style="width: 500px; max-width: 90vw; height: auto">
+  <NModal
+    v-if="currentGoods"
+    v-model:show="showBuyModal"
+    preset="card"
+    title="确认兑换"
+    style="width: 500px; max-width: 90vw; height: auto"
+  >
     <template #header>
       <NFlex align="baseline">
-        <NTag :type="currentGoods.type == GoodsTypes.Physical ? 'info' : 'default'" :bordered="false">
+        <NTag
+          :type="currentGoods.type == GoodsTypes.Physical ? 'info' : 'default'"
+          :bordered="false"
+        >
           {{ currentGoods.type == GoodsTypes.Physical ? '实体礼物' : '虚拟物品' }}
         </NTag>
         <NText> {{ currentGoods.name }} </NText>
       </NFlex>
     </template>
-    <PointGoodsItem v-if="currentGoods" :goods="currentGoods" />
+    <PointGoodsItem
+      v-if="currentGoods"
+      :goods="currentGoods"
+    />
     <template v-if="currentGoods.type == GoodsTypes.Physical">
       <NDivider> 选项 </NDivider>
       <NForm>
-        <NFormItem label="兑换数量" required>
-          <NInputNumber v-model:value="buyCount" :min="1" :max="currentGoods.maxBuyCount ?? 100000"
-            style="max-width: 120px" step="1" :precision="0" />
+        <NFormItem
+          label="兑换数量"
+          required
+        >
+          <NInputNumber
+            v-model:value="buyCount"
+            :min="1"
+            :max="currentGoods.maxBuyCount ?? 100000"
+            style="max-width: 120px"
+            step="1"
+            :precision="0"
+          />
         </NFormItem>
-        <NFormItem v-if="
-          currentGoods.type == GoodsTypes.Physical &&
-          (currentGoods.collectUrl == null || currentGoods.collectUrl == undefined)
-        " label="收货地址" required>
-          <NSelect v-model:show="showAddressSelect" :value="selectedAddress?.id" :options="addressOptions"
-            :render-label="renderLabel" :render-option="renderOption" placeholder="请选择地址" />
+        <NFormItem
+          v-if="
+            currentGoods.type == GoodsTypes.Physical &&
+              (currentGoods.collectUrl == null || currentGoods.collectUrl == undefined)
+          "
+          label="收货地址"
+          required
+        >
+          <NSelect
+            v-model:show="showAddressSelect"
+            :value="selectedAddress?.id"
+            :options="addressOptions"
+            :render-label="renderLabel"
+            :render-option="renderOption"
+            placeholder="请选择地址"
+          />
           &nbsp;
-          <NButton size="small" type="info" tag="a" href="/bili-user#settings" target="_blank"> 管理收货地址 </NButton>
+          <NButton
+            size="small"
+            type="info"
+            tag="a"
+            href="/bili-user#settings"
+            target="_blank"
+          >
+            管理收货地址
+          </NButton>
         </NFormItem>
       </NForm>
     </template>
@@ -293,7 +398,14 @@ onMounted(async () => {
         {{ currentGoods.price * buyCount > currentPoint ? '积分不足' : '可兑换' }}
       </NTag>
     </NDivider>
-    <NButton type="primary" :disabled="!canDoBuy" @click="buyGoods" :loading="isLoading"> 确认兑换 </NButton>
+    <NButton
+      type="primary"
+      :disabled="!canDoBuy"
+      :loading="isLoading"
+      @click="buyGoods"
+    >
+      确认兑换
+    </NButton>
     <NText>
       <NDivider vertical />
       所需积分: {{ currentGoods.price * buyCount }}

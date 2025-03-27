@@ -382,51 +382,120 @@ onUnmounted(() => {
 
 <template>
   <NSpace>
-    <NAlert type="info"> 搜索时会优先选择非VIP歌曲, 所以点到付费曲目时可能会是猴版或者各种奇怪的歌 </NAlert>
+    <NAlert type="info">
+      搜索时会优先选择非VIP歌曲, 所以点到付费曲目时可能会是猴版或者各种奇怪的歌
+    </NAlert>
   </NSpace>
   <NDivider />
   <NSpace align="center">
-    <NButton @click="listening ? stopListen() : startListen()" :type="listening ? 'error' : 'primary'"
-      :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }" data-umami-event="Use Music Request"
-      :data-umami-event-uid="accountInfo?.biliId" size="large">
+    <NButton
+      :type="listening ? 'error' : 'primary'"
+      :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }"
+      data-umami-event="Use Music Request"
+      :data-umami-event-uid="accountInfo?.biliId"
+      size="large"
+      @click="listening ? stopListen() : startListen()"
+    >
       {{ listening ? '停止监听' : '开始监听' }}
     </NButton>
-    <NButton @click="showOBSModal = true" type="info" size="small"> OBS组件 </NButton>
-    <NButton @click="showNeteaseModal = true" size="small"> 从网易云歌单导入空闲歌单 </NButton>
+    <NButton
+      type="info"
+      size="small"
+      @click="showOBSModal = true"
+    >
+      OBS组件
+    </NButton>
+    <NButton
+      size="small"
+      @click="showNeteaseModal = true"
+    >
+      从网易云歌单导入空闲歌单
+    </NButton>
 
-    <NButton @click="uploadConfig" type="primary" secondary :disabled="!accountInfo" size="small">
+    <NButton
+      type="primary"
+      secondary
+      :disabled="!accountInfo"
+      size="small"
+      @click="uploadConfig"
+    >
       保存配置到服务器
     </NButton>
     <NPopconfirm @positive-click="downloadConfig">
       <template #trigger>
-        <NButton type="primary" secondary :disabled="!accountInfo" size="small"> 从服务器获取配置 </NButton>
+        <NButton
+          type="primary"
+          secondary
+          :disabled="!accountInfo"
+          size="small"
+        >
+          从服务器获取配置
+        </NButton>
       </template>
       这将覆盖当前设置, 确定?
     </NPopconfirm>
   </NSpace>
   <NDivider />
   <NCollapse :default-expanded-names="['1']">
-    <NCollapseItem title="队列" name="1">
-      <NEmpty v-if="musicRquestStore.waitingMusics.length == 0"> 暂无 </NEmpty>
-      <NList v-else size="small" bordered>
-        <NListItem v-for="item in musicRquestStore.waitingMusics" :key="item.music.name">
+    <NCollapseItem
+      title="队列"
+      name="1"
+    >
+      <NEmpty v-if="musicRquestStore.waitingMusics.length == 0">
+        暂无
+      </NEmpty>
+      <NList
+        v-else
+        size="small"
+        bordered
+      >
+        <NListItem
+          v-for="item in musicRquestStore.waitingMusics"
+          :key="item.music.name"
+        >
           <NSpace align="center">
-            <NButton @click="musicRquestStore.playMusic(item.music)" type="primary" secondary size="small">
+            <NButton
+              type="primary"
+              secondary
+              size="small"
+              @click="musicRquestStore.playMusic(item.music)"
+            >
               播放
             </NButton>
-            <NButton @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
-              type="error" secondary size="small">
+            <NButton
+              type="error"
+              secondary
+              size="small"
+              @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
+            >
               取消
             </NButton>
-            <NButton @click="blockMusic(item.music)" type="warning" secondary size="small"> 拉黑 </NButton>
+            <NButton
+              type="warning"
+              secondary
+              size="small"
+              @click="blockMusic(item.music)"
+            >
+              拉黑
+            </NButton>
             <span>
-              <NTag v-if="item.music.from == SongFrom.Netease" type="success" size="small"> 网易</NTag>
-              <NTag v-else-if="item.music.from == SongFrom.Kugou" type="success" size="small"> 酷狗</NTag>
+              <NTag
+                v-if="item.music.from == SongFrom.Netease"
+                type="success"
+                size="small"
+              > 网易</NTag>
+              <NTag
+                v-else-if="item.music.from == SongFrom.Kugou"
+                type="success"
+                size="small"
+              > 酷狗</NTag>
             </span>
             <NText>
               {{ item.from.name }}
             </NText>
-            <NText depth="3"> {{ item.music.name }} - {{ item.music.author?.join('/') }} </NText>
+            <NText depth="3">
+              {{ item.music.name }} - {{ item.music.author?.join('/') }}
+            </NText>
           </NSpace>
         </NListItem>
       </NList>
@@ -434,84 +503,157 @@ onUnmounted(() => {
   </NCollapse>
   <NDivider />
   <NTabs>
-    <NTabPane name="settings" tab="设置">
+    <NTabPane
+      name="settings"
+      tab="设置"
+    >
       <NSpace vertical>
         <NSpace align="center">
           <NRadioGroup v-model:value="settings.platform">
-            <NRadioButton value="netease"> 网易云 </NRadioButton>
-            <NRadioButton value="kugou"> 酷狗 </NRadioButton>
+            <NRadioButton value="netease">
+              网易云
+            </NRadioButton>
+            <NRadioButton value="kugou">
+              酷狗
+            </NRadioButton>
           </NRadioGroup>
           <NInputGroup style="width: 250px">
             <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
             <NInput v-model:value="settings.orderPrefix" />
           </NInputGroup>
-          <NCheckbox :checked="settings.orderCooldown != undefined" @update:checked="(checked: boolean) => {
-            settings.orderCooldown = checked ? 300 : undefined
-          }
-            ">
+          <NCheckbox
+            :checked="settings.orderCooldown != undefined"
+            @update:checked="(checked: boolean) => {
+              settings.orderCooldown = checked ? 300 : undefined
+            }
+            "
+          >
             是否启用点歌冷却
           </NCheckbox>
-          <NInputGroup v-if="settings.orderCooldown" style="width: 200px">
+          <NInputGroup
+            v-if="settings.orderCooldown"
+            style="width: 200px"
+          >
             <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
-            <NInputNumber v-model:value="settings.orderCooldown" @update:value="(value) => {
-              if (!value || value <= 0) settings.orderCooldown = undefined
-            }
-              " />
+            <NInputNumber
+              v-model:value="settings.orderCooldown"
+              @update:value="(value) => {
+                if (!value || value <= 0) settings.orderCooldown = undefined
+              }
+              "
+            />
           </NInputGroup>
         </NSpace>
         <NSpace>
-          <NCheckbox v-model:checked="settings.playMusicWhenFree"> 空闲时播放空闲歌单 </NCheckbox>
-          <NCheckbox v-model:checked="settings.orderMusicFirst"> 优先播放点歌 </NCheckbox>
+          <NCheckbox v-model:checked="settings.playMusicWhenFree">
+            空闲时播放空闲歌单
+          </NCheckbox>
+          <NCheckbox v-model:checked="settings.orderMusicFirst">
+            优先播放点歌
+          </NCheckbox>
         </NSpace>
         <NSpace>
           <NTooltip>
             <template #trigger>
-              <NButton @click="getOutputDevice" type="info"> 获取输出设备 </NButton>
+              <NButton
+                type="info"
+                @click="getOutputDevice"
+              >
+                获取输出设备
+              </NButton>
             </template>
             获取和修改输出设备需要打开麦克风权限
           </NTooltip>
-          <NSelect v-model:value="settings.deviceId" :options="deviceList"
-            :fallback-option="() => ({ label: '未选择', value: '' })" style="min-width: 200px"
-            @update:value="musicRquestStore.setSinkId" />
+          <NSelect
+            v-model:value="settings.deviceId"
+            :options="deviceList"
+            :fallback-option="() => ({ label: '未选择', value: '' })"
+            style="min-width: 200px"
+            @update:value="musicRquestStore.setSinkId"
+          />
         </NSpace>
       </NSpace>
     </NTabPane>
-    <NTabPane name="list" tab="闲置歌单">
+    <NTabPane
+      name="list"
+      tab="闲置歌单"
+    >
       <NSpace>
         <NPopconfirm @positive-click="clearMusic">
           <template #trigger>
-            <NButton type="error"> 清空 </NButton>
+            <NButton type="error">
+              清空
+            </NButton>
           </template>
           确定清空吗?
         </NPopconfirm>
-        <NButton @click="showNeteaseModal = true"> 从网易云歌单导入 </NButton>
+        <NButton @click="showNeteaseModal = true">
+          从网易云歌单导入
+        </NButton>
       </NSpace>
       <NDivider style="margin: 15px 0 10px 0" />
-      <NEmpty v-if="musicRquestStore.originMusics.length == 0"> 暂无 </NEmpty>
-      <NVirtualList v-else :style="`max-height: 1000px`" :item-size="30" :items="originMusics" item-resizable>
+      <NEmpty v-if="musicRquestStore.originMusics.length == 0">
+        暂无
+      </NEmpty>
+      <NVirtualList
+        v-else
+        :style="`max-height: 1000px`"
+        :item-size="30"
+        :items="originMusics"
+        item-resizable
+      >
         <template #default="{ item }">
           <p :style="`min-height: ${30}px;width:97%;display:flex;align-items:center;`">
-            <NSpace align="center" style="width: 100%">
+            <NSpace
+              align="center"
+              style="width: 100%"
+            >
               <NPopconfirm @positive-click="delMusic(item)">
                 <template #trigger>
-                  <NButton type="error" secondary size="small"> 删除 </NButton>
+                  <NButton
+                    type="error"
+                    secondary
+                    size="small"
+                  >
+                    删除
+                  </NButton>
                 </template>
                 确定删除?
               </NPopconfirm>
 
-              <NButton type="info" secondary size="small" @click="musicRquestStore.playMusic(item)"> 播放 </NButton>
+              <NButton
+                type="info"
+                secondary
+                size="small"
+                @click="musicRquestStore.playMusic(item)"
+              >
+                播放
+              </NButton>
               <NText> {{ item.name }} - {{ item.author?.join('/') }} </NText>
             </NSpace>
           </p>
         </template>
       </NVirtualList>
     </NTabPane>
-    <NTabPane name="blacklist" tab="黑名单">
+    <NTabPane
+      name="blacklist"
+      tab="黑名单"
+    >
       <NList>
-        <NListItem v-for="item in settings.blacklist" :key="item">
-          <NSpace align="center" style="width: 100%">
-            <NButton @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)" type="error" secondary
-              size="small">
+        <NListItem
+          v-for="item in settings.blacklist"
+          :key="item"
+        >
+          <NSpace
+            align="center"
+            style="width: 100%"
+          >
+            <NButton
+              type="error"
+              secondary
+              size="small"
+              @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)"
+            >
               删除
             </NButton>
             <NText> {{ item }} </NText>
@@ -521,34 +663,75 @@ onUnmounted(() => {
     </NTabPane>
   </NTabs>
   <NDivider style="height: 100px" />
-  <NModal v-model:show="showNeteaseModal" preset="card" :title="`获取歌单`" style="max-width: 600px">
-    <NInput clearable style="width: 100%" autosize :status="neteaseSongListId ? 'success' : 'error'"
-      v-model:value="neteaseIdInput" placeholder="直接输入歌单Id或者网页链接">
+  <NModal
+    v-model:show="showNeteaseModal"
+    preset="card"
+    :title="`获取歌单`"
+    style="max-width: 600px"
+  >
+    <NInput
+      v-model:value="neteaseIdInput"
+      clearable
+      style="width: 100%"
+      autosize
+      :status="neteaseSongListId ? 'success' : 'error'"
+      placeholder="直接输入歌单Id或者网页链接"
+    >
       <template #suffix>
-        <NTag v-if="neteaseSongListId" type="success" size="small"> 歌单Id: {{ neteaseSongListId }} </NTag>
+        <NTag
+          v-if="neteaseSongListId"
+          type="success"
+          size="small"
+        >
+          歌单Id: {{ neteaseSongListId }}
+        </NTag>
       </template>
     </NInput>
     <NDivider style="margin: 10px" />
-    <NButton type="primary" @click="getNeteaseSongList" :disabled="!neteaseSongListId" :loading="isLoading">
+    <NButton
+      type="primary"
+      :disabled="!neteaseSongListId"
+      :loading="isLoading"
+      @click="getNeteaseSongList"
+    >
       获取
     </NButton>
     <template v-if="neteaseSongsOptions.length > 0">
       <NDivider style="margin: 10px" />
-      <NTransfer style="height: 500px" ref="transfer" v-model:value="selectedNeteaseSongs"
-        :options="neteaseSongsOptions" source-filterable />
+      <NTransfer
+        ref="transfer"
+        v-model:value="selectedNeteaseSongs"
+        style="height: 500px"
+        :options="neteaseSongsOptions"
+        source-filterable
+      />
       <NDivider style="margin: 10px" />
-      <NButton type="primary" @click="addNeteaseSongs" :loading="isLoading">
+      <NButton
+        type="primary"
+        :loading="isLoading"
+        @click="addNeteaseSongs"
+      >
         添加到歌单 | {{ selectedNeteaseSongs.length }} 首
       </NButton>
     </template>
   </NModal>
-  <NModal v-model:show="showOBSModal" title="OBS组件" preset="card" style="width: 800px">
-    <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
+  <NModal
+    v-model:show="showOBSModal"
+    title="OBS组件"
+    preset="card"
+    style="width: 800px"
+  >
+    <NAlert
+      title="这是什么?  "
+      type="info"
+    >
+      将等待队列以及结果显示在OBS中
+    </NAlert>
     <NDivider> 浏览 </NDivider>
     <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
       <MusicRequestOBS :id="accountInfo?.id" />
     </div>
-    <br />
+    <br>
     <NInput :value="`${CURRENT_HOST}obs/music-request?id=` + accountInfo?.id" />
     <NDivider />
     <NCollapse>

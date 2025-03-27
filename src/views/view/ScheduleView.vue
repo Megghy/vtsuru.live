@@ -1,24 +1,41 @@
 <template>
   <NSpin v-if="isLoading" show />
-  <component
-    v-else
-    :is="ScheduleTemplateMap[componentType ?? ''].compoent"
-    :bili-info="biliInfo"
-    :user-info="userInfo"
-    :data="currentData"
-    v-bind="$attrs"
-  />
+  <div v-else>
+    <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+      订阅链接
+      <NTooltip>
+        <template #trigger>
+          <NIcon>
+            <TagQuestionMark16Filled />
+          </NIcon>
+        </template>
+        通过订阅链接可以订阅日程表到日历软件中
+      </NTooltip>
+    </NDivider>
+    <NFlex align="center">
+      <NInputGroup style="max-width: 400px;">
+        <NInput :value="`${SCHEDULE_API_URL}${userInfo?.id}.ics`" readonly />
+        <NButton secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo?.id}.ics`)">
+          复制
+        </NButton>
+      </NInputGroup>
+    </NFlex>
+    <NDivider />
+    <component :is="ScheduleTemplateMap[componentType ?? ''].compoent" :bili-info="biliInfo"
+      :user-info="userInfo" :data="currentData" v-bind="$attrs" />
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL, ScheduleTemplateMap } from '@/data/constants'
-import { NSpin, useMessage } from 'naive-ui'
+import { copyToClipboard } from '@/Utils'
+import { TagQuestionMark16Filled } from '@vicons/fluent'
+import { NButton, NDivider, NFlex, NInput, NInputGroup, NSpin, NTooltip, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
   template?: string | undefined

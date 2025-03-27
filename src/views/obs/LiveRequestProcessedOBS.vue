@@ -55,7 +55,7 @@ const songs = computed(() => {
     }
   }
   if (settings.value.isReverse) {
-    // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+     
     return result.Reverse().ToArray()
   } else {
     return result.ToArray()
@@ -124,36 +124,78 @@ onUnmounted(() => {
 
 <template>
   <NMessageProvider :to="cardRef" />
-  <div ref="cardRef" class="live-request-background" v-bind="$attrs">
-    <p class="live-request-header">{{ settings.obsTitleToday ?? '今日已唱' }}</p>
+  <div
+    ref="cardRef"
+    class="live-request-background"
+    v-bind="$attrs"
+  >
+    <p class="live-request-header">
+      {{ settings.obsTitleToday ?? '今日已唱' }}
+    </p>
     <NDivider class="live-request-divider">
-      <p class="live-request-header-count">{{ songs.length ?? 0 }} 条</p>
+      <p class="live-request-header-count">
+        {{ songs.length ?? 0 }} 条
+      </p>
     </NDivider>
-    <div class="live-request-content" ref="listContainerRef">
+    <div
+      ref="listContainerRef"
+      class="live-request-content"
+    >
       <template v-if="songs.length > 0">
-        <Vue3Marquee class="live-request-list" :key="key" vertical :duration="20" :pause="!isMoreThanContainer"
-          :style="`height: ${height}px;width: ${width}px;`">
-          <div class="live-request-list-item" :from="song.from as number" :status="song.status as number"
-            v-for="(song, index) in songs" :key="song.id" :style="`height: ${itemHeight}px`">
-            <div class="live-request-list-item-index" :index="index + 1">
+        <Vue3Marquee
+          :key="key"
+          class="live-request-list"
+          vertical
+          :duration="20"
+          :pause="!isMoreThanContainer"
+          :style="`height: ${height}px;width: ${width}px;`"
+        >
+          <div
+            v-for="(song, index) in songs"
+            :key="song.id"
+            class="live-request-list-item"
+            :from="song.from as number"
+            :status="song.status as number"
+            :style="`height: ${itemHeight}px`"
+          >
+            <div
+              class="live-request-list-item-index"
+              :index="index + 1"
+            >
               {{ index + 1 }}
             </div>
             <div class="live-request-list-item-song-name">
               {{ song.songName }}
             </div>
-            <p v-if="settings.showUserName" class="live-request-list-item-name">
+            <p
+              v-if="settings.showUserName"
+              class="live-request-list-item-name"
+            >
               {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
             </p>
-            <div v-if="settings.showFanMadelInfo" class="live-request-list-item-level"
-              :has-level="(song.user?.fans_medal_level ?? 0) > 0">
+            <div
+              v-if="settings.showFanMadelInfo"
+              class="live-request-list-item-level"
+              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
+            >
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
-          <NDivider v-if="isMoreThanContainer" class="live-request-footer-divider" style="margin: 10px 0 10px 0" />
+          <NDivider
+            v-if="isMoreThanContainer"
+            class="live-request-footer-divider"
+            style="margin: 10px 0 10px 0"
+          />
         </Vue3Marquee>
       </template>
-      <div v-else style="position: relative; top: 20%">
-        <NEmpty class="live-request-empty" description="今日暂无" />
+      <div
+        v-else
+        style="position: relative; top: 20%"
+      >
+        <NEmpty
+          class="live-request-empty"
+          description="今日暂无"
+        />
       </div>
     </div>
   </div>

@@ -342,52 +342,134 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NResult v-if="!code && !accountInfo" status="403" title="403" description="该页面只能从幻星平台访问或者注册用户使用" />
+  <NResult
+    v-if="!code && !accountInfo"
+    status="403"
+    title="403"
+    description="该页面只能从幻星平台访问或者注册用户使用"
+  />
   <template v-else>
     <NCard>
       <template #header>
         直播抽奖
         <NDivider vertical />
-        <NButton text type="primary" tag="a" href="https://vtsuru.live" target="_blank">
+        <NButton
+          text
+          type="primary"
+          tag="a"
+          href="https://vtsuru.live"
+          target="_blank"
+        >
           前往 VTsuru.live 主站
         </NButton>
       </template>
-      <NAlert v-if="!code && accountInfo && !accountInfo.isBiliVerified" type="error"> 请先绑定B站账号 </NAlert>
-      <NAlert v-else-if="!code && accountInfo && accountInfo.biliAuthCodeStatus != 1" type="error">
+      <NAlert
+        v-if="!code && accountInfo && !accountInfo.isBiliVerified"
+        type="error"
+      >
+        请先绑定B站账号
+      </NAlert>
+      <NAlert
+        v-else-if="!code && accountInfo && accountInfo.biliAuthCodeStatus != 1"
+        type="error"
+      >
         身份码状态异常, 请重新绑定
       </NAlert>
       <NCard>
         <NSpace align="center">
-          <NButton type="info" @click="showModal = true" size="small"> 抽奖历史</NButton>
-          <NButton type="success" @click="showOBSModal = true" size="small"> OBS组件</NButton>
+          <NButton
+            type="info"
+            size="small"
+            @click="showModal = true"
+          >
+            抽奖历史
+          </NButton>
+          <NButton
+            type="success"
+            size="small"
+            @click="showOBSModal = true"
+          >
+            OBS组件
+          </NButton>
         </NSpace>
       </NCard>
-      <NCard size="small" embedded title="抽奖选项">
+      <NCard
+        size="small"
+        embedded
+        title="抽奖选项"
+      >
         <template #header-extra>
-          <NButton size="small" secondary @click="lotteryOption = defaultOption" :disabled="isStartLottery">
+          <NButton
+            size="small"
+            secondary
+            :disabled="isStartLottery"
+            @click="lotteryOption = defaultOption"
+          >
             恢复默认
           </NButton>
         </template>
-        <NSpace justify="center" align="center">
-          <NTag :bordered="false"> 抽奖类型 </NTag>
-          <NRadioGroup v-model:value="lotteryOption.type" :disabled="isLottering" size="small">
-            <NRadioButton value="danmaku" :disabled="isStartLottery"> 弹幕 </NRadioButton>
-            <NRadioButton value="gift" :disabled="isStartLottery"> 礼物 </NRadioButton>
+        <NSpace
+          justify="center"
+          align="center"
+        >
+          <NTag :bordered="false">
+            抽奖类型
+          </NTag>
+          <NRadioGroup
+            v-model:value="lotteryOption.type"
+            :disabled="isLottering"
+            size="small"
+          >
+            <NRadioButton
+              value="danmaku"
+              :disabled="isStartLottery"
+            >
+              弹幕
+            </NRadioButton>
+            <NRadioButton
+              value="gift"
+              :disabled="isStartLottery"
+            >
+              礼物
+            </NRadioButton>
           </NRadioGroup>
         </NSpace>
-        <NDivider style="margin: 10px 0 10px 0"></NDivider>
+        <NDivider style="margin: 10px 0 10px 0" />
         <NSpace align="center">
           <NInputGroup style="max-width: 200px">
             <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
-            <NInputNumber :disabled="isStartLottery" v-model:value="lotteryOption.resultCount" placeholder="" min="1" />
+            <NInputNumber
+              v-model:value="lotteryOption.resultCount"
+              :disabled="isStartLottery"
+              placeholder=""
+              min="1"
+            />
           </NInputGroup>
-          <NCheckbox :disabled="isStartLottery" v-model:checked="lotteryOption.needGuard"> 需要上舰 </NCheckbox>
-          <NCheckbox :disabled="isStartLottery" v-model:checked="lotteryOption.needFanMedal"> 需要粉丝牌 </NCheckbox>
+          <NCheckbox
+            v-model:checked="lotteryOption.needGuard"
+            :disabled="isStartLottery"
+          >
+            需要上舰
+          </NCheckbox>
+          <NCheckbox
+            v-model:checked="lotteryOption.needFanMedal"
+            :disabled="isStartLottery"
+          >
+            需要粉丝牌
+          </NCheckbox>
           <NCollapseTransition>
-            <NInputGroup v-if="lotteryOption.needFanMedal" style="max-width: 200px">
+            <NInputGroup
+              v-if="lotteryOption.needFanMedal"
+              style="max-width: 200px"
+            >
               <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-              <NInputNumber v-model:value="lotteryOption.fanCardLevel" min="1" max="50" :default-value="1"
-                :disabled="isLottering || isStartLottery" />
+              <NInputNumber
+                v-model:value="lotteryOption.fanCardLevel"
+                min="1"
+                max="50"
+                :default-value="1"
+                :disabled="isLottering || isStartLottery"
+              />
             </NInputGroup>
           </NCollapseTransition>
           <template v-if="lotteryOption.type == 'danmaku'">
@@ -395,35 +477,74 @@ onUnmounted(() => {
               <template #trigger>
                 <NInputGroup style="max-width: 250px">
                   <NInputGroupLabel> 弹幕内容 </NInputGroupLabel>
-                  <NInput :disabled="isStartLottery" v-model:value="lotteryOption.danmakuKeyword"
-                    placeholder="留空则任何弹幕都可以" />
+                  <NInput
+                    v-model:value="lotteryOption.danmakuKeyword"
+                    :disabled="isStartLottery"
+                    placeholder="留空则任何弹幕都可以"
+                  />
                 </NInputGroup>
               </template>
               符合规则的弹幕才会被添加到抽奖队列中
             </NTooltip>
-            <NRadioGroup v-model:value="lotteryOption.danmakuFilterType" name="判定类型" :disabled="isLottering"
-              size="small">
-              <NRadioButton :disabled="isStartLottery" value="all"> 完全一致 </NRadioButton>
-              <NRadioButton :disabled="isStartLottery" value="contains"> 包含 </NRadioButton>
-              <NRadioButton :disabled="isStartLottery" value="regex"> 正则 </NRadioButton>
+            <NRadioGroup
+              v-model:value="lotteryOption.danmakuFilterType"
+              name="判定类型"
+              :disabled="isLottering"
+              size="small"
+            >
+              <NRadioButton
+                :disabled="isStartLottery"
+                value="all"
+              >
+                完全一致
+              </NRadioButton>
+              <NRadioButton
+                :disabled="isStartLottery"
+                value="contains"
+              >
+                包含
+              </NRadioButton>
+              <NRadioButton
+                :disabled="isStartLottery"
+                value="regex"
+              >
+                正则
+              </NRadioButton>
             </NRadioGroup>
           </template>
           <template v-else-if="lotteryOption.type == 'gift'">
             <NInputGroup style="max-width: 250px">
               <NInputGroupLabel> 最低价格 </NInputGroupLabel>
-              <NInputNumber :disabled="isStartLottery" v-model:value="lotteryOption.giftMinPrice"
-                placeholder="留空则不限制" />
+              <NInputNumber
+                v-model:value="lotteryOption.giftMinPrice"
+                :disabled="isStartLottery"
+                placeholder="留空则不限制"
+              />
             </NInputGroup>
             <NInputGroup style="max-width: 200px">
               <NInputGroupLabel> 礼物名称 </NInputGroupLabel>
-              <NInput :disabled="isStartLottery" v-model:value="lotteryOption.giftName" placeholder="留空则不限制" />
+              <NInput
+                v-model:value="lotteryOption.giftName"
+                :disabled="isStartLottery"
+                placeholder="留空则不限制"
+              />
             </NInputGroup>
           </template>
         </NSpace>
-        <NDivider style="margin: 10px 0 10px 0"></NDivider>
-        <NSpace justify="center" align="center">
-          <NTag :bordered="false"> 抽取方式 </NTag>
-          <NRadioGroup v-model:value="lotteryOption.lotteryType" name="抽取类型" size="small" :disabled="isLottering">
+        <NDivider style="margin: 10px 0 10px 0" />
+        <NSpace
+          justify="center"
+          align="center"
+        >
+          <NTag :bordered="false">
+            抽取方式
+          </NTag>
+          <NRadioGroup
+            v-model:value="lotteryOption.lotteryType"
+            name="抽取类型"
+            size="small"
+            :disabled="isLottering"
+          >
             <NRadioButton value="single">
               单个
               <NTooltip>
@@ -445,39 +566,107 @@ onUnmounted(() => {
           </NRadioGroup>
         </NSpace>
       </NCard>
-      <NCard v-if="originUsers" size="small">
-        <NSpace justify="center" align="center">
-          <NButton type="primary" @click="continueLottery" :loading="isStartLottery"
-            :disabled="isStartLottery || isLotteried || !client">
+      <NCard
+        v-if="originUsers"
+        size="small"
+      >
+        <NSpace
+          justify="center"
+          align="center"
+        >
+          <NButton
+            type="primary"
+            :loading="isStartLottery"
+            :disabled="isStartLottery || isLotteried || !client"
+            @click="continueLottery"
+          >
             开始
           </NButton>
-          <NButton type="warning" :disabled="!isStartLottery" @click="pause"> 停止 </NButton>
-          <NButton type="error" :disabled="isLottering || originUsers.length == 0" @click="clear"> 清空 </NButton>
+          <NButton
+            type="warning"
+            :disabled="!isStartLottery"
+            @click="pause"
+          >
+            停止
+          </NButton>
+          <NButton
+            type="error"
+            :disabled="isLottering || originUsers.length == 0"
+            @click="clear"
+          >
+            清空
+          </NButton>
         </NSpace>
         <NDivider style="margin: 20px 0 20px 0">
-          <template v-if="isStartLottery"> 进行抽取前需要先停止 </template>
+          <template v-if="isStartLottery">
+            进行抽取前需要先停止
+          </template>
         </NDivider>
         <NSpace justify="center">
-          <NButton type="primary" secondary @click="startLottery" :loading="isLottering"
-            :disabled="isStartLottery || isLotteried" data-umami-event="Open-Live Use Lottery"
-            :data-umami-event-uid="client?.authInfo?.anchor_info?.uid">
+          <NButton
+            type="primary"
+            secondary
+            :loading="isLottering"
+            :disabled="isStartLottery || isLotteried"
+            data-umami-event="Open-Live Use Lottery"
+            :data-umami-event-uid="client?.authInfo?.anchor_info?.uid"
+            @click="startLottery"
+          >
             进行抽取
           </NButton>
-          <NButton type="info" secondary :disabled="isStartLottery || isLottering || !isLotteried" @click="reset">
+          <NButton
+            type="info"
+            secondary
+            :disabled="isStartLottery || isLottering || !isLotteried"
+            @click="reset"
+          >
             重置
           </NButton>
         </NSpace>
-        <NDivider style="margin: 10px 0 10px 0"> 共 {{ currentUsers?.length }} 人</NDivider>
-        <NGrid v-if="currentUsers.length > 0" cols="1 500:2 800:3 1000:4" :x-gap="12" :y-gap="8">
-          <NGridItem v-for="item in currentUsers" v-bind:key="item.openId">
-            <NCard size="small" :title="item.name" style="height: 155px" embedded>
+        <NDivider style="margin: 10px 0 10px 0">
+          共 {{ currentUsers?.length }} 人
+        </NDivider>
+        <NGrid
+          v-if="currentUsers.length > 0"
+          cols="1 500:2 800:3 1000:4"
+          :x-gap="12"
+          :y-gap="8"
+        >
+          <NGridItem
+            v-for="item in currentUsers"
+            :key="item.openId"
+          >
+            <NCard
+              size="small"
+              :title="item.name"
+              style="height: 155px"
+              embedded
+            >
               <template #header>
-                <NSpace align="center" vertical :size="5">
-                  <NAvatar round lazy borderd :size="64" :src="item.avatar + '@64w_64h'"
-                    :img-props="{ referrerpolicy: 'no-referrer' }" style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)" />
+                <NSpace
+                  align="center"
+                  vertical
+                  :size="5"
+                >
+                  <NAvatar
+                    round
+                    lazy
+                    borderd
+                    :size="64"
+                    :src="item.avatar + '@64w_64h'"
+                    :img-props="{ referrerpolicy: 'no-referrer' }"
+                    style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
+                  />
                   <NSpace v-if="item.fans_medal_wearing_status">
-                    <NTag size="tiny" round>
-                      <NTag size="tiny" round :bordered="false">
+                    <NTag
+                      size="tiny"
+                      round
+                    >
+                      <NTag
+                        size="tiny"
+                        round
+                        :bordered="false"
+                      >
                         {{ item.fans_medal_level }}
                       </NTag>
                       <span style="color: #577fb8">
@@ -485,12 +674,23 @@ onUnmounted(() => {
                       </span>
                     </NTag>
                   </NSpace>
-                  <NTag v-else size="tiny" round :bordered="false"> 无粉丝牌 </NTag>
+                  <NTag
+                    v-else
+                    size="tiny"
+                    round
+                    :bordered="false"
+                  >
+                    无粉丝牌
+                  </NTag>
                   {{ item.name }}
                 </NSpace>
 
-                <NButton style="position: absolute; right: 5px; top: 5px; color: #753e3e" @click="removeUser(item)"
-                  size="small" circle>
+                <NButton
+                  style="position: absolute; right: 5px; top: 5px; color: #753e3e"
+                  size="small"
+                  circle
+                  @click="removeUser(item)"
+                >
                   <template #icon>
                     <NIcon :component="Delete24Filled" />
                   </template>
@@ -499,29 +699,62 @@ onUnmounted(() => {
             </NCard>
           </NGridItem>
         </NGrid>
-        <NEmpty v-else description="暂无用户" />
+        <NEmpty
+          v-else
+          description="暂无用户"
+        />
       </NCard>
     </NCard>
   </template>
-  <NModal v-model:show="showModal" preset="card" title="抽奖结果" style="max-width: 90%; width: 800px" closable>
+  <NModal
+    v-model:show="showModal"
+    preset="card"
+    title="抽奖结果"
+    style="max-width: 90%; width: 800px"
+    closable
+  >
     <template #header-extra>
-      <NButton type="error" size="small" @click="lotteryHistory = []"> 清空 </NButton>
+      <NButton
+        type="error"
+        size="small"
+        @click="lotteryHistory = []"
+      >
+        清空
+      </NButton>
     </template>
-    <NScrollbar v-if="lotteryHistory.length > 0" style="max-height: 80vh">
+    <NScrollbar
+      v-if="lotteryHistory.length > 0"
+      style="max-height: 80vh"
+    >
       <NList>
-        <NListItem v-for="item in lotteryHistory" :key="item.time">
+        <NListItem
+          v-for="item in lotteryHistory"
+          :key="item.time"
+        >
           <NCard size="small">
             <template #header>
               <NTime :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton type="error" size="small" @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)">
+              <NButton
+                type="error"
+                size="small"
+                @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"
+              >
                 删除
               </NButton>
             </template>
             <NSpace vertical>
-              <NSpace v-for="user in item.users" :key="user.openId">
-                <NAvatar round lazy :src="user.avatar + '@64w_64h'" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NSpace
+                v-for="user in item.users"
+                :key="user.openId"
+              >
+                <NAvatar
+                  round
+                  lazy
+                  :src="user.avatar + '@64w_64h'"
+                  :img-props="{ referrerpolicy: 'no-referrer' }"
+                />
                 {{ user.name }}
               </NSpace>
             </NSpace>
@@ -529,16 +762,30 @@ onUnmounted(() => {
         </NListItem>
       </NList>
     </NScrollbar>
-    <NEmpty v-else description="暂无记录" />
+    <NEmpty
+      v-else
+      description="暂无记录"
+    />
   </NModal>
-  <NModal v-model:show="showOBSModal" preset="card" title="OBS 组件"
-    style="max-width: 90%; width: 800px; max-height: 90vh" closable content-style="overflow: auto">
-    <NAlert title="这是什么?  " type="info"> 将等待队列以及结果显示在OBS中 </NAlert>
+  <NModal
+    v-model:show="showOBSModal"
+    preset="card"
+    title="OBS 组件"
+    style="max-width: 90%; width: 800px; max-height: 90vh"
+    closable
+    content-style="overflow: auto"
+  >
+    <NAlert
+      title="这是什么?  "
+      type="info"
+    >
+      将等待队列以及结果显示在OBS中
+    </NAlert>
     <NDivider> 浏览 </NDivider>
     <div style="height: 400px; width: 250px; position: relative; margin: 0 auto">
       <LiveLotteryOBS :code="code" />
     </div>
-    <br />
+    <br>
     <NInput :value="`${CURRENT_HOST}obs/live-lottery?code=` + code" />
     <NDivider />
     <NCollapse>

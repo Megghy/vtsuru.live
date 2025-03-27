@@ -72,46 +72,103 @@ export const Config: TemplateConfig<ConfigType> = {
   <NDivider />
   <template v-if="userInfo?.biliId">
     <template v-if="userInfo?.id == accountInfo?.id">
-      <NButton type="primary"
-        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })">
+      <NButton
+        type="primary"
+        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+      >
         自定义个人主页
       </NButton>
       <NDivider />
     </template>
     <template v-if="indexInfo?.notification">
-      <NCard size="small" content-style="text-align: center">
+      <NCard
+        size="small"
+        content-style="text-align: center"
+      >
         {{ indexInfo?.notification }}
       </NCard>
-      <br />
+      <br>
     </template>
 
-    <NSpace justify="center" align="center" vertical>
-      <NAvatar v-if="biliInfo" :src="biliInfo?.face" :size="width > 750 ? 175 : 100" round bordered :img-props="{
-        referrerpolicy: 'no-referrer',
-      }"
-        :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }" />
-      <NSpace align="baseline" justify="center">
-        <NText strong style="font-size: 32px"> {{ biliInfo?.name }} </NText>
-        <NText strong style="font-size: 20px" depth="3"> ({{ userInfo?.name }}) </NText>
+    <NSpace
+      justify="center"
+      align="center"
+      vertical
+    >
+      <NAvatar
+        v-if="biliInfo"
+        :src="biliInfo?.face"
+        :size="width > 750 ? 175 : 100"
+        round
+        bordered
+        :img-props="{
+          referrerpolicy: 'no-referrer',
+        }"
+        :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
+      />
+      <NSpace
+        align="baseline"
+        justify="center"
+      >
+        <NText
+          strong
+          style="font-size: 32px"
+        >
+          {{ biliInfo?.name }}
+        </NText>
+        <NText
+          strong
+          style="font-size: 20px"
+          depth="3"
+        >
+          ({{ userInfo?.name }})
+        </NText>
       </NSpace>
-      <NText strong depth="3" style="font-size: medium">
+      <NText
+        strong
+        depth="3"
+        style="font-size: medium"
+      >
         {{ userInfo?.biliId }}
       </NText>
-      <NText strong depth="2" style="font-size: medium">
+      <NText
+        strong
+        depth="2"
+        style="font-size: medium"
+      >
         {{ biliInfo?.sign }}
       </NText>
     </NSpace>
     <NDivider />
-    <NSpace align="center" justify="center">
-      <NButton type="primary" @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"> 个人主页 </NButton>
-      <NButton type="primary" secondary @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)">
+    <NSpace
+      align="center"
+      justify="center"
+    >
+      <NButton
+        type="primary"
+        @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"
+      >
+        个人主页
+      </NButton>
+      <NButton
+        type="primary"
+        secondary
+        @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"
+      >
         直播间
       </NButton>
       <template v-if="Object.keys(indexInfo.links || {}).length > 0">
         <NFlex align="center">
           <NDivider vertical />
-          <NButton type="info" secondary tag="a" :href="link[1]" target="_blank"
-            v-for="link in Object.entries(indexInfo.links || {})" :key="link[0] + link[1]">
+          <NButton
+            v-for="link in Object.entries(indexInfo.links || {})"
+            :key="link[0] + link[1]"
+            type="info"
+            secondary
+            tag="a"
+            :href="link[1]"
+            target="_blank"
+          >
             {{ link[0] }}
           </NButton>
         </NFlex>
@@ -122,13 +179,25 @@ export const Config: TemplateConfig<ConfigType> = {
         <NText>相关视频</NText>
       </NDivider>
       <NFlex justify="center">
-        <SimpleVideoCard v-for="video in indexInfo.videos" :video="video" :key="video.id" />
+        <SimpleVideoCard
+          v-for="video in indexInfo.videos"
+          :key="video.id"
+          :video="video"
+        />
       </NFlex>
     </template>
   </template>
   <template v-else>
-    <NSpace justify="center" align="center">
-      <NText strong style="font-size: 32px"> {{ userInfo?.name }} </NText>
+    <NSpace
+      justify="center"
+      align="center"
+    >
+      <NText
+        strong
+        style="font-size: 32px"
+      >
+        {{ userInfo?.name }}
+      </NText>
       未认证
     </NSpace>
   </template>

@@ -2,7 +2,7 @@
 import { useAccount } from '@/api/account'
 import { QAInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
 import GraphemeSplitter from 'grapheme-splitter'
 import {
   NAlert,
@@ -264,7 +264,7 @@ onUnmounted(() => {
           </NCard>
           <template v-if="item.answer" #footer>
             <NSpace align="center" :size="6" :wrap="false">
-              <NAvatar :src="biliInfo?.face + '@64w'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
+              <NAvatar :src="AVATAR_URL + userInfo?.biliId + '?size=64'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
               <NDivider vertical />
               <NText style="font-size: 16px">
                 {{ item.answer?.message }}

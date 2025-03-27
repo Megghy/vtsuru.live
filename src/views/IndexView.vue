@@ -113,40 +113,100 @@ onMounted(async () => {
 
 <template>
   <div class="index-background">
-    <NSpace vertical justify="center" align="center" style="padding-top: 30px">
-      <NSpace justify="center" align="center" :size="width > 700 ? 50 : 0">
+    <NSpace
+      vertical
+      justify="center"
+      align="center"
+      style="padding-top: 30px"
+    >
+      <NSpace
+        justify="center"
+        align="center"
+        :size="width > 700 ? 50 : 0"
+      >
         <vtb />
-        <NSpace vertical justify="center">
-          <NGradientText size="3rem" :gradient="{
-            deg: 180,
-            from: '#e5e5e5',
-            to: '#c2ebeb',
-          }" style="font-weight: 700">
+        <NSpace
+          vertical
+          justify="center"
+        >
+          <NGradientText
+            size="3rem"
+            :gradient="{
+              deg: 180,
+              from: '#e5e5e5',
+              to: '#c2ebeb',
+            }"
+            style="font-weight: 700"
+          >
             VTSURU.LIVE
           </NGradientText>
-          <NText style="font-size: 1.5em; font-weight: 500; color: white"> 一个给主播提供便利功能的网站 😊 </NText>
-          <span></span>
-          <NSpace justify="center" align="center">
+          <NText style="font-size: 1.5em; font-weight: 500; color: white">
+            一个给主播提供便利功能的网站 😊
+          </NText>
+          <span />
+          <NSpace
+            justify="center"
+            align="center"
+          >
             <NSpace align="center">
-              <NSpace vertical justify="end">
-                <NText style="font-size: medium" italic> 我是主播 </NText>
-                <NButton type="primary" size="small" @click="$router.push({ name: 'manage-index' })">
+              <NSpace
+                vertical
+                justify="end"
+              >
+                <NText
+                  style="font-size: medium"
+                  italic
+                >
+                  我是主播
+                </NText>
+                <NButton
+                  type="primary"
+                  size="small"
+                  @click="$router.push({ name: 'manage-index' })"
+                >
                   开始使用
                 </NButton>
               </NSpace>
               <NSpace vertical>
-                <NText style="font-size: medium" italic> 我是观众 </NText>
-                <NButton type="primary" size="small" secondary @click="$router.push({ name: 'bili-user' })" bordered>
+                <NText
+                  style="font-size: medium"
+                  italic
+                >
+                  我是观众
+                </NText>
+                <NButton
+                  type="primary"
+                  size="small"
+                  secondary
+                  bordered
+                  @click="$router.push({ name: 'bili-user' })"
+                >
                   用户主页
                 </NButton>
               </NSpace>
             </NSpace>
-            <NButton size="large" @click="$router.push('/@Megghy')"> 展示 </NButton>
-            <NButton size="large" tag="a" href="https://play-live.bilibili.com/details/1698742711771" target="_blank"
-              color="#ff778f">
+            <NButton
+              size="large"
+              @click="$router.push('/@Megghy')"
+            >
+              展示
+            </NButton>
+            <NButton
+              size="large"
+              tag="a"
+              href="https://play-live.bilibili.com/details/1698742711771"
+              target="_blank"
+              color="#ff778f"
+            >
               幻星平台
             </NButton>
-            <NButton type="info" size="large" @click="$router.push({ name: 'about' })"> 关于 </NButton>
+            <NButton
+              type="info"
+              size="large"
+              @click="$router.push({ name: 'about' })"
+            >
+              关于
+            </NButton>
           </NSpace>
         </NSpace>
       </NSpace>
@@ -156,17 +216,41 @@ onMounted(async () => {
           本站用户
         </NText>
         <NDivider vertical />
-        <NNumberAnimation :from="0" :to="indexData?.userCount" show-separator />
+        <NNumberAnimation
+          :from="0"
+          :to="indexData?.userCount"
+          show-separator
+        />
       </NDivider>
-      <NGrid cols="1 s:2 m:3 l:4 xl:5 2xl:5" x-gap="50" y-gap="50" style="max-width: 80vw" responsive="screen">
-        <NGridItem v-for="item in functions" :key="item.name">
-          <NSpace align="end" :wrap="false">
-            <NIcon :component="item.icon" :color="iconColor" size="20" />
+      <NGrid
+        cols="1 s:2 m:3 l:4 xl:5 2xl:5"
+        x-gap="50"
+        y-gap="50"
+        style="max-width: 80vw"
+        responsive="screen"
+      >
+        <NGridItem
+          v-for="item in functions"
+          :key="item.name"
+        >
+          <NSpace
+            align="end"
+            :wrap="false"
+          >
+            <NIcon
+              :component="item.icon"
+              :color="iconColor"
+              size="20"
+            />
             <NEllipsis>
-              <NText class="index-feature header"> {{ item.name }} </NText>
+              <NText class="index-feature header">
+                {{ item.name }}
+              </NText>
             </NEllipsis>
           </NSpace>
-          <NText class="index-feature content"> {{ item.desc }} </NText>
+          <NText class="index-feature content">
+            {{ item.desc }}
+          </NText>
         </NGridItem>
       </NGrid>
       <NDivider style="width: 90vw">
@@ -178,14 +262,36 @@ onMounted(async () => {
           随机展示不分先后, 仅粉丝数大于500的主播
         </NTooltip>
       </NDivider>
-      <NFlex v-if="indexData" vertical style="max-width: 80vw;">
-        <NFlex align="center" justify="center" :size="32">
-          <NFlex v-for="streamer in indexData?.streamers" style="display: flex;" align="center" justify="center">
+      <NFlex
+        v-if="indexData"
+        vertical
+        style="max-width: 80vw;"
+      >
+        <NFlex
+          align="center"
+          justify="center"
+          :size="32"
+        >
+          <NFlex
+            v-for="streamer in indexData?.streamers"
+            :key="streamer.name"
+            style="display: flex;"
+            align="center"
+            justify="center"
+          >
             <div>
-              <img :src="streamer.avatar + '@64w'" referrerpolicy="no-referrer" height="32"
-                style="border-radius: 50%;" />
+              <img
+                :src="streamer.avatar + '@64w'"
+                referrerpolicy="no-referrer"
+                height="32"
+                style="border-radius: 50%;"
+              >
             </div>
-            <NButton tag="a" :href="'@' + streamer.name" text>
+            <NButton
+              tag="a"
+              :href="'@' + streamer.name"
+              text
+            >
               {{ streamer.uname || streamer.name }}
             </NButton>
           </NFlex>
@@ -195,7 +301,10 @@ onMounted(async () => {
         </NText>
         <NText depth="3">
           如果你不想要被展示在主页, 请前往
-          <NButton text @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })">
+          <NButton
+            text
+            @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+          >
             这里
           </NButton>
           进行设置
@@ -203,11 +312,19 @@ onMounted(async () => {
       </NFlex>
       <NDivider style="width: 90vw" />
     </NSpace>
-    <NSpace style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw" justify="center">
+    <NSpace
+      style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw"
+      justify="center"
+    >
       <span style="color: white">
         BY
-        <NButton tag="a" href="https://space.bilibili.com/10021741" target="_blank" text
-          style="color: rgb(215, 245, 230)">
+        <NButton
+          tag="a"
+          href="https://space.bilibili.com/10021741"
+          target="_blank"
+          text
+          style="color: rgb(215, 245, 230)"
+        >
           Megghy
         </NButton>
       </span>

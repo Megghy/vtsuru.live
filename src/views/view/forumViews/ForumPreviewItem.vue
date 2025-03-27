@@ -72,12 +72,33 @@ function onDropdownSelect(key: string) {
 
 <template>
   <NFlex align="center">
-    <NFlex align="center" :wrap="false">
-      <NTag v-if="item.isDeleted" size="small" round :bordered="false"> 已删除 </NTag>
-      <NTag v-if="item.isPinned" size="small" round :bordered="false">
-        <NIcon :component="Star24Filled" color="#dba913" />
+    <NFlex
+      align="center"
+      :wrap="false"
+    >
+      <NTag
+        v-if="item.isDeleted"
+        size="small"
+        round
+        :bordered="false"
+      >
+        已删除
       </NTag>
-      <NTag size="small" style="color: gray">
+      <NTag
+        v-if="item.isPinned"
+        size="small"
+        round
+        :bordered="false"
+      >
+        <NIcon
+          :component="Star24Filled"
+          color="#dba913"
+        />
+      </NTag>
+      <NTag
+        size="small"
+        style="color: gray"
+      >
         <template #icon>
           <NIcon :component="Chat24Regular" />
         </template>
@@ -90,17 +111,29 @@ function onDropdownSelect(key: string) {
         {{ item.title }}
       </NText>
     </NFlex>
-    <NFlex style="flex: 1; color: gray; font-size: small" justify="end" align="center">
+    <NFlex
+      style="flex: 1; color: gray; font-size: small"
+      justify="end"
+      align="center"
+    >
       <template v-if="item.latestRepliedBy">
         <span>
-          <NIcon :component="ArrowReply24Filled" size="15" />
+          <NIcon
+            :component="ArrowReply24Filled"
+            size="15"
+          />
           @{{ item.latestRepliedBy.name }}
         </span>
       </template>
-      <template v-else> @{{ item.user?.name }} 发布于 </template>
+      <template v-else>
+        @{{ item.user?.name }} 发布于
+      </template>
       <NTooltip>
         <template #trigger>
-          <NTime :time="item.createAt" type="relative" />
+          <NTime
+            :time="item.createAt"
+            type="relative"
+          />
         </template>
         <NTime :time="item.createAt" />
       </NTooltip>

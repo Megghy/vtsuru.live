@@ -367,41 +367,100 @@ onActivated(async () => {
 </script>
 <template>
   <NSpace>
-    <NButton @click="$router.go(-1)" text>
-      <NText depth="3">{{ '< 返回' }}</NText>
+    <NButton
+      text
+      @click="$router.go(-1)"
+    >
+      <NText depth="3">
+        {{ '< 返回' }}
+      </NText>
     </NButton>
     <template v-if="width <= 1000">
-      <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
-      <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
-      <NButton type="warning" size="small" @click="closeTable">
+      <NButton
+        type="success"
+        size="small"
+        @click="shareModalVisiable = true"
+      >
+        分享
+      </NButton>
+      <NButton
+        type="info"
+        size="small"
+        @click="editModalVisiable = true"
+      >
+        更新
+      </NButton>
+      <NButton
+        type="warning"
+        size="small"
+        @click="closeTable"
+      >
         {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
       </NButton>
-      <NButton size="small" @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })">
+      <NButton
+        size="small"
+        @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
+      >
         结果页面
       </NButton>
       <NPopconfirm :on-positive-click="deleteTable">
         <template #trigger>
-          <NButton type="error" size="small"> 删除 </NButton>
+          <NButton
+            type="error"
+            size="small"
+          >
+            删除
+          </NButton>
         </template>
         确定删除表? 此操作无法撤销
       </NPopconfirm>
     </template>
   </NSpace>
-  <VideoCollectInfoCard :item="videoDetail.table" style="width: 100%; max-width: 90vw" from="owner">
-    <template v-if="width > 1000" #header-extra>
+  <VideoCollectInfoCard
+    :item="videoDetail.table"
+    style="width: 100%; max-width: 90vw"
+    from="owner"
+  >
+    <template
+      v-if="width > 1000"
+      #header-extra
+    >
       <NSpace>
-        <NButton type="success" size="small" @click="shareModalVisiable = true"> 分享 </NButton>
-        <NButton type="info" size="small" @click="editModalVisiable = true"> 更新 </NButton>
-        <NButton type="warning" size="small" @click="closeTable">
+        <NButton
+          type="success"
+          size="small"
+          @click="shareModalVisiable = true"
+        >
+          分享
+        </NButton>
+        <NButton
+          type="info"
+          size="small"
+          @click="editModalVisiable = true"
+        >
+          更新
+        </NButton>
+        <NButton
+          type="warning"
+          size="small"
+          @click="closeTable"
+        >
           {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
         </NButton>
-        <NButton size="small"
-          @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })">
+        <NButton
+          size="small"
+          @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
+        >
           结果表
         </NButton>
         <NPopconfirm :on-positive-click="deleteTable">
           <template #trigger>
-            <NButton type="error" size="small"> 删除 </NButton>
+            <NButton
+              type="error"
+              size="small"
+            >
+              删除
+            </NButton>
           </template>
           确定删除表? 此操作无法撤销
         </NPopconfirm>
@@ -409,13 +468,22 @@ onActivated(async () => {
     </template>
   </VideoCollectInfoCard>
   <NDivider> 已通过时长: {{ formatSeconds(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }} </NDivider>
-  <NEmpty v-if="videoDetail?.videos?.length == 0" description="暂无视频" />
+  <NEmpty
+    v-if="videoDetail?.videos?.length == 0"
+    description="暂无视频"
+  />
   <template v-else>
-    <NTabs animated type="segment">
+    <NTabs
+      animated
+      type="segment"
+    >
       <NTabPane name="padding">
         <template #tab>
           未审核
-          <NDivider vertical style="margin: 0 3px 0 3px" />
+          <NDivider
+            vertical
+            style="margin: 0 3px 0 3px"
+          />
           <NText depth="3">
             {{ paddingVideos.length }}
           </NText>
@@ -424,8 +492,13 @@ onActivated(async () => {
       </NTabPane>
       <NTabPane name="accept">
         <template #tab>
-          <NText style="color: #5bb85f"> 通过 </NText>
-          <NDivider vertical style="margin: 0 5px 0 5px" />
+          <NText style="color: #5bb85f">
+            通过
+          </NText>
+          <NDivider
+            vertical
+            style="margin: 0 5px 0 5px"
+          />
           <NText depth="3">
             {{ acceptVideos.length }}
           </NText>
@@ -434,8 +507,13 @@ onActivated(async () => {
       </NTabPane>
       <NTabPane name="reject">
         <template #tab>
-          <NText style="color: #a85f5f"> 拒绝 </NText>
-          <NDivider vertical style="margin: 0 3px 0 3px" />
+          <NText style="color: #a85f5f">
+            拒绝
+          </NText>
+          <NDivider
+            vertical
+            style="margin: 0 3px 0 3px"
+          />
           <NText depth="3">
             {{ rejectVideos.length }}
           </NText>
@@ -444,36 +522,98 @@ onActivated(async () => {
       </NTabPane>
     </NTabs>
   </template>
-  <NModal v-model:show="shareModalVisiable" title="分享" preset="card" style="width: 600px; max-width: 90vw">
-    <Qrcode :value="`${CURRENT_HOST}video-collect/` + videoDetail.table.shortId" level="Q" :size="100" background="#fff"
-      :margin="1" />
+  <NModal
+    v-model:show="shareModalVisiable"
+    title="分享"
+    preset="card"
+    style="width: 600px; max-width: 90vw"
+  >
+    <Qrcode
+      :value="`${CURRENT_HOST}video-collect/` + videoDetail.table.shortId"
+      level="Q"
+      :size="100"
+      background="#fff"
+      :margin="1"
+    />
     <NInput :value="`${CURRENT_HOST}video-collect/` + videoDetail.table.shortId" />
     <NDivider />
     <NSpace justify="center">
-      <NButton type="primary" @click="saveQRCode"> 保存二维码 </NButton>
+      <NButton
+        type="primary"
+        @click="saveQRCode"
+      >
+        保存二维码
+      </NButton>
     </NSpace>
   </NModal>
-  <NModal v-model:show="editModalVisiable" title="更新信息" preset="card" style="width: 600px; max-width: 90vw">
-    <NForm ref="formRef" :model="updateModel" :rules="createRules">
-      <NFormItem label="标题" path="name">
-        <NInput v-model:value="updateModel.name" placeholder="征集表的标题" maxlength="30" show-count />
+  <NModal
+    v-model:show="editModalVisiable"
+    title="更新信息"
+    preset="card"
+    style="width: 600px; max-width: 90vw"
+  >
+    <NForm
+      ref="formRef"
+      :model="updateModel"
+      :rules="createRules"
+    >
+      <NFormItem
+        label="标题"
+        path="name"
+      >
+        <NInput
+          v-model:value="updateModel.name"
+          placeholder="征集表的标题"
+          maxlength="30"
+          show-count
+        />
       </NFormItem>
-      <NFormItem label="描述" path="description">
-        <NInput v-model:value="updateModel.description" placeholder="可以是备注之类的" maxlength="300" show-count />
+      <NFormItem
+        label="描述"
+        path="description"
+      >
+        <NInput
+          v-model:value="updateModel.description"
+          placeholder="可以是备注之类的"
+          maxlength="300"
+          show-count
+        />
       </NFormItem>
-      <NFormItem label="视频数量" path="maxVideoCount">
-        <NInputNumber v-model:value="updateModel.maxVideoCount" placeholder="最大数量" type="number"
-          style="max-width: 150px" />
+      <NFormItem
+        label="视频数量"
+        path="maxVideoCount"
+      >
+        <NInputNumber
+          v-model:value="updateModel.maxVideoCount"
+          placeholder="最大数量"
+          type="number"
+          style="max-width: 150px"
+        />
       </NFormItem>
-      <NFormItem label="结束时间" path="endAt">
-        <NDatePicker v-model:value="updateModel.endAt" type="datetime" placeholder="结束征集的时间"
-          :isDateDisabled="dateDisabled" />
+      <NFormItem
+        label="结束时间"
+        path="endAt"
+      >
+        <NDatePicker
+          v-model:value="updateModel.endAt"
+          type="datetime"
+          placeholder="结束征集的时间"
+          :is-date-disabled="dateDisabled"
+        />
         <NDivider vertical />
-        <NText depth="3"> 最低为一小时 </NText>
+        <NText depth="3">
+          最低为一小时
+        </NText>
       </NFormItem>
       <NFormItem>
         <NSpace>
-          <NButton type="primary" @click="updateTable" :loading="isLoading"> 更新 </NButton>
+          <NButton
+            type="primary"
+            :loading="isLoading"
+            @click="updateTable"
+          >
+            更新
+          </NButton>
         </NSpace>
       </NFormItem>
     </NForm>

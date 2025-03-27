@@ -7,6 +7,11 @@ import { defineConfig } from 'vite'
 import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
 import svgLoader from 'vite-svg-loader'
 import caddyTls from './plugins/vite-plugin-caddy'
+import { VineVitePlugin } from 'vue-vine/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import oxlintPlugin from 'vite-plugin-oxlint'
 
 const isObjectWithDefaultFunction = (
   module: unknown
@@ -35,7 +40,24 @@ export default defineConfig({
       /* options */
     }),
     caddyTls(),
-    monacoEditorPlugin({ languageWorkers: ['css'] })
+    AutoImport({
+      imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns', {
+        'naive-ui': [
+          'useDialog',
+          'useMessage',
+          'useNotification',
+          'useLoadingBar'
+        ]
+      }],
+      dts: 'src/auto-imports.d.ts'
+    }),
+    Components({
+      resolvers: [NaiveUiResolver()],
+      dts: 'src/components.d.ts',
+    }),
+    monacoEditorPlugin({ languageWorkers: ['css'] }),
+    oxlintPlugin(),
+    VineVitePlugin()
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
@@ -43,5 +65,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
   },
-  build: { sourcemap: true }
+  build: { sourcemap: true },
 })

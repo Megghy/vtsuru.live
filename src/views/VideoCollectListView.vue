@@ -105,13 +105,26 @@ function formatSecondsToTime(seconds: number): string {
 
 <template>
   <NLayoutContent style="height: 100vh; position: relative">
-    <NResult v-if="!videoDetail" status="404" title="未找到指定视频征集表" description="请检查链接" />
-    <NCard v-else style="width: 600px; max-width: 90vw; top: 30px; margin: 0 auto">
-      <template #header> 视频征集表 | {{ videoDetail.table.name }} </template>
+    <NResult
+      v-if="!videoDetail"
+      status="404"
+      title="未找到指定视频征集表"
+      description="请检查链接"
+    />
+    <NCard
+      v-else
+      style="width: 600px; max-width: 90vw; top: 30px; margin: 0 auto"
+    >
+      <template #header>
+        视频征集表 | {{ videoDetail.table.name }}
+      </template>
       <template #header-extra>
         <NTooltip>
           <template #trigger>
-            <NButton circle size="tiny">
+            <NButton
+              circle
+              size="tiny"
+            >
               <template #icon>
                 <NIcon :component="Question24Regular" />
               </template>
@@ -120,35 +133,62 @@ function formatSecondsToTime(seconds: number): string {
           只会显示已通过的视频
         </NTooltip>
       </template>
-      <NProgress type="line" :percentage="Math.round((watchedTime / totalTime) * 100)" />
-      <NSpace justify="center" :size="5">
-        共 [<NText depth="3">{{ formatSecondsToTime(totalTime) }}</NText
-        >]
+      <NProgress
+        type="line"
+        :percentage="Math.round((watchedTime / totalTime) * 100)"
+      />
+      <NSpace
+        justify="center"
+        :size="5"
+      >
+        共 [<NText depth="3">
+          {{ formatSecondsToTime(totalTime) }}
+        </NText>]
         <NDivider vertical />
-        已观看 [<NText style="color: #4ea555">{{ formatSecondsToTime(watchedTime) }}</NText
-        >]
+        已观看 [<NText style="color: #4ea555">
+          {{ formatSecondsToTime(watchedTime) }}
+        </NText>]
       </NSpace>
       <NDivider>
         共 {{ acceptVideos?.length }} 条
         <NDivider vertical />
         已观看 {{ watchedVideos.length }} 条
       </NDivider>
-      <NAlert v-if="watchedVideos.length == acceptVideos?.length" type="success"> 已观看全部视频 </NAlert>
+      <NAlert
+        v-if="watchedVideos.length == acceptVideos?.length"
+        type="success"
+      >
+        已观看全部视频
+      </NAlert>
       <NList ref="card">
-        <NListItem v-for="item in acceptVideos" v-bind:key="item.info.bvid">
-          <NCard size="small" :hoverable="!item.video.watched" :embedded="!item.video.watched">
+        <NListItem
+          v-for="item in acceptVideos"
+          :key="item.info.bvid"
+        >
+          <NCard
+            size="small"
+            :hoverable="!item.video.watched"
+            :embedded="!item.video.watched"
+          >
             <NSpace>
               <NImage
                 :src="item.video.cover + '@100h'"
                 lazy
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 height="75"
-                @click="onClick(item.video)"
                 preview-disabled
                 style="cursor: pointer"
+                @click="onClick(item.video)"
               />
-              <NSpace vertical :size="5">
-                <NButton style="width: 100%; max-width: 100px" @click="onClick(item.video)" text>
+              <NSpace
+                vertical
+                :size="5"
+              >
+                <NButton
+                  style="width: 100%; max-width: 100px"
+                  text
+                  @click="onClick(item.video)"
+                >
                   <NText
                     :title="item.video.title"
                     :delete="item.video.watched"
@@ -157,7 +197,10 @@ function formatSecondsToTime(seconds: number): string {
                     {{ item.video.title }}
                   </NText>
                 </NButton>
-                <NText depth="3" style="white-space: pre-line; font-size: small">
+                <NText
+                  depth="3"
+                  style="white-space: pre-line; font-size: small"
+                >
                   <NEllipsis line-clamp="1">
                     <template #tooltip>
                       <div style="white-space: pre-line; max-width: 300px">

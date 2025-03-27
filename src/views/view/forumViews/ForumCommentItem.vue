@@ -54,24 +54,44 @@ function delReply(id: number) {
       :src="VTSURU_API_URL + 'user-face/' + item.user.id + '?size=64'"
       :img-props="{ referrerpolicy: 'no-referrer' }"
     />
-    <NFlex vertical style="flex: 1" :size="2">
+    <NFlex
+      vertical
+      style="flex: 1"
+      :size="2"
+    >
       <NFlex align="center">
-        <NTag v-if="item.isDeleted" type="warning" :bordered="false"> 已删除 </NTag>
+        <NTag
+          v-if="item.isDeleted"
+          type="warning"
+          :bordered="false"
+        >
+          已删除
+        </NTag>
         <NText>
           {{ item.user.name }}
         </NText>
         <NText depth="3">
           <NTooltip>
             <template #trigger>
-              <NTime :time="item.sendAt" type="relative" />
+              <NTime
+                :time="item.sendAt"
+                type="relative"
+              />
             </template>
             <NTime :time="item.sendAt" />
           </NTooltip>
         </NText>
       </NFlex>
-      <div class="editor-content-view" v-html="item.content"></div>
+      <div
+        class="editor-content-view"
+        v-html="item.content"
+      />
 
-      <NCard v-if="item.replies.length > 0" size="small" style="margin-bottom: 10px">
+      <NCard
+        v-if="item.replies.length > 0"
+        size="small"
+        style="margin-bottom: 10px"
+      >
         <NFlex vertical>
           <ForumReplyItem
             v-for="reply in item.replies"
@@ -79,7 +99,7 @@ function delReply(id: number) {
             :item="reply"
             :comment="item"
             :topic="topic"
-            showReplyButton
+            show-reply-button
             :reply-to="reply.replyTo ? item.replies.find((r) => r.id === reply.replyTo) : undefined"
             :reply-to-id="reply.replyTo"
             @delete="delReply"
@@ -91,6 +111,9 @@ function delReply(id: number) {
           <template #trigger>
             <NButton
               size="small"
+              text
+              :loading="useForum.isLikeLoading"
+              :disabled="!canOprate"
               @click="
                 useForum.LikeComment(item.id, !item.isLiked).then((success) => {
                   if (success) {
@@ -99,12 +122,12 @@ function delReply(id: number) {
                   }
                 })
               "
-              text
-              :loading="useForum.isLikeLoading"
-              :disabled="!canOprate"
             >
               <template #icon>
-                <NIcon :component="item.isLiked ? Heart : HeartOutline" :color="item.isLiked ? '#dd484f' : ''" />
+                <NIcon
+                  :component="item.isLiked ? Heart : HeartOutline"
+                  :color="item.isLiked ? '#dd484f' : ''"
+                />
               </template>
               {{ item.likeCount }}
             </NButton>
@@ -113,7 +136,12 @@ function delReply(id: number) {
         </NTooltip>
         <NTooltip>
           <template #trigger>
-            <NButton size="small" @click="useForum.SetReplyingComment(item)" text :disabled="!canOprate">
+            <NButton
+              size="small"
+              text
+              :disabled="!canOprate"
+              @click="useForum.SetReplyingComment(item)"
+            >
               <template #icon>
                 <NIcon :component="ArrowReply16Filled" />
               </template>
@@ -122,12 +150,19 @@ function delReply(id: number) {
           </template>
           回复
         </NTooltip>
-        <NFlex style="flex: 1" justify="end">
+        <NFlex
+          style="flex: 1"
+          justify="end"
+        >
           <NTooltip v-if="item.user.id === accountInfo.id || topic.isAdmin">
             <template #trigger>
               <NPopconfirm @positive-click="delComment(item.id)">
                 <template #trigger>
-                  <NButton size="small" text :disabled="!canOprate">
+                  <NButton
+                    size="small"
+                    text
+                    :disabled="!canOprate"
+                  >
                     <template #icon>
                       <NIcon
                         :component="Delete24Filled"
@@ -145,9 +180,16 @@ function delReply(id: number) {
             <template #trigger>
               <NPopconfirm @positive-click="restoreComment(item.id)">
                 <template #trigger>
-                  <NButton size="small" text :disabled="!canOprate">
+                  <NButton
+                    size="small"
+                    text
+                    :disabled="!canOprate"
+                  >
                     <template #icon>
-                      <NIcon :component="SyncCircleSharp" color="#7f7f7f" />
+                      <NIcon
+                        :component="SyncCircleSharp"
+                        color="#7f7f7f"
+                      />
                     </template>
                   </NButton>
                 </template>

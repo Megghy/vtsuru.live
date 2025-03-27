@@ -10,6 +10,15 @@ const client = await useDanmakuClient().initClient()
 </script>
 
 <template>
-  <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
-  <OpenLottery v-else :room-info="client.authInfo!" :code="accountInfo?.biliAuthCode" />
+  <NAlert
+    v-if="accountInfo?.isBiliVerified != true"
+    type="info"
+  >
+    尚未进行Bilibili认证
+  </NAlert>
+  <OpenLottery
+    v-else
+    :room-info="client.authInfo!"
+    :code="accountInfo?.biliAuthCode"
+  />
 </template>

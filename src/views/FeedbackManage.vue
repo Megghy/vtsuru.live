@@ -97,35 +97,60 @@ async function add() {
   <NSpace align="center">
     <NTooltip :disabled="accountInfo !== undefined">
       <template #trigger>
-        <NButton @click="showAddModal = true" type="info" :disabled="!accountInfo">添加反馈</NButton>
+        <NButton
+          type="info"
+          :disabled="!accountInfo"
+          @click="showAddModal = true"
+        >
+          添加反馈
+        </NButton>
       </template>
       你需要登陆后才能提交反馈
     </NTooltip>
-    <NText depth="3"> 或者直接加群 873260337 说也可以 </NText>
+    <NText depth="3">
+      或者直接加群 873260337 说也可以
+    </NText>
   </NSpace>
   <NDivider>
     <NTooltip>
       <template #trigger>
-        <NRadioGroup v-model:value="orderType" size="small">
-          <NRadioButton value="status">状态</NRadioButton>
-          <NRadioButton value="time">时间</NRadioButton>
+        <NRadioGroup
+          v-model:value="orderType"
+          size="small"
+        >
+          <NRadioButton value="status">
+            状态
+          </NRadioButton>
+          <NRadioButton value="time">
+            时间
+          </NRadioButton>
         </NRadioGroup>
       </template>
       排序方式
     </NTooltip>
   </NDivider>
-  <NEmpty v-if="feedbacks.length == 0" description="暂无反馈" />
+  <NEmpty
+    v-if="feedbacks.length == 0"
+    description="暂无反馈"
+  />
   <NSpace v-else-if="orderType == 'time'">
-    <FeedbackItem v-for="item in selectedFeedback" :item="item" :key="item.createAt" />
+    <FeedbackItem
+      v-for="item in selectedFeedback"
+      :key="item.createAt"
+      :item="item"
+    />
   </NSpace>
   <template v-else>
     <NDivider> 开发计划 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing).length == 0"
+      description="无"
+    />
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Developing)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
     <NDivider> 处理中 </NDivider>
@@ -136,48 +161,65 @@ async function add() {
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Progressing)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
     <NDivider> 等待回复 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding).length == 0"
+      description="无"
+    />
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Padding)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
     <NDivider> 计划中 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo).length == 0"
+      description="无"
+    />
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Todo)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
     <NDivider> 已完成 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish).length == 0"
+      description="无"
+    />
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Finish)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
     <NDivider> 搁置 </NDivider>
-    <NEmpty v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject).length == 0" description="无" />
+    <NEmpty
+      v-if="selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject).length == 0"
+      description="无"
+    />
     <NSpace v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status == FeedbackStatus.Reject)"
-        :item="item"
         :key="item.createAt"
+        :item="item"
       />
     </NSpace>
   </template>
-  <NModal v-model:show="showAddModal" preset="card" title="添加反馈" style="width: 600px; max-width: 90vw">
+  <NModal
+    v-model:show="showAddModal"
+    preset="card"
+    title="添加反馈"
+    style="width: 600px; max-width: 90vw"
+  >
     <NSpace vertical>
       <NInput
         v-model:value="newFeedback.message"
@@ -187,15 +229,33 @@ async function add() {
         show-count
         maxlength="1000"
       />
-      <NRadioGroup v-model:value="newFeedback.type" name="radiogroup">
-        <NRadioButton :value="FeedbackType.Opinion">建议 / 意见</NRadioButton>
-        <NRadioButton :value="FeedbackType.Bug">Bug</NRadioButton>
-        <NRadioButton :value="FeedbackType.FunctionRequest">功能需求</NRadioButton>
-        <NRadioButton :value="FeedbackType.Other">其他</NRadioButton>
+      <NRadioGroup
+        v-model:value="newFeedback.type"
+        name="radiogroup"
+      >
+        <NRadioButton :value="FeedbackType.Opinion">
+          建议 / 意见
+        </NRadioButton>
+        <NRadioButton :value="FeedbackType.Bug">
+          Bug
+        </NRadioButton>
+        <NRadioButton :value="FeedbackType.FunctionRequest">
+          功能需求
+        </NRadioButton>
+        <NRadioButton :value="FeedbackType.Other">
+          其他
+        </NRadioButton>
       </NRadioGroup>
-      <NCheckbox v-model:checked="newFeedback.isAnonymous">匿名</NCheckbox>
+      <NCheckbox v-model:checked="newFeedback.isAnonymous">
+        匿名
+      </NCheckbox>
       <NDivider style="margin: 10px 0 10px 0" />
-      <NButton @click="add" type="primary">发送</NButton>
+      <NButton
+        type="primary"
+        @click="add"
+      >
+        发送
+      </NButton>
     </NSpace>
   </NModal>
 </template>

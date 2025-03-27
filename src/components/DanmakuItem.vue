@@ -57,9 +57,20 @@ defineEmits<{
         <span style="display: flex; align-items: center; gap: 8px 8px">
           <NTooltip v-if="danmaku.uId > 0 && showAvatar">
             <template #trigger>
-              <img :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=25`" alt="头像" referrerpolicy="no-referrer" style="border-radius: 50%" loading="lazy" />
+              <img
+                :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=25`"
+                alt="头像"
+                referrerpolicy="no-referrer"
+                style="border-radius: 50%"
+                loading="lazy"
+              >
             </template>
-            <img :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`" alt="头像" referrerpolicy="no-referrer" loading="lazy" />
+            <img
+              :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
+              alt="头像"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+            >
           </NTooltip>
           <NTooltip>
             <template #trigger>
@@ -69,8 +80,17 @@ defineEmits<{
             </template>
             {{ format(danmaku.time, 'yyyy-MM-dd HH:mm:ss') }}
           </NTooltip>
-          <NButton v-if="showName" text type="primary" @click="$emit('onClickName', danmaku.uId, danmaku.ouId)">
-            <NTag v-if="danmaku.uId == accountInfo?.biliId" size="small" type="warning">
+          <NButton
+            v-if="showName"
+            text
+            type="primary"
+            @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
+          >
+            <NTag
+              v-if="danmaku.uId == accountInfo?.biliId"
+              size="small"
+              type="warning"
+            >
               {{ danmaku.uName }}
             </NTag>
             <template v-else>
@@ -94,12 +114,24 @@ defineEmits<{
     </span>
   </NCard>
   <template v-else>
-    <span class="danmaku-item" style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: gray">
+    <span
+      class="danmaku-item"
+      style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: gray"
+    >
       <NTooltip v-if="danmaku.uId > 0 && showAvatar">
         <template #trigger>
-          <img :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=22`" alt="头像" referrerpolicy="no-referrer" style="border-radius: 50%; margin-right: 5px" />
+          <img
+            :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=22`"
+            alt="头像"
+            referrerpolicy="no-referrer"
+            style="border-radius: 50%; margin-right: 5px"
+          >
         </template>
-        <img :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`" alt="头像" referrerpolicy="no-referrer" />
+        <img
+          :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=1024`"
+          alt="头像"
+          referrerpolicy="no-referrer"
+        >
       </NTooltip>
       <NTooltip>
         <template #trigger>
@@ -110,10 +142,19 @@ defineEmits<{
     </span>
     <span>
       <template v-if="showName && danmaku.uId != -1">
-        <NButton class="danmaku-item" text type="info" @click="$emit('onClickName', danmaku.uId, danmaku.ouId)">
+        <NButton
+          class="danmaku-item"
+          text
+          type="info"
+          @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
+        >
           <NTooltip v-if="danmaku.uId == accountInfo?.biliId">
             <template #trigger>
-              <NTag size="small" type="warning" style="cursor: pointer">
+              <NTag
+                size="small"
+                type="warning"
+                style="cursor: pointer"
+              >
                 {{ danmaku.uName && danmaku.uName != '' ? danmaku.uName : '主播' }}
               </NTag>
             </template>
@@ -133,27 +174,52 @@ defineEmits<{
         <template v-if="danmaku.isEmoji">
           <NTooltip>
             <template #trigger>
-              <img :src="'https://' + danmaku.msg + `@22h`" referrerpolicy="no-referrer" :style="`max-height: ${height}px;display:inline-flex;`" />
+              <img
+                :src="'https://' + danmaku.msg + `@22h`"
+                referrerpolicy="no-referrer"
+                :style="`max-height: ${height}px;display:inline-flex;`"
+              >
             </template>
-            <img :src="'https://' + danmaku.msg" referrerpolicy="no-referrer" />
+            <img
+              :src="'https://' + danmaku.msg"
+              referrerpolicy="no-referrer"
+            >
           </NTooltip>
         </template>
         <template v-else>
           {{ danmaku.msg }}
         </template>
       </span>
-      <span v-else-if="danmaku.type == EventDataTypes.Gift" :style="'color:' + ((danmaku.price ?? 0) > 0 ? '#DD2F2F' : '#E9A8A8')">
-        <NTag size="tiny" v-if="(danmaku.price ?? 0) > 0" type="error" :bordered="false"> <NIcon :component="Money24Regular" /> {{ danmaku.price }} </NTag>
+      <span
+        v-else-if="danmaku.type == EventDataTypes.Gift"
+        :style="'color:' + ((danmaku.price ?? 0) > 0 ? '#DD2F2F' : '#E9A8A8')"
+      >
+        <NTag
+          v-if="(danmaku.price ?? 0) > 0"
+          size="tiny"
+          type="error"
+          :bordered="false"
+        > <NIcon :component="Money24Regular" /> {{ danmaku.price }} </NTag>
         {{ danmaku.price ?? 0 > 0 ? '' : '免费' }}礼物
         <NDivider vertical />
         {{ danmaku.msg }}
-        <NTag size="tiny" :bordered="false" v-if="danmaku.num">
+        <NTag
+          v-if="danmaku.num"
+          size="tiny"
+          :bordered="false"
+        >
           <span style="color: gray"> {{ danmaku.num }} 个 </span>
         </NTag>
       </span>
-      <span v-else-if="danmaku.type == EventDataTypes.Guard" style="color: #9d78c1">
+      <span
+        v-else-if="danmaku.type == EventDataTypes.Guard"
+        style="color: #9d78c1"
+      >
         上舰
-        <NTag size="small" :style="`color:${GetGuardColor(danmaku.price ?? 0)}`"> <NIcon :component="VehicleShip24Filled" /> {{ danmaku.price }} </NTag>
+        <NTag
+          size="small"
+          :style="`color:${GetGuardColor(danmaku.price ?? 0)}`"
+        > <NIcon :component="VehicleShip24Filled" /> {{ danmaku.price }} </NTag>
         <NDivider vertical />
         {{ danmaku.msg }}
       </span>

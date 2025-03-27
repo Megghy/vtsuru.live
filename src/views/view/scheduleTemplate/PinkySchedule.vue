@@ -48,17 +48,28 @@ onMounted(() => {
 
 <template>
   <NSpace>
-    <NSelect :options="options" v-model:value="selectedDate" style="width: 200px" placeholder="选择其他周表" />
-    <SaveCompoent :compoent="table" :file-name="`周表_${selectedDate}_${userInfo?.name}`" />
+    <NSelect
+      v-model:value="selectedDate"
+      :options="options"
+      style="width: 200px"
+      placeholder="选择其他周表"
+    />
+    <SaveCompoent
+      :compoent="table"
+      :file-name="`周表_${selectedDate}_${userInfo?.name}`"
+    />
   </NSpace>
   <NDivider />
-  <div ref="table" class="schedule-template pinky container">
+  <div
+    ref="table"
+    class="schedule-template pinky container"
+  >
     <div class="schedule-template pinky day-container">
       <div
-        class="schedule-template pinky day-item"
-        :id="index.toString()"
         v-for="(item, index) in currentWeek?.days"
+        :id="index.toString()"
         :key="index"
+        class="schedule-template pinky day-item"
       >
         <div class="schedule-template pinky header">
           <span class="schedule-template pinky week">
@@ -72,15 +83,25 @@ onMounted(() => {
           </span>
         </div>
         <div class="schedule-template pinky day-content-container">
-          <span v-if="item.tag" class="schedule-template pinky day-content" id="work">
+          <span
+            v-if="item.tag"
+            id="work"
+            class="schedule-template pinky day-content"
+          >
             {{ item.title }}
           </span>
-          <span v-else class="schedule-template pinky day-content" id="rest"> 休息 </span>
+          <span
+            v-else
+            id="rest"
+            class="schedule-template pinky day-content"
+          > 休息 </span>
         </div>
       </div>
     </div>
     <div class="schedule-template pinky title-container">
-      <div class="schedule-template pinky title">S C H E D U L E</div>
+      <div class="schedule-template pinky title">
+        S C H E D U L E
+      </div>
     </div>
   </div>
 </template>

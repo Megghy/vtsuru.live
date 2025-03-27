@@ -584,17 +584,38 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NAlert v-if="accountInfo?.isBiliVerified != true" type="info"> 尚未进行Bilibili认证 </NAlert>
-  <NSpin v-else-if="isLoading" show />
-  <NCard v-else size="small">
+  <NAlert
+    v-if="accountInfo?.isBiliVerified != true"
+    type="info"
+  >
+    尚未进行Bilibili认证
+  </NAlert>
+  <NSpin
+    v-else-if="isLoading"
+    show
+  />
+  <NCard
+    v-else
+    size="small"
+  >
     <NAlert type="warning">
       由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
-      <NButton text type="info" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
-        VTsuruEventFetcher </NButton>
+      <NButton
+        text
+        type="info"
+        tag="a"
+        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+        target="_blank"
+      >
+        VTsuruEventFetcher
+      </NButton>
       来帮助本站获取你的数据记录
     </NAlert>
-    <br />
-    <NTooltip trigger="click" placement="bottom">
+    <br>
+    <NTooltip
+      trigger="click"
+      placement="bottom"
+    >
       <template #trigger>
         <NButton type="info">
           <template #icon>
@@ -604,17 +625,32 @@ onMounted(async () => {
         </NButton>
       </template>
       <NSpace vertical>
-        <NText strong>所有数据改为每天更新一次</NText>
+        <NText strong>
+          所有数据改为每天更新一次
+        </NText>
         <NDivider style="margin: 0" />
-        <NText delete :depth="3">
+        <NText
+          delete
+          :depth="3"
+        >
           粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
         </NText>
-        <NText delete :depth="3"> 舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次 </NText>
-        <NText delete :depth="3"> 投稿数据: 500粉以上: 每天一次 </NText>
+        <NText
+          delete
+          :depth="3"
+        >
+          舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次
+        </NText>
+        <NText
+          delete
+          :depth="3"
+        >
+          投稿数据: 500粉以上: 每天一次
+        </NText>
       </NSpace>
     </NTooltip>
-    <br />
-    <br />
+    <br>
+    <br>
     <NSpace vertical>
       <NDivider>
         粉丝
@@ -622,28 +658,40 @@ onMounted(async () => {
         <NTooltip>
           <template #trigger>
             <span>
-              <NTime :time="fansUpdateAt" type="relative" />
+              <NTime
+                :time="fansUpdateAt"
+                type="relative"
+              />
               更新
             </span>
           </template>
           <NTime :time="fansUpdateAt" />
         </NTooltip>
       </NDivider>
-      <VChart :option="fansOption" style="height: 200px" />
+      <VChart
+        :option="fansOption"
+        style="height: 200px"
+      />
       <NDivider>
         舰长
         <NDivider vertical />
         <NTooltip>
           <template #trigger>
             <span>
-              <NTime :time="guardUpdateAt" type="relative" />
+              <NTime
+                :time="guardUpdateAt"
+                type="relative"
+              />
               更新
             </span>
           </template>
           <NTime :time="guardUpdateAt" />
         </NTooltip>
       </NDivider>
-      <VChart :option="guardsOption" style="height: 200px" />
+      <VChart
+        :option="guardsOption"
+        style="height: 200px"
+      />
 
       <NDivider>
         投稿播放量
@@ -651,14 +699,20 @@ onMounted(async () => {
         <NTooltip>
           <template #trigger>
             <span>
-              <NTime :time="upstatUpdateAt" type="relative" />
+              <NTime
+                :time="upstatUpdateAt"
+                type="relative"
+              />
               更新
             </span>
           </template>
           <NTime :time="upstatUpdateAt" />
         </NTooltip>
       </NDivider>
-      <VChart :option="upstatViewOption" style="height: 200px" />
+      <VChart
+        :option="upstatViewOption"
+        style="height: 200px"
+      />
 
       <NDivider>
         投稿点赞量
@@ -666,14 +720,20 @@ onMounted(async () => {
         <NTooltip>
           <template #trigger>
             <span>
-              <NTime :time="upstatUpdateAt" type="relative" />
+              <NTime
+                :time="upstatUpdateAt"
+                type="relative"
+              />
               更新
             </span>
           </template>
           <NTime :time="upstatUpdateAt" />
         </NTooltip>
       </NDivider>
-      <VChart :option="upstatLikeOption" style="height: 200px" />
+      <VChart
+        :option="upstatLikeOption"
+        style="height: 200px"
+      />
     </NSpace>
   </NCard>
 </template>

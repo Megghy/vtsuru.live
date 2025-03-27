@@ -71,5 +71,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <QuestionDisplayCard ref="cardRef" :question="question" :setting="setting" />
+  <QuestionDisplayCard
+    ref="cardRef"
+    :question="question"
+    :setting="setting"
+  />
 </template>

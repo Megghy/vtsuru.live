@@ -96,9 +96,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="web-fetcher-status" :style="{
-    backgroundColor: webFetcher.isStarted ? '#6dc56d' : '#e34a4a',
-  }"></div>
+  <div
+    class="web-fetcher-status"
+    :style="{
+      backgroundColor: webFetcher.isStarted ? '#6dc56d' : '#e34a4a',
+    }"
+  />
 </template>
 
 <style scoped>

@@ -52,10 +52,17 @@ watch(
           lazy
           preview-disabled
           @click="OnClickCover()"
-        />
+        >
       </span>
-      <NSpace vertical justify="center" style="gap: 2px">
-        <NButton text @click="OnClickCover()">
+      <NSpace
+        vertical
+        justify="center"
+        style="gap: 2px"
+      >
+        <NButton
+          text
+          @click="OnClickCover()"
+        >
           <span style="font-size: 18px; white-space: break-spaces">
             {{ live.title }}
           </span>
@@ -71,7 +78,10 @@ watch(
               直播中
             </NTag>
           </span>
-          <span v-else style="color: gray">
+          <span
+            v-else
+            style="color: gray"
+          >
             {{ (((live.stopAt ?? 0) - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }}
             时
           </span>
@@ -79,7 +89,10 @@ watch(
           <NPopover trigger="hover">
             <template #trigger>
               <div style="color: grey; font-size: small; display: inline">
-                <NTime style="font-size: small" :time="live.startAt" />
+                <NTime
+                  style="font-size: small"
+                  :time="live.startAt"
+                />
               </div>
             </template>
             <span v-if="live.isFinish">
@@ -108,12 +121,23 @@ watch(
       </NStatistic>
       <NStatistic label="弹幕">
         <span style="font-size: 18px; font-weight: 500">
-          <NNumberAnimation :from="defaultDanmakusCount" :to="live.danmakusCount" show-separator />
+          <NNumberAnimation
+            :from="defaultDanmakusCount"
+            :to="live.danmakusCount"
+            show-separator
+          />
         </span>
       </NStatistic>
-      <NStatistic label="互动" tabular-nums>
+      <NStatistic
+        label="互动"
+        tabular-nums
+      >
         <span style="font-size: 18px; font-weight: 500">
-          <NNumberAnimation :from="0" :to="live.interactionCount" show-separator />
+          <NNumberAnimation
+            :from="0"
+            :to="live.interactionCount"
+            show-separator
+          />
         </span>
       </NStatistic>
       <transition>
@@ -125,16 +149,20 @@ watch(
                 <NIcon :component="Info24Filled" />
               </template>
               因为官方并没有提供上舰的价格, 所以记录中的舰长价格一律按照打折价格计算
-              <br />
+              <br>
               即舰长 138, 提督 1598, 总督 15998
-              <br />
+              <br>
               把鼠标放在下面的价格上就可以查看排除舰长后的收益
             </NTooltip>
           </template>
           <NTooltip>
             <template #trigger>
               <span style="font-size: 18px; font-weight: 500; color: #a35353">
-                <NNumberAnimation :from="0" :to="new Date(live.startAt) < guartPriceStartData ? live.totalIncomeWithGuard : live.totalIncome" show-separator />
+                <NNumberAnimation
+                  :from="0"
+                  :to="new Date(live.startAt) < guartPriceStartData ? live.totalIncomeWithGuard : live.totalIncome"
+                  show-separator
+                />
               </span>
             </template>
             {{ live.totalIncome }}

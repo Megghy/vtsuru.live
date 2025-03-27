@@ -5,7 +5,7 @@ import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { FETCH_API } from '@/data/constants'
+import { AVATAR_URL, FETCH_API } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
   BookCoins20Filled,
@@ -273,10 +273,10 @@ onMounted(async () => {
         style="height: 100%"
       >
         <Transition>
-          <div v-if="accountInfo.streamerInfo" style="margin-top: 8px">
+          <div v-if="userInfo?.streamerInfo" style="margin-top: 8px">
             <NSpace vertical justify="center" align="center">
               <NAvatar
-                :src="accountInfo.streamerInfo.faceUrl"
+                :src="userInfo.streamerInfo.faceUrl"
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 round
                 bordered
@@ -286,7 +286,7 @@ onMounted(async () => {
               />
               <NEllipsis v-if="width > 100" style="max-width: 100%">
                 <NText strong>
-                  {{ accountInfo.streamerInfo.name }}
+                  {{ userInfo?.streamerInfo.name }}
                 </NText>
               </NEllipsis>
             </NSpace>
