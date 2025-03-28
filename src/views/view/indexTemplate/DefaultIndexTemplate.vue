@@ -96,8 +96,8 @@ export const Config: TemplateConfig<ConfigType> = {
       vertical
     >
       <NAvatar
-        v-if="biliInfo"
-        :src="biliInfo?.face"
+        v-if="accountInfo.streamerInfo"
+        :src="accountInfo.streamerInfo.faceUrl"
         :size="width > 750 ? 175 : 100"
         round
         bordered
@@ -114,14 +114,14 @@ export const Config: TemplateConfig<ConfigType> = {
           strong
           style="font-size: 32px"
         >
-          {{ biliInfo?.name }}
+          {{ userInfo?.name }}
         </NText>
         <NText
           strong
           style="font-size: 20px"
           depth="3"
         >
-          ({{ userInfo?.name }})
+          ({{ userInfo?.streamerInfo?.name }})
         </NText>
       </NSpace>
       <NText
@@ -129,7 +129,7 @@ export const Config: TemplateConfig<ConfigType> = {
         depth="3"
         style="font-size: medium"
       >
-        {{ userInfo?.biliId }}
+        {{ userInfo.streamerInfo?.uId }}
       </NText>
       <NText
         strong
