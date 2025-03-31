@@ -83,6 +83,12 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NDivider>
           <NTimeline>
             <NTimelineItem
+              type="info"
+              title="功能更新"
+              content="新增歌单样式: 列表"
+              time="2025-3-31"
+            />
+            <NTimelineItem
               type="success"
               title="功能添加"
               content="上线直播数据分析"
