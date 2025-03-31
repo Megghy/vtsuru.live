@@ -195,7 +195,7 @@ export type ExtractConfigData<
  * @param items 一个只读的配置项定义数组。
  * @returns 类型被保留的同一个只读数组。
  */
-export function defineItems<
+export function defineTemplateConfig<
   const Items extends readonly ConfigItemDefinition[] // 使用 'const' 泛型进行推断
 >(items: Items): Items {
   // 如果需要，可以在此处添加基本的运行时验证。

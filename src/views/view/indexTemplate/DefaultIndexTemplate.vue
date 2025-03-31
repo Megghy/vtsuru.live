@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { isDarkMode } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
-import { TemplateConfig } from '@/data/VTsuruTypes'
-import { USER_INDEX_API_URL } from '@/data/constants'
-import { NAlert, NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { isDarkMode } from '@/Utils';
+import { useAccount } from '@/api/account';
+import { ResponseUserIndexModel, UserInfo } from '@/api/api-models';
+import { QueryGetAPI } from '@/api/query';
+import SimpleVideoCard from '@/components/SimpleVideoCard.vue';
+import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruTypes';
+import { USER_INDEX_API_URL } from '@/data/constants';
+import { NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui';
+import { ref } from 'vue';
 
 defineExpose({ Config, DefaultConfig })
 const width = window.innerWidth
@@ -46,13 +46,9 @@ function navigate(url: string) {
 </script>
 
 <script lang="ts">
-export type ConfigType = {
-  test: string
-}
+export type ConfigType = ExtractConfigData<typeof Config>
 export const DefaultConfig = {} as ConfigType
-export const Config: TemplateConfig<ConfigType> = {
-  name: 'Template.Index.Simple',
-  items: [
+export const Config = defineTemplateConfig([
     {
       name: '封面',
       type: 'image',
@@ -64,8 +60,7 @@ export const Config: TemplateConfig<ConfigType> = {
       type: 'string',
       key: 'test',
     },
-  ],
-}
+  ])
 </script>
 
 <template>
