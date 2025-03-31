@@ -49,7 +49,7 @@
         public: 'true',
       });
       if (resp.code == 200) {
-        message.success('已保存至服务器');
+        message.success('已保存设置');
         props.config?.forEach(item => {
           if (item.type === 'render') {
             item.onUploaded?.(props.configData[item.key], props.configData);
