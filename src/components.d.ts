@@ -17,6 +17,8 @@ declare module 'vue' {
     FeedbackItem: typeof import('./components/FeedbackItem.vue')['default']
     LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
     MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
+    NFormItemG: typeof import('naive-ui')['NFormItemG']
+    NFormItemGi: typeof import('naive-ui')['NFormItemGi']
     NIcon: typeof import('naive-ui')['NIcon']
     NTag: typeof import('naive-ui')['NTag']
     PointGoodsItem: typeof import('./components/manage/PointGoodsItem.vue')['default']

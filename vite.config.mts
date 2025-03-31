@@ -1,29 +1,29 @@
 // vite.config.ts
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import path from 'path'
-import Markdown from 'unplugin-vue-markdown/vite'
-import { defineConfig } from 'vite'
-import monacoEditorPluginModule from 'vite-plugin-monaco-editor'
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import path, { resolve } from 'path';
+import Markdown from 'unplugin-vue-markdown/vite';
+import { defineConfig } from 'vite';
+import monacoEditorPluginModule from 'vite-plugin-monaco-editor';
+import caddyTls from './plugins/vite-plugin-caddy';
+import { VineVitePlugin } from 'vue-vine/vite';
+import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite';
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
+import oxlintPlugin from 'vite-plugin-oxlint';
 import svgLoader from 'vite-svg-loader'
-import caddyTls from './plugins/vite-plugin-caddy'
-import { VineVitePlugin } from 'vue-vine/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import oxlintPlugin from 'vite-plugin-oxlint'
 
 const isObjectWithDefaultFunction = (
   module: unknown
-): module is { default: typeof monacoEditorPluginModule } =>
+): module is { default: typeof monacoEditorPluginModule; } =>
   module != null &&
   typeof module === 'object' &&
   'default' in module &&
-  typeof module.default === 'function'
+  typeof module.default === 'function';
 
 const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
   ? monacoEditorPluginModule.default
-  : monacoEditorPluginModule
+  : monacoEditorPluginModule;
 
 export default defineConfig({
   plugins: [
@@ -34,8 +34,8 @@ export default defineConfig({
         compilerOptions: { isCustomElement: (tag) => tag.startsWith('yt-') }
       }
     }),
-    svgLoader(),
     vueJsx(),
+    svgLoader(),
     Markdown({
       /* options */
     }),
@@ -66,4 +66,4 @@ export default defineConfig({
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
   },
   build: { sourcemap: true },
-})
+});

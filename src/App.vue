@@ -9,6 +9,7 @@ import {
   NLayoutContent,
   NLoadingBarProvider,
   NMessageProvider,
+  NModalProvider,
   NNotificationProvider,
   NSpin,
   zhCN,
@@ -16,11 +17,13 @@ import {
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import TempComponent from './components/TempComponent.vue'
-import { theme } from './Utils'
+import { isDarkMode, theme } from './Utils'
 import OBSLayout from './views/OBSLayout.vue'
 import OpenLiveLayout from './views/OpenLiveLayout.vue'
+import { ThemeType } from './api/api-models';
 
-const route = useRoute()
+  const route = useRoute()
+  const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
@@ -44,6 +47,16 @@ const layout = computed(() => {
     return ''
   }
 })
+watchEffect(() => {
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark');
+    console.log('Added dark class to HTML'); // For debugging
+  } else {
+    document.documentElement.classList.remove('dark');
+    console.log('Removed dark class from HTML'); // For debugging
+  }
+  // If you dynamically apply Naive UI theme to body or provider, do it here too
+});
 
 const themeOverrides = {
   common: {
@@ -52,34 +65,51 @@ const themeOverrides = {
       'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
   },
   // ...
-}
+  }
+
+onMounted(() => {
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark');
+    console.log('Added dark class to HTML'); // For debugging
+  }
+})
 </script>
 
 <template>
   <NConfigProvider
-    :theme-overrides="themeOverrides" :theme="theme" style="height: 100vh" :locale="zhCN"
+    :theme-overrides="themeOverrides"
+    :theme="theme"
+    style="height: 100vh"
+    :locale="zhCN"
     :date-locale="dateZhCN"
   >
     <NMessageProvider>
       <NNotificationProvider>
         <NDialogProvider>
           <NLoadingBarProvider>
-            <Suspense>
-              <TempComponent>
-                <NLayoutContent>
-                  <ViewerLayout v-if="layout == 'viewer'" />
-                  <ManageLayout v-else-if="layout == 'manage'" />
-                  <OpenLiveLayout v-else-if="layout == 'open-live'" />
-                  <OBSLayout v-else-if="layout == 'obs'" />
-                  <template v-else>
-                    <RouterView />
-                  </template>
-                </NLayoutContent>
-              </TempComponent>
-              <template #fallback>
-                <NSpin size="large" show />
-              </template>
-            </Suspense>
+            <NModalProvider>
+              <Suspense>
+                <TempComponent>
+                  <NLayoutContent>
+                    <NElement>
+                      <ViewerLayout v-if="layout == 'viewer'" />
+                      <ManageLayout v-else-if="layout == 'manage'" />
+                      <OpenLiveLayout v-else-if="layout == 'open-live'" />
+                      <OBSLayout v-else-if="layout == 'obs'" />
+                      <template v-else>
+                        <RouterView />
+                      </template>
+                    </NElement>
+                  </NLayoutContent>
+                </TempComponent>
+                <template #fallback>
+                  <NSpin
+                    size="large"
+                    show
+                  />
+                </template>
+              </Suspense>
+            </NModalProvider>
           </NLoadingBarProvider>
         </NDialogProvider>
       </NNotificationProvider>
@@ -90,6 +120,8 @@ const themeOverrides = {
 <style>
 :root {
   font-feature-settings: 'liga' 1, 'calt' 1;
+  --vtsuru-header-height: 50px;
+  --vtsuru-content-padding: 16px;
 }
 
 @supports (font-variation-settings: normal) {

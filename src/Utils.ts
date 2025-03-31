@@ -1,6 +1,9 @@
 import { useStorage } from '@vueuse/core'
 import {
   ConfigProviderProps,
+  NButton,
+  NIcon,
+  NTooltip,
   UploadFileInfo,
   createDiscreteApi,
   darkTheme,
@@ -8,10 +11,13 @@ import {
   useOsTheme,
   zhCN
 } from 'naive-ui'
-import { ThemeType } from './api/api-models'
+import { SongFrom, SongsInfo, ThemeType } from './api/api-models'
 import { computed } from 'vue'
 import { VTSURU_API_URL } from './data/constants'
 import { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
+import { SquareArrowForward24Filled } from '@vicons/fluent';
+import FiveSingIcon from '@/svgs/fivesing.svg'
+import NeteaseIcon from '@/svgs/netease.svg'
 
 const { message } = createDiscreteApi(['message'])
 
@@ -29,7 +35,7 @@ export const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
   theme: theme.value,
   locale: zhCN,
   dateLocale: dateZhCN,
-  
+
 }))
 export function createNaiveUIApi(types: DiscreteApiType[]) {
   return createDiscreteApi(types, {
@@ -139,7 +145,8 @@ export async function getImageUploadModel(
   }
   return result
 }
-export function getUserAvatarUrl(userId: number) {
+export function getUserAvatarUrl(userId: number | undefined | null) {
+  if (!userId) return ''
   return VTSURU_API_URL + 'user-face/' + userId
 }
 export function getOUIdAvatarUrl(ouid: string) {
@@ -196,5 +203,71 @@ export class GuidUtils {
       view.setUint8(i, parseInt(hex.substr(i * 2, 2), 16))
     }
     return buffer
+  }
+}
+export function GetPlayButton(song: SongsInfo) {
+  switch (song.from) {
+    case SongFrom.FiveSing: {
+      return h(NTooltip, null, {
+        trigger: () =>
+          h(
+            h(
+              NButton,
+              {
+                size: 'small',
+                color: '#00BBB3',
+                ghost: true,
+                onClick: () => {
+                  window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
+                },
+              },
+              {
+                icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
+              },
+            ),
+          ),
+        default: () => '在5sing打开',
+      })
+    }
+    case SongFrom.Netease:
+      return h(NTooltip, null, {
+        trigger: () =>
+          h(
+            NButton,
+            {
+              size: 'small',
+              color: '#C20C0C',
+              ghost: true,
+              onClick: () => {
+                window.open(`https://music.163.com/#/song?id=${song.id}`)
+              },
+            },
+            {
+              icon: () => h(NeteaseIcon, { class: 'svg-icon netease' }),
+            },
+          ),
+        default: () => '在网易云打开',
+      })
+    case SongFrom.Custom:
+      return song.url
+        ? h(NTooltip, null, {
+          trigger: () =>
+            h(
+              NButton,
+              {
+                size: 'small',
+                color: '#6b95bd',
+                ghost: true,
+                onClick: () => {
+                  window.open(song.url)
+                },
+              },
+              {
+                icon: () => h(NIcon, { component: SquareArrowForward24Filled }),
+              },
+            ),
+          default: () => '打开链接',
+        })
+        : null
   }
 }

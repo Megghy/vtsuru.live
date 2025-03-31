@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/data/constants'
-import vtb from '@/svgs/ic_vtuber.svg'
 import {
   BookCoins20Filled,
   Info24Filled,
@@ -15,6 +14,7 @@ import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vic
 import { useWindowSize } from '@vueuse/core'
 import { NButton, NDivider, NEllipsis, NFlex, NGradientText, NGrid, NGridItem, NIcon, NNumberAnimation, NSpace, NText, NTooltip } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+import vtb from '@/svgs/ic_vtuber.svg'
 
 const { width } = useWindowSize()
 
