@@ -147,15 +147,16 @@ onUnmounted(() => {
           >
             推荐视频
           </NButton>
+
+          <VueTurnstile
+            ref="turnstile"
+            v-model="token"
+            :site-key="TURNSTILE_KEY"
+            theme="auto"
+            style="text-align: center"
+          />
         </NSpace>
       </NCard>
-      <VueTurnstile
-        ref="turnstile"
-        v-model="token"
-        :site-key="TURNSTILE_KEY"
-        theme="auto"
-        style="text-align: center"
-      />
     </div>
   </NLayoutContent>
 </template>
