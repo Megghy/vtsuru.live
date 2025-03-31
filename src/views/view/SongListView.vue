@@ -78,7 +78,7 @@ import { computed, onMounted, ref, watch } from 'vue';
     if (componentType.value) {
       return SongListTemplateMap[componentType.value];
     }
-    return undefined;
+    return SongListTemplateMap[''];
   });
   const currentConfig = ref();
   watch(

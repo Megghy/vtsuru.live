@@ -2,7 +2,7 @@
   import { computed, h, ref, watch } from 'vue'; // Import computed and watch
   import { getUserAvatarUrl, isDarkMode } from '@/Utils';
   import { SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
-  import { defineItems, ExtractConfigData } from '@/data/VTsuruTypes';
+  import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruTypes';
   import { FILE_BASE_URL } from '@/data/constants';
   import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NTag, NTooltip, NSelect } from 'naive-ui'; // Import NSelect
   import bilibili from '@/svgs/bilibili.svg';
@@ -216,7 +216,7 @@
 
   export type TraditionalConfigType = ExtractConfigData<typeof Config>;
   export const DefaultConfig = {} as TraditionalConfigType;
-  export const Config = defineItems([
+  export const Config = defineTemplateConfig([
     {
       name: '背景',
       type: 'image',
