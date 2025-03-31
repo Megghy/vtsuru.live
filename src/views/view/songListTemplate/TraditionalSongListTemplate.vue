@@ -294,6 +294,13 @@ export const Config = defineTemplateConfig([
     },
   },
   {
+    name: '固定歌曲列表高度',
+    type: 'boolean',
+    key: 'fixedHeight',
+    default: true,
+    description: '如果不勾选，歌曲较多时会整个页面滚动, 否则只会滚动歌单部分',
+  },
+  {
     name: '标题',
     type: 'string',
     key: 'title',
@@ -629,15 +636,18 @@ export const Config = defineTemplateConfig([
             <n-button
               class="refresh-button"
               size="small"
-              @click="randomOrder"
               ghost
+              @click="randomOrder"
             >
               随机点歌
             </n-button>
           </n-flex>
 
           <!-- Song Table -->
-          <div class="song-table-wrapper">
+          <div
+            class="song-table-wrapper"
+            :style="{ height: props.config?.fixedHeight ? '55vh' : 'none' }"
+          >
             <table class="song-list-table">
               <thead>
                 <tr>
@@ -718,7 +728,7 @@ export const Config = defineTemplateConfig([
                         size="small"
                         checkable
                         :checked="selectedTag === tag"
-                        @checked-change="selectTag(tag)"
+                        @update:checked="selectTag(tag)"
                       >
                         {{ tag }}
                       </n-tag>
@@ -936,7 +946,7 @@ html.dark .song-list-background-wrapper::before {
   z-index: 2; /* Place above the ::before blur layer */
   background: transparent !important; /* Ensure no background color obscures the wrapper */
   border-radius: inherit; /* Inherit rounding for scrollbar area */
-
+  min-width: 400px;
   /* Keep scrollbar styles */
   &::-webkit-scrollbar { width: 8px; }
   &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
@@ -1107,10 +1117,12 @@ html.dark .song-list-container {
   border-radius: 8px;
   /* Scrollbar styling specific to this inner table scroll if needed */
   /* ... */
+
 }
 
 .song-list-table {
   width: 100%; border-collapse: collapse; font-size: 0.9em;
+  min-width: 600px;
 }
 
 .song-list-table thead th {
