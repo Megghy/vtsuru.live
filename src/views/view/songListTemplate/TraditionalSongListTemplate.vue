@@ -146,7 +146,7 @@ const selectTag = (tagName: string) => {
 };
 
 // Select Artist (from table click, unchanged)
-const selectArtist = (artist: string) => {
+const selectArtistFromTable = (artist: string) => {
   selectedArtist.value = artist;
 };
 
@@ -433,300 +433,303 @@ export const Config = defineTemplateConfig([
 </script>
 
 <template>
+  <!-- 新增: 外部背景和模糊容器 -->
   <div
-    class="song-list-template"
+    class="song-list-background-wrapper"
     :style="{
-      backgroundImage: `url(${FILE_BASE_URL + props.config?.background})`,
-      backgroundSize: 'cover', height: '100%', backdropFilter: 'blur(5px)'
+      backgroundImage: props.config?.background ? `url(${FILE_BASE_URL + props.config.background})` : 'none',
     }"
   >
-    <div class="profile-card-container">
-      <!-- Profile Hover Area (unchanged) -->
-      <div
-        class="profile-hover-area"
-        :class="{ 'is-hovering': isHovering }"
-        @mouseenter="isHovering = true"
-        @mouseleave="isHovering = false"
-      >
-        <!-- Avatar -->
-        <img
-          :src="'https://fetch.vtsuru.live/' + props.userInfo?.streamerInfo?.faceUrl + '@256w_256h'"
-          alt="Avatar"
-          class="profile-avatar"
-          referrerpolicy="no-referrer"
-        >
-
-        <!-- Basic Info (Always Visible) -->
-        <div class="profile-info">
-          <h2 class="profile-name">
-            {{ props.config?.title ?? `${props.userInfo?.name} 的歌单` }}
-          </h2>
-          <p class="profile-description">
-            {{ props.config?.description }}
-          </p>
-          <span class="profile-extra-info">（点击歌名进行点歌）</span>
-        </div>
-
-        <!-- Social Links (Visible on Hover) -->
-        <div class="social-links">
-          <p class="social-links-title">
-            关于
-          </p>
-          <p class="social-links-subtitle">
-            {{ props.config?.longDescription }}
-          </p>
-          <div class="social-icons-bar">
-            <!-- Add actual icons here -->
-            <a
-              v-if="props.userInfo?.biliId"
-              :href="'https://space.bilibili.com/' + props.userInfo?.biliId"
-              class="icon icon-bilibili"
-              title="Bilibili 链接"
-              target="_blank"
-            >
-              <bilibili />
-            </a>
-            <a
-              v-if="props.config?.douyinLink"
-              :href="props.config?.douyinLink"
-              title="抖音链接"
-              target="_blank"
-              class="icon"
-            >
-              <douyin />
-            </a>
-            <a
-              v-if="props.config?.neteaseLink"
-              :href="props.config?.neteaseLink"
-              title="网易云链接"
-              target="_blank"
-              class="icon"
-            >
-              <neteaseMusic />
-            </a>
-            <a
-              v-if="props.config?.qqMusicLink"
-              :href="props.config?.qqMusicLink"
-              title="QQ音乐链接"
-              target="_blank"
-              class="icon"
-            >
-              <qqMusic />
-            </a>
-          </div>
-          <div
-            v-if="props.config?.links && props.config.links.length > 0"
-            class="social-grid"
-          >
-            <a
-              v-for="link in props.config?.links"
-              :key="link.name"
-              :href="link.url"
-              target="_blank"
-              class="social-link"
-            >
-              <span>{{ link.name }}</span>
-              <span class="arrow">></span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Song List Content Area -->
-      <div class="song-list-container">
-        <!-- Language Filter Buttons -->
+    <!-- 原始: 滚动和内容容器 -->
+    <div class="song-list-template">
+      <div class="profile-card-container">
+        <!-- Profile Hover Area (unchanged) -->
         <div
-          v-if="languageButtons.length > 0"
-          class="filter-button-group language-filters"
+          class="profile-hover-area"
+          :class="{ 'is-hovering': isHovering }"
+          @mouseenter="isHovering = true"
+          @mouseleave="isHovering = false"
         >
-          <span class="filter-label">语言:</span>
-          <button
-            v-for="lang in languageButtons"
-            :key="lang.id"
-            :class="{ active: selectedLanguage === lang.name }"
-            class="filter-button"
-            @click="selectLanguage(lang.name)"
+          <!-- Avatar -->
+          <img
+            :src="'https://fetch.vtsuru.live/' + props.userInfo?.streamerInfo?.faceUrl + '@256w_256h'"
+            alt="Avatar"
+            class="profile-avatar"
+            referrerpolicy="no-referrer"
           >
-            {{ lang.name }}
-          </button>
-        </div>
 
-        <!-- Tag Filter Buttons (Replaces original tabs) -->
-        <div
-          v-if="tagButtons.length > 0"
-          class="filter-button-group tag-filters"
-        >
-          <span class="filter-label">标签:</span>
-          <button
-            v-for="tag in tagButtons"
-            :key="tag.id"
-            :class="{ active: selectedTag === tag.name }"
-            class="filter-button"
-            @click="selectTag(tag.name)"
-          >
-            {{ tag.name }}
-          </button>
-        </div>
+          <!-- Basic Info (Always Visible) -->
+          <div class="profile-info">
+            <h2 class="profile-name">
+              {{ props.config?.title ?? `${props.userInfo?.name} 的歌单` }}
+            </h2>
+            <p class="profile-description">
+              {{ props.config?.description }}
+            </p>
+            <span class="profile-extra-info">（点击歌名进行点歌）</span>
+          </div>
 
-        <!-- Divider -->
-        <div class="filter-divider" />
-
-        <!-- Filter/Search Bar Row -->
-        <n-flex
-          class="song-list-filter"
-          justify="space-between"
-          align="center"
-        >
-          <!-- Left side filters: Artist, Search, Clear -->
-          <n-flex
-            align="center"
-            :wrap="true"
-            style="flex-grow: 1;"
-          >
-            <!-- Artist Filter Dropdown -->
-            <n-select
-              v-model:value="selectedArtist"
-              :options="artistOptions"
-              placeholder="筛选歌手"
-              clearable
-              style="max-width: 160px; margin-right: 10px; margin-bottom: 5px;"
-              size="small"
-            />
-
-            <!-- Search Input -->
-            <div
-              class="search-wrapper"
-              style="margin-right: 10px; margin-bottom: 5px;"
-            >
-              <span class="search-icon">🔍</span>
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="筛选歌名/歌手/语言/标签/备注"
-                class="filter-input"
-                style="min-width: 220px;"
+          <!-- Social Links (Visible on Hover) -->
+          <div class="social-links">
+            <p class="social-links-title">
+              关于
+            </p>
+            <p class="social-links-subtitle">
+              {{ props.config?.longDescription }}
+            </p>
+            <div class="social-icons-bar">
+              <!-- Add actual icons here -->
+              <a
+                v-if="props.userInfo?.biliId"
+                :href="'https://space.bilibili.com/' + props.userInfo?.biliId"
+                class="icon icon-bilibili"
+                title="Bilibili 链接"
+                target="_blank"
               >
+                <bilibili />
+              </a>
+              <a
+                v-if="props.config?.douyinLink"
+                :href="props.config?.douyinLink"
+                title="抖音链接"
+                target="_blank"
+                class="icon"
+              >
+                <douyin />
+              </a>
+              <a
+                v-if="props.config?.neteaseLink"
+                :href="props.config?.neteaseLink"
+                title="网易云链接"
+                target="_blank"
+                class="icon"
+              >
+                <neteaseMusic />
+              </a>
+              <a
+                v-if="props.config?.qqMusicLink"
+                :href="props.config?.qqMusicLink"
+                title="QQ音乐链接"
+                target="_blank"
+                class="icon"
+              >
+                <qqMusic />
+              </a>
             </div>
-
-            <!-- Clear Filters Button -->
-            <n-button
-              size="small"
-              class="clear-button"
-              ghost
-              :disabled="!selectedLanguage && !selectedTag && !selectedArtist && !searchQuery"
-              @click="clearFilters"
+            <div
+              v-if="props.config?.links && props.config.links.length > 0"
+              class="social-grid"
             >
-              <template #icon>
-                <n-icon :component="ArrowCounterclockwise20Filled" />
-              </template>
-              清空筛选
+              <a
+                v-for="link in props.config?.links"
+                :key="link.name"
+                :href="link.url"
+                target="_blank"
+                class="social-link"
+              >
+                <span>{{ link.name }}</span>
+                <span class="arrow">></span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Song List Content Area -->
+        <div class="song-list-container">
+          <!-- Language Filter Buttons -->
+          <div
+            v-if="languageButtons.length > 0"
+            class="filter-button-group language-filters"
+          >
+            <span class="filter-label">语言:</span>
+            <button
+              v-for="lang in languageButtons"
+              :key="lang.id"
+              :class="{ active: selectedLanguage === lang.name }"
+              class="filter-button"
+              @click="selectLanguage(lang.name)"
+            >
+              {{ lang.name }}
+            </button>
+          </div>
+
+          <!-- Tag Filter Buttons (Replaces original tabs) -->
+          <div
+            v-if="tagButtons.length > 0"
+            class="filter-button-group tag-filters"
+          >
+            <span class="filter-label">标签:</span>
+            <button
+              v-for="tag in tagButtons"
+              :key="tag.id"
+              :class="{ active: selectedTag === tag.name }"
+              class="filter-button"
+              @click="selectTag(tag.name)"
+            >
+              {{ tag.name }}
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="filter-divider" />
+
+          <!-- Filter/Search Bar Row -->
+          <n-flex
+            class="song-list-filter"
+            justify="space-between"
+            align="center"
+          >
+            <!-- Left side filters: Artist, Search, Clear -->
+            <n-flex
+              align="center"
+              :wrap="true"
+              style="flex-grow: 1;"
+            >
+              <!-- Artist Filter Dropdown -->
+              <n-select
+                v-model:value="selectedArtist"
+                :options="artistOptions"
+                placeholder="筛选歌手"
+                clearable
+                style="max-width: 160px; margin-right: 10px; margin-bottom: 5px;"
+                size="small"
+              />
+
+              <!-- Search Input -->
+              <div
+                class="search-wrapper"
+                style="margin-right: 10px; margin-bottom: 5px;"
+              >
+                <span class="search-icon">🔍</span>
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  placeholder="筛选歌名/歌手/语言/标签/备注"
+                  class="filter-input"
+                  style="min-width: 220px;"
+                >
+              </div>
+
+              <!-- Clear Filters Button -->
+              <n-button
+                size="small"
+                class="clear-button"
+                ghost
+                :disabled="!selectedLanguage && !selectedTag && !selectedArtist && !searchQuery"
+                @click="clearFilters"
+              >
+                <template #icon>
+                  <n-icon :component="ArrowCounterclockwise20Filled" />
+                </template>
+                清空筛选
+              </n-button>
+            </n-flex>
+
+            <!-- Right side: Random Button -->
+            <n-button
+              class="refresh-button"
+              size="small"
+              @click="randomOrder"
+              ghost
+            >
+              随机点歌
             </n-button>
           </n-flex>
 
-          <!-- Right side: Random Button -->
-          <n-button
-            class="refresh-button"
-            size="small"
-            @click="randomOrder"
-            ghost
-          >
-            随机点歌
-          </n-button>
-        </n-flex>
-
-        <!-- Song Table -->
-        <div class="song-table-wrapper">
-          <table class="song-list-table">
-            <thead>
-              <tr>
-                <th>歌名</th>
-                <th>歌手</th>
-                <th>语言</th>
-                <th>标签</th>
-                <th>备注</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="!props.data || props.data.length === 0">
-                <td
-                  colspan="5"
-                  class="no-results"
-                >
-                  歌单里还没有歌曲哦~
-                </td>
-              </tr>
-              <tr v-else-if="filteredSongs.length === 0">
-                <td
-                  colspan="5"
-                  class="no-results"
-                >
-                  当前筛选条件下暂无匹配歌曲
-                </td>
-              </tr>
-              <tr
-                v-for="song in filteredSongs"
-                :key="song.id || (song.name + '-' + song.author?.join('/'))"
-                :style="{
-                  textShadow: isDarkMode ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(255, 255, 255, 0.4)',
-                }"
-                class="song-row"
-              >
-                <td>
-                  <span class="song-name">
-                    <component :is="GetPlayButton(song)" />
-                    <span
-                      style="cursor: pointer;"
-                      @click="onSongClick(song)"
-                    >
-                      {{ song.name }}
-                    </span>
-                  </span>
-                </td>
-                <td>
-                  <!-- Updated Artist Cell (Clickable) -->
-                  <span v-if="song.author && song.author.length > 0">
-                    <span
-                      v-for="(artist, index) in song.author"
-                      :key="artist"
-                    >
-                      <span
-                        class="artist-link"
-                        :title="`筛选: ${artist}`"
-                        @click.stop="selectArtist(artist)"
-                      >
-                        {{ artist }}
-                      </span>
-                      <!-- Add separator only if not the last artist -->
-                      <span v-if="index < song.author.length - 1"> / </span>
-                    </span>
-                  </span>
-                  <span v-else>未知</span>
-                </td>
-                <td>{{ song.language?.join(', ') ?? '未知' }}</td>
-                <td>
-                  <n-flex
-                    :size="4"
-                    :wrap="true"
-                    style="gap: 4px;"
+          <!-- Song Table -->
+          <div class="song-table-wrapper">
+            <table class="song-list-table">
+              <thead>
+                <tr>
+                  <th>歌名</th>
+                  <th>歌手</th>
+                  <th>语言</th>
+                  <th>标签</th>
+                  <th>备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="!props.data || props.data.length === 0">
+                  <td
+                    colspan="5"
+                    class="no-results"
                   >
-                    <!-- Use NFlex for tag wrapping -->
-                    <n-tag
-                      v-for="tag in song.tags"
-                      :key="tag"
-                      size="small"
-                      checkable
-                      :checked="selectedTag === tag"
-                      @checked-change="selectTag(tag)"
+                    歌单里还没有歌曲哦~
+                  </td>
+                </tr>
+                <tr v-else-if="filteredSongs.length === 0">
+                  <td
+                    colspan="5"
+                    class="no-results"
+                  >
+                    当前筛选条件下暂无匹配歌曲
+                  </td>
+                </tr>
+                <tr
+                  v-for="song in filteredSongs"
+                  :key="song.id || (song.name + '-' + song.author?.join('/'))"
+                  :style="{
+                    textShadow: isDarkMode ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(255, 255, 255, 0.4)',
+                  }"
+                  class="song-row"
+                >
+                  <td>
+                    <span class="song-name">
+                      <component :is="GetPlayButton(song)" />
+                      <span
+                        style="cursor: pointer;"
+                        @click="onSongClick(song)"
+                      >
+                        {{ song.name }}
+                      </span>
+                    </span>
+                  </td>
+                  <td>
+                    <!-- Updated Artist Cell (Clickable) -->
+                    <span v-if="song.author && song.author.length > 0">
+                      <span
+                        v-for="(artist, index) in song.author"
+                        :key="artist"
+                      >
+                        <span
+                          class="artist-link"
+                          :title="`筛选: ${artist}`"
+                          @click.stop="selectArtistFromTable(artist)"
+                        >
+                          {{ artist }}
+                        </span>
+                        <!-- Add separator only if not the last artist -->
+                        <span v-if="index < song.author.length - 1"> / </span>
+                      </span>
+                    </span>
+                    <span v-else>未知</span>
+                  </td>
+                  <td>{{ song.language?.join(', ') ?? '未知' }}</td>
+                  <td>
+                    <n-flex
+                      :size="4"
+                      :wrap="true"
+                      style="gap: 4px;"
                     >
-                      {{ tag }}
-                    </n-tag>
-                    <span v-if="!song.tags || song.tags.length === 0">无标签</span>
-                  </n-flex>
-                </td>
-                <td>{{ song.description }}</td>
-              </tr>
-            </tbody>
-          </table>
+                      <!-- Use NFlex for tag wrapping -->
+                      <n-tag
+                        v-for="tag in song.tags"
+                        :key="tag"
+                        size="small"
+                        checkable
+                        :checked="selectedTag === tag"
+                        @checked-change="selectTag(tag)"
+                      >
+                        {{ tag }}
+                      </n-tag>
+                      <span v-if="!song.tags || song.tags.length === 0">无标签</span>
+                    </n-flex>
+                  </td>
+                  <td>{{ song.description }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -895,50 +898,82 @@ html.dark .filter-input::placeholder {
   white-space: nowrap;
 }
 
-/* --- Table Styles (mostly unchanged) --- */
+/* --- MODIFIED: Structure Styles --- */
 
-.song-list-template {
+/* --- NEW: Outer Background & Blur Wrapper --- */
+.song-list-background-wrapper {
+  position: relative; /* Anchor for ::before */
   height: calc(100vh - var(--vtsuru-header-height) - var(--vtsuru-content-padding) - var(--vtsuru-content-padding));
-  overflow-y: auto;
-  border-radius: 8px;
+  border-radius: 8px; /* Apply rounding here */
   background-size: cover;
   background-position: center center;
-  position: relative;
+  background-attachment: fixed; /* Keep background fixed */
+  overflow: hidden; /* Clip the ::before pseudo-element */
 }
 
-.song-list-template::before {
+/* Blur effect on the wrapper's ::before */
+.song-list-background-wrapper::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: inherit;
-  z-index: 1;
+  background-color: rgba(0, 0, 0, 0.1); /* Optional overlay */
+  border-radius: inherit; /* Inherit rounding */
+  z-index: 1; /* Below content */
   pointer-events: none;
 }
 
-html.dark .song-list-template::before {
-  background-color: rgba(255, 255, 255, 0.05);
+html.dark .song-list-background-wrapper::before {
+  background-color: rgba(255, 255, 255, 0.05); /* Dark mode overlay */
 }
 
+/* --- MODIFIED: Inner Scrolling Container --- */
+.song-list-template {
+  height: 100%; /* Fill the wrapper */
+  overflow-y: auto; /* Enable vertical scrolling for content */
+  position: relative; /* Needed for z-index */
+  z-index: 2; /* Place above the ::before blur layer */
+  background: transparent !important; /* Ensure no background color obscures the wrapper */
+  border-radius: inherit; /* Inherit rounding for scrollbar area */
+
+  /* Keep scrollbar styles */
+  &::-webkit-scrollbar { width: 8px; }
+  &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+}
+
+/* Dark mode scrollbar styles for the scrolling container */
+html.dark .song-list-template {
+  &::-webkit-scrollbar-track { background: var(--scrollbar-color); }
+  &::-webkit-scrollbar-thumb { background: var(--scrollbar-color-hover); }
+  &::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-color-active); }
+}
+
+
+/* --- MODIFIED: Main Content Container --- */
 .profile-card-container {
-  position: relative;
-  z-index: 2;
+  position: relative; /* Keep for potential absolute children if any */
+  /* z-index: 2; */ /* Removed: Handled by .song-list-template */
   padding: 20px;
   font-family: sans-serif;
   color: #333333;
+  /* height: 100%; */ /* Removed: Let content define height */
+  min-height: 100%; /* Ensure it tries to fill the scroll container */
+  box-sizing: border-box; /* Include padding in height calculation */
 }
 
 html.dark .profile-card-container {
   color: var(--text-color-1);
 }
 
+/* --- Profile Hover Area Styles (Unchanged) --- */
 .profile-hover-area {
   position: relative; display: flex; align-items: flex-start;
   width: fit-content; min-width: 300px; margin: 0 auto 20px auto;
   padding: 15px; border-radius: 15px;
-  transition: transform 0.4s ease-in-out; z-index: 100;
+  transition: transform 0.4s ease-in-out; z-index: 100; /* High z-index for hover effect */
   box-shadow: var(--box-shadow-1);
   background-color: rgba(255, 255, 255, 0.65);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -994,7 +1029,7 @@ html.dark .profile-extra-info {
 .social-links {
   position: absolute; top: 5px; left: calc(100px + 20px + 10px);
   width: 380px; padding: 15px 20px; border-radius: 10px;
-  box-shadow: var(--box-shadow-2); z-index: 20;
+  box-shadow: var(--box-shadow-2); z-index: 20; /* High z-index within hover area */
   background-color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.1);
   opacity: 0; visibility: hidden; transform: translateX(20px);
@@ -1052,10 +1087,11 @@ html.dark .social-link .arrow { color: var(--text-color-3); }
   left: calc(100px - 60px + 15px);
 }
 
+/* --- Song List Container Styles (Unchanged except background/border) --- */
 .song-list-container {
   padding: 15px 25px; border-radius: 15px; font-family: sans-serif;
   box-shadow: var(--box-shadow-1);
-  background-color: rgba(255, 255, 255, 0.65); /* Matched profile */
+  background-color: rgba(255, 255, 255, 0.50); /* Matched profile */
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -1064,21 +1100,13 @@ html.dark .song-list-container {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* --- Table Styles (Unchanged) --- */
 .song-table-wrapper {
-  overflow-y: auto;
-  max-height: calc(100vh - 520px); /* Adjusted height calculation */
-  min-height: 200px;
+  overflow-y: auto; /* This overflow handles table content, not main scroll */
+  /* min-height: 200px; */ /* Might not be needed if max-height is set */
   border-radius: 8px;
-  &::-webkit-scrollbar { width: 8px; }
-  &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
-  &::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-  &::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
-}
-
-html.dark .song-table-wrapper {
-  &::-webkit-scrollbar-track { background: var(--scrollbar-color); }
-  &::-webkit-scrollbar-thumb { background: var(--scrollbar-color-hover); }
-  &::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-color-active); }
+  /* Scrollbar styling specific to this inner table scroll if needed */
+  /* ... */
 }
 
 .song-list-table {
@@ -1086,7 +1114,7 @@ html.dark .song-table-wrapper {
 }
 
 .song-list-table thead th {
-  position: sticky; top: 0; z-index: 1;
+  position: sticky; top: 0; z-index: 1; /* Sticky within .song-table-wrapper */
   padding: 10px 12px; text-align: left; font-weight: 600;
   background-color: rgba(245, 245, 245, 0.8); /* Slightly less transparent */
   backdrop-filter: blur(2px); /* Blur header slightly */
@@ -1095,7 +1123,7 @@ html.dark .song-table-wrapper {
 }
 
 html.dark .song-list-table thead th {
-  background-color: rgba(55, 55, 55, 0.8); /* Dark mode header bg */
+  background-color: rgba(55, 55, 55, 0.85); /* Dark mode header bg */
   border-bottom-color: var(--border-color);
   color: var(--text-color-2);
 }
@@ -1135,7 +1163,7 @@ html.dark .song-name { color: var(--text-color-1); }
 
 .artist-link {
   padding: 1px 0; cursor: pointer; text-decoration: none;
-  color: var(--primary-color); /* Use theme primary for links */
+  color: var(--text-color-2); /* Use theme primary for links */
   transition: color 0.2s ease, text-decoration 0.2s ease;
 }
 .artist-link:hover { text-decoration: underline; }
