@@ -9,8 +9,8 @@ import {
 export interface SongListConfigType {
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
-  liveRequestSettings: Setting_LiveRequest
-  liveRequestActive: SongRequestInfo[]
+  liveRequestSettings?: Setting_LiveRequest
+  liveRequestActive?: SongRequestInfo[]
   data: SongsInfo[] | undefined
   config?: any
 }

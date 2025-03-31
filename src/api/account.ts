@@ -183,7 +183,7 @@ export function downloadConfigDirect(name: string) {
   })
 }
 export type ConfigStatus = 'success' | 'error' | 'notfound'
-export async function DownloadConfig<T>(name: string): Promise<
+export async function DownloadConfig<T>(name: string, id?: number): Promise<
   | {
       msg: undefined
       status: ConfigStatus
@@ -196,8 +196,9 @@ export async function DownloadConfig<T>(name: string): Promise<
     }
 > {
   try {
-    const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
-      name: name
+    const resp = await QueryGetAPI<string>(VTSURU_API_URL + (id ? 'get-user-config' : 'get-config'), {
+      name: name,
+      id: id
     })
     if (resp.code == 200) {
       console.log('已获取配置文件: ' + name)

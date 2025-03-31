@@ -43,7 +43,7 @@ const buttons = (song: SongsInfo) => [
             },
           ),
         default: () =>
-          !props.liveRequestSettings.allowFromWeb || song.options
+          !props.liveRequestSettings?.allowFromWeb || song.options
             ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板'
             : !accountInfo
               ? '点歌 | 你需要登录后才能点歌'

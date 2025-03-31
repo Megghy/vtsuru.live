@@ -2,7 +2,7 @@
 import { useAccount } from '@/api/account';
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import { useStorage } from '@vueuse/core';
-import { NSpin, useLoadingBar, useMessage } from 'naive-ui'
+import { NSpin, useLoadingBar, useMessage, useModal } from 'naive-ui'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router';
 
@@ -14,6 +14,7 @@ onMounted(() => {
   window.$loadingBar = useLoadingBar()
   window.$message = useMessage()
   window.$route = useRoute()
+  window.$modal = useModal()
   const providerStore = useLoadingBarStore()
   providerStore.setLoadingBar(window.$loadingBar)
 })

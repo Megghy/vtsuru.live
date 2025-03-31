@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { SONG_API_URL } from '@/data/constants'
-import FiveSingIcon from '@/svgs/fivesing.svg'
-import NeteaseIcon from '@/svgs/netease.svg'
+import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models';
+import { QueryGetAPI, QueryPostAPI } from '@/api/query';
+import { SONG_API_URL } from '@/data/constants';
 import {
   Delete24Filled,
   Info24Filled,
   NotepadEdit20Filled,
-  Play24Filled,
-  SquareArrowForward24Filled,
-} from '@vicons/fluent'
-import { refDebounced, useLocalStorage } from '@vueuse/core'
-import { List } from 'linqts'
+  Play24Filled
+} from '@vicons/fluent';
+import { refDebounced, useLocalStorage } from '@vueuse/core';
+import { List } from 'linqts';
 import {
   DataTableBaseColumn,
   DataTableColumns,
@@ -42,9 +39,10 @@ import {
   NText,
   NTooltip,
   useMessage,
-} from 'naive-ui'
-import { VNodeChild, computed, h, onMounted, ref, watch } from 'vue'
-import SongPlayer from './SongPlayer.vue'
+} from 'naive-ui';
+import { VNodeChild, computed, h, onMounted, ref, watch } from 'vue';
+  import SongPlayer from './SongPlayer.vue';
+import { GetPlayButton } from '@/Utils';
 
 const props = defineProps<{
   songs: SongsInfo[]
@@ -393,72 +391,6 @@ function createColumns(): DataTableColumns<SongsInfo> {
   ]
 }
 
-function GetPlayButton(song: SongsInfo) {
-  switch (song.from) {
-    case SongFrom.FiveSing: {
-      return h(NTooltip, null, {
-        trigger: () =>
-          h(
-            h(
-              NButton,
-              {
-                size: 'small',
-                color: '#00BBB3',
-                ghost: true,
-                onClick: () => {
-                  window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
-                },
-              },
-              {
-                icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
-              },
-            ),
-          ),
-        default: () => '在5sing打开',
-      })
-    }
-    case SongFrom.Netease:
-      return h(NTooltip, null, {
-        trigger: () =>
-          h(
-            NButton,
-            {
-              size: 'small',
-              color: '#C20C0C',
-              ghost: true,
-              onClick: () => {
-                window.open(`https://music.163.com/#/song?id=${song.id}`)
-              },
-            },
-            {
-              icon: () => h(NeteaseIcon, { class: 'svg-icon netease' }),
-            },
-          ),
-        default: () => '在网易云打开',
-      })
-    case SongFrom.Custom:
-      return song.url
-        ? h(NTooltip, null, {
-          trigger: () =>
-            h(
-              NButton,
-              {
-                size: 'small',
-                color: '#6b95bd',
-                ghost: true,
-                onClick: () => {
-                  window.open(song.url)
-                },
-              },
-              {
-                icon: () => h(NIcon, { component: SquareArrowForward24Filled }),
-              },
-            ),
-          default: () => '打开链接',
-        })
-        : null
-  }
-}
 function renderCell(value: string | number) {
   if (!value) {
     return h(NText, { depth: 3 }, { default: () => '未填写' })

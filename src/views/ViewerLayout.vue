@@ -189,15 +189,35 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NLayoutContent v-if="!id" style="height: 100vh">
-    <NResult status="error" title="输入的uId无效" description="再检查检查" />
+  <NLayoutContent
+    v-if="!id"
+    style="height: 100vh"
+  >
+    <NResult
+      status="error"
+      title="输入的uId无效"
+      description="再检查检查"
+    />
   </NLayoutContent>
-  <NLayoutContent v-else-if="notfount" style="height: 100vh">
-    <NResult status="error" title="未找到指定 uId 的用户" description="或者是没有进行认证" />
+  <NLayoutContent
+    v-else-if="notfount"
+    style="height: 100vh"
+  >
+    <NResult
+      status="error"
+      title="未找到指定 uId 的用户"
+      description="或者是没有进行认证"
+    />
   </NLayoutContent>
-  <NLayout v-else style="height: 100vh">
+  <NLayout
+    v-else
+    style="height: 100vh"
+  >
     <NLayoutHeader style="height: 50px; padding: 5px 15px 5px 15px">
-      <NPageHeader :subtitle="($route.meta.title as string) ?? ''" style="margin-top: 6px">
+      <NPageHeader
+        :subtitle="($route.meta.title as string) ?? ''"
+        style="margin-top: 6px"
+      >
         <template #extra>
           <NSpace align="center">
             <NSwitch
@@ -233,8 +253,8 @@ onMounted(async () => {
                 <NButton
                   style="right: 0px; position: relative"
                   type="primary"
-                  @click="$router.push({ name: 'manage-index' })"
                   size="small"
+                  @click="$router.push({ name: 'manage-index' })"
                 >
                   <template #icon>
                     <NIcon :component="WindowWrench20Filled" />
@@ -255,13 +275,25 @@ onMounted(async () => {
           </NSpace>
         </template>
         <template #title>
-          <NButton text tag="a" @click="$router.push({ name: 'index' })">
-            <NText strong style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"> VTSURU </NText>
+          <NButton
+            text
+            tag="a"
+            @click="$router.push({ name: 'index' })"
+          >
+            <NText
+              strong
+              style="font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)"
+            >
+              VTSURU
+            </NText>
           </NButton>
         </template>
       </NPageHeader>
     </NLayoutHeader>
-    <NLayout has-sider style="height: calc(100vh - 50px)">
+    <NLayout
+      has-sider
+      style="height: calc(100vh - --vtsuru-header-height)"
+    >
       <NLayoutSider
         ref="sider"
         show-trigger
@@ -270,11 +302,18 @@ onMounted(async () => {
         :collapsed-width="64"
         :width="180"
         :native-scrollbar="false"
-        style="height: 100%"
+        style="height: calc(100vh - --vtsuru-header-height)"
       >
         <Transition>
-          <div v-if="userInfo?.streamerInfo" style="margin-top: 8px">
-            <NSpace vertical justify="center" align="center">
+          <div
+            v-if="userInfo?.streamerInfo"
+            style="margin-top: 8px"
+          >
+            <NSpace
+              vertical
+              justify="center"
+              align="center"
+            >
               <NAvatar
                 :src="userInfo.streamerInfo.faceUrl"
                 :img-props="{ referrerpolicy: 'no-referrer' }"
@@ -284,7 +323,10 @@ onMounted(async () => {
                   boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
                 }"
               />
-              <NEllipsis v-if="width > 100" style="max-width: 100%">
+              <NEllipsis
+                v-if="width > 100"
+                style="max-width: 100%"
+              >
                 <NText strong>
                   {{ userInfo?.streamerInfo.name }}
                 </NText>
@@ -298,13 +340,34 @@ onMounted(async () => {
           :collapsed-icon-size="22"
           :options="menuOptions"
         />
-        <NSpace v-if="width > 150" justify="center" align="center" vertical>
+        <NSpace
+          v-if="width > 150"
+          justify="center"
+          align="center"
+          vertical
+        >
           <NText depth="3">
             有更多功能建议请
-            <NButton text type="info" tag="a" href="/feedback" target="_blank"> 反馈 </NButton>
+            <NButton
+              text
+              type="info"
+              tag="a"
+              href="/feedback"
+              target="_blank"
+            >
+              反馈
+            </NButton>
           </NText>
           <NText depth="3">
-            <NButton text type="info" tag="a" href="/about" target="_blank"> 关于本站 </NButton>
+            <NButton
+              text
+              type="info"
+              tag="a"
+              href="/about"
+              target="_blank"
+            >
+              关于本站
+            </NButton>
           </NText>
         </NSpace>
       </NLayoutSider>
@@ -313,9 +376,16 @@ onMounted(async () => {
           class="viewer-page-content"
           :style="`box-shadow:${isDarkMode ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
         >
-          <RouterView v-if="userInfo" v-slot="{ Component }">
+          <RouterView
+            v-if="userInfo"
+            v-slot="{ Component }"
+          >
             <KeepAlive>
-              <component :is="Component" :bili-info="biliUserInfo" :user-info="userInfo" />
+              <component
+                :is="Component"
+                :bili-info="biliUserInfo"
+                :user-info="userInfo"
+              />
             </KeepAlive>
           </RouterView>
           <template v-else>
@@ -326,7 +396,10 @@ onMounted(async () => {
       </NLayout>
     </NLayout>
   </NLayout>
-  <NModal v-model:show="registerAndLoginModalVisiable" style="width: 500px; max-width: 90vw">
+  <NModal
+    v-model:show="registerAndLoginModalVisiable"
+    style="width: 500px; max-width: 90vw"
+  >
     <div>
       <RegisterAndLogin />
     </div>
@@ -337,7 +410,8 @@ onMounted(async () => {
 .viewer-page-content{
     height: 100%;
     border-radius: 18px;
-    padding: 15px;
+    padding: var(--vtsuru-content-padding);
+    height: calc(100vh - var(--vtsuru-header-height));
     margin-right: 10px;
     box-sizing: border-box;
     overflow-y: auto;

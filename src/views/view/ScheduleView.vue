@@ -1,7 +1,13 @@
 <template>
-  <NSpin v-if="isLoading" show />
+  <NSpin
+    v-if="isLoading"
+    show
+  />
   <div v-else>
-    <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+    <NDivider
+      style="margin: 16px 0 16px 0"
+      title-placement="left"
+    >
       订阅链接
       <NTooltip>
         <template #trigger>
@@ -14,15 +20,26 @@
     </NDivider>
     <NFlex align="center">
       <NInputGroup style="max-width: 400px;">
-        <NInput :value="`${SCHEDULE_API_URL}${userInfo?.id}.ics`" readonly />
-        <NButton secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo?.id}.ics`)">
+        <NInput
+          :value="`${SCHEDULE_API_URL}${userInfo?.id}.ics`"
+          readonly
+        />
+        <NButton
+          secondary
+          @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo?.id}.ics`)"
+        >
           复制
         </NButton>
       </NInputGroup>
     </NFlex>
     <NDivider />
-    <component :is="ScheduleTemplateMap[componentType ?? ''].compoent" :bili-info="biliInfo"
-      :user-info="userInfo" :data="currentData" v-bind="$attrs" />
+    <component
+      :is="ScheduleTemplateMap[componentType ?? ''].component"
+      :bili-info="biliInfo"
+      :user-info="userInfo"
+      :data="currentData"
+      v-bind="$attrs"
+    />
   </div>
 </template>
 
