@@ -30,7 +30,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 
 const { biliInfo, userInfo } = defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
 }>()
@@ -172,40 +171,50 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div style="max-width: 700px; margin: 0 auto" title="提问">
+  <div
+    style="max-width: 700px; margin: 0 auto"
+    title="提问"
+  >
     <NCard embedded>
       <NSpace vertical>
-        <NCard v-if="tags.length > 0" title="投稿话题 (可选)" size="small">
+        <NCard
+          v-if="tags.length > 0"
+          title="投稿话题 (可选)"
+          size="small"
+        >
           <NSpace>
             <NTag
               v-for="tag in tags"
               :key="tag"
-              @click="onSelectTag(tag)"
               style="cursor: pointer"
               :bordered="false"
               :type="selectedTag == tag ? 'primary' : 'default'"
+              @click="onSelectTag(tag)"
             >
               {{ tag }}
             </NTag>
           </NSpace>
         </NCard>
-        <NSpace align="center" justify="center">
+        <NSpace
+          align="center"
+          justify="center"
+        >
           <NInput
+            v-model:value="questionMessage"
             :disabled="isSelf"
             show-count
             maxlength="5000"
             type="textarea"
             :count-graphemes="countGraphemes"
-            v-model:value="questionMessage"
             style="width: 300px"
           />
           <NUpload
+            v-model:file-list="fileList"
             :max="1"
             accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
             list-type="image-card"
             :disabled="!accountInfo.id || isSelf"
             :default-upload="false"
-            v-model:file-list="fileList"
             @update:file-list="OnFileListChange"
           >
             + 上传图片
@@ -213,14 +222,31 @@ onUnmounted(() => {
         </NSpace>
         <NDivider style="margin: 10px 0 10px 0" />
         <NSpace align="center">
-          <NAlert v-if="!accountInfo.id && !isSelf" type="warning"> 只有注册用户才能够上传图片 </NAlert>
+          <NAlert
+            v-if="!accountInfo.id && !isSelf"
+            type="warning"
+          >
+            只有注册用户才能够上传图片
+          </NAlert>
         </NSpace>
-        <NSpace v-if="accountInfo.id" vertical>
-          <NCheckbox :disabled="isSelf" v-model:checked="isAnonymous" label="匿名提问" />
+        <NSpace
+          v-if="accountInfo.id"
+          vertical
+        >
+          <NCheckbox
+            v-model:checked="isAnonymous"
+            :disabled="isSelf"
+            label="匿名提问"
+          />
           <NDivider style="margin: 10px 0 10px 0" />
         </NSpace>
         <NSpace justify="center">
-          <NButton :disabled="isSelf" type="primary" :loading="isSending || !token" @click="SendQuestion">
+          <NButton
+            :disabled="isSelf"
+            type="primary"
+            :loading="isSending || !token"
+            @click="SendQuestion"
+          >
             发送
           </NButton>
           <NButton
@@ -233,24 +259,46 @@ onUnmounted(() => {
         </NSpace>
         <VueTurnstile
           ref="turnstile"
-          :site-key="TURNSTILE_KEY"
           v-model="token"
+          :site-key="TURNSTILE_KEY"
           theme="auto"
           style="text-align: center"
         />
-        <NAlert v-if="isSelf" type="warning"> 不能给自己提问 </NAlert>
+        <NAlert
+          v-if="isSelf"
+          type="warning"
+        >
+          不能给自己提问
+        </NAlert>
       </NSpace>
     </NCard>
     <NDivider> 公开回复 </NDivider>
     <NList v-if="publicQuestions.length > 0">
-      <NListItem v-for="item in publicQuestions" :key="item.id">
-        <NCard :embedded="!item.isReaded" hoverable size="small">
+      <NListItem
+        v-for="item in publicQuestions"
+        :key="item.id"
+      >
+        <NCard
+          :embedded="!item.isReaded"
+          hoverable
+          size="small"
+        >
           <template #header>
-            <NSpace :size="0" align="center">
-              <NText depth="3" style="font-size: small">
+            <NSpace
+              :size="0"
+              align="center"
+            >
+              <NText
+                depth="3"
+                style="font-size: small"
+              >
                 <NTooltip>
                   <template #trigger>
-                    <NTime :time="item.sendAt" :to="Date.now()" type="relative" />
+                    <NTime
+                      :time="item.sendAt"
+                      :to="Date.now()"
+                      type="relative"
+                    />
                   </template>
                   <NTime />
                 </NTooltip>
@@ -259,12 +307,29 @@ onUnmounted(() => {
           </template>
           <NCard style="text-align: center">
             {{ item.question.message }}
-            <br />
-            <NImage v-if="item.question.image" :src="item.question.image" height="100" lazy />
+            <br>
+            <NImage
+              v-if="item.question.image"
+              :src="item.question.image"
+              height="100"
+              lazy
+            />
           </NCard>
-          <template v-if="item.answer" #footer>
-            <NSpace align="center" :size="6" :wrap="false">
-              <NAvatar :src="AVATAR_URL + userInfo?.biliId + '?size=64'" circle :size="45" :img-props="{ referrerpolicy: 'no-referrer' }" />
+          <template
+            v-if="item.answer"
+            #footer
+          >
+            <NSpace
+              align="center"
+              :size="6"
+              :wrap="false"
+            >
+              <NAvatar
+                :src="AVATAR_URL + userInfo?.biliId + '?size=64'"
+                circle
+                :size="45"
+                :img-props="{ referrerpolicy: 'no-referrer' }"
+              />
               <NDivider vertical />
               <NText style="font-size: 16px">
                 {{ item.answer?.message }}
