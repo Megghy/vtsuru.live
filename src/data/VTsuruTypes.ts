@@ -103,6 +103,10 @@ export type TemplateConfigSliderNumberItem<T = unknown> = TemplateConfigItemWith
 export type TemplateConfigNumberArrayItem<T = unknown> = TemplateConfigItemWithType<T, number[]> & {
   type: 'numberArray';
 };
+export type TemplateConfigBooleanItem<T = unknown> = TemplateConfigItemWithType<T, boolean> & {
+  type: 'boolean';
+  description?: string; // 可选的描述
+};
 
 export type TemplateConfigImageItem<T = unknown> = TemplateConfigItemWithType<T, string[]> & {
   type: 'image';
@@ -159,6 +163,7 @@ export type ConfigItemDefinition =
   | TemplateConfigImageItem<any>
   | TemplateConfigRenderItem<any> // 包含优化后的 render/onUploaded 方法
   | TemplateConfigSliderNumberItem<any>
+  | TemplateConfigBooleanItem<any>
   | TemplateConfigColorItem<any>;
 
 /**

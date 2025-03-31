@@ -3,7 +3,8 @@
   import { QueryPostAPI } from '@/api/query';
   import { ConfigItemDefinition, TemplateConfigImageItem } from '@/data/VTsuruTypes';
   import { FILE_BASE_URL, VTSURU_API_URL } from '@/data/constants';
-  import { NButton, NColorPicker, NEmpty, NForm, NFormItem, NGrid, NInput, NInputNumber, NSlider, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
+import { Info24Filled } from '@vicons/fluent';
+  import { NButton, NCheckbox, NColorPicker, NEmpty, NForm, NFormItem, NGrid, NInput, NInputNumber, NSlider, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
   import { onMounted, ref } from 'vue';
 
   const message = useMessage();
@@ -117,8 +118,8 @@
           <NInput
             :value="configData[item.key]"
             :placeholder="item.placeholder"
-            @update:value="configData[item.key] = $event"
             :type="item.inputType"
+            @update:value="configData[item.key] = $event"
           />
         </template>
         <NColorPicker
@@ -141,6 +142,22 @@
           :step="item.step"
           @update:value="configData[item.key] = $event"
         />
+        <template v-else-if="item.type == 'boolean'">
+          <NCheckbox
+            :checked="configData[item.key]"
+            @update:checked="configData[item.key] = $event">
+            启用
+          </NCheckbox>
+          <NTooltip
+            v-if="item.description"
+            placement="top"
+          >
+            <template #trigger>
+              <NIcon :component="Info24Filled" />
+            </template>
+            {{ item.description }}
+          </NTooltip>
+        </template>
         <NUpload
           v-else-if="item.type == 'image'"
           v-model:file-list="fileList[item.key]"
