@@ -612,6 +612,13 @@ onMounted(async () => {
       添加歌曲
     </NButton>
     <NButton
+    secondary
+    type="primary"
+      @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
+    >
+      修改展示模板
+    </NButton>
+    <NButton
       type="primary"
       secondary
       @click="exportData"
@@ -639,11 +646,6 @@ onMounted(async () => {
       "
     >
       刷新
-    </NButton>
-    <NButton
-      @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
-    >
-      修改模板
     </NButton>
   </NSpace>
   <NDivider

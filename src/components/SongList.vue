@@ -645,15 +645,18 @@ onMounted(() => {
       <NDivider style="margin: 15px 0 15px 0" />
     </div>
   </Transition>
-  <NButton
-    :disabled="selectedColumn.length <= 1 && isSelf"
-    type="info"
-    size="small"
-    @click="showBatchModal = true"
-  >
-    批量编辑
-  </NButton>
-  <NDivider style="margin: 5px 0 5px 0" />
+  <template v-if="isSelf">
+    <NButton
+
+      :disabled="selectedColumn.length <= 1 && isSelf"
+      type="info"
+      size="small"
+      @click="showBatchModal = true"
+    >
+      批量编辑
+    </NButton>
+    <NDivider style="margin: 5px 0 5px 0" />
+  </template>
   <NDataTable
     v-model:checked-row-keys="selectedColumn"
     size="small"
