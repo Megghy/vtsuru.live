@@ -96,8 +96,8 @@ export const Config: TemplateConfig<ConfigType> = {
       vertical
     >
       <NAvatar
-        v-if="accountInfo.streamerInfo"
-        :src="accountInfo.streamerInfo.faceUrl"
+        v-if="userInfo.streamerInfo"
+        :src="userInfo.streamerInfo.faceUrl"
         :size="width > 750 ? 175 : 100"
         round
         bordered
