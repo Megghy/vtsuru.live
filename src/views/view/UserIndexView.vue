@@ -1,9 +1,11 @@
 <template>
-  <component
-    :is="componentType"
-    :user-info="userInfo"
-    :bili-info="biliInfo"
-  />
+  <div>
+    <component
+      :is="componentType"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>

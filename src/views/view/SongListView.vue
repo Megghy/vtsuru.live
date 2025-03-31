@@ -1,42 +1,44 @@
 <template>
-  <NSpin
-    v-if="isLoading"
-    show
-  />
-  <component
-    :is="selectedTemplate?.component"
-    v-else
-    ref="dynamicConfigRef"
-    :config="selectedTemplate?.settingName ? currentConfig : undefined"
-    :user-info="userInfo"
-    :bili-info="biliInfo"
-    :data="currentData"
-    :live-request-settings="settings"
-    :live-request-active="songsActive"
-    v-bind="$attrs"
-    @request-song="requestSong"
-  />
-  <NButton
-    v-if="selectedTemplate?.settingName && userInfo?.id == accountInfo.id"
-    type="info"
-    size="small"
-    style="position: absolute; right: 32px; top: 20px; z-index: 1000; border: solid 3px #dfdfdf;"
-    @click="showSettingModal = true"
-  >
-    自定义
-  </NButton>
-  <NModal
-    v-model:show="showSettingModal"
-    style="max-width: 90vw; width: 800px;"
-    preset="card"
-    title="设置"
-  >
-    <DynamicForm
-      :name="selectedTemplate?.settingName"
-      :config-data="currentConfig"
-      :config="selectedTemplateConfig"
+  <div>
+    <NSpin
+      v-if="isLoading"
+      show
     />
-  </NModal>
+    <component
+      :is="selectedTemplate?.component"
+      v-else
+      ref="dynamicConfigRef"
+      :config="selectedTemplate?.settingName ? currentConfig : undefined"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+      :data="currentData"
+      :live-request-settings="settings"
+      :live-request-active="songsActive"
+      v-bind="$attrs"
+      @request-song="requestSong"
+    />
+    <NButton
+      v-if="selectedTemplate?.settingName && userInfo?.id == accountInfo.id"
+      type="info"
+      size="small"
+      style="position: absolute; right: 32px; top: 20px; z-index: 1000; border: solid 3px #dfdfdf;"
+      @click="showSettingModal = true"
+    >
+      自定义
+    </NButton>
+    <NModal
+      v-model:show="showSettingModal"
+      style="max-width: 90vw; width: 800px;"
+      preset="card"
+      title="设置"
+    >
+      <DynamicForm
+        :name="selectedTemplate?.settingName"
+        :config-data="currentConfig"
+        :config="selectedTemplateConfig"
+      />
+    </NModal>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -135,7 +137,8 @@ import { computed, onMounted, ref, watch } from 'vue';
     await DownloadConfig(selectedTemplate.value!.settingName, props.userInfo?.id)
       .then((data) => {
         if (data.msg) {
-          message.error('加载失败: ' + data.msg);
+          //message.error('加载失败: ' + data.msg);
+          console.log('当前模板没有配置, 使用默认配置');
         } else {
           currentConfig.value = data.data;
         }

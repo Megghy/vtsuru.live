@@ -50,12 +50,9 @@ const layout = computed(() => {
 watchEffect(() => {
   if (isDarkMode.value) {
     document.documentElement.classList.add('dark');
-    console.log('Added dark class to HTML'); // For debugging
   } else {
     document.documentElement.classList.remove('dark');
-    console.log('Removed dark class from HTML'); // For debugging
   }
-  // If you dynamically apply Naive UI theme to body or provider, do it here too
 });
 
 const themeOverrides = {

@@ -472,10 +472,10 @@ export const Config = defineTemplateConfig([
           <!-- Social Links (Visible on Hover) -->
           <div class="social-links">
             <p class="social-links-title">
-              关于
+              关于我
             </p>
             <p class="social-links-subtitle">
-              {{ props.config?.longDescription }}
+              {{ props.config?.longDescription ?? '暂时没有填写介绍' }}
             </p>
             <div class="social-icons-bar">
               <!-- Add actual icons here -->
@@ -918,7 +918,7 @@ html.dark .filter-input::placeholder {
   top: 0; left: 0; right: 0; bottom: 0;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-  background-color: rgba(0, 0, 0, 0.1); /* Optional overlay */
+  background-color: rgba(80, 80, 80, 0.1); /* Optional overlay */
   border-radius: inherit; /* Inherit rounding */
   z-index: 1; /* Below content */
   pointer-events: none;
