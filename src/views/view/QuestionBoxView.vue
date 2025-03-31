@@ -34,6 +34,9 @@ const { biliInfo, userInfo } = defineProps<{
   userInfo: UserInfo | undefined
 }>()
 
+const nextSendQuestionTime = ref(Date.now())
+const minSendQuestionTime = 30 * 1000 // 30 seconds
+
 const splitter = new GraphemeSplitter()
 
 const message = useMessage()
@@ -63,6 +66,10 @@ async function SendQuestion() {
     message.error('内容最少需要3个字')
     return
   }
+  if (nextSendQuestionTime.value > Date.now()) {
+    message.error('冷却中, 剩余 ' + Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000) + '秒')
+    return
+  }
   isSending.value = true
   await QueryPostAPI<QAInfo>(
     QUESTION_API_URL + 'send',
@@ -80,6 +87,7 @@ async function SendQuestion() {
         message.success('成功发送棉花糖')
         questionMessage.value = ''
         fileList.value = []
+        nextSendQuestionTime.value = Date.now() + minSendQuestionTime
       } else {
         message.error(data.message)
       }
