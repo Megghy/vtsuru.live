@@ -252,8 +252,7 @@ async function addFingsingSongs(song: SongsInfo) {
       song.url = url
     } catch (err) {
       isModalLoading.value = false
-      message.error('添加失败')
-      return
+      message.error('未能获取到歌曲链接, 将留空')
     }
   }
   await addSongs([song], SongFrom.FiveSing)
