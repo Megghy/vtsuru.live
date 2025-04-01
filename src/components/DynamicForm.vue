@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import { getImageUploadModel } from '@/Utils';
-  import { QueryPostAPI } from '@/api/query';
-  import { ConfigItemDefinition, TemplateConfigImageItem } from '@/data/VTsuruTypes';
-  import { FILE_BASE_URL, VTSURU_API_URL } from '@/data/constants';
+import { QueryPostAPI } from '@/api/query';
+import { ConfigItemDefinition, TemplateConfigImageItem } from '@/data/VTsuruTypes';
+import { FILE_BASE_URL, VTSURU_API_URL } from '@/data/constants';
 import { Info24Filled } from '@vicons/fluent';
-  import { NButton, NCheckbox, NColorPicker, NEmpty, NForm, NFormItem, NGrid, NInput, NInputNumber, NSlider, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
-  import { onMounted, ref } from 'vue';
+import { NButton, NCheckbox, NColorPicker, NEmpty, NForm, NGrid, NInput, NInputNumber, NSlider, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
+import { onMounted, ref } from 'vue';
 
   const message = useMessage();
 
@@ -73,7 +73,8 @@ import { Info24Filled } from '@vicons/fluent';
   function getItems() { }
   onMounted(() => {
     props.config?.forEach(item => {
-      if (item.default && !props.configData[item.key]) {
+      console.log(props.configData)
+      if (item.default && !(item.key in props.configData)) {
         props.configData[item.key] = item.default;
       }
       if (item.type == 'image') {
