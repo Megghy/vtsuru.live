@@ -13,7 +13,7 @@ export const isLoggedIn = computed<boolean>(() => {
 });
 
 const { message } = createDiscreteApi(['message']);
-export const cookie = useLocalStorage('Cookie', {cookie: '', refreshDate: 0}, { serializer: StorageSerializers.object });
+export const cookie = useLocalStorage<{ cookie: string; refreshDate: number }>('Cookie', {cookie: '', refreshDate: 0}, { serializer: StorageSerializers.object });
 
 export async function GetSelfAccount(token?: string) {
   if (cookie.value.cookie || token) {

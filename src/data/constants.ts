@@ -10,6 +10,8 @@ const failoverAPI = `https://failover-api.vtsuru.suki.club/`;
 
 export const isBackendUsable = ref(true);
 export const isDev = import.meta.env.MODE === 'development';
+// @ts-ignore
+export const isTauri = window.__TAURI__ !== undefined || window.__TAURI_INTERNAL__ !== undefined;
 
 export const AVATAR_URL = 'https://workers.vrp.moe/api/bilibili/avatar/';
 export const FILE_BASE_URL = 'https://files.vtsuru.live';

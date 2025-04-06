@@ -218,7 +218,7 @@ onUnmounted(() => {
     <template #header-extra>
       <slot name="header-extra" />
     </template>
-    <template v-if="cookie">
+    <template v-if="cookie.cookie">
       <NAlert type="warning">
         你已经登录
       </NAlert>

@@ -1,5 +1,5 @@
 import { QueryGetAPI } from '@/api/query'
-import { apiFail, BASE_API_URL } from '@/data/constants'
+import { apiFail, BASE_API_URL, isTauri } from '@/data/constants'
 import HyperDX from '@hyperdx/browser'
 import EasySpeech from 'easy-speech'
 import { createDiscreteApi, NButton, NFlex, NText } from 'naive-ui'
@@ -55,33 +55,38 @@ QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
                 const path = url.pathname
 
                 if (!path.startsWith('/obs')) {
-                  const n = notification.info({
-                    title: '发现新的版本更新',
-                    content: '是否现在刷新?',
-                    meta: () => h(NText, { depth: 3 }, () => currentVersion),
-                    action: () =>
-                      h(NFlex, null, () => [
-                        h(
-                          NButton,
-                          {
-                            text: true,
-                            type: 'primary',
-                            onClick: () => location.reload(),
-                            size: 'small',
-                          },
-                          { default: () => '刷新' },
-                        ),
-                        h(
-                          NButton,
-                          {
-                            text: true,
-                            onClick: () => n.destroy(),
-                            size: 'small',
-                          },
-                          { default: () => '稍后' },
-                        ),
-                      ]),
-                  })
+                  if (isTauri) {
+                    location.reload();
+                  }
+                  else {
+                    const n = notification.info({
+                      title: '发现新的版本更新',
+                      content: '是否现在刷新?',
+                      meta: () => h(NText, { depth: 3 }, () => currentVersion),
+                      action: () =>
+                        h(NFlex, null, () => [
+                          h(
+                            NButton,
+                            {
+                              text: true,
+                              type: 'primary',
+                              onClick: () => location.reload(),
+                              size: 'small',
+                            },
+                            { default: () => '刷新' },
+                          ),
+                          h(
+                            NButton,
+                            {
+                              text: true,
+                              onClick: () => n.destroy(),
+                              size: 'small',
+                            },
+                            { default: () => '稍后' },
+                          ),
+                        ]),
+                    })
+                  }
                 }
               }
             },
