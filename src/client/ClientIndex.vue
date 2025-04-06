@@ -1,12 +1,11 @@
 <script setup lang="ts">
-  import { useAccount } from '@/api/account';
-import { useWebFetcher } from '@/store/useWebFetcher';
-import { openUrl } from '@tauri-apps/plugin-opener';
+  import { cookie, useAccount } from '@/api/account';
+  import { useWebFetcher } from '@/store/useWebFetcher';
+  import { openUrl } from '@tauri-apps/plugin-opener';
   import { useElementSize } from '@vueuse/core';
-import { roomInfo, streamingInfo } from './data/info';
+  import { roomInfo, streamingInfo } from './data/info';
 
   const accountInfo = useAccount();
-  const cookie = useLocalStorage('JWT_Token', '')
 
   const webfetcher = useWebFetcher();
 
@@ -91,9 +90,7 @@ import { roomInfo, streamingInfo } from './data/info';
       <template #header>
         <NSpace align="center">
           直播状态
-          <NTag
-            :type="!accountInfo.streamerInfo?.isStreaming ? 'error' : 'success'"
-          >
+          <NTag :type="!accountInfo.streamerInfo?.isStreaming ? 'error' : 'success'">
             {{ !accountInfo.streamerInfo?.isStreaming ? '未直播' : '直播中' }}
           </NTag>
         </NSpace>
@@ -108,15 +105,13 @@ import { roomInfo, streamingInfo } from './data/info';
         v-if="roomInfo?.user_cover"
         style="position: relative"
       >
-        <div
-          style="position: relative; width: 100%; max-width: 500px;"
-        >
+        <div style="position: relative; width: 100%; max-width: 500px;">
           <NImage
             ref="coverRef"
             :src="roomInfo?.user_cover"
             style="width: 100%; opacity: 0.5; border-radius: 8px;"
             referrerpolicy="no-referrer"
-            :img-props="{ referrerpolicy: 'no-referrer', style: { width: '100%'} }"
+            :img-props="{ referrerpolicy: 'no-referrer', style: { width: '100%' } }"
           />
         </div>
         <div

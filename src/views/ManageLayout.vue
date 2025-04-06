@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NavigateToNewTab, isDarkMode } from '@/Utils'
-import { isLoadingAccount, useAccount } from '@/api/account'
+import { cookie, isLoadingAccount, useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
@@ -69,7 +69,6 @@ const type = computed(() => {
   }
   return ''
 })
-const cookie = useStorage('JWT_Token', '')
 const musicRquestStore = useMusicRequestProvider()
 
 const canResendEmail = ref(false)

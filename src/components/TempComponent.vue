@@ -5,8 +5,8 @@ import { useStorage } from '@vueuse/core';
 import { NSpin, useLoadingBar, useMessage, useModal } from 'naive-ui'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router';
+import { cookie } from '@/api/account';
 
-const cookie = useStorage('JWT_Token', '')
 const accountInfo = useAccount()
 
 // Setup code

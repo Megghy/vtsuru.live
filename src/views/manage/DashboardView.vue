@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
+import { cookie, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType, BiliAuthModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
@@ -40,8 +40,6 @@ const token = ref('')
 const turnstile = ref()
 
 const accountInfo = useAccount()
-const useAuth = useAuthStore()
-const cookie = useLocalStorage('JWT_Token', '')
 const message = useMessage()
 
 const resetEmailModalVisiable = ref(false)

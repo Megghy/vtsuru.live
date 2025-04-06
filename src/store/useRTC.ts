@@ -1,4 +1,4 @@
-import { useAccount } from '@/api/account'
+import { cookie, useAccount } from '@/api/account'
 import {
   BaseRTCClient,
   MasterRTCClient,
@@ -25,7 +25,6 @@ export const useWebRTC = defineStore('WebRTC', () => {
   function send(event: string, data: any) {
     client.value?.send(event, data)
   }
-  const cookie = useStorage('JWT_Token', '')
   const route = useRoute()
   async function Init(type: 'master' | 'slave') {
     if (isInitializing) {
@@ -38,7 +37,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
         { ifAvailable: true },
         async (lock) => {
           if (lock) {
-            if (!cookie.value && !route.query.token) {
+            if (!cookie.value.cookie && !route.query.token) {
               console.log('[RTC] 未登录, 跳过RTC初始化')
               return
             }

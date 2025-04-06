@@ -29,6 +29,7 @@ export async function initAll() {
     return;
   }
   let permissionGranted = await isPermissionGranted();
+  checkUpdate();
 
   // If not we need to request it
   if (!permissionGranted) {
@@ -117,6 +118,7 @@ export function OnClientUnmounted() {
 
 async function checkUpdate() {
   const update = await check();
+  console.log(update);
   if (update) {
     console.log(
       `found update ${update.version} from ${update.date} with notes ${update.body}`
