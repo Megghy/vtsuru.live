@@ -14,6 +14,10 @@ import { useAuthStore } from './store/useAuthStore'
 import { useNotificationStore } from './store/useNotificationStore'
 
 const pinia = createPinia()
+export const getPinia = () => pinia
+
+const app = createApp(App)
+app.use(router).use(pinia).mount('#app')
 
 QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
   .then((version) => {
@@ -121,9 +125,6 @@ QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
     GetNotifactions()
     UpdateAccountLoop()
   })
-
-const app = createApp(App)
-app.use(router).use(pinia).mount('#app')
 
 let currentVersion: string
 let isHaveNewVersion = false

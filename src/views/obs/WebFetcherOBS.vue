@@ -31,7 +31,7 @@ onMounted(async () => {
 
     rpc.expose('status', () => {
       return {
-        status: webFetcher.isStarted ? 'running' : 'stopped',
+        status: webFetcher.state,
         type: webFetcher.client?.type,
         roomId: webFetcher.client instanceof OpenLiveClient ?
           webFetcher.client.roomAuthInfo?.anchor_info.room_id :
@@ -44,7 +44,8 @@ onMounted(async () => {
 
     rpc.expose('start', async (data: { type: 'openlive' | 'direct', directAuthInfo?: DirectClientAuthInfo, force: boolean }) => {
       console.log('[web-fetcher-iframe] 接收到 ' + (data.force ? '强制' : '') + '启动请求')
-      if (data.force && webFetcher.isStarted) {
+      if (data.force && webFetcher.state === 'connected') {
+        console.log('[web-fetcher-iframe] 强制启动, 停止当前实例')
         webFetcher.Stop()
       }
       return await webFetcher.Start(data.type, data.directAuthInfo, true).then((result) => {
@@ -73,9 +74,9 @@ onMounted(async () => {
   }
   setTimeout(() => {
     // @ts-expect-error obs的东西
-    if (!webFetcher.isStarted && window.obsstudio) {
+    if (webFetcher.state !== 'connected' && window.obsstudio) {
       timer = setInterval(() => {
-        if (webFetcher.isStarted) {
+        if (webFetcher.state === 'connected') {
           return
         }
 
@@ -99,7 +100,7 @@ onUnmounted(() => {
   <div
     class="web-fetcher-status"
     :style="{
-      backgroundColor: webFetcher.isStarted ? '#6dc56d' : '#e34a4a',
+      backgroundColor: webFetcher.state === 'connected' ? '#6dc56d' : '#e34a4a',
     }"
   />
 </template>
