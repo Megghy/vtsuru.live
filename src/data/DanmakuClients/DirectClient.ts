@@ -11,6 +11,7 @@ export type DirectClientAuthInfo = {
  * 未实现除raw事件外的所有事件
  */
 export default class DirectClient extends BaseDanmakuClient {
+  public serverUrl: string = 'wss://broadcastlv.chat.bilibili.com/sub';
   public onDanmaku(command: any): void {
     throw new Error('Method not implemented.')
   }

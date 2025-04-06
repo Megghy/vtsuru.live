@@ -5,19 +5,20 @@ import { isSameDay } from 'date-fns'
 import { createDiscreteApi } from 'naive-ui'
 import { ref } from 'vue'
 import { APIRoot, AccountInfo, FunctionTypes } from './api-models'
-import { useRoute } from 'vue-router'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
-const route = useRoute()
+export const isLoggedIn = computed<boolean>(() => {
+  return ACCOUNT.value.id > 0
+})
 
 const { message } = createDiscreteApi(['message'])
 const cookie = useLocalStorage('JWT_Token', '')
-const cookieRefreshDate = useLocalStorage('JWT_Token_Last_Refresh', Date.now())
+const cookieRefreshDate = useLocalStorage('JWT_Token_Last_Refresh', 0)
 
-export async function GetSelfAccount() {
-  if (cookie.value) {
-    const result = await Self()
+export async function GetSelfAccount(token?: string) {
+  if (cookie.value || token) {
+    const result = await Self(token)
     if (result.code == 200) {
       if (!ACCOUNT.value.id) {
         ACCOUNT.value = result.data
@@ -28,7 +29,7 @@ export async function GetSelfAccount() {
       isLoadingAccount.value = false
       //console.log('[vtsuru] 已获取账户信息')
       if (!isSameDay(new Date(), cookieRefreshDate.value)) {
-        refreshCookie()
+        refreshCookie(token)
       }
       return result.data
     } else if (result.code == 401) {
@@ -45,16 +46,17 @@ export async function GetSelfAccount() {
   }
   isLoadingAccount.value = false
 }
+
 export function UpdateAccountLoop() {
   setInterval(() => {
-    if (ACCOUNT.value && route?.name != 'question-display') {
+    if (ACCOUNT.value && window.$route?.name != 'question-display') {
       // 防止在问题详情页刷新
       GetSelfAccount()
     }
   }, 60 * 1000)
 }
-function refreshCookie() {
-  QueryPostAPI<string>(`${ACCOUNT_API_URL}refresh-token`).then((data) => {
+function refreshCookie(token?: string) {
+  QueryPostAPIWithParams<string>(`${ACCOUNT_API_URL}refresh-token`, { token }).then((data) => {
     if (data.code == 200) {
       cookie.value = data.data
       cookieRefreshDate.value = Date.now()
@@ -155,8 +157,8 @@ export async function Login(
     password
   })
 }
-export async function Self(): Promise<APIRoot<AccountInfo>> {
-  return QueryPostAPI<AccountInfo>(`${ACCOUNT_API_URL}self`)
+export async function Self(token?: string): Promise<APIRoot<AccountInfo>> {
+  return QueryPostAPIWithParams<AccountInfo>(`${ACCOUNT_API_URL}self`, token ? { token } : undefined)
 }
 export async function AddBiliBlackList(
   id: number,

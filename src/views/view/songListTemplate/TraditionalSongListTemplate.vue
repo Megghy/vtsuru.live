@@ -644,8 +644,9 @@ export const Config = defineTemplateConfig([
           </n-flex>
 
           <!-- Song Table -->
-          <div
+          <NScrollbar
             class="song-table-wrapper"
+            trigger="none"
             :style="{ height: props.config?.fixedHeight ? '55vh' : 'none' }"
           >
             <table class="song-list-table">
@@ -739,7 +740,7 @@ export const Config = defineTemplateConfig([
                 </tr>
               </tbody>
             </table>
-          </div>
+          </NScrollbar>
         </div>
       </div>
     </div>
@@ -1116,7 +1117,7 @@ html.dark .song-list-container {
   /* min-height: 200px; */ /* Might not be needed if max-height is set */
   border-radius: 8px;
   /* Scrollbar styling specific to this inner table scroll if needed */
-  /* ... */
+  scroll-behavior: smooth;
 
 }
 

@@ -7,6 +7,7 @@ import { OPEN_LIVE_API_URL } from '../constants'
 import BaseDanmakuClient from './BaseDanmakuClient'
 
 export default class OpenLiveClient extends BaseDanmakuClient {
+  public serverUrl: string = '';
   constructor(auth?: AuthInfo) {
     super()
     this.authInfo = auth

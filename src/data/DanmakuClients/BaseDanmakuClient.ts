@@ -12,6 +12,7 @@ export default abstract class BaseDanmakuClient {
     'padding'
 
   public abstract type: 'openlive' | 'direct'
+  public abstract serverUrl: string
 
   public eventsAsModel: {
     danmaku: ((arg1: EventModel, arg2?: any) => void)[]
@@ -118,6 +119,7 @@ export default abstract class BaseDanmakuClient {
       this.client.close()
       this.client = null
     }
+    this.serverUrl = chatClient.connection.ws.ws.url
     return {
       success: !isError,
       message: errorMsg
