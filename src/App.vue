@@ -93,7 +93,7 @@
               <Suspense>
                 <TempComponent>
                   <NLayoutContent>
-                    <NElement>
+                    <NElement style="height: 100vh;">
                       <ViewerLayout v-if="layout == 'viewer'" />
                       <ManageLayout v-else-if="layout == 'manage'" />
                       <OpenLiveLayout v-else-if="layout == 'open-live'" />

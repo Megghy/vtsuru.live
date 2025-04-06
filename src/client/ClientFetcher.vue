@@ -219,7 +219,7 @@
         data: [{ value: eventsPerSecond.value, name: '事件/秒' }]
       }]
     };
-    gaugeOption.value = option; // 保留原始option用于初始化
+    gaugeOption.value ??= option; // 保留原始option用于初始化
     if (gaugeChart.value) {
       gaugeChart.value.setOption(option, false);
     }
@@ -239,7 +239,7 @@
         markLine: { data: [{ type: 'average', name: '平均值' }] }
       }]
     };
-    //historyOption.value = option; // 保留原始option用于初始化
+    historyOption.value ??= option; // 保留原始option用于初始化
     if (historyChart.value) {
       historyChart.value.setOption(option, false);
     }
@@ -259,7 +259,7 @@
         labelLine: { show: false }, data: typeData
       }]
     };
-    typeDistributionOption.value = option; // 保留原始option用于初始化
+    typeDistributionOption.value ??= option; // 保留原始option用于初始化
     if (typeDistributionChart.value) {
       typeDistributionChart.value.setOption(option, false);
     }

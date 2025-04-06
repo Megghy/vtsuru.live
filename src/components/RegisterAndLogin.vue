@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cookie } from '@/api/account';
 import { AccountInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
@@ -43,7 +44,6 @@ const registerModel = ref<RegisterModel>({} as RegisterModel)
 const loginModel = ref<LoginModel>({} as LoginModel)
 const token = ref('')
 const turnstile = ref()
-const cookie = useLocalStorage('JWT_Token', '')
 
 const selectedTab = ref('login')
 const inputForgetPasswordValue = ref('')
@@ -133,7 +133,10 @@ function onRegisterButtonClick() {
       .then((data) => {
         if (data.code == 200) {
           message.success(`注册成功`)
-          cookie.value = data.data
+          cookie.value = {
+            cookie: data.data,
+            refreshDate: Date.now()
+          }
           setTimeout(() => {
             location.reload()
           }, 1000)
@@ -159,7 +162,10 @@ function onLoginButtonClick() {
     })
       .then(async (data) => {
         if (data.code == 200) {
-          localStorage.setItem('JWT_Token', data.data.token)
+          cookie.value = {
+            cookie: data.data.token,
+            refreshDate: Date.now()
+          }
           message.success(`成功登陆为 ${data?.data.account.name}`)
           setTimeout(() => {
             location.reload()

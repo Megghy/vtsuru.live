@@ -6,7 +6,7 @@ import { compress } from 'brotli-compress';
 import { format } from 'date-fns';
 import * as signalR from '@microsoft/signalr';
 import * as msgpack from '@microsoft/signalr-protocol-msgpack';
-import { useAccount } from '@/api/account'; // 假设账户信息路径
+import { cookie, useAccount } from '@/api/account'; // 假设账户信息路径
 import { BASE_HUB_URL, isDev } from '@/data/constants'; // 假设常量路径
 import BaseDanmakuClient from '@/data/DanmakuClients/BaseDanmakuClient'; // 假设弹幕客户端基类路径
 import DirectClient, { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient'; // 假设直连客户端路径
@@ -16,7 +16,6 @@ import { getEventType, recordEvent, streamingInfo } from '@/client/data/info';
 import { useWebRTC } from './useRTC';
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
-  const cookie = useLocalStorage('JWT_Token', '');
   const route = useRoute();
   const account = useAccount();
   const rtc = useWebRTC();
@@ -220,7 +219,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     logInfo(prefix.value + '正在连接到 vtsuru 服务器...');
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(BASE_HUB_URL + 'web-fetcher?token=' + (route.query.token ?? account.value.token), { // 使用 account.token
-        headers: { Authorization: `Bearer ${cookie.value}` },
+        headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets
       })

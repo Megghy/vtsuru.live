@@ -244,6 +244,9 @@ import { CloudArchive24Filled, Settings24Filled } from '@vicons/fluent';
     <NLayoutContent
       class="main-layout-content"
       :native-scrollbar="false"
+      :scrollbar-props="{
+        trigger: 'none'
+      }"
     >
       <div style="padding: 12px; padding-right: 15px;">
         <RouterView v-slot="{ Component }">
@@ -278,7 +281,7 @@ import { CloudArchive24Filled, Settings24Filled } from '@vicons/fluent';
     justify-content: center;
     /* 计算高度，减去 WindowBar 的高度 (假设为 30px) */
     height: calc(100vh - 30px);
-    background-color: #f8f8fa;
+    background-color: var(--n-color);
     /* 可选：添加背景色 */
   }
 

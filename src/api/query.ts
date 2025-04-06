@@ -2,8 +2,7 @@
 import { apiFail } from '@/data/constants'
 import { useLocalStorage } from '@vueuse/core'
 import { APIRoot, PaginationResponse } from './api-models'
-
-const cookie = useLocalStorage('JWT_Token', '')
+import { cookie } from './account';
 
 export async function QueryPostAPI<T>(
   urlString: string,
@@ -58,7 +57,7 @@ async function QueryPostAPIWithParamsInternal<T>(
   headers.forEach((header) => {
     h[header[0]] = header[1]
   })
-  if (cookie.value) h['Authorization'] = `Bearer ${cookie.value}`
+  if (cookie.value.cookie) h['Authorization'] = `Bearer ${cookie.value.cookie}`
 
   h['Content-Type'] = contentType
   return await QueryAPIInternal<T>(url, {
@@ -112,8 +111,8 @@ async function QueryGetAPIInternal<T>(
     headers.forEach((header) => {
       h[header[0]] = header[1]
     })
-    if (cookie.value) {
-      h['Authorization'] = `Bearer ${cookie.value}`
+    if (cookie.value.cookie) {
+      h['Authorization'] = `Bearer ${cookie.value.cookie}`
     }
     return await QueryAPIInternal<T>(url, { method: 'get', headers: h })
   } catch (err) {
@@ -163,5 +162,5 @@ export async function QueryGetPaginationAPI<T>(
   return await QueryGetAPIInternal<PaginationResponse<T>>(urlString, params)
 }
 export function GetHeaders(): [string, string][] {
-  return [['Authorization', `Bearer ${cookie.value}`]]
+  return [['Authorization', `Bearer ${cookie.value?.cookie}`]]
 }
