@@ -357,8 +357,8 @@
     const minutes = duration.minutes || 0; const seconds = duration.seconds || 0;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
-  async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct') {
-    if (webfetcher.webfetcherType === type) {
+  async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boolean = false) {
+    if (webfetcher.webfetcherType === type && !force) {
       message.info('当前已是该模式'); return;
     }
     const noticeRef = window.$notification.info({
@@ -494,8 +494,7 @@
       embedded
       style="width: 100%; max-width: 800px;"
     >
-      <NFlex align="center">
-        <NText>模式:</NText>
+      <NFlex vertical>
         <NRadioGroup
           v-model:value="settings.settings.useDanmakuClientType"
           :disabled="webfetcher.state === 'connecting'"
@@ -519,6 +518,27 @@
             </NText>
           </NRadioButton>
         </NRadioGroup>
+        <NPopconfirm
+          type="info"
+          :disabled="webfetcher.state === 'connecting'"
+          @positive-click="async () => {
+            await onSwitchDanmakuClientMode(settings.settings.useDanmakuClientType, true);
+            message.success('已重启弹幕服务器');
+          }"
+        >
+          <template #trigger>
+            <NButton
+              type="error"
+              style="max-width: 150px;"
+              :disabled="webfetcher.state === 'connecting'"
+            >
+              强制重启弹幕客户端
+            </NButton>
+          </template>
+          <template #default>
+            确定要强制重启弹幕服务器吗？
+          </template>
+        </NPopconfirm>
       </NFlex>
     </NCard>
 
@@ -789,6 +809,7 @@
         bordered
         :columns="2"
         size="small"
+        style="overflow-x: auto;"
       >
         <NDescriptionsItem label="启动时间">
           <NIcon :component="TimeOutline" /> {{ formattedStartedAt }}
@@ -800,6 +821,7 @@
           <NFlex
             align="center"
             size="small"
+            :wrap="false"
           >
             <NTag
               :type="signalRStateType"
@@ -807,8 +829,8 @@
             >
               {{ signalRStateText }}
             </NTag>
-            <NEllipsis style="max-width: 200px;">
-              {{ webfetcher.signalRClient?.connectionId ?? 'N/A' }}
+            <NEllipsis style="max-width: 150px;">
+              {{ webfetcher.signalRId ?? 'N/A' }}
             </NEllipsis>
           </NFlex>
         </NDescriptionsItem>
@@ -816,6 +838,7 @@
           <NFlex
             align="center"
             size="small"
+            :wrap="false"
           >
             <NTag
               :type="danmakuClientStateType"
@@ -823,7 +846,7 @@
             >
               {{ danmakuClientStateText }}
             </NTag>
-            <NEllipsis style="max-width: 200px;">
+            <NEllipsis style="max-width: 150px;">
               {{ webfetcher.danmakuServerUrl ?? 'N/A' }}
             </NEllipsis> <!-- Assuming this is exposed -->
           </NFlex>
@@ -967,10 +990,6 @@
               >
                 <NStatistic label="会话事件总数">
                   <NIcon :component="BarChartOutline" /> {{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}
-                </NStatistic>
-                <NStatistic label="数据上传">
-                  <NIcon :component="DownloadOutline" /> 成功: {{ webfetcher.successfulUploads ?? 0 }} / 失败:
-                  {{ webfetcher.failedUploads ?? 0 }} <!-- Assuming exposed -->
                 </NStatistic>
                 <NStatistic label="已发送">
                   {{ ((webfetcher.bytesSentSession ?? 0) / 1024).toFixed(2) }} KB <!-- Assuming exposed -->

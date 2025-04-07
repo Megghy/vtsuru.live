@@ -15,6 +15,7 @@
     "@microsoft/signalr": "^8.0.7",
     "@microsoft/signalr-protocol-msgpack": "^8.0.7",
     "@mixer/postmessage-rpc": "^1.1.4",
+    "@oneidentity/zstd-js": "^1.0.3",
     "@tauri-apps/api": "^2.4.0",
     "@tauri-apps/plugin-autostart": "^2.3.0",
     "@tauri-apps/plugin-http": "^2.4.2",

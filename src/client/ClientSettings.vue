@@ -15,11 +15,13 @@ import {
   NFormItem, // Added NFormItem
   NAlert,
   NCheckboxGroup,
-  NCheckbox, // Added NAlert for error messages
+  NCheckbox,
+  NDivider, // Added NAlert for error messages
 } from 'naive-ui';
 import type { MenuOption } from 'naive-ui'; // Import MenuOption type
 import { ThemeType } from '@/api/api-models';
 import { NotificationType, useSettings } from './store/useSettings';
+import { getVersion } from '@tauri-apps/api/app';
 
 // --- State ---
 
@@ -28,6 +30,7 @@ const isLoading = ref(true); // Loading state for initial fetch
   const errorMsg = ref<string | null>(null); // Error message state
 
   const setting = useSettings();
+  const currentVersion = await getVersion(); // Fetch current version on mount
 
 // Navigation
 const navOptions: MenuOption[] = [ // Explicitly typed
@@ -73,10 +76,10 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
   try {
     if (newValue) {
       await enable();
-      window.$message.success('已启用开机启动');
+      //window.$message.success('已启用开机启动');
     } else {
       await disable();
-      window.$message.success('已禁用开机启动'); // Provide feedback for disabling too
+      //window.$message.success('已禁用开机启动'); // Provide feedback for disabling too
     }
   } catch (err) {
     console.error("Failed to update autostart status:", err);
@@ -170,14 +173,16 @@ watch(minimizeOnStart, (newValue) => {
                 <template v-if="currentTab === 'general'">
                   <NSpace
                     vertical
-                    size="large"
                   >
                     <NCard
                       title="启动"
                       :bordered="false"
                     >
-                      <NSpace vertical>
-                        <NFormItem
+                      <NFlex
+                        vertical
+                        align="start"
+                      >
+                        <LabelItem
                           label="开机时启动应用"
                           label-placement="left"
                         >
@@ -185,15 +190,19 @@ watch(minimizeOnStart, (newValue) => {
                             v-model:value="isStartOnBoot"
                             :disabled="isLoading"
                           />
-                        </NFormItem>
-                        <NFormItem
+                        </LabelItem>
+                        <LabelItem
+                          v-if="isStartOnBoot"
                           label="启动后最小化到托盘"
                           label-placement="left"
                         >
-                          <NSwitch v-model:value="minimizeOnStart" />
+                          <NSwitch
+                            v-model:value="setting.settings.bootAsMinimized"
+                            @update:value="setting.save()"
+                          />
                           <!-- Add appropriate logic/state for this -->
-                        </NFormItem>
-                      </NSpace>
+                        </LabelItem>
+                      </NFlex>
                     </NCard>
 
                     <NCard
@@ -230,6 +239,10 @@ watch(minimizeOnStart, (newValue) => {
                     title="通知设置"
                     :bordered="false"
                   >
+                    <NAlert type="warning">
+                      暂未完成
+                    </NAlert>
+                    <NDivider />
                     <NSpace vertical>
                       <NCheckbox
                         v-model:checked="setting.settings.enableNotification"
@@ -284,8 +297,42 @@ watch(minimizeOnStart, (newValue) => {
                         @click="$router.push({name: 'client-test'})"
                       />
                     </template>
-                    <p>应用名称: Your App Name</p>
-                    <p>版本: 1.0.0</p>
+                    <p>VTsuruEventFetcher Tauri</p>
+                    <p>版本: {{ currentVersion }}</p>
+                    <p>
+                      作者:
+                      <NButton
+                        tag="a"
+                        href="https://space.bilibili.com/10021741"
+                        target="_blank"
+                        type="info"
+                        text
+                      >
+                        Megghy
+                      </NButton>
+                    </p>
+                    <p>
+                      储存库:
+                      <NButton
+                        tag="a"
+                        href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+                        target="_blank"
+                        type="info"
+                        text
+                      >
+                        界面/逻辑
+                      </NButton>
+                      <NDivider vertical />
+                      <NButton
+                        tag="a"
+                        href="https://github.com/Megghy/vtsuru-fetcher-client"
+                        target="_blank"
+                        type="info"
+                        text
+                      >
+                        Tauri 客户端
+                      </NButton>
+                    </p>
                     <!-- Add more about info -->
                   </NCard>
                 </template>
@@ -312,7 +359,9 @@ watch(minimizeOnStart, (newValue) => {
 .fade-leave-to {
   opacity: 0;
 }
-
+.label-item {
+  height: 20px;
+}
 /* Optional: Adjust NFormItem label alignment if needed */
 /* :deep(.n-form-item-label) { */
   /* Add custom styles */

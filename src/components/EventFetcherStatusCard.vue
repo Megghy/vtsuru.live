@@ -6,7 +6,21 @@ import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-u
 import { computed } from 'vue'
 
 const accountInfo = useAccount()
-const state = accountInfo.value?.eventFetcherState
+  const state = accountInfo.value?.eventFetcherState
+
+  const eventFetcherVersionName = computed(() => {
+    if (state?.type == EventFetcherType.OBS) {
+      return 'OBS/网页端'
+    } else if (state?.type == EventFetcherType.Application) {
+      return '控制台应用'
+    } else if (state?.type == EventFetcherType.Server) {
+      return '本站监听 (已删除)'
+    } else if (state?.type == EventFetcherType.Tauri) {
+      return 'Tauri 应用'
+    } else {
+      return state?.version ?? '未知'
+    }
+  })
 
 const status = computed(() => {
   if (state.online == true) {
@@ -57,7 +71,7 @@ const status = computed(() => {
             :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }"
           >
             <NIcon :component="FlashCheckmark16Filled" />
-            {{ state.type == EventFetcherType.OBS ? 'OBS/网页端' : state.version ?? '未知' }}
+            {{ eventFetcherVersionName }}
           </NTag>
         </template>
         你所使用的版本

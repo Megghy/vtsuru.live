@@ -15,6 +15,7 @@ declare module 'vue' {
     EventFetcherAlert: typeof import('./components/EventFetcherAlert.vue')['default']
     EventFetcherStatusCard: typeof import('./components/EventFetcherStatusCard.vue')['default']
     FeedbackItem: typeof import('./components/FeedbackItem.vue')['default']
+    LabelItem: typeof import('./components/LabelItem.vue')['default']
     LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
     MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']

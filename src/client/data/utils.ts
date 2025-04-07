@@ -4,7 +4,7 @@ import { QueryPostAPI } from '@/api/query';
 import { OPEN_LIVE_API_URL } from '@/data/constants';
 import { error } from '@tauri-apps/plugin-log';
 
-export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '') {
+export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true) {
   const u = new URL(url);
   return fetch(url, {
     method: method,
@@ -12,8 +12,7 @@ export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: 
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
       Origin: '',
-      Cookie: cookie || (await useBiliCookie().getBiliCookie()) || '',
-      'Upgrade-Insecure-Requests': '1',
+      Cookie:  useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : ''
     },
   });
 }
