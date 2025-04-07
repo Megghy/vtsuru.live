@@ -54,6 +54,7 @@ export interface EventFetcherStateModel {
 export enum EventFetcherType {
   Application,
   OBS,
+  Tauri,
   Server
 }
 export interface AccountInfo extends UserInfo {

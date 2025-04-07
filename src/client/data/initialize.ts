@@ -7,7 +7,7 @@ import { getBuvid, getRoomKey } from "./utils";
 import { initInfo } from "./info";
 import { TrayIcon, TrayIconOptions } from '@tauri-apps/api/tray';
 import { Menu } from "@tauri-apps/api/menu";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import {
   isPermissionGranted,
   onAction,
@@ -15,7 +15,7 @@ import {
   sendNotification,
 } from '@tauri-apps/plugin-notification';
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { CN_HOST } from "@/data/constants";
+import { CN_HOST, isDev } from "@/data/constants";
 import { invoke } from "@tauri-apps/api/core";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
@@ -24,9 +24,16 @@ const accountInfo = useAccount();
 
 export const clientInited = ref(false);
 let tray: TrayIcon;
-export async function initAll() {
+export async function initAll(isOnBoot: boolean) {
+  const setting = useSettings();
   if (clientInited.value) {
     return;
+  }
+  if (isOnBoot) {
+    if (setting.settings.bootAsMinimized && !isDev) {
+      const appWindow = getCurrentWindow();
+      appWindow.hide();
+    }
   }
   let permissionGranted = await isPermissionGranted();
   checkUpdate();
@@ -96,15 +103,15 @@ export async function initAll() {
         case 'DoubleClick':
           appWindow.show();
           break;
-          case 'Click':
+        case 'Click':
           appWindow.show();
           break;
-        }
+      }
     }
   };
-
-
   tray = await TrayIcon.new(options);
+
+  appWindow.setMinSize(new PhysicalSize(720, 480));
 
   clientInited.value = true;
 }
@@ -209,7 +216,7 @@ export async function initOpenLive() {
   }
   return reuslt;
 }
-function initNotificationHandler(){
+function initNotificationHandler() {
   onAction((event) => {
     if (event.extra?.type === 'question-box') {
       openUrl(CN_HOST + '/manage/question-box');

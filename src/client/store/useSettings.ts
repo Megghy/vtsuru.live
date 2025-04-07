@@ -7,6 +7,7 @@ export type NotificationSettings = {
 export type VTsuruClientSettings = {
   useDanmakuClientType: 'openlive' | 'direct';
   fallbackToOpenLive: boolean;
+  bootAsMinimized: boolean;
 
   danmakuHistorySize: number;
   loginType: 'qrcode' | 'cookiecloud'
@@ -20,6 +21,7 @@ export const useSettings = defineStore('settings', () => {
   const defaultSettings: VTsuruClientSettings = {
     useDanmakuClientType: 'openlive',
     fallbackToOpenLive: true,
+    bootAsMinimized: true,
 
     danmakuHistorySize: 100,
     loginType: 'qrcode',
