@@ -16,6 +16,7 @@ onMounted(() => {
   window.$route = useRoute()
   window.$modal = useModal()
   window.$notification = useNotification()
+  window.$dialog = useDialog()
   const providerStore = useLoadingBarStore()
   providerStore.setLoadingBar(window.$loadingBar)
 })

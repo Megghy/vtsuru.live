@@ -163,7 +163,7 @@ function saveShareImage() {
     // 生成的ba64图片
     canvas.toBlob(
       (data) => {
-        saveAs(data, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
+        saveAs(data!, `vtsuru-提问箱-${accountInfo.value?.name}.png`)
       },
       'image/png',
       1,

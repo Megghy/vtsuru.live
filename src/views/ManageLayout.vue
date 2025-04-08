@@ -4,6 +4,7 @@ import { cookie, isLoadingAccount, useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { checkUpdateNote } from '@/data/UpdateNote';
 import { ACCOUNT_API_URL } from '@/data/constants'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
@@ -485,6 +486,9 @@ onMounted(() => {
       canResendEmail.value = true
     }
   }
+  // 当进入管理页时检查更新日志
+
+  checkUpdateNote();
 })
 </script>
 

@@ -139,7 +139,7 @@ const showContent = ref(!isViolation)
       <br>
     </template>
 
-    <NText :style="{ filter: showContent ? '' : 'blur(3.7px)', cursor: showContent ? '' : 'pointer' }">
+    <NText :style="{ filter: showContent ? '' : 'blur(3.7px)', cursor: showContent ? '' : 'pointer', whiteSpace: 'pre-wrap' }">
       <NButton
         v-if="isViolation"
         size="small"

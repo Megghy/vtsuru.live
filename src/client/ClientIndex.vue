@@ -10,6 +10,10 @@
   const webfetcher = useWebFetcher();
 
   const coverRef = ref();
+  const isHover = ref(false);
+  const roomCover = computed(() => {
+    return isHover.value ? roomInfo.value?.keyframe : roomInfo.value?.user_cover;
+  });
   const { width, height } = useElementSize(coverRef);
 
   function logout() {
@@ -90,8 +94,8 @@
       <template #header>
         <NSpace align="center">
           直播状态
-          <NTag :type="!accountInfo.streamerInfo?.isStreaming ? 'error' : 'success'">
-            {{ !accountInfo.streamerInfo?.isStreaming ? '未直播' : '直播中' }}
+          <NTag :type="roomInfo?.live_status === 1 ? 'success' : 'error'">
+            {{ roomInfo?.live_status === 1 ? '直播中' : '未直播' }}
           </NTag>
         </NSpace>
         <NText
@@ -102,13 +106,13 @@
         </NText>
       </template>
       <div
-        v-if="roomInfo?.user_cover"
+        v-if="roomCover"
         style="position: relative"
       >
         <div style="position: relative; width: 100%; max-width: 500px;">
           <NImage
             ref="coverRef"
-            :src="roomInfo?.user_cover"
+            :src="roomCover"
             style="width: 100%; opacity: 0.5; border-radius: 8px;"
             referrerpolicy="no-referrer"
             :img-props="{ referrerpolicy: 'no-referrer', style: { width: '100%' } }"
@@ -118,6 +122,8 @@
           style="position: absolute; z-index: 1; top: 0; width: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2), transparent)"
           :style="{ height: `${height}px`, maxWidth: '500px', cursor: 'pointer' }"
           @click="openUrl(`https://live.bilibili.com/${accountInfo.biliRoomId}`)"
+          @mouseenter="isHover = true"
+          @mouseleave="isHover = false"
         />
         <NText style="position: absolute; bottom: 12px; left: 16px; z-index: 2; color: white; font-size: 18px">
           {{ roomInfo?.title }}

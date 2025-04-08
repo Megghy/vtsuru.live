@@ -992,7 +992,7 @@
                   <NIcon :component="BarChartOutline" /> {{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}
                 </NStatistic>
                 <NStatistic label="已发送">
-                  {{ ((webfetcher.bytesSentSession ?? 0) / 1024).toFixed(2) }} KB <!-- Assuming exposed -->
+                  {{ ((webfetcher.bytesSentSession ?? 0) / 1024 / 1024).toFixed(2) }} Mb <!-- Assuming exposed -->
                 </NStatistic>
               </NFlex>
             </NCard>

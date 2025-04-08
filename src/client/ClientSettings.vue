@@ -333,6 +333,9 @@ watch(minimizeOnStart, (newValue) => {
                         Tauri 客户端
                       </NButton>
                     </p>
+                    <p>
+                      反馈: 🐧 873260337
+                    </p>
                     <!-- Add more about info -->
                   </NCard>
                 </template>

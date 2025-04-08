@@ -16,6 +16,7 @@ import { ZstdCodec, ZstdInit } from '@oneidentity/zstd-js/wasm';
 
 import { encode } from "@msgpack/msgpack";
 import { getVersion } from '@tauri-apps/api/app';
+import { onReceivedNotification } from '@/client/data/notification';
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
   const route = useRoute();
@@ -275,7 +276,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       Stop(); // 服务器要求断开，调用 Stop 清理所有资源
     });
     connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie));
-
+    connection.on('Notification', (type: string, data: any) => { onReceivedNotification(type, data); });
     // --- 尝试启动连接 ---
     try {
       await connection.start();

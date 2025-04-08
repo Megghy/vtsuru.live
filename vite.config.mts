@@ -54,6 +54,11 @@ export default defineConfig({
     Components({
       resolvers: [NaiveUiResolver()],
       dts: 'src/components.d.ts',
+      // allow auto load markdown components under `./src/components/`
+      extensions: ['vue', 'md'],
+
+      // allow auto import and register components used in markdown
+      include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
     }),
     monacoEditorPlugin({ languageWorkers: ['css'] }),
     oxlintPlugin(),

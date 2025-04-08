@@ -4,6 +4,7 @@ import { info, error } from '@tauri-apps/plugin-log';
 import { QueryBiliAPI } from './utils'; // 假设 Bili API 工具路径
 import { BiliRoomInfo, BiliStreamingInfo, FetcherStatisticData } from './models'; // 假设模型路径
 import { useTauriStore } from '../store/useTauriStore';
+import { useAccount } from '@/api/account';
 // import { useAccount } from '@/api/account'; // 如果需要账户信息
 
 // const accountInfo = useAccount(); // 如果需要
@@ -185,10 +186,8 @@ export async function getHistoricalStatistics(days: number = 7): Promise<Fetcher
  * 更新房间和直播流信息
  */
 async function updateRoomAndStreamingInfo() {
-  // 需要一个房间ID来查询，这个ID可能来自设置、登录信息或固定配置
-  // const roomId = accountInfo.value?.roomid ?? settings.value.roomId; // 示例：获取房间ID
-  const roomId = 21484828; // !!! 示例：这里需要替换成实际获取房间ID的逻辑 !!!
-  if (!roomId) {
+  const account = useAccount();
+  if (!account.value.biliRoomId) {
     // error("无法获取房间ID以更新直播信息");
     return;
   }
@@ -196,7 +195,7 @@ async function updateRoomAndStreamingInfo() {
   try {
     // 查询房间基本信息
     const roomRes = await QueryBiliAPI(
-      `https://api.live.bilibili.com/room/v1/Room/get_info?room_id=${roomId}`
+      `https://api.live.bilibili.com/room/v1/Room/get_info?room_id=${account.value.biliRoomId}`
     );
     const json = await roomRes.json();
     if (json.code === 0) {
