@@ -57,6 +57,7 @@ declare module 'vue' {
     SongPlayer: typeof import('./components/SongPlayer.vue')['default']
     TempComponent: typeof import('./components/TempComponent.vue')['default']
     TurnstileVerify: typeof import('./components/TurnstileVerify.vue')['default']
+    UpdateNoteContainer: typeof import('./components/UpdateNoteContainer.vue')['default']
     UserBasicInfoCard: typeof import('./components/UserBasicInfoCard.vue')['default']
     VEditor: typeof import('./components/VEditor.vue')['default']
     VideoCollectInfoCard: typeof import('./components/VideoCollectInfoCard.vue')['default']

@@ -183,6 +183,7 @@ onUnmounted(() => {
 
 .question-display-text {
   min-height: 50px;
+  white-space: pre-wrap;
 }
 
 .question-display-image {

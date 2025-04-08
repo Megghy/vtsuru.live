@@ -117,169 +117,160 @@ import { isTauri } from '@/data/constants';
 </script>
 
 <template>
-  <NAlert
-    v-if="!isTauri"
-    type="error"
-    title="错误"
+  <WindowBar />
+
+  <div
+    v-if="!isLoggedIn"
+    class="login-container"
   >
-    此应用在 Tauri 环境外运行，无法使用
-  </NAlert>
-  <template v-else>
-    <WindowBar />
-
-    <div
-      v-if="!isLoggedIn"
-      class="login-container"
+    <NCard
+      v-if="!isLoadingAccount"
+      :bordered="false"
+      size="large"
+      class="login-card"
     >
-      <NCard
-        v-if="!isLoadingAccount"
-        :bordered="false"
-        size="large"
-        class="login-card"
-      >
-        <template #header>
-          <div class="login-header">
-            <div class="login-title">
-              登陆
-            </div>
-            <div class="login-subtitle">
-              输入你的 VTsuru Token
-            </div>
-          </div>
-        </template>
-
-        <NSpace
-          vertical
-          size="large"
-        >
-          <NSpace vertical>
-            <div class="token-label-container">
-              <span class="token-label">Token</span>
-              <NTooltip placement="top">
-                <template #trigger>
-                  <NA
-                    class="token-get-link"
-                    @click="openUrl('https://vtsuru.suki.club/manage')"
-                  >
-                    前往获取
-                  </NA>
-                </template>
-                登录后在管理面板主页的个人信息下方
-              </NTooltip>
-            </div>
-            <NInput
-              v-model:value="token"
-              type="password"
-              show-password-on="click"
-              placeholder="请输入Token"
-              @keyup.enter="login"
-            />
-          </NSpace>
-
-          <NButton
-            block
-            type="primary"
-            :loading="isLoadingAccount"
-            :disabled="isLoadingAccount"
-            @click="login"
-          >
+      <template #header>
+        <div class="login-header">
+          <div class="login-title">
             登陆
-          </NButton>
-        </NSpace>
-      </NCard>
+          </div>
+          <div class="login-subtitle">
+            输入你的 VTsuru Token
+          </div>
+        </div>
+      </template>
 
-      <NSpin
-        v-else
+      <NSpace
+        vertical
         size="large"
-      />
-    </div>
-
-    <NLayout
-      v-else
-      has-sider
-      class="main-layout"
-      @vue:mounted="initAll(true)"
-    >
-      <NLayoutSider
-        width="200"
-        bordered
-        class="main-layout-sider"
       >
-        <div class="sider-content">
-          <div class="sider-header">
-            <NText
-              tag="div"
-              class="app-title"
-            >
-              <span>VTsuru.Client</span>
-            </NText>
-            <NTooltip trigger="hover">
+        <NSpace vertical>
+          <div class="token-label-container">
+            <span class="token-label">Token</span>
+            <NTooltip placement="top">
               <template #trigger>
-                <NButton
-                  quaternary
-                  class="fetcher-status-button"
-                  :type="webfetcher.state === 'connected' ? 'success' : 'error'"
+                <NA
+                  class="token-get-link"
+                  @click="openUrl('https://vtsuru.suki.club/manage')"
                 >
-                  <CheckmarkCircle
-                    v-if="webfetcher.state === 'connected'"
-                    class="fetcher-status-icon connected"
-                  />
-                  <CloseCircle
-                    v-else
-                    class="fetcher-status-icon disconnected"
-                  />
-                </NButton>
+                  前往获取
+                </NA>
               </template>
-              <div>
-                <div>EventFetcher 状态</div>
-                <div v-if="webfetcher.state === 'connected'">
-                  运行中
-                </div>
-                <div v-else>
-                  未运行 / 连接断开
-                </div>
-              </div>
+              登录后在管理面板主页的个人信息下方
             </NTooltip>
           </div>
-
-          <NMenu
-            :options="menuOptions"
-            :default-value="'go-back-home'"
-            class="sider-menu"
+          <NInput
+            v-model:value="token"
+            type="password"
+            show-password-on="click"
+            placeholder="请输入Token"
+            @keyup.enter="login"
           />
-        </div>
-      </NLayoutSider>
+        </NSpace>
 
-      <NLayoutContent
-        class="main-layout-content"
-        :native-scrollbar="false"
-        :scrollbar-props="{
-          trigger: 'none'
-        }"
-      >
-        <div style="padding: 12px; padding-right: 15px;">
-          <RouterView v-slot="{ Component }">
-            <Transition
-              name="fade-slide"
-              mode="out-in"
-              :appear="true"
-            >
-              <KeepAlive>
-                <Suspense>
-                  <component :is="Component" />
-                  <template #fallback>
-                    <div class="suspense-fallback">
-                      加载中...
-                    </div>
-                  </template>
-                </Suspense>
-              </KeepAlive>
-            </Transition>
-          </RouterView>
+        <NButton
+          block
+          type="primary"
+          :loading="isLoadingAccount"
+          :disabled="isLoadingAccount"
+          @click="login"
+        >
+          登陆
+        </NButton>
+      </NSpace>
+    </NCard>
+
+    <NSpin
+      v-else
+      size="large"
+    />
+  </div>
+
+  <NLayout
+    v-else
+    has-sider
+    class="main-layout"
+    @vue:mounted="initAll(true)"
+  >
+    <NLayoutSider
+      width="200"
+      bordered
+      class="main-layout-sider"
+    >
+      <div class="sider-content">
+        <div class="sider-header">
+          <NText
+            tag="div"
+            class="app-title"
+          >
+            <span>VTsuru.Client</span>
+          </NText>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton
+                quaternary
+                class="fetcher-status-button"
+                :type="webfetcher.state === 'connected' ? 'success' : 'error'"
+              >
+                <CheckmarkCircle
+                  v-if="webfetcher.state === 'connected'"
+                  class="fetcher-status-icon connected"
+                />
+                <CloseCircle
+                  v-else
+                  class="fetcher-status-icon disconnected"
+                />
+              </NButton>
+            </template>
+            <div>
+              <div>EventFetcher 状态</div>
+              <div v-if="webfetcher.state === 'connected'">
+                运行中
+              </div>
+              <div v-else>
+                未运行 / 连接断开
+              </div>
+            </div>
+          </NTooltip>
         </div>
-      </NLayoutContent>
-    </NLayout>
-  </template>
+
+        <NMenu
+          :options="menuOptions"
+          :default-value="'go-back-home'"
+          class="sider-menu"
+        />
+      </div>
+    </NLayoutSider>
+
+    <NLayoutContent
+      class="main-layout-content"
+      :native-scrollbar="false"
+      :scrollbar-props="{
+        trigger: 'none'
+      }"
+    >
+      <div style="padding: 12px; padding-right: 15px;">
+        <RouterView v-slot="{ Component }">
+          <Transition
+            name="fade-slide"
+            mode="out-in"
+            :appear="true"
+          >
+            <KeepAlive>
+              <Suspense>
+                <component :is="Component" />
+                <template #fallback>
+                  <div class="suspense-fallback">
+                    加载中...
+                  </div>
+                </template>
+              </Suspense>
+            </KeepAlive>
+          </Transition>
+        </RouterView>
+      </div>
+    </NLayoutContent>
+  </NLayout>
 </template>
 
 <style scoped>

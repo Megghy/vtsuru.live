@@ -1,5 +1,5 @@
 
-import type { LoadingBarProviderInst, MessageProviderInst, ModalProviderInst, NotificationProviderInst } from 'naive-ui'
+import type { DialogProviderInst, LoadingBarProviderInst, MessageProviderInst, ModalProviderInst, NotificationProviderInst } from 'naive-ui'
 import type { useRoute } from 'vue-router'
 
 declare module 'vue3-aplayer' {
@@ -23,5 +23,6 @@ declare global {
     $modal: ModalProviderInst
     $mitt: Emitter<MittType>
     $notification: NotificationProviderInst
+    $dialog: DialogProviderInst
   }
 }

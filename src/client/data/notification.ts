@@ -4,6 +4,18 @@ import { isPermissionGranted, onAction, sendNotification } from "@tauri-apps/plu
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { CN_HOST } from "@/data/constants";
 
+export function onReceivedNotification(type: string, data: any) {
+  switch (type) {
+    case 'question-box':
+
+      onReceivedQuestion(data);
+      break;
+
+    default:
+      console.warn(`Unhandled notification type: ${type}`);
+  }
+}
+
 export async function onReceivedQuestion(question: QAInfo) {
   const setting = useSettings();
   if (setting.settings.notificationSettings.enableTypes.includes("question-box")) {
@@ -20,7 +32,7 @@ export async function onReceivedQuestion(question: QAInfo) {
         silent: false,
         extra: { type: 'question-box' },
       });
-      
+
     }
   }
 
