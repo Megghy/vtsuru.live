@@ -29,20 +29,9 @@ export async function initAll(isOnBoot: boolean) {
   if (clientInited.value) {
     return;
   }
-  if (isOnBoot) {
-    if (setting.settings.bootAsMinimized && !isDev) {
-      const appWindow = getCurrentWindow();
-      appWindow.hide();
-      sendNotification({
-        title: "VTsuru.Client",
-        body: '已启动并最小化到托盘',
-        silent: false,
-        extra: { type: 'question-box' },
-      });
-    }
-  }
-  let permissionGranted = await isPermissionGranted();
   checkUpdate();
+  const appWindow = getCurrentWindow();
+  let permissionGranted = await isPermissionGranted();
 
   // If not we need to request it
   if (!permissionGranted) {
@@ -51,7 +40,16 @@ export async function initAll(isOnBoot: boolean) {
     if (permissionGranted) {
       info('Notification permission granted');
     }
+  }
 
+  if (isOnBoot) {
+    if (setting.settings.bootAsMinimized && !isDev && await appWindow.isVisible()) {
+      appWindow.hide();
+      sendNotification({
+        title: "VTsuru.Client",
+        body: '已启动并最小化到托盘'
+      });
+    }
   }
   initNotificationHandler();
   const detach = await attachConsole();
@@ -64,7 +62,7 @@ export async function initAll(isOnBoot: boolean) {
   initInfo();
   info('[init] 开始更新数据');
 
-  if (isLoggedIn && accountInfo.value.isBiliVerified) {
+  if (isLoggedIn && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient) {
     const danmakuInitNoticeRef = window.$notification.info({
       title: '正在初始化弹幕客户端...',
       closable: false
@@ -96,7 +94,6 @@ export async function initAll(isOnBoot: boolean) {
     ],
   });
   const iconData = await (await fetch('https://oss.suki.club/vtsuru/icon.ico')).arrayBuffer();
-  const appWindow = getCurrentWindow();
   const options: TrayIconOptions = {
     // here you can add a tray menu, title, tooltip, event handler, etc
     menu: menu,

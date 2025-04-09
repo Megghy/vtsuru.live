@@ -240,7 +240,7 @@ import { invoke } from '@tauri-apps/api/core';
                     :bordered="false"
                   >
                     <NAlert type="warning">
-                      暂未完成
+                      未完全完成
                     </NAlert>
                     <NDivider />
                     <NSpace vertical>
@@ -260,6 +260,14 @@ import { invoke } from '@tauri-apps/api/core';
                         >
                           <template #header-extra>
                             <component :is="renderNotifidactionEnable('question-box')" />
+                          </template>
+                        </NCard>
+                        <NCard
+                          size="small"
+                          title="积分兑换通知"
+                        >
+                          <template #header-extra>
+                            <component :is="renderNotifidactionEnable('goods-buy')" />
                           </template>
                         </NCard>
                         <NCard

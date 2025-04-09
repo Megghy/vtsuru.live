@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { isPermissionGranted, onAction, sendNotification } from '@tauri-apps/plugin-notification';
+  import { NSwitch } from 'naive-ui';
+import { useSettings } from './store/useSettings';
+import { onReceivedQuestion } from './data/notification';
+import { QAInfo } from '@/api/api-models';
 
+  const setting = useSettings()
 async function testNotification() {
-  let permissionGranted = await isPermissionGranted();
-    if (permissionGranted) {
-      sendNotification({
-        title: "测试通知",
-        body: "这是一个测试通知",
-        silent: false,
-        extra: { type: 'test' },
-      });
-      onAction((event) => {
-        console.log('Notification clicked:', event);
-      });
-    }
+  onReceivedQuestion({
+    id: 1,
+    question: {
+      message: '这是一条测试问题',
+    },
+    tag: '测试标签',
+    sender: { name: '测试用户', id: 1, isBiliAuthed: false },
+    isPublic: true,
+  } as QAInfo);
 }
 </script>
 
@@ -26,6 +28,12 @@ async function testNotification() {
       >
         测试通知
       </NButton>
+      <LabelItem label="关闭弹幕客户端">
+        <NSwitch
+          v-model:value="setting.settings.dev_disableDanmakuClient"
+          @update:value="setting.save()"
+        />
+      </LabelItem>
     </NFlex>
   </div>
 </template>
