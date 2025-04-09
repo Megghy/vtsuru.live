@@ -33,6 +33,12 @@ export async function initAll(isOnBoot: boolean) {
     if (setting.settings.bootAsMinimized && !isDev) {
       const appWindow = getCurrentWindow();
       appWindow.hide();
+      sendNotification({
+        title: "VTsuru.Client",
+        body: '已启动并最小化到托盘',
+        silent: false,
+        extra: { type: 'question-box' },
+      });
     }
   }
   let permissionGranted = await isPermissionGranted();
@@ -112,6 +118,16 @@ export async function initAll(isOnBoot: boolean) {
   tray = await TrayIcon.new(options);
 
   appWindow.setMinSize(new PhysicalSize(720, 480));
+
+  // 监听f12事件
+  if (!isDev) {
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'F12') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+  }
 
   clientInited.value = true;
 }

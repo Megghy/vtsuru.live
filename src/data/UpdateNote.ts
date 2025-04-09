@@ -14,11 +14,10 @@ export const updateNotes: updateNoteType[] = [
         content: [
           ['比当前所有 EventFetcher 部署方法都更要简单且支持扫码登录的客户端开始测试力, 支持Windows, Linux, MacOS (后两个没测试过'],
           [
-            '如果对此感兴趣的话可以使用 ',
+            '安装方式: ',
             () => h(NButton, {
-              text: true, tag: 'a', href: FETCH_API + 'https://github.com/Megghy/vtsuru-fetcher-client/releases/download/app-v0.1.0/vtsuru-fetcher-client_0.1.0_x64-setup.exe', target: '_blank', type: 'info'
-            }, () => '这个链接'),
-            ' 下载Windows客户端, 其他平台请在下面的客户端 Repo 中的 Release 下载',
+              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+            }, () => '查看介绍'),
           ],
           [
             '当前可能存在一些问题, 可以加入秋秋群 873260337 进行反馈, 有功能需求也可以提出'
