@@ -1,6 +1,6 @@
 import { useTauriStore } from './useTauriStore';
 
-export type NotificationType = 'question-box' | 'danmaku';
+export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy';
 export type NotificationSettings = {
   enableTypes: NotificationType[];
 };
@@ -14,6 +14,8 @@ export type VTsuruClientSettings = {
 
   enableNotification: boolean;
   notificationSettings: NotificationSettings;
+
+  dev_disableDanmakuClient: boolean;
 };
 
 export const useSettings = defineStore('settings', () => {
@@ -29,6 +31,8 @@ export const useSettings = defineStore('settings', () => {
     notificationSettings: {
       enableTypes: ['question-box', 'danmaku'],
     },
+
+    dev_disableDanmakuClient: false,
   };
   const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings));
 
