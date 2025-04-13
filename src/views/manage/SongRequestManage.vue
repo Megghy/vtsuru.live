@@ -5,7 +5,7 @@ import { NAlert } from 'naive-ui'
 import MusicRequest from '../open_live/MusicRequest.vue'
 
 const accountInfo = useAccount()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 </script>
 
 <template>

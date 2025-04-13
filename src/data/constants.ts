@@ -14,7 +14,7 @@ export const isDev = import.meta.env.MODE === 'development';
 export const isTauri = window.__TAURI__ !== undefined || window.__TAURI_INTERNAL__ !== undefined;
 
 export const AVATAR_URL = 'https://workers.vrp.moe/api/bilibili/avatar/';
-export const FILE_BASE_URL = 'https://files.vtsuru.live';
+export const FILE_BASE_URL = 'https://files.vtsuru.suki.club';
 export const IMGUR_URL = FILE_BASE_URL + '/imgur/';
 export const THINGS_URL = FILE_BASE_URL + '/things/';
 export const apiFail = ref(false);

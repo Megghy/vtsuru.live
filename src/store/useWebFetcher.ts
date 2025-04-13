@@ -17,6 +17,7 @@ import { ZstdCodec, ZstdInit } from '@oneidentity/zstd-js/wasm';
 import { encode } from "@msgpack/msgpack";
 import { getVersion } from '@tauri-apps/api/app';
 import { onReceivedNotification } from '@/client/data/notification';
+import { useDanmakuClient } from './useDanmakuClient';
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
   const route = useRoute();
@@ -28,7 +29,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   const startedAt = ref<Date>(); // 本次启动时间
   const signalRClient = shallowRef<signalR.HubConnection>(); // SignalR 客户端实例 (浅响应)
   const signalRId = ref<string>(); // SignalR 连接 ID
-  const client = shallowRef<BaseDanmakuClient>(); // 弹幕客户端实例 (浅响应)
+  const client = useDanmakuClient();
   let timer: any; // 事件发送定时器
   let disconnectedByServer = false;
   let isFromClient = false; // 是否由Tauri客户端启动
@@ -135,8 +136,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     if (timer) { clearInterval(timer); timer = undefined; }
 
     // 停止弹幕客户端
-    client.value?.Stop();
-    client.value = undefined;
+    client.dispose();
     danmakuClientState.value = 'stopped';
     danmakuServerUrl.value = undefined;
 
@@ -169,7 +169,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     type: 'openlive' | 'direct',
     directConnectInfo?: DirectClientAuthInfo
   ) {
-    if (client.value?.state === 'connected' || client.value?.state === 'connecting') {
+    if (client.state !== 'waiting') {
       console.log(prefix.value + '弹幕客户端已连接或正在连接');
       return { success: true, message: '弹幕客户端已启动' };
     }
@@ -177,47 +177,32 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     console.log(prefix.value + '正在连接弹幕客户端...');
     danmakuClientState.value = 'connecting';
 
-    // 如果实例存在但已停止，先清理
-    if (client.value?.state === 'disconnected') {
-      client.value = undefined;
-    }
-
-    // 创建实例并添加事件监听 (仅在首次创建时)
-    if (!client.value) {
-      if (type === 'openlive') {
-        client.value = new OpenLiveClient();
-      } else {
-        if (!directConnectInfo) {
-          danmakuClientState.value = 'stopped';
-          console.error(prefix.value + '未提供直连弹幕客户端认证信息');
-          return { success: false, message: '未提供弹幕客户端认证信息' };
-        }
-        client.value = new DirectClient(directConnectInfo);
-        // 直连地址通常包含 host 和 port，可以从 directConnectInfo 获取
-        //danmakuServerUrl.value = `${directConnectInfo.host}:${directConnectInfo.port}`;
+    if (type === 'openlive') {
+      await client.initOpenlive();
+    } else {
+      if (!directConnectInfo) {
+        danmakuClientState.value = 'stopped';
+        console.error(prefix.value + '未提供直连弹幕客户端认证信息');
+        return { success: false, message: '未提供弹幕客户端认证信息' };
       }
-
-      // 监听所有事件，用于处理和转发
-      client.value?.on('all', onGetDanmakus);
+      await client.initDirect(directConnectInfo);
     }
 
+    // 监听所有事件，用于处理和转发
+    client?.onEvent('all', onGetDanmakus);
 
-    // 启动客户端连接
-    const result = await client.value?.Start();
-
-    if (result?.success) {
+    if (client.connected) {
       console.log(prefix.value + '弹幕客户端连接成功, 开始监听弹幕');
       danmakuClientState.value = 'connected'; // 明确设置状态
-      danmakuServerUrl.value = client.value.serverUrl; // 获取服务器地址
+      danmakuServerUrl.value = client.danmakuClient!.serverUrl; // 获取服务器地址
       // 启动事件发送定时器 (如果之前没有启动)
       timer ??= setInterval(sendEvents, 1500); // 每 1.5 秒尝试发送一次事件
     } else {
-      console.error(prefix.value + '弹幕客户端启动失败: ' + result?.message);
+      console.error(prefix.value + '弹幕客户端启动失败');
       danmakuClientState.value = 'stopped';
       danmakuServerUrl.value = undefined;
-      client.value = undefined; // 启动失败，清理实例，下次会重建
+      client.dispose(); // 启动失败，清理实例，下次会重建
     }
-    return result;
   }
 
   /**
@@ -371,11 +356,18 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
     events.push(eventString);
   }
-
+  let updateCount = 0;
   /**
    * 定期将队列中的事件发送到服务器
    */
   async function sendEvents() {
+    if (updateCount % 60 == 0) {
+      // 每60秒更新一次连接信息
+      if (signalRClient.value) {
+        await sendSelfInfo(signalRClient.value);
+      }
+    }
+    updateCount++;
     // 确保 SignalR 已连接
     if (!signalRClient.value || signalRClient.value.state !== signalR.HubConnectionState.Connected) {
       return;
@@ -450,7 +442,5 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
     // 实例 (谨慎暴露，主要用于调试或特定场景)
     signalRClient: computed(() => signalRClient.value), // 返回计算属性以防直接修改
-    client: computed(() => client.value),
-
   };
 });

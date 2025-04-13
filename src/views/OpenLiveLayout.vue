@@ -2,7 +2,7 @@
 import { isDarkMode } from '@/Utils'
 import { ThemeType } from '@/api/api-models'
 import { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent'
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
@@ -39,7 +39,7 @@ const sider = ref()
 const { width } = useElementSize(sider)
 
 const authInfo = ref<AuthInfo>()
-const danmakuClient = await useDanmakuClient()
+const danmakuClient = await useDanmakuClient().initOpenlive();
 
 const menuOptions = [
   {
@@ -111,7 +111,7 @@ const danmakuClientError = ref<string>()
 onMounted(async () => {
   authInfo.value = route.query as unknown as AuthInfo
   if (authInfo.value?.Code) {
-    danmakuClient.initClient(authInfo.value)
+    danmakuClient.initOpenlive(authInfo.value)
   } else {
     message.error('你不是从幻星平台访问此页面, 或未提供对应参数, 无法使用此功能')
   }

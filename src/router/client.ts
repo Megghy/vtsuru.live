@@ -27,6 +27,14 @@ export default {
       }
     },
     {
+      path: 'danmaku-window-manage',
+      name: 'client-danmaku-window-manage',
+      component: () => import('@/client/DanmakuWindowManager.vue'),
+      meta: {
+        title: '弹幕窗口管理',
+      }
+    },
+    {
       path: 'test',
       name: 'client-test',
       component: () => import('@/client/ClientTest.vue'),

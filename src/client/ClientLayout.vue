@@ -101,6 +101,12 @@ import { isTauri } from '@/data/constants';
       key: 'fetcher',
       icon: () => h(CloudArchive24Filled)
     },
+    /*{
+      label: () =>
+        h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机管理'),
+      key: 'danmaku-window-manage',
+      icon: () => h(Settings24Filled)
+    },*/
     {
       label: () =>
         h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),

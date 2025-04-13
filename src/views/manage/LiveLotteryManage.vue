@@ -5,7 +5,7 @@ import { NAlert } from 'naive-ui'
 import OpenLottery from '../open_live/OpenLottery.vue'
 
 const accountInfo = useAccount()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 
 </script>
 
