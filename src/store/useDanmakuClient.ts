@@ -1,238 +1,316 @@
-import { useAccount } from '@/api/account'
-import { OpenLiveInfo } from '@/api/api-models'
-import OpenLiveClient, { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { EventModel, OpenLiveInfo } from '@/api/api-models';
+import BaseDanmakuClient from '@/data/DanmakuClients/BaseDanmakuClient';
+import DirectClient, { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient';
+import OpenLiveClient, { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient';
+import { defineStore } from 'pinia';
+import { computed, ref, shallowRef } from 'vue'; // 引入 shallowRef
 
-export interface BCMessage {
-  type: string
-  data: string
-}
+// 定义支持的事件名称类型
+type EventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel';
+type EventNameWithAll = EventName | 'all';
+// 定义监听器函数类型
+type Listener = (arg1: any, arg2: any) => void;
+type EventListener = (arg1: EventModel, arg2: any) => void;
+// --- 修正点: 确保 AllEventListener 定义符合要求 ---
+// AllEventListener 明确只接受一个参数
+type AllEventListener = (arg1: any) => void;
+
+// --- 修正点: 定义一个统一的监听器类型，用于内部实现签名 ---
+type GenericListener = Listener | AllEventListener;
 
 export const useDanmakuClient = defineStore('DanmakuClient', () => {
-  const danmakuClient = ref<OpenLiveClient>(new OpenLiveClient())
-  let bc: BroadcastChannel
-  const isOwnedDanmakuClient = ref(false)
-  const status = ref<'waiting' | 'initializing' | 'listening' | 'running'>(
-    'waiting'
-  )
-  const connected = computed(
-    () => status.value === 'running' || status.value === 'listening'
-  )
-  const authInfo = ref<OpenLiveInfo>()
-  const accountInfo = useAccount()
+  // 使用 shallowRef 存储 danmakuClient 实例, 性能稍好
+  const danmakuClient = shallowRef<BaseDanmakuClient>();
 
-  let existOtherClient = false
-  let isInitializing = false
+  // 连接状态: 'waiting'-等待初始化, 'connecting'-连接中, 'connected'-已连接
+  const state = ref<'waiting' | 'connecting' | 'connected'>('waiting');
+  // 计算属性, 判断是否已连接
+  const connected = computed(() => state.value === 'connected');
+  // 存储开放平台认证信息 (如果使用 OpenLiveClient)
+  const authInfo = ref<OpenLiveInfo>();
 
-  function on(
-    eventName: 'danmaku' | 'gift' | 'sc' | 'guard',
-    listener: (...args: any[]) => void
-  ) {
-    if (!danmakuClient.value.events[eventName]) {
-      danmakuClient.value.events[eventName] = []
+  // 初始化锁, 防止并发初始化
+  let isInitializing = false;
+
+  /**
+   * @description 注册事件监听器 (特定于 OpenLiveClient 的原始事件 或 调用 onEvent)
+   * @param eventName 事件名称 ('danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel')
+   * @param listener 回调函数
+   * @remarks 对于 OpenLiveClient, 直接操作其内部 events; 对于其他客户端, 调用 onEvent.
+   */
+  // --- 修正点: 保持重载签名不变 ---
+  function onEvent(eventName: 'all', listener: AllEventListener): void;
+  function onEvent(eventName: EventName, listener: Listener): void;
+  // --- 修正点: 实现签名使用联合类型，并在内部进行类型断言 ---
+  function onEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: GenericListener): void {
+    if(!danmakuClient.value) {
+      console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'onEvent'。");
+      return;
     }
-    danmakuClient.value.events[eventName].push(listener)
-  }
-  function onEvent(
-    eventName: 'danmaku' | 'gift' | 'sc' | 'guard' | 'all',
-    listener: (...args: any[]) => void
-  ) {
-    if (!danmakuClient.value.eventsAsModel[eventName]) {
-      danmakuClient.value.eventsAsModel[eventName] = []
+    if (eventName === 'all') {
+      // 对于 'all' 事件, 直接使用 AllEventListener 类型
+      danmakuClient.value.eventsAsModel[eventName].push(listener as AllEventListener);
+    } else {
+      danmakuClient.value.eventsAsModel[eventName].push(listener);
     }
-    danmakuClient.value.eventsAsModel[eventName].push(listener)
   }
 
-  function off(
-    eventName: 'danmaku' | 'gift' | 'sc' | 'guard',
-    listener: (...args: any[]) => void
-  ) {
-    if (danmakuClient.value.events[eventName]) {
-      const index = danmakuClient.value.events[eventName].indexOf(listener)
+  /*
+   * @description 注册事件监听器 (模型化数据, 存储在 Store 中)
+   * @param eventName 事件名称 ('danmaku', 'gift', 'sc', 'guard', 'all')
+   * @param listener 回调函数
+   * @remarks 监听器存储在 Store 中, 会在客户端重连后自动重新附加.
+   */
+  // --- 修正点: 保持重载签名不变 ---
+  function on(eventName: 'all', listener: AllEventListener): void;
+  function on(eventName: EventName, listener: Listener): void;
+  // --- 修正点: 实现签名使用联合类型，并在内部进行类型断言 ---
+  function on(eventName: EventNameWithAll, listener: GenericListener): void {
+    if (!danmakuClient.value) {
+      console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'on'。");
+      return;
+    }
+    danmakuClient.value.eventsRaw[eventName].push(listener);
+  }
+
+
+  /**
+   * @description 移除事件监听器 (模型化数据, 从 Store 中移除)
+   * @param eventName 事件名称 ('danmaku', 'gift', 'sc', 'guard', 'all')
+   * @param listener 要移除的回调函数
+   */
+  // --- 修正点: 保持重载签名不变 ---
+  function offEvent(eventName: 'all', listener: AllEventListener): void;
+  function offEvent(eventName: EventName, listener: Listener): void;
+  // --- 修正点: 实现签名使用联合类型，并在内部进行类型断言 ---
+  function offEvent(eventName: keyof BaseDanmakuClient['eventsRaw'], listener: GenericListener): void {
+    if (!danmakuClient.value) {
+      console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'offEvent'。");
+      return;
+    }
+    if (eventName === 'all') {
+      // 对于 'all' 事件, 直接使用 AllEventListener 类型
+      const modelListeners = danmakuClient.value.eventsAsModel[eventName] as AllEventListener[];
+      const index = modelListeners.indexOf(listener as AllEventListener);
       if (index > -1) {
-        danmakuClient.value.events[eventName].splice(index, 1)
-      }
-    }
-  }
-
-  function offEvent(
-    eventName: 'danmaku' | 'gift' | 'sc' | 'guard' | 'all',
-    listener: (...args: any[]) => void
-  ) {
-    if (danmakuClient.value.eventsAsModel[eventName]) {
-      const index =
-        danmakuClient.value.eventsAsModel[eventName].indexOf(listener)
-      if (index > -1) {
-        danmakuClient.value.eventsAsModel[eventName].splice(index, 1)
-      }
-    }
-  }
-
-  async function initClient(auth?: AuthInfo) {
-    if (!isInitializing && !connected.value) {
-      isInitializing = true
-      navigator.locks.request(
-        'danmakuClientInit',
-        { ifAvailable: true },
-        async (lock) => {
-          if (lock) {
-            status.value = 'initializing'
-            bc = new BroadcastChannel(
-              'vtsuru.danmaku.open-live' + accountInfo.value?.id
-            )
-            console.log('[DanmakuClient] 创建 BroadcastChannel: ' + bc.name)
-            bc.onmessage = (event) => {
-              const message: BCMessage = event.data as BCMessage
-              const data = message.data ? JSON.parse(message.data) : {}
-              switch (message.type) {
-                case 'check-client':
-                  sendBCMessage('response-client-status', {
-                    status: status.value,
-                    auth: authInfo.value
-                  })
-                  break
-                case 'response-client-status':
-                  switch (
-                    data.status //如果存在已经在运行或者正在启动的客户端, 状态设为 listening
-                  ) {
-                    case 'running':
-                    case 'initializing':
-                      status.value = 'listening'
-                      existOtherClient = true
-                      authInfo.value = data.auth
-                      break
-                  }
-                  break
-                case 'on-danmaku':
-                  const danmaku = typeof data === 'string' ? JSON.parse(data) : data
-                  switch (danmaku.cmd) {
-                    case 'LIVE_OPEN_PLATFORM_DM':
-                      danmakuClient.value.onDanmaku(danmaku)
-                      break
-                    case 'LIVE_OPEN_PLATFORM_SEND_GIFT':
-                      danmakuClient.value.onGift(danmaku)
-                      break
-                    case 'LIVE_OPEN_PLATFORM_SUPER_CHAT':
-                      danmakuClient.value.onSC(danmaku)
-                      break
-                    case 'LIVE_OPEN_PLATFORM_GUARD':
-                      danmakuClient.value.onGuard(danmaku)
-                      break
-                    default:
-                      danmakuClient.value.onRawMessage(danmaku)
-                      break
-                  }
-                  break
-              }
-            }
-            console.log('[DanmakuClient] 正在检查客户端状态...')
-            sendBCMessage('check-client')
-            setTimeout(() => {
-              if (!connected.value) {
-                isOwnedDanmakuClient.value = true
-                initClientInternal(auth)
-              } else {
-                console.log(
-                  '[DanmakuClient] 已存在其他页面弹幕客户端, 开始监听 BroadcastChannel...'
-                )
-              }
-
-              setInterval(checkClientStatus, 500)
-            }, 1000)
-          }
-        }
-      )
-    }
-    isInitializing = false
-    return useDanmakuClient()
-  }
-  function sendBCMessage(type: string, data?: any) {
-    bc.postMessage({
-      type,
-      data: JSON.stringify(data)
-    })
-  }
-  function checkClientStatus() {
-    if (!existOtherClient && !isOwnedDanmakuClient.value) {
-      //当不存在其他客户端, 且自己不是弹幕客户端
-      //则自己成为新的弹幕客户端
-      if (status.value != 'initializing') {
-        console.log('[DanmakuClient] 其他 Client 离线, 开始初始化...')
-        initClientInternal()
+        modelListeners.splice(index, 1);
       }
     } else {
-      existOtherClient = false //假设其他客户端不存在
-      sendBCMessage('check-client') //检查其他客户端是否存在
+      const index = danmakuClient.value.eventsAsModel[eventName].indexOf(listener);
+      if (index > -1) {
+        danmakuClient.value.eventsAsModel[eventName].splice(index, 1);
+      } else {
+        console.warn(`[DanmakuClient] 试图移除未注册的监听器: ${listener}`);
+      }
     }
   }
 
-  async function initClientInternal(auth?: AuthInfo) {
-    status.value = 'initializing'
-    await navigator.locks.request(
-      'danmakuClientInitInternal',
-      {
-        ifAvailable: true
-      },
-      async (lock) => {
-        if (lock) {
-          // 有锁
-          isOwnedDanmakuClient.value = true
-          const events = danmakuClient.value.events
-          const eventsAsModel = danmakuClient.value.eventsAsModel
+  /*
+   * @description 移除事件监听器 (特定于 OpenLiveClient 或调用 offEvent)
+   * @param eventName 事件名称 ('danmaku', 'gift', 'sc', 'guard', 'all')
+   * @param listener 要移除的回调函数
+   */
+  // --- 修正点: 保持重载签名不变 ---
+  function off(eventName: 'all', listener: AllEventListener): void;
+  function off(eventName: EventName, listener: Listener): void;
+  // --- 修正点: 实现签名使用联合类型，并在内部进行类型断言 ---
+  function off(eventName: EventNameWithAll, listener: GenericListener): void {
+    if (!danmakuClient.value) {
+      console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'off'。");
+      return;
+    }
+    const index = danmakuClient.value.eventsRaw[eventName].indexOf(listener);
+    if (index > -1) {
+      danmakuClient.value.eventsRaw[eventName].splice(index, 1);
+    }
+    // 直接从 eventsRaw 中移除监听器
+  }
 
-          danmakuClient.value = new OpenLiveClient(auth)
+  /**
+   * @description 初始化 OpenLive 客户端
+   * @param auth 认证信息
+   * @returns
+   */
+  async function initOpenlive(auth?: AuthInfo) {
+    return initClient(new OpenLiveClient(auth));
+  }
 
-          danmakuClient.value.events = events
-          danmakuClient.value.eventsAsModel = eventsAsModel
-          const init = async () => {
-            const result = await danmakuClient.value.Start()
-            if (result.success) {
-              authInfo.value = danmakuClient.value.roomAuthInfo
-              status.value = 'running'
-              console.log('[DanmakuClient] 初始化成功')
-              sendBCMessage('response-client-status', {
-                status: 'running',
-                auth: authInfo.value
-              })
-              danmakuClient.value.on('all', (data) => {
-                sendBCMessage('on-danmaku', data)
-              })
-              return true
-            } else {
-              console.log(
-                '[DanmakuClient] 初始化失败, 5秒后重试: ' + result.message
-              )
-              return false
-            }
-          }
-          while (!(await init())) {
-            await new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(true)
-              }, 5000)
-            })
-          }
-        } else {
-          // 无锁
-          console.log('[DanmakuClient] 正在等待其他页面弹幕客户端初始化...')
-          status.value = 'listening'
-          isOwnedDanmakuClient.value = false
+  /**
+   * @description 初始化 Direct 客户端
+   * @param auth 认证信息
+   * @returns
+   */
+  async function initDirect(auth: DirectClientAuthInfo) {
+    return initClient(new DirectClient(auth));
+  }
+
+
+  // 辅助函数: 从客户端的 eventsAsModel 移除单个监听器
+  // --- 修正点: 修正 detachListenerFromClient 的签名和实现以处理联合类型 ---
+  function detachListenerFromClient(client: BaseDanmakuClient, eventName: EventNameWithAll, listener: GenericListener): void {
+    if (client.eventsAsModel[eventName]) {
+      if (eventName === 'all') {
+        const modelListeners = client.eventsAsModel[eventName] as AllEventListener[];
+        const index = modelListeners.indexOf(listener as AllEventListener);
+        if (index > -1) {
+          modelListeners.splice(index, 1);
+        }
+      } else {
+        const modelListeners = client.eventsAsModel[eventName] as Listener[];
+        const index = modelListeners.indexOf(listener as Listener);
+        if (index > -1) {
+          modelListeners.splice(index, 1);
         }
       }
-    )
+    }
+  }
+
+
+  /**
+   * @description 通用客户端初始化逻辑
+   * @param client 要初始化的客户端实例
+   * @returns Promise<boolean> 是否初始化成功 (包括重试后最终成功)
+   */
+  async function initClient(client: BaseDanmakuClient) { // 返回 Promise<boolean> 表示最终是否成功
+    // 防止重复初始化或在非等待状态下初始化
+    if (isInitializing || state.value !== 'waiting') {
+      console.warn(`[DanmakuClient] 初始化尝试被阻止。 isInitializing: ${isInitializing}, state: ${state.value}`);
+      return useDanmakuClient(); // 如果已连接，则视为“成功”
+    }
+
+    isInitializing = true;
+    state.value = 'connecting';
+    console.log('[DanmakuClient] 开始初始化...');
+
+
+    const oldEventsAsModel = danmakuClient.value?.eventsAsModel;
+    const oldEventsRaw = danmakuClient.value?.eventsRaw;
+
+    // 先停止并清理旧客户端 (如果存在)
+    if (danmakuClient.value) {
+      console.log('[DanmakuClient] 正在处理旧的客户端实例...');
+      await disposeClientInstance(danmakuClient.value);
+      danmakuClient.value = undefined; // 显式清除旧实例引用
+    }
+
+    // 设置新的客户端实例
+    danmakuClient.value = client;
+    // 确保新客户端有空的监听器容器 (BaseDanmakuClient 应负责初始化)
+    danmakuClient.value.eventsAsModel = oldEventsAsModel || client.createEmptyEventModelListeners();
+    danmakuClient.value.eventsRaw = oldEventsRaw || client.createEmptyRawEventlisteners();
+    // 通常在 client 实例化或 Start 时处理，或者在 attachListenersToClient 中确保存在
+
+
+    let connectSuccess = false;
+    const maxRetries = 5; // Example: Limit retries
+    let retryCount = 0;
+
+    const attemptConnect = async () => {
+      if (!danmakuClient.value) return false; // Guard against client being disposed during wait
+      try {
+        console.log(`[DanmakuClient] 尝试连接 (第 ${retryCount + 1} 次)...`);
+        const result = await danmakuClient.value.Start(); // 启动连接
+        if (result.success) {
+          // 连接成功
+          authInfo.value = danmakuClient.value instanceof OpenLiveClient ? danmakuClient.value.roomAuthInfo : undefined;
+          state.value = 'connected';
+          // 将 Store 中存储的监听器 (来自 onEvent) 附加到新连接的客户端的 eventsAsModel
+          console.log('[DanmakuClient] 初始化成功。');
+          connectSuccess = true;
+          return true; // 连接成功, 退出重试循环
+        } else {
+          // 连接失败
+          console.error(`[DanmakuClient] 连接尝试失败: ${result.message}`);
+          return false; // 继续重试
+        }
+      } catch (error) {
+        // 捕获 Start() 可能抛出的异常
+        console.error(`[DanmakuClient] 连接尝试期间发生异常:`, error);
+        return false; // 继续重试
+      }
+    };
+
+    // 循环尝试连接, 直到成功或达到重试次数
+    while (!connectSuccess && retryCount < maxRetries) {
+      if (state.value !== 'connecting') { // 检查状态是否在循环开始时改变
+        console.log('[DanmakuClient] 初始化被外部中止。');
+        isInitializing = false;
+        //return false; // 初始化被中止
+        break;
+      }
+
+      if (!(await attemptConnect())) {
+        retryCount++;
+        if (retryCount < maxRetries && state.value === 'connecting') {
+          console.log(`[DanmakuClient] 5 秒后重试连接... (${retryCount}/${maxRetries})`);
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // 再次检查在等待期间状态是否改变
+          if (state.value !== 'connecting') {
+            console.log('[DanmakuClient] 在重试等待期间初始化被中止。');
+            isInitializing = false;
+            //return false; // 初始化被中止
+            break;
+          }
+        } else if (state.value === 'connecting') {
+          console.error(`[DanmakuClient] 已达到最大连接重试次数 (${maxRetries})。初始化失败。`);
+          // 连接失败，重置状态
+          await dispose(); // 清理资源
+          // state.value = 'waiting'; // dispose 会设置状态
+          // isInitializing = false; // dispose 会设置
+          // return false; // 返回失败状态
+          break;
+        }
+      }
+    }
+
+    isInitializing = false; // 无论成功失败，初始化过程结束
+    // 返回最终的连接状态
+    return useDanmakuClient();
+  }
+
+  // 封装停止和清理客户端实例的逻辑
+  async function disposeClientInstance(client: BaseDanmakuClient) {
+    try {
+      console.log('[DanmakuClient] 正在停止客户端实例...');
+      client.Stop(); // 停止客户端连接和内部处理
+      // 可能需要添加额外的清理逻辑，例如移除所有监听器
+      // client.eventsAsModel = client.createEmptyEventModelListeners(); // 清空监听器
+      // client.eventsRaw = client.createEmptyRawEventlisteners(); // 清空监听器
+      console.log('[DanmakuClient] 客户端实例已停止。');
+    } catch (error) {
+      console.error('[DanmakuClient] 停止客户端时出错:', error);
+    }
+  }
+
+  /**
+   * @description 停止并清理当前客户端连接和资源
+   */
+  async function dispose() {
+    console.log('[DanmakuClient] 正在停止并清理客户端...');
+    isInitializing = false; // 允许在 dispose 后重新初始化
+
+    if (danmakuClient.value) {
+      await disposeClientInstance(danmakuClient.value);
+      danmakuClient.value = undefined; // 解除对旧客户端实例的引用
+    }
+    state.value = 'waiting'; // 重置状态为等待
+    authInfo.value = undefined; // 清理认证信息
+    // isInitializing = false; // 在函数开始处已设置
+    console.log('[DanmakuClient] 已处理。');
+    // 注意: Store 中 listeners.value (来自 onEvent) 默认不清空, 以便重连后恢复
   }
 
   return {
-    danmakuClient,
-    isOwnedDanmakuClient,
-    status,
-    connected,
-    authInfo,
-    on,
-    off,
-    onEvent,
-    offEvent,
-    initClient
-  }
-})
+    danmakuClient, // 当前弹幕客户端实例 (shallowRef)
+    state,         // 连接状态 ('waiting', 'connecting', 'connected')
+    authInfo,      // OpenLive 认证信息 (ref)
+    connected,     // 是否已连接 (computed)
+    onEvent,       // 注册事件监听器 (模型化数据, 存储于 Store)
+    offEvent,      // 移除事件监听器 (模型化数据, 从 Store 移除)
+    on,            // 注册事件监听器 (直接操作 client.eventsRaw)
+    off,           // 移除事件监听器 (直接操作 client.eventsRaw 或调用 offEvent)
+    initOpenlive,  // 初始化 OpenLive 客户端
+    initDirect,    // 初始化 Direct 客户端
+    dispose,       // 停止并清理客户端
+  };
+});

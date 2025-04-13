@@ -64,7 +64,7 @@ const settings = computed(() => {
 })
 const cooldown = useStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
 const musicRquestStore = useMusicRequestProvider()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 
 const props = defineProps<{
   roomInfo?: OpenLiveInfo

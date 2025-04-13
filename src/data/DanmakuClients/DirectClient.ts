@@ -1,66 +1,207 @@
-import { KeepLiveWS } from 'bilibili-live-ws/browser'
-import BaseDanmakuClient from './BaseDanmakuClient'
+import { KeepLiveWS } from 'bilibili-live-ws/browser';
+import BaseDanmakuClient from './BaseDanmakuClient';
+import { EventDataTypes } from '@/api/api-models';
+import { getUserAvatarUrl, GuidUtils } from '@/Utils';
+import { AVATAR_URL } from '../constants';
 export type DirectClientAuthInfo = {
-  token: string
-  roomId: number
-  tokenUserId: number
-  buvid: string
-}
+  token: string;
+  roomId: number;
+  tokenUserId: number;
+  buvid: string;
+};
 /** 直播间弹幕客户端, 只能在vtsuru.client环境使用
  *
- * 未实现除raw事件外的所有事件
  */
 export default class DirectClient extends BaseDanmakuClient {
   public serverUrl: string = 'wss://broadcastlv.chat.bilibili.com/sub';
-  public onDanmaku(command: any): void {
-    throw new Error('Method not implemented.')
-  }
-  public onGift(command: any): void {
-    throw new Error('Method not implemented.')
-  }
-  public onSC(command: any): void {
-    throw new Error('Method not implemented.')
-  }
-  public onGuard(command: any): void {
-    throw new Error('Method not implemented.')
-  }
+
   constructor(auth: DirectClientAuthInfo) {
-    super()
-    this.authInfo = auth
+    super();
+    this.authInfo = auth;
   }
 
-  public type = 'direct' as const
+  public type = 'direct' as const;
 
-  public readonly authInfo: DirectClientAuthInfo
+  public readonly authInfo: DirectClientAuthInfo;
 
-  protected async initClient(): Promise<{ success: boolean; message: string }> {
+  protected async initClient(): Promise<{ success: boolean; message: string; }> {
     if (this.authInfo) {
       const chatClient = new KeepLiveWS(this.authInfo.roomId, {
         key: this.authInfo.token,
         buvid: this.authInfo.buvid,
         uid: this.authInfo.tokenUserId,
         protover: 3
-      })
+      });
 
       chatClient.on('live', () => {
-        console.log('[DIRECT] 已连接房间: ' + this.authInfo.roomId)
-      })
-      /*chatClient.on('DANMU_MSG', this.onDanmaku)
-      chatClient.on('SEND_GIFT', this.onGift)
-      chatClient.on('GUARD_BUY', this.onGuard)
-      chatClient.on('SUPER_CHAT_MESSAGE', this.onSC)
-      chatClient.on('msg', (data) => {
-        this.events.all?.forEach((d) => {
-          d(data)
-        })
-      })*/
-      return await super.initClientInner(chatClient)
+        console.log('[DIRECT] 已连接房间: ' + this.authInfo.roomId);
+      });
+      chatClient.on('DANMU_MSG', (data) => this.onDanmaku(data));
+      chatClient.on('SEND_GIFT', (data) => this.onGift(data));
+      chatClient.on('GUARD_BUY', (data) => this.onGuard(data));
+      chatClient.on('SUPER_CHAT_MESSAGE', (data) => this.onSC(data));
+      chatClient.on('INTERACT_WORD', (data) => this.onEnter(data));
+      chatClient.on('SUPER_CHAT_MESSAGE_DELETE', (data) => this.onScDel(data));
+
+      return await super.initClientInner(chatClient);
     } else {
-      console.log('[DIRECT] 无法开启场次, 未提供弹幕客户端认证信息')
+      console.log('[DIRECT] 无法开启场次, 未提供弹幕客户端认证信息');
       return {
         success: false,
         message: '未提供弹幕客户端认证信息'
-      }
+      };
     }
+  }
+  public onDanmaku(command: any): void {
+    const data = command.data;
+    const info = data.info;
+    this.eventsRaw?.danmaku?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.danmaku?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Message,
+          name: info[2][1],
+          uid: info[2][0],
+          msg: info[1],
+          price: 0,
+          num: 1,
+          time: Date.now(),
+          guard_level: info[7],
+          fans_medal_level: info[0][15].medal?.level,
+          fans_medal_name: info[0][15].medal?.name,
+          fans_medal_wearing_status: info[0][15].medal?.is_light === 1,
+          emoji: info[0]?.[13]?.url?.replace("http://", "https://") || '',
+          uface: info[0][15].user.base.face.replace("http://", "https://"),
+          open_id: '',
+          ouid: GuidUtils.numToGuid(info[2][0])
+        },
+        command
+      );
+    });
+  }
+  public onGift(command: any): void {
+    const data = command.data;
+    this.eventsRaw?.gift?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.gift?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Gift,
+          name: data.uname,
+          uid: data.uid,
+          msg: data.giftName,
+          price: data.giftId,
+          num: data.num,
+          time: Date.now(),
+          guard_level: data.guard_level,
+          fans_medal_level: data.medal_info.medal_level,
+          fans_medal_name: data.medal_info.medal_name,
+          fans_medal_wearing_status: data.medal_info.is_lighted === 1,
+          uface: data.face.replace("http://", "https://"),
+          open_id: '',
+          ouid: GuidUtils.numToGuid(data.uid)
+        },
+        command
+      );
+    });
+  }
+  public onSC(command: any): void {
+    const data = command.data;
+    this.eventsRaw?.sc?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.sc?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.SC,
+          name: data.user_info.uname,
+          uid: data.uid,
+          msg: data.message,
+          price: data.price,
+          num: 1,
+          time: Date.now(),
+          guard_level: data.user_info.guard_level,
+          fans_medal_level: data.medal_info.medal_level,
+          fans_medal_name: data.medal_info.medal_name,
+          fans_medal_wearing_status: data.medal_info.is_lighted === 1,
+          uface: data.user_info.face.replace("http://", "https://"),
+          open_id: '',
+          ouid: GuidUtils.numToGuid(data.uid)
+        },
+        command
+      );
+    });
+  }
+  public onGuard(command: any): void {
+    const data = command.data;
+    this.eventsRaw?.guard?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.guard?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Guard,
+          name: data.username,
+          uid: data.uid,
+          msg: data.gift_name,
+          price: data.price / 1000,
+          num: data.num,
+          time: Date.now(),
+          guard_level: data.guard_level,
+          fans_medal_level: 0,
+          fans_medal_name: '',
+          fans_medal_wearing_status: false,
+          uface: AVATAR_URL + data.uid,
+          open_id: '',
+          ouid: GuidUtils.numToGuid(data.uid)
+        },
+        command
+      );
+    });
+  }
+  public onEnter(command: any): void {
+    const data = command.data;
+    this.eventsRaw?.enter?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.enter?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Enter,
+          name: data.uname,
+          uid: data.uid,
+          msg: '',
+          price: 0,
+          num: 1,
+          time: Date.now(),
+          guard_level: 0,
+          fans_medal_level: data.fans_medal?.medal_level || 0,
+          fans_medal_name: data.fans_medal?.medal_name || '',
+          fans_medal_wearing_status: false,
+          uface: getUserAvatarUrl(data.uid),
+          open_id: '',
+          ouid: GuidUtils.numToGuid(data.uid)
+        },
+        command
+      );
+    });
+  }
+  public onScDel(command: any): void {
+    const data = command.data;
+    this.eventsRaw?.scDel?.forEach((d) => { d(data, command); });
+    this.eventsAsModel.scDel?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.SCDel,
+          name: '',
+          uid: 0,
+          msg: JSON.stringify(data.ids),
+          price: 0,
+          num: 1,
+          time: Date.now(),
+          guard_level: 0,
+          fans_medal_level: 0,
+          fans_medal_name: '',
+          fans_medal_wearing_status: false,
+          uface: '',
+          open_id: '',
+          ouid: ''
+        },
+        command
+      );
+    });
   }
 }

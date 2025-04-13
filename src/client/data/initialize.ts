@@ -19,6 +19,7 @@ import { CN_HOST, isDev } from "@/data/constants";
 import { invoke } from "@tauri-apps/api/core";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { useDanmakuWindow } from "../store/useDanmakuWindow";
 
 const accountInfo = useAccount();
 
@@ -134,6 +135,7 @@ export function OnClientUnmounted() {
   }
 
   tray.close();
+  useDanmakuWindow().closeWindow()
 }
 
 async function checkUpdate() {

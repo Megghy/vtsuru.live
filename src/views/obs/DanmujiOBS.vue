@@ -49,7 +49,7 @@ const { customCss, isOBS = true } = defineProps<{
 }>()
 
 const messageRender = ref()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 const pronunciationConverter = new pronunciation.PronunciationConverter()
 const accountInfo = useAccount()
 const route = useRoute()

@@ -14,5 +14,13 @@ export default [
     meta: {
       title: '测试页'
     }
+  },
+  {
+    path: '/danmaku-window',
+    name: 'client-danmaku-client',
+    component: () => import('@/client/ClientDanmakuWindow.vue'),
+    meta: {
+      title: '弹幕窗口'
+    }
   }
 ]

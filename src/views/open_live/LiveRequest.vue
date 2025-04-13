@@ -104,7 +104,7 @@ const route = useRoute()
 const accountInfo = useAccount()
 const message = useMessage()
 const notice = useNotification()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 
 const isWarnMessageAutoClose = useStorage('SongRequest.Settings.WarnMessageAutoClose', false)
 const volumn = useStorage('Settings.Volumn', 0.5)

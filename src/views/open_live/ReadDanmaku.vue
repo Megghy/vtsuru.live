@@ -73,7 +73,7 @@ type SpeechInfo = {
 const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
-const client = await useDanmakuClient().initClient()
+const client = await useDanmakuClient().initOpenlive()
 const settings = useStorage<SpeechSettings>('Setting.Speech', {
   speechInfo: {
     volume: 1,
