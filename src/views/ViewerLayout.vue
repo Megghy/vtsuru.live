@@ -459,7 +459,6 @@
           <RouterView v-slot="{ Component }">
             <Transition
               name="fade-slide"
-              mode="out-in"
               :appear="true"
             >
               <KeepAlive>

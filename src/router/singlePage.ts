@@ -17,10 +17,11 @@ export default [
   },
   {
     path: '/danmaku-window',
-    name: 'client-danmaku-client',
+    name: 'client-danmaku-window',
     component: () => import('@/client/ClientDanmakuWindow.vue'),
     meta: {
-      title: '弹幕窗口'
+      title: '弹幕窗口',
+      ignoreLogin: true
     }
   }
 ]

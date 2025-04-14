@@ -20,7 +20,7 @@ type GenericListener = Listener | AllEventListener;
 
 export const useDanmakuClient = defineStore('DanmakuClient', () => {
   // 使用 shallowRef 存储 danmakuClient 实例, 性能稍好
-  const danmakuClient = shallowRef<BaseDanmakuClient>();
+  const danmakuClient = shallowRef<BaseDanmakuClient | undefined>(new OpenLiveClient()); // 默认实例化一个 OpenLiveClient
 
   // 连接状态: 'waiting'-等待初始化, 'connecting'-连接中, 'connected'-已连接
   const state = ref<'waiting' | 'connecting' | 'connected'>('waiting');
@@ -43,7 +43,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   function onEvent(eventName: EventName, listener: Listener): void;
   // --- 修正点: 实现签名使用联合类型，并在内部进行类型断言 ---
   function onEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: GenericListener): void {
-    if(!danmakuClient.value) {
+    if (!danmakuClient.value) {
       console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'onEvent'。");
       return;
     }
@@ -189,7 +189,9 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     // 先停止并清理旧客户端 (如果存在)
     if (danmakuClient.value) {
       console.log('[DanmakuClient] 正在处理旧的客户端实例...');
-      await disposeClientInstance(danmakuClient.value);
+      if (danmakuClient.value.state === 'connected') {
+        await disposeClientInstance(danmakuClient.value);
+      }
       danmakuClient.value = undefined; // 显式清除旧实例引用
     }
 

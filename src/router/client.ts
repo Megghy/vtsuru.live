@@ -35,6 +35,13 @@ export default {
       }
     },
     {
+      path: 'danmaku-window',
+      name: 'client-danmaku-window-redirect',
+      redirect: {
+        name: 'client-danmaku-window'
+      }
+    },
+    {
       path: 'test',
       name: 'client-test',
       component: () => import('@/client/ClientTest.vue'),

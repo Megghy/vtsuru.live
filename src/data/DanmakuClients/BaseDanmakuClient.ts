@@ -102,7 +102,7 @@ export default abstract class BaseDanmakuClient {
         const result = await this.initClient();
         if (result.success) {
           this.state = 'connected';
-          console.log(`[${this.type}] 弹幕客户端启动成功`);
+          console.log(`[${this.type}] 弹幕客户端已完成启动`);
         } else {
           this.state = 'disconnected';
           console.error(`[${this.type}] 弹幕客户端启动失败: ${result.message}`);

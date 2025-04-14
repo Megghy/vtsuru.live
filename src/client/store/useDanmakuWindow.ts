@@ -1,11 +1,7 @@
 import { EventDataTypes, EventModel } from "@/api/api-models";
-import { CURRENT_HOST } from "@/data/constants";
 import { useDanmakuClient } from "@/store/useDanmakuClient";
-import { useWebFetcher } from "@/store/useWebFetcher";
 import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
-import { Webview } from "@tauri-apps/api/webview";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { Window } from "@tauri-apps/api/window";
+import { getAllWebviewWindows, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export type DanmakuWindowSettings = {
   width: number;
@@ -39,10 +35,12 @@ export type DanmakuWindowBCData = {
 } | {
   type: 'update-setting',
   data: DanmakuWindowSettings;
+} | {
+  type: 'window-ready';
 };
 
 export const useDanmakuWindow = defineStore('danmakuWindow', () => {
-  const danmakuWindow = ref<Webview>();
+  const danmakuWindow = ref<WebviewWindow>();
   const danmakuWindowSetting = useStorage<DanmakuWindowSettings>('Setting.DanmakuWindow', {
     width: 400,
     height: 600,
@@ -68,15 +66,19 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     shadowColor: 'rgba(0,0,0,0.5)'
   });
   const danmakuClient = useDanmakuClient();
+  const isWindowOpened = ref(false);
   let bc: BroadcastChannel | undefined = undefined;
 
-  function hideWindow() {
-    danmakuWindow.value?.window.hide();
-    danmakuWindow.value = undefined;
-  }
   function closeWindow() {
-    danmakuWindow.value?.close();
-    danmakuWindow.value = undefined;
+    danmakuWindow.value?.hide();
+    isWindowOpened.value = false;
+  }
+  function openWindow() {
+    if (!isInited) {
+      init();
+    }
+    danmakuWindow.value?.show();
+    isWindowOpened.value = true;
   }
 
   function setDanmakuWindowSize(width: number, height: number) {
@@ -90,47 +92,58 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     danmakuWindowSetting.value.y = y;
     danmakuWindow.value?.setPosition(new PhysicalPosition(x, y));
   }
-
-  function updateSetting<K extends keyof DanmakuWindowSettings>(key: K, value: DanmakuWindowSettings[K]) {
-    danmakuWindowSetting.value[key] = value;
-    // 特定设置需要直接应用到窗口
-    if (key === 'alwaysOnTop' && danmakuWindow.value) {
-      danmakuWindow.value.window.setAlwaysOnTop(value as boolean);
-    }
-    if (key === 'interactive' && danmakuWindow.value) {
-      danmakuWindow.value.window.setIgnoreCursorEvents(value as boolean);
-    }
+  function updateWindowPosition() {
+    danmakuWindow.value?.setPosition(new PhysicalPosition(danmakuWindowSetting.value.x, danmakuWindowSetting.value.y));
   }
+  let isInited = false;
 
-  async function createWindow() {
-    const appWindow = new Window('uniqueLabel', {
-      decorations: true,
-      resizable: true,
-      transparent: true,
-      fullscreen: false,
-      alwaysOnTop: danmakuWindowSetting.value.alwaysOnTop,
-      title: "VTsuru 弹幕窗口",
-    });
-
-    // loading embedded asset:
-    danmakuWindow.value = new Webview(appWindow, 'theUniqueLabel', {
-      url: `${CURRENT_HOST}/client/danaku-window-manage`,
-      width: danmakuWindowSetting.value.width,
-      height: danmakuWindowSetting.value.height,
-      x: danmakuWindowSetting.value.x,
-      y: danmakuWindowSetting.value.y,
-    });
-
-    appWindow.onCloseRequested(() => {
+  async function init() {
+    if (isInited) return;
+    danmakuWindow.value = (await getAllWebviewWindows()).find((win) => win.label === 'danmaku-window');
+    if (!danmakuWindow.value) {
+      window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。');
+      return;
+    }
+    console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value);
+    danmakuWindow.value.onCloseRequested(() => {
       danmakuWindow.value = undefined;
       bc?.close();
       bc = undefined;
     });
 
-    danmakuWindow.value.once('tauri://window-created', async () => {
-      console.log('弹幕窗口已创建');
-      await danmakuWindow.value?.window.setIgnoreCursorEvents(true);
+    await danmakuWindow.value.setIgnoreCursorEvents(false);
+    await danmakuWindow.value.show();
+    danmakuWindow.value.onCloseRequested(() => {
+      closeWindow();
+      console.log('弹幕窗口关闭');
     });
+    danmakuWindow.value.onMoved(({
+      payload: position
+    }) => {
+      danmakuWindowSetting.value.x = position.x;
+      danmakuWindowSetting.value.y = position.y;
+    });
+
+    isWindowOpened.value = true;
+
+    bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
+    bc.onmessage = (event: MessageEvent<DanmakuWindowBCData>) => {
+      if (event.data.type === 'window-ready') {
+        console.log(`[danmaku-window] 窗口已就绪`);
+        bc?.postMessage({
+          type: 'update-setting',
+          data: toRaw(danmakuWindowSetting.value),
+        });
+      }
+    };
+    bc.postMessage({
+      type: 'window-ready',
+    });
+    bc.postMessage({
+      type: 'update-setting',
+      data: toRaw(danmakuWindowSetting.value),
+    });
+
     bc?.postMessage({
       type: 'danmaku',
       data: {
@@ -139,16 +152,34 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       } as Partial<EventModel>,
     });
 
-    bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
+    danmakuClient.onEvent('danmaku', (event) => onGetDanmakus(event));
+    danmakuClient.onEvent('gift', (event) => onGetDanmakus(event));
+    danmakuClient.onEvent('sc', (event) => onGetDanmakus(event));
+    danmakuClient.onEvent('guard', (event) => onGetDanmakus(event));
+    danmakuClient.onEvent('enter', (event) => onGetDanmakus(event));
+    danmakuClient.onEvent('scDel', (event) => onGetDanmakus(event));
 
-    if (danmakuClient.connected) {
-      danmakuClient.onEvent('danmaku', (event) => onGetDanmakus(event));
-      danmakuClient.onEvent('gift', (event) => onGetDanmakus(event));
-      danmakuClient.onEvent('sc', (event) => onGetDanmakus(event));
-      danmakuClient.onEvent('guard', (event) => onGetDanmakus(event));
-      danmakuClient.onEvent('enter', (event) => onGetDanmakus(event));
-      danmakuClient.onEvent('scDel', (event) => onGetDanmakus(event));
-    }
+    watch(() => danmakuWindowSetting, async (newValue) => {
+      if (danmakuWindow.value) {
+        bc?.postMessage({
+          type: 'update-setting',
+          data: toRaw(newValue.value),
+        });
+        if (newValue.value.alwaysOnTop) {
+          await danmakuWindow.value.setAlwaysOnTop(true);
+        }
+        else {
+          await danmakuWindow.value.setAlwaysOnTop(false);
+        }
+        if (newValue.value.interactive) {
+          await danmakuWindow.value.setIgnoreCursorEvents(true);
+        } else {
+          await danmakuWindow.value.setIgnoreCursorEvents(false);
+        }
+      }
+    }, { deep: true });
+
+    isInited = true;
   }
 
   function onGetDanmakus(data: EventModel) {
@@ -158,29 +189,17 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     });
   }
 
-  watch(danmakuWindowSetting, async (newValue) => {
-    if (danmakuWindow.value) {
-      if (await danmakuWindow.value.window.isVisible()) {
-        danmakuWindow.value.setSize(new PhysicalSize(newValue.width, newValue.height));
-        danmakuWindow.value.setPosition(new PhysicalPosition(newValue.x, newValue.y));
-      }
-      bc?.postMessage({
-        type: 'update-setting',
-        data: newValue,
-      });
-    }
-  }, { deep: true });
+
 
   return {
     danmakuWindow,
     danmakuWindowSetting,
     setDanmakuWindowSize,
     setDanmakuWindowPosition,
-    updateSetting,
-    isDanmakuWindowOpen: computed(() => !!danmakuWindow.value),
-    createWindow,
+    updateWindowPosition,
+    isDanmakuWindowOpen: isWindowOpened,
+    openWindow,
     closeWindow,
-    hideWindow
   };
 });
 

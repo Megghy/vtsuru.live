@@ -58,32 +58,16 @@ const presets = {
 // 应用预设
 function applyPreset(preset: 'dark' | 'light' | 'transparent') {
   const presetData = presets[preset];
-  danmakuWindow.updateSetting('backgroundColor', presetData.backgroundColor);
-  danmakuWindow.updateSetting('textColor', presetData.textColor);
-  danmakuWindow.updateSetting('shadowColor', presetData.shadowColor);
+  danmakuWindow.danmakuWindowSetting.backgroundColor = presetData.backgroundColor;
+  danmakuWindow.danmakuWindowSetting.textColor = presetData.textColor;
+  danmakuWindow.danmakuWindowSetting.shadowColor = presetData.shadowColor;
   message.success(`已应用${preset === 'dark' ? '暗黑' : preset === 'light' ? '明亮' : '透明'}主题预设`);
 }
 
 // 重置位置到屏幕中央
 async function resetPosition() {
-  // 假设屏幕尺寸为 1920x1080，将窗口居中
-  const width = danmakuWindow.danmakuWindowSetting.width;
-  const height = danmakuWindow.danmakuWindowSetting.height;
-
-  // 计算居中位置
-  const x = Math.floor((1920 - width) / 2);
-  const y = Math.floor((1080 - height) / 2);
-
-  danmakuWindow.setDanmakuWindowPosition(x, y);
+  danmakuWindow.setDanmakuWindowPosition(0, 0);
   message.success('窗口位置已重置');
-}
-
-// 更新设置，包装了updateSetting方法
-function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting>(
-  key: K,
-  value: typeof danmakuWindow.danmakuWindowSetting[K]
-) {
-  danmakuWindow.updateSetting(key, value);
 }
 </script>
 
@@ -95,7 +79,7 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
     <template #header-extra>
       <NButton
         :type="danmakuWindow.isDanmakuWindowOpen ? 'warning' : 'primary'"
-        @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.createWindow()"
+        @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.openWindow()"
       >
         {{ danmakuWindow.isDanmakuWindowOpen ? '关闭弹幕窗口' : '打开弹幕窗口' }}
       </NButton>
@@ -136,7 +120,7 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                       v-model:value="danmakuWindow.danmakuWindowSetting.width"
                       :min="200"
                       :max="2000"
-                      @update:value="val => updateSetting('width', val || 400)"
+                      @update:value="(value) => danmakuWindow.setDanmakuWindowSize(value as number, danmakuWindow.danmakuWindowSetting.height)"
                     />
                   </NFormItem>
                 </NGi>
@@ -146,7 +130,7 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                       v-model:value="danmakuWindow.danmakuWindowSetting.height"
                       :min="200"
                       :max="2000"
-                      @update:value="val => updateSetting('height', val || 600)"
+                      @update:value="(value) => danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, value as number)"
                     />
                   </NFormItem>
                 </NGi>
@@ -155,7 +139,7 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.x"
                       :min="0"
-                      @update:value="val => updateSetting('x', val || 0)"
+                      @update:value="() => danmakuWindow.updateWindowPosition()"
                     />
                   </NFormItem>
                 </NGi>
@@ -164,7 +148,7 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     <NInputNumber
                       v-model:value="danmakuWindow.danmakuWindowSetting.y"
                       :min="0"
-                      @update:value="val => updateSetting('y', val || 0)"
+                      @update:value="() => danmakuWindow.updateWindowPosition()"
                     />
                   </NFormItem>
                 </NGi>
@@ -188,13 +172,11 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                 <NFormItem label="总是置顶">
                   <NSwitch
                     v-model:value="danmakuWindow.danmakuWindowSetting.alwaysOnTop"
-                    @update:value="val => updateSetting('alwaysOnTop', val)"
                   />
                 </NFormItem>
                 <NFormItem label="鼠标穿透">
                   <NSwitch
                     v-model:value="danmakuWindow.danmakuWindowSetting.interactive"
-                    @update:value="val => updateSetting('interactive', val)"
                   />
                 </NFormItem>
               </NSpace>
@@ -217,7 +199,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   <NColorPicker
                     v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
                     :show-alpha="true"
-                    @update:value="val => updateSetting('backgroundColor', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -226,7 +207,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   <NColorPicker
                     v-model:value="danmakuWindow.danmakuWindowSetting.textColor"
                     :show-alpha="true"
-                    @update:value="val => updateSetting('textColor', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -237,7 +217,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     :min="0.1"
                     :max="1"
                     :step="0.05"
-                    @update:value="val => updateSetting('opacity', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -248,7 +227,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     :min="10"
                     :max="24"
                     :step="1"
-                    @update:value="val => updateSetting('fontSize', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -259,7 +237,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     :min="0"
                     :max="20"
                     :step="1"
-                    @update:value="val => updateSetting('borderRadius', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -270,7 +247,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                     :min="0"
                     :max="20"
                     :step="1"
-                    @update:value="val => updateSetting('itemSpacing', val)"
                   />
                 </NFormItem>
               </NGi>
@@ -284,7 +260,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                 <NFormItem label="启用阴影">
                   <NSwitch
                     v-model:value="danmakuWindow.danmakuWindowSetting.enableShadow"
-                    @update:value="val => updateSetting('enableShadow', val)"
                   />
                 </NFormItem>
                 <NFormItem
@@ -294,7 +269,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   <NColorPicker
                     v-model:value="danmakuWindow.danmakuWindowSetting.shadowColor"
                     :show-alpha="true"
-                    @update:value="val => updateSetting('shadowColor', val)"
                   />
                 </NFormItem>
               </NSpace>
@@ -331,15 +305,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                       :key="option.value"
                       :value="option.value"
                       :label="option.label"
-                      @update:checked="val => {
-                        let types = [...danmakuWindow.danmakuWindowSetting.filterTypes];
-                        if (val) {
-                          if (!types.includes(option.value)) types.push(option.value);
-                        } else {
-                          types = types.filter(t => t !== option.value);
-                        }
-                        updateSetting('filterTypes', types);
-                      }"
                     />
                   </NSpace>
                 </NCheckboxGroup>
@@ -351,25 +316,21 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                 <NSpace>
                   <NCheckbox
                     :checked="danmakuWindow.danmakuWindowSetting.showAvatar"
-                    @update:checked="val => updateSetting('showAvatar', val)"
                   >
                     显示头像
                   </NCheckbox>
                   <NCheckbox
                     :checked="danmakuWindow.danmakuWindowSetting.showUsername"
-                    @update:checked="val => updateSetting('showUsername', val)"
                   >
                     显示用户名
                   </NCheckbox>
                   <NCheckbox
                     :checked="danmakuWindow.danmakuWindowSetting.showFansMedal"
-                    @update:checked="val => updateSetting('showFansMedal', val)"
                   >
                     显示粉丝牌
                   </NCheckbox>
                   <NCheckbox
                     :checked="danmakuWindow.danmakuWindowSetting.showGuardIcon"
-                    @update:checked="val => updateSetting('showGuardIcon', val)"
                   >
                     显示舰长图标
                   </NCheckbox>
@@ -383,7 +344,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   <NText>从上往下</NText>
                   <NSwitch
                     v-model:value="danmakuWindow.danmakuWindowSetting.reverseOrder"
-                    @update:value="val => updateSetting('reverseOrder', val)"
                   />
                   <NText>从下往上</NText>
                 </NSpace>
@@ -396,7 +356,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   v-model:value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
                   :min="10"
                   :max="200"
-                  @update:value="val => updateSetting('maxDanmakuCount', val || 50)"
                 />
               </NFormItem>
             </NGi>
@@ -408,7 +367,6 @@ function updateSetting<K extends keyof typeof danmakuWindow.danmakuWindowSetting
                   :min="0"
                   :max="1000"
                   :step="50"
-                  @update:value="val => updateSetting('animationDuration', val || 300)"
                 >
                   <template #suffix>
                     ms
