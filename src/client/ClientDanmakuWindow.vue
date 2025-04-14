@@ -3,7 +3,8 @@ import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL, DanmakuWindowBCData, DanmakuWindowSettings } from './store/useDanmakuWindow';
 import { NSpin, NEmpty, NIcon } from 'naive-ui';
 import { EventDataTypes, EventModel } from '@/api/api-models';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+// Import nextTick
+import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
 import { TransitionGroup } from 'vue';
 import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent';
 
@@ -11,6 +12,8 @@ let bc: BroadcastChannel | undefined = undefined;
 const setting = ref<DanmakuWindowSettings>();
 const danmakuList = ref<EventModel[]>([]);
 const maxItems = computed(() => setting.value?.maxDanmakuCount || 50);
+// Ref for the scroll container
+const scrollContainerRef = ref<HTMLElement | null>(null);
 
 const isConnected = computed(() => {
   return setting.value !== undefined;
@@ -49,8 +52,8 @@ function formatUsername(item: EventModel): string {
 function addDanmaku(data: EventModel) {
   if (!setting.value) return;
 
-  // 检查是否是需要过滤的消息类型
-  const typeMap: Record<number, string> = {
+  // Map EventDataTypes enum values to the string values used in filterTypes
+  const typeToStringMap: { [key in EventDataTypes]?: string } = {
     [EventDataTypes.Message]: "Message",
     [EventDataTypes.Gift]: "Gift",
     [EventDataTypes.SC]: "SC",
@@ -58,12 +61,30 @@ function addDanmaku(data: EventModel) {
     [EventDataTypes.Enter]: "Enter"
   };
 
-  const typeStr = typeMap[data.type];
+  const typeStr = typeToStringMap[data.type];
+
+  // Check if the type should be filtered out
   if (!typeStr || !setting.value.filterTypes.includes(typeStr)) {
-    return;
+    return; // Don't add if filtered
   }
 
-  // 维护最大消息数量
+  // --- Auto Scroll Logic ---
+  const el = scrollContainerRef.value;
+  let shouldScroll = false;
+  if (el) {
+    const threshold = 5; // Pixels threshold to consider "at the end"
+    if (setting.value?.reverseOrder) {
+      // Check if scrolled to the top before adding
+      shouldScroll = el.scrollTop <= threshold;
+    } else {
+      // Check if scrolled to the bottom before adding
+      shouldScroll = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    }
+  }
+  // --- End Auto Scroll Logic ---
+
+
+  // Maintain max message count
   if (setting.value.reverseOrder) {
     danmakuList.value.unshift(data);
     if (danmakuList.value.length > maxItems.value) {
@@ -75,18 +96,47 @@ function addDanmaku(data: EventModel) {
       danmakuList.value.shift();
     }
   }
+
+  // --- Auto Scroll Execution ---
+  if (shouldScroll && el) {
+    nextTick(() => {
+      if (setting.value?.reverseOrder) {
+        el.scrollTop = 0; // Scroll to top
+      } else {
+        el.scrollTop = el.scrollHeight; // Scroll to bottom
+      }
+    });
+  }
+  // --- End Auto Scroll Execution ---
 }
 
 onMounted(() => {
   bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
+  console.log(`[DanmakuWindow] BroadcastChannel 已创建: ${DANMAKU_WINDOW_BROADCAST_CHANNEL}`);
+  bc.postMessage({
+    type: 'window-ready',
+  })
   bc.onmessage = (event) => {
     const data = event.data as DanmakuWindowBCData;
     switch (data.type) {
       case 'danmaku':
-        addDanmaku(data.data);
+        addDanmaku(data.data); // addDanmaku now handles scrolling
+        // console.log('[DanmakuWindow] 收到弹幕:', data.data); // Keep console logs minimal if not debugging
         break;
       case 'update-setting':
         setting.value = data.data;
+        console.log('[DanmakuWindow] 设置已更新:', data.data);
+        // Adjust scroll on setting change if needed (e.g., reverseOrder changes)
+        nextTick(() => {
+            const el = scrollContainerRef.value;
+            if (el) {
+                if (setting.value?.reverseOrder) {
+                    el.scrollTop = 0;
+                } else {
+                    el.scrollTop = el.scrollHeight;
+                }
+            }
+        });
         break;
     }
   };
@@ -143,6 +193,7 @@ function formatMessage(item: EventModel): string {
     }"
   >
     <TransitionGroup
+      ref="scrollContainerRef"
       :class="['danmaku-list', {'reverse': setting?.reverseOrder}]"
       name="danmaku-list"
       tag="div"
@@ -158,6 +209,7 @@ function formatMessage(item: EventModel): string {
       <div
         v-for="(item, index) in danmakuList"
         :key="`${item.time}-${index}`"
+        :data-type="item.type"
         class="danmaku-item"
         :style="{
           marginBottom: `${setting?.itemSpacing || 5}px`,
@@ -235,7 +287,11 @@ function formatMessage(item: EventModel): string {
   </div>
 </template>
 
-<style scoped>
+<style>
+html, body{
+  background: transparent;
+}
+
 .danmaku-list-enter-active,
 .danmaku-list-leave-active {
   transition: all 0.3s ease;
@@ -280,6 +336,10 @@ function formatMessage(item: EventModel): string {
 }
 
 .danmaku-item[data-type="0"] { /* Guard */
+  color: #9d78c1;
+}
+
+.danmaku-item[data-type="3"] { /* Guard */
   color: #9d78c1;
 }
 

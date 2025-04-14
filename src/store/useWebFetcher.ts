@@ -186,6 +186,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         return { success: false, message: '未提供弹幕客户端认证信息' };
       }
       await client.initDirect(directConnectInfo);
+      return { success: true, message: '弹幕客户端已启动' };
     }
 
     // 监听所有事件，用于处理和转发
@@ -197,11 +198,14 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       danmakuServerUrl.value = client.danmakuClient!.serverUrl; // 获取服务器地址
       // 启动事件发送定时器 (如果之前没有启动)
       timer ??= setInterval(sendEvents, 1500); // 每 1.5 秒尝试发送一次事件
+      return { success: true, message: '弹幕客户端已启动' };
     } else {
       console.error(prefix.value + '弹幕客户端启动失败');
       danmakuClientState.value = 'stopped';
       danmakuServerUrl.value = undefined;
       client.dispose(); // 启动失败，清理实例，下次会重建
+      return { success: false, message: '弹幕客户端启动失败' };
+
     }
   }
 
@@ -265,11 +269,11 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     // --- 尝试启动连接 ---
     try {
       await connection.start();
-      console.log(prefix.value + '已连接到 vtsuru 服务器, ConnectionId: ' + connection.connectionId); // 调试输出连接状态
       signalRConnectionId.value = connection.connectionId ?? undefined; // 保存连接ID
       signalRId.value = await sendSelfInfo(connection); // 发送客户端信息
       await connection.send('Finished'); // 通知服务器已准备好
       signalRClient.value = connection; // 保存实例
+      console.log(prefix.value + '已连接到 vtsuru 服务器, ConnectionId: ' + signalRId.value); // 调试输出连接状态
       // state.value = 'connected'; // 状态将在 Start 函数末尾统一设置
       return true;
     } catch (e) {

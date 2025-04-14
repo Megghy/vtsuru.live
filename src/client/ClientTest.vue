@@ -28,6 +28,12 @@ async function testNotification() {
       >
         测试通知
       </NButton>
+      <NButton
+        type="primary"
+        @click="$router.push({ name: 'client-danmaku-window-manage'})"
+      >
+      弹幕机
+      </NButton>
       <LabelItem label="关闭弹幕客户端">
         <NSwitch
           v-model:value="setting.settings.dev_disableDanmakuClient"

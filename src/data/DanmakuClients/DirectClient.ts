@@ -34,7 +34,7 @@ export default class DirectClient extends BaseDanmakuClient {
       });
 
       chatClient.on('live', () => {
-        console.log('[DIRECT] 已连接房间: ' + this.authInfo.roomId);
+        console.log('[direct] 已连接房间: ' + this.authInfo.roomId);
       });
       chatClient.on('DANMU_MSG', (data) => this.onDanmaku(data));
       chatClient.on('SEND_GIFT', (data) => this.onGift(data));
@@ -45,7 +45,7 @@ export default class DirectClient extends BaseDanmakuClient {
 
       return await super.initClientInner(chatClient);
     } else {
-      console.log('[DIRECT] 无法开启场次, 未提供弹幕客户端认证信息');
+      console.log('[direct] 无法开启场次, 未提供弹幕客户端认证信息');
       return {
         success: false,
         message: '未提供弹幕客户端认证信息'
