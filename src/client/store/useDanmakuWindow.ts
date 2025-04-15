@@ -1,4 +1,6 @@
-import { EventDataTypes, EventModel } from "@/api/api-models";
+import { EventDataTypes, EventModel, GuardLevel } from "@/api/api-models";
+import { QueryGetAPI } from "@/api/query";
+import { VTSURU_API_URL } from "@/data/constants";
 import { useDanmakuClient } from "@/store/useDanmakuClient";
 import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
 import { getAllWebviewWindows, WebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -26,6 +28,11 @@ export type DanmakuWindowSettings = {
   itemSpacing: number; // 项目间距
   enableShadow: boolean; // 是否启用阴影
   shadowColor: string; // 阴影颜色
+  autoDisappearTime: number; // 单位：秒，0表示不自动消失
+  displayStyle: string; // 新增：显示风格，可选值：'card'（卡片风格）, 'text'（纯文本风格）
+  textStyleCompact: boolean; // 新增：纯文本模式下是否使用紧凑布局
+  textStyleShowType: boolean; // 新增：纯文本模式下是否显示消息类型标签
+  textStyleNameSeparator: string; // 新增：纯文本模式下用户名和消息之间的分隔符
 };
 
 export const DANMAKU_WINDOW_BROADCAST_CHANNEL = 'channel.danmaku.window';
@@ -37,7 +44,106 @@ export type DanmakuWindowBCData = {
   data: DanmakuWindowSettings;
 } | {
   type: 'window-ready';
+} | {
+  type: 'clear-danmaku'; // 新增：清空弹幕消息
+} | {
+  type: 'test-danmaku', // 新增：测试弹幕消息
+  data: EventModel;
 };
+
+// Helper function to generate random test data
+function generateTestDanmaku(): EventModel {
+  const types = [
+    EventDataTypes.Message,
+    EventDataTypes.Gift,
+    EventDataTypes.SC,
+    EventDataTypes.Guard,
+    EventDataTypes.Enter,
+  ];
+  const randomType = types[Math.floor(Math.random() * types.length)];
+  const randomUid = Math.floor(Math.random() * 1000000);
+  const randomName = `测试用户${randomUid % 100}`;
+  const randomTime = Date.now();
+  const randomOuid = `oid_${randomUid}`;
+
+  const baseEvent: Partial<EventModel> = {
+    name: randomName,
+    uface: `https://i0.hdslb.com/bfs/face/member/noface.jpg`, // Placeholder for user avatar
+    uid: randomUid,
+    open_id: randomOuid, // Assuming open_id is same as ouid for test
+    time: randomTime,
+    guard_level: Math.floor(Math.random() * 4) as GuardLevel,
+    fans_medal_level: Math.floor(Math.random() * 41),
+    fans_medal_name: '测试牌',
+    fans_medal_wearing_status: Math.random() > 0.5,
+    ouid: randomOuid,
+  };
+
+  switch (randomType) {
+    case EventDataTypes.Message:
+      return {
+        ...baseEvent,
+        type: EventDataTypes.Message,
+        msg: `这是一条测试弹幕消息 ${Math.random().toString(36).substring(7)}`,
+        num: 0, // Not applicable
+        price: 0, // Not applicable
+        emoji: Math.random() > 0.8 ? '😀' : undefined, // Randomly add emoji
+      } as EventModel;
+    case EventDataTypes.Gift:
+      const giftNames = ['小花花', '辣条', '能量饮料', '小星星'];
+      const giftNums = [1, 5, 10];
+      const giftPrices = [100, 1000, 5000]; // Price in copper coins (100 = 0.1 yuan)
+      return {
+        ...baseEvent,
+        type: EventDataTypes.Gift,
+        msg: giftNames[Math.floor(Math.random() * giftNames.length)],
+        num: giftNums[Math.floor(Math.random() * giftNums.length)],
+        price: giftPrices[Math.floor(Math.random() * giftPrices.length)],
+      } as EventModel;
+    case EventDataTypes.SC:
+      const scPrices = [30, 50, 100, 500, 1000, 2000]; // Price in yuan
+      return {
+        ...baseEvent,
+        type: EventDataTypes.SC,
+        msg: `这是一条测试SC消息！感谢老板！`,
+        num: 1, // Not applicable
+        price: scPrices[Math.floor(Math.random() * scPrices.length)],
+      } as EventModel;
+    case EventDataTypes.Guard:
+      const guardLevels = [GuardLevel.Jianzhang, GuardLevel.Tidu, GuardLevel.Zongdu];
+      const guardPrices = {
+        [GuardLevel.Jianzhang]: 198,
+        [GuardLevel.Tidu]: 1998,
+        [GuardLevel.Zongdu]: 19998,
+        [GuardLevel.None]: 0, // Add missing GuardLevel.None case
+      };
+      const selectedGuardLevel = guardLevels[Math.floor(Math.random() * guardLevels.length)];
+      return {
+        ...baseEvent,
+        type: EventDataTypes.Guard,
+        msg: `开通了${selectedGuardLevel === GuardLevel.Jianzhang ? '舰长' : selectedGuardLevel === GuardLevel.Tidu ? '提督' : '总督'}`,
+        num: 1, // Represents 1 month usually
+        price: guardPrices[selectedGuardLevel],
+        guard_level: selectedGuardLevel, // Ensure guard level matches
+      } as EventModel;
+    case EventDataTypes.Enter:
+      return {
+        ...baseEvent,
+        type: EventDataTypes.Enter,
+        msg: '进入了直播间',
+        num: 0, // Not applicable
+        price: 0, // Not applicable
+      } as EventModel;
+    default: // Fallback to Message
+      return {
+        ...baseEvent,
+        type: EventDataTypes.Message,
+        msg: `默认测试弹幕`,
+        num: 0,
+        price: 0,
+      } as EventModel;
+  }
+}
 
 export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   const danmakuWindow = ref<WebviewWindow>();
@@ -52,7 +158,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     showFansMedal: true,
     showGuardIcon: true,
     fontSize: 14,
-    maxDanmakuCount: 50,
+    maxDanmakuCount: 30,
     reverseOrder: false,
     filterTypes: ["Message", "Gift", "SC", "Guard"],
     animationDuration: 300,
@@ -63,7 +169,25 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     borderRadius: 8,
     itemSpacing: 5,
     enableShadow: true,
-    shadowColor: 'rgba(0,0,0,0.5)'
+    shadowColor: 'rgba(0,0,0,0.5)',
+    autoDisappearTime: 0, // 默认不自动消失
+    displayStyle: 'card', // 新增：默认使用卡片风格
+    textStyleCompact: false, // 新增：默认不使用紧凑布局
+    textStyleShowType: true, // 新增：默认显示消息类型标签
+    textStyleNameSeparator: ': ', // 新增：默认用户名和消息之间的分隔符为冒号+空格
+  });
+  const emojiData = useStorage<{
+    updateAt: number,
+    data: {
+      inline: { [key: string]: string; },
+      plain: { [key: string]: string; },
+    };
+  }>('Data.Emoji', {
+    updateAt: 0,
+    data: {
+      inline: {},
+      plain: {},
+    }
   });
   const danmakuClient = useDanmakuClient();
   const isWindowOpened = ref(false);
@@ -77,6 +201,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     if (!isInited) {
       init();
     }
+    checkAndUseSetting(danmakuWindowSetting.value);
     danmakuWindow.value?.show();
     isWindowOpened.value = true;
   }
@@ -105,15 +230,9 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       return;
     }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value);
-    danmakuWindow.value.onCloseRequested(() => {
-      danmakuWindow.value = undefined;
-      bc?.close();
-      bc = undefined;
-    });
 
-    await danmakuWindow.value.setIgnoreCursorEvents(false);
-    await danmakuWindow.value.show();
-    danmakuWindow.value.onCloseRequested(() => {
+    danmakuWindow.value.onCloseRequested((event) => {
+      event.preventDefault(); // 阻止默认关闭行为
       closeWindow();
       console.log('弹幕窗口关闭');
     });
@@ -165,41 +284,97 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
           type: 'update-setting',
           data: toRaw(newValue.value),
         });
-        if (newValue.value.alwaysOnTop) {
-          await danmakuWindow.value.setAlwaysOnTop(true);
-        }
-        else {
-          await danmakuWindow.value.setAlwaysOnTop(false);
-        }
-        if (newValue.value.interactive) {
-          await danmakuWindow.value.setIgnoreCursorEvents(true);
-        } else {
-          await danmakuWindow.value.setIgnoreCursorEvents(false);
-        }
+        await checkAndUseSetting(newValue.value);
       }
     }, { deep: true });
 
+    console.log('[danmaku-window] 初始化完成');
+
     isInited = true;
+  }
+  async function checkAndUseSetting(setting: DanmakuWindowSettings) {
+    if (setting.alwaysOnTop) {
+      await danmakuWindow.value?.setAlwaysOnTop(true);
+    }
+    else {
+      await danmakuWindow.value?.setAlwaysOnTop(false);
+    }
+    if (setting.interactive) {
+      await danmakuWindow.value?.setIgnoreCursorEvents(true);
+    } else {
+      await danmakuWindow.value?.setIgnoreCursorEvents(false);
+    }
+  }
+
+  async function getEmojiData() {
+    try {
+      const resp = await QueryGetAPI<{
+        inline: { [key: string]: string; },
+        plain: { [key: string]: string; },
+      }>(VTSURU_API_URL + 'client/live-emoji');
+      if (resp.code == 200) {
+        emojiData.value = {
+          updateAt: Date.now(),
+          data: resp.data,
+        };
+        console.log(`已获取表情数据, 共 ${Object.keys(resp.data.inline).length + Object.keys(resp.data.plain).length} 条`, resp.data);
+      }
+      else {
+        console.error('获取表情数据失败:', resp.message);
+      }
+    } catch (error) {
+      console.error('无法获取表情数据:', error);
+    }
   }
 
   function onGetDanmakus(data: EventModel) {
-    bc?.postMessage({
+    if (!isWindowOpened.value || !bc) return;
+    bc.postMessage({
       type: 'danmaku',
       data,
     });
   }
 
+  // 新增：清空弹幕函数
+  function clearAllDanmaku() {
+    if (!isWindowOpened.value || !bc) {
+      console.warn('[danmaku-window] 窗口未打开或 BC 未初始化，无法清空弹幕');
+      return;
+    }
+    bc.postMessage({
+      type: 'clear-danmaku',
+    });
+    console.log('[danmaku-window] 发送清空弹幕指令');
+  }
 
+  // 新增：发送测试弹幕函数
+  function sendTestDanmaku() {
+    if (!isWindowOpened.value || !bc) {
+      console.warn('[danmaku-window] 窗口未打开或 BC 未初始化，无法发送测试弹幕');
+      return;
+    }
+    const testData = generateTestDanmaku();
+    bc.postMessage({
+      type: 'test-danmaku',
+      data: testData,
+    });
+    console.log('[danmaku-window] 发送测试弹幕指令:', testData);
+  }
 
   return {
     danmakuWindow,
     danmakuWindowSetting,
+    emojiData,
     setDanmakuWindowSize,
     setDanmakuWindowPosition,
     updateWindowPosition,
+    getEmojiData,
     isDanmakuWindowOpen: isWindowOpened,
     openWindow,
     closeWindow,
+    init,
+    clearAllDanmaku, // 导出新函数
+    sendTestDanmaku, // 导出新函数
   };
 });
 

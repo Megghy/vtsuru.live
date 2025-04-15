@@ -186,11 +186,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         return { success: false, message: '未提供弹幕客户端认证信息' };
       }
       await client.initDirect(directConnectInfo);
-      return { success: true, message: '弹幕客户端已启动' };
     }
 
     // 监听所有事件，用于处理和转发
-    client?.onEvent('all', onGetDanmakus);
+    client?.on('all', onGetDanmakus);
 
     if (client.connected) {
       console.log(prefix.value + '弹幕客户端连接成功, 开始监听弹幕');
@@ -262,7 +261,12 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     connection.on('Disconnect', (reason: unknown) => {
       console.log(prefix.value + '被服务器断开连接: ' + reason);
       disconnectedByServer = true; // 标记是服务器主动断开
-      Stop(); // 服务器要求断开，调用 Stop 清理所有资源
+      window.$message.error(`被服务器要求断开连接: ${reason}, 为保证可用性, 30秒后将自动重启`);
+      //Stop(); // 服务器要求断开，调用 Stop 清理所有资源
+      setTimeout(() => {
+        console.log(prefix.value + '尝试重启...');
+        connectSignalR(); // 30秒后尝试重启
+      }, 30 * 1000); // 30秒后自动重启
     });
     connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie));
     connection.on('Notification', (type: string, data: any) => { onReceivedNotification(type, data); });

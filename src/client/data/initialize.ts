@@ -20,6 +20,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { useDanmakuWindow } from "../store/useDanmakuWindow";
+import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 
 const accountInfo = useAccount();
 
@@ -117,6 +118,23 @@ export async function initAll(isOnBoot: boolean) {
 
   appWindow.setMinSize(new PhysicalSize(720, 480));
 
+  getAllWebviewWindows().then(async (windows) => {
+    const w = windows.find((win) => win.label === 'danmaku-window')
+    if (w) {
+      const useWindow = useDanmakuWindow();
+      useWindow.init();
+
+      if ((useWindow.emojiData?.updateAt ?? 0) < Date.now() - 1000 * 60 * 60 * 24) {
+        await useWindow.getEmojiData();
+      }
+      if (await w.isVisible()) {
+        //useWindow.isDanmakuWindowOpen = true;
+
+        console.log('弹幕窗口已打开');
+      }
+    }
+  });
+
   // 监听f12事件
   if (!isDev) {
     window.addEventListener('keydown', (event) => {
@@ -135,7 +153,7 @@ export function OnClientUnmounted() {
   }
 
   tray.close();
-  useDanmakuWindow().closeWindow()
+  //useDanmakuWindow().closeWindow();
 }
 
 async function checkUpdate() {

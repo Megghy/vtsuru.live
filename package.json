@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "vite build",
-    "lint": "vite lint"
+    "lint": "vite lint",
+    "knip": "knip"
   },
   "dependencies": {
     "@antfu/ni": "^24.3.0",
@@ -53,6 +54,7 @@
     "mitt": "^3.0.1",
     "monaco-editor": "^0.52.2",
     "music-metadata-browser": "^2.5.11",
+    "nanoid": "^5.1.5",
     "oxlint": "^0.16.2",
     "peerjs": "^1.5.4",
     "pinia": "^3.0.1",
@@ -83,6 +85,7 @@
     "@types/bun": "^1.2.5",
     "@types/eslint": "^9.6.1",
     "@types/file-saver": "^2.0.7",
+    "@types/node": "^22.14.1",
     "@types/obs-studio": "^2.17.2",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/parser": "^8.27.0",
@@ -93,9 +96,10 @@
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-vue": "^10.0.0",
+    "knip": "^5.50.4",
     "naive-ui": "^2.41.0",
     "stylus": "^0.64.0",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "vue-vine": "^0.3.19"
   }
 }

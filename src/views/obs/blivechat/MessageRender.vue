@@ -1,32 +1,80 @@
 <template>
-  <yt-live-chat-renderer class="style-scope yt-live-chat-app" style="--scrollbar-width:11px;" hide-timestamps
-    @mousemove="refreshCantScrollStartTime">
-    <ticker class="style-scope yt-live-chat-renderer" :messages.sync="paidMessages" :showGiftName="showGiftName || undefined">
-    </ticker>
-    <yt-live-chat-item-list-renderer class="style-scope yt-live-chat-renderer" allow-scroll>
-      <div ref="scroller" id="item-scroller" class="style-scope yt-live-chat-item-list-renderer animated"
-        @scroll="onScroll">
-        <div ref="itemOffset" id="item-offset" class="style-scope yt-live-chat-item-list-renderer">
-          <div ref="items" id="items" class="style-scope yt-live-chat-item-list-renderer" style="overflow: hidden"
-            :style="{ transform: `translateY(${Math.floor(scrollPixelsRemaining)}px)` }">
-            <template v-for="message in messages" :key="message.id">
-              <text-message v-if="message.type === MESSAGE_TYPE_TEXT"
-                class="style-scope yt-live-chat-item-list-renderer" :time="message.time" :avatarUrl="message.avatarUrl"
-                :authorName="message.authorName" :authorType="message.authorType" :privilegeType="message.privilegeType"
-                :richContent="getShowRichContent(message)" :repeated="message.repeated"></text-message>
-              <paid-message v-else-if="message.type === MESSAGE_TYPE_GIFT"
-                class="style-scope yt-live-chat-item-list-renderer" :time="message.time" :avatarUrl="message.avatarUrl"
-                :authorName="getShowAuthorName(message)" :price="message.price"
-                :priceText="message.price <= 0 ? getGiftShowNameAndNum(message) : ''"
-                :content="message.price <= 0 ? '' : getGiftShowContent(message, showGiftName)"></paid-message>
-              <membership-item v-else-if="message.type === MESSAGE_TYPE_MEMBER"
-                class="style-scope yt-live-chat-item-list-renderer" :time="message.time" :avatarUrl="message.avatarUrl"
-                :authorName="getShowAuthorName(message)" :privilegeType="message.privilegeType"
-                :title="message.title"></membership-item>
-              <paid-message v-else-if="message.type === MESSAGE_TYPE_SUPER_CHAT"
-                class="style-scope yt-live-chat-item-list-renderer" :time="message.time" :avatarUrl="message.avatarUrl"
-                :authorName="getShowAuthorName(message)" :price="message.price"
-                :content="getShowContent(message)"></paid-message>
+  <yt-live-chat-renderer
+    class="style-scope yt-live-chat-app"
+    style="--scrollbar-width:11px;"
+    hide-timestamps
+    @mousemove="refreshCantScrollStartTime"
+  >
+    <ticker
+      v-model:messages="paidMessages"
+      class="style-scope yt-live-chat-renderer"
+      :show-gift-name="showGiftName || undefined"
+    />
+    <yt-live-chat-item-list-renderer
+      class="style-scope yt-live-chat-renderer"
+      allow-scroll
+    >
+      <div
+        id="item-scroller"
+        ref="scroller"
+        class="style-scope yt-live-chat-item-list-renderer animated"
+        @scroll="onScroll"
+      >
+        <div
+          id="item-offset"
+          ref="itemOffset"
+          class="style-scope yt-live-chat-item-list-renderer"
+        >
+          <div
+            id="items"
+            ref="items"
+            class="style-scope yt-live-chat-item-list-renderer"
+            style="overflow: hidden"
+            :style="{ transform: `translateY(${Math.floor(scrollPixelsRemaining)}px)` }"
+          >
+            <template
+              v-for="message in messages"
+              :key="message.id"
+            >
+              <text-message
+                v-if="message.type === MESSAGE_TYPE_TEXT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="message.authorName"
+                :author-type="message.authorType"
+                :privilege-type="message.privilegeType"
+                :rich-content="getShowRichContent(message)"
+                :repeated="message.repeated"
+              />
+              <paid-message
+                v-else-if="message.type === MESSAGE_TYPE_GIFT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :price="message.price"
+                :price-text="message.price <= 0 ? getGiftShowNameAndNum(message) : ''"
+                :content="message.price <= 0 ? '' : getGiftShowContent(message, showGiftName)"
+              />
+              <membership-item
+                v-else-if="message.type === MESSAGE_TYPE_MEMBER"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :privilege-type="message.privilegeType"
+                :title="message.title"
+              />
+              <paid-message
+                v-else-if="message.type === MESSAGE_TYPE_SUPER_CHAT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :price="message.price"
+                :content="getShowContent(message)"
+              />
             </template>
           </div>
         </div>
@@ -143,7 +191,7 @@ export default defineComponent({
   mounted() {
     this.scrollToBottom()
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.emitSmoothedMessageTimerId) {
       window.clearTimeout(this.emitSmoothedMessageTimerId)
       this.emitSmoothedMessageTimerId = null

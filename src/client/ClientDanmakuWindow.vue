@@ -1,349 +1,310 @@
 <script setup lang="ts">
-import { useDanmakuClient } from '@/store/useDanmakuClient';
-import { DANMAKU_WINDOW_BROADCAST_CHANNEL, DanmakuWindowBCData, DanmakuWindowSettings } from './store/useDanmakuWindow';
-import { NSpin, NEmpty, NIcon } from 'naive-ui';
-import { EventDataTypes, EventModel } from '@/api/api-models';
-// Import nextTick
-import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
-import { TransitionGroup } from 'vue';
-import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent';
+  import { EventDataTypes, EventModel } from '@/api/api-models';
+  import { NSpin } from 'naive-ui';
+  import { DANMAKU_WINDOW_BROADCAST_CHANNEL, DanmakuWindowBCData, DanmakuWindowSettings } from './store/useDanmakuWindow';
+  import { nanoid } from 'nanoid';
+  import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+  import ClientDanmakuItem from './ClientDanmakuItem.vue';
 
-let bc: BroadcastChannel | undefined = undefined;
-const setting = ref<DanmakuWindowSettings>();
-const danmakuList = ref<EventModel[]>([]);
-const maxItems = computed(() => setting.value?.maxDanmakuCount || 50);
-// Ref for the scroll container
-const scrollContainerRef = ref<HTMLElement | null>(null);
-
-const isConnected = computed(() => {
-  return setting.value !== undefined;
-});
-
-function GetSCColor(price: number): string {
-  if (price === 0) return `#2a60b2`;
-  if (price > 0 && price < 50) return `#2a60b2`;
-  if (price >= 50 && price < 100) return `#427d9e`;
-  if (price >= 100 && price < 500) return `#c99801`;
-  if (price >= 500 && price < 1000) return `#e09443`;
-  if (price >= 1000 && price < 2000) return `#e54d4d`;
-  if (price >= 2000) return `#ab1a32`;
-  return '';
-}
-
-function GetGuardColor(level: number | null | undefined): string {
-  if (level) {
-    switch (level) {
-      case 1: return 'rgb(122, 4, 35)';
-      case 2: return 'rgb(157, 155, 255)';
-      case 3: return 'rgb(104, 136, 241)';
-    }
-  }
-  return '';
-}
-
-function formatUsername(item: EventModel): string {
-  let result = item.name;
-  if (setting.value?.showFansMedal && item.fans_medal_wearing_status) {
-    result = `[${item.fans_medal_name} ${item.fans_medal_level}] ${result}`;
-  }
-  return result;
-}
-
-function addDanmaku(data: EventModel) {
-  if (!setting.value) return;
-
-  // Map EventDataTypes enum values to the string values used in filterTypes
-  const typeToStringMap: { [key in EventDataTypes]?: string } = {
-    [EventDataTypes.Message]: "Message",
-    [EventDataTypes.Gift]: "Gift",
-    [EventDataTypes.SC]: "SC",
-    [EventDataTypes.Guard]: "Guard",
-    [EventDataTypes.Enter]: "Enter"
+  type TempDanmakuType = EventModel & {
+    randomId: string;
+    isNew?: boolean; // 添加：标记是否为新弹幕
+    disappearAt?: number; // 消失时间戳
   };
 
-  const typeStr = typeToStringMap[data.type];
+  let bc: BroadcastChannel | undefined = undefined;
+  const setting = ref<DanmakuWindowSettings>();
+  const danmakuList = ref<TempDanmakuType[]>([]);
+  const maxItems = computed(() => setting.value?.maxDanmakuCount || 50);
+  const hasItems = computed(() => danmakuList.value.length > 0);
 
-  // Check if the type should be filtered out
-  if (!typeStr || !setting.value.filterTypes.includes(typeStr)) {
-    return; // Don't add if filtered
+  // 动态设置CSS变量
+  function updateCssVariables() {
+    if (!setting.value) return;
+
+    const root = document.documentElement;
+    root.style.setProperty('--dw-direction', setting.value.reverseOrder ? 'column-reverse' : 'column');
+
+    // 背景和文字颜色
+    root.style.setProperty('--dw-bg-color', setting.value.backgroundColor || 'rgba(0,0,0,0.6)');
+    root.style.setProperty('--dw-text-color', setting.value.textColor || '#ffffff');
+
+    // 尺寸相关
+    root.style.setProperty('--dw-border-radius', `${setting.value.borderRadius || 0}px`);
+    root.style.setProperty('--dw-opacity', `${setting.value.opacity || 1}`);
+    root.style.setProperty('--dw-font-size', `${setting.value.fontSize || 14}px`);
+    root.style.setProperty('--dw-avatar-size', `${(setting.value.fontSize || 14) + 6}px`);
+    root.style.setProperty('--dw-emoji-size', `${(setting.value.fontSize || 14) + 10}px`);
+    root.style.setProperty('--dw-item-spacing', `${setting.value.itemSpacing || 5}px`);
+
+    // 动画和阴影
+    root.style.setProperty('--dw-animation-duration', `${setting.value.animationDuration || 300}ms`);
+    root.style.setProperty('--dw-shadow', setting.value.enableShadow ? `0 0 10px ${setting.value.shadowColor}` : 'none');
   }
 
-  // --- Auto Scroll Logic ---
-  const el = scrollContainerRef.value;
-  let shouldScroll = false;
-  if (el) {
-    const threshold = 5; // Pixels threshold to consider "at the end"
-    if (setting.value?.reverseOrder) {
-      // Check if scrolled to the top before adding
-      shouldScroll = el.scrollTop <= threshold;
-    } else {
-      // Check if scrolled to the bottom before adding
-      shouldScroll = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  function addDanmaku(data: EventModel) {
+    if (!setting.value) return;
+
+    // Map EventDataTypes enum values to the string values used in filterTypes
+    const typeToStringMap: { [key in EventDataTypes]?: string } = {
+      [EventDataTypes.Message]: "Message",
+      [EventDataTypes.Gift]: "Gift",
+      [EventDataTypes.SC]: "SC",
+      [EventDataTypes.Guard]: "Guard",
+      [EventDataTypes.Enter]: "Enter"
+    };
+
+    const typeStr = typeToStringMap[data.type];
+
+    // Check if the type should be filtered out
+    if (!typeStr || !setting.value.filterTypes.includes(typeStr)) {
+      return; // Don't add if filtered
     }
-  }
-  // --- End Auto Scroll Logic ---
 
+    // 计算消失时间
+    let disappearAt: number | undefined = undefined;
+    if (setting.value.autoDisappearTime > 0) {
+      disappearAt = Date.now() + setting.value.autoDisappearTime * 1000;
+    }
 
-  // Maintain max message count
-  if (setting.value.reverseOrder) {
-    danmakuList.value.unshift(data);
-    if (danmakuList.value.length > maxItems.value) {
+    // 为传入的弹幕对象添加一个随机ID和isNew标记
+    const dataWithId = {
+      ...data,
+      randomId: nanoid(), // 生成一个随机ID
+      disappearAt, // 添加消失时间
+      isNew: true, // 标记为新弹幕，用于动画
+    };
+
+    danmakuList.value.unshift(dataWithId);
+    // Limit the list size AFTER adding the new item
+    while (danmakuList.value.length > maxItems.value) {
       danmakuList.value.pop();
     }
-  } else {
-    danmakuList.value.push(data);
-    if (danmakuList.value.length > maxItems.value) {
-      danmakuList.value.shift();
-    }
+
+    // 设置一个定时器，在动画完成后移除isNew标记
+    setTimeout(() => {
+      const index = danmakuList.value.findIndex(item => item.randomId === dataWithId.randomId);
+      if (index !== -1) {
+        danmakuList.value[index].isNew = false;
+      }
+    }, setting.value.animationDuration || 300);
+
+    console.log('[DanmakuWindow] 添加弹幕:', dataWithId);
   }
 
-  // --- Auto Scroll Execution ---
-  if (shouldScroll && el) {
-    nextTick(() => {
-      if (setting.value?.reverseOrder) {
-        el.scrollTop = 0; // Scroll to top
-      } else {
-        el.scrollTop = el.scrollHeight; // Scroll to bottom
-      }
+  // 检查和移除过期弹幕
+  function checkAndRemoveExpiredDanmaku() {
+    if (!setting.value || setting.value.autoDisappearTime <= 0) return;
+
+    const now = Date.now();
+    // 让弹幕有足够时间完成消失动画后再从列表中移除
+    danmakuList.value = danmakuList.value.filter(item => {
+      // 如果设置了消失时间，则在消失时间+动画时长后才真正移除
+      const animationDuration = setting.value?.animationDuration || 300;
+      return !item.disappearAt || (item.disappearAt + animationDuration) > now;
     });
   }
-  // --- End Auto Scroll Execution ---
-}
 
-onMounted(() => {
-  bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
-  console.log(`[DanmakuWindow] BroadcastChannel 已创建: ${DANMAKU_WINDOW_BROADCAST_CHANNEL}`);
-  bc.postMessage({
-    type: 'window-ready',
-  })
-  bc.onmessage = (event) => {
-    const data = event.data as DanmakuWindowBCData;
-    switch (data.type) {
-      case 'danmaku':
-        addDanmaku(data.data); // addDanmaku now handles scrolling
-        // console.log('[DanmakuWindow] 收到弹幕:', data.data); // Keep console logs minimal if not debugging
-        break;
-      case 'update-setting':
-        setting.value = data.data;
-        console.log('[DanmakuWindow] 设置已更新:', data.data);
-        // Adjust scroll on setting change if needed (e.g., reverseOrder changes)
-        nextTick(() => {
-            const el = scrollContainerRef.value;
-            if (el) {
-                if (setting.value?.reverseOrder) {
-                    el.scrollTop = 0;
-                } else {
-                    el.scrollTop = el.scrollHeight;
-                }
-            }
-        });
-        break;
-    }
-  };
-
-  // Dispatch a request for settings
-  bc.postMessage({ type: 'request-settings' });
-});
-
-onUnmounted(() => {
-  if (bc) {
-    bc.close();
-    bc = undefined;
+  // 为弹幕项生成自定义属性值
+  function getSCColorAttribute(price: number): string {
+    if (price === 0) return `sc-0`;
+    if (price > 0 && price < 50) return `sc-50`;
+    if (price >= 50 && price < 100) return `sc-100`;
+    if (price >= 100 && price < 500) return `sc-500`;
+    if (price >= 500 && price < 1000) return `sc-1000`;
+    if (price >= 1000 && price < 2000) return `sc-2000`;
+    if (price >= 2000) return `sc-max`;
+    return '';
   }
-});
 
-// 格式化弹幕消息
-function formatMessage(item: EventModel): string {
-  switch(item.type) {
-    case EventDataTypes.Message:
-      return item.msg;
-    case EventDataTypes.Gift:
-      return `${item.msg} ${item.num > 1 ? 'x'+item.num : ''}`;
-    case EventDataTypes.SC:
-      return item.msg;
-    case EventDataTypes.Guard:
-      return `开通了${item.guard_level === 1 ? '总督' : item.guard_level === 2 ? '提督' : '舰长'}`;
-    case EventDataTypes.Enter:
-      return '进入直播间';
-    default:
-      return item.msg;
-  }
-}
+  onMounted(() => {
+    bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
+    console.log(`[DanmakuWindow] BroadcastChannel 已创建: ${DANMAKU_WINDOW_BROADCAST_CHANNEL}`);
+    bc.postMessage({
+      type: 'window-ready',
+    });
+    bc.onmessage = (event) => {
+      const data = event.data as DanmakuWindowBCData;
+      switch (data.type) {
+        case 'danmaku':
+          addDanmaku(data.data);
+          break;
+        case 'test-danmaku': // 处理测试弹幕
+          addDanmaku(data.data);
+          break;
+        case 'update-setting':
+          setting.value = data.data;
+          updateCssVariables();
+          console.log('[DanmakuWindow] 设置已更新:', data.data);
+          break;
+        case 'clear-danmaku': // 处理清空弹幕
+          danmakuList.value = [];
+          console.log('[DanmakuWindow] 弹幕已清空');
+          break;
+      }
+    };
+
+    // 初始化CSS变量
+    updateCssVariables();
+
+    // 启动定时器，定期检查过期弹幕
+    const checkInterval = setInterval(checkAndRemoveExpiredDanmaku, 1000);
+
+    onUnmounted(() => {
+      if (bc) {
+        bc.close();
+        bc = undefined;
+      }
+      clearInterval(checkInterval);
+    });
+  });
+
+  // 监听设置变化
+  watch(() => setting.value, () => {
+    updateCssVariables();
+  }, { deep: true });
 </script>
 
 <template>
   <NSpin
-    v-if="!isConnected"
+    v-if="!setting"
     show
   />
 
   <div
     v-else
     class="danmaku-window"
-    :style="{
-      backgroundColor: setting?.backgroundColor || 'rgba(0,0,0,0.6)',
-      width: '100%',
-      height: '100%',
-      borderRadius: `${setting?.borderRadius || 0}px`,
-      opacity: setting?.opacity || 1,
-      color: setting?.textColor || '#ffffff',
-      fontSize: `${setting?.fontSize || 14}px`,
-      overflow: 'hidden',
-      boxShadow: setting?.enableShadow ? `0 0 10px ${setting?.shadowColor}` : 'none'
-    }"
+    :class="{ 'has-items': hasItems }"
   >
-    <TransitionGroup
+    <div
       ref="scrollContainerRef"
-      :class="['danmaku-list', {'reverse': setting?.reverseOrder}]"
-      name="danmaku-list"
-      tag="div"
-      :style="{
-        padding: '8px',
-        height: '100%',
-        overflowY: 'auto',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: setting?.reverseOrder ? 'column-reverse' : 'column'
-      }"
+      class="danmaku-list"
     >
-      <div
-        v-for="(item, index) in danmakuList"
-        :key="`${item.time}-${index}`"
-        :data-type="item.type"
-        class="danmaku-item"
-        :style="{
-          marginBottom: `${setting?.itemSpacing || 5}px`,
-          padding: '6px',
-          borderRadius: '4px',
-          backgroundColor: item.type === EventDataTypes.SC ? GetSCColor(item.price) : 'transparent',
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          color: item.type === EventDataTypes.SC ? '#ffffff' : undefined,
-          transition: `all ${setting?.animationDuration || 300}ms ease`
-        }"
-      >
-        <!-- 头像 -->
-        <img
-          v-if="setting?.showAvatar && item.uface"
-          :src="item.uface"
-          class="avatar"
-          :style="{
-            width: `${setting?.fontSize + 6 || 20}px`,
-            height: `${setting?.fontSize + 6 || 20}px`,
-            borderRadius: '50%',
-            marginRight: '6px'
-          }"
-          referrerpolicy="no-referrer"
-        >
-
-        <!-- 用户名 -->
+      <!-- 移除 TransitionGroup，使用普通 div -->
+      <div class="danmaku-list-container">
         <div
-          v-if="setting?.showUsername"
-          class="username"
-          :style="{
-            fontWeight: 'bold',
-            marginRight: '6px',
-          }"
+          v-for="item in danmakuList"
+          :key="item.randomId"
+          :data-type="item.type"
+          class="danmaku-item"
+          :class="{ 'danmaku-item-new': item.isNew }"
         >
-          <!-- 舰长图标 -->
-          <NIcon
-            v-if="setting?.showGuardIcon && item.guard_level > 0"
-            :component="VehicleShip24Filled"
-            :color="GetGuardColor(item.guard_level)"
-            :size="setting?.fontSize"
-            style="margin-right: 2px; vertical-align: middle;"
+          <ClientDanmakuItem
+            :item="item"
+            :setting="setting"
           />
-          {{ formatUsername(item) }}:
-        </div>
-
-        <!-- 消息内容 -->
-        <div class="message">
-          <!-- SC/礼物金额 -->
-          <NIcon
-            v-if="(item.type === EventDataTypes.Gift || item.type === EventDataTypes.SC) && item.price > 0"
-            :component="Money24Regular"
-            :color="item.type === EventDataTypes.SC ? '#ffffff' : '#dd2f2f'"
-            :size="setting?.fontSize"
-            style="margin-right: 4px; vertical-align: middle;"
-          />
-          <span v-if="(item.type === EventDataTypes.Gift || item.type === EventDataTypes.SC) && item.price > 0">
-            {{ item.price }}￥
-          </span>
-
-          <!-- 消息内容 -->
-          {{ formatMessage(item) }}
         </div>
       </div>
-
-      <div
-        v-if="danmakuList.length === 0"
-        key="empty"
-        style="display: flex; align-items: center; justify-content: center; height: 100%;"
-      >
-        <NEmpty description="暂无弹幕" />
-      </div>
-    </TransitionGroup>
+    </div>
   </div>
 </template>
 
 <style>
-html, body{
-  background: transparent;
-}
+  html,
+  body {
+    background: transparent;
+    overflow: hidden;
+  }
 
-.danmaku-list-enter-active,
-.danmaku-list-leave-active {
-  transition: all 0.3s ease;
-}
+  .n-layout {
+    background: transparent;
+  }
 
-.danmaku-list-enter-from {
-  opacity: 0;
-  transform: translateY(30px);
-}
+  :root {
+    --dw-bg-color: rgba(0, 0, 0, 0.6);
+    --dw-text-color: #ffffff;
+    --dw-border-radius: 0px;
+    --dw-opacity: 1;
+    --dw-font-size: 14px;
+    --dw-avatar-size: 20px;
+    --dw-emoji-size: 24px;
+    --dw-item-spacing: 5px;
+    --dw-animation-duration: 300ms;
+    --dw-shadow: none;
+  }
 
-.danmaku-list-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
-}
+  .danmaku-window {
+    -webkit-app-region: drag;
+    overflow: hidden;
+    background-color: transparent; /* 完全透明背景 */
+    width: 100%;
+    height: 100%;
+    color: var(--dw-text-color);
+    font-size: var(--dw-font-size);
+    box-shadow: var(--dw-shadow);
+    overflow-x: hidden;
+    transition: opacity 0.3s ease;
+  }
 
-/* 滚动条样式 */
-.danmaku-list::-webkit-scrollbar {
-  width: 4px;
-}
+  /* 没有弹幕时完全透明 */
+  .danmaku-window:not(.has-items) {
+    opacity: 0;
+  }
 
-.danmaku-list::-webkit-scrollbar-track {
-  background: transparent;
-}
+  .danmaku-list {
+    padding: 8px;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: var(--dw-direction);
+    box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
+  }
 
-.danmaku-list::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-}
+  .danmaku-list-container {
+    width: 100%;
+    display: flex;
+    flex-direction: inherit;
+    gap: var(--dw-item-spacing);
+    padding-bottom: 8px; /* 添加底部内边距以防止项目溢出 */
+    box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
+  }
 
-/* 拖动窗口时用于指示 */
-.danmaku-window {
-  -webkit-app-region: drag;
-}
+  .danmaku-list.reverse {
+    flex-direction: column-reverse;
+  }
 
-.danmaku-item {
-  -webkit-app-region: no-drag;
-}
+  .danmaku-list::-webkit-scrollbar {
+    width: 4px;
+  }
 
-/* 根据消息类型添加特殊样式 */
-.danmaku-item[data-type="2"] { /* Gift */
-  color: #dd2f2f;
-}
+  .danmaku-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-.danmaku-item[data-type="0"] { /* Guard */
-  color: #9d78c1;
-}
+  .danmaku-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
 
-.danmaku-item[data-type="3"] { /* Guard */
-  color: #9d78c1;
-}
+  /* 弹幕进入动画 */
+  .danmaku-item {
+    transform-origin: center left;
+    transition: all var(--dw-animation-duration) ease;
+  }
 
-.danmaku-item[data-type="4"] { /* Enter */
-  color: #4caf50;
-}
+  .danmaku-item-new {
+    animation: danmaku-in var(--dw-animation-duration) ease-out forwards;
+  }
+
+  @keyframes danmaku-in {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes danmaku-out {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+  }
 </style>
