@@ -152,8 +152,8 @@ export default abstract class BaseDanmakuClient {
       console.warn(`[${this.type}] 弹幕客户端未被启动, 忽略停止操作`);
     }
     // 注意: 清空所有事件监听器
-    this.eventsAsModel = this.createEmptyEventModelListeners();
-    this.eventsRaw = this.createEmptyRawEventlisteners();
+    //this.eventsAsModel = this.createEmptyEventModelListeners();
+    //this.eventsRaw = this.createEmptyRawEventlisteners();
   }
 
   /**

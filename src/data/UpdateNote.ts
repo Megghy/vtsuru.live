@@ -5,6 +5,23 @@ import { FETCH_API } from "./constants";
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 3,
+    date: '2025.4.15',
+    items: [
+      {
+        type: 'new',
+        title: 'Tauri 客户端新增弹幕机功能',
+        content: [
+          [
+            'Tauri 客户端新增弹幕机功能, 可以在自己电脑上显示弹幕礼物等. ',
+            '客户端需更新至0.1.2版本, 重启客户端后会自动更新',
+            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/81d76a89-96b8-44e9-be79-6caaa5741f64.png', width: 200 }),
+          ]
+        ],
+      },
+    ]
+  },
+  {
     ver: 2,
     date: '2025.4.8',
     items: [

@@ -3,7 +3,7 @@
   import { RouterLink, RouterView } from 'vue-router'; // 引入 Vue Router 组件
 
   // 引入 Naive UI 组件 和 图标
-  import { NA, NButton, NCard, NInput, NLayout, NLayoutSider, NLayoutContent, NMenu, NSpace, NSpin, NText, NTooltip } from 'naive-ui';
+  import { NA, NButton, NCard, NInput, NLayout, NLayoutSider, NLayoutContent, NMenu, NSpace, NSpin, NText, NTooltip, MenuOption } from 'naive-ui';
   import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5';
 
   // 引入 Tauri 插件
@@ -16,8 +16,9 @@
   // 引入子组件
   import WindowBar from './WindowBar.vue';
   import { initAll, OnClientUnmounted } from './data/initialize';
-import { CloudArchive24Filled, Settings24Filled } from '@vicons/fluent';
-import { isTauri } from '@/data/constants';
+  import { CloudArchive24Filled, Settings24Filled } from '@vicons/fluent';
+  import { isTauri } from '@/data/constants';
+import { useDanmakuWindow } from './store/useDanmakuWindow';
 
   // --- 响应式状态 ---
 
@@ -25,6 +26,7 @@ import { isTauri } from '@/data/constants';
   const webfetcher = useWebFetcher();
   // 获取账户信息状态管理的实例 (如果 accountInfo 未使用，可以考虑移除)
   const accountInfo = useAccount();
+  const danmakuWindow = useDanmakuWindow();
   // 用于存储用户输入的 Token
   const token = ref('');
 
@@ -88,32 +90,35 @@ import { isTauri } from '@/data/constants';
 
   // --- 导航菜单配置 ---
   // 将菜单项定义为常量，使模板更清晰
-  const menuOptions = [
-    {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
-      key: 'go-back-home',
-      icon: () => h(Home)
-    },
-    {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
-      key: 'fetcher',
-      icon: () => h(CloudArchive24Filled)
-    },
-    /*{
-      label: () =>
-        h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机管理'),
-      key: 'danmaku-window-manage',
-      icon: () => h(Settings24Filled)
-    },*/
-    {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
-      key: 'settings',
-      icon: () => h(Settings24Filled)
-    },
-  ];
+  const menuOptions = computed(() => {
+    return [
+      {
+        label: () =>
+          h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
+        key: 'go-back-home',
+        icon: () => h(Home)
+      },
+      {
+        label: () =>
+          h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
+        key: 'fetcher',
+        icon: () => h(CloudArchive24Filled)
+      },
+      {
+        label: () =>
+          h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机管理'),
+        key: 'danmaku-window-manage',
+        icon: () => h(Settings24Filled),
+        show: danmakuWindow.danmakuWindow != undefined
+      },
+      {
+        label: () =>
+          h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
+        key: 'settings',
+        icon: () => h(Settings24Filled)
+      },
+    ] as MenuOption[];
+  });
 
   onMounted(() => {
     window.addEventListener('beforeunload', (event) => {

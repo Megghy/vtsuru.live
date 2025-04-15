@@ -53,9 +53,8 @@ export default class DirectClient extends BaseDanmakuClient {
     }
   }
   public onDanmaku(command: any): void {
-    const data = command.data;
-    const info = data.info;
-    this.eventsRaw?.danmaku?.forEach((d) => { d(data, command); });
+    const info = command.info;
+    this.eventsRaw?.danmaku?.forEach((d) => { d(info, command); });
     this.eventsAsModel.danmaku?.forEach((d) => {
       d(
         {
@@ -89,7 +88,7 @@ export default class DirectClient extends BaseDanmakuClient {
           name: data.uname,
           uid: data.uid,
           msg: data.giftName,
-          price: data.giftId,
+          price: data.price / 1000,
           num: data.num,
           time: Date.now(),
           guard_level: data.guard_level,
@@ -171,7 +170,7 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_level: data.fans_medal?.medal_level || 0,
           fans_medal_name: data.fans_medal?.medal_name || '',
           fans_medal_wearing_status: false,
-          uface: getUserAvatarUrl(data.uid),
+          uface: AVATAR_URL + data.uid,
           open_id: '',
           ouid: GuidUtils.numToGuid(data.uid)
         },

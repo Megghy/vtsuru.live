@@ -173,8 +173,10 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
    */
   async function initClient(client: BaseDanmakuClient) { // 返回 Promise<boolean> 表示最终是否成功
     // 防止重复初始化或在非等待状态下初始化
-    if (isInitializing || state.value !== 'waiting') {
-      console.warn(`[DanmakuClient] 初始化尝试被阻止。 isInitializing: ${isInitializing}, state: ${state.value}`);
+    if (isInitializing) {
+      while (isInitializing) {
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 等待初始化完成
+      }
       return useDanmakuClient(); // 如果已连接，则视为“成功”
     }
 
@@ -217,7 +219,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
           authInfo.value = danmakuClient.value instanceof OpenLiveClient ? danmakuClient.value.roomAuthInfo : undefined;
           state.value = 'connected';
           // 将 Store 中存储的监听器 (来自 onEvent) 附加到新连接的客户端的 eventsAsModel
-          console.log('[DanmakuClient] 初始化成功。');
+          console.log('[DanmakuClient] 初始化成功');
           connectSuccess = true;
           return true; // 连接成功, 退出重试循环
         } else {
@@ -293,7 +295,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
 
     if (danmakuClient.value) {
       await disposeClientInstance(danmakuClient.value);
-      danmakuClient.value = undefined; // 解除对旧客户端实例的引用
+      //danmakuClient.value = undefined; // 保留, 用户再次获取event
     }
     state.value = 'waiting'; // 重置状态为等待
     authInfo.value = undefined; // 清理认证信息
