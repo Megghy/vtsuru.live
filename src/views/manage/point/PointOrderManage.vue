@@ -24,25 +24,32 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
+// 订单筛选设置类型定义
 type OrderFilterSettings = {
-  type?: GoodsTypes
-  status?: PointOrderStatus
-  customer?: number
-  onlyRequireShippingInfo: boolean
+  type?: GoodsTypes       // 订单类型（实体/虚拟）
+  status?: PointOrderStatus // 订单状态
+  customer?: number       // 用户ID
+  onlyRequireShippingInfo: boolean // 是否只显示需要物流信息的订单
 }
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]
 }>()
+
+// 默认筛选设置
 const defaultSettings = {
   onlyRequireShippingInfo: false,
 } as OrderFilterSettings
+
+// 使用持久化存储保存筛选设置
 const filterSettings = useStorage<OrderFilterSettings>('Setting.Point.OrderFilter', defaultSettings)
 
 const message = useMessage()
 const accountInfo = useAccount()
 
+// 订单数据
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
+// 根据筛选条件过滤后的订单
 const filteredOrders = computed(() => {
   return orders.value.filter((o) => {
     if (filterSettings.value.type != undefined && o.type !== filterSettings.value.type) return false
@@ -52,9 +59,11 @@ const filteredOrders = computed(() => {
     return true
   })
 })
+
 const isLoading = ref(false)
 const selectedItem = ref<DataTableRowKey[]>()
 
+// 获取所有订单
 async function getOrders() {
   try {
     isLoading.value = true
@@ -72,7 +81,14 @@ async function getOrders() {
   }
   return []
 }
+
+// 删除选中的订单
 async function deleteOrder() {
+  if (!selectedItem.value?.length) {
+    message.warning('请选择要删除的订单')
+    return
+  }
+
   try {
     const data = await QueryPostAPI(POINT_API_URL + 'delete-orders', selectedItem.value)
     if (data.code == 200) {
@@ -87,45 +103,61 @@ async function deleteOrder() {
     console.log(err)
   }
 }
+
+// 订单状态文本映射
 const statusText = {
   [PointOrderStatus.Completed]: '已完成',
   [PointOrderStatus.Pending]: '等待发货',
   [PointOrderStatus.Shipped]: '已发货',
 }
+
+// 导出订单数据为CSV
 function exportData() {
-  const text = objectsToCSV(
-    filteredOrders.value.map((s) => {
-      const gift = props.goods.find((g) => g.id == s.goodsId)
-      return {
-        订单号: s.id,
-        订单类型: s.type == GoodsTypes.Physical ? '实体' : '虚拟',
-        订单状态: statusText[s.status],
-        用户名: s.customer.name ?? '未知',
-        用户UID: s.customer.userId,
-        联系人: s.address?.name,
-        联系电话: s.address?.phone,
-        地址: s.address
-          ? `${s.address?.province}省${s.address?.city}市${s.address?.district}区${s.address?.street}街道${s.address?.address}`
-          : '无',
-        礼物名: gift?.name ?? '已删除',
-        礼物数量: s.count,
-        礼物单价: gift?.price,
-        礼物总价: s.point,
-        快递公司: s.expressCompany,
-        快递单号: s.trackingNumber,
-        创建时间: format(s.createAt, 'yyyy-MM-dd HH:mm:ss'),
-        更新时间: s.updateAt ? format(s.updateAt, 'yyyy-MM-dd HH:mm:ss') : '未更新',
-      }
-    }),
-  )
-  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
-  const utf8encoder = new TextEncoder()
-  const utf8array = utf8encoder.encode(text)
-  saveAs(
-    new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
-    `积分订单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
-  )
+  try {
+    const text = objectsToCSV(
+      filteredOrders.value.map((s) => {
+        const gift = props.goods.find((g) => g.id == s.goodsId)
+        return {
+          订单号: s.id,
+          订单类型: s.type == GoodsTypes.Physical ? '实体' : '虚拟',
+          订单状态: statusText[s.status],
+          用户名: s.customer.name ?? '未知',
+          用户UID: s.customer.userId,
+          联系人: s.address?.name,
+          联系电话: s.address?.phone,
+          地址: s.address
+            ? `${s.address?.province}省${s.address?.city}市${s.address?.district}区${s.address?.street}街道${s.address?.address}`
+            : '无',
+          礼物名: gift?.name ?? '已删除',
+          礼物数量: s.count,
+          礼物单价: gift?.price,
+          礼物总价: s.point,
+          快递公司: s.expressCompany,
+          快递单号: s.trackingNumber,
+          创建时间: format(s.createAt, 'yyyy-MM-dd HH:mm:ss'),
+          更新时间: s.updateAt ? format(s.updateAt, 'yyyy-MM-dd HH:mm:ss') : '未更新',
+        }
+      }),
+    )
+
+    // 添加BOM标记，确保Excel正确识别UTF-8编码
+    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+    const utf8encoder = new TextEncoder()
+    const utf8array = utf8encoder.encode(text)
+
+    saveAs(
+      new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
+      `积分订单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
+    )
+
+    message.success('导出成功')
+  } catch (error) {
+    message.error('导出失败: ' + error)
+    console.error('导出失败:', error)
+  }
 }
+
+// 刷新订单数据
 async function refresh() {
   orders.value = await getOrders()
 }
@@ -142,8 +174,13 @@ onMounted(async () => {
       description="暂无订单"
     />
     <template v-else>
-      <br>
-      <NFlex>
+      <!-- 操作按钮 -->
+      <NFlex
+        :wrap="false"
+        justify="start"
+        :gap="12"
+        class="action-buttons"
+      >
         <NButton @click="refresh">
           刷新
         </NButton>
@@ -155,7 +192,10 @@ onMounted(async () => {
           导出数据
         </NButton>
       </NFlex>
+
       <NDivider />
+
+      <!-- 筛选条件卡片 -->
       <NCard
         size="small"
         title="筛选订单"
@@ -169,7 +209,11 @@ onMounted(async () => {
             重置
           </NButton>
         </template>
-        <NFlex align="center">
+        <NFlex
+          align="center"
+          :wrap="true"
+          :gap="8"
+        >
           <NSelect
             v-model:value="filterSettings.type"
             :options="[
@@ -178,7 +222,7 @@ onMounted(async () => {
             ]"
             clearable
             placeholder="订单类型"
-            style="width: 150px"
+            style="min-width: 120px; max-width: 150px"
           />
           <NSelect
             v-model:value="filterSettings.status"
@@ -189,9 +233,8 @@ onMounted(async () => {
             ]"
             placeholder="订单状态"
             clearable
-            style="width: 150px"
+            style="min-width: 120px; max-width: 150px"
           />
-
           <NSelect
             v-model:value="filterSettings.customer"
             :options="
@@ -202,21 +245,23 @@ onMounted(async () => {
             "
             placeholder="用户"
             clearable
-            style="width: 150px"
+            style="min-width: 120px; max-width: 150px"
           />
           <NCheckbox
             v-model:checked="filterSettings.onlyRequireShippingInfo"
-            label="仅包含未填写快递单号的订单"
-          />
+          >
+            仅包含未填写快递单号的订单
+          </NCheckbox>
         </NFlex>
       </NCard>
+
       <NDivider title-placement="left">
         <NPopconfirm @positive-click="deleteOrder">
           <template #trigger>
             <NButton
               size="tiny"
               type="error"
-              :disabled="(selectedItem?.length ?? 0) == 0"
+              :disabled="!selectedItem?.length"
             >
               删除选中的订单 | {{ selectedItem?.length ?? 0 }}
             </NButton>
@@ -224,6 +269,8 @@ onMounted(async () => {
           确定删除吗?
         </NPopconfirm>
       </NDivider>
+
+      <!-- 订单列表 -->
       <PointOrderCard
         :order="filteredOrders"
         :goods="goods"
@@ -233,3 +280,9 @@ onMounted(async () => {
     </template>
   </NSpin>
 </template>
+
+<style scoped>
+.action-buttons {
+  margin: 12px 0;
+}
+</style>

@@ -252,7 +252,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         // withAutomaticReconnect 会处理重连，这里不需要手动调用 reconnect
       } else if (disconnectedByServer) {
         console.log(prefix.value + `连接已被服务器关闭.`);
-        Stop(); // 服务器要求断开，则彻底停止
+        //Stop(); // 服务器要求断开，则彻底停止
       } else {
         console.log(prefix.value + `连接已手动关闭.`);
       }

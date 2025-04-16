@@ -57,9 +57,10 @@
     SelectOption,
     useMessage,
   } from 'naive-ui';
-  import { computed, h, nextTick, onActivated, onMounted, ref, watch } from 'vue';
+  import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef } from 'vue';
   import { useRoute } from 'vue-router';
 
+  // 模板定义类型接口
   interface TemplateDefineTypes {
     TemplateMap: TemplateMapType;
     Options: SelectOption[];
@@ -73,7 +74,9 @@
   const route = useRoute();
 
   const isSaving = ref(false);
+  const isLoading = ref(false);
 
+  // 模板相关数据
   const templates = ref({
     index: {
       TemplateMap: IndexTemplateMap,
@@ -221,256 +224,302 @@
     },
   } as { [type: string]: TemplateDefineTypes; });
 
+  // 模板选项配置
   const templateOptions = [
-    {
-      label: '主页',
-      value: 'index',
-    },
-    {
-      label: '歌单',
-      value: 'songlist',
-    },
-    {
-      label: '日程表',
-      value: 'schedule',
-    },
+    { label: '主页', value: 'index' },
+    { label: '歌单', value: 'songlist' },
+    { label: '日程表', value: 'schedule' },
   ] as SelectOption[];
+
+  // 路由查询参数优先级高于默认值
   const selectedOption = ref(route.query.template?.toString() ?? 'index');
   const selectedTab = ref(route.query.setting?.toString() ?? 'general');
 
+  // 动态表单相关
   const dynamicConfigRef = shallowRef();
+
+  // 计算属性
   const selectedTemplateData = computed(() => templates.value[selectedOption.value]);
-  const selectedTemplate = computed(() => {
-    return templates.value[selectedOption.value].TemplateMap[selectedTemplateData.value.Selected];
-  });
-  const selectedComponent = computed(
-    () => selectedTemplate.value.component,
-  );
-  const selectedTemplateConfig = computed(() => {
-    if (dynamicConfigRef.value?.Config) {
-      return dynamicConfigRef.value?.Config as ConfigItemDefinition[];
-    }
-    return undefined;
-  });
+  const selectedTemplate = computed(() => selectedTemplateData.value.TemplateMap[selectedTemplateData.value.Selected]);
+  const selectedComponent = computed(() => selectedTemplate.value.component);
+  const selectedTemplateConfig = computed(() => dynamicConfigRef.value?.Config ? dynamicConfigRef.value.Config : undefined);
+
+  // B站用户信息
   const biliUserInfo = ref();
+
+  // 模态框控制
   const settingModalVisiable = ref(false);
   const showAddVideoModal = ref(false);
   const showAddLinkModal = ref(false);
 
+  // 主页数据
   const indexDisplayInfo = ref<ResponseUserIndexModel>();
   const addVideoUrl = ref('');
-  const isLoading = ref(false);
   const addLinkName = ref('');
   const addLinkUrl = ref('');
   const linkKey = ref(0);
 
+  /**
+   * 获取B站用户数据
+   */
   async function RequestBiliUserData() {
-    await fetch(FETCH_API + `https://workers.vrp.moe/api/bilibili/user-info/10021741`).then(async (respone) => {
-      const data = await respone.json();
+    try {
+      const response = await fetch(FETCH_API + `https://workers.vrp.moe/api/bilibili/user-info/10021741`);
+      const data = await response.json();
       if (data.code == 0) {
         biliUserInfo.value = data.card;
       } else {
         throw new Error('Bili User API Error: ' + data.message);
       }
-    });
+    } catch (error) {
+      console.error('获取B站用户数据失败:', error);
+    }
   }
+
+  /**
+   * 保存功能启用状态
+   */
   async function SaveComboGroupSetting(
     value: (string | number)[],
     meta: { actionType: 'check' | 'uncheck'; value: string | number; },
   ) {
-    if (accountInfo.value) {
-      isSaving.value = true;
-      //UpdateEnableFunction(meta.value as FunctionTypes, meta.actionType == 'check')
-      await SaveEnableFunctions(accountInfo.value.settings.enableFunctions)
-        .then((data) => {
-          if (data.code == 200) {
-            //message.success('保存成功')
-          } else {
-            message.error('修改失败');
-            if (accountInfo.value) {
-              accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-                (f) => f != (meta.value as FunctionTypes),
-              );
-            }
-          }
-        })
-        .catch((err) => {
-          message.error('修改失败: ' + err);
-        })
-        .finally(() => {
-          isSaving.value = false;
-        });
-    }
-  }
-  async function SaveComboSetting() {
+    if (!accountInfo.value) return;
+
     isSaving.value = true;
-    if (accountInfo.value) {
-      //UpdateEnableFunction(meta.value as FunctionTypes, meta.actionType == 'check')
-      await SaveAccountSettings()
-        .then((data) => {
-          if (data.code == 200) {
-            message.success('已保存');
-          } else {
-            message.error('修改失败');
-          }
-        })
-        .catch((err) => {
-          message.error('修改失败: ' + err);
-        })
-        .finally(() => {
-          isSaving.value = false;
-        });
-    }
-  }
-  async function SaveTemplateSetting() {
-    if (accountInfo.value) {
-      switch (selectedOption.value) {
-        case 'index': {
-          accountInfo.value.settings.indexTemplate = selectedTemplateData.value.Selected ?? '';
-          break;
-        }
-        case 'songlist': {
-          accountInfo.value.settings.songListTemplate = selectedTemplateData.value.Selected ?? '';
-          break;
-        }
-        case 'schedule': {
-          accountInfo.value.settings.scheduleTemplate = selectedTemplateData.value.Selected ?? '';
-          break;
+    try {
+      const response = await SaveEnableFunctions(accountInfo.value.settings.enableFunctions);
+      if (response.code !== 200) {
+        message.error('修改失败');
+        // 回滚修改
+        if (accountInfo.value) {
+          accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
+            (f) => f != (meta.value as FunctionTypes),
+          );
         }
       }
-      await SaveComboSetting();
+    } catch (err) {
+      message.error('修改失败: ' + err);
+    } finally {
+      isSaving.value = false;
     }
   }
-  async function updateIndexSettings() {
-    await QueryPostAPI(USER_INDEX_API_URL + 'update-setting', accountInfo.value.settings.index)
-      .then((data) => {
-        if (data.code == 200) {
-          message.success('已保存');
-        } else {
-          message.error('保存失败: ' + data.message);
-        }
-      })
-      .catch((err) => {
-        message.error('保存失败: ' + err);
-      });
+
+  /**
+   * 保存账户设置
+   */
+  async function SaveComboSetting() {
+    if (!accountInfo.value) return;
+
+    isSaving.value = true;
+    try {
+      const response = await SaveAccountSettings();
+      if (response.code === 200) {
+        message.success('已保存');
+      } else {
+        message.error('修改失败');
+      }
+    } catch (err) {
+      message.error('修改失败: ' + err);
+    } finally {
+      isSaving.value = false;
+    }
   }
+
+  /**
+   * 保存模板设置
+   */
+  async function SaveTemplateSetting() {
+    if (!accountInfo.value) return;
+
+    // 根据选择的模板类型保存对应设置
+    switch (selectedOption.value) {
+      case 'index':
+        accountInfo.value.settings.indexTemplate = selectedTemplateData.value.Selected ?? '';
+        break;
+      case 'songlist':
+        accountInfo.value.settings.songListTemplate = selectedTemplateData.value.Selected ?? '';
+        break;
+      case 'schedule':
+        accountInfo.value.settings.scheduleTemplate = selectedTemplateData.value.Selected ?? '';
+        break;
+    }
+
+    await SaveComboSetting();
+  }
+
+  /**
+   * 更新主页设置
+   */
+  async function updateIndexSettings() {
+    try {
+      const response = await QueryPostAPI(USER_INDEX_API_URL + 'update-setting', accountInfo.value.settings.index);
+      if (response.code === 200) {
+        message.success('已保存');
+      } else {
+        message.error('保存失败: ' + response.message);
+      }
+    } catch (err) {
+      message.error('保存失败: ' + err);
+    }
+  }
+
+  /**
+   * 添加视频到主页
+   */
   async function addVideo() {
     if (!addVideoUrl.value) {
       message.error('请输入视频链接');
       return;
     }
+
     isLoading.value = true;
-    await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'add-video', {
-      video: addVideoUrl.value,
-    })
-      .then((data) => {
-        if (data.code == 200) {
-          message.success('已添加');
-          indexDisplayInfo.value?.videos.push(data.data);
-          accountInfo.value?.settings.index.videos.push(data.data.id);
-          addVideoUrl.value = '';
-        } else {
-          message.error('保存失败: ' + data.message);
-        }
-      })
-      .catch((err) => {
-        message.error('保存失败: ' + err);
-      })
-      .finally(() => {
-        isLoading.value = false;
+    try {
+      const response = await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'add-video', {
+        video: addVideoUrl.value,
       });
+
+      if (response.code === 200) {
+        message.success('已添加');
+        indexDisplayInfo.value?.videos.push(response.data);
+        accountInfo.value?.settings.index.videos.push(response.data.id);
+        addVideoUrl.value = '';
+      } else {
+        message.error('保存失败: ' + response.message);
+      }
+    } catch (err) {
+      message.error('保存失败: ' + err);
+    } finally {
+      isLoading.value = false;
+    }
   }
+
+  /**
+   * 从主页移除视频
+   */
   async function removeVideo(id: string) {
     isLoading.value = true;
-    await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'del-video', {
-      video: id,
-    })
-      .then((data) => {
-        if (data.code == 200) {
-          message.success('已删除');
-          if (indexDisplayInfo.value) {
-            indexDisplayInfo.value.videos = indexDisplayInfo.value?.videos.filter((v) => v.id != id);
-          }
-
-          accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v != id);
-        } else {
-          message.error('删除失败: ' + data.message);
-        }
-      })
-      .catch((err) => {
-        message.error('删除失败: ' + err);
-      })
-      .finally(() => {
-        isLoading.value = false;
+    try {
+      const response = await QueryGetAPI<VideoCollectVideo>(USER_INDEX_API_URL + 'del-video', {
+        video: id,
       });
+
+      if (response.code === 200) {
+        message.success('已删除');
+        // 更新视频列表
+        if (indexDisplayInfo.value) {
+          indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter((v) => v.id !== id);
+        }
+        // 更新设置
+        accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter((v) => v !== id);
+      } else {
+        message.error('删除失败: ' + response.message);
+      }
+    } catch (err) {
+      message.error('删除失败: ' + err);
+    } finally {
+      isLoading.value = false;
+    }
   }
+
+  /**
+   * 添加外部链接
+   */
   async function addLink() {
+    // 验证输入
     if (!addLinkName.value || !addLinkUrl.value) {
       message.error('请输入名称和链接');
       return;
     }
+
+    // 验证URL格式
     try {
       new URL(addLinkUrl.value);
     } catch (e) {
       message.error('请输入正确的链接');
       return;
     }
+
+    // 检查链接名是否已存在
     if (Object.keys(accountInfo.value.settings.index.links).includes(addLinkName.value)) {
       message.error(addLinkName.value + '已存在');
       return;
     }
+
+    // 保存链接
     accountInfo.value.settings.index.links[addLinkName.value] = addLinkUrl.value;
     await updateIndexSettings();
+
+    // 重置表单
     addLinkName.value = '';
     addLinkUrl.value = '';
     location.reload();
   }
+
+  /**
+   * 删除外部链接
+   */
   async function removeLink(name: string) {
     delete accountInfo.value.settings.index.links[name];
     await updateIndexSettings();
-
     location.reload();
   }
+
+  /**
+   * 打开模板设置
+   */
   async function onOpenTemplateSettings() {
     settingModalVisiable.value = true;
     nextTick(async () => {
       await getTemplateConfig();
     });
   }
+
+  /**
+   * 获取模板配置
+   */
   async function getTemplateConfig() {
+    // 只获取未加载且有配置名的模板
     if (selectedTemplate.value && !selectedTemplateData.value.Config && selectedTemplate.value.settingName) {
       const name = selectedTemplate.value.settingName;
-      await downloadConfigDirect(name)
-        .then((data) => {
-          if (data.code == 200) {
-            message.success('已获取配置文件');
-            console.log(`已获取模板配置: ${name}`);
-            selectedTemplateData.value.Config = JSON.parse(data.data);
-          } else if (data.code == 404) {
-            //message.error(`未找到名为 ${name} 的配置文件`)
-            console.error(`未找到名为 ${name} 的配置文件`);
-            selectedTemplateData.value.Config = dynamicConfigRef.value.DefaultConfig;
-          } else {
-            message.error('获取失败: ' + data.message);
-            console.error('获取失败: ' + data.message);
-          }
-        })
-        .catch((err) => {
-          message.error(err);
-        });
+      try {
+        const response = await downloadConfigDirect(name);
+
+        if (response.code === 200) {
+          console.log(`已获取模板配置: ${name}`);
+          selectedTemplateData.value.Config = JSON.parse(response.data);
+        } else if (response.code === 404) {
+          console.error(`未找到名为 ${name} 的配置文件`);
+          // 使用默认配置
+          selectedTemplateData.value.Config = dynamicConfigRef.value.DefaultConfig;
+        } else {
+          message.error('获取失败: ' + response.message);
+          console.error('获取失败: ' + response.message);
+        }
+      } catch (err) {
+        message.error((err as Error).toString());
+      }
     }
   }
+
+  // 操作按钮组
   const buttonGroup = computed(() => {
     return h(NSpace, () => [
       h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'),
-      h(NButton, { type: 'info', onClick: onOpenTemplateSettings, disabled: !selectedTemplate.value.settingName }, () => '模板设置'),
+      h(NButton, {
+        type: 'info',
+        onClick: onOpenTemplateSettings,
+        disabled: !selectedTemplate.value.settingName
+      }, () => '模板设置'),
     ]);
   });
 
+  /**
+   * 解除B站用户黑名单
+   */
   function unblockBiliUser(id: number) {
     DelBiliBlackList(id)
       .then((data) => {
-        if (data.code == 200) {
+        if (data.code === 200) {
           message.success(`[${id}] 已移除黑名单`);
           if (accountInfo.value) {
             delete accountInfo.value.biliBlackList[id];
@@ -483,10 +532,14 @@
         message.error(err);
       });
   }
+
+  /**
+   * 解除普通用户黑名单
+   */
   function unblockUser(id: number) {
     DelBlackList(id)
       .then((data) => {
-        if (data.code == 200) {
+        if (data.code === 200) {
           message.success(`[${id}] 已移除黑名单`);
           if (accountInfo.value) {
             accountInfo.value.blackList = accountInfo.value.blackList.filter((u) => u.id != id);
@@ -499,16 +552,20 @@
         message.error(err);
       });
   }
+
+  /**
+   * 获取用户主页信息
+   */
   async function getIndexInfo() {
+    isLoading.value = true;
     try {
-      isLoading.value = true;
       const data = await QueryGetAPI<ResponseUserIndexModel>(USER_INDEX_API_URL + 'get', { id: accountInfo.value.id });
-      if (data.code == 200) {
+      if (data.code === 200) {
         return data.data;
-      } else if (data.code != 404) {
+      } else if (data.code !== 404) {
         message?.error('无法获取数据: ' + data.message);
-        return undefined;
       }
+      return undefined;
     } catch (err) {
       message?.error('无法获取数据: ' + err);
       return undefined;
@@ -516,11 +573,16 @@
       isLoading.value = false;
     }
   }
+
+  /**
+   * 更新用户主页设置
+   */
   async function updateUserIndexSettings() {
     await SaveSetting('Index', accountInfo.value.settings.index);
     message.success('已保存');
   }
 
+  // 路由激活时更新选项卡
   onActivated(() => {
     if (route.query.tab) {
       selectedTab.value = route.query.setting?.toString() ?? 'general';
@@ -529,9 +591,12 @@
       selectedOption.value = route.query.template.toString();
     }
   });
+
+  // 组件挂载时初始化数据
   onMounted(async () => {
     await RequestBiliUserData();
     indexDisplayInfo.value = await getIndexInfo();
+    // 设置默认值
     accountInfo.value.settings.index.allowDisplayInIndex = accountInfo.value.settings.index.allowDisplayInIndex ?? true;
   });
 </script>
@@ -546,6 +611,7 @@
         v-model:value="selectedTab"
         :default-value="$route.query.setting?.toString() ?? 'general'"
       >
+        <!-- 常规设置标签页 -->
         <NTabPane
           tab="常规"
           name="general"
@@ -574,6 +640,7 @@
               排队
             </NCheckbox>
           </NCheckboxGroup>
+
           <NDivider> 通知 </NDivider>
           <NSpace>
             <NCheckbox
@@ -589,6 +656,7 @@
               提问收到回复时发送邮件
             </NCheckbox>
           </NSpace>
+
           <NDivider> 提问箱 </NDivider>
           <NSpace>
             <NCheckbox
@@ -599,6 +667,8 @@
             </NCheckbox>
           </NSpace>
         </NTabPane>
+
+        <!-- 主页设置标签页 -->
         <NTabPane
           tab="主页"
           name="index"
@@ -613,6 +683,7 @@
             允许显示在网站主页
           </NCheckbox>
           <br><br>
+
           <NDivider> 通知 </NDivider>
           <NInput
             v-model:value="accountInfo.settings.index.notification"
@@ -625,6 +696,7 @@
           >
             保存
           </NButton>
+
           <NDivider> 展示视频 </NDivider>
           <NButton
             type="primary"
@@ -651,6 +723,7 @@
               </template>
             </NCard>
           </NFlex>
+
           <NDivider> 其他链接 </NDivider>
           <NButton
             type="primary"
@@ -696,35 +769,15 @@
               </NPopconfirm>
             </NFlex>
           </NFlex>
-          <NModal
-            v-model:show="showAddLinkModal"
-            :show-icon="false"
-            preset="dialog"
-            title="添加链接"
-          >
-            <NFlex vertical>
-              <NInput
-                v-model:value="addLinkName"
-                placeholder="链接名称"
-              />
-              <NInput
-                v-model:value="addLinkUrl"
-                placeholder="链接地址"
-              />
-              <NButton
-                type="primary"
-                @click="addLink"
-              >
-                添加
-              </NButton>
-            </NFlex>
-          </NModal>
         </NTabPane>
+
+        <!-- 黑名单标签页 -->
         <NTabPane
           tab="黑名单"
           name="blacklist"
           display-directive="show:lazy"
         >
+          <!-- B站黑名单列表 -->
           <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
             <NListItem
               v-for="item in Object.entries(accountInfo.biliBlackList)"
@@ -747,6 +800,8 @@
               </NSpace>
             </NListItem>
           </NList>
+
+          <!-- 普通用户黑名单列表 -->
           <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
             <NListItem
               v-for="item in accountInfo.blackList"
@@ -771,6 +826,8 @@
           </NList>
           <NEmpty v-else />
         </NTabPane>
+
+        <!-- 模板设置标签页 -->
         <NTabPane
           tab="模板"
           name="template"
@@ -830,6 +887,8 @@
       </NTabs>
     </NSpin>
   </NCard>
+
+  <!-- 模板设置模态框 -->
   <NModal
     v-model:show="settingModalVisiable"
     preset="card"
@@ -849,6 +908,8 @@
       :config="selectedTemplateConfig"
     />
   </NModal>
+
+  <!-- 添加视频模态框 -->
   <NModal
     v-model:show="showAddVideoModal"
     preset="card"
@@ -868,5 +929,31 @@
     >
       添加视频
     </NButton>
+  </NModal>
+
+  <!-- 添加链接模态框 -->
+  <NModal
+    v-model:show="showAddLinkModal"
+    preset="card"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="添加链接"
+  >
+    <NFlex vertical>
+      <NInput
+        v-model:value="addLinkName"
+        placeholder="链接名称"
+      />
+      <NInput
+        v-model:value="addLinkUrl"
+        placeholder="链接地址"
+      />
+      <NButton
+        type="primary"
+        @click="addLink"
+      >
+        添加
+      </NButton>
+    </NFlex>
   </NModal>
 </template>

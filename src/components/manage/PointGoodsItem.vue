@@ -8,6 +8,8 @@
     goods: ResponsePointGoodModel | undefined;
     contentStyle?: string | undefined;
   }>();
+
+  // 默认封面图片
   const emptyCover = IMGUR_URL + 'None.png';
 </script>
 
@@ -20,7 +22,9 @@
     v-else
     embedded
     :style="props.contentStyle"
+    class="goods-card"
   >
+    <!-- 商品封面 -->
     <template #cover>
       <NImage
         :src="goods.cover ? FILE_BASE_URL + goods.cover : emptyCover"
@@ -31,6 +35,8 @@
         style="width: 100%"
       />
     </template>
+
+    <!-- 商品信息头部 -->
     <template #header-extra>
       <NFlex justify="space-between">
         <NFlex>
@@ -52,11 +58,14 @@
         </NFlex>
       </NFlex>
     </template>
+
+    <!-- 商品标题 -->
     <template #header>
       <NFlex
         align="center"
         :size="5"
       >
+        <!-- 售罄标签 -->
         <NTag
           v-if="goods.count == 0"
           size="small"
@@ -65,17 +74,23 @@
         >
           已售完
         </NTag>
+
+        <!-- 商品类型标签 -->
         <NTag
           size="small"
           :bordered="goods.type != GoodsTypes.Physical"
         >
           {{ goods.type == GoodsTypes.Physical ? '实物' : '虚拟' }}
         </NTag>
+
+        <!-- 商品名称 -->
         <NEllipsis>
           {{ goods.name }}
         </NEllipsis>
       </NFlex>
     </template>
+
+    <!-- 商品描述和标签 -->
     <NFlex vertical>
       <NEllipsis :line-clamp="2">
         <NText
@@ -85,7 +100,10 @@
           {{ goods.description ? goods.description : '暂无描述' }}
         </NText>
       </NEllipsis>
-      <NFlex>
+
+      <!-- 标签展示 -->
+      <NFlex wrap>
+        <!-- 舰长限制标签 -->
         <NTag
           v-if="goods.allowGuardLevel > 0"
           size="tiny"
@@ -96,6 +114,8 @@
           </template>
           仅限舰长
         </NTag>
+
+        <!-- 商品标签 -->
         <NTag
           v-for="tag in goods.tags"
           :key="tag"
@@ -106,8 +126,21 @@
         </NTag>
       </NFlex>
     </NFlex>
+
+    <!-- 自定义页脚 -->
     <template #footer>
       <slot name="footer" />
     </template>
   </NCard>
 </template>
+
+<style scoped>
+.goods-card {
+  transition: all 0.3s ease;
+}
+
+.goods-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+</style>

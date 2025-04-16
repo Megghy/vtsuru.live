@@ -3,7 +3,7 @@ import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
-import { addDays, addHours, endOfDay, format, isSameDay, isSameHour, startOfDay, startOfHour } from 'date-fns'
+import { addDays, endOfDay, format, isSameDay, startOfDay } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -16,9 +16,11 @@ import {
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 
+
+// 初始化ECharts组件
 use([
   CanvasRenderer,
   LineChart,
@@ -31,6 +33,8 @@ use([
   ToolboxComponent,
   BarChart,
 ])
+
+// 定义数据模型类型
 type HistoryModel = {
   fan: {
     records: HistoryRecordModel[]
@@ -45,21 +49,34 @@ type HistoryModel = {
     updateAt: number
   }
 }
+
 type HistoryRecordModel = {
   time: number
   count: number
 }
-type HistoryUpstatRecordModel = { time: number; stats: { views: number; likes: number } }
+
+type HistoryUpstatRecordModel = {
+  time: number
+  stats: {
+    views: number
+    likes: number
+  }
+}
 
 const accountInfo = useAccount()
 const message = useMessage()
 
-const fansHistory = ref<{ time: number; count: number }[]>()
-const guardHistory = ref<{ time: number; count: number }[]>()
-const upstatHistory = ref<{ time: number; stats: { views: number; likes: number } }[]>()
+// 历史数据引用
+const fansHistory = ref<HistoryRecordModel[]>()
+const guardHistory = ref<HistoryRecordModel[]>()
+const upstatHistory = ref<HistoryUpstatRecordModel[]>()
+
+// 更新时间引用
 const fansUpdateAt = ref(0)
 const guardUpdateAt = ref(0)
 const upstatUpdateAt = ref(0)
+
+// 图表配置引用
 const fansOption = ref()
 const guardsOption = ref()
 const upstatViewOption = ref()
@@ -67,202 +84,42 @@ const upstatLikeOption = ref()
 
 const isLoading = ref(true)
 
-async function getHistory() {
-  await QueryGetAPI<HistoryModel>(HISTORY_API_URL + 'get-all')
-    .then((data) => {
-      if (data.code == 200) {
-        fansHistory.value = data.data.fan.records
-        guardHistory.value = data.data.guard.records
-        upstatHistory.value = data.data.upstat.records
-        fansUpdateAt.value = data.data.fan.updateAt
-        guardUpdateAt.value = data.data.guard.updateAt
-        upstatUpdateAt.value = data.data.upstat.updateAt
-      } else {
-        message.error('加载失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('加载失败')
-    })
-}
-function isSameDaySimple(time1: number, time2: number) {
-  const time1Date = new Date(time1)
-  const time2Date = new Date(time2)
-  return (
-    time1Date.getFullYear() === time2Date.getFullYear() &&
-    time1Date.getMonth() === time2Date.getMonth() &&
-    time1Date.getDate() === time2Date.getDate()
-  )
-}
+// 统计开始日期
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
-function getOptions() {
-  // 用于存储粉丝增量数据
-  const fansIncreacement: { time: Date; count: number }[] = []
-  // 用于存储完整的时间序列数据，包括时间、粉丝数、是否变化
-  const completeTimeSeries: { time: Date; count: number; change: boolean, exist: boolean }[] = []
 
-  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
-  startTime = startTime < statisticStartDate ? statisticStartDate : startTime // 确保开始时间不早于统计开始时间
-  startTime = startOfDay(startTime) // 将开始时间调整到整点
-  const endTime = new Date()
+// 响应式图表高度
+const chartHeight = computed(() => {
+  // 可以根据窗口大小动态调整图表高度
+  return window.innerWidth < 768 ? '250px' : '300px'
+})
 
-  if (fansHistory.value) {
-    let currentTime = startTime
-    let lastFansTimeIndex = fansHistory.value.length > 0
-      ? fansHistory.value[0].time >= statisticStartDateTime
-        ? 0
-        : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
-      : -1
-    let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
-
-    // 生成完整的天序列数据
-    while (currentTime <= endTime) {
-      const dayEndTime = endOfDay(currentTime).getTime()
-      while (true) {
-        const data = fansHistory.value[lastFansTimeIndex]
-        if (!data) {
-          completeTimeSeries.push({
-            time: currentTime,
-            count: lastDayCount,
-            change: false,
-            exist: false,
-          })
-          break
-        }
-        // 如果下一个数据的时间大于当前天的结束时间
-        if ((fansHistory.value[lastFansTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-          const changed = data.count !== lastDayCount
-          lastDayCount = data.count
-
-          completeTimeSeries.push({
-            time: currentTime,
-            count: lastDayCount,
-            change: changed,
-            exist: true,
-          })
-          break
-        }
-
-        lastFansTimeIndex++
-      }
-
-      currentTime = addDays(currentTime, 1) // 移动到下一天
+/**
+ * 获取所有历史数据
+ */
+async function getHistory() {
+  try {
+    const response = await QueryGetAPI<HistoryModel>(HISTORY_API_URL + 'get-all')
+    if (response.code == 200) {
+      fansHistory.value = response.data.fan.records
+      guardHistory.value = response.data.guard.records
+      upstatHistory.value = response.data.upstat.records
+      fansUpdateAt.value = response.data.fan.updateAt
+      guardUpdateAt.value = response.data.guard.updateAt
+      upstatUpdateAt.value = response.data.upstat.updateAt
+    } else {
+      message.error('加载失败: ' + response.message)
     }
-
-    // 计算粉丝增量数据
-    let previousDayCount = completeTimeSeries[0].count
-    completeTimeSeries.forEach((entry, index, array) => {
-      if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
-        if (index > 0) {
-          const dailyIncrement = entry.count - previousDayCount
-          fansIncreacement.push({
-            time: startOfDay(array[index - 1].time),
-            count: dailyIncrement,
-          })
-        }
-        previousDayCount = entry.count
-      } else if (index === array.length - 1) {
-        const dailyIncrement = entry.count - previousDayCount
-        fansIncreacement.push({
-          time: startOfDay(entry.time),
-          count: dailyIncrement,
-        })
-      }
-    })
+  } catch (err) {
+    message.error('加载失败')
   }
+}
 
-  let lastDayGuards = 0
-  let lastDay = 0
-  const guardsIncreacement: { time: number; count: number; timeString: string }[] = []
-  const guards: { time: number; count: number; timeString: string }[] = []
-
-  // 处理舰长历史数据
-  if (guardHistory.value && guardHistory.value.length > 0) {
-    let currentGuardTime = startTime
-    let lastDayGuardCount = 0
-    const completeGuardTimeSeries: { time: Date; count: number }[] = []
-    let lastGuardTimeIndex = 0
-
-    // 生成完整的舰长天序列
-    while (currentGuardTime <= endTime) {
-      const dayEndTime = endOfDay(currentGuardTime).getTime()
-      while (true) {
-        const data = guardHistory.value[lastGuardTimeIndex]
-        if (!data) {
-          completeGuardTimeSeries.push({
-            time: currentGuardTime,
-            count: lastDayGuardCount,
-          })
-          break
-        }
-
-        if ((guardHistory.value[lastGuardTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-          lastDayGuardCount = data.count
-          completeGuardTimeSeries.push({
-            time: currentGuardTime,
-            count: lastDayGuardCount,
-          })
-          break
-        }
-
-        lastGuardTimeIndex++
-      }
-
-      currentGuardTime = addDays(currentGuardTime, 1) // 移动到下一天
-    }
-
-    // 计算守护增量数据
-    completeGuardTimeSeries.forEach((g) => {
-      if (!isSameDay(g.time, new Date(lastDay * 1000))) {
-        guardsIncreacement.push({
-          time: lastDayGuards,
-          count: lastDay === 0 ? 0 : g.count - lastDayGuards,
-          timeString: format(g.time, 'yyyy-MM-dd'),
-        })
-        guards.push({
-          time: g.time.getTime() / 1000,
-          count: g.count,
-          timeString: format(g.time, 'yyyy-MM-dd'),
-        })
-        lastDay = g.time.getTime() / 1000
-        lastDayGuards = g.count
-      }
-    })
-  }
-
-  const upstatViewIncreace: { time: number; value: number }[] = []
-  const upstatLikeIncreace: { time: number; value: number }[] = []
-
-  // 处理upstat历史数据
-  if (upstatHistory.value && upstatHistory.value.length > 0) {
-    let lastUpstatView = upstatHistory.value[0].stats.views
-    let lastUpstatLike = upstatHistory.value[0].stats.likes
-
-    upstatHistory.value.forEach((u) => {
-      upstatViewIncreace.push({
-        time: u.time,
-        value: u.stats.views - lastUpstatView,
-      })
-      lastUpstatView = u.stats.views
-      upstatLikeIncreace.push({
-        time: u.time,
-        value: u.stats.likes - lastUpstatLike,
-      })
-      lastUpstatLike = u.stats.likes
-    })
-  }
-  const chartData = {
-    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
-    hourlyCounts: completeTimeSeries.map((entry) => entry.count),
-    dailyIncrements: fansIncreacement.map((entry) => {
-      return {
-        date: format(entry.time, 'yyyy-MM-dd'),
-        count: entry.count,
-      }
-    }),
-  }
-  fansOption.value = {
+/**
+ * 获取基础图表配置
+ */
+function getBaseChartOptions() {
+  return {
     tooltip: {
       trigger: 'axis',
       axisPointer: {
@@ -271,6 +128,125 @@ function getOptions() {
           color: '#999',
         },
       },
+    },
+    toolbox: {
+      feature: {
+        dataView: { show: true, readOnly: false },
+        magicType: { show: true, type: ['line', 'bar'] },
+        restore: { show: true },
+        saveAsImage: { show: true },
+      },
+    },
+    legend: {},
+    dataZoom: [
+      {
+        show: true,
+        realtime: true,
+        start: 0,
+        end: 100,
+        xAxisIndex: [0, 1],
+      },
+    ],
+  }
+}
+
+/**
+ * 处理粉丝历史数据并生成图表选项
+ */
+function processFansChartOptions() {
+  if (!fansHistory.value || fansHistory.value.length === 0) return
+
+  // 确定开始时间
+  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
+  startTime = startTime < statisticStartDate ? statisticStartDate : startTime
+  startTime = startOfDay(startTime)
+  const endTime = new Date()
+
+  // 用于存储完整的时间序列数据
+  const completeTimeSeries: { time: Date; count: number; change: boolean, exist: boolean }[] = []
+  // 用于存储粉丝增量数据
+  const fansIncreacement: { time: Date; count: number }[] = []
+
+  // 查找统计开始时间之后的第一个数据点
+  let lastFansTimeIndex = fansHistory.value.length > 0
+    ? fansHistory.value[0].time >= statisticStartDateTime
+      ? 0
+      : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
+    : -1
+  let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
+
+  // 生成完整的天序列数据
+  let currentTime = startTime
+  while (currentTime <= endTime) {
+    const dayEndTime = endOfDay(currentTime).getTime()
+    while (true) {
+      const data = fansHistory.value[lastFansTimeIndex]
+      if (!data) {
+        completeTimeSeries.push({
+          time: currentTime,
+          count: lastDayCount,
+          change: false,
+          exist: false,
+        })
+        break
+      }
+      // 如果下一个数据的时间大于当前天的结束时间
+      if ((fansHistory.value[lastFansTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
+        const changed = data.count !== lastDayCount
+        lastDayCount = data.count
+
+        completeTimeSeries.push({
+          time: currentTime,
+          count: lastDayCount,
+          change: changed,
+          exist: true,
+        })
+        break
+      }
+
+      lastFansTimeIndex++
+    }
+
+    currentTime = addDays(currentTime, 1) // 移动到下一天
+  }
+
+  // 计算粉丝增量数据
+  let previousDayCount = completeTimeSeries[0].count
+  completeTimeSeries.forEach((entry, index, array) => {
+    if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
+      if (index > 0) {
+        const dailyIncrement = entry.count - previousDayCount
+        fansIncreacement.push({
+          time: startOfDay(array[index - 1].time),
+          count: dailyIncrement,
+        })
+      }
+      previousDayCount = entry.count
+    } else if (index === array.length - 1) {
+      const dailyIncrement = entry.count - previousDayCount
+      fansIncreacement.push({
+        time: startOfDay(entry.time),
+        count: dailyIncrement,
+      })
+    }
+  })
+
+  // 准备图表数据
+  const chartData = {
+    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
+    hourlyCounts: completeTimeSeries.map((entry) => entry.count),
+    dailyIncrements: fansIncreacement.map((entry) => ({
+      date: format(entry.time, 'yyyy-MM-dd'),
+      count: entry.count,
+    })),
+  }
+
+  // 生成图表配置
+  const baseOptions = getBaseChartOptions()
+  fansOption.value = {
+    ...baseOptions,
+    tooltip: {
+      ...baseOptions.tooltip,
       formatter: (param: any) => {
         const name = param[0].name + '<br>'
         let str = ''
@@ -283,15 +259,6 @@ function getOptions() {
         return name + str
       },
     },
-    toolbox: {
-      feature: {
-        dataView: { show: true, readOnly: false },
-        magicType: { show: true, type: ['line', 'bar'] },
-        restore: { show: true },
-        saveAsImage: { show: true },
-      },
-    },
-    legend: {},
     yAxis: [
       {
         type: 'value',
@@ -314,23 +281,19 @@ function getOptions() {
             color: '#5470C6',
           },
         },
-        // prettier-ignore
         data: chartData.xAxisData,
       },
-
       {
         type: 'category',
         axisTick: {
           alignWithLabel: true,
         },
-        //boundaryGap: chartData.dailyIncrements.length < 15, // 设置为false使得柱状图紧贴左右两侧
         axisLine: {
           onZero: false,
           lineStyle: {
             color: '#EE6666',
           },
         },
-        // prettier-ignore
         data: fansIncreacement.map((f) => format(f.time, 'yyyy-MM-dd')),
       },
     ],
@@ -344,11 +307,7 @@ function getOptions() {
         data: chartData.hourlyCounts,
         itemStyle: {
           color: function (data: any) {
-            if (completeTimeSeries[data.dataIndex].change) {
-              return '#18a058'
-            } else {
-              return '#5470C6'
-            }
+            return completeTimeSeries[data.dataIndex].change ? '#18a058' : '#5470C6'
           },
         },
       },
@@ -363,31 +322,87 @@ function getOptions() {
         data: chartData.dailyIncrements.map((f) => f.count),
         itemStyle: {
           color: function (params: any) {
-            // params.value 是当前数据项的值
             return params.value < 0 ? '#FF4D4F' : '#3398DB' // 负数时红色，正数时默认颜色
           },
         },
       },
     ],
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: 0,
-        end: 100,
-        xAxisIndex: [0, 1],
-      },
-    ],
   }
+}
+
+/**
+ * 处理舰长历史数据并生成图表选项
+ */
+function processGuardsChartOptions() {
+  if (!guardHistory.value || guardHistory.value.length === 0) return
+
+  // 确定开始时间
+  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
+  startTime = startTime < statisticStartDate ? statisticStartDate : startTime
+  startTime = startOfDay(startTime)
+  const endTime = new Date()
+
+  // 生成完整的舰长天序列
+  const completeGuardTimeSeries: { time: Date; count: number }[] = []
+  let currentGuardTime = startTime
+  let lastGuardTimeIndex = 0
+  let lastDayGuardCount = 0
+
+  while (currentGuardTime <= endTime) {
+    const dayEndTime = endOfDay(currentGuardTime).getTime()
+    while (true) {
+      const data = guardHistory.value[lastGuardTimeIndex]
+      if (!data) {
+        completeGuardTimeSeries.push({
+          time: currentGuardTime,
+          count: lastDayGuardCount,
+        })
+        break
+      }
+
+      if ((guardHistory.value[lastGuardTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
+        lastDayGuardCount = data.count
+        completeGuardTimeSeries.push({
+          time: currentGuardTime,
+          count: lastDayGuardCount,
+        })
+        break
+      }
+
+      lastGuardTimeIndex++
+    }
+
+    currentGuardTime = addDays(currentGuardTime, 1) // 移动到下一天
+  }
+
+  // 计算守护增量数据
+  const guardsIncreacement: { time: number; count: number; timeString: string }[] = []
+  const guards: { time: number; count: number; timeString: string }[] = []
+
+  let lastDayGuards = 0
+  let lastDay = 0
+
+  completeGuardTimeSeries.forEach((g) => {
+    if (!isSameDay(g.time, new Date(lastDay * 1000))) {
+      guardsIncreacement.push({
+        time: lastDayGuards,
+        count: lastDay === 0 ? 0 : g.count - lastDayGuards,
+        timeString: format(g.time, 'yyyy-MM-dd'),
+      })
+      guards.push({
+        time: g.time.getTime() / 1000,
+        count: g.count,
+        timeString: format(g.time, 'yyyy-MM-dd'),
+      })
+      lastDay = g.time.getTime() / 1000
+      lastDayGuards = g.count
+    }
+  })
+
+  // 生成图表配置
+  const baseOptions = getBaseChartOptions()
   guardsOption.value = {
-    /*title: {
-      text: '舰长数',
-      left: 'left',
-    },*/
-    tooltip: {
-      trigger: 'axis',
-    },
-    legend: {},
+    ...baseOptions,
     yAxis: [
       {
         type: 'value',
@@ -408,7 +423,6 @@ function getOptions() {
             color: '#EE6666',
           },
         },
-        // prettier-ignore
         data: guardsIncreacement.map((f) => f.timeString),
       },
     ],
@@ -432,31 +446,36 @@ function getOptions() {
         data: guardsIncreacement.map((f) => f.count),
         itemStyle: {
           color: function (params: any) {
-            // params.value 是当前数据项的值
-            return params.value < 0 ? '#FF4D4F' : '#3398DB' // 负数时红色，正数时默认颜色
+            return params.value < 0 ? '#FF4D4F' : '#3398DB'
           },
         },
       },
     ],
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: 0,
-        end: 100,
-        xAxisIndex: [0, 1],
-      },
-    ],
   }
+}
+
+/**
+ * 处理播放量历史数据并生成图表选项
+ */
+function processUpstatViewChartOptions() {
+  if (!upstatHistory.value || upstatHistory.value.length === 0) return
+
+  // 计算播放量增量数据
+  const upstatViewIncreace: { time: number; value: number }[] = []
+  let lastUpstatView = upstatHistory.value[0].stats.views
+
+  upstatHistory.value.forEach((u) => {
+    upstatViewIncreace.push({
+      time: u.time,
+      value: u.stats.views - lastUpstatView,
+    })
+    lastUpstatView = u.stats.views
+  })
+
+  // 生成图表配置
+  const baseOptions = getBaseChartOptions()
   upstatViewOption.value = {
-    /*title: {
-      text: '投稿播放数',
-      left: 'left',
-    },*/
-    tooltip: {
-      trigger: 'axis',
-    },
-    legend: {},
+    ...baseOptions,
     yAxis: [
       {
         type: 'value',
@@ -477,8 +496,7 @@ function getOptions() {
             color: '#EE6666',
           },
         },
-        // prettier-ignore
-        data: upstatHistory.value?.map((f) => format(f.time, 'yyyy-MM-dd')),
+        data: upstatHistory.value.map((f) => format(f.time, 'yyyy-MM-dd')),
       },
     ],
     series: [
@@ -488,7 +506,7 @@ function getOptions() {
         emphasis: {
           focus: 'series',
         },
-        data: upstatHistory.value?.map((f) => f.stats.views),
+        data: upstatHistory.value.map((f) => f.stats.views),
       },
       {
         name: '日增',
@@ -500,25 +518,31 @@ function getOptions() {
         data: upstatViewIncreace.map((f) => f.value),
       },
     ],
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: 0,
-        end: 100,
-        xAxisIndex: [0, 1],
-      },
-    ],
   }
+}
+
+/**
+ * 处理点赞量历史数据并生成图表选项
+ */
+function processUpstatLikeChartOptions() {
+  if (!upstatHistory.value || upstatHistory.value.length === 0) return
+
+  // 计算点赞量增量数据
+  const upstatLikeIncreace: { time: number; value: number }[] = []
+  let lastUpstatLike = upstatHistory.value[0].stats.likes
+
+  upstatHistory.value.forEach((u) => {
+    upstatLikeIncreace.push({
+      time: u.time,
+      value: u.stats.likes - lastUpstatLike,
+    })
+    lastUpstatLike = u.stats.likes
+  })
+
+  // 生成图表配置
+  const baseOptions = getBaseChartOptions()
   upstatLikeOption.value = {
-    /*title: {
-      text: '投稿点赞数',
-      left: 'left',
-    },*/
-    tooltip: {
-      trigger: 'axis',
-    },
-    legend: {},
+    ...baseOptions,
     yAxis: [
       {
         type: 'value',
@@ -539,8 +563,7 @@ function getOptions() {
             color: '#EE6666',
           },
         },
-        // prettier-ignore
-        data: upstatHistory.value?.map((f) => format(f.time, 'yyyy-MM-dd')),
+        data: upstatHistory.value.map((f) => format(f.time, 'yyyy-MM-dd')),
       },
     ],
     series: [
@@ -550,7 +573,7 @@ function getOptions() {
         emphasis: {
           focus: 'series',
         },
-        data: upstatHistory.value?.map((f) => f.stats.likes),
+        data: upstatHistory.value.map((f) => f.stats.likes),
       },
       {
         name: '日增',
@@ -562,22 +585,23 @@ function getOptions() {
         data: upstatLikeIncreace.map((f) => f.value),
       },
     ],
-    dataZoom: [
-      {
-        show: true,
-        realtime: true,
-        start: 0,
-        end: 100,
-        xAxisIndex: [0, 1],
-      },
-    ],
   }
+}
+
+/**
+ * 处理所有图表选项
+ */
+function processAllChartOptions() {
+  processFansChartOptions()
+  processGuardsChartOptions()
+  processUpstatViewChartOptions()
+  processUpstatLikeChartOptions()
 }
 
 onMounted(async () => {
   if (accountInfo.value?.isBiliVerified == true) {
     await getHistory()
-    getOptions()
+    processAllChartOptions()
     isLoading.value = false
   }
 })
@@ -597,6 +621,7 @@ onMounted(async () => {
   <NCard
     v-else
     size="small"
+    class="history-card"
   >
     <NAlert type="warning">
       由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
@@ -651,7 +676,10 @@ onMounted(async () => {
     </NTooltip>
     <br>
     <br>
-    <NSpace vertical>
+    <NSpace
+      vertical
+      class="charts-container"
+    >
       <NDivider>
         粉丝
         <NDivider vertical />
@@ -670,7 +698,8 @@ onMounted(async () => {
       </NDivider>
       <VChart
         :option="fansOption"
-        style="height: 200px"
+        :style="{ height: chartHeight }"
+        class="chart"
       />
       <NDivider>
         舰长
@@ -690,7 +719,8 @@ onMounted(async () => {
       </NDivider>
       <VChart
         :option="guardsOption"
-        style="height: 200px"
+        :style="{ height: chartHeight }"
+        class="chart"
       />
 
       <NDivider>
@@ -711,7 +741,8 @@ onMounted(async () => {
       </NDivider>
       <VChart
         :option="upstatViewOption"
-        style="height: 200px"
+        :style="{ height: chartHeight }"
+        class="chart"
       />
 
       <NDivider>
@@ -732,8 +763,31 @@ onMounted(async () => {
       </NDivider>
       <VChart
         :option="upstatLikeOption"
-        style="height: 200px"
+        :style="{ height: chartHeight }"
+        class="chart"
       />
     </NSpace>
   </NCard>
 </template>
+
+<style scoped>
+.history-card {
+  width: 100%;
+}
+
+.charts-container {
+  width: 100%;
+}
+
+.chart {
+  width: 100%;
+  min-height: 200px;
+  transition: height 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .chart {
+    min-height: 250px;
+  }
+}
+</style>

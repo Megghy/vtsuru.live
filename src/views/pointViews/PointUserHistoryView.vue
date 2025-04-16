@@ -12,6 +12,7 @@ const isLoading = ref(false)
 
 const history = ref<ResponsePointHisrotyModel[]>([])
 
+// 获取积分历史记录
 async function getHistories() {
   try {
     isLoading.value = true
@@ -39,6 +40,8 @@ onMounted(async () => {
 
 <template>
   <NSpin :show="isLoading">
-    <PointHistoryCard :histories="history" />
+    <PointHistoryCard
+      :histories="history"
+    />
   </NSpin>
 </template>

@@ -32,20 +32,24 @@ import { computed, ref } from 'vue'
 
 const accountInfo = useAccount()
 const message = useMessage()
+
+// 默认积分设置
 const defaultSettingPoint: Setting_Point = {
-  allowType: [EventDataTypes.Guard],
-  jianzhangPoint: 10,
-  tiduPoint: 100,
-  zongduPoint: 1000,
-  giftPercentMap: {}, // Empty object for an empty map
-  scPointPercent: 0.1,
-  giftPointPercent: 0.1,
-  giftAllowType: SettingPointGiftAllowType.All,
+  allowType: [EventDataTypes.Guard],  // 默认只允许舰长积分
+  jianzhangPoint: 10,                 // 舰长积分
+  tiduPoint: 100,                     // 提督积分
+  zongduPoint: 1000,                  // 总督积分
+  giftPercentMap: {},                 // 礼物积分映射表
+  scPointPercent: 0.1,                // SC积分比例 (10%)
+  giftPointPercent: 0.1,              // 礼物积分比例 (10%)
+  giftAllowType: SettingPointGiftAllowType.All, // 默认允许所有礼物
 }
+
+// 响应式设置对象
 const setting = computed({
   get: () => {
     if (accountInfo.value) {
-      return accountInfo.value.settings.point
+      return accountInfo.value.settings.point || defaultSettingPoint
     }
     return defaultSettingPoint
   },
@@ -55,65 +59,93 @@ const setting = computed({
     }
   },
 })
+
+// 添加礼物表单模型
 const addGiftModel = ref<{ name: string; point: number }>({ name: '', point: 1 })
 
+// 是否可以编辑设置
 const canEdit = computed(() => {
   return accountInfo.value && accountInfo.value.settings
 })
+
 const isLoading = ref(false)
 const showAddGiftModal = ref(false)
 
+// 更新积分设置
 async function updateSettings() {
-  if (accountInfo.value) {
-    isLoading.value = true
-    setting.value.giftPercentMap ??= {}
-    try {
-      const msg = await SaveSetting('Point', setting.value)
-      if (msg) {
-        message.success('已保存')
-        return true
-      } else {
-        message.error('保存失败: ' + msg)
-      }
-    } catch (err) {
-      message.error('保存失败: ' + err)
-      console.error(err)
-    } finally {
-      isLoading.value = false
-    }
-  } else {
+  if (!accountInfo.value) {
     message.success('完成')
+    return false
   }
+
+  isLoading.value = true
+  setting.value.giftPercentMap ??= {}
+
+  try {
+    const msg = await SaveSetting('Point', setting.value)
+    if (msg) {
+      message.success('已保存')
+      return true
+    } else {
+      message.error('保存失败: ' + msg)
+    }
+  } catch (err) {
+    message.error('保存失败: ' + err)
+    console.error(err)
+  } finally {
+    isLoading.value = false
+  }
+
   return false
 }
+
+// 添加礼物积分规则
 async function addGift() {
+  // 表单验证
   if (!addGiftModel.value.name) {
     message.error('请输入礼物名称')
     return
   }
+
   if (addGiftModel.value.point > 2147483647) {
-    //不能超过int
     message.error('积分不能超过2147483647')
+    return
   }
+
+  // 添加礼物积分规则
   setting.value.giftPercentMap[addGiftModel.value.name] = addGiftModel.value.point
-  updateGift()
+  const success = await updateGift()
+
+  // 添加成功后清空表单
+  if (success) {
+    addGiftModel.value = { name: '', point: 1 }
+    showAddGiftModal.value = false
+  }
 }
+
+// 删除礼物积分规则
 async function deleteGift(name: string) {
   const oldValue = setting.value.giftPercentMap[name]
   delete setting.value.giftPercentMap[name]
+
   if (!(await updateGift())) {
+    // 如果更新失败，恢复原值
     setting.value.giftPercentMap[name] = oldValue
   }
 }
+
+// 更新礼物积分规则
 async function updateGift() {
   return await updateSettings()
 }
 </script>
 
 <template>
+  <!-- EventFetcher 部署提示 -->
   <NAlert
     v-if="!accountInfo.eventFetcherState.online"
     type="warning"
+    class="alert-margin"
   >
     由于你尚未部署
     <NButton
@@ -127,15 +159,28 @@ async function updateGift() {
     </NButton>
     , 以下选项设置了也没用
   </NAlert>
-  <br>
-  <NAlert type="info">
+
+  <!-- 积分精度提示 -->
+  <NAlert
+    type="info"
+    class="alert-margin"
+  >
     积分总是最多保留两位小数, 四舍五入
   </NAlert>
+
   <NDivider> 常用 </NDivider>
+
   <NSpin :show="isLoading">
-    <NFlex vertical>
-      <NFlex>
-        允许的积分来源
+    <NFlex
+      vertical
+      :gap="12"
+    >
+      <!-- 积分来源设置 -->
+      <NFlex
+        align="center"
+        :gap="12"
+      >
+        <span>允许的积分来源:</span>
         <NCheckboxGroup
           v-model:value="setting.allowType"
           :disabled="!canEdit"
@@ -152,13 +197,23 @@ async function updateGift() {
           </NCheckbox>
         </NCheckboxGroup>
       </NFlex>
+
+      <!-- 舰长设置区域 -->
       <template v-if="setting.allowType.includes(EventDataTypes.Guard)">
         <NDivider>上舰设置</NDivider>
-        <NFlex align="center">
-          上舰所给予的积分
-          <NFlex>
+        <NFlex
+          align="center"
+          vertical
+          :gap="10"
+          class="settings-section"
+        >
+          <span>上舰所给予的积分:</span>
+          <NFlex
+            :wrap="true"
+            :gap="8"
+          >
             <NInputGroup
-              style="width: 230px"
+              class="input-group"
               :disabled="!canEdit"
             >
               <NInputGroupLabel> 舰长 </NInputGroupLabel>
@@ -175,8 +230,9 @@ async function updateGift() {
                 确定
               </NButton>
             </NInputGroup>
+
             <NInputGroup
-              style="width: 230px"
+              class="input-group"
               :disabled="!canEdit"
             >
               <NInputGroupLabel> 提督 </NInputGroupLabel>
@@ -193,8 +249,9 @@ async function updateGift() {
                 确定
               </NButton>
             </NInputGroup>
+
             <NInputGroup
-              style="width: 230px"
+              class="input-group"
               :disabled="!canEdit"
             >
               <NInputGroupLabel> 总督 </NInputGroupLabel>
@@ -214,11 +271,16 @@ async function updateGift() {
           </NFlex>
         </NFlex>
       </template>
+
+      <!-- SC设置区域 -->
       <template v-if="setting.allowType.includes(EventDataTypes.SC)">
         <NDivider>SC设置</NDivider>
-        <NFlex>
+        <NFlex
+          :gap="12"
+          class="settings-section"
+        >
           <NInputGroup
-            style="width: 280px"
+            class="input-group-wide"
             :disabled="!canEdit"
           >
             <NInputGroupLabel> SC转换倍率 </NInputGroupLabel>
@@ -245,9 +307,16 @@ async function updateGift() {
           </NInputGroup>
         </NFlex>
       </template>
+
+      <!-- 礼物设置区域 -->
       <template v-if="setting.allowType.includes(EventDataTypes.Gift)">
         <NDivider>礼物设置</NDivider>
-        <NFlex vertical>
+        <NFlex
+          vertical
+          :gap="12"
+          class="settings-section"
+        >
+          <!-- 礼物类型选择 -->
           <NRadioGroup
             v-model:value="setting.giftAllowType"
             @update:value="updateSettings"
@@ -259,9 +328,11 @@ async function updateGift() {
               包含所有礼物
             </NRadioButton>
           </NRadioGroup>
+
+          <!-- 所有礼物转换比例 -->
           <template v-if="setting.giftAllowType === SettingPointGiftAllowType.All">
             <NInputGroup
-              style="width: 280px"
+              class="input-group-wide"
               :disabled="!canEdit"
             >
               <NInputGroupLabel> 礼物转换倍率 </NInputGroupLabel>
@@ -287,22 +358,36 @@ async function updateGift() {
               </NButton>
             </NInputGroup>
           </template>
-          <NCard>
-            <NFlex vertical>
+
+          <!-- 礼物列表 -->
+          <NCard class="gift-card">
+            <NFlex
+              vertical
+              :gap="12"
+            >
               <NButton
                 type="primary"
                 :disabled="!canEdit"
-                style="max-width: 200px"
+                class="add-gift-button"
                 @click="showAddGiftModal = true"
               >
                 添加礼物
               </NButton>
+
               <NList bordered>
+                <NEmpty
+                  v-if="!Object.keys(setting.giftPercentMap).length"
+                  description="暂无自定义礼物"
+                />
+
                 <NListItem
                   v-for="item in Object.entries(setting.giftPercentMap)"
                   :key="item[0]"
                 >
-                  <NFlex align="center">
+                  <NFlex
+                    align="center"
+                    :gap="8"
+                  >
                     <NTag
                       :bordered="false"
                       size="small"
@@ -348,6 +433,8 @@ async function updateGift() {
             </NFlex>
           </NCard>
         </NFlex>
+
+        <!-- 添加礼物弹窗 -->
         <NModal
           v-model:show="showAddGiftModal"
           preset="card"
@@ -357,6 +444,7 @@ async function updateGift() {
           <NFlex
             align="center"
             vertical
+            :gap="12"
           >
             <NAlert
               title="注意"
@@ -364,14 +452,16 @@ async function updateGift() {
             >
               这里填写的积分是指这个礼物直接对应多少积分, 而不是兑换比例
             </NAlert>
-            <NInputGroup>
+
+            <NInputGroup class="modal-input">
               <NInputGroupLabel> 礼物名称 </NInputGroupLabel>
               <NInput
                 v-model:value="addGiftModel.name"
                 placeholder="礼物名称"
               />
             </NInputGroup>
-            <NInputGroup>
+
+            <NInputGroup class="modal-input">
               <NInputGroupLabel> 给予积分 </NInputGroupLabel>
               <NInputNumber
                 v-model:value="addGiftModel.point"
@@ -379,6 +469,7 @@ async function updateGift() {
                 min="0"
               />
             </NInputGroup>
+
             <NButton
               type="info"
               :loading="isLoading"
@@ -392,3 +483,49 @@ async function updateGift() {
     </NFlex>
   </NSpin>
 </template>
+
+<style scoped>
+.alert-margin {
+  margin-bottom: 12px;
+}
+
+.settings-section {
+  margin: 8px 0;
+}
+
+.input-group {
+  width: 230px;
+  max-width: 100%;
+}
+
+.input-group-wide {
+  width: 280px;
+  max-width: 100%;
+}
+
+.gift-card {
+  width: 100%;
+}
+
+.add-gift-button {
+  max-width: 200px;
+}
+
+.modal-input {
+  width: 100%;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 768px) {
+  .input-group, .input-group-wide {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .stat-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+</style>

@@ -34,42 +34,53 @@ const { biliInfo, userInfo } = defineProps<{
   userInfo: UserInfo | undefined
 }>()
 
-const nextSendQuestionTime = ref(Date.now())
-const minSendQuestionTime = 30 * 1000 // 30 seconds
-
-const splitter = new GraphemeSplitter()
-
+// 状态变量
 const message = useMessage()
 const accountInfo = useAccount()
+const questionMessage = ref('') // 提问内容
+const fileList = ref<UploadFileInfo[]>([]) // 上传图片列表
+const publicQuestions = ref<QAInfo[]>([]) // 公开提问列表
+const tags = ref<string[]>([]) // 标签列表
+const selectedTag = ref<string | null>(null) // 选中的标签
+const isAnonymous = ref(true) // 是否匿名提问
+const isSending = ref(false) // 是否正在发送
+const isGetting = ref(true) // 是否正在获取数据
+
+// 验证码相关
 const token = ref('')
 const turnstile = ref()
 
+// 防刷控制
+const nextSendQuestionTime = ref(Date.now())
+const minSendQuestionTime = 30 * 1000 // 30秒冷却时间
+
+// 字符分割器(用于正确计算表情符号等Unicode字符)
+const splitter = new GraphemeSplitter()
+
+// 计算属性
 const isSelf = computed(() => {
-  return userInfo?.id == accountInfo.value?.id
+  return userInfo?.id === accountInfo.value?.id
 })
 
-const questionMessage = ref('')
-const fileList = ref<UploadFileInfo[]>([])
-const publicQuestions = ref<QAInfo[]>([])
-const tags = ref<string[]>([])
-const selectedTag = ref()
-
-const isAnonymous = ref(true)
-const isSending = ref(false)
-const isGetting = ref(true)
-
+// 计算字符数量
 function countGraphemes(value: string) {
   return splitter.countGraphemes(value)
 }
+
+// 发送提问
 async function SendQuestion() {
+  // 内容长度检查
   if (countGraphemes(questionMessage.value) < 3) {
     message.error('内容最少需要3个字')
     return
   }
+
+  // 冷却时间检查
   if (nextSendQuestionTime.value > Date.now()) {
     message.error('冷却中, 剩余 ' + Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000) + '秒')
     return
   }
+
   isSending.value = true
   await QueryPostAPI<QAInfo>(
     QUESTION_API_URL + 'send',
@@ -100,6 +111,8 @@ async function SendQuestion() {
       turnstile.value?.reset()
     })
 }
+
+// 转换文件为Base64
 function getBase64(file: File | undefined | null) {
   if (!file) return null
   return new Promise((resolve, reject) => {
@@ -109,15 +122,20 @@ function getBase64(file: File | undefined | null) {
     reader.onerror = (error) => reject(error)
   })
 }
+
+// 文件列表变更处理
 function OnFileListChange(files: UploadFileInfo[]) {
   if (files.length == 1) {
-    var file = files[0]
+    const file = files[0]
+    // 文件大小检查
     if ((file.file?.size ?? 0) > 10 * 1024 * 1024) {
       message.error('文件大小不能超过10MB')
       fileList.value = []
     }
   }
 }
+
+// 获取公开提问列表
 function getPublicQuestions() {
   isGetting.value = true
   QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
@@ -137,6 +155,8 @@ function getPublicQuestions() {
       isGetting.value = false
     })
 }
+
+// 获取标签列表
 function getTags() {
   isGetting.value = true
   QueryGetAPI<string[]>(QUESTION_API_URL + 'get-tags', {
@@ -144,9 +164,15 @@ function getTags() {
   })
     .then((data) => {
       if (data.code == 200) {
-        if (userInfo?.id == accountInfo.value.id) {
-          tags.value = data.data.map((tag) => JSON.parse(JSON.stringify(tag)).name)
+        // 处理标签数据
+        if (userInfo?.id == accountInfo.value?.id) {
+          // 自己查看自己的标签时，需要从对象中提取名称
+          tags.value = data.data.map((tag: any) => {
+            // 直接访问name属性，避免不必要的JSON序列化和解析
+            return typeof tag === 'object' && tag !== null ? tag.name : tag
+          })
         } else {
+          // 查看他人标签时直接使用返回数据
           tags.value = data.data
         }
       } else {
@@ -160,20 +186,21 @@ function getTags() {
       isGetting.value = false
     })
 }
+
+// 标签选择处理
 function onSelectTag(tag: string) {
-  if (selectedTag.value == tag) {
-    selectedTag.value = null
-    return
-  }
-  selectedTag.value = tag
+  // 切换选中状态
+  selectedTag.value = selectedTag.value === tag ? null : tag
 }
 
+// 生命周期钩子
 onMounted(() => {
   getPublicQuestions()
   getTags()
 })
 
 onUnmounted(() => {
+  // 清理验证码资源
   turnstile.value?.remove()
 })
 </script>
@@ -183,8 +210,10 @@ onUnmounted(() => {
     style="max-width: 700px; margin: 0 auto"
     title="提问"
   >
+    <!-- 提问表单 -->
     <NCard embedded>
       <NSpace vertical>
+        <!-- 话题选择区域 -->
         <NCard
           v-if="tags.length > 0"
           title="投稿话题 (可选)"
@@ -196,13 +225,15 @@ onUnmounted(() => {
               :key="tag"
               style="cursor: pointer"
               :bordered="false"
-              :type="selectedTag == tag ? 'primary' : 'default'"
+              :type="selectedTag === tag ? 'primary' : 'default'"
               @click="onSelectTag(tag)"
             >
               {{ tag }}
             </NTag>
           </NSpace>
         </NCard>
+
+        <!-- 提问内容区域 -->
         <NSpace
           align="center"
           justify="center"
@@ -228,7 +259,10 @@ onUnmounted(() => {
             + 上传图片
           </NUpload>
         </NSpace>
-        <NDivider style="margin: 10px 0 10px 0" />
+
+        <NDivider style="margin: 10px 0" />
+
+        <!-- 提示信息 -->
         <NSpace align="center">
           <NAlert
             v-if="!accountInfo.id && !isSelf"
@@ -237,6 +271,8 @@ onUnmounted(() => {
             只有注册用户才能够上传图片
           </NAlert>
         </NSpace>
+
+        <!-- 匿名选项 -->
         <NSpace
           v-if="accountInfo.id"
           vertical
@@ -246,8 +282,10 @@ onUnmounted(() => {
             :disabled="isSelf"
             label="匿名提问"
           />
-          <NDivider style="margin: 10px 0 10px 0" />
+          <NDivider style="margin: 10px 0" />
         </NSpace>
+
+        <!-- 操作按钮 -->
         <NSpace justify="center">
           <NButton
             :disabled="isSelf"
@@ -265,6 +303,8 @@ onUnmounted(() => {
             我发送的
           </NButton>
         </NSpace>
+
+        <!-- 验证码 -->
         <VueTurnstile
           ref="turnstile"
           v-model="token"
@@ -272,6 +312,8 @@ onUnmounted(() => {
           theme="auto"
           style="text-align: center"
         />
+
+        <!-- 错误提示 -->
         <NAlert
           v-if="isSelf"
           type="warning"
@@ -280,6 +322,8 @@ onUnmounted(() => {
         </NAlert>
       </NSpace>
     </NCard>
+
+    <!-- 公开回复列表 -->
     <NDivider> 公开回复 </NDivider>
     <NList v-if="publicQuestions.length > 0">
       <NListItem
@@ -291,6 +335,7 @@ onUnmounted(() => {
           hoverable
           size="small"
         >
+          <!-- 问题头部 -->
           <template #header>
             <NSpace
               :size="0"
@@ -308,11 +353,13 @@ onUnmounted(() => {
                       type="relative"
                     />
                   </template>
-                  <NTime />
+                  <NTime :time="item.sendAt" />
                 </NTooltip>
               </NText>
             </NSpace>
           </template>
+
+          <!-- 问题内容 -->
           <NCard style="text-align: center">
             {{ item.question.message }}
             <br>
@@ -323,6 +370,8 @@ onUnmounted(() => {
               lazy
             />
           </NCard>
+
+          <!-- 回答内容 -->
           <template
             v-if="item.answer"
             #footer

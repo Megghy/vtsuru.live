@@ -89,7 +89,7 @@
       }
     }, setting.value.animationDuration || 300);
 
-    console.log('[DanmakuWindow] 添加弹幕:', dataWithId);
+    //console.log('[DanmakuWindow] 添加弹幕:', dataWithId);
   }
 
   // 检查和移除过期弹幕

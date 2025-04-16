@@ -19,18 +19,13 @@ const props = defineProps<{
   template?: string | undefined
 }>()
 
+// 计算要展示的模板组件
 const componentType = computed(() => {
-  const type = props.template ?? props.userInfo?.extra?.templateTypes['index']?.toLowerCase()
-  if (props.userInfo) {
-    switch (type?.toLocaleLowerCase()) {
-      case '':
-        return DefaultIndexTemplate
+  // 获取模板类型：优先使用传入的template，其次使用用户配置，默认为空字符串
+  const type = props.template ?? props.userInfo?.extra?.templateTypes['index']?.toLowerCase() ?? ''
 
-      default:
-        return DefaultIndexTemplate
-    }
-  } else {
-    return DefaultIndexTemplate
-  }
+  // 无论用户信息是否存在，始终返回默认模板
+  // 这里预留了根据不同类型返回不同模板的扩展性
+  return DefaultIndexTemplate
 })
 </script>

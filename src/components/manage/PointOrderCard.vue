@@ -177,16 +177,28 @@ const orderColumn: DataTableColumns<ResponsePointOrder2UserModel | ResponsePoint
       },
     ],
     render: (row: ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel) => {
-      switch (row.status) {
-        case PointOrderStatus.Pending:
-          return h(NTag, { size: 'small' }, () => '等待发货')
-        case PointOrderStatus.Shipped:
-          return h(NTag, { size: 'small', type: row.expressCompany ? 'info' : 'warning', bordered: false }, () =>
-            row.expressCompany ? '已发货 | 已填写单号' : '已发货 | 未填写单号',
-          )
-        case PointOrderStatus.Completed:
-          return h(NTag, { size: 'small', type: 'success' }, () => '已完成')
+      const statusMap = {
+        [PointOrderStatus.Pending]: {
+          text: '等待发货',
+          type: 'default'
+        },
+        [PointOrderStatus.Shipped]: {
+          text: row.expressCompany ? '已发货 | 已填写单号' : '已发货 | 未填写单号',
+          type: row.expressCompany ? 'info' : 'warning'
+        },
+        [PointOrderStatus.Completed]: {
+          text: '已完成',
+          type: 'success'
+        }
       }
+
+      const status = statusMap[row.status] || { text: '未知状态', type: 'error' }
+
+      return h(NTag, {
+        size: 'small',
+        type: status.type as any,
+        bordered: false
+      }, () => status.text)
     },
   },
   {
@@ -294,6 +306,7 @@ function onChangeStatus(id: number, status: PointOrderStatus) {
 }
 async function updateStatus(id: number[], status: PointOrderStatus) {
   try {
+    isLoading.value = true
     const data = await QueryPostAPI(POINT_API_URL + 'update-orders-status', {
       ids: id,
       status,
@@ -311,6 +324,8 @@ async function updateStatus(id: number[], status: PointOrderStatus) {
   } catch (err) {
     message.error('操作失败: ' + err)
     console.log(err)
+  } finally {
+    isLoading.value = false
   }
 }
 async function updateExpress(item: ResponsePointOrder2OwnerModel) {
@@ -358,7 +373,6 @@ onMounted(() => {
     <template #empty>
       <NEmpty description="暂无订单" />
     </template>
-  >
   </NDataTable>
   <NModal
     v-if="orderDetail"
@@ -380,25 +394,38 @@ onMounted(() => {
             </NTooltip>
           </NDivider>
           <NFlex justify="center">
-            <PointGoodsItem style="max-width: 300px" :goods="currentGoods" />
+            <PointGoodsItem
+              style="max-width: 300px"
+              :goods="currentGoods"
+            />
           </NFlex>
           <template v-if="orderDetail.type == GoodsTypes.Virtual">
             <NDivider> 虚拟礼物内容 </NDivider>
-            <NInput :value="currentGoods?.content" type="textarea" readonly placeholder="无内容" />
+            <NInput
+              :value="currentGoods?.content"
+              type="textarea"
+              readonly
+              placeholder="无内容"
+            />
           </template>
           <template
             v-if="
               orderDetail.type == GoodsTypes.Physical &&
-              orderDetail.status == PointOrderStatus.Pending &&
-              orderDetail.goods.embedCollectUrl &&
-              orderDetail.goods.collectUrl
+                orderDetail.status == PointOrderStatus.Pending &&
+                orderDetail.goods.embedCollectUrl &&
+                orderDetail.goods.collectUrl
             "
           >
             <NDivider> 填写收货地址 </NDivider>
-            <NButton tag="a" :href="orderDetail.goods.collectUrl" target="_blank" type="info">
+            <NButton
+              tag="a"
+              :href="orderDetail.goods.collectUrl"
+              target="_blank"
+              type="info"
+            >
               在新窗口中打开地址填写表格
             </NButton>
-            <br />
+            <br>
             <iframe
               height="1200"
               width="800"
@@ -406,23 +433,41 @@ onMounted(() => {
               frameborder="0"
               allowfullscreen
               sandbox="allow-same-origin allow-scripts allow-modals allow-downloads allow-forms allow-popups"
-            ></iframe>
+            />
           </template>
         </template>
-        <template v-else-if="orderDetail.instanceOf == 'owner'"
-          ><NFlex justify="center">
-            <PointGoodsItem style="max-width: 300px" :goods="currentGoods" />
+        <template v-else-if="orderDetail.instanceOf == 'owner'">
+          <NFlex justify="center">
+            <PointGoodsItem
+              style="max-width: 300px"
+              :goods="currentGoods"
+            />
           </NFlex>
           <NDivider> 设置订单状态 </NDivider>
-          <NFlex justify="center" style="width: 100%">
+          <NFlex
+            justify="center"
+            style="width: 100%"
+          >
             <NSteps
               :current="orderDetail.status + 1"
               size="small"
               @update:current="(c) => onChangeStatus(orderDetail?.id ?? -1, c - 1)"
             >
-              <NStep title="等待中" description="等待主播发货" :disabled="orderDetail.status >= 0" />
-              <NStep title="已发货" description="已经发货了" :disabled="orderDetail.status >= 1" />
-              <NStep title="已完成" description="就是已完成" :disabled="orderDetail.status >= 2" />
+              <NStep
+                title="等待中"
+                description="等待主播发货"
+                :disabled="orderDetail.status >= 0"
+              />
+              <NStep
+                title="已发货"
+                description="已经发货了"
+                :disabled="orderDetail.status >= 1"
+              />
+              <NStep
+                title="已完成"
+                description="就是已完成"
+                :disabled="orderDetail.status >= 2"
+              />
             </NSteps>
           </NFlex>
           <template v-if="orderDetail.status == PointOrderStatus.Shipped && orderDetail.instanceOf == 'owner'">
@@ -442,7 +487,12 @@ onMounted(() => {
                   style="max-width: 200px"
                 />
               </NInputGroup>
-              <NButton type="primary" @click="updateExpress(orderDetail)" style="width: 120px" :loading="isLoading">
+              <NButton
+                type="primary"
+                style="width: 120px"
+                :loading="isLoading"
+                @click="updateExpress(orderDetail)"
+              >
                 更新快递信息
               </NButton>
             </NFlex>
@@ -452,3 +502,9 @@ onMounted(() => {
     </NScrollbar>
   </NModal>
 </template>
+
+<style scoped>
+:deep(.n-data-table .n-data-table-tr:hover) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+</style>

@@ -12,6 +12,7 @@ import {
   NText,
   NTime,
   NTooltip,
+  NEmpty
 } from 'naive-ui'
 import { h, ref } from 'vue'
 import PointGoodsItem from './PointGoodsItem.vue'
@@ -20,9 +21,11 @@ const props = defineProps<{
   histories: ResponsePointHisrotyModel[]
 }>()
 
+// 礼物详情模态框
 const showGoodsModal = ref(false)
 const currentGoods = ref<ResponsePointGoodModel>()
 
+// 数据表格列定义
 const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
   {
     title: '时间',
@@ -102,7 +105,6 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
   {
     title: '详情',
     key: 'action',
-
     render: (row: ResponsePointHisrotyModel) => {
       switch (row.from) {
         case PointFrom.Danmaku:
@@ -128,6 +130,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 row.extra?.danmaku.price,
               ])
           }
+          break
         case PointFrom.Manual:
           return h(NFlex, { align: 'center' }, () => [
             h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '来自'),
@@ -162,23 +165,48 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             ),
           ])
       }
+      return null
     },
   },
 ]
 </script>
 
 <template>
+  <!-- 无数据时显示提示 -->
+  <NEmpty
+    v-if="!histories || histories.length === 0"
+    description="暂无积分历史记录"
+  />
+
+  <!-- 有数据时显示表格 -->
   <NDataTable
+    v-else
     :columns="historyColumn"
     :data="histories"
-    :pagination="{ showSizePicker: true, pageSizes: [10, 25, 50, 100], defaultPageSize: 10, size: 'small' }"
+    :pagination="{
+      showSizePicker: true,
+      pageSizes: [10, 25, 50, 100],
+      defaultPageSize: 10,
+      size: 'small'
+    }"
+  />
+
+  <!-- 商品详情模态框 -->
+  <NModal
+    v-model:show="showGoodsModal"
+    preset="card"
+    title="礼物详情 (快照)"
+    style="max-width: 400px; height: auto"
   >
-  </NDataTable>
-  <NModal v-model:show="showGoodsModal" preset="card" title="礼物详情 (快照)" style="max-width: 400px; height: auto">
     <PointGoodsItem :goods="currentGoods" />
     <template v-if="currentGoods?.content">
-      <NDivider> 礼物内容 </NDivider>
-      <NInput :value="currentGoods?.content" type="textarea" readonly placeholder="无内容" />
+      <NDivider>礼物内容</NDivider>
+      <NInput
+        :value="currentGoods?.content"
+        type="textarea"
+        readonly
+        placeholder="无内容"
+      />
     </template>
   </NModal>
 </template>

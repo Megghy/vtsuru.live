@@ -359,21 +359,38 @@ onMounted(() => { })
 
 <template>
   <NFlex>
-    <NAlert :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+    <NAlert
+      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
         ? 'success'
         : 'warning'
-      " style="min-width: 400px">
+      "
+      style="min-width: 400px"
+    >
       启用
-      <NButton text type="primary" tag="a" href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co" target="_blank">
+      <NButton
+        text
+        type="primary"
+        tag="a"
+        href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+        target="_blank"
+      >
         积分系统
       </NButton>
       <NDivider vertical />
-      <NSwitch :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Point)"
-        @update:value="setFunctionEnable" />
-      <br />
+      <NSwitch
+        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Point)"
+        @update:value="setFunctionEnable"
+      />
+      <br>
       <NText depth="3">
         此功能需要部署
-        <NButton text type="primary" tag="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank">
+        <NButton
+          text
+          type="primary"
+          tag="a"
+          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+        >
           VtsuruEventFetcher
         </NButton>
         , 否则将无法记录各种事件
@@ -381,139 +398,324 @@ onMounted(() => { })
     </NAlert>
     <EventFetcherStatusCard />
   </NFlex>
-  <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+  <NDivider
+    style="margin: 16px 0 16px 0"
+    title-placement="left"
+  >
     礼物展示页链接
   </NDivider>
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
-      <NInput :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
-      <NButton secondary @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`)">
-        复制 </NButton>
+      <NInput
+        :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`"
+        readonly
+      />
+      <NButton
+        secondary
+        @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`)"
+      >
+        复制
+      </NButton>
     </NInputGroup>
-    <NCheckbox v-model:checked="useCNUrl"> 使用国内镜像(访问更快) </NCheckbox>
+    <NCheckbox v-model:checked="useCNUrl">
+      使用国内镜像(访问更快)
+    </NCheckbox>
   </NFlex>
   <NDivider />
-  <NTabs animated v-model:value="hash">
-    <NTabPane name="goods" tab="礼物">
+  <NTabs
+    v-model:value="hash"
+    animated
+  >
+    <NTabPane
+      name="goods"
+      tab="礼物"
+    >
       <NFlex>
-        <NButton type="primary" @click="onModalOpen"> 添加礼物 </NButton>
-        <NButton @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })" secondary>
+        <NButton
+          type="primary"
+          @click="onModalOpen"
+        >
+          添加礼物
+        </NButton>
+        <NButton
+          secondary
+          @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
+        >
           前往展示页
         </NButton>
       </NFlex>
       <NDivider />
-      <NEmpty v-if="goods.filter((g) => g.status != GoodsStatus.Discontinued).length == 0" description="暂无礼物" />
-      <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
-        <NGridItem v-for="item in goods.filter((g) => g.status != GoodsStatus.Discontinued)" :key="item.id">
+      <NEmpty
+        v-if="goods.filter((g) => g.status != GoodsStatus.Discontinued).length == 0"
+        description="暂无礼物"
+      />
+      <NGrid
+        v-else
+        cols="1 500:2 700:3 1000:4 1200:5"
+        :x-gap="12"
+        :y-gap="8"
+      >
+        <NGridItem
+          v-for="item in goods.filter((g) => g.status != GoodsStatus.Discontinued)"
+          :key="item.id"
+        >
           <PointGoodsItem :goods="item">
             <template #footer>
               <span> 价格: {{ item.price }} </span>
               <NFlex>
-                <NButton type="info" size="small" @click="onUpdateClick(item)"> 修改 </NButton>
-                <NButton type="warning" size="small" @click="onSetShelfClick(item, GoodsStatus.Discontinued)">
+                <NButton
+                  type="info"
+                  size="small"
+                  @click="onUpdateClick(item)"
+                >
+                  修改
+                </NButton>
+                <NButton
+                  type="warning"
+                  size="small"
+                  @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
+                >
                   下架
                 </NButton>
-                <NButton type="error" size="small" @click="onDeleteClick(item)"> 删除 </NButton>
+                <NButton
+                  type="error"
+                  size="small"
+                  @click="onDeleteClick(item)"
+                >
+                  删除
+                </NButton>
               </NFlex>
             </template>
           </PointGoodsItem>
         </NGridItem>
       </NGrid>
       <NDivider>已下架</NDivider>
-      <NEmpty v-if="goods.filter((g) => g.status == GoodsStatus.Discontinued).length == 0" description="暂无已下架的礼物" />
-      <NGrid v-else cols="1 500:2 700:3 1000:4 1200:5" :x-gap="12" :y-gap="8">
-        <NGridItem v-for="item in goods.filter((g) => g.status == GoodsStatus.Discontinued)" :key="item.id">
+      <NEmpty
+        v-if="goods.filter((g) => g.status == GoodsStatus.Discontinued).length == 0"
+        description="暂无已下架的礼物"
+      />
+      <NGrid
+        v-else
+        cols="1 500:2 700:3 1000:4 1200:5"
+        :x-gap="12"
+        :y-gap="8"
+      >
+        <NGridItem
+          v-for="item in goods.filter((g) => g.status == GoodsStatus.Discontinued)"
+          :key="item.id"
+        >
           <PointGoodsItem :goods="item">
             <template #footer>
               <span> 价格: {{ item.price }} </span>
               <NFlex>
-                <NButton type="info" size="small" @click="onUpdateClick(item)"> 修改 </NButton>
-                <NButton type="success" size="small" @click="onSetShelfClick(item, GoodsStatus.Normal)"> 上架 </NButton>
-                <NButton type="error" size="small" @click="onDeleteClick(item)"> 删除 </NButton>
+                <NButton
+                  type="info"
+                  size="small"
+                  @click="onUpdateClick(item)"
+                >
+                  修改
+                </NButton>
+                <NButton
+                  type="success"
+                  size="small"
+                  @click="onSetShelfClick(item, GoodsStatus.Normal)"
+                >
+                  上架
+                </NButton>
+                <NButton
+                  type="error"
+                  size="small"
+                  @click="onDeleteClick(item)"
+                >
+                  删除
+                </NButton>
               </NFlex>
             </template>
           </PointGoodsItem>
         </NGridItem>
       </NGrid>
     </NTabPane>
-    <NTabPane name="orders" tab="订单" display-directive="show:lazy">
+    <NTabPane
+      name="orders"
+      tab="订单"
+      display-directive="show:lazy"
+    >
       <PointOrderManage :goods="goods" />
     </NTabPane>
-    <NTabPane name="users" tab="用户" display-directive="show:lazy">
+    <NTabPane
+      name="users"
+      tab="用户"
+      display-directive="show:lazy"
+    >
       <PointUserManage :goods="goods" />
     </NTabPane>
-    <NTabPane name="settings" tab="设置" display-directive="show:lazy">
+    <NTabPane
+      name="settings"
+      tab="设置"
+      display-directive="show:lazy"
+    >
       <PointSettings />
     </NTabPane>
   </NTabs>
   <NDivider />
-  <NModal v-model:show="showAddGoodsModal" preset="card" style="width: 600px; max-width: 90%" title="添加/修改礼物信息">
+  <NModal
+    v-model:show="showAddGoodsModal"
+    preset="card"
+    style="width: 600px; max-width: 90%"
+    title="添加/修改礼物信息"
+  >
     <template #header-extra>
-      <NPopconfirm v-if="!currentGoodsModel.goods.id" @positive-click="resetGoods">
+      <NPopconfirm
+        v-if="!currentGoodsModel.goods.id"
+        @positive-click="resetGoods"
+      >
         <template #trigger>
-          <NButton type="warning" size="small"> 重置 </NButton>
+          <NButton
+            type="warning"
+            size="small"
+          >
+            重置
+          </NButton>
         </template>
         确定要重置此页面内容?
       </NPopconfirm>
     </template>
     <NScrollbar style="max-height: 80vh">
-      <NForm ref="formRef" :model="currentGoodsModel" :rules="rules" style="width: 95%">
-        <NFormItem path="goods.name" label="名称" required>
-          <NInput v-model:value="currentGoodsModel.goods.name" placeholder="必填, 礼物名称" />
+      <NForm
+        ref="formRef"
+        :model="currentGoodsModel"
+        :rules="rules"
+        style="width: 95%"
+      >
+        <NFormItem
+          path="goods.name"
+          label="名称"
+          required
+        >
+          <NInput
+            v-model:value="currentGoodsModel.goods.name"
+            placeholder="必填, 礼物名称"
+          />
         </NFormItem>
-        <NFormItem path="goods.price" label="所需积分" required>
-          <NInputNumber v-model:value="currentGoodsModel.goods.price" placeholder="必填, 兑换所需要的积分" min="0" />
+        <NFormItem
+          path="goods.price"
+          label="所需积分"
+          required
+        >
+          <NInputNumber
+            v-model:value="currentGoodsModel.goods.price"
+            placeholder="必填, 兑换所需要的积分"
+            min="0"
+          />
         </NFormItem>
-        <NFormItem path="goods.count" label="库存">
-          <NCheckbox :checked="!currentGoodsModel.goods.count"
-            @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)">
+        <NFormItem
+          path="goods.count"
+          label="库存"
+        >
+          <NCheckbox
+            :checked="!currentGoodsModel.goods.count"
+            @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)"
+          >
             不限
           </NCheckbox>
-          <NInputNumber v-if="currentGoodsModel.goods.count" v-model:value="currentGoodsModel.goods.count"
-            placeholder="可选, 礼物库存" style="max-width: 120px" />
+          <NInputNumber
+            v-if="currentGoodsModel.goods.count"
+            v-model:value="currentGoodsModel.goods.count"
+            placeholder="可选, 礼物库存"
+            style="max-width: 120px"
+          />
         </NFormItem>
-        <NFormItem path="goods.description" label="描述">
-          <NInput v-model:value="currentGoodsModel.goods.description" placeholder="可选, 礼物描述" maxlength="500"
-            type="textarea" />
+        <NFormItem
+          path="goods.description"
+          label="描述"
+        >
+          <NInput
+            v-model:value="currentGoodsModel.goods.description"
+            placeholder="可选, 礼物描述"
+            maxlength="500"
+            type="textarea"
+          />
         </NFormItem>
-        <NFormItem path="goods.tags" label="标签">
-          <NSelect v-model:value="currentGoodsModel.goods.tags" filterable multiple clearable tag
-            placeholder="可选，输入后按回车添加" :options="existTags" />
+        <NFormItem
+          path="goods.tags"
+          label="标签"
+        >
+          <NSelect
+            v-model:value="currentGoodsModel.goods.tags"
+            filterable
+            multiple
+            clearable
+            tag
+            placeholder="可选，输入后按回车添加"
+            :options="existTags"
+          />
         </NFormItem>
-        <NFormItem path="goods.cover" label="封面">
+        <NFormItem
+          path="goods.cover"
+          label="封面"
+        >
           <NFlex v-if="currentGoodsModel.goods.cover">
             <NText>当前封面: </NText>
-            <NImage :src="FILE_BASE_URL + currentGoodsModel.goods.cover" height="50" object-fit="cover" />
+            <NImage
+              :src="FILE_BASE_URL + currentGoodsModel.goods.cover"
+              height="50"
+              object-fit="cover"
+            />
           </NFlex>
-          <NUpload :max="1" accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
-            list-type="image-card" :default-upload="false" v-model:file-list="currentGoodsModel.fileList"
-            @update:file-list="OnFileListChange">
+          <NUpload
+            v-model:file-list="currentGoodsModel.fileList"
+            :max="1"
+            accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
+            list-type="image-card"
+            :default-upload="false"
+            @update:file-list="OnFileListChange"
+          >
             + {{ currentGoodsModel.goods.cover ? '更换' : '上传' }}封面
           </NUpload>
         </NFormItem>
-        <NFormItem path="goods.guardFree" label="兑换规则">
+        <NFormItem
+          path="goods.guardFree"
+          label="兑换规则"
+        >
           <NFlex vertical>
-            <NCheckbox :checked="currentGoodsModel.goods.setting?.guardFree != undefined" @update:checked="
-              (v) => {
-                // @ts-ignore
-                currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
-              }
-            ">
+            <NCheckbox
+              :checked="currentGoodsModel.goods.setting?.guardFree != undefined"
+              @update:checked="
+                (v) => {
+                  // @ts-ignore
+                  currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
+                }
+              "
+            >
               允许舰长免费兑换
               <NTooltip>
                 <template #trigger>
                   <NIcon :component="Info24Filled" />
                 </template>
                 仅当
-                <NButton type="info" text tag="a" href="/manage/event" target="_blank">舰长和SC</NButton>
+                <NButton
+                  type="info"
+                  text
+                  tag="a"
+                  href="/manage/event"
+                  target="_blank"
+                >
+                  舰长和SC
+                </NButton>
                 中存在对应记录时才能生效
               </NTooltip>
             </NCheckbox>
             <NFlex v-if="currentGoodsModel.goods.setting?.guardFree">
-              <NSelect v-model:value="currentGoodsModel.goods.setting.guardFree.year" :options="allowedYearOptions"
-                placeholder="请选择年份" />
-              <NSelect v-model:value="currentGoodsModel.goods.setting.guardFree.month" :options="allowedMonthOptions"
-                placeholder="请选择月份" />
+              <NSelect
+                v-model:value="currentGoodsModel.goods.setting.guardFree.year"
+                :options="allowedYearOptions"
+                placeholder="请选择年份"
+              />
+              <NSelect
+                v-model:value="currentGoodsModel.goods.setting.guardFree.month"
+                :options="allowedMonthOptions"
+                placeholder="请选择月份"
+              />
             </NFlex>
             <NText>
               最低兑换等级
@@ -522,37 +724,79 @@ onMounted(() => { })
                   <NIcon :component="Info24Filled" />
                 </template>
                 仅当
-                <NButton type="info" text tag="a" href="/manage/event" target="_blank">舰长和SC</NButton>
+                <NButton
+                  type="info"
+                  text
+                  tag="a"
+                  href="/manage/event"
+                  target="_blank"
+                >
+                  舰长和SC
+                </NButton>
                 中存在对应记录时才能生效
               </NTooltip>
             </NText>
 
             <NRadioGroup v-model:value="currentGoodsModel.goods.setting.allowGuardLevel">
-              <NRadioButton :value="0">不限</NRadioButton>
-              <NRadioButton :value="1">总督</NRadioButton>
-              <NRadioButton :value="2">提督</NRadioButton>
-              <NRadioButton :value="3">舰长</NRadioButton>
+              <NRadioButton :value="0">
+                不限
+              </NRadioButton>
+              <NRadioButton :value="1">
+                总督
+              </NRadioButton>
+              <NRadioButton :value="2">
+                提督
+              </NRadioButton>
+              <NRadioButton :value="3">
+                舰长
+              </NRadioButton>
             </NRadioGroup>
           </NFlex>
         </NFormItem>
-        <NFormItem path="goods.type" label="类型">
+        <NFormItem
+          path="goods.type"
+          label="类型"
+        >
           <NRadioGroup v-model:value="currentGoodsModel.goods.type">
-            <NRadioButton :value="GoodsTypes.Virtual">虚拟礼物</NRadioButton>
-            <NRadioButton :value="GoodsTypes.Physical">实体礼物</NRadioButton>
+            <NRadioButton :value="GoodsTypes.Virtual">
+              虚拟礼物
+            </NRadioButton>
+            <NRadioButton :value="GoodsTypes.Physical">
+              实体礼物
+            </NRadioButton>
           </NRadioGroup>
         </NFormItem>
-        <NFormItem path="settings" label="选项">
-          <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">允许重复兑换</NCheckbox>
+        <NFormItem
+          path="settings"
+          label="选项"
+        >
+          <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">
+            允许重复兑换
+          </NCheckbox>
         </NFormItem>
         <template v-if="currentGoodsModel.goods.type == GoodsTypes.Physical">
-          <NFormItem path="goods.maxBuyCount" label="最大兑换数量">
-            <NInputNumber v-model:value="currentGoodsModel.goods.maxBuyCount" placeholder="必填, 最大兑换数量" min="1" />
+          <NFormItem
+            path="goods.maxBuyCount"
+            label="最大兑换数量"
+          >
+            <NInputNumber
+              v-model:value="currentGoodsModel.goods.maxBuyCount"
+              placeholder="必填, 最大兑换数量"
+              min="1"
+            />
           </NFormItem>
-          <NFormItem path="address" label="收货地址">
+          <NFormItem
+            path="address"
+            label="收货地址"
+          >
             <NFlex vertical>
-              <NRadioGroup :value="currentGoodsModel.goods.collectUrl == undefined ? 0 : 1"
-                @update:value="(v) => (currentGoodsModel.goods.collectUrl = v == 1 ? '' : undefined)">
-                <NRadioButton :value="0">通过本站收集收货地址</NRadioButton>
+              <NRadioGroup
+                :value="currentGoodsModel.goods.collectUrl == undefined ? 0 : 1"
+                @update:value="(v) => (currentGoodsModel.goods.collectUrl = v == 1 ? '' : undefined)"
+              >
+                <NRadioButton :value="0">
+                  通过本站收集收货地址
+                </NRadioButton>
                 <NRadioButton :value="1">
                   使用站外链接收集地址
                   <NTooltip>
@@ -566,10 +810,19 @@ onMounted(() => { })
             </NFlex>
           </NFormItem>
           <template v-if="currentGoodsModel.goods.collectUrl != undefined">
-            <NFormItem path="goods.collectUrl" label="收集链接">
-              <NFlex vertical style="width: 100%">
-                <NInput v-model:value="currentGoodsModel.goods.collectUrl" placeholder="用于给用户填写自己收货地址的表格的分享链接"
-                  maxlength="300" />
+            <NFormItem
+              path="goods.collectUrl"
+              label="收集链接"
+            >
+              <NFlex
+                vertical
+                style="width: 100%"
+              >
+                <NInput
+                  v-model:value="currentGoodsModel.goods.collectUrl"
+                  placeholder="用于给用户填写自己收货地址的表格的分享链接"
+                  maxlength="300"
+                />
                 <NCheckbox v-model:checked="currentGoodsModel.goods.embedCollectUrl">
                   尝试将收集链接嵌入到网页中
                 </NCheckbox>
@@ -577,13 +830,22 @@ onMounted(() => { })
             </NFormItem>
           </template>
           <template v-else>
-            <NFormItem path="privacy" label="隐私协议" required>
-              <NCheckbox v-model:checked="isAllowedPrivacyPolicy"> 同意本站隐私协议 </NCheckbox>
+            <NFormItem
+              path="privacy"
+              label="隐私协议"
+              required
+            >
+              <NCheckbox v-model:checked="isAllowedPrivacyPolicy">
+                同意本站隐私协议
+              </NCheckbox>
             </NFormItem>
           </template>
         </template>
         <template v-else>
-          <NFormItem path="goods.content" required>
+          <NFormItem
+            path="goods.content"
+            required
+          >
             <template #label>
               礼物内容
               <NTooltip>
@@ -593,11 +855,21 @@ onMounted(() => { })
                 虚拟礼物的具体内容, 网盘链接什么之类的
               </NTooltip>
             </template>
-            <NInput v-model:value="currentGoodsModel.goods.content" type="textarea" placeholder="写这里咯" maxlength="10000"
-              show-count clearable />
+            <NInput
+              v-model:value="currentGoodsModel.goods.content"
+              type="textarea"
+              placeholder="写这里咯"
+              maxlength="10000"
+              show-count
+              clearable
+            />
           </NFormItem>
         </template>
-        <NButton @click="updateGoods" type="primary" :loading="isUpdating">
+        <NButton
+          type="primary"
+          :loading="isUpdating"
+          @click="updateGoods"
+        >
           {{ currentGoodsModel.goods.id ? '修改' : '创建' }}
         </NButton>
       </NForm>
