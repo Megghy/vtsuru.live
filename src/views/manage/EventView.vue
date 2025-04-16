@@ -3,6 +3,7 @@ import { isDarkMode } from '@/Utils'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import EventFetcherAlert from '@/components/EventFetcherAlert.vue' // 添加缺失的组件导入
 import { AVATAR_URL, BASE_API_URL, EVENT_API_URL } from '@/data/constants'
 import { Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
@@ -36,10 +37,13 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 
+// 事件类型枚举
 enum EventType {
   Guard,
   SC,
 }
+
+// 事件数据模型接口
 interface EventModel {
   type: EventType
   name: string
@@ -54,6 +58,7 @@ interface EventModel {
 const accountInfo = useAccount()
 const message = useMessage()
 
+// 日期选择快捷方式
 const rangeShortcuts = {
   上个月: () => {
     const cur = new Date()
@@ -68,23 +73,29 @@ const rangeShortcuts = {
     return [new Date(cur.getFullYear(), cur.getMonth(), 1).getTime(), cur.getTime()] as const
   },
 }
+
+// 响应式状态
 const selectedDate = ref<[number, number]>([rangeShortcuts.本月()[0], rangeShortcuts.本月()[1]])
 const selectedType = ref(EventType.Guard)
 const events = ref<EventModel[]>(await get())
 const isLoading = ref(false)
+const displayMode = ref<'grid' | 'column'>('grid')
+const exportType = ref<'json' | 'csv'>('csv') // 移除了未实现的xml选项
 
+// 根据类型过滤事件
 const selectedEvents = computed(() => {
   return events.value.filter((e) => e.type == selectedType.value)
 })
-const displayMode = ref<'grid' | 'column'>('grid')
-const exportType = ref<'json' | 'xml' | 'csv'>('csv')
 
+// 获取事件数据
 async function onDateChange() {
   isLoading.value = true
   const data = await get()
   events.value = data
   isLoading.value = false
 }
+
+// API请求获取数据
 async function get() {
   try {
     const data = await QueryGetAPI<EventModel[]>(EVENT_API_URL + 'get', {
@@ -103,6 +114,8 @@ async function get() {
     return []
   }
 }
+
+// 获取SC颜色
 function GetSCColor(price: number): string {
   if (price === 0) return `#2a60b2`
   if (price > 0 && price < 30) return `#2a60b2`
@@ -114,6 +127,8 @@ function GetSCColor(price: number): string {
   if (price >= 2000) return `#ab1a32`
   return ''
 }
+
+// 获取舰长颜色
 function GetGuardColor(price: number | null | undefined): string {
   if (price) {
     if (price < 138) return ''
@@ -123,8 +138,12 @@ function GetGuardColor(price: number | null | undefined): string {
   }
   return ''
 }
+
+// 导出数据功能
 function exportData() {
   let text = ''
+  const fileName = generateExportFileName()
+
   switch (exportType.value) {
     case 'json': {
       text = JSON.stringify(selectedEvents.value)
@@ -145,13 +164,22 @@ function exportData() {
       break
     }
   }
+
   saveAs(
     new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}}_${accountInfo.value?.id
-    }_${accountInfo.value?.name}_${selectedType.value}.${exportType.value}`,
+    fileName
   )
 }
+
+// 生成导出文件名
+function generateExportFileName() {
+  return `${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[0], 'yyyy-MM-dd HH:mm:ss')}_${format(selectedDate.value[1], 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.id}_${accountInfo.value?.name}_${selectedType.value}.${exportType.value}`
+}
+
+// 将对象数组转换为CSV格式
 function objectsToCSV(arr: any[]) {
+  if (arr.length === 0) return ''
+
   const array = [Object.keys(arr[0])].concat(arr)
   return array
     .map((row) => {
@@ -173,12 +201,14 @@ function objectsToCSV(arr: any[]) {
   <NDivider />
   <NCard
     size="small"
-    style="witdh: 100%"
-  >
+    style="width: 100%"
+    >
     <template v-if="accountInfo?.isBiliVerified">
+      <!-- 日期选择和类型选择区域 -->
       <NSpace
         justify="center"
         align="center"
+        class="control-panel"
       >
         <NDatePicker
           v-model:value="selectedDate"
@@ -205,6 +235,8 @@ function objectsToCSV(arr: any[]) {
         </NButton>
       </NSpace>
       <br>
+
+      <!-- 导出选项区域 -->
       <NCard
         title="导出"
         size="small"
@@ -223,14 +255,19 @@ function objectsToCSV(arr: any[]) {
           </NRadioGroup>
           <NButton
             type="primary"
+            :disabled="selectedEvents.length === 0"
             @click="exportData"
           >
             导出
           </NButton>
         </NSpace>
       </NCard>
+
       <NDivider> 共 {{ selectedEvents.length }} 条 </NDivider>
+
+      <!-- 数据展示区域 -->
       <NSpin :show="isLoading">
+        <!-- 显示模式切换 -->
         <NRadioGroup
           v-model:value="displayMode"
           style="display: flex; justify-content: center"
@@ -244,14 +281,17 @@ function objectsToCSV(arr: any[]) {
           </NRadioButton>
         </NRadioGroup>
         <br>
+
+        <!-- 数据展示区域 - 网格或表格 -->
         <Transition
           mode="out-in"
           name="fade"
           appear
         >
+          <!-- 网格视图 -->
           <div v-if="displayMode == 'grid'">
             <NGrid
-              cols="1 500:2 800:3 1000:4"
+              cols="1 500:2 800:3 1000:4 1200:5"
               :x-gap="12"
               :y-gap="8"
             >
@@ -261,10 +301,10 @@ function objectsToCSV(arr: any[]) {
               >
                 <NCard
                   size="small"
-                  :style="`height: ${selectedType == EventType.Guard ? '175px' : '220'}px`"
+                  :style="`height: ${selectedType == EventType.Guard ? '175px' : '220px'}`"
                   embedded
                   hoverable
-                >
+                  >
                   <NSpace
                     align="center"
                     vertical
@@ -316,6 +356,8 @@ function objectsToCSV(arr: any[]) {
               </NGridItem>
             </NGrid>
           </div>
+
+          <!-- 表格视图 -->
           <NTable v-else>
             <thead>
               <tr>
@@ -331,11 +373,11 @@ function objectsToCSV(arr: any[]) {
                 </th>
               </tr>
             </thead>
-            <tbody
-              v-for="item in selectedEvents"
-              :key="item.time"
-            >
-              <tr>
+            <tbody>
+              <tr
+                v-for="item in selectedEvents"
+                :key="item.time"
+              >
                 <td>{{ item.name }}</td>
                 <td>{{ item.uid }}</td>
                 <td>
@@ -349,7 +391,7 @@ function objectsToCSV(arr: any[]) {
                     :color="{
                       color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                       textColor: 'white',
-                      borderColor: 'white',
+                      borderColor: isDarkMode ? 'white' : '#00000000',
                     }"
                   >
                     {{ item.price }}
@@ -366,6 +408,8 @@ function objectsToCSV(arr: any[]) {
         </Transition>
       </NSpin>
     </template>
+
+    <!-- 未认证用户提示区域 -->
     <template v-else>
       <NCollapse :default-expanded-names="['1']">
         <NCollapseItem
@@ -410,3 +454,24 @@ function objectsToCSV(arr: any[]) {
     </template>
   </NCard>
 </template>
+
+<style scoped>
+/* 响应式样式调整 */
+@media (max-width: 600px) {
+  .control-panel {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* 添加过渡效果 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

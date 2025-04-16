@@ -48,122 +48,102 @@ import {
   useMessage,
 } from 'naive-ui'
 import { Option } from 'naive-ui/es/transfer/src/interface'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import * as XLSX from 'xlsx'
 
 const message = useMessage()
 const accountInfo = useAccount()
 
+// 全局状态变量
+const isLoading = ref(true)
 const showModal = ref(false)
-const neteaseIdInput = ref()
-const fivesingSearchInput = ref()
-const isModalLoading = ref(false)
-
+const showModalRenderKey = ref(0)
 const useCNUrl = useStorage('Settings.UseCNUrl', false)
-
 const onlyResetNameOnAdded = ref(true)
 
+// 歌曲列表数据
+const songs = ref<SongsInfo[]>([])
+
+// 表单相关
+const formRef = ref<FormInst | null>(null)
+const addSongModel = ref<SongsInfo>({} as SongsInfo)
+const addSongRules: FormRules = {
+  name: [{ required: true, message: '请输入歌曲名称' }],
+  password: [{ required: true, message: '请输入密码' }],
+}
+
+// 网易云相关
+const neteaseIdInput = ref()
+const neteaseSongs = ref<SongsInfo[]>([])
+const neteaseSongsOptions = ref<Option[]>([])
+const selectedNeteaseSongs = ref<string[]>([])
+
+// 5sing相关
+const fivesingSearchInput = ref()
+const fivesingResults = ref<SongsInfo[]>([])
+const fivesingTotalPageCount = ref(1)
+const fivesingCurrentPage = ref(1)
+const isGettingFivesingSongPlayUrl = ref(0)
+
+// 文件上传相关
+const uploadFiles = ref<UploadFileInfo[]>([])
+const uploadSongsFromFile = ref<SongsInfo[]>([])
+
+// 模态框加载状态
+const isModalLoading = ref(false)
+
+// 计算属性
 const neteaseSongListId = computed(() => {
   try {
+    // 尝试解析URL
     const url = new URL(neteaseIdInput.value)
-    console.log(url)
-    if (url.host == 'music.163.com') {
+    if (url.host === 'music.163.com') {
       const regex = /id=(\d+)/
-
-      // 使用exec方法在链接中查找匹配项
       const match = regex.exec(neteaseIdInput.value)
-
-      // 如果找到了匹配项，那么match[1]就是分组1的值，也就是id的值
       if (match) {
         return Number(match[1])
       }
     }
   } catch (err) { }
+
+  // 如果不是URL，尝试直接解析为数字
   try {
     return Number(neteaseIdInput.value)
   } catch { }
+
   return null
 })
 
-const songs = ref<SongsInfo[]>([])
-const neteaseSongs = ref<SongsInfo[]>([])
-const neteaseSongsOptions = ref<Option[]>([])
-const selectedNeteaseSongs = ref<string[]>([])
-
-const fivesingResults = ref<SongsInfo[]>([])
-const fivesingTotalPageCount = ref(1)
-const fivesingCurrentPage = ref(1)
-
-const isGettingFivesingSongPlayUrl = ref(0)
-const showModalRenderKey = ref(0)
-
+// 从歌曲列表中提取所有作者
 const authors = computed(() => {
   return new List(songs.value)
-    .SelectMany((s) => new List(s?.author))
+    .SelectMany((s) => new List(s?.author || []))
     .Distinct()
     .ToArray()
-    .map((t) => ({
-      label: t,
-      value: t,
-    }))
-})
-const tags = computed(() => {
-  return new List(songs.value)
-    .SelectMany((s) => new List(s?.tags))
-    .Distinct()
-    .ToArray()
-    .map((t) => ({
-      label: t,
-      value: t,
-    }))
+    .map((t) => ({ label: t, value: t }))
 })
 
-const formRef = ref<FormInst | null>(null)
-const addSongModel = ref<SongsInfo>({} as SongsInfo)
-const addSongRules: FormRules = {
-  name: [
-    {
-      required: true,
-      message: '请输入歌曲名称',
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: '请输入密码',
-    },
-  ],
-}
+// 从歌曲列表中提取所有标签
+const tags = computed(() => {
+  return new List(songs.value)
+    .SelectMany((s) => new List(s?.tags || []))
+    .Distinct()
+    .ToArray()
+    .map((t) => ({ label: t, value: t }))
+})
+
+// 语言选项列表
 const songSelectOption = [
-  {
-    label: '中文',
-    value: '中文',
-  },
-  {
-    label: '日语',
-    value: '日语',
-  },
-  {
-    label: '英语',
-    value: '英语',
-  },
-  {
-    label: '韩语',
-    value: '韩语',
-  },
-  {
-    label: '法语',
-    value: '法语',
-  },
-  {
-    label: '西语',
-    value: '西语',
-  },
-  {
-    label: '其他',
-    value: '其他',
-  },
+  { label: '中文', value: '中文' },
+  { label: '日语', value: '日语' },
+  { label: '英语', value: '英语' },
+  { label: '韩语', value: '韩语' },
+  { label: '法语', value: '法语' },
+  { label: '西语', value: '西语' },
+  { label: '其他', value: '其他' },
 ]
+
+// 从已有歌曲中提取所有语言
 const languageSelectOption = computed(() => {
   const languages = new Set<string>(songSelectOption.map((s) => s.label))
   songs.value.forEach((s) => {
@@ -171,13 +151,10 @@ const languageSelectOption = computed(() => {
       s.language.forEach((l) => languages.add(l))
     }
   })
-  return [...languages].map((t) => ({
-    label: t,
-    value: t,
-  }))
+  return [...languages].map((t) => ({ label: t, value: t }))
 })
-const uploadFiles = ref<UploadFileInfo[]>([])
-const uploadSongsFromFile = ref<SongsInfo[]>([])
+
+// 从上传文件中读取的歌曲列表选项
 const uploadSongsOptions = computed(() => {
   return uploadSongsFromFile.value.map((s) => ({
     label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
@@ -185,13 +162,19 @@ const uploadSongsOptions = computed(() => {
     disabled: songs.value.findIndex((exist) => exist.name == s.name) > -1,
   }))
 })
+
 const selecteduploadSongs = ref<string[]>([])
 
+/**
+ * 添加自定义歌曲
+ */
 async function addCustomSong() {
+  // 检查歌曲名称是否已存在
   if (songs.value.findIndex((s) => s.name == addSongModel.value.name) > -1) {
     message.error('已存在相同名称的歌曲')
     return
   }
+
   isModalLoading.value = true
   formRef.value
     ?.validate()
@@ -218,21 +201,21 @@ async function addCustomSong() {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 添加选中的网易云歌曲
+ */
 async function addNeteaseSongs() {
   isModalLoading.value = true
   const selected = neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.find((select) => s.key == select))
+
   await addSongs(selected, SongFrom.Netease)
     .then((data) => {
       if (data.code == 200) {
         message.success(`已添加 ${data.data.length} 首歌曲`)
         songs.value.push(...data.data)
-        neteaseSongsOptions.value = neteaseSongs.value.map((s) => ({
-          label: `${s.name} - ${s.author.join('/')}`,
-          value: s.key,
-          disabled:
-            songs.value.findIndex((exist) => exist.id == s.id) > -1 ||
-            data.data.findIndex((add) => add.id == s.id) > -1,
-        }))
+        // 更新选项禁用状态
+        updateNeteaseSongsOptions(data.data)
       } else {
         message.error('添加失败: ' + data.message)
       }
@@ -244,8 +227,27 @@ async function addNeteaseSongs() {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 更新网易云歌曲选项的禁用状态
+ */
+function updateNeteaseSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
+  neteaseSongsOptions.value = neteaseSongs.value.map((s) => ({
+    label: `${s.name} - ${s.author.join('/')}`,
+    value: s.key,
+    disabled:
+      songs.value.findIndex((exist) => exist.id == s.id) > -1 ||
+      newlyAddedSongs.findIndex((add) => add.id == s.id) > -1,
+  }))
+}
+
+/**
+ * 添加5sing歌曲
+ */
 async function addFingsingSongs(song: SongsInfo) {
   isModalLoading.value = true
+
+  // 如果没有URL，尝试获取
   if (!song.url) {
     try {
       const url = await getFivesingSongUrl(song)
@@ -255,6 +257,7 @@ async function addFingsingSongs(song: SongsInfo) {
       message.error('未能获取到歌曲链接, 将留空')
     }
   }
+
   await addSongs([song], SongFrom.FiveSing)
     .then((data) => {
       if (data.code == 200) {
@@ -273,16 +276,22 @@ async function addFingsingSongs(song: SongsInfo) {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 添加从文件中选择的歌曲
+ */
 async function addUploadFileSong() {
   if (selecteduploadSongs.value.length == 0) {
     message.error('请选择歌曲')
     return
   }
+
   isModalLoading.value = true
-  await addSongs(
-    uploadSongsFromFile.value.filter((s) => selecteduploadSongs.value.find((select) => s.name == select)),
-    SongFrom.Custom,
+  const songsToAdd = uploadSongsFromFile.value.filter((s) =>
+    selecteduploadSongs.value.find((select) => s.name == select)
   )
+
+  await addSongs(songsToAdd, SongFrom.Custom)
     .then((data) => {
       if (data.code == 200) {
         message.success(`已添加 ${data.data.length} 首歌曲`)
@@ -299,6 +308,10 @@ async function addUploadFileSong() {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 向服务器发送添加歌曲请求
+ */
 async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   return QueryPostAPI<SongsInfo[]>(
     SONG_API_URL + 'add',
@@ -318,7 +331,15 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   )
 }
 
+/**
+ * 获取网易云歌单列表
+ */
 async function getNeteaseSongList() {
+  if (!neteaseSongListId.value) {
+    message.error('请输入有效的网易云歌单ID')
+    return
+  }
+
   isModalLoading.value = true
   await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
     id: neteaseSongListId.value,
@@ -326,11 +347,7 @@ async function getNeteaseSongList() {
     .then((data) => {
       if (data.code == 200) {
         neteaseSongs.value = data.data
-        neteaseSongsOptions.value = data.data.map((s) => ({
-          label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
-          value: s.key,
-          disabled: songs.value.findIndex((exist) => exist.id == s.id) > -1,
-        }))
+        updateNeteaseSongsOptions()
         message.success(
           `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
         )
@@ -345,31 +362,40 @@ async function getNeteaseSongList() {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 获取5sing搜索结果
+ */
 async function getFivesingSearchList(isRestart = false) {
+  if (!fivesingSearchInput.value) {
+    message.error('请输入搜索关键词')
+    return
+  }
+
   isModalLoading.value = true
-  await fetch(
-    FETCH_API +
-    `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`,
-  )
+  if (isRestart) {
+    fivesingCurrentPage.value = 1
+  }
+
+  const searchUrl = `http://search.5sing.kugou.com/home/json?keyword=${fivesingSearchInput.value}&sort=1&page=${fivesingCurrentPage.value}&filter=3`
+
+  await fetch(FETCH_API + searchUrl)
     .then(async (data) => {
       const json = await data.json()
       if (json.list.length == 0) {
         message.error('搜索结果为空')
       }
-      if (isRestart) {
-        fivesingCurrentPage.value = 1
-      }
+
       fivesingResults.value = []
-      //fivesingResultsOptions.value = []
       json.list.forEach((song: any) => {
         const songInfo = {
           id: song.songId,
           name: extractTextFromHtml(song.songName),
           author: [song.originSinger, song.singer],
-          //url: `http://service.5sing.kugou.com/song/getsongurl?songid=${song.songId}&songtype=bz&from=web&version=6.6.72`,
         } as SongsInfo
         fivesingResults.value.push(songInfo)
       })
+
       fivesingTotalPageCount.value = json.pageInfo.totalPages
       message.success(`成功获取搜索信息, 共 ${json.pageInfo.totalCount} 条, 当前第 ${fivesingCurrentPage.value} 页`)
     })
@@ -380,6 +406,10 @@ async function getFivesingSearchList(isRestart = false) {
       isModalLoading.value = false
     })
 }
+
+/**
+ * 从HTML中提取文本内容
+ */
 function extractTextFromHtml(html: string): string {
   const regex = /<em class="keyword">(.*?)<\/em>/
   const match = regex.exec(html)
@@ -389,6 +419,10 @@ function extractTextFromHtml(html: string): string {
     return html
   }
 }
+
+/**
+ * 播放5sing歌曲
+ */
 async function playFivesingSong(song: SongsInfo) {
   isGettingFivesingSongPlayUrl.value = song.id
   await getFivesingSongUrl(song)
@@ -402,19 +436,26 @@ async function playFivesingSong(song: SongsInfo) {
       isGettingFivesingSongPlayUrl.value = 0
     })
 }
+
+/**
+ * 获取5sing歌曲URL
+ */
 async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
-  const data = await fetch(
-    FETCH_API + `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`,
-  )
+  const apiUrl = `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`
+  const data = await fetch(FETCH_API + apiUrl)
   const result = await data.text()
-  //忽略掉result的第一个字符和最后一个字符, 并反序列化
+
+  // 忽略掉result的第一个字符和最后一个字符, 并反序列化
   const json = JSON.parse(result.substring(1, result.length - 1))
   if (json.code == 0) {
     return json.data.lqurl
   }
   return ''
 }
-const isLoading = ref(true)
+
+/**
+ * 获取歌曲列表
+ */
 async function getSongs() {
   isLoading.value = true
   await QueryGetAPI<any>(SONG_API_URL + 'get', {
@@ -432,50 +473,65 @@ async function getSongs() {
       isLoading.value = false
     })
 }
+
+/**
+ * 导出歌单数据为CSV
+ */
 function exportData() {
+  // 转换歌曲来源为中文
   const from = (f: SongFrom) => {
     switch (f) {
-      case SongFrom.Custom:
-        return '手动添加'
-      case SongFrom.Netease:
-        return '网易云'
-      case SongFrom.FiveSing:
-        return '5sing'
+      case SongFrom.Custom: return '手动添加'
+      case SongFrom.Netease: return '网易云'
+      case SongFrom.FiveSing: return '5sing'
     }
   }
-  const text = objectsToCSV(
-    songs.value.map((s) => ({
-      id: s.id,
-      名称: s.name,
-      翻译名称: s.translateName,
-      作者: s.author?.join('/') ?? '未知',
-      创建于: format(s.createTime, 'yyyy-MM-dd HH:mm:ss'),
-      更新于: format(s.updateTime, 'yyyy-MM-dd HH:mm:ss'),
-      描述: s.description,
-      来自: from(s.from),
-      语言: s.language.join(','),
-      标签: s.tags?.join(',') ?? '',
-      链接: s.url,
-    })),
-  )
+
+  // 构建CSV数据
+  const csvData = songs.value.map((s) => ({
+    id: s.id,
+    名称: s.name,
+    翻译名称: s.translateName,
+    作者: s.author?.join('/') ?? '未知',
+    创建于: format(s.createTime, 'yyyy-MM-dd HH:mm:ss'),
+    更新于: format(s.updateTime, 'yyyy-MM-dd HH:mm:ss'),
+    描述: s.description,
+    来自: from(s.from),
+    语言: s.language.join(','),
+    标签: s.tags?.join(',') ?? '',
+    链接: s.url,
+  }))
+
+  const text = objectsToCSV(csvData)
+
+  // 添加UTF-8 BOM以支持中文
   const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
   const utf8encoder = new TextEncoder()
   const utf8array = utf8encoder.encode(text)
+
+  // 保存文件
+  const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`
   saveAs(
     new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
-    `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`,
+    fileName
   )
 }
+
+/**
+ * 解析Excel文件
+ */
 function parseExcelFile() {
   if (uploadFiles.value.length == 0) {
     message.error('请选择文件')
     return
   }
+
   const file = uploadFiles.value[0]
   if (!file.file) {
     message.error('无效的文件')
     return
   }
+
   const reader = new FileReader()
   reader.readAsArrayBuffer(file.file)
   reader.onload = (e) => {
@@ -484,16 +540,26 @@ function parseExcelFile() {
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null })
+
     if (json.length == 0) {
       message.error('文件为空')
+      return
     }
+
     const headers = json[0] as any
     const rows = json.slice(1) as any[]
-    const songs = rows.map((row) => {
+
+    // 解析每一行数据
+    const parsedSongs = rows.map((row) => {
       const song = {} as SongsInfo
+
       for (let i = 0; i < headers.length; i++) {
         const key = headers[i] as string
         const value = row[i] as string
+
+        if (!key) continue
+
+        // 根据列头映射到歌曲属性
         switch (key.toLowerCase().trim()) {
           case 'id':
           case 'name':
@@ -510,12 +576,8 @@ function parseExcelFile() {
           case 'singer':
           case '作者':
           case '歌手':
-            song.author = value
-              ?.replace('／', '/')
-              .replace('，', ',')
-              .split(/\/|,/)
-              .map((a: string) => a.trim())
-              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
+            if (!value) break
+            song.author = parseMultipleValues(value)
             break
           case 'description':
           case 'desc':
@@ -529,63 +591,91 @@ function parseExcelFile() {
             break
           case 'language':
           case '语言':
-            song.language = value
-              ?.replace('／', '/')
-              .replace('，', ',')
-              .split(/\/|,/)
-              .map((a: string) => a.trim())
-              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
+            if (!value) break
+            song.language = parseMultipleValues(value)
             break
           case 'tags':
           case 'tag':
           case '标签':
-            song.tags = value
-              ?.replace('／', '/')
-              .replace('，', ',')
-              .split(/\/|,/)
-              .map((t: string) => t.trim())
-              .filter((value: string, index: number, self: string[]) => self.indexOf(value) === index)
+            if (!value) break
+            song.tags = parseMultipleValues(value)
             break
         }
       }
+
       return song
     })
-    uploadSongsFromFile.value = songs.filter((s) => s.name)
-    console.log(uploadSongsFromFile.value)
+
+    // 过滤掉没有名称的歌曲
+    uploadSongsFromFile.value = parsedSongs.filter((s) => s.name)
     message.success('解析完成, 共获取 ' + uploadSongsFromFile.value.length + ' 首曲目')
   }
 }
+
+/**
+ * 解析多值字段（如作者、标签等）
+ */
+function parseMultipleValues(value: string): string[] {
+  return value
+    ?.replace('／', '/')
+    .replace('，', ',')
+    .split(/\/|,/)
+    .map((a: string) => a.trim())
+    .filter((value: string, index: number, self: string[]) =>
+      value && self.indexOf(value) === index
+    )
+}
+
+/**
+ * 上传前验证文件类型
+ */
 function beforeUpload(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
-  //只能选择xlsx和xls和csv
-  if (data.file.name.endsWith('.xlsx') || data.file.name.endsWith('.xls') || data.file.name.endsWith('.csv')) {
+  const validExtensions = ['.xlsx', '.xls', '.csv']
+  const isValid = validExtensions.some(ext => data.file.name.endsWith(ext))
+
+  if (isValid) {
     return true
   }
+
   message.error('只能选择xlsx和xls和csv')
   return false
 }
+
+/**
+ * 设置歌单功能启用状态
+ */
 async function setFunctionEnable(enable: boolean) {
   let success = false
+
   if (enable) {
     success = await EnableFunction(FunctionTypes.SongList)
   } else {
     success = await DisableFunction(FunctionTypes.SongList)
   }
+
   if (success) {
     message.success('已' + (enable ? '启用' : '禁用'))
   } else {
     message.error('无法' + (enable ? '启用' : '禁用'))
   }
 }
+
+/**
+ * 重置添加歌曲表单
+ */
 function resetAddingSong(onlyName = false) {
   if (onlyName) {
     addSongModel.value.name = ''
     addSongModel.value.description = ''
+  } else {
+    addSongModel.value = {} as SongsInfo
   }
-  addSongModel.value = {} as SongsInfo
+
   showModalRenderKey.value++
   message.success('已重置')
 }
 
+// 组件挂载时加载歌曲列表
 onMounted(async () => {
   await getSongs()
 })
@@ -593,6 +683,7 @@ onMounted(async () => {
 
 <template>
   <NSpace align="center">
+    <!-- 歌单功能启用状态 -->
     <NAlert
       :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
       style="max-width: 200px"
@@ -604,6 +695,8 @@ onMounted(async () => {
         @update:value="setFunctionEnable"
       />
     </NAlert>
+
+    <!-- 功能按钮区 -->
     <NButton
       type="primary"
       @click="showModal = true"
@@ -611,8 +704,8 @@ onMounted(async () => {
       添加歌曲
     </NButton>
     <NButton
-    secondary
-    type="primary"
+      secondary
+      type="primary"
       @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
     >
       修改展示模板
@@ -641,12 +734,13 @@ onMounted(async () => {
       @click="() => {
         getSongs()
         message.success('完成')
-      }
-      "
+      }"
     >
       刷新
     </NButton>
   </NSpace>
+
+  <!-- 歌单展示页链接 -->
   <NDivider
     style="margin: 16px 0 16px 0"
     title-placement="left"
@@ -671,6 +765,8 @@ onMounted(async () => {
     </NCheckbox>
   </NFlex>
   <NDivider style="margin: 16px 0 16px 0" />
+
+  <!-- 添加歌曲模态框 -->
   <NModal
     :key="showModalRenderKey"
     v-model:show="showModal"
@@ -686,6 +782,7 @@ onMounted(async () => {
           default-value="custom"
           animated
         >
+          <!-- 手动录入选项卡 -->
           <NTabPane
             name="custom"
             tab="手动录入"
@@ -771,6 +868,7 @@ onMounted(async () => {
                   placeholder="可选, 后缀为mp3、wav、ogg时将会尝试播放, 否则会在新页面打开"
                 />
               </NFormItem>
+              <!-- 点歌设置选项 -->
               <NFormItem path="options">
                 <template #label>
                   点歌设置
@@ -792,8 +890,7 @@ onMounted(async () => {
                           needZongdu: false,
                         } as SongRequestOption)
                         : undefined
-                    }
-                    "
+                    }"
                   >
                     是否启用
                   </NCheckbox>
@@ -814,8 +911,7 @@ onMounted(async () => {
                         :checked="addSongModel.options.scMinPrice != undefined"
                         @update:checked="(checked: boolean) => {
                           if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
-                        }
-                        "
+                        }"
                       >
                         需要SC
                       </NCheckbox>
@@ -835,8 +931,7 @@ onMounted(async () => {
                         :checked="addSongModel.options.fanMedalMinLevel != undefined"
                         @update:checked="(checked: boolean) => {
                           if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
-                        }
-                        "
+                        }"
                       >
                         需要粉丝牌
                         <NTooltip>
@@ -885,6 +980,8 @@ onMounted(async () => {
               </NCheckbox>
             </NFlex>
           </NTabPane>
+
+          <!-- 从网易云歌单导入选项卡 -->
           <NTabPane
             name="netease"
             tab="从网易云歌单导入"
@@ -933,6 +1030,8 @@ onMounted(async () => {
               </NButton>
             </template>
           </NTabPane>
+
+          <!-- 从5sing搜索选项卡 -->
           <NTabPane
             name="5sing"
             tab="从5sing搜索"
@@ -986,7 +1085,6 @@ onMounted(async () => {
                         </NSpace>
                       </td>
                       <td style="display: flex; justify-content: flex-end">
-                        <!-- 在这里播放song.url链接中的音频 -->
                         <NButton
                           v-if="!song.url"
                           size="small"
@@ -1026,6 +1124,8 @@ onMounted(async () => {
               />
             </template>
           </NTabPane>
+
+          <!-- 从文件导入选项卡 -->
           <NTabPane
             name="file"
             tab="从文件导入"
@@ -1092,6 +1192,8 @@ onMounted(async () => {
               />
             </template>
           </NTabPane>
+
+          <!-- 从文件夹读取选项卡 -->
           <NTabPane
             name="directory"
             tab="从文件夹读取"
@@ -1102,6 +1204,8 @@ onMounted(async () => {
       </NSpin>
     </NScrollbar>
   </NModal>
+
+  <!-- 歌曲列表展示 -->
   <NSpin
     v-if="isLoading"
     show

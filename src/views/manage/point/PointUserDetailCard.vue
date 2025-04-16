@@ -31,6 +31,7 @@ import {
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
+// 组件属性定义
 const props = defineProps<{
   user: ResponsePointUserModel
   goods: ResponsePointGoodModel[]
@@ -38,20 +39,30 @@ const props = defineProps<{
 
 const message = useMessage()
 
+// 加载状态
 const isLoading = ref(false)
+// 用户订单列表
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
+// 用户积分历史
 const pointHistory = ref<ResponsePointHisrotyModel[]>([])
 
+// 积分调整弹窗状态
 const showAddPointModal = ref(false)
 const addPointCount = ref(0)
-const addPointReason = ref<string>()
+const addPointReason = ref<string>('')
 
+// 获取用户订单
 async function getOrders() {
+  if (!props.user.info?.id) {
+    return []
+  }
+
   try {
     isLoading.value = true
     const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(POINT_API_URL + 'get-user-orders', {
       authId: props.user.info?.id,
     })
+
     if (data.code == 200) {
       return data.data
     } else {
@@ -64,21 +75,25 @@ async function getOrders() {
   } finally {
     isLoading.value = false
   }
+
   return []
 }
+
+// 获取用户积分历史
 async function getPointHistory() {
   try {
     isLoading.value = true
+
+    // 根据用户认证状态使用不同的请求参数
+    const params = props.user.info.id > 0
+      ? { authId: props.user.info.id }
+      : { id: props.user.info.userId ?? props.user.info.openId }
+
     const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
       POINT_API_URL + 'get-user-histories',
-      props.user.info.id > 0
-        ? {
-            authId: props.user.info.id,
-          }
-        : {
-            id: props.user.info.userId ?? props.user.info.openId,
-          },
+      params
     )
+
     if (data.code == 200) {
       return data.data
     } else {
@@ -91,42 +106,58 @@ async function getPointHistory() {
   } finally {
     isLoading.value = false
   }
+
   return []
 }
+
+// 给用户增加/减少积分
 async function givePoint() {
+  // 验证积分数量
   if (addPointCount.value == 0) {
     message.error('积分数量不能为 0')
     return
   }
+
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(
-      POINT_API_URL + 'give-point',
-      props.user.info?.id >= 0
-        ? {
-            authId: props.user.info?.id,
-            count: addPointCount.value,
-            reason: addPointReason.value ?? '',
-          }
-        : props.user.info?.userId
-          ? {
-              uId: props.user.info?.userId,
-              count: addPointCount.value,
-              reason: addPointReason.value ?? '',
-            }
-          : {
-              oId: props.user.info?.openId,
-              count: addPointCount.value,
-              reason: addPointReason.value ?? '',
-            },
-    )
+    // 根据用户认证状态构建不同的请求参数
+    let params = {}
+
+    if (props.user.info?.id >= 0) {
+      params = {
+        authId: props.user.info?.id,
+        count: addPointCount.value,
+        reason: addPointReason.value ?? '',
+      }
+    } else if (props.user.info?.userId) {
+      params = {
+        uId: props.user.info?.userId,
+        count: addPointCount.value,
+        reason: addPointReason.value ?? '',
+      }
+    } else {
+      params = {
+        oId: props.user.info?.openId,
+        count: addPointCount.value,
+        reason: addPointReason.value ?? '',
+      }
+    }
+
+    const data = await QueryGetAPI(POINT_API_URL + 'give-point', params)
+
     if (data.code == 200) {
       message.success('添加成功')
       showAddPointModal.value = false
       props.user.point += addPointCount.value
+
+      // 重新加载积分历史
       setTimeout(async () => {
         pointHistory.value = await getPointHistory()
       }, 1500)
+
+      // 重置表单
+      addPointCount.value = 0
+      addPointReason.value = ''
     } else {
       message.error('添加积分失败: ' + data.message)
       console.error(data)
@@ -139,8 +170,10 @@ async function givePoint() {
   }
 }
 
+// 组件挂载时加载数据
 onMounted(async () => {
   pointHistory.value = await getPointHistory()
+
   if (props.user.info?.id) {
     orders.value = await getOrders()
   }
@@ -151,10 +184,15 @@ onMounted(async () => {
   <NCard
     :bordered="false"
     content-style="padding-top: 0"
+    class="user-detail-card"
   >
+    <!-- 用户基本信息 -->
     <NCard :title="`用户信息 | ${user.isAuthed ? '已认证' : '未认证'}`">
       <template #header>
-        <NFlex align="center">
+        <NFlex
+          align="center"
+          :gap="8"
+        >
           <NTag
             :bordered="false"
             :type="user.isAuthed ? 'success' : 'error'"
@@ -162,9 +200,10 @@ onMounted(async () => {
           >
             {{ user.isAuthed ? '已认证' : '未认证' }}
           </NTag>
-          关于
+          <span>关于</span>
         </NFlex>
       </template>
+
       <NDescriptions
         label-placement="left"
         bordered
@@ -172,23 +211,27 @@ onMounted(async () => {
         :column="2"
       >
         <NDescriptionsItem label="用户名">
-          {{ user.info.name }}
+          {{ user.info.name || '未知' }}
         </NDescriptionsItem>
+
         <NDescriptionsItem
           v-if="user.info.userId > 0"
           label="UId"
         >
           {{ user.info.userId }}
         </NDescriptionsItem>
+
         <NDescriptionsItem
-          v-if="user.info.openId != '00000000-0000-0000-0000-000000000000'"
+          v-if="user.info.openId && user.info.openId != '00000000-0000-0000-0000-000000000000'"
           label="OpenId"
         >
           {{ user.info.openId }}
         </NDescriptionsItem>
+
         <NDescriptionsItem label="积分">
           {{ user.point }}
         </NDescriptionsItem>
+
         <NDescriptionsItem
           v-if="user.isAuthed"
           label="认证时间"
@@ -196,8 +239,9 @@ onMounted(async () => {
           <NTime :time="user.info.createAt" />
         </NDescriptionsItem>
       </NDescriptions>
+
       <template #footer>
-        <NFlex>
+        <NFlex justify="end">
           <NButton
             type="primary"
             size="small"
@@ -208,11 +252,15 @@ onMounted(async () => {
         </NFlex>
       </template>
     </NCard>
+
+    <!-- 订单信息 -->
     <NDivider> 订单 </NDivider>
     <NSpin :show="isLoading">
-      <template v-if="orders.length == 0">
-        <NEmpty description="暂无订单" />
-      </template>
+      <NEmpty
+        v-if="orders.length == 0"
+        description="暂无订单"
+        class="empty-container"
+      />
       <PointOrderCard
         v-else
         :order="orders"
@@ -220,10 +268,22 @@ onMounted(async () => {
         :goods="goods"
       />
     </NSpin>
+
+    <!-- 积分历史 -->
     <NDivider> 积分历史 </NDivider>
     <NSpin :show="isLoading">
-      <PointHistoryCard :histories="pointHistory" />
+      <NEmpty
+        v-if="!pointHistory.length"
+        description="暂无积分记录"
+        class="empty-container"
+      />
+      <PointHistoryCard
+        v-else
+        :histories="pointHistory"
+      />
     </NSpin>
+
+    <!-- 积分调整弹窗 -->
     <NModal
       v-model:show="showAddPointModal"
       preset="card"
@@ -232,10 +292,15 @@ onMounted(async () => {
       <template #header>
         给予/扣除积分
       </template>
-      <NFlex vertical>
+
+      <NFlex
+        vertical
+        :gap="16"
+      >
         <NFlex
           align="center"
           :wrap="false"
+          :gap="8"
         >
           <NInputNumber
             v-model:value="addPointCount"
@@ -248,9 +313,10 @@ onMounted(async () => {
             <template #trigger>
               <NIcon :component="Info24Filled" />
             </template>
-            负数为扣除
+            负数为扣除积分
           </NTooltip>
         </NFlex>
+
         <NInput
           v-model:value="addPointReason"
           placeholder="请输入备注"
@@ -258,6 +324,7 @@ onMounted(async () => {
           show-count
           clearable
         />
+
         <NButton
           type="primary"
           :loading="isLoading"
@@ -269,3 +336,17 @@ onMounted(async () => {
     </NModal>
   </NCard>
 </template>
+
+<style scoped>
+.user-detail-card {
+  width: 100%;
+}
+
+.empty-container {
+  margin: 16px 0;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
