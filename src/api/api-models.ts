@@ -698,9 +698,9 @@ export interface PointGoodsModel {
 export interface AddressInfo {
   id?: string
   province: string
-  city: string
-  district: string
-  street: string
+  city?: string
+  district?: string
+  street?: string
   address: string
   phone: number
   name: string

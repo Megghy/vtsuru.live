@@ -32,6 +32,7 @@ import { computed, ref } from 'vue'
 //@ts-expect-error 导入有点问题
 import UserAgreement from '@/document/UserAgreement.md'
 
+// 地区数据类型定义
 type AreaData = {
   [province: string]: {
     [city: string]: {
@@ -43,9 +44,13 @@ type AreaData = {
 const useAuth = useAuthStore()
 const message = useMessage()
 const isLoading = ref(false)
-
 const userAgree = ref(false)
+const showAddressModal = ref(false)
+const showAgreementModal = ref(false)
+const formRef = ref()
+const currentAddress = ref<AddressInfo>()
 
+// 本地存储区域数据
 const areas = useStorage<{
   createAt: number
   data: AreaData
@@ -53,21 +58,34 @@ const areas = useStorage<{
   createAt: 0,
   data: {},
 })
+
+// 计算属性：获取省份选项
 const provinceOptions = computed(() => {
   return Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p }))
 })
+
+// 计算属性：当前用户授权信息
+const biliAuth = computed(() => useAuth.biliAuth)
+
+// 获取城市选项
 const cityOptions = (province: string) => {
   if (!areas.value?.data[province]) return []
   return Object.keys(areas.value?.data[province] ?? {}).map((c) => ({ label: c, value: c }))
 }
+
+// 获取区/县选项
 const districtOptions = (province: string, city: string) => {
   if (!areas.value?.data[province]?.[city]) return []
   return Object.keys(areas.value?.data[province][city] ?? {}).map((d) => ({ label: d, value: d }))
 }
+
+// 获取街道选项
 const streetOptions = (province: string, city: string, district: string) => {
   if (!areas.value?.data[province]?.[city]?.[district]) return []
   return areas.value?.data[province][city][district]?.map((s) => ({ label: s, value: s })) ?? []
 }
+
+// 表单验证规则
 const rules: FormRules = {
   phone: {
     required: true,
@@ -99,53 +117,55 @@ const rules: FormRules = {
     },
   },
 }
-const formRef = ref()
 
-const biliAuth = computed(() => useAuth.biliAuth)
-
-const currentAddress = ref<AddressInfo>()
-
-const showAddressModal = ref(false)
-const showAgreementModal = ref(false)
-
-async function updateAddress() {
-  formRef.value
-    ?.validate()
-    .then(async () => {
-      isLoading.value = true
-      try {
-        const data = await useAuth.QueryBiliAuthPostAPI<AddressInfo>(
-          POINT_API_URL + 'user/update-address',
-          currentAddress.value,
-        )
-        if (data.code == 200) {
-          message.success('已保存')
-          showAddressModal.value = false
-          currentAddress.value = {} as AddressInfo
-          if (biliAuth.value.address) {
-            const index = biliAuth.value.address?.findIndex((a) => a.id == data.data.id) ?? -1
-            if (index >= 0) {
-              biliAuth.value.address[index] = data.data
-            } else {
-              biliAuth.value.address.push(data.data)
-            }
-          }
-        } else {
-          message.error('更新地址失败: ' + data.message)
-          console.error(data)
-        }
-      } catch (err) {
-        message.error('更新地址失败: ' + err)
-        console.error(err)
-      }
-    })
-    .catch(() => {
-      message.error('信息未填写完成')
-    })
-    .finally(() => {
-      isLoading.value = false
-    })
+// 处理API错误的工具函数
+const handleApiError = (action: string, err: any) => {
+  message.error(`${action}失败: ${err}`)
+  console.error(err)
 }
+
+// 地址管理相关函数
+// 更新地址信息
+async function updateAddress() {
+  try {
+    await formRef.value?.validate()
+    isLoading.value = true
+
+    const data = await useAuth.QueryBiliAuthPostAPI<AddressInfo>(
+      POINT_API_URL + 'user/update-address',
+      currentAddress.value,
+    )
+
+    if (data.code == 200) {
+      message.success('已保存')
+      showAddressModal.value = false
+
+      // 更新本地地址列表
+      if (biliAuth.value.address) {
+        const index = biliAuth.value.address?.findIndex((a) => a.id == data.data.id) ?? -1
+        if (index >= 0) {
+          biliAuth.value.address[index] = data.data
+        } else {
+          biliAuth.value.address.push(data.data)
+        }
+      }
+
+      currentAddress.value = {} as AddressInfo
+    } else {
+      handleApiError('更新地址', data.message)
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      handleApiError('更新地址', err)
+    } else {
+      message.error('信息未填写完成')
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 删除地址
 async function deleteAddress(id: string) {
   isLoading.value = true
   try {
@@ -156,66 +176,69 @@ async function deleteAddress(id: string) {
         biliAuth.value.address = biliAuth.value.address?.filter((a) => a.id != id)
       }
     } else {
-      message.error('删除地址失败: ' + data.message)
-      console.error(data)
+      handleApiError('删除地址', data.message)
     }
   } catch (err) {
-    message.error('删除地址失败: ' + err)
-    console.error(err)
+    handleApiError('删除地址', err)
   } finally {
     isLoading.value = false
   }
 }
+
+// 获取区域数据
 async function getArea() {
+  // 缓存一周内的数据，避免频繁请求
   if (areas.value && Date.now() - areas.value?.createAt < 1000 * 60 * 60 * 24 * 7) {
     return
   }
+
   try {
     isLoading.value = true
-    const data = await fetch(THINGS_URL + 'area_data.json')
+    const data = await fetch('https://oss.suki.club/vtsuru/area_data.json')
     if (data.ok) {
       const area = {
         createAt: Date.now(),
         data: await data.json(),
       }
-      console.log(area)
       areas.value = area
     }
   } catch (err) {
-    console.error(err)
-    message.error('获取区域数据失败')
+    handleApiError('获取区域数据', err)
+  } finally {
+    isLoading.value = false
   }
-  isLoading.value = false
 }
+
+// 打开地址编辑模态框
 async function onOpenAddressModal() {
   showAddressModal.value = true
   currentAddress.value = {} as AddressInfo
   await getArea()
 }
+
+// 处理地区选择变化，级联清除下级选项
 function onAreaSelectChange(level: number) {
   if (!currentAddress.value) return
-  const newValue = {} as AddressInfo
+
+  // 根据变化的级别清除下级数据
   switch (level) {
-    case 0: {
-      // @ts-expect-error 不管这个，直接赋值
+    case 0: // 省份变化，清除市区街道
       currentAddress.value.city = undefined
-      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.district = undefined
-      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.street = undefined
-    }
-    case 1: {
-      // @ts-expect-error 不管这个，直接赋值
+      break
+    case 1: // 城市变化，清除区县街道
       currentAddress.value.district = undefined
-      // @ts-expect-error 不管这个，直接赋值
       currentAddress.value.street = undefined
-    }
-    case 2: {
-      // @ts-expect-error 不管这个，直接赋值
+      break
+    case 2: // 区县变化，清除街道
       currentAddress.value.street = undefined
-    }
+      break
   }
 }
+
+// 账号管理相关函数
+// 切换当前使用的授权账号
 function switchAuth(token: string) {
   if (token == useAuth.biliToken) {
     message.info('当前正在使用该账号')
@@ -225,6 +248,7 @@ function switchAuth(token: string) {
   message.success('已切换账号')
 }
 
+// 登出当前账号
 function logout() {
   useAuth.logout()
 }
@@ -392,7 +416,7 @@ function logout() {
             <NSelect
               :key="currentAddress.city"
               v-model:value="currentAddress.district"
-              :options="districtOptions(currentAddress.province, currentAddress.city)"
+              :options="currentAddress.city ? districtOptions(currentAddress.province, currentAddress.city) : []"
               :disabled="!currentAddress?.city"
               placeholder="请选择区"
               style="width: 100px"
@@ -402,7 +426,7 @@ function logout() {
             <NSelect
               :key="currentAddress.district"
               v-model:value="currentAddress.street"
-              :options="streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)"
+              :options="currentAddress.city && currentAddress.district ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district) : []"
               :disabled="!currentAddress?.district"
               placeholder="请选择街道"
               style="width: 150px"
