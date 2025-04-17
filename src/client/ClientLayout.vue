@@ -16,7 +16,7 @@
   // 引入子组件
   import WindowBar from './WindowBar.vue';
   import { initAll, OnClientUnmounted } from './data/initialize';
-  import { CloudArchive24Filled, Settings24Filled } from '@vicons/fluent';
+  import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Settings24Filled } from '@vicons/fluent';
   import { isTauri } from '@/data/constants';
 import { useDanmakuWindow } from './store/useDanmakuWindow';
 
@@ -106,10 +106,16 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
       },
       {
         label: () =>
-          h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机管理'),
+          h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
         key: 'danmaku-window-manage',
-        icon: () => h(Settings24Filled),
+        icon: () => h(Chat24Filled),
         show: danmakuWindow.danmakuWindow != undefined
+      },
+      {
+        label: () =>
+          h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
+        key: 'danmaku-auto-action-manage',
+        icon: () => h(FlashAuto24Filled),
       },
       {
         label: () =>

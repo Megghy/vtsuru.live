@@ -39,6 +39,7 @@ declare module 'vue' {
     NRadioGroup: typeof import('naive-ui')['NRadioGroup']
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSpace: typeof import('naive-ui')['NSpace']
+    NSSwitch: typeof import('naive-ui')['NSSwitch']
     NTab: typeof import('naive-ui')['NTab']
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']

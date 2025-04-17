@@ -125,7 +125,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Message,
-          name: data.uname,
+          uname: data.uname,
           uid: data.uid,
           msg: data.msg,
           price: 0,
@@ -154,7 +154,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Gift,
-          name: data.uname,
+          uname: data.uname,
           uid: data.uid,
           msg: data.gift_name,
           price: data.paid ? price : -price,
@@ -181,7 +181,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.SC,
-          name: data.uname,
+          uname: data.uname,
           uid: data.uid,
           msg: data.message,
           price: data.rmb,
@@ -208,7 +208,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Guard,
-          name: data.user_info.uname,
+          uname: data.user_info.uname,
           uid: data.user_info.uid,
           msg:
             data.guard_level == 1
@@ -243,7 +243,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Enter,
-          name: data.uname,
+          uname: data.uname,
           msg: '',
           price: 0,
           num: 0,
@@ -270,7 +270,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Enter,
-          name: '',
+          uname: '',
           msg: JSON.stringify(data.message_ids),
           price: 0,
           num: 0,

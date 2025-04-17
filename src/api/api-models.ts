@@ -550,7 +550,7 @@ export enum QueueStatus {
 }
 export interface EventModel {
   type: EventDataTypes
-  name: string
+  uname: string
   uface: string
   uid: number
   open_id: string

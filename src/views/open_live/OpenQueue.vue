@@ -251,7 +251,7 @@
     if (!checkMessage(danmaku)) {
       return;
     }
-    console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.name}] 的排队请求`);
+    console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.uname}] 的排队请求`);
     // 检查是否仅直播时允许加入
     if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
       message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入');
@@ -275,21 +275,21 @@
               originQueue.value.splice(existingIndex, 1, data.data); // 替换现有条目
             } else { // 新用户加入
               originQueue.value.push(data.data); // 添加到末尾 (排序由 computed 处理)
-              message.success(`[${danmaku.name}] 添加至队列`);
+              message.success(`[${danmaku.uname}] 添加至队列`);
             }
           }
         } else { // 添加失败
           const time = Date.now();
           notice.warning({
-            title: danmaku.name + ' 排队失败',
+            title: danmaku.uname + ' 排队失败',
             description: data.message,
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
             meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }), // 使用 updateKey 强制更新时间显示
           });
-          console.log(`[OPEN-LIVE-QUEUE] [${danmaku.name}] 排队失败: ${data.message}`);
+          console.log(`[OPEN-LIVE-QUEUE] [${danmaku.uname}] 排队失败: ${data.message}`);
         }
       } catch (err: any) {
-        message.error(`[${danmaku.name}] 添加队列时出错: ${err.message || err}`);
+        message.error(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`);
         console.error(`[OPEN-LIVE-QUEUE] 添加队列出错:`, err);
       }
     } else { // 未登录，操作本地队列
@@ -298,7 +298,7 @@
         from: danmaku.type == EventDataTypes.Message ? QueueFrom.Danmaku : QueueFrom.Gift,
         giftPrice: danmaku.type == EventDataTypes.SC ? danmaku.price : undefined,
         user: {
-          name: danmaku.name,
+          name: danmaku.uname,
           uid: danmaku.uid,
           oid: danmaku.open_id,
           fans_medal_level: danmaku.fans_medal_level,
@@ -311,7 +311,7 @@
         id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max((s) => s.id) + 1, // 本地 ID
       } as ResponseQueueModel;
       localQueues.value.unshift(songData); // 添加到本地队列开头
-      message.success(`[${danmaku.name}] 添加至本地队列`);
+      message.success(`[${danmaku.uname}] 添加至本地队列`);
     }
   }
 
@@ -410,7 +410,7 @@
   function checkMessage(eventData: EventModel): boolean {
     // 未登录时，如果用户已在本地队列，则不允许重复添加 (简单检查)
     if (!configCanEdit.value && localQueues.value.some((q) => q.user?.uid == eventData.uid && q.status < QueueStatus.Finish)) {
-      console.log(`[OPEN-LIVE-QUEUE] 本地队列已存在用户 [${eventData.name}]，跳过`);
+      console.log(`[OPEN-LIVE-QUEUE] 本地队列已存在用户 [${eventData.uname}]，跳过`);
       return false;
     }
 

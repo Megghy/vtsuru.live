@@ -5,11 +5,13 @@
   import { nanoid } from 'nanoid';
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
   import ClientDanmakuItem from './ClientDanmakuItem.vue';
+  import { TransitionGroup } from 'vue'; // 添加TransitionGroup导入
 
   type TempDanmakuType = EventModel & {
     randomId: string;
     isNew?: boolean; // 添加：标记是否为新弹幕
     disappearAt?: number; // 消失时间戳
+    timestamp?: number; // 添加：记录插入时间戳
   };
 
   let bc: BroadcastChannel | undefined = undefined;
@@ -17,6 +19,8 @@
   const danmakuList = ref<TempDanmakuType[]>([]);
   const maxItems = computed(() => setting.value?.maxDanmakuCount || 50);
   const hasItems = computed(() => danmakuList.value.length > 0);
+  const isInBatchUpdate = ref(false); // 添加批量更新状态标志
+  const pendingRemovalItems = ref<string[]>([]); // 待移除的弹幕ID
 
   // 动态设置CSS变量
   function updateCssVariables() {
@@ -67,18 +71,51 @@
       disappearAt = Date.now() + setting.value.autoDisappearTime * 1000;
     }
 
+    // 判断短时间内是否有大量弹幕插入
+    const isRapidInsertion = danmakuList.value.filter(item =>
+      item.isNew && Date.now() - (item.timestamp || 0) < 500).length > 5;
+
+    if (isRapidInsertion && !isInBatchUpdate.value) {
+      isInBatchUpdate.value = true;
+      // 在大量插入时简化动画，300ms后恢复
+      setTimeout(() => {
+        isInBatchUpdate.value = false;
+      }, 300);
+    }
+
     // 为传入的弹幕对象添加一个随机ID和isNew标记
     const dataWithId = {
       ...data,
       randomId: nanoid(), // 生成一个随机ID
       disappearAt, // 添加消失时间
       isNew: true, // 标记为新弹幕，用于动画
+      timestamp: Date.now(), // 添加时间戳记录插入时间
     };
 
     danmakuList.value.unshift(dataWithId);
-    // Limit the list size AFTER adding the new item
-    while (danmakuList.value.length > maxItems.value) {
-      danmakuList.value.pop();
+
+    // 优化超出长度的弹幕处理 - 改为标记并动画方式移除
+    if (danmakuList.value.length > maxItems.value) {
+      // 找到要移除的项目
+      const itemsToRemove = danmakuList.value.slice(maxItems.value);
+      itemsToRemove.forEach(item => {
+        if (!pendingRemovalItems.value.includes(item.randomId)) {
+          pendingRemovalItems.value.push(item.randomId);
+        }
+      });
+
+      // 延迟移除，给动画足够时间
+      setTimeout(() => {
+        danmakuList.value = danmakuList.value.filter(item =>
+          !pendingRemovalItems.value.includes(item.randomId) ||
+          item.timestamp && Date.now() - item.timestamp < setting.value!.animationDuration
+        );
+
+        // 更新待移除列表
+        pendingRemovalItems.value = pendingRemovalItems.value.filter(id =>
+          danmakuList.value.some(item => item.randomId === id)
+        );
+      }, setting.value.animationDuration || 300);
     }
 
     // 设置一个定时器，在动画完成后移除isNew标记
@@ -97,11 +134,20 @@
     if (!setting.value || setting.value.autoDisappearTime <= 0) return;
 
     const now = Date.now();
-    // 让弹幕有足够时间完成消失动画后再从列表中移除
-    danmakuList.value = danmakuList.value.filter(item => {
-      // 如果设置了消失时间，则在消失时间+动画时长后才真正移除
-      const animationDuration = setting.value?.animationDuration || 300;
-      return !item.disappearAt || (item.disappearAt + animationDuration) > now;
+    const animationDuration = setting.value.animationDuration || 300;
+
+    // 先标记将要消失的弹幕
+    danmakuList.value.forEach(item => {
+      if (item.disappearAt && item.disappearAt <= now && !pendingRemovalItems.value.includes(item.randomId)) {
+        // 标记为待移除，但还不实际移除
+        pendingRemovalItems.value.push(item.randomId);
+
+        // 延迟删除，让动画有时间完成
+        setTimeout(() => {
+          danmakuList.value = danmakuList.value.filter(d => d.randomId !== item.randomId);
+          pendingRemovalItems.value = pendingRemovalItems.value.filter(id => id !== item.randomId);
+        }, animationDuration);
+      }
     });
   }
 
@@ -174,27 +220,34 @@
   <div
     v-else
     class="danmaku-window"
-    :class="{ 'has-items': hasItems }"
+    :class="{ 'has-items': hasItems, 'batch-update': isInBatchUpdate }"
   >
     <div
       ref="scrollContainerRef"
       class="danmaku-list"
     >
-      <!-- 移除 TransitionGroup，使用普通 div -->
-      <div class="danmaku-list-container">
+      <!-- 使用TransitionGroup替代普通div -->
+      <TransitionGroup
+        name="danmaku-list"
+        tag="div"
+        class="danmaku-list-container"
+      >
         <div
           v-for="item in danmakuList"
           :key="item.randomId"
           :data-type="item.type"
           class="danmaku-item"
-          :class="{ 'danmaku-item-new': item.isNew }"
+          :class="{
+            'danmaku-item-leaving': pendingRemovalItems.includes(item.randomId),
+            'batch-item': isInBatchUpdate
+          }"
         >
           <ClientDanmakuItem
             :item="item"
             :setting="setting"
           />
         </div>
-      </div>
+      </TransitionGroup>
     </div>
   </div>
 </template>
@@ -257,6 +310,7 @@
     gap: var(--dw-item-spacing);
     padding-bottom: 8px; /* 添加底部内边距以防止项目溢出 */
     box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
+    position: relative; /* 为TransitionGroup添加相对定位 */
   }
 
   .danmaku-list.reverse {
@@ -276,35 +330,101 @@
     border-radius: 4px;
   }
 
-  /* 弹幕进入动画 */
+  /* 弹幕项样式 */
   .danmaku-item {
     transform-origin: center left;
     transition: all var(--dw-animation-duration) ease;
+    /* 添加硬件加速，防止文字模糊 */
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: subpixel-antialiased;
   }
 
-  .danmaku-item-new {
-    animation: danmaku-in var(--dw-animation-duration) ease-out forwards;
+  /* 正在离开的弹幕项样式 */
+  .danmaku-item-leaving {
+    animation: danmaku-leave var(--dw-animation-duration) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0.8; /* 轻微降低不透明度，提高视觉层次感 */
+    z-index: -1; /* 确保离开的项在其他项下方 */
   }
 
-  @keyframes danmaku-in {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
+  /* 批量更新模式下的优化 */
+  .batch-update .danmaku-list-move {
+    transition-duration: 100ms !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .batch-item {
+    transition-duration: 100ms !important;
+  }
+
+  /* TransitionGroup动画效果 */
+  .danmaku-list-enter-active,
+  .danmaku-list-leave-active,
+  .danmaku-list-move {
+    transition: all var(--dw-animation-duration) cubic-bezier(0.55, 0, 0.1, 1);
+    /* 确保动画过程中文字不模糊 */
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+
+  .danmaku-list-leave-active {
+    position: absolute;
+    pointer-events: none;
+    z-index: -1;
+    width: 100%;
+  }
+
+  .danmaku-list-enter-from {
+    opacity: 0;
+    transform: scaleY(0.5) translateX(-30px) translateZ(0);
+  }
+
+  .danmaku-list-enter-to {
+    opacity: 1;
+    transform: scaleY(1) translateX(0) translateZ(0);
+  }
+
+  .danmaku-list-leave-to {
+    opacity: 0;
+    transform: scaleY(0.5) translateX(30px) translateZ(0);
+  }
+
+  /* 处理已有弹幕的移动动画 */
+  .danmaku-list-move {
+    transition: transform var(--dw-animation-duration) cubic-bezier(0.55, 0, 0.1, 1);
+    /* 确保移动动画时文字不模糊 */
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  /* 根据弹幕类型提供不同的动画特性 */
+  [data-type="3"] { /* 普通弹幕 */
+    --transition-delay: 0.02s;
+  }
+
+  [data-type="2"] { /* 礼物 */
+    --transition-delay: 0.04s;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); /* 小弹跳效果 */
+  }
+
+  [data-type="1"] { /* SC */
+    --transition-delay: 0.05s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); /* 特殊强调效果 */
+  }
+
+  /* 添加弹幕消失动画 */
+  @keyframes danmaku-leave {
+    0% {
       opacity: 1;
-      transform: translateX(0);
+      transform: translateX(0) translateZ(0);
+      filter: blur(0px);
     }
-  }
-
-  @keyframes danmaku-out {
-    from {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    to {
+    100% {
       opacity: 0;
-      transform: translateX(20px);
+      transform: translateX(30px) translateZ(0);
+      filter: blur(1px);
     }
   }
 </style>

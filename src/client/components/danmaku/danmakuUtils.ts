@@ -3,6 +3,31 @@ import { DanmakuWindowSettings } from '../../store/useDanmakuWindow';
 import { computed, ComputedRef } from 'vue';
 import { GetGuardColor } from '@/Utils';
 
+// 粉丝勋章等级对应的颜色
+export const MEDAL_LEVEL_COLORS: { [key: number]: string } = {
+  1: '#68a49a', 2: '#5b9a8f', 3: '#539288', 4: '#4e8a80',
+  5: '#607ea0', 6: '#54708f', 7: '#4e6887', 8: '#49617e',
+  9: '#8d7a9b', 10: '#816d8f', 11: '#776385', 12: '#6e5a7c',
+  13: '#c06d80', 14: '#b66174', 15: '#ac586a', 16: '#a34f61',
+  17: '#caa44a', 18: '#bf973e', 19: '#b68c35', 20: '#ae812f',
+  21: '#347368', 22: '#2e685e', 23: '#285e55', 24: '#25564e',
+  25: '#354b86', 26: '#2e4179', 27: '#293a6f', 28: '#243466',
+  29: '#624180', 30: '#573873', 31: '#4f3168', 32: '#482b5f',
+  33: '#a23e54', 34: '#92364a', 35: '#843042', 36: '#772a3b',
+  37: '#f38b3c', 38: '#e87b2e', 39: '#de6e23', 40: '#d5621a'
+};
+
+// 获取粉丝勋章颜色
+export function getMedalColor(level: number): string {
+  // 处理超过40级的情况，颜色循环使用
+  if (level > 40) {
+    level = 40;
+  }
+
+  // 如果找不到对应等级颜色或者等级小于1，返回默认颜色
+  return MEDAL_LEVEL_COLORS[level] || '#999999';
+}
+
 export interface BaseDanmakuItemProps {
   item: EventModel & { randomId: string; isNew?: boolean; disappearAt?: number; };
   setting: DanmakuWindowSettings;
@@ -129,7 +154,7 @@ export function useDanmakuUtils(
 
   // 获取用户名显示
   const displayName = computed(() => {
-    return props.item.name || '匿名用户';
+    return props.item.uname || '匿名用户';
   });
 
   // 获取消息显示内容
@@ -164,6 +189,14 @@ export function useDanmakuUtils(
     return undefined; // 普通消息使用默认颜色
   });
 
+  // 计算粉丝勋章颜色
+  const medalColor = computed(() => {
+    if (props.item.fans_medal_level && props.item.fans_medal_level > 0) {
+      return getMedalColor(props.item.fans_medal_level);
+    }
+    return '#999999'; // 默认颜色
+  });
+
   return {
     scColorClass,
     typeClass,
@@ -175,7 +208,8 @@ export function useDanmakuUtils(
     priceText,
     displayName,
     displayContent,
-    textModeColor
+    textModeColor,
+    medalColor // 添加粉丝勋章颜色计算属性
   };
 }
 

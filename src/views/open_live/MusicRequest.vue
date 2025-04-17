@@ -281,7 +281,7 @@ async function onGetEvent(data: EventModel) {
     const lastRequest = cooldown.value[data.uid]
     if (Date.now() - lastRequest < settings.value.orderCooldown * 1000) {
       message.info(
-        `[${data.name}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`,
+        `[${data.uname}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`,
       )
       return
     }
@@ -290,13 +290,13 @@ async function onGetEvent(data: EventModel) {
   const result = await searchMusic(name)
   if (result) {
     if (settings.value.blacklist.includes(result.name)) {
-      message.warning(`[${data.name}] 点歌失败，因为 ${result.name} 在黑名单中`)
+      message.warning(`[${data.uname}] 点歌失败，因为 ${result.name} 在黑名单中`)
       return
     }
     cooldown.value[data.uid] = Date.now()
     const music = {
       from: {
-        name: data.name,
+        name: data.uname,
         uid: data.uid,
         guard_level: data.guard_level,
         fans_medal_level: data.fans_medal_level,
