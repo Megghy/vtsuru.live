@@ -59,16 +59,16 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Message,
-          name: info[2][1],
+          uname: info[2][1],
           uid: info[2][0],
           msg: info[1],
           price: 0,
           num: 1,
           time: Date.now(),
           guard_level: info[7],
-          fans_medal_level: info[0][15].medal?.level,
-          fans_medal_name: info[0][15].medal?.name,
-          fans_medal_wearing_status: info[0][15].medal?.is_light === 1,
+          fans_medal_level: info[0][15].user.medal?.level,
+          fans_medal_name: info[0][15].user.medal?.name,
+          fans_medal_wearing_status: info[0][15].user.medal?.is_light === 1,
           emoji: info[0]?.[13]?.url?.replace("http://", "https://") || '',
           uface: info[0][15].user.base.face.replace("http://", "https://"),
           open_id: '',
@@ -85,7 +85,7 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Gift,
-          name: data.uname,
+          uname: data.uname,
           uid: data.uid,
           msg: data.giftName,
           price: data.price / 1000,
@@ -110,7 +110,7 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.SC,
-          name: data.user_info.uname,
+          uname: data.user_info.uname,
           uid: data.uid,
           msg: data.message,
           price: data.price,
@@ -135,7 +135,7 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Guard,
-          name: data.username,
+          uname: data.username,
           uid: data.uid,
           msg: data.gift_name,
           price: data.price / 1000,
@@ -160,7 +160,7 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.Enter,
-          name: data.uname,
+          uname: data.uname,
           uid: data.uid,
           msg: '',
           price: 0,
@@ -185,7 +185,7 @@ export default class DirectClient extends BaseDanmakuClient {
       d(
         {
           type: EventDataTypes.SCDel,
-          name: '',
+          uname: '',
           uid: 0,
           msg: JSON.stringify(data.ids),
           price: 0,

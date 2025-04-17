@@ -66,16 +66,23 @@ function generateTestDanmaku(): EventModel {
   const randomTime = Date.now();
   const randomOuid = `oid_${randomUid}`;
 
+  // 扩展粉丝勋章相关的随机数据
+  const hasMedal = Math.random() > 0.3; // 70% 概率拥有粉丝勋章
+  const isWearingMedal = hasMedal && Math.random() > 0.2; // 佩戴粉丝勋章的概率
+  const medalNames = ['鸽子团', '鲨鱼牌', '椰奶', '饼干', '猫猫头', '南极', '狗妈', '可爱', '团子', '喵'];
+  const randomMedalName = medalNames[Math.floor(Math.random() * medalNames.length)];
+  const randomMedalLevel = isWearingMedal ? Math.floor(Math.random() * 40) + 1 : 0;
+
   const baseEvent: Partial<EventModel> = {
-    name: randomName,
+    uname: randomName,
     uface: `https://i0.hdslb.com/bfs/face/member/noface.jpg`, // Placeholder for user avatar
     uid: randomUid,
     open_id: randomOuid, // Assuming open_id is same as ouid for test
     time: randomTime,
     guard_level: Math.floor(Math.random() * 4) as GuardLevel,
-    fans_medal_level: Math.floor(Math.random() * 41),
-    fans_medal_name: '测试牌',
-    fans_medal_wearing_status: Math.random() > 0.5,
+    fans_medal_level: randomMedalLevel,
+    fans_medal_name: randomMedalName,
+    fans_medal_wearing_status: isWearingMedal,
     ouid: randomOuid,
   };
 
@@ -243,8 +250,6 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       danmakuWindowSetting.value.y = position.y;
     });
 
-    isWindowOpened.value = true;
-
     bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL);
     bc.onmessage = (event: MessageEvent<DanmakuWindowBCData>) => {
       if (event.data.type === 'window-ready') {
@@ -350,7 +355,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   // 新增：发送测试弹幕函数
   function sendTestDanmaku() {
     if (!isWindowOpened.value || !bc) {
-      console.warn('[danmaku-window] 窗口未打开或 BC 未初始化，无法发送测试弹幕');
+      console.warn('[danmaku-window] 窗口未打开或 BroadcastChannel 未初始化，无法发送测试弹幕');
       return;
     }
     const testData = generateTestDanmaku();

@@ -6,6 +6,7 @@ import { QueryBiliAPI } from '../data/utils';
 import { BiliUserProfile } from '../data/models';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 import { ref, computed, shallowRef } from 'vue';
+import { StorageSerializers } from '@vueuse/core';
 
 // --- 常量定义 ---
 // Tauri Store 存储键名
@@ -72,7 +73,11 @@ type CookieCloudState = 'unset' | 'valid' | 'invalid' | 'syncing';
 export const useBiliCookie = defineStore('biliCookie', () => {
   // --- 依赖和持久化存储实例 ---
   // 使用 useTauriStore 获取持久化存储目标
-  const biliCookieStore = useTauriStore().getTarget<BiliCookieStoreData>(BILI_COOKIE_KEY);
+  const biliCookieStore = useStorage<BiliCookieStoreData>(BILI_COOKIE_KEY, {
+    cookie: '',
+    refreshToken: undefined, // 可选，未使用
+    lastRefresh: new Date(0), // 默认值
+  }); // 为保持响应性
   const cookieCloudStore = useTauriStore().getTarget<CookieCloudConfig>(COOKIE_CLOUD_KEY);
   const userInfoCacheStore = useTauriStore().getTarget<UserInfoCache>(USER_INFO_CACHE_KEY);
 
@@ -328,7 +333,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
 
     // 1. 加载持久化数据
     const [storedCookieData, storedCloudConfig, storedUserInfo] = await Promise.all([
-      biliCookieStore.get(),
+      biliCookieStore.value,
       cookieCloudStore.get(),
       userInfoCacheStore.get(),
     ]);
@@ -411,7 +416,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     // 如果没有尝试云同步，或者云同步失败，则检查本地 Cookie
     if (!cloudSyncAttempted || !cloudSyncSuccess) {
       debug('[BiliCookie] 检查本地存储的 Cookie 有效性...');
-      const storedCookie = (await biliCookieStore.get())?.cookie;
+      const storedCookie = biliCookieStore.value?.cookie;
       if (storedCookie) {
         const { valid } = await _checkCookieValidity(storedCookie);
         // 只有在云同步未成功时才更新状态，避免覆盖云同步设置的状态
@@ -450,7 +455,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
         lastRefresh: new Date() // 更新刷新时间戳
       };
       try {
-        await biliCookieStore.set(dataToStore);
+        biliCookieStore.value = dataToStore; // 使用响应式存储
         info('[BiliCookie] 新 Bilibili Cookie 已验证并保存');
         _updateCookieState(true, true); // 更新状态为存在且有效
       } catch (err) {
@@ -473,7 +478,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
    * @returns Promise<string | undefined> Cookie 字符串或 undefined
    */
   const getBiliCookie = async (): Promise<string | undefined> => {
-    const data = await biliCookieStore.get();
+    const data = biliCookieStore.value;
     return data?.cookie;
   };
 
@@ -489,11 +494,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
       debug('[BiliCookie] 定时检查已停止');
     }
     // 清除 Cookie 存储
-    try {
-      await biliCookieStore.delete();
-    } catch (err) {
-      error('[BiliCookie] 清除 Bilibili Cookie 存储失败: ' + String(err));
-    }
+    biliCookieStore.value = undefined; // 清除持久化存储
     // 清除用户信息缓存
     await _clearUserInfoCache();
     // 重置状态变量
@@ -562,6 +563,8 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     cookieCloudState: computed(() => cookieCloudState.value), // 只读 ref
     uId: computed(() => uId.value), // 只读 ref
     userInfo, // computed 属性本身就是只读的
+
+    cookie: computed(() => biliCookieStore.value?.cookie), // 只读 ref
 
     // 方法
     init,

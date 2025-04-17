@@ -542,6 +542,89 @@
       </NFlex>
     </NCard>
 
+    <!-- Overall Status & Connection Details -->
+    <NCard
+      title="运行状态 & 连接"
+      embedded
+      style="width: 100%; max-width: 800px;"
+    >
+      <template #header-extra>
+        <NTag
+          :type="connectionStatusType"
+          size="small"
+        >
+          <template #icon>
+            <NIcon :component="isConnected ? CheckmarkCircleOutline : AlertCircleOutline" />
+          </template>
+          {{ connectionStatusText }}
+        </NTag>
+      </template>
+      <NDescriptions
+        label-placement="top"
+        bordered
+        :columns="2"
+        size="small"
+        style="overflow-x: auto;"
+      >
+        <NDescriptionsItem label="启动时间">
+          <NIcon :component="TimeOutline" /> {{ formattedStartedAt }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="运行时长">
+          <NIcon :component="TimerOutline" /> {{ uptime }}
+        </NDescriptionsItem>
+        <NDescriptionsItem label="SignalR 服务">
+          <NFlex
+            align="center"
+            size="small"
+            :wrap="false"
+          >
+            <NTag
+              :type="signalRStateType"
+              size="tiny"
+            >
+              {{ signalRStateText }}
+            </NTag>
+            <NEllipsis style="max-width: 150px;">
+              {{ webfetcher.signalRId ?? 'N/A' }}
+            </NEllipsis>
+          </NFlex>
+        </NDescriptionsItem>
+        <NDescriptionsItem label="弹幕服务器">
+          <NFlex
+            align="center"
+            size="small"
+            :wrap="false"
+          >
+            <NTag
+              :type="danmakuClientStateType"
+              size="tiny"
+            >
+              {{ danmakuClientStateText }}
+            </NTag>
+            <NEllipsis style="max-width: 150px;">
+              {{ webfetcher.danmakuServerUrl ?? 'N/A' }}
+            </NEllipsis> <!-- Assuming this is exposed -->
+          </NFlex>
+        </NDescriptionsItem>
+        <NDescriptionsItem label="网络状态">
+          <NFlex
+            align="center"
+            size="small"
+          >
+            <NTag
+              :type="networkStatus === 'online' ? 'success' : 'error'"
+              size="tiny"
+            >
+              <template #icon>
+                <NIcon :component="WifiOutline" />
+              </template>
+              {{ networkStatus === 'online' ? '在线' : '离线' }}
+            </NTag>
+          </NFlex>
+        </NDescriptionsItem>
+      </NDescriptions>
+    </NCard>
+
     <!-- Credentials & Account -->
     <NCard
       title="凭据 & 账户"
@@ -785,89 +868,6 @@
           </NTabPane>
         </NTabs>
       </NFlex>
-    </NCard>
-
-    <!-- Overall Status & Connection Details -->
-    <NCard
-      title="运行状态 & 连接"
-      embedded
-      style="width: 100%; max-width: 800px;"
-    >
-      <template #header-extra>
-        <NTag
-          :type="connectionStatusType"
-          size="small"
-        >
-          <template #icon>
-            <NIcon :component="isConnected ? CheckmarkCircleOutline : AlertCircleOutline" />
-          </template>
-          {{ connectionStatusText }}
-        </NTag>
-      </template>
-      <NDescriptions
-        label-placement="top"
-        bordered
-        :columns="2"
-        size="small"
-        style="overflow-x: auto;"
-      >
-        <NDescriptionsItem label="启动时间">
-          <NIcon :component="TimeOutline" /> {{ formattedStartedAt }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="运行时长">
-          <NIcon :component="TimerOutline" /> {{ uptime }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="SignalR 服务">
-          <NFlex
-            align="center"
-            size="small"
-            :wrap="false"
-          >
-            <NTag
-              :type="signalRStateType"
-              size="tiny"
-            >
-              {{ signalRStateText }}
-            </NTag>
-            <NEllipsis style="max-width: 150px;">
-              {{ webfetcher.signalRId ?? 'N/A' }}
-            </NEllipsis>
-          </NFlex>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="弹幕服务器">
-          <NFlex
-            align="center"
-            size="small"
-            :wrap="false"
-          >
-            <NTag
-              :type="danmakuClientStateType"
-              size="tiny"
-            >
-              {{ danmakuClientStateText }}
-            </NTag>
-            <NEllipsis style="max-width: 150px;">
-              {{ webfetcher.danmakuServerUrl ?? 'N/A' }}
-            </NEllipsis> <!-- Assuming this is exposed -->
-          </NFlex>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="网络状态">
-          <NFlex
-            align="center"
-            size="small"
-          >
-            <NTag
-              :type="networkStatus === 'online' ? 'success' : 'error'"
-              size="tiny"
-            >
-              <template #icon>
-                <NIcon :component="WifiOutline" />
-              </template>
-              {{ networkStatus === 'online' ? '在线' : '离线' }}
-            </NTag>
-          </NFlex>
-        </NDescriptionsItem>
-      </NDescriptions>
     </NCard>
 
     <!-- Live Stream Info -->

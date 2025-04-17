@@ -128,7 +128,7 @@ export async function initAll(isOnBoot: boolean) {
         await useWindow.getEmojiData();
       }
       if (await w.isVisible()) {
-        //useWindow.isDanmakuWindowOpen = true;
+        useWindow.isDanmakuWindowOpen = true;
 
         console.log('弹幕窗口已打开');
       }

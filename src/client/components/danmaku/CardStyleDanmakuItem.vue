@@ -19,7 +19,8 @@ import { VehicleShip24Filled } from '@vicons/fluent';
     showAvatar,
     guardColor,
     scColorClass,
-    parsedMessage
+    parsedMessage,
+    medalColor
   } = danmakuUtils;
 </script>
 
@@ -44,7 +45,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
           class="username"
           :style="{ color: item.type === EventDataTypes.SC ? '#222' : '#fff' }"
         >
-          {{ item?.name || '匿名用户' }}
+          {{ item?.uname || '匿名用户' }}
         </span>
         <!-- 卡片右侧徽章 -->
         <template v-if="item.type === EventDataTypes.SC">
@@ -101,7 +102,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
           class="username"
           :style="{ color: '#fff' }"
         >
-          {{ item?.name || '匿名用户' }}
+          {{ item?.uname || '匿名用户' }}
         </span>
         <span
           v-if="item.guard_level && item.guard_level > 0"
@@ -112,6 +113,18 @@ import { VehicleShip24Filled } from '@vicons/fluent';
             :component="VehicleShip24Filled"
             size="12"
           />
+        </span>
+        <!-- 添加粉丝勋章显示 -->
+        <span
+          v-if="setting.showFansMedal && item.fans_medal_wearing_status && item.fans_medal_level > 0"
+          class="fans-medal"
+          :style="{ backgroundColor: medalColor }"
+        >
+          <span class="medal-name">{{ item.fans_medal_name }}</span>
+          <span
+            class="medal-level"
+            :style="{ backgroundColor: `${medalColor}CC` }"
+          >{{ item.fans_medal_level }}</span>
         </span>
         <template v-if="item.type === EventDataTypes.Enter">
           <span class="enter-badge">进入了直播间</span>
@@ -264,7 +277,6 @@ import { VehicleShip24Filled } from '@vicons/fluent';
   .card-header {
     display: flex;
     align-items: center;
-    gap: 6px;
     margin-bottom: 4px;
     min-height: var(--dw-avatar-size);
   }
@@ -386,6 +398,34 @@ import { VehicleShip24Filled } from '@vicons/fluent';
     border-radius: 4px;
     margin-left: 4px;
     flex-shrink: 0;
+  }
+
+  /* 粉丝勋章样式 */
+  .fans-medal {
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-size: 0.75em;
+    height: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .medal-name {
+    padding: 0 3px;
+    color: #fff;
+    max-width: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .medal-level {
+    padding: 0 3px;
+    color: #fff;
+    font-weight: bold;
   }
 
   .enter-badge {

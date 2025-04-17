@@ -35,6 +35,14 @@ export default {
       }
     },
     {
+      path: 'auto-action',
+      name: 'client-auto-action-manage',
+      component: () => import('@/client/ClientAutoAction.vue'),
+      meta: {
+        title: '自动操作管理',
+      }
+    },
+    {
       path: 'danmaku-window',
       name: 'client-danmaku-window-redirect',
       redirect: {

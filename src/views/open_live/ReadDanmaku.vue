@@ -357,7 +357,7 @@ function onGetEvent(data: EventModel) {
       exist.combineCount ??= 0
       exist.combineCount += data.num
       console.log(
-        `[TTS] ${data.name} 增加已存在礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`,
+        `[TTS] ${data.uname} 增加已存在礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`,
       )
       return
     }
@@ -401,7 +401,7 @@ function getTextFromDanmaku(data: EventModel | undefined) {
   text = text
     .replace(
       templateConstants.name.regex,
-      settings.value.voiceType == 'api' && settings.value.splitText ? `'${data.name}'` : data.name,
+      settings.value.voiceType == 'api' && settings.value.splitText ? `'${data.uname}'` : data.uname,
     )
     .replace(templateConstants.count.regex, data.num.toString())
     .replace(templateConstants.price.regex, data.price.toString())
@@ -483,7 +483,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Message:
       forceSpeak({
         type: EventDataTypes.Message,
-        name: accountInfo.value?.name ?? '测试用户',
+        uname: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '测试弹幕',
         price: 0,
@@ -502,7 +502,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.SC:
       forceSpeak({
         type: EventDataTypes.SC,
-        name: accountInfo.value?.name ?? '测试用户',
+        uname: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '测试留言',
         price: 30,
@@ -521,7 +521,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Guard:
       forceSpeak({
         type: EventDataTypes.Guard,
-        name: accountInfo.value?.name ?? '测试用户',
+        uname: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '舰长',
         price: 0,
@@ -540,7 +540,7 @@ function test(type: EventDataTypes) {
     case EventDataTypes.Gift:
       forceSpeak({
         type: EventDataTypes.Gift,
-        name: accountInfo.value?.name ?? '测试用户',
+        uname: accountInfo.value?.name ?? '测试用户',
         uid: accountInfo.value?.biliId ?? 0,
         msg: '测试礼物',
         price: 5,
@@ -790,7 +790,7 @@ onUnmounted(() => {
                     > SC</NTag>
                   </span>
                   <NText>
-                    {{ item.data.name }}
+                    {{ item.data.uname }}
                   </NText>
                   <NText depth="3">
                     {{ getTextFromDanmaku(item.data) }}

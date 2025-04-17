@@ -253,11 +253,11 @@ async function getAllSong() {
 }
 async function addSong(danmaku: EventModel) {
   console.log(
-    `[OPEN-LIVE-LIVE-REQUEST] 收到 [${danmaku.name}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
+    `[OPEN-LIVE-LIVE-REQUEST] 收到 [${danmaku.uname}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
   )
   if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
     notice.info({
-      title: `${danmaku.name} 点播失败`,
+      title: `${danmaku.uname} 点播失败`,
       description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',
       meta: () => h(NTime, { type: 'relative', time: Date.now(), key: updateKey.value }),
     })
@@ -266,18 +266,18 @@ async function addSong(danmaku: EventModel) {
   if (accountInfo.value) {
     await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL + 'try-add', danmaku).then((data) => {
       if (data.code == 200) {
-        message.success(`[${danmaku.name}] 添加曲目: ${data.data.songName}`)
+        message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
         if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
       } else {
         //message.error(`[${danmaku.name}] 添加曲目失败: ${data.message}`)
         const time = Date.now()
         notice.warning({
-          title: danmaku.name + ' 点播失败',
+          title: danmaku.uname + ' 点播失败',
           description: data.message,
           duration: isWarnMessageAutoClose.value ? 3000 : 0,
           meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
         })
-        console.log(`[OPEN-LIVE-LIVE-REQUEST] [${danmaku.name}] 添加曲目失败: ${data.message}`)
+        console.log(`[OPEN-LIVE-LIVE-REQUEST] [${danmaku.uname}] 添加曲目失败: ${data.message}`)
       }
     })
   } else {
@@ -288,7 +288,7 @@ async function addSong(danmaku: EventModel) {
       from: danmaku.type == EventDataTypes.Message ? SongRequestFrom.Danmaku : SongRequestFrom.SC,
       scPrice: danmaku.type == EventDataTypes.SC ? danmaku.price : 0,
       user: {
-        name: danmaku.name,
+        name: danmaku.uname,
         uid: danmaku.uid,
         oid: danmaku.open_id,
         face: danmaku.uface,
@@ -302,7 +302,7 @@ async function addSong(danmaku: EventModel) {
       id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
     } as SongRequestInfo
     localActiveSongs.value.unshift(songData)
-    message.success(`[${danmaku.name}] 添加: ${songData.songName}`)
+    message.success(`[${danmaku.uname}] 添加: ${songData.songName}`)
   }
 }
 async function addSongManual() {

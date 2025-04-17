@@ -136,7 +136,7 @@ const priceText = computed(() => {
 
 // 获取用户名显示
 const displayName = computed(() => {
-  return props.item.name || '匿名用户';
+  return props.item.uname || '匿名用户';
 });
 
 // 获取消息显示内容
