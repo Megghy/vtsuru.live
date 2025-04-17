@@ -8,12 +8,12 @@ const props = defineProps<BaseDanmakuItemProps>();
 
 // 使用工具函数获取基础计算属性
 const emojiData = useDanmakuWindow().emojiData;
-const { isDisappearing, typeClass } = useDanmakuUtils(props, emojiData);
+const { typeClass } = useDanmakuUtils(props, emojiData);
 </script>
 
 <template>
   <div
-    :class="['danmaku-item-content', typeClass, { 'disappearing': isDisappearing }]"
+    :class="['danmaku-item-content', typeClass]"
     :data-disappear="item.disappearAt"
   >
     <!-- 根据设置选择显示风格 -->
@@ -46,23 +46,5 @@ const { isDisappearing, typeClass } = useDanmakuUtils(props, emojiData);
     min-height: 0;
     font-size: var(--dw-font-size);
     color: var(--dw-text-color);
-  }
-
-  .danmaku-item-content.disappearing {
-    animation: danmaku-out var(--dw-animation-duration, 300ms) ease forwards;
-    pointer-events: none;
-  }
-
-  /* 动画相关 */
-  @keyframes danmaku-out {
-    from {
-      opacity: var(--dw-opacity);
-      transform: translateX(0);
-    }
-
-    to {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
   }
 </style>

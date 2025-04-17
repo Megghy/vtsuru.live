@@ -191,18 +191,3 @@ defineExpose({
 <template>
   <slot />
 </template>
-
-<style scoped>
-/* 公共基础动画样式 */
-@keyframes danmaku-out {
-  from {
-    opacity: var(--dw-opacity);
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-}
-</style>
