@@ -399,7 +399,7 @@ function renderCell(value: string | number) {
 }
 
 async function updateSong() {
-  if (props.songs.some((s) => s.name == updateSongModel.value.name)) {
+  if (props.songs.filter((s) => s.name == updateSongModel.value.name).length > 1) {
     message.error('已存在相同名称的歌曲')
     return
   }

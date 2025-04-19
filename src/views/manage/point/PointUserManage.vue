@@ -5,6 +5,7 @@ import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
 import { objectsToCSV } from '@/Utils'
 import { Info24Filled } from '@vicons/fluent'
+import { Warning24Regular } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
@@ -63,12 +64,17 @@ const ps = ref(25)
 // 弹窗控制
 const showModal = ref(false)
 const showGivePointModal = ref(false)
+const showResetAllPointsModal = ref(false)
 const isLoading = ref(true)
 
 // 积分调整表单
 const addPointCount = ref(0)
 const addPointReason = ref<string>('')
 const addPointTarget = ref<number>()
+
+// 重置所有积分确认
+const resetConfirmText = ref('')
+const RESET_CONFIRM_TEXT = '我确认删除'
 
 // 用户数据
 const users = ref<ResponsePointUserModel[]>([])
@@ -277,6 +283,37 @@ async function deleteUser(user: ResponsePointUserModel) {
   }
 }
 
+// 重置所有用户积分
+async function resetAllPoints() {
+  // 验证确认文本
+  if (resetConfirmText.value !== RESET_CONFIRM_TEXT) {
+    message.error(`请输入"${RESET_CONFIRM_TEXT}"以确认操作`)
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const data = await QueryGetAPI(POINT_API_URL + 'reset')
+
+    if (data.code == 200) {
+      message.success('已重置所有用户积分')
+      resetConfirmText.value = ''
+      showResetAllPointsModal.value = false
+
+      // 重新加载用户数据
+      setTimeout(() => {
+        refresh()
+      }, 1500)
+    } else {
+      message.error('重置失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('重置失败: ' + err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // 导出用户积分数据
 function exportData() {
   try {
@@ -359,6 +396,12 @@ onMounted(async () => {
             @click="exportData"
           >
             导出积分数据
+          </NButton>
+          <NButton
+            type="error"
+            @click="showResetAllPointsModal = true"
+          >
+            重置所有积分
           </NButton>
         </NFlex>
       </template>
@@ -513,6 +556,46 @@ onMounted(async () => {
         @click="givePoint"
       >
         {{ addPointCount > 0 ? '给予' : '扣除' }}
+      </NButton>
+    </NFlex>
+  </NModal>
+
+  <!-- 重置所有用户积分弹窗 -->
+  <NModal
+    v-model:show="showResetAllPointsModal"
+    preset="card"
+    style="max-width: 500px"
+    title="重置所有用户积分"
+  >
+    <NFlex
+      vertical
+      :gap="16"
+    >
+      <NFlex
+        align="center"
+        :gap="8"
+      >
+        <NIcon
+          :component="Warning24Regular"
+          color="red"
+        />
+        <NText type="error">
+          警告：此操作将删除所有用户积分记录，不可恢复！
+        </NText>
+      </NFlex>
+      <NText>请输入 <b>"{{ RESET_CONFIRM_TEXT }}"</b> 以确认操作</NText>
+      <NInput
+        v-model:value="resetConfirmText"
+        placeholder="请输入确认文本"
+      />
+
+      <NButton
+        type="error"
+        :loading="isLoading"
+        @click="resetAllPoints"
+        :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
+      >
+        确认重置所有用户积分
       </NButton>
     </NFlex>
   </NModal>

@@ -1,6 +1,6 @@
 import { useTauriStore } from './useTauriStore';
 
-export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy';
+export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'message-failed' | 'live-danmaku-failed';
 export type NotificationSettings = {
   enableTypes: NotificationType[];
 };
@@ -29,7 +29,7 @@ export const useSettings = defineStore('settings', () => {
     loginType: 'qrcode',
     enableNotification: true,
     notificationSettings: {
-      enableTypes: ['question-box', 'danmaku'],
+      enableTypes: ['question-box', 'danmaku', 'message-failed'],
     },
 
     dev_disableDanmakuClient: false,
@@ -39,7 +39,7 @@ export const useSettings = defineStore('settings', () => {
   async function init() {
     settings.value = (await store.get()) || Object.assign({}, defaultSettings);
     settings.value.notificationSettings ??= defaultSettings.notificationSettings;
-    settings.value.notificationSettings.enableTypes ??= [ 'question-box', 'danmaku' ];
+    settings.value.notificationSettings.enableTypes ??= [ 'question-box', 'danmaku', 'message-failed' ];
   }
   async function save() {
     await store.set(settings.value);

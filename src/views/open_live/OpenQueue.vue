@@ -132,13 +132,13 @@
   // 队列设置 (登录后使用账户设置, 否则使用默认设置)
   const settings = computed({
     get: () => {
-      if (accountInfo.value) {
+      if (accountInfo.value.id) {
         return accountInfo.value.settings.queue;
       }
       return defaultSettings;
     },
     set: (value) => {
-      if (accountInfo.value) {
+      if (accountInfo.value.id) {
         accountInfo.value.settings.queue = value;
       }
     },
@@ -215,7 +215,7 @@
 
   // 获取所有队列数据
   async function getAll() {
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       try {
         isLoading.value = true;
         const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-all', {
@@ -258,7 +258,7 @@
       return;
     }
 
-    if (accountInfo.value) { // 已登录，调用 API
+    if (accountInfo.value.id) { // 已登录，调用 API
       try {
         const data = await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL + 'try-add', danmaku);
         if (data.code == 200) {
@@ -321,7 +321,7 @@
       message.error('请输入用户名');
       return;
     }
-    if (accountInfo.value) { // 已登录，调用 API
+    if (accountInfo.value.id) { // 已登录，调用 API
       try {
         const data = await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL + 'add', {
           name: newQueueName.value,
@@ -484,7 +484,7 @@
 
   // 更新功能启用状态
   async function onUpdateFunctionEnable() {
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions));
       const isEnabling = !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.Queue);
 
@@ -508,14 +508,14 @@
           message.success(`已${isEnabling ? '启用' : '禁用'}队列功能`);
         } else {
           // 回滚状态
-          if (accountInfo.value) {
+          if (accountInfo.value.id) {
             accountInfo.value.settings.enableFunctions = oldValue;
           }
           message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${data.message}`);
         }
       } catch (err: any) {
         // 回滚状态
-        if (accountInfo.value) {
+        if (accountInfo.value.id) {
           accountInfo.value.settings.enableFunctions = oldValue;
         }
         message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${err.message || err}`);
@@ -526,7 +526,7 @@
 
   // 更新设置
   async function updateSettings() {
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       isLoading.value = true;
       try {
         const success = await SaveSetting('Queue', settings.value);
@@ -550,7 +550,7 @@
   async function deleteQueue(values: ResponseQueueModel[]) {
     if (!values || values.length === 0) return;
 
-    if (accountInfo.value) { // 已登录，调用 API
+    if (accountInfo.value.id) { // 已登录，调用 API
       isLoading.value = true;
       try {
         const idsToDelete = values.map((s) => s.id);
@@ -578,7 +578,7 @@
 
   // 取消所有活动队列项
   async function deactiveAllSongs() {
-    if (accountInfo.value) { // 已登录，调用 API
+    if (accountInfo.value.id) { // 已登录，调用 API
       isLoading.value = true;
       try {
         const data = await QueryGetAPI(QUEUE_API_URL + 'deactive');
@@ -826,7 +826,7 @@
 
   // 定时更新活动队列信息 (增量更新)
   async function updateActive() {
-    if (!accountInfo.value) return; // 未登录则不执行
+    if (!accountInfo.value.id) return; // 未登录则不执行
     try {
       const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-active', {
         id: accountInfo.value?.id,
@@ -922,7 +922,7 @@
   async function init() {
     dispose(); // 先清理旧的计时器
     // 如果登录了，获取一次全量数据
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       originQueue.value = await getAll();
     }
     // 设置定时器
@@ -945,7 +945,7 @@
   // --- 生命周期钩子 ---
   onMounted(async () => {
     // 挂载时初始化
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       // 如果已登录，同步一次设置到本地状态 (虽然 computed 会处理，但显式同步更清晰)
       settings.value = accountInfo.value.settings.queue;
     }

@@ -21,6 +21,7 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { useDanmakuWindow } from "../store/useDanmakuWindow";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
+import { useAutoAction } from "../store/useAutoAction";
 
 const accountInfo = useAccount();
 
@@ -144,6 +145,8 @@ export async function initAll(isOnBoot: boolean) {
       }
     });
   }
+
+  useAutoAction().init();
 
   clientInited.value = true;
 }

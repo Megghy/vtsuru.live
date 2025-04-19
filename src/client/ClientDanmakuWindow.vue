@@ -43,6 +43,13 @@
     // 动画和阴影
     root.style.setProperty('--dw-animation-duration', `${setting.value.animationDuration || 300}ms`);
     root.style.setProperty('--dw-shadow', setting.value.enableShadow ? `0 0 10px ${setting.value.shadowColor}` : 'none');
+
+    // 根据 enableAnimation 设置 data-animation-disabled 属性
+    if (setting.value.enableAnimation) {
+      root.removeAttribute('data-animation-disabled');
+    } else {
+      root.setAttribute('data-animation-disabled', 'true');
+    }
   }
 
   function addDanmaku(data: EventModel) {
@@ -287,11 +294,20 @@
     transition-duration: 100ms !important;
   }
 
+  /* 动画相关样式 - 根据 enableAnimation 设置应用 */
   /* 1. declare transition */
   .danmaku-list-move,
   .danmaku-list-enter-active,
   .danmaku-list-leave-active {
     transition: all var(--dw-animation-duration) cubic-bezier(0.55, 0, 0.1, 1);
+  }
+
+  /* 当禁用动画时应用的样式 */
+  :root[data-animation-disabled="true"] .danmaku-list-move,
+  :root[data-animation-disabled="true"] .danmaku-list-enter-active,
+  :root[data-animation-disabled="true"] .danmaku-list-leave-active {
+    transition: none !important;
+    animation: none !important;
   }
 
   .danmaku-list-enter-from,

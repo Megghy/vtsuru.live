@@ -86,3 +86,21 @@ export function onGoodsBuy(info: {
     });
   }
 }
+
+// 私信发送失败通知
+export function onSendPrivateMessageFailed(receiverId: number, message: string, error: any) {
+  const setting = useSettings();
+  if (setting.settings.notificationSettings.enableTypes.includes("message-failed")) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    window.$notification.error({
+      title: "私信发送失败",
+      description: `向用户 ${receiverId} 发送私信失败: ${errorMsg}`,
+      duration: 8000,
+    });
+    trySendNotification({
+      title: "私信发送失败",
+      body: `向用户 ${receiverId} 发送私信失败`,
+      extra: { type: 'message-failed' },
+    });
+  }
+}
