@@ -112,6 +112,8 @@ const isReverse = useStorage('SongRequest.Settings.Reverse', false)
 
 const isLoading = ref(false)
 const showOBSModal = ref(false)
+const obsStyleType = ref<'classic' | 'fresh'>('classic')
+const obsScrollSpeedMultiplierRef = ref(1)
 
 const settings = computed({
   get: () => {
@@ -1619,12 +1621,54 @@ onUnmounted(() => {
     >
       将等待队列以及结果显示在OBS中
     </NAlert>
-    <NDivider> 浏览 </NDivider>
+
+    <NDivider>样式与速度</NDivider>
+    <NSpace align="center">
+      <NRadioGroup
+        v-model:value="obsStyleType"
+        name="obsStyle"
+      >
+        <NSpace>
+          <NRadioButton value="classic">
+            经典黑色风格
+          </NRadioButton>
+          <NRadioButton value="fresh">
+            清新明亮风格
+          </NRadioButton>
+        </NSpace>
+      </NRadioGroup>
+      <NInputGroup style="width: 200px">
+        <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
+        <NInputNumber
+          v-model:value="obsScrollSpeedMultiplierRef"
+          :min="0.5"
+          :max="5"
+          :step="0.1"
+          placeholder="1"
+        />
+      </NInputGroup>
+      <NTooltip>
+        <template #trigger>
+          <NIcon :component="Info24Filled" />
+        </template>
+        数值越大滚动越快 (0.5 ~ 5)
+      </NTooltip>
+    </NSpace>
+
+    <NDivider>预览</NDivider>
     <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
-      <LiveRequestOBS :id="accountInfo?.id" />
+      <LiveRequestOBS
+        :id="accountInfo?.id"
+        :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeedMultiplierRef}`"
+        :style="obsStyleType"
+        :speed-multiplier="obsScrollSpeedMultiplierRef"
+      />
     </div>
     <br>
-    <NInput :value="`${CURRENT_HOST}obs/live-request?id=` + accountInfo?.id" />
+    <NInput
+      :value="`${CURRENT_HOST}obs/live-request?id=${accountInfo?.id ?? 0}&style=${obsStyleType}&speed=${obsScrollSpeedMultiplierRef}`"
+      readonly
+    />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">
@@ -1632,7 +1676,8 @@ onUnmounted(() => {
           <NLi>在 OBS 来源中添加源, 选择 浏览器</NLi>
           <NLi>在 URL 栏填入上方链接</NLi>
           <NLi>根据自己的需要调整宽度和高度 (这里是宽 280px 高 500px)</NLi>
-          <NLi>完事</NLi>
+          <NLi>样式可选"经典黑色风格"或"清新明亮风格"</NLi>
+          <NLi>使用URL中的style参数可以切换不同样式</NLi>
         </NUl>
       </NCollapseItem>
     </NCollapse>

@@ -46,3 +46,9 @@ onUnmounted(() => {
     </RouterView>
   </div>
 </template>
+
+<style>
+.body,html,.n-element,.n-layout-content {
+  background-color: transparent !important;
+}
+</style>
