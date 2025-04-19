@@ -115,13 +115,13 @@ const showOBSModal = ref(false)
 
 const settings = computed({
   get: () => {
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       return accountInfo.value.settings.songRequest
     }
     return defaultSettings
   },
   set: (value) => {
-    if (accountInfo.value) {
+    if (accountInfo.value.id) {
       accountInfo.value.settings.songRequest = value
     }
   },
@@ -231,7 +231,7 @@ const configCanEdit = computed(() => {
 const table = ref()
 
 async function getAllSong() {
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     try {
       const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-all', {
         id: accountInfo.value.id,
@@ -263,7 +263,7 @@ async function addSong(danmaku: EventModel) {
     })
     return
   }
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL + 'try-add', danmaku).then((data) => {
       if (data.code == 200) {
         message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
@@ -310,7 +310,7 @@ async function addSongManual() {
     message.error('请输入名称')
     return
   }
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL + 'add', {
       name: newSongName.value,
     }).then((data) => {
@@ -409,7 +409,7 @@ function checkMessage(msg: string) {
     .startsWith(accountInfo.value ? settings.value.orderPrefix.toLowerCase() : defaultPrefix.value)
 }
 async function onUpdateFunctionEnable() {
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
     if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
@@ -428,7 +428,7 @@ async function onUpdateFunctionEnable() {
             `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}点播功能`,
           )
         } else {
-          if (accountInfo.value) {
+          if (accountInfo.value.id) {
             accountInfo.value.settings.enableFunctions = oldValue
           }
           message.error(
@@ -444,7 +444,7 @@ async function onUpdateFunctionEnable() {
   }
 }
 async function updateSettings() {
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     isLoading.value = true
     await SaveSetting('SongRequest', settings.value)
       .then((msg) => {
@@ -714,7 +714,7 @@ function GetGuardColor(level: number | null | undefined): string {
   return ''
 }
 async function updateActive() {
-  if (!accountInfo.value) return
+  if (!accountInfo.value.id) return
   try {
     const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
       id: accountInfo.value?.id,
@@ -763,7 +763,7 @@ let timer: any
 let updateActiveTimer: any
 const updateKey = ref(0)
 onMounted(() => {
-  if (accountInfo.value) {
+  if (accountInfo.value.id) {
     settings.value = accountInfo.value.settings.songRequest
   }
   client.onEvent('danmaku', onGetDanmaku)

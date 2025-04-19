@@ -403,6 +403,20 @@ const separatorOptions = [
             </NGi>
 
             <NGi>
+              <NFormItem label="启用动画">
+                <NSwitch
+                  v-model:value="danmakuWindow.danmakuWindowSetting.enableAnimation"
+                />
+                <NText
+                  depth="3"
+                  style="margin-left: 8px"
+                >
+                  关闭可减少资源占用
+                </NText>
+              </NFormItem>
+            </NGi>
+
+            <NGi>
               <NFormItem label="最大弹幕数量">
                 <NInputNumber
                   v-model:value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"

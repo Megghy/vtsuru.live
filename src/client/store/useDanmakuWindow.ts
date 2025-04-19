@@ -20,6 +20,7 @@ export type DanmakuWindowSettings = {
   reverseOrder: boolean; // 是否倒序显示（从下往上）
   filterTypes: string[]; // 要显示的弹幕类型
   animationDuration: number; // 动画持续时间
+  enableAnimation: boolean; // 是否启用动画效果
   backgroundColor: string; // 背景色
   textColor: string; // 文字颜色
   alwaysOnTop: boolean; // 是否总在最前
@@ -182,6 +183,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     textStyleCompact: false, // 新增：默认不使用紧凑布局
     textStyleShowType: true, // 新增：默认显示消息类型标签
     textStyleNameSeparator: ': ', // 新增：默认用户名和消息之间的分隔符为冒号+空格
+    enableAnimation: true, // 新增：默认启用动画效果
   });
   const emojiData = useStorage<{
     updateAt: number,

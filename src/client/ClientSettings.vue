@@ -278,6 +278,24 @@ import { invoke } from '@tauri-apps/api/core';
                             <component :is="renderNotifidactionEnable('danmaku')" />
                           </template>
                         </NCard>
+                        <NCard
+                          size="small"
+                          title="私信失败通知"
+                        >
+                          <template #header-extra>
+                            <component :is="renderNotifidactionEnable('message-failed')" />
+                          </template>
+                          <p>当B站私信发送失败时通知你</p>
+                        </NCard>
+                        <NCard
+                          size="small"
+                          title="弹幕发送失败通知"
+                        >
+                          <template #header-extra>
+                            <component :is="renderNotifidactionEnable('live-danmaku-failed')" />
+                          </template>
+                          <p>当直播弹幕发送失败时通知你</p>
+                        </NCard>
                       </template>
                     </NSpace>
                   </NCard>

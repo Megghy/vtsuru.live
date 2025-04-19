@@ -57,12 +57,15 @@ import { VehicleShip24Filled } from '@vicons/fluent';
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Gift">
-          <span class="gift-badge">
+          <span
+            class="gift-badge"
+            :isPay="item?.price > 0"
+          >
             {{ item?.num || 1 }} × {{ item?.msg }}
             <span
               v-if="item?.price"
               class="gift-price"
-            >￥{{ (item.price || 0).toFixed(2) }}</span>
+            >￥{{ (item.price || 0).toFixed(1) }}</span>
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Guard">
@@ -333,7 +336,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
 
   /* 礼物 徽章 */
   .gift-badge {
-    background: #F56C6C;
+    background: #6aa8a3;
     color: #fff;
     border-radius: 4px;
     padding: 1px 6px;
@@ -344,6 +347,9 @@ import { VehicleShip24Filled } from '@vicons/fluent';
     align-items: center;
     gap: 4px;
     white-space: nowrap;
+  }
+  .gift-badge[isPay="true"] {
+    background: #F56C6C;
   }
 
   .gift-price {

@@ -47,11 +47,15 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       console.warn("[DanmakuClient] 尝试在客户端初始化之前调用 'onEvent'。");
       return;
     }
-    if (eventName === 'all') {
-      // 对于 'all' 事件, 直接使用 AllEventListener 类型
-      danmakuClient.value.eventsAsModel[eventName].push(listener as AllEventListener);
-    } else {
-      danmakuClient.value.eventsAsModel[eventName].push(listener);
+    try {
+      if (eventName === 'all') {
+        // 对于 'all' 事件, 直接使用 AllEventListener 类型
+        danmakuClient.value.eventsAsModel[eventName].push(listener as AllEventListener);
+      } else {
+        danmakuClient.value.eventsAsModel[eventName].push(listener);
+      }
+    } catch (error) {
+      console.error(`[DanmakuClient] 注册事件监听器: ${eventName} 失败: ${error}`);
     }
   }
 
@@ -185,8 +189,14 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     console.log('[DanmakuClient] 开始初始化...');
 
 
-    const oldEventsAsModel = danmakuClient.value?.eventsAsModel;
-    const oldEventsRaw = danmakuClient.value?.eventsRaw;
+    let oldEventsAsModel = danmakuClient.value?.eventsAsModel;
+    let oldEventsRaw = danmakuClient.value?.eventsRaw;
+    if (!oldEventsAsModel || Object.keys(oldEventsAsModel).length === 0) {
+      oldEventsAsModel = client.createEmptyEventModelListeners();
+    }
+    if (!oldEventsRaw || Object.keys(oldEventsRaw).length === 0) {
+      oldEventsRaw = client.createEmptyRawEventlisteners();
+    }
 
     // 先停止并清理旧客户端 (如果存在)
     if (danmakuClient.value) {
@@ -194,14 +204,13 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       if (danmakuClient.value.state === 'connected') {
         await disposeClientInstance(danmakuClient.value);
       }
-      danmakuClient.value = undefined; // 显式清除旧实例引用
     }
 
     // 设置新的客户端实例
     danmakuClient.value = client;
     // 确保新客户端有空的监听器容器 (BaseDanmakuClient 应负责初始化)
-    danmakuClient.value.eventsAsModel = oldEventsAsModel || client.createEmptyEventModelListeners();
-    danmakuClient.value.eventsRaw = oldEventsRaw || client.createEmptyRawEventlisteners();
+    danmakuClient.value.eventsAsModel = oldEventsAsModel;
+    danmakuClient.value.eventsRaw = oldEventsRaw;
     // 通常在 client 实例化或 Start 时处理，或者在 attachListenersToClient 中确保存在
 
 
