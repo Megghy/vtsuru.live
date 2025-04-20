@@ -62,6 +62,7 @@ const songsInternal = ref<SongsInfo[]>([]) // 内部维护的歌曲列表，避�
 const playingSong = ref<SongsInfo>() // 当前正在试听的歌曲
 const isLrcLoading = ref<string>() // 歌词加载状态（存储歌曲 key）
 const isLoading = ref(false) // 通用加载状态 (用于 API 请求)
+const pageSize = ref(25) // 每页大小
 
 // --- 搜索与筛选状态 ---
 const searchMusicKeyword = ref('') // 歌曲名称搜索关键词
@@ -743,22 +744,16 @@ onMounted(() => {
     v-model:checked-row-keys="selectedColumn"
     :columns="columns"
     :data="songsComputed"
-    :row-key="(row: SongsInfo) => row.key"
     size="small"
-    :bordered="false"
-    :single-line="false"
-    flex-height
-    style="height: 60vh;"
     :pagination="{
-      // itemCount: songsComputed.length, // 根据筛选结果分页或总数分页？取决于需求
-      pageSize: 25, // 默认每页大小
-      pageSizes: [10, 25, 50, 100, 200], // 可选的每页大小
+      itemCount: songsInternal.length,
+      defaultPageSize: pageSize,
+      pageSizes: [10, 25, 50, 100, 200],
       showSizePicker: true,
-      showQuickJumper: true, // 显示快速跳转
-      // size: 'small', // 已在 NDataTable 设置 size
+      showQuickJumper: true,
+
     }"
     :loading="isLoading && songsComputed.length === 0"
-    remote
     striped
   />
 
