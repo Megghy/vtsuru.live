@@ -5,6 +5,8 @@ import { onMounted, onUnmounted, ref } from 'vue'
 const timer = ref<any>()
 const visible = ref(true)
 const active = ref(true)
+
+const originalBackgroundColor = ref('')
 onMounted(() => {
   timer.value = setInterval(() => {
     if (!visible.value || !active.value) return
@@ -22,9 +24,21 @@ onMounted(() => {
       active.value = a
     }
   }
+  // 使 .n-layout-content 背景透明
+  const layoutContent = document.querySelector('.n-layout-content');
+  if (layoutContent instanceof HTMLElement) {
+    originalBackgroundColor.value = layoutContent.style.backgroundColor
+    layoutContent.style.setProperty('background-color', 'transparent');
+  }
 })
+
 onUnmounted(() => {
   clearInterval(timer.value)
+  // 还原 .n-layout-content 背景颜色
+  const layoutContent = document.querySelector('.n-layout-content');
+  if (layoutContent instanceof HTMLElement) {
+    layoutContent.style.setProperty('background-color', originalBackgroundColor.value);
+  }
 })
 </script>
 
@@ -46,9 +60,3 @@ onUnmounted(() => {
     </RouterView>
   </div>
 </template>
-
-<style>
-.body,html,.n-element,.n-layout-content {
-  background-color: transparent !important;
-}
-</style>
