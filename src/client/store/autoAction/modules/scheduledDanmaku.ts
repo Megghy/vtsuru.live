@@ -74,20 +74,6 @@ export function useScheduledDanmaku(
   }
 
   /**
-   * 启动定时弹幕 (旧方式)
-   */
-  function startScheduledDanmaku() {
-    console.log('定时弹幕已迁移到新的AutoActionItem结构');
-  }
-
-  /**
-   * 停止定时弹幕 (旧方式)
-   */
-  function stopScheduledDanmaku() {
-    console.log('定时弹幕已迁移到新的AutoActionItem结构');
-  }
-
-  /**
    * 格式化剩余时间为分:秒格式
    */
   const formattedRemainingTime = computed(() => {
@@ -111,8 +97,6 @@ export function useScheduledDanmaku(
   }
 
   return {
-    startScheduledDanmaku,
-    stopScheduledDanmaku,
     processScheduledActions,
     clearTimer,
     remainingSeconds,

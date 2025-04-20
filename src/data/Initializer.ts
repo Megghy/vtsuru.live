@@ -99,7 +99,7 @@ function InitVersionCheck() {
           const path = url.pathname
 
           if (!path.startsWith('/obs')) {
-            if (isTauri) {
+            if (isTauri()) {
               location.reload();
             }
             else {
