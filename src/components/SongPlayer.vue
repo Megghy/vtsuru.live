@@ -11,7 +11,7 @@ const props = defineProps<{
   song: SongsInfo | undefined
   isLrcLoading?: string
 }>()
-const emits = defineEmits(['update:isLrcLoading'])
+const emits = defineEmits(['update:isLrcLoading', 'update:close', 'update:volume'])
 
 const aplayerMusic = ref({
   title: '',
