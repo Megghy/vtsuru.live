@@ -11,6 +11,21 @@ const useQA = useQuestionBox()
 
 const isViolation = props.item.reviewResult?.isApproved == false
 const showContent = ref(!isViolation)
+
+// 计算得分颜色的函数
+function getScoreColor(score: number | undefined): string {
+  if (score === undefined) {
+    return 'grey'; // 如果没有分数，返回灰色
+  }
+  // 将分数限制在 0 到 100 之间
+  const clampedScore = Math.max(0, Math.min(100, score));
+  // 插值计算色相: 0 (红色) for score 0, 120 (绿色) for score 100
+  const hue = 120 * (clampedScore / 100); // 反转插值逻辑
+  // 固定饱和度和亮度 (可根据需要调整)
+  const saturation = 50;
+  const lightness = 45; // 稍暗以提高与白色文本的对比度
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 </script>
 
 <template>
@@ -101,18 +116,18 @@ const showContent = ref(!isViolation)
             </NTag>
           </NFlex>
         </template>
-        <template v-if="item.reviewResult && item.reviewResult.saftyScore">
+        <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
           <NDivider vertical />
           <NTooltip>
             <template #trigger>
               <NTag
                 size="small"
-                :color="{ color: '#af2525', textColor: 'white', borderColor: 'white' }"
+                :style="{ backgroundColor: getScoreColor(item.reviewResult.saftyScore), color: 'white', borderColor: 'transparent' }"
               >
                 得分: {{ item.reviewResult.saftyScore }}
               </NTag>
             </template>
-            审查得分, 满分100, 越低代表消息越8行
+            审查得分, 满分100, 越低代表消息越安全, 越高越危险
           </NTooltip>
         </template>
       </NFlex>
@@ -139,18 +154,15 @@ const showContent = ref(!isViolation)
       <br>
     </template>
 
-    <NText :style="{ filter: showContent ? '' : 'blur(3.7px)', cursor: showContent ? '' : 'pointer', whiteSpace: 'pre-wrap' }">
-      <NButton
-        v-if="isViolation"
-        size="small"
-        text
-        @click="showContent = !showContent"
-      >
-        {{ item.question?.message }}
-      </NButton>
-      <template v-else>
-        {{ item.question?.message }}
-      </template>
+    <NText
+      :style="{
+        filter: isViolation && !showContent ? 'blur(3.7px)' : '',
+        cursor: isViolation && !showContent ? 'pointer' : '',
+        whiteSpace: 'pre-wrap'
+      }"
+      @click="isViolation ? (showContent = !showContent) : null"
+    >
+      {{ item.question?.message }}
     </NText>
 
     <template v-if="item.answer">

@@ -224,7 +224,11 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         skipNegotiation: true,
         transport: signalR.HttpTransportType.WebSockets
       })
-      .withAutomaticReconnect([0, 2000, 10000, 30000]) // 自动重连策略
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: retryContext => {
+          return retryContext.elapsedMilliseconds < 60 * 1000 ? 10 * 1000 : 30 * 1000;
+        }
+      }) // 自动重连策略
       .withHubProtocol(new msgpack.MessagePackHubProtocol()) // 使用 MessagePack 协议
       .build();
 
@@ -249,7 +253,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         console.error(prefix.value + `与服务器连接关闭: ${error?.message || '未知原因'}. 自动重连将处理.`);
         state.value = 'connecting'; // 标记为连接中，等待自动重连
         signalRConnectionId.value = undefined;
-        // withAutomaticReconnect 会处理重连，这里不需要手动调用 reconnect
+        await connection.start();
       } else if (disconnectedByServer) {
         console.log(prefix.value + `连接已被服务器关闭.`);
         //Stop(); // 服务器要求断开，则彻底停止
@@ -369,12 +373,6 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
    * 定期将队列中的事件发送到服务器
    */
   async function sendEvents() {
-    if (updateCount % 60 == 0) {
-      // 每60秒更新一次连接信息
-      if (signalRClient.value) {
-        await sendSelfInfo(signalRClient.value);
-      }
-    }
     updateCount++;
     // 确保 SignalR 已连接
     if (!signalRClient.value || signalRClient.value.state !== signalR.HubConnectionState.Connected) {
@@ -383,6 +381,12 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     // 如果没有事件，则不发送
     if (events.length === 0) {
       return;
+    }
+    if (updateCount % 60 == 0) {
+      // 每60秒更新一次连接信息
+      if (signalRClient.value) {
+        await sendSelfInfo(signalRClient.value);
+      }
     }
 
     // 批量处理事件，每次最多发送20条

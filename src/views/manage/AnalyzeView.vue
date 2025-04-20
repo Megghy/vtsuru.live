@@ -645,7 +645,7 @@ const fetchAnalyzeData = async () => {
       message.error(`获取数据失败: ${data.message}`);
     }
   } catch (error) {
-    message.error('请求失败，请检查网络连接');
+    message.error('获取数据出错:' + (error as Error).message);
     console.error('获取数据出错:', error);
   } finally {
     loading.value = false;
