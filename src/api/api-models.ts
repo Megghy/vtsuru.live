@@ -358,7 +358,7 @@ export interface QAInfo {
   sender: UserBasicInfo
   target: UserBasicInfo
   question: { message: string; image?: string }
-  answer?: { message: string; image?: string }
+  answer?: { message: string; image?: string, createdAt: number }
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean

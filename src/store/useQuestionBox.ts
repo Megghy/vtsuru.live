@@ -23,7 +23,11 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   const recieveQuestions = ref<QAInfo[]>([])
   const sendQuestions = ref<QAInfo[]>([])
-  const trashQuestions = ref<QAInfo[]>([])
+  const trashQuestions = computed(() => {
+    return recieveQuestions.value.filter(
+      (q) => q.reviewResult && q.reviewResult.isApproved == false
+    )
+  })
   const tags = ref<QATagInfo[]>([])
   const reviewing = ref(0)
 
@@ -37,6 +41,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         return false
       }*/
       return (
+        (!q.reviewResult || q.reviewResult.isApproved == true) &&
         (q.isFavorite || !onlyFavorite.value) &&
         (q.isPublic || !onlyPublic.value) &&
         (!q.isReaded || !onlyUnread.value) &&
@@ -66,16 +71,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
           if (data.data.questions.length > 0) {
             recieveQuestions.value = new List(data.data.questions)
               .OrderBy((d) => d.isReaded)
-              //.ThenByDescending(d => d.isFavorite)
-              .Where(
-                (d) => !d.reviewResult || d.reviewResult.isApproved == true
-              ) //只显示审核通过的
               .ThenByDescending((d) => d.sendAt)
               .ToArray()
             reviewing.value = data.data.reviewCount
-            trashQuestions.value = data.data.questions.filter(
-              (d) => d.reviewResult && d.reviewResult.isApproved == false
-            )
 
             const displayId =
               accountInfo.value?.settings.questionDisplay.currentQuestion
@@ -378,6 +376,20 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         message.error('拉黑失败: ' + err)
       })
   }
+  async function markAsNormal(question: QAInfo) {
+    await QueryGetAPI(QUESTION_API_URL + 'mark-as-normal', {
+      id: question.id
+    })
+      .then((data) => {
+        if (data.code == 200) {
+          message.success('已标记为正常')
+          question.reviewResult!.isApproved = true
+        }
+      })
+      .catch((err) => {
+        message.error('标记失败: ' + err)
+      })
+  }
   async function setCurrentQuestion(item: QAInfo | undefined) {
     const isCurrent = displayQuestion.value?.id == item?.id
     if (!isCurrent) {
@@ -433,6 +445,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     favorite,
     setPublic,
     blacklist,
+    markAsNormal,
     setCurrentQuestion,
     getViolationString
   }
