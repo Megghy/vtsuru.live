@@ -272,84 +272,62 @@ onMounted(async () => {
       <NLayoutSider
         ref="sider"
         bordered
-        show-trigger="arrow-circle"
+        show-trigger
+        default-collapsed
         collapse-mode="width"
         :collapsed-width="64"
-        :width="200"
+        :width="180"
         :native-scrollbar="false"
-        style="height: 100%;"
-        default-collapsed
+        style="height: 100%"
       >
-        <!-- 主播信息区域 (优化样式和过渡) -->
-        <Transition name="fade">
-          <!-- 添加简单的淡入淡出效果 -->
+        <Transition>
           <div
-            v-if="danmakuClient.authInfo?.anchor_info && siderWidth > 64"
-            style="padding: 20px 10px; text-align: center;"
+            v-if="danmakuClient.authInfo"
+            style="margin-top: 8px"
           >
-            <NAvatar
-              :src="danmakuClient.authInfo.anchor_info.uface"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              round
-              bordered
-              size="large"
-              :style="{
-                marginBottom: '10px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              }"
-            />
-            <!-- 限制最大宽度并居中 -->
-            <NEllipsis
-              style="max-width: 160px; margin: 0 auto; font-weight: bold;"
-              :tooltip="{ placement: 'bottom' }"
+            <NSpace
+              vertical
+              justify="center"
+              align="center"
             >
-              {{ danmakuClient.authInfo.anchor_info.uname }}
-            </NEllipsis>
-          </div>
-          <!-- 折叠时显示小头像 (可选) -->
-          <div
-            v-else-if="danmakuClient.authInfo?.anchor_info && siderWidth <= 64"
-            style="padding: 15px 0; text-align: center;"
-          >
-            <NAvatar
-              :src="danmakuClient.authInfo.anchor_info.uface"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              round
-              size="medium"
-              :style="{ boxShadow: '0 1px 4px rgba(0, 0, 0, 0.1)' }"
-            />
+              <NAvatar
+                :src="danmakuClient.authInfo?.anchor_info?.uface"
+                :img-props="{ referrerpolicy: 'no-referrer' }"
+                round
+                bordered
+                :style="{
+                  boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
+                }"
+              />
+              <NEllipsis
+                v-if="siderWidth > 100"
+                style="max-width: 100%"
+              >
+                <NText strong>
+                  {{ danmakuClient.authInfo?.anchor_info?.uname }}
+                </NText>
+              </NEllipsis>
+            </NSpace>
           </div>
         </Transition>
-
-        <!-- 导航菜单 -->
         <NMenu
-          :value="route.name?.toString()"
+          :default-value="$route.name?.toString()"
           :collapsed-width="64"
           :collapsed-icon-size="22"
           :options="menuOptions"
-          :indent="24"
-          style="margin-top: 10px;"
         />
-
-        <!-- 侧边栏底部提示/链接 (优化样式和显示逻辑) -->
-        <NSpace
-          v-if="siderWidth > 150"
-          vertical
-          align="center"
-          style="position: absolute; bottom: 20px; left: 0; right: 0; padding: 0 15px;"
-        >
+        <NSpace justify="center">
           <NText
+            v-if="siderWidth > 150"
             depth="3"
-            style="font-size: 12px; text-align: center;"
           >
-            遇到问题或有建议?
+            有更多功能建议请
             <NButton
               text
               type="info"
-              size="tiny"
-              @click="router.push({ name: 'about' })"
+              @click="$router.push({ name: 'about' })"
             >
-              点此反馈
+              反馈
             </NButton>
           </NText>
         </NSpace>

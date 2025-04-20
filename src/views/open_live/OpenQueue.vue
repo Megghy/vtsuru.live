@@ -67,7 +67,7 @@
     useMessage,
     useNotification,
   } from 'naive-ui';
-  import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, VNodeChild } from 'vue';
+  import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, VNodeChild, CSSProperties } from 'vue';
   // import { useRoute } from 'vue-router' // 未使用
   import QueueOBS from '../obs/QueueOBS.vue';
   import { copyToClipboard } from '@/Utils';
@@ -971,6 +971,46 @@
     client.offEvent('gift', onGetGift);
     dispose();
   });
+
+  // --- 辅助函数 ---
+  function getIndexStyle(status: QueueStatus): CSSProperties {
+    // 基础颜色定义 - 扁平化风格
+    let backgroundColor;
+
+    // 根据状态设置不同的颜色
+    switch (status) {
+      case QueueStatus.Progressing:
+        backgroundColor = '#18a058';  // 处理中 - 绿色
+        break;
+      case QueueStatus.Waiting:
+        backgroundColor = '#2080f0';  // 等待中 - 蓝色
+        break;
+      case QueueStatus.Finish:
+        backgroundColor = '#86909c';  // 已完成 - 灰色
+        break;
+      case QueueStatus.Cancel:
+        backgroundColor = '#d03050';  // 已取消 - 红色
+        break;
+      default:
+        backgroundColor = '#2080f0';  // 默认 - 蓝色
+    }
+
+    const style: CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 'bold',
+      width: '24px',               // 确保宽高一致以形成完美圆形
+      height: '24px',              // 保持一致的宽高
+      borderRadius: '50%',         // 圆形
+      color: 'white',
+      fontSize: '13px',            // 适当调整字体大小
+      backgroundColor,             // 扁平化的纯色背景
+      transition: 'opacity 0.2s',  // 仅保留简单的过渡效果
+    };
+
+    return style;
+  }
 </script>
 
 <template>
@@ -1067,8 +1107,9 @@
         >
           <NSpace
             align="center"
-            justify="start"
+            justify="space-between"
             wrap
+            :item-style="{ marginBottom: '8px' }"
           >
             <!-- 队列统计信息 -->
             <NSpace align="center">
@@ -1170,7 +1211,6 @@
 
         <!-- 队列列表 -->
         <NSpin :show="isLoading && originQueue.length === 0">
-          <!-- 初始加载时显示 Spin -->
           <NList
             v-if="queue.length > 0"
             hoverable
@@ -1195,18 +1235,21 @@
                   :wrap="false"
                 >
                   <!-- 左侧信息 -->
-                  <NSpace align="center">
-                    <NTag
-                      round
-                      size="small"
-                      :type="queueData.status == QueueStatus.Progressing ? 'success' : 'default'"
-                      style="min-width: 30px; text-align: center;"
+                  <NSpace
+                    align="center"
+                    :size="8"
+                    :wrap="false"
+                  >
+                    <span
+                      :style="getIndexStyle(queueData.status)"
+                      class="queue-index"
+                      :class="{ 'queue-index-processing': queueData.status === QueueStatus.Progressing }"
                     >
                       {{ index + 1 }}
-                    </NTag>
+                    </span>
                     <NText
                       strong
-                      style="font-size: 16px; margin-right: 5px;"
+                      style="font-size: 16px;"
                     >
                       <NTooltip>
                         <template #trigger>
@@ -1262,7 +1305,7 @@
                         <NIcon
                           :component="Info24Filled"
                           size="16"
-                          style="cursor: help; color: #aaa; margin-left: 5px;"
+                          style="cursor: help; color: #aaa;"
                         />
                       </template>
                       <NCard
@@ -1303,8 +1346,9 @@
                   <NSpace
                     justify="end"
                     align="center"
-                    :size="5"
+                    :size="6"
                     :wrap="false"
+                    style="flex-shrink: 0;"
                   >
                     <!-- 开始/暂停处理 -->
                     <NTooltip>
@@ -1418,18 +1462,23 @@
           :bordered="false"
           style="margin-bottom: 10px;"
         >
-          <NSpace align="center">
-            <NInputGroup style="width: 300px">
-              <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-              <NInput
-                v-model:value="filterName"
-                clearable
-                placeholder="输入用户名"
-              />
-            </NInputGroup>
-            <NCheckbox v-model:checked="filterNameContains">
-              模糊匹配
-            </NCheckbox>
+          <NSpace
+            align="center"
+            justify="space-between"
+          >
+            <NSpace align="center">
+              <NInputGroup style="width: 300px">
+                <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
+                <NInput
+                  v-model:value="filterName"
+                  clearable
+                  placeholder="输入用户名"
+                />
+              </NInputGroup>
+              <NCheckbox v-model:checked="filterNameContains">
+                模糊匹配
+              </NCheckbox>
+            </NSpace>
             <NButton
               size="small"
               type="error"
@@ -1461,13 +1510,21 @@
         :disabled="!configCanEdit"
       >
         <NSpin :show="isLoading">
-          <NCollapse>
-            <!-- 规则设置 -->
-            <NCollapseItem
+          <NSpace
+            vertical
+            :size="20"
+            style="padding-top: 10px;"
+          >
+            <!-- 加入规则 -->
+            <NCard
+              size="small"
               title="加入规则"
-              name="rules"
+              :bordered="false"
             >
-              <NSpace vertical>
+              <NSpace
+                vertical
+                :size="12"
+              >
                 <NSpace align="center">
                   <NInputGroup style="width: 350px">
                     <NInputGroupLabel> 弹幕关键词 </NInputGroupLabel>
@@ -1525,6 +1582,7 @@
                 <NSpace
                   v-if="!settings.allowAllDanmaku"
                   vertical
+                  :size="10"
                   style="margin-left: 20px;"
                 >
                   <NInputGroup style="width: 270px">
@@ -1555,14 +1613,20 @@
                   </NCheckbox>
                 </NSpace>
               </NSpace>
-            </NCollapseItem>
+            </NCard>
 
-            <!-- 礼物设置 -->
-            <NCollapseItem
+            <NDivider />
+
+            <!-- 礼物规则 -->
+            <NCard
+              size="small"
               title="礼物规则"
-              name="gift"
+              :bordered="false"
             >
-              <NSpace vertical>
+              <NSpace
+                vertical
+                :size="12"
+              >
                 <NCheckbox
                   v-model:checked="settings.allowGift"
                   @update:checked="updateSettings"
@@ -1572,6 +1636,7 @@
                 <NSpace
                   v-if="settings.allowGift"
                   vertical
+                  :size="10"
                   style="margin-left: 20px;"
                 >
                   <NInputGroup style="width: 250px">
@@ -1651,12 +1716,15 @@
                   </NCheckbox>
                 </NSpace>
               </NSpace>
-            </NCollapseItem>
+            </NCard>
 
-            <!-- 冷却设置 -->
-            <NCollapseItem
+            <NDivider />
+
+            <!-- 冷却时间 (CD) -->
+            <NCard
+              size="small"
               title="冷却时间 (CD)"
-              name="cooldown"
+              :bordered="false"
             >
               <NCheckbox
                 v-model:checked="settings.enableCooldown"
@@ -1667,6 +1735,7 @@
               <NSpace
                 v-if="settings.enableCooldown"
                 vertical
+                :size="10"
                 style="margin-left: 20px; margin-top: 10px;"
               >
                 <NInputGroup style="width: 280px">
@@ -1702,14 +1771,20 @@
                   />
                 </NInputGroup>
               </NSpace>
-            </NCollapseItem>
+            </NCard>
 
-            <!-- 显示设置 -->
-            <NCollapseItem
+            <NDivider />
+
+            <!-- 显示与界面 -->
+            <NCard
+              size="small"
               title="显示与界面"
-              name="display"
+              :bordered="false"
             >
-              <NSpace vertical>
+              <NSpace
+                vertical
+                :size="12"
+              >
                 <NDivider
                   title-placement="left"
                   style="margin: 5px 0;"
@@ -1741,11 +1816,11 @@
                   其他界面设置
                 </NDivider>
                 <NCheckbox v-model:checked="isWarnMessageAutoClose">
-                  自动关闭“加入队列失败”的通知消息 (默认3秒)
+                  自动关闭"加入队列失败"的通知消息 (默认3秒)
                 </NCheckbox>
               </NSpace>
-            </NCollapseItem>
-          </NCollapse>
+            </NCard>
+          </NSpace>
         </NSpin>
       </NTabPane>
     </NTabs>
@@ -1802,14 +1877,17 @@
         style="padding-top: 100px;"
       />
     </div>
-    <NCollapse style="margin-top: 15px;">
+    <NCollapse
+      style="margin-top: 15px;"
+      accordion
+    >
       <NCollapseItem title="详细说明">
         <NUl>
-          <NLi>在 OBS 中添加一个新的“浏览器”来源。</NLi>
-          <NLi>将上方 URL 粘贴到“URL”栏中。</NLi>
+          <NLi>在 OBS 中添加一个新的"浏览器"来源。</NLi>
+          <NLi>将上方 URL 粘贴到"URL"栏中。</NLi>
           <NLi>推荐宽度设置为 280-350px，高度根据需要调整 (例如 500-700px)。</NLi>
-          <NLi>可在“设置”标签页中调整 OBS 组件的显示内容。</NLi>
-          <NLi>如果需要自定义样式，可以在 OBS 的“自定义 CSS”中添加覆盖样式。</NLi>
+          <NLi>可在"设置"标签页中调整 OBS 组件的显示内容。</NLi>
+          <NLi>如果需要自定义样式，可以在 OBS 的"自定义 CSS"中添加覆盖样式。</NLi>
         </NUl>
       </NCollapseItem>
     </NCollapse>
@@ -1817,20 +1895,14 @@
 </template>
 
 <style>
-  /* 移除全局动画，仅在需要的地方应用 */
-  /* @keyframes loading { ... } */
-
   /* 处理中状态的边框动画 */
   @keyframes animated-border {
     0% {
       box-shadow: 0 0 0 0px rgba(103, 194, 58, 0.7);
-      /* 对应 success 颜色 */
     }
-
     70% {
       box-shadow: 0 0 0 5px rgba(103, 194, 58, 0);
     }
-
     100% {
       box-shadow: 0 0 0 0px rgba(103, 194, 58, 0);
     }
@@ -1838,11 +1910,7 @@
 
   /* 处理中状态的卡片左边框或标签动画 */
   .n-card[style*="border-left: 4px solid #63e2b7;"],
-  /* 处理中卡片的左边框 */
-  .n-tag--success[style*="animation: animated-border"]
-
-  /* 处理中标签 (如果应用了动画) */
-    {
+  .n-tag--success[style*="animation: animated-border"] {
     animation: animated-border 1.5s infinite;
   }
 
@@ -1853,9 +1921,41 @@
     text-overflow: ellipsis;
   }
 
-  /* 如果需要特定列换行，可以单独设置 */
-  /* .n-data-table-td[data-col-key="user.name"] { white-space: normal; } */
+  /* 序号悬停效果 - 扁平化风格 */
+  .queue-index:hover {
+    opacity: 0.85;
+  }
 
-  /* 移除旧的 round 动画 */
-  /* @keyframes animated-border-round { ... } */
+  /* 处理中状态的序号动画 - 扁平化风格 */
+  .queue-index-processing {
+    position: relative;
+  }
+
+  .queue-index-processing::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    border: 2px solid #18a058;
+    opacity: 0;
+    animation: flat-pulse 2s infinite;
+  }
+
+  @keyframes flat-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    70% {
+      transform: scale(1.1);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.1);
+      opacity: 0;
+    }
+  }
 </style>
