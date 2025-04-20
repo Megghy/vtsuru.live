@@ -3,7 +3,7 @@
   import { NSpin } from 'naive-ui';
   import { DANMAKU_WINDOW_BROADCAST_CHANNEL, DanmakuWindowBCData, DanmakuWindowSettings } from './store/useDanmakuWindow';
   import { nanoid } from 'nanoid';
-  import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+  import { computed, onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
   import ClientDanmakuItem from './ClientDanmakuItem.vue';
   import { TransitionGroup } from 'vue'; // 添加TransitionGroup导入
 
@@ -16,6 +16,8 @@
   let bc: BroadcastChannel | undefined = undefined;
   const setting = ref<DanmakuWindowSettings>();
   const danmakuList = ref<TempDanmakuType[]>([]);
+  const pendingDanmakuQueue = ref<TempDanmakuType[]>([]); // 新增：待处理弹幕队列
+  const isUpdateScheduled = ref(false); // 新增：是否已安排更新
   const maxItems = computed(() => setting.value?.maxDanmakuCount || 50);
   const hasItems = computed(() => danmakuList.value.length > 0);
   const isInBatchUpdate = ref(false); // 添加批量更新状态标志
@@ -52,6 +54,42 @@
     }
   }
 
+  // 新增：处理批量更新
+  function processBatchUpdate() {
+    if (pendingDanmakuQueue.value.length === 0) {
+      isUpdateScheduled.value = false;
+      return;
+    }
+
+    isInBatchUpdate.value = true; // 开始批量更新
+
+    const itemsToAdd = pendingDanmakuQueue.value.slice(); // 复制队列
+    pendingDanmakuQueue.value = []; // 清空队列
+
+    // 将新弹幕添加到列表开头
+    danmakuList.value.unshift(...itemsToAdd);
+
+    // 优化超出长度的弹幕处理
+    if (danmakuList.value.length > maxItems.value) {
+      danmakuList.value.splice(maxItems.value, danmakuList.value.length - maxItems.value);
+    }
+
+    isUpdateScheduled.value = false;
+
+    // 在下一帧 DOM 更新后结束批量更新状态
+    nextTick(() => {
+        isInBatchUpdate.value = false;
+    });
+  }
+
+  // 新增：安排批量更新
+  function scheduleBatchUpdate() {
+    if (!isUpdateScheduled.value) {
+      isUpdateScheduled.value = true;
+      requestAnimationFrame(processBatchUpdate);
+    }
+  }
+
   function addDanmaku(data: EventModel) {
     if (!setting.value) return;
 
@@ -77,37 +115,40 @@
       disappearAt = Date.now() + setting.value.autoDisappearTime * 1000;
     }
 
-    // 为传入的弹幕对象添加一个随机ID和isNew标记
-    const dataWithId = {
+    // 为传入的弹幕对象添加一个随机ID和时间戳
+    const dataWithId: TempDanmakuType = {
       ...data,
-      randomId: nanoid(), // 生成一个随机ID
-      disappearAt, // 添加消失时间
-      timestamp: Date.now(), // 添加时间戳记录插入时间
+      randomId: nanoid(),
+      disappearAt,
+      timestamp: Date.now(),
     };
 
-    danmakuList.value.unshift(dataWithId);
+    // 将弹幕添加到待处理队列，并安排批量更新
+    pendingDanmakuQueue.value.push(dataWithId);
+    scheduleBatchUpdate();
 
-    // 优化超出长度的弹幕处理 - 改为标记并动画方式移除
-    if (danmakuList.value.length > maxItems.value) {
-      danmakuList.value.splice(maxItems.value, danmakuList.value.length - maxItems.value);
-    }
-
-    //console.log('[DanmakuWindow] 添加弹幕:', dataWithId);
+    //console.log('[DanmakuWindow] 添加弹幕到队列:', dataWithId);
   }
 
-  // 检查和移除过期弹幕
+  // 检查和移除过期弹幕 - 优化为 filter
   function checkAndRemoveExpiredDanmaku() {
-    if (!setting.value || setting.value.autoDisappearTime <= 0) return;
+    if (!setting.value || setting.value.autoDisappearTime <= 0 || danmakuList.value.length === 0) return;
 
     const now = Date.now();
-    const animationDuration = setting.value.animationDuration || 300;
+    const originalLength = danmakuList.value.length;
 
-    // 先标记将要消失的弹幕
-    danmakuList.value.forEach(item => {
-      if (item.disappearAt && item.disappearAt <= now && !pendingRemovalItems.value.includes(item.randomId)) {
-        danmakuList.value.splice(danmakuList.value.indexOf(item), 1);
-      }
+    danmakuList.value = danmakuList.value.filter(item => {
+      // 如果没有 disappearAt 或 disappearAt 在未来，则保留
+      return !item.disappearAt || item.disappearAt > now;
     });
+
+    // 如果有弹幕被移除，可以考虑触发一次批量状态（可选，取决于是否需要移除动画也加速）
+    // if (danmakuList.value.length < originalLength) {
+    //   isInBatchUpdate.value = true;
+    //   nextTick(() => {
+    //     isInBatchUpdate.value = false;
+    //   });
+    // }
   }
 
   // 为弹幕项生成自定义属性值
@@ -340,5 +381,10 @@
     --transition-delay: 0.05s;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
     /* 特殊强调效果 */
+  }
+
+  .danmaku-item {
+    /* 添加 will-change 提示浏览器进行优化 */
+    will-change: transform, opacity;
   }
 </style>
