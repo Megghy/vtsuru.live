@@ -34,26 +34,10 @@ import {
   NTime,
   NUl,
   useMessage,
+  NInfiniteScroll,
 } from 'naive-ui'
-import { computed, ref } from 'vue'
-
-// 事件类型枚举
-enum EventType {
-  Guard,
-  SC,
-}
-
-// 事件数据模型接口
-interface EventModel {
-  type: EventType
-  name: string
-  uid: number
-  msg: string
-  time: number
-  num: number
-  price: number
-  uface: string
-}
+import { computed, ref, watch } from 'vue'
+import { EventDataTypes, EventModel } from '@/api/api-models'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -76,44 +60,91 @@ const rangeShortcuts = {
 
 // 响应式状态
 const selectedDate = ref<[number, number]>([rangeShortcuts.本月()[0], rangeShortcuts.本月()[1]])
-const selectedType = ref(EventType.Guard)
-const events = ref<EventModel[]>(await get())
-const isLoading = ref(false)
+const selectedType = ref(EventDataTypes.Guard)
+const events = ref<EventModel[]>([]) // 初始为空数组
+const isLoading = ref(false) // 用于初始加载
+const isLoadingMore = ref(false) // 用于无限滚动加载
 const displayMode = ref<'grid' | 'column'>('grid')
-const exportType = ref<'json' | 'csv'>('csv') // 移除了未实现的xml选项
+const exportType = ref<'json' | 'csv'>('csv')
+const offset = ref(0) // 当前偏移量
+const limit = ref(20) // 每次加载数量
+const hasMore = ref(true) // 是否还有更多数据
 
-// 根据类型过滤事件
+// 根据类型过滤事件 - 这个计算属性现在可能只显示当前已加载的事件
+// 如果需要导出 *所有* 选定日期/类型的数据，导出逻辑需要调整
 const selectedEvents = computed(() => {
   return events.value.filter((e) => e.type == selectedType.value)
 })
 
-// 获取事件数据
-async function onDateChange() {
-  isLoading.value = true
-  const data = await get()
-  events.value = data
-  isLoading.value = false
-}
-
-// API请求获取数据
-async function get() {
+// API请求获取数据 - 修改为支持分页
+async function get(currentOffset: number, currentLimit: number) {
   try {
     const data = await QueryGetAPI<EventModel[]>(EVENT_API_URL + 'get', {
       start: selectedDate.value[0],
       end: selectedDate.value[1],
+      offset: currentOffset, // 添加 offset 参数
+      limit: currentLimit, // 添加 limit 参数
     })
     if (data.code == 200) {
-      message.success('已获取数据')
-      return new List(data.data).OrderByDescending((d) => d.time).ToArray()
+      message.success(`成功获取 ${data.data.length} 条数据`) // 调整提示
+      return data.data // 直接返回数据数组
     } else {
       message.error('获取数据失败: ' + data.message)
       return []
     }
   } catch (err) {
-    message.error('获取数据失败')
+    message.error('获取数据失败: ' + (err as Error).message) // 提供更详细的错误信息
     return []
   }
 }
+
+// 封装的数据获取函数
+async function fetchData(isInitialLoad = false) {
+  if (isLoading.value || isLoadingMore.value) return // 防止重复加载
+
+  if (isInitialLoad) {
+    isLoading.value = true
+    offset.value = 0 // 重置偏移量
+    events.value = [] // 清空现有事件
+    hasMore.value = true // 假设有更多数据
+  } else {
+    isLoadingMore.value = true
+  }
+
+  const currentOffset = offset.value
+  const fetchedData = await get(currentOffset, limit.value)
+
+  if (fetchedData.length > 0) {
+    // 使用 Linqts 进行排序后追加或设置
+    const sortedData = new List(fetchedData).OrderByDescending((d) => d.time).ToArray()
+    events.value = isInitialLoad ? sortedData : [...events.value, ...sortedData]
+    offset.value += fetchedData.length // 更新偏移量
+    hasMore.value = fetchedData.length === limit.value // 如果返回的数量等于请求的数量，则可能还有更多
+  } else {
+    hasMore.value = false // 没有获取到数据，说明没有更多了
+  }
+
+  if (isInitialLoad) {
+    isLoading.value = false
+  } else {
+    isLoadingMore.value = false
+  }
+}
+
+// 日期或类型变化时重新加载
+async function onFilterChange() {
+  await fetchData(true) // 初始加载
+}
+
+// 无限滚动加载更多
+async function loadMore() {
+  if (!hasMore.value || isLoadingMore.value || isLoading.value) return
+  console.log('Loading more...') // 调试信息
+  await fetchData(false)
+}
+
+// 监视日期和类型变化
+watch([selectedDate, selectedType], onFilterChange, { immediate: true }) // 初始加载数据
 
 // 获取SC颜色
 function GetSCColor(price: number): string {
@@ -139,8 +170,11 @@ function GetGuardColor(price: number | null | undefined): string {
   return ''
 }
 
-// 导出数据功能
+// 导出数据功能 - 注意：这现在只导出已加载的数据
 function exportData() {
+  if(hasMore.value) {
+    message.warning('当前导出的是已加载的部分数据，并非所有数据。')
+  }
   let text = ''
   const fileName = generateExportFileName()
 
@@ -154,7 +188,7 @@ function exportData() {
         selectedEvents.value.map((v) => ({
           type: v.type,
           time: format(v.time, 'yyyy-MM-dd HH:mm:ss'),
-          name: v.name,
+          name: v.uname,
           uId: v.uid,
           num: v.num,
           price: v.price,
@@ -202,7 +236,7 @@ function objectsToCSV(arr: any[]) {
   <NCard
     size="small"
     style="width: 100%"
-    >
+  >
     <template v-if="accountInfo?.isBiliVerified">
       <!-- 日期选择和类型选择区域 -->
       <NSpace
@@ -216,23 +250,19 @@ function objectsToCSV(arr: any[]) {
           :shortcuts="rangeShortcuts"
           start-placeholder="开始时间"
           end-placeholder="结束时间"
-          @update:value="onDateChange"
+          :disabled="isLoading || isLoadingMore"
         />
-        <NRadioGroup v-model:value="selectedType">
-          <NRadioButton :value="EventType.Guard">
+        <NRadioGroup
+          v-model:value="selectedType"
+          :disabled="isLoading || isLoadingMore"
+        >
+          <NRadioButton :value="EventDataTypes.Guard">
             舰长
           </NRadioButton>
-          <NRadioButton :value="EventType.SC">
+          <NRadioButton :value="EventDataTypes.SC">
             Superchat
           </NRadioButton>
         </NRadioGroup>
-        <NButton
-          type="primary"
-          :loading="isLoading"
-          @click="onDateChange"
-        >
-          刷新
-        </NButton>
       </NSpace>
       <br>
 
@@ -255,18 +285,28 @@ function objectsToCSV(arr: any[]) {
           </NRadioGroup>
           <NButton
             type="primary"
-            :disabled="selectedEvents.length === 0"
+            :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore"
             @click="exportData"
           >
-            导出
+            导出{{ hasMore ? ' (已加载部分)' : ' (全部)' }}
           </NButton>
         </NSpace>
+        <NText
+          v-if="hasMore && selectedEvents.length > 0"
+          type="warning"
+          style="font-size: smaller; display: block; margin-top: 5px;"
+        >
+          当前仅显示已加载的部分数据，滚动到底部可加载更多。导出功能也仅导出已加载数据。
+        </NText>
       </NCard>
 
-      <NDivider> 共 {{ selectedEvents.length }} 条 </NDivider>
+      <NDivider>
+        共加载 {{ selectedEvents.length }} 条 {{ hasMore ? '(滚动加载更多...)' : '' }}
+      </NDivider>
 
       <!-- 数据展示区域 -->
       <NSpin :show="isLoading">
+        <!-- 主 Spinner 只在初始加载时显示 -->
         <!-- 显示模式切换 -->
         <NRadioGroup
           v-model:value="displayMode"
@@ -290,85 +330,122 @@ function objectsToCSV(arr: any[]) {
         >
           <!-- 网格视图 -->
           <div v-if="displayMode == 'grid'">
-            <NGrid
-              cols="1 500:2 800:3 1000:4 1200:5"
-              :x-gap="12"
-              :y-gap="8"
+            <NInfiniteScroll
+              :distance="100"
+              :disabled="isLoadingMore || !hasMore || isLoading"
+              @load="loadMore"
             >
-              <NGridItem
-                v-for="item in selectedEvents"
-                :key="item.time"
+              <NGrid
+                cols="1 500:2 800:3 1000:4 1200:5"
+                :x-gap="12"
+                :y-gap="8"
+                style="min-height: 200px;"
               >
-                <NCard
-                  size="small"
-                  :style="`height: ${selectedType == EventType.Guard ? '175px' : '220px'}`"
-                  embedded
-                  hoverable
+                <NGridItem
+                  v-for="item in selectedEvents"
+                  :key="item.time + '_' + item.uid + '_' + item.price"
+                >
+                  <NCard
+                    size="small"
+                    :style="`height: ${selectedType == EventDataTypes.Guard ? '175px' : '220px'}`"
+                    embedded
+                    hoverable
                   >
-                  <NSpace
-                    align="center"
-                    vertical
-                    :size="5"
-                  >
-                    <NAvatar
-                      round
-                      lazy
-                      borderd
-                      :size="64"
-                      :src="item.uid ? AVATAR_URL + item.uid : item.uface"
-                      :img-props="{ referrerpolicy: 'no-referrer' }"
-                      style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
-                    />
-                    <NSpace>
-                      <NTag
-                        v-if="selectedType == EventType.Guard"
-                        size="tiny"
-                        :bordered="false"
-                      >
-                        {{ item.msg }}
-                      </NTag>
-                      <NTag
-                        size="tiny"
-                        round
-                        :color="{
-                          color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
-                          textColor: 'white',
-                          borderColor: isDarkMode ? 'white' : '#00000000',
-                        }"
-                      >
-                        {{ item.price }}
-                      </NTag>
-                    </NSpace>
-                    <NText>
-                      {{ item.name }}
-                    </NText>
-                    <NText
-                      depth="3"
-                      style="font-size: small"
+                    <NSpace
+                      align="center"
+                      vertical
+                      :size="5"
                     >
-                      <NTime :time="item.time" />
-                    </NText>
-                    <NEllipsis v-if="selectedType == EventType.SC">
-                      {{ item.msg }}
-                    </NEllipsis>
-                  </NSpace>
-                </NCard>
-              </NGridItem>
-            </NGrid>
+                      <NAvatar
+                        round
+                        lazy
+                        borderd
+                        :size="64"
+                        :src="item.uid ? AVATAR_URL + item.uid : item.uface"
+                        :img-props="{ referrerpolicy: 'no-referrer' }"
+                        style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
+                      />
+                      <NSpace>
+                        <NTag
+                          v-if="selectedType == EventDataTypes.Guard"
+                          size="tiny"
+                          :bordered="false"
+                        >
+                          {{ item.msg }}
+                        </NTag>
+                        <NTag
+                          size="tiny"
+                          round
+                          :color="{
+                            color: selectedType == EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                            textColor: 'white',
+                            borderColor: isDarkMode ? 'white' : '#00000000',
+                          }"
+                        >
+                          {{ item.price }}
+                        </NTag>
+                      </NSpace>
+                      <NText
+                        :depth="1"
+                        style="font-weight: 500;"
+                      >
+                        <!-- 用户名加粗一点 -->
+                        {{ item.uname }}
+                      </NText>
+                      <NText
+                        depth="3"
+                        style="font-size: small"
+                      >
+                        <NTime :time="item.time" />
+                      </NText>
+                      <NEllipsis
+                        v-if="selectedType == EventDataTypes.SC"
+                        :line-clamp="3"
+                      >
+                        <!-- SC 消息限制行数 -->
+                        {{ item.msg }}
+                      </NEllipsis>
+                    </NSpace>
+                  </NCard>
+                </NGridItem>
+              </NGrid>
+              <!-- 加载更多指示器 -->
+              <div
+                v-if="isLoadingMore"
+                style="text-align: center; padding: 10px;"
+              >
+                <NSpin size="small" />
+                <NText
+                  depth="3"
+                  style="margin-left: 5px;"
+                >
+                  加载中...
+                </NText>
+              </div>
+              <div
+                v-if="!hasMore && !isLoading && selectedEvents.length > 0"
+                style="text-align: center; padding: 10px;"
+              >
+                <NText depth="3">
+                  没有更多数据了
+                </NText>
+              </div>
+            </NInfiniteScroll>
           </div>
 
-          <!-- 表格视图 -->
-          <NTable v-else>
+          <!-- 表格视图 (未应用无限滚动) -->
+          <NTable v-else-if="!isLoading && selectedEvents.length > 0">
+            <!-- 添加 v-else-if 避免初始加载时显示空表格 -->
             <thead>
               <tr>
                 <th>用户名</th>
                 <th>UId</th>
                 <th>时间</th>
-                <th v-if="selectedType == EventType.Guard">
+                <th v-if="selectedType == EventDataTypes.Guard">
                   类型
                 </th>
                 <th>价格</th>
-                <th v-if="selectedType == EventType.SC">
+                <th v-if="selectedType == EventDataTypes.SC">
                   内容
                 </th>
               </tr>
@@ -376,20 +453,24 @@ function objectsToCSV(arr: any[]) {
             <tbody>
               <tr
                 v-for="item in selectedEvents"
-                :key="item.time"
+                :key="item.time + '_' + item.uid + '_' + item.price"
               >
-                <td>{{ item.name }}</td>
+                <td>{{ item.uname }}</td>
                 <td>{{ item.uid }}</td>
                 <td>
-                  <NTime :time="item.time" />
+                  <NTime
+                    :time="item.time"
+                    format="yyyy-MM-dd HH:mm:ss"
+                  /> <!-- 指定格式 -->
                 </td>
-                <td v-if="selectedType == EventType.Guard">
+                <td v-if="selectedType == EventDataTypes.Guard">
                   {{ item.msg }}
                 </td>
                 <td>
                   <NTag
+                    size="small"
                     :color="{
-                      color: selectedType == EventType.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                      color: selectedType == EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                       textColor: 'white',
                       borderColor: isDarkMode ? 'white' : '#00000000',
                     }"
@@ -397,7 +478,7 @@ function objectsToCSV(arr: any[]) {
                     {{ item.price }}
                   </NTag>
                 </td>
-                <td v-if="selectedType == EventType.SC">
+                <td v-if="selectedType == EventDataTypes.SC">
                   <NEllipsis style="max-width: 300px">
                     {{ item.msg }}
                   </NEllipsis>
@@ -405,6 +486,14 @@ function objectsToCSV(arr: any[]) {
               </tr>
             </tbody>
           </NTable>
+          <!-- 初始加载时或无数据时的提示 -->
+          <NAlert
+            v-else-if="!isLoading && selectedEvents.length === 0"
+            title="无数据"
+            type="info"
+          >
+            在选定的时间范围和类型内没有找到数据。
+          </NAlert>
         </Transition>
       </NSpin>
     </template>
@@ -473,5 +562,10 @@ function objectsToCSV(arr: any[]) {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* 网格卡片样式微调 */
+.n-card {
+  transition: box-shadow 0.3s ease; /* 平滑阴影过渡 */
 }
 </style>

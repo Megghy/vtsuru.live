@@ -196,7 +196,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       danmakuClientState.value = 'connected'; // 明确设置状态
       danmakuServerUrl.value = client.danmakuClient!.serverUrl; // 获取服务器地址
       // 启动事件发送定时器 (如果之前没有启动)
-      timer ??= setInterval(sendEvents, 1500); // 每 1.5 秒尝试发送一次事件
+      timer ??= setInterval(sendEvents, 2000); // 每 2 秒尝试发送一次事件
       return { success: true, message: '弹幕客户端已启动' };
     } else {
       console.error(prefix.value + '弹幕客户端启动失败');
@@ -301,7 +301,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     Data: string;
   };
   async function onRequest(url: string, method: string, body: string, useCookie: boolean) {
-    if (!isTauri) {
+    if (!isTauri()) {
       console.error(prefix.value + '非Tauri环境下无法处理请求: ' + url);
       return {
         Message: '非Tauri环境',
@@ -386,7 +386,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
 
     // 批量处理事件，每次最多发送20条
-    const batchSize = 20;
+    const batchSize = 30;
     const batch = events.slice(0, batchSize);
 
     try {

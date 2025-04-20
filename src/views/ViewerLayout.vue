@@ -13,7 +13,7 @@
     VideoAdd20Filled,
     WindowWrench20Filled,
   } from '@vicons/fluent';
-  import { Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5';
+  import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5';
   import { useElementSize, useStorage } from '@vueuse/core';
   import {
     MenuOption,
@@ -491,6 +491,36 @@
     :auto-focus="false"
     :mask-closable="false"
   >
+    <NAlert
+      type="info"
+      style="border-radius: 8px;"
+    >
+      <NFlex
+        vertical
+        align="center"
+        size="small"
+      >
+        <div style="text-align: center;">
+          如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录
+        </div>
+        <NFlex
+          justify="center"
+          style="width: 100%; margin-top: 8px;"
+        >
+          <NButton
+            type="primary"
+            size="small"
+            @click="$router.push({ name: 'bili-user'})"
+          >
+            <template #icon>
+              <NIcon :component="BrowsersOutline" />
+            </template>
+            前往 Bilibili 认证用户主页
+          </NButton>
+        </NFlex>
+      </NFlex>
+    </NAlert>
+    <br>
     <!-- 异步加载注册登录组件，优化初始加载性能 -->
     <RegisterAndLogin @close="registerAndLoginModalVisiable = false" />
   </NModal>

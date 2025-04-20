@@ -88,6 +88,9 @@ export function checkUpdateNote() {
       positiveText: '下次更新前不再提示',
       onPositiveClick: () => {
         savedUpdateNoteVer.value = currentUpdateNoteVer;
+      },
+      onClose: () => {
+        savedUpdateNoteVer.value = currentUpdateNoteVer;
       }
     });
   }

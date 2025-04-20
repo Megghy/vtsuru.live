@@ -1,20 +1,24 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTimelineItem } from 'naive-ui'
+import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTimelineItem, NTag, NIcon } from 'naive-ui'
+import { h } from 'vue'
+import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/ionicons5'
 </script>
 <template>
-  <NLayoutContent style="height: 100vh">
+  <NLayoutContent style="height: 100vh; padding: 20px 0;">
     <NSpace
-      style="margin-top: 50px"
+      style="margin-top: 30px"
       justify="center"
       align="center"
       vertical
     >
       <NCard
-        style="max-width: 80vw; width: 700px"
+        style="max-width: 80vw; width: 700px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);"
         embedded
       >
         <template #header>
-          关于
+          <div style="font-size: 22px; font-weight: bold; padding: 8px 0;">
+            关于
+          </div>
         </template>
         <NText>
           一个兴趣使然的网站
@@ -52,23 +56,174 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           <NSpace
             vertical
             align="center"
+            style="margin-bottom: 16px;"
           >
-            <span style="color: gray">
-              MADE WITH ❤️ BY
+            <span style="color: #666; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              MADE WITH <NIcon
+                size="18"
+                color="#f56c6c"
+              ><HeartOutline /></NIcon> BY
               <NButton
                 type="primary"
                 tag="a"
                 href="https://space.bilibili.com/10021741"
                 target="_blank"
                 text
-                style=""
+                style="font-weight: bold;"
               >
                 Megghy
               </NButton>
             </span>
+            <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+              <NButton
+                tag="a"
+                href="https://github.com/Megghy/vtsuru.live"
+                target="_blank"
+                text
+                style="display: flex; align-items: center; gap: 4px; color: #666;"
+              >
+                <NIcon size="16">
+                  <LogoGithub />
+                </NIcon>
+                <span>源代码仓库</span>
+              </NButton>
+            </div>
+          </NSpace>
+          <NDivider
+            title-placement="left"
+            style="margin-top: 12px;"
+          >
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span>技术栈</span>
+            </div>
+          </NDivider>
+          <NSpace
+            vertical
+            style="padding: 0 12px; margin-bottom: 16px;"
+          >
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <NIcon
+                size="20"
+                color="#709e7e"
+              >
+                <CodeOutline />
+              </NIcon>
+              <NText style="font-weight: 500;">
+                前端:
+              </NText>
+              <NTag
+                type="success"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://vuejs.org/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  Vue.js
+                </NButton>
+              </NTag>
+              <NTag
+                type="info"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://www.typescriptlang.org/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  TypeScript
+                </NButton>
+              </NTag>
+              <NTag
+                type="warning"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://www.naiveui.com/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  Naive UI
+                </NButton>
+              </NTag>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <NIcon
+                size="20"
+                color="#7c7ca0"
+              >
+                <ServerOutline />
+              </NIcon>
+              <NText style="font-weight: 500;">
+                后端:
+              </NText>
+              <NTag
+                type="primary"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://dotnet.microsoft.com/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  C# .NET 10
+                </NButton>
+              </NTag>
+              <NTag
+                type="error"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://www.postgresql.org/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  PostgreSQL
+                </NButton>
+              </NTag>
+              <NTag
+                type="default"
+                size="small"
+                round
+                :bordered="false"
+              >
+                <NButton
+                  tag="a"
+                  href="https://keydb.dev/"
+                  target="_blank"
+                  text
+                  style="padding: 0; color: inherit;"
+                >
+                  KeyDB
+                </NButton>
+              </NTag>
+            </div>
           </NSpace>
           <NDivider title-placement="left">
-            赞助我
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span>赞助我</span>
+            </div>
           </NDivider>
           <iframe
             id="afdian_leaflet_vtsuru"
@@ -77,10 +232,15 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
             scrolling="no"
             height="200"
             frameborder="0"
+            style="border-radius: 8px;"
           />
           <NDivider title-placement="left">
-            更新日志
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span>更新日志</span>
+            </div>
           </NDivider>
+          <UpdateNoteContainer />
+          <NDivider />
           <NTimeline>
             <NTimelineItem
               type="info"
@@ -241,9 +401,46 @@ import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTi
           </NTimeline>
         </template>
       </NCard>
-      <NButton @click="$router.push({ name: 'manage-index' })">
+      <NButton
+        type="primary"
+        style="margin-top: 20px; padding: 8px 24px; font-size: 15px; border-radius: 8px;"
+        @click="$router.push({ name: 'manage-index' })"
+      >
         回到控制台
       </NButton>
     </NSpace>
   </NLayoutContent>
 </template>
+
+<style scoped>
+:deep(.n-timeline) {
+  padding: 0 8px;
+}
+
+:deep(.n-timeline-item-content) {
+  margin-bottom: 12px;
+}
+
+:deep(.n-card-header) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:deep(.n-divider.n-divider--title-position-left .n-divider__title) {
+  font-weight: 600;
+  font-size: 16px;
+  color: #444;
+}
+
+:deep(.n-timeline-item-content__title) {
+  font-weight: 600;
+}
+
+:deep(.n-timeline-item-content__content) {
+  color: #555;
+}
+
+:deep(.n-timeline-item-content__time) {
+  color: #888;
+  font-size: 13px;
+}
+</style>

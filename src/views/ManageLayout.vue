@@ -21,6 +21,7 @@ import {
   TabletSpeaker24Filled,
   VehicleShip24Filled,
   VideoAdd20Filled,
+  Mail24Filled,
 } from '@vicons/fluent'
 import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, Eye } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
@@ -561,37 +562,90 @@ onMounted(() => {
               </RouterView>
               <!-- 未验证邮箱的提示 -->
               <template v-else>
-                <NAlert type="info">
-                  请进行邮箱验证
-                  <br><br>
-                  <NSpace>
-                    <NButton
-                      size="small"
-                      type="info"
-                      :disabled="!canResendEmail"
-                      @click="resendEmail"
+                <NCard>
+                  <NSpace
+                    vertical
+                    size="large"
+                    align="center"
+                  >
+                    <NFlex
+                      justify="center"
+                      align="center"
+                      vertical
                     >
-                      重新发送验证邮件
-                    </NButton>
-                    <NCountdown
-                      v-if="!canResendEmail"
-                      :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                      @finish="canResendEmail = true"
-                    />
+                      <NIcon
+                        size="48"
+                        color="#2080f0"
+                      >
+                        <Mail24Filled />
+                      </NIcon>
+                      <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
+                        请验证您的邮箱
+                      </NText>
+                      <NText
+                        depth="3"
+                        style="text-align: center; margin-top: 8px;"
+                      >
+                        我们已向您的邮箱发送了验证链接，请查收并点击链接完成验证
+                      </NText>
+                    </NFlex>
 
-                    <NPopconfirm
-                      size="small"
-                      @positive-click="logout"
+                    <NAlert
+                      type="warning"
+                      style="max-width: 450px;"
                     >
+                      <template #icon>
+                        <NIcon>
+                          <Info24Filled />
+                        </NIcon>
+                      </template>
+                      如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
+                    </NAlert>
+
+                    <NSpace>
+                      <NButton
+                        type="primary"
+                        :disabled="!canResendEmail"
+                        style="min-width: 140px;"
+                        @click="resendEmail"
+                      >
+                        <template #icon>
+                          <NIcon>
+                            <Mail24Filled />
+                          </NIcon>
+                        </template>
+                        重新发送验证邮件
+                      </NButton>
+                      <NTag
+                        v-if="!canResendEmail"
+                        type="warning"
+                        round
+                      >
+                        <NCountdown
+                          :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                          @finish="canResendEmail = true"
+                        />
+                        后可重新发送
+                      </NTag>
+                    </NSpace>
+
+                    <NDivider style="width: 80%; min-width: 250px;" />
+
+                    <NPopconfirm @positive-click="logout">
                       <template #trigger>
-                        <NButton type="error">
-                          登出
+                        <NButton secondary>
+                          <template #icon>
+                            <NIcon>
+                              <PersonFeedback24Filled />
+                            </NIcon>
+                          </template>
+                          切换账号
                         </NButton>
                       </template>
-                      确定登出?
+                      确定要登出当前账号吗？
                     </NPopconfirm>
                   </NSpace>
-                </NAlert>
+                </NCard>
               </template>
               <NBackTop />
             </NElement>

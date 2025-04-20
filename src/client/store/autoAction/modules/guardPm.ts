@@ -155,17 +155,8 @@ export function useGuardPm(
     }
   }
 
-  /**
-   * 处理上舰事件 - 旧方式实现，用于兼容现有代码
-   */
-  function onGuard(event: EventModel) {
-    // 将在useAutoAction.ts中进行迁移，此方法保留但不实现具体逻辑
-    console.log('舰长事件处理已迁移到新的AutoActionItem结构');
-  }
-
   return {
     config,
-    onGuard,
     processGuard
   };
 }

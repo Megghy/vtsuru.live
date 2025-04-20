@@ -55,14 +55,12 @@ export const useAutoAction = defineStore('autoAction', () => {
     (roomId: number, message: string) => biliFunc.sendLiveDanmaku(roomId, message)
   );
 
-  // @ts-ignore - 忽略类型错误以保持功能正常
   const guardPm = useGuardPm(
     isLive,
     roomId,
     (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message)
   );
 
-  // @ts-ignore - 忽略类型错误以保持功能正常
   const followThank = useFollowThank(
     isLive,
     roomId,
@@ -70,7 +68,6 @@ export const useAutoAction = defineStore('autoAction', () => {
     (roomId: number, message: string) => biliFunc.sendLiveDanmaku(roomId, message)
   );
 
-  // @ts-ignore - 忽略类型错误以保持功能正常
   const entryWelcome = useEntryWelcome(
     isLive,
     roomId,
@@ -78,14 +75,12 @@ export const useAutoAction = defineStore('autoAction', () => {
     (roomId: number, message: string) => biliFunc.sendLiveDanmaku(roomId, message)
   );
 
-  // @ts-ignore - 忽略类型错误以保持功能正常
   const autoReply = useAutoReply(
     isLive,
     roomId,
     (roomId: number, message: string) => biliFunc.sendLiveDanmaku(roomId, message)
   );
 
-  // @ts-ignore - 忽略类型错误以保持功能正常
   const scheduledDanmaku = useScheduledDanmaku(
     isLive,
     roomId,
@@ -168,11 +163,11 @@ export const useAutoAction = defineStore('autoAction', () => {
         break;
 
       case TriggerType.GUARD:
-        guardPm.onGuard(event);
+        guardPm.processGuard(event, autoActions.value, runtimeState.value);
         break;
 
       case TriggerType.FOLLOW:
-        followThank.onFollow(event);
+        followThank.processFollow(event, autoActions.value, runtimeState.value);
         break;
 
       case TriggerType.ENTER:
@@ -366,7 +361,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     if (!roomId.value) return;
 
     // 使用专用模块处理定时发送
-    scheduledDanmaku.startScheduledDanmaku();
+    scheduledDanmaku.processScheduledActions(autoActions.value, runtimeState.value);
 
     // 同时处理自定义的定时任务
     const scheduledActions = autoActions.value.filter(
@@ -382,37 +377,33 @@ export const useAutoAction = defineStore('autoAction', () => {
       const intervalSeconds = action.triggerConfig.intervalSeconds || 300; // 默认5分钟
 
       const timerFunc = () => {
-        if (!isLive.value && action.triggerConfig.onlyDuringLive) {
-          // 如果设置了仅直播时发送，且当前未直播，则跳过
-          return;
+        // 仅在检查时判断直播状态，不停止定时器
+        const shouldExecute =
+          !action.triggerConfig.onlyDuringLive || isLive.value;
+
+        if (shouldExecute && !(action.triggerConfig.ignoreTianXuan && isTianXuanActive.value)) {
+          // 创建执行上下文
+          const context: ExecutionContext = {
+            roomId: roomId.value,
+            variables: {
+              date: {
+                formatted: new Date().toLocaleString(),
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1,
+                day: new Date().getDate(),
+                hour: new Date().getHours(),
+                minute: new Date().getMinutes(),
+                second: new Date().getSeconds(),
+              }
+            },
+            timestamp: Date.now()
+          };
+
+          // 执行定时操作
+          executeAction(action, context);
         }
 
-        if (action.triggerConfig.ignoreTianXuan && isTianXuanActive.value) {
-          // 如果设置了天选时刻不发送，且当前有天选，则跳过
-          return;
-        }
-
-        // 创建执行上下文
-        const context: ExecutionContext = {
-          roomId: roomId.value,
-          variables: {
-            date: {
-              formatted: new Date().toLocaleString(),
-              year: new Date().getFullYear(),
-              month: new Date().getMonth() + 1,
-              day: new Date().getDate(),
-              hour: new Date().getHours(),
-              minute: new Date().getMinutes(),
-              second: new Date().getSeconds(),
-            }
-          },
-          timestamp: Date.now()
-        };
-
-        // 执行定时操作
-        executeAction(action, context);
-
-        // 设置下一次执行
+        // 无论是否执行，都设置下一次定时
         runtimeState.value.scheduledTimers[action.id] = setTimeout(timerFunc, intervalSeconds * 1000);
       };
 
@@ -465,8 +456,48 @@ export const useAutoAction = defineStore('autoAction', () => {
       // 如果是定时操作，重新配置定时器
       if (action.triggerType === TriggerType.SCHEDULED) {
         if (enabled) {
-          // 启用时重新启动定时器
-          startScheduledActions();
+          // 如果已有定时器，先清理
+          if (runtimeState.value.scheduledTimers[id]) {
+            clearTimeout(runtimeState.value.scheduledTimers[id]!);
+            runtimeState.value.scheduledTimers[id] = null;
+          }
+
+          // 启用时单独启动这个定时器
+          const intervalSeconds = action.triggerConfig.intervalSeconds || 300;
+
+          const timerFunc = () => {
+            // 仅在检查时判断直播状态，不停止定时器
+            const shouldExecute =
+              !action.triggerConfig.onlyDuringLive || isLive.value;
+
+            if (shouldExecute && !(action.triggerConfig.ignoreTianXuan && isTianXuanActive.value)) {
+              // 创建执行上下文
+              const context: ExecutionContext = {
+                roomId: roomId.value,
+                variables: {
+                  date: {
+                    formatted: new Date().toLocaleString(),
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth() + 1,
+                    day: new Date().getDate(),
+                    hour: new Date().getHours(),
+                    minute: new Date().getMinutes(),
+                    second: new Date().getSeconds(),
+                  }
+                },
+                timestamp: Date.now()
+              };
+
+              // 执行定时操作
+              executeAction(action, context);
+            }
+
+            // 无论是否执行，都设置下一次定时
+            runtimeState.value.scheduledTimers[id] = setTimeout(timerFunc, intervalSeconds * 1000);
+          };
+
+          // 启动定时器
+          runtimeState.value.scheduledTimers[id] = setTimeout(timerFunc, intervalSeconds * 1000);
         } else if (runtimeState.value.scheduledTimers[id]) {
           // 禁用时清理定时器
           clearTimeout(runtimeState.value.scheduledTimers[id]!);
@@ -484,14 +515,14 @@ export const useAutoAction = defineStore('autoAction', () => {
     // 启动所有定时发送任务
     startScheduledActions();
 
-    // 监听直播状态变化，自动启停定时任务
-    watch(isLive, (newIsLive) => {
+    // 不再根据直播状态停止定时任务，只在回调中判断
+    /*watch(isLive, (newIsLive) => {
       if (newIsLive) {
         startScheduledActions();
       } else {
         stopAllScheduledActions();
       }
-    });
+    });*/
 
     // 安全地订阅事件
     try {
@@ -509,115 +540,6 @@ export const useAutoAction = defineStore('autoAction', () => {
       import.meta.hot.dispose(() => {
         clearAllTimers();
       });
-    }
-
-    // 迁移旧的配置
-    migrateAutoReplyConfig();
-    migrateGiftThankConfig();
-  }
-
-  /**
-   * 迁移旧的自动回复配置到新的AutoActionItem格式
-   */
-  function migrateAutoReplyConfig() {
-    try {
-      // 尝试从localStorage获取旧配置
-      const oldConfigStr = localStorage.getItem('autoAction.autoReplyConfig');
-      if (!oldConfigStr) return;
-
-      const oldConfig = JSON.parse(oldConfigStr);
-      if (!oldConfig.enabled || !oldConfig.rules || !Array.isArray(oldConfig.rules)) return;
-
-      // 检查是否已经迁移过（防止重复迁移）
-      const migratedKey = 'autoAction.autoReplyMigrated';
-      if (localStorage.getItem(migratedKey) === 'true') return;
-
-      // 将旧规则转换为新的AutoActionItem
-      const newItems = oldConfig.rules.map((rule: any) => {
-        const item = createDefaultAutoAction(TriggerType.DANMAKU);
-        item.name = `弹幕回复: ${rule.keywords.join(',')}`;
-        item.enabled = oldConfig.enabled;
-        item.templates = rule.replies || ['感谢您的弹幕'];
-        item.triggerConfig = {
-          ...item.triggerConfig,
-          keywords: rule.keywords || [],
-          blockwords: rule.blockwords || [],
-          onlyDuringLive: oldConfig.onlyDuringLive,
-          userFilterEnabled: oldConfig.userFilterEnabled,
-          requireMedal: oldConfig.requireMedal,
-          requireCaptain: oldConfig.requireCaptain
-        };
-        item.actionConfig = {
-          ...item.actionConfig,
-          cooldownSeconds: oldConfig.cooldownSeconds || 5
-        };
-        return item;
-      });
-
-      // 添加到现有的autoActions中
-      autoActions.value = [...autoActions.value, ...newItems];
-
-      // 标记为已迁移
-      localStorage.setItem(migratedKey, 'true');
-      console.log(`成功迁移 ${newItems.length} 条自动回复规则`);
-    } catch (error) {
-      console.error('迁移自动回复配置失败:', error);
-    }
-  }
-
-  /**
-   * 迁移旧的礼物感谢配置到新的AutoActionItem格式
-   */
-  function migrateGiftThankConfig() {
-    try {
-      // 尝试从localStorage获取旧配置
-      const oldConfigStr = localStorage.getItem('autoAction.giftThankConfig');
-      if (!oldConfigStr) return;
-
-      const oldConfig = JSON.parse(oldConfigStr);
-      if (!oldConfig.enabled || !oldConfig.templates || !Array.isArray(oldConfig.templates)) return;
-
-      // 检查是否已经迁移过（防止重复迁移）
-      const migratedKey = 'autoAction.giftThankMigrated';
-      if (localStorage.getItem(migratedKey) === 'true') return;
-
-      // 创建新的礼物感谢项
-      const item = createDefaultAutoAction(TriggerType.GIFT);
-      item.name = '礼物感谢';
-      item.enabled = oldConfig.enabled;
-      item.templates = oldConfig.templates;
-
-      // 设置触发配置
-      item.triggerConfig = {
-        ...item.triggerConfig,
-        onlyDuringLive: oldConfig.onlyDuringLive ?? true,
-        ignoreTianXuan: oldConfig.ignoreTianXuan ?? true,
-        userFilterEnabled: oldConfig.userFilterEnabled ?? false,
-        requireMedal: oldConfig.requireMedal ?? false,
-        requireCaptain: oldConfig.requireCaptain ?? false,
-        filterMode: oldConfig.filterModes?.useWhitelist ? 'whitelist' :
-                    oldConfig.filterModes?.useBlacklist ? 'blacklist' : undefined,
-        filterGiftNames: oldConfig.filterGiftNames || [],
-        minValue: oldConfig.minValue || 0
-      };
-
-      // 设置操作配置
-      item.actionConfig = {
-        ...item.actionConfig,
-        delaySeconds: oldConfig.delaySeconds || 0,
-        cooldownSeconds: 5,
-        maxUsersPerMsg: oldConfig.maxUsersPerMsg || 3,
-        maxItemsPerUser: oldConfig.maxGiftsPerUser || 3
-      };
-
-      // 添加到现有的autoActions中
-      autoActions.value.push(item);
-
-      // 标记为已迁移
-      localStorage.setItem(migratedKey, 'true');
-      console.log('成功迁移礼物感谢配置');
-    } catch (error) {
-      console.error('迁移礼物感谢配置失败:', error);
     }
   }
 

@@ -91,14 +91,6 @@ export function useFollowThank(
   }
 
   /**
-   * 处理关注事件 - 旧方式实现，用于兼容现有代码
-   */
-  function onFollow(event: EventModel) {
-    // 将在useAutoAction.ts中进行迁移，此方法保留但不实现具体逻辑
-    console.log('关注事件处理已迁移到新的AutoActionItem结构');
-  }
-
-  /**
    * 清理计时器
    */
   function clearTimer() {
@@ -109,7 +101,6 @@ export function useFollowThank(
   }
 
   return {
-    onFollow,
     processFollow,
     clearTimer
   };

@@ -18,6 +18,7 @@ declare module 'vue' {
     LabelItem: typeof import('./components/LabelItem.vue')['default']
     LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
     MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
+    NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
     NBadge: typeof import('naive-ui')['NBadge']
     NButton: typeof import('naive-ui')['NButton']
