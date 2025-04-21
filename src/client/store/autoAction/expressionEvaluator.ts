@@ -2,36 +2,106 @@
  * 表达式求值工具 - 用于在自动操作模板中支持简单的JavaScript表达式
  */
 
+// 导入ExecutionContext类型
+import { ExecutionContext } from './types';
+
 // 表达式模式匹配
-// {{js: expression}} - 完整的JavaScript表达式
-const JS_EXPRESSION_REGEX = /\{\{\s*js:\s*(.*?)\s*\}\}/g;
+// {{js: expression}} - 简单的JavaScript表达式 (隐式return)
+// {{js+: code block}} - JavaScript代码块 (需要显式return)
+// {{js-run: code block}} - JavaScript代码块 (需要显式return)
+export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|\-run)?):\s*(.*?)\s*\}\}/gs; // 使用 s 标志允许多行匹配
 
 /**
  * 处理模板中的表达式
  * @param template 包含表达式的模板字符串
- * @param context 上下文对象，包含可在表达式中访问的变量
+ * @param context 执行上下文对象
  * @returns 处理后的字符串
  */
-export function evaluateTemplateExpressions(template: string, context: Record<string, any>): string {
+export function evaluateTemplateExpressions(template: string, context: ExecutionContext): string {
+  // 增加严格的类型检查
+  if (typeof template !== 'string') {
+    console.error('[evaluateTemplateExpressions] Error: Expected template to be a string, but received:', typeof template, template);
+    return ""; // 或者抛出错误，或者返回一个默认值
+  }
+
   if (!template) return "";
 
-  return template.replace(JS_EXPRESSION_REGEX, (match, expression) => {
-    try {
-      // 创建一个安全的求值函数
-      const evalInContext = new Function(...Object.keys(context), `
-        try {
-          return ${expression};
-        } catch (e) {
-          return "[表达式错误: " + e.message + "]";
-        }
-      `);
+  // 获取基础变量和数据管理函数
+  const variables = context.variables;
+  const dataFunctions = {
+    getData: context.getData,
+    setData: context.setData,
+    containsData: context.containsData,
+    removeData: context.removeData,
+    getStorageData: context.getStorageData,
+    setStorageData: context.setStorageData,
+    hasStorageData: context.hasStorageData,
+    removeStorageData: context.removeStorageData,
+    clearStorageData: context.clearStorageData,
+  };
 
-      // 执行表达式并返回结果
-      const result = evalInContext(...Object.values(context));
-      return result !== undefined ? String(result) : "";
+  // 合并基础变量和数据管理函数的作用域
+  const scopeVariables = { ...variables, ...dataFunctions };
+  const scopeKeys = Object.keys(scopeVariables);
+  const scopeValues = Object.values(scopeVariables);
+
+  // 第一步：处理简单的文本替换 {{variable.path}}
+  let result = template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
+    if (path.trim().startsWith('js:') || path.trim().startsWith('js+:') || path.trim().startsWith('js-run:')) {
+      return match; // 跳过所有JS变体，留给下一步
+    }
+
+    try {
+      // 解析路径
+      const parts = path.trim().split('.');
+      let value: any = scopeVariables;
+
+      // 递归获取嵌套属性
+      for (const part of parts) {
+        if (value === undefined || value === null) return match;
+        if (dataFunctions.hasOwnProperty(part) && parts.length === 1) {
+          value = value[part]; // 不要调用顶层函数
+        } else if (typeof value[part] === 'function') {
+          value = value[part]();
+        } else {
+          value = value[part];
+        }
+        if (typeof value === 'function' && !dataFunctions.hasOwnProperty(part)) value = value();
+      }
+
+      return value !== undefined && value !== null ? String(value) : match;
     } catch (error) {
-      console.error("表达式求值错误:", error);
-      return `[表达式错误: ${(error as Error).message}]`;
+      console.error('模板格式化错误:', error);
+      return match; // 出错时返回原始匹配项
+    }
+  });
+
+  // 第二步：处理 JS 表达式和代码块 {{js: ...}}, {{js+: ...}}, {{js-run: ...}}
+  return result.replace(JS_EXPRESSION_REGEX, (match, type, code) => {
+    try {
+      let functionBody: string;
+
+      if (type === 'js') {
+        // 简单表达式: 隐式 return
+        functionBody = `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return \"[表达式错误: \" + e.message + \"]\"; }`;
+      } else { // js+ 或 js-run
+        // 代码块: 需要显式 return
+        functionBody = `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return \"[代码块错误: \" + e.message + \"]\"; }`;
+      }
+
+      const evalInContext = new Function(...scopeKeys, functionBody);
+
+      const evalResult = evalInContext(...scopeValues);
+
+      // 对结果进行处理，将 undefined/null 转换为空字符串，除非是错误消息
+      return typeof evalResult === 'string' && (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
+        ? evalResult
+        : String(evalResult ?? '');
+
+    } catch (error) {
+      // 捕获 Function 构造或顶层执行错误
+      console.error("JS占位符处理错误:", error, "类型:", type, "代码:", code);
+      return `[处理错误: ${(error as Error).message}]`;
     }
   });
 }
@@ -61,7 +131,7 @@ export function escapeRegExp(string: string): string {
  * @param placeholders 占位符列表
  * @returns 转换后的模板
  */
-export function convertToJsExpressions(template: string, placeholders: {name: string, description: string}[]): string {
+export function convertToJsExpressions(template: string, placeholders: { name: string, description: string }[]): string {
   let result = template;
 
   placeholders.forEach(p => {
@@ -75,13 +145,29 @@ export function convertToJsExpressions(template: string, placeholders: {name: st
 }
 
 /**
+ * 从模板字符串中提取所有 JS 表达式占位符。
+ * 例如，从 'Hello {{js: user.name}}, time: {{js: Date.now()}}' 提取出
+ * ['{{js: user.name}}', '{{js: Date.now()}}']
+ * @param template 模板字符串
+ * @returns 包含所有匹配的 JS 表达式字符串的数组
+ */
+export function extractJsExpressions(template: string): string[] {
+  if (!template) {
+    return [];
+  }
+  // 使用全局匹配来查找所有出现
+  const matches = template.match(JS_EXPRESSION_REGEX);
+  return matches || []; // match 返回 null 或字符串数组
+}
+
+/**
  * 为礼物感谢模块创建上下文对象
  * @param user 用户信息
  * @param gift 礼物信息
  * @returns 上下文对象
  */
 export function createGiftThankContext(user: { uid: number; name: string },
-                                     gift: { name: string; count: number; price: number }): Record<string, any> {
+  gift: { name: string; count: number; price: number }): Record<string, any> {
   return {
     user: {
       uid: user.uid,
@@ -104,68 +190,6 @@ export function createGiftThankContext(user: { uid: number; name: string },
       pluralize: (count: number, singular: string, plural: string) => count === 1 ? singular : plural,
     },
     // 日期时间
-    date: {
-      now: new Date(),
-      timestamp: Date.now(),
-      formatted: new Intl.DateTimeFormat('zh-CN').format(new Date())
-    }
-  };
-}
-
-/**
- * 为入场欢迎模块创建上下文对象
- * @param user 用户信息
- * @returns 上下文对象
- */
-export function createEntryWelcomeContext(user: { uid: number; name: string; medal?: { level: number; name: string } }): Record<string, any> {
-  return {
-    user: {
-      uid: user.uid,
-      name: user.name,
-      nameLength: user.name.length,
-      medal: user.medal || { level: 0, name: '' },
-      hasMedal: !!user.medal
-    },
-    date: {
-      now: new Date(),
-      timestamp: Date.now(),
-      formatted: new Intl.DateTimeFormat('zh-CN').format(new Date()),
-      hour: new Date().getHours()
-    },
-    // 时间相关的便捷函数
-    timeOfDay: () => {
-      const hour = new Date().getHours();
-      if (hour < 6) return '凌晨';
-      if (hour < 12) return '上午';
-      if (hour < 14) return '中午';
-      if (hour < 18) return '下午';
-      return '晚上';
-    }
-  };
-}
-
-/**
- * 为自动回复模块创建上下文对象
- * @param user 用户信息
- * @param message 消息内容
- * @returns 上下文对象
- */
-export function createAutoReplyContext(user: { uid: number; name: string; medal?: { level: number; name: string } },
-                                    message: string): Record<string, any> {
-  return {
-    user: {
-      uid: user.uid,
-      name: user.name,
-      nameLength: user.name.length,
-      medal: user.medal || { level: 0, name: '' },
-      hasMedal: !!user.medal
-    },
-    message: {
-      content: message,
-      length: message.length,
-      containsQuestion: message.includes('?') || message.includes('？'),
-      words: message.split(/\s+/).filter(Boolean)
-    },
     date: {
       now: new Date(),
       timestamp: Date.now(),

@@ -1,15 +1,18 @@
 import { ref, watch, Ref, computed } from 'vue';
 import { useStorage } from '@vueuse/core';
 import {
-  getRandomTemplate,
-  formatTemplate,
   buildExecutionContext
 } from '../utils';
 import {
   AutoActionItem,
   TriggerType,
-  RuntimeState
+  RuntimeState,
+  ExecutionContext
 } from '../types';
+import {
+  filterValidActions,
+  executeActions
+} from '../actionUtils';
 
 /**
  * 定时弹幕模块
@@ -38,12 +41,8 @@ export function useScheduledDanmaku(
   ) {
     if (!roomId.value) return;
 
-    // 获取定时消息操作
-    const scheduledActions = actions.filter(action =>
-      action.triggerType === TriggerType.SCHEDULED &&
-      action.enabled &&
-      (!action.triggerConfig.onlyDuringLive || isLive.value)
-    );
+    // 使用通用函数过滤有效的定时弹幕操作
+    const scheduledActions = filterValidActions(actions, TriggerType.SCHEDULED, isLive);
 
     // 为每个定时操作设置定时器
     scheduledActions.forEach(action => {
@@ -54,22 +53,30 @@ export function useScheduledDanmaku(
 
       // 创建定时器函数
       const timerFn = () => {
-        // 创建执行上下文
-        const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED);
-
-        // 选择并发送消息
-        const template = getRandomTemplate(action.templates);
-        if (template && roomId.value) {
-          const formattedMessage = formatTemplate(template, context);
-          sendLiveDanmaku(roomId.value, formattedMessage);
+        // 使用通用执行函数处理定时操作
+        if (roomId.value) {
+          executeActions(
+            [action], // 只处理单个操作
+            null, // 定时操作没有触发事件
+            TriggerType.SCHEDULED,
+            roomId.value,
+            runtimeState,
+            { sendLiveDanmaku },
+            {
+              skipUserFilters: true, // 定时任务不需要用户过滤
+              skipCooldownCheck: false // 可以保留冷却检查
+            }
+          );
         }
 
         // 设置下一次定时
         runtimeState.scheduledTimers[action.id] = setTimeout(timerFn, intervalSeconds * 1000);
+        runtimeState.timerStartTimes[action.id] = Date.now(); // 更新定时器启动时间
       };
 
       // 首次启动定时器
       runtimeState.scheduledTimers[action.id] = setTimeout(timerFn, intervalSeconds * 1000);
+      runtimeState.timerStartTimes[action.id] = Date.now(); // 记录定时器启动时间
     });
   }
 

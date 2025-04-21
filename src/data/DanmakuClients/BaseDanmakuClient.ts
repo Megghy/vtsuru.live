@@ -33,6 +33,7 @@ export default abstract class BaseDanmakuClient {
     enter: ((arg1: EventModel, arg2?: any) => void)[]; // 新增: 用户进入事件
     scDel: ((arg1: EventModel, arg2?: any) => void)[]; // 新增: SC 删除事件
     all: ((arg1: any) => void)[]; // 'all' 事件监听器接收原始消息或特定事件包
+    follow: ((arg1: EventModel, arg2?: any) => void)[]; // 新增: 关注事件
   };
 
   // --- 事件系统 2: 使用原始数据类型 ---
@@ -45,6 +46,7 @@ export default abstract class BaseDanmakuClient {
     enter: ((arg1: any, arg2?: any) => void)[]; // 新增: 用户进入事件
     scDel: ((arg1: any, arg2?: any) => void)[]; // 新增: SC 删除事件
     all: ((arg1: any) => void)[]; // 'all' 事件监听器接收原始消息或特定事件包
+    follow: ((arg1: any, arg2?: any) => void)[]; // 新增: 关注事件
   };
 
   // 创建空的 EventModel 监听器对象
@@ -57,6 +59,7 @@ export default abstract class BaseDanmakuClient {
       enter: [],
       scDel: [],
       all: [],
+      follow: [], // 初始化 follow 事件
     };
   }
 
@@ -70,6 +73,7 @@ export default abstract class BaseDanmakuClient {
       enter: [],
       scDel: [],
       all: [],
+      follow: [], // 初始化 follow 事件
     };
   }
 
@@ -296,6 +300,7 @@ export default abstract class BaseDanmakuClient {
   public onEvent(eventName: 'enter', listener: (arg1: EventModel, arg2?: any) => void): this; // 新增
   public onEvent(eventName: 'scDel', listener: (arg1: EventModel, arg2?: any) => void): this; // 新增
   public onEvent(eventName: 'all', listener: (arg1: any) => void): this;
+  public onEvent(eventName: 'follow', listener: (arg1: EventModel, arg2?: any) => void): this; // 新增
   public onEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: (...args: any[]) => void): this {
     if (!this.eventsAsModel[eventName]) {
       // @ts-ignore
@@ -327,6 +332,7 @@ export default abstract class BaseDanmakuClient {
   public on(eventName: 'enter', listener: (arg1: any, arg2?: any) => void): this; // 新增
   public on(eventName: 'scDel', listener: (arg1: any, arg2?: any) => void): this; // 新增
   public on(eventName: 'all', listener: (arg1: any) => void): this;
+  public on(eventName: 'follow', listener: (arg1: any, arg2?: any) => void): this; // 新增
   public on(eventName: keyof BaseDanmakuClient['eventsRaw'], listener: (...args: any[]) => void): this {
     if (!this.eventsRaw[eventName]) {
       // @ts-ignore

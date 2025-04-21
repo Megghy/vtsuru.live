@@ -42,7 +42,6 @@ import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/io
             反馈页面
           </NButton>
           <NDivider vertical />
-          邮箱:
           <NButton
             tag="a"
             type="info"
@@ -86,6 +85,18 @@ import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/io
                   <LogoGithub />
                 </NIcon>
                 <span>源代码仓库</span>
+              </NButton>
+              <NButton
+                tag="a"
+                href="https://stats.uptimerobot.com/vGKZv8uhVC"
+                target="_blank"
+                text
+                style="display: flex; align-items: center; gap: 4px; color: #666;"
+              >
+                <NIcon size="16">
+                  <ServerOutline />
+                </NIcon>
+                <span>服务状态</span>
               </NButton>
             </div>
           </NSpace>

@@ -1,162 +1,172 @@
-import { Ref } from 'vue';
-import { useStorage } from '@vueuse/core';
+import { computed, Ref } from 'vue';
 import { GuardLevel, EventModel } from '@/api/api-models';
 import {
   AutoActionItem,
   TriggerType,
-  ActionType,
-  RuntimeState
+  RuntimeState,
+  ExecutionContext,
+  ActionType
 } from '../types';
-import { formatTemplate, buildExecutionContext } from '../utils';
+import {
+  filterValidActions,
+  executeActions
+} from '../actionUtils';
+import { buildExecutionContext } from '../utils';
 
 /**
  * 舰长私信模块
- * @param isLive 是否处于直播状态
  * @param roomId 房间ID
  * @param sendPrivateMessage 发送私信函数
  * @param sendLiveDanmaku 发送弹幕函数
  */
 export function useGuardPm(
-  isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
-  sendPrivateMessage: (userId: number, message: string) => Promise<boolean>,
-  sendLiveDanmaku?: (roomId: number, message: string) => Promise<boolean>
+  sendPrivateMessage: (uid: number, message: string) => Promise<boolean>,
+  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>
 ) {
-  // 保留旧配置用于兼容
-  const config = useStorage<{
-    enabled: boolean;
-    template: string;
-    sendDanmakuConfirm: boolean;
-    danmakuTemplate: string;
-    preventRepeat: boolean;
-    giftCodeMode: boolean;
-    giftCodes: { level: number; codes: string[] }[];
-    onlyDuringLive: boolean;
-  }>(
-    'autoAction.guardPmConfig',
-    {
-      enabled: false,
-      template: '感谢 {{user.name}} 成为 {{guard.levelName}}！欢迎加入！',
-      sendDanmakuConfirm: false,
-      danmakuTemplate: '已私信 {{user.name}} 舰长福利！',
-      preventRepeat: true,
-      giftCodeMode: false,
-      giftCodes: [],
-      onlyDuringLive: true
-    }
-  );
-
   /**
-   * 处理舰长事件 - 支持新的AutoActionItem结构
-   * @param event 舰长事件
+   * 处理舰长购买事件
    * @param actions 自动操作列表
+   * @param event 舰长购买事件
    * @param runtimeState 运行时状态
    */
-  function processGuard(
-    event: EventModel,
+  function handleGuardBuy(
     actions: AutoActionItem[],
+    event: any,
     runtimeState: RuntimeState
   ) {
     if (!roomId.value) return;
 
-    const guardLevel = event.guard_level;
-    if (guardLevel === GuardLevel.None) return; // 不是上舰事件
+    // 使用通用函数过滤舰长事件的操作
+    const isLiveRef = computed(() => true);
+    const guardActions = filterValidActions(actions, TriggerType.GUARD, isLiveRef);
 
-    // 过滤出有效的舰长私信操作
-    const guardActions = actions.filter(action =>
-      action.triggerType === TriggerType.GUARD &&
-      action.enabled &&
-      action.actionType === ActionType.SEND_PRIVATE_MSG &&
-      (!action.triggerConfig.onlyDuringLive || isLive.value)
-    );
+    // 使用通用执行函数处理舰长事件
+    if (guardActions.length > 0 && roomId.value) {
+      executeActions(
+        guardActions,
+        event,
+        TriggerType.GUARD,
+        roomId.value,
+        runtimeState,
+        { sendPrivateMessage, sendLiveDanmaku },
+        {
+          customFilters: [
+            // 防止重复发送检查
+            (action, context) => {
+              if (action.triggerConfig.preventRepeat && event && event.uid) {
+                // 确保 uid 是数字类型
+                const uid = typeof event.uid === 'number' ? event.uid : parseInt(event.uid, 10);
 
-    if (guardActions.length === 0) return;
+                // 检查是否已经发送过
+                if (runtimeState.sentGuardPms.has(uid)) {
+                  return false;
+                }
 
-    // 创建执行上下文
-    const context = buildExecutionContext(event, roomId.value, TriggerType.GUARD);
+                // 添加到已发送集合
+                runtimeState.sentGuardPms.add(uid);
+              }
+              return true;
+            }
+          ],
+          customContextBuilder: (eventData, roomId, triggerType): ExecutionContext => {
+            // 使用标准上下文构建方法
+            const context = buildExecutionContext(eventData, roomId, triggerType);
 
-    // 处理礼品码
-    for (const action of guardActions) {
-      // 防止重复发送
-      if (action.triggerConfig.preventRepeat) {
-        if (runtimeState.sentGuardPms.has(event.uid)) {
-          console.log(`用户 ${event.uname} (${event.uid}) 已发送过上舰私信，跳过。`);
-          continue;
-        }
-      }
+            // 如果是舰长事件且有事件数据，处理礼品码
+            if (triggerType === TriggerType.GUARD && eventData && eventData.guard_level !== undefined) {
+              const guardLevel = eventData.guard_level;
 
-      // 特定舰长等级过滤
-      if (action.triggerConfig.guardLevels && !action.triggerConfig.guardLevels.includes(guardLevel)) {
-        continue;
-      }
+              // 查找包含礼品码的操作
+              guardActions.forEach(action => {
+                // 找到对应等级的礼品码
+                if (action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0) {
+                  // 优先查找特定等级的礼品码
+                  let levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === guardLevel);
 
-      // 获取礼品码
-      let giftCode = '';
-      if (action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0) {
-        // 查找匹配等级的礼品码
-        const levelCodes = action.triggerConfig.giftCodes.find(gc => gc.level === guardLevel);
-        if (levelCodes && levelCodes.codes.length > 0) {
-          giftCode = levelCodes.codes.shift() || '';
-        } else {
-          // 查找通用码 (level 0)
-          const commonCodes = action.triggerConfig.giftCodes.find(gc => gc.level === GuardLevel.None);
-          if (commonCodes && commonCodes.codes.length > 0) {
-            giftCode = commonCodes.codes.shift() || '';
-          } else {
-            console.warn(`等级 ${guardLevel} 或通用礼品码已用完，无法发送给 ${event.uname}`);
-          }
-        }
-      }
+                  // 如果没有找到特定等级的礼品码，尝试查找通用礼品码（level为0）
+                  if (!levelCodesEntry) {
+                    levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === 0);
+                  }
 
-      // 更新上下文中的礼品码
-      if (context.variables.guard) {
-        context.variables.guard.giftCode = giftCode;
-      }
-
-      // 选择模板并格式化
-      if (action.templates.length > 0) {
-        const template = action.templates[0]; // 对于私信，使用第一个模板
-        const formattedMessage = formatTemplate(template, context);
-
-        // 发送私信
-        sendPrivateMessage(event.uid, formattedMessage).then(success => {
-          if (success) {
-            console.log(`成功发送上舰私信给 ${event.uname} (${event.uid})`);
-            if (action.triggerConfig.preventRepeat) {
-              runtimeState.sentGuardPms.add(event.uid);
+                  if (levelCodesEntry && levelCodesEntry.codes && levelCodesEntry.codes.length > 0) {
+                    // 随机选择一个礼品码
+                    const randomIndex = Math.floor(Math.random() * levelCodesEntry.codes.length);
+                    const randomCode = levelCodesEntry.codes[randomIndex];
+                    // 确保guard变量存在并设置礼品码
+                    if (context.variables.guard) {
+                      context.variables.guard.giftCode = randomCode;
+                      // 在上下文中存储选中的礼品码信息以供后续消耗
+                      context.variables.guard.selectedGiftCode = {
+                        code: randomCode,
+                        level: levelCodesEntry.level
+                      };
+                    }
+                  }
+                }
+              });
             }
 
-            // 发送弹幕确认
-            if (roomId.value && sendLiveDanmaku) {
-              // 查找确认弹幕的设置
-              const confirmActions = actions.filter(a =>
-                a.triggerType === TriggerType.GUARD &&
-                a.enabled &&
-                a.actionType === ActionType.SEND_DANMAKU
-              );
+            return context;
+          },
+          onSuccess: (action: AutoActionItem, context: ExecutionContext) => {
+            // 检查是否需要消耗礼品码
+            if (
+              action.actionType === ActionType.SEND_PRIVATE_MSG &&
+              action.triggerConfig.consumeGiftCode &&
+              context.variables.guard?.selectedGiftCode
+            ) {
+              const { code: selectedCode, level: selectedLevel } = context.variables.guard.selectedGiftCode;
 
-              if (confirmActions.length > 0 && confirmActions[0].templates.length > 0) {
-                const confirmMsg = formatTemplate(confirmActions[0].templates[0], context);
-                sendLiveDanmaku(roomId.value, confirmMsg);
+              console.log(`[AutoAction] 尝试消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}`);
+
+              // 确保 giftCodes 存在且为数组
+              if (Array.isArray(action.triggerConfig.giftCodes)) {
+                // 找到对应等级的礼品码条目
+                const levelCodesEntry = action.triggerConfig.giftCodes.find(gc => gc.level === selectedLevel);
+
+                if (levelCodesEntry && Array.isArray(levelCodesEntry.codes)) {
+                  // 找到要删除的礼品码的索引
+                  const codeIndex = levelCodesEntry.codes.indexOf(selectedCode);
+
+                  if (codeIndex > -1) {
+                    // 从数组中移除礼品码
+                    levelCodesEntry.codes.splice(codeIndex, 1);
+                    console.log(`[AutoAction] 成功消耗礼品码: ActionID=${action.id}, Level=${selectedLevel}, Code=${selectedCode}. 剩余 ${levelCodesEntry.codes.length} 个。`);
+                    // !!! 重要提示: 此处直接修改了 action 对象。
+                    // !!! 请确保你的状态管理允许这种修改，或者调用 store action 来持久化更新。
+                    // 例如: store.updateActionGiftCodes(action.id, selectedLevel, levelCodesEntry.codes);
+                  } else {
+                    console.warn(`[AutoAction] 未能在等级 ${selectedLevel} 中找到要消耗的礼品码: ${selectedCode}, ActionID=${action.id}`);
+                  }
+                } else {
+                  console.warn(`[AutoAction] 未找到等级 ${selectedLevel} 的礼品码列表或列表格式不正确, ActionID=${action.id}`);
+                }
+              } else {
+                console.warn(`[AutoAction] Action ${action.id} 的 giftCodes 配置不存在或不是数组。`);
               }
             }
-          } else {
-            console.error(`发送上舰私信给 ${event.uname} (${event.uid}) 失败`);
-            // 失败时归还礼品码
-            if (giftCode && action.triggerConfig.giftCodes) {
-              const levelCodes = action.triggerConfig.giftCodes.find(gc => gc.level === guardLevel);
-              if (levelCodes) {
-                levelCodes.codes.push(giftCode);
-              }
-            }
           }
-        });
-      }
+        }
+      );
+    }
+  }
+
+  /**
+   * 获取舰长等级名称
+   * @param level 舰长等级
+   * @returns 舰长等级名称
+   */
+  function getGuardLevelName(level: number): string {
+    switch (level) {
+      case 1: return '总督';
+      case 2: return '提督';
+      case 3: return '舰长';
+      default: return '未知等级';
     }
   }
 
   return {
-    config,
-    processGuard
+    handleGuardBuy
   };
 }

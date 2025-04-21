@@ -1,8 +1,6 @@
 import { ref, Ref } from 'vue';
-import { EventModel, EventDataTypes } from '@/api/api-models';
+import { EventModel } from '@/api/api-models';
 import {
-  formatTemplate,
-  getRandomTemplate,
   buildExecutionContext
 } from '../utils';
 import {
@@ -10,6 +8,10 @@ import {
   TriggerType,
   RuntimeState
 } from '../types';
+import {
+  filterValidActions,
+  executeActions
+} from '../actionUtils';
 
 /**
  * 关注感谢模块
@@ -26,7 +28,7 @@ export function useFollowThank(
 ) {
   // 运行时数据
   const aggregatedFollows = ref<{uid: number, name: string, timestamp: number}[]>([]);
-  const timer = ref<NodeJS.Timeout | null>(null);
+  const timer = ref<any | null>(null);
 
   /**
    * 处理关注事件 - 支持新的AutoActionItem结构
@@ -41,52 +43,19 @@ export function useFollowThank(
   ) {
     if (!roomId.value) return;
 
-    // 过滤出有效的关注感谢操作
-    const followActions = actions.filter(action =>
-      action.triggerType === TriggerType.FOLLOW &&
-      action.enabled &&
-      (!action.triggerConfig.onlyDuringLive || isLive.value) &&
-      (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
-    );
+    // 使用通用函数过滤有效的关注感谢操作
+    const followActions = filterValidActions(actions, TriggerType.FOLLOW, isLive, isTianXuanActive);
 
-    if (followActions.length === 0) return;
-
-    // 创建执行上下文
-    const context = buildExecutionContext(event, roomId.value, TriggerType.FOLLOW);
-
-    // 处理每个符合条件的操作
-    for (const action of followActions) {
-      // 跳过不符合用户过滤条件的
-      if (action.triggerConfig.userFilterEnabled) {
-        if (action.triggerConfig.requireMedal && !event.fans_medal_wearing_status) continue;
-        if (action.triggerConfig.requireCaptain && !event.guard_level) continue;
-      }
-
-      // 检查冷却时间
-      const lastExecTime = runtimeState.lastExecutionTime[action.id] || 0;
-      if (!action.ignoreCooldown &&
-          Date.now() - lastExecTime < (action.actionConfig.cooldownSeconds || 0) * 1000) {
-        continue; // 仍在冷却中
-      }
-
-      // 选择并发送回复
-      const template = getRandomTemplate(action.templates);
-      if (template) {
-        // 更新冷却时间
-        runtimeState.lastExecutionTime[action.id] = Date.now();
-
-        // 格式化并发送
-        const formattedReply = formatTemplate(template, context);
-
-        // 延迟发送
-        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => {
-            sendLiveDanmaku(roomId.value!, formattedReply);
-          }, action.actionConfig.delaySeconds * 1000);
-        } else {
-          sendLiveDanmaku(roomId.value!, formattedReply);
-        }
-      }
+    // 使用通用执行函数处理关注事件
+    if (followActions.length > 0 && roomId.value) {
+      executeActions(
+        followActions,
+        event,
+        TriggerType.FOLLOW,
+        roomId.value,
+        runtimeState,
+        { sendLiveDanmaku }
+      );
     }
   }
 

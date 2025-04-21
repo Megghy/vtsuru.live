@@ -6,7 +6,7 @@ import { defineStore } from 'pinia';
 import { computed, ref, shallowRef } from 'vue'; // 引入 shallowRef
 
 // 定义支持的事件名称类型
-type EventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel';
+type EventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow';
 type EventNameWithAll = EventName | 'all';
 // 定义监听器函数类型
 type Listener = (arg1: any, arg2: any) => void;

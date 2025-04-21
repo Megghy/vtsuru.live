@@ -61,13 +61,13 @@ function removeGiftName(index: number) {
       >
         <span>礼物过滤模式:</span>
         <NSelect
-          v-model:value="action.triggerConfig.giftFilterMode"
+          v-model:value="action.triggerConfig.filterMode"
           style="width: 200px"
           :options="giftFilterModeOptions"
         />
       </NSpace>
 
-      <template v-if="action.triggerConfig.giftFilterMode === 'blacklist' || action.triggerConfig.giftFilterMode === 'whitelist'">
+      <template v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'">
         <NSpace>
           <NInput
             v-model:value="tempGiftName"
@@ -93,7 +93,7 @@ function removeGiftName(index: number) {
         </NSpace>
       </template>
 
-      <template v-if="action.triggerConfig.giftFilterMode === 'value'">
+      <template v-if="action.triggerConfig.filterMode === 'value'">
         <NSpace
           align="center"
           justify="space-between"

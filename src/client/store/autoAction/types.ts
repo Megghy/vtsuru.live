@@ -1,6 +1,6 @@
 // 统一的自动操作类型定义
 
-import { EventModel } from '@/api/api-models';
+import { EventModel, GuardLevel } from '@/api/api-models';
 
 // 触发条件类型
 export enum TriggerType {
@@ -20,6 +20,13 @@ export enum ActionType {
   EXECUTE_COMMAND = 'execute_command',  // 执行命令
 }
 
+// 关键词匹配类型
+export enum KeywordMatchType {
+  Full = 'full',         // 完全匹配
+  Contains = 'contains', // 包含匹配
+  Regex = 'regex',       // 正则匹配
+}
+
 // 优先级
 export enum Priority {
   HIGHEST = 0,
@@ -36,7 +43,7 @@ export type AutoActionItem = {
   enabled: boolean;      // 是否启用
   triggerType: TriggerType; // 触发类型
   actionType: ActionType;   // 操作类型
-  templates: string[];      // 模板列表
+  template: string;      // 模板
   priority: Priority;       // 优先级
 
   // 高级配置
@@ -45,33 +52,7 @@ export type AutoActionItem = {
   executeCommand: string;    // 要执行的JS代码
 
   // 触发器特定配置
-  triggerConfig: {
-    // 通用
-    userFilterEnabled?: boolean; // 是否启用用户过滤
-    requireMedal?: boolean;      // 要求本房间勋章
-    requireCaptain?: boolean;    // 要求任意舰长
-    onlyDuringLive?: boolean;    // 仅直播中启用
-    ignoreTianXuan?: boolean;    // 天选时刻忽略
-
-    // 弹幕触发特定
-    keywords?: string[];         // 触发关键词
-    blockwords?: string[];       // 屏蔽词
-
-    // 礼物触发特定
-    filterMode?: 'none' | 'blacklist' | 'whitelist' | 'value' | 'free'; // 礼物过滤模式
-    filterGiftNames?: string[];  // 礼物黑/白名单
-    minValue?: number;           // 最低礼物价值
-    includeQuantity?: boolean;   // 是否包含礼物数量
-
-    // 定时触发特定
-    intervalSeconds?: number;    // 间隔秒数
-    schedulingMode?: 'random' | 'sequential'; // 定时模式
-
-    // 上舰特定
-    guardLevels?: number[];      // 舰长等级过滤
-    preventRepeat?: boolean;     // 防止重复发送
-    giftCodes?: {level: number, codes: string[]}[]; // 礼品码
-  };
+  triggerConfig: TriggerConfig;
 
   // 动作特定配置
   actionConfig: {
@@ -88,12 +69,78 @@ export interface ExecutionContext {
   roomId?: number;               // 直播间ID
   variables: Record<string, any>; // 额外变量
   timestamp: number;             // 时间戳
+
+  // --- 新增运行时数据管理函数 ---
+  /** 获取运行时数据 */
+  getData: <T>(key: string, defaultValue?: T) => T | undefined;
+  /** 设置运行时数据 */
+  setData: <T>(key: string, value: T) => void;
+  /** 检查运行时数据是否存在 */
+  containsData: (key: string) => boolean;
+  /** 移除运行时数据 */
+  removeData: (key: string) => void;
+
+  // --- 新增持久化数据管理函数 ---
+  /** 获取持久化存储的数据 */
+  getStorageData: <T>(key: string, defaultValue?: T) => Promise<T | undefined>;
+  /** 设置持久化存储的数据 */
+  setStorageData: <T>(key: string, value: T) => Promise<void>;
+  /** 检查持久化存储中是否存在指定的键 */
+  hasStorageData: (key: string) => Promise<boolean>;
+  /** 从持久化存储中删除数据 */
+  removeStorageData: (key: string) => Promise<void>;
+  /** 清除所有持久化存储的数据 */
+  clearStorageData: () => Promise<void>;
 }
 
 // 运行状态接口
 export interface RuntimeState {
   lastExecutionTime: Record<string, number>; // 上次执行时间
   aggregatedEvents: Record<string, any[]>;   // 聚合的事件
-  scheduledTimers: Record<string, NodeJS.Timeout | null>; // 定时器
+  scheduledTimers: Record<string, any | null>; // 定时器 ID
+  timerStartTimes: Record<string, number>; // <--- 新增：独立定时器启动时间戳
+  globalTimerStartTime: number | null;     // <--- 新增：全局定时器启动时间戳
   sentGuardPms: Set<number>;                // 已发送的舰长私信
+}
+
+export interface TriggerConfig {
+  // User filters
+  userFilterEnabled?: boolean;
+  requireMedal?: boolean;
+  requireCaptain?: boolean;
+
+  // Common conditions
+  onlyDuringLive?: boolean;
+  ignoreTianXuan?: boolean;
+
+  // Keywords for autoReply
+  keywords?: string[];
+  keywordMatchType?: KeywordMatchType;
+  blockwords?: string[];
+  blockwordMatchType?: KeywordMatchType;
+
+  // Gift filters
+  filterMode?: 'blacklist' | 'whitelist' | 'value' | 'none' | 'free';
+  filterGiftNames?: string[];
+  minValue?: number; // For gift and SC minimum value (元)
+  includeQuantity?: boolean; // 是否包含礼物数量
+
+  // SC相关配置
+  scFilterMode?: 'none' | 'price'; // SC过滤模式
+  scMinPrice?: number; // SC最低价格(元)
+
+  // Scheduled options
+  useGlobalTimer?: boolean;
+  intervalSeconds?: number;
+  schedulingMode?: 'random' | 'sequential';
+
+  // Guard related
+  guardLevels?: GuardLevel[];
+  preventRepeat?: boolean;
+  giftCodes?: { level: number; codes: string[] }[];
+  consumeGiftCode?: boolean; // 是否消耗礼品码
+
+  // Confirm message options
+  sendDanmakuConfirm?: boolean; // 是否发送弹幕确认
+  isConfirmMessage?: boolean; // 标记这是一个确认消息
 }

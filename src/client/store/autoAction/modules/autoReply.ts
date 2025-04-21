@@ -3,15 +3,16 @@ import { EventModel } from '@/api/api-models';
 import {
   AutoActionItem,
   TriggerType,
-  ExecutionContext,
-  RuntimeState
+  RuntimeState,
+  KeywordMatchType
 } from '../types';
 import {
-  formatTemplate,
-  getRandomTemplate,
-  shouldProcess,
-  evaluateExpression
+  buildExecutionContext
 } from '../utils';
+import {
+  filterValidActions,
+  executeActions
+} from '../actionUtils';
 
 /**
  * 自动回复模块
@@ -28,6 +29,32 @@ export function useAutoReply(
   const lastReplyTimestamps = ref<{ [keyword: string]: number; }>({});
 
   /**
+   * 检查关键词匹配
+   * @param text 要检查的文本
+   * @param keyword 关键词
+   * @param matchType 匹配类型
+   * @returns 是否匹配
+   */
+  function isKeywordMatch(text: string, keyword: string, matchType: KeywordMatchType = KeywordMatchType.Contains): boolean {
+    switch (matchType) {
+      case KeywordMatchType.Full:
+        return text === keyword;
+      case KeywordMatchType.Contains:
+        return text.includes(keyword);
+      case KeywordMatchType.Regex:
+        try {
+          const regex = new RegExp(keyword);
+          return regex.test(text);
+        } catch (e) {
+          console.warn('无效的正则表达式:', keyword, e);
+          return false;
+        }
+      default:
+        return text.includes(keyword); // 默认使用包含匹配
+    }
+  }
+
+  /**
    * 处理弹幕事件
    * @param event 弹幕事件
    * @param actions 自动操作列表
@@ -40,95 +67,57 @@ export function useAutoReply(
   ) {
     if (!roomId.value) return;
 
-    // 过滤出有效的自动回复操作
-    const replyActions = actions.filter(action =>
-      action.triggerType === TriggerType.DANMAKU &&
-      action.enabled &&
-      (!action.triggerConfig.onlyDuringLive || isLive.value)
-    );
+    // 使用通用函数过滤有效的自动回复操作
+    const replyActions = filterValidActions(actions, TriggerType.DANMAKU, isLive);
 
-    if (replyActions.length === 0) return;
+    if (replyActions.length > 0 && roomId.value) {
+      const message = event.msg;
 
-    const message = event.msg;
-    const now = Date.now();
+      executeActions(
+        replyActions,
+        event,
+        TriggerType.DANMAKU,
+        roomId.value,
+        runtimeState,
+        { sendLiveDanmaku },
+        {
+          customFilters: [
+            // 关键词和屏蔽词检查
+            (action, context) => {
+              const keywordMatchType = action.triggerConfig.keywordMatchType || KeywordMatchType.Contains;
+              const keywordMatch = action.triggerConfig.keywords?.some(kw =>
+                isKeywordMatch(message, kw, keywordMatchType)
+              );
+              if (!keywordMatch) return false;
 
-    // 准备执行上下文
-    const context: ExecutionContext = {
-      event,
-      roomId: roomId.value,
-      variables: {
-        user: {
-          name: event.uname,
-          uid: event.uid,
-          guardLevel: event.guard_level,
-          hasMedal: event.fans_medal_wearing_status,
-          medalLevel: event.fans_medal_level,
-          medalName: event.fans_medal_name
-        },
-        message: event.msg,
-        timeOfDay: () => {
-          const hour = new Date().getHours();
-          if (hour < 6) return '凌晨';
-          if (hour < 9) return '早上';
-          if (hour < 12) return '上午';
-          if (hour < 14) return '中午';
-          if (hour < 18) return '下午';
-          if (hour < 22) return '晚上';
-          return '深夜';
-        },
-        date: {
-          formatted: new Date().toLocaleString('zh-CN')
+              const blockwordMatchType = action.triggerConfig.blockwordMatchType || KeywordMatchType.Contains;
+              const blockwordMatch = action.triggerConfig.blockwords?.some(bw =>
+                isKeywordMatch(message, bw, blockwordMatchType)
+              );
+              return !blockwordMatch; // 如果匹配屏蔽词返回false，否则返回true
+            }
+          ],
+          // 附加选项：只处理第一个匹配的自动回复
+          customContextBuilder: (event, roomId, triggerType) => {
+            const now = Date.now();
+            const context = buildExecutionContext(event, roomId, triggerType);
+
+            // 添加时间段判断变量
+            context.variables.timeOfDay = () => {
+              const hour = new Date().getHours();
+              if (hour < 6) return '凌晨';
+              if (hour < 9) return '早上';
+              if (hour < 12) return '上午';
+              if (hour < 14) return '中午';
+              if (hour < 18) return '下午';
+              if (hour < 22) return '晚上';
+              return '深夜';
+            };
+
+            return context;
+          }
         }
-      },
-      timestamp: now
-    };
-
-    // 检查每个操作
-    for (const action of replyActions) {
-      // 检查用户过滤条件
-      if (action.triggerConfig.userFilterEnabled) {
-        if (action.triggerConfig.requireMedal && !event.fans_medal_wearing_status) continue;
-        if (action.triggerConfig.requireCaptain && !event.guard_level) continue;
-      }
-
-      // 关键词和屏蔽词检查
-      const keywordMatch = action.triggerConfig.keywords?.some(kw => message.includes(kw));
-      if (!keywordMatch) continue;
-
-      const blockwordMatch = action.triggerConfig.blockwords?.some(bw => message.includes(bw));
-      if (blockwordMatch) continue; // 包含屏蔽词，不回复
-
-      // 评估逻辑表达式
-      if (action.logicalExpression && !evaluateExpression(action.logicalExpression, context)) {
-        continue;
-      }
-
-      // 检查冷却
-      const lastExecTime = runtimeState.lastExecutionTime[action.id] || 0;
-      if (!action.ignoreCooldown && now - lastExecTime < (action.actionConfig.cooldownSeconds || 0) * 1000) {
-        continue; // 仍在冷却中
-      }
-
-      // 选择回复并发送
-      const template = getRandomTemplate(action.templates);
-      if (template) {
-        // 格式化并发送
-        const formattedReply = formatTemplate(template, context);
-
-        // 更新冷却时间
-        runtimeState.lastExecutionTime[action.id] = now;
-
-        // 执行延迟处理
-        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => {
-            sendLiveDanmaku(roomId.value!, formattedReply);
-          }, action.actionConfig.delaySeconds * 1000);
-        } else {
-          sendLiveDanmaku(roomId.value!, formattedReply);
-        }
-
-        break; // 匹配到一个规则就停止
-      }
+      );
     }
   }
 

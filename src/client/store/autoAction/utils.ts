@@ -7,6 +7,16 @@ import {
   RuntimeState,
   ExecutionContext
 } from './types';
+import { get, set, del, clear, keys as idbKeys, createStore } from 'idb-keyval'; // 导入 useIDBKeyval
+
+// --- 定义用户持久化数据的自定义存储区 ---
+const USER_DATA_DB_NAME = 'AutoActionUserDataDB';
+const USER_DATA_STORE_NAME = 'userData';
+const userDataStore = createStore(USER_DATA_DB_NAME, USER_DATA_STORE_NAME);
+// ----------------------------------------
+
+// --- 定义运行时数据的前缀 (避免与页面其他 sessionStorage 冲突) ---
+const RUNTIME_STORAGE_PREFIX = 'autoaction_runtime_';
 
 /**
  * 创建默认的运行时状态
@@ -15,6 +25,8 @@ export function createDefaultRuntimeState(): RuntimeState {
   return {
     lastExecutionTime: {},
     scheduledTimers: {},
+    timerStartTimes: {},
+    globalTimerStartTime: null,
     sentGuardPms: new Set(),
     aggregatedEvents: {}
   };
@@ -28,14 +40,14 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
   const id = `auto-action-${nanoid(8)}`;
 
   // 根据不同触发类型设置默认模板
-  const defaultTemplates: Record<TriggerType, string[]> = {
-    [TriggerType.DANMAKU]: ['收到 @{user.name} 的弹幕: {event.msg}'],
-    [TriggerType.GIFT]: ['感谢 @{user.name} 赠送的 {gift.summary}'],
-    [TriggerType.GUARD]: ['感谢 @{user.name} 开通了{guard.levelName}！'],
-    [TriggerType.FOLLOW]: ['感谢 @{user.name} 的关注！'],
-    [TriggerType.ENTER]: ['欢迎 @{user.name} 进入直播间'],
-    [TriggerType.SCHEDULED]: ['这是一条定时消息，当前时间: {date.formatted}'],
-    [TriggerType.SUPER_CHAT]: ['感谢 @{user.name} 的SC: {sc.message}'],
+  const defaultTemplates: Record<TriggerType, string> = {
+    [TriggerType.DANMAKU]: '收到 {{user.name}} 的弹幕: {{danmaku.msg}}',
+    [TriggerType.GIFT]: '感谢 {{user.name}} 赠送的 {{gift.summary}}',
+    [TriggerType.GUARD]: '感谢 {{user.name}} 开通了{{danmaku.msg}}！',
+    [TriggerType.FOLLOW]: '感谢 {{user.name}} 的关注！',
+    [TriggerType.ENTER]: '欢迎 {{user.name}} 进入直播间',
+    [TriggerType.SCHEDULED]: '这是一条定时消息，当前时间: {{date.formatted}}',
+    [TriggerType.SUPER_CHAT]: '感谢 {{user.name}} 的SC!',
   };
 
   // 根据不同触发类型设置默认名称
@@ -56,7 +68,7 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     triggerType,
     actionType: triggerType === TriggerType.GUARD ? ActionType.SEND_PRIVATE_MSG : ActionType.SEND_DANMAKU,
     priority: Priority.NORMAL,
-    templates: defaultTemplates[triggerType] || ['默认模板'],
+    template: defaultTemplates[triggerType] || '默认模板',
     logicalExpression: '',
     executeCommand: '',
     ignoreCooldown: false,
@@ -79,13 +91,12 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
 }
 
 /**
- * 从模板数组中随机选择一个
- * @param templates 模板数组
+ * 处理模板字符串
+ * @param template 模板字符串
  */
-export function getRandomTemplate(templates: string[]): string | null {
-  if (!templates || templates.length === 0) return null;
-  const index = Math.floor(Math.random() * templates.length);
-  return templates[index];
+export function getRandomTemplate(template: string): string | null {
+  if (!template) return null;
+  return template;
 }
 
 /**
@@ -268,7 +279,6 @@ export function buildExecutionContext(
   const now = Date.now();
   const dateObj = new Date(now);
 
-  // 基础上下文
   const context: ExecutionContext = {
     event,
     roomId,
@@ -295,6 +305,88 @@ export function buildExecutionContext(
         if (hour < 22) return '晚上';
         return '深夜';
       }
+    },
+    // --- 实现运行时数据管理函数 (使用 sessionStorage) ---
+    getData: <T>(key: string, defaultValue?: T): T | undefined => {
+      const prefixedKey = RUNTIME_STORAGE_PREFIX + key;
+      try {
+        const storedValue = sessionStorage.getItem(prefixedKey);
+        if (storedValue === null) {
+          return defaultValue;
+        }
+        return JSON.parse(storedValue) as T;
+      } catch (error) {
+        console.error(`[Runtime SessionStorage] Error getting/parsing key '${key}':`, error);
+        return defaultValue;
+      }
+    },
+    setData: <T>(key: string, value: T): void => {
+      const prefixedKey = RUNTIME_STORAGE_PREFIX + key;
+      try {
+        // 不存储 undefined
+        if (value === undefined) {
+          sessionStorage.removeItem(prefixedKey);
+          return;
+        }
+        sessionStorage.setItem(prefixedKey, JSON.stringify(value));
+      } catch (error) {
+        console.error(`[Runtime SessionStorage] Error setting key '${key}':`, error);
+        // 如果序列化失败，可以选择移除旧键或保留
+        sessionStorage.removeItem(prefixedKey);
+      }
+    },
+    containsData: (key: string): boolean => {
+      const prefixedKey = RUNTIME_STORAGE_PREFIX + key;
+      return sessionStorage.getItem(prefixedKey) !== null;
+    },
+    removeData: (key: string): void => {
+      const prefixedKey = RUNTIME_STORAGE_PREFIX + key;
+      sessionStorage.removeItem(prefixedKey);
+    },
+    // --- 持久化数据管理函数 (不变，继续使用 userDataStore) ---
+    getStorageData: async <T>(key: string, defaultValue?: T): Promise<T | undefined> => {
+      try {
+        // 使用 userDataStore
+        const value = await get<T>(key, userDataStore);
+        return value === undefined ? defaultValue : value;
+      } catch (error) {
+        console.error(`[UserData IDB] getStorageData error for key '${key}':`, error);
+        return defaultValue;
+      }
+    },
+    setStorageData: async <T>(key: string, value: T): Promise<void> => {
+      try {
+        // 使用 userDataStore
+        await set(key, value, userDataStore);
+      } catch (error) {
+        console.error(`[UserData IDB] setStorageData error for key '${key}':`, error);
+      }
+    },
+    hasStorageData: async (key: string): Promise<boolean> => {
+      try {
+        // 使用 userDataStore
+        const value = await get(key, userDataStore);
+        return value !== undefined;
+      } catch (error) {
+        console.error(`[UserData IDB] hasStorageData error for key '${key}':`, error);
+        return false;
+      }
+    },
+    removeStorageData: async (key: string): Promise<void> => {
+      try {
+        // 使用 userDataStore
+        await del(key, userDataStore);
+      } catch (error) {
+        console.error(`[UserData IDB] removeStorageData error for key '${key}':`, error);
+      }
+    },
+    clearStorageData: async (): Promise<void> => {
+      try {
+        // 使用 userDataStore
+        await clear(userDataStore);
+      } catch (error) {
+        console.error('[UserData IDB] clearStorageData error:', error);
+      }
     }
   };
 
@@ -308,7 +400,7 @@ export function buildExecutionContext(
       medalLevel: event.fans_medal_level,
       medalName: event.fans_medal_name
     };
-
+    context.variables.danmaku = event;
     context.variables.message = event.msg;
 
     // 根据不同触发类型添加特定变量

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NSpace, NInput, NButton, NTag, NDivider, NCollapseItem, useMessage } from 'naive-ui';
+import { NSpace, NInput, NButton, NTag, NDivider, NCollapseItem, useMessage, NRadioGroup, NRadioButton } from 'naive-ui';
 import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import { KeywordMatchType } from '@/client/store/autoAction/types';
+import SingleTemplateEditor from '../SingleTemplateEditor.vue';
 
 const props = defineProps({
   action: {
@@ -15,6 +17,15 @@ const message = useMessage();
 // 弹幕关键词相关
 const tempKeyword = ref('');
 const tempBlockword = ref('');
+
+// 初始化匹配类型配置
+if (!props.action.triggerConfig.keywordMatchType) {
+  props.action.triggerConfig.keywordMatchType = KeywordMatchType.Contains;
+}
+
+if (!props.action.triggerConfig.blockwordMatchType) {
+  props.action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains;
+}
 
 // 添加关键词
 function addKeyword() {
@@ -61,6 +72,17 @@ function removeBlockword(index: number) {
     props.action.triggerConfig.blockwords.splice(index, 1);
   }
 }
+
+// 定义弹幕相关的模板占位符
+const danmakuPlaceholders = [
+  { name: '{{user.name}}', description: '发送弹幕的用户名' },
+  { name: '{{user.uid}}', description: '用户UID' },
+  { name: '{{user.guardLevel}}', description: '用户舰长等级(0-3)' },
+  { name: '{{user.medalLevel}}', description: '粉丝勋章等级' },
+  { name: '{{user.medalName}}', description: '粉丝勋章名称' },
+  { name: '{{message}}', description: '弹幕内容' },
+  { name: '{{js: message.substring(0, 10)}}', description: '弹幕内容的前10个字符' },
+];
 </script>
 
 <template>
@@ -81,6 +103,24 @@ function removeBlockword(index: number) {
         <NButton @click="addKeyword">
           添加
         </NButton>
+      </NSpace>
+
+      <NSpace align="center">
+        <span>匹配方式:</span>
+        <NRadioGroup
+          v-model:value="action.triggerConfig.keywordMatchType"
+          size="small"
+        >
+          <NRadioButton :value="KeywordMatchType.Full">
+            完全
+          </NRadioButton>
+          <NRadioButton :value="KeywordMatchType.Contains">
+            包含
+          </NRadioButton>
+          <NRadioButton :value="KeywordMatchType.Regex">
+            正则
+          </NRadioButton>
+        </NRadioGroup>
       </NSpace>
 
       <NSpace>
@@ -110,6 +150,24 @@ function removeBlockword(index: number) {
         <NButton @click="addBlockword">
           添加
         </NButton>
+      </NSpace>
+
+      <NSpace align="center">
+        <span>匹配方式:</span>
+        <NRadioGroup
+          v-model:value="action.triggerConfig.blockwordMatchType"
+          size="small"
+        >
+          <NRadioButton :value="KeywordMatchType.Full">
+            完全
+          </NRadioButton>
+          <NRadioButton :value="KeywordMatchType.Contains">
+            包含
+          </NRadioButton>
+          <NRadioButton :value="KeywordMatchType.Regex">
+            正则
+          </NRadioButton>
+        </NRadioGroup>
       </NSpace>
 
       <NSpace>
