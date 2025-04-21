@@ -1,22 +1,19 @@
 <template>
   <div>
-    <NSpin
-      v-if="isLoading"
-      show
-    />
-    <component
-      :is="selectedTemplate?.component"
-      v-else
-      ref="dynamicConfigRef"
-      :config="selectedTemplate?.settingName ? currentConfig : undefined"
-      :user-info="userInfo"
-      :bili-info="biliInfo"
-      :data="currentData"
-      :live-request-settings="settings"
-      :live-request-active="songsActive"
-      v-bind="$attrs"
-      @request-song="requestSong"
-    />
+    <NSpin :show="isLoading">
+      <component
+        :is="selectedTemplate?.component"
+        ref="dynamicConfigRef"
+        :config="selectedTemplate?.settingName ? currentConfig : undefined"
+        :user-info="userInfo"
+        :bili-info="biliInfo"
+        :data="currentData"
+        :live-request-settings="settings"
+        :live-request-active="songsActive"
+        v-bind="$attrs"
+        @request-song="requestSong"
+      />
+    </NSpin>
     <NButton
       v-if="selectedTemplate?.settingName && userInfo?.id == accountInfo.id"
       type="info"
@@ -49,8 +46,9 @@ import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/
 import { ConfigItemDefinition } from '@/data/VTsuruTypes';
 import { useStorage } from '@vueuse/core';
 import { addSeconds } from 'date-fns';
-import { NButton, NModal, NSpin, useMessage } from 'naive-ui';
+import { NButton, NModal, NSpin, useMessage, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NTag, NTooltip, NSelect, NSpace } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue';
+import { GetGuardColor, getUserAvatarUrl, isDarkMode } from '@/Utils';
 
   const accountInfo = useAccount();
   const nextRequestTime = useStorage('SongList.NextRequestTime', new Date());
@@ -83,14 +81,11 @@ import { computed, onMounted, ref, watch } from 'vue';
     return SongListTemplateMap[''];
   });
   const currentConfig = ref();
-  watch(
-    () => dynamicConfigRef,
-    () => {
-      getConfig();
-    },
-  );
 
-  const isLoading = ref(true);
+  const isDataLoading = ref(true);
+  const isConfigLoading = ref(true);
+  const isLoading = computed(() => isDataLoading.value || isConfigLoading.value);
+
   const message = useMessage();
 
   const errMessage = ref('');
@@ -112,7 +107,7 @@ import { computed, onMounted, ref, watch } from 'vue';
     return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest; };
   }
   async function getSongs() {
-    isLoading.value = true;
+    isDataLoading.value = true;
     await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get', {
       id: props.userInfo?.id,
     })
@@ -128,27 +123,30 @@ import { computed, onMounted, ref, watch } from 'vue';
         message.error('加载失败: ' + err);
       })
       .finally(() => {
-        isLoading.value = false;
+        isDataLoading.value = false;
       });
   }
   async function getConfig() {
-    if (!selectedTemplateConfig.value || !selectedTemplate.value!.settingName) return;
-    isLoading.value = true;
-    await DownloadConfig(selectedTemplate.value!.settingName, props.userInfo?.id)
-      .then((data) => {
-        if (data.msg) {
-          //message.error('加载失败: ' + data.msg);
-          console.log('当前模板没有配置, 使用默认配置');
-        } else {
-          currentConfig.value = data.data;
+    if (!selectedTemplateConfig.value || !selectedTemplate.value!.settingName) {
+        if (!selectedTemplate.value!.settingName) {
+             isConfigLoading.value = false;
         }
-      })
-      .catch((err) => {
-        message.error('加载失败: ' + err);
-      })
-      .finally(() => {
-        isLoading.value = false;
-      });
+        return;
+    }
+
+    isConfigLoading.value = true;
+    try {
+        const data = await DownloadConfig(selectedTemplate.value!.settingName, props.userInfo?.id);
+        if (data.msg) {
+            currentConfig.value = dynamicConfigRef.value?.DefaultConfig ?? {};
+        } else {
+            currentConfig.value = data.data;
+        }
+    } catch (err) {
+        message.error('加载配置失败: ' + err);
+    } finally {
+        isConfigLoading.value = false;
+    }
   }
   async function requestSong(song: SongsInfo) {
     if (song.options || !settings.value.allowFromWeb || (settings.value.allowFromWeb && !settings.value.allowAnonymousFromWeb)) {
@@ -186,25 +184,41 @@ import { computed, onMounted, ref, watch } from 'vue';
     }
   }
 
+  watch(
+    () => dynamicConfigRef.value,
+    (newValue) => {
+      if (newValue?.Config) {
+        getConfig();
+      }
+    },
+    { immediate: false }
+  );
+
   onMounted(async () => {
+    isDataLoading.value = true;
     if (!props.fakeData) {
       try {
         await getSongs();
-        setTimeout(async () => {
-          const r = await getSongRequestInfo();
-          if (r) {
-            songsActive.value = r.songs;
-            settings.value = r.setting;
-          }
-          await getConfig();
-        }, 300);
+        const r = await getSongRequestInfo();
+        if (r) {
+          songsActive.value = r.songs;
+          settings.value = r.setting;
+        }
+
       } catch (err) {
         message.error('加载失败: ' + err);
         console.error(err);
+        isDataLoading.value = false;
+        isConfigLoading.value = false;
       }
     } else {
       currentData.value = props.fakeData;
-      isLoading.value = false;
+      isDataLoading.value = false;
+      isConfigLoading.value = false;
+    }
+
+    if (!selectedTemplate.value?.settingName) {
+       isConfigLoading.value = false;
     }
   });
 </script>
