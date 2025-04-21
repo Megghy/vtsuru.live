@@ -43,7 +43,7 @@ const scFilterModeOptions = [
         >
           <span>最低价格 (元):</span>
           <NInputNumber
-            v-model:value="action.triggerConfig.minPrice"
+            v-model:value="action.triggerConfig.scMinPrice"
             :min="0"
             style="width: 120px"
           />

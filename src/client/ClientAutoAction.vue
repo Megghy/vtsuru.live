@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { AutoActionItem, TriggerType, useAutoAction } from '@/client/store/useAutoAction';
 import { useDanmakuClient } from '@/store/useDanmakuClient';
+import { useBiliCookie } from '@/client/store/useBiliCookie';
+import { useWebFetcher } from '@/store/useWebFetcher';
 import {
   NAlert,
   NButton,
@@ -17,58 +19,100 @@ import {
   NTag,
   useMessage,
   NDataTable,
-  NSwitch
+  NSwitch,
+  NDivider,
+  NIcon,
+  NText,
+  NTooltip,
+  NInput
 } from 'naive-ui';
-import { computed, h, onMounted, onUnmounted, provide, reactive, ref, watch } from 'vue';
+import { computed, h, onMounted, onUnmounted, ref, watch, reactive } from 'vue';
+import { ArrowUp24Regular, ArrowDown24Regular, Target24Filled, Edit16Regular } from '@vicons/fluent';
 import AutoActionEditor from './components/autoaction/AutoActionEditor.vue';
+import GlobalScheduledSettings from './components/autoaction/settings/GlobalScheduledSettings.vue';
+import TimerCountdown from './components/autoaction/TimerCountdown.vue';
+import DataManager from './components/autoaction/DataManager.vue';
 
 const autoActionStore = useAutoAction();
 const message = useMessage();
 const danmakuClient = useDanmakuClient();
+const biliCookieStore = useBiliCookie();
+const webFetcherStore = useWebFetcher();
+
+// 从 store 获取 enabledTriggerTypes
+const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes);
 
 // 分类标签
 const typeMap = {
   [TriggerType.DANMAKU]: '自动回复',
   [TriggerType.GIFT]: '礼物感谢',
-  [TriggerType.GUARD]: '舰长相关',
+  [TriggerType.GUARD]: '上舰感谢',
   [TriggerType.FOLLOW]: '关注感谢',
   [TriggerType.ENTER]: '入场欢迎',
   [TriggerType.SCHEDULED]: '定时发送',
   [TriggerType.SUPER_CHAT]: 'SC感谢',
 };
 
-// 类型总开关状态
-const typeEnabledStatus = reactive<Record<string, boolean>>({});
-
-// 初始化每种类型的启用状态（默认启用）
-Object.values(TriggerType).forEach(type => {
-  typeEnabledStatus[type as string] = true;
-});
-
-// 激活的标签页
 const activeTab = ref(TriggerType.GIFT);
-
-// 添加自动操作模态框
 const showAddModal = ref(false);
 const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT);
-
-// 正在编辑的自动操作
 const editingActionId = ref<string | null>(null);
+const showSetNextModal = ref(false);
+const targetNextActionId = ref<string | null>(null);
+const showTestModal = ref(false);
+const testUid = ref<string>('10004');
+const currentTestType = ref<TriggerType | null>(null);
 
 const triggerTypeOptions = [
   { label: '自动回复', value: TriggerType.DANMAKU },
   { label: '礼物感谢', value: TriggerType.GIFT },
-  { label: '舰长相关', value: TriggerType.GUARD },
+  { label: '上舰感谢', value: TriggerType.GUARD },
   { label: '关注感谢', value: TriggerType.FOLLOW },
   { label: '入场欢迎', value: TriggerType.ENTER },
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
 ];
 
-// 自定义列存储，按触发类型分组
 const customColumnsByType = reactive<Record<string, any[]>>({});
 
-// 基础表格列定义
+function toggleActionStatus(action: AutoActionItem) {
+  autoActionStore.toggleAutoAction(action.id, !action.enabled);
+  message.success(`已${!action.enabled ? '启用' : '禁用'}操作: ${action.name || '未命名自动操作'}`);
+}
+
+function getStatusTag(action: AutoActionItem) {
+  // 检查是否需要登录且未登录
+  const config = action.actionConfig as any; // 使用类型断言访问 type
+  const requiresLogin = config.type === 'sendDanmaku' || config.type === 'sendMessage';
+  if (requiresLogin && !biliCookieStore.isCookieValid) {
+    return { type: 'error' as const, text: '需登录', tooltip: '发送弹幕或私信需要登录B站账号' };
+  }
+  // 1. Check type enable switch (从 store 读取)
+  if (!enabledTriggerTypes.value[action.triggerType]) {
+    return { type: 'warning' as const, text: '类型已禁用', tooltip: `所有${typeMap[action.triggerType]}类型的操作已禁用` };
+  }
+  // 2. Check action self enabled
+  if (!action.enabled) {
+    return { type: 'error' as const, text: '已禁用', tooltip: '此操作已被手动禁用' };
+  }
+  // 3. Check if template is empty
+  if (!action.template ||
+      (typeof action.template === 'string' && action.template.trim() === '') ||
+      (Array.isArray(action.template) && action.template.length === 0)) {
+    return { type: 'warning' as const, text: '模板为空', tooltip: '请设置有效的模板内容' };
+  }
+  // 4. Check onlyDuringLive condition
+  if (action.triggerConfig.onlyDuringLive && !autoActionStore.isLive) {
+    return { type: 'warning' as const, text: '待机中', tooltip: '此操作设置为仅在直播时触发' };
+  }
+  // 5. Check ignoreTianXuan condition
+  if (action.triggerConfig.ignoreTianXuan && autoActionStore.isTianXuanActive) {
+    return { type: 'warning' as const, text: '暂停中', tooltip: '此操作设置为忽略天选时刻，当前正在进行天选' };
+  }
+  // 6. All conditions met, enabled
+  return { type: 'success' as const, text: '已启用', tooltip: '此操作当前处于活动状态' };
+}
+
 const baseColumns = [
   {
     title: '名称',
@@ -83,202 +127,244 @@ const baseColumns = [
     width: 100,
     render: (row: AutoActionItem) => {
       const status = getStatusTag(row);
-      return h(
-        NTag,
+
+      const options = [
         {
-          type: status.type,
-          size: 'small',
-          round: true,
-          style: 'cursor: pointer;',
-          onClick: () => toggleActionStatus(row)
+          label: row.enabled ? '禁用此操作' : '启用此操作',
+          key: 'toggleEnable',
+          props: {
+            onClick: () => {
+              autoActionStore.toggleAutoAction(row.id, !row.enabled);
+              message.success(`已${!row.enabled ? '启用' : '禁用'}操作: ${row.name || '未命名自动操作'}`);
+            }
+          }
         },
-        { default: () => status.text }
+        {
+          label: row.triggerConfig.onlyDuringLive ? '取消"仅直播触发"' : '设为"仅直播触发"',
+          key: 'toggleLive',
+          props: {
+            onClick: () => {
+              row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive;
+              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.onlyDuringLive ? '设为' : '取消'}仅直播触发`);
+              if (row.triggerType === TriggerType.SCHEDULED) {
+                if (row.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer();
+                else {
+                  autoActionStore.stopIndividualTimer(row.id);
+                  autoActionStore.startIndividualTimer(row);
+                }
+              }
+            }
+          }
+        },
+        {
+          label: row.triggerConfig.ignoreTianXuan ? '取消"忽略天选暂停"' : '设为"忽略天选暂停"',
+          key: 'toggleTianXuan',
+          props: {
+            onClick: () => {
+              row.triggerConfig.ignoreTianXuan = !row.triggerConfig.ignoreTianXuan;
+              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.ignoreTianXuan ? '设为' : '取消'}忽略天选暂停`);
+              if (row.triggerType === TriggerType.SCHEDULED) {
+                if (row.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer();
+                else {
+                  autoActionStore.stopIndividualTimer(row.id);
+                  autoActionStore.startIndividualTimer(row);
+                }
+              }
+            }
+          }
+        }
+      ];
+
+      return h(
+        NDropdown,
+        {
+          trigger: 'click',
+          options: options,
+          showArrow: true,
+        },
+        {
+          default: () => h(
+            NTooltip,
+            { trigger: 'hover' },
+            {
+              trigger: () => h(
+                NTag,
+                {
+                  type: status.type,
+                  size: 'small',
+                  round: true,
+                  style: 'cursor: pointer;'
+                },
+                { default: () => status.text }
+              ),
+              default: () => status.tooltip
+            }
+          )
+        }
       );
     }
   },
 ];
 
-// 定义定时任务的剩余时间列
 const remainingTimeColumn = {
-  title: '剩余时间',
+  title: '下一次发送 (估算)',
   key: 'remainingTime',
-  width: 150,
-  render: (row: AutoActionItem) => {
-    // 从runtimeState中获取该任务的定时器状态
-    const timer = autoActionStore.runtimeState.scheduledTimers[row.id];
-
-    if (timer) {
-      // 从store中获取剩余时间
-      const timerInfo = autoActionStore.getScheduledTimerInfo(row.id);
-      const remainingMs = timerInfo?.remainingMs || 0;
-
-      // 获取状态标记
-      const remainingSeconds = Math.floor(remainingMs / 1000);
-
-      // 根据剩余时间确定状态
-      let statusType: 'success' | 'warning' | 'error' = 'success';
-      let statusText = '等待中';
-
-      if (remainingSeconds <= 10) {
-        statusType = 'error';
-        statusText = '即将发送';
-      } else if (remainingSeconds <= 30) {
-        statusType = 'warning';
-        statusText = '即将发送';
-      }
-
-      return h(
-        NSpace,
-        { align: 'center' },
-        {
-          default: () => [
-            h(NCountdown, {
-              duration: remainingMs,
-              precision: 0,
-              render: (props) => {
-                const { minutes, seconds } = props;
-                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-              }
-            }),
-            h(
-              NTag,
-              {
-                type: statusType,
-                size: 'small',
-                round: true
-              },
-              { default: () => statusText }
-            )
-          ]
-        }
-      );
-    } else {
-      // 没有定时器，显示未设置状态
-      return h(
-        NTag,
-        {
-          type: 'default',
-          size: 'small',
-          round: true
-        },
-        { default: () => '未启动' }
-      );
-    }
-  }
-};
-
-// 操作列定义
-const actionsColumn = {
-  title: '操作',
-  key: 'actions',
   width: 180,
   render: (row: AutoActionItem) => {
-    return h(
-      NSpace,
-      { justify: 'end', align: 'center' },
-      {
-        default: () => [
-          h(
-            NButton,
+    if (!enabledTriggerTypes.value[TriggerType.SCHEDULED]) {
+      return h(NText, { depth: 3 }, '类型已禁用');
+    }
+    return h(TimerCountdown, { actionId: row.id });
+  }
+};
+
+const createActionsColumn = (type: TriggerType, items: AutoActionItem[]) => {
+  return {
+    title: '操作',
+    key: 'actions',
+    width: type === TriggerType.SCHEDULED ? 240 : 180,
+    render: (row: AutoActionItem, index: number) => {
+      const buttons = [
+        h(
+          NButton,
+          {
+            size: 'small',
+            type: 'primary',
+            ghost: true,
+            onClick: () => editAction(row.id)
+          },
+          { default: () => '编辑' }
+        )
+      ];
+
+      if (type === TriggerType.SCHEDULED) {
+        buttons.unshift(
+          h(NButton,
             {
               size: 'small',
-              type: 'primary',
-              ghost: true,
-              onClick: () => editAction(row.id)
+              circle: true,
+              tertiary: true,
+              disabled: index === 0,
+              onClick: () => moveAction(row.id, 'up'),
+              title: '上移'
             },
-            { default: () => '编辑' }
+            { icon: () => h(NIcon, { component: ArrowUp24Regular }) }
           ),
-          h(
-            NDropdown,
+          h(NButton,
             {
-              trigger: 'hover',
-              options: [
-                {
-                  label: '复制',
-                  key: 'duplicate',
-                },
-                {
-                  label: '删除',
-                  key: 'delete',
-                }
-              ],
-              onSelect: (key: string) => {
-                if (key === 'duplicate') duplicateAutoAction(row);
-                if (key === 'delete') removeAutoAction(row);
-              }
+              size: 'small',
+              circle: true,
+              tertiary: true,
+              style: 'margin-left: 6px;',
+              disabled: index === items.length - 1,
+              onClick: () => moveAction(row.id, 'down'),
+              title: '下移'
             },
-            {
-              default: () => h(
-                NButton,
-                {
-                  size: 'small',
-                  tertiary: true,
-                  style: 'padding: 0 8px;'
-                },
-                { default: () => '•••' }
-              )
-            }
+            { icon: () => h(NIcon, { component: ArrowDown24Regular }) }
           )
-        ]
+        );
       }
-    );
-  }
+
+      buttons.push(
+        h(
+          NDropdown,
+          {
+            trigger: 'hover',
+            options: [
+              { label: '复制', key: 'duplicate' },
+              { label: '删除', key: 'delete' }
+            ],
+            onSelect: (key: string) => {
+              if (key === 'duplicate') duplicateAutoAction(row);
+              if (key === 'delete') removeAutoAction(row);
+            }
+          },
+          {
+            default: () => h(
+              NButton,
+              { size: 'small', tertiary: true, style: 'padding: 0 8px; margin-left: 6px;' },
+              { default: () => '•••' }
+            )
+          }
+        )
+      );
+
+      return h(NSpace, { justify: 'end', align: 'center' }, { default: () => buttons });
+    }
+  };
 };
 
-// 获取当前类型的列，组合基础列、自定义列和操作列
 const getColumnsForType = (type: TriggerType) => {
+  const items = groupedActions.value[type] || [];
   const customCols = customColumnsByType[type] || [];
+  const actionsCol = createActionsColumn(type, items);
 
-  // 如果是定时发送类型，添加剩余时间列
   if (type === TriggerType.SCHEDULED) {
-    return [...baseColumns, remainingTimeColumn, ...customCols, actionsColumn];
+    return [...baseColumns, remainingTimeColumn, ...customCols, actionsCol];
   }
 
-  return [...baseColumns, ...customCols, actionsColumn];
+  return [...baseColumns, ...customCols, actionsCol];
 };
 
-// 按类型分组的自动操作
 const groupedActions = computed(() => {
   const grouped: Record<string, AutoActionItem[]> = {};
-
-  // 初始化所有分组
   Object.values(TriggerType).forEach(type => {
     grouped[type as string] = [];
   });
-
-  // 放入对应分组
   autoActionStore.autoActions.forEach(action => {
     if (grouped[action.triggerType]) {
       grouped[action.triggerType].push(action);
     }
   });
-
-  // 对每个组内的操作进行排序，启用的排在前面
   Object.keys(grouped).forEach(type => {
     grouped[type].sort((a, b) => {
       if (a.enabled === b.enabled) return 0;
-      return a.enabled ? -1 : 1; // 启用的排在前面
+      return a.enabled ? -1 : 1;
     });
   });
-
   return grouped;
 });
 
-// 添加新的自动操作
+const eligibleGlobalActions = computed(() => {
+  if (!enabledTriggerTypes.value) return [];
+  return autoActionStore.autoActions.filter(action =>
+    action.triggerType === TriggerType.SCHEDULED &&
+    enabledTriggerTypes.value[TriggerType.SCHEDULED] &&
+    action.enabled &&
+    action.triggerConfig.useGlobalTimer &&
+    (!action.triggerConfig.onlyDuringLive || autoActionStore.isLive) &&
+    (!action.triggerConfig.ignoreTianXuan || !autoActionStore.isTianXuanActive)
+  ).map(action => ({
+    label: action.name || '未命名操作',
+    value: action.id
+  }));
+});
+
+function openSetNextModal() {
+  targetNextActionId.value = autoActionStore.nextScheduledAction?.id ?? null;
+  showSetNextModal.value = true;
+}
+
+function confirmSetNextAction() {
+  if (targetNextActionId.value) {
+    autoActionStore.setNextGlobalAction(targetNextActionId.value);
+    message.success('已指定下一条执行的操作');
+  }
+  showSetNextModal.value = false;
+}
+
 function addAutoAction() {
   if (!selectedTriggerType.value) {
     message.error('请选择触发类型');
     return;
   }
-
   const newAction = autoActionStore.addAutoAction(selectedTriggerType.value);
   showAddModal.value = false;
-  activeTab.value = selectedTriggerType.value; // 切换到新添加的类型的标签页
-  editingActionId.value = newAction.id; // 自动打开编辑界面
+  activeTab.value = selectedTriggerType.value;
+  editingActionId.value = newAction.id;
   message.success('已添加新的自动操作');
 }
 
-// 删除自动操作
 function removeAutoAction(action: AutoActionItem) {
   autoActionStore.removeAutoAction(action.id);
   if (editingActionId.value === action.id) {
@@ -287,122 +373,102 @@ function removeAutoAction(action: AutoActionItem) {
   message.success('已删除自动操作');
 }
 
-// 复制自动操作
 function duplicateAutoAction(action: AutoActionItem) {
-  const newAction = JSON.parse(JSON.stringify(action));
-  newAction.id = `${newAction.id}-copy-${Date.now()}`;
-  newAction.name += ' (复制)';
-  autoActionStore.autoActions.push(newAction);
+  const newActionData = JSON.parse(JSON.stringify(action));
+  const newActionId = `auto-action-${Date.now()}`;
+  newActionData.id = newActionId;
+  newActionData.name += ' (复制)';
+  autoActionStore.autoActions.push(newActionData);
+  if (newActionData.triggerType === TriggerType.SCHEDULED) {
+    const addedAction = autoActionStore.autoActions.find(a => a.id === newActionId);
+    if (addedAction) {
+      if (addedAction.triggerConfig.useGlobalTimer) {
+        autoActionStore.restartGlobalTimer();
+      } else {
+        autoActionStore.startIndividualTimer(addedAction);
+      }
+    } else {
+      console.error("[ClientAutoAction] Could not find duplicated action after pushing.");
+    }
+  }
   message.success('已复制自动操作');
 }
 
-// 切换到编辑模式
+function moveAction(actionId: string, direction: 'up' | 'down') {
+  autoActionStore.moveAction(actionId, direction);
+}
+
 function editAction(actionId: string) {
   editingActionId.value = actionId;
 }
 
-// 返回到概览
 function backToOverview() {
   editingActionId.value = null;
 }
 
-// 获取状态标签
-function getStatusTag(action: AutoActionItem) {
-  // 如果该类型被禁用，显示为类型禁用状态
-  if (!typeEnabledStatus[action.triggerType]) {
-    return { type: 'warning' as const, text: '类型已禁用' };
-  }
-
-  if (!action.enabled) {
-    return { type: 'error' as const, text: '已禁用' };
-  }
-  return { type: 'success' as const, text: '已启用' };
-}
-
-// 切换动作状态
-function toggleActionStatus(action: AutoActionItem) {
-  action.enabled = !action.enabled;
-  message.success(`已${action.enabled ? '启用' : '禁用'}操作: ${action.name || '未命名自动操作'}`);
-}
-
-// 切换类型启用状态
 function toggleTypeStatus(type: string) {
-  typeEnabledStatus[type] = !typeEnabledStatus[type];
-  message.success(`已${typeEnabledStatus[type] ? '启用' : '禁用'}所有${typeMap[type as TriggerType]}`);
+  const triggerType = type as TriggerType;
+  const newState = !enabledTriggerTypes.value[triggerType];
+  autoActionStore.setTriggerTypeEnabled(triggerType, newState);
+  message.success(`已${newState ? '启用' : '禁用'}所有 ${typeMap[triggerType]}`);
 }
 
-// 判断自动操作是否实际启用（考虑类型总开关）
-function isActionActuallyEnabled(action: AutoActionItem) {
-  return action.enabled && typeEnabledStatus[action.triggerType];
-}
-
-// 在组件挂载后初始化自动操作模块
-onMounted(() => {
-  // 确保danmakuClient已经初始化
-  if (danmakuClient.connected) {
-    autoActionStore.init();
-
-    // 添加总开关状态检查代码
-    // 监听类型总开关变化，根据开关启用或禁用定时任务
-    watch(typeEnabledStatus, (newStatus) => {
-      // 更新定时任务
-      const scheduledActions = autoActionStore.autoActions.filter(
-        action => action.triggerType === TriggerType.SCHEDULED
-      );
-
-      // 如果定时发送类型被禁用，停止所有定时任务
-      if (!newStatus[TriggerType.SCHEDULED]) {
-        scheduledActions.forEach(action => {
-          if (autoActionStore.runtimeState.scheduledTimers[action.id]) {
-            clearTimeout(autoActionStore.runtimeState.scheduledTimers[action.id]!);
-            autoActionStore.runtimeState.scheduledTimers[action.id] = null;
-          }
-        });
-      } else {
-        // 如果定时发送类型被启用，重新初始化自动操作
-        autoActionStore.init();
-      }
-    }, { deep: true });
-
-    // 修改shouldProcessAction函数，使其考虑类型总开关
-    const originalShouldProcess = autoActionStore.shouldProcessAction;
-    if (originalShouldProcess) {
-      autoActionStore.shouldProcessAction = (action, event) => {
-        // 首先检查类型总开关状态
-        if (!typeEnabledStatus[action.triggerType]) {
-          return false;
-        }
-
-        // 然后再执行原始检查
-        return originalShouldProcess(action, event);
-      };
-    }
-  } else {
-    // 如果没有连接，等待连接状态变化后再初始化
-    watch(() => danmakuClient.connected, (isConnected) => {
-      if (isConnected) {
-        autoActionStore.init();
-      }
-    });
+function handleTestClick(type: TriggerType) {
+  const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type);
+  if (requiresLogin && !biliCookieStore.isCookieValid) {
+    message.error('此测试需要登录B站账号，请先前往设置页面登录');
+    return;
   }
 
-  // 提供类型启用状态和判断函数给子组件使用
-  provide('typeEnabledStatus', typeEnabledStatus);
-  provide('isActionActuallyEnabled', isActionActuallyEnabled);
+  if (type === TriggerType.GUARD) {
+    // 为舰长相关(私信)测试显示UID输入对话框
+    currentTestType.value = type;
+    testUid.value = '10004'; // 默认值
+    showTestModal.value = true;
+  } else {
+    // 其他类型直接测试
+    autoActionStore.triggerTestActionByType(type);
+  }
+}
 
-  // 组件卸载时清理定时器
-  onUnmounted(() => {
-    // 清理操作保留在这里，但移除了具体的定时器引用
-  });
+function confirmTest() {
+  if (currentTestType.value === TriggerType.GUARD) {
+    // 在执行私信测试前再次确认登录状态
+    if (!biliCookieStore.isCookieValid) {
+        message.error('无法发送私信测试，请先登录B站账号');
+        showTestModal.value = false;
+        return;
+    }
+    const uid = parseInt(testUid.value);
+    if (isNaN(uid) || uid <= 0) {
+      message.error('请输入有效的UID');
+      return;
+    }
+    autoActionStore.triggerTestActionByType(currentTestType.value, uid);
+  }
+  showTestModal.value = false;
+}
+
+onMounted(() => {
+  const stopWatch = watch(() => danmakuClient.state, (newState) => {
+    if (newState === 'connected') {
+      console.log('[ClientAutoAction] Danmaku client connected, initializing store...');
+      autoActionStore.init();
+      stopWatch();
+    } else if (newState !== 'connecting' && newState !== 'waiting') {
+      console.warn(`[ClientAutoAction] Danmaku client state is ${newState}, auto actions might not work.`);
+    }
+  }, { immediate: true });
+});
+
+onUnmounted(() => {
+  console.log('[ClientAutoAction] Unmounted.');
 });
 
 </script>
 
 <template>
   <div>
-    <NAlert type="warning">
-      施工中
-    </NAlert>
     <NCard
       title="自动操作设置"
       size="small"
@@ -416,11 +482,22 @@ onMounted(() => {
         </NButton>
       </template>
 
+      <!-- 添加全局登录提示 -->
+      <NAlert
+        v-if="!biliCookieStore.isCookieValid"
+        type="warning"
+        title="未登录B站账号"
+        style="margin-bottom: 16px;"
+        :bordered="false"
+        closable
+      >
+        部分需要发送弹幕或私信的自动操作（如自动回复、上舰感谢）将无法执行。请前往【设置】- 【账号设置】页面登录。
+      </NAlert>
+
       <NSpace
         vertical
         size="large"
       >
-        <!-- 分类标签页 -->
         <NTabs
           v-model:value="activeTab"
           type="line"
@@ -434,19 +511,102 @@ onMounted(() => {
             :tab="label"
           >
             <NSpace vertical>
-              <!-- 类型总开关 -->
               <NSpace
+                v-if="enabledTriggerTypes"
                 align="center"
                 style="padding: 8px 0; margin-bottom: 8px"
               >
                 <NSwitch
-                  v-model:value="typeEnabledStatus[type]"
+                  :value="enabledTriggerTypes[type]"
                   @update:value="toggleTypeStatus(type)"
                 />
-                <span>{{ typeEnabledStatus[type] ? '启用' : '禁用' }}所有{{ label }}</span>
+                <span>{{ enabledTriggerTypes[type] ? '启用' : '禁用' }}所有{{ label }}</span>
               </NSpace>
 
-              <!-- 如果没有此类型的动作，显示空状态 -->
+              <NAlert
+                v-if="type === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
+                type="warning"
+                title="功能限制提醒"
+                style="margin-bottom: 12px;"
+                :bordered="false"
+              >
+                当前连接模式 (OpenLive) 无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
+              </NAlert>
+
+              <NSpace
+                justify="end"
+                style="margin-bottom: 12px;"
+              >
+                <NPopconfirm
+                  :negative-text="'取消'"
+                  :positive-text="'确认测试'"
+                  @positive-click="() => handleTestClick(type as TriggerType)"
+                >
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="warning"
+                      ghost
+                    >
+                      测试 {{ label }} 类型
+                    </NButton>
+                  </template>
+                  {{ `确认模拟一个 ${label} 事件来测试所有启用的 ${label} 操作吗？\n注意：这可能会发送真实的消息、执行操作，并可能触发B站风控限制。` }}
+                </NPopconfirm>
+              </NSpace>
+
+              <div v-if="activeTab === TriggerType.SCHEDULED">
+                <GlobalScheduledSettings />
+                <div
+                  v-if="enabledTriggerTypes && enabledTriggerTypes[TriggerType.SCHEDULED] && autoActionStore.globalSchedulingMode === 'sequential' && autoActionStore.nextScheduledAction"
+                  class="next-action-display"
+                >
+                  <NDivider style="margin: 12px 0 8px 0;" />
+                  <NSpace
+                    align="center"
+                    justify="space-between"
+                  >
+                    <NText type="success">
+                      <NIcon
+                        :component="Target24Filled"
+                        style="vertical-align: -0.15em; margin-right: 4px;"
+                      />
+                      下一个执行:
+                      <NTag
+                        type="info"
+                        size="small"
+                        round
+                      >
+                        {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
+                      </NTag>
+                    </NText>
+                    <NTooltip trigger="hover">
+                      <template #trigger>
+                        <NButton
+                          text
+                          icon-placement="right"
+                          size="small"
+                          @click="openSetNextModal"
+                        >
+                          <template #icon>
+                            <NIcon :component="Edit16Regular" />
+                          </template>
+                          手动指定
+                        </NButton>
+                      </template>
+                      手动设置下一个要执行的操作
+                    </NTooltip>
+                  </NSpace>
+                </div>
+                <NAlert
+                  v-else-if="enabledTriggerTypes && !enabledTriggerTypes[TriggerType.SCHEDULED]"
+                  type="warning"
+                  :bordered="false"
+                  style="margin-bottom: 12px;"
+                >
+                  定时发送类型已被禁用，所有相关操作不会执行。
+                </NAlert>
+              </div>
               <NEmpty
                 v-if="groupedActions[type].length === 0"
                 description="暂无自动操作"
@@ -454,14 +614,13 @@ onMounted(() => {
                 <template #extra>
                   <NButton
                     type="primary"
-                    @click="() => { selectedTriggerType = type; showAddModal = true; }"
+                    @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
                   >
-                    添加{{ typeMap[type] }}
+                    添加{{ typeMap[type as TriggerType] }}
                   </NButton>
                 </template>
               </NEmpty>
 
-              <!-- 此类型的所有操作概览 -->
               <div
                 v-else-if="editingActionId === null"
                 class="overview-container"
@@ -469,26 +628,25 @@ onMounted(() => {
                 <NDataTable
                   :bordered="false"
                   :single-line="false"
-                  :columns="getColumnsForType(type)"
+                  :columns="getColumnsForType(type as TriggerType)"
                   :data="groupedActions[type]"
+                  :row-key="(row: AutoActionItem) => row.id"
                 >
                   <template #empty>
                     <NEmpty description="暂无数据" />
                   </template>
                 </NDataTable>
 
-                <!-- 添加按钮 -->
                 <NButton
                   type="default"
                   style="width: 100%; margin-top: 16px;"
                   class="btn-with-transition"
-                  @click="() => { selectedTriggerType = type; showAddModal = true; }"
+                  @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
                 >
-                  + 添加{{ typeMap[type] }}
+                  + 添加{{ typeMap[type as TriggerType] }}
                 </NButton>
               </div>
 
-              <!-- 编辑视图 -->
               <div
                 v-else
                 class="edit-container"
@@ -513,7 +671,6 @@ onMounted(() => {
                       :key="action.id"
                       class="action-item"
                     >
-                      <!-- 编辑器组件 -->
                       <AutoActionEditor :action="action" />
                     </div>
                   </transition-group>
@@ -521,11 +678,19 @@ onMounted(() => {
               </div>
             </NSpace>
           </NTabPane>
+
+          <!-- 新增数据管理标签页 -->
+          <NTabPane
+            name="data-manager"
+            tab="数据管理"
+          >
+            <DataManager />
+          </NTabPane>
+          <!-- 结束新增 -->
         </NTabs>
       </NSpace>
     </NCard>
 
-    <!-- 添加新自动操作的模态框 -->
     <NModal
       v-model:show="showAddModal"
       preset="dialog"
@@ -543,6 +708,60 @@ onMounted(() => {
           placeholder="选择触发类型"
           style="width: 100%"
         />
+      </NSpace>
+    </NModal>
+
+    <NModal
+      v-model:show="showSetNextModal"
+      preset="dialog"
+      title="手动指定下一条 (顺序模式)"
+      positive-text="确认指定"
+      negative-text="取消"
+      @positive-click="confirmSetNextAction"
+    >
+      <NSpace vertical>
+        <div>选择下一个要执行的定时操作：</div>
+        <NSelect
+          v-model:value="targetNextActionId"
+          :options="eligibleGlobalActions"
+          placeholder="选择操作"
+          filterable
+          clearable
+          style="width: 100%"
+        />
+        <NText
+          type="info"
+          :depth="3"
+          style="font-size: 12px;"
+        >
+          只会列出当前已启用、类型也已启用且使用全局定时器的操作。
+          选择后，下一个全局定时周期将执行您指定的操作。
+        </NText>
+      </NSpace>
+    </NModal>
+
+    <NModal
+      v-model:show="showTestModal"
+      preset="dialog"
+      title="测试舰长私信"
+      positive-text="确认测试"
+      negative-text="取消"
+      @positive-click="confirmTest"
+    >
+      <NSpace vertical>
+        <div>请输入私信接收者的UID：</div>
+        <NInput
+          v-model:value="testUid"
+          placeholder="请输入UID"
+          type="text"
+        />
+        <NText
+          type="info"
+          :depth="3"
+          style="font-size: 12px;"
+        >
+          这是接收私信消息的B站用户UID，测试将向此UID发送私信。请确保该UID有效且您有权限向其发送私信。
+        </NText>
       </NSpace>
     </NModal>
   </div>
@@ -579,6 +798,7 @@ code {
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
@@ -588,15 +808,18 @@ code {
 .list-item {
   transition: all 0.3s ease;
 }
+
 .list-enter-active,
 .list-leave-active {
   transition: all 0.3s ease;
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
   transform: translateY(20px);
 }
+
 .list-move {
   transition: transform 0.3s ease;
 }
@@ -606,10 +829,12 @@ code {
 .fade-slide-leave-active {
   transition: all 0.3s ease;
 }
+
 .fade-slide-enter-from {
   opacity: 0;
   transform: translateX(20px);
 }
+
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateX(-20px);
@@ -619,6 +844,7 @@ code {
 .btn-with-transition {
   transition: all 0.2s ease;
 }
+
 .btn-with-transition:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -629,6 +855,7 @@ code {
   position: relative;
   overflow: hidden;
 }
+
 .back-btn::after {
   content: '';
   position: absolute;
@@ -639,6 +866,7 @@ code {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s ease;
 }
+
 .back-btn:hover::after {
   left: 100%;
 }
@@ -648,5 +876,13 @@ code {
 .edit-container {
   transition: all 0.4s ease;
   transform-origin: center top;
+}
+
+.next-action-display {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: var(--n-color-embedded);
+  border-radius: var(--n-border-radius);
+  font-size: 13px;
 }
 </style>

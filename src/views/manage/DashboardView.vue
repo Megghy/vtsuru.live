@@ -4,9 +4,7 @@ import { BiliAuthCodeStatusType, BiliAuthModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import { ACCOUNT_API_URL, CN_HOST, TURNSTILE_KEY } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import { useLocalStorage } from '@vueuse/core'
 import {
   NAlert,
   NButton,
@@ -32,8 +30,9 @@ import {
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
-import SettingsManageView from './SettingsManageView.vue'
 import SettingPaymentView from './Setting_PaymentView.vue'
+import SettingsManageView from './SettingsManageView.vue'
+import { checkUpdateNote } from '@/data/UpdateNote'
 
 
 const token = ref('')
@@ -281,6 +280,8 @@ async function ChangeBili() {
 }
 onUnmounted(() => {
   turnstile.value?.remove()
+  // 当进入管理页时检查更新日志
+  checkUpdateNote();
 })
 </script>
 

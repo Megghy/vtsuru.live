@@ -374,8 +374,6 @@ onMounted(() => {
       canResendEmail.value = true
     }
   }
-  // 当进入管理页时检查更新日志
-  checkUpdateNote();
 })
 </script>
 

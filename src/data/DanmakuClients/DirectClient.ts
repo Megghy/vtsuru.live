@@ -1,6 +1,6 @@
 import { KeepLiveWS } from 'bilibili-live-ws/browser';
 import BaseDanmakuClient from './BaseDanmakuClient';
-import { EventDataTypes } from '@/api/api-models';
+import { EventDataTypes, GuardLevel } from '@/api/api-models';
 import { getUserAvatarUrl, GuidUtils } from '@/Utils';
 import { AVATAR_URL } from '../constants';
 export type DirectClientAuthInfo = {
@@ -155,28 +155,56 @@ export default class DirectClient extends BaseDanmakuClient {
   }
   public onEnter(command: any): void {
     const data = command.data;
-    this.eventsRaw?.enter?.forEach((d) => { d(data, command); });
-    this.eventsAsModel.enter?.forEach((d) => {
-      d(
-        {
-          type: EventDataTypes.Enter,
-          uname: data.uname,
-          uid: data.uid,
-          msg: '',
-          price: 0,
-          num: 1,
-          time: Date.now(),
-          guard_level: 0,
-          fans_medal_level: data.fans_medal?.medal_level || 0,
-          fans_medal_name: data.fans_medal?.medal_name || '',
-          fans_medal_wearing_status: false,
-          uface: AVATAR_URL + data.uid,
-          open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid)
-        },
-        command
-      );
-    });
+    const msgType = data.msg_type;
+
+    if (msgType === 1) {
+      this.eventsRaw?.enter?.forEach((d) => { d(data, command); });
+      this.eventsAsModel.enter?.forEach((d) => {
+        d(
+          {
+            type: EventDataTypes.Enter,
+            uname: data.uname,
+            uid: data.uid,
+            msg: '',
+            price: 0,
+            num: 1,
+            time: data.timestamp ? data.timestamp * 1000 : Date.now(),
+            guard_level: data.privilege_type || GuardLevel.None,
+            fans_medal_level: data.fans_medal?.medal_level || 0,
+            fans_medal_name: data.fans_medal?.medal_name || '',
+            fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
+            uface: data.face?.replace("http://", "https://") || (AVATAR_URL + data.uid),
+            open_id: '',
+            ouid: GuidUtils.numToGuid(data.uid)
+          },
+          command
+        );
+      });
+    }
+    else if (msgType === 2) {
+      this.eventsRaw?.follow?.forEach((d) => { d(data, command); });
+      this.eventsAsModel.follow?.forEach((d) => {
+        d(
+          {
+            type: EventDataTypes.Follow,
+            uname: data.uname,
+            uid: data.uid,
+            msg: '关注了主播',
+            price: 0,
+            num: 1,
+            time: data.timestamp ? data.timestamp * 1000 : Date.now(),
+            guard_level: data.privilege_type || GuardLevel.None,
+            fans_medal_level: data.fans_medal?.medal_level || 0,
+            fans_medal_name: data.fans_medal?.medal_name || '',
+            fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
+            uface: data.face?.replace("http://", "https://") || (AVATAR_URL + data.uid),
+            open_id: '',
+            ouid: GuidUtils.numToGuid(data.uid)
+          },
+          command
+        );
+      });
+    }
   }
   public onScDel(command: any): void {
     const data = command.data;

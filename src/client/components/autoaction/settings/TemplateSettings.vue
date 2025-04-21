@@ -11,59 +11,6 @@ const props = defineProps({
   }
 });
 
-// 模板变量占位符选项，根据触发类型动态生成
-const placeholders = computed(() => {
-  const commonPlaceholders = [
-    { name: '{{user.name}}', description: '用户名称' },
-    { name: '{{user.uid}}', description: '用户ID' },
-    { name: '{{date.formatted}}', description: '当前日期时间' },
-    { name: '{{timeOfDay()}}', description: '当前时段（早上/下午/晚上）' },
-  ];
-
-  let specificPlaceholders: { name: string, description: string }[] = [];
-
-  switch (props.action.triggerType) {
-    case TriggerType.GIFT:
-      specificPlaceholders = [
-        { name: '{{gift.name}}', description: '礼物名称' },
-        { name: '{{gift.count}}', description: '礼物数量' },
-        { name: '{{gift.price}}', description: '礼物单价' },
-        { name: '{{gift.totalPrice}}', description: '礼物总价值' },
-        { name: '{{gift.summary}}', description: '礼物摘要（如：5个辣条）' },
-      ];
-      break;
-    case TriggerType.GUARD:
-      specificPlaceholders = [
-        { name: '{{guard.level}}', description: '舰长等级' },
-        { name: '{{guard.levelName}}', description: '舰长等级名称' },
-        { name: '{{guard.giftCode}}', description: '礼品码（如已配置）' },
-      ];
-      break;
-    case TriggerType.SUPER_CHAT:
-      specificPlaceholders = [
-        { name: '{{sc.message}}', description: 'SC消息内容' },
-        { name: '{{sc.price}}', description: 'SC价格' },
-      ];
-      break;
-    case TriggerType.FOLLOW:
-      specificPlaceholders = [
-        { name: '{{follow.time}}', description: '关注时间' },
-        { name: '{{follow.isNew}}', description: '是否新关注' },
-      ];
-      break;
-    case TriggerType.ENTER:
-      specificPlaceholders = [
-        { name: '{{enter.time}}', description: '入场时间' },
-        { name: '{{enter.guardLevel}}', description: '舰长等级' },
-        { name: '{{enter.medalName}}', description: '勋章名称' },
-        { name: '{{enter.medalLevel}}', description: '勋章等级' },
-      ];
-      break;
-  }
-
-  return [...commonPlaceholders, ...specificPlaceholders];
-});
-
 // 根据操作类型获取模板标题
 const templateTitle = computed(() => {
   switch (props.action.actionType) {
@@ -91,6 +38,15 @@ const templateDescription = computed(() => {
       return '消息内容模板';
   }
 });
+
+// Handle template updates from TemplateEditor
+function handleTemplateUpdate(payload: { index: number, value: string }) {
+  // Assuming index will always be 0 here as we only render one editor
+  // And assuming action.templates is a string based on previous findings
+  if (payload.index === 0) {
+    props.action.template = payload.value;
+  }
+}
 </script>
 
 <template>
@@ -100,11 +56,13 @@ const templateDescription = computed(() => {
       appear
     >
       <TemplateEditor
-        :templates="action.templates"
-        :placeholders="placeholders"
+        :action="props.action"
+        :template-index="0"
         :title="templateTitle"
         :description="templateDescription"
+        :check-length="action.actionType === ActionType.SEND_DANMAKU"
         class="template-editor"
+        @update:template="handleTemplateUpdate"
       />
     </transition>
   </div>

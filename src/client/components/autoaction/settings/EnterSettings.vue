@@ -32,7 +32,7 @@ const enterFilterModeOptions = [
       >
         <span>入场过滤模式:</span>
         <NSelect
-          v-model:value="action.triggerConfig.enterFilterMode"
+          v-model:value="action.triggerConfig.filterMode"
           style="width: 200px"
           :options="enterFilterModeOptions"
         />

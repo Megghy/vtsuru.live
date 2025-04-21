@@ -48,48 +48,48 @@ const TriggerSettings = getTriggerSettings();
 
 <template>
   <div class="auto-action-editor">
-    <NCard
-      :title="action.name"
-      size="small"
-      class="editor-card"
-    >
-      <NSpace vertical>
-        <!-- 模板设置 - 移到最上面 -->
-        <TemplateSettings :action="action" />
+    <NSpace vertical>
+      <!-- 模板设置 - 移到最上面 -->
+      <TemplateSettings :action="action" />
 
-        <!-- 基本设置 -->
-        <BasicSettings :action="action" />
-        <!-- 高级选项 - 所有高级设置放在一个折叠面板中 -->
-        <NCollapse class="settings-collapse">
-          <template #default>
-            <!-- 触发类型特定设置 -->
-            <component
-              :is="TriggerSettings"
-              v-if="TriggerSettings"
-              :action="action"
-              class="trigger-settings"
-            />
+      <!-- 基本设置 -->
+      <BasicSettings :action="action" />
+      <!-- 高级选项 - 所有高级设置放在一个折叠面板中 -->
+      <NCollapse class="settings-collapse">
+        <template #default>
+          <br>
+          <!-- 触发类型特定设置 -->
+          <component
+            :is="TriggerSettings"
+            v-if="TriggerSettings"
+            :action="action"
+            class="trigger-settings"
+          />
 
-            <NDivider style="margin: 10px 0;">
-              高级选项
-            </NDivider>
-            <!-- 通用高级设置 -->
-            <AdvancedSettings
-              :action="action"
-              class="advanced-settings"
-            />
-          </template>
-          <template #header>
+          <NDivider style="margin: 10px 0;">
             高级选项
-          </template>
-        </NCollapse>
-      </NSpace>
-    </NCard>
+          </NDivider>
+          <!-- 通用高级设置 -->
+          <AdvancedSettings
+            :action="action"
+            class="advanced-settings"
+          />
+        </template>
+        <template #header>
+          高级选项
+        </template>
+      </NCollapse>
+    </NSpace>
   </div>
 </template>
 
 <style scoped>
 .auto-action-editor {
-  margin-bottom: 20px;
+  margin-bottom
+  : 20px;
+}
+.trigger-settings {
+  color: var(--n-color-info);
+  font-size: bold;
 }
 </style>

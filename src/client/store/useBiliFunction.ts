@@ -105,8 +105,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       return false;
     }
     if (!message || message.trim().length === 0) {
-        console.warn("尝试发送空弹幕，已阻止。");
-        return false;
+      console.warn("尝试发送空弹幕，已阻止。");
+      return false;
     }
     roomId = 1294406; // 测试用房间号
     const url = "https://api.live.bilibili.com/msg/send";
@@ -143,8 +143,21 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       const json = await response.json();
       // B站成功码通常是 0
       if (json.code !== 0) {
-          console.error("发送弹幕API失败:", json.code, json.message || json.msg);
-          return false;
+        window.$notification.error({
+          title: '发送弹幕失败',
+          description: `内容: ${message}`,
+          meta: () => h('div', {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+            },
+          }, () => `错误: ${json.code} - ${json.message || json.msg}`),
+          duration: 0,
+        });
+        console.error(`发送弹幕API失败 to: ${roomId} ${uid.value} [${message}] - ${json.code} - ${json.message || json.msg}`);
+        return false;
       }
 
       console.log("发送弹幕成功:", message);
@@ -221,9 +234,14 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       return false;
     }
     if (!message || message.trim().length === 0) {
-        const error = "尝试发送空私信，已阻止。";
-        console.warn(error);
-        return false;
+      const error = "尝试发送空私信，已阻止。";
+      console.warn(error);
+      window.$notification.error({
+        title: '发送私信失败',
+        description: `尝试发送空私信给 ${receiverId}, 已阻止`,
+        duration: 0,
+      });
+      return false;
     }
 
     try {
@@ -239,8 +257,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       }
 
       const dev_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16).toUpperCase();
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16).toUpperCase();
       });
 
       const timestamp = Math.floor(Date.now() / 1000);
@@ -301,10 +319,10 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
       const json = await response.json();
       if (json.code !== 0) {
-          const error = `发送私信API失败: ${json.code} - ${json.message}`;
-          console.error(error);
-          onSendPrivateMessageFailed(receiverId, message, error);
-          return false;
+        const error = `发送私信API失败: ${json.code} - ${json.message}`;
+        console.error(error);
+        onSendPrivateMessageFailed(receiverId, message, error);
+        return false;
       }
 
       console.log(`发送私信给 ${receiverId} 成功`);

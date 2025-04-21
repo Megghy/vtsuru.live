@@ -558,7 +558,7 @@ export interface EventModel {
   time: number
   num: number
   price: number
-  guard_level: number
+  guard_level: GuardLevel
   fans_medal_level: number
   fans_medal_name: string
   fans_medal_wearing_status: boolean
@@ -572,7 +572,8 @@ export enum EventDataTypes {
   Message,
   Like,
   SCDel,
-  Enter
+  Enter,
+  Follow
 }
 export interface ResponseQueueModel {
   id: number

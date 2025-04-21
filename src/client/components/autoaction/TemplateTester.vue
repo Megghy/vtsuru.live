@@ -46,6 +46,9 @@
 import { ref, computed } from 'vue';
 import { NSpace, NInput, NInputGroup, NInputGroupLabel, NButton, useMessage, NDivider } from 'naive-ui';
 import { evaluateTemplateExpressions } from '@/client/store/autoAction/expressionEvaluator';
+import { EventModel } from '@/api/api-models';
+import { TriggerType } from '@/client/store/autoAction/types';
+import { buildExecutionContext } from '@/client/store/autoAction/utils';
 
 const props = defineProps({
   defaultTemplate: {
@@ -63,9 +66,14 @@ const result = ref('');
 const hasResult = computed(() => result.value !== '');
 const message = useMessage();
 
+function evaluateTemplateForUI(template: string, contextObj: Record<string, any>): string {
+  const tempContext = buildExecutionContext(contextObj, undefined, TriggerType.DANMAKU);
+  return evaluateTemplateExpressions(template, tempContext);
+}
+
 function testTemplate() {
   try {
-    result.value = evaluateTemplateExpressions(template.value, props.context);
+    result.value = evaluateTemplateForUI(template.value, props.context);
   } catch (error) {
     message.error(`表达式求值错误: ${(error as Error).message}`);
     result.value = `[错误] ${(error as Error).message}`;
