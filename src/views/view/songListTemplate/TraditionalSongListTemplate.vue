@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, ref, watch } from 'vue';
+import { computed, h, ref, watch, VNode } from 'vue';
 import { getUserAvatarUrl, isDarkMode } from '@/Utils';
 import { SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
 import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruTypes';
@@ -9,9 +9,10 @@ import bilibili from '@/svgs/bilibili.svg';
 import neteaseMusic from '@/svgs/neteaseMusic.svg';
 import qqMusic from '@/svgs/qqMusic.svg';
 import douyin from '@/svgs/douyin.svg';
-import { SongFrom, SongsInfo } from '@/api/api-models';
+import { SongFrom, SongsInfo, SongRequestOption } from '@/api/api-models';
 import FiveSingIcon from '@/svgs/fivesing.svg';
-import { SquareArrowForward24Filled, ArrowCounterclockwise20Filled } from '@vicons/fluent'; // Import clear icon
+import { SquareArrowForward24Filled, ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled } from '@vicons/fluent';
+import { List } from 'linqts';
 
 // Interface Tab - can be reused for both language and tag buttons
 interface FilterButton {
@@ -30,6 +31,11 @@ const selectedLanguage = ref<string | undefined>();
 const selectedTag = ref<string | undefined>(); // Renamed from activeTab for clarity
 const searchQuery = ref<string>('');
 const selectedArtist = ref<string | null>(null);
+
+// --- New: Sorting State ---
+type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description' | null;
+const sortKey = ref<SortKey>(null); // 当前排序列
+const sortOrder = ref<'asc' | 'desc'>('asc'); // 当前排序顺序
 
 // --- Computed Properties for Filter Buttons ---
 
@@ -90,39 +96,78 @@ const artistOptions = computed(() => {
   return allArtists.value.map(artist => ({ label: artist, value: artist }));
 });
 
-// --- Updated Filtered Songs Logic ---
-const filteredSongs = computed(() => {
-  let songs = props.data!;
-  if (!songs) return [];
+// --- Updated Filtered & Sorted Songs Logic using linq-ts ---
+const filteredAndSortedSongs = computed(() => {
+  if (!props.data) return [];
+
+  let query = new List<SongsInfo>(props.data);
 
   // 1. Filter by Selected Language
   if (selectedLanguage.value) {
-    songs = songs.filter(song => song.language?.includes(selectedLanguage.value!));
+    const lang = selectedLanguage.value;
+    query = query.Where(song => song.language?.includes(lang));
   }
 
   // 2. Filter by Selected Tag
   if (selectedTag.value) {
-    songs = songs.filter(song => song.tags?.includes(selectedTag.value!));
+    const tag = selectedTag.value;
+    query = query.Where(song => song.tags?.includes(tag) ?? false);
   }
 
   // 3. Filter by Selected Artist
   if (selectedArtist.value) {
-    songs = songs.filter(song => song.author?.includes(selectedArtist.value!));
+    const artist = selectedArtist.value;
+    query = query.Where(song => song.author?.includes(artist));
   }
 
   // 4. Filter by Search Query (case-insensitive, including tags)
   if (searchQuery.value.trim()) {
     const lowerSearch = searchQuery.value.toLowerCase().trim();
-    songs = songs.filter(song =>
+    query = query.Where(song =>
       song.name.toLowerCase().includes(lowerSearch) ||
-      song.author?.some(artist => artist.toLowerCase().includes(lowerSearch)) ||
-      song.language?.some(lang => lang.toLowerCase().includes(lowerSearch)) ||
-      song.tags?.some(tag => tag.toLowerCase().includes(lowerSearch)) || // Added tags to search
-      song.description?.toLowerCase().includes(lowerSearch)
+      (song.author?.some(a => a.toLowerCase().includes(lowerSearch)) ?? false) ||
+      (song.language?.some(l => l.toLowerCase().includes(lowerSearch)) ?? false) ||
+      (song.tags?.some(t => t.toLowerCase().includes(lowerSearch)) ?? false) ||
+      (song.description?.toLowerCase().includes(lowerSearch) ?? false)
     );
   }
 
-  return songs;
+  // 5. Sort the filtered songs using linq-ts
+  if (sortKey.value) {
+    const key = sortKey.value;
+
+    // Define selector function for linq-ts
+    const keySelector = (song: SongsInfo): any => {
+        if (key === 'options') {
+            // Prefer sorting by specific conditions first if needed, then by presence
+            // Example: Sort by 'needZongdu' first if key is 'options'
+            // For simplicity, just sorting by presence (1) vs absence (0)
+            return song.options ? 1 : 0;
+        }
+        let val = song[key];
+        // Handle potential array values for sorting (simple join)
+        if (Array.isArray(val)) return val.join('').toLowerCase(); // Lowercase for consistent string sort
+        // Handle strings and other types, provide default for null/undefined
+        return (typeof val === 'string' ? val.toLowerCase() : val) ?? '';
+    };
+
+    // Define a stable secondary sort key selector
+    const secondaryKeySelector = (song: SongsInfo): string | number => {
+        return song.id ?? (song.name + '-' + (song.author?.join('/') ?? '')); // Use ID or fallback key
+    };
+
+    if (sortOrder.value === 'asc') {
+        query = query.OrderBy(keySelector).ThenBy(secondaryKeySelector); // Add ThenBy for stability
+    } else {
+        query = query.OrderByDescending(keySelector).ThenBy(secondaryKeySelector); // Add ThenBy for stability
+    }
+  }
+  // else if no primary sort key, maybe apply a default sort? e.g., by name
+  // else {
+  //    query = query.OrderBy(s => s.name);
+  // }
+
+  return query.ToArray(); // Get the final array
 });
 
 // --- Methods ---
@@ -145,9 +190,22 @@ const selectTag = (tagName: string) => {
   }
 };
 
-// Select Artist (from table click, unchanged)
+// Select Artist (from table click, updated to allow deselect)
 const selectArtistFromTable = (artist: string) => {
-  selectedArtist.value = artist;
+  if (selectedArtist.value === artist) {
+    selectedArtist.value = null; // Deselect if clicking the already selected artist
+  } else {
+    selectedArtist.value = artist; // Select the new artist
+  }
+};
+
+// Select Language (from table click, allows deselect)
+const selectLanguageFromTable = (lang: string) => {
+  if (selectedLanguage.value === lang) {
+    selectedLanguage.value = undefined; // Use undefined based on existing filter logic
+  } else {
+    selectedLanguage.value = lang;
+  }
 };
 
 // --- New: Clear All Filters ---
@@ -158,6 +216,35 @@ const clearFilters = () => {
   searchQuery.value = '';
 };
 
+// --- Updated Sorting Method ---
+const handleSort = (key: SortKey) => {
+  if (sortKey.value === key) {
+    // Cycle through asc -> desc -> null (clear sort)
+    if (sortOrder.value === 'asc') {
+      sortOrder.value = 'desc';
+    } else {
+      // If already desc, clear the sort
+      sortKey.value = null;
+      // Optional: Reset sortOrder, though it doesn't matter when sortKey is null
+      // sortOrder.value = 'asc';
+    }
+  } else {
+    // Set new key and default to ascending order
+    sortKey.value = key;
+    sortOrder.value = 'asc';
+  }
+};
+
+// --- Updated Helper function for Sort Icons ---
+const getSortIcon = (key: SortKey) => {
+  if (sortKey.value !== key) {
+    // Show inactive sort icon (down arrow as placeholder)
+    return h(NIcon, { component: ArrowSortDown20Filled, style: { opacity: 0.3, marginLeft: '4px', verticalAlign: 'middle' } });
+  }
+  // Show active sort icon (up or down)
+  return h(NIcon, { component: sortOrder.value === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled, style: { marginLeft: '4px', verticalAlign: 'middle' } });
+  // Note: We don't need a specific 'clear' icon here, as clicking 'desc' clears the sort and the icon reverts to inactive.
+};
 
 // Watcher for artist selection (unchanged, good practice)
 watch(allArtists, (newArtists) => {
@@ -166,9 +253,8 @@ watch(allArtists, (newArtists) => {
   }
 });
 
-
 const randomOrder = () => {
-  const songsToChooseFrom = filteredSongs.value.length > 0 ? filteredSongs.value : props.data ?? [];
+  const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : props.data ?? [];
   if (songsToChooseFrom.length === 0) {
     window.$message?.warning('歌单为空或当前筛选无结果，无法随机点歌');
     return;
@@ -270,6 +356,38 @@ function GetPlayButton(song: SongsInfo) {
           })
           : null;
     }
+}
+
+// --- New: Helper function for Song Request Options ---
+function getOptionDisplay(options?: SongRequestOption) {
+  if (!options) {
+    return h('span', '无特殊要求');
+  }
+
+  const conditions: VNode[] = [];
+
+  if (options.needJianzhang) {
+    conditions.push(h(NTag, { size: 'small', type: 'info', style: { marginRight: '4px', marginBottom: '2px'} }, () => '舰长'));
+  }
+  if (options.needTidu) {
+    conditions.push(h(NTag, { size: 'small', type: 'warning', style: { marginRight: '4px', marginBottom: '2px'} }, () => '提督'));
+  }
+  if (options.needZongdu) {
+    conditions.push(h(NTag, { size: 'small', type: 'error', style: { marginRight: '4px', marginBottom: '2px'} }, () => '总督'));
+  }
+  if (options.fanMedalMinLevel && options.fanMedalMinLevel > 0) {
+    conditions.push(h(NTag, { size: 'small', type: 'success', style: { marginRight: '4px', marginBottom: '2px'} }, () => `粉丝牌 ${options.fanMedalMinLevel}级`));
+  }
+  if (options.scMinPrice && options.scMinPrice > 0) {
+    conditions.push(h(NTag, { size: 'small', color: { color: '#E85A4F', textColor: '#fff' }, style: { marginRight: '4px', marginBottom: '2px'} }, () => `SC ¥${options.scMinPrice}`));
+  }
+
+  if (conditions.length === 0) {
+    return h('span', '无特殊要求');
+  }
+
+  // Use NFlex for better wrapping
+  return h(NFlex, { size: 4, wrap: true, style: { gap: '4px' } }, () => conditions);
 }
 
 </script>
@@ -652,33 +770,64 @@ export const Config = defineTemplateConfig([
             <table class="song-list-table">
               <thead>
                 <tr>
-                  <th>歌名</th>
-                  <th>歌手</th>
-                  <th>语言</th>
-                  <th>标签</th>
-                  <th>备注</th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('name')"
+                  >
+                    歌名 <component :is="getSortIcon('name')" />
+                  </th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('author')"
+                  >
+                    歌手 <component :is="getSortIcon('author')" />
+                  </th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('language')"
+                  >
+                    语言 <component :is="getSortIcon('language')" />
+                  </th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('tags')"
+                  >
+                    标签 <component :is="getSortIcon('tags')" />
+                  </th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('options')"
+                  >
+                    点歌条件 <component :is="getSortIcon('options')" />
+                  </th>
+                  <th
+                    style="cursor: pointer;"
+                    @click="handleSort('description')"
+                  >
+                    备注 <component :is="getSortIcon('description')" />
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="!props.data || props.data.length === 0">
                   <td
-                    colspan="5"
+                    colspan="6"
                     class="no-results"
                   >
                     歌单里还没有歌曲哦~
                   </td>
                 </tr>
-                <tr v-else-if="filteredSongs.length === 0">
+                <tr v-else-if="filteredAndSortedSongs.length === 0">
                   <td
-                    colspan="5"
+                    colspan="6"
                     class="no-results"
                   >
                     当前筛选条件下暂无匹配歌曲
                   </td>
                 </tr>
                 <tr
-                  v-for="song in filteredSongs"
-                  :key="song.id || (song.name + '-' + song.author?.join('/'))"
+                  v-for="song in filteredAndSortedSongs"
+                  :key="song.key || (song.name + '-' + song.author?.join('/'))"
                   :style="{
                     textShadow: isDarkMode ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(255, 255, 255, 0.4)',
                   }"
@@ -704,6 +853,7 @@ export const Config = defineTemplateConfig([
                       >
                         <span
                           class="artist-link"
+                          :class="{ 'selected-artist': selectedArtist === artist }"
                           :title="`筛选: ${artist}`"
                           @click.stop="selectArtistFromTable(artist)"
                         >
@@ -715,7 +865,26 @@ export const Config = defineTemplateConfig([
                     </span>
                     <span v-else>未知</span>
                   </td>
-                  <td>{{ song.language?.join(', ') ?? '未知' }}</td>
+                  <td>
+                    <span v-if="song.language && song.language.length > 0">
+                      <span
+                        v-for="(lang, index) in song.language"
+                        :key="lang"
+                      >
+                        <span
+                          class="language-link"
+                          :class="{ 'selected-language': selectedLanguage === lang }"
+                          :title="`筛选: ${lang}`"
+                          @click.stop="selectLanguageFromTable(lang)"
+                        >
+                          {{ lang }}
+                        </span>
+                        <!-- Add separator only if not the last language -->
+                        <span v-if="index < song.language.length - 1">, </span>
+                      </span>
+                    </span>
+                    <span v-else>未知</span>
+                  </td>
                   <td>
                     <n-flex
                       :size="4"
@@ -735,6 +904,9 @@ export const Config = defineTemplateConfig([
                       </n-tag>
                       <span v-if="!song.tags || song.tags.length === 0">无标签</span>
                     </n-flex>
+                  </td>
+                  <td>
+                    <component :is="getOptionDisplay(song.options)" />
                   </td>
                   <td>{{ song.description }}</td>
                 </tr>
@@ -1133,6 +1305,7 @@ html.dark .song-list-container {
   backdrop-filter: blur(2px); /* Blur header slightly */
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   color: #444444;
+  user-select: none; /* Prevent text selection on click */
 }
 
 html.dark .song-list-table thead th {
@@ -1141,11 +1314,12 @@ html.dark .song-list-table thead th {
   color: var(--text-color-2);
 }
 
-.song-list-table th:nth-child(1) { width: 25%; } /* Song Name */
-.song-list-table th:nth-child(2) { width: 18%; } /* Artist */
-.song-list-table th:nth-child(3) { width: 12%; } /* Language */
-.song-list-table th:nth-child(4) { width: 15%; } /* Tags */
-.song-list-table th:nth-child(5) { width: 30%; } /* Remarks */
+.song-list-table th:nth-child(1) { width: 22%; }
+.song-list-table th:nth-child(2) { width: 15%; }
+.song-list-table th:nth-child(3) { width: 10%; }
+.song-list-table th:nth-child(4) { width: 13%; }
+.song-list-table th:nth-child(5) { width: 15%; }
+.song-list-table th:nth-child(6) { width: 25%; }
 
 
 .song-list-table tbody tr { transition: background-color 0.15s ease; }
@@ -1201,6 +1375,61 @@ html.dark .no-results td { color: var(--text-color-3); }
 .song-list-table td .n-tag {
     margin-bottom: 2px; /* Add slight spacing if tags wrap */
     margin-right: 4px;
+}
+
+/* --- NEW: Selected Artist Highlight --- */
+.artist-link.selected-artist {
+  background-color: var(--primary-color-a4); /* 增加背景不透明度 */
+  border: 1px solid var(--primary-color-a6); /* 添加边框 */
+  font-weight: bold;
+  padding: 1px 3px; /* 调整内边距，使边框更明显 */
+  border-radius: 4px; /* 轻微调整圆角 */
+  color: var(--primary-color-dark); /* 亮色模式下使用较深的主题色文字 */
+  /* text-decoration: underline; */ /* 如果需要可以取消注释 */
+}
+
+html.dark .artist-link.selected-artist {
+    background-color: var(--primary-color-a6); /* 增加背景不透明度 */
+    border: 1px solid var(--primary-color-a8); /* 添加边框 */
+    color: var(--primary-color-light); /* 暗色模式下使用亮色文字 */
+}
+/* --- END: Selected Artist Highlight --- */
+
+/* Base style for clickable language */
+.language-link {
+  padding: 1px 0;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-color-2); /* Use theme primary for links */
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+.language-link:hover {
+  text-decoration: underline;
+}
+
+/* --- NEW: Selected Artist/Language Highlight --- */
+.artist-link.selected-artist,
+.language-link.selected-language {
+  background-color: var(--primary-color-a4); /* 增加背景不透明度 */
+  border: 1px solid var(--primary-color-a6); /* 添加边框 */
+  font-weight: bold;
+  padding: 1px 3px; /* 调整内边距，使边框更明显 */
+  border-radius: 4px; /* 轻微调整圆角 */
+  color: var(--primary-color-dark); /* 亮色模式下使用较深的主题色文字 */
+  /* text-decoration: underline; */ /* 如果需要可以取消注释 */
+}
+
+html.dark .artist-link.selected-artist,
+html.dark .language-link.selected-language {
+    background-color: var(--primary-color-a6); /* 增加背景不透明度 */
+    border: 1px solid var(--primary-color-a8); /* 添加边框 */
+    color: var(--primary-color-light); /* 暗色模式下使用亮色文字 */
+}
+/* --- END: Selected Artist/Language Highlight --- */
+
+.song-name :deep(.n-button .n-icon),
+.song-name :deep(.n-button .svg-icon) {
+  color: currentColor !important; fill: currentColor !important;
 }
 
 </style>
