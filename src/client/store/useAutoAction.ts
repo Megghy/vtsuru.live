@@ -1,5 +1,5 @@
 // 导入 Vue 和 Pinia 相关函数
-import { ref, computed, onUnmounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineStore, acceptHMRUpdate } from 'pinia';
 // 导入 API 模型和类型
 import { EventModel, GuardLevel, EventDataTypes } from '@/api/api-models.js';
@@ -365,11 +365,15 @@ export const useAutoAction = defineStore('autoAction', () => {
   }
 
   // --- 初始化与事件监听 ---
-
+  let isInited = false
   /**
    * 初始化自动操作系统
    */
   function init() {
+    if (isInited) {
+      return;
+    }
+    isInited = true;
     // 计算属性，判断所有持久化数据是否加载完成
     const allLoaded = computed(() => isActionsLoaded.value && isIntervalLoaded.value && isModeLoaded.value && isIndexLoaded.value && isTriggersLoaded.value);
 
@@ -447,17 +451,6 @@ export const useAutoAction = defineStore('autoAction', () => {
       console.error('[AutoAction] 注册事件监听器时出错:', err);
     }
   }
-
-
-  /**
-   * 组件卸载时清理资源
-   */
-  onUnmounted(() => {
-    console.log('[AutoAction] 清理定时器和监听器.');
-    stopAllIndividualScheduledActions(); // 停止所有独立定时器
-    stopGlobalTimer(); // 停止全局定时器
-    clearInterval(tianXuanTimer); // 清除天选状态检查定时器
-  });
 
   // --- 操作项管理 (增删改查) ---
 
@@ -811,118 +804,71 @@ export const useAutoAction = defineStore('autoAction', () => {
       return;
     }
 
-    // 创建一个模拟事件用于测试
-    let testEvent: EventModel;
+    // 创建基础测试事件属性
+    const baseTestEvent: Partial<EventModel> = {
+      uid: testUid || 10000,
+      uname: '测试用户',
+      uface: '',
+      open_id: 'test-open-id',
+      ouid: 'test-ouid',
+      time: Math.floor(Date.now() / 1000),
+      num: 1,
+      price: 0,
+      guard_level: Math.floor(Math.random() * 3) + 1, // 1-3
+      fans_medal_wearing_status: true,
+      fans_medal_name: '测试牌子',
+      fans_medal_level: Math.floor(Math.random() * 30) + 1 // 1-10
+    };
 
     // 根据不同触发类型创建不同的模拟事件
+    let testEvent: EventModel;
+
     switch (triggerType) {
       case TriggerType.DANMAKU:
         testEvent = {
+          ...baseTestEvent,
           type: EventDataTypes.Message,
-          uid: 10000,
-          uname: '测试用户',
-          uface: '',
-          open_id: 'test-open-id',
-          ouid: 'test-ouid',
           msg: '测试弹幕消息',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
-          price: 0,
-          guard_level: 3,
-          fans_medal_wearing_status: true,
-          fans_medal_name: '测试牌子',
-          fans_medal_level: 10
-        };
+        } as EventModel;
         break;
       case TriggerType.GIFT:
         testEvent = {
+          ...baseTestEvent,
           type: EventDataTypes.Gift,
-          uid: 10003,
-          uname: '测试送礼者',
-          uface: '',
-          open_id: 'test-open-id-gift',
-          ouid: 'test-ouid-gift',
-          msg: '感谢 测试送礼者 赠送的 测试礼物 x 1',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
+          msg: '测试礼物',
           price: 100,
-          guard_level: 1,
-          fans_medal_wearing_status: true,
-          fans_medal_name: '测试牌子',
-          fans_medal_level: 15
-        };
+          num: 5
+        } as EventModel;
         break;
       case TriggerType.GUARD:
+        const level = Math.floor(Math.random() * 3) + 1; // 1-3
         testEvent = {
+          ...baseTestEvent,
           type: EventDataTypes.Guard,
-          uid: testUid || 10002,
-          uname: '测试大航海成员',
-          uface: '',
-          open_id: 'test-open-id-guard',
-          ouid: 'test-ouid-guard',
-          msg: '测试大航海成员 开通了舰长',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
-          price: 138,
-          guard_level: Math.floor(Math.random() * 3) + 1, // 1-3
-          fans_medal_wearing_status: true,
-          fans_medal_name: '测试牌子',
-          fans_medal_level: 20
-        };
+          msg: '舰长',
+          price: level === 1 ? 19998 : level === 2 ? 1998 : 198,
+          guard_level: level, // 1-3
+        } as EventModel;
         break;
       case TriggerType.FOLLOW:
         testEvent = {
-          type: EventDataTypes.Message,
-          uid: 10004,
-          uname: '测试关注者',
-          uface: '',
-          open_id: 'test-open-id-follow',
-          ouid: 'test-ouid-follow',
-          msg: '测试关注者 关注了直播间',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
-          price: 0,
-          guard_level: 0,
-          fans_medal_wearing_status: false,
-          fans_medal_name: '',
-          fans_medal_level: 0
-        };
+          ...baseTestEvent,
+          type: EventDataTypes.Follow,
+        } as EventModel;
         break;
       case TriggerType.ENTER:
         testEvent = {
+          ...baseTestEvent,
           type: EventDataTypes.Enter,
-          uid: 10005,
-          uname: '测试入场观众',
-          uface: '',
-          open_id: 'test-open-id-enter',
-          ouid: 'test-ouid-enter',
-          msg: '测试入场观众 进入了直播间',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
-          price: 0,
-          guard_level: 2,
-          fans_medal_wearing_status: true,
-          fans_medal_name: '测试牌子',
-          fans_medal_level: 8
-        };
+        } as EventModel;
         break;
       case TriggerType.SUPER_CHAT:
         testEvent = {
+          ...baseTestEvent,
           type: EventDataTypes.SC,
-          uid: 10006,
-          uname: '测试SC用户',
-          uface: '',
-          open_id: 'test-open-id-sc',
-          ouid: 'test-ouid-sc',
           msg: '这是一条测试SC消息',
-          time: Math.floor(Date.now() / 1000),
-          num: 1,
-          price: 30,
-          guard_level: 0,
-          fans_medal_wearing_status: true,
-          fans_medal_name: '测试牌子',
-          fans_medal_level: 25
-        };
+          price: Math.floor(Math.random() * 1000) + 10,
+        } as EventModel;
         break;
       case TriggerType.SCHEDULED:
         // 对于定时任务，使用特殊的处理方式
