@@ -3,20 +3,20 @@ import { updateNoteItemContentType, updateNotes } from '@/data/UpdateNote';
 import { NDivider, NGrid } from 'naive-ui';
 import { VNode } from 'vue';
 
-  const currentVer = '1'
-  const savedVer = useStorage('UpdateNoteVer', 0)
-  function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
-    if (Array.isArray(content)) {
-      return h('div', { style: { whiteSpace: 'pre-wrap' } }, content.map(item => renderContent(item)))
-    }
-    if (typeof content === 'string') {
-      return content
-    }
-    if (typeof content === 'function') {
-      return content()
-    }
-    return undefined;
+function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
+  if (Array.isArray(content)) {
+    return h('div', { style: { whiteSpace: 'pre-wrap' } }, content.map(item => renderContent(item)))
   }
+  const getContent = (c: unknown) => {
+    if (typeof c === 'string') {
+      return c
+    }
+    if (typeof c === 'function') {
+      return c()
+    }
+  }
+  return h('span', { style: { whiteSpace: 'pre-wrap' } }, getContent(content))
+}
 </script>
 
 <template>
@@ -32,9 +32,7 @@ import { VNode } from 'vue';
         <NDivider title-placement="left">
           {{ item.date }}
         </NDivider>
-        <NGrid
-          x-gap="10"
-        >
+        <NGrid x-gap="10">
           <template
             v-for="note in item.items"
             :key="note.title"

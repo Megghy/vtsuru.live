@@ -278,10 +278,13 @@ async function ChangeBili() {
       isLoading.value = false
     })
 }
+onMounted(() => {
+
+  checkUpdateNote();
+})
 onUnmounted(() => {
   turnstile.value?.remove()
   // 当进入管理页时检查更新日志
-  checkUpdateNote();
 })
 </script>
 
