@@ -32,6 +32,7 @@ import AutoActionEditor from './components/autoaction/AutoActionEditor.vue';
 import GlobalScheduledSettings from './components/autoaction/settings/GlobalScheduledSettings.vue';
 import TimerCountdown from './components/autoaction/TimerCountdown.vue';
 import DataManager from './components/autoaction/DataManager.vue';
+import ActionHistoryViewer from './components/autoaction/ActionHistoryViewer.vue';
 
 const autoActionStore = useAutoAction();
 const message = useMessage();
@@ -54,6 +55,7 @@ const typeMap = {
 };
 
 const activeTab = ref(TriggerType.GIFT);
+const activeMainTab = ref('action-management');
 const showAddModal = ref(false);
 const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT);
 const editingActionId = ref<string | null>(null);
@@ -499,194 +501,214 @@ onUnmounted(() => {
         size="large"
       >
         <NTabs
-          v-model:value="activeTab"
+          v-model:value="activeMainTab"
           type="line"
           animated
           @update:value="editingActionId = null"
         >
+          <!-- 操作管理标签页 -->
           <NTabPane
-            v-for="(label, type) in typeMap"
-            :key="type"
-            :name="type"
-            :tab="label"
+            name="action-management"
+            tab="操作管理"
           >
-            <NSpace vertical>
-              <NSpace
-                v-if="enabledTriggerTypes"
-                align="center"
-                style="padding: 8px 0; margin-bottom: 8px"
-              >
-                <NSwitch
-                  :value="enabledTriggerTypes[type]"
-                  @update:value="toggleTypeStatus(type)"
-                />
-                <span>{{ enabledTriggerTypes[type] ? '启用' : '禁用' }}所有{{ label }}</span>
-              </NSpace>
-
-              <NAlert
-                v-if="type === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
-                type="warning"
-                title="功能限制提醒"
-                style="margin-bottom: 12px;"
-                :bordered="false"
-              >
-                当前连接模式 (OpenLive) 无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
-              </NAlert>
-
-              <NSpace
-                justify="end"
-                style="margin-bottom: 12px;"
-              >
-                <NPopconfirm
-                  :negative-text="'取消'"
-                  :positive-text="'确认测试'"
-                  @positive-click="() => handleTestClick(type as TriggerType)"
-                >
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      type="warning"
-                      ghost
-                    >
-                      测试 {{ label }} 类型
-                    </NButton>
-                  </template>
-                  {{ `确认模拟一个 ${label} 事件来测试所有启用的 ${label} 操作吗？\n注意：这可能会发送真实的消息、执行操作，并可能触发B站风控限制。` }}
-                </NPopconfirm>
-              </NSpace>
-
-              <div v-if="activeTab === TriggerType.SCHEDULED">
-                <GlobalScheduledSettings />
-                <div
-                  v-if="enabledTriggerTypes && enabledTriggerTypes[TriggerType.SCHEDULED] && autoActionStore.globalSchedulingMode === 'sequential' && autoActionStore.nextScheduledAction"
-                  class="next-action-display"
-                >
-                  <NDivider style="margin: 12px 0 8px 0;" />
-                  <NSpace
-                    align="center"
-                    justify="space-between"
-                  >
-                    <NText type="success">
-                      <NIcon
-                        :component="Target24Filled"
-                        style="vertical-align: -0.15em; margin-right: 4px;"
-                      />
-                      下一个执行:
-                      <NTag
-                        type="info"
-                        size="small"
-                        round
-                      >
-                        {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
-                      </NTag>
-                    </NText>
-                    <NTooltip trigger="hover">
-                      <template #trigger>
-                        <NButton
-                          text
-                          icon-placement="right"
-                          size="small"
-                          @click="openSetNextModal"
-                        >
-                          <template #icon>
-                            <NIcon :component="Edit16Regular" />
-                          </template>
-                          手动指定
-                        </NButton>
-                      </template>
-                      手动设置下一个要执行的操作
-                    </NTooltip>
-                  </NSpace>
-                </div>
-                <NAlert
-                  v-else-if="enabledTriggerTypes && !enabledTriggerTypes[TriggerType.SCHEDULED]"
-                  type="warning"
-                  :bordered="false"
-                  style="margin-bottom: 12px;"
-                >
-                  定时发送类型已被禁用，所有相关操作不会执行。
-                </NAlert>
-              </div>
-              <NEmpty
-                v-if="groupedActions[type].length === 0"
-                description="暂无自动操作"
-              >
-                <template #extra>
-                  <NButton
-                    type="primary"
-                    @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
-                  >
-                    添加{{ typeMap[type as TriggerType] }}
-                  </NButton>
-                </template>
-              </NEmpty>
-
-              <div
-                v-else-if="editingActionId === null"
-                class="overview-container"
-              >
-                <NDataTable
-                  :bordered="false"
-                  :single-line="false"
-                  :columns="getColumnsForType(type as TriggerType)"
-                  :data="groupedActions[type]"
-                  :row-key="(row: AutoActionItem) => row.id"
-                >
-                  <template #empty>
-                    <NEmpty description="暂无数据" />
-                  </template>
-                </NDataTable>
-
-                <NButton
-                  type="default"
-                  style="width: 100%; margin-top: 16px;"
-                  class="btn-with-transition"
-                  @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
-                >
-                  + 添加{{ typeMap[type as TriggerType] }}
-                </NButton>
-              </div>
-
-              <div
-                v-else
-                class="edit-container"
+            <NTabs
+              v-model:value="activeTab"
+              type="segment"
+              animated
+              style="margin-bottom: 16px"
+            >
+              <NTabPane
+                v-for="(label, type) in typeMap"
+                :key="type"
+                :name="type"
+                :tab="label"
               >
                 <NSpace vertical>
-                  <NButton
-                    size="small"
-                    style="align-self: flex-start; margin-bottom: 8px"
-                    class="back-btn btn-with-transition"
-                    @click="backToOverview"
+                  <NSpace
+                    v-if="enabledTriggerTypes"
+                    align="center"
+                    style="padding: 8px 0; margin-bottom: 8px"
                   >
-                    ← 返回列表
-                  </NButton>
+                    <NSwitch
+                      :value="enabledTriggerTypes[type]"
+                      @update:value="toggleTypeStatus(type)"
+                    />
+                    <span>{{ enabledTriggerTypes[type] ? '启用' : '禁用' }}所有{{ label }}</span>
+                  </NSpace>
 
-                  <transition-group
-                    name="fade-slide"
-                    tag="div"
+                  <NAlert
+                    v-if="type === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
+                    type="warning"
+                    title="功能限制提醒"
+                    style="margin-bottom: 12px;"
+                    :bordered="false"
                   >
-                    <div
-                      v-for="action in groupedActions[type]"
-                      v-show="action.id === editingActionId"
-                      :key="action.id"
-                      class="action-item"
+                    当前连接模式 (OpenLive) 无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
+                  </NAlert>
+
+                  <NSpace
+                    justify="end"
+                    style="margin-bottom: 12px;"
+                  >
+                    <NPopconfirm
+                      :negative-text="'取消'"
+                      :positive-text="'确认测试'"
+                      @positive-click="() => handleTestClick(type as TriggerType)"
                     >
-                      <AutoActionEditor :action="action" />
+                      <template #trigger>
+                        <NButton
+                          size="small"
+                          type="warning"
+                          ghost
+                        >
+                          测试 {{ label }} 类型
+                        </NButton>
+                      </template>
+                      {{ `确认模拟一个 ${label} 事件来测试所有启用的 ${label} 操作吗？\n注意：这可能会发送真实的消息、执行操作，并可能触发B站风控限制。` }}
+                    </NPopconfirm>
+                  </NSpace>
+
+                  <div v-if="activeTab === TriggerType.SCHEDULED">
+                    <GlobalScheduledSettings />
+                    <div
+                      v-if="enabledTriggerTypes && enabledTriggerTypes[TriggerType.SCHEDULED] && autoActionStore.globalSchedulingMode === 'sequential' && autoActionStore.nextScheduledAction"
+                      class="next-action-display"
+                    >
+                      <NDivider style="margin: 12px 0 8px 0;" />
+                      <NSpace
+                        align="center"
+                        justify="space-between"
+                      >
+                        <NText type="success">
+                          <NIcon
+                            :component="Target24Filled"
+                            style="vertical-align: -0.15em; margin-right: 4px;"
+                          />
+                          下一个执行:
+                          <NTag
+                            type="info"
+                            size="small"
+                            round
+                          >
+                            {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
+                          </NTag>
+                        </NText>
+                        <NTooltip trigger="hover">
+                          <template #trigger>
+                            <NButton
+                              text
+                              icon-placement="right"
+                              size="small"
+                              @click="openSetNextModal"
+                            >
+                              <template #icon>
+                                <NIcon :component="Edit16Regular" />
+                              </template>
+                              手动指定
+                            </NButton>
+                          </template>
+                          手动设置下一个要执行的操作
+                        </NTooltip>
+                      </NSpace>
                     </div>
-                  </transition-group>
+                    <NAlert
+                      v-else-if="enabledTriggerTypes && !enabledTriggerTypes[TriggerType.SCHEDULED]"
+                      type="warning"
+                      :bordered="false"
+                      style="margin-bottom: 12px;"
+                    >
+                      定时发送类型已被禁用，所有相关操作不会执行。
+                    </NAlert>
+                  </div>
+                  <NEmpty
+                    v-if="groupedActions[type].length === 0"
+                    description="暂无自动操作"
+                  >
+                    <template #extra>
+                      <NButton
+                        type="primary"
+                        @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
+                      >
+                        添加{{ typeMap[type as TriggerType] }}
+                      </NButton>
+                    </template>
+                  </NEmpty>
+
+                  <div
+                    v-else-if="editingActionId === null"
+                    class="overview-container"
+                  >
+                    <NDataTable
+                      :bordered="false"
+                      :single-line="false"
+                      :columns="getColumnsForType(type as TriggerType)"
+                      :data="groupedActions[type]"
+                      :row-key="(row: AutoActionItem) => row.id"
+                    >
+                      <template #empty>
+                        <NEmpty description="暂无数据" />
+                      </template>
+                    </NDataTable>
+
+                    <NButton
+                      type="default"
+                      style="width: 100%; margin-top: 16px;"
+                      class="btn-with-transition"
+                      @click="() => { selectedTriggerType = type as TriggerType; showAddModal = true; }"
+                    >
+                      + 添加{{ typeMap[type as TriggerType] }}
+                    </NButton>
+                  </div>
+
+                  <div
+                    v-else
+                    class="edit-container"
+                  >
+                    <NSpace vertical>
+                      <NButton
+                        size="small"
+                        style="align-self: flex-start; margin-bottom: 8px"
+                        class="back-btn btn-with-transition"
+                        @click="backToOverview"
+                      >
+                        ← 返回列表
+                      </NButton>
+
+                      <transition-group
+                        name="fade-slide"
+                        tag="div"
+                      >
+                        <div
+                          v-for="action in groupedActions[type]"
+                          v-show="action.id === editingActionId"
+                          :key="action.id"
+                          class="action-item"
+                        >
+                          <AutoActionEditor :action="action" />
+                        </div>
+                      </transition-group>
+                    </NSpace>
+                  </div>
                 </NSpace>
-              </div>
-            </NSpace>
+              </NTabPane>
+            </NTabs>
           </NTabPane>
 
-          <!-- 新增数据管理标签页 -->
+          <!-- 历史记录标签页 -->
+          <NTabPane
+            name="action-history"
+            tab="执行历史"
+          >
+            <ActionHistoryViewer />
+          </NTabPane>
+
+          <!-- 数据管理标签页 -->
           <NTabPane
             name="data-manager"
             tab="数据管理"
           >
             <DataManager />
           </NTabPane>
-          <!-- 结束新增 -->
         </NTabs>
       </NSpace>
     </NCard>

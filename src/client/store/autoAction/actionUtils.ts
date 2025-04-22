@@ -11,6 +11,7 @@ import { buildExecutionContext, getRandomTemplate } from './utils';
 import { evaluateTemplateExpressions } from './expressionEvaluator';
 import { evaluateExpression } from './utils';
 import { useBiliCookie } from '../useBiliCookie';
+import { logDanmakuHistory, logPrivateMsgHistory, logCommandHistory } from './utils/historyLogger';
 
 /**
  * 过滤有效的自动操作项
@@ -223,11 +224,57 @@ export function executeActions(
             if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
               setTimeout(() => {
                 handlers.sendLiveDanmaku!(roomId, message)
-                  .catch(err => console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err));
+                  .then(success => {
+                    // 记录弹幕发送历史
+                    logDanmakuHistory(
+                      action.id,
+                      action.name || '未命名操作',
+                      message,
+                      roomId,
+                      success,
+                      success ? undefined : '发送失败'
+                    ).catch(err => console.error('记录弹幕历史失败:', err));
+                    return success;
+                  })
+                  .catch(err => {
+                    console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err);
+                    // 记录失败的发送
+                    logDanmakuHistory(
+                      action.id,
+                      action.name || '未命名操作',
+                      message,
+                      roomId,
+                      false,
+                      err.toString()
+                    ).catch(e => console.error('记录弹幕历史失败:', e));
+                  });
               }, action.actionConfig.delaySeconds * 1000);
             } else {
               handlers.sendLiveDanmaku(roomId, message)
-                .catch(err => console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err));
+                .then(success => {
+                  // 记录弹幕发送历史
+                  logDanmakuHistory(
+                    action.id,
+                    action.name || '未命名操作',
+                    message,
+                    roomId,
+                    success,
+                    success ? undefined : '发送失败'
+                  ).catch(err => console.error('记录弹幕历史失败:', err));
+                  return success;
+                })
+                .catch(err => {
+                  console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err);
+                  // 记录失败的发送
+                  logDanmakuHistory(
+                    action.id,
+                    action.name || '未命名操作',
+                    message,
+                    roomId,
+                    false,
+                    err.toString()
+                  ).catch(e => console.error('记录弹幕历史失败:', e));
+                });
             }
           }
         } else {
@@ -249,6 +296,16 @@ export function executeActions(
             const sendPmPromise = (uid: number, msg: string) => {
               return handlers.sendPrivateMessage!(uid, msg)
                 .then(success => {
+                  // 记录私信发送历史
+                  logPrivateMsgHistory(
+                    action.id,
+                    action.name || '未命名操作',
+                    msg,
+                    uid,
+                    success,
+                    success ? undefined : '发送失败'
+                  ).catch(err => console.error('记录私信历史失败:', err));
+
                   if (success && options?.onSuccess) {
                     // 发送成功后调用 onSuccess 回调
                     options.onSuccess(action, context);
@@ -257,6 +314,15 @@ export function executeActions(
                 })
                 .catch(err => {
                   console.error(`[AutoAction] 发送私信失败 (${action.name || action.id}):`, err);
+                  // 记录失败的发送
+                  logPrivateMsgHistory(
+                    action.id,
+                    action.name || '未命名操作',
+                    msg,
+                    uid,
+                    false,
+                    err.toString()
+                  ).catch(e => console.error('记录私信历史失败:', e));
                   return false; // 明确返回 false 表示失败
                 });
             };
@@ -276,8 +342,22 @@ export function executeActions(
         break;
 
       case ActionType.EXECUTE_COMMAND:
-        // 执行自定义命令（未实现）
-        console.warn(`[AutoAction] 暂不支持执行自定义命令: ${action.name || action.id}`);
+        // 执行自定义命令
+        const command = processTemplate(action, context);
+        if (command) {
+          // 更新冷却时间
+          runtimeState.lastExecutionTime[action.id] = Date.now();
+
+          // 目前只记录执行历史，具体实现可在未来扩展
+          logCommandHistory(
+            action.id,
+            action.name || '未命名操作',
+            command,
+            true
+          ).catch(err => console.error('记录命令执行历史失败:', err));
+
+          console.warn(`[AutoAction] 暂不支持执行自定义命令: ${action.name || action.id}`);
+        }
         break;
 
       default:
