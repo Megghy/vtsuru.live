@@ -452,21 +452,8 @@ function confirmTest() {
 }
 
 onMounted(() => {
-  const stopWatch = watch(() => danmakuClient.state, (newState) => {
-    if (newState === 'connected') {
-      console.log('[ClientAutoAction] Danmaku client connected, initializing store...');
-      autoActionStore.init();
-      stopWatch();
-    } else if (newState !== 'connecting' && newState !== 'waiting') {
-      console.warn(`[ClientAutoAction] Danmaku client state is ${newState}, auto actions might not work.`);
-    }
-  }, { immediate: true });
+  autoActionStore.init();
 });
-
-onUnmounted(() => {
-  console.log('[ClientAutoAction] Unmounted.');
-});
-
 </script>
 
 <template>
