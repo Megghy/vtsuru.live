@@ -5,6 +5,30 @@ import { FETCH_API } from "./constants";
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 4,
+    date: '2025.4.22',
+    items: [
+      {
+        type: 'new',
+        title: '添加自动操作功能',
+        content: [
+          [
+            'EventFetcher客户端新增多种自动操作类型支持，包括弹幕自动回复、礼物感谢、上舰发送私信、关注感谢、入场欢迎、定时发送和SC感谢等, 可以执行js代码',
+            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250422-221703.png', width: 300 }),
+          ],
+          [
+            '使用模板系统，支持随机回复、自定义表达式和条件判断等\r\n',
+            '数据持久化存储，各类操作配置和运行状态不会丢失\r\n\r\n',
+            '发送弹幕和私信需要客户端扫码登录, 客户端安装方式:',
+            () => h(NButton, {
+              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+            }, () => '查看介绍'),
+          ]
+        ],
+      },
+    ]
+  },
+  {
     ver: 3,
     date: '2025.4.15',
     items: [

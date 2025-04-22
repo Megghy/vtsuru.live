@@ -8,11 +8,13 @@ import {
   MoreHorizontal24Filled,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
-  VideoAdd20Filled
+  VideoAdd20Filled,
+  Chat24Filled,
+  PersonFeedback24Filled
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NDivider, NEllipsis, NFlex, NGradientText, NGrid, NGridItem, NIcon, NNumberAnimation, NSpace, NText, NTooltip } from 'naive-ui'
+import { NButton, NDivider, NEllipsis, NFlex, NGradientText, NGrid, NGridItem, NIcon, NNumberAnimation, NSpace, NText, NTooltip, NAlert, NCard, NStatistic, NTag, NBadge } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import vtb from '@/svgs/ic_vtuber.svg'
 
@@ -28,6 +30,11 @@ const functions = [
     name: '积分兑换',
     desc: '通过上舰, Superchat, 赠送礼物等操作可以获取积分, 并通过积分兑换虚拟或者实体礼物',
     icon: BookCoins20Filled,
+  },
+  {
+    name: '弹幕机 (OBS',
+    desc: '在OBS上显示直播间弹幕、礼物和互动内容，兼容blivechat样式 (开发中',
+    icon: Chat24Filled,
   },
   {
     name: '日程表',
@@ -117,200 +124,350 @@ onMounted(async () => {
       vertical
       justify="center"
       align="center"
-      style="padding-top: 30px"
+      style="padding-top: 30px; padding-bottom: 30px;"
     >
-      <NSpace
-        justify="center"
-        align="center"
-        :size="width > 700 ? 50 : 0"
-      >
-        <vtb />
+      <!-- 顶部标题部分 -->
+      <NCard style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: none; width: 90vw; max-width: 1400px; ">
         <NSpace
-          vertical
           justify="center"
+          align="center"
+          :size="width > 700 ? 50 : 0"
         >
-          <NGradientText
-            size="3rem"
-            :gradient="{
-              deg: 180,
-              from: '#e5e5e5',
-              to: '#c2ebeb',
-            }"
-            style="font-weight: 700"
-          >
-            VTSURU.LIVE
-          </NGradientText>
-          <NText style="font-size: 1.5em; font-weight: 500; color: white">
-            一个给主播提供便利功能的网站 😊
-          </NText>
-          <span />
+          <vtb />
           <NSpace
+            vertical
             justify="center"
-            align="center"
           >
-            <NSpace align="center">
-              <NSpace
-                vertical
-                justify="end"
+            <NGradientText
+              size="3rem"
+              :gradient="{
+                deg: 180,
+                from: '#e5e5e5',
+                to: '#c2ebeb',
+              }"
+              style="font-weight: 700"
+            >
+              VTSURU.LIVE
+            </NGradientText>
+            <NText style="font-size: 1.5em; font-weight: 500; color: white">
+              一个给主播提供便利功能的网站 😊
+            </NText>
+            <span />
+            <NSpace
+              justify="center"
+              align="center"
+            >
+              <NSpace align="center">
+                <NSpace
+                  vertical
+                  justify="end"
+                >
+                  <NText
+                    style="font-size: medium"
+                    italic
+                  >
+                    我是主播
+                  </NText>
+                  <NButton
+                    type="primary"
+                    size="small"
+                    @click="$router.push({ name: 'manage-index' })"
+                  >
+                    开始使用
+                  </NButton>
+                </NSpace>
+                <NSpace vertical>
+                  <NText
+                    style="font-size: medium"
+                    italic
+                  >
+                    我是观众
+                  </NText>
+                  <NButton
+                    type="primary"
+                    size="small"
+                    secondary
+                    bordered
+                    @click="$router.push({ name: 'bili-user' })"
+                  >
+                    用户主页
+                  </NButton>
+                </NSpace>
+              </NSpace>
+              <NButton
+                size="large"
+                @click="$router.push('/@Megghy')"
               >
-                <NText
-                  style="font-size: medium"
-                  italic
-                >
-                  我是主播
-                </NText>
-                <NButton
-                  type="primary"
-                  size="small"
-                  @click="$router.push({ name: 'manage-index' })"
-                >
-                  开始使用
-                </NButton>
-              </NSpace>
-              <NSpace vertical>
-                <NText
-                  style="font-size: medium"
-                  italic
-                >
-                  我是观众
-                </NText>
-                <NButton
-                  type="primary"
-                  size="small"
-                  secondary
-                  bordered
-                  @click="$router.push({ name: 'bili-user' })"
-                >
-                  用户主页
-                </NButton>
-              </NSpace>
+                展示
+              </NButton>
+              <NButton
+                size="large"
+                tag="a"
+                href="https://play-live.bilibili.com/details/1698742711771"
+                target="_blank"
+                color="#ff778f"
+              >
+                幻星平台
+              </NButton>
+              <NButton
+                type="info"
+                size="large"
+                @click="$router.push({ name: 'about' })"
+              >
+                关于
+              </NButton>
             </NSpace>
-            <NButton
-              size="large"
-              @click="$router.push('/@Megghy')"
-            >
-              展示
-            </NButton>
-            <NButton
-              size="large"
-              tag="a"
-              href="https://play-live.bilibili.com/details/1698742711771"
-              target="_blank"
-              color="#ff778f"
-            >
-              幻星平台
-            </NButton>
-            <NButton
-              type="info"
-              size="large"
-              @click="$router.push({ name: 'about' })"
-            >
-              关于
-            </NButton>
           </NSpace>
         </NSpace>
-      </NSpace>
+      </NCard>
 
-      <NDivider style="width: 90vw">
-        <NText :depth="3">
-          本站用户
-        </NText>
-        <NDivider vertical />
-        <NNumberAnimation
-          :from="0"
-          :to="indexData?.userCount"
-          show-separator
-        />
-      </NDivider>
-      <NGrid
-        cols="1 s:2 m:3 l:4 xl:5 2xl:5"
-        x-gap="50"
-        y-gap="50"
-        style="max-width: 80vw"
-        responsive="screen"
-      >
-        <NGridItem
-          v-for="item in functions"
-          :key="item.name"
-        >
-          <NSpace
-            align="end"
-            :wrap="false"
-          >
-            <NIcon
-              :component="item.icon"
-              :color="iconColor"
-              size="20"
-            />
-            <NEllipsis>
-              <NText class="index-feature header">
-                {{ item.name }}
-              </NText>
-            </NEllipsis>
-          </NSpace>
-          <NText class="index-feature content">
-            {{ item.desc }}
-          </NText>
-        </NGridItem>
-      </NGrid>
-      <NDivider style="width: 90vw">
-        正在使用本站的主播们
-        <NTooltip>
-          <template #trigger>
-            <NIcon :component="Info24Filled" />
-          </template>
-          随机展示不分先后, 仅粉丝数大于500的主播
-        </NTooltip>
-      </NDivider>
-      <NFlex
-        v-if="indexData"
-        vertical
-        style="max-width: 80vw;"
+      <!-- 用户统计部分 -->
+      <NCard
+        style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
+        border: none; width: 90vw; max-width: 1400px;"
+        size="small"
       >
         <NFlex
-          align="center"
           justify="center"
-          :size="32"
+          align="center"
         >
+          <NText style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            本站用户: <NNumberAnimation
+              :from="0"
+              :to="indexData?.userCount"
+              show-separator
+            />
+          </NText>
+        </NFlex>
+      </NCard>
+
+      <!-- 功能列表部分 -->
+      <NCard style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: none; width: 90vw; max-width: 1400px; margin-bottom: 20px;">
+        <NFlex vertical>
           <NFlex
-            v-for="streamer in indexData?.streamers"
-            :key="streamer.name"
-            style="display: flex;"
-            align="center"
             justify="center"
+            align="center"
+            style="margin-bottom: 20px;"
           >
-            <div>
-              <img
-                :src="streamer.avatar + '@64w'"
-                referrerpolicy="no-referrer"
-                height="32"
-                style="border-radius: 50%;"
-              >
-            </div>
-            <NButton
-              tag="a"
-              :href="'@' + streamer.name"
-              text
+            <NText style="font-size: 1.2rem; font-weight: 500; background-image: linear-gradient(to right, #e5e5e5, #c2ebeb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+              网站功能
+            </NText>
+          </NFlex>
+
+          <NFlex
+            :wrap="true"
+            justify="center"
+            style="gap: 15px;"
+          >
+            <NCard
+              v-for="item in functions"
+              :key="item.name"
+              style="width: 300px; max-width: 100%; background: rgba(255, 255, 255, 0.2); border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);"
+              hoverable
             >
-              {{ streamer.uname || streamer.name }}
-            </NButton>
+              <NFlex vertical>
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px;"
+                >
+                  <NIcon
+                    :component="item.icon"
+                    size="24"
+                    color="white"
+                  />
+                  <NText style="font-size: 1.1rem; font-weight: 500; margin-left: 10px; color: white;">
+                    {{ item.name }}
+                  </NText>
+                </NFlex>
+                <NText style="line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+                  {{ item.desc }}
+                </NText>
+              </NFlex>
+            </NCard>
           </NFlex>
         </NFlex>
-        <NText>
-          还有更多...
-        </NText>
-        <NText depth="3">
-          如果你不想要被展示在主页, 请前往
-          <NButton
-            text
-            @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+      </NCard>
+
+      <!-- 客户端专属功能部分 -->
+      <NCard style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: none; width: 90vw; max-width: 1400px; margin-bottom: 20px;">
+        <NFlex vertical>
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 20px;"
           >
-            这里
-          </NButton>
-          进行设置
-        </NText>
-      </NFlex>
-      <NDivider style="width: 90vw" />
+            <NText style="font-size: 1.2rem; font-weight: 500; background-image: linear-gradient(to right, #e5e5e5, #c2ebeb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+              客户端功能
+            </NText>
+          </NFlex>
+
+          <NFlex
+            :wrap="true"
+            justify="center"
+            style="gap: 20px;"
+          >
+            <NCard
+              style="width: 380px; max-width: 100%; background: rgba(255, 255, 255, 0.2); border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);"
+              hoverable
+            >
+              <NFlex vertical>
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px;"
+                >
+                  <NIcon
+                    :component="PersonFeedback24Filled"
+                    size="24"
+                    color="white"
+                  />
+                  <NText style="font-size: 1.1rem; font-weight: 500; margin-left: 10px; color: white;">
+                    自动操作
+                  </NText>
+                </NFlex>
+                <NText style="line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+                  支持弹幕自动回复、礼物感谢、上舰私信、关注感谢、入场欢迎、定时发送和SC感谢等功能，使用模板系统和JS执行环境，可定制化程度挺高
+                </NText>
+              </NFlex>
+            </NCard>
+
+            <NCard
+              style="width: 380px; max-width: 100%; background: rgba(255, 255, 255, 0.2); border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);"
+              hoverable
+            >
+              <NFlex vertical>
+                <NFlex
+                  align="center"
+                  style="margin-bottom: 10px;"
+                >
+                  <NIcon
+                    :component="Chat24Filled"
+                    size="24"
+                    color="white"
+                  />
+                  <NText style="font-size: 1.1rem; font-weight: 500; margin-left: 10px; color: white;">
+                    弹幕机 (客户端)
+                  </NText>
+                </NFlex>
+                <NText style="line-height: 1.6; color: rgba(255, 255, 255, 0.9);">
+                  在自己电脑上显示直播间弹幕、礼物和互动内容
+                </NText>
+              </NFlex>
+            </NCard>
+          </NFlex>
+
+          <NFlex
+            justify="center"
+            style="margin-top: 20px;"
+          >
+            <NSpace>
+              <NButton
+                type="primary"
+                tag="a"
+                href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+                target="_blank"
+              >
+                <template #icon>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                客户端安装说明
+              </NButton>
+              <NButton
+                ghost
+                tag="a"
+                href="https://github.com/Megghy/vtsuru-fetvher-client"
+                target="_blank"
+                color="white"
+              >
+                客户端代码
+              </NButton>
+              <NButton
+                ghost
+                tag="a"
+                href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+                target="_blank"
+                color="white"
+              >
+                逻辑代码
+              </NButton>
+            </NSpace>
+          </NFlex>
+        </NFlex>
+      </NCard>
+
+      <!-- 使用本站的主播部分 -->
+      <NCard style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: none; width: 90vw; max-width: 1400px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+        <NFlex vertical>
+          <NFlex
+            justify="center"
+            align="center"
+            style="margin-bottom: 20px;"
+          >
+            <NText style="font-size: 1.2rem; font-weight: 500; background-image: linear-gradient(to right, #e5e5e5, #c2ebeb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+              正在使用本站的主播们
+              <NTooltip>
+                <template #trigger>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                随机展示不分先后, 仅粉丝数大于500的主播
+              </NTooltip>
+            </NText>
+          </NFlex>
+
+          <NFlex
+            v-if="indexData"
+            vertical
+            style="max-width: 90vw;"
+          >
+            <NFlex
+              align="center"
+              justify="center"
+              :size="32"
+              :wrap="true"
+              style="gap: 10px;"
+            >
+              <NFlex
+                v-for="streamer in indexData?.streamers"
+                :key="streamer.name"
+                style="display: flex;"
+                align="center"
+                justify="center"
+              >
+                <div>
+                  <img
+                    :src="streamer.avatar + '@64w'"
+                    referrerpolicy="no-referrer"
+                    height="32"
+                    style="border-radius: 50%;"
+                  >
+                </div>
+                <NButton
+                  tag="a"
+                  :href="'@' + streamer.name"
+                  text
+                >
+                  {{ streamer.uname || streamer.name }}
+                </NButton>
+              </NFlex>
+            </NFlex>
+            <NText style="text-align: center; margin-top: 10px; color: white;">
+              还有更多...
+            </NText>
+            <NText
+              depth="3"
+              style="text-align: center; margin-top: 5px;"
+            >
+              如果你不想要被展示在主页, 请前往
+              <NButton
+                text
+                @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+              >
+                这里
+              </NButton>
+              进行设置
+            </NText>
+          </NFlex>
+        </NFlex>
+      </NCard>
     </NSpace>
     <NSpace
       style="position: absolute; bottom: 0; margin: 0 auto; width: 100vw"
@@ -333,22 +490,11 @@ onMounted(async () => {
 </template>
 
 <style lang="stylus" scoped>
-body
-    margin:0
 .index-background
     display: abslute;
-    height: 100vh;
     background: #8360c3;  /* fallback for old browsers */
     background: -webkit-linear-gradient(to right, #2ebf91, #8360c3);  /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to right, #2ebf91, #8360c3); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
     overflow: auto
-
-.index-background .header
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: white;
-.index-background .content
-  max-width: 300px;
-  font-size: 17px;
-  color: white;
+    padding-bottom: 50px;
 </style>
