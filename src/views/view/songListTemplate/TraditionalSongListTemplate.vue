@@ -361,7 +361,8 @@ function GetPlayButton(song: SongsInfo) {
 // --- New: Helper function for Song Request Options ---
 function getOptionDisplay(options?: SongRequestOption) {
   if (!options) {
-    return h('span', '无特殊要求');
+    // 为"无特殊要求"添加 'empty-placeholder' 类
+    return h('span', { class: 'empty-placeholder' }, '无特殊要求');
   }
 
   const conditions: VNode[] = [];
@@ -383,7 +384,8 @@ function getOptionDisplay(options?: SongRequestOption) {
   }
 
   if (conditions.length === 0) {
-    return h('span', '无特殊要求');
+    // 为"无特殊要求"添加 'empty-placeholder' 类
+    return h('span', { class: 'empty-placeholder' }, '无特殊要求');
   }
 
   // Use NFlex for better wrapping
@@ -902,7 +904,11 @@ export const Config = defineTemplateConfig([
                       >
                         {{ tag }}
                       </n-tag>
-                      <span v-if="!song.tags || song.tags.length === 0">无标签</span>
+                      <!-- 为"无标签"添加 'empty-placeholder' 类 -->
+                      <span
+                        v-if="!song.tags || song.tags.length === 0"
+                        class="empty-placeholder"
+                      >无标签</span>
                     </n-flex>
                   </td>
                   <td>
@@ -1430,6 +1436,17 @@ html.dark .language-link.selected-language {
 .song-name :deep(.n-button .n-icon),
 .song-name :deep(.n-button .svg-icon) {
   color: currentColor !important; fill: currentColor !important;
+}
+
+/* --- NEW: Style for empty placeholders --- */
+.empty-placeholder {
+  color: #999999; /* Use a standard gray color */
+  font-style: italic; /* Optional: make it italic */
+  font-size: 0.9em; /* Optional: slightly smaller */
+}
+
+html.dark .empty-placeholder {
+  color: var(--text-color-3); /* Use theme variable for dark mode */
 }
 
 </style>
