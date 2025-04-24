@@ -508,8 +508,26 @@ onMounted(() => {
                 v-for="(label, type) in typeMap"
                 :key="type"
                 :name="type"
-                :tab="label"
               >
+                <template #tab>
+                  <NSpace
+                    align="center"
+                    size="small"
+                    inline
+                  >
+                    {{ label }}
+                    <span
+                      :style="{
+                        color: enabledTriggerTypes && enabledTriggerTypes[type] ? '#18a058' : '#d03050',
+                        fontSize: '14px', // Adjust size as needed
+                        verticalAlign: 'middle'
+                      }"
+                      :title="enabledTriggerTypes && enabledTriggerTypes[type] ? '已启用' : '已禁用'"
+                    >
+                      ●
+                    </span>
+                  </NSpace>
+                </template>
                 <NSpace vertical>
                   <NSpace
                     v-if="enabledTriggerTypes"

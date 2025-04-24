@@ -5,6 +5,26 @@ import { FETCH_API } from "./constants";
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 5,
+    date: '2025.4.24',
+    items: [
+      {
+        type: 'new',
+        title: '新增弹幕姬管理页面',
+        content: [
+          [
+            '弹幕姬现在可用，兼容 blivechat 样式',
+            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/3c5a6f68-1aa4-4b96-a25e-dba2581ac898.png', width: 300 }),
+          ],
+          [
+            '大部分功能都和 blivechat 一致, 不过目前还无法提供本地文件访问, 部分css中需要使用图片等本地资源样式的需要等 EventFetcher 更新相关功能后才能使用\r\n',
+            '配置上传之后会自动同步到obs中'
+          ]
+        ],
+      },
+    ]
+  },
+  {
     ver: 4,
     date: '2025.4.22',
     items: [

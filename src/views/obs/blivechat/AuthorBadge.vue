@@ -22,38 +22,34 @@
   </yt-live-chat-author-badge-renderer>
 </template>
 
-<script>
-import { NTooltip } from 'naive-ui';
+<script setup>
+import { computed } from 'vue'
+import { NTooltip } from 'naive-ui'
 import * as constants from './constants'
-import { FILE_BASE_URL } from '@/data/constants';
+import { FILE_BASE_URL } from '@/data/constants'
 
-export default {
-  name: 'AuthorBadge',
-  props: {
-    isAdmin: Boolean,
-    privilegeType: Number
-  },
-  components: {
-    NTooltip
-  },
-  computed: {
-    authorTypeText() {
-      if (this.isAdmin) {
-        return 'moderator'
-      }
-      return this.privilegeType > 0 ? 'member' : ''
-    },
-    readableAuthorTypeText() {
-      if (this.isAdmin) {
-        return '管理员'
-      }
-      return constants.getShowGuardLevelText(this.privilegeType)
-    },
-    fileServerUrl() {
-      return FILE_BASE_URL
-    }
+const props = defineProps({
+  isAdmin: Boolean,
+  privilegeType: Number
+})
+
+const authorTypeText = computed(() => {
+  if (props.isAdmin) {
+    return 'moderator'
   }
-}
+  return props.privilegeType > 0 ? 'member' : ''
+})
+
+const readableAuthorTypeText = computed(() => {
+  if (props.isAdmin) {
+    return '管理员'
+  }
+  return constants.getShowGuardLevelText(props.privilegeType)
+})
+
+const fileServerUrl = computed(() => {
+  return FILE_BASE_URL
+})
 </script>
 
 <style src="@/assets/css/youtube/yt-live-chat-author-badge-renderer.css"></style>

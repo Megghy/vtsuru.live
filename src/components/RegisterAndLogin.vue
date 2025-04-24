@@ -167,9 +167,7 @@ function onLoginButtonClick() {
             refreshDate: Date.now()
           }
           message.success(`成功登陆为 ${data?.data.account.name}`)
-          setTimeout(() => {
-            location.reload()
-          }, 1000)
+          location.reload()
         } else {
           message.error(data.message)
         }

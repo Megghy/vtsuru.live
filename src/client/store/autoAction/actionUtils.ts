@@ -30,11 +30,17 @@ export function filterValidActions(
   options?: {
     actionType?: ActionType; // 特定操作类型
     customFilter?: (action: AutoActionItem) => boolean; // 自定义过滤器
+    enabledTriggerTypes?: Ref<Record<TriggerType, boolean>> // 触发类型启用状态
   }
 ): AutoActionItem[] {
   return actions.filter(action => {
     // 基本过滤条件
     if (action.triggerType !== triggerType || !action.enabled) {
+      return false;
+    }
+
+    // 检查触发类型是否启用
+    if (options?.enabledTriggerTypes && !options.enabledTriggerTypes.value[triggerType]) {
       return false;
     }
 
@@ -146,6 +152,38 @@ export function processTemplate(
   }
 }
 
+// 辅助函数：发送弹幕并记录日志
+async function sendAndLogDanmaku(
+  sendHandler: (roomId: number, message: string) => Promise<boolean>,
+  action: AutoActionItem,
+  roomId: number,
+  message: string
+): Promise<boolean> {
+  try {
+    const success = await sendHandler(roomId, message);
+    logDanmakuHistory(
+      action.id,
+      action.name || '未命名操作',
+      message,
+      roomId,
+      success,
+      success ? undefined : '发送失败'
+    ).catch(err => console.error('记录弹幕历史失败:', err));
+    return success;
+  } catch (err) {
+    console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err);
+    logDanmakuHistory(
+      action.id,
+      action.name || '未命名操作',
+      message,
+      roomId,
+      false,
+      err instanceof Error ? err.toString() : String(err) // 确保err是字符串
+    ).catch(e => console.error('记录弹幕历史失败:', e));
+    return false;
+  }
+}
+
 /**
  * 执行操作的通用函数
  * @param actions 过滤后的操作列表
@@ -220,61 +258,13 @@ export function executeActions(
             // 更新冷却时间
             runtimeState.lastExecutionTime[action.id] = Date.now();
 
+            const sendAction = () => sendAndLogDanmaku(handlers.sendLiveDanmaku!, action, roomId, message);
+
             // 延迟发送
             if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-              setTimeout(() => {
-                handlers.sendLiveDanmaku!(roomId, message)
-                  .then(success => {
-                    // 记录弹幕发送历史
-                    logDanmakuHistory(
-                      action.id,
-                      action.name || '未命名操作',
-                      message,
-                      roomId,
-                      success,
-                      success ? undefined : '发送失败'
-                    ).catch(err => console.error('记录弹幕历史失败:', err));
-                    return success;
-                  })
-                  .catch(err => {
-                    console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err);
-                    // 记录失败的发送
-                    logDanmakuHistory(
-                      action.id,
-                      action.name || '未命名操作',
-                      message,
-                      roomId,
-                      false,
-                      err.toString()
-                    ).catch(e => console.error('记录弹幕历史失败:', e));
-                  });
-              }, action.actionConfig.delaySeconds * 1000);
+              setTimeout(sendAction, action.actionConfig.delaySeconds * 1000);
             } else {
-              handlers.sendLiveDanmaku(roomId, message)
-                .then(success => {
-                  // 记录弹幕发送历史
-                  logDanmakuHistory(
-                    action.id,
-                    action.name || '未命名操作',
-                    message,
-                    roomId,
-                    success,
-                    success ? undefined : '发送失败'
-                  ).catch(err => console.error('记录弹幕历史失败:', err));
-                  return success;
-                })
-                .catch(err => {
-                  console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err);
-                  // 记录失败的发送
-                  logDanmakuHistory(
-                    action.id,
-                    action.name || '未命名操作',
-                    message,
-                    roomId,
-                    false,
-                    err.toString()
-                  ).catch(e => console.error('记录弹幕历史失败:', e));
-                });
+              sendAction();
             }
           }
         } else {
@@ -321,7 +311,7 @@ export function executeActions(
                     msg,
                     uid,
                     false,
-                    err.toString()
+                    err instanceof Error ? err.toString() : String(err) // 确保err是字符串
                   ).catch(e => console.error('记录私信历史失败:', e));
                   return false; // 明确返回 false 表示失败
                 });

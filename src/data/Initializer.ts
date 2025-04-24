@@ -94,43 +94,38 @@ function InitVersionCheck() {
           currentVersion = keepCheckData.data
           localStorage.setItem('Version', currentVersion)
           console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
-
-          const url = new URL(window.location.href)
-          const path = url.pathname
-
-          if (!path.startsWith('/obs')) {
-            if (isTauri()) {
-              location.reload();
-            }
-            else {
-              const n = notification.info({
-                title: '发现新的版本更新',
-                content: '是否现在刷新?',
-                meta: () => h(NText, { depth: 3 }, () => currentVersion),
-                action: () =>
-                  h(NFlex, null, () => [
-                    h(
-                      NButton,
-                      {
-                        text: true,
-                        type: 'primary',
-                        onClick: () => location.reload(),
-                        size: 'small',
-                      },
-                      { default: () => '刷新' },
-                    ),
-                    h(
-                      NButton,
-                      {
-                        text: true,
-                        onClick: () => n.destroy(),
-                        size: 'small',
-                      },
-                      { default: () => '稍后' },
-                    ),
-                  ]),
-              })
-            }
+          
+          if (window.$route.meta.forceReload || isTauri()) {
+            location.reload()
+          }
+          else {
+            const n = notification.info({
+              title: '发现新的版本更新',
+              content: '是否现在刷新?',
+              meta: () => h(NText, { depth: 3 }, () => currentVersion),
+              action: () =>
+                h(NFlex, null, () => [
+                  h(
+                    NButton,
+                    {
+                      text: true,
+                      type: 'primary',
+                      onClick: () => location.reload(),
+                      size: 'small',
+                    },
+                    { default: () => '刷新' },
+                  ),
+                  h(
+                    NButton,
+                    {
+                      text: true,
+                      onClick: () => n.destroy(),
+                      size: 'small',
+                    },
+                    { default: () => '稍后' },
+                  ),
+                ]),
+            })
           }
         }
       },

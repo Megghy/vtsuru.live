@@ -21,7 +21,8 @@ export default [
     component: () => import('@/client/ClientDanmakuWindow.vue'),
     meta: {
       title: '弹幕窗口',
-      ignoreLogin: true
+      ignoreLogin: true,
+      forceReload: true,
     }
   }
 ]

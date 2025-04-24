@@ -138,7 +138,7 @@ export default //管理页面
       name: 'manage-danmuji',
       component: () => import('@/views/manage/DanmujiManageView.vue'),
       meta: {
-        title: '点歌',
+        title: '弹幕姬',
         keepAlive: true,
         danmaku: true,
         isNew: true

@@ -12,6 +12,7 @@ import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import oxlintPlugin from 'vite-plugin-oxlint';
 import svgLoader from 'vite-svg-loader'
+import { install as VueMonacoEditorPlugin } from '@guolao/vue-monaco-editor'
 
 const isObjectWithDefaultFunction = (
   module: unknown
@@ -20,10 +21,6 @@ const isObjectWithDefaultFunction = (
   typeof module === 'object' &&
   'default' in module &&
   typeof module.default === 'function';
-
-const monacoEditorPlugin = isObjectWithDefaultFunction(monacoEditorPluginModule)
-  ? monacoEditorPluginModule.default
-  : monacoEditorPluginModule;
 
 export default defineConfig({
   plugins: [
@@ -58,11 +55,10 @@ export default defineConfig({
       extensions: ['vue', 'md'],
 
       // allow auto import and register components used in markdown
-      include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
+      include: [/\.vue$/, /\.vue\?vue/, /\.md$/, /\.vine$/],
     }),
-    monacoEditorPlugin({ languageWorkers: ['css'] }),
     oxlintPlugin(),
-    VineVitePlugin()
+    VineVitePlugin(),
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },

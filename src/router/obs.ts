@@ -7,7 +7,8 @@ export default {
       name: 'obs-live-lottery',
       component: () => import('@/views/obs/LiveLotteryOBS.vue'),
       meta: {
-        title: '直播抽奖'
+        title: '直播抽奖',
+        forceReload: true,
       }
     },
     {
@@ -16,7 +17,8 @@ export default {
       alias: 'song-request',
       component: () => import('@/views/obs/LiveRequestOBS.vue'),
       meta: {
-        title: '弹幕点播'
+        title: '弹幕点播',
+        forceReload: true,
       }
     },
     {
@@ -24,7 +26,8 @@ export default {
       name: 'obs-live-request-today',
       component: () => import('@/views/obs/LiveRequestProcessedOBS.vue'),
       meta: {
-        title: '弹幕点播-今日'
+        title: '弹幕点播-今日',
+        forceReload: true,
       }
     },
     {
@@ -32,7 +35,8 @@ export default {
       name: 'obs-queue',
       component: () => import('@/views/obs/QueueOBS.vue'),
       meta: {
-        title: '弹幕排队'
+        title: '弹幕排队',
+        forceReload: true,
       }
     },
     {
@@ -40,7 +44,8 @@ export default {
       name: 'obs-music-request',
       component: () => import('@/views/obs/MusicRequestOBS.vue'),
       meta: {
-        title: '弹幕排队 (播放'
+        title: '弹幕排队 (播放列表)',
+        forceReload: true,
       }
     },
     {
@@ -48,7 +53,8 @@ export default {
       name: 'obs-question-display',
       component: () => import('@/views/obs/QuestionDisplayOBS.vue'),
       meta: {
-        title: '棉花糖展示'
+        title: '棉花糖展示',
+        forceReload: true,
       }
     },
     {
@@ -56,7 +62,8 @@ export default {
       name: 'obs-web-fetcher',
       component: () => import('@/views/obs/WebFetcherOBS.vue'),
       meta: {
-        title: '弹幕收集器 (OBS版'
+        title: '弹幕收集器 (OBS版)',
+        forceReload: true,
       }
     },
     {
@@ -64,7 +71,8 @@ export default {
       name: 'obs-danmuji',
       component: () => import('@/views/obs/DanmujiOBS.vue'),
       meta: {
-        title: '弹幕机'
+        title: '弹幕姬',
+        forceReload: true,
       }
     }
   ]

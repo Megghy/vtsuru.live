@@ -129,10 +129,44 @@ const selectedItems = computed(() => {
 // --- 方法 ---
 
 // 获取礼物兑换按钮的提示文本
-function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积分不足' | '请先进行账号认证' | '库存不足' {
+function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积分不足' | '请先进行账号认证' | '库存不足' | '舰长等级不足' | '兑换时间未到' | '已达兑换上限' | '需要设置地址' {
   if (!biliAuth.value.id) return '请先进行账号认证' // 未认证
   if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足' // 库存不足
-  if ((currentPoint.value ?? 0) < goods.price) return '当前积分不足' // 积分不足
+  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return '当前积分不足' // 积分不足且不能免费兑换
+  // 检查舰长等级要求
+  // 使用 guardInfo 判断用户在当前主播房间的舰长等级
+  const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
+  if (goods.allowGuardLevel > 0 && currentGuardLevel < goods.allowGuardLevel) {
+    return '舰长等级不足'
+  }
+
+  // 在当前模型中没有兑换时间限制字段，可以根据需要添加相关功能
+  // 如果将来添加了时间限制功能，可以取消下面注释并调整代码
+  /*
+  if (goods.startTime && new Date() < new Date(goods.startTime)) {
+    return '兑换时间未到'
+  }
+  if (goods.endTime && new Date() > new Date(goods.endTime)) {
+    return '兑换已结束'
+  }
+  */
+
+  // 检查用户兑换上限
+  // 注意：当前模型中没有 userBoughtCount 属性，
+  // 需要后端提供已购买数量信息才能实现此功能
+  /*
+  if (goods.userBoughtCount !== undefined && goods.maxBuyCount !== undefined &&
+      goods.userBoughtCount >= goods.maxBuyCount && goods.maxBuyCount > 0) {
+    return '已达兑换上限'
+  }
+  */
+
+  // 检查实物礼物的地址要求
+  if (goods.type === GoodsTypes.Physical && !goods.collectUrl &&
+      (!biliAuth.value.address || biliAuth.value.address.length === 0)) {
+    return '需要设置地址'
+  }
+
   return '开始兑换' // 可以兑换
 }
 
@@ -420,7 +454,7 @@ onMounted(async () => {
           <NSelect
             v-model:value="priceOrder"
             :options="[
-              { label: '默认排序', value: null },
+              { label: '默认排序', value: 'null' },
               { label: '价格 低→高', value: 'asc' },
               { label: '价格 高→低', value: 'desc' }
             ]"

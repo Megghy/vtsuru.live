@@ -124,7 +124,7 @@
   :root {
     font-feature-settings: 'liga' 1, 'calt' 1;
     --vtsuru-header-height: 50px;
-    --vtsuru-content-padding: 16px;
+    --vtsuru-content-padding: 12px;
   }
 
   @supports (font-variation-settings: normal) {

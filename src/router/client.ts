@@ -8,6 +8,7 @@ export default {
       component: () => import('@/client/ClientIndex.vue'),
       meta: {
         title: '首页',
+        forceReload: true,
       }
     },
     {
@@ -16,6 +17,7 @@ export default {
       component: () => import('@/client/ClientFetcher.vue'),
       meta: {
         title: 'EventFetcher',
+        forceReload: true,
       }
     },
     {
@@ -24,6 +26,7 @@ export default {
       component: () => import('@/client/ClientSettings.vue'),
       meta: {
         title: '设置',
+        forceReload: true,
       }
     },
     {
@@ -32,6 +35,7 @@ export default {
       component: () => import('@/client/DanmakuWindowManager.vue'),
       meta: {
         title: '弹幕窗口管理',
+        forceReload: true,
       }
     },
     {
@@ -40,6 +44,7 @@ export default {
       component: () => import('@/client/ClientAutoAction.vue'),
       meta: {
         title: '自动操作管理',
+        forceReload: true,
       }
     },
     {
@@ -55,6 +60,7 @@ export default {
       component: () => import('@/client/ClientTest.vue'),
       meta: {
         title: '测试',
+        forceReload: true,
       }
     },
   ]
