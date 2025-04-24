@@ -28,19 +28,21 @@ import {
   createDefaultRuntimeState
 } from './autoAction/utils';
 import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator';
+// 导入 actionUtils 工具函数
+import { filterValidActions, checkUserFilters, checkCooldown, processTemplate, executeActions } from './autoAction/actionUtils';
 // 导入 nanoid 用于生成唯一 ID
 import { nanoid } from 'nanoid';
 // 导入开发环境判断标志
 import { isDev } from '@/data/constants.js';
 
 // 导入所有自动操作子模块
-import { useGiftThank } from './autoAction/modules/giftThank.js';
-import { useGuardPm } from './autoAction/modules/guardPm.js';
-import { useFollowThank } from './autoAction/modules/followThank.js';
-import { useEntryWelcome } from './autoAction/modules/entryWelcome.js';
-import { useAutoReply } from './autoAction/modules/autoReply.js';
-import { useScheduledDanmaku } from './autoAction/modules/scheduledDanmaku.js';
-import { useSuperChatThank } from './autoAction/modules/superChatThank.js';
+import { useGiftThank } from './autoAction/modules/giftThank';
+import { useGuardPm } from './autoAction/modules/guardPm';
+import { useFollowThank } from './autoAction/modules/followThank';
+import { useEntryWelcome } from './autoAction/modules/entryWelcome';
+import { useAutoReply } from './autoAction/modules/autoReply';
+import { useScheduledDanmaku } from './autoAction/modules/scheduledDanmaku';
+import { useSuperChatThank } from './autoAction/modules/superChatThank';
 
 // 定义名为 'autoAction' 的 Pinia store
 export const useAutoAction = defineStore('autoAction', () => {
@@ -541,48 +543,14 @@ export const useAutoAction = defineStore('autoAction', () => {
   const tianXuanTimer = setInterval(checkTianXuanStatus, 5 * 60 * 1000);
 
   /**
-   * 判断是否应处理某个操作项 (基于事件和配置)
-   * @param action 操作项配置
-   * @param event 可选的事件数据
-   * @returns 是否应该处理
-   */
-  function shouldProcessAction(action: AutoActionItem, event?: EventModel | null): boolean {
-    if (!action.enabled) return false; // 未启用则跳过
-    if (!enabledTriggerTypes.value[action.triggerType]) return false; // 触发类型未启用则跳过
-
-    // 检查模板是否为空 (添加新的检查)
-    if (!action.template || action.template.trim() === '') {
-      console.warn(`[AutoAction] 跳过操作 "${action.name}"：未设置有效模板`);
-      return false;
-    }
-
-    // 根据配置检查条件
-    if (action.triggerConfig.onlyDuringLive && !isLive.value) return false; // 仅直播时
-    if (action.triggerConfig.ignoreTianXuan && isTianXuanActive.value) return false; // 忽略天选时
-    // 用户过滤条件
-    if (event && action.triggerConfig.userFilterEnabled) {
-      if (action.triggerConfig.requireMedal && !event.fans_medal_wearing_status) return false; // 要求粉丝牌
-      if (action.triggerConfig.requireCaptain && event.guard_level === GuardLevel.None) return false; // 要求舰长
-    }
-    // 逻辑表达式判断
-    if (action.logicalExpression && event) {
-      const context = buildExecutionContext(event, roomId.value, action.triggerType);
-      if (!evaluateExpression(action.logicalExpression, context)) return false; // 表达式不满足
-    }
-    return true; // 所有条件满足
-  }
-
-  /**
    * 处理接收到的事件
    * @param event 事件数据
    * @param triggerType 事件对应的触发器类型
    */
   function processEvent(event: EventModel, triggerType: TriggerType) {
     if (!roomId.value) return; // 房间 ID 无效则跳过
-
     // 检查触发类型是否启用
     if (!enabledTriggerTypes.value[triggerType]) return;
-
     // 根据触发类型调用相应模块的处理函数
     switch (triggerType) {
       case TriggerType.DANMAKU:

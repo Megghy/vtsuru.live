@@ -5,6 +5,18 @@ import App from './App.vue';
 import { InitVTsuru } from './data/Initializer';
 import emitter from './mitt';
 import router from './router';
+import { loader } from '@guolao/vue-monaco-editor'
+
+loader.config({
+  paths: {
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor/min/vs'
+  },
+  'vs/nls': {
+    availableLanguages: {
+      '*': 'zh-cn'
+    }
+  }
+})
 
 const pinia = createPinia()
 export const getPinia = () => pinia

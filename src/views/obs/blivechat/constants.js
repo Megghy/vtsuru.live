@@ -1,4 +1,3 @@
-
 export const AUTHOR_TYPE_NORMAL = 0
 export const AUTHOR_TYPE_MEMBER = 1
 export const AUTHOR_TYPE_ADMIN = 2
@@ -179,6 +178,17 @@ export function getShowRichContent(message) {
     })
   }
   return richContent
+}
+
+export function getShowContentParts(message) {
+  let contentParts = [...message.contentParts || []]
+  if (message.translation) {
+    contentParts.push({
+      type: CONTENT_TYPE_TEXT,
+      text: `（${message.translation}）`
+    })
+  }
+  return contentParts
 }
 
 export function getGiftShowContent(message, showGiftName) {

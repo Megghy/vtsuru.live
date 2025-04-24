@@ -1,36 +1,43 @@
 <template>
-  <yt-img-shadow class="no-transition" :height="height" :width="width" style="background-color: transparent;" loaded>
-    <img id="img" class="style-scope yt-img-shadow" alt="" :height="height" :width="width" :src="showImgUrl"
-      @error="onLoadError" referrerpolicy="no-referrer">
+  <yt-img-shadow
+    class="no-transition"
+    :height="height"
+    :width="width"
+    style="background-color: transparent;"
+    loaded
+  >
+    <img
+      id="img"
+      class="style-scope yt-img-shadow"
+      alt=""
+      :height="height"
+      :width="width"
+      :src="showImgUrl"
+      referrerpolicy="no-referrer"
+      @error="onLoadError"
+    >
   </yt-img-shadow>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue'
 import * as models from '../../../data/chat/models'
 
-export default {
-  name: 'ImgShadow',
-  props: {
-    imgUrl: String,
-    height: String,
-    width: String
-  },
-  data() {
-    return {
-      showImgUrl: this.imgUrl
-    }
-  },
-  watch: {
-    imgUrl(val) {
-      this.showImgUrl = val
-    }
-  },
-  methods: {
-    onLoadError() {
-      if (this.showImgUrl !== models.DEFAULT_AVATAR_URL) {
-        this.showImgUrl = models.DEFAULT_AVATAR_URL
-      }
-    }
+const props = defineProps({
+  imgUrl: String,
+  height: String,
+  width: String
+})
+
+const showImgUrl = ref(props.imgUrl)
+
+watch(() => props.imgUrl, (val) => {
+  showImgUrl.value = val
+})
+
+function onLoadError() {
+  if (showImgUrl.value !== models.DEFAULT_AVATAR_URL) {
+    showImgUrl.value = models.DEFAULT_AVATAR_URL
   }
 }
 </script>

@@ -84,246 +84,255 @@ watch(aplayer, () => {
 
 // 邮箱验证相关
 const canResendEmail = ref(false)
+const isBiliVerified = computed(() => accountInfo.value?.isBiliVerified)
 
 // 图标渲染函数 - 用于菜单项
 const renderIcon = (icon: any) => () => h(NIcon, null, { default: () => h(icon) })
 
 // 菜单配置
-const menuOptions = [
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-history' } }, { default: () => '历史' }),
-    key: 'manage-history',
-    disabled: accountInfo.value?.isEmailVerified === false,
-    icon: renderIcon(AnalyticsSharp),
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-live' } }, { default: () => '直播记录' }),
-    key: 'manage-live',
-    disabled: accountInfo.value?.isEmailVerified === false,
-    icon: renderIcon(Live24Filled),
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-analyze' } }, { default: () => '直播数据' }),
-    key: 'manage-analyze',
-    disabled: accountInfo.value?.isEmailVerified === false,
-    icon: renderIcon(Eye),
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-event' } }, { default: () => '舰长和SC' }),
-    key: 'manage-event',
-    disabled: accountInfo.value?.isEmailVerified === false,
-    icon: renderIcon(VehicleShip24Filled),
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-point' } }, { default: () => '积分和礼物' }),
-    key: 'manage-point',
-    disabled: accountInfo.value?.isEmailVerified === false,
-    icon: renderIcon(BookCoins20Filled),
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-schedule' } }, { default: () => '日程' }),
-    key: 'manage-schedule',
-    icon: renderIcon(CalendarClock24Filled),
-    disabled: accountInfo.value?.isEmailVerified === false,
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-songList' } }, { default: () => '歌单' }),
-    key: 'manage-songList',
-    icon: renderIcon(MusicalNote),
-    disabled: accountInfo.value?.isEmailVerified === false,
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-questionBox' } }, { default: () => '棉花糖 (提问箱' }),
-    key: 'manage-questionBox',
-    icon: renderIcon(Chatbox),
-    disabled: accountInfo.value?.isEmailVerified === false,
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-videoCollect' } }, { default: () => '视频征集' }),
-    key: 'manage-videoCollect',
-    icon: renderIcon(VideoAdd20Filled),
-    disabled: accountInfo.value?.isEmailVerified === false,
-  },
-  {
-    label: () => h(RouterLink, { to: { name: 'manage-lottery' } }, { default: () => '动态抽奖' }),
-    key: 'manage-lottery',
-    icon: renderIcon(Lottery24Filled),
-  },
-  {
-    label: () => h(
-      NTooltip,
-      {},
-      {
-        trigger: () => h(
-          NText,
-          () => [
-            '弹幕相关',
-            h(
+const menuOptions = computed(() => {
+  return [
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-history' } }, { default: () => '历史' }),
+      key: 'manage-history',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(AnalyticsSharp),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-live' } }, { default: () => '直播记录' }),
+      key: 'manage-live',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(Live24Filled),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-analyze' } }, { default: () => '直播数据' }),
+      key: 'manage-analyze',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(Eye),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-event' } }, { default: () => '舰长和SC' }),
+      key: 'manage-event',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(VehicleShip24Filled),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-point' } }, { default: () => '积分和礼物' }),
+      key: 'manage-point',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(BookCoins20Filled),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-schedule' } }, { default: () => '日程' }),
+      key: 'manage-schedule',
+      icon: renderIcon(CalendarClock24Filled),
+      disabled: accountInfo.value?.isEmailVerified === false,
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-songList' } }, { default: () => '歌单' }),
+      key: 'manage-songList',
+      icon: renderIcon(MusicalNote),
+      disabled: accountInfo.value?.isEmailVerified === false,
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-questionBox' } }, { default: () => '棉花糖 (提问箱' }),
+      key: 'manage-questionBox',
+      icon: renderIcon(Chatbox),
+      disabled: accountInfo.value?.isEmailVerified === false,
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-videoCollect' } }, { default: () => '视频征集' }),
+      key: 'manage-videoCollect',
+      icon: renderIcon(VideoAdd20Filled),
+      disabled: accountInfo.value?.isEmailVerified === false,
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'manage-lottery' } }, { default: () => '动态抽奖' }),
+      key: 'manage-lottery',
+      icon: renderIcon(Lottery24Filled),
+    },
+    {
+      label: () => h(
+        NTooltip,
+        {},
+        {
+          trigger: () => h(
+            NText,
+            () => [
+              '弹幕相关',
+              h(
+                NTooltip,
+                { style: 'padding: 0;' },
+                {
+                  trigger: () => h(NIcon, { component: Info24Filled }),
+                  default: () => h(
+                    NAlert,
+                    {
+                      type: 'warning',
+                      size: 'small',
+                      title: '可用性警告',
+                      style: 'max-width: 600px;',
+                    },
+                    () => h('div', {}, [
+                      '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                      h(
+                        NButton,
+                        {
+                          text: true,
+                          tag: 'a',
+                          href: 'https://developer.chrome.com/blog/background_tabs/',
+                          target: '_blank',
+                          type: 'info',
+                        },
+                        () => '此文章',
+                      ),
+                      '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
+                      h('br'),
+                      '为避免这种情况, 建议注册本站账后使用',
+                      h(
+                        NButton,
+                        {
+                          type: 'primary',
+                          text: true,
+                          size: 'small',
+                          tag: 'a',
+                          href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
+                          target: '_blank',
+                        },
+                        () => 'VtsuruEventFetcher',
+                      ),
+                      ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
+                      h('br'),
+                      'Chrome: ',
+                      h(
+                        NButton,
+                        {
+                          type: 'info',
+                          text: true,
+                          size: 'small',
+                          tag: 'a',
+                          href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
+                          target: '_blank',
+                        },
+                        () => '让特定网站保持活动状态',
+                      ),
+                      ', Edge: ',
+                      h(
+                        NButton,
+                        {
+                          type: 'info',
+                          text: true,
+                          size: 'small',
+                          tag: 'a',
+                          href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
+                          target: '_blank',
+                        },
+                        () => '永远不想进入睡眠状态的网站',
+                      ),
+                    ]),
+                  ),
+                },
+              ),
+            ]
+          ),
+          default: () => isBiliVerified.value
+            ? '需要使用直播弹幕的功能'
+            : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
+        },
+      ),
+      key: 'manage-danmaku',
+      icon: renderIcon(Chat24Filled),
+      disabled: accountInfo.value?.isEmailVerified === false || !isBiliVerified.value,
+      children: [
+        {
+          label: () => !isBiliVerified.value ? '弹幕机' : h(
+            NBadge,
+            { value: '新', offset: [15, 12], type: 'info' },
+            () => h(
               NTooltip,
-              { style: 'padding: 0;' },
+              {},
               {
-                trigger: () => h(NIcon, { component: Info24Filled }),
-                default: () => h(
-                  NAlert,
-                  {
-                    type: 'warning',
-                    size: 'small',
-                    title: '可用性警告',
-                    style: 'max-width: 600px;',
-                  },
-                  () => h('div', {}, [
-                    '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
-                    h(
-                      NButton,
-                      {
-                        text: true,
-                        tag: 'a',
-                        href: 'https://developer.chrome.com/blog/background_tabs/',
-                        target: '_blank',
-                        type: 'info',
-                      },
-                      () => '此文章',
-                    ),
-                    '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
-                    h('br'),
-                    '为避免这种情况, 建议注册本站账后使用',
-                    h(
-                      NButton,
-                      {
-                        type: 'primary',
-                        text: true,
-                        size: 'small',
-                        tag: 'a',
-                        href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
-                        target: '_blank',
-                      },
-                      () => 'VtsuruEventFetcher',
-                    ),
-                    ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
-                    h('br'),
-                    'Chrome: ',
-                    h(
-                      NButton,
-                      {
-                        type: 'info',
-                        text: true,
-                        size: 'small',
-                        tag: 'a',
-                        href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
-                        target: '_blank',
-                      },
-                      () => '让特定网站保持活动状态',
-                    ),
-                    ', Edge: ',
-                    h(
-                      NButton,
-                      {
-                        type: 'info',
-                        text: true,
-                        size: 'small',
-                        tag: 'a',
-                        href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
-                        target: '_blank',
-                      },
-                      () => '永远不想进入睡眠状态的网站',
-                    ),
-                  ]),
+                trigger: () => h(
+                  RouterLink,
+                  { to: { name: 'manage-danmuji' } },
+                  { default: () => '弹幕机' },
                 ),
-              },
-            ),
-          ]
-        ),
-        default: () => accountInfo.value?.isBiliVerified
-          ? '需要使用直播弹幕的功能'
-          : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
-      },
-    ),
-    key: 'manage-danmaku',
-    icon: renderIcon(Chat24Filled),
-    disabled: accountInfo.value?.isEmailVerified === false,
-    children: [
-      {
-        label: () => h(
-          NBadge,
-          { value: '新', offset: [15, 12], type: 'info' },
-          () => h(
+                default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
+              }
+            )
+          ),
+          key: 'manage-danmuji',
+          disabled: !isBiliVerified.value,
+          icon: renderIcon(Lottery24Filled),
+        },
+        {
+          label: () => !isBiliVerified.value ? '抽奖' : h(
+            RouterLink,
+            { to: { name: 'manage-liveLottery' } },
+            { default: () => '抽奖' },
+          ),
+          key: 'manage-liveLottery',
+          icon: renderIcon(Lottery24Filled),
+          disabled: !isBiliVerified.value,
+        },
+        {
+          label: () => !isBiliVerified.value ? '点播' : h(
             NTooltip,
             {},
             {
               trigger: () => h(
                 RouterLink,
-                { to: { name: 'manage-danmuji' } },
-                { default: () => '弹幕机' },
+                { to: { name: 'manage-liveRequest' } },
+                { default: () => '点播' },
               ),
-              default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
-            }
-          )
-        ),
-        key: 'manage-danmuji',
-        icon: renderIcon(Lottery24Filled),
-      },
-      {
-        label: () => h(
-          RouterLink,
-          { to: { name: 'manage-liveLottery' } },
-          { default: () => '抽奖' },
-        ),
-        key: 'manage-liveLottery',
-        icon: renderIcon(Lottery24Filled),
-      },
-      {
-        label: () => h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-liveRequest' } },
-              { default: () => '点播' },
-            ),
-            default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
-          },
-        ),
-        key: 'manage-liveRequest',
-        icon: renderIcon(MusicalNote),
-      },
-      {
-        label: () => h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-musicRequest' } },
-              { default: () => '点歌' },
-            ),
-            default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
-          },
-        ),
-        key: 'manage-musicRequest',
-        icon: renderIcon(MusicalNote),
-      },
-      {
-        label: () => h(
-          RouterLink,
-          { to: { name: 'manage-liveQueue' } },
-          { default: () => '排队' },
-        ),
-        key: 'manage-liveQueue',
-        icon: renderIcon(PeopleQueue24Filled),
-      },
-      {
-        label: () => h(
-          RouterLink,
-          { to: { name: 'manage-speech' } },
-          { default: () => '读弹幕' },
-        ),
-        key: 'manage-speech',
-        icon: renderIcon(TabletSpeaker24Filled),
-      },
-    ],
-  },
-]
+              default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
+            },
+          ),
+          key: 'manage-liveRequest',
+          icon: renderIcon(MusicalNote),
+          disabled: !isBiliVerified.value,
+        },
+        {
+          label: () => !isBiliVerified.value ? '点歌' : h(
+            NTooltip,
+            {},
+            {
+              trigger: () => h(
+                RouterLink,
+                { to: { name: 'manage-musicRequest' } },
+                { default: () => '点歌' },
+              ),
+              default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
+            },
+          ),
+          key: 'manage-musicRequest',
+          icon: renderIcon(MusicalNote),
+          disabled: !isBiliVerified.value,
+        },
+        {
+          label: () => !isBiliVerified.value ? '排队' : h(
+            RouterLink,
+            { to: { name: 'manage-liveQueue' } },
+            { default: () => '排队' },
+          ),
+          key: 'manage-liveQueue',
+          icon: renderIcon(PeopleQueue24Filled),
+          disabled: !isBiliVerified.value,
+        },
+        {
+          label: () => !isBiliVerified.value ? '读弹幕' : h(
+            RouterLink,
+            { to: { name: 'manage-speech' } },
+            { default: () => '读弹幕' },
+          ),
+          key: 'manage-speech',
+          icon: renderIcon(TabletSpeaker24Filled),
+          disabled: !isBiliVerified.value,
+        },
+      ],
+    },
+  ]
+})
 
 // 重发验证邮件
 async function resendEmail() {
@@ -385,7 +394,7 @@ onMounted(() => {
     <!-- 顶部导航栏 -->
     <NLayoutHeader
       bordered
-      style="height: 50px; padding: 10px 15px 5px 15px"
+      style="height: var(--vtsuru-header-height); padding: 10px 15px 5px 15px"
     >
       <NPageHeader>
         <template #title>
@@ -432,6 +441,7 @@ onMounted(() => {
     >
       <!-- 侧边导航栏 -->
       <NLayoutSider
+        v-if="accountInfo?.isEmailVerified"
         ref="sider"
         bordered
         show-trigger
@@ -541,8 +551,8 @@ onMounted(() => {
       <!-- 内容区域 -->
       <NLayout>
         <!-- 主内容区域 -->
-        <NScrollbar :style="`height: calc(100vh - 50px - ${aplayerHeight}px)`">
-          <NLayoutContent content-style="margin: 12px; margin-right: 16px">
+        <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${aplayerHeight}px)`">
+          <NLayoutContent content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px)">
             <NElement>
               <!-- 已验证邮箱的用户显示内容 -->
               <RouterView
@@ -706,12 +716,13 @@ onMounted(() => {
         position: fixed;
         top: 0;
         left: 0;
+        overflow: auto;
       "
       :class="isDarkMode ? 'login-dark-bg' : ''"
     >
       <template v-if="!isLoadingAccount">
         <NCard
-          style="max-width: 520px; width: 100%; min-width: 350px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin: 16px;"
+          class="login-card"
           :bordered="false"
         >
           <template #header>
@@ -753,7 +764,7 @@ onMounted(() => {
                 size="small"
               >
                 <div style="text-align: center;">
-                  如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录
+                  如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录, 直接访问认证完成后给出的链接即可
                 </div>
                 <NFlex
                   justify="center"
@@ -762,7 +773,7 @@ onMounted(() => {
                   <NButton
                     type="primary"
                     size="small"
-                    @click="$router.push({ name: 'bili-user'})"
+                    @click="$router.push({ name: 'bili-user' })"
                   >
                     <template #icon>
                       <NIcon :component="BrowsersOutline" />
@@ -792,8 +803,8 @@ onMounted(() => {
       </template>
       <template v-else>
         <NCard
+          class="loading-card"
           :bordered="false"
-          style="min-width: 300px; width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin: 16px;"
         >
           <NFlex
             vertical
@@ -816,6 +827,31 @@ onMounted(() => {
 
 <style scoped>
 .login-dark-bg {
-  background: linear-gradient(135deg, rgba(30,30,35,0.9) 0%, rgba(20,20,25,0.95) 100%) !important;
+  background: linear-gradient(135deg, rgba(30, 30, 35, 0.9) 0%, rgba(20, 20, 25, 0.95) 100%) !important;
+}
+
+.login-card {
+  max-width: 520px;
+  width: 90%;
+  min-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  margin: 16px;
+}
+
+.loading-card {
+  min-width: 280px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  margin: 16px;
+}
+
+@media (max-width: 480px) {
+  .login-card, .loading-card {
+    width: 95%;
+    margin: 8px;
+  }
 }
 </style>

@@ -254,6 +254,22 @@ export async function UploadConfig(name: string, data: unknown) {
   }
   return false;
 }
+export async function GetConfigHash(name: string) {
+  try {
+    const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config-hash', {
+      name: name
+    });
+    if (resp.code == 200) {
+      return resp.data;
+    } else {
+      console.error(`获取配置文件hash失败: ` + resp.message);
+      return null;
+    }
+  } catch (err) {
+    console.error(`获取配置文件hash失败: ` + err);
+    return null;
+  }
+}
 export async function EnableFunction(func: FunctionTypes) {
   if (ACCOUNT.value) {
     if (ACCOUNT.value.settings.enableFunctions.includes(func)) {

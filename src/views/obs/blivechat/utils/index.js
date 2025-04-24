@@ -1,3 +1,6 @@
+
+import { format } from 'date-fns'
+
 export function mergeConfig(config, defaultConfig) {
   let res = {}
   for (let i in defaultConfig) {
@@ -36,9 +39,7 @@ export function formatCurrency(price) {
 }
 
 export function getTimeTextHourMin(date) {
-  let hour = date.getHours()
-  let min = `00${date.getMinutes()}`.slice(-2)
-  return `${hour}:${min}`
+  return format(date, 'H:mm')
 }
 
 export function getUuid4Hex() {
