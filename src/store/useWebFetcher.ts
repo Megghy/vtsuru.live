@@ -254,7 +254,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         state.value = 'connecting'; // 标记为连接中，等待自动重连
         signalRConnectionId.value = undefined;
         await connection.start();
-      } else if (disconnectedByServer) {
+      } else if (disconnectedByServer) { 
         console.log(prefix.value + `连接已被服务器关闭.`);
         //Stop(); // 服务器要求断开，则彻底停止
       } else {
