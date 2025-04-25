@@ -1,48 +1,45 @@
 // 导入 Vue 和 Pinia 相关函数
-import { ref, computed, watch } from 'vue';
-import { defineStore, acceptHMRUpdate } from 'pinia';
+import { acceptHMRUpdate, defineStore } from 'pinia';
+import { computed, ref, watch } from 'vue';
 // 导入 API 模型和类型
-import { EventModel, GuardLevel, EventDataTypes } from '@/api/api-models.js';
+import { useAccount } from '@/api/account.js';
+import { EventDataTypes, EventModel } from '@/api/api-models.js';
 import { useDanmakuClient } from '@/store/useDanmakuClient.js';
 import { useBiliFunction } from './useBiliFunction.js';
-import { useAccount } from '@/api/account.js';
 // 导入 VueUse 工具库
-import { useStorage } from '@vueuse/core';
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval';
 // 导入自动操作相关的类型和工具函数
+import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator';
 import {
-  TriggerType,
   ActionType,
+  KeywordMatchType,
   Priority,
   RuntimeState,
-  type AutoActionItem,
-  ExecutionContext,
-  KeywordMatchType
+  TriggerType,
+  type AutoActionItem
 } from './autoAction/types.js';
 import {
-  getRandomTemplate,
   buildExecutionContext,
-  evaluateExpression,
-  shouldProcess,
   createDefaultAutoAction,
-  createDefaultRuntimeState
+  createDefaultRuntimeState,
+  getRandomTemplate
 } from './autoAction/utils';
-import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator';
 // 导入 actionUtils 工具函数
-import { filterValidActions, checkUserFilters, checkCooldown, processTemplate, executeActions } from './autoAction/actionUtils';
 // 导入 nanoid 用于生成唯一 ID
-import { nanoid } from 'nanoid';
 // 导入开发环境判断标志
 import { isDev } from '@/data/constants.js';
 
 // 导入所有自动操作子模块
+import { usePointStore } from '@/store/usePointStore'; // 修正导入路径
+import { useAutoReply } from './autoAction/modules/autoReply';
+import { useEntryWelcome } from './autoAction/modules/entryWelcome';
+import { useFollowThank } from './autoAction/modules/followThank';
 import { useGiftThank } from './autoAction/modules/giftThank';
 import { useGuardPm } from './autoAction/modules/guardPm';
-import { useFollowThank } from './autoAction/modules/followThank';
-import { useEntryWelcome } from './autoAction/modules/entryWelcome';
-import { useAutoReply } from './autoAction/modules/autoReply';
 import { useScheduledDanmaku } from './autoAction/modules/scheduledDanmaku';
 import { useSuperChatThank } from './autoAction/modules/superChatThank';
+import { useCheckIn } from './autoAction/modules/checkin';
+
 
 // 定义名为 'autoAction' 的 Pinia store
 export const useAutoAction = defineStore('autoAction', () => {
@@ -50,11 +47,13 @@ export const useAutoAction = defineStore('autoAction', () => {
   const danmakuClient = useDanmakuClient(); // 弹幕客户端
   const biliFunc = useBiliFunction();      // B站相关功能函数
   const account = useAccount();             // 账户信息，用于获取房间ID和直播状态
+  const pointStore = usePointStore();       // 积分 Store
 
   // --- 共享状态 ---
   const isLive = computed(() => account.value.streamerInfo?.isStreaming ?? false); // 获取直播状态
   const roomId = computed(() => isDev ? 1294406 : account.value.streamerInfo?.roomId); // 获取房间ID (开发环境使用固定ID)
   const isTianXuanActive = ref(false); // 天选时刻活动状态
+  const liveStartTime = ref<number | null>(null); // 直播开始时间戳
 
   // --- 存储所有自动操作项 (使用 IndexedDB 持久化) ---
   const { data: autoActions, isFinished: isActionsLoaded } = useIDBKeyval<AutoActionItem[]>('autoAction.items', [], {
@@ -393,28 +392,29 @@ export const useAutoAction = defineStore('autoAction', () => {
             if (action.triggerConfig.schedulingMode === undefined) action.triggerConfig.schedulingMode = 'random';
           }
         });
-        // 确保全局顺序索引已初始化 (以防 IDB 返回 null/undefined)
-        if (lastGlobalActionIndex.value === null || lastGlobalActionIndex.value === undefined) {
-          lastGlobalActionIndex.value = -1;
-        }
-        // 确保触发类型启用状态已初始化
-        if (!enabledTriggerTypes.value) {
-          enabledTriggerTypes.value = {
-            [TriggerType.DANMAKU]: true,
-            [TriggerType.GIFT]: true,
-            [TriggerType.GUARD]: true,
-            [TriggerType.FOLLOW]: true,
-            [TriggerType.ENTER]: true,
-            [TriggerType.SCHEDULED]: true,
-            [TriggerType.SUPER_CHAT]: true
-          };
-        }
-        checkTianXuanStatus(); // 检查天选状态
-        startIndividualScheduledActions(); // 启动独立定时任务
-        startGlobalTimer(); // 启动全局定时器 (如果需要)
-        registerEventListeners(); // 注册弹幕事件监听器
+
+        // 启动定时器 (如果有需要)
+        startGlobalTimer();
+        startIndividualScheduledActions();
       }
-    }, { immediate: true }); // 立即执行一次检查
+    }, { immediate: true });
+
+    // 监听直播状态变化，处理签到模块的生命周期事件
+    watch(isLive, (currentState, prevState) => {
+      // 直播开始
+      if (currentState && !prevState) {
+        console.log('[AutoAction] 检测到直播开始，更新签到模块状态');
+        checkInModule.onLiveStart();
+      }
+      // 直播结束
+      else if (!currentState && prevState) {
+        console.log('[AutoAction] 检测到直播结束，更新签到模块状态');
+        checkInModule.onLiveEnd();
+      }
+    }, { immediate: true });
+
+    // 注册事件监听器
+    registerEventListeners();
   }
 
   // 初始化模块
@@ -429,6 +429,7 @@ export const useAutoAction = defineStore('autoAction', () => {
   const autoReplyModule = useAutoReply(isLive, roomId, biliFunc.sendLiveDanmaku);
   const scheduledDanmakuModule = useScheduledDanmaku(isLive, roomId, biliFunc.sendLiveDanmaku);
   const superChatThankModule = useSuperChatThank(isLive, roomId, isTianXuanActive, biliFunc.sendLiveDanmaku);
+  const checkInModule = useCheckIn(isLive, roomId, liveStartTime, isTianXuanActive, biliFunc.sendLiveDanmaku);
 
   /**
    * 向弹幕客户端注册事件监听器
@@ -556,6 +557,8 @@ export const useAutoAction = defineStore('autoAction', () => {
       case TriggerType.DANMAKU:
         // 调用弹幕自动回复模块
         autoReplyModule.onDanmaku(event, autoActions.value, runtimeState.value);
+        // 处理签到功能
+        checkInModule.processCheckIn(event, runtimeState.value);
         break;
       case TriggerType.GIFT:
         // 调用礼物感谢模块
@@ -710,42 +713,34 @@ export const useAutoAction = defineStore('autoAction', () => {
    * @param actionId 要设置为下一个执行的操作ID
    */
   function setNextGlobalAction(actionId: string) {
+    const targetAction = autoActions.value.find(a => a.id === actionId);
+    if (!targetAction || targetAction.triggerType !== TriggerType.SCHEDULED || !targetAction.triggerConfig.useGlobalTimer) {
+      console.warn(`[AutoAction] setNextGlobalAction: 无法设置 ID 为 ${actionId} 的操作为下一个全局操作 (不存在、类型错误或未使用全局定时器)`);
+      return;
+    }
     if (globalSchedulingMode.value !== 'sequential') {
-      console.warn('[AutoAction] 只能在顺序模式下手动指定下一个操作。');
+       console.warn(`[AutoAction] setNextGlobalAction: 只有在顺序模式下才能手动指定下一个操作。当前模式: ${globalSchedulingMode.value}`);
       return;
     }
 
-    // 筛选出当前符合条件的活动操作 (与 nextScheduledAction 逻辑一致)
     const eligibleActions = autoActions.value.filter(action =>
       action.triggerType === TriggerType.SCHEDULED &&
-      action.enabled &&
+      action.enabled && // 这里需要检查启用状态，只在启用的里面找
       action.triggerConfig.useGlobalTimer &&
       (!action.triggerConfig.onlyDuringLive || isLive.value) &&
       (!action.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
     );
 
-    if (eligibleActions.length === 0) {
-      console.warn('[AutoAction] 没有符合条件的活动操作可供指定。');
-      return;
-    }
-
-    // 找到目标操作在当前合格列表中的索引
-    const targetIndex = eligibleActions.findIndex(action => action.id === actionId);
+    const targetIndex = eligibleActions.findIndex(a => a.id === actionId);
 
     if (targetIndex === -1) {
-      console.warn(`[AutoAction] 指定的操作ID ${actionId} 不存在或不符合当前执行条件。`);
+       console.warn(`[AutoAction] setNextGlobalAction: 指定的操作 ID ${actionId} 当前不符合执行条件，无法设置为下一个。`);
       return;
     }
 
-    // 设置 lastGlobalActionIndex 为目标索引的前一个索引
-    // 这样，在下一次 handleGlobalTimerTick 中计算 (lastGlobalActionIndex + 1) % length 时，就会得到 targetIndex
-    // 如果目标是列表中的第一个 (index 0)，则将 lastGlobalActionIndex 设置为列表最后一个元素的索引
-    lastGlobalActionIndex.value = (targetIndex === 0) ? eligibleActions.length - 1 : targetIndex - 1;
-
-    console.log(`[AutoAction] 手动指定下一个执行的操作为: ${eligibleActions[targetIndex].name} (ID: ${actionId}), 将在下一个计时周期执行。`);
-
-    // 重启全局计时器，以便立即应用更改并在下一个周期执行指定的操作
-    // （如果不重启，则会在当前周期结束后，按新的索引执行）
+     // 设置索引，使其下一次执行 targetIndex
+    lastGlobalActionIndex.value = (targetIndex - 1 + eligibleActions.length) % eligibleActions.length;
+    // 立即重置并重新安排计时器，以便下次tick时执行新指定的任务
     restartGlobalTimer();
   }
 
@@ -885,6 +880,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     isLive, // 直播状态 (计算属性)
     isTianXuanActive, // 天选状态 (ref)
     enabledTriggerTypes, // 触发类型启用状态
+    checkInModule,
     init, // 初始化函数
     addAutoAction, // 添加操作
     removeAutoAction, // 移除操作
@@ -899,7 +895,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     stopIndividualTimer,
     stopAllIndividualScheduledActions,
     startIndividualScheduledActions,
-    triggerTestActionByType // 新的 action
+    triggerTestActionByType, // 新的 action
   };
 });// HMR (热模块替换) 支持
 if (import.meta.hot) {
@@ -907,5 +903,5 @@ if (import.meta.hot) {
 }
 
 // 重新导出类型，方便外部使用
-export { AutoActionItem, TriggerType, ActionType, Priority, KeywordMatchType };
+export { ActionType, AutoActionItem, KeywordMatchType, Priority, TriggerType };
 

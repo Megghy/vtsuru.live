@@ -916,8 +916,12 @@ onMounted(() => {
             </NSpace>
             <NSpace align="center">
               <NCheckbox
-                :checked="updateSongModel.options!.fanMedalMinLevel != null"
-                @update:checked="(checked: boolean) => updateSongModel.options!.fanMedalMinLevel = checked ? 1 : undefined"
+                :checked="updateSongModel.options?.fanMedalMinLevel != null"
+                @update:checked="(checked: boolean) => {
+                  if (updateSongModel.options) {
+                    updateSongModel.options.fanMedalMinLevel = checked ? 1 : undefined;
+                  }
+                }"
               >
                 粉丝牌
                 <NTooltip trigger="hover">
@@ -931,14 +935,14 @@ onMounted(() => {
                 </NTooltip>
               </NCheckbox>
               <NInputGroup
-                v-if="updateSongModel.options!.fanMedalMinLevel != null"
+                v-if="updateSongModel.options?.fanMedalMinLevel != null"
                 style="width: auto;"
               >
                 <NInputGroupLabel size="small">
                   最低
                 </NInputGroupLabel>
                 <NInputNumber
-                  v-model:value="updateSongModel.options!.fanMedalMinLevel"
+                  v-model:value="updateSongModel.options.fanMedalMinLevel"
                   :min="1"
                   size="small"
                   style="width: 80px;"

@@ -31,7 +31,7 @@ function handleTemplateUpdate(payload: { index: number, value: string }) {
 
 <template>
   <TemplateEditor
-    :action="props.action"
+    :template="props.action"
     :template-index="0"
     :title="title"
     :description="description"

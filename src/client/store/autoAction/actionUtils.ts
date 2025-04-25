@@ -117,7 +117,7 @@ export function checkCooldown(action: AutoActionItem, runtimeState: RuntimeState
  */
 export function processTemplate(
   action: AutoActionItem,
-  context: any,
+  context: ExecutionContext,
   options?: {
     useRandomTemplate?: boolean; // 是否随机选择模板，默认true
     defaultValue?: string; // 如果模板为空或格式化失败时的默认值

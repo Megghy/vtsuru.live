@@ -31,6 +31,8 @@ const selectedLanguage = ref<string | undefined>();
 const selectedTag = ref<string | undefined>(); // Renamed from activeTab for clarity
 const searchQuery = ref<string>('');
 const selectedArtist = ref<string | null>(null);
+// 添加点歌条件筛选状态
+const selectedOption = ref<string | undefined>();
 
 // --- New: Sorting State ---
 type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description' | null;
@@ -42,6 +44,10 @@ const sortOrder = ref<'asc' | 'desc'>('asc'); // 当前排序顺序
 // Extract unique languages
 const allUniqueLanguages = computed<string[]>(() => {
   const languages = new Set<string>();
+
+  // 添加"未设定"语言选项
+  languages.add('未设定');
+
   props.data?.forEach(song => {
     song.language?.forEach(lang => {
       if (lang?.trim()) {
@@ -60,6 +66,10 @@ const languageButtons = computed<FilterButton[]>(() =>
 // Extract unique tags (similar to original 'tabs' logic)
 const allUniqueTags = computed<string[]>(() => {
   const tags = new Set<string>();
+
+  // 添加"未设定"标签选项
+  tags.add('未设定');
+
   props.data?.forEach(song => {
     song.tags?.forEach(tag => {
       if (tag?.trim()) {
@@ -73,6 +83,28 @@ const allUniqueTags = computed<string[]>(() => {
 // Create structure for tag buttons (reuse FilterButton interface)
 const tagButtons = computed<FilterButton[]>(() =>
   allUniqueTags.value.map((tag, index) => ({ id: index, name: tag }))
+);
+
+// --- 添加点歌条件筛选按钮 ---
+// 提取所有唯一的点歌条件类型
+const allOptionTypes = computed<string[]>(() => {
+  const optionTypes = new Set<string>();
+
+  // 添加"未设定"选项
+  optionTypes.add('未设定');
+  // 添加基本选项类型
+  optionTypes.add('舰长');
+  optionTypes.add('提督');
+  optionTypes.add('总督');
+  optionTypes.add('粉丝牌');
+  optionTypes.add('SC');
+
+  return Array.from(optionTypes);
+});
+
+// 创建点歌条件筛选按钮
+const optionButtons = computed<FilterButton[]>(() =>
+  allOptionTypes.value.map((option, index) => ({ id: index, name: option }))
 );
 
 
@@ -105,21 +137,52 @@ const filteredAndSortedSongs = computed(() => {
   // 1. Filter by Selected Language
   if (selectedLanguage.value) {
     const lang = selectedLanguage.value;
-    query = query.Where(song => song.language?.includes(lang));
+    if (lang === '未设定') {
+      // 筛选没有设置语言或语言数组为空的歌曲
+      query = query.Where(song => !song.language || song.language.length === 0);
+    } else {
+      query = query.Where(song => song.language?.includes(lang));
+    }
   }
 
   // 2. Filter by Selected Tag
   if (selectedTag.value) {
     const tag = selectedTag.value;
-    query = query.Where(song => song.tags?.includes(tag) ?? false);
+    if (tag === '未设定') {
+      // 筛选没有设置标签或标签数组为空的歌曲
+      query = query.Where(song => !song.tags || song.tags.length === 0);
+    } else {
+      query = query.Where(song => song.tags?.includes(tag) ?? false);
+    }
   }
 
   // 3. Filter by Selected Artist
   if (selectedArtist.value) {
     const artist = selectedArtist.value;
-    query = query.Where(song => song.author?.includes(artist));
+    query = query.Where(song => song.author?.includes(artist) ?? false);
   }
 
+  // 新增: 4. 根据点歌条件筛选
+  if (selectedOption.value) {
+    const option = selectedOption.value;
+
+    if (option === '未设定') {
+      // 筛选没有设置点歌条件的歌曲
+      query = query.Where(song => !song.options);
+    } else if (option === '舰长') {
+      query = query.Where(song => song.options?.needJianzhang === true);
+    } else if (option === '提督') {
+      query = query.Where(song => song.options?.needTidu === true);
+    } else if (option === '总督') {
+      query = query.Where(song => song.options?.needZongdu === true);
+    } else if (option === '粉丝牌') {
+      query = query.Where(song => (song.options?.fanMedalMinLevel ?? 0) > 0);
+    } else if (option === 'SC') {
+      query = query.Where(song => (song.options?.scMinPrice ?? 0) > 0);
+    }
+  }
+
+  // 原有的搜索逻辑
   // 4. Filter by Search Query (case-insensitive, including tags)
   if (searchQuery.value.trim()) {
     const lowerSearch = searchQuery.value.toLowerCase().trim();
@@ -190,6 +253,15 @@ const selectTag = (tagName: string) => {
   }
 };
 
+// 新增: 选择/取消选择点歌条件
+const selectOption = (optionName: string) => {
+  if (optionName === selectedOption.value) {
+    selectedOption.value = undefined; // 点击已激活的按钮则取消筛选
+  } else {
+    selectedOption.value = optionName;
+  }
+};
+
 // Select Artist (from table click, updated to allow deselect)
 const selectArtistFromTable = (artist: string) => {
   if (selectedArtist.value === artist) {
@@ -213,6 +285,7 @@ const clearFilters = () => {
   selectedLanguage.value = undefined;
   selectedTag.value = undefined;
   selectedArtist.value = null; // Reset NSelect value
+  selectedOption.value = undefined; // 清除点歌条件筛选
   searchQuery.value = '';
 };
 
@@ -361,8 +434,8 @@ function GetPlayButton(song: SongsInfo) {
 // --- New: Helper function for Song Request Options ---
 function getOptionDisplay(options?: SongRequestOption) {
   if (!options) {
-    // 为"无特殊要求"添加 'empty-placeholder' 类
-    return h('span', { class: 'empty-placeholder' }, '无特殊要求');
+    // 直接返回空元素，不显示"无特殊要求"
+    return h('span', {});
   }
 
   const conditions: VNode[] = [];
@@ -384,8 +457,8 @@ function getOptionDisplay(options?: SongRequestOption) {
   }
 
   if (conditions.length === 0) {
-    // 为"无特殊要求"添加 'empty-placeholder' 类
-    return h('span', { class: 'empty-placeholder' }, '无特殊要求');
+    // 如果没有条件，直接返回空元素，不显示"无特殊要求"
+    return h('span', {});
   }
 
   // Use NFlex for better wrapping
@@ -697,6 +770,23 @@ export const Config = defineTemplateConfig([
             </button>
           </div>
 
+          <!-- 新增: 点歌条件筛选按钮 -->
+          <div
+            v-if="optionButtons.length > 0"
+            class="filter-button-group option-filters"
+          >
+            <span class="filter-label">点歌条件:</span>
+            <button
+              v-for="option in optionButtons"
+              :key="option.id"
+              :class="{ active: selectedOption === option.name }"
+              class="filter-button"
+              @click="selectOption(option.name)"
+            >
+              {{ option.name }}
+            </button>
+          </div>
+
           <!-- Divider -->
           <div class="filter-divider" />
 
@@ -885,10 +975,11 @@ export const Config = defineTemplateConfig([
                         <span v-if="index < song.language.length - 1">, </span>
                       </span>
                     </span>
-                    <span v-else>未知</span>
+                    <!-- 移除了 "未知" 占位文本 -->
                   </td>
                   <td>
                     <n-flex
+                      v-if="song.tags && song.tags.length > 0"
                       :size="4"
                       :wrap="true"
                       style="gap: 4px;"
@@ -904,12 +995,8 @@ export const Config = defineTemplateConfig([
                       >
                         {{ tag }}
                       </n-tag>
-                      <!-- 为"无标签"添加 'empty-placeholder' 类 -->
-                      <span
-                        v-if="!song.tags || song.tags.length === 0"
-                        class="empty-placeholder"
-                      >无标签</span>
                     </n-flex>
+                    <!-- 移除了 "无标签" 占位文本 -->
                   </td>
                   <td>
                     <component :is="getOptionDisplay(song.options)" />
@@ -981,7 +1068,6 @@ html.dark .filter-button {
 
 html.dark .filter-button:hover:not(.active) {
   background-color: var(--item-color-hover);
-   border-color: var(--border-color-hover);
 }
 
 /* Divider between filters and search bar */

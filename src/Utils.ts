@@ -156,6 +156,9 @@ export function getOUIdAvatarUrl(ouid: string) {
 export class GuidUtils {
   // 将数字转换为GUID
   public static numToGuid(value: number): string {
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new Error('输入必须是非负安全整数');
+    }
     const buffer = new ArrayBuffer(16);
     const view = new DataView(buffer);
     view.setBigUint64(8, BigInt(value)); // 将数字写入后8个字节
@@ -164,44 +167,60 @@ export class GuidUtils {
 
   // 检查GUID是否由数字生成
   public static isGuidFromUserId(guid: string): boolean {
-    const buffer = GuidUtils.guidToBuffer(guid);
-    const view = new DataView(buffer);
-    for (let i = 0; i < 8; i++) {
-      if (view.getUint8(i) !== 0) return false; // 检查前8个字节是否为0
+    try {
+      const buffer = GuidUtils.guidToBuffer(guid);
+      const view = new DataView(buffer);
+      for (let i = 0; i < 8; i++) {
+        if (view.getUint8(i) !== 0) return false; // 检查前8个字节是否为0
+      }
+      return true;
+    } catch (e) {
+      return false;
     }
-    return true;
   }
 
   // 将GUID转换为数字
   public static guidToLong(guid: string): number {
-    const buffer = GuidUtils.guidToBuffer(guid);
-    const view = new DataView(buffer);
-    return Number(view.getBigUint64(8));
+    try {
+      const buffer = GuidUtils.guidToBuffer(guid);
+      const view = new DataView(buffer);
+      return Number(view.getBigUint64(8));
+    } catch (e) {
+      throw new Error('无效的GUID格式');
+    }
   }
 
   // 辅助方法：将ArrayBuffer转换为GUID字符串
   private static bufferToGuid(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
-    const guid = bytes.reduce((str, byte, idx) => {
-      const pair = byte.toString(16).padStart(2, '0');
-      return (
-        str +
-        pair +
-        (idx === 3 || idx === 5 || idx === 7 || idx === 9 ? '-' : '')
-      );
-    }, '');
-    return guid;
+    let hex = '';
+
+    for (let i = 0; i < 16; i++) {
+      hex += bytes[i].toString(16).padStart(2, '0');
+    }
+
+    // 标准GUID格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    return hex.substring(0, 8) + '-' +
+      hex.substring(8, 12) + '-' +
+      hex.substring(12, 16) + '-' +
+      hex.substring(16, 20) + '-' +
+      hex.substring(20);
   }
 
   // 辅助方法：将GUID字符串转换为ArrayBuffer
   private static guidToBuffer(guid: string): ArrayBuffer {
     const hex = guid.replace(/-/g, '');
-    if (hex.length !== 32) throw new Error('Invalid GUID format.');
+    if (hex.length !== 32) throw new Error('无效的GUID格式');
+
     const buffer = new ArrayBuffer(16);
-    const view = new DataView(buffer);
+    const view = new Uint8Array(buffer);
+
     for (let i = 0; i < 16; i++) {
-      view.setUint8(i, parseInt(hex.substr(i * 2, 2), 16));
+      const byteValue = parseInt(hex.substr(i * 2, 2), 16);
+      if (isNaN(byteValue)) throw new Error('GUID包含非法字符');
+      view.set([byteValue], i);
     }
+
     return buffer;
   }
 }
