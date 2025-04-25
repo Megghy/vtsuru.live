@@ -22,13 +22,31 @@ import {
   NTabPane,
   NTabs,
   NText,
+  NTag,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PointOrderView from './PointOrderView.vue'
 import PointUserHistoryView from './PointUserHistoryView.vue'
 import PointUserSettings from './PointUserSettings.vue'
+
+// 定义组件接口
+interface ComponentWithReset {
+  reset: () => void;
+}
+
+interface OrderViewInstance extends ComponentWithReset {
+  getOrders: () => Promise<any>;
+}
+
+interface HistoryViewInstance extends ComponentWithReset {
+  getHistories: () => Promise<any>;
+}
+
+interface SettingsViewInstance extends ComponentWithReset {
+  // 设置组件可能需要的方法
+}
 
 const useAuth = useAuthStore()
 const message = useMessage()
@@ -48,6 +66,19 @@ const router = useRouter()
 const biliAuth = computed(() => useAuth.biliAuth)
 const isLoading = ref(false)
 const points = ref<{ owner: UserInfo; points: number }[]>([])
+const isFirstMounted = ref(true)
+// 分别定义各组件引用，使用正确的类型
+const orderViewRef = ref<OrderViewInstance | null>(null)
+const historyViewRef = ref<HistoryViewInstance | null>(null)
+const settingsViewRef = ref<SettingsViewInstance | null>(null)
+
+// 跟踪各标签页数据是否已加载
+const tabDataLoaded = ref({
+  points: false,
+  orders: false,
+  histories: false,
+  settings: true // 设置页面不需要加载数据
+})
 
 const pointColumn = [
   {
@@ -89,6 +120,7 @@ async function getAllPoints() {
     if (data.code == 200) {
       console.log('[point] 已获取积分')
       points.value = data.data
+      tabDataLoaded.value.points = true
       return data.data
     }
   } catch (err) {
@@ -99,19 +131,79 @@ async function getAllPoints() {
   }
   return []
 }
+
+// 重置所有数据
+function resetData() {
+  points.value = []
+  isFirstMounted.value = true
+  // 重置数据加载状态
+  Object.keys(tabDataLoaded.value).forEach(key => {
+    tabDataLoaded.value[key as keyof typeof tabDataLoaded.value] = false
+  })
+  tabDataLoaded.value.settings = true // 设置页不需要加载数据
+  // 重置所有子组件的数据
+  orderViewRef.value?.reset?.()
+  historyViewRef.value?.reset?.()
+  settingsViewRef.value?.reset?.()
+}
+
 function switchAuth(token: string) {
   if (token == useAuth.biliToken) {
     message.info('当前正在使用该账号')
     return
   }
+  resetData()
   useAuth.setCurrentAuth(token)
   message.success('已选择账号')
 }
-let isFirstMounted = true
+
 function onAllPointPaneMounted() {
-  if (!isFirstMounted) return
-  isFirstMounted = false
+  if (!isFirstMounted.value) return
+  isFirstMounted.value = false
   getAllPoints()
+}
+
+// 处理选项卡切换
+function onTabChange(tabName: string) {
+  // 只在数据未加载时刷新
+  switch(tabName) {
+    case 'points':
+      if (!tabDataLoaded.value.points) {
+        getAllPoints()
+      }
+      break
+    case 'orders':
+      if (!tabDataLoaded.value.orders && orderViewRef.value) {
+        orderViewRef.value.getOrders()
+        tabDataLoaded.value.orders = true
+      }
+      break
+    case 'histories':
+      if (!tabDataLoaded.value.histories && historyViewRef.value) {
+        historyViewRef.value.getHistories()
+        tabDataLoaded.value.histories = true
+      }
+      break
+  }
+}
+
+// 监听 biliToken 变化
+watch(() => useAuth.biliToken, (newToken) => {
+  if (newToken) {
+    resetData()
+    getAllPoints()
+  }
+})
+
+// 手动刷新当前标签页数据
+function refreshCurrentTab() {
+  if (!hash.value) return
+
+  // 将当前标签设为未加载状态
+  tabDataLoaded.value[hash.value as keyof typeof tabDataLoaded.value] = false
+
+  // 触发刷新
+  onTabChange(hash.value)
 }
 
 onMounted(async () => {
@@ -205,10 +297,28 @@ onMounted(async () => {
         style="padding: 10px"
         bordered
       >
-        <NFlex justify="center">
+        <NFlex
+          justify="space-between"
+          align="center"
+        >
+          <NButton
+            type="primary"
+            secondary
+            @click="$router.back()"
+          >
+            返回
+          </NButton>
           <NText style="font-size: 24px">
             认证用户个人中心
           </NText>
+          <NButton
+            size="small"
+            type="primary"
+            :disabled="!hash"
+            @click="refreshCurrentTab"
+          >
+            刷新数据
+          </NButton>
         </NFlex>
       </NLayoutHeader>
       <NLayoutContent content-style="padding: 24px;">
@@ -236,6 +346,20 @@ onMounted(async () => {
                 <NDescriptionsItem label="OpenId">
                   {{ biliAuth.openId }}
                 </NDescriptionsItem>
+                <NDescriptionsItem label="状态">
+                  <NTag
+                    v-if="biliAuth.id > 0"
+                    type="success"
+                  >
+                    已认证
+                  </NTag>
+                  <NTag
+                    v-else
+                    type="error"
+                  >
+                    未认证
+                  </NTag>
+                </NDescriptionsItem>
               </NDescriptions>
             </NCard>
             <NDivider />
@@ -244,6 +368,7 @@ onMounted(async () => {
               v-model:value="hash"
               default-value="points"
               animated
+              @update:value="onTabChange"
             >
               <NTabPane
                 name="points"
@@ -252,15 +377,18 @@ onMounted(async () => {
                 @vue:mounted="onAllPointPaneMounted"
               >
                 <NDivider style="margin-top: 10px" />
-                <NButton
-                  style="margin-bottom: 10px"
-                  size="small"
-                  type="primary"
-                  @click="getAllPoints()"
-                >
-                  刷新
-                </NButton>
-                <NDivider />
+                <NFlex justify="end" style="margin-bottom: 10px">
+                  <NButton
+                    size="small"
+                    type="primary"
+                    @click="() => {
+                      tabDataLoaded.points = false;
+                      getAllPoints();
+                    }"
+                  >
+                    刷新积分
+                  </NButton>
+                </NFlex>
                 <NFlex justify="center">
                   <NDataTable
                     :loading="isLoading"
@@ -278,7 +406,10 @@ onMounted(async () => {
                 display-directive="show:lazy"
               >
                 <NDivider style="margin-top: 10px" />
-                <PointOrderView />
+                <PointOrderView
+                  ref="orderViewRef"
+                  @data-loaded="tabDataLoaded.orders = true"
+                />
               </NTabPane>
               <NTabPane
                 name="histories"
@@ -286,7 +417,10 @@ onMounted(async () => {
                 display-directive="show:lazy"
               >
                 <NDivider style="margin-top: 10px" />
-                <PointUserHistoryView />
+                <PointUserHistoryView
+                  ref="historyViewRef"
+                  @data-loaded="tabDataLoaded.histories = true"
+                />
               </NTabPane>
               <NTabPane
                 name="settings"
@@ -294,7 +428,7 @@ onMounted(async () => {
                 display-directive="show:lazy"
               >
                 <NDivider style="margin-top: 10px" />
-                <PointUserSettings />
+                <PointUserSettings ref="settingsViewRef" />
               </NTabPane>
             </NTabs>
           </div>
