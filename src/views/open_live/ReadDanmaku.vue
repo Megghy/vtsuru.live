@@ -55,6 +55,7 @@ type SpeechSettings = {
   scTemplate: string
   guardTemplate: string
   giftTemplate: string
+  enterTemplate: string
   voiceType: 'local' | 'api'
   voiceAPISchemeType: 'http' | 'https'
   voiceAPI?: string
@@ -85,6 +86,7 @@ const settings = useStorage<SpeechSettings>('Setting.Speech', {
   scTemplate: '{name} 发送了醒目留言: {message}',
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
+  enterTemplate: '欢迎 {name} 进入直播间',
   voiceType: 'local',
   voiceAPISchemeType: 'https',
   voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
@@ -342,6 +344,9 @@ function onGetEvent(data: EventModel) {
     // 不支持表情
     return
   }
+  if (data.type == EventDataTypes.Enter && !settings.value.enterTemplate) {
+    return
+  }
   if (data.type == EventDataTypes.Gift) {
     const exist = speakQueue.value.find(
       (v) =>
@@ -396,6 +401,12 @@ function getTextFromDanmaku(data: EventModel | undefined) {
         return
       }
       text = settings.value.giftTemplate
+      break
+    case EventDataTypes.Enter:
+      if (!settings.value.enterTemplate) {
+        return
+      }
+      text = settings.value.enterTemplate
       break
   }
   text = text
@@ -499,6 +510,25 @@ function test(type: EventDataTypes) {
         ouid: '00000000-0000-0000-0000-000000000000',
       })
       break
+    case EventDataTypes.Enter:
+      forceSpeak({
+        type: EventDataTypes.Enter,
+        uname: accountInfo.value?.name ?? '测试用户',
+        uid: accountInfo.value?.biliId ?? 0,
+        msg: '',
+        price: 0,
+        num: 0,
+        time: Date.now(),
+        guard_level: 0,
+        fans_medal_level: 1,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+        emoji: undefined,
+        uface: '',
+        open_id: '00000000-0000-0000-0000-000000000000',
+        ouid: '00000000-0000-0000-0000-000000000000',
+      })
+      break
     case EventDataTypes.SC:
       forceSpeak({
         type: EventDataTypes.SC,
@@ -574,6 +604,7 @@ onMounted(() => {
   client.onEvent('sc', onGetEvent)
   client.onEvent('guard', onGetEvent)
   client.onEvent('gift', onGetEvent)
+  client.onEvent('enter', onGetEvent)
 })
 onUnmounted(() => {
   clearInterval(speechQueueTimer)
@@ -581,6 +612,7 @@ onUnmounted(() => {
   client.offEvent('sc', onGetEvent)
   client.offEvent('guard', onGetEvent)
   client.offEvent('gift', onGetEvent)
+  client.offEvent('enter', onGetEvent)
 })
 </script>
 
@@ -788,6 +820,11 @@ onUnmounted(() => {
                       type="success"
                       size="small"
                     > SC</NTag>
+                    <NTag
+                      v-else-if="item.data.type == EventDataTypes.Enter"
+                      type="success"
+                      size="small"
+                    > 进入直播间</NTag>
                   </span>
                   <NText>
                     {{ item.data.uname }}
@@ -1075,6 +1112,20 @@ onUnmounted(() => {
           type="info"
           :loading="isApiAudioLoading"
           @click="test(EventDataTypes.Guard)"
+        >
+          测试
+        </NButton>
+      </NInputGroup>
+      <NInputGroup>
+        <NInputGroupLabel> 进入直播间模板 </NInputGroupLabel>
+        <NInput
+          v-model:value="settings.enterTemplate"
+          placeholder="进入直播间消息"
+        />
+        <NButton
+          type="info"
+          :loading="isApiAudioLoading"
+          @click="test(EventDataTypes.Enter)"
         >
           测试
         </NButton>

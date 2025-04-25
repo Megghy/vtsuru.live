@@ -32,7 +32,10 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
         <NDivider title-placement="left">
           {{ item.date }}
         </NDivider>
-        <NGrid x-gap="10">
+        <NGrid
+          x-gap="10"
+          y-gap="10"
+        >
           <template
             v-for="note in item.items"
             :key="note.title"
