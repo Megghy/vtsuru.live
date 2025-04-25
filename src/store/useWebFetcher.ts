@@ -208,97 +208,102 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
   }
 
+  let isConnectingSignalR = false;
   /**
    * 连接 SignalR 服务器
    */
   async function connectSignalR(): Promise<boolean> {
-    return await navigator.locks.request('webFetcherStartLock', async () => {
-      if (signalRClient.value && signalRClient.value.state !== signalR.HubConnectionState.Disconnected) {
-        console.log(prefix.value + "SignalR 已连接或正在连接");
-        return true;
-      }
-      signalRClient.value?.stop();
-      signalRClient.value = undefined;
-      signalRConnectionId.value = undefined;
-      console.log(prefix.value + '正在连接到 vtsuru 服务器...');
-      const connection = new signalR.HubConnectionBuilder()
-        .withUrl(BASE_HUB_URL + 'web-fetcher?token=' + (route.query.token ?? account.value.token), { // 使用 account.token
-          headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
-          skipNegotiation: true,
-          transport: signalR.HttpTransportType.WebSockets
-        })
-        .withAutomaticReconnect({
-          nextRetryDelayInMilliseconds: retryContext => {
-            return retryContext.elapsedMilliseconds < 60 * 1000 ? 10 * 1000 : 30 * 1000;
-          }
-        }) // 自动重连策略
-        .withHubProtocol(new msgpack.MessagePackHubProtocol()) // 使用 MessagePack 协议
-        .build();
+    if (isConnectingSignalR) {
+      return false;
+    }
+    isConnectingSignalR = true;
+    if (signalRClient.value && signalRClient.value.state !== signalR.HubConnectionState.Disconnected) {
+      console.log(prefix.value + "SignalR 已连接或正在连接");
+      return true;
+    }
+    signalRClient.value?.stop();
+    signalRClient.value = undefined;
+    signalRConnectionId.value = undefined;
+    console.log(prefix.value + '正在连接到 vtsuru 服务器...');
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(BASE_HUB_URL + 'web-fetcher?token=' + (route.query.token ?? account.value.token), { // 使用 account.token
+        headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
+        skipNegotiation: true,
+        transport: signalR.HttpTransportType.WebSockets
+      })
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: retryContext => {
+          return retryContext.elapsedMilliseconds < 60 * 1000 ? 10 * 1000 : 30 * 1000;
+        }
+      }) // 自动重连策略
+      .withHubProtocol(new msgpack.MessagePackHubProtocol()) // 使用 MessagePack 协议
+      .build();
 
-      connection.on('Disconnect', (reason: unknown) => {
-        console.log(prefix.value + '被服务器断开连接: ' + reason);
-        disconnectedByServer = true; // 标记是服务器主动断开
-        window.$message.error(`被服务器要求断开连接: ${reason}`);
-      });
-      // --- 尝试启动连接 ---
-      try {
-        await connection.start();
-        signalRConnectionId.value = connection.connectionId ?? undefined; // 保存连接ID
-        signalRId.value = await sendSelfInfo(connection); // 发送客户端信息
-        await connection.send('Finished'); // 通知服务器已准备好
-        signalRClient.value = connection; // 保存实例
-
-        // --- SignalR 事件监听 ---
-        connection.onreconnecting(error => {
-          console.log(prefix.value + `与服务器断开，正在尝试重连... ${error?.message || ''}`);
-          state.value = 'connecting'; // 更新状态为连接中
-          signalRConnectionId.value = undefined; // 连接断开，ID失效
-        });
-
-        connection.onreconnected(async connectionId => {
-          console.log(prefix.value + `与服务器重新连接成功! ConnectionId: ${connectionId}`);
-          signalRConnectionId.value = connectionId ?? undefined;
-          state.value = 'connected'; // 更新状态为已连接
-          signalRId.value = connectionId ?? await sendSelfInfo(connection); // 更新连接ID
-          connection.send('Reconnected').catch(err => console.error(prefix.value + "Send Reconnected failed: " + err));
-        });
-
-        connection.onclose(async (error) => {
-          // 只有在不是由 Stop() 或服务器明确要求断开时才记录错误并尝试独立重连（虽然 withAutomaticReconnect 应该处理）
-          if (state.value !== 'disconnected' && !disconnectedByServer) {
-            console.error(prefix.value + `与服务器连接关闭: ${error?.message || '未知原因'}. 30秒后将自动重启`);
-            //state.value = 'connecting'; // 标记为连接中，等待自动重连
-            //signalRConnectionId.value = undefined;
-            //await connection.start();
-            // 停止 SignalR 连接
-            signalRClient.value?.stop();
-            signalRClient.value = undefined;
-            signalRConnectionId.value = undefined;
-            setTimeout(() => {
-              console.log(prefix.value + '尝试重启...');
-              connectSignalR(); // 30秒后尝试重启
-            }, 30 * 1000); // 30秒后自动重启
-          } else if (disconnectedByServer) {
-            console.log(prefix.value + `连接已被服务器关闭.`);
-            //Stop(); // 服务器要求断开，则彻底停止
-          } else {
-            console.log(prefix.value + `连接已手动关闭.`);
-          }
-        });
-        connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie));
-        connection.on('Notification', (type: string, data: any) => { onReceivedNotification(type, data); });
-
-        console.log(prefix.value + '已连接到 vtsuru 服务器, ConnectionId: ' + signalRId.value); // 调试输出连接状态
-        // state.value = 'connected'; // 状态将在 Start 函数末尾统一设置
-        return true;
-      } catch (e) {
-        console.error(prefix.value + '无法连接到 vtsuru 服务器: ' + e);
-        signalRConnectionId.value = undefined;
-        signalRClient.value = undefined;
-        // state.value = 'disconnected'; // 保持 connecting 或由 Start 控制
-        return false;
-      }
+    connection.on('Disconnect', (reason: unknown) => {
+      console.log(prefix.value + '被服务器断开连接: ' + reason);
+      disconnectedByServer = true; // 标记是服务器主动断开
+      window.$message.error(`被服务器要求断开连接: ${reason}`);
     });
+    // --- 尝试启动连接 ---
+    try {
+      await connection.start();
+      signalRConnectionId.value = connection.connectionId ?? undefined; // 保存连接ID
+      signalRId.value = await sendSelfInfo(connection); // 发送客户端信息
+      await connection.send('Finished'); // 通知服务器已准备好
+      signalRClient.value = connection; // 保存实例
+
+      // --- SignalR 事件监听 ---
+      connection.onreconnecting(error => {
+        console.log(prefix.value + `与服务器断开，正在尝试重连... ${error?.message || ''}`);
+        state.value = 'connecting'; // 更新状态为连接中
+        signalRConnectionId.value = undefined; // 连接断开，ID失效
+      });
+
+      connection.onreconnected(async connectionId => {
+        console.log(prefix.value + `与服务器重新连接成功! ConnectionId: ${connectionId}`);
+        signalRConnectionId.value = connectionId ?? undefined;
+        state.value = 'connected'; // 更新状态为已连接
+        signalRId.value = connectionId ?? await sendSelfInfo(connection); // 更新连接ID
+        connection.send('Reconnected').catch(err => console.error(prefix.value + "Send Reconnected failed: " + err));
+      });
+
+      connection.onclose(async (error) => {
+        // 只有在不是由 Stop() 或服务器明确要求断开时才记录错误并尝试独立重连（虽然 withAutomaticReconnect 应该处理）
+        if (state.value !== 'disconnected' && !disconnectedByServer) {
+          console.error(prefix.value + `与服务器连接关闭: ${error?.message || '未知原因'}. 30秒后将自动重启`);
+          //state.value = 'connecting'; // 标记为连接中，等待自动重连
+          //signalRConnectionId.value = undefined;
+          //await connection.start();
+          // 停止 SignalR 连接
+          signalRClient.value?.stop();
+          signalRClient.value = undefined;
+          signalRConnectionId.value = undefined;
+          setTimeout(() => {
+            console.log(prefix.value + '尝试重启...');
+            connectSignalR(); // 30秒后尝试重启
+          }, 30 * 1000); // 30秒后自动重启
+        } else if (disconnectedByServer) {
+          console.log(prefix.value + `连接已被服务器关闭.`);
+          //Stop(); // 服务器要求断开，则彻底停止
+        } else {
+          console.log(prefix.value + `连接已手动关闭.`);
+        }
+      });
+      connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie));
+      connection.on('Notification', (type: string, data: any) => { onReceivedNotification(type, data); });
+
+      console.log(prefix.value + '已连接到 vtsuru 服务器, ConnectionId: ' + signalRId.value); // 调试输出连接状态
+      // state.value = 'connected'; // 状态将在 Start 函数末尾统一设置
+      return true;
+    } catch (e) {
+      console.error(prefix.value + '无法连接到 vtsuru 服务器: ' + e);
+      signalRConnectionId.value = undefined;
+      signalRClient.value = undefined;
+      // state.value = 'disconnected'; // 保持 connecting 或由 Start 控制
+      return false;
+    } finally {
+      isConnectingSignalR = false;
+    }
   }
   async function sendSelfInfo(client: signalR.HubConnection) {
     return client.invoke('SetSelfInfo',
