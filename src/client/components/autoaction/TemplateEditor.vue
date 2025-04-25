@@ -2,7 +2,6 @@
 import { NButton, NCard, NDivider, NHighlight, NInput, NScrollbar, NSpace, NModal, useMessage, NTabs, NTabPane, NFlex, NAlert, NIcon, NCollapse, NCollapseItem, NBadge, NText } from 'naive-ui';
 import { computed, ref, watch } from 'vue';
 import TemplateHelper from './TemplateHelper.vue';
-import TemplateTester from './TemplateTester.vue';
 import { containsJsExpression, convertToJsExpressions, evaluateTemplateExpressions, extractJsExpressions, JS_EXPRESSION_REGEX } from '@/client/store/autoAction/expressionEvaluator';
 import { buildExecutionContext } from '@/client/store/autoAction/utils';
 import { AutoActionItem, TriggerType } from '@/client/store/autoAction/types';
@@ -11,7 +10,7 @@ import { EventDataTypes, EventModel } from '@/api/api-models';
 import GraphemeSplitter from 'grapheme-splitter';
 
 const props = defineProps({
-  action: {
+  template: {
     type: Object as () => AutoActionItem,
     required: true
   },
@@ -26,6 +25,10 @@ const props = defineProps({
   checkLength: {
     type: Boolean,
     default: true
+  },
+  customTestContext: {
+    type: Object,
+    default: undefined
   }
 });
 
@@ -52,7 +55,7 @@ const mergedPlaceholders = computed(() => {
 
   const specificPlaceholders: { name: string, description: string }[] = [];
 
-  switch (props.action.triggerType) {
+  switch (props.template.triggerType) {
     case TriggerType.DANMAKU:
       specificPlaceholders.push(
         { name: '{{message}}', description: '弹幕内容' },
@@ -87,8 +90,27 @@ const mergedPlaceholders = computed(() => {
   return Array.from(new Map(finalPlaceholders.map(item => [item.name, item])).values());
 });
 
+// 深度合并两个对象的辅助函数
+function deepMerge(target: any, source: any): any {
+  if (!source) return target;
+  if (!target) return source;
+
+  const result = { ...target };
+
+  Object.keys(source).forEach(key => {
+    if (typeof source[key] === 'object' && source[key] !== null && typeof target[key] === 'object' && target[key] !== null) {
+      result[key] = deepMerge(target[key], source[key]);
+    } else if (source[key] !== undefined) {
+      result[key] = source[key];
+    }
+  });
+
+  return result;
+}
+
 const testContext = computed(() => {
-  return buildExecutionContext({
+  // 创建默认上下文
+  const defaultContext = buildExecutionContext({
     msg: '测试',
     time: 1713542400,
     num: 1,
@@ -105,8 +127,14 @@ const testContext = computed(() => {
     fans_medal_wearing_status: true,
     guard_level_name: '测试舰队',
     guard_level_price: 100,
+  }, undefined, props.template.triggerType);
 
-  }, undefined, props.action.triggerType);
+  // 如果有自定义上下文，将其与默认上下文合并
+  if (props.customTestContext) {
+    return deepMerge(defaultContext, props.customTestContext);
+  }
+
+  return defaultContext;
 });
 
 const message = useMessage();
@@ -120,13 +148,13 @@ function countGraphemes(value: string) {
 }
 
 function convertPlaceholders() {
-  if (!props.action.template) {
+  if (!props.template.template) {
     message.warning('请先输入模板内容');
     return;
   }
-  const converted = convertToJsExpressions(props.action.template, mergedPlaceholders.value);
-  if (converted !== props.action.template) {
-    props.action.template = converted;
+  const converted = convertToJsExpressions(props.template.template, mergedPlaceholders.value);
+  if (converted !== props.template.template) {
+    props.template.template = converted;
     message.success('已转换占位符为表达式格式');
   } else {
     message.info('模板中没有需要转换的占位符');
@@ -139,7 +167,7 @@ function hasJsExpression(template: string): boolean {
 
 const highlightPatterns = computed(() => {
   const simplePlaceholders = mergedPlaceholders.value.map(p => p.name);
-  const jsExpressionsInTemplate = extractJsExpressions(props.action.template || '');
+  const jsExpressionsInTemplate = extractJsExpressions(props.template.template || '');
   const allPatterns = [...new Set([...simplePlaceholders, ...jsExpressionsInTemplate])];
   return allPatterns;
 });
@@ -148,7 +176,20 @@ const MAX_LENGTH = 20;
 const WARNING_THRESHOLD = 16;
 
 function evaluateTemplateForUI(template: string): string {
-  const executionContext = buildExecutionContext(testContext.value.event, undefined, props.action.triggerType);
+  // 深度合并默认上下文和自定义上下文
+  const executionContext = buildExecutionContext(testContext.value.event, undefined, props.template.triggerType);
+
+  // 如果有自定义上下文，将其深度合并到执行上下文中
+  if (props.customTestContext) {
+    Object.keys(props.customTestContext).forEach(key => {
+      if (typeof props.customTestContext?.[key] === 'object' && props.customTestContext[key] !== null) {
+        executionContext.variables[key] = deepMerge(executionContext.variables[key] || {}, props.customTestContext[key]);
+      } else {
+        executionContext.variables[key] = props.customTestContext?.[key];
+      }
+    });
+  }
+
   try {
     return evaluateTemplateExpressions(template, executionContext);
   } catch (error) {
@@ -158,8 +199,8 @@ function evaluateTemplateForUI(template: string): string {
 }
 
 const evaluatedTemplateResult = computed(() => {
-  if (!props.action.template || !showLivePreview.value) return '';
-  return evaluateTemplateForUI(props.action.template);
+  if (!props.template.template || !showLivePreview.value) return '';
+  return evaluateTemplateForUI(props.template.template);
 });
 
 const previewResult = computed(() => {
@@ -167,7 +208,7 @@ const previewResult = computed(() => {
 });
 
 const lengthStatus = computed(() => {
-  if (!props.action.template || !props.checkLength || !showLivePreview.value) {
+  if (!props.template.template || !props.checkLength || !showLivePreview.value) {
     return { status: 'normal' as const, message: '' };
   }
   try {
@@ -230,7 +271,7 @@ const templateExamples = [
 ];
 
 function insertExample(template: string) {
-  props.action.template = template;
+  props.template.template = template;
   message.success('已插入示例模板');
 }
 </script>
@@ -286,7 +327,7 @@ function insertExample(template: string) {
 
           <!-- 当前模板预览 -->
           <NInput
-            v-model:value="action.template"
+            v-model:value="template.template"
             type="textarea"
             placeholder="输入模板内容... 使用 {{变量名}} 插入变量， {{js: 表达式}} 执行JS"
             :autosize="{ minRows: 3, maxRows: 6 }"
@@ -352,15 +393,6 @@ function insertExample(template: string) {
             >
               占位符转表达式
             </NButton>
-
-            <NButton
-              type="primary"
-              size="small"
-              class="btn-with-transition"
-              @click="activeTab = 'test'"
-            >
-              测试模板
-            </NButton>
           </NFlex>
 
           <!-- 模板示例 -->
@@ -402,17 +434,6 @@ function insertExample(template: string) {
             </NCollapseItem>
           </NCollapse>
         </NFlex>
-      </NTabPane>
-
-      <NTabPane
-        name="test"
-        tab="测试"
-      >
-        <TemplateTester
-          :default-template="action.template"
-          :context="testContext"
-          :placeholders="mergedPlaceholders"
-        />
       </NTabPane>
     </NTabs>
 

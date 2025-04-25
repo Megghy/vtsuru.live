@@ -269,12 +269,14 @@ export function checkUserFilter(config: { userFilterEnabled: boolean; requireMed
  * @param event 事件对象
  * @param roomId 房间ID
  * @param triggerType 触发类型
+ * @param additionalContext 附加的上下文数据，将被合并到上下文中
  * @returns 标准化的执行上下文
  */
 export function buildExecutionContext(
   event: any,
   roomId: number | undefined,
-  triggerType?: TriggerType
+  triggerType?: TriggerType,
+  additionalContext?: Record<string, any>
 ): ExecutionContext {
   const now = Date.now();
   const dateObj = new Date(now);
@@ -430,6 +432,14 @@ export function buildExecutionContext(
         price: (event.price || 0) / 1000
       };
     }
+  }
+
+  // 合并附加的上下文数据（如果存在）
+  if (additionalContext) {
+    context.variables = {
+      ...context.variables,
+      ...additionalContext
+    };
   }
 
   return context;

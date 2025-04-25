@@ -65,7 +65,7 @@ export async function initAll(isOnBoot: boolean) {
   initInfo();
   info('[init] 开始更新数据');
 
-  if (isLoggedIn && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient) {
+  if (isLoggedIn.value && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient) {
     const danmakuInitNoticeRef = window.$notification.info({
       title: '正在初始化弹幕客户端...',
       closable: false
@@ -196,9 +196,11 @@ export async function initDanmakuClient() {
   const biliCookie = useBiliCookie();
   const settings = useSettings();
   if (isInitedDanmakuClient.value || isInitingDanmakuClient.value) {
+    info('弹幕客户端已初始化, 跳过初始化');
     return { success: true, message: '' };
   }
   isInitingDanmakuClient.value = true;
+  console.log(settings.settings);
   let result = { success: false, message: '' };
   try {
     if (isLoggedIn) {
@@ -231,6 +233,9 @@ export async function initDanmakuClient() {
           }
         }
       }
+    } else {
+      info('未登录, 跳过弹幕客户端初始化');
+      result = { success: true, message: '' };
     }
     return result;
   } catch (err) {
@@ -265,6 +270,7 @@ export async function callStartDanmakuClient() {
   const settings = useSettings();
   const webFetcher = useWebFetcher();
   if (settings.settings.useDanmakuClientType === 'direct') {
+    info('开始初始化弹幕客户端 [direct]');
     const key = await getRoomKey(
       accountInfo.value.biliRoomId!, await biliCookie.getBiliCookie() || '');
     if (!key) {
@@ -283,6 +289,7 @@ export async function callStartDanmakuClient() {
       tokenUserId: biliCookie.uId!,
     }, true);
   } else {
+    info('开始初始化弹幕客户端 [openlive]');
     return await webFetcher.Start('openlive', undefined, true);
   }
 }

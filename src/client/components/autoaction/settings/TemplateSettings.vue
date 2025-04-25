@@ -56,7 +56,7 @@ function handleTemplateUpdate(payload: { index: number, value: string }) {
       appear
     >
       <TemplateEditor
-        :action="props.action"
+        :template="props.action"
         :template-index="0"
         :title="templateTitle"
         :description="templateDescription"

@@ -15,6 +15,12 @@ declare module '*.js' {
   export = content
 }
 
+declare module 'naive-ui' {
+  interface TabPaneSlots {
+    tab?: () => VNode[]
+  }
+}
+
 declare global {
   interface Window {
     $message: MessageProviderInst

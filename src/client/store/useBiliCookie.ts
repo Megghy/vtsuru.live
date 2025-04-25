@@ -371,7 +371,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
       info('[BiliCookie] 检测到已存储的 Bilibili Cookie');
       // 检查 Cookie 有效性，除非用户信息缓存有效且未过期
       if (!_cachedUserInfo.value) { // 只有在没有有效缓存时才立即检查
-        debug('[BiliCookie] 无有效缓存，立即检查 Cookie 有效性...');
+        info('[BiliCookie] 无有效缓存，立即检查 Cookie 有效性...');
         const { valid } = await _checkCookieValidity(storedCookieData.cookie);
         _updateCookieState(true, valid); // 更新状态
       }

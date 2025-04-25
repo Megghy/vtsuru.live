@@ -33,6 +33,7 @@ import GlobalScheduledSettings from './components/autoaction/settings/GlobalSche
 import TimerCountdown from './components/autoaction/TimerCountdown.vue';
 import DataManager from './components/autoaction/DataManager.vue';
 import ActionHistoryViewer from './components/autoaction/ActionHistoryViewer.vue';
+import CheckInSettings from './components/autoaction/settings/CheckInSettings.vue';
 
 const autoActionStore = useAutoAction();
 const message = useMessage();
@@ -697,6 +698,14 @@ onMounted(() => {
                 </NSpace>
               </NTabPane>
             </NTabs>
+          </NTabPane>
+
+          <!-- 新增：签到设置标签页 -->
+          <NTabPane
+            name="check-in-settings"
+            tab="签到设置"
+          >
+            <CheckInSettings />
           </NTabPane>
 
           <!-- 历史记录标签页 -->

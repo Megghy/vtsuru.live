@@ -4,6 +4,7 @@ import { POINT_API_URL } from "@/data/constants";
 import { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider";
 import { defineStore } from "pinia";
 import { useAuthStore } from "./useAuthStore";
+import { GuidUtils } from "@/Utils";
 
 export const usePointStore = defineStore('point', () => {
   const useAuth = useAuthStore()
@@ -41,9 +42,54 @@ export const usePointStore = defineStore('point', () => {
     }
     return []
   }
+  /**
+   * 给用户添加或扣除积分
+   * @param userId 用户ID
+   * @param count 积分数量（正数为增加，负数为减少）
+   * @param reason 积分变动原因
+   * @param remark 备注信息
+   * @returns 成功时返回修改后的积分值，失败时返回null
+   */
+  async function addPoints(userId: string, count: number, reason: string, remark?: string) {
+    if (count === 0) {
+      console.warn('[point] 积分变动数量不能为0');
+      return null;
+    }
+
+    try {
+      // 根据用户ID构建参数
+      const params: Record<string, any> = GuidUtils.isGuidFromUserId(userId) ? {
+        uId: GuidUtils.guidToLong(userId),
+        count: count,
+        reason: reason || '',
+      } : {
+        oid: userId,
+        count: count,
+        reason: reason || '',
+      };
+
+      if (remark) {
+        params.remark = remark;
+      }
+
+      const data = await QueryGetAPI<number>(POINT_API_URL + 'give-point', params);
+
+      if (data.code === 200) {
+        console.log(`[point] 用户 ${userId} 积分${count > 0 ? '增加' : '减少'} ${Math.abs(count)} 成功，当前积分：${data.data}`);
+        return data.data; // 返回修改后的积分值
+      } else {
+        console.error('[point] 积分操作失败:', data.message);
+        return null;
+      }
+    } catch (err) {
+      console.error('[point] 积分操作出错:', err);
+      return null;
+    }
+  }
 
   return {
     GetSpecificPoint,
-    GetGoods
+    GetGoods,
+    addPoints
   }
 })

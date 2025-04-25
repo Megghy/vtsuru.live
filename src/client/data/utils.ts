@@ -6,13 +6,22 @@ import { error } from '@tauri-apps/plugin-log';
 
 export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true) {
   const u = new URL(url);
+  console.log(`调用bilibili api: ${url}`);
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  ];
+  const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+
   return fetch(url, {
     method: method,
     headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
-      Origin: '',
-      Cookie:  useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : ''
+      'User-Agent': randomUserAgent,
+      Origin: 'https://www.bilibili.com',
+      Cookie: useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : ''
     },
   });
 }

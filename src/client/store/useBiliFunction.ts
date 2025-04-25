@@ -153,7 +153,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
               justifyContent: 'space-between',
               width: '100%',
             },
-          }, () => `错误: ${json.code} - ${json.message || json.msg}`),
+          }, `错误: ${json.code} - ${json.message || json.msg}`),
           duration: 0,
         });
         console.error(`发送弹幕API失败 to: ${roomId} ${uid.value} [${message}] - ${json.code} - ${json.message || json.msg}`);

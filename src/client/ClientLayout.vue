@@ -24,8 +24,6 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
 
   // 获取 webfetcher 状态管理的实例
   const webfetcher = useWebFetcher();
-  // 获取账户信息状态管理的实例 (如果 accountInfo 未使用，可以考虑移除)
-  const accountInfo = useAccount();
   const danmakuWindow = useDanmakuWindow();
   // 用于存储用户输入的 Token
   const token = ref('');

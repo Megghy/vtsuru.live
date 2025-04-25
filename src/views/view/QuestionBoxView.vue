@@ -206,197 +206,289 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="question-box-container"
-    title="提问"
-  >
+  <div class="question-box-container">
     <!-- 提问表单 -->
-    <NCard embedded>
-      <NSpace vertical>
-        <!-- 话题选择区域 -->
-        <NCard
-          v-if="tags.length > 0"
-          title="投稿话题 (可选)"
-          size="small"
-        >
-          <NSpace>
-            <NTag
-              v-for="tag in tags"
-              :key="tag"
-              style="cursor: pointer"
-              :bordered="false"
-              :type="selectedTag === tag ? 'primary' : 'default'"
-              @click="onSelectTag(tag)"
+    <transition
+      name="fade-slide-down"
+      appear
+    >
+      <NCard
+        embedded
+        class="question-form-card"
+        :class="{ 'self-user': isSelf }"
+      >
+        <NSpace vertical>
+          <!-- 话题选择区域 -->
+          <transition
+            name="fade-scale"
+            appear
+          >
+            <NCard
+              v-if="tags.length > 0"
+              title="投稿话题 (可选)"
+              size="small"
+              class="topic-card"
             >
-              {{ tag }}
-            </NTag>
-          </NSpace>
-        </NCard>
+              <transition-group
+                name="tag-list"
+                tag="div"
+                class="tag-container"
+              >
+                <NTag
+                  v-for="tag in tags"
+                  :key="tag"
+                  class="tag-item"
+                  :bordered="false"
+                  :type="selectedTag === tag ? 'primary' : 'default'"
+                  @click="onSelectTag(tag)"
+                >
+                  {{ tag }}
+                </NTag>
+              </transition-group>
+            </NCard>
+          </transition>
 
-        <!-- 提问内容区域 -->
-        <NSpace
-          align="center"
-          justify="center"
-        >
-          <NInput
-            v-model:value="questionMessage"
-            :disabled="isSelf"
-            show-count
-            maxlength="5000"
-            type="textarea"
-            :count-graphemes="countGraphemes"
-            style="width: 300px"
-          />
-          <NUpload
-            v-model:file-list="fileList"
-            :max="1"
-            accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
-            list-type="image-card"
-            :disabled="!accountInfo.id || isSelf"
-            :default-upload="false"
-            @update:file-list="OnFileListChange"
+          <!-- 提问内容区域 -->
+          <div class="question-input-area">
+            <NInput
+              v-model:value="questionMessage"
+              :disabled="isSelf"
+              show-count
+              maxlength="5000"
+              type="textarea"
+              :count-graphemes="countGraphemes"
+              class="question-textarea"
+              placeholder="在这里输入您的问题..."
+            />
+            <transition
+              name="fade-scale"
+            >
+              <NUpload
+                v-model:file-list="fileList"
+                :max="1"
+                accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+                list-type="image-card"
+                :disabled="!accountInfo.id || isSelf"
+                :default-upload="false"
+                class="image-upload"
+                @update:file-list="OnFileListChange"
+              >
+                <div class="upload-trigger">
+                  <div class="upload-icon">
+                    +
+                  </div>
+                  <span>上传图片</span>
+                </div>
+              </NUpload>
+            </transition>
+          </div>
+
+          <NDivider class="form-divider" />
+
+          <!-- 提示信息 -->
+          <transition
+            name="fade"
+            appear
           >
-            + 上传图片
-          </NUpload>
-        </NSpace>
+            <NAlert
+              v-if="!accountInfo.id && !isSelf"
+              type="warning"
+              class="login-alert"
+            >
+              只有注册用户才能够上传图片
+            </NAlert>
+          </transition>
 
-        <NDivider style="margin: 10px 0" />
-
-        <!-- 提示信息 -->
-        <NSpace align="center">
-          <NAlert
-            v-if="!accountInfo.id && !isSelf"
-            type="warning"
+          <!-- 匿名选项 -->
+          <transition
+            name="fade"
+            appear
           >
-            只有注册用户才能够上传图片
-          </NAlert>
-        </NSpace>
+            <NSpace
+              v-if="accountInfo.id"
+              vertical
+              class="anonymous-option"
+            >
+              <NCheckbox
+                v-model:checked="isAnonymous"
+                :disabled="isSelf"
+                label="匿名提问"
+              />
+              <NDivider class="form-divider" />
+            </NSpace>
+          </transition>
 
-        <!-- 匿名选项 -->
-        <NSpace
-          v-if="accountInfo.id"
-          vertical
-        >
-          <NCheckbox
-            v-model:checked="isAnonymous"
-            :disabled="isSelf"
-            label="匿名提问"
-          />
-          <NDivider style="margin: 10px 0" />
-        </NSpace>
+          <!-- 操作按钮 -->
+          <div class="action-buttons">
+            <NButton
+              :disabled="isSelf"
+              type="primary"
+              :loading="isSending || !token"
+              class="send-button"
+              @click="SendQuestion"
+            >
+              发送
+            </NButton>
+            <NButton
+              :disabled="isSelf || !accountInfo.id"
+              type="info"
+              class="my-questions-button"
+              @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
+            >
+              我发送的
+            </NButton>
+          </div>
 
-        <!-- 操作按钮 -->
-        <NSpace justify="center">
-          <NButton
-            :disabled="isSelf"
-            type="primary"
-            :loading="isSending || !token"
-            @click="SendQuestion"
+          <!-- 验证码 -->
+          <div class="turnstile-container">
+            <VueTurnstile
+              ref="turnstile"
+              v-model="token"
+              :site-key="TURNSTILE_KEY"
+              theme="auto"
+            />
+          </div>
+
+          <!-- 错误提示 -->
+          <transition
+            name="fade-slide-up"
+            appear
           >
-            发送
-          </NButton>
-          <NButton
-            :disabled="isSelf || !accountInfo.id"
-            type="info"
-            @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
-          >
-            我发送的
-          </NButton>
+            <NAlert
+              v-if="isSelf"
+              type="warning"
+              class="self-alert"
+            >
+              不能给自己提问
+            </NAlert>
+          </transition>
         </NSpace>
-
-        <!-- 验证码 -->
-        <VueTurnstile
-          ref="turnstile"
-          v-model="token"
-          :site-key="TURNSTILE_KEY"
-          theme="auto"
-          style="text-align: center"
-        />
-
-        <!-- 错误提示 -->
-        <NAlert
-          v-if="isSelf"
-          type="warning"
-        >
-          不能给自己提问
-        </NAlert>
-      </NSpace>
-    </NCard>
+      </NCard>
+    </transition>
 
     <!-- 公开回复列表 -->
-    <NDivider> 公开回复 </NDivider>
-    <NList v-if="publicQuestions.length > 0">
-      <NListItem
-        v-for="item in publicQuestions"
-        :key="item.id"
-      >
-        <NCard
-          :embedded="!item.isReaded"
-          hoverable
-          size="small"
+    <transition
+      name="fade"
+      appear
+    >
+      <div>
+        <NDivider class="public-divider">
+          <div class="divider-content">
+            公开回复
+          </div>
+        </NDivider>
+        <transition-group
+          name="list-fade"
+          tag="div"
+          class="questions-list-container"
         >
-          <!-- 问题头部 -->
-          <template #header>
-            <NSpace
-              :size="0"
-              align="center"
-            >
-              <NText
-                depth="3"
-                style="font-size: small"
-              >
-                <NTooltip>
-                  <template #trigger>
-                    <NTime
-                      :time="item.sendAt"
-                      :to="Date.now()"
-                      type="relative"
-                    />
-                  </template>
-                  <NTime :time="item.sendAt" />
-                </NTooltip>
-              </NText>
-            </NSpace>
-          </template>
-
-          <!-- 问题内容 -->
-          <NCard style="text-align: center">
-            {{ item.question.message }}
-            <br>
-            <NImage
-              v-if="item.question.image"
-              :src="item.question.image"
-              height="100"
-              lazy
-            />
-          </NCard>
-
-          <!-- 回答内容 -->
-          <template
-            v-if="item.answer"
-            #footer
+          <NList
+            v-if="publicQuestions.length > 0"
+            class="questions-list"
           >
-            <NSpace
-              align="center"
-              :size="6"
-              :wrap="false"
+            <NListItem
+              v-for="item in publicQuestions"
+              :key="item.id"
+              class="question-list-item"
             >
-              <NAvatar
-                :src="AVATAR_URL + userInfo?.biliId + '?size=64'"
-                circle
-                :size="45"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-              />
-              <NDivider vertical />
-              <NText style="font-size: 16px">
-                {{ item.answer?.message }}
-              </NText>
-            </NSpace>
-          </template>
-        </NCard>
-      </NListItem>
-    </NList>
-    <NEmpty v-else />
+              <NCard
+                :embedded="!item.isReaded"
+                hoverable
+                size="small"
+                class="question-card"
+                :class="{ 'unread': !item.isReaded }"
+              >
+                <!-- 问题头部 -->
+                <template #header>
+                  <NSpace
+                    :size="0"
+                    align="center"
+                    class="question-header"
+                  >
+                    <NText
+                      depth="3"
+                      class="time-text"
+                    >
+                      <NTooltip>
+                        <template #trigger>
+                          <NTime
+                            :time="item.sendAt"
+                            :to="Date.now()"
+                            type="relative"
+                          />
+                        </template>
+                        <NTime :time="item.sendAt" />
+                      </NTooltip>
+                    </NText>
+                    <div
+                      v-if="item.tag"
+                      class="question-tag"
+                    >
+                      <NTag
+                        size="small"
+                        type="info"
+                      >
+                        {{ item.tag }}
+                      </NTag>
+                    </div>
+                  </NSpace>
+                </template>
+
+                <!-- 问题内容 -->
+                <NCard class="question-content">
+                  <div class="question-message">
+                    {{ item.question.message }}
+                  </div>
+                  <div
+                    v-if="item.question.image"
+                    class="question-image-container"
+                  >
+                    <NImage
+                      :src="item.question.image"
+                      class="question-image"
+                      lazy
+                      object-fit="contain"
+                    />
+                  </div>
+                </NCard>
+
+                <!-- 回答内容 -->
+                <template
+                  v-if="item.answer"
+                  #footer
+                >
+                  <div class="answer-container">
+                    <NSpace
+                      align="center"
+                      :wrap="false"
+                      class="answer-content"
+                    >
+                      <NAvatar
+                        :src="AVATAR_URL + userInfo?.biliId + '?size=64'"
+                        circle
+                        class="answer-avatar"
+                        :img-props="{ referrerpolicy: 'no-referrer' }"
+                      />
+                      <NDivider
+                        vertical
+                        class="answer-divider"
+                      />
+                      <NText class="answer-text">
+                        {{ item.answer?.message }}
+                      </NText>
+                    </NSpace>
+                  </div>
+                </template>
+              </NCard>
+            </NListItem>
+          </NList>
+          <NEmpty
+            v-else
+            class="empty-state"
+          />
+        </transition-group>
+      </div>
+    </transition>
 
     <NDivider />
   </div>
@@ -408,5 +500,380 @@ onUnmounted(() => {
   margin: 0 auto;
   position: relative;
   width: 100%;
+  padding: 0 16px;
+}
+
+/* 卡片样式 */
+.question-form-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.question-form-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.self-user {
+  border-left: 4px solid #f5222d;
+}
+
+/* 话题选择卡片 */
+.topic-card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.tag-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 提问输入区域 */
+.question-textarea {
+  flex: 1;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100% !important; /* 使用 !important 确保不被其他样式覆盖 */
+  min-height: 100px; /* 设置最小高度 */
+  resize: vertical; /* 允许垂直调整大小 */
+}
+
+/* 设置 naive-ui 内部元素样式 */
+.question-textarea :deep(.n-input__textarea) {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+.question-textarea :deep(.n-input__textarea-el) {
+  min-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 确保输入框容器占满可用空间 */
+.question-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 16px 0;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .question-input-area {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  /* 在水平布局中设置输入框区域的最小宽度 */
+  .question-textarea {
+    min-width: 75%; /* 占据至少75%的宽度 */
+  }
+}
+
+.image-upload {
+  min-width: 112px;
+}
+
+.upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.upload-trigger:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+/* 分隔线 */
+.form-divider {
+  margin: 10px 0;
+  opacity: 0.6;
+}
+
+/* 警告提示 */
+.login-alert,
+.self-alert {
+  border-radius: 8px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 213, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 213, 79, 0);
+  }
+}
+
+/* 匿名选项 */
+.anonymous-option {
+  margin: 8px 0;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 8px 0 16px 0;
+}
+
+.send-button,
+.my-questions-button {
+  min-width: 100px;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+}
+
+.send-button:not(:disabled):hover,
+.my-questions-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 验证码容器 */
+.turnstile-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+/* 公开回复部分 */
+.public-divider {
+  margin: 32px 0 24px;
+  position: relative;
+}
+
+.divider-content {
+  font-weight: bold;
+  color: #36ad6a;
+  background-image: linear-gradient(90deg, #36ad6a, #18a058);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: inline-block;
+  padding: 0 8px;
+  position: relative;
+}
+
+.questions-list-container {
+  position: relative;
+}
+
+.questions-list {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.question-list-item {
+  margin-bottom: 16px;
+}
+
+.question-card {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.question-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.unread {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.3);
+}
+
+.question-header {
+  padding: 8px 0;
+}
+
+.time-text {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.question-tag {
+  margin-left: 8px;
+}
+
+.question-content {
+  text-align: center;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+}
+
+.question-message {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 12px;
+}
+
+.question-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.question-image {
+  max-height: 200px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.question-image:hover {
+  transform: scale(1.02);
+}
+
+.answer-container {
+  padding: 12px;
+  background-color: rgba(24, 160, 88, 0.06);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.answer-content {
+  gap: 12px;
+}
+
+.answer-avatar {
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid #fff;
+  transition: all 0.3s ease;
+}
+
+.answer-avatar:hover {
+  transform: scale(1.05);
+}
+
+.answer-divider {
+  height: 24px;
+  margin: 0 4px;
+}
+
+.answer-text {
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty-state {
+  padding: 24px;
+  opacity: 0.7;
+}
+
+/* 过渡动效 */
+/* 淡入淡出 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 下滑淡入 */
+.fade-slide-down-enter-active,
+.fade-slide-down-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-down-enter-from,
+.fade-slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* 上滑淡入 */
+.fade-slide-up-enter-active,
+.fade-slide-up-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-slide-up-enter-from,
+.fade-slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* 缩放淡入 */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 标签列表过渡 */
+.tag-list-move {
+  transition: all 0.5s ease;
+}
+
+.tag-list-enter-active,
+.tag-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.tag-list-enter-from,
+.tag-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+/* 问题列表过渡 */
+.list-fade-move {
+  transition: transform 0.5s ease;
+}
+
+.list-fade-enter-active,
+.list-fade-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-fade-enter-from,
+.list-fade-leave-to {
+  opacity: 0;
+  transform: translateY(30px);
 }
 </style>
