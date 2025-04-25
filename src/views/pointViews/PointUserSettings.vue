@@ -252,6 +252,19 @@ function switchAuth(token: string) {
 function logout() {
   useAuth.logout()
 }
+
+// 提供给父组件调用的重置方法
+function reset() {
+  // 重置表单数据或其他状态
+  currentAddress.value = {} as AddressInfo
+  userAgree.value = false
+  // 可能还需要重置其他状态
+}
+
+// 暴露方法给父组件
+defineExpose({
+  reset
+})
 </script>
 
 <template>
