@@ -510,23 +510,15 @@ function confirmTest() {
                 :name="type"
               >
                 <template #tab>
-                  <NSpace
-                    align="center"
-                    size="small"
-                    inline
+                  <span
+                    :style="{
+                      color: enabledTriggerTypes && enabledTriggerTypes[type] ? '#18a058' : '#d03050',
+                      fontWeight: 'medium'
+                    }"
+                    :title="enabledTriggerTypes && enabledTriggerTypes[type] ? '已启用' : '已禁用'"
                   >
                     {{ label }}
-                    <span
-                      :style="{
-                        color: enabledTriggerTypes && enabledTriggerTypes[type] ? '#18a058' : '#d03050',
-                        fontSize: '14px', // Adjust size as needed
-                        verticalAlign: 'middle'
-                      }"
-                      :title="enabledTriggerTypes && enabledTriggerTypes[type] ? '已启用' : '已禁用'"
-                    >
-                      ●
-                    </span>
-                  </NSpace>
+                  </span>
                 </template>
                 <NSpace vertical>
                   <NSpace
