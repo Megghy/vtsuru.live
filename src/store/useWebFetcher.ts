@@ -216,7 +216,9 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       console.log(prefix.value + "SignalR 已连接或正在连接");
       return true;
     }
-
+    signalRClient.value?.stop();
+    signalRClient.value = undefined;
+    signalRConnectionId.value = undefined;
     console.log(prefix.value + '正在连接到 vtsuru 服务器...');
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(BASE_HUB_URL + 'web-fetcher?token=' + (route.query.token ?? account.value.token), { // 使用 account.token
@@ -250,11 +252,19 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     connection.onclose(async (error) => {
       // 只有在不是由 Stop() 或服务器明确要求断开时才记录错误并尝试独立重连（虽然 withAutomaticReconnect 应该处理）
       if (state.value !== 'disconnected' && !disconnectedByServer) {
-        console.error(prefix.value + `与服务器连接关闭: ${error?.message || '未知原因'}. 自动重连将处理.`);
-        state.value = 'connecting'; // 标记为连接中，等待自动重连
+        console.error(prefix.value + `与服务器连接关闭: ${error?.message || '未知原因'}. 30秒后将自动重启`);
+        //state.value = 'connecting'; // 标记为连接中，等待自动重连
+        //signalRConnectionId.value = undefined;
+        //await connection.start();
+        // 停止 SignalR 连接
+        signalRClient.value?.stop();
+        signalRClient.value = undefined;
         signalRConnectionId.value = undefined;
-        await connection.start();
-      } else if (disconnectedByServer) { 
+        setTimeout(() => {
+          console.log(prefix.value + '尝试重启...');
+          connectSignalR(); // 30秒后尝试重启
+        }, 30 * 1000); // 30秒后自动重启
+      } else if (disconnectedByServer) {
         console.log(prefix.value + `连接已被服务器关闭.`);
         //Stop(); // 服务器要求断开，则彻底停止
       } else {
@@ -265,12 +275,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     connection.on('Disconnect', (reason: unknown) => {
       console.log(prefix.value + '被服务器断开连接: ' + reason);
       disconnectedByServer = true; // 标记是服务器主动断开
-      window.$message.error(`被服务器要求断开连接: ${reason}, 为保证可用性, 30秒后将自动重启`);
-      //Stop(); // 服务器要求断开，调用 Stop 清理所有资源
-      setTimeout(() => {
-        console.log(prefix.value + '尝试重启...');
-        connectSignalR(); // 30秒后尝试重启
-      }, 30 * 1000); // 30秒后自动重启
+      window.$message.error(`被服务器要求断开连接: ${reason}`);
     });
     connection.on('Request', async (url: string, method: string, body: string, useCookie: boolean) => onRequest(url, method, body, useCookie));
     connection.on('Notification', (type: string, data: any) => { onReceivedNotification(type, data); });
