@@ -15,6 +15,10 @@ export type VTsuruClientSettings = {
   enableNotification: boolean;
   notificationSettings: NotificationSettings;
 
+  // 消息队列间隔设置
+  danmakuInterval: number;
+  pmInterval: number;
+
   dev_disableDanmakuClient: boolean;
 };
 
@@ -32,6 +36,10 @@ export const useSettings = defineStore('settings', () => {
       enableTypes: ['question-box', 'danmaku', 'message-failed'],
     },
 
+    // 默认间隔为2秒
+    danmakuInterval: 2000,
+    pmInterval: 2000,
+
     dev_disableDanmakuClient: false,
   };
   const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings));
@@ -40,6 +48,9 @@ export const useSettings = defineStore('settings', () => {
     settings.value = (await store.get()) || Object.assign({}, defaultSettings);
     settings.value.notificationSettings ??= defaultSettings.notificationSettings;
     settings.value.notificationSettings.enableTypes ??= [ 'question-box', 'danmaku', 'message-failed' ];
+    // 初始化消息队列间隔设置
+    settings.value.danmakuInterval ??= defaultSettings.danmakuInterval;
+    settings.value.pmInterval ??= defaultSettings.pmInterval;
   }
   async function save() {
     await store.set(settings.value);

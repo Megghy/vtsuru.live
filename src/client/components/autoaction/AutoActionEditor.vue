@@ -18,6 +18,14 @@ const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
     required: true
+  },
+  hideName: {
+    type: Boolean,
+    default: false
+  },
+  hideEnabled: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -53,7 +61,11 @@ const TriggerSettings = getTriggerSettings();
       <TemplateSettings :action="action" />
 
       <!-- 基本设置 -->
-      <BasicSettings :action="action" />
+      <BasicSettings
+        :action="action"
+        :hide-name="hideName"
+        :hide-enabled="hideEnabled"
+      />
       <!-- 高级选项 - 所有高级设置放在一个折叠面板中 -->
       <NCollapse class="settings-collapse">
         <template #default>

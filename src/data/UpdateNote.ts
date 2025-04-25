@@ -5,6 +5,28 @@ import { FETCH_API } from "./constants";
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 6,
+    date: '2025.4.26',
+    items: [
+      {
+        type: 'new',
+        title: '自动操作新增弹幕签到功能',
+        content: [
+          [
+            '客户端新增弹幕签到功能，支持观众通过发送特定指令获得积分 (需扫码登录或者使用CookieCloud才能发送回复',
+            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/0e784480a3016b748af2579b2c492a3b.png', width: 300 }),
+          ],
+          [
+            '客户端安装方式:',
+            () => h(NButton, {
+              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+            }, () => '查看介绍'),
+          ]
+        ],
+      },
+    ]
+  },
+  {
     ver: 5,
     date: '2025.4.24',
     items: [

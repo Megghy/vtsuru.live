@@ -2,11 +2,12 @@ import { ref, Ref, computed } from 'vue';
 import { EventModel, EventDataTypes } from '@/api/api-models';
 import { ActionType, AutoActionItem, RuntimeState, TriggerType, Priority, KeywordMatchType } from '../types';
 import { usePointStore } from '@/store/usePointStore';
-import { processTemplate } from '../actionUtils';
+import { processTemplate, executeActions } from '../actionUtils';
 import { buildExecutionContext } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval';
 import { GuidUtils } from '@/Utils';
+import { createDefaultAutoAction } from '../utils';
 
 // 签到配置接口
 export interface CheckInConfig {
@@ -27,59 +28,33 @@ export interface CheckInConfig {
 }
 
 // 创建默认配置
-function createDefaultCheckInConfig(): CheckInConfig {  return {
+function createDefaultCheckInConfig(): CheckInConfig {
+  const successAction = createDefaultAutoAction(TriggerType.DANMAKU);
+  successAction.name = '签到成功回复';
+  successAction.template = '@{{user.name}} 签到成功，获得 {{checkin.totalPoints}} 积分。';
+
+  const cooldownAction = createDefaultAutoAction(TriggerType.DANMAKU);
+  cooldownAction.name = '签到冷却回复';
+  cooldownAction.template = '{{user.name}} 你今天已经签到过了，明天再来吧~';
+
+  const earlyBirdAction = createDefaultAutoAction(TriggerType.DANMAKU);
+  earlyBirdAction.name = '早鸟签到回复';
+  earlyBirdAction.template = '恭喜 {{user.name}} 完成早鸟签到！额外获得 {{bonusPoints}} 积分，共获得 {{totalPoints}} 积分！';
+
+  return {
     enabled: false,
     command: '签到',
     points: 10,
     cooldownSeconds: 3600, // 1小时
     onlyDuringLive: true, // 默认仅在直播时可签到
     sendReply: true, // 默认发送回复消息
-    successAction: {
-      id: uuidv4(),
-      name: '签到成功回复',
-      enabled: true,
-      triggerType: TriggerType.DANMAKU,
-      actionType: ActionType.SEND_DANMAKU,
-      template: '@{{user.name}} 签到成功，获得 {{checkin.totalPoints}} 积分。',
-      priority: Priority.NORMAL,
-      logicalExpression: '',
-      ignoreCooldown: false,
-      executeCommand: '',
-      triggerConfig: {},
-      actionConfig: {}
-    },
-    cooldownAction: {
-      id: uuidv4(),
-      name: '签到冷却回复',
-      enabled: true,
-      triggerType: TriggerType.DANMAKU,
-      actionType: ActionType.SEND_DANMAKU,
-      template: '{{user.name}} 你今天已经签到过了，明天再来吧~',
-      priority: Priority.NORMAL,
-      logicalExpression: '',
-      ignoreCooldown: false,
-      executeCommand: '',
-      triggerConfig: {},
-      actionConfig: {}
-    },
+    successAction,
+    cooldownAction,
     earlyBird: {
       enabled: false,
       windowMinutes: 30,
       bonusPoints: 5,
-      successAction: {
-        id: uuidv4(),
-        name: '早鸟签到回复',
-        enabled: true,
-        triggerType: TriggerType.DANMAKU,
-        actionType: ActionType.SEND_DANMAKU,
-        template: '恭喜 {{user.name}} 完成早鸟签到！额外获得 {{bonusPoints}} 积分，共获得 {{totalPoints}} 积分！',
-        priority: Priority.NORMAL,
-        logicalExpression: '',
-        ignoreCooldown: false,
-        executeCommand: '',
-        triggerConfig: {},
-        actionConfig: {}
-      }
+      successAction: earlyBirdAction
     }
   };
 }
@@ -186,18 +161,22 @@ export function useCheckIn(
     if (lastCheckInTime > 0 && isSameDay) {
       // 用户今天已经签到过，发送提示
       if (checkInConfig.value.sendReply) {
-        // 使用buildExecutionContext构建上下文
+        // 构建上下文
         const cooldownContext = buildExecutionContext(event, roomId.value, TriggerType.DANMAKU, {
           user: { name: username, uid: userId }
         });
-
-        const message = processTemplate(checkInConfig.value.cooldownAction, cooldownContext);
-
-        if (roomId.value && message) {
-          sendDanmaku(roomId.value, message).catch(err =>
-            console.error('[CheckIn] 发送已签到提示失败:', err)
-          );
-        }
+        // 统一用 executeActions
+        executeActions(
+          [checkInConfig.value.cooldownAction],
+          event,
+          TriggerType.DANMAKU,
+          roomId.value,
+          runtimeState,
+          { sendLiveDanmaku: sendDanmaku },
+          {
+            customContextBuilder: () => cooldownContext
+          }
+        );
       }
       window.$notification.info({
         title: '签到提示',
@@ -227,21 +206,15 @@ export function useCheckIn(
     // 更新用户积分
     try {
       // 调用积分系统添加积分
-      const point = await pointStore.addPoints(userId, pointsEarned, `签到奖励 (${format(new Date(), 'yyyy-MM-dd')})`, `${username} 完成签到`);      // 更新签到记录
+      const point = await pointStore.addPoints(userId, pointsEarned, `签到奖励 (${format(new Date(), 'yyyy-MM-dd')})`, `${username} 完成签到`);
       if (checkInStorage.value) {
-        // 确保 lastCheckIn 对象存在
         if (!checkInStorage.value.lastCheckIn) {
           checkInStorage.value.lastCheckIn = {};
         }
-        // 确保 users 对象存在
         if (!checkInStorage.value.users) {
           checkInStorage.value.users = {};
         }
-
-        // 获取用户当前的签到数据
         let userData = checkInStorage.value.users[userId];
-
-        // 如果是新用户，创建用户数据
         if (!userData) {
           userData = {
             ouid: userId,
@@ -253,54 +226,31 @@ export function useCheckIn(
             firstCheckInTime: currentTime
           };
         }
-
-        // 计算连续签到天数
         const lastCheckInDate = new Date(userData.lastCheckInTime);
         const currentDate = new Date(currentTime);
-
-        // 如果上次签到不是昨天（隔了一天以上），则重置连续签到天数
         const isYesterday =
           lastCheckInDate.getFullYear() === currentDate.getFullYear() &&
           lastCheckInDate.getMonth() === currentDate.getMonth() &&
           lastCheckInDate.getDate() === currentDate.getDate() - 1;
-
-        // 如果上次签到不是今天（防止重复计算）
         if (!isSameDay) {
-          // 更新连续签到天数
           if (isYesterday) {
-            // 昨天签到过，增加连续签到天数
             userData.streakDays += 1;
           } else if (userData.lastCheckInTime > 0) {
-            // 不是昨天签到且不是首次签到，重置连续签到天数为1
             userData.streakDays = 1;
           } else {
-            // 首次签到
             userData.streakDays = 1;
           }
-
-          // 更新累计签到次数
           userData.totalCheckins += 1;
-
-          // 更新早鸟签到次数
           if (isEarlyBird) {
             userData.earlyBirdCount += 1;
           }
         }
-
-        // 更新最后签到时间
         userData.lastCheckInTime = currentTime;
-        // 更新用户名（以防用户改名）
         userData.username = username;
-
-        // 保存用户数据
         checkInStorage.value.users[userId] = userData;
-        // 更新lastCheckIn记录
         checkInStorage.value.lastCheckIn[userId] = currentTime;
       }
-
-      // 发送成功消息
       if (roomId.value) {
-        // 构建签到上下文数据
         const checkInData = {
           checkin: {
             points: checkInConfig.value.points,
@@ -312,28 +262,21 @@ export function useCheckIn(
             cooldownSeconds: checkInConfig.value.cooldownSeconds
           }
         };
-
-        // 根据配置决定是否发送回复消息
         if (checkInConfig.value.sendReply) {
-          // 使用buildExecutionContext构建完整上下文
           const successContext = buildExecutionContext(event, roomId.value, TriggerType.DANMAKU, checkInData);
-
-          let message;
-          if (isEarlyBird) {
-            // 使用早鸟签到模板
-            message = processTemplate(checkInConfig.value.earlyBird.successAction, successContext);
-          } else {
-            // 使用普通签到模板
-            message = processTemplate(checkInConfig.value.successAction, successContext);
-          }
-
-          if (message) {
-            sendDanmaku(roomId.value, message).catch(err =>
-              console.error('[CheckIn] 发送签到成功消息失败:', err)
-            );
-          }
+          const action = isEarlyBird ? checkInConfig.value.earlyBird.successAction : checkInConfig.value.successAction;
+          executeActions(
+            [action],
+            event,
+            TriggerType.DANMAKU,
+            roomId.value,
+            runtimeState,
+            { sendLiveDanmaku: sendDanmaku },
+            {
+              customContextBuilder: () => successContext
+            }
+          );
         }
-
         window.$notification.success({
           title: '签到成功',
           description: `${username} 完成签到, 获得 ${pointsEarned} 积分, 累计签到 ${checkInStorage.value.users[userId].totalCheckins} 次`,

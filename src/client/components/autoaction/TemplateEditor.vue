@@ -398,7 +398,6 @@ function insertExample(template: string) {
           <!-- 模板示例 -->
           <NCollapse
             class="template-examples"
-            :default-expanded-names="['examples']"
           >
             <NCollapseItem
               name="examples"
