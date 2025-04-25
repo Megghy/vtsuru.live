@@ -655,6 +655,12 @@
             >
               提问收到回复时发送邮件
             </NCheckbox>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.sendEmail.receiveOrder"
+              @update:checked="SaveComboSetting"
+            >
+              积分礼物有新用户兑换时发送邮件
+            </NCheckbox>
           </NSpace>
 
           <NDivider> 提问箱 </NDivider>

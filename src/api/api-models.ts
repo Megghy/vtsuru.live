@@ -108,6 +108,7 @@ export enum BiliAuthCodeStatusType {
 export interface Setting_SendEmail {
   recieveQA: boolean
   recieveQAReply: boolean
+  receiveOrder: boolean
 }
 export enum SaftyLevels {
   Disabled,

@@ -177,7 +177,7 @@
         // 基于新的用户信息更新菜单
         updateMenuOptions();
         // 异步获取 B 站信息（不阻塞主流程）
-        await RequestBiliUserData();
+        RequestBiliUserData();
       }
     } catch (error) {
       console.error("获取用户信息时出错:", error);
@@ -218,7 +218,6 @@
     },
     { immediate: true } // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
   );
-
   // --- 组件模板 ---
 </script>
 
