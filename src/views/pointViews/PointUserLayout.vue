@@ -377,7 +377,10 @@ onMounted(async () => {
                 @vue:mounted="onAllPointPaneMounted"
               >
                 <NDivider style="margin-top: 10px" />
-                <NFlex justify="end" style="margin-bottom: 10px">
+                <NFlex
+                  justify="end"
+                  style="margin-bottom: 10px"
+                >
                   <NButton
                     size="small"
                     type="primary"
