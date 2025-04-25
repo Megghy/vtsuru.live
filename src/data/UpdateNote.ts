@@ -24,6 +24,15 @@ export const updateNotes: updateNoteType[] = [
           ]
         ],
       },
+      {
+        type: 'optimize',
+        title: '优化',
+        content: [
+          [
+            '读弹幕现在支持进入直播间消息',
+          ]
+        ]
+      }
     ]
   },
   {
