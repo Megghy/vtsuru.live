@@ -207,7 +207,7 @@ onUnmounted(() => {
 
 <template>
   <div
-    style="max-width: 700px; margin: 0 auto"
+    class="question-box-container"
     title="提问"
   >
     <!-- 提问表单 -->
@@ -401,3 +401,12 @@ onUnmounted(() => {
     <NDivider />
   </div>
 </template>
+
+<style scoped>
+.question-box-container {
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  width: 100%;
+}
+</style>

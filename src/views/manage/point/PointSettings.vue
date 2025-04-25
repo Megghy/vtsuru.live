@@ -138,6 +138,27 @@ async function deleteGift(name: string) {
 async function updateGift() {
   return await updateSettings()
 }
+
+// 更新账户通知设置
+async function SaveComboSetting() {
+  if (!accountInfo.value) return false
+
+  isLoading.value = true
+  try {
+    const msg = await SaveSetting('SendEmail', accountInfo.value.settings.sendEmail)
+    if (msg) {
+      message.success('已保存')
+      return true
+    } else {
+      message.error('保存失败: ' + msg)
+    }
+  } catch (err) {
+    message.error('修改失败: ' + err)
+  } finally {
+    isLoading.value = false
+  }
+  return false
+}
 </script>
 
 <template>
@@ -175,6 +196,21 @@ async function updateGift() {
       vertical
       :gap="12"
     >
+      <!-- 通知设置 -->
+      <NFlex
+        align="center"
+        :gap="12"
+      >
+        <span>通知设置:</span>
+        <NCheckbox
+          v-model:checked="accountInfo.settings.sendEmail.receiveOrder"
+          :disabled="!canEdit"
+          @update:checked="SaveComboSetting"
+        >
+          积分礼物有新用户兑换时发送邮件
+        </NCheckbox>
+      </NFlex>
+
       <!-- 积分来源设置 -->
       <NFlex
         align="center"
