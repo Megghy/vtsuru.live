@@ -60,7 +60,7 @@
                 style="width: 100%"
               />
               <template #feedback>
-                每个用户在指定秒数内只能签到一次。
+                每个用户在指定秒数内签到命令只会响应一次
               </template>
             </NFormItem>
 
@@ -90,15 +90,16 @@
               </NAlert>
             </div>
 
-            <TemplateEditor
-              v-model:template="config.successAction"
-              title="签到成功回复模板"
-              :custom-test-context="checkInTestContext"
+            <!-- 使用 AutoActionEditor 编辑 action 配置 -->
+            <AutoActionEditor
+              :action="config.successAction"
+              :hide-name="true"
+              :hide-enabled="true"
             />
-            <TemplateEditor
-              v-model:template="config.cooldownAction"
-              title="冷却中回复模板"
-              :custom-test-context="checkInTestContext"
+            <AutoActionEditor
+              :action="config.cooldownAction"
+              :hide-name="true"
+              :hide-enabled="true"
             />
 
             <NDivider title-placement="left">
@@ -133,11 +134,11 @@
                 <template #feedback>
                   成功触发早鸟签到的用户额外获得的积分。
                 </template>
-              </NFormItem>          <TemplateEditor
-                v-model:template="config.earlyBird.successAction"
-                title="早鸟成功回复模板"
-                description="用户成功触发早鸟奖励时发送的回复消息，可用变量: {{user.name}}, {{checkin.bonusPoints}}, {{checkin.totalPoints}}, {{checkin.userPoints}}"
-                :custom-test-context="checkInTestContext"
+              </NFormItem>
+              <AutoActionEditor
+                :action="config.earlyBird.successAction"
+                :hide-name="true"
+                :hide-enabled="true"
               />
             </template>
           </template>
@@ -248,6 +249,7 @@ import { EventModel, EventDataTypes } from '@/api/api-models';
 import { Info24Filled } from '@vicons/fluent';
 import { computed, h, ref } from 'vue';
 import type { UserCheckInData } from '@/client/store/autoAction/modules/checkin';
+import AutoActionEditor from '../AutoActionEditor.vue';
 
 const autoActionStore = useAutoAction();
 const config = autoActionStore.checkInModule.checkInConfig;

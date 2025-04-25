@@ -2,10 +2,11 @@ import { useAccount } from "@/api/account";
 import { useBiliCookie } from "./useBiliCookie";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http"; // 引入 Body
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { computed, ref } from 'vue';
+import { computed, ref, onUnmounted } from 'vue';
 import md5 from 'md5';
 import { QueryBiliAPI } from "../data/utils";
 import { onSendPrivateMessageFailed } from "../data/notification";
+import { useSettings } from "./useSettings";
 
 // WBI 混合密钥编码表
 const mixinKeyEncTab = [
@@ -79,10 +80,23 @@ async function getWbiKeys(cookie: string): Promise<{ img_key: string, sub_key: s
 export const useBiliFunction = defineStore('biliFunction', () => {
   const biliCookieStore = useBiliCookie();
   const account = useAccount();
+  const settingsStore = useSettings();
   const cookie = computed(() => biliCookieStore.cookie);
   const uid = computed(() => account.value.biliId);
   // 存储WBI密钥
   const wbiKeys = ref<{ img_key: string, sub_key: string } | null>(null);
+
+  // 队列相关状态
+  const danmakuQueue = ref<{ roomId: number, message: string, color?: string, fontsize?: number, mode?: number }[]>([]);
+  const pmQueue = ref<{ receiverId: number, message: string }[]>([]);
+  const isDanmakuProcessing = ref(false);
+  const isPmProcessing = ref(false);
+  const danmakuTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+  const pmTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+  // 使用computed获取设置中的间隔值
+  const danmakuInterval = computed(() => settingsStore.settings.danmakuInterval);
+  const pmInterval = computed(() => settingsStore.settings.pmInterval);
 
   const csrf = computed(() => {
     if (!cookie.value) return null;
@@ -90,16 +104,81 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     return match ? match[1] : null;
   });
 
-  /**
-   * 发送直播弹幕
-   * @param roomId 直播间 ID
-   * @param message 弹幕内容
-   * @param color 弹幕颜色 (十六进制, 如 FFFFFF)
-   * @param fontsize 字体大小 (默认 25)
-   * @param mode 弹幕模式 (1: 滚动, 4: 底部, 5: 顶部)
-   * @returns Promise<boolean> 是否发送成功 (基于API响应码)
-   */
-  async function sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
+  // 设置间隔的方法
+  async function setDanmakuInterval(interval: number) {
+    settingsStore.settings.danmakuInterval = interval;
+    await settingsStore.save();
+  }
+
+  async function setPmInterval(interval: number) {
+    settingsStore.settings.pmInterval = interval;
+    await settingsStore.save();
+  }
+
+  // 处理弹幕队列
+  async function processDanmakuQueue() {
+    if (isDanmakuProcessing.value || danmakuQueue.value.length === 0) return;
+    isDanmakuProcessing.value = true;
+    console.log('[BiliFunction] 处理弹幕队列', danmakuQueue.value);
+    try {
+      const item = danmakuQueue.value[0];
+      await _sendLiveDanmaku(item.roomId, item.message, item.color, item.fontsize, item.mode);
+      danmakuQueue.value.shift();
+    } finally {
+      isDanmakuProcessing.value = false;
+      if (danmakuQueue.value.length > 0) {
+        danmakuTimer.value = setTimeout(() => processDanmakuQueue(), danmakuInterval.value);
+      }
+    }
+  }
+
+  // 处理私信队列
+  async function processPmQueue() {
+    if (isPmProcessing.value || pmQueue.value.length === 0) return;
+    isPmProcessing.value = true;
+
+    try {
+      const item = pmQueue.value[0];
+      await _sendPrivateMessage(item.receiverId, item.message);
+      pmQueue.value.shift();
+    } finally {
+      isPmProcessing.value = false;
+      if (pmQueue.value.length > 0) {
+        pmTimer.value = setTimeout(() => processPmQueue(), pmInterval.value);
+      }
+    }
+  }
+
+  // 清理定时器
+  function clearTimers() {
+    if (danmakuTimer.value) {
+      clearTimeout(danmakuTimer.value);
+      danmakuTimer.value = null;
+    }
+    if (pmTimer.value) {
+      clearTimeout(pmTimer.value);
+      pmTimer.value = null;
+    }
+  }
+
+  // 初始化函数
+  async function init() {
+    // 确保设置已经初始化
+    if (!settingsStore.settings.danmakuInterval) {
+      await settingsStore.init();
+    }
+    // 启动队列处理
+    processDanmakuQueue();
+    processPmQueue();
+    console.log('[BiliFunction] 队列初始化完成');
+    // 清理定时器
+    onUnmounted(() => {
+      clearTimers();
+    });
+  }
+
+  // 原始发送弹幕方法（重命名为_sendLiveDanmaku）
+  async function _sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
     if (!csrf.value || !cookie.value) {
       console.error("发送弹幕失败：缺少 cookie 或 csrf token");
       return false;
@@ -124,7 +203,6 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     };
     const params = new URLSearchParams(data)
     try {
-      // 注意: B站网页版发送弹幕是用 application/x-www-form-urlencoded
       const response = await tauriFetch(url, {
         method: "POST",
         headers: {
@@ -133,7 +211,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36",
           "Referer": `https://live.bilibili.com/${roomId}`
         },
-        body: params, // 发送 JSON 数据
+        body: params,
       });
 
       if (!response.ok) {
@@ -141,7 +219,6 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         return false;
       }
       const json = await response.json();
-      // B站成功码通常是 0
       if (json.code !== 0) {
         window.$notification.error({
           title: '发送弹幕失败',
@@ -168,65 +245,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
   }
 
-  /**
-   * 封禁直播间用户 (需要主播或房管权限)
-   * @param roomId 直播间 ID
-   * @param userId 要封禁的用户 UID
-   * @param hours 封禁时长 (小时, 1-720)
-   */
-  async function banLiveUser(roomId: number, userId: number, hours: number = 1) {
-    // 使用 csrf.value
-    if (!csrf.value || !cookie.value) {
-      console.error("封禁用户失败：缺少 cookie 或 csrf token");
-      return;
-    }
-    // 确保 hours 在 1 到 720 之间
-    const validHours = Math.max(1, Math.min(hours, 720));
-    const url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_user";
-    const data = {
-      room_id: roomId.toString(),
-      block_uid: userId.toString(),
-      hour: validHours.toString(),
-      csrf: csrf.value, // 使用计算属性的值
-      csrf_token: csrf.value, // 使用计算属性的值
-      visit_id: "", // 通常可以为空
-    };
-
-    try {
-      const params = new URLSearchParams(data)
-      const response = await tauriFetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Cookie": cookie.value, // 使用计算属性的值
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36",
-          "Referer": `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}` // 模拟来源
-        },
-        body: params, // 发送 URLSearchParams 数据
-      });
-      if (!response.ok) {
-        console.error("封禁用户失败:", response.status, await response.text());
-        return response.statusText;
-      }
-      const json = await response.json();
-      if (json.code !== 0) {
-        console.error("封禁用户API失败:", json.code, json.message || json.msg);
-        return json.data;
-      }
-      console.log("封禁用户成功:", json.data);
-      return json.data;
-    } catch (error) {
-      console.error("封禁用户时发生错误:", error);
-    }
-  }
-
-  /**
-   * 发送私信
-   * @param receiverId 接收者 UID
-   * @param message 私信内容
-   * @returns Promise<boolean> 是否发送成功 (基于API响应码)
-   */
-  async function sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
+  // 原始发送私信方法（重命名为_sendPrivateMessage）
+  async function _sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
     if (!csrf.value || !cookie.value || !uid.value) {
       const error = "发送私信失败：缺少 cookie, csrf token 或 uid";
       console.error(error);
@@ -338,12 +358,82 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
   }
 
+  // 新的队列发送方法
+  async function sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
+    danmakuQueue.value.push({ roomId, message, color, fontsize, mode });
+    processDanmakuQueue();
+    return true;
+  }
+
+  async function sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
+    pmQueue.value.push({ receiverId, message });
+    processPmQueue();
+    return true;
+  }
+
+  /**
+   * 封禁直播间用户 (需要主播或房管权限)
+   * @param roomId 直播间 ID
+   * @param userId 要封禁的用户 UID
+   * @param hours 封禁时长 (小时, 1-720)
+   */
+  async function banLiveUser(roomId: number, userId: number, hours: number = 1) {
+    // 使用 csrf.value
+    if (!csrf.value || !cookie.value) {
+      console.error("封禁用户失败：缺少 cookie 或 csrf token");
+      return;
+    }
+    // 确保 hours 在 1 到 720 之间
+    const validHours = Math.max(1, Math.min(hours, 720));
+    const url = "https://api.live.bilibili.com/banned_service/v2/Silent/add_user";
+    const data = {
+      room_id: roomId.toString(),
+      block_uid: userId.toString(),
+      hour: validHours.toString(),
+      csrf: csrf.value, // 使用计算属性的值
+      csrf_token: csrf.value, // 使用计算属性的值
+      visit_id: "", // 通常可以为空
+    };
+
+    try {
+      const params = new URLSearchParams(data)
+      const response = await tauriFetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Cookie": cookie.value, // 使用计算属性的值
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36",
+          "Referer": `https://live.bilibili.com/p/html/live-room-setting/#/room-manager/black-list?room_id=${roomId}` // 模拟来源
+        },
+        body: params, // 发送 URLSearchParams 数据
+      });
+      if (!response.ok) {
+        console.error("封禁用户失败:", response.status, await response.text());
+        return response.statusText;
+      }
+      const json = await response.json();
+      if (json.code !== 0) {
+        console.error("封禁用户API失败:", json.code, json.message || json.msg);
+        return json.data;
+      }
+      console.log("封禁用户成功:", json.data);
+      return json.data;
+    } catch (error) {
+      console.error("封禁用户时发生错误:", error);
+    }
+  }
+
   return {
+    init,
     sendLiveDanmaku,
     banLiveUser,
     sendPrivateMessage,
     csrf,
     uid,
+    danmakuInterval,
+    pmInterval,
+    setDanmakuInterval,
+    setPmInterval,
   };
 });
 

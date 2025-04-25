@@ -6,6 +6,14 @@ const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
     required: true
+  },
+  hideName: {
+    type: Boolean,
+    default: false
+  },
+  hideEnabled: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -44,6 +52,7 @@ const priorityOptions = [
       class="basic-settings"
     >
       <NSpace
+        v-if="!hideName"
         key="name"
         align="center"
         justify="space-between"
@@ -58,6 +67,7 @@ const priorityOptions = [
       </NSpace>
 
       <NSpace
+        v-if="!hideEnabled"
         key="enabled"
         align="center"
         justify="space-between"

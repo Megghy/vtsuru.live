@@ -3,6 +3,7 @@ import { AutoActionItem, TriggerType, useAutoAction } from '@/client/store/useAu
 import { useDanmakuClient } from '@/store/useDanmakuClient';
 import { useBiliCookie } from '@/client/store/useBiliCookie';
 import { useWebFetcher } from '@/store/useWebFetcher';
+import { useBiliFunction } from '@/client/store/useBiliFunction';
 import {
   NAlert,
   NButton,
@@ -24,7 +25,8 @@ import {
   NIcon,
   NText,
   NTooltip,
-  NInput
+  NInput,
+  NInputNumber
 } from 'naive-ui';
 import { computed, h, onMounted, onUnmounted, ref, watch, reactive } from 'vue';
 import { ArrowUp24Regular, ArrowDown24Regular, Target24Filled, Edit16Regular } from '@vicons/fluent';
@@ -40,6 +42,7 @@ const message = useMessage();
 const danmakuClient = useDanmakuClient();
 const biliCookieStore = useBiliCookie();
 const webFetcherStore = useWebFetcher();
+const biliFunc = useBiliFunction();
 
 // 从 store 获取 enabledTriggerTypes
 const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes);
@@ -451,10 +454,6 @@ function confirmTest() {
   }
   showTestModal.value = false;
 }
-
-onMounted(() => {
-  autoActionStore.init();
-});
 </script>
 
 <template>
@@ -722,6 +721,51 @@ onMounted(() => {
             tab="数据管理"
           >
             <DataManager />
+          </NTabPane>
+
+          <!-- 新增：消息队列设置标签页 -->
+          <NTabPane
+            name="queue-settings"
+            tab="消息队列设置"
+          >
+            <NCard
+              title="全局消息队列设置"
+              size="small"
+            >
+              <NSpace
+                vertical
+                size="large"
+              >
+                <NSpace align="center">
+                  <span>弹幕队列间隔(毫秒):</span>
+                  <NInputNumber
+                    v-model:value="biliFunc.danmakuInterval"
+                    style="width: 120px"
+                    @update:value="v => biliFunc.setDanmakuInterval(Number(v))"
+                  />
+                  <NText
+                    depth="3"
+                    style="margin-left: 8px;"
+                  >
+                    每{{ biliFunc.danmakuInterval }}ms 发送一条弹幕
+                  </NText>
+                </NSpace>
+                <NSpace align="center">
+                  <span>私信队列间隔(毫秒):</span>
+                  <NInputNumber
+                    v-model:value="biliFunc.pmInterval"
+                    style="width: 120px"
+                    @update:value="v => biliFunc.setPmInterval(Number(v))"
+                  />
+                  <NText
+                    depth="3"
+                    style="margin-left: 8px;"
+                  >
+                    每{{ biliFunc.pmInterval }}ms 发送一条私信
+                  </NText>
+                </NSpace>
+              </NSpace>
+            </NCard>
           </NTabPane>
         </NTabs>
       </NSpace>
