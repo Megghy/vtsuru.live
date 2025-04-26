@@ -183,6 +183,9 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
       }
       return useDanmakuClient(); // 如果已连接，则视为“成功”
     }
+    if (state.value === 'connected') {
+      return useDanmakuClient(); // 如果已连接，则视为“成功”
+    }
 
     isInitializing = true;
     state.value = 'connecting';
