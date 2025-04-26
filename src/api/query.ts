@@ -141,6 +141,10 @@ function getParams(params: any) {
   if (urlParams.has('token')) {
     resultParams.set('token', urlParams.get('token') || '')
   }
+
+  // 添加时间戳用于解决意外添加的缓存
+  resultParams.set('timestamp', Date.now().toString())
+
   return resultParams.toString()
 }
 export async function QueryPostPaginationAPI<T>(
