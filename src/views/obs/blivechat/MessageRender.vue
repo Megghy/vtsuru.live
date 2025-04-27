@@ -44,7 +44,7 @@
                 :author-name="message.authorName"
                 :author-type="message.authorType"
                 :privilege-type="message.privilegeType"
-                :rich-content="getShowRichContent(message)"
+                :content-parts="getShowContentParts(message)"
                 :repeated="message.repeated"
               />
               <paid-message
@@ -205,7 +205,7 @@ export default defineComponent({
     },
     getGiftShowNameAndNum: constants.getGiftShowNameAndNum,
     getShowContent: constants.getShowContent,
-    getShowRichContent: constants.getShowRichContent,
+    getShowContentParts: constants.getShowContentParts,
     getShowAuthorName: constants.getShowAuthorName,
 
     addMessage(message) {

@@ -89,9 +89,10 @@ const filteredUsers = computed(() => {
 
       // 根据关键词搜索
       if (settings.value.searchKeyword) {
+        const keyword = settings.value.searchKeyword.toLowerCase()
         return (
-          user.info.name?.toLowerCase().includes(settings.value.searchKeyword.toLowerCase()) == true ||
-          user.info.userId?.toString() == settings.value.searchKeyword
+          user.info.name?.toLowerCase().includes(keyword) == true ||
+          user.info.userId?.toString() == keyword
         )
       }
 
@@ -102,6 +103,76 @@ const filteredUsers = computed(() => {
 
 // 当前查看的用户详情
 const currentUser = ref<ResponsePointUserModel>()
+
+// 渲染用户名或用户ID
+const renderUsername = (user: ResponsePointUserModel) => {
+  if (user.info?.name) {
+    return user.info.name
+  }
+
+  return h(NFlex, null, () => [
+    '未知',
+    h(NText, { depth: 3 }, { default: () => `(${user.info.userId ?? user.info.openId})` }),
+  ])
+}
+
+// 渲染订单数量，更友好的显示方式
+const renderOrderCount = (user: ResponsePointUserModel) => {
+  if (!user.isAuthed) return h(NText, { depth: 3 }, { default: () => '未认证' })
+  return user.orderCount > 0 ? h(NText, {}, { default: () => formatNumber(user.orderCount) }) : h(NText, { depth: 3 }, { default: () => '无订单' })
+}
+
+// 渲染时间戳为相对时间和绝对时间
+const renderTime = (timestamp: number) => {
+  return h(NTooltip, null, {
+    trigger: () => h(NTime, { time: timestamp, type: 'relative' }),
+    default: () => h(NTime, { time: timestamp }),
+  })
+}
+
+// 渲染操作按钮
+const renderActions = (user: ResponsePointUserModel) => {
+  return h(NFlex, { justify: 'center', gap: 8 }, () => [
+    h(
+      NButton,
+      {
+        onClick: () => {
+          currentUser.value = user
+          showModal.value = true
+        },
+        type: 'info',
+        size: 'small',
+      },
+      { default: () => '详情' },
+    ),
+    h(
+      NPopconfirm,
+      { onPositiveClick: () => deleteUser(user) },
+      {
+        default: () => '确定要删除这个用户吗？记录将无法恢复',
+        trigger: () =>
+          h(
+            NButton,
+            {
+              type: 'error',
+              size: 'small',
+            },
+            { default: () => '删除' },
+          ),
+      },
+    ),
+  ])
+}
+
+// 格式化数字，添加千位符
+const formatNumber = (num: number) => {
+  return num.toLocaleString('zh-CN')
+}
+
+// 渲染积分，添加千位符并加粗
+const renderPoint = (num: number) => {
+  return h(NText, { strong: true }, { default: () => formatNumber(num) })
+}
 
 // 数据表格列定义
 const column: DataTableColumns<ResponsePointUserModel> = [
@@ -115,77 +186,29 @@ const column: DataTableColumns<ResponsePointUserModel> = [
   {
     title: '用户名',
     key: 'username',
-    render: (row: ResponsePointUserModel) => {
-      return (
-        row.info?.name ??
-        h(NFlex, null, () => [
-          '未知',
-          h(NText, { depth: 3 }, { default: () => `(${row.info.userId ?? row.info.openId})` }),
-        ])
-      )
-    },
+    render: (row: ResponsePointUserModel) => renderUsername(row),
   },
   {
     title: '积分',
     key: 'point',
     sorter: 'default',
-    render: (row: ResponsePointUserModel) => {
-      return row.point
-    },
+    render: (row: ResponsePointUserModel) => renderPoint(row.point),
   },
   {
     title: '订单数量',
-    key: 'orders',
-    render: (row: ResponsePointUserModel) => {
-      return row.isAuthed ? row.orderCount : '无'
-    },
+    key: 'orderCount',
+    render: (row: ResponsePointUserModel) => renderOrderCount(row),
   },
   {
     title: '最后更新于',
     key: 'updateAt',
     sorter: 'default',
-    render: (row: ResponsePointUserModel) => {
-      return h(NTooltip, null, {
-        trigger: () => h(NTime, { time: row.updateAt, type: 'relative' }),
-        default: () => h(NTime, { time: row.updateAt }),
-      })
-    },
+    render: (row: ResponsePointUserModel) => renderTime(row.updateAt),
   },
   {
     title: '操作',
     key: 'action',
-    render: (row: ResponsePointUserModel) => {
-      return h(NFlex, { justify: 'center', gap: 8 }, () => [
-        h(
-          NButton,
-          {
-            onClick: () => {
-              currentUser.value = row
-              showModal.value = true
-            },
-            type: 'info',
-            size: 'small',
-          },
-          { default: () => '详情' },
-        ),
-        h(
-          NPopconfirm,
-          { onPositiveClick: () => deleteUser(row) },
-          {
-            default: () => '确定要删除这个用户吗？记录将无法恢复',
-            trigger: () =>
-              h(
-                NButton,
-                {
-                  type: 'error',
-                  size: 'small',
-                },
-                { default: () => '删除' },
-              ),
-          },
-        ),
-      ])
-    },
+    render: (row: ResponsePointUserModel) => renderActions(row),
   },
 ]
 
@@ -445,10 +468,10 @@ onMounted(async () => {
     <NDivider />
 
     <!-- 无数据提示 -->
-    <template v-if="filteredUsers.length == 0">
-      <NDivider />
-      <NEmpty :description="settings.onlyAuthed ? '没有已认证的用户' : '没有用户'" />
-    </template>
+    <NEmpty
+      v-if="filteredUsers.length == 0"
+      :description="isLoading ? '加载中...' : (settings.onlyAuthed ? '没有已认证的用户' : '没有用户')"
+    />
 
     <!-- 用户数据表格 -->
     <NDataTable
@@ -465,6 +488,7 @@ onMounted(async () => {
         onUpdatePage: (page) => (pn = page),
         onUpdatePageSize: (pageSize) => (ps = pageSize)
       }"
+      :loading="isLoading"
     />
   </NSpin>
 
@@ -592,8 +616,8 @@ onMounted(async () => {
       <NButton
         type="error"
         :loading="isLoading"
-        @click="resetAllPoints"
         :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
+        @click="resetAllPoints"
       >
         确认重置所有用户积分
       </NButton>

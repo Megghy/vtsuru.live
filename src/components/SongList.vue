@@ -87,6 +87,33 @@ const batchUpdate_Option = ref<SongRequestOption | undefined>() // 批量编辑 
 const columns = ref<DataTableColumns<SongsInfo>>() // 表格列定义
 const selectedColumn = ref<DataTableRowKey[]>([]) // 表格选中行的 Key 数组
 
+// 分页相关
+const currentPage = ref(1) // 当前页码
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+}
+
+// 暴露分页方法
+const nextPage = () => {
+  const pagination = songsComputed.value.length > 0 ? Math.ceil(songsComputed.value.length / pageSize.value) : 1
+  if (currentPage.value < pagination) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+// 暴露给父组件
+defineExpose({
+  nextPage,
+  prevPage,
+  currentPage
+})
+
 // --- 计算属性 ---
 
 // 筛选后的歌曲列表
@@ -162,8 +189,6 @@ const authorsOptions = computed(() => {
       value: t,
     }))
 })
-
-// --- 表格列定义 ---
 
 // 作者列定义 (包含筛选逻辑)
 const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
@@ -751,7 +776,8 @@ onMounted(() => {
       pageSizes: [10, 25, 50, 100, 200],
       showSizePicker: true,
       showQuickJumper: true,
-
+      page: currentPage,
+      onUpdatePage: handlePageChange
     }"
     :loading="isLoading && songsComputed.length === 0"
     striped
