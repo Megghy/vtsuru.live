@@ -57,7 +57,7 @@
     SelectOption,
     useMessage,
   } from 'naive-ui';
-  import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef } from 'vue';
+  import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef, markRaw } from 'vue';
   import { useRoute } from 'vue-router';
 
   // 模板定义类型接口

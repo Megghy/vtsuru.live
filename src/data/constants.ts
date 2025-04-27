@@ -1,5 +1,5 @@
 import DefaultIndexTemplateVue from '@/views/view/indexTemplate/DefaultIndexTemplate.vue';
-import { defineAsyncComponent, ref } from 'vue';
+import { defineAsyncComponent, ref, markRaw } from 'vue';
 
 const debugAPI =
   import.meta.env.VITE_API == 'dev'
@@ -74,40 +74,40 @@ export const ScheduleTemplateMap: TemplateMapType = {
   '': {
     name: '默认',
     //settingName: 'Template.Schedule.Default',
-    component: defineAsyncComponent(
+    component: markRaw(defineAsyncComponent(
       () => import('@/views/view/scheduleTemplate/DefaultScheduleTemplate.vue')
-    )
+    ))
   },
   pinky: {
     name: '粉粉',
     //settingName: 'Template.Schedule.Pinky',
-    component: defineAsyncComponent(
+    component: markRaw(defineAsyncComponent(
       () => import('@/views/view/scheduleTemplate/PinkySchedule.vue')
-    )
+    ))
   }
 };
 export const SongListTemplateMap: TemplateMapType = {
   '': {
     name: '默认',
     //settingName: 'Template.SongList.Default',
-    component: defineAsyncComponent(
+    component: markRaw(defineAsyncComponent(
       () => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')
-    )
+    ))
   },
   simple: {
     name: '简单',
     //settingName: 'Template.SongList.Simple',
-    component: defineAsyncComponent(
+    component: markRaw(defineAsyncComponent(
       () => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')
-    )
+    ))
   },
   traditional: {
     name: '列表',
     settingName: 'Template.SongList.Traditional',
-    component: defineAsyncComponent(
+    component: markRaw(defineAsyncComponent(
       () =>
         import('@/views/view/songListTemplate/TraditionalSongListTemplate.vue')
-    )
+    ))
   }
 };
 
@@ -115,7 +115,7 @@ export const IndexTemplateMap: TemplateMapType = {
   '': {
     name: '默认',
     //settingName: 'Template.Index.Default',
-    component: DefaultIndexTemplateVue
+    component: markRaw(DefaultIndexTemplateVue)
   }
 };
 

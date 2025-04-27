@@ -16,6 +16,7 @@ const props = defineProps<{
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
   currentData?: any
+  config?: any
 }>()
 const isLoading = ref(true)
 const message = useMessage()

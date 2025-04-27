@@ -29,7 +29,7 @@
         id="message"
         class="style-scope yt-live-chat-text-message-renderer"
       >
-        <template v-for="(content, index) in richContent">
+        <template v-for="(content, index) in contentParts">
           <span
             v-if="content.type === CONTENT_TYPE_TEXT"
             :key="index"
@@ -81,7 +81,7 @@ const props = defineProps({
   time: Date,
   authorName: String,
   authorType: Number,
-  richContent: Array,
+  contentParts: Array,
   privilegeType: Number,
   repeated: Number
 })
