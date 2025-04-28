@@ -36,7 +36,7 @@ export const BASE_HUB_URL =
 
 export const TURNSTILE_KEY = '0x4AAAAAAAETUSAKbds019h0';
 
-export const CURRENT_HOST = `${window.location.protocol}//${isDev ? window.location.host : 'vtsuru.live'}/`;
+export const CURRENT_HOST = `${window.location.protocol}//${window.location.host}/`;
 export const CN_HOST = 'https://vtsuru.suki.club/';
 
 export const USER_API_URL = BASE_API_URL + 'user/';
@@ -86,10 +86,10 @@ export const ScheduleTemplateMap: TemplateMapType = {
     ))
   },
   kawaii: {
-    name: '可爱手帐 (未完成',
-    settingName: 'Template.Schedule.Kawaii',
+    name: '可爱�?,
+    //settingName: 'Template.Schedule.Kawaii',
     component: markRaw(defineAsyncComponent(
-      () => import('@/views/view/scheduleTemplate/KawaiiSchedule.vue')
+      () => import('@/views/view/scheduleTemplate/KawaiiScheduleTemplate.vue')
     ))
   }
 };
@@ -102,7 +102,7 @@ export const SongListTemplateMap: TemplateMapType = {
     ))
   },
   simple: {
-    name: '简单',
+    name: '简�?,
     //settingName: 'Template.SongList.Simple',
     component: markRaw(defineAsyncComponent(
       () => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')

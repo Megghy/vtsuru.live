@@ -58,7 +58,6 @@ const accountInfo = useAccount()
 const isLoading = ref(true)
 const showModal = ref(false)
 const showModalRenderKey = ref(0)
-const useCNUrl = useStorage('Settings.UseCNUrl', false)
 const onlyResetNameOnAdded = ref(true)
 
 // 歌曲列表数据
@@ -750,19 +749,16 @@ onMounted(async () => {
   <NFlex align="center">
     <NInputGroup style="max-width: 400px;">
       <NInput
-        :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`"
+        :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`"
         readonly
       />
       <NButton
         secondary
-        @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/song-list`)"
+        @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)"
       >
         复制
       </NButton>
     </NInputGroup>
-    <NCheckbox v-model:checked="useCNUrl">
-      使用国内镜像(访问更快)
-    </NCheckbox>
   </NFlex>
   <NDivider style="margin: 16px 0 16px 0" />
 

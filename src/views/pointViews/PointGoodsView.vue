@@ -324,7 +324,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="point-goods-container">
     <!-- 未认证提示 -->
     <NAlert
       v-if="!useAuth.isAuthed"
@@ -332,152 +332,173 @@ onMounted(async () => {
       title="需要认证"
     >
       你尚未进行 Bilibili 账号认证, 无法查看积分或兑换礼物。
-      <br>
       <NButton
         type="primary"
         size="small"
-        style="margin-top: 12px"
+        style="margin-top: 8px"
         @click="$router.push({ name: 'bili-auth' })"
       >
         立即认证
       </NButton>
     </NAlert>
 
-    <!-- 用户信息与积分展示 -->
-    <NCard
+    <!-- 优化后的用户信息与筛选区域 -->
+    <div
       v-else
-      style="max-width: 600px; margin: 0 auto;"
-      embedded
-      hoverable
+      class="header-section"
     >
-      <template #header>
-        你好, {{ biliAuth.name }} <!-- 直接使用计算属性 -->
-      </template>
-      <template #header-extra>
-        <NFlex>
-          <NButton
-            type="info"
-            secondary
-            size="small"
-            @click="gotoAuthPage"
-          >
-            前往认证用户中心
-          </NButton>
-          <NButton
-            secondary
-            size="small"
-            @click="NavigateToNewTab('/bili-user#settings')"
-          >
-            切换账号
-          </NButton>
-        </NFlex>
-      </template>
-      <NText v-if="currentPoint >= 0">
-        你在 {{ userInfo.extra?.streamerInfo?.name ?? userInfo.name }} 的直播间的积分为 {{ currentPoint }}
-      </NText>
-      <NText v-else>
-        正在加载积分...
-      </NText>
-    </NCard>
-
-    <NDivider />
-
-    <!-- 礼物筛选区域 -->
-    <NCard
-      v-if="tags.length > 0 || goods.length > 0"
-      size="small"
-      title="礼物筛选与排序"
-      style="margin-bottom: 16px;"
-    >
-      <!-- 标签筛选 -->
-      <NFlex
-        v-if="tags.length > 0"
-        align="center"
-        justify="start"
-        wrap
-        style="margin-bottom: 12px;"
-      >
-        <NText style="margin-right: 8px;">
-          标签:
-        </NText>
-        <NButton
-          v-for="tag in tags"
-          :key="tag"
-          :type="tag === selectedTag ? 'success' : 'default'"
-          :ghost="tag !== selectedTag"
-          style="margin: 2px;"
-          size="small"
-          @click="selectedTag = selectedTag === tag ? undefined : tag"
-        >
-          {{ tag }}
-        </NButton>
-        <NButton
-          v-if="selectedTag"
-          text
-          type="warning"
-          size="small"
-          style="margin-left: 8px;"
-          @click="selectedTag = undefined"
-        >
-          清除标签
-        </NButton>
-      </NFlex>
-
-      <!-- 搜索与选项 -->
-      <NFlex
-        wrap
-        justify="space-between"
-        align="center"
-        :size="[12, 8]"
-      >
-        <!-- 搜索框 -->
-        <NInput
-          v-model:value="searchKeyword"
-          placeholder="搜索礼物名称或描述"
-          clearable
-          style="min-width: 200px; flex-grow: 1;"
-        />
-
-        <!-- 筛选选项 -->
+      <!-- 用户信息区域 -->
+      <div class="user-info-section">
         <NFlex
-          wrap
-          :gap="12"
+          justify="space-between"
           align="center"
         >
-          <NCheckbox v-model:checked="onlyCanBuy">
-            只显示可兑换
-          </NCheckbox>
-          <NCheckbox v-model:checked="ignoreGuard">
-            忽略舰长限制
-          </NCheckbox>
-          <!-- 价格排序 -->
-          <NSelect
-            v-model:value="priceOrder"
-            :options="[
-              { label: '默认排序', value: 'null' },
-              { label: '价格 低→高', value: 'asc' },
-              { label: '价格 高→低', value: 'desc' }
-            ]"
-            placeholder="价格排序"
-            clearable
-            style="min-width: 140px"
-          />
+          <NFlex align="center">
+            <NText class="username">
+              你好, {{ biliAuth.name }}
+            </NText>
+            <NText
+              v-if="currentPoint >= 0"
+              class="point-info"
+            >
+              你在本直播间的积分: <strong>{{ currentPoint }}</strong>
+            </NText>
+            <NText
+              v-else
+              class="point-info loading"
+            >
+              积分加载中...
+            </NText>
+          </NFlex>
+          <NFlex :size="8">
+            <NButton
+              quaternary
+              size="small"
+              @click="gotoAuthPage"
+            >
+              账号中心
+            </NButton>
+            <NButton
+              quaternary
+              size="small"
+              @click="NavigateToNewTab('/bili-user#settings')"
+            >
+              切换账号
+            </NButton>
+          </NFlex>
         </NFlex>
-      </NFlex>
-    </NCard>
+      </div>
+
+      <!-- 礼物筛选区域 -->
+      <div
+        v-if="tags.length > 0 || goods.length > 0"
+        class="filter-section"
+      >
+        <!-- 标签筛选 -->
+        <NFlex
+          v-if="tags.length > 0"
+          wrap
+          class="tags-container"
+        >
+          <div class="filter-label">
+            分类:
+          </div>
+          <div class="tags-wrapper">
+            <NButton
+              v-for="tag in tags"
+              :key="tag"
+              :type="tag === selectedTag ? 'primary' : 'default'"
+              :ghost="tag !== selectedTag"
+              class="tag-button"
+              size="tiny"
+              @click="selectedTag = selectedTag === tag ? undefined : tag"
+            >
+              {{ tag }}
+            </NButton>
+            <NButton
+              v-if="selectedTag"
+              text
+              type="error"
+              size="tiny"
+              @click="selectedTag = undefined"
+            >
+              ✕
+            </NButton>
+          </div>
+        </NFlex>
+
+        <!-- 搜索与高级筛选 -->
+        <NFlex
+          justify="space-between"
+          align="center"
+          wrap
+          class="search-filter-row"
+        >
+          <!-- 搜索框 -->
+          <NInput
+            v-model:value="searchKeyword"
+            placeholder="搜索礼物名称"
+            clearable
+            size="small"
+            class="search-input"
+          >
+            <template #prefix>
+              🔍
+            </template>
+          </NInput>
+
+          <!-- 筛选选项 -->
+          <NFlex
+            wrap
+            align="center"
+            class="filter-options"
+          >
+            <NCheckbox
+              v-model:checked="onlyCanBuy"
+              size="small"
+              class="filter-checkbox"
+            >
+              仅显示可兑换
+            </NCheckbox>
+            <NCheckbox
+              v-model:checked="ignoreGuard"
+              size="small"
+              class="filter-checkbox"
+            >
+              忽略舰长限制
+            </NCheckbox>
+            <!-- 价格排序 -->
+            <NSelect
+              v-model:value="priceOrder"
+              :options="[
+                { label: '默认排序', value: 'null' },
+                { label: '价格 ↑', value: 'asc' },
+                { label: '价格 ↓', value: 'desc' }
+              ]"
+              placeholder="排序方式"
+              size="small"
+              class="sort-select"
+            />
+          </NFlex>
+        </NFlex>
+      </div>
+    </div>
 
     <!-- 礼物列表区域 -->
-    <NSpin :show="isLoading">
+    <NSpin
+      :show="isLoading"
+      class="goods-list-container"
+    >
       <template #description>
         加载中...
       </template>
       <NEmpty
         v-if="!isLoading && selectedItems.length === 0"
-        description="没有找到符合条件的礼物"
+        :description="goods.length === 0 ? '当前没有可兑换的礼物哦~' : '没有找到符合筛选条件的礼物'"
       >
         <template #extra>
           <NButton
-            v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || priceOrder"
+            v-if="goods.length > 0 && (selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || priceOrder)"
             size="small"
             @click="() => { selectedTag = undefined; searchKeyword = ''; onlyCanBuy = false; ignoreGuard = false; priceOrder = null; }"
           >
@@ -485,51 +506,49 @@ onMounted(async () => {
           </NButton>
         </template>
       </NEmpty>
-      <NFlex
+      <div
         v-else
-        wrap
-        justify="center"
-        :gap="16"
+        class="goods-grid"
       >
         <PointGoodsItem
           v-for="item in selectedItems"
           :key="item.id"
           :goods="item"
           content-style="max-width: 300px; min-width: 250px; height: 380px;"
-          style="flex-grow: 1;"
+          class="goods-item"
         >
           <template #footer>
             <NFlex
               justify="space-between"
               align="center"
+              class="goods-footer"
             >
               <NTooltip placement="bottom">
                 <template #trigger>
-                  <!-- 按钮禁用状态由 getTooltip 控制 -->
                   <NButton
                     :disabled="getTooltip(item) !== '开始兑换'"
                     size="small"
                     type="primary"
+                    class="exchange-btn"
                     @click="onBuyClick(item)"
                   >
                     兑换
                   </NButton>
                 </template>
-                {{ getTooltip(item) }} <!-- 显示提示信息 -->
+                {{ getTooltip(item) }}
               </NTooltip>
               <NFlex
                 align="center"
                 justify="end"
-                style="flex-grow: 1;"
+                class="price-display"
               >
                 <NTooltip placement="bottom">
                   <template #trigger>
                     <NText
-                      style="font-size: 1.1em; font-weight: bold;"
+                      class="price-text"
                       :delete="item.canFreeBuy"
                     >
-                      🪙
-                      {{ item.price > 0 ? item.price : '免费' }}
+                      🪙 {{ item.price > 0 ? item.price : '免费' }}
                     </NText>
                   </template>
                   {{ item.canFreeBuy ? '你可以免费兑换此礼物' : '所需积分' }}
@@ -538,7 +557,7 @@ onMounted(async () => {
             </NFlex>
           </template>
         </PointGoodsItem>
-      </NFlex>
+      </div>
     </NSpin>
 
     <!-- 兑换确认模态框 -->
@@ -658,8 +677,132 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* 可以添加一些 scoped 样式来优化布局或外观 */
-.n-card {
-  margin-bottom: 16px; /* 为卡片添加一些底部间距 */
+.point-goods-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+.header-section {
+  margin-bottom: 16px;
+  background-color: var(--card-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.user-info-section {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.username {
+  font-weight: var(--font-weight-strong);
+  margin-right: 16px;
+}
+
+.point-info {
+  color: var(--text-color-2);
+}
+
+.point-info.loading {
+  font-style: italic;
+  color: var(--text-color-3);
+}
+
+.filter-section {
+  padding: 12px 16px;
+  background-color: var(--action-color);
+}
+
+.tags-container {
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: var(--font-size-small);
+  color: var(--text-color-2);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.tag-button {
+  margin: 0;
+  padding: 0 8px;
+  border-radius: var(--border-radius-small);
+}
+
+.search-filter-row {
+  gap: 12px;
+}
+
+.search-input {
+  max-width: 200px;
+}
+
+.filter-options {
+  gap: 16px;
+}
+
+.filter-checkbox {
+  margin: 0;
+}
+
+.sort-select {
+  width: 120px;
+}
+
+.goods-list-container {
+  min-height: 200px;
+}
+
+.goods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.goods-item {
+  break-inside: avoid;
+  background-color: var(--card-color);
+  transition: all 0.2s ease-in-out;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.goods-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.goods-footer {
+  padding: 8px;
+}
+
+.exchange-btn {
+  min-width: 70px;
+}
+
+.price-text {
+  font-size: 1.1em;
+  font-weight: var(--font-weight-strong);
+  padding: 0 6px;
+}
+
+@media (max-width: 768px) {
+  .goods-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
 }
 </style>

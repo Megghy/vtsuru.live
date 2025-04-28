@@ -55,7 +55,6 @@ const useBiliAuth = useAuthStore()
 const formRef = ref()
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
-const useCNUrl = useStorage('Settings.UseCNUrl', false)
 const showAddGoodsModal = ref(false)
 
 // 路由哈希处理
@@ -401,7 +400,7 @@ onMounted(() => { })
 
     <!-- 礼物展示页链接 -->
     <NDivider
-      style="margin: 16px 0"
+      style="margin: 0"
       title-placement="left"
     >
       礼物展示页链接
@@ -413,19 +412,16 @@ onMounted(() => { })
     >
       <NInputGroup style="max-width: 400px;">
         <NInput
-          :value="`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`"
+          :value="`${CURRENT_HOST}@${accountInfo.name}/goods`"
           readonly
         />
         <NButton
           secondary
-          @click="copyToClipboard(`${useCNUrl ? CN_HOST : CURRENT_HOST}@${accountInfo.name}/goods`)"
+          @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)"
         >
           复制
         </NButton>
       </NInputGroup>
-      <NCheckbox v-model:checked="useCNUrl">
-        使用国内镜像(访问更快)
-      </NCheckbox>
     </NFlex>
   </NFlex>
 

@@ -221,12 +221,12 @@ import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/io
               >
                 <NButton
                   tag="a"
-                  href="https://keydb.dev/"
+                  href="hhttps://microsoft.github.io/garnet/"
                   target="_blank"
                   text
                   style="padding: 0; color: inherit;"
                 >
-                  KeyDB
+                  Garnet
                 </NButton>
               </NTag>
             </div>
