@@ -358,6 +358,7 @@
           >
             <NAvatar
               class="sider-avatar"
+              :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
               :src="userInfo.streamerInfo.faceUrl"
               :img-props="{ referrerpolicy: 'no-referrer' }"
               round
@@ -369,9 +370,20 @@
               v-if="siderWidth > 100"
               style="max-width: 100%"
             >
-              <NText strong>
-                {{ userInfo?.streamerInfo.name }}
-              </NText>
+              <NSpace
+                align="center"
+                :size="4"
+                :wrap="false"
+              >
+                <NText strong>
+                  {{ userInfo?.streamerInfo.name }}
+                </NText>
+                <span
+                  v-if="userInfo?.streamerInfo?.isStreaming"
+                  class="live-indicator-dot"
+                  title="直播中"
+                />
+              </NSpace>
             </NEllipsis>
           </NSpace>
         </div>
@@ -530,6 +542,7 @@
 :root {
   --vtsuru-header-height: 50px; // 顶部导航栏高度
   --vtsuru-content-padding: 20px; // 内容区域内边距
+  --streaming-glow-color: #00ff00; // 直播状态光晕颜色
 }
 
 // --- 布局样式 ---
@@ -561,9 +574,29 @@
 .sider-avatar {
   box-shadow: var(--n-avatar-box-shadow, 0 2px 3px rgba(0, 0, 0, 0.1)); // 使用 Naive UI 变量或默认值
   cursor: pointer;
-  transition: transform 0.2s ease; // 添加悬浮效果
+  transition: transform 0.2s ease, box-shadow 0.3s ease; // 添加悬浮效果和阴影过渡
   &:hover {
     transform: scale(1.1);
+  }
+  &.streaming-avatar {
+    border: 2px solid var(--streaming-glow-color);
+    box-shadow: 0 0 10px var(--streaming-glow-color), 0 0 15px var(--streaming-glow-color) inset;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 5px var(--streaming-glow-color), 0 0 8px var(--streaming-glow-color) inset;
+    border-color: rgba(0, 255, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 12px var(--streaming-glow-color), 0 0 18px var(--streaming-glow-color) inset;
+    border-color: var(--streaming-glow-color);
+  }
+  100% {
+    box-shadow: 0 0 5px var(--streaming-glow-color), 0 0 8px var(--streaming-glow-color) inset;
+     border-color: rgba(0, 255, 0, 0.7);
   }
 }
 
@@ -665,5 +698,32 @@
 // --- 返回顶部按钮 ---
 .n-back-top {
   z-index: 10; // 确保在最上层
+}
+
+.live-indicator-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #66bb6a; // 改为柔和绿色
+  margin-left: 4px; // 与用户名稍微隔开
+  vertical-align: middle; // 垂直居中对齐
+  box-shadow: 0 0 4px #66bb6a; // 同色阴影
+  animation: dot-pulse 1.5s infinite ease-in-out; // 添加脉冲动画
+}
+
+@keyframes dot-pulse { // 定义绿点脉冲动画
+  0% {
+    box-shadow: 0 0 3px #66bb6a;
+    opacity: 0.7;
+  }
+  50% {
+    box-shadow: 0 0 6px #66bb6a;
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 3px #66bb6a;
+    opacity: 0.7;
+  }
 }
 </style>

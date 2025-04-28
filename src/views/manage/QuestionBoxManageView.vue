@@ -62,8 +62,9 @@ const shareModalVisiable = ref(false) // 分享模态框可见性
 const showOBSModal = ref(false) // OBS预览模态框可见性
 const replyMessage = ref('') // 回复输入框内容
 const addTagName = ref('') // 添加标签输入框内容
-const useCNUrl = useStorage('Settings.UseCNUrl', false) // 是否使用国内镜像URL (持久化存储)
 const shareCardRef = ref<HTMLElement | null>(null) // 分享卡片DOM引用
+const selectedShareTag = ref<string | null>(null) // 分享时选择的标签
+const selectedDirectShareTag = ref<string | null>(null) // 主链接区域选择的标签
 const ps = ref(20) // 分页大小 (每页条数)
 const pn = ref(1) // 当前页码
 const savedCardSize = useStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', { // 问题展示卡片尺寸 (持久化存储)
@@ -85,10 +86,17 @@ const setting = computed({
   },
 })
 
-// 分享链接 (当前域名)
-const shareUrl = computed(() => `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`)
-// 分享链接 (国内镜像)
-const shareUrlCN = computed(() => `${CN_HOST}@${accountInfo.value?.name}/question-box`)
+// 分享链接 (统一 Host, 根据选择的标签附加参数)
+const shareUrlWithTag = (tag: string | null) => {
+  const base = `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`
+  return tag ? `${base}?tag=${encodeURIComponent(tag)}` : base
+}
+
+// 主链接区域显示的链接
+const directShareUrl = computed(() => shareUrlWithTag(selectedDirectShareTag.value))
+
+// 分享模态框中的二维码/卡片链接 (也基于selectedShareTag)
+const modalShareUrl = computed(() => shareUrlWithTag(selectedShareTag.value))
 
 // 分页后的问题列表 (仅限收到的问题)
 const pagedQuestions = computed(() =>
@@ -181,9 +189,9 @@ function saveShareImage() {
 
 // 保存二维码图片
 function saveQRCode() {
-  if (!shareUrl.value || !accountInfo.value?.name) return
+  if (!modalShareUrl.value || !accountInfo.value?.name) return
   // 使用 QR Server API 生成并下载二维码
-  downloadImage(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl.value)}`, `vtsuru-提问箱二维码-${accountInfo.value.name}.png`)
+  downloadImage(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(modalShareUrl.value)}`, `vtsuru-提问箱二维码-${accountInfo.value.name}.png`)
   message.success('二维码已开始下载')
 }
 
@@ -362,21 +370,28 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         提问页链接
       </NDivider>
       <NFlex align="center">
-        <NInputGroup style="max-width: 400px;">
+        <!-- 主链接区域输入框和复制按钮 -->
+        <NInputGroup style="flex-grow: 1; max-width: 500px;">
           <NInput
-            :value="`${useCNUrl ? shareUrlCN : shareUrl}`"
+            :value="directShareUrl"
             readonly
           />
           <NButton
             secondary
-            @click="copyToClipboard(`${useCNUrl ? shareUrlCN : shareUrl}`)"
+            @click="copyToClipboard(directShareUrl)"
           >
             复制
           </NButton>
         </NInputGroup>
-        <NCheckbox v-model:checked="useCNUrl">
-          使用国内镜像(访问更快)
-        </NCheckbox>
+        <!-- 主链接区域标签选择器 -->
+        <NSelect
+          v-model:value="selectedDirectShareTag"
+          placeholder="附加话题 (可选)"
+          filterable
+          clearable
+          :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
+          style="min-width: 150px; max-width: 200px;"
+        />
       </NFlex>
 
       <!-- 审核中提示 -->
@@ -696,7 +711,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
               closable
               style="margin-bottom: 10px;"
             >
-              这里存放的是被内容审查机制自动过滤的提问。您可以查看、删除或将其标记为正常提问。标记为正常后，提问将移至“我收到的”列表。
+              这里存放的是被内容审查机制自动过滤的提问。您可以查看、删除或将其标记为正常提问。标记为正常后，提问将移至"我收到的"列表。
             </NAlert>
             <NEmpty
               v-if="useQB.trashQuestions.length === 0"
@@ -1034,7 +1049,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         </div>
         <div class="share-card-qr">
           <QrcodeVue
-            :value="shareUrl"
+            :value="modalShareUrl"
             level="Q"
             :size="90"
             background="#FFFFFF"
@@ -1047,30 +1062,31 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     </div>
 
     <NDivider style="margin-top: 20px; margin-bottom: 10px;">
+      分享链接设置
+    </NDivider>
+    <NSpace vertical>
+      <NSelect
+        v-model:value="selectedShareTag"
+        placeholder="选择要附加到链接的话题 (可选)"
+        filterable
+        clearable
+        :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
+        style="width: 100%;"
+      />
+    </NSpace>
+
+    <NDivider style="margin-top: 20px; margin-bottom: 10px;">
       分享链接
     </NDivider>
     <NInputGroup>
-      <NInputGroupLabel> 默认 </NInputGroupLabel>
+      <NInputGroupLabel> 链接 </NInputGroupLabel>
       <NInput
-        :value="shareUrl"
+        :value="modalShareUrl"
         readonly
       />
       <NButton
         secondary
-        @click="copyToClipboard(shareUrl)"
-      >
-        复制
-      </NButton>
-    </NInputGroup>
-    <NInputGroup style="margin-top: 5px;">
-      <NInputGroupLabel> 国内 </NInputGroupLabel>
-      <NInput
-        :value="shareUrlCN"
-        readonly
-      />
-      <NButton
-        secondary
-        @click="copyToClipboard(shareUrlCN)"
+        @click="copyToClipboard(modalShareUrl)"
       >
         复制
       </NButton>

@@ -241,11 +241,36 @@
 <script lang="ts" setup>
 import { ref, onMounted, computed, nextTick, onUnmounted, watch } from 'vue';
 import { NCard, NGrid, NGridItem, NSpin, NStatistic, NTabPane, NTabs, useMessage, NTag, NIcon, NDivider, NFlex, NSpace } from 'naive-ui';
-import * as echarts from 'echarts';
+import * as echarts from 'echarts/core';
+import { LineChart, BarChart } from 'echarts/charts';
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  MarkPointComponent,
+  MarkLineComponent,
+  DataZoomComponent
+} from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 import { QueryGetAPI } from '@/api/query';
 import { ANALYZE_API_URL } from '@/data/constants';
 import { useThemeVars } from 'naive-ui';
 import { TrendingDown, TrendingUp } from '@vicons/ionicons5';
+
+// 注册必要的组件
+echarts.use([
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  LineChart,
+  BarChart,
+  CanvasRenderer,
+  MarkPointComponent,
+  MarkLineComponent,
+  DataZoomComponent
+]);
 
 // types.ts
 interface ChartItem {

@@ -88,9 +88,18 @@ export type TemplateConfigNumberItem<T = unknown> = TemplateConfigItemWithType<T
 
 };
 
-export type TemplateConfigColorItem<T = unknown> = TemplateConfigItemWithType<T, number> & {
+// RGBA颜色对象接口
+export interface RGBAColor {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+// 修改 TemplateConfigColorItem 以使用 RGBAColor 接口
+export type TemplateConfigColorItem<T = unknown> = TemplateConfigItemWithType<T, RGBAColor> & {
   type: 'color';
-  showAlpha?: boolean;
+  showAlpha?: boolean; // 控制是否显示透明度调整
 };
 
 export type TemplateConfigSliderNumberItem<T = unknown> = TemplateConfigItemWithType<T, number> & {
@@ -108,10 +117,56 @@ export type TemplateConfigBooleanItem<T = unknown> = TemplateConfigItemWithType<
   description?: string; // 可选的描述
 };
 
+// 修改 TemplateConfigImageItem 以支持单个或多个图片，并返回完整 URL
 export type TemplateConfigImageItem<T = unknown> = TemplateConfigItemWithType<T, string[]> & {
   type: 'image';
   imageLimit: number; // 图片数量限制
+  // onUploaded 的 data 现在是 string[]
+  onUploaded?: (data: string[], config: T) => void;
 };
+
+// --- 新增：装饰性图片配置 ---
+
+/**
+ * @description 单个装饰图片的属性接口
+ */
+export interface DecorativeImageProperties {
+  id: string;        // 唯一标识符 (例如 UUID 或时间戳)
+  src: string;       // 图片 URL
+  x: number;         // X 坐标 (%)
+  y: number;         // Y 坐标 (%)
+  width: number;     // 宽度 (%)
+  // height: number; // 高度通常由宽度和图片比例决定，或设为 auto
+  rotation: number;  // 旋转角度 (deg)
+  opacity: number;   // 透明度 (0-1)
+  zIndex: number;    // 层叠顺序
+}
+
+/**
+ * @description 用于管理装饰性图片数组的渲染配置项。
+ * 由于 UI 复杂性，使用 TemplateConfigRenderItem。
+ * @template T - 完整配置对象的类型 (默认为 unknown)。
+ */
+export interface TemplateConfigDecorativeImagesItem<T = unknown> extends TemplateConfigBase {
+  type: 'decorativeImages'; // 新类型标识符
+  default?: DecorativeImageProperties[]; // 默认值是图片属性数组
+
+  /**
+   * @description 渲染此项的自定义 VNode (配置 UI)。
+   * @param config 整个配置对象 (类型为 T, 默认为 unknown)。
+   * @returns 表示配置 UI 的 VNode。
+   */
+  render?(config: T): VNode;
+
+  /**
+   * @description 当装饰图片数组更新时调用的回调。
+   * @param data 更新后的 DecorativeImageProperties 数组。
+   * @param config 整个配置对象。
+   */
+  onUploaded?(data: DecorativeImageProperties[], config: T): void; // data 类型是数组
+
+  // 继承 TemplateConfigBase 的 default?: any
+}
 
 /**
  * @description 自定义渲染项的配置。使用 'this' 类型实现动态参数类型。
@@ -162,6 +217,7 @@ export type ConfigItemDefinition =
   | TemplateConfigNumberArrayItem<any>
   | TemplateConfigImageItem<any>
   | TemplateConfigRenderItem<any> // 包含优化后的 render/onUploaded 方法
+  | TemplateConfigDecorativeImagesItem<any> // 新增装饰图片类型
   | TemplateConfigSliderNumberItem<any>
   | TemplateConfigBooleanItem<any>
   | TemplateConfigColorItem<any>;
@@ -187,6 +243,9 @@ export type ExtractConfigData<
     : ItemWithKeyK extends { type: 'number' | 'sliderNumber' | 'color'; } ? number
     : ItemWithKeyK extends { type: 'numberArray'; } ? number[]
     : ItemWithKeyK extends { type: 'image'; } ? string[]
+    : ItemWithKeyK extends { type: 'boolean'; } ? boolean
+    : ItemWithKeyK extends { type: 'color'; } ? RGBAColor
+    : ItemWithKeyK extends { type: 'decorativeImages'; } ? DecorativeImageProperties[]
     // *** 优化应用：无 default 的 render 类型回退到 'unknown' ***
     : ItemWithKeyK extends { type: 'render'; } ? unknown
     // 其他意外情况的回退类型
@@ -206,4 +265,10 @@ export function defineTemplateConfig<
   // 如果需要，可以在此处添加基本的运行时验证。
   // 类型检查主要由 TypeScript 根据约束完成。
   return items;
+}
+
+// 帮助函数：将 RGBA 对象转换为 CSS 字符串
+export function rgbaToString(color: RGBAColor | undefined): string {
+  if (!color) return 'rgba(0,0,0,0)'; // 或者一个默认颜色
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
 }

@@ -21,5 +21,8 @@ export interface ScheduleConfigType {
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
   data: ScheduleWeekInfo[] | undefined
-  config?: any
+}
+
+export interface ScheduleConfigTypeWithConfig<T> extends ScheduleConfigType {
+  config?: T
 }

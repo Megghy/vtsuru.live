@@ -28,6 +28,7 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+import { useRoute } from 'vue-router'
 
 const { biliInfo, userInfo } = defineProps<{
   biliInfo: any | undefined
@@ -49,6 +50,7 @@ const isGetting = ref(true) // 是否正在获取数据
 // 验证码相关
 const token = ref('')
 const turnstile = ref()
+const route = useRoute()
 
 // 防刷控制
 const nextSendQuestionTime = ref(Date.now())
@@ -184,6 +186,11 @@ function getTags() {
     })
     .finally(() => {
       isGetting.value = false
+      // 检查 URL 参数中的 tag
+      const tagFromQuery = route.query.tag as string | undefined
+      if (tagFromQuery && tags.value.includes(tagFromQuery)) {
+        selectedTag.value = tagFromQuery
+      }
     })
 }
 
@@ -240,6 +247,7 @@ onUnmounted(() => {
                   class="tag-item"
                   :bordered="false"
                   :type="selectedTag === tag ? 'primary' : 'default'"
+                  :clearable="false"
                   @click="onSelectTag(tag)"
                 >
                   {{ tag }}
@@ -495,6 +503,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.n-list {
+  background-color: transparent;
+}
+
 .question-box-container {
   max-width: 700px;
   margin: 0 auto;
