@@ -650,6 +650,14 @@ export enum GoodsTypes {
   Physical,
   Virtual
 }
+
+// 添加密钥选择模式枚举
+export enum KeySelectionMode {
+  None,
+  Random,    // 随机选择
+  Sequential  // 顺序选择
+}
+
 export interface PointGoodsSetting {
   guardFree?: { year: number; month: number }
   allowGuardLevel?: GuardLevel
@@ -670,16 +678,22 @@ export interface ResponsePointGoodModel {
   maxBuyCount?: number
   collectUrl?: string
   embedCollectUrl?: boolean
+  isPinned: boolean
 
   canFreeBuy: boolean
   allowGuardLevel: GuardLevel
   setting: PointGoodsSetting
+
+  // 添加虚拟礼物多Key支持
+  virtualKeys?: string[]
+  keySelectionMode?: KeySelectionMode
+  currentKeyIndex?: number
 }
 export interface ImageUploadModel {
   existImages: string[]
   newImagesBase64: string[]
 }
-export interface PointGoodsModel {
+export interface UploadPointGoodsModel {
   id?: number
   name: string
   count?: number
@@ -694,8 +708,14 @@ export interface PointGoodsModel {
   content?: string
   isAllowRebuy: boolean
   maxBuyCount?: number
+  isPinned: boolean
 
   setting: PointGoodsSetting
+
+  // 添加虚拟礼物多Key支持
+  virtualKeys?: string[]
+  keySelectionMode?: KeySelectionMode
+  currentKeyIndex?: number
 }
 export interface AddressInfo {
   id?: string

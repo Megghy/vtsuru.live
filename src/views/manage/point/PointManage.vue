@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { copyToClipboard, getImageUploadModel } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { FunctionTypes, GoodsStatus, GoodsTypes, PointGoodsModel, ResponsePointGoodModel } from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, UploadPointGoodsModel, ResponsePointGoodModel, KeySelectionMode } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
@@ -42,6 +42,7 @@ import {
   UploadFileInfo,
   useDialog,
   useMessage,
+  NDynamicTags,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import PointOrderManage from './PointOrderManage.vue'
@@ -76,13 +77,21 @@ const defaultGoodsModel = {
     status: GoodsStatus.Normal,
     maxBuyCount: 1,
     isAllowRebuy: false,
+    isPinned: false,
     setting: {
       allowGuardLevel: 0
     },
-  } as PointGoodsModel,
+    virtualKeys: [],
+    keySelectionMode: KeySelectionMode.None,
+    currentKeyIndex: 0,
+    name: '',
+    price: 0,
+    tags: [],
+    description: ''
+  } as UploadPointGoodsModel,
   fileList: [],
-} as { goods: PointGoodsModel; fileList: UploadFileInfo[] }
-const currentGoodsModel = ref<{ goods: PointGoodsModel; fileList: UploadFileInfo[] }>(
+} as { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }
+const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(
   JSON.parse(JSON.stringify(defaultGoodsModel))
 )
 
@@ -478,37 +487,29 @@ onMounted(() => { })
           >
             <template #footer>
               <NFlex
-                vertical
                 :gap="8"
-                style="width: 100%"
               >
-                <span>价格: {{ item.price }}</span>
-                <NFlex
-                  justify="space-between"
-                  :gap="8"
+                <NButton
+                  type="info"
+                  size="small"
+                  @click="onUpdateClick(item)"
                 >
-                  <NButton
-                    type="info"
-                    size="small"
-                    @click="onUpdateClick(item)"
-                  >
-                    修改
-                  </NButton>
-                  <NButton
-                    type="warning"
-                    size="small"
-                    @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
-                  >
-                    下架
-                  </NButton>
-                  <NButton
-                    type="error"
-                    size="small"
-                    @click="onDeleteClick(item)"
-                  >
-                    删除
-                  </NButton>
-                </NFlex>
+                  修改
+                </NButton>
+                <NButton
+                  type="warning"
+                  size="small"
+                  @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
+                >
+                  下架
+                </NButton>
+                <NButton
+                  type="error"
+                  size="small"
+                  @click="onDeleteClick(item)"
+                >
+                  删除
+                </NButton>
               </NFlex>
             </template>
           </PointGoodsItem>
@@ -629,25 +630,24 @@ onMounted(() => { })
         确定要重置此页面内容?
       </NPopconfirm>
     </template>
-    <NScrollbar style="max-height: 80vh">
-      <NForm
-        ref="formRef"
-        :model="currentGoodsModel"
-        :rules="rules"
-        style="width: 100%"
+    <div class="scrollable-container">
+      <NScrollbar
+        style="max-height: 70vh; padding-right: 12px;"
+        class="goods-scrollbar"
       >
-        <!-- 基本信息分组 -->
-        <NDivider
-          title-placement="left"
-          style="margin: 8px 0 16px"
+        <NForm
+          ref="formRef"
+          :model="currentGoodsModel"
+          :rules="rules"
+          style="width: 100%"
         >
-          基本信息
-        </NDivider>
-        <NFlex
-          vertical
-          :gap="12"
-          style="margin-bottom: 16px"
-        >
+          <!-- 基本信息分组 -->
+          <NDivider
+            title-placement="left"
+            style="margin: 8px 0 16px"
+          >
+            基本信息
+          </NDivider>
           <NFormItem
             path="goods.name"
             label="名称"
@@ -693,20 +693,23 @@ onMounted(() => { })
               />
             </NFlex>
           </NFormItem>
-        </NFlex>
 
-        <!-- 详细描述分组 -->
-        <NDivider
-          title-placement="left"
-          style="margin: 16px 0"
-        >
-          详细描述
-        </NDivider>
-        <NFlex
-          vertical
-          :gap="12"
-          style="margin-bottom: 16px"
-        >
+          <NFormItem
+            path="goods.isPinned"
+            label="置顶显示"
+          >
+            <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned">
+              在礼物列表中置顶显示
+            </NCheckbox>
+          </NFormItem>
+
+          <!-- 详细描述分组 -->
+          <NDivider
+            title-placement="left"
+            style="margin-top: 0;"
+          >
+            详细描述
+          </NDivider>
           <NFormItem
             path="goods.description"
             label="描述"
@@ -737,6 +740,7 @@ onMounted(() => { })
           <NFormItem
             path="goods.cover"
             label="封面"
+            style="margin-bottom: 16px;"
           >
             <NFlex
               vertical
@@ -766,20 +770,14 @@ onMounted(() => { })
               </NUpload>
             </NFlex>
           </NFormItem>
-        </NFlex>
 
-        <!-- 兑换规则分组 -->
-        <NDivider
-          title-placement="left"
-          style="margin: 16px 0"
-        >
-          兑换规则
-        </NDivider>
-        <NFlex
-          vertical
-          :gap="12"
-          style="margin-bottom: 16px"
-        >
+          <!-- 兑换规则分组 -->
+          <NDivider
+            title-placement="left"
+            style="margin: 16px 0"
+          >
+            兑换规则
+          </NDivider>
           <NFormItem
             path="goods.type"
             label="礼物类型"
@@ -806,6 +804,7 @@ onMounted(() => { })
           <NFormItem
             path="goods.guardFree"
             label="特殊权限"
+            style="margin-bottom: 16px;"
           >
             <NFlex
               vertical
@@ -891,21 +890,15 @@ onMounted(() => { })
               </NRadioGroup>
             </NFlex>
           </NFormItem>
-        </NFlex>
 
-        <!-- 礼物类型特定配置 -->
-        <template v-if="currentGoodsModel.goods.type == GoodsTypes.Physical">
-          <NDivider
-            title-placement="left"
-            style="margin: 16px 0"
-          >
-            实物礼物配置
-          </NDivider>
-          <NFlex
-            vertical
-            :gap="12"
-            style="margin-bottom: 16px"
-          >
+          <!-- 礼物类型特定配置 -->
+          <template v-if="currentGoodsModel.goods.type == GoodsTypes.Physical">
+            <NDivider
+              title-placement="left"
+              style="margin: 16px 0"
+            >
+              实物礼物配置
+            </NDivider>
             <NFormItem
               path="goods.maxBuyCount"
               label="最大兑换数量"
@@ -920,6 +913,7 @@ onMounted(() => { })
             <NFormItem
               path="address"
               label="收货地址"
+              style="margin-bottom: 16px;"
             >
               <NFlex
                 vertical
@@ -977,23 +971,67 @@ onMounted(() => { })
                 </NCheckbox>
               </NFormItem>
             </template>
-          </NFlex>
-        </template>
-        <template v-else>
-          <NDivider
-            title-placement="left"
-            style="margin: 16px 0"
-          >
-            虚拟礼物配置
-          </NDivider>
-          <NFlex
-            vertical
-            :gap="12"
-            style="margin-bottom: 16px"
-          >
+          </template>
+          <template v-else>
+            <NDivider
+              title-placement="left"
+              style="margin: 16px 0"
+            >
+              虚拟礼物配置
+            </NDivider>
+            <NFormItem
+              path="goods.keySelectionMode"
+              label="密钥选择模式"
+            >
+              <NRadioGroup v-model:value="currentGoodsModel.goods.keySelectionMode">
+                <NRadioButton :value="KeySelectionMode.None">
+                  不使用
+                </NRadioButton>
+                <NRadioButton :value="KeySelectionMode.Random">
+                  随机选择
+                </NRadioButton>
+                <NRadioButton :value="KeySelectionMode.Sequential">
+                  顺序选择
+                </NRadioButton>
+              </NRadioGroup>
+            </NFormItem>
+            <!-- 添加多Key支持配置 -->
+            <NFormItem
+              v-if="currentGoodsModel.goods.keySelectionMode != KeySelectionMode.None"
+              path="goods.virtualKeys"
+              label="礼物密钥列表 (可选)"
+            >
+              <template #label>
+                礼物密钥列表
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  添加多个密钥，用户购买时会根据选择模式分配一个密钥. 可以留空
+                </NTooltip>
+              </template>
+              <NFlex
+                vertical
+                :gap="8"
+              >
+                <NDynamicTags
+                  v-model:value="currentGoodsModel.goods.virtualKeys"
+                  placeholder="输入密钥后按Enter添加"
+                />
+                <NText
+                  depth="3"
+                  style="margin-top: 4px; display: block"
+                >
+                  已添加 {{ (currentGoodsModel.goods.virtualKeys || []).length }} 个密钥
+                </NText>
+              </NFlex>
+            </NFormItem>
+
+
             <NFormItem
               path="goods.content"
               required
+              style="margin-bottom: 16px;"
             >
               <template #label>
                 礼物内容
@@ -1001,36 +1039,40 @@ onMounted(() => { })
                   <template #trigger>
                     <NIcon :component="Info24Filled" />
                   </template>
-                  虚拟礼物的具体内容, 网盘链接什么之类的
+                  虚拟礼物的具体内容，可使用 {key} 作为占位符
                 </NTooltip>
               </template>
               <NInput
                 v-model:value="currentGoodsModel.goods.content"
                 type="textarea"
-                placeholder="写这里咯"
+                placeholder="写这里咯，可使用 {key} 作为占位符，购买时会自动替换为上面密钥列表中的一个"
                 maxlength="10000"
                 show-count
                 clearable
               />
             </NFormItem>
-          </NFlex>
-        </template>
-
-        <NFlex
-          justify="center"
-          style="margin-top: 24px"
+          </template>
+        </NForm>
+        <!-- 添加一个底部间距，让滚动更自然 -->
+        <div style="height: 16px;" />
+      </NScrollbar>
+      <div class="scroll-shadow-top" />
+      <div class="scroll-shadow-bottom" />
+    </div>
+    <template #footer>
+      <NFlex
+        justify="center"
+      >
+        <NButton
+          type="primary"
+          size="large"
+          :loading="isUpdating"
+          @click="updateGoods"
         >
-          <NButton
-            type="primary"
-            size="large"
-            :loading="isUpdating"
-            @click="updateGoods"
-          >
-            {{ currentGoodsModel.goods.id ? '修改' : '创建' }}
-          </NButton>
-        </NFlex>
-      </NForm>
-    </NScrollbar>
+          {{ currentGoodsModel.goods.id ? '修改' : '创建' }}
+        </NButton>
+      </NFlex>
+    </template>
   </NModal>
 </template>
 
@@ -1059,6 +1101,60 @@ onMounted(() => { })
 }
 
 .goods-modal :deep(.n-card-content) {
-  padding: 0 20px 20px;
+  padding: 0 20px 8px;
+}
+
+.goods-modal :deep(.n-card-footer) {
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--action-color);
+}
+
+.scrollable-container {
+  position: relative;
+  background-color: var(--body-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin: 0 4px;
+}
+
+.goods-scrollbar {
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: var(--card-color);
+}
+
+.goods-scrollbar :deep(.n-scrollbar-rail) {
+  right: 0;
+}
+
+.goods-scrollbar :deep(.n-scrollbar-content) {
+  padding-bottom: 8px;
+}
+
+.scroll-shadow-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.06), transparent);
+  z-index: 1;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.scroll-shadow-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.06), transparent);
+  z-index: 1;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 </style>
