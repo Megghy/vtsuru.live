@@ -65,7 +65,7 @@ const selectedAddress = ref<AddressInfo>() // 选中的地址
 const selectedTag = ref<string>() // 选中的标签
 const onlyCanBuy = ref(false) // 只显示可兑换
 const ignoreGuard = ref(false) // 忽略舰长限制
-const priceOrder = ref<'asc' | 'desc' | null>(null) // 价格排序
+const sortOrder = ref<string | null>(null) // 排序方式
 const searchKeyword = ref('') // 搜索关键词
 
 // --- 计算属性 ---
@@ -116,15 +116,52 @@ const selectedItems = computed(() => {
         (item.description && item.description.toLowerCase().includes(searchKeyword.value.toLowerCase())),
     )
 
-  // 价格排序
-  if (priceOrder.value) {
-    filteredItems = filteredItems.sort((a, b) => {
-      return priceOrder.value === 'asc' ? a.price - b.price : b.price - a.price
-    })
+  // 应用排序方式
+  if (sortOrder.value) {
+    switch (sortOrder.value) {
+      case 'price_asc':
+        filteredItems = filteredItems.sort((a, b) => a.price - b.price)
+        break
+      case 'price_desc':
+        filteredItems = filteredItems.sort((a, b) => b.price - a.price)
+        break
+      case 'name_asc':
+        filteredItems = filteredItems.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case 'name_desc':
+        filteredItems = filteredItems.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case 'type':
+        filteredItems = filteredItems.sort((a, b) => a.type - b.type)
+        break
+      case 'popular':
+        // 按照热门程度排序（置顶的排在前面）
+        filteredItems = filteredItems.sort((a, b) => {
+          if (a.isPinned && !b.isPinned) return -1
+          if (!a.isPinned && b.isPinned) return 1
+          return 0
+        })
+        break
+    }
   }
 
-  return filteredItems
+  // 无论是否有其他排序，置顶礼物始终排在前面
+  return filteredItems.sort((a, b) => {
+    // 先按置顶状态排序
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    // 如果已有排序方式，则不再进行额外排序
+    if (sortOrder.value) return 0;
+    // 默认排序逻辑
+    return 0;
+  })
 })
+
+// 获取商品标签颜色
+function getTagColor(index: number): 'default' | 'info' | 'success' | 'warning' | 'error' | 'primary' {
+  const colors: Array<'default' | 'info' | 'success' | 'warning' | 'error' | 'primary'> = ['default', 'info', 'success', 'warning', 'error'];
+  return colors[index % colors.length];
+}
 
 // --- 方法 ---
 
@@ -297,6 +334,15 @@ function gotoAuthPage() {
   NavigateToNewTab('/bili-user')
 }
 
+// 清空筛选条件
+function clearFilters() {
+  selectedTag.value = undefined
+  searchKeyword.value = ''
+  onlyCanBuy.value = false
+  ignoreGuard.value = false
+  sortOrder.value = null
+}
+
 // --- 生命周期钩子 ---
 onMounted(async () => {
   isLoading.value = true // 开始加载
@@ -467,13 +513,17 @@ onMounted(async () => {
             >
               忽略舰长限制
             </NCheckbox>
-            <!-- 价格排序 -->
+            <!-- 排序方式 -->
             <NSelect
-              v-model:value="priceOrder"
+              v-model:value="sortOrder"
               :options="[
                 { label: '默认排序', value: 'null' },
-                { label: '价格 ↑', value: 'asc' },
-                { label: '价格 ↓', value: 'desc' }
+                { label: '价格 ↑', value: 'price_asc' },
+                { label: '价格 ↓', value: 'price_desc' },
+                { label: '名称 ↑', value: 'name_asc' },
+                { label: '名称 ↓', value: 'name_desc' },
+                { label: '类型', value: 'type' },
+                { label: '置顶', value: 'popular' }
               ]"
               placeholder="排序方式"
               size="small"
@@ -498,9 +548,9 @@ onMounted(async () => {
       >
         <template #extra>
           <NButton
-            v-if="goods.length > 0 && (selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || priceOrder)"
+            v-if="goods.length > 0 && (selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder)"
             size="small"
-            @click="() => { selectedTag = undefined; searchKeyword = ''; onlyCanBuy = false; ignoreGuard = false; priceOrder = null; }"
+            @click="clearFilters"
           >
             清空筛选条件
           </NButton>
@@ -516,6 +566,7 @@ onMounted(async () => {
           :goods="item"
           content-style="max-width: 300px; min-width: 250px; height: 380px;"
           class="goods-item"
+          :class="{ 'pinned-item': item.isPinned }"
         >
           <template #footer>
             <NFlex
@@ -532,28 +583,11 @@ onMounted(async () => {
                     class="exchange-btn"
                     @click="onBuyClick(item)"
                   >
-                    兑换
+                    {{ item.isPinned ? '🔥 兑换' : '兑换' }}
                   </NButton>
                 </template>
                 {{ getTooltip(item) }}
               </NTooltip>
-              <NFlex
-                align="center"
-                justify="end"
-                class="price-display"
-              >
-                <NTooltip placement="bottom">
-                  <template #trigger>
-                    <NText
-                      class="price-text"
-                      :delete="item.canFreeBuy"
-                    >
-                      🪙 {{ item.price > 0 ? item.price : '免费' }}
-                    </NText>
-                  </template>
-                  {{ item.canFreeBuy ? '你可以免费兑换此礼物' : '所需积分' }}
-                </NTooltip>
-              </NFlex>
             </NFlex>
           </template>
         </PointGoodsItem>
@@ -775,34 +809,146 @@ onMounted(async () => {
 .goods-item {
   break-inside: avoid;
   background-color: var(--card-color);
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
 }
 
 .goods-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1;
+}
+
+.pinned-item {
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 2px 12px rgba(var(--primary-color-rgb), 0.15);
+  position: relative;
+}
+
+.pinned-item::before {
+  content: none;
+}
+
+.pin-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  margin-right: 2px;
+}
+
+.goods-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.price-section {
+  margin-bottom: 8px;
+}
+
+.price-display {
+  gap: 8px;
+}
+
+.price-text {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.free-tag {
+  animation: pulse 2s infinite;
+}
+
+.description-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  position: relative;
+  padding: 8px 0;
+  max-height: 120px;
+  margin-bottom: 8px;
+}
+
+.goods-description {
+  line-height: 1.5;
+  font-size: 0.95em;
+  white-space: pre-line;
+}
+
+.tags-section {
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+.goods-tag {
+  transition: all 0.2s ease;
+}
+
+.goods-tag:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stock-info {
+  margin-top: 4px;
 }
 
 .goods-footer {
   padding: 8px;
+  border-top: 1px solid var(--border-color-1);
+  background-color: rgba(var(--card-color-rgb), 0.7);
 }
 
 .exchange-btn {
-  min-width: 70px;
+  min-width: 80px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.price-text {
-  font-size: 1.1em;
-  font-weight: var(--font-weight-strong);
-  padding: 0 6px;
+.exchange-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.6s ease;
+}
+
+.exchange-btn:not(:disabled):hover::after {
+  left: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 768px) {
   .goods-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .price-text {
+    font-size: 1.1em;
   }
 }
 </style>

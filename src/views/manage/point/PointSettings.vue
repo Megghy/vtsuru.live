@@ -12,6 +12,8 @@ import {
   NCheckboxGroup,
   NDivider,
   NFlex,
+  NForm,
+  NFormItem,
   NIcon,
   NInput,
   NInputGroup,
@@ -61,7 +63,12 @@ const setting = computed({
 })
 
 // 添加礼物表单模型
-const addGiftModel = ref<{ name: string; point: number }>({ name: '', point: 1 })
+const addGiftModel = ref<{ name: string; point: number; nameError: string; pointError: string }>({
+  name: '',
+  point: 1,
+  nameError: '',
+  pointError: ''
+})
 
 // 是否可以编辑设置
 const canEdit = computed(() => {
@@ -101,25 +108,60 @@ async function updateSettings() {
 
 // 添加礼物积分规则
 async function addGift() {
+  // 重置错误信息
+  addGiftModel.value.nameError = ''
+  addGiftModel.value.pointError = ''
+
   // 表单验证
-  if (!addGiftModel.value.name) {
-    message.error('请输入礼物名称')
-    return
+  let hasError = false
+
+  if (!addGiftModel.value.name.trim()) {
+    addGiftModel.value.nameError = '请输入礼物名称'
+    hasError = true
+  } else if (setting.value.giftPercentMap[addGiftModel.value.name] !== undefined) {
+    addGiftModel.value.nameError = '此礼物名称已存在'
+    hasError = true
   }
 
-  if (addGiftModel.value.point > 2147483647) {
-    message.error('积分不能超过2147483647')
+  if (!addGiftModel.value.point) {
+    addGiftModel.value.pointError = '请输入积分数量'
+    hasError = true
+  } else if (addGiftModel.value.point <= 0) {
+    addGiftModel.value.pointError = '积分必须大于0'
+    hasError = true
+  } else if (addGiftModel.value.point > 2147483647) {
+    addGiftModel.value.pointError = '积分不能超过2147483647'
+    hasError = true
+  }
+
+  if (hasError) {
     return
   }
 
   // 添加礼物积分规则
   setting.value.giftPercentMap[addGiftModel.value.name] = addGiftModel.value.point
-  const success = await updateGift()
+  isLoading.value = true
 
-  // 添加成功后清空表单
-  if (success) {
-    addGiftModel.value = { name: '', point: 1 }
-    showAddGiftModal.value = false
+  try {
+    const success = await updateGift()
+    // 添加成功后清空表单
+    if (success) {
+      addGiftModel.value = { name: '', point: 1, nameError: '', pointError: '' }
+      showAddGiftModal.value = false
+      message.success('礼物添加成功')
+    }
+  } catch (error) {
+    console.error('添加礼物失败:', error)
+    message.error('添加礼物失败，请重试')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 处理键盘按下事件
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Enter' && !isLoading.value) {
+    addGift()
   }
 }
 
@@ -401,14 +443,20 @@ async function SaveComboSetting() {
               vertical
               :gap="12"
             >
-              <NButton
-                type="primary"
-                :disabled="!canEdit"
-                class="add-gift-button"
-                @click="showAddGiftModal = true"
+              <NFlex
+                justify="space-between"
+                align="center"
               >
-                添加礼物
-              </NButton>
+                <span class="section-title">自定义礼物列表</span>
+                <NButton
+                  type="primary"
+                  :disabled="!canEdit"
+                  class="add-gift-button"
+                  @click="showAddGiftModal = true"
+                >
+                  添加礼物
+                </NButton>
+              </NFlex>
 
               <NList bordered>
                 <NEmpty
@@ -422,47 +470,61 @@ async function SaveComboSetting() {
                 >
                   <NFlex
                     align="center"
-                    :gap="8"
+                    justify="space-between"
+                    style="width: 100%"
                   >
-                    <NTag
-                      :bordered="false"
-                      size="small"
-                      type="success"
+                    <NFlex
+                      align="center"
+                      :gap="8"
                     >
-                      {{ item[0] }}
-                    </NTag>
-                    <NInputGroup
-                      style="width: 200px"
-                      :disabled="!canEdit"
-                    >
-                      <NInputNumber
-                        :value="setting.giftPercentMap[item[0]]"
-                        :disabled="!canEdit"
-                        min="0"
-                        @update:value="(v) => (setting.giftPercentMap[item[0]] = v ?? 0)"
-                      />
-                      <NButton
-                        type="info"
-                        :disabled="!canEdit"
-                        @click="updateSettings"
+                      <NTag
+                        :bordered="false"
+                        size="medium"
+                        type="success"
                       >
-                        确定
-                      </NButton>
-                    </NInputGroup>
-                    <NPopconfirm @positive-click="deleteGift(item[0])">
-                      <template #trigger>
-                        <NButton
-                          type="error"
-                          text
+                        {{ item[0] }}
+                      </NTag>
+                    </NFlex>
+
+                    <NFlex
+                      align="center"
+                      :gap="12"
+                    >
+                      <NInputGroup
+                        style="width: 180px"
+                        :disabled="!canEdit"
+                      >
+                        <NInputNumber
+                          :value="setting.giftPercentMap[item[0]]"
                           :disabled="!canEdit"
+                          min="0"
+                          @update:value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
+                        />
+                        <NButton
+                          type="info"
+                          size="small"
+                          :disabled="!canEdit"
+                          @click="updateSettings"
                         >
-                          <template #icon>
-                            <NIcon :component="Delete24Regular" />
-                          </template>
+                          更新
                         </NButton>
-                      </template>
-                      确定要删除这个礼物吗?
-                    </NPopconfirm>
+                      </NInputGroup>
+                      <NPopconfirm @positive-click="deleteGift(item[0])">
+                        <template #trigger>
+                          <NButton
+                            type="error"
+                            size="small"
+                            :disabled="!canEdit"
+                          >
+                            <template #icon>
+                              <NIcon :component="Delete24Regular" />
+                            </template>
+                            删除
+                          </NButton>
+                        </template>
+                        确定要删除这个礼物吗?
+                      </NPopconfirm>
+                    </NFlex>
                   </NFlex>
                 </NListItem>
               </NList>
@@ -475,45 +537,73 @@ async function SaveComboSetting() {
           v-model:show="showAddGiftModal"
           preset="card"
           title="添加礼物"
-          style="max-width: 400px"
+          style="max-width: 480px"
+          :mask-closable="false"
         >
-          <NFlex
-            align="center"
-            vertical
-            :gap="12"
-          >
+          <NForm>
             <NAlert
               title="注意"
               type="warning"
+              closable
+              style="margin-bottom: 16px"
             >
-              这里填写的积分是指这个礼物直接对应多少积分, 而不是兑换比例
+              <template #icon>
+                <NIcon :component="Info24Filled" />
+              </template>
+              这里填写的积分是指这个礼物直接对应多少积分，而不是兑换比例
             </NAlert>
 
-            <NInputGroup class="modal-input">
-              <NInputGroupLabel> 礼物名称 </NInputGroupLabel>
+            <NFormItem
+              label="礼物名称"
+              :validation-status="addGiftModel.nameError ? 'error' : undefined"
+              :feedback="addGiftModel.nameError"
+              required
+            >
               <NInput
                 v-model:value="addGiftModel.name"
-                placeholder="礼物名称"
+                placeholder="请输入礼物名称"
+                clearable
+                autofocus
+                @keydown="handleKeyDown"
               />
-            </NInputGroup>
+            </NFormItem>
 
-            <NInputGroup class="modal-input">
-              <NInputGroupLabel> 给予积分 </NInputGroupLabel>
+            <NFormItem
+              label="给予积分"
+              :validation-status="addGiftModel.pointError ? 'error' : undefined"
+              :feedback="addGiftModel.pointError"
+              required
+            >
               <NInputNumber
                 v-model:value="addGiftModel.point"
-                placeholder="积分数量"
-                min="0"
+                placeholder="请输入积分数量"
+                min="1"
+                clearable
+                style="width: 100%"
+                @keydown="handleKeyDown"
               />
-            </NInputGroup>
+            </NFormItem>
 
-            <NButton
-              type="info"
-              :loading="isLoading"
-              @click="addGift"
+            <NFlex
+              justify="end"
+              :gap="12"
+              style="margin-top: 24px"
             >
-              确定
-            </NButton>
-          </NFlex>
+              <NButton
+                @click="showAddGiftModal = false"
+              >
+                取消
+              </NButton>
+              <NButton
+                type="primary"
+                :loading="isLoading"
+                :disabled="!addGiftModel.name || !addGiftModel.point || addGiftModel.point <= 0"
+                @click="addGift"
+              >
+                确定
+              </NButton>
+            </NFlex>
+          </NForm>
         </NModal>
       </template>
     </NFlex>
@@ -539,16 +629,31 @@ async function SaveComboSetting() {
   max-width: 100%;
 }
 
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 4px 0;
+}
+
 .gift-card {
   width: 100%;
+  margin-top: 8px;
 }
 
 .add-gift-button {
-  max-width: 200px;
+  max-width: 120px;
 }
 
 .modal-input {
   width: 100%;
+  margin-bottom: 8px;
+}
+
+.error-text {
+  color: var(--error-color, #d03050);
+  font-size: 12px;
+  margin-top: -6px;
+  margin-bottom: 8px;
 }
 
 /* 响应式布局优化 */
