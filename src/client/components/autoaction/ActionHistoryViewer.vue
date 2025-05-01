@@ -36,11 +36,15 @@ const columns = [
     width: 180,
     sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
     render: (row: HistoryItem) => {
-      return h(NTime, {
-        time: new Date(row.timestamp),
-        format: 'yyyy-MM-dd HH:mm:ss'
+      return h(NTooltip, {
+      }, {
+        trigger: () => h(NTime, {
+          time: row.timestamp,
+          type: 'relative'
+        }),
+        default: () => new Date(row.timestamp).toLocaleString()
       });
-    }
+    },
   },
   {
     title: '操作名称',
