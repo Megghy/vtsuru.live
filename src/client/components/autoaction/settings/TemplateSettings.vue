@@ -8,6 +8,10 @@ const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
     required: true
+  },
+  customTestContext: {
+    type: Object,
+    default: undefined
   }
 });
 
@@ -61,6 +65,7 @@ function handleTemplateUpdate(payload: { index: number, value: string }) {
         :title="templateTitle"
         :description="templateDescription"
         :check-length="action.actionType === ActionType.SEND_DANMAKU"
+        :custom-test-context="customTestContext"
         class="template-editor"
         @update:template="handleTemplateUpdate"
       />

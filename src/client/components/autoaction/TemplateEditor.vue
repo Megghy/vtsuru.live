@@ -380,21 +380,6 @@ function insertExample(template: string) {
             </transition>
           </NFlex>
 
-          <!-- 操作按钮 -->
-          <NFlex
-            justify="end"
-            :size="12"
-          >
-            <NButton
-              type="default"
-              size="small"
-              class="btn-with-transition"
-              @click="convertPlaceholders"
-            >
-              占位符转表达式
-            </NButton>
-          </NFlex>
-
           <!-- 模板示例 -->
           <NCollapse
             class="template-examples"
