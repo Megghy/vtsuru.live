@@ -57,6 +57,7 @@ async function InitOther() {
       tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
       //consoleCapture: true, // Capture console logs (default false)
       advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
+      ignoreUrls: [/localhost/i],
     })
   }
   // 加载其他数据
