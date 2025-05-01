@@ -5,9 +5,11 @@ import { FunctionTypes, SongsInfo } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { SongListConfigType } from '@/data/TemplateTypes'
 import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
+import { getSongRequestTooltip, getSongRequestButtonType } from './utils/songRequestUtils'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import {
   NButton,
   NCard,
@@ -36,6 +38,7 @@ const container = ref()
 const index = ref(20)
 
 const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 
 const selectedTag = ref('')
 const selectedSong = ref<SongsInfo>()
@@ -296,7 +299,7 @@ function loadMore() {
                   <template #trigger>
                     <NButton
                       size="small"
-                      :type="liveRequestSettings?.allowFromWeb == false || item.options ? 'warning' : 'info'"
+                      :type="getSongRequestButtonType(item, liveRequestSettings, !!accountInfo, biliAuth.isAuthed)"
                       :loading="isLoading == item.key"
                       @click="() => {
                         isLoading = item.key
@@ -310,13 +313,7 @@ function loadMore() {
                       </template>
                     </NButton>
                   </template>
-                  {{
-                    liveRequestSettings?.allowFromWeb == false || item.options
-                      ? '点歌 | 用户或此歌曲不允许从网页点歌, 点击后将复制点歌内容到剪切板'
-                      : !accountInfo
-                        ? '点歌 | 你需要登录后才能点歌'
-                        : '点歌'
-                  }}
+                  {{ getSongRequestTooltip(item, liveRequestSettings) }}
                 </NTooltip>
 
                 <NPopover

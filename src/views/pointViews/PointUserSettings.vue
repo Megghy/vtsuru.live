@@ -2,7 +2,7 @@
 import { AddressInfo } from '@/api/api-models'
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import { CURRENT_HOST, POINT_API_URL, THINGS_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { useStorage } from '@vueuse/core'
 import {
   FormRules,
@@ -41,7 +41,7 @@ type AreaData = {
   }
 }
 
-const useAuth = useAuthStore()
+const useAuth = useBiliAuth()
 const message = useMessage()
 const isLoading = ref(false)
 const userAgree = ref(false)

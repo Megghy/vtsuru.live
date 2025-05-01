@@ -6,7 +6,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { CN_HOST, CURRENT_HOST, FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { Info24Filled } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
 import { useStorage } from '@vueuse/core'
@@ -52,7 +52,7 @@ import PointUserManage from './PointUserManage.vue'
 const message = useMessage()
 const accountInfo = useAccount()
 const dialog = useDialog()
-const useBiliAuth = useAuthStore()
+const useBiliAuth = useBiliAuth()
 const formRef = ref()
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)

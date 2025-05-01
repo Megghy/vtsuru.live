@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { UserInfo } from '@/api/api-models'
 import { POINT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { useRouteHash } from '@vueuse/router'
 import {
   NAlert,
@@ -48,7 +48,7 @@ interface SettingsViewInstance extends ComponentWithReset {
   // 设置组件可能需要的方法
 }
 
-const useAuth = useAuthStore()
+const useAuth = useBiliAuth()
 const message = useMessage()
 const realHash = useRouteHash('points', {
   mode: 'replace',

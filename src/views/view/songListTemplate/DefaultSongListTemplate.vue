@@ -4,11 +4,14 @@ import { SongsInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
 import { SongListConfigType } from '@/data/TemplateTypes'
 import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
+import { getSongRequestTooltip } from './utils/songRequestUtils'
 import { CloudAdd20Filled, ChevronLeft24Filled, ChevronRight24Filled } from '@vicons/fluent'
 import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
 import { h, ref, onMounted, onUnmounted } from 'vue'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 
 //所有模板都应该有这些
 const props = defineProps<SongListConfigType>()
@@ -75,7 +78,7 @@ const buttons = (song: SongsInfo) => [
               size: 'small',
               circle: true,
               loading: isLoading.value == song.key,
-              disabled: !accountInfo,
+              disabled: !accountInfo.value,
               onClick: () => {
                 isLoading.value = song.key
                 emits('requestSong', song)
@@ -86,12 +89,7 @@ const buttons = (song: SongsInfo) => [
               icon: () => h(NIcon, { component: CloudAdd20Filled }),
             },
           ),
-        default: () =>
-          !props.liveRequestSettings?.allowFromWeb || song.options
-            ? '点歌 | 用户不允许从网页点歌, 点击后将复制点歌内容到剪切板'
-            : !accountInfo
-              ? '点歌 | 你需要登录后才能点歌'
-              : '点歌',
+        default: () => getSongRequestTooltip(song, props.liveRequestSettings)
       },
     )
     : undefined,

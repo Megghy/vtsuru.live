@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { QueryGetAPI } from '@/api/query'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { useStorage } from '@vueuse/core'
 import {
   NAlert,
@@ -33,7 +33,7 @@ const message = useMessage()
 
 const guidKey = useStorage('Bili.Auth.Key', uuidv4())
 const currentToken = useStorage<string>('Bili.Auth.Selected', null)
-const useAuth = useAuthStore()
+const useAuth = useBiliAuth()
 
 const startModel = ref<AuthStartModel>()
 

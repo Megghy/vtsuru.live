@@ -6,7 +6,7 @@ import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { checkUpdateNote } from '@/data/UpdateNote';
 import { ACCOUNT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import {
   BookCoins20Filled,
@@ -369,7 +369,7 @@ function gotoAuthPage() {
     message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
     return
   }
-  useAuthStore()
+  useBiliAuth()
     .setCurrentAuth(accountInfo.value?.biliUserAuthInfo.token)
     .then(() => {
       NavigateToNewTab('/bili-user')
