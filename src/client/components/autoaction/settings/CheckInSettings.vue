@@ -188,23 +188,25 @@
                   </template>
                 </NAlert>
               </div>
+              <NDivider title-placement="left">
+                签到成功回复
+              </NDivider>
+              <AutoActionEditor
+                :action="config.successAction"
+                :hide-name="true"
+                :hide-enabled="true"
+                :custom-test-context="customTestContext"
+              />
 
-              <!-- 使用 AutoActionEditor 编辑 action 配置 -->
-              <NFormItem label="签到成功回复">
-                <AutoActionEditor
-                  :action="config.successAction"
-                  :hide-name="true"
-                  :hide-enabled="true"
-                />
-              </NFormItem>
-
-              <NFormItem label="签到冷却回复">
-                <AutoActionEditor
-                  :action="config.cooldownAction"
-                  :hide-name="true"
-                  :hide-enabled="true"
-                />
-              </NFormItem>
+              <NDivider title-placement="left">
+                签到冷却回复
+              </NDivider>
+              <AutoActionEditor
+                :action="config.cooldownAction"
+                :hide-name="true"
+                :hide-enabled="true"
+                :custom-test-context="customTestContext"
+              />
             </template>
 
             <NFormItem>
@@ -397,6 +399,15 @@ const autoActionStore = useAutoAction();
 const config = autoActionStore.checkInModule.checkInConfig;
 const accountInfo = useAccount();
 const isLoading = ref(false);
+
+const customTestContext = ref({
+  checkin: {
+    points: 0,
+    consecutiveDays: 0,
+    todayRank: 0,
+    time: new Date()
+  }
+});
 
 // 签到模板的特定占位符
 const checkInPlaceholders = [

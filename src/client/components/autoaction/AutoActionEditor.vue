@@ -26,6 +26,10 @@ const props = defineProps({
   hideEnabled: {
     type: Boolean,
     default: false
+  },
+  customTestContext: {
+    type: Object,
+    default: undefined
   }
 });
 
@@ -58,7 +62,7 @@ const TriggerSettings = getTriggerSettings();
   <div class="auto-action-editor">
     <NSpace vertical>
       <!-- 模板设置 - 移到最上面 -->
-      <TemplateSettings :action="action" />
+      <TemplateSettings :action="action" :custom-test-context="customTestContext" />
 
       <!-- 基本设置 -->
       <BasicSettings
