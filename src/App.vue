@@ -67,7 +67,8 @@
         'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
     },
     // ...
-  };
+};
+  const body = document.body;
 
   onMounted(() => {
     if (isDarkMode.value) {
@@ -84,6 +85,7 @@
     style="height: 100vh"
     :locale="zhCN"
     :date-locale="dateZhCN"
+    inline-theme-disabled
   >
     <NMessageProvider>
       <NNotificationProvider>
@@ -93,6 +95,7 @@
               <Suspense>
                 <TempComponent>
                   <NLayoutContent>
+                    <NGlobalStyle />
                     <NElement style="height: 100vh;">
                       <ViewerLayout v-if="layout == 'viewer'" />
                       <ManageLayout v-else-if="layout == 'manage'" />

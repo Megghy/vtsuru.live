@@ -40,6 +40,7 @@ export interface UserInfo extends UserBasicInfo {
     isInBlackList: boolean
     templateTypes: { [key: string]: string }
     streamerInfo?: StreamerModel
+    allowCheckInRanking?: boolean  // 是否允许查看签到排行
   }
 }
 export interface EventFetcherStateModel {
@@ -226,6 +227,18 @@ export interface Setting_Point {
   scPointPercent: number // double maps to number in TypeScript
   giftPointPercent: number // double maps to number in TypeScript
   giftAllowType: SettingPointGiftAllowType
+
+  // 签到系统设置
+  enableCheckIn: boolean           // 是否启用签到功能
+  checkInKeyword: string           // 签到关键词
+  givePointsForCheckIn: boolean    // 是否为签到提供积分
+  baseCheckInPoints: number        // 基础签到积分
+  enableConsecutiveBonus: boolean  // 是否启用连续签到奖励
+  bonusPointsPerDay: number        // 每天额外奖励积分
+  maxBonusPoints: number           // 最大奖励积分
+  allowSelfCheckIn: boolean        // 是否允许自己签到
+  requireAuth: boolean             // 是否需要认证
+  allowCheckInRanking: boolean     // 是否允许查询签到排行
 }
 export interface Setting_QuestionDisplay {
   font?: string // Optional string, with a maximum length of 30 characters
@@ -801,11 +814,33 @@ export interface ResponsePointHisrotyModel {
 export enum PointFrom {
   Danmaku,
   Manual,
-  Use
+  Use,
+  CheckIn
 }
 
 export interface ResponseUserIndexModel {
   notification: string
   videos: VideoCollectVideo[]
   links: { [key: string]: string }
+}
+
+// 签到排行信息
+export interface CheckInRankingInfo {
+  ouId: string
+  name: string
+  consecutiveDays: number
+  points: number
+  lastCheckInTime: number
+  isAuthed: boolean
+  monthlyCheckInCount?: number // 本月签到次数
+  totalCheckInCount?: number   // 总签到次数
+}
+
+// 签到结果
+export interface CheckInResult {
+  success: boolean
+  message: string
+  points: number
+  consecutiveDays: number
+  todayRank: number
 }

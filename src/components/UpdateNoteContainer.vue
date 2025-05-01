@@ -21,7 +21,7 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
 
 <template>
   <NScrollbar
-    style="max-height: 80vh;"
+    style="max-height: 80vh;padding-right: 16px;"
     trigger="none"
   >
     <NFlex vertical>

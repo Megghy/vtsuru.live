@@ -12,6 +12,7 @@
     Person48Filled,
     VideoAdd20Filled,
     WindowWrench20Filled,
+    CheckmarkCircle24Filled,
   } from '@vicons/fluent';
   import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5';
   import { useElementSize, useStorage } from '@vueuse/core';
@@ -116,6 +117,11 @@
         label: () => h(RouterLink, { to: { name: 'user-goods' } }, { default: () => '积分' }),
         key: 'user-goods', icon: renderIcon(BookCoins20Filled),
         show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point)
+      },
+      {
+        label: () => h(RouterLink, { to: { name: 'user-checkin' } }, { default: () => '签到排行' }),
+        key: 'user-checkin', icon: renderIcon(CheckmarkCircle24Filled),
+        show: userInfo.value?.extra?.allowCheckInRanking
       },
     ].filter(option => option.show !== false) as MenuOption[]; // 过滤掉 show 为 false 的菜单项
   }

@@ -12,161 +12,297 @@
         name="settings"
         tab="签到设置"
       >
-        <NForm
-          label-placement="left"
-          label-width="auto"
-        >
-          <NFormItem label="启用签到功能">
-            <NSwitch v-model:value="config.enabled" />
-          </NFormItem>
+        <NSpin :show="isLoading">
+          <NAlert
+            v-if="!canEdit"
+            type="warning"
+          >
+            加载中或无法编辑设置，请稍后再试
+          </NAlert>
 
-          <template v-if="config.enabled">
-            <NFormItem label="签到指令">
-              <NInput
-                v-model:value="config.command"
-                placeholder="例如：签到"
+          <NForm
+            label-placement="left"
+            :label-width="120"
+            :style="{
+              maxWidth: '650px'
+            }"
+          >
+            <!-- 服务端签到设置 -->
+            <NDivider title-placement="left">
+              基本设置
+            </NDivider>
+
+            <NFormItem label="启用签到功能">
+              <NSwitch
+                v-model:value="serverSetting.enableCheckIn"
+                @update:value="updateServerSettings"
               />
               <template #feedback>
-                观众发送此指令触发签到。
+                启用后，观众可以通过发送签到命令获得积分
               </template>
             </NFormItem>
 
-            <NFormItem label="仅在直播时可签到">
-              <NSwitch v-model:value="config.onlyDuringLive" />
-              <template #feedback>
-                启用后，仅在直播进行中才能签到，否则任何时候都可以签到。
+            <template v-if="serverSetting.enableCheckIn">
+              <NFormItem label="签到命令">
+                <NInputGroup>
+                  <NInput
+                    :value="serverSetting.checkInKeyword"
+                    placeholder="例如：签到"
+                    @update:value="(v: string) => serverSetting.checkInKeyword = v"
+                  />
+                  <NButton
+                    type="primary"
+                    @click="updateServerSettings"
+                  >
+                    保存
+                  </NButton>
+                </NInputGroup>
+                <template #feedback>
+                  观众发送此命令可以触发签到（注意：同时更新客户端命令设置）
+                </template>
+              </NFormItem>
+
+              <NFormItem label="为签到提供积分">
+                <NSwitch
+                  v-model:value="serverSetting.givePointsForCheckIn"
+                  @update:value="updateServerSettings"
+                />
+                <template #feedback>
+                  启用后，签到会获得积分奖励
+                </template>
+              </NFormItem>
+
+              <!-- 积分相关设置，只有在开启"为签到提供积分"后显示 -->
+              <template v-if="serverSetting.givePointsForCheckIn">
+                <NFormItem label="基础签到积分">
+                  <NInputNumber
+                    v-model:value="serverSetting.baseCheckInPoints"
+                    :min="0"
+                    style="width: 100%"
+                    @update:value="updateServerSettings"
+                  />
+                  <template #feedback>
+                    每次签到获得的基础积分数量
+                  </template>
+                </NFormItem>
+
+                <NFormItem label="启用连续签到奖励">
+                  <NSwitch
+                    v-model:value="serverSetting.enableConsecutiveBonus"
+                    @update:value="updateServerSettings"
+                  />
+                  <template #feedback>
+                    启用后，连续签到会获得额外奖励
+                  </template>
+                </NFormItem>
+
+                <template v-if="serverSetting.enableConsecutiveBonus">
+                  <NFormItem label="每天额外奖励积分">
+                    <NInputNumber
+                      v-model:value="serverSetting.bonusPointsPerDay"
+                      :min="0"
+                      style="width: 100%"
+                      @update:value="updateServerSettings"
+                    />
+                    <template #feedback>
+                      每天连续签到额外奖励的积分数量
+                    </template>
+                  </NFormItem>
+
+                  <NFormItem label="最大奖励积分">
+                    <NInputNumber
+                      v-model:value="serverSetting.maxBonusPoints"
+                      :min="0"
+                      style="width: 100%"
+                      @update:value="updateServerSettings"
+                    />
+                    <template #feedback>
+                      连续签到奖励积分的上限
+                    </template>
+                  </NFormItem>
+                </template>
               </template>
-            </NFormItem>
 
-            <NFormItem label="发送签到回复">
-              <NSwitch v-model:value="config.sendReply" />
-              <template #feedback>
-                启用后，签到成功或重复签到时会发送弹幕回复，关闭则只显示通知不发送弹幕。
-              </template>
-            </NFormItem>
+              <NFormItem label="允许自己签到">
+                <NSwitch
+                  v-model:value="serverSetting.allowSelfCheckIn"
+                  @update:value="updateServerSettings"
+                />
+                <template #feedback>
+                  启用后，主播自己也可以签到获得积分
+                </template>
+              </NFormItem>
 
-            <NFormItem label="签到成功获得积分">
-              <NInputNumber
-                v-model:value="config.points"
-                :min="0"
-                style="width: 100%"
-              />
-            </NFormItem>
+              <NFormItem label="要求用户已认证">
+                <NSwitch
+                  v-model:value="serverSetting.requireAuth"
+                  @update:value="updateServerSettings"
+                />
+                <template #feedback>
+                  启用后，只有已认证的用户才能签到
+                </template>
+              </NFormItem>
 
-            <NFormItem label="用户签到冷却时间 (秒)">
-              <NInputNumber
-                v-model:value="config.cooldownSeconds"
-                :min="0"
-                style="width: 100%"
-              />
-              <template #feedback>
-                每个用户在指定秒数内签到命令只会响应一次
-              </template>
-            </NFormItem>
+              <NFormItem label="允许查看签到排行">
+                <NSwitch
+                  v-model:value="serverSetting.allowCheckInRanking"
+                  @update:value="updateServerSettings"
+                />
+                <template #feedback>
+                  启用后，用户可以查看签到排行榜
+                </template>
+              </NFormItem>
+            </template>
 
+            <!-- 客户端回复设置 -->
             <NDivider title-placement="left">
               回复消息设置
             </NDivider>
 
-            <!-- 签到模板帮助信息组件 -->
-            <div style="margin-bottom: 12px">
-              <TemplateHelper :placeholders="checkInPlaceholders" />
-              <NAlert
-                type="info"
-                :show-icon="false"
-                style="margin-top: 8px"
-              >
-                <template #header>
-                  <div
-                    style="display: flex; align-items: center; font-weight: bold"
-                  >
-                    <NIcon
-                      :component="Info24Filled"
-                      style="margin-right: 4px"
-                    />
-                    签到模板可用变量列表
-                  </div>
-                </template>
-              </NAlert>
-            </div>
-
-            <!-- 使用 AutoActionEditor 编辑 action 配置 -->
-            <AutoActionEditor
-              :action="config.successAction"
-              :hide-name="true"
-              :hide-enabled="true"
-            />
-            <AutoActionEditor
-              :action="config.cooldownAction"
-              :hide-name="true"
-              :hide-enabled="true"
-            />
-
-            <NDivider title-placement="left">
-              早鸟奖励设置
-            </NDivider>
-
-            <NFormItem label="启用早鸟奖励">
-              <NSwitch v-model:value="config.earlyBird.enabled" />
+            <NFormItem label="发送签到回复">
+              <NSwitch v-model:value="config.sendReply" />
               <template #feedback>
-                在直播开始后的一段时间内签到可获得额外奖励。
+                启用后，签到成功或重复签到时会发送弹幕回复，关闭则只显示通知不发送弹幕
               </template>
             </NFormItem>
 
-            <template v-if="config.earlyBird.enabled">
-              <NFormItem label="早鸟时间窗口 (分钟)">
-                <NInputNumber
-                  v-model:value="config.earlyBird.windowMinutes"
-                  :min="1"
-                  style="width: 100%"
+            <template v-if="config.sendReply">
+              <!-- 签到模板帮助信息组件 -->
+              <div style="margin-bottom: 12px">
+                <TemplateHelper :placeholders="checkInPlaceholders" />
+                <NAlert
+                  type="info"
+                  :show-icon="false"
+                  style="margin-top: 8px"
+                >
+                  <template #header>
+                    <div
+                      style="display: flex; align-items: center; font-weight: bold"
+                    >
+                      <NIcon
+                        :component="Info24Filled"
+                        style="margin-right: 4px"
+                      />
+                      签到模板可用变量列表
+                    </div>
+                  </template>
+                </NAlert>
+              </div>
+
+              <!-- 使用 AutoActionEditor 编辑 action 配置 -->
+              <NFormItem label="签到成功回复">
+                <AutoActionEditor
+                  :action="config.successAction"
+                  :hide-name="true"
+                  :hide-enabled="true"
                 />
-                <template #feedback>
-                  直播开始后多少分钟内视为早鸟。
-                </template>
               </NFormItem>
 
-              <NFormItem label="早鸟额外奖励积分">
-                <NInputNumber
-                  v-model:value="config.earlyBird.bonusPoints"
-                  :min="0"
-                  style="width: 100%"
+              <NFormItem label="签到冷却回复">
+                <AutoActionEditor
+                  :action="config.cooldownAction"
+                  :hide-name="true"
+                  :hide-enabled="true"
                 />
-                <template #feedback>
-                  成功触发早鸟签到的用户额外获得的积分。
-                </template>
               </NFormItem>
-              <AutoActionEditor
-                :action="config.earlyBird.successAction"
-                :hide-name="true"
-                :hide-enabled="true"
-              />
             </template>
-          </template>
-        </NForm>
+
+            <NFormItem>
+              <NButton
+                type="primary"
+                :disabled="!canEdit"
+                :loading="isLoading"
+                @click="updateSettings"
+              >
+                保存所有设置
+              </NButton>
+            </NFormItem>
+          </NForm>
+        </NSpin>
       </NTabPane>
 
       <NTabPane
-        name="userStats"
-        tab="用户签到情况"
+        name="checkInRanking"
+        tab="签到排行榜"
       >
-        <div class="checkin-stats">
+        <div class="checkin-ranking">
           <NSpace vertical>
             <NAlert type="info">
-              以下显示用户的签到统计信息。包括累计签到次数、连续签到天数和早鸟签到次数等。
+              显示用户签到排行榜，包括连续签到天数和积分情况。选择时间段可查看不同期间的签到情况。
             </NAlert>
 
+            <div class="ranking-filter">
+              <NSpace align="center">
+                <span>时间段：</span>
+                <NSelect
+                  v-model:value="timeRange"
+                  style="width: 180px"
+                  :options="timeRangeOptions"
+                  @update:value="loadCheckInRanking"
+                />
+
+                <span>用户名：</span>
+                <NInput
+                  v-model:value="userFilter"
+                  placeholder="搜索用户"
+                  clearable
+                  style="width: 150px"
+                />
+
+                <NButton
+                  type="primary"
+                  :loading="isLoadingRanking"
+                  @click="loadCheckInRanking"
+                >
+                  刷新排行榜
+                </NButton>
+              </NSpace>
+            </div>
+
             <NDataTable
-              :columns="userStatsColumns"
-              :data="userStatsData"
-              :pagination="{ pageSize: 10 }"
+              :columns="rankingColumns"
+              :data="filteredRankingData"
+              :pagination="{
+                pageSize: 10,
+                showSizePicker: true,
+                pageSizes: [10, 20, 50, 100],
+                onChange: (page: number) => pagination.page = page,
+                onUpdatePageSize: (pageSize: number) => pagination.pageSize = pageSize
+              }"
               :bordered="false"
+              :loading="isLoadingRanking"
               striped
             />
 
-            <NEmpty
-              v-if="!userStatsData.length"
-              description="暂无用户签到数据"
-            />
+            <NDivider />
+
+            <div class="ranking-actions">
+              <NSpace vertical>
+                <NAlert type="warning">
+                  以下操作将重置用户的签到记录，请谨慎操作。重置后数据无法恢复。
+                </NAlert>
+
+                <NSpace justify="end">
+                  <NPopconfirm @positive-click="resetAllCheckIn">
+                    <template #trigger>
+                      <NButton
+                        type="error"
+                        :disabled="isResetting"
+                        :loading="isResetting"
+                      >
+                        重置所有用户签到数据
+                      </NButton>
+                    </template>
+                    <template #default>
+                      <div style="max-width: 250px">
+                        <p>警告：此操作将清空所有用户的签到记录，包括连续签到天数等数据，且不可恢复！</p>
+                        <p>确定要继续吗？</p>
+                      </div>
+                    </template>
+                  </NPopconfirm>
+                </NSpace>
+              </NSpace>
+            </div>
           </NSpace>
         </div>
       </NTabPane>
@@ -181,7 +317,7 @@
               在此可以模拟用户签到，测试签到功能是否正常工作。
             </NAlert>
 
-            <NForm>
+            <NForm :label-width="100">
               <NFormItem label="用户UID">
                 <NInputNumber
                   v-model:value="testUid"
@@ -199,7 +335,7 @@
               <NFormItem>
                 <NButton
                   type="primary"
-                  :disabled="!testUid || !config?.enabled"
+                  :disabled="!testUid || !serverSetting.enableCheckIn"
                   @click="handleTestCheckIn"
                 >
                   模拟签到
@@ -240,101 +376,341 @@
 </template>
 
 <script lang="ts" setup>
-import { NCard, NForm, NFormItem, NSwitch, NInput, NInputNumber, NSpace, NText, NDivider, NAlert, NIcon, NTabs, NTabPane, NDataTable, NEmpty, NButton } from 'naive-ui';
+import { SaveSetting, useAccount } from '@/api/account';
+import { CheckInRankingInfo, CheckInResult } from '@/api/api-models';
+import { QueryGetAPI } from '@/api/query';
 import { useAutoAction } from '@/client/store/useAutoAction';
-import TemplateEditor from '../TemplateEditor.vue';
-import TemplateHelper from '../TemplateHelper.vue';
-import { TriggerType, ActionType, Priority, RuntimeState } from '@/client/store/autoAction/types';
-import { EventModel, EventDataTypes } from '@/api/api-models';
+import { CHECKIN_API_URL } from '@/data/constants';
+import { GuidUtils } from '@/Utils';
 import { Info24Filled } from '@vicons/fluent';
-import { computed, h, ref } from 'vue';
-import type { UserCheckInData } from '@/client/store/autoAction/modules/checkin';
+import type { DataTableColumns } from 'naive-ui';
+import { NAlert, NButton, NCard, NDataTable, NDivider, NEmpty, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, NText } from 'naive-ui';
+import { computed, h, onMounted, ref, watch } from 'vue';
 import AutoActionEditor from '../AutoActionEditor.vue';
+import TemplateHelper from '../TemplateHelper.vue';
+
+interface LiveInfo {
+  roomId?: number;
+}
 
 const autoActionStore = useAutoAction();
 const config = autoActionStore.checkInModule.checkInConfig;
-const checkInStorage = autoActionStore.checkInModule.checkInStorage;
+const accountInfo = useAccount();
+const isLoading = ref(false);
 
 // 签到模板的特定占位符
 const checkInPlaceholders = [
-  { name: '{{checkin.points}}', description: '基础签到积分' },
-  { name: '{{checkin.bonusPoints}}', description: '早鸟额外积分 (普通签到为0)' },
-  { name: '{{checkin.totalPoints}}', description: '本次总获得积分' },
-  { name: '{{checkin.userPoints}}', description: '用户当前积分' },
-  { name: '{{checkin.isEarlyBird}}', description: '是否是早鸟签到 (true/false)' },
-  { name: '{{checkin.cooldownSeconds}}', description: '签到冷却时间(秒)' },
+  { name: '{{checkin.points}}', description: '获得的总积分' },
+  { name: '{{checkin.consecutiveDays}}', description: '连续签到天数' },
+  { name: '{{checkin.todayRank}}', description: '今日签到排名' },
   { name: '{{checkin.time}}', description: '签到时间对象' }
 ];
 
-// 为签到模板自定义的测试上下文
-const checkInTestContext = computed(() => {
-  if (!config) return undefined;
-
-  return {
-    checkin: {
-      points: config.points || 0,
-      bonusPoints: config.earlyBird.enabled ? config.earlyBird.bonusPoints : 0,
-      totalPoints: (config.points || 0) + (config.earlyBird.enabled ? config.earlyBird.bonusPoints : 0),
-      userPoints: 1000, // 模拟用户当前积分
-      isEarlyBird: false,
-      cooldownSeconds: config.cooldownSeconds || 0,
-      time: new Date()
-    }
-  };
+// 服务端签到设置
+const serverSetting = computed(() => {
+  return accountInfo.value?.settings?.point || {};
 });
 
-// 用户签到数据表格列定义
-const userStatsColumns = [
+// 是否可以编辑设置
+const canEdit = computed(() => {
+  return accountInfo.value && accountInfo.value.settings && accountInfo.value.settings.point;
+});
+
+// 更新所有设置
+async function updateSettings() {
+  // 先保存服务端设置
+  const serverSaved = await updateServerSettings();
+
+  if (serverSaved) {
+    window.$notification.success({
+      title: '设置已保存',
+      duration: 3000
+    });
+  }
+
+  return serverSaved;
+}
+
+// 更新服务端签到设置
+async function updateServerSettings() {
+  if (!canEdit.value) {
+    return false;
+  }
+
+  isLoading.value = true;
+
+  try {
+    const msg = await SaveSetting('Point', accountInfo.value.settings.point);
+    if (msg) {
+      return true;
+    } else {
+      window.$notification.error({
+        title: '保存失败',
+        content: msg,
+        duration: 5000
+      });
+    }
+  } catch (err) {
+    window.$notification.error({
+      title: '保存失败',
+      content: String(err),
+      duration: 5000
+    });
+    console.error('保存签到设置失败:', err);
+  } finally {
+    isLoading.value = false;
+  }
+
+  return false;
+}
+
+// 排行榜数据
+const rankingData = ref<CheckInRankingInfo[]>([]);
+const isLoadingRanking = ref(false);
+const timeRange = ref<string>('all');
+const userFilter = ref<string>('');
+const pagination = ref({
+  page: 1,
+  pageSize: 10
+});
+
+// 时间段选项
+const timeRangeOptions = [
+  { label: '全部时间', value: 'all' },
+  { label: '今日', value: 'today' },
+  { label: '本周', value: 'week' },
+  { label: '本月', value: 'month' },
+  { label: '上个月', value: 'lastMonth' },
+];
+
+// 过滤后的排行榜数据
+const filteredRankingData = computed(() => {
+  let filtered = rankingData.value;
+
+  // 按时间范围筛选
+  if (timeRange.value !== 'all') {
+    const now = new Date();
+    let startTime: Date;
+
+    if (timeRange.value === 'today') {
+      // 今天凌晨
+      startTime = new Date(now);
+      startTime.setHours(0, 0, 0, 0);
+    } else if (timeRange.value === 'week') {
+      // 本周一
+      const dayOfWeek = now.getDay() || 7; // 把周日作为7处理
+      startTime = new Date(now);
+      startTime.setDate(now.getDate() - (dayOfWeek - 1));
+      startTime.setHours(0, 0, 0, 0);
+    } else if (timeRange.value === 'month') {
+      // 本月1号
+      startTime = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (timeRange.value === 'lastMonth') {
+      // 上月1号
+      startTime = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      // 本月1号作为结束时间
+      const endTime = new Date(now.getFullYear(), now.getMonth(), 1);
+      filtered = filtered.filter(user => {
+        const checkInTime = new Date(user.lastCheckInTime);
+        return checkInTime >= startTime && checkInTime < endTime;
+      });
+      // 已经筛选完成，不需要再次筛选
+      startTime = new Date(0);
+    }
+
+    // 如果不是上个月，用通用筛选逻辑
+    if (timeRange.value !== 'lastMonth') {
+      filtered = filtered.filter(user => {
+        const checkInTime = new Date(user.lastCheckInTime);
+        return checkInTime >= startTime;
+      });
+    }
+  }
+
+  // 按用户名筛选
+  if (userFilter.value) {
+    const keyword = userFilter.value.toLowerCase();
+    filtered = filtered.filter(user =>
+      user.name.toLowerCase().includes(keyword)
+    );
+  }
+
+  return filtered;
+});
+
+// 排行榜列定义
+const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
   {
-    title: '用户ID',
-    key: 'uid'
+    title: '排名',
+    key: 'rank',
+    render: (row: CheckInRankingInfo, index: number) => h('span', {}, index + 1)
   },
   {
     title: '用户名',
-    key: 'username'
+    key: 'name'
   },
   {
-    title: '首次签到时间',
-    key: 'firstCheckInTime',
-    render(row: UserCheckInData) {
-      return h('span', {}, new Date(row.firstCheckInTime).toLocaleString());
-    }
+    title: '连续签到天数',
+    key: 'consecutiveDays',
+    sorter: 'default'
+  },
+  {
+    title: '积分',
+    key: 'points',
+    sorter: 'default'
   },
   {
     title: '最近签到时间',
     key: 'lastCheckInTime',
-    sorter: true,
-    defaultSortOrder: 'descend' as const,
-    render(row: UserCheckInData) {
+    render(row: CheckInRankingInfo) {
       return h('span', {}, new Date(row.lastCheckInTime).toLocaleString());
+    },
+    sorter: 'default'
+  },
+  {
+    title: '已认证',
+    key: 'isAuthed',
+    render(row: CheckInRankingInfo) {
+      return h('span', {}, row.isAuthed ? '是' : '否');
     }
   },
   {
-    title: '累计签到',
-    key: 'totalCheckins',
-    sorter: true
-  },
-  {
-    title: '连续签到',
-    key: 'streakDays',
-    sorter: true
-  },
-  {
-    title: '早鸟签到次数',
-    key: 'earlyBirdCount',
-    sorter: true
+    title: '操作',
+    key: 'actions',
+    render(row: CheckInRankingInfo) {
+      return h(
+        NPopconfirm,
+        {
+          onPositiveClick: () => resetUserCheckInByGuid(row.ouId)
+        },
+        {
+          trigger: () => h(
+            NButton,
+            {
+              size: 'small',
+              type: 'warning',
+              disabled: isResetting.value,
+              loading: isResetting.value && resetTargetId.value === row.ouId,
+              onClick: (e) => e.stopPropagation()
+            },
+            { default: () => '重置签到' }
+          ),
+          default: () => '确定要重置该用户的所有签到数据吗？此操作不可撤销。'
+        }
+      );
+    }
   }
 ];
 
-// 转换用户签到数据为表格可用格式
-const userStatsData = computed<UserCheckInData[]>(() => {
-  if (!checkInStorage?.users) {
-    return [];
-  }
+// 加载签到排行榜数据
+async function loadCheckInRanking() {
+  if (isLoadingRanking.value) return;
 
-  // 将对象转换为数组
-  return Object.values(checkInStorage.users);
-});
+  isLoadingRanking.value = true;
+  try {
+    // 获取所有用户数据，不再根据时间范围过滤
+    const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}admin/users`);
+
+    if (response.code == 200) {
+      rankingData.value = response.data;
+      pagination.value.page = 1; // 重置为第一页
+    } else {
+      rankingData.value = [];
+      window.$message.error(`获取签到排行榜失败: ${response.message}`);
+    }
+  } catch (error) {
+    console.error('加载签到排行榜失败:', error);
+    window.$notification.error({
+      title: '加载失败',
+      content: '无法加载签到排行榜数据',
+      duration: 5000
+    });
+    rankingData.value = [];
+  } finally {
+    isLoadingRanking.value = false;
+  }
+}
+
+// 重置签到数据相关
+const isResetting = ref(false);
+const resetTargetId = ref<string>();
+
+// 重置单个用户签到数据
+async function resetUserCheckInByGuid(ouId: string) {
+  if (!ouId || isResetting.value) return;
+
+  isResetting.value = true;
+  resetTargetId.value = ouId;
+
+  try {
+    const response = await QueryGetAPI(`${CHECKIN_API_URL}admin/reset`, {
+      ouId: ouId
+    });
+
+    if (response && response.code === 200) {
+      window.$notification.success({
+        title: '重置成功',
+        content: '用户签到数据已重置',
+        duration: 3000
+      });
+
+      // 重置成功后重新加载排行榜
+      await loadCheckInRanking();
+    } else {
+      window.$notification.error({
+        title: '重置失败',
+        content: response?.message || '无法重置用户签到数据',
+        duration: 5000
+      });
+    }
+  } catch (error) {
+    console.error('重置用户签到数据失败:', error);
+    window.$notification.error({
+      title: '重置失败',
+      content: '重置用户签到数据时发生错误',
+      duration: 5000
+    });
+  } finally {
+    isResetting.value = false;
+    resetTargetId.value = undefined;
+  }
+}
+
+// 重置所有用户签到数据
+async function resetAllCheckIn() {
+  if (isResetting.value) return;
+
+  isResetting.value = true;
+  try {
+    const response = await QueryGetAPI(`${CHECKIN_API_URL}admin/reset`, {});
+
+    if (response && response.code === 200) {
+      window.$notification.success({
+        title: '重置成功',
+        content: '所有用户的签到数据已重置',
+        duration: 3000
+      });
+
+      // 重置成功后重新加载排行榜
+      await loadCheckInRanking();
+    } else {
+      window.$notification.error({
+        title: '重置失败',
+        content: response?.message || '无法重置所有用户签到数据',
+        duration: 5000
+      });
+    }
+  } catch (error) {
+    console.error('重置所有用户签到数据失败:', error);
+    window.$notification.error({
+      title: '重置失败',
+      content: '重置所有用户签到数据时发生错误',
+      duration: 5000
+    });
+  } finally {
+    isResetting.value = false;
+  }
+}
 
 // 测试签到功能
 const testUid = ref<number>();
@@ -343,7 +719,7 @@ const testResult = ref<{ success: boolean; message: string }>();
 
 // 处理测试签到
 async function handleTestCheckIn() {
-  if (!testUid.value || !config?.enabled) {
+  if (!testUid.value || !serverSetting.value.enableCheckIn) {
     testResult.value = {
       success: false,
       message: '请输入有效的UID或确保签到功能已启用'
@@ -352,49 +728,61 @@ async function handleTestCheckIn() {
   }
 
   try {
-    // 创建唯一标识符ouid，基于用户输入的uid
-    const userOuid = testUid.value.toString();
+    // 直接调用服务端签到API
+    const response = await QueryGetAPI<CheckInResult>(`${CHECKIN_API_URL}check-in-for`, {
+      uId: testUid.value,
+      name: testUsername.value || '测试用户'
+    });
 
-    // 创建模拟的事件对象
-    const mockEvent: EventModel = {
-      type: EventDataTypes.Message,
-      uname: testUsername.value || '测试用户',
-      uface: '',
-      uid: testUid.value,
-      open_id: '',
-      msg: config.command,
-      time: Date.now(),
-      num: 0,
-      price: 0,
-      guard_level: 0,
-      fans_medal_level: 0,
-      fans_medal_name: '',
-      fans_medal_wearing_status: false,
-      ouid: userOuid
-    };
+    if (response.code === 200 && response.data) {
+      const result = response.data;
 
-    // 创建模拟的运行时状态
-    const mockRuntimeState: RuntimeState = {
-      lastExecutionTime: {},
-      aggregatedEvents: {},
-      scheduledTimers: {},
-      timerStartTimes: {},
-      globalTimerStartTime: null,
-      sentGuardPms: new Set<number>()
-    };
+      testResult.value = {
+        success: result.success,
+        message: result.success
+          ? `签到成功！用户 ${testUsername.value || '测试用户'} 获得 ${result.points} 积分，连续签到 ${result.consecutiveDays} 天`
+          : result.message || '签到失败，可能今天已经签到过了'
+      };
 
-    // 处理签到请求
-    await autoActionStore.checkInModule.processCheckIn(mockEvent, mockRuntimeState);
-
-    testResult.value = {
-      success: true,
-      message: `已为用户 ${testUsername.value || '测试用户'}(UID: ${testUid.value}) 模拟签到操作，请查看用户签到情况选项卡确认结果`
-    };
+      // 显示通知
+      window.$notification[result.success ? 'success' : 'info']({
+        title: result.success ? '测试签到成功' : '测试签到失败',
+        content: testResult.value.message,
+        duration: 3000
+      });
+    } else {
+      testResult.value = {
+        success: false,
+        message: `API返回错误: ${response.message || '未知错误'}`
+      };
+    }
   } catch (error) {
     testResult.value = {
       success: false,
       message: `签到操作失败: ${error instanceof Error ? error.message : String(error)}`
     };
+
+    // 显示错误通知
+    window.$notification.error({
+      title: '测试签到失败',
+      content: testResult.value.message,
+      duration: 5000
+    });
   }
 }
+
+// 组件挂载时加载排行榜
+onMounted(() => {
+  loadCheckInRanking();
+});
 </script>
+
+<style scoped>
+.settings-section {
+  margin: 8px 0;
+}
+
+.ranking-filter {
+  margin: 10px 0;
+}
+</style>

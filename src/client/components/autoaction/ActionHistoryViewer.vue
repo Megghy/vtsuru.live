@@ -34,6 +34,7 @@ const columns = [
     title: '时间',
     key: 'timestamp',
     width: 180,
+    sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
     render: (row: HistoryItem) => {
       return h(NTime, {
         time: new Date(row.timestamp),
@@ -106,9 +107,9 @@ async function loadHistory() {
     ]);
 
     historyData.value = {
-      [HistoryType.DANMAKU]: danmakuHistory,
-      [HistoryType.PRIVATE_MSG]: privateMsgHistory,
-      [HistoryType.COMMAND]: commandHistory
+      [HistoryType.DANMAKU]: danmakuHistory.sort((a, b) => b.timestamp - a.timestamp),
+      [HistoryType.PRIVATE_MSG]: privateMsgHistory.sort((a, b) => b.timestamp - a.timestamp),
+      [HistoryType.COMMAND]: commandHistory.sort((a, b) => b.timestamp - a.timestamp)
     };
   } catch (error) {
     console.error('加载历史数据失败:', error);
@@ -253,6 +254,7 @@ onUnmounted(() => {
                   pageSizes: [10, 20, 50],
                 }"
                 :row-key="row => row.id"
+                default-sort-order="descend"
               >
                 <template #empty>
                   <NEmpty description="暂无历史记录" />

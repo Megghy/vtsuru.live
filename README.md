@@ -2,22 +2,22 @@
 
 ## Project setup
 ```
-yarn install
+bun install
 ```
 
 ### Compiles and hot-reloads for development
 ```
-yarn serve
+bun dev
 ```
 
 ### Compiles and minifies for production
 ```
-yarn build
+bun run build
 ```
 
 ### Lints and fixes files
 ```
-yarn lint
+bun run lint
 ```
 
 ### Customize configuration

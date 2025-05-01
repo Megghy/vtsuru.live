@@ -2,11 +2,12 @@ import { useAccount } from "@/api/account";
 import { useBiliCookie } from "./useBiliCookie";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http"; // 引入 Body
 import { defineStore, acceptHMRUpdate } from 'pinia';
-import { computed, ref, onUnmounted } from 'vue';
+import { computed, ref, onUnmounted, h } from 'vue';
 import md5 from 'md5';
 import { QueryBiliAPI } from "../data/utils";
 import { onSendPrivateMessageFailed } from "../data/notification";
 import { useSettings } from "./useSettings";
+import { isDev } from "@/data/constants";
 
 // WBI 混合密钥编码表
 const mixinKeyEncTab = [
@@ -187,7 +188,18 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       console.warn("尝试发送空弹幕，已阻止。");
       return false;
     }
-    roomId = 1294406; // 测试用房间号
+
+    // 开发环境下只显示通知，不实际发送
+    if (isDev) {
+      console.log(`[开发环境] 模拟发送弹幕到房间 ${roomId}: ${message}`);
+      window.$notification.info({
+        title: '开发环境 - 弹幕未实际发送',
+        description: `房间: ${roomId}, 内容: ${message}`,
+        duration: 10000,
+      });
+      return true;
+    }
+
     const url = "https://api.live.bilibili.com/msg/send";
     const rnd = Math.floor(Date.now() / 1000);
     const data = {
@@ -262,6 +274,17 @@ export const useBiliFunction = defineStore('biliFunction', () => {
         duration: 0,
       });
       return false;
+    }
+
+    // 开发环境下只显示通知，不实际发送
+    if (isDev) {
+      console.log(`[开发环境] 模拟发送私信到用户 ${receiverId}: ${message}`);
+      window.$notification.info({
+        title: '开发环境 - 私信未实际发送',
+        description: `接收者: ${receiverId}, 内容: ${message}`,
+        duration: 10000,
+      });
+      return true;
     }
 
     try {

@@ -57,6 +57,15 @@ export default [
     },
   },
   {
+    path: 'check-in',
+    name: 'user-checkin',
+    component: () => import('@/views/view/CheckInRankingView.vue'),
+    meta: {
+      title: '签到排行',
+      keepAlive: true,
+    },
+  },
+  {
     path: 'video-collect',
     name: 'user-video-collect',
     component: () => import('@/views/view/VideoCollectView.vue'),
