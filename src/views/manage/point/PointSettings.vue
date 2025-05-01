@@ -37,14 +37,24 @@ const message = useMessage()
 
 // 默认积分设置
 const defaultSettingPoint: Setting_Point = {
-  allowType: [EventDataTypes.Guard],  // 默认只允许舰长积分
-  jianzhangPoint: 10,                 // 舰长积分
-  tiduPoint: 100,                     // 提督积分
-  zongduPoint: 1000,                  // 总督积分
-  giftPercentMap: {},                 // 礼物积分映射表
-  scPointPercent: 0.1,                // SC积分比例 (10%)
-  giftPointPercent: 0.1,              // 礼物积分比例 (10%)
+  allowType: [EventDataTypes.Guard], // 默认只允许舰长积分
+  jianzhangPoint: 10, // 舰长积分
+  tiduPoint: 100, // 提督积分
+  zongduPoint: 1000, // 总督积分
+  giftPercentMap: {}, // 礼物积分映射表
+  scPointPercent: 0.1, // SC积分比例 (10%)
+  giftPointPercent: 0.1, // 礼物积分比例 (10%)
   giftAllowType: SettingPointGiftAllowType.All, // 默认允许所有礼物
+  enableCheckIn: false,
+  checkInKeyword: '签到',
+  givePointsForCheckIn: false,
+  baseCheckInPoints: 10,
+  enableConsecutiveBonus: false,
+  bonusPointsPerDay: 2,
+  maxBonusPoints: 0,
+  allowSelfCheckIn: false,
+  requireAuth: false,
+  allowCheckInRanking: false
 }
 
 // 响应式设置对象

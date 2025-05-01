@@ -25,3 +25,5 @@ pnpm-debug.log*
 env.d.ts
 /.specstory
 /.cursor
+# SpecStory explanation file
+.specstory/.what-is-this.md

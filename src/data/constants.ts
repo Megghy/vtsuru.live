@@ -62,6 +62,7 @@ export const BILI_AUTH_API_URL = BASE_API_URL + 'bili-auth/';
 export const FORUM_API_URL = BASE_API_URL + 'forum/';
 export const USER_INDEX_API_URL = BASE_API_URL + 'user-index/';
 export const ANALYZE_API_URL = BASE_API_URL + 'analyze/';
+export const CHECKIN_API_URL = BASE_API_URL + 'checkin/';
 
 export type TemplateMapType = {
   [key: string]: {

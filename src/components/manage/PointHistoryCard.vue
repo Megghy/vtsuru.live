@@ -68,6 +68,10 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         label: '使用',
         value: PointFrom.Use,
       },
+      {
+        label: '签到',
+        value: PointFrom.CheckIn,
+      },
     ],
     render: (row: ResponsePointHisrotyModel) => {
       const get = () => {
@@ -77,16 +81,16 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间'),
               row.extra?.user
                 ? h(
-                    NButton,
-                    {
-                      tag: 'a',
-                      href: '/@' + row.extra.user?.name,
-                      target: '_blank',
-                      text: true,
-                      type: 'success',
-                    },
-                    () => row.extra.user?.name,
-                  )
+                  NButton,
+                  {
+                    tag: 'a',
+                    href: '/@' + row.extra.user?.name,
+                    target: '_blank',
+                    text: true,
+                    type: 'success',
+                  },
+                  () => row.extra.user?.name,
+                )
                 : null,
             ])
           case PointFrom.Manual:
@@ -97,6 +101,23 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             )
           case PointFrom.Use:
             return h(NTag, { type: 'warning', bordered: false, size: 'small' }, () => '使用')
+          case PointFrom.CheckIn:
+            return h(NFlex, { align: 'center' }, () => [
+              h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '签到'),
+              row.extra?.user
+                ? h(
+                  NButton,
+                  {
+                    tag: 'a',
+                    href: '/@' + row.extra.user?.name,
+                    target: '_blank',
+                    text: true,
+                    type: 'success',
+                  },
+                  () => row.extra.user?.name,
+                )
+                : null,
+            ])
         }
       }
       return h(NFlex, {}, () => get())
@@ -173,40 +194,22 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
 
 <template>
   <!-- 无数据时显示提示 -->
-  <NEmpty
-    v-if="!histories || histories.length === 0"
-    description="暂无积分历史记录"
-  />
+  <NEmpty v-if="!histories || histories.length === 0" description="暂无积分历史记录" />
 
   <!-- 有数据时显示表格 -->
-  <NDataTable
-    v-else
-    :columns="historyColumn"
-    :data="histories"
-    :pagination="{
-      showSizePicker: true,
-      pageSizes: [10, 25, 50, 100],
-      defaultPageSize: 10,
-      size: 'small'
-    }"
-  />
+  <NDataTable v-else :columns="historyColumn" :data="histories" :pagination="{
+    showSizePicker: true,
+    pageSizes: [10, 25, 50, 100],
+    defaultPageSize: 10,
+    size: 'small'
+  }" />
 
   <!-- 商品详情模态框 -->
-  <NModal
-    v-model:show="showGoodsModal"
-    preset="card"
-    title="礼物详情 (快照)"
-    style="max-width: 400px; height: auto"
-  >
+  <NModal v-model:show="showGoodsModal" preset="card" title="礼物详情 (快照)" style="max-width: 400px; height: auto">
     <PointGoodsItem :goods="currentGoods" />
     <template v-if="currentGoods?.content">
       <NDivider>礼物内容</NDivider>
-      <NInput
-        :value="currentGoods?.content"
-        type="textarea"
-        readonly
-        placeholder="无内容"
-      />
+      <NInput :value="currentGoods?.content" type="textarea" readonly placeholder="无内容" />
     </template>
   </NModal>
 </template>

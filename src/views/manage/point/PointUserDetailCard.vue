@@ -87,7 +87,7 @@ async function getPointHistory() {
     // 根据用户认证状态使用不同的请求参数
     const params = props.user.info.id > 0
       ? { authId: props.user.info.id }
-      : { id: props.user.info.userId ?? props.user.info.openId }
+      : { id: props.user.info.userId > 0 ? props.user.info.userId : props.user.info.openId }
 
     const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
       POINT_API_URL + 'get-user-histories',

@@ -1,9 +1,43 @@
 import UpdateNoteContainer from "@/components/UpdateNoteContainer.vue";
-import { NButton, NImage, NTag } from "naive-ui";
+import { NButton, NImage } from "naive-ui";
 import { VNode } from "vue";
-import { FETCH_API } from "./constants";
 
 export const updateNotes: updateNoteType[] = [
+  {
+    ver: 7,
+    date: '2025.5.1',
+    items: [
+      {
+        type: 'optimize',
+        title: '礼物支持置顶和随机key',
+        content: [
+          [
+            '积分礼物现在可以对部分进行置顶操作, 置顶的礼物会出现在礼物列表的最前面',
+          ],
+          [
+            '现在支持为礼物附加key, 可以在兑换礼物之后自动选择一个附加到礼物内容中',
+          ],
+          [
+            '礼物页面样式优化'
+          ]
+        ]
+      },
+      {
+        type: 'new',
+        title: '签到功能增加排行榜, 允许仅签到',
+        content: [
+          [
+            '签到功能增加排行榜, 可以查看签到天数和签到排名 ',
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/25_5_1_1.png', width: 300 }),
+          ],
+          [
+            '签到功能增加仅签到功能, 可以只签到不给予积分, 修改设置项',
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-01%20080506.png', width: 300 }),
+          ]
+        ]
+      }
+    ]
+  },
   {
     ver: 6,
     date: '2025.4.26',
@@ -45,7 +79,7 @@ export const updateNotes: updateNoteType[] = [
         content: [
           [
             '弹幕姬现在可用，兼容 blivechat 样式',
-            () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/3c5a6f68-1aa4-4b96-a25e-dba2581ac898.png', width: 300 }),
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2025-05-01 081550.png', width: 300 }),
           ],
           [
             '大部分功能都和 blivechat 一致, 不过目前还无法提供本地文件访问, 部分css中需要使用图片等本地资源样式的需要等 EventFetcher 更新相关功能后才能使用\r\n',
@@ -158,6 +192,10 @@ export function checkUpdateNote() {
   if (savedUpdateNoteVer.value < currentUpdateNoteVer) {
     window.$dialog.create({
       title: '更新日志',
+      style: {
+        width: '700px',
+        maxWidth: '90vw',
+      },
       content: () => h(UpdateNoteContainer),
       negativeText: '确定',
       positiveText: '下次更新前不再提示',
