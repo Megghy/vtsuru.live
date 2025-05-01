@@ -341,15 +341,15 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   /* 使用官方阴影变量 */
-  box-shadow: var(--n-boxShadow1, 0 1px 2px -2px rgba(0, 0, 0, .24), 0 3px 6px 0 rgba(0, 0, 0, .18), 0 5px 12px 4px rgba(0, 0, 0, .12));
+  box-shadow: var(--box-shadow-1);
   margin-bottom: 16px;
 }
 
 .ranking-header {
   /* 使用官方背景色变量 */
-  background-color: var(--n-tableHeaderColor, rgba(255, 255, 255, 0.06));
-  font-weight: var(--n-fontWeightStrong, 500);
-  color: var(--n-textColor2, rgba(255, 255, 255, 0.82));
+  background-color: var(--table-header-color);
+  font-weight: var(--font-weight-strong);
+  color: var(--text-color-2);
 }
 
 .ranking-row {
@@ -357,13 +357,13 @@ onMounted(() => {
   align-items: center;
   padding: 12px 16px;
   /* 使用官方分割线变量 */
-  border-bottom: 1px solid var(--n-dividerColor, rgba(255, 255, 255, 0.09));
-  transition: background-color 0.3s var(--n-cubicBezierEaseInOut, cubic-bezier(.4, 0, .2, 1));
+  border-bottom: 1px solid var(--divider-color);
+  transition: background-color 0.3s var(--cubic-bezier-ease-in-out);
 }
 
 .ranking-body .ranking-row:hover {
   /* 使用官方悬停背景色变量 */
-  background-color: var(--n-hoverColor, rgba(255, 255, 255, 0.09));
+  background-color: var(--hover-color);
 }
 
 .ranking-body .ranking-row:last-child {
@@ -372,7 +372,7 @@ onMounted(() => {
 
 .top-three {
   /* 使用官方条纹背景色变量 */
-  background-color: var(--n-tableColorStriped, rgba(255, 255, 255, 0.05));
+  background-color: var(--table-color-striped);
 }
 
 .col-rank {
@@ -409,10 +409,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--n-fontWeightStrong, 500);
+  font-weight: var(--font-weight-strong);
   /* 使用官方文本和背景色变量 */
-  color: var(--n-textColor2, rgba(255, 255, 255, 0.82));
-  background-color: var(--n-actionColor, rgba(255, 255, 255, 0.06));
+  color: var(--text-color-2);
+  background-color: var(--action-color);
 }
 
 /* 保持奖牌颜色在暗色模式下也清晰可见 */
@@ -432,30 +432,30 @@ onMounted(() => {
 }
 
 .user-name {
-  font-weight: var(--n-fontWeightStrong, 500);
+  font-weight: var(--font-weight-strong);
   margin-right: 8px;
 }
 
 .user-authed {
-  background-color: var(--n-successColor, #63e2b7);
+  background-color: var(--success-color);
   color: white;
   padding: 2px 6px;
   border-radius: 10px;
-  font-size: var(--n-fontSizeTiny, 12px);
+  font-size: var(--font-size-tiny);
 }
 
 .days-count,
 .count-value {
-  font-weight: var(--n-fontWeightStrong, 500);
-  font-size: var(--n-fontSizeLarge, 15px);
-  color: var(--n-infoColor, #70c0e8);
+  font-weight: var(--font-weight-strong);
+  font-size: var(--font-size-large);
+  color: var(--info-color);
   margin-right: 4px;
 }
 
 .days-text,
 .count-text {
-  color: var(--n-textColor3, rgba(255, 255, 255, 0.52));
-  font-size: var(--n-fontSizeTiny, 12px);
+  color: var(--text-color-3);
+  font-size: var(--font-size-tiny);
 }
 
 .ranking-footer {
@@ -463,6 +463,6 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   /* 使用官方背景色变量 */
-  background-color: var(--n-tableHeaderColor, rgba(255, 255, 255, 0.06));
+  background-color: var(--table-header-color);
 }
 </style>

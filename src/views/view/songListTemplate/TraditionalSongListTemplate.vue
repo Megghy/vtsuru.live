@@ -13,6 +13,9 @@ import { SongFrom, SongsInfo, SongRequestOption } from '@/api/api-models';
 import FiveSingIcon from '@/svgs/fivesing.svg';
 import { SquareArrowForward24Filled, ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled } from '@vicons/fluent';
 import { List } from 'linqts';
+import { useAccount } from '@/api/account';
+import { getSongRequestTooltip, getSongRequestConfirmText } from './utils/songRequestUtils';
+import { useBiliAuth } from '@/store/useBiliAuth';
 
 // Interface Tab - can be reused for both language and tag buttons
 interface FilterButton {
@@ -326,6 +329,9 @@ watch(allArtists, (newArtists) => {
   }
 });
 
+const accountInfo = useAccount();
+const biliAuth = useBiliAuth();
+
 const randomOrder = () => {
   const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : props.data ?? [];
   if (songsToChooseFrom.length === 0) {
@@ -347,10 +353,12 @@ const randomOrder = () => {
 };
 
 function onSongClick(song: SongsInfo) {
+  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings);
+  const confirmText = getSongRequestConfirmText(song);
   window.$modal.create({
     preset: 'dialog',
     title: '点歌',
-    content: `确定要点 ${song.name} 么`,
+    content: `${confirmText}${tooltip !== '点歌' ? '\n' + tooltip : ''}`,
     positiveText: '点歌',
     negativeText: '算了',
     onPositiveClick: () => {
@@ -928,12 +936,17 @@ export const Config = defineTemplateConfig([
                   <td>
                     <span class="song-name">
                       <component :is="GetPlayButton(song)" />
-                      <span
-                        style="cursor: pointer;"
-                        @click="onSongClick(song)"
-                      >
-                        {{ song.name }}
-                      </span>
+                      <NTooltip>
+                        <template #trigger>
+                          <span
+                            style="cursor: pointer;"
+                            @click="onSongClick(song)"
+                          >
+                            {{ song.name }}
+                          </span>
+                        </template>
+                        {{ getSongRequestTooltip(song, props.liveRequestSettings) }}
+                      </NTooltip>
                     </span>
                   </td>
                   <td>

@@ -5,7 +5,7 @@
   import { useUser } from '@/api/user';
   import RegisterAndLogin from '@/components/RegisterAndLogin.vue';
   import { FETCH_API } from '@/data/constants'; // 移除了未使用的 AVATAR_URL
-  import { useAuthStore } from '@/store/useAuthStore';
+  import { useBiliAuth } from '@/store/useBiliAuth';
   import {
     BookCoins20Filled,
     CalendarClock24Filled,
@@ -47,7 +47,7 @@
   const router = useRouter(); // 获取 router 实例
   const message = useMessage();
   const accountInfo = useAccount(); // 获取当前登录账户信息
-  const useAuth = useAuthStore(); // 获取认证状态 Store
+  const useAuth = useBiliAuth(); // 获取认证状态 Store
 
   // 路由参数
   const id = computed(() => route.params.id);

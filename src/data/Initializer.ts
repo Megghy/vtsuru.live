@@ -1,6 +1,6 @@
 import { GetSelfAccount, useAccount, UpdateAccountLoop } from "@/api/account";
 import { QueryGetAPI } from "@/api/query";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useBiliAuth } from "@/store/useBiliAuth";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { createDiscreteApi, NText, NFlex, NButton } from "naive-ui";
 import { BASE_API_URL, isTauri, apiFail } from "./constants";
@@ -64,7 +64,7 @@ async function InitOther() {
   InitTTS()
   await GetSelfAccount()
   const account = useAccount()
-  const useAuth = useAuthStore()
+  const useAuth = useBiliAuth()
   if (account.value.id) {
     if (account.value.biliUserAuthInfo && !useAuth.currentToken) {
       useAuth.currentToken = account.value.biliUserAuthInfo.token

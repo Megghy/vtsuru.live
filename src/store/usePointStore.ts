@@ -3,11 +3,11 @@ import { QueryGetAPI } from "@/api/query";
 import { POINT_API_URL } from "@/data/constants";
 import { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider";
 import { defineStore } from "pinia";
-import { useAuthStore } from "./useAuthStore";
+import { useBiliAuth } from "./useBiliAuth";
 import { GuidUtils } from "@/Utils";
 
 export const usePointStore = defineStore('point', () => {
-  const useAuth = useAuthStore()
+  const useAuth = useBiliAuth()
 
   async function GetSpecificPoint(id: number) {
     try {

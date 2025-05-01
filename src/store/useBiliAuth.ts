@@ -6,7 +6,7 @@ import { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-export const useAuthStore = defineStore('BiliAuth', () => {
+export const useBiliAuth = defineStore('BiliAuth', () => {
   const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)
 
   const biliTokens = useStorage<

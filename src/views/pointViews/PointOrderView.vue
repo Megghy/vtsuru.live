@@ -2,12 +2,12 @@
 import { ResponsePointOrder2UserModel } from '@/api/api-models'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { NButton, NEmpty, NFlex, NSpin, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 const message = useMessage()
-const useAuth = useAuthStore()
+const useAuth = useBiliAuth()
 
 const orders = ref<ResponsePointOrder2UserModel[]>([])
 const isLoading = ref(false)

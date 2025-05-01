@@ -11,7 +11,7 @@ import {
 import AddressDisplay from '@/components/manage/AddressDisplay.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { POINT_API_URL } from '@/data/constants'
-import { useAuthStore } from '@/store/useAuthStore'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import {
   NAlert,
   NButton,
@@ -43,7 +43,7 @@ const props = defineProps<{
 }>()
 const router = useRouter()
 
-const useAuth = useAuthStore()
+const useAuth = useBiliAuth()
 // 移除未使用的 accountInfo
 const isLoading = ref(false)
 const message = useMessage()
