@@ -96,7 +96,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
           case PointFrom.Manual:
             return h(
               NTag,
-              { type: 'success', bordered: false, size: 'small' },
+              { type: row.point > 0 ? 'success' : 'error', bordered: false, size: 'small' },
               () => '主播' + (row.point > 0 ? '赠予' : '扣除'),
             )
           case PointFrom.Use:
@@ -194,22 +194,40 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
 
 <template>
   <!-- 无数据时显示提示 -->
-  <NEmpty v-if="!histories || histories.length === 0" description="暂无积分历史记录" />
+  <NEmpty
+    v-if="!histories || histories.length === 0"
+    description="暂无积分历史记录"
+  />
 
   <!-- 有数据时显示表格 -->
-  <NDataTable v-else :columns="historyColumn" :data="histories" :pagination="{
-    showSizePicker: true,
-    pageSizes: [10, 25, 50, 100],
-    defaultPageSize: 10,
-    size: 'small'
-  }" />
+  <NDataTable
+    v-else
+    :columns="historyColumn"
+    :data="histories"
+    :pagination="{
+      showSizePicker: true,
+      pageSizes: [10, 25, 50, 100],
+      defaultPageSize: 10,
+      size: 'small'
+    }"
+  />
 
   <!-- 商品详情模态框 -->
-  <NModal v-model:show="showGoodsModal" preset="card" title="礼物详情 (快照)" style="max-width: 400px; height: auto">
+  <NModal
+    v-model:show="showGoodsModal"
+    preset="card"
+    title="礼物详情 (快照)"
+    style="max-width: 400px; height: auto"
+  >
     <PointGoodsItem :goods="currentGoods" />
     <template v-if="currentGoods?.content">
       <NDivider>礼物内容</NDivider>
-      <NInput :value="currentGoods?.content" type="textarea" readonly placeholder="无内容" />
+      <NInput
+        :value="currentGoods?.content"
+        type="textarea"
+        readonly
+        placeholder="无内容"
+      />
     </template>
   </NModal>
 </template>

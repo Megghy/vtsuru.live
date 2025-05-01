@@ -721,6 +721,16 @@ onMounted(() => {
               </NSpace>
             </NCard>
 
+            <!-- 收货地址信息 -->
+            <template v-if="orderDetail.type === GoodsTypes.Physical">
+              <NDivider>收货地址</NDivider>
+              <NCard
+                size="small"
+                class="address-info-card"
+              >
+                <AddressDisplay :address="orderDetail.address" />
+              </NCard>
+            </template>
 
             <!-- 快递信息 -->
             <template v-if="orderDetail.status === PointOrderStatus.Shipped && orderDetail.instanceOf === 'owner' && orderDetail.type === GoodsTypes.Physical">
@@ -937,6 +947,10 @@ onMounted(() => {
 .status-action-buttons .n-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 8px var(--n-box-shadow-color);
+}
+
+.address-info-card {
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
