@@ -50,12 +50,12 @@ export function InitVTsuru() {
 }
 
 async function InitOther() {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== 'development' && !window.$route.path.startsWith('/obs')) {
     HyperDX.init({
       apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
       service: 'vtsuru.live',
       tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
-      consoleCapture: true, // Capture console logs (default false)
+      //consoleCapture: true, // Capture console logs (default false)
       advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
     })
   }
@@ -94,7 +94,7 @@ function InitVersionCheck() {
           currentVersion = keepCheckData.data
           localStorage.setItem('Version', currentVersion)
           console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
-          
+
           if (window.$route.meta.forceReload || isTauri()) {
             location.reload()
           }
