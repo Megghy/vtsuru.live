@@ -259,6 +259,7 @@ onUnmounted(() => {
   width: 100%;
   min-height: 150px; /* 增加最小高度 */
   min-width: 250px; /* 增加最小宽度 */
+  max-height: 100vh; /* 确保在OBS中不超出视口高度 */
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(245, 245, 250, 0.85) 100%);
   border-radius: 16px; /* 更大的圆角 */
   color: #333;
@@ -406,7 +407,7 @@ onUnmounted(() => {
 /* 歌曲列表 */
 .fresh-request-list-container {
   flex: 1; /* 占据剩余空间 */
-  overflow: hidden;
+  overflow: hidden !important; /* 强制隐藏溢出 */
   padding: 0 12px; /* 调整左右内边距 */
   margin-bottom: 8px;
   position: relative; /* 为空状态居中 */

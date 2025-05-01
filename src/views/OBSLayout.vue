@@ -43,7 +43,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div style="height: 100vh;">
+  <div class="obs-container">
     <RouterView v-slot="{ Component }">
       <KeepAlive>
         <Suspense>
@@ -60,3 +60,18 @@ onUnmounted(() => {
     </RouterView>
   </div>
 </template>
+
+<style>
+.obs-container {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 确保OBS中不出现滚动条 */
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+</style>

@@ -95,7 +95,6 @@
               <Suspense>
                 <TempComponent>
                   <NLayoutContent>
-                    <NGlobalStyle />
                     <NElement style="height: 100vh;">
                       <ViewerLayout v-if="layout == 'viewer'" />
                       <ManageLayout v-else-if="layout == 'manage'" />
