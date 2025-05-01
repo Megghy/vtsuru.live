@@ -131,7 +131,19 @@
 
                 <!-- 签到时间列 -->
                 <div class="col-time">
-                  {{ formatDate(item.lastCheckInTime) }}
+                  <NTooltip>
+                    <template #trigger>
+                      <NTime
+                        :time="item.lastCheckInTime"
+                        type="relative"
+                      />
+                    </template>
+                    <template #default>
+                      <NTime
+                        :time="item.lastCheckInTime"
+                      />
+                    </template>
+                  </NTooltip>
                 </div>
               </div>
             </div>
@@ -180,6 +192,7 @@ import {
   NSelect,
   NSpace,
   NSpin,
+  NTooltip,
 } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue';
 

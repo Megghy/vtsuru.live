@@ -52,7 +52,7 @@ import PointUserManage from './PointUserManage.vue'
 const message = useMessage()
 const accountInfo = useAccount()
 const dialog = useDialog()
-const useBiliAuth = useBiliAuth()
+const biliAuth = useBiliAuth()
 const formRef = ref()
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
@@ -70,7 +70,7 @@ const hash = computed({
 })
 
 // 商品数据及模型
-const goods = ref<ResponsePointGoodModel[]>(await useBiliAuth.GetGoods(accountInfo.value?.id, message))
+const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
 const defaultGoodsModel = {
   goods: {
     type: GoodsTypes.Virtual,

@@ -43,7 +43,10 @@
             </NFormItem>
 
             <template v-if="serverSetting.enableCheckIn">
-              <NFormItem label="签到命令">
+              <NFormItem
+                label="签到命令"
+                required
+              >
                 <NInputGroup>
                   <NInput
                     :value="serverSetting.checkInKeyword"
@@ -386,7 +389,7 @@ import { CHECKIN_API_URL } from '@/data/constants';
 import { GuidUtils } from '@/Utils';
 import { Info24Filled } from '@vicons/fluent';
 import type { DataTableColumns } from 'naive-ui';
-import { NAlert, NButton, NCard, NDataTable, NDivider, NEmpty, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, NText } from 'naive-ui';
+import { NAlert, NButton, NCard, NDataTable, NDivider, NEmpty, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue';
 import AutoActionEditor from '../AutoActionEditor.vue';
 import TemplateHelper from '../TemplateHelper.vue';
@@ -574,7 +577,14 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
     title: '最近签到时间',
     key: 'lastCheckInTime',
     render(row: CheckInRankingInfo) {
-      return h('span', {}, new Date(row.lastCheckInTime).toLocaleString());
+      return h(NTooltip, {
+      }, {
+        trigger: () => h(NTime, {
+          time: row.lastCheckInTime,
+          type: 'relative'
+        }),
+        default: () => new Date(row.lastCheckInTime).toLocaleString()
+      });
     },
     sorter: 'default'
   },

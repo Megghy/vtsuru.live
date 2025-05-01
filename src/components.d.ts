@@ -36,6 +36,7 @@ declare module 'vue' {
     NSpace: typeof import('naive-ui')['NSpace']
     NTag: typeof import('naive-ui')['NTag']
     NText: typeof import('naive-ui')['NText']
+    NTime: typeof import('naive-ui')['NTime']
     PointGoodsItem: typeof import('./components/manage/PointGoodsItem.vue')['default']
     PointHistoryCard: typeof import('./components/manage/PointHistoryCard.vue')['default']
     PointOrderCard: typeof import('./components/manage/PointOrderCard.vue')['default']
