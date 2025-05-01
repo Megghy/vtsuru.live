@@ -1255,7 +1255,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                         <template #trigger>
                           {{ queueData.user?.name }}
                         </template>
-                        UID: {{ queueData.user?.uid ?? 'N/A' }}
+                        {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
                       </NTooltip>
                     </NText>
                     <!-- 粉丝牌 -->
@@ -1264,7 +1264,6 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                       size="tiny"
                       round
                       :bordered="false"
-                      :color="{ color: '#f0f0f0', textColor: '#555' }"
                       style="padding: 0 5px 0 0;"
                     >
                       <NTag
@@ -1597,19 +1596,19 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                     v-model:checked="settings.needJianzhang"
                     @update:checked="updateSettings"
                   >
-                    允许舰长
+                    需要舰长
                   </NCheckbox>
                   <NCheckbox
                     v-model:checked="settings.needTidu"
                     @update:checked="updateSettings"
                   >
-                    允许提督
+                    需要提督
                   </NCheckbox>
                   <NCheckbox
                     v-model:checked="settings.needZongdu"
                     @update:checked="updateSettings"
                   >
-                    允许总督
+                    需要总督
                   </NCheckbox>
                 </NSpace>
               </NSpace>
