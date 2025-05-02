@@ -48,7 +48,7 @@ import { DownloadConfig, useAccount } from '@/api/account';
 import { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models';
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query';
 import { SONG_API_URL, SONG_REQUEST_API_URL, SongListTemplateMap } from '@/data/constants';
-import { ConfigItemDefinition } from '@/data/VTsuruTypes';
+import { ConfigItemDefinition } from '@/data/VTsuruConfigTypes';
 import { useBiliAuth } from '@/store/useBiliAuth';
 import { useStorage } from '@vueuse/core';
 import { addSeconds } from 'date-fns';

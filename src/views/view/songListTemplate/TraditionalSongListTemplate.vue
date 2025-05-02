@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import { computed, h, ref, watch, VNode } from 'vue';
-import { getUserAvatarUrl, isDarkMode } from '@/Utils';
+import { isDarkMode } from '@/Utils';
+import { useAccount } from '@/api/account';
+import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models';
 import { SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
-import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruTypes';
-import { FILE_BASE_URL } from '@/data/constants';
-import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NTag, NTooltip, NSelect } from 'naive-ui';
+import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
+import { useBiliAuth } from '@/store/useBiliAuth';
 import bilibili from '@/svgs/bilibili.svg';
+import douyin from '@/svgs/douyin.svg';
+import FiveSingIcon from '@/svgs/fivesing.svg';
 import neteaseMusic from '@/svgs/neteaseMusic.svg';
 import qqMusic from '@/svgs/qqMusic.svg';
-import douyin from '@/svgs/douyin.svg';
-import { SongFrom, SongsInfo, SongRequestOption } from '@/api/api-models';
-import FiveSingIcon from '@/svgs/fivesing.svg';
-import { SquareArrowForward24Filled, ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled } from '@vicons/fluent';
+import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent';
 import { List } from 'linqts';
-import { useAccount } from '@/api/account';
-import { getSongRequestTooltip, getSongRequestConfirmText } from './utils/songRequestUtils';
-import { useBiliAuth } from '@/store/useBiliAuth';
+import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui';
+import { computed, h, ref, VNode, watch } from 'vue';
+import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils';
 
 // Interface Tab - can be reused for both language and tag buttons
 interface FilterButton {
@@ -487,11 +486,12 @@ export const DefaultConfig = {} as TraditionalConfigType;
 export const Config = defineTemplateConfig([
   {
     name: '背景',
-    type: 'image',
-    imageLimit: 1,
-    key: 'background',
-    onUploaded: (url, config) => {
-      config.background = url;
+    type: 'file',
+    fileLimit: 1,
+    key: 'backgroundFile',
+    onUploaded: (file, config) => {
+      console.log(file, config);
+      config.backgroundFile = file;
     },
   },
   {
@@ -645,7 +645,7 @@ export const Config = defineTemplateConfig([
   <div
     class="song-list-background-wrapper"
     :style="{
-      backgroundImage: props.config?.background ? `url(${FILE_BASE_URL + props.config.background})` : 'none',
+      backgroundImage: props.config?.backgroundFile && props.config.backgroundFile.length > 0 ? `url(${props.config.backgroundFile[0].path})` : 'none',
     }"
   >
     <!-- 原始: 滚动和内容容器 -->

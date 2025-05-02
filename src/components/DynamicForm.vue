@@ -1,14 +1,11 @@
 <script setup lang="ts">
-  import { getImageUploadModel } from '@/Utils';
-import { QueryPostAPI } from '@/api/query';
-import { ConfigItemDefinition, DecorativeImageProperties, TemplateConfigImageItem, RGBAColor, rgbaToString } from '@/data/VTsuruTypes';
-import { FILE_BASE_URL, VTSURU_API_URL } from '@/data/constants';
-import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled } from '@vicons/fluent';
-import { Info24Filled } from '@vicons/fluent';
-import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NScrollbar, NSlider, NSpace, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
-import { h } from 'vue';
-import { onMounted, ref } from 'vue';
-import { v4 as uuidv4 } from 'uuid';
+  import { UploadConfig } from '@/api/account';
+import { UploadFileResponse, UserFileLocation } from '@/api/api-models';
+import { ConfigItemDefinition, DecorativeImageProperties, RGBAColor, rgbaToString } from '@/data/VTsuruConfigTypes';
+import { uploadFiles, UploadStage } from '@/data/fileUpload';
+import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent';
+import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSlider, NSpace, NText, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
+import { h, onMounted, ref } from 'vue';
 
   const message = useMessage();
 
@@ -19,7 +16,19 @@ import { v4 as uuidv4 } from 'uuid';
   }>();
 
   const fileList = ref<{ [key: string]: UploadFileInfo[]; }>({});
-  const selectedImageId = ref<string | null>(null);
+  // 新增实际文件列表，用于存储待上传的文件
+  const pendingFiles = ref<{ [key: string]: File[]; }>({});
+  // 新增装饰图片待上传文件
+  const pendingDecorativeImages = ref<{ [key: string]: File[]; }>({});
+
+  // 上传进度相关
+  const showUploadModal = ref(false);
+  const uploadStage = ref('');
+  const uploadProgress = ref(0);
+  const totalFilesToUpload = ref(0);
+  const uploadedFilesCount = ref(0);
+
+  const selectedImageId = ref<number | null>(null);
 
   const isUploading = ref(false);
 
@@ -29,31 +38,166 @@ import { v4 as uuidv4 } from 'uuid';
       if ((file.file?.size ?? 0) > 10 * 1024 * 1024) {
         message.error('文件大小不能超过10MB');
         fileList.value[key] = [];
+        return;
+      }
+
+      // 存储文件以便于稍后上传
+      if (file.file) {
+        if (!pendingFiles.value[key]) {
+          pendingFiles.value[key] = [];
+        }
+        pendingFiles.value[key].push(file.file);
       }
     }
   }
+
+  // 更新上传进度的函数
+  function updateUploadProgress(stage: string, fileIndex?: number, totalFiles?: number) {
+    uploadStage.value = stage;
+
+    if (totalFiles !== undefined) {
+      totalFilesToUpload.value = totalFiles;
+    }
+
+    if (fileIndex !== undefined) {
+      uploadedFilesCount.value = fileIndex;
+      uploadProgress.value = Math.floor((fileIndex / totalFilesToUpload.value) * 100);
+    }
+  }
+
+  async function uploadAllFiles() {
+    const allPendingFiles: File[] = [];
+
+    // 计算待上传的文件总数
+    for (const key in pendingFiles.value) {
+      if (pendingFiles.value[key]?.length > 0) {
+        allPendingFiles.push(...pendingFiles.value[key]);
+      }
+    }
+
+    for (const key in pendingDecorativeImages.value) {
+      if (pendingDecorativeImages.value[key]?.length > 0) {
+        allPendingFiles.push(...pendingDecorativeImages.value[key]);
+      }
+    }
+
+    // 如果没有文件需要上传，直接返回
+    if (allPendingFiles.length === 0) {
+      return true;
+    }
+
+    // 显示上传模态框
+    totalFilesToUpload.value = allPendingFiles.length;
+    uploadedFilesCount.value = 0;
+    uploadProgress.value = 0;
+    showUploadModal.value = true;
+
+    const uploadTasks = [];
+    let fileCounter = 0;
+
+    // 上传普通文件
+    for (const key in pendingFiles.value) {
+      if (pendingFiles.value[key]?.length > 0) {
+        const filesToUpload = pendingFiles.value[key];
+        uploadTasks.push(
+          uploadFiles(
+            filesToUpload,
+            undefined,
+            UserFileLocation.Local,
+            (stage) => {
+              updateUploadProgress(stage, fileCounter + filesToUpload.length, totalFilesToUpload.value);
+              if (stage === UploadStage.Success) {
+                fileCounter += filesToUpload.length;
+              } else if (stage === UploadStage.Failed) {
+                message.error(`${key} 文件上传失败`);
+              }
+            }
+          ).then(results => {
+            // 更新配置数据
+            props.configData[key] = results;
+          })
+        );
+      }
+    }
+
+    // 上传装饰图片
+    for (const key in pendingDecorativeImages.value) {
+      if (pendingDecorativeImages.value[key]?.length > 0) {
+        const filesToUpload = pendingDecorativeImages.value[key];
+        uploadTasks.push(
+          uploadFiles(
+            filesToUpload,
+            undefined,
+            UserFileLocation.Local,
+            (stage) => {
+              updateUploadProgress(stage, fileCounter + filesToUpload.length, totalFilesToUpload.value);
+              if (stage === UploadStage.Success) {
+                fileCounter += filesToUpload.length;
+              } else if (stage === UploadStage.Failed) {
+                message.error(`装饰图片上传失败`);
+              }
+            }
+          ).then(results => {
+            // 创建新的装饰图片对象并添加到现有数组中
+            const newImages: DecorativeImageProperties[] = results.map((result, index) => ({
+              id: Number(result.id),
+              path: result.path,
+              name: result.name,
+              hash: result.hash,
+              src: result.path,
+              x: 10 + index * 5,
+              y: 10 + index * 5,
+              width: 20,
+              rotation: 0,
+              opacity: 1,
+              zIndex: (props.configData[key]?.length ?? 0) + index + 1,
+            }));
+
+            const currentImages = props.configData[key] as DecorativeImageProperties[] || [];
+            props.configData[key] = [...currentImages, ...newImages];
+          })
+        );
+      }
+    }
+
+    // 等待所有上传任务完成
+    try {
+      await Promise.all(uploadTasks);
+      // 完成上传，关闭模态框
+      updateUploadProgress(UploadStage.Success, totalFilesToUpload.value, totalFilesToUpload.value);
+      setTimeout(() => {
+        showUploadModal.value = false;
+      }, 500); // 给用户一个短暂的视觉反馈，然后关闭模态框
+
+      // 清空待上传文件
+      pendingFiles.value = {};
+      pendingDecorativeImages.value = {};
+      return true;
+    } catch (error) {
+      console.error("文件上传失败:", error);
+      message.error("文件上传失败: " + (error instanceof Error ? error.message : String(error)));
+      updateUploadProgress(UploadStage.Failed);
+      setTimeout(() => {
+        showUploadModal.value = false;
+      }, 2000); // 错误状态多显示一会儿
+      return false;
+    }
+  }
+
   async function onSubmit() {
     try {
       isUploading.value = true;
-      let images = {} as {
-        [key: string]: {
-          existImages: string[],
-          newImagesBase64: string[],
-        };
-      };
-      for (const item of props.config!) {
-        if (item.type == 'image') {
-          const key = (item as TemplateConfigImageItem<any>).key;
-          images[key] = await getImageUploadModel(fileList.value[key]);
-        }
+
+      // 先上传所有文件
+      const uploadSuccess = await uploadAllFiles();
+      if (!uploadSuccess) {
+        isUploading.value = false;
+        return;
       }
-      const resp = await QueryPostAPI<any>(VTSURU_API_URL + 'set-config', {
-        name: props.name,
-        json: JSON.stringify(props.configData),
-        images: images,
-        public: 'true',
-      });
-      if (resp.code == 200) {
+
+      const success = await UploadConfig(props.name || '', props.configData, true);
+
+      if (success) {
         message.success('已保存设置');
         props.config?.forEach(item => {
           if (item.type === 'render') {
@@ -64,7 +208,7 @@ import { v4 as uuidv4 } from 'uuid';
           }
         });
       } else {
-        message.error('保存失败: ' + resp.message);
+        message.error('保存失败');
       }
     } catch (err) {
       message.error('保存失败: ' + err);
@@ -149,7 +293,7 @@ import { v4 as uuidv4 } from 'uuid';
   }
 
   // 装饰图片功能
-  const updateImageProp = (id: string, prop: keyof DecorativeImageProperties, value: any, key: string) => {
+  const updateImageProp = (id: number, prop: keyof DecorativeImageProperties, value: any, key: string) => {
     const images = props.configData[key] as DecorativeImageProperties[];
     const index = images.findIndex(img => img.id === id);
     if (index !== -1) {
@@ -159,7 +303,7 @@ import { v4 as uuidv4 } from 'uuid';
     }
   };
 
-  const removeImage = (id: string, key: string) => {
+  const removeImage = (id: number, key: string) => {
     const images = props.configData[key] as DecorativeImageProperties[];
     props.configData[key] = images.filter(img => img.id !== id);
     if (selectedImageId.value === id) {
@@ -167,7 +311,7 @@ import { v4 as uuidv4 } from 'uuid';
     }
   };
 
-  const changeZIndex = (id: string, direction: 'up' | 'down', key: string) => {
+  const changeZIndex = (id: number, direction: 'up' | 'down', key: string) => {
     const images = props.configData[key] as DecorativeImageProperties[];
     const index = images.findIndex(img => img.id === id);
     if (index === -1) return;
@@ -182,32 +326,20 @@ import { v4 as uuidv4 } from 'uuid';
   };
 
   const renderDecorativeImages = (key: string) => {
-    // 获取全局处理器
-    const uploadHandler = (window as any).$upload;
-    const messageHandler = (window as any).$message ?? message;
-
     return h(NFlex, { vertical: true, size: 'large' }, () => [
       // 上传按钮
       h(NUpload, {
         multiple: true, accept: 'image/*', showFileList: false,
         'onUpdate:fileList': (fileList: UploadFileInfo[]) => {
-          if (uploadHandler?.upload && fileList.length > 0) {
+          if (fileList.length > 0) {
             const filesToUpload = fileList.map(f => f.file).filter((f): f is File => f instanceof File);
             if (filesToUpload.length > 0) {
-              uploadHandler.upload(filesToUpload, '/api/file/upload')
-                .then((results: any[]) => {
-                  const newImages: DecorativeImageProperties[] = results.map((result: any, index: number) => ({
-                    id: uuidv4(), src: result.url, x: 10 + index * 5, y: 10 + index * 5,
-                    width: 20, rotation: 0, opacity: 1,
-                    zIndex: (props.configData[key]?.length ?? 0) + index + 1,
-                  }));
-                  const currentImages = props.configData[key] as DecorativeImageProperties[] || [];
-                  props.configData[key] = [...currentImages, ...newImages];
-                })
-                .catch((error: any) => {
-                  console.error("图片上传失败:", error);
-                  messageHandler?.error("图片上传失败: " + (error?.message ?? error));
-                });
+              // 不立即上传，而是存储起来等待提交时上传
+              if (!pendingDecorativeImages.value[key]) {
+                pendingDecorativeImages.value[key] = [];
+              }
+              pendingDecorativeImages.value[key].push(...filesToUpload);
+              message.success(`已选择 ${filesToUpload.length} 个装饰图片，提交时会自动上传`);
             }
           }
           return [];
@@ -227,8 +359,8 @@ import { v4 as uuidv4 } from 'uuid';
             }, {
               default: () => h(NFlex, { justify: 'space-between', align: 'center' }, () => [
                 h(NFlex, { align: 'center', size: 'small' }, () => [
-                  h('img', { src: FILE_BASE_URL + img.src, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: '#f0f0f0' } }),
-                  h('span', `ID: ...${img.id.slice(-4)}`)
+                  h('img', { src: img.path, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: '#f0f0f0' } }),
+                  h('span', `ID: ${img.id}`)
                 ]),
                 h(NSpace, null, () => [
                   h(NButton, { size: 'tiny', circle: true, secondary: true, title: '上移一层', onClick: (e: Event) => { e.stopPropagation(); changeZIndex(img.id, 'up', key); } }, { icon: () => h(NIcon, { component: ArrowUp20Filled }) }),
@@ -244,9 +376,9 @@ import { v4 as uuidv4 } from 'uuid';
                 h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '透明度:'), h(NInputNumber, { value: img.opacity, size: 'small', 'onUpdate:value': (v: number | null) => updateImageProp(img.id, 'opacity', v ?? 0, key), min: 0, max: 1, step: 0.01 }), h(NSlider, { value: img.opacity, 'onUpdate:value': (v: number | number[]) => updateImageProp(img.id, 'opacity', Array.isArray(v) ? v[0] : v ?? 0, key), min: 0, max: 1, step: 0.01, style: { marginLeft: '10px', flexGrow: 1 } })]),
                 h(NFlex, { align: 'center' }, () => [h('span', { style: { width: '50px' } }, '层级:'), h(NInputNumber, { value: img.zIndex, size: 'small', readonly: true })]),
               ]) : null
-            })
+            });
           })
-          : h(NEmpty, { description: '暂无装饰图片' })
+          : h(NEmpty, { description: '暂无装饰图片' });
       }),
     ]);
   };
@@ -258,13 +390,13 @@ import { v4 as uuidv4 } from 'uuid';
       if (item.default && !(item.key in props.configData)) {
         props.configData[item.key] = item.default;
       }
-      if (item.type == 'image') {
+      if (item.type == 'file') {
         const configItem = props.configData[item.key];
         if (configItem) {
-          fileList.value[item.key] = configItem.map((i: string) => ({
-            id: i,
-            thumbnailUrl: FILE_BASE_URL + i,
-            name: '',
+          fileList.value[item.key] = configItem.map((uploadedFile: UploadFileResponse) => ({
+            id: uploadedFile.id,
+            thumbnailUrl: uploadedFile.path,
+            name: uploadedFile.name || '',
             status: 'finished',
           }));
         }
@@ -346,16 +478,15 @@ import { v4 as uuidv4 } from 'uuid';
           </NTooltip>
         </template>
         <NUpload
-          v-else-if="item.type == 'image'"
+          v-else-if="item.type == 'file'"
           v-model:file-list="fileList[item.key]"
-          accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+          accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.mp3,.mp4,.pdf,.doc,.docx"
           list-type="image-card"
           :default-upload="false"
-          :max="item.imageLimit"
-          im
+          :max="item.fileLimit"
           @update:file-list="file => OnFileListChange(item.key, file)"
         >
-          上传图片
+          上传文件
         </NUpload>
       </NFormItemGi>
     </NGrid>
@@ -367,5 +498,31 @@ import { v4 as uuidv4 } from 'uuid';
     >
       提交
     </NButton>
+
+    <!-- 上传进度模态框 -->
+    <NModal
+      v-model:show="showUploadModal"
+      preset="card"
+      title="文件上传进度"
+      :mask-closable="false"
+      :closable="false"
+      style="width: 400px"
+    >
+      <NFlex
+        vertical
+        size="large"
+      >
+        <NText>{{ uploadStage }}</NText>
+        <NProgress
+          type="line"
+          :percentage="uploadProgress"
+          :indicator-placement="'inside'"
+          :show-indicator="true"
+        />
+        <NText v-if="totalFilesToUpload > 0">
+          {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件
+        </NText>
+      </NFlex>
+    </NModal>
   </NForm>
 </template>

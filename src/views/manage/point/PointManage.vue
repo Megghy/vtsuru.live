@@ -1,21 +1,30 @@
 <script setup lang="ts">
-import { copyToClipboard, getImageUploadModel } from '@/Utils'
+import { copyToClipboard } from '@/Utils'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { FunctionTypes, GoodsStatus, GoodsTypes, UploadPointGoodsModel, ResponsePointGoodModel, KeySelectionMode } from '@/api/api-models'
+import {
+  FunctionTypes,
+  GoodsStatus,
+  GoodsTypes,
+  KeySelectionMode,
+  ResponsePointGoodModel,
+  UploadPointGoodsModel,
+  UserFileLocation
+} from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
-import { CN_HOST, CURRENT_HOST, FILE_BASE_URL, POINT_API_URL } from '@/data/constants'
+import { CURRENT_HOST, POINT_API_URL } from '@/data/constants'
+import { uploadFiles, UploadStage } from '@/data/fileUpload'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { Info24Filled } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
-import { useStorage } from '@vueuse/core'
 import {
   FormItemRule,
   NAlert,
   NButton,
   NCheckbox,
   NDivider,
+  NDynamicTags,
   NEmpty,
   NFlex,
   NForm,
@@ -23,12 +32,12 @@ import {
   NGrid,
   NGridItem,
   NIcon,
-  NImage,
   NInput,
-  NInputNumber,
   NInputGroup,
+  NInputNumber,
   NModal,
   NPopconfirm,
+  NProgress,
   NRadioButton,
   NRadioGroup,
   NScrollbar,
@@ -41,10 +50,9 @@ import {
   NUpload,
   UploadFileInfo,
   useDialog,
-  useMessage,
-  NDynamicTags,
+  useMessage
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import PointOrderManage from './PointOrderManage.vue'
 import PointSettings from './PointSettings.vue'
 import PointUserManage from './PointUserManage.vue'
@@ -57,6 +65,8 @@ const formRef = ref()
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
 const showAddGoodsModal = ref(false)
+const uploadProgress = ref(0)
+const isUploadingCover = ref(false)
 
 // 路由哈希处理
 const realHash = useRouteHash('goods', { mode: 'replace' })
@@ -71,7 +81,7 @@ const hash = computed({
 
 // 商品数据及模型
 const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
-const defaultGoodsModel = {
+const defaultGoodsModel = (): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } => ({
   goods: {
     type: GoodsTypes.Virtual,
     status: GoodsStatus.Normal,
@@ -87,13 +97,23 @@ const defaultGoodsModel = {
     name: '',
     price: 0,
     tags: [],
-    description: ''
+    description: '',
+    cover: undefined,
   } as UploadPointGoodsModel,
   fileList: [],
-} as { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }
+})
 const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(
-  JSON.parse(JSON.stringify(defaultGoodsModel))
+  defaultGoodsModel()
 )
+
+// 监听 fileList 变化，确保 cover 和 fileList 同步
+watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
+  if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
+    if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
+        currentGoodsModel.value.goods.cover = undefined
+    }
+  }
+}, { deep: true })
 
 // 计算属性
 const allowedYearOptions = computed(() => {
@@ -202,12 +222,45 @@ async function updateGoods(e: MouseEvent) {
   if (isUpdating.value || !formRef.value) return
   e.preventDefault()
   isUpdating.value = true
+  isUploadingCover.value = false
+  uploadProgress.value = 0
 
   try {
     await formRef.value.validate()
 
-    if (currentGoodsModel.value.fileList.length > 0) {
-      currentGoodsModel.value.goods.cover = await getImageUploadModel(currentGoodsModel.value.fileList)
+    const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
+    if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
+      isUploadingCover.value = true
+      message.info('正在上传封面...')
+      const uploadResults = await uploadFiles(
+        [newFilesToUpload[0].file],
+        undefined,
+        UserFileLocation.Local,
+        (stage: string) => {
+          if (stage === UploadStage.Uploading) {
+            uploadProgress.value = 0
+          }
+        }
+      )
+      isUploadingCover.value = false
+      if (uploadResults && uploadResults.length > 0) {
+        currentGoodsModel.value.goods.cover = uploadResults[0]
+        message.success('封面上传成功')
+        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id)
+        if (uploadedFileIndex > -1) {
+          currentGoodsModel.value.fileList[uploadedFileIndex] = {
+            ...currentGoodsModel.value.fileList[uploadedFileIndex],
+            id: uploadResults[0].id.toString(),
+            status: 'finished',
+            thumbnailUrl: uploadResults[0].path,
+            url: uploadResults[0].path
+          };
+        }
+      } else {
+        throw new Error('封面上传失败')
+      }
+    } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
+      currentGoodsModel.value.goods.cover = undefined
     }
 
     const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
@@ -216,9 +269,9 @@ async function updateGoods(e: MouseEvent) {
     )
 
     if (code === 200) {
-      message.success('成功')
+      message.success('商品信息保存成功')
       showAddGoodsModal.value = false
-      currentGoodsModel.value = JSON.parse(JSON.stringify(defaultGoodsModel))
+      currentGoodsModel.value = defaultGoodsModel()
 
       const index = goods.value.findIndex(g => g.id === data.id)
       if (index >= 0) {
@@ -227,13 +280,15 @@ async function updateGoods(e: MouseEvent) {
         goods.value.push(data)
       }
     } else {
-      message.error('失败: ' + errMsg)
+      message.error('商品信息保存失败: ' + errMsg)
     }
-  } catch (err) {
-    console.error(err)
-    message.error(typeof err === 'string' ? `失败: ${err}` : '表单验证失败')
+  } catch (err: any) {
+    console.error(currentGoodsModel.value, err)
+    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错'
+    message.error(`失败: ${errorMsg}`)
   } finally {
     isUpdating.value = false
+    isUploadingCover.value = false
   }
 }
 
@@ -241,23 +296,24 @@ function OnFileListChange(files: UploadFileInfo[]) {
   if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
     message.error('文件大小不能超过10MB')
     currentGoodsModel.value.fileList = []
+  } else {
+    currentGoodsModel.value.fileList = files
   }
 }
 
 function onUpdateClick(item: ResponsePointGoodModel) {
   currentGoodsModel.value = {
-    goods: {
+    goods: JSON.parse(JSON.stringify({
       ...item,
-      count: item.count,
-      cover: undefined,
-    },
+    })),
     fileList: item.cover
       ? [
         {
-          id: item.cover ?? 'cover',
-          thumbnailUrl: FILE_BASE_URL + item.cover,
-          name: '封面',
+          id: item.cover.id.toString(),
+          name: item.cover.name || '封面',
           status: 'finished',
+          url: item.cover.path,
+          thumbnailUrl: item.cover.path,
         },
       ]
       : [],
@@ -336,14 +392,15 @@ function onDeleteClick(item: ResponsePointGoodModel) {
 }
 
 function onModalOpen() {
-  if (currentGoodsModel.value.goods.id) {
+  if (!currentGoodsModel.value.goods.id) {
     resetGoods()
   }
   showAddGoodsModal.value = true
 }
 
 function resetGoods() {
-  currentGoodsModel.value = JSON.parse(JSON.stringify(defaultGoodsModel))
+  currentGoodsModel.value = defaultGoodsModel()
+  isAllowedPrivacyPolicy.value = false
 }
 
 onMounted(() => { })
@@ -613,6 +670,8 @@ onMounted(() => { })
     style="width: 600px; max-width: 90%"
     title="添加/修改礼物信息"
     class="goods-modal"
+    :mask-closable="!isUpdating && !isUploadingCover"
+    :close-on-esc="!isUpdating && !isUploadingCover"
   >
     <template #header-extra>
       <NPopconfirm
@@ -637,7 +696,7 @@ onMounted(() => { })
       >
         <NForm
           ref="formRef"
-          :model="currentGoodsModel"
+          :model="currentGoodsModel.goods"
           :rules="rules"
           style="width: 100%"
         >
@@ -746,28 +805,36 @@ onMounted(() => { })
               vertical
               :gap="8"
             >
-              <NFlex
-                v-if="currentGoodsModel.goods.cover"
-                :gap="8"
-                align="center"
-              >
-                <NText>当前封面: </NText>
-                <NImage
-                  :src="FILE_BASE_URL + currentGoodsModel.goods.cover"
-                  height="50"
-                  object-fit="cover"
-                />
-              </NFlex>
               <NUpload
                 v-model:file-list="currentGoodsModel.fileList"
                 :max="1"
                 accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
                 list-type="image-card"
                 :default-upload="false"
+                :disabled="isUploadingCover"
                 @update:file-list="OnFileListChange"
               >
-                + {{ currentGoodsModel.goods.cover ? '更换' : '上传' }}封面
+                <NFlex
+                  vertical
+                  align="center"
+                  justify="center"
+                  style="width: 100%; height: 100%;"
+                >
+                  <NIcon
+                    size="24"
+                    :depth="3"
+                  />
+                  <span>{{ currentGoodsModel.goods.cover ? '更换' : '上传' }}封面</span>
+                  <span style="font-size: 12px; color: grey">(小于10MB)</span>
+                </NFlex>
               </NUpload>
+              <NProgress
+                v-if="isUploadingCover"
+                type="line"
+                :percentage="uploadProgress"
+                :indicator-placement="'inside'"
+                processing
+              />
             </NFlex>
           </NFormItem>
 
@@ -779,7 +846,7 @@ onMounted(() => { })
             兑换规则
           </NDivider>
           <NFormItem
-            path="goods.type"
+            path="type"
             label="礼物类型"
           >
             <NRadioGroup v-model:value="currentGoodsModel.goods.type">
@@ -1066,10 +1133,12 @@ onMounted(() => { })
         <NButton
           type="primary"
           size="large"
-          :loading="isUpdating"
+          :loading="isUpdating || isUploadingCover"
+          :disabled="isUploadingCover"
           @click="updateGoods"
         >
-          {{ currentGoodsModel.goods.id ? '修改' : '创建' }}
+          <span v-if="isUploadingCover">正在上传封面...</span>
+          <span v-else>{{ currentGoodsModel.goods.id ? '修改' : '创建' }}</span>
         </NButton>
       </NFlex>
     </template>
@@ -1156,5 +1225,13 @@ onMounted(() => { })
   z-index: 1;
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
+}
+
+.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
+    width: 104px;
+    height: 104px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

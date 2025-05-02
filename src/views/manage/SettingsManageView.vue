@@ -29,7 +29,7 @@
     TemplateMapType,
     USER_INDEX_API_URL,
   } from '@/data/constants';
-  import { ConfigItemDefinition } from '@/data/VTsuruTypes';
+  import { ConfigItemDefinition } from '@/data/VTsuruConfigTypes';
   import { Delete24Regular } from '@vicons/fluent';
   import {
     NAlert,

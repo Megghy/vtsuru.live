@@ -7,13 +7,14 @@ import { cookie } from './account';
 export async function QueryPostAPI<T>(
   urlString: string,
   body?: unknown,
-  headers?: [string, string][]
+  headers?: [string, string][],
+  contentType?: string
 ): Promise<APIRoot<T>> {
   return await QueryPostAPIWithParams<T>(
     urlString,
     undefined,
     body,
-    'application/json',
+    contentType || 'application/json',
     headers
   )
 }
@@ -59,11 +60,15 @@ async function QueryPostAPIWithParamsInternal<T>(
   })
   if (cookie.value.cookie) h['Authorization'] = `Bearer ${cookie.value.cookie}`
 
-  h['Content-Type'] = contentType
+  // 当使用FormData时，不手动设置Content-Type，让浏览器自动添加boundary
+  if (!(body instanceof FormData)) {
+    h['Content-Type'] = contentType
+  }
+
   return await QueryAPIInternal<T>(url, {
     method: 'post',
     headers: h,
-    body: typeof body === 'string' ? body : JSON.stringify(body)
+    body: body instanceof FormData ? body : typeof body === 'string' ? body : JSON.stringify(body)
   })
 }
 async function QueryAPIInternal<T>(url: URL, init: RequestInit) {

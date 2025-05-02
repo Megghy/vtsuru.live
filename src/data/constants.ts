@@ -63,7 +63,8 @@ export const FORUM_API_URL = BASE_API_URL + 'forum/';
 export const USER_INDEX_API_URL = BASE_API_URL + 'user-index/';
 export const ANALYZE_API_URL = BASE_API_URL + 'analyze/';
 export const CHECKIN_API_URL = BASE_API_URL + 'checkin/';
-
+export const USER_CONFIG_API_URL = BASE_API_URL + 'user-config/';
+export const FILE_API_URL = BASE_API_URL + 'files/';
 export type TemplateMapType = {
   [key: string]: {
     name: string;
@@ -102,6 +103,14 @@ export const SongListTemplateMap: TemplateMapType = {
       () => import('@/views/view/songListTemplate/DefaultSongListTemplate.vue')
     ))
   },
+  traditional: {
+    name: '列表 (较推荐',
+    settingName: 'Template.SongList.Traditional',
+    component: markRaw(defineAsyncComponent(
+      () =>
+        import('@/views/view/songListTemplate/TraditionalSongListTemplate.vue')
+    ))
+  },
   simple: {
     name: '简单',
     //settingName: 'Template.SongList.Simple',
@@ -109,14 +118,6 @@ export const SongListTemplateMap: TemplateMapType = {
       () => import('@/views/view/songListTemplate/SimpleSongListTemplate.vue')
     ))
   },
-  traditional: {
-    name: '列表',
-    settingName: 'Template.SongList.Traditional',
-    component: markRaw(defineAsyncComponent(
-      () =>
-        import('@/views/view/songListTemplate/TraditionalSongListTemplate.vue')
-    ))
-  }
 };
 
 export const IndexTemplateMap: TemplateMapType = {

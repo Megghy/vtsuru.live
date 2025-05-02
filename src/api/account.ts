@@ -1,5 +1,5 @@
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query';
-import { ACCOUNT_API_URL, VTSURU_API_URL } from '@/data/constants';
+import { ACCOUNT_API_URL, USER_CONFIG_API_URL, VTSURU_API_URL } from '@/data/constants';
 import { isSameDay } from 'date-fns';
 import { createDiscreteApi } from 'naive-ui';
 import { ref } from 'vue';
@@ -184,7 +184,7 @@ export async function DelBlackList(id: number): Promise<APIRoot<unknown>> {
   });
 }
 export function downloadConfigDirect(name: string) {
-  return QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
+  return QueryGetAPI<string>(USER_CONFIG_API_URL + 'get', {
     name: name
   });
 }
@@ -202,7 +202,7 @@ export async function DownloadConfig<T>(name: string, id?: number): Promise<
   }
 > {
   try {
-    const resp = await QueryGetAPI<string>(VTSURU_API_URL + (id ? 'get-user-config' : 'get-config'), {
+    const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + (id ? 'user-get' : 'get'), {
       name: name,
       id: id
     });
@@ -237,11 +237,12 @@ export async function DownloadConfig<T>(name: string, id?: number): Promise<
     };
   }
 }
-export async function UploadConfig(name: string, data: unknown) {
+export async function UploadConfig(name: string, data: unknown, isPublic: boolean = false) {
   try {
-    const resp = await QueryPostAPI(VTSURU_API_URL + 'set-config', {
+    const resp = await QueryPostAPI(USER_CONFIG_API_URL + 'set', {
       name: name,
-      json: JSON.stringify(data)
+      json: JSON.stringify(data),
+      public: isPublic
     });
     if (resp.code == 200) {
       console.log('已保存配置文件至服务器:' + name);
@@ -256,7 +257,7 @@ export async function UploadConfig(name: string, data: unknown) {
 }
 export async function GetConfigHash(name: string) {
   try {
-    const resp = await QueryGetAPI<string>(VTSURU_API_URL + 'get-config-hash', {
+    const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + 'hash', {
       name: name
     });
     if (resp.code == 200) {

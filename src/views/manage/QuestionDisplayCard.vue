@@ -128,11 +128,14 @@ onUnmounted(() => {
             <div class="question-display-text">
               {{ question?.question.message }}
             </div>
-            <img
-              v-if="setting.showImage && question?.question.image"
-              class="question-display-image"
-              :src="question?.question.image"
-            >
+            <div v-if="setting.showImage && question?.questionImages && question.questionImages.length > 0" class="question-display-images">
+              <img
+                v-for="(img, index) in question.questionImages"
+                :key="index"
+                class="question-display-image"
+                :src="img.path"
+              >
+            </div>
           </div>
         </template>
         <div
@@ -186,10 +189,18 @@ onUnmounted(() => {
   white-space: pre-wrap;
 }
 
+.question-display-images {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .question-display-image {
   max-width: 40%;
-  max-height: 40%;
-  margin: 0 auto;
+  max-height: 150px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar {

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { UserInfo } from '@/api/api-models'
-import { TemplateConfig } from '@/data/VTsuruTypes'
+import { TemplateConfig } from '@/data/VTsuruConfigTypes'
 import { h } from 'vue'
 
 const width = window.innerWidth
