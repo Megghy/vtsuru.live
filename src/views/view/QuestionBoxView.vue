@@ -435,7 +435,7 @@ onUnmounted(() => {
               type="textarea"
               :count-graphemes="countGraphemes"
               class="question-textarea"
-              placeholder="在这里输入您的问题..."
+              placeholder="随便说点"
             />
           </div>
 
@@ -591,20 +591,13 @@ onUnmounted(() => {
           <NDivider class="form-divider" />
 
           <!-- 提示区域 - 合并条件 -->
-          <transition
-            name="fade"
-            appear
+          <NAlert
+            v-if="!isUserLoggedIn && !isSelf && !allowUploadImage"
+            type="info"
+            class="login-alert"
           >
-            <NAlert
-              v-if="!isUserLoggedIn && !isSelf"
-              type="info"
-              class="login-alert"
-            >
-              {{ !allowUploadImage && targetUserSetting !== null ?
-                '登录后才能上传图片，或该用户未允许匿名上传图片。' :
-                allowUploadImage ? '当前为匿名状态，图片上传后将无法更改。' : '' }}
-            </NAlert>
-          </transition>
+            {{ '主播不允许上传图片' }}
+          </NAlert>
 
           <!-- 匿名选项 -->
           <transition
@@ -743,7 +736,10 @@ onUnmounted(() => {
                 </template>
 
                 <!-- 问题内容 -->
-                <NCard class="question-content">
+                <NCard
+                  class="question-content"
+                  size="small"
+                >
                   <div
                     v-if="item.question.message"
                     class="question-message"
@@ -755,7 +751,7 @@ onUnmounted(() => {
                     v-if="item.questionImages && item.questionImages.length > 0"
                     class="question-image-container"
                   >
-                  <NImage
+                    <NImage
                       v-for="(img, index) in item.questionImages"
                       :key="index"
                       :src="img.path"

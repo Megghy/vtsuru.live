@@ -146,7 +146,6 @@ function getScoreColor(score: number | undefined): string {
     </template>
     <template v-if="item.questionImages && item.questionImages.length > 0">
       <NSpace
-        vertical
         size="small"
       >
         <NImage
@@ -157,7 +156,7 @@ function getScoreColor(score: number | undefined): string {
           lazy
         />
       </NSpace>
-      <br>
+      <NDivider style="margin: 10px 0;" />
     </template>
 
     <NText
