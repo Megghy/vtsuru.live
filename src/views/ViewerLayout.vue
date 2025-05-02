@@ -476,6 +476,7 @@
           <RouterView v-slot="{ Component }">
             <Transition
               name="fade-slide"
+              mode="out-in"
               :appear="true"
             >
               <KeepAlive>
@@ -676,19 +677,7 @@
 // --- 路由过渡动画 ---
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  // 关键: 相对于 content-layout-container 定位
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%; // 让过渡元素也撑满容器高度
-  // 关键: 保持内边距和盒模型一致
-  padding: var(--vtsuru-content-padding);
-  box-sizing: border-box;
-  // 关键: 背景色防止透视
-  background-color: var(--n-card-color); // 使用内容区的背景色
-  z-index: 1;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .fade-slide-enter-from {
