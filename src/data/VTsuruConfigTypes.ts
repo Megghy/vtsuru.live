@@ -1,3 +1,4 @@
+import { UploadFileResponse } from '@/api/api-models';
 import { VNode, h } from 'vue'; // 导入 Vue 的 VNode 类型和 h 函数（用于示例）
 
 // --- 基础和通用类型 ---
@@ -30,6 +31,37 @@ type DataAccessor<T, V> = {
   get: (config: T) => V;
   set: (config: T, value: V) => void;
 };
+
+// 添加辅助函数，用于从配置对象中安全获取数据
+export function getConfigValue<T, K extends keyof T>(config: T, key: K): T[K] {
+  return config[key];
+}
+
+// 添加辅助函数，用于设置配置对象的数据
+export function setConfigValue<T, K extends keyof T>(config: T, key: K, value: T[K]): void {
+  config[key] = value;
+}
+
+// 创建一个默认的RGBA颜色对象
+export function createDefaultRGBA(r = 0, g = 0, b = 0, a = 1): RGBAColor {
+  return { r, g, b, a };
+}
+
+// 添加类型守卫函数，用于检查上传文件信息
+export function isUploadFileInfo(obj: any): obj is UploadFileResponse {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'id' in obj &&
+    typeof obj.id === 'number' &&
+    'path' in obj &&
+    typeof obj.path === 'string' &&
+    'name' in obj &&
+    typeof obj.name === 'string' &&
+    'hash' in obj &&
+    typeof obj.hash === 'string'
+  );
+}
 
 /**
  * @description 带有特定值类型 'V' 的配置项的基础类型。
@@ -117,22 +149,21 @@ export type TemplateConfigBooleanItem<T = unknown> = TemplateConfigItemWithType<
   description?: string; // 可选的描述
 };
 
-// 修改 TemplateConfigImageItem 以支持单个或多个图片，并返回完整 URL
-export type TemplateConfigImageItem<T = unknown> = TemplateConfigItemWithType<T, string[]> & {
-  type: 'image';
-  imageLimit: number; // 图片数量限制
-  // onUploaded 的 data 现在是 string[]
-  onUploaded?: (data: string[], config: T) => void;
-};
+// 将文件类型统一为数组，不再根据fileLimit区分
+export type TemplateConfigFileItem<T = unknown> =
+  TemplateConfigItemWithType<T, UploadFileResponse[]> & {
+    type: 'file';
+    fileLimit?: number; // 变为可选参数，仅用于UI限制，不影响类型
+    fileType?: string[];
+    onUploaded?: (data: UploadFileResponse[], config: T) => void;
+  };
 
 // --- 新增：装饰性图片配置 ---
 
 /**
  * @description 单个装饰图片的属性接口
  */
-export interface DecorativeImageProperties {
-  id: string;        // 唯一标识符 (例如 UUID 或时间戳)
-  src: string;       // 图片 URL
+export interface DecorativeImageProperties extends UploadFileResponse {
   x: number;         // X 坐标 (%)
   y: number;         // Y 坐标 (%)
   width: number;     // 宽度 (%)
@@ -208,16 +239,16 @@ export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBas
 
 /**
  * @description 所有可能的配置项定义类型的联合类型。
- * 使用 `<unknown>` 作为完整配置类型 T 的占位符。
+ * 使用 `<any>` 作为完整配置类型 T 的占位符。
  */
 export type ConfigItemDefinition =
   | TemplateConfigStringItem<any>
   | TemplateConfigNumberItem<any>
   | TemplateConfigStringArrayItem<any>
   | TemplateConfigNumberArrayItem<any>
-  | TemplateConfigImageItem<any>
-  | TemplateConfigRenderItem<any> // 包含优化后的 render/onUploaded 方法
-  | TemplateConfigDecorativeImagesItem<any> // 新增装饰图片类型
+  | TemplateConfigFileItem<any>
+  | TemplateConfigRenderItem<any>
+  | TemplateConfigDecorativeImagesItem<any>
   | TemplateConfigSliderNumberItem<any>
   | TemplateConfigBooleanItem<any>
   | TemplateConfigColorItem<any>;
@@ -240,9 +271,10 @@ export type ExtractConfigData<
     // 如果没有 default，则根据 'type' 属性确定类型
     : ItemWithKeyK extends { type: 'string'; } ? string
     : ItemWithKeyK extends { type: 'stringArray'; } ? string[]
-    : ItemWithKeyK extends { type: 'number' | 'sliderNumber' | 'color'; } ? number
+    : ItemWithKeyK extends { type: 'number' | 'sliderNumber' ; } ? number
     : ItemWithKeyK extends { type: 'numberArray'; } ? number[]
-    : ItemWithKeyK extends { type: 'image'; } ? string[]
+    // 文件类型统一处理为数组
+    : ItemWithKeyK extends { type: 'file'; } ? UploadFileResponse[]
     : ItemWithKeyK extends { type: 'boolean'; } ? boolean
     : ItemWithKeyK extends { type: 'color'; } ? RGBAColor
     : ItemWithKeyK extends { type: 'decorativeImages'; } ? DecorativeImageProperties[]
@@ -253,22 +285,140 @@ export type ExtractConfigData<
     : never // 如果 K 正确派生，则不应发生
   };
 
+
+// --- Key 约束辅助类型 ---
+/**
+ * @description 根据配置项的 'type' 约束其 'key' 属性。
+ * - type: 'file'或'decorativeImages'等包含UploadFileInfo的类型的key必须以'File'结尾。
+ * - 其他type的key禁止以'File'结尾。
+ * @template Item - 待检查的配置项定义类型。
+ */
+type ConstrainedKeyItem<Item extends ConfigItemDefinition> =
+    // 所有包含UploadFileInfo的类型必须以'File'结尾
+    Item extends { type: 'file' } | { type: 'decorativeImages' }
+        // 强制key以'File'结尾
+        ? Omit<Item, 'key'> & { key: `${string}File` }
+        : Item extends { key: infer K extends string }
+            // 对于其它类型，检查key是否以'File'结尾
+            ? K extends `${string}File`
+                // 如果以'File'结尾，则类型无效(never)，导致TypeScript报错
+                ? never
+                // 如果不以'File'结尾，则类型有效
+                : Item
+            // 如果Item没有key属性(理论上不应发生)，保持原样
+            : Item;
+
 /**
  * @description 定义并验证配置项数组。
  * 使用 `const Items` 可以在与 `as const` 结合使用时保留字面量类型和元组结构。
+ * 此函数现在会强制执行 key 的命名规则：'file' 类型 key 必须以 'File' 结尾，其他类型禁止。
+ * @template Items - 一个只读的配置项定义数组，每个元素都必须满足 ConstrainedKeyItem 约束。
  * @param items 一个只读的配置项定义数组。
- * @returns 类型被保留的同一个只读数组。
+ * @returns 类型被保留且经过验证的同一个只读数组。
  */
 export function defineTemplateConfig<
-  const Items extends readonly ConfigItemDefinition[] // 使用 'const' 泛型进行推断
+    // 应用 ConstrainedKeyItem 约束到数组的每个元素
+    const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition>[]
 >(items: Items): Items {
-  // 如果需要，可以在此处添加基本的运行时验证。
-  // 类型检查主要由 TypeScript 根据约束完成。
-  return items;
+    // 可选的运行时验证，用于在浏览器控制台提供更友好的错误提示
+    items.forEach(item => {
+      // 类型守卫确保 item 有 key 和 type 属性
+      if ('key' in item && typeof item.key === 'string' && 'type' in item && typeof item.type === 'string') {
+        // 检查是否是需要File后缀的类型
+        const requiresFileSuffix = item.type === 'file' || item.type === 'decorativeImages';
+
+        if (requiresFileSuffix) {
+            if (!item.key.endsWith('File')) {
+                console.error(`类型错误: 配置项 "${item.key}" 类型为 '${item.type}' 但 key 未以 'File' 结尾。`);
+            }
+        } else {
+            if (item.key.endsWith('File')) {
+                console.error(`类型错误: 配置项 "${item.key}" 类型为 '${item.type}' 但 key 以 'File' 结尾。`);
+            }
+        }
+      }
+    });
+    return items;
 }
 
-// 帮助函数：将 RGBA 对象转换为 CSS 字符串
-export function rgbaToString(color: RGBAColor | undefined): string {
-  if (!color) return 'rgba(0,0,0,0)'; // 或者一个默认颜色
-  return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+// --- 增强型工具类型 ---
+
+/**
+ * 确保数值在指定范围内的工具类型
+ */
+export type NumericRange<Min extends number, Max extends number> =
+  number extends Min ? number :
+  number extends Max ? number :
+  Min | Max | Exclude<number, Min | Max>;
+
+/**
+ * 非空数组工具类型
+ */
+export type NonEmptyArray<T> = [T, ...T[]];
+
+// --- 改进 rgbaToString 函数，添加更严格的类型检查 ---
+export function rgbaToString(color: RGBAColor | undefined | null): string {
+  if (!color) return 'rgba(0,0,0,0)';
+
+  // 额外的类型安全检查
+  const r = Math.min(255, Math.max(0, Math.round(color.r)));
+  const g = Math.min(255, Math.max(0, Math.round(color.g)));
+  const b = Math.min(255, Math.max(0, Math.round(color.b)));
+  const a = Math.min(1, Math.max(0, color.a));
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+/**
+ * 辅助函数：创建一个配置对象的模板工厂函数
+ * @param items 配置项定义数组
+ * @returns 创建配置对象的工厂函数
+ */
+export function createTemplateConfigFactory<const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition>[]>(
+  items: Items
+) {
+  // 返回一个工厂函数，用于创建初始化的配置对象
+  return (): ExtractConfigData<Items> => {
+    const config = {} as ExtractConfigData<Items>;
+
+    // 使用项定义中的默认值初始化配置对象
+    for (const item of items) {
+      if ('default' in item && item.default !== undefined) {
+        if (typeof config === 'object' && item.key) {
+          // @ts-ignore - 动态赋值
+          config[item.key] = item.default;
+        }
+      }
+    }
+
+    return config;
+  };
+}
+
+/**
+ * 模板配置校验函数类型
+ */
+export type TemplateConfigValidator<T> = (config: T) => { valid: boolean; message?: string };
+
+/**
+ * 创建配置验证器
+ * @param validator 验证函数
+ * @returns 验证器函数
+ */
+export function createConfigValidator<T>(validator: TemplateConfigValidator<T>) {
+  return validator;
+}
+
+/**
+ * 类型守卫：检查对象是否为有效的RGBA颜色
+ */
+export function isValidRGBAColor(obj: any): obj is RGBAColor {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'r' in obj && typeof obj.r === 'number' &&
+    'g' in obj && typeof obj.g === 'number' &&
+    'b' in obj && typeof obj.b === 'number' &&
+    'a' in obj && typeof obj.a === 'number'
+  );
 }

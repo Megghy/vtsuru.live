@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { QAInfo, UserInfo } from '@/api/api-models'
+import { QAInfo, UserInfo, Setting_QuestionBox, UploadFileResponse } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY, FILE_API_URL } from '@/data/constants'
+import { uploadFiles, UploadStage } from '@/data/fileUpload'
 import GraphemeSplitter from 'grapheme-splitter'
 import {
   NAlert,
@@ -22,122 +23,298 @@ import {
   NText,
   NTime,
   NTooltip,
-  NUpload,
-  UploadFileInfo,
+  NSpin,
+  NIcon,
   useMessage,
 } from 'naive-ui'
+import { AddCircle24Regular, DismissCircle24Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { useRoute } from 'vue-router'
+import { getUserAvatarUrl } from '@/Utils'
 
 const { biliInfo, userInfo } = defineProps<{
   biliInfo: any | undefined
   userInfo: UserInfo | undefined
 }>()
 
-// 状态变量
+// 基础状态变量
 const message = useMessage()
 const accountInfo = useAccount()
-const questionMessage = ref('') // 提问内容
-const fileList = ref<UploadFileInfo[]>([]) // 上传图片列表
-const publicQuestions = ref<QAInfo[]>([]) // 公开提问列表
-const tags = ref<string[]>([]) // 标签列表
-const selectedTag = ref<string | null>(null) // 选中的标签
-const isAnonymous = ref(true) // 是否匿名提问
-const isSending = ref(false) // 是否正在发送
-const isGetting = ref(true) // 是否正在获取数据
-
-// 验证码相关
-const token = ref('')
-const turnstile = ref()
 const route = useRoute()
-
-// 防刷控制
-const nextSendQuestionTime = ref(Date.now())
-const minSendQuestionTime = 30 * 1000 // 30秒冷却时间
-
-// 字符分割器(用于正确计算表情符号等Unicode字符)
 const splitter = new GraphemeSplitter()
 
-// 计算属性
-const isSelf = computed(() => {
-  return userInfo?.id === accountInfo.value?.id
-})
+// 问题相关状态
+const questionMessage = ref('')
+const publicQuestions = ref<QAInfo[]>([])
+const tags = ref<string[]>([])
+const selectedTag = ref<string | null>(null)
+const isAnonymous = ref(true)
+const isSending = ref(false)
+const isGetting = ref(true)
+const token = ref('')
+const turnstile = ref()
+const nextSendQuestionTime = ref(Date.now())
+const minSendQuestionTime = 30 * 1000
 
-// 计算字符数量
+// 图片上传相关状态
+const targetUserSetting = ref<Setting_QuestionBox | null>(null)
+const allowUploadImage = computed(() => userInfo?.extra?.allowQuestionBoxUploadImage ?? false)
+const anonymousImageToken = ref<string | null>(null)
+const anonymousImagePreviewUrl = ref<string | null>(null)
+const isUploadingAnonymousImage = ref(false)
+const loggedInSelectedFiles = ref<File[]>([])
+const loggedInImagePreviewUrls = ref<string[]>([])
+const MAX_LOGGED_IN_IMAGES = 5
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon']
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
+// 计算属性
+const isSelf = computed(() => userInfo?.id === accountInfo.value?.id)
+const isUserLoggedIn = computed(() => !!accountInfo.value?.id)
+
+// 辅助函数
 function countGraphemes(value: string) {
   return splitter.countGraphemes(value)
 }
 
-// 发送提问
-async function SendQuestion() {
-  // 内容长度检查
-  if (countGraphemes(questionMessage.value) < 3) {
-    message.error('内容最少需要3个字')
-    return
+// 图片处理公共方法
+function validateImageFile(file: File): {valid: boolean, message?: string} {
+  if (file.size > MAX_FILE_SIZE) {
+    return {valid: false, message: '文件大小不能超过10MB'};
   }
 
-  // 冷却时间检查
-  if (nextSendQuestionTime.value > Date.now()) {
-    message.error('冷却中, 剩余 ' + Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000) + '秒')
-    return
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {valid: false, message: '只支持上传 PNG, JPG, GIF, WEBP, SVG, ICO 格式的图片'};
   }
 
-  isSending.value = true
-  await QueryPostAPI<QAInfo>(
-    QUESTION_API_URL + 'send',
-    {
-      Target: userInfo?.id,
-      IsAnonymous: !accountInfo.value || isAnonymous.value,
-      Message: questionMessage.value,
-      ImageBase64: fileList.value?.length > 0 ? await getBase64(fileList.value[0].file) : undefined,
-      Tag: selectedTag.value,
-    },
-    [['Turnstile', token.value]],
-  )
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('成功发送棉花糖')
-        questionMessage.value = ''
-        fileList.value = []
-        nextSendQuestionTime.value = Date.now() + minSendQuestionTime
-      } else {
-        message.error(data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('发送失败')
-    })
-    .finally(() => {
-      isSending.value = false
-      turnstile.value?.reset()
-    })
+  return {valid: true};
 }
 
-// 转换文件为Base64
-function getBase64(file: File | undefined | null) {
-  if (!file) return null
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result?.toString().split(',')[1])
-    reader.onerror = (error) => reject(error)
-  })
+function clearImageURLs(urls: string[]) {
+  urls.forEach(url => {
+    if (url) URL.revokeObjectURL(url);
+  });
 }
 
-// 文件列表变更处理
-function OnFileListChange(files: UploadFileInfo[]) {
-  if (files.length == 1) {
-    const file = files[0]
-    // 文件大小检查
-    if ((file.file?.size ?? 0) > 10 * 1024 * 1024) {
-      message.error('文件大小不能超过10MB')
-      fileList.value = []
+// 匿名图片上传
+async function uploadAnonymousImage(file: File) {
+  if (!userInfo?.id) {
+    message.error('无法获取目标用户信息');
+    return;
+  }
+
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    message.error(validation.message || '图片上传失败');
+    return;
+  }
+
+  isUploadingAnonymousImage.value = true;
+  removeAnonymousImage();
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('targetUserId', userInfo.id.toString());
+
+  try {
+    const data = await QueryPostAPI<string>(FILE_API_URL + 'upload-anonymous', formData);
+    if (data.code === 200 && data.data) {
+      anonymousImageToken.value = data.data;
+      const url = URL.createObjectURL(file);
+      anonymousImagePreviewUrl.value = url;
+      message.success('匿名图片准备就绪');
+    } else {
+      message.error(data.message || '匿名图片上传失败');
+      removeAnonymousImage();
     }
+  } catch (err: any) {
+    message.error('匿名图片上传失败: ' + (err.message || err));
+    removeAnonymousImage();
+  } finally {
+    isUploadingAnonymousImage.value = false;
   }
 }
 
-// 获取公开提问列表
+function handleAnonymousFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    const file = input.files[0];
+
+    // 如果已经有图片，提示不能多选
+    if (anonymousImageToken.value) {
+      message.warning('匿名模式下只能上传一张图片');
+      input.value = '';
+      return;
+    }
+
+    uploadAnonymousImage(file);
+    input.value = '';
+  }
+}
+
+function removeAnonymousImage() {
+  if (anonymousImagePreviewUrl.value) {
+    URL.revokeObjectURL(anonymousImagePreviewUrl.value as string);
+    anonymousImagePreviewUrl.value = null;
+  }
+  anonymousImageToken.value = null;
+}
+
+// 已登录用户图片上传
+function handleLoggedInFileSelect(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    // 处理多个文件 - 支持多选
+    const newFiles = Array.from(input.files);
+
+    // 检查每个文件
+    for (const file of newFiles) {
+      // 验证文件类型和大小
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        message.error(validation.message || '图片上传失败');
+        continue;
+      }
+
+      // 检查是否超出最大数量限制
+      if (loggedInSelectedFiles.value.length >= MAX_LOGGED_IN_IMAGES) {
+        message.warning(`最多只能上传${MAX_LOGGED_IN_IMAGES}张图片`);
+        break;
+      }
+
+      // 检查文件是否重复（通过文件名、大小和最后修改时间判断）
+      // 避免重复选择相同图片
+      const isDuplicate = loggedInSelectedFiles.value.some(existingFile =>
+        existingFile.name === file.name &&
+        existingFile.size === file.size &&
+        existingFile.lastModified === file.lastModified
+      );
+
+      if (isDuplicate) {
+        message.warning(`文件"${file.name}"已存在，不会重复添加`);
+        continue;
+      }
+
+      // 添加到已选文件列表
+      loggedInSelectedFiles.value.push(file);
+      const url = URL.createObjectURL(file);
+      loggedInImagePreviewUrls.value.push(url);
+    }
+
+    // 清空输入框，允许重新选择文件
+    input.value = '';
+  }
+}
+
+function removeLoggedInImage(index: number) {
+  const url = loggedInImagePreviewUrls.value[index];
+  if (url) {
+    URL.revokeObjectURL(url as string);
+  }
+  loggedInImagePreviewUrls.value.splice(index, 1);
+  loggedInSelectedFiles.value.splice(index, 1);
+}
+
+function clearAllLoggedInImages() {
+  loggedInImagePreviewUrls.value.forEach(url => {
+    if (url) URL.revokeObjectURL(url as string);
+  });
+  loggedInImagePreviewUrls.value = [];
+  loggedInSelectedFiles.value = [];
+}
+
+// API 交互方法
+async function SendQuestion() {
+  if (countGraphemes(questionMessage.value) < 3) {
+    message.error('内容最少需要3个字');
+    return;
+  }
+
+  if (nextSendQuestionTime.value > Date.now()) {
+    message.error('冷却中, 剩余 ' + Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000) + '秒');
+    return;
+  }
+
+  isSending.value = true;
+  let uploadedFileIds: number[] = [];
+  let imagePayload: { id: number }[] | undefined = undefined;
+  let tokenPayload: string | undefined = undefined;
+
+  try {
+    // 处理图片上传
+    if (!isUserLoggedIn.value) {
+      if (anonymousImageToken.value) {
+        tokenPayload = anonymousImageToken.value;
+      }
+    } else if (loggedInSelectedFiles.value.length > 0) {
+      message.info('正在上传图片...');
+
+      // 上传多张图片
+      const uploadPromises = loggedInSelectedFiles.value.map(file =>
+        uploadFiles(file, undefined, undefined, (stage) => {
+          console.log('上传阶段:', stage);
+        })
+      );
+
+      const uploadResults = await Promise.all(uploadPromises);
+
+      // 提取所有上传的文件ID
+      uploadedFileIds = uploadResults
+        .filter(result => result && result.length > 0)
+        .map(result => result[0].id);
+
+      if (uploadedFileIds.length > 0) {
+        imagePayload = uploadedFileIds.map(id => ({ id }));
+        message.success('图片上传成功');
+      } else if (loggedInSelectedFiles.value.length > 0) {
+        throw new Error('图片上传失败，未返回文件信息');
+      }
+    }
+
+    // 发送问题
+    const payload = {
+      Target: userInfo?.id,
+      IsAnonymous: !isUserLoggedIn.value || isAnonymous.value,
+      Message: questionMessage.value,
+      Tag: selectedTag.value,
+      Images: imagePayload,
+      ImageTokens: tokenPayload ? [tokenPayload] : undefined,
+    };
+
+    const data = await QueryPostAPI<QAInfo>(
+      QUESTION_API_URL + 'send',
+      payload,
+      [['Turnstile', token.value]],
+    );
+
+    if (data.code == 200) {
+      message.success('成功发送棉花糖');
+      questionMessage.value = '';
+      removeAnonymousImage();
+      clearAllLoggedInImages();
+      nextSendQuestionTime.value = Date.now() + minSendQuestionTime;
+      getPublicQuestions();
+    } else {
+      message.error(data.message || '发送失败');
+      if (tokenPayload && (data.message.includes('token') || data.code === 400)) {
+        removeAnonymousImage();
+      }
+    }
+  } catch (err: any) {
+    message.error('发送失败: ' + (err.message || err));
+    if (loggedInSelectedFiles.value.length > 0 && uploadedFileIds.length === 0) {
+      clearAllLoggedInImages();
+    }
+    if (tokenPayload && (err.message?.includes('token'))) {
+      removeAnonymousImage();
+    }
+  } finally {
+    isSending.value = false;
+    turnstile.value?.reset();
+  }
+}
+
 function getPublicQuestions() {
   isGetting.value = true
   QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
@@ -158,63 +335,53 @@ function getPublicQuestions() {
     })
 }
 
-// 获取标签列表
-function getTags() {
-  isGetting.value = true
-  QueryGetAPI<string[]>(QUESTION_API_URL + 'get-tags', {
-    id: userInfo?.id,
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        // 处理标签数据
-        if (userInfo?.id == accountInfo.value?.id) {
-          // 自己查看自己的标签时，需要从对象中提取名称
-          tags.value = data.data.map((tag: any) => {
-            // 直接访问name属性，避免不必要的JSON序列化和解析
-            return typeof tag === 'object' && tag !== null ? tag.name : tag
-          })
-        } else {
-          // 查看他人标签时直接使用返回数据
-          tags.value = data.data
-        }
+async function getTagsAndSettings() {
+  if (!userInfo?.id) return;
+  isGetting.value = true;
+  try {
+    const tagsData = await QueryGetAPI<string[]>(QUESTION_API_URL + 'get-tags', { id: userInfo.id });
+
+    if (tagsData.code == 200) {
+      if (userInfo?.id == accountInfo.value?.id) {
+        tags.value = tagsData.data.map((tag: any) =>
+          typeof tag === 'object' && tag !== null ? tag.name : tag
+        );
       } else {
-        message.error('获取标签失败:' + data.message)
+        tags.value = tagsData.data;
       }
-    })
-    .catch((err) => {
-      message.error('获取标签失败: ' + err)
-    })
-    .finally(() => {
-      isGetting.value = false
-      // 检查 URL 参数中的 tag
       const tagFromQuery = route.query.tag as string | undefined
       if (tagFromQuery && tags.value.includes(tagFromQuery)) {
         selectedTag.value = tagFromQuery
       }
-    })
+    } else {
+      message.error('获取标签失败:' + tagsData.message);
+    }
+  } catch (err: any) {
+    message.error('获取信息失败: ' + (err.message || err));
+  } finally {
+    isGetting.value = false;
+  }
 }
 
-// 标签选择处理
 function onSelectTag(tag: string) {
-  // 切换选中状态
   selectedTag.value = selectedTag.value === tag ? null : tag
 }
 
 // 生命周期钩子
 onMounted(() => {
   getPublicQuestions()
-  getTags()
+  getTagsAndSettings()
 })
 
 onUnmounted(() => {
-  // 清理验证码资源
   turnstile.value?.remove()
+  removeAnonymousImage();
+  clearAllLoggedInImages();
 })
 </script>
 
 <template>
   <div class="question-box-container">
-    <!-- 提问表单 -->
     <transition
       name="fade-slide-down"
       appear
@@ -256,7 +423,7 @@ onUnmounted(() => {
             </NCard>
           </transition>
 
-          <!-- 提问内容区域 -->
+          <!-- 问题输入区域 -->
           <div class="question-input-area">
             <NInput
               v-model:value="questionMessage"
@@ -268,42 +435,172 @@ onUnmounted(() => {
               class="question-textarea"
               placeholder="在这里输入您的问题..."
             />
-            <transition
-              name="fade-scale"
-            >
-              <NUpload
-                v-model:file-list="fileList"
-                :max="1"
-                accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
-                list-type="image-card"
-                :disabled="!accountInfo.id || isSelf"
-                :default-upload="false"
-                class="image-upload"
-                @update:file-list="OnFileListChange"
-              >
-                <div class="upload-trigger">
-                  <div class="upload-icon">
-                    +
+          </div>
+
+          <!-- 图片上传区域 - 重构为更简洁的条件块 -->
+          <div class="image-upload-container">
+            <!-- 已登录用户图片上传 -->
+            <template v-if="isUserLoggedIn && !isSelf">
+              <NSpin :show="isSending && loggedInSelectedFiles.length > 0">
+                <NCard
+                  size="small"
+                  class="image-upload-card"
+                >
+                  <div class="upload-header">
+                    <NText class="upload-title">
+                      图片 (最多{{ MAX_LOGGED_IN_IMAGES }}张)
+                    </NText>
                   </div>
-                  <span>上传图片</span>
-                </div>
-              </NUpload>
-            </transition>
+
+                  <div class="upload-images-grid">
+                    <div
+                      v-for="(url, index) in loggedInImagePreviewUrls"
+                      :key="index"
+                      class="upload-image-item"
+                    >
+                      <div class="image-preview-wrapper">
+                        <NImage
+                          :src="url"
+                          object-fit="cover"
+                          class="upload-preview-image"
+                        />
+                        <NButton
+                          circle
+                          size="tiny"
+                          type="error"
+                          class="remove-image-btn"
+                          @click="removeLoggedInImage(index)"
+                        >
+                          <template #icon>
+                            <NIcon :component="DismissCircle24Regular" />
+                          </template>
+                        </NButton>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="loggedInSelectedFiles.length < MAX_LOGGED_IN_IMAGES"
+                      class="upload-add-item"
+                      @click="($refs.loggedInFileInput as HTMLInputElement)?.click()"
+                    >
+                      <NIcon
+                        :component="AddCircle24Regular"
+                        class="add-icon"
+                      />
+                    </div>
+                  </div>
+
+                  <input
+                    ref="loggedInFileInput"
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+                    style="display: none;"
+                    multiple
+                    @change="handleLoggedInFileSelect"
+                  >
+                </NCard>
+              </NSpin>
+            </template>
+
+            <!-- 匿名用户图片上传 -->
+            <template v-else-if="!isUserLoggedIn && !isSelf && allowUploadImage">
+              <NSpin :show="isUploadingAnonymousImage">
+                <NCard
+                  size="small"
+                  class="image-upload-card"
+                >
+                  <div class="upload-header">
+                    <NText class="upload-title">
+                      匿名图片
+                    </NText>
+                  </div>
+
+                  <div class="anonymous-upload-container">
+                    <template v-if="!anonymousImageToken">
+                      <div
+                        class="anonymous-upload-btn"
+                        @click="($refs.anonymousFileInput as HTMLInputElement)?.click()"
+                      >
+                        <NIcon
+                          :component="AddCircle24Regular"
+                          class="add-icon"
+                        />
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="image-preview-wrapper">
+                        <NImage
+                          v-if="anonymousImagePreviewUrl"
+                          :src="anonymousImagePreviewUrl"
+                          object-fit="cover"
+                          class="upload-preview-image"
+                        />
+                        <NButton
+                          circle
+                          size="tiny"
+                          type="error"
+                          class="remove-image-btn"
+                          @click="removeAnonymousImage"
+                        >
+                          <template #icon>
+                            <NIcon :component="DismissCircle24Regular" />
+                          </template>
+                        </NButton>
+                      </div>
+                    </template>
+                  </div>
+
+                  <input
+                    ref="anonymousFileInput"
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+                    style="display: none;"
+                    @change="handleAnonymousFileSelect"
+                  >
+                </NCard>
+              </NSpin>
+            </template>
+
+            <!-- 未开启匿名图片上传提示 -->
+            <template v-else-if="!isUserLoggedIn && !isSelf && !allowUploadImage && targetUserSetting !== null">
+              <NTooltip>
+                <template #trigger>
+                  <NCard
+                    size="small"
+                    class="image-upload-card upload-disabled"
+                  >
+                    <div class="upload-header">
+                      <NText class="upload-title">
+                        图片
+                      </NText>
+                    </div>
+                    <div class="disabled-container">
+                      <NText depth="3">
+                        未开启匿名图片上传
+                      </NText>
+                    </div>
+                  </NCard>
+                </template>
+                主播不允许上传图片
+              </NTooltip>
+            </template>
           </div>
 
           <NDivider class="form-divider" />
 
-          <!-- 提示信息 -->
+          <!-- 提示区域 - 合并条件 -->
           <transition
             name="fade"
             appear
           >
             <NAlert
-              v-if="!accountInfo.id && !isSelf"
-              type="warning"
+              v-if="!isUserLoggedIn && !isSelf"
+              type="info"
               class="login-alert"
             >
-              只有注册用户才能够上传图片
+              {{ !allowUploadImage && targetUserSetting !== null ?
+                '登录后才能上传图片，或该用户未允许匿名上传图片。' :
+                allowUploadImage ? '当前为匿名状态，图片上传后将无法更改。' : '' }}
             </NAlert>
           </transition>
 
@@ -313,7 +610,7 @@ onUnmounted(() => {
             appear
           >
             <NSpace
-              v-if="accountInfo.id"
+              v-if="isUserLoggedIn"
               vertical
               class="anonymous-option"
             >
@@ -329,7 +626,7 @@ onUnmounted(() => {
           <!-- 操作按钮 -->
           <div class="action-buttons">
             <NButton
-              :disabled="isSelf"
+              :disabled="isSelf || isUploadingAnonymousImage"
               type="primary"
               :loading="isSending || !token"
               class="send-button"
@@ -338,7 +635,7 @@ onUnmounted(() => {
               发送
             </NButton>
             <NButton
-              :disabled="isSelf || !accountInfo.id"
+              :disabled="isSelf || !isUserLoggedIn"
               type="info"
               class="my-questions-button"
               @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
@@ -347,7 +644,7 @@ onUnmounted(() => {
             </NButton>
           </div>
 
-          <!-- 验证码 -->
+          <!-- 验证组件 -->
           <div class="turnstile-container">
             <VueTurnstile
               ref="turnstile"
@@ -357,7 +654,7 @@ onUnmounted(() => {
             />
           </div>
 
-          <!-- 错误提示 -->
+          <!-- 自己提示 -->
           <transition
             name="fade-slide-up"
             appear
@@ -374,7 +671,7 @@ onUnmounted(() => {
       </NCard>
     </transition>
 
-    <!-- 公开回复列表 -->
+    <!-- 公开提问列表 -->
     <transition
       name="fade"
       appear
@@ -413,9 +710,44 @@ onUnmounted(() => {
                     align="center"
                     class="question-header"
                   >
+                    <NTooltip v-if="!item.isAnonymous">
+                      <template #trigger>
+                        <NAvatar
+                          v-if="item.sender?.id"
+                          :src="getUserAvatarUrl(item.sender.id)"
+                          round
+                          size="small"
+                          class="sender-avatar"
+                          :img-props="{ referrerpolicy: 'no-referrer' }"
+                        />
+                        <NAvatar
+                          v-else
+                          round
+                          size="small"
+                          class="sender-avatar"
+                        >
+                          ?
+                        </NAvatar>
+                      </template>
+                      {{ item.sender?.name || '未知用户' }}
+                    </NTooltip>
+                    <NTooltip v-else>
+                      <template #trigger>
+                        <NAvatar
+                          round
+                          size="small"
+                          class="sender-avatar"
+                        >
+                          匿
+                        </NAvatar>
+                      </template>
+                      匿名用户
+                    </NTooltip>
+
                     <NText
                       depth="3"
                       class="time-text"
+                      style="margin-left: 8px;"
                     >
                       <NTooltip>
                         <template #trigger>
@@ -444,19 +776,29 @@ onUnmounted(() => {
 
                 <!-- 问题内容 -->
                 <NCard class="question-content">
-                  <div class="question-message">
+                  <div
+                    v-if="item.question.message"
+                    class="question-message"
+                  >
                     {{ item.question.message }}
                   </div>
                   <div
-                    v-if="item.question.image"
+                    v-if="item.questionImages && item.questionImages.length > 0"
                     class="question-image-container"
                   >
-                    <NImage
-                      :src="item.question.image"
-                      class="question-image"
-                      lazy
-                      object-fit="contain"
-                    />
+                    <NSpace
+                      vertical
+                      align="center"
+                    >
+                      <NImage
+                        v-for="(img, index) in item.questionImages"
+                        :key="index"
+                        :src="img.path"
+                        class="question-image"
+                        lazy
+                        object-fit="contain"
+                      />
+                    </NSpace>
                   </div>
                 </NCard>
 
@@ -491,8 +833,13 @@ onUnmounted(() => {
             </NListItem>
           </NList>
           <NEmpty
-            v-else
+            v-else-if="!isGetting"
             class="empty-state"
+            description="还没有公开回复"
+          />
+          <NSpin
+            v-else
+            style="width: 100%; margin-top: 20px;"
           />
         </transition-group>
       </div>
@@ -506,7 +853,7 @@ onUnmounted(() => {
 .n-list {
   background-color: transparent;
 }
-
+/* 基础容器样式 */
 .question-box-container {
   max-width: 700px;
   margin: 0 auto;
@@ -515,7 +862,7 @@ onUnmounted(() => {
   padding: 0 16px;
 }
 
-/* 卡片样式 */
+/* 表单卡片样式 */
 .question-form-card {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -532,7 +879,7 @@ onUnmounted(() => {
   border-left: 4px solid #f5222d;
 }
 
-/* 话题选择卡片 */
+/* 话题选择区样式 */
 .topic-card {
   border-radius: 8px;
   overflow: hidden;
@@ -557,80 +904,138 @@ onUnmounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 提问输入区域 */
-.question-textarea {
-  flex: 1;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  width: 100% !important; /* 使用 !important 确保不被其他样式覆盖 */
-  min-height: 100px; /* 设置最小高度 */
-  resize: vertical; /* 允许垂直调整大小 */
-}
-
-/* 设置 naive-ui 内部元素样式 */
-.question-textarea :deep(.n-input__textarea) {
-  min-width: 100% !important;
-  width: 100% !important;
-}
-
-.question-textarea :deep(.n-input__textarea-el) {
-  min-width: 100% !important;
-  width: 100% !important;
-}
-
-/* 确保输入框容器占满可用空间 */
+/* 问题输入区域 */
 .question-input-area {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   margin: 16px 0;
   width: 100%;
 }
 
-@media (min-width: 640px) {
-  .question-input-area {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
-  /* 在水平布局中设置输入框区域的最小宽度 */
-  .question-textarea {
-    min-width: 75%; /* 占据至少75%的宽度 */
-  }
-}
-
-.image-upload {
-  min-width: 112px;
-}
-
-.upload-trigger {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-  opacity: 0.8;
+.question-textarea {
+  width: 100% !important;
+  min-height: 200px;
+  resize: vertical;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
-.upload-trigger:hover {
-  opacity: 1;
-  transform: scale(1.05);
+/* 图片上传区域 */
+.image-upload-container {
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-.upload-icon {
-  font-size: 24px;
-  margin-bottom: 4px;
+.image-upload-card {
+  width: 50%;
+  margin: 0 auto;
+  text-align: center;
+  border-radius: 6px;
+  padding: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-color);
 }
 
-/* 分隔线 */
+.image-upload-card:hover {
+  background-color: var(--hover-background-color);
+}
+
+.upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.upload-title {
+  font-size: 13px;
+  color: #666;
+}
+
+/* 已登录用户图片上传网格 */
+.upload-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 8px;
+}
+
+.upload-image-item, .upload-add-item {
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.upload-add-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-color);
+  cursor: pointer;
+}
+
+.add-icon {
+  font-size: 20px;
+  color: var(--text-color);
+}
+
+/* 图片预览样式 */
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  opacity: 0.9;
+}
+
+/* 匿名图片上传样式 */
+.anonymous-upload-container {
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.anonymous-upload-btn {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.disabled-container {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.upload-disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background-color: var(--hover-background-color);
+}
+
+/* 通用元素 */
 .form-divider {
   margin: 10px 0;
   opacity: 0.6;
 }
 
-/* 警告提示 */
 .login-alert,
 .self-alert {
   border-radius: 8px;
@@ -649,12 +1054,11 @@ onUnmounted(() => {
   }
 }
 
-/* 匿名选项 */
+/* 操作按钮 */
 .anonymous-option {
   margin: 8px 0;
 }
 
-/* 操作按钮 */
 .action-buttons {
   display: flex;
   justify-content: center;
@@ -675,14 +1079,13 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 验证码容器 */
 .turnstile-container {
   display: flex;
   justify-content: center;
   margin: 8px 0;
 }
 
-/* 公开回复部分 */
+/* 公开提问区域 */
 .public-divider {
   margin: 32px 0 24px;
   position: relative;
@@ -738,11 +1141,11 @@ onUnmounted(() => {
 }
 
 .question-tag {
-  margin-left: 8px;
+  margin-left: auto;
 }
 
 .question-content {
-  text-align: center;
+  text-align: left;
   padding: 16px;
   background-color: rgba(0, 0, 0, 0.02);
   border-radius: 6px;
@@ -762,6 +1165,7 @@ onUnmounted(() => {
 
 .question-image {
   max-height: 200px;
+  max-width: 100%;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
@@ -770,6 +1174,7 @@ onUnmounted(() => {
   transform: scale(1.02);
 }
 
+/* 回答区域 */
 .answer-container {
   padding: 12px;
   background-color: rgba(24, 160, 88, 0.06);
@@ -809,8 +1214,7 @@ onUnmounted(() => {
   opacity: 0.7;
 }
 
-/* 过渡动效 */
-/* 淡入淡出 */
+/* 过渡动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -821,7 +1225,6 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* 下滑淡入 */
 .fade-slide-down-enter-active,
 .fade-slide-down-leave-active {
   transition: all 0.5s ease;
@@ -833,7 +1236,6 @@ onUnmounted(() => {
   transform: translateY(-20px);
 }
 
-/* 上滑淡入 */
 .fade-slide-up-enter-active,
 .fade-slide-up-leave-active {
   transition: all 0.5s ease;
@@ -845,7 +1247,6 @@ onUnmounted(() => {
   transform: translateY(20px);
 }
 
-/* 缩放淡入 */
 .fade-scale-enter-active,
 .fade-scale-leave-active {
   transition: all 0.5s ease;
@@ -857,7 +1258,6 @@ onUnmounted(() => {
   transform: scale(0.9);
 }
 
-/* 标签列表过渡 */
 .tag-list-move {
   transition: all 0.5s ease;
 }
@@ -873,7 +1273,6 @@ onUnmounted(() => {
   transform: translateX(30px);
 }
 
-/* 问题列表过渡 */
 .list-fade-move {
   transition: transform 0.5s ease;
 }

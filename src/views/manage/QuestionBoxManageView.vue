@@ -634,14 +634,21 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                     </NFlex>
                   </template>
                   <!-- 问题内容 -->
-                  <template v-if="item.question?.image">
-                    <NImage
-                      :src="item.question.image"
-                      width="100"
-                      object-fit="cover"
-                      lazy
-                      style="border-radius: 4px; margin-bottom: 5px;"
-                    />
+                  <template v-if="item.questionImages && item.questionImages.length > 0">
+                    <NSpace
+                      vertical
+                      size="small"
+                    >
+                      <NImage
+                        v-for="(img, index) in item.questionImages"
+                        :key="index"
+                        :src="img.path"
+                        width="100"
+                        object-fit="cover"
+                        lazy
+                        style="border-radius: 4px; margin-bottom: 5px;"
+                      />
+                    </NSpace>
                     <br>
                   </template>
                   <NText>{{ item.question?.message }}</NText>
@@ -797,7 +804,13 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
               >
                 允许未注册/匿名用户进行提问
               </NCheckbox>
-
+              <NCheckbox
+                v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
+                :disabled="useQB.isLoading"
+                @update:checked="saveQuestionBoxSettings"
+              >
+                允许上传图片
+              </NCheckbox>
               <!-- 内容审查 -->
               <NDivider title-placement="left">
                 内容审查等级

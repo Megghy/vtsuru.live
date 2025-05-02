@@ -1,16 +1,12 @@
 <script lang="ts">
-// --- Define Config First ---
-// NOTE: Define ConfigDefinition *before* types that depend on it.
-// Use 'any' for config param in render/onUploaded to break circular dependency for now.
 export const Config = defineTemplateConfig([
   {
     name: '背景图', // Removed 'as const'
-    type: 'image',
-    key: 'backgroundImage', // Removed 'as const'
-    imageLimit: 1,
-    default: [] as string[],
-    onUploaded: (urls: string[], config: any) => {
-      config.backgroundImage = urls;
+    type: 'file',
+    key: 'backgroundFile', // Removed 'as const'
+    fileLimit: 1,
+    onUploaded: (files: UploadFileResponse[], config: any) => {
+      config.backgroundFile = files;
     },
   },
   {
@@ -58,26 +54,24 @@ export const Config = defineTemplateConfig([
   {
     name: '装饰图片',
     type: 'decorativeImages',
-    key: 'decorativeImages',
-    default: [] as DecorativeImageProperties[],
+    key: 'decorativeFile',
   },
 ]);
 export type KawaiiConfigType = ExtractConfigData<typeof Config>;
 export const DefaultConfig = {
-  
+
 } as KawaiiConfigType;
 </script>
 
 
 <script setup lang="ts">
-import { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models';
+import { ScheduleDayInfo, ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models';
 import SaveCompoent from '@/components/SaveCompoent.vue'; // 引入截图组件
 import { ScheduleConfigTypeWithConfig } from '@/data/TemplateTypes'; // Use base type
-import { DecorativeImageProperties, defineTemplateConfig, ExtractConfigData, RGBAColor, rgbaToString } from '@/data/VTsuruTypes';
-import { FILE_BASE_URL } from '@/data/constants';
+import { defineTemplateConfig, ExtractConfigData, RGBAColor, rgbaToString } from '@/data/VTsuruConfigTypes';
 import { getWeek, getYear } from 'date-fns';
-import { NButton, NDivider, NEmpty, NFlex, NSelect, NSpace, useMessage } from 'naive-ui';
-import { computed, h, ref, watch, WritableComputedRef } from 'vue';
+import { NDivider, NSelect, NSpace, useMessage } from 'naive-ui';
+import { computed, ref, watch, WritableComputedRef } from 'vue';
 
 // Get message instance
 const message = useMessage();
@@ -87,14 +81,14 @@ const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>();
 // --- 默认配置 --- Define DefaultConfig using KawaiiConfigType
 // No export needed here
 const DefaultConfig: KawaiiConfigType = {
-  backgroundImage: [],
+  backgroundFile: [],
   containerColor: { r: 255, g: 255, b: 255, a: 0.8 },
   dayLabelColor: { r: 126, g: 136, b: 184, a: 1 },
   dayContentBgColor: { r: 255, g: 255, b: 255, a: 1 },
   dayContentTextColor: { r: 100, g: 100, b: 100, a: 1 },
   timeLabelBgColor: { r: 245, g: 189, b: 189, a: 1 },
   timeLabelTextColor: { r: 255, g: 255, b: 255, a: 1 },
-  decorativeImages: [],
+  decorativeFile: [],
 };
 
 // --- 状态 ---
@@ -225,12 +219,12 @@ defineExpose({ Config, DefaultConfig });
       '--day-content-text-color': rgbaToString(effectiveConfig.dayContentTextColor),
       '--time-label-bg-color': rgbaToString(effectiveConfig.timeLabelBgColor),
       '--time-label-text-color': rgbaToString(effectiveConfig.timeLabelTextColor),
-      backgroundImage: effectiveConfig.backgroundImage && effectiveConfig.backgroundImage.length > 0 ? `url(${FILE_BASE_URL + effectiveConfig.backgroundImage[0]})` : 'none',
+      backgroundImage: effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0 ? `url(${effectiveConfig.backgroundFile[0].path})` : 'none',
     }"
   >
     <!-- 装饰图片渲染 -->
     <div
-      v-for="img in effectiveConfig.decorativeImages"
+      v-for="img in effectiveConfig.decorativeFile"
       :key="img.id"
       class="decorative-image"
       :style="{
@@ -247,7 +241,7 @@ defineExpose({ Config, DefaultConfig });
       }"
     >
       <img
-        :src="FILE_BASE_URL + img.src"
+        :src="img.path"
         alt="decoration"
         style="display: block; width: 100%; height: auto;"
       >

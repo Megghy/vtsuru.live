@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { QAInfo } from '@/api/api-models'
 import { useQuestionBox } from '@/store/useQuestionBox';
-import { NButton, NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip, NSpace } from 'naive-ui'
 import { ref } from 'vue';
 
 const props = defineProps<{
@@ -144,13 +144,19 @@ function getScoreColor(score: number | undefined): string {
         :item="item"
       />
     </template>
-    <template v-if="item.question?.image">
-      <NImage
-        v-if="item.question?.image"
-        :src="item.question.image"
-        height="100"
-        lazy
-      />
+    <template v-if="item.questionImages && item.questionImages.length > 0">
+      <NSpace
+        vertical
+        size="small"
+      >
+        <NImage
+          v-for="(img, index) in item.questionImages"
+          :key="index"
+          :src="img.path"
+          height="100"
+          lazy
+        />
+      </NSpace>
       <br>
     </template>
 

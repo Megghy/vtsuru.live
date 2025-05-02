@@ -1,26 +1,15 @@
 // vite.config.ts
 import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
-import path, { resolve } from 'path';
+import path from 'path';
+import AutoImport from 'unplugin-auto-import/vite';
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
+import Components from 'unplugin-vue-components/vite';
 import Markdown from 'unplugin-vue-markdown/vite';
 import { defineConfig } from 'vite';
-import monacoEditorPluginModule from 'vite-plugin-monaco-editor';
-import caddyTls from './plugins/vite-plugin-caddy';
-import { VineVitePlugin } from 'vue-vine/vite';
-import AutoImport from 'unplugin-auto-import/vite';
-import Components from 'unplugin-vue-components/vite';
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import oxlintPlugin from 'vite-plugin-oxlint';
-import svgLoader from 'vite-svg-loader'
-import { install as VueMonacoEditorPlugin } from '@guolao/vue-monaco-editor'
-
-const isObjectWithDefaultFunction = (
-  module: unknown
-): module is { default: typeof monacoEditorPluginModule; } =>
-  module != null &&
-  typeof module === 'object' &&
-  'default' in module &&
-  typeof module.default === 'function';
+import svgLoader from 'vite-svg-loader';
+import { VineVitePlugin } from 'vue-vine/vite';
 
 export default defineConfig({
   plugins: [
@@ -36,7 +25,6 @@ export default defineConfig({
     Markdown({
       /* options */
     }),
-    caddyTls(),
     AutoImport({
       imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns', {
         'naive-ui': [

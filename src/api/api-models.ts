@@ -41,6 +41,7 @@ export interface UserInfo extends UserBasicInfo {
     templateTypes: { [key: string]: string }
     streamerInfo?: StreamerModel
     allowCheckInRanking?: boolean  // 是否允许查看签到排行
+    allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
   }
 }
 export interface EventFetcherStateModel {
@@ -119,8 +120,8 @@ export enum SaftyLevels {
 }
 export interface Setting_QuestionBox {
   allowUnregistedUser: boolean
-
   saftyLevel: SaftyLevels
+  allowImageUpload: boolean
 }
 export interface UserSetting {
   sendEmail: Setting_SendEmail
@@ -371,14 +372,17 @@ export interface QAInfo {
   id: number
   sender: UserBasicInfo
   target: UserBasicInfo
-  question: { message: string; image?: string }
-  answer?: { message: string; image?: string, createdAt: number }
+  question: { message: string;  }
+  answer?: { message: string; createdAt: number }
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean
   isFavorite: boolean
   sendAt: number
   isAnonymous: boolean
+
+  answerImages?: UploadFileResponse[]
+  questionImages?: UploadFileResponse[]
 
   tag?: string
   reviewResult?: QAReviewInfo
@@ -683,7 +687,7 @@ export interface ResponsePointGoodModel {
   count?: number
   price: number
   tags: string[]
-  cover?: string
+  cover?: UploadFileResponse
   images: string[]
   status: GoodsStatus
   type: GoodsTypes
@@ -702,17 +706,13 @@ export interface ResponsePointGoodModel {
   keySelectionMode?: KeySelectionMode
   currentKeyIndex?: number
 }
-export interface ImageUploadModel {
-  existImages: string[]
-  newImagesBase64: string[]
-}
 export interface UploadPointGoodsModel {
   id?: number
   name: string
   count?: number
   price: number
   tags: string[]
-  cover?: ImageUploadModel
+  cover?: UploadFileResponse
   status: GoodsStatus
   type: GoodsTypes
   collectUrl?: string
@@ -843,4 +843,43 @@ export interface CheckInResult {
   points: number
   consecutiveDays: number
   todayRank: number
+}
+
+/**
+ * 文件类型枚举
+ */
+export enum UserFileTypes {
+  Image = 0,
+  Audio = 1,
+  Video = 2,
+  Document = 3,
+  Other = 4
+}
+
+/**
+ * 文件存储位置枚举
+ */
+export enum UserFileLocation {
+  Local = 0
+}
+
+/**
+ * 文件上传响应接口
+ */
+export interface UploadFileResponse {
+  id: number;
+  path: string;
+  name: string;
+  hash: string;
+}
+
+/**
+ * 扩展的文件信息接口，用于文件上传组件
+ */
+export interface ExtendedUploadFileInfo {
+  id: string;  // 文件唯一标识符
+  name: string; // 文件名称
+  status: 'uploading' | 'finished' | 'error' | 'removed'; // 上传状态
+  thumbnailUrl?: string; // 缩略图URL
+  file?: File; // 可选的文件对象
 }

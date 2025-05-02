@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { copyToClipboard } from '@/Utils'
-import { useAccount } from '@/api/account'
+import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { FETCH_API, VTSURU_API_URL } from '@/data/constants'
+import { FETCH_API } from '@/data/constants'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Info24Filled, Mic24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
@@ -456,38 +455,23 @@ function stopSpeech() {
   message.success('已停止监听')
 }
 async function uploadConfig() {
-  await QueryPostAPI(VTSURU_API_URL + 'set-config', {
-    name: 'Speech',
-    json: JSON.stringify(settings.value),
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        message.success('已保存至服务器')
-      } else {
-        message.error('保存失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('保存失败')
-    })
+  const result = await UploadConfig('Speech', settings.value)
+  if (result) {
+    message.success('已保存至服务器')
+  } else {
+    message.error('保存失败')
+  }
 }
 async function downloadConfig() {
-  await QueryGetAPI<string>(VTSURU_API_URL + 'get-config', {
-    name: 'Speech',
-  })
-    .then((data) => {
-      if (data.code == 200) {
-        settings.value = JSON.parse(data.data)
-        message.success('已获取配置文件')
-      } else if (data.code == 404) {
-        message.error('未上传配置文件')
-      } else {
-        message.error('获取失败: ' + data.message)
-      }
-    })
-    .catch((err) => {
-      message.error('获取失败')
-    })
+  const result = await DownloadConfig<SpeechSettings>('Speech')
+  if (result.status === 'success' && result.data) {
+    settings.value = result.data
+    message.success('已获取配置文件')
+  } else if (result.status === 'notfound') {
+    message.error('未上传配置文件')
+  } else {
+    message.error('获取失败: ' + result.msg)
+  }
 }
 function test(type: EventDataTypes) {
   switch (type) {

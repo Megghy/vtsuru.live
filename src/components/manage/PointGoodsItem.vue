@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { GoodsTypes, ResponsePointGoodModel } from '@/api/api-models';
-  import { FILE_BASE_URL, IMGUR_URL } from '@/data/constants';
-  import { NAlert, NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui';
-  import { VehicleShip20Filled, Pin16Filled } from '@vicons/fluent';
+import { IMGUR_URL } from '@/data/constants';
+import { Pin16Filled } from '@vicons/fluent';
+import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui';
 
   const props = defineProps<{
     goods: ResponsePointGoodModel | undefined;
@@ -30,7 +30,7 @@
     <template #cover>
       <div class="cover-container">
         <NImage
-          :src="goods.cover ? FILE_BASE_URL + goods.cover : emptyCover"
+          :src="goods.cover ? goods.cover.path : emptyCover"
           :fallback-src="emptyCover"
           height="150"
           object-fit="cover"
