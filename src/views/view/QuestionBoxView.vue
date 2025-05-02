@@ -26,6 +26,8 @@ import {
   NSpin,
   NIcon,
   useMessage,
+  NCarousel,
+  NCarouselItem,
 } from 'naive-ui'
 import { AddCircle24Regular, DismissCircle24Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -706,44 +708,10 @@ onUnmounted(() => {
                 <!-- 问题头部 -->
                 <template #header>
                   <NSpace
-                    :size="0"
+                    :size="5"
                     align="center"
                     class="question-header"
                   >
-                    <NTooltip v-if="!item.isAnonymous">
-                      <template #trigger>
-                        <NAvatar
-                          v-if="item.sender?.id"
-                          :src="getUserAvatarUrl(item.sender.id)"
-                          round
-                          size="small"
-                          class="sender-avatar"
-                          :img-props="{ referrerpolicy: 'no-referrer' }"
-                        />
-                        <NAvatar
-                          v-else
-                          round
-                          size="small"
-                          class="sender-avatar"
-                        >
-                          ?
-                        </NAvatar>
-                      </template>
-                      {{ item.sender?.name || '未知用户' }}
-                    </NTooltip>
-                    <NTooltip v-else>
-                      <template #trigger>
-                        <NAvatar
-                          round
-                          size="small"
-                          class="sender-avatar"
-                        >
-                          匿
-                        </NAvatar>
-                      </template>
-                      匿名用户
-                    </NTooltip>
-
                     <NText
                       depth="3"
                       class="time-text"
@@ -782,23 +750,20 @@ onUnmounted(() => {
                   >
                     {{ item.question.message }}
                   </div>
+                  <NDivider style="margin: 0;" />
                   <div
                     v-if="item.questionImages && item.questionImages.length > 0"
                     class="question-image-container"
                   >
-                    <NSpace
-                      vertical
-                      align="center"
-                    >
-                      <NImage
-                        v-for="(img, index) in item.questionImages"
-                        :key="index"
-                        :src="img.path"
-                        class="question-image"
-                        lazy
-                        object-fit="contain"
-                      />
-                    </NSpace>
+                  <NImage
+                      v-for="(img, index) in item.questionImages"
+                      :key="index"
+                      :src="img.path"
+                      class="question-image"
+                      :img-props="{ height: '100px' }"
+                      lazy
+                      object-fit="contain"
+                    />
                   </div>
                 </NCard>
 
@@ -925,7 +890,8 @@ onUnmounted(() => {
 }
 
 .image-upload-card {
-  width: 50%;
+  max-width: 500px;
+  width: 100%;
   margin: 0 auto;
   text-align: center;
   border-radius: 6px;
@@ -954,14 +920,17 @@ onUnmounted(() => {
 /* 已登录用户图片上传网格 */
 .upload-images-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 8px;
 }
 
 .upload-image-item, .upload-add-item {
-  height: 60px;
+  aspect-ratio: 1 / 1;
   border-radius: 4px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .upload-add-item {
@@ -973,21 +942,8 @@ onUnmounted(() => {
 }
 
 .add-icon {
-  font-size: 20px;
+  font-size: 24px;
   color: var(--text-color);
-}
-
-/* 图片预览样式 */
-.image-preview-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.upload-preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .remove-image-btn {
@@ -1159,19 +1115,13 @@ onUnmounted(() => {
 
 .question-image-container {
   display: flex;
+  flex-direction: row;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
   margin-top: 12px;
-}
-
-.question-image {
-  max-height: 200px;
-  max-width: 100%;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.question-image:hover {
-  transform: scale(1.02);
+  width: 100%;
+  overflow: hidden;
 }
 
 /* 回答区域 */
