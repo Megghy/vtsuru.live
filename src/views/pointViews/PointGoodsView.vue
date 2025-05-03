@@ -22,7 +22,9 @@ import {
   NFlex,
   NForm,
   NFormItem,
-  NInput, // 引入 NInput
+  NGrid,
+  NGi,
+  NInput,
   NInputNumber,
   NModal,
   NSelect,
@@ -556,42 +558,50 @@ onMounted(async () => {
           </NButton>
         </template>
       </NEmpty>
-      <div
+      <NGrid
         v-else
-        class="goods-grid"
+        cols="1 500:2 750:3 1000:4 1300:5"
+        :x-gap="12"
+        :y-gap="12"
+        class="goods-list"
+        style="justify-items: center;"
       >
-        <PointGoodsItem
+        <NGi
           v-for="item in selectedItems"
           :key="item.id"
-          :goods="item"
-          content-style="max-width: 300px; min-width: 250px; height: 380px;"
-          class="goods-item"
-          :class="{ 'pinned-item': item.isPinned }"
+          style="width: 100%;"
         >
-          <template #footer>
-            <NFlex
-              justify="space-between"
-              align="center"
-              class="goods-footer"
-            >
-              <NTooltip placement="bottom">
-                <template #trigger>
-                  <NButton
-                    :disabled="getTooltip(item) !== '开始兑换'"
-                    size="small"
-                    type="primary"
-                    class="exchange-btn"
-                    @click="onBuyClick(item)"
-                  >
-                    {{ item.isPinned ? '🔥 兑换' : '兑换' }}
-                  </NButton>
-                </template>
-                {{ getTooltip(item) }}
-              </NTooltip>
-            </NFlex>
-          </template>
-        </PointGoodsItem>
-      </div>
+          <PointGoodsItem
+            :goods="item"
+            content-style="max-width: 300px; min-width: 250px; height: 380px;"
+            class="goods-item"
+            :class="{ 'pinned-item': item.isPinned }"
+          >
+            <template #footer>
+              <NFlex
+                justify="space-between"
+                align="center"
+                class="goods-footer"
+              >
+                <NTooltip placement="bottom">
+                  <template #trigger>
+                    <NButton
+                      :disabled="getTooltip(item) !== '开始兑换'"
+                      size="small"
+                      type="primary"
+                      class="exchange-btn"
+                      @click="onBuyClick(item)"
+                    >
+                      {{ item.isPinned ? '🔥 兑换' : '兑换' }}
+                    </NButton>
+                  </template>
+                  {{ getTooltip(item) }}
+                </NTooltip>
+              </NFlex>
+            </template>
+          </PointGoodsItem>
+        </NGi>
+      </NGrid>
     </NSpin>
 
     <!-- 兑换确认模态框 -->
@@ -712,7 +722,7 @@ onMounted(async () => {
 
 <style scoped>
 .point-goods-container {
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 8px;
 }
@@ -799,11 +809,9 @@ onMounted(async () => {
   min-height: 200px;
 }
 
-.goods-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+.goods-list {
   margin-top: 16px;
+  justify-items: center;
 }
 
 .goods-item {
@@ -815,6 +823,7 @@ onMounted(async () => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   position: relative;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .goods-item:hover {
@@ -943,10 +952,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .goods-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-
   .price-text {
     font-size: 1.1em;
   }
