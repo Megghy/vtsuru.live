@@ -8,20 +8,18 @@ import {
 } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { QUEUE_API_URL } from '@/data/constants'
-import { MittType } from '@/mitt'
 import { useWebRTC } from '@/store/useRTC'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import mitt from 'mitt'
 import { NDivider, NEmpty, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Vue3Marquee } from 'vue3-marquee'
 
 const props = defineProps<{
   id?: number,
   active?: boolean,
   visible?: boolean,
+  speedMultiplier?: number,
 }>()
 
 const message = useMessage()
@@ -31,6 +29,15 @@ const currentId = computed(() => {
 })
 const rtc = await useWebRTC().Init('slave')
 
+const speedMultiplier = computed(() => {
+  if (props.speedMultiplier !== undefined && props.speedMultiplier > 0) {
+    return props.speedMultiplier
+  }
+  const speedParam = route.query.speed
+  const speed = parseFloat(speedParam?.toString() ?? '1')
+  return isNaN(speed) || speed <= 0 ? 1 : speed
+})
+
 const listContainerRef = ref()
 const footerRef = ref()
 const footerListRef = ref()
@@ -39,7 +46,17 @@ const footerSize = useElementSize(footerRef)
 const footerListSize = useElementSize(footerListRef)
 const itemHeight = 40
 
-const key = ref(Date.now())
+const queueListInnerRef = ref<HTMLElement | null>(null)
+const { height: innerListHeight } = useElementSize(queueListInnerRef)
+
+const itemMarginBottom = 0
+const totalContentHeightWithLastMargin = computed(() => {
+  const count = activeItems.value.length
+  if (count === 0 || innerListHeight.value <= 0) {
+    return 0
+  }
+  return innerListHeight.value + itemMarginBottom
+})
 
 const queue = ref<ResponseQueueModel[]>([])
 const settings = ref<Setting_Queue>({} as Setting_Queue)
@@ -79,6 +96,9 @@ const activeItems = computed(() => {
   list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
+const itemNum = computed(() => {
+  return queue.value.length
+})
 
 async function get() {
   try {
@@ -94,9 +114,26 @@ async function get() {
   } catch (err) { }
   return {} as { queue: ResponseQueueModel[]; setting: Setting_Queue }
 }
+
 const isMoreThanContainer = computed(() => {
-  return queue.value.length * itemHeight > height.value
+  return totalContentHeightWithLastMargin.value > height.value
 })
+
+const animationTranslateY = computed(() => {
+  if (!isMoreThanContainer.value || height.value <= 0) {
+    return 0
+  }
+  return height.value - totalContentHeightWithLastMargin.value
+})
+const animationTranslateYCss = computed(() => `${animationTranslateY.value}px`)
+
+const animationDuration = computed(() => {
+  const baseDuration = activeItems.value.length * 1
+  const adjustedDuration = baseDuration / speedMultiplier.value
+  return Math.max(adjustedDuration, 1)
+})
+const animationDurationCss = computed(() => `${animationDuration.value}s`)
+
 const allowGuardTypes = computed(() => {
   const types = []
   if (settings.value.needTidu) {
@@ -174,13 +211,11 @@ onUnmounted(() => {
       class="queue-content"
     >
       <template v-if="activeItems.length > 0">
-        <Vue3Marquee
-          :key="key"
+        <div
+          ref="queueListInnerRef"
           class="queue-list"
-          vertical
-          :pause="!isMoreThanContainer"
-          :duration="20"
-          :style="`height: ${height}px;width: ${width}px;`"
+          :class="{ animating: isMoreThanContainer }"
+          :style="`width: ${width}px;`"
         >
           <span
             v-for="(item, index) in activeItems"
@@ -198,31 +233,23 @@ onUnmounted(() => {
               {{ index + 1 }}
             </div>
             <div
-              v-if="settings.showFanMadelInfo"
+              v-if="settings.showFanMadelInfo && (item.user?.fans_medal_level ?? 0) > 0"
               class="queue-list-item-level"
               :has-level="(item.user?.fans_medal_level ?? 0) > 0"
             >
-              {{ `${item.user?.fans_medal_name} ${item.user?.fans_medal_level}` }}
+              {{ `${item.user?.fans_medal_name || ''} ${item.user?.fans_medal_level || ''}` }}
             </div>
             <div class="queue-list-item-user-name">
-              {{ item.user?.name }}
+              {{ item.user?.name || '未知用户' }}
             </div>
-            <p
-              v-if="settings.showPayment"
+            <div
+              v-if="item.from == QueueFrom.Manual || ((item.giftPrice ?? 0) > 0 || settings.showPayment)"
               class="queue-list-item-payment"
             >
-              {{
-                item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice
-              }}
-            </p>
+              {{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice }}
+            </div>
           </span>
-
-          <NDivider
-            v-if="isMoreThanContainer"
-            class="queue-footer-divider"
-            style="margin: 10px 0 10px 0"
-          />
-        </Vue3Marquee>
+        </div>
       </template>
       <div
         v-else
@@ -239,74 +266,112 @@ onUnmounted(() => {
       ref="footerRef"
       class="queue-footer"
     >
-      <Vue3Marquee
-        :key="key"
-        ref="footerListRef"
-        class="queue-footer-marquee"
-        :pause="footerSize.width < footerListSize.width"
-        :duration="20"
-      >
-        <span
-          class="queue-tag"
-          type="prefix"
-        >
-          <div class="queue-tag-key">关键词</div>
-          <div class="queue-tag-value">
-            {{ settings.keyword }}
+      <div class="queue-footer-info">
+        <div class="queue-footer-tags">
+          <div
+            class="queue-footer-tag"
+            type="keyword"
+          >
+            <span class="tag-label">关键词</span>
+            <span class="tag-value">{{ settings.keyword }}</span>
           </div>
-        </span>
-        <span
-          class="queue-tag"
-          type="prefix"
-        >
-          <div class="queue-tag-key">允许</div>
-          <div class="queue-tag-value">
-            {{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join(',') : '无' }}
+          <div
+            class="queue-footer-tag"
+            type="allow"
+          >
+            <span class="tag-label">允许</span>
+            <span class="tag-value">{{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join('/') : '无' }}</span>
           </div>
-        </span>
-        <span
-          class="queue-tag"
-          type="gift"
-        >
-          <div class="queue-tag-key">通过礼物</div>
-          <div class="queue-tag-value">
-            {{ settings.allowGift ? '允许' : '不允许' }}
+          <div
+            class="queue-footer-tag"
+            type="gift"
+          >
+            <span class="tag-label">礼物</span>
+            <span class="tag-value">{{ settings.allowGift ? '允许' : '不允许' }}</span>
           </div>
-        </span>
-        <span
-          class="queue-tag"
-          type="gift-price"
-        >
-          <div class="queue-tag-key">最低价格</div>
-          <div class="queue-tag-value">
-            {{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}
+          <div
+            class="queue-footer-tag"
+            type="price"
+          >
+            <span class="tag-label">最低价格</span>
+            <span class="tag-value">{{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}</span>
           </div>
-        </span>
-        <span
-          class="queue-tag"
-          type="gift-type"
-        >
-          <div class="queue-tag-key">礼物名</div>
-          <div class="queue-tag-value">
-            {{ settings.giftNames ? settings.giftNames.join(', ') : '无' }}
+          <div
+            class="queue-footer-tag"
+            type="gift-names"
+          >
+            <span class="tag-label">礼物名</span>
+            <span class="tag-value">{{ settings.giftNames ? settings.giftNames.join(', ') : '无' }}</span>
           </div>
-        </span>
-        <span
-          class="queue-tag"
-          type="fan-madel"
-        >
-          <div class="queue-tag-key">粉丝牌</div>
-          <div class="queue-tag-value">
-            {{
-              settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
-                ? settings.fanMedalMinLevel > 0
-                  ? '> ' + settings.fanMedalMinLevel
-                  : '佩戴'
-                : '无需'
-            }}
+          <div
+            class="queue-footer-tag"
+            type="medal"
+          >
+            <span class="tag-label">粉丝牌</span>
+            <span class="tag-value">
+              {{
+                settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
+                  ? settings.fanMedalMinLevel > 0
+                    ? '> ' + settings.fanMedalMinLevel
+                    : '佩戴'
+                  : '无需'
+              }}
+            </span>
           </div>
-        </span>
-      </Vue3Marquee>
+          <!-- 重复标签组，实现无缝滚动 -->
+          <div
+            class="queue-footer-tag"
+            type="keyword"
+          >
+            <span class="tag-label">关键词</span>
+            <span class="tag-value">{{ settings.keyword }}</span>
+          </div>
+          <div
+            class="queue-footer-tag"
+            type="allow"
+          >
+            <span class="tag-label">允许</span>
+            <span class="tag-value">{{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join('/') : '无' }}</span>
+          </div>
+          <div
+            class="queue-footer-tag"
+            type="gift"
+          >
+            <span class="tag-label">礼物</span>
+            <span class="tag-value">{{ settings.allowGift ? '允许' : '不允许' }}</span>
+          </div>
+          <div
+            class="queue-footer-tag"
+            type="price"
+          >
+            <span class="tag-label">最低价格</span>
+            <span class="tag-value">{{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}</span>
+          </div>
+          <div
+            v-if="settings.giftNames && settings.giftNames.length > 0"
+            class="queue-footer-tag"
+            type="gift-names"
+          >
+            <span class="tag-label">礼物名</span>
+            <span class="tag-value">{{ settings.giftNames ? settings.giftNames.join(', ') : '无' }}</span>
+          </div>
+          <div
+            class="queue-footer-tag"
+            type="medal"
+          >
+            <span class="tag-label">粉丝牌</span>
+            <span class="tag-value">
+              {{
+                settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
+                  ? settings.fanMedalMinLevel > 0
+                    ? '> ' + settings.fanMedalMinLevel
+                    : '佩戴'
+                  : '无需'
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -383,11 +448,9 @@ onUnmounted(() => {
 .queue-singing-avatar {
   height: 30px;
   border-radius: 50%;
-  /* 添加无限旋转动画 */
   animation: rotate 20s linear infinite;
 }
 
-/* 网页点歌 */
 .queue-singing-container[from='3'] .queue-singing-avatar {
   display: none;
 }
@@ -417,50 +480,62 @@ onUnmounted(() => {
 .queue-content {
   background-color: #0f0f0f4f;
   margin: 10px;
-  padding: 10px;
+  padding: 8px;
   height: 100%;
   border-radius: 10px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-.marquee {
-  justify-items: left;
+.queue-list {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+@keyframes vertical-ping-pong {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(v-bind(animationTranslateYCss));
+  }
+}
+
+.queue-list.animating {
+  animation-name: vertical-ping-pong;
+  animation-duration: v-bind(animationDurationCss);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  pointer-events: auto;
+}
+
+.queue-list.animating:hover {
+  animation-play-state: paused;
 }
 
 .queue-list-item {
   display: flex;
-  width: 100%;
   align-self: flex-start;
   position: relative;
   align-items: center;
   justify-content: left;
-  gap: 10px;
+  gap: 5px;
+  padding: 4px 6px;
+  margin-bottom: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  min-height: 36px;
 }
 
 .queue-list-item-user-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 80%;
-}
-
-/* 手动添加 */
-.queue-list-item[from='0'] .queue-list-item-payment {
-  font-style: italic;
-  font-weight: bold;
-  color: #d2d8d6;
-  font-size: 12px;
-}
-
-.queue-list-item[from='0'] .queue-list-item-avatar {
-  display: none;
-}
-
-/* 弹幕点歌 */
-.queue-list-item[payment='0'] .queue-list-item-payment {
-  display: none;
+  max-width: 50%;
+  flex-grow: 1;
 }
 
 .queue-list-item-payment {
@@ -469,8 +544,23 @@ onUnmounted(() => {
   color: rgba(233, 165, 165, 0.993);
   text-overflow: ellipsis;
   white-space: nowrap;
-
   margin-left: auto;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
+}
+
+.queue-list-item-level {
+  text-align: center;
+  height: 18px;
+  padding: 2px 6px;
+  min-width: 15px;
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: rgba(204, 204, 204, 0.993);
+  font-size: 12px;
 }
 
 .queue-list-item-index {
@@ -518,36 +608,103 @@ onUnmounted(() => {
   display: none;
 }
 
+/* 底部信息区域样式优化 */
 .queue-footer {
   margin: 0 5px 5px 5px;
-  height: 60px;
-  border-radius: 5px;
-  background-color: #0f0f0f4f;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 6px;
+  overflow: hidden;
+  height: auto;
+  min-height: 40px;
+  max-height: 60px;
   display: flex;
   align-items: center;
 }
 
-.queue-tag {
-  display: flex;
-  margin: 5px 0 5px 5px;
-  height: 40px;
-  border-radius: 3px;
-  background-color: #0f0f0f4f;
-  padding: 4px;
-  padding-right: 6px;
-  display: flex;
+.queue-footer-info {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.queue-footer-tags {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 2px;
+  white-space: nowrap;
+  animation: scrollTags 25s linear infinite;
+  padding-right: 16px; /* 确保最后一个标签有足够间距 */
+}
+
+@keyframes scrollTags {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* 移动一半距离，因为我们复制了标签 */
+  }
+}
+
+.queue-footer-tags:hover {
+  animation-play-state: paused;
+}
+
+.queue-footer-tag {
+  display: inline-flex;
   flex-direction: column;
-  justify-content: left;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
+  min-width: max-content;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.queue-tag-key {
-  font-style: italic;
-  color: rgb(211, 211, 211);
+.queue-footer-tag[type="keyword"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.18));
+}
+
+.queue-footer-tag[type="allow"] {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.18));
+}
+
+.queue-footer-tag[type="gift"] {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(219, 39, 119, 0.18));
+}
+
+.queue-footer-tag[type="price"] {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.18));
+}
+
+.queue-footer-tag[type="gift-names"] {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(124, 58, 237, 0.18));
+}
+
+.queue-footer-tag[type="medal"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.18));
+}
+
+.queue-footer-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.tag-label {
+  font-size: 10px;
+  opacity: 0.8;
+  color: #e5e7eb;
+  font-weight: normal;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.tag-value {
   font-size: 12px;
-}
-
-.queue-tag-value {
-  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
 }
 
 @keyframes animated-border {
@@ -558,5 +715,20 @@ onUnmounted(() => {
   100% {
     box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
   }
+}
+
+.queue-list-item[from='0'] .queue-list-item-payment {
+  font-style: italic;
+  font-weight: bold;
+  color: #d2d8d6;
+  font-size: 12px;
+}
+
+.queue-list-item[from='0'] .queue-list-item-avatar {
+  display: none;
+}
+
+.queue-list-item[payment='0'] .queue-list-item-payment {
+  display: none;
 }
 </style>

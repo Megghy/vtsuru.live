@@ -125,6 +125,7 @@ const isReverse = useStorage('Queue.Settings.Reverse', false); // 本地存储�
 
 const isLoading = ref(false); // 加载状态
 const showOBSModal = ref(false); // OBS 组件模态框显示状态
+const obsScrollSpeed = ref(1.0); // OBS 组件滚动速度
 
 const filterName = ref(''); // 历史记录筛选用户名
 const filterNameContains = ref(false); // 历史记录筛选是否包含
@@ -1862,6 +1863,24 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
         复制
       </NButton>
     </NInputGroup>
+    <!-- 添加速度控制 -->
+    <NInputGroup style="margin-bottom: 15px;">
+      <NInputGroupLabel>滚动速度</NInputGroupLabel>
+      <NInputNumber
+        v-model:value="obsScrollSpeed"
+        :min="0.5"
+        :max="5"
+        :step="0.1"
+        placeholder="默认1.0"
+      />
+      <NButton
+        type="primary"
+        ghost
+        @click="copyToClipboard(`${CURRENT_HOST}obs/queue?id=${accountInfo?.id}&speed=${obsScrollSpeed}`)"
+      >
+        复制带速度URL
+      </NButton>
+    </NInputGroup>
     <NDivider> 预览 (尺寸可能与实际不同) </NDivider>
     <div
       style="height: 450px; width: 280px; position: relative; margin: 0 auto; border: 1px dashed #ccc; overflow: hidden;"
@@ -1869,6 +1888,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
       <QueueOBS
         v-if="accountInfo?.id"
         :id="accountInfo.id"
+        :speed-multiplier="obsScrollSpeed"
       />
       <NEmpty
         v-else
