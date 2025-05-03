@@ -57,7 +57,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     rollupOptions: {
-      external: ['naive-ui']
+      external: [/^naive-ui($|\/)/, /^naive-ui\/es\/_internal($|\/)/]
     }
   },
 });
