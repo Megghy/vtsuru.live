@@ -43,6 +43,7 @@ import {
   NTag,
   NText,
   NTooltip,
+  NSwitch,
   useMessage, // Naive UI 组件
 } from 'naive-ui';
 import { VNodeChild, computed, h, onMounted, ref, watch } from 'vue'; // Vue 核心 API
@@ -58,6 +59,8 @@ const props = defineProps<{
 // --- 响应式状态 ---
 const message = useMessage() // Naive UI 消息提示
 const volume = useLocalStorage('Settings.AplayerVolume', 0.8) // 播放器音量，持久化存储
+const showListenButton = useLocalStorage('SongList.ShowListenButton', true) // 是否显示试听按钮
+const showLinkButton = useLocalStorage('SongList.ShowLinkButton', true) // 是否显示跳转按钮
 const songsInternal = ref<SongsInfo[]>([]) // 内部维护的歌曲列表，避免直接修改 props
 const playingSong = ref<SongsInfo>() // 当前正在试听的歌曲
 const isLrcLoading = ref<string>() // 歌词加载状态（存储歌曲 key）
@@ -115,6 +118,32 @@ defineExpose({
 })
 
 // --- 计算属性 ---
+
+// 计算操作列的预定义宽度
+const actionColumnWidth = computed(() => {
+  const baseSelfWidth = 85; // 基础宽度 (isSelf=true, 编辑+删除)
+  const basePublicWidth = 40; // 基础宽度 (isSelf=false)
+  const listenButtonWidth = 40;
+  const linkButtonWidth = 40;
+  const extraButtonWidth = 40; // 假设的额外按钮宽度
+
+  let width = props.isSelf ? baseSelfWidth : basePublicWidth;
+
+  if (showListenButton.value) {
+    width += listenButtonWidth;
+  }
+  if (showLinkButton.value) {
+    width += linkButtonWidth;
+  }
+  if (props.extraButton) {
+    width += extraButtonWidth;
+  }
+
+  // 返回一个合理的宽度值，例如，可以设定几个档位
+  // 这里用之前的计算逻辑，但可以替换为固定档位如 80, 120, 160, 200, 240
+  // 为了精确，我们还是用计算值，但它是响应式的
+  return width;
+});
 
 // 筛选后的歌曲列表
 const songsComputed = computed(() => {
@@ -340,18 +369,19 @@ function createColumns(): DataTableColumns<SongsInfo> {
     {
       title: '操作',
       key: 'manage',
-      width: props.isSelf ? 170 : 120, // 根据是否自己的歌单调整宽度
       fixed: 'right', // 固定操作列在右侧
       render(data) {
         const buttons: VNodeChild[] = [];
 
         // 1. 获取播放/信息按钮 (来自 Utils)
-        const playButton = GetPlayButton(data);
-        if (playButton) buttons.push(playButton);
+        if (showLinkButton.value) { // 添加条件
+          const playButton = GetPlayButton(data);
+          if (playButton) buttons.push(playButton);
+        }
 
         // 2. 试听按钮 (仅对音频文件显示)
         const isAudio = /\.(mp3|flac|ogg|wav|m4a)$/i.test(data.url ?? ''); // 正则判断音频后缀
-        if (isAudio) {
+        if (showListenButton.value && isAudio) { // 添加条件
           buttons.push(
             h(NTooltip, null, {
               trigger: () =>
@@ -422,6 +452,17 @@ function createColumns(): DataTableColumns<SongsInfo> {
         // 使用 NSpace 渲染所有按钮
         return h(NSpace, { justify: 'end', size: 8, wrap: false }, () => buttons); // 增加间距，禁止换行
       },
+      // --- 动态计算宽度 --- START
+      /* width: (() => {
+        let calculatedWidth = 20; // 基础内边距
+        if (showLinkButton.value) calculatedWidth += 40; // 链接按钮宽度
+        if (showListenButton.value) calculatedWidth += 40; // 试听按钮宽度
+        if (props.isSelf) calculatedWidth += 80; // 编辑 + 删除按钮宽度
+        if (props.extraButton) calculatedWidth += 40; // 额外按钮预估宽度
+        return Math.max(calculatedWidth, props.isSelf ? 160 : 80); // 设置最小宽度防止太窄
+      })(), */
+      width: actionColumnWidth.value, // 使用计算属性
+      // --- 动态计算宽度 --- END
     },
   ]
 }
@@ -451,6 +492,12 @@ watch(
   },
   { deep: true } // 深度监听，如果 songs 数组内部对象变化也触发
 )
+
+// 监听按钮显示状态变化，重新计算列定义以更新宽度
+watch([showListenButton, showLinkButton], () => {
+  console.log('Button visibility changed, recalculating columns.');
+  columns.value = createColumns();
+});
 
 // 更新单首歌曲信息
 async function updateSong() {
@@ -711,16 +758,26 @@ onMounted(() => {
         style="min-width: 180px; flex-grow: 1;"
         max-tag-count="responsive"
       />
-      <!-- 清除作者列筛选按钮 (当顶部选择器清除时，列筛选也应清除，但保留按钮以防万一) -->
-      <!-- <NButton
-        v-if="authorColumn.filterOptionValue"
-        type="warning"
+      <!-- 显示控制开关 -->
+      <NSpace
+        item-style="display: flex; align-items: center;"
         size="small"
-        ghost
-        @click="onAuthorClick(authorColumn.filterOptionValue as string)"
       >
-        清除歌手列筛选
-      </NButton> -->
+        <NSwitch
+          v-model:value="showListenButton"
+          size="small"
+        />
+        <NText style="font-size: 12px;">
+          试听
+        </NText>
+        <NSwitch
+          v-model:value="showLinkButton"
+          size="small"
+        />
+        <NText style="font-size: 12px;">
+          链接
+        </NText>
+      </NSpace>
     </NSpace>
   </NCard>
 
@@ -770,6 +827,7 @@ onMounted(() => {
     :columns="columns"
     :data="songsComputed"
     size="small"
+    :scroll-x="800"
     :pagination="{
       itemCount: songsInternal.length,
       defaultPageSize: pageSize,

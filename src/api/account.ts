@@ -202,7 +202,7 @@ export async function DownloadConfig<T>(name: string, id?: number): Promise<
   }
 > {
   try {
-    const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + (id ? 'user-get' : 'get'), {
+    const resp = await QueryGetAPI<string>(USER_CONFIG_API_URL + (id ? 'get-user' : 'get'), {
       name: name,
       id: id
     });

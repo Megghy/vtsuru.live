@@ -821,6 +821,7 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   padding: 0 16px;
+  box-sizing: border-box;
 }
 
 /* 表单卡片样式 */

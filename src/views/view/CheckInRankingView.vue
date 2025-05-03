@@ -1,12 +1,18 @@
 <template>
   <div class="checkin-ranking-view">
     <NSpace vertical>
-      <NCard title="签到排行榜">
+      <NCard
+        class="ranking-card"
+        title="签到排行榜"
+      >
         <template #header-extra>
-          <NSpace>
+          <NSpace
+            :wrap="true"
+            :size="8"
+          >
             <NSelect
               v-model:value="timeRange"
-              style="width: 180px"
+              style="min-width: 120px; width: auto"
               :options="timeRangeOptions"
               @update:value="loadCheckInRanking"
             />
@@ -14,7 +20,7 @@
               v-model:value="userFilter"
               placeholder="搜索用户"
               clearable
-              style="width: 150px"
+              style="min-width: 120px; width: auto"
             />
             <NButton
               type="primary"
@@ -38,125 +44,129 @@
           <!-- 自定义排行榜表格 -->
           <div
             v-else
-            class="custom-ranking-table"
+            class="ranking-table-wrapper"
           >
-            <!-- 排行榜头部 -->
-            <div class="ranking-header">
-              <div class="ranking-row">
-                <div class="col-rank">
-                  排名
-                </div>
-                <div class="col-user">
-                  用户
-                </div>
-                <div class="col-days">
-                  连续签到
-                </div>
-                <div class="col-monthly">
-                  本月签到
-                </div>
-                <div class="col-total">
-                  总签到
-                </div>
-                <div class="col-time">
-                  最近签到时间
+            <div
+              class="custom-ranking-table"
+            >
+              <!-- 排行榜头部 -->
+              <div class="ranking-header">
+                <div class="ranking-row">
+                  <div class="col-rank">
+                    排名
+                  </div>
+                  <div class="col-user">
+                    用户
+                  </div>
+                  <div class="col-days">
+                    连续签到
+                  </div>
+                  <div class="col-monthly">
+                    本月签到
+                  </div>
+                  <div class="col-total">
+                    总签到
+                  </div>
+                  <div class="col-time">
+                    最近签到时间
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 排行榜内容 -->
-            <div class="ranking-body">
-              <div
-                v-for="(item, index) in pagedData"
-                :key="index"
-                class="ranking-row"
-                :class="{'top-three': index < 3}"
-              >
-                <!-- 排名列 -->
-                <div class="col-rank">
-                  <div
-                    class="rank-number"
-                    :class="{
-                      'rank-1': index === 0,
-                      'rank-2': index === 1,
-                      'rank-3': index === 2
-                    }"
-                  >
-                    {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
+              <!-- 排行榜内容 -->
+              <div class="ranking-body">
+                <div
+                  v-for="(item, index) in pagedData"
+                  :key="index"
+                  class="ranking-row"
+                  :class="{'top-three': index < 3}"
+                >
+                  <!-- 排名列 -->
+                  <div class="col-rank">
+                    <div
+                      class="rank-number"
+                      :class="{
+                        'rank-1': index === 0,
+                        'rank-2': index === 1,
+                        'rank-3': index === 2
+                      }"
+                    >
+                      {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
+                    </div>
                   </div>
-                </div>
 
-                <!-- 用户列 -->
-                <div class="col-user">
-                  <div class="user-name">
-                    {{ item.name }}
+                  <!-- 用户列 -->
+                  <div class="col-user">
+                    <div class="user-name">
+                      {{ item.name }}
+                    </div>
+                    <div
+                      v-if="item.isAuthed"
+                      class="user-authed"
+                    >
+                      已认证
+                    </div>
                   </div>
-                  <div
-                    v-if="item.isAuthed"
-                    class="user-authed"
-                  >
-                    已认证
-                  </div>
-                </div>
 
-                <!-- 连续签到列 -->
-                <div class="col-days">
-                  <div class="days-count">
-                    {{ item.consecutiveDays }}
+                  <!-- 连续签到列 -->
+                  <div class="col-days">
+                    <div class="days-count">
+                      {{ item.consecutiveDays }}
+                    </div>
+                    <div class="days-text">
+                      天
+                    </div>
                   </div>
-                  <div class="days-text">
-                    天
-                  </div>
-                </div>
 
-                <!-- 本月签到列 -->
-                <div class="col-monthly">
-                  <div class="count-value">
-                    {{ item.monthlyCheckInCount || 0 }}
+                  <!-- 本月签到列 -->
+                  <div class="col-monthly">
+                    <div class="count-value">
+                      {{ item.monthlyCheckInCount || 0 }}
+                    </div>
+                    <div class="count-text">
+                      次
+                    </div>
                   </div>
-                  <div class="count-text">
-                    次
-                  </div>
-                </div>
 
-                <!-- 总签到列 -->
-                <div class="col-total">
-                  <div class="count-value">
-                    {{ item.totalCheckInCount || 0 }}
+                  <!-- 总签到列 -->
+                  <div class="col-total">
+                    <div class="count-value">
+                      {{ item.totalCheckInCount || 0 }}
+                    </div>
+                    <div class="count-text">
+                      次
+                    </div>
                   </div>
-                  <div class="count-text">
-                    次
-                  </div>
-                </div>
 
-                <!-- 签到时间列 -->
-                <div class="col-time">
-                  <NTooltip>
-                    <template #trigger>
-                      <NTime
-                        :time="item.lastCheckInTime"
-                        type="relative"
-                      />
-                    </template>
-                    <template #default>
-                      <NTime
-                        :time="item.lastCheckInTime"
-                      />
-                    </template>
-                  </NTooltip>
+                  <!-- 签到时间列 -->
+                  <div class="col-time">
+                    <NTooltip>
+                      <template #trigger>
+                        <NTime
+                          :time="item.lastCheckInTime"
+                          type="relative"
+                        />
+                      </template>
+                      <template #default>
+                        <NTime
+                          :time="item.lastCheckInTime"
+                        />
+                      </template>
+                    </NTooltip>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 分页控制 -->
-            <div class="ranking-footer">
-              <NPagination
-                v-model:page="pagination.page"
-                v-model:page-size="pagination.pageSize"
-                :item-count="filteredRankingData.length"
-                :page-sizes="[10, 20, 50]"
-                show-size-picker
-              />
+              <!-- 分页控制 -->
+              <div class="ranking-footer">
+                <NPagination
+                  v-model:page="pagination.page"
+                  v-model:page-size="pagination.pageSize"
+                  :item-count="filteredRankingData.length"
+                  :page-sizes="[10, 20, 50]"
+                  show-size-picker
+                />
+              </div>
             </div>
           </div>
         </NSpin>
@@ -353,29 +363,27 @@ onMounted(() => {
 .custom-ranking-table {
   border-radius: 8px;
   overflow: hidden;
-  /* 使用官方阴影变量 */
   box-shadow: var(--box-shadow-1);
   margin-bottom: 16px;
+  overflow-x: auto;
 }
 
 .ranking-header {
-  /* 使用官方背景色变量 */
   background-color: var(--table-header-color);
   font-weight: var(--font-weight-strong);
   color: var(--text-color-2);
+  border-radius: 8px;
 }
 
 .ranking-row {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  /* 使用官方分割线变量 */
   border-bottom: 1px solid var(--divider-color);
   transition: background-color 0.3s var(--cubic-bezier-ease-in-out);
 }
 
 .ranking-body .ranking-row:hover {
-  /* 使用官方悬停背景色变量 */
   background-color: var(--hover-color);
 }
 
@@ -384,7 +392,6 @@ onMounted(() => {
 }
 
 .top-three {
-  /* 使用官方条纹背景色变量 */
   background-color: var(--table-color-striped);
 }
 
@@ -423,12 +430,10 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   font-weight: var(--font-weight-strong);
-  /* 使用官方文本和背景色变量 */
   color: var(--text-color-2);
   background-color: var(--action-color);
 }
 
-/* 保持奖牌颜色在暗色模式下也清晰可见 */
 .rank-1 {
   background: linear-gradient(135deg, #ffe259, #ffa751);
   color: white !important;
@@ -475,7 +480,64 @@ onMounted(() => {
   padding: 16px;
   display: flex;
   justify-content: center;
-  /* 使用官方背景色变量 */
   background-color: var(--table-header-color);
+}
+
+/* 增强响应式样式 */
+.ranking-card :deep(.n-card-header__main) {
+  font-size: var(--font-size-large);
+  white-space: nowrap;
+}
+
+.ranking-table-wrapper {
+  overflow-x: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .ranking-card :deep(.n-card-header) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ranking-card :deep(.n-card-header__extra) {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .col-rank {
+    width: 50px;
+  }
+
+  .col-days,
+  .col-monthly,
+  .col-total {
+    width: 80px;
+  }
+
+  .col-time {
+    width: 120px;
+  }
+
+  .custom-ranking-table {
+    min-width: 550px;
+  }
+}
+
+@media (max-width: 480px) {
+  .col-user {
+    min-width: 80px;
+  }
+
+  .col-days,
+  .col-monthly,
+  .col-total {
+    width: 70px;
+  }
+
+  .col-time {
+    width: 100px;
+  }
 }
 </style>
