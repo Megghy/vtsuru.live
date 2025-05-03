@@ -54,5 +54,10 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
   },
-  build: { sourcemap: true },
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      external: ['naive-ui']
+    }
+  },
 });

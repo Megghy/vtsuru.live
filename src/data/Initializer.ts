@@ -1,13 +1,13 @@
-import { GetSelfAccount, useAccount, UpdateAccountLoop } from "@/api/account";
+import { GetSelfAccount, UpdateAccountLoop, useAccount } from "@/api/account";
 import { QueryGetAPI } from "@/api/query";
 import { useBiliAuth } from "@/store/useBiliAuth";
 import { useNotificationStore } from "@/store/useNotificationStore";
-import { createDiscreteApi, NText, NFlex, NButton } from "naive-ui";
-import { BASE_API_URL, isTauri, apiFail } from "./constants";
-import { GetNotifactions } from "./notifactions";
-import HyperDX from '@hyperdx/browser'
+import { h } from "vue";
+import HyperDX from '@hyperdx/browser';
 import EasySpeech from "easy-speech";
-import { checkUpdateNote } from "./UpdateNote";
+import { createDiscreteApi, NButton, NFlex, NText } from "naive-ui";
+import { apiFail, BASE_API_URL, isTauri } from "./constants";
+import { GetNotifactions } from "./notifactions";
 
 let currentVersion: string
 let isHaveNewVersion = false
