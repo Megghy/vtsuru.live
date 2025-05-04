@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import { GoodsTypes, PointOrderStatus, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
+import { GoodsTypes, PointOrderStatus, ResponsePointGoodModel, ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
@@ -17,12 +17,16 @@ import {
   NDivider,
   NEmpty,
   NFlex,
+  NModal,
   NPopconfirm,
   NSelect,
+  NSpace,
   NSpin,
+  NText,
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
+import PointUserDetailCard from './PointUserDetailCard.vue'
 
 // 订单筛选设置类型定义
 type OrderFilterSettings = {
@@ -62,6 +66,8 @@ const filteredOrders = computed(() => {
 
 const isLoading = ref(false)
 const selectedItem = ref<DataTableRowKey[]>()
+const targetStatus = ref<PointOrderStatus>()
+const showStatusModal = ref(false)
 
 // 获取所有订单
 async function getOrders() {
@@ -104,6 +110,54 @@ async function deleteOrder() {
   }
 }
 
+// 打开状态更新模态框
+function openStatusUpdateModal() {
+  if (!selectedItem.value?.length) {
+    message.warning('请选择要更新的订单')
+    return
+  }
+  showStatusModal.value = true
+}
+
+// 批量更新订单状态
+async function batchUpdateOrderStatus() {
+  if (!selectedItem.value?.length) {
+    message.warning('请选择要更新的订单')
+    return
+  }
+
+  if (targetStatus.value === undefined) {
+    message.warning('请选择目标状态')
+    return
+  }
+
+  try {
+    const requestData = {
+      orderIds: selectedItem.value,
+      status: targetStatus.value
+    }
+
+    const data = await QueryPostAPI<number[]>(POINT_API_URL + 'batch-update-order-status', requestData)
+    if (data.code == 200) {
+      message.success('更新成功')
+      // 更新本地订单状态
+      orders.value.forEach(order => {
+        if (data.data.includes(order.id)) {
+          order.status = targetStatus.value as PointOrderStatus
+          order.updateAt = Date.now()
+        }
+      })
+      targetStatus.value = undefined
+      showStatusModal.value = false
+    } else {
+      message.error('更新失败: ' + data.message)
+    }
+  } catch (err) {
+    message.error('更新失败: ' + err)
+    console.log(err)
+  }
+}
+
 // 订单状态文本映射
 const statusText = {
   [PointOrderStatus.Completed]: '已完成',
@@ -116,7 +170,7 @@ function exportData() {
   try {
     const text = objectsToCSV(
       filteredOrders.value.map((s) => {
-        const gift = props.goods.find((g) => g.id == s.goodsId)
+        const gift = s.goods
         return {
           订单号: s.id,
           订单类型: s.type == GoodsTypes.Physical ? '实体' : '虚拟',
@@ -237,46 +291,97 @@ onMounted(async () => {
           />
           <NSelect
             v-model:value="filterSettings.customer"
-            :options="
-              new List(orders)
-                .DistinctBy((s) => s.customer.userId)
-                .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
-                .ToArray()
+            :options="new List(orders)
+              .DistinctBy((s) => s.customer.userId)
+              .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
+              .ToArray()
             "
             placeholder="用户"
             clearable
             style="min-width: 120px; max-width: 150px"
           />
-          <NCheckbox
-            v-model:checked="filterSettings.onlyRequireShippingInfo"
-          >
+          <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo">
             仅包含未填写快递单号的订单
           </NCheckbox>
         </NFlex>
       </NCard>
 
       <NDivider title-placement="left">
-        <NPopconfirm @positive-click="deleteOrder">
-          <template #trigger>
-            <NButton
-              size="tiny"
-              type="error"
-              :disabled="!selectedItem?.length"
-            >
-              删除选中的订单 | {{ selectedItem?.length ?? 0 }}
-            </NButton>
-          </template>
-          确定删除吗?
-        </NPopconfirm>
+        <NFlex
+          :gap="8"
+          :wrap="false"
+        >
+          <NPopconfirm @positive-click="deleteOrder">
+            <template #trigger>
+              <NButton
+                size="tiny"
+                type="error"
+                :disabled="!selectedItem?.length"
+              >
+                删除选中的订单 | {{ selectedItem?.length ?? 0 }}
+              </NButton>
+            </template>
+            确定删除吗?
+          </NPopconfirm>
+
+          <NPopconfirm @positive-click="openStatusUpdateModal">
+            <template #trigger>
+              <NButton
+                size="tiny"
+                type="info"
+                :disabled="!selectedItem?.length"
+              >
+                批量更新状态
+              </NButton>
+            </template>
+            确定要更新选中订单的状态吗?
+          </NPopconfirm>
+        </NFlex>
       </NDivider>
 
       <!-- 订单列表 -->
       <PointOrderCard
         :order="filteredOrders"
-        :goods="goods"
         type="owner"
         @selected-item="(items) => (selectedItem = items)"
       />
+
+      <!-- 状态选择模态框 -->
+      <NModal
+        v-model:show="showStatusModal"
+        title="选择目标状态"
+        preset="card"
+        style="max-width: 400px"
+      >
+        <NSpace vertical>
+          <NText>请选择您想要将订单更新为的状态</NText>
+          <NSelect
+            v-model:value="targetStatus"
+            :options="[
+              { label: '已完成', value: PointOrderStatus.Completed },
+              { label: '等待发货', value: PointOrderStatus.Pending },
+              { label: '已发货', value: PointOrderStatus.Shipped },
+            ]"
+            placeholder="选择状态"
+            style="width: 100%"
+          />
+          <NFlex
+            justify="end"
+            :gap="12"
+          >
+            <NButton @click="showStatusModal = false">
+              取消
+            </NButton>
+            <NButton
+              type="primary"
+              :disabled="targetStatus === undefined"
+              @click="batchUpdateOrderStatus"
+            >
+              确认更新
+            </NButton>
+          </NFlex>
+        </NSpace>
+      </NModal>
     </template>
   </NSpin>
 </template>

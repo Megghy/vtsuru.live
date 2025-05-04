@@ -2,9 +2,8 @@
 import {
   GoodsTypes,
   PointOrderStatus,
-  ResponsePointGoodModel,
   ResponsePointOrder2OwnerModel,
-  ResponsePointOrder2UserModel,
+  ResponsePointOrder2UserModel
 } from '@/api/api-models'
 import { QueryPostAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
@@ -12,10 +11,13 @@ import { Info24Filled } from '@vicons/fluent'
 import {
   DataTableColumns,
   DataTableRowKey,
+  NAlert,
   NAutoComplete,
   NButton,
+  NCard,
   NDataTable,
   NDivider,
+  NEllipsis,
   NEmpty,
   NFlex,
   NIcon,
@@ -24,6 +26,7 @@ import {
   NInputGroupLabel,
   NModal,
   NScrollbar,
+  NSpace,
   NStep,
   NSteps,
   NTag,
@@ -32,9 +35,6 @@ import {
   NTooltip,
   useDialog,
   useMessage,
-  NCard,
-  NSpace,
-  NAlert,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import AddressDisplay from './AddressDisplay.vue'
@@ -45,9 +45,9 @@ type OrderType = ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel
 const props = defineProps<{
   order: ResponsePointOrder2UserModel[] | ResponsePointOrder2OwnerModel[]
   type: 'user' | 'owner'
-  goods?: ResponsePointGoodModel[]
   loading?: boolean
 }>()
+
 
 const message = useMessage()
 const dialog = useDialog()
@@ -71,11 +71,7 @@ const orderAsOwner = computed(() => props.order as ResponsePointOrder2OwnerModel
 const currentGoods = computed(() => {
   if (!orderDetail.value) return null
 
-  if (props.type === 'user') {
-    return (orderDetail.value as ResponsePointOrder2UserModel).goods
-  } else {
-    return props.goods?.find((g) => g.id === (orderDetail.value as ResponsePointOrder2OwnerModel).goodsId)
-  }
+  return orderDetail.value.goods
 })
 
 const expressOptions = computed(() => {
@@ -143,6 +139,7 @@ const orderColumn: DataTableColumns<OrderType> = [
   },
   {
     title: '订单号',
+    minWidth: 70,
     key: 'id',
   },
   {
@@ -173,11 +170,9 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '礼物名',
     key: 'giftName',
+    minWidth: 150,
     render: (row: OrderType) => {
-      if (row.instanceOf === 'user') {
-        return (row as ResponsePointOrder2UserModel).goods.name
-      }
-      return props.goods?.find((g) => g.id === row.goodsId)?.name || '未知礼物'
+      return row.goods?.name
     },
   },
   {
@@ -249,9 +244,7 @@ const orderColumn: DataTableColumns<OrderType> = [
     key: 'address',
     minWidth: 250,
     render: (row: OrderType) => {
-      const goodsCollectUrl = row.instanceOf === 'user'
-        ? (row as ResponsePointOrder2UserModel).goods.collectUrl
-        : props.goods?.find((g) => g.id === row.goodsId)?.collectUrl
+      const goodsCollectUrl = row.goods.collectUrl
 
       if (row.type === GoodsTypes.Physical) {
         return goodsCollectUrl
@@ -262,7 +255,7 @@ const orderColumn: DataTableColumns<OrderType> = [
               text: true,
               type: 'info'
             }, () => h(NText, { italic: true }, () => '通过站外链接收集'))
-          : h(AddressDisplay, { address: row.address })
+          : h(AddressDisplay, { address: row.address, size: 'small' })
       } else {
         return h(NText, { depth: 3, italic: true }, () => '无需发货')
       }
@@ -277,7 +270,7 @@ const orderColumn: DataTableColumns<OrderType> = [
         if (row.trackingNumber) {
           return h(NFlex, { align: 'center', gap: 8 }, () => [
             h(NTag, { size: 'tiny', bordered: false }, () => row.expressCompany),
-            h(NText, { depth: 3 }, () => row.trackingNumber),
+            h(NEllipsis, { style: { maxWidth: '100px' } }, () => h(NText, { depth: 3 }, () => row.trackingNumber)),
           ])
         }
         return h(NText, { depth: 3, italic: true }, () => '尚未发货')
@@ -728,7 +721,10 @@ onMounted(() => {
                 size="small"
                 class="address-info-card"
               >
-                <AddressDisplay :address="orderDetail.address" />
+                <AddressDisplay
+                  :address="orderDetail.address"
+                  size="default"
+                />
               </NCard>
             </template>
 
