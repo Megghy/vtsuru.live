@@ -772,7 +772,7 @@ export interface ResponsePointOrder2OwnerModel {
   type: GoodsTypes
   customer: BiliAuthModel
   address?: AddressInfo
-  goodsId: number
+  goods: ResponsePointGoodModel
   count: number
   createAt: number
   updateAt: number

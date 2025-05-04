@@ -2,7 +2,7 @@
 import { QueryGetAPI } from '@/api/query'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/data/constants'
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { useStorage } from '@vueuse/core'
+import { useStorage, useBreakpoints as useVueUseBreakpoints, breakpointsTailwind } from '@vueuse/core'
 import {
   NAlert,
   NButton,
@@ -17,7 +17,7 @@ import {
   NStep,
   NSteps,
   NText,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onMounted, ref } from 'vue'
@@ -30,6 +30,8 @@ type AuthStartModel = {
 }
 
 const message = useMessage()
+const breakpoints = useVueUseBreakpoints(breakpointsTailwind)
+const isSmallScreen = breakpoints.smaller('sm')
 
 const guidKey = useStorage('Bili.Auth.Key', uuidv4())
 const currentToken = useStorage<string>('Bili.Auth.Selected', null)
@@ -97,11 +99,15 @@ function checkTimeLeft() {
   }
 }
 function copyCode() {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(startModel.value?.code ?? '')
-    message.success('已复制认证码到剪切板')
+  const textToCopy = currentStep.value === 2
+    ? `${CURRENT_HOST}bili-user?auth=${currentToken.value}`
+    : startModel.value?.code ?? ''
+
+  if (navigator.clipboard && textToCopy) {
+    navigator.clipboard.writeText(textToCopy)
+    message.success(currentStep.value === 2 ? '已复制登陆链接到剪切板' : '已复制认证码到剪切板')
   } else {
-    message.warning('当前环境不支持自动复制, 请手动选择并复制')
+    message.warning('无法复制内容, 请手动选择并复制')
   }
 }
 
@@ -119,20 +125,25 @@ onMounted(async () => {
   <NFlex
     justify="center"
     align="center"
-    style="height: 100vh"
+    style="min-height: 100vh; padding: 20px; box-sizing: border-box"
   >
     <NCard
       embedded
-      style="margin: 20px; max-width: 1100px"
+      style="width: 100%; max-width: 1000px"
     >
       <template #header>
-        Bilibili 身份验证
+        <NText style="font-size: 1.2em; font-weight: bold">
+          Bilibili 身份验证
+        </NText>
       </template>
-      <NFlex :wrap="false">
+      <NFlex
+        :wrap="false"
+        :vertical="isSmallScreen"
+      >
         <NSteps
           :current="currentStep + 1"
           vertical
-          style="max-width: 300px"
+          style="min-width: 200px; max-width: 300px; margin-bottom: 20px"
         >
           <NStep
             title="准备认证"
@@ -147,149 +158,180 @@ onMounted(async () => {
             description="现在就已经通过了认证!"
           />
         </NSteps>
-        <template v-if="currentStep == 1">
-          <NSpace
-            vertical
-            justify="center"
-            align="center"
-            style="width: 100%"
-          >
-            <template v-if="!timeOut">
-              <NSpin />
-              <span> 剩余 <NCountdown :duration="timeLeft" /> </span>
-              <NInputGroup>
-                <NInput
-                  :value="startModel?.code"
-                  :allow-input="() => false"
-                />
-                <NButton @click="copyCode">
-                  复制认证码
-                </NButton>
-              </NInputGroup>
-              <NButton
-                type="primary"
-                tag="a"
-                :href="'https://live.bilibili.com/' + startModel?.targetRoomId"
-                target="_blank"
-              >
-                前往直播间
-              </NButton>
-            </template>
-            <NAlert
-              v-else
-              type="error"
+        <div style="flex-grow: 1; padding-left: 20px; border-left: 1px solid var(--n-border-color); min-width: 0;">
+          <template v-if="currentStep == 1">
+            <NFlex
+              vertical
+              justify="center"
+              align="center"
+              style="width: 100%; height: 100%; padding-top: 20px; min-height: 250px;"
             >
-              认证超时
-              <NButton
-                type="error"
-                @click="
-                  () => {
-                    currentStep = 0
-                    timeOut = false
-                  }
-                "
-              >
-                重新开始
-              </NButton>
-            </NAlert>
-          </NSpace>
-        </template>
-        <template v-else-if="currentStep == 0">
-          <NSpace
-            vertical
-            justify="center"
-            align="center"
-            style="width: 100%"
-          >
-            <NAlert type="info">
-              <NText>
-                点击
+              <template v-if="!timeOut">
+                <NSpin size="large" />
+                <NText style="margin-top: 15px; font-size: 1.1em;">
+                  剩余时间：<NCountdown :duration="timeLeft" />
+                </NText>
                 <NText
+                  depth="3"
+                  style="margin-top: 20px;"
+                >
+                  请复制下方的认证码，并前往指定直播间发送：
+                </NText>
+                <NInputGroup style="margin-top: 10px; max-width: 300px;">
+                  <NInput
+                    :value="startModel?.code"
+                    readonly
+                    placeholder="认证码"
+                    style="text-align: center; font-size: 1.2em; letter-spacing: 2px;"
+                  />
+                  <NButton
+                    type="primary"
+                    @click="copyCode"
+                  >
+                    复制
+                  </NButton>
+                </NInputGroup>
+                <NButton
+                  type="info"
+                  tag="a"
+                  :href="'https://live.bilibili.com/' + startModel?.targetRoomId"
+                  target="_blank"
+                  style="margin-top: 20px"
+                >
+                  前往直播间
+                </NButton>
+              </template>
+              <NAlert
+                v-else
+                type="error"
+                title="认证超时"
+                style="width: 100%; max-width: 400px;"
+              >
+                <NFlex justify="center">
+                  <NButton
+                    type="error"
+                    style="margin-top: 10px"
+                    @click="
+                      () => {
+                        currentStep = 0
+                        timeOut = false
+                      }
+                    "
+                  >
+                    重新开始认证
+                  </NButton>
+                </NFlex>
+              </NAlert>
+            </NFlex>
+          </template>
+          <template v-else-if="currentStep == 0">
+            <NSpace
+              vertical
+              align="stretch"
+              style="width: 100%; padding-top: 10px"
+            >
+              <NAlert type="info">
+                <NText>
+                  点击
+                  <NText
+                    type="primary"
+                    strong
+                  >
+                    开始认证
+                  </NText>
+                  后请在 5 分钟之内使用
+                  <NText
+                    strong
+                    type="primary"
+                  >
+                    需要认证的账户
+                  </NText>
+                  在指定的直播间直播间内发送给出的验证码
+                </NText>
+              </NAlert>
+              <NFlex
+                justify="center"
+                style="margin-top: 20px"
+              >
+                <NButton
+                  size="large"
                   type="primary"
-                  strong
+                  @click="onStartVerify"
                 >
                   开始认证
-                </NText>
-                后请在 5 分钟之内使用
-                <NText
-                  strong
-                  type="primary"
-                >
-                  需要认证的账户
-                </NText>
-                在指定的直播间直播间内发送给出的验证码
+                </NButton>
+              </NFlex>
+            </NSpace>
+          </template>
+          <template v-else-if="currentStep == 2">
+            <NSpace
+              vertical
+              align="stretch"
+              style="width: 100%; padding-top: 10px"
+            >
+              <NAlert
+                type="success"
+                title="验证成功！"
+                style="margin-bottom: 15px"
+              >
+                你已完成验证! 请妥善保存你的登陆链接, 请勿让其他人获取. 丢失后可以再次通过认证流程获得.
+                <br>
+                要在其他地方登陆, 或者需要重新登陆的话把这个链接复制到浏览器地址栏打开即可
+              </NAlert>
+              <NText strong>
+                你的登陆链接为:
               </NText>
-            </NAlert>
-            <NText
-              depth="3"
-              style="font-size: 15px"
-            >
-              准备好了吗?
-            </NText>
-            <NButton
-              size="large"
-              type="primary"
-              @click="onStartVerify"
-            >
-              开始认证
-            </NButton>
-          </NSpace>
-        </template>
-        <template v-else-if="currentStep == 2">
-          <NFlex
-            justify="center"
-            align="center"
-            vertical
-            style="width: 100%"
-          >
-            <NAlert type="success">
-              你已完成验证! 请妥善保存你的登陆链接, 请勿让其他人获取. 丢失后可以再次通过认证流程获得.
-              <br>
-              要在其他地方登陆, 或者需要重新登陆的话把这个链接复制到浏览器地址栏打开即可
-            </NAlert>
-            <NText> 你的登陆链接为: </NText>
-            <NInputGroup>
               <NInput
                 :value="`${CURRENT_HOST}bili-user?auth=${currentToken}`"
                 type="textarea"
-                :allow-input="() => false"
+                readonly
+                style="margin-top: 5px"
               />
-              <NButton
-                type="info"
-                style="height: 100%"
-                @click="copyCode"
+              <NFlex
+                justify="end"
+                style="margin-top: 10px"
               >
-                复制登陆链接
-              </NButton>
-            </NInputGroup>
-            <NFlex>
-              <NButton
-                type="primary"
-                @click="$router.push({ name: 'bili-user' })"
+                <NButton
+                  type="primary"
+                  @click="copyCode"
+                >
+                  复制登陆链接
+                </NButton>
+              </NFlex>
+              <NFlex
+                justify="center"
+                style="margin-top: 20px"
+                :wrap="true"
               >
-                前往个人中心
-              </NButton>
-              <NPopconfirm
-                positive-text="继续"
-                @positive-click="
-                  () => {
-                    currentStep = 0
-                    //@ts-ignore
-                    currentToken = null
-                    guidKey = uuidv4()
-                  }
-                "
-              >
-                <template #trigger>
-                  <NButton type="warning">
-                    认证其他账号
-                  </NButton>
-                </template>
-                这将会登出当前已认证的账号, 请先在认证其他账号前保存你的登陆链接
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
-        </template>
+                <NButton
+                  type="primary"
+                  @click="$router.push({ name: 'bili-user' })"
+                >
+                  前往个人中心
+                </NButton>
+                <NPopconfirm
+                  positive-text="继续"
+                  negative-text="取消"
+                  @positive-click="
+                    () => {
+                      currentStep = 0
+                      //@ts-ignore
+                      currentToken = null
+                      guidKey = uuidv4()
+                    }
+                  "
+                >
+                  <template #trigger>
+                    <NButton type="warning">
+                      认证其他账号
+                    </NButton>
+                  </template>
+                  这将会登出当前已认证的账号, 请先在认证其他账号前保存你的登陆链接
+                </NPopconfirm>
+              </NFlex>
+            </NSpace>
+          </template>
+        </div>
       </NFlex>
     </NCard>
   </NFlex>

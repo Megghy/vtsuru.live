@@ -7,6 +7,7 @@ import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'nai
   const props = defineProps<{
     goods: ResponsePointGoodModel | undefined;
     contentStyle?: string | undefined;
+    size?: 'small' | 'default';
   }>();
 
   // 默认封面图片
