@@ -74,6 +74,15 @@ export default {
         title: '弹幕姬',
         forceReload: true,
       }
+    },
+    {
+      path: 'danmaku-vote',
+      name: 'obs-danmaku-vote',
+      component: () => import('@/views/obs/DanmakuVoteOBS.vue'),
+      meta: {
+        title: '弹幕投票',
+        forceReload: true,
+      }
     }
   ]
 }

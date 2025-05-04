@@ -200,8 +200,9 @@ function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积�
   }
   */
 
-  // 检查实物礼物的地址要求
-  if (goods.type === GoodsTypes.Physical && !goods.collectUrl &&
+  // 检查实物礼物的地址要求 - 仅对没有外部收集链接的实物礼物检查
+  if (goods.type === GoodsTypes.Physical &&
+      !goods.collectUrl && // 修复：如果有站外链接收集地址，不需要检查用户是否设置了地址
       (!biliAuth.value.address || biliAuth.value.address.length === 0)) {
     return '需要设置地址'
   }

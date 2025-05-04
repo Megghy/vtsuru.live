@@ -1,22 +1,20 @@
 import { cookie, useAccount } from '@/api/account';
 import { getEventType, recordEvent, streamingInfo } from '@/client/data/info';
+import { QueryBiliAPI } from '@/client/data/utils';
 import { BASE_HUB_URL, isDev, isTauri } from '@/data/constants';
-import BaseDanmakuClient from '@/data/DanmakuClients/BaseDanmakuClient';
-import DirectClient, { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient';
-import OpenLiveClient from '@/data/DanmakuClients/OpenLiveClient';
+import { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient';
 import * as signalR from '@microsoft/signalr';
 import * as msgpack from '@microsoft/signalr-protocol-msgpack';
+import { ZstdCodec, ZstdInit } from '@oneidentity/zstd-js/wasm';
+import { platform, version } from '@tauri-apps/plugin-os';
 import { defineStore } from 'pinia';
 import { computed, ref, shallowRef } from 'vue'; // shallowRef 用于非深度响应对象
 import { useRoute } from 'vue-router';
 import { useWebRTC } from './useRTC';
-import { QueryBiliAPI } from '@/client/data/utils';
-import { platform, type, version } from '@tauri-apps/plugin-os';
-import { ZstdCodec, ZstdInit } from '@oneidentity/zstd-js/wasm';
 
+import { onReceivedNotification } from '@/client/data/notification';
 import { encode } from "@msgpack/msgpack";
 import { getVersion } from '@tauri-apps/api/app';
-import { onReceivedNotification } from '@/client/data/notification';
 import { useDanmakuClient } from './useDanmakuClient';
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
@@ -334,6 +332,12 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         Message: '请求成功',
         Success: true,
         Data: data
+      } as ResponseFetchRequestData;
+    } else {
+      return {
+        Message: '请求失败: ' + result.statusText,
+        Success: false,
+        Data: ''
       } as ResponseFetchRequestData;
     }
   }

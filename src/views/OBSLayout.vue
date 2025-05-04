@@ -1,17 +1,27 @@
 <script setup lang="ts">
+import { useAccount } from '@/api/account'
+import { useWebFetcher } from '@/store/useWebFetcher'
 import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 const timer = ref<any>()
 const visible = ref(true)
 const active = ref(true)
+const webfetcher = useWebFetcher()
+const accountInfo = useAccount()
+
+const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
 
 const originalBackgroundColor = ref('')
-onMounted(() => {
+onMounted(async () => {
   timer.value = setInterval(() => {
     if (!visible.value || !active.value) return
     window.$mitt.emit('onOBSComponentUpdate')
   }, 1000)
+
+  if (accountInfo.value.id) {
+    await webfetcher.Start()
+  }
 
   //@ts-expect-error 这里获取不了
   if (window.obsstudio) {
@@ -51,6 +61,7 @@ onUnmounted(() => {
             :is="Component"
             :active
             :visible
+            :code="code"
           />
           <template #fallback>
             <NSpin show />

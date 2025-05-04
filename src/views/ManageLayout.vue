@@ -329,6 +329,16 @@ const menuOptions = computed(() => {
           icon: renderIcon(TabletSpeaker24Filled),
           disabled: !isBiliVerified.value,
         },
+        /*{
+          label: () => !isBiliVerified.value ? '弹幕投票' : h(
+            RouterLink,
+            { to: { name: 'manage-danmakuVote' } },
+            { default: () => '弹幕投票' },
+          ),
+          key: 'manage-danmakuVote',
+          icon: renderIcon(Chat24Filled),
+          disabled: !isBiliVerified.value,
+        },*/
       ],
     },
   ]

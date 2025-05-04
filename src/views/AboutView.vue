@@ -221,7 +221,7 @@ import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/io
               >
                 <NButton
                   tag="a"
-                  href="hhttps://microsoft.github.io/garnet/"
+                  href="https://microsoft.github.io/garnet/"
                   target="_blank"
                   text
                   style="padding: 0; color: inherit;"
