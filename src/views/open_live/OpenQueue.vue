@@ -1510,6 +1510,11 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
         :disabled="!configCanEdit"
       >
         <NSpin :show="isLoading">
+          <NAlert
+            type="info"
+            closable
+            title="Tip"
+          />
           <NSpace
             vertical
             :size="20"

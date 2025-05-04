@@ -526,6 +526,7 @@ onUnmounted(() => {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   min-height: 36px;
+  flex-wrap: wrap;
 }
 
 .queue-list-item-user-name {
@@ -534,8 +535,17 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 50%;
+  max-width: 60%;
   flex-grow: 1;
+  margin-right: 5px;
+}
+
+/* 只有在小屏幕/容器较窄时才允许换行 */
+@media (max-width: 300px) {
+  .queue-list-item-user-name {
+    white-space: normal;
+    max-width: 100%;
+  }
 }
 
 .queue-list-item-payment {
@@ -705,6 +715,9 @@ onUnmounted(() => {
   font-weight: 600;
   color: white;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes animated-border {

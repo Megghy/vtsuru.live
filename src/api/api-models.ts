@@ -883,3 +883,78 @@ export interface ExtendedUploadFileInfo {
   thumbnailUrl?: string; // 缩略图URL
   file?: File; // 可选的文件对象
 }
+
+// 弹幕投票相关类型定义
+export enum VoteResultMode {
+  ByCount = 0,    // 按人数计票
+  ByGiftValue = 1 // 按礼物价值计票
+}
+
+export interface APIFileModel {
+  id: number;
+  path: string;
+  name: string;
+  hash: string;
+}
+
+export interface VoteConfig {
+  isEnabled: boolean;
+  showResults: boolean;
+  voteDurationSeconds: number;
+  voteCommand: string;
+  voteEndCommand: string;
+  voteTitle: string;
+  allowMultipleOptions: boolean;
+  allowMultipleVotes: boolean;
+  allowCustomOptions: boolean;
+  logVotes: boolean;
+  defaultOptions: string[];
+  backgroundFile?: APIFileModel;
+  backgroundColor: string;
+  textColor: string;
+  optionColor: string;
+  roundedCorners: boolean;
+  displayPosition: string;
+  allowGiftVoting: boolean;
+  minGiftPrice?: number;
+  voteResultMode: VoteResultMode;
+}
+
+export interface VoteOption {
+  text: string;
+  count: number;
+  voters: string[];
+  percentage?: number; // 用于OBS显示
+}
+
+export interface ResponseVoteSession {
+  id: number;
+  title: string;
+  options: VoteOption[];
+  startTime: number;
+  endTime?: number;
+  isActive: boolean;
+  totalVotes: number;
+  creator?: UserBasicInfo;
+}
+
+export interface RequestCreateBulletVote {
+  title: string;
+  options: string[];
+  allowMultipleVotes: boolean;
+  durationSeconds?: number;
+}
+
+export interface VoteOBSData {
+  title: string;
+  options: VoteOption[];
+  totalVotes: number;
+  showResults: boolean;
+  isEnding: boolean;
+  backgroundImage?: string;
+  backgroundColor: string;
+  textColor: string;
+  optionColor: string;
+  roundedCorners: boolean;
+  displayPosition: string;
+}

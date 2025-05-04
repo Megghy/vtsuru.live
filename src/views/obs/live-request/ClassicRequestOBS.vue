@@ -6,7 +6,6 @@ import {
 import { useElementSize } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Vue3Marquee } from 'vue3-marquee'
 import { NDivider, NEmpty } from 'naive-ui'
 import { useLiveRequestData } from './useLiveRequestData'
 
@@ -14,11 +13,21 @@ const props = defineProps<{
   id?: number,
   active?: boolean,
   visible?: boolean,
+  speedMultiplier?: number,
 }>()
 
 const route = useRoute()
 const currentId = computed(() => {
   return props.id ?? route.query.id
+})
+
+const speedMultiplier = computed(() => {
+  if (props.speedMultiplier !== undefined && props.speedMultiplier > 0) {
+    return props.speedMultiplier
+  }
+  const speedParam = route.query.speed
+  const speed = parseFloat(speedParam?.toString() ?? '1')
+  return isNaN(speed) || speed <= 0 ? 1 : speed
 })
 
 const {
@@ -37,9 +46,36 @@ const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)
 const itemHeight = 40
 
-const isMoreThanContainer = computed(() => {
-  return activeSongs.value.length * itemHeight > height.value
+const listInnerRef = ref<HTMLElement | null>(null)
+const { height: innerListHeight } = useElementSize(listInnerRef)
+
+const itemMarginBottom = 5
+const totalContentHeightWithLastMargin = computed(() => {
+  const count = activeSongs.value.length
+  if (count === 0 || innerListHeight.value <= 0) {
+    return 0
+  }
+  return innerListHeight.value + itemMarginBottom
 })
+
+const isMoreThanContainer = computed(() => {
+  return totalContentHeightWithLastMargin.value > height.value
+})
+
+const animationTranslateY = computed(() => {
+  if (!isMoreThanContainer.value || height.value <= 0) {
+    return 0
+  }
+  return height.value - totalContentHeightWithLastMargin.value
+})
+const animationTranslateYCss = computed(() => `${animationTranslateY.value}px`)
+
+const animationDuration = computed(() => {
+  const baseDuration = activeSongs.value.length * 1
+  const adjustedDuration = baseDuration / speedMultiplier.value
+  return Math.max(adjustedDuration, 1)
+})
+const animationDurationCss = computed(() => `${animationDuration.value}s`)
 
 onMounted(() => {
   update()
@@ -102,13 +138,11 @@ onUnmounted(() => {
       class="live-request-content"
     >
       <template v-if="activeSongs.length > 0">
-        <Vue3Marquee
-          :key="key"
+        <div
+          ref="listInnerRef"
           class="live-request-list"
-          vertical
-          :duration="20"
-          :pause="!isMoreThanContainer"
-          :style="`height: ${height}px;width: ${width}px;`"
+          :class="{ animating: isMoreThanContainer }"
+          :style="`width: ${width}px;`"
         >
           <div
             v-for="(song, index) in activeSongs"
@@ -116,7 +150,6 @@ onUnmounted(() => {
             class="live-request-list-item"
             :from="song.from as number"
             :status="song.status as number"
-            :style="`height: ${itemHeight}px`"
           >
             <div
               class="live-request-list-item-index"
@@ -125,28 +158,23 @@ onUnmounted(() => {
               {{ index + 1 }}
             </div>
             <div class="live-request-list-item-song-name">
-              {{ song.songName }}
+              {{ song.songName || '未知歌曲' }}
             </div>
-            <p
+            <div
               v-if="settings.showUserName"
               class="live-request-list-item-name"
             >
-              {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name }}
-            </p>
+              {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户' }}
+            </div>
             <div
-              v-if="settings.showFanMadelInfo"
+              v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
               class="live-request-list-item-level"
               :has-level="(song.user?.fans_medal_level ?? 0) > 0"
             >
-              {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
+              {{ `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}` }}
             </div>
           </div>
-          <NDivider
-            v-if="isMoreThanContainer"
-            class="live-request-footer-divider"
-            style="margin: 10px 0 10px 0"
-          />
-        </Vue3Marquee>
+        </div>
       </template>
       <div
         v-else
@@ -163,56 +191,82 @@ onUnmounted(() => {
       ref="footerRef"
       class="live-request-footer"
     >
-      <Vue3Marquee
-        :key="key"
-        ref="footerListRef"
-        class="live-request-footer-marquee"
-        :duration="10"
-        animate-on-overflow-only
-      >
-        <span
-          class="live-request-tag"
-          type="prefix"
-        >
-          <div class="live-request-tag-key">前缀</div>
-          <div class="live-request-tag-value">
-            {{ settings.orderPrefix }}
+      <div class="live-request-footer-info">
+        <div class="live-request-footer-tags">
+          <div
+            class="live-request-footer-tag"
+            type="prefix"
+          >
+            <span class="tag-label">前缀</span>
+            <span class="tag-value">{{ settings.orderPrefix }}</span>
           </div>
-        </span>
-        <span
-          class="live-request-tag"
-          type="prefix"
-        >
-          <div class="live-request-tag-key">允许</div>
-          <div class="live-request-tag-value">
-            {{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join(',') : '无' }}
+          <div
+            class="live-request-footer-tag"
+            type="allow"
+          >
+            <span class="tag-label">允许</span>
+            <span class="tag-value">{{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join('/') : '无' }}</span>
           </div>
-        </span>
-        <span
-          class="live-request-tag"
-          type="sc"
-        >
-          <div class="live-request-tag-key">SC点歌</div>
-          <div class="live-request-tag-value">
-            {{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}
+          <div
+            class="live-request-footer-tag"
+            type="sc"
+          >
+            <span class="tag-label">SC点歌</span>
+            <span class="tag-value">{{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}</span>
           </div>
-        </span>
-        <span
-          class="live-request-tag"
-          type="fan-madel"
-        >
-          <div class="live-request-tag-key">粉丝牌</div>
-          <div class="live-request-tag-value">
-            {{
-              settings.needWearFanMedal
-                ? settings.fanMedalMinLevel > 0
-                  ? '> ' + settings.fanMedalMinLevel
-                  : '佩戴'
-                : '无需'
-            }}
+          <div
+            class="live-request-footer-tag"
+            type="medal"
+          >
+            <span class="tag-label">粉丝牌</span>
+            <span class="tag-value">
+              {{
+                settings.needWearFanMedal
+                  ? settings.fanMedalMinLevel > 0
+                    ? '> ' + settings.fanMedalMinLevel
+                    : '佩戴'
+                  : '无需'
+              }}
+            </span>
           </div>
-        </span>
-      </Vue3Marquee>
+          <div
+            class="live-request-footer-tag"
+            type="prefix"
+          >
+            <span class="tag-label">前缀</span>
+            <span class="tag-value">{{ settings.orderPrefix }}</span>
+          </div>
+          <div
+            class="live-request-footer-tag"
+            type="allow"
+          >
+            <span class="tag-label">允许</span>
+            <span class="tag-value">{{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join('/') : '无' }}</span>
+          </div>
+          <div
+            class="live-request-footer-tag"
+            type="sc"
+          >
+            <span class="tag-label">SC点歌</span>
+            <span class="tag-value">{{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}</span>
+          </div>
+          <div
+            class="live-request-footer-tag"
+            type="medal"
+          >
+            <span class="tag-label">粉丝牌</span>
+            <span class="tag-value">
+              {{
+                settings.needWearFanMedal
+                  ? settings.fanMedalMinLevel > 0
+                    ? '> ' + settings.fanMedalMinLevel
+                    : '佩戴'
+                  : '无需'
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -327,33 +381,72 @@ onUnmounted(() => {
 .live-request-content {
   background-color: #0f0f0f4f;
   margin: 10px;
-  padding: 10px;
+  padding: 8px;
   height: 100%;
   border-radius: 10px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
-.marquee {
-  justify-items: left;
+.live-request-list {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+@keyframes vertical-ping-pong {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(v-bind(animationTranslateYCss));
+  }
+}
+
+.live-request-list.animating {
+  animation-name: vertical-ping-pong;
+  animation-duration: v-bind(animationDurationCss);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  pointer-events: auto;
+}
+
+.live-request-list.animating:hover {
+  animation-play-state: paused;
 }
 
 .live-request-list-item {
   display: flex;
-  width: 100%;
   align-self: flex-start;
   position: relative;
   align-items: center;
   justify-content: left;
-  gap: 10px;
+  gap: 5px;
+  padding: 4px 6px;
+  margin-bottom: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  min-height: 36px;
+  flex-wrap: wrap;
 }
 
 .live-request-list-item-song-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 80%;
+  max-width: 60%;
+  flex-grow: 1;
+  margin-right: 5px;
+}
+
+/* 只有在小屏幕/容器较窄时才允许换行 */
+@media (max-width: 300px) {
+  .live-request-list-item-song-name {
+    white-space: normal;
+    max-width: 100%;
+  }
 }
 
 /* 手动添加 */
@@ -378,6 +471,11 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-left: auto;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
 }
 
 .live-request-list-item-index {
@@ -394,10 +492,10 @@ onUnmounted(() => {
 .live-request-list-item-level {
   text-align: center;
   height: 18px;
-  padding: 2px;
+  padding: 2px 6px;
   min-width: 15px;
   border-radius: 5px;
-  background-color: #0f0f0f48;
+  background-color: rgba(0, 0, 0, 0.3);
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
@@ -408,34 +506,95 @@ onUnmounted(() => {
 
 .live-request-footer {
   margin: 0 5px 5px 5px;
-  height: 60px;
-  border-radius: 5px;
-  background-color: #0f0f0f4f;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 6px;
+  overflow: hidden;
+  height: auto;
+  min-height: 40px;
+  max-height: 60px;
   display: flex;
   align-items: center;
 }
 
-.live-request-tag {
-  display: flex;
-  margin: 5px 0 5px 5px;
-  height: 40px;
-  border-radius: 3px;
-  background-color: #0f0f0f4f;
-  padding: 4px;
-  padding-right: 6px;
-  display: flex;
+.live-request-footer-info {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.live-request-footer-tags {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 2px;
+  white-space: nowrap;
+  animation: scrollTags 25s linear infinite;
+  padding-right: 16px;
+}
+
+@keyframes scrollTags {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.live-request-footer-tags:hover {
+  animation-play-state: paused;
+}
+
+.live-request-footer-tag {
+  display: inline-flex;
   flex-direction: column;
-  justify-content: left;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
+  min-width: max-content;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.live-request-tag-key {
-  font-style: italic;
-  color: rgb(211, 211, 211);
+.live-request-footer-tag[type="prefix"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.18));
+}
+
+.live-request-footer-tag[type="allow"] {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.18));
+}
+
+.live-request-footer-tag[type="sc"] {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.12), rgba(219, 39, 119, 0.18));
+}
+
+.live-request-footer-tag[type="medal"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.18));
+}
+
+.live-request-footer-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.tag-label {
+  font-size: 10px;
+  opacity: 0.8;
+  color: #e5e7eb;
+  font-weight: normal;
+  margin-bottom: 2px;
+  line-height: 1;
+}
+
+.tag-value {
   font-size: 12px;
-}
-
-.live-request-tag-value {
-  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .live-request-list-item-index[index='1'] {

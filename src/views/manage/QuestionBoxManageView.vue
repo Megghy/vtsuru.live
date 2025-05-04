@@ -2,15 +2,15 @@
 import { copyToClipboard, downloadImage } from '@/Utils'
 import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes, QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { CN_HOST, CURRENT_HOST } from '@/data/constants'
-import router from '@/router'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionItems from '@/components/QuestionItems.vue'
-import QuestionDisplayCard from './QuestionDisplayCard.vue'
+import { CURRENT_HOST } from '@/data/constants'
+import router from '@/router'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, TrashBin } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
+import QuestionDisplayCard from './QuestionDisplayCard.vue'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
@@ -89,7 +89,7 @@ const setting = computed({
 // 分享链接 (统一 Host, 根据选择的标签附加参数)
 const shareUrlWithTag = (tag: string | null) => {
   const base = `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`
-  return tag ? `${base}?tag=${encodeURIComponent(tag)}` : base
+  return tag ? `${base}?tag=${tag}` : base
 }
 
 // 主链接区域显示的链接

@@ -145,6 +145,16 @@ export default //管理页面
       }
     },
     {
+      path: 'vote',
+      name: 'manage-danmakuVote',
+      component: () => import('@/views/open_live/DanmakuVote.vue'),
+      meta: {
+        title: '弹幕投票',
+        keepAlive: true,
+        danmaku: true
+      }
+    },
+    {
       path: 'live',
       name: 'manage-live',
       component: () => import('@/views/manage/LiveManager.vue'),

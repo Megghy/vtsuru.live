@@ -100,6 +100,13 @@ const props = defineProps<{
   code?: string | undefined
 }>()
 
+const refinedCode = computed(() => {
+  if (props.code) {
+    return props.code
+  }
+  return accountInfo.value?.biliAuthCode ?? window.$route.query.code?.toString()
+})
+
 async function getUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
