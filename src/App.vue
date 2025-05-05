@@ -99,7 +99,8 @@ const themeOverrides = computed(() => {
         'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
     },
     Tooltip: {
-      color: isDarkMode.value ? '#101014' : '#FFFFFF',
+      color: isDarkMode.value ? '#48484e' : '#FFFFFF',
+      textColor: isDarkMode.value ? '#FFFFFF' : '#333639',
     }
   };
 })
