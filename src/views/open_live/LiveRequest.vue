@@ -76,12 +76,12 @@ const props = defineProps<{
 async function onUpdateFunctionEnable() {
   if (accountInfo.value.id) {
     const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
-    if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
+    if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)) {
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        (f) => f != FunctionTypes.SongRequest,
+        (f) => f != FunctionTypes.LiveRequest,
       )
     } else {
-      accountInfo.value.settings.enableFunctions.push(FunctionTypes.SongRequest)
+      accountInfo.value.settings.enableFunctions.push(FunctionTypes.LiveRequest)
     }
     if (!accountInfo.value.settings.songRequest.orderPrefix) {
       accountInfo.value.settings.songRequest.orderPrefix = songRequest.defaultPrefix
@@ -90,20 +90,20 @@ async function onUpdateFunctionEnable() {
       .then((data) => {
         if (data.code == 200) {
           message.success(
-            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}点播功能`,
+            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}点播功能`,
           )
         } else {
           if (accountInfo.value.id) {
             accountInfo.value.settings.enableFunctions = oldValue
           }
           message.error(
-            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`,
+            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${data.message}`,
           )
         }
       })
       .catch((err) => {
         message.error(
-          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`,
+          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${err}`,
         )
       })
   }
@@ -158,11 +158,11 @@ onUnmounted(() => {
 <template>
   <NAlert
     v-if="accountInfo.id"
-    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? 'success' : 'warning'"
+    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? 'success' : 'warning'"
   >
     启用弹幕点播功能
     <NSwitch
-      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
+      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
       @update:value="onUpdateFunctionEnable"
     />
 
@@ -215,7 +215,7 @@ onUnmounted(() => {
   <br>
   <NCard>
     <NTabs
-      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.SongRequest)"
+      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
       animated
       display-directive="show:lazy"
     >

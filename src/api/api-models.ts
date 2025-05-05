@@ -239,7 +239,6 @@ export interface Setting_Point {
   maxBonusPoints: number           // 最大奖励积分
   allowSelfCheckIn: boolean        // 是否允许自己签到
   requireAuth: boolean             // 是否需要认证
-  allowCheckInRanking: boolean     // 是否允许查询签到排行
 }
 export interface Setting_QuestionDisplay {
   font?: string // Optional string, with a maximum length of 30 characters
@@ -293,10 +292,11 @@ export enum FunctionTypes {
   SongList,
   QuestionBox,
   Schedule,
-  SongRequest,
+  LiveRequest,
   Queue,
   Point,
-  VideoCollect
+  VideoCollect,
+  CheckInRanking,
 }
 export interface SongAuthorInfo {
   name: string

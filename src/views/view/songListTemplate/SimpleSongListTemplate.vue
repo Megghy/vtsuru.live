@@ -153,7 +153,7 @@ function loadMore() {
           clearable
         />
         <NDivider />
-        <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest)" />
+        <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest)" />
       </NSpace>
     </NCard>
     <NEmpty
