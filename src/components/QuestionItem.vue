@@ -156,7 +156,6 @@ function getScoreColor(score: number | undefined): string {
           lazy
         />
       </NSpace>
-      <NDivider style="margin: 10px 0;" />
     </template>
 
     <NText

@@ -24,7 +24,7 @@ const message = useMessage()
 
 const enableSongRequest = computed({
   get: () => {
-    return accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.SongRequest) || false
+    return accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest) || false
   },
   set: async () => {
     await updateEnableFunctions()
@@ -35,12 +35,12 @@ const enableSongRequest = computed({
 async function updateEnableFunctions() {
   if (accountInfo.value.id) {
     const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
-    if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
+    if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)) {
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        (f: number) => f != FunctionTypes.SongRequest,
+        (f: number) => f != FunctionTypes.LiveRequest,
       )
     } else {
-      accountInfo.value.settings.enableFunctions.push(FunctionTypes.SongRequest)
+      accountInfo.value.settings.enableFunctions.push(FunctionTypes.LiveRequest)
     }
     if (!accountInfo.value.settings.songRequest.orderPrefix) {
       accountInfo.value.settings.songRequest.orderPrefix = liveRequest.defaultPrefix
@@ -49,20 +49,20 @@ async function updateEnableFunctions() {
       .then((data) => {
         if (data.code == 200) {
           message.success(
-            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}点播功能`,
+            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}点播功能`,
           )
         } else {
           if (accountInfo.value.id) {
             accountInfo.value.settings.enableFunctions = oldValue
           }
           message.error(
-            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${data.message}`,
+            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${data.message}`,
           )
         }
       })
       .catch((err) => {
         message.error(
-          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest) ? '启用' : '禁用'}失败: ${err}`,
+          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${err}`,
         )
       })
   }

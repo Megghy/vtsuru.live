@@ -54,7 +54,6 @@ const defaultSettingPoint: Setting_Point = {
   maxBonusPoints: 0,
   allowSelfCheckIn: false,
   requireAuth: false,
-  allowCheckInRanking: false
 }
 
 // 响应式设置对象

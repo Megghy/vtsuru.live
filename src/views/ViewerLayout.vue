@@ -121,7 +121,7 @@
       {
         label: () => h(RouterLink, { to: { name: 'user-checkin' } }, { default: () => '签到排行' }),
         key: 'user-checkin', icon: renderIcon(CheckmarkCircle24Filled),
-        show: userInfo.value?.extra?.allowCheckInRanking
+        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking)
       },
     ].filter(option => option.show !== false) as MenuOption[]; // 过滤掉 show 为 false 的菜单项
   }

@@ -148,8 +148,8 @@
 
               <NFormItem label="允许查看签到排行">
                 <NSwitch
-                  v-model:value="serverSetting.allowCheckInRanking"
-                  @update:value="updateServerSettings"
+                  :value="accountInfo.settings.enableFunctions.includes(FunctionTypes.CheckInRanking)"
+                  @update:value="updateCheckInRanking"
                 />
                 <template #feedback>
                   启用后，用户可以查看签到排行榜
@@ -381,8 +381,8 @@
 </template>
 
 <script lang="ts" setup>
-import { SaveSetting, useAccount } from '@/api/account';
-import { CheckInRankingInfo, CheckInResult } from '@/api/api-models';
+import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account';
+import { CheckInRankingInfo, CheckInResult, FunctionTypes } from '@/api/api-models';
 import { QueryGetAPI } from '@/api/query';
 import { useAutoAction } from '@/client/store/useAutoAction';
 import { CHECKIN_API_URL } from '@/data/constants';
@@ -790,6 +790,10 @@ async function handleTestCheckIn() {
       duration: 5000
     });
   }
+}
+function updateCheckInRanking(value: boolean) {
+  accountInfo.value.settings.enableFunctions = value ? [...accountInfo.value.settings.enableFunctions, FunctionTypes.CheckInRanking] : accountInfo.value.settings.enableFunctions.filter(f => f !== FunctionTypes.CheckInRanking);
+  SaveEnableFunctions(accountInfo.value.settings.enableFunctions);
 }
 
 // 组件挂载时加载排行榜

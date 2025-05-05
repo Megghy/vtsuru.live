@@ -633,11 +633,14 @@
             <NCheckbox :value="FunctionTypes.Schedule">
               日程
             </NCheckbox>
-            <NCheckbox :value="FunctionTypes.SongRequest">
+            <NCheckbox :value="FunctionTypes.LiveRequest">
               点歌
             </NCheckbox>
             <NCheckbox :value="FunctionTypes.Queue">
               排队
+            </NCheckbox>
+            <NCheckbox :value="FunctionTypes.CheckInRanking">
+              签到排行
             </NCheckbox>
           </NCheckboxGroup>
 
