@@ -119,20 +119,32 @@ defineExpose({
 
 // --- 计算属性 ---
 
+// 新增：计算是否需要显示试听开关
+const canShowListenSwitch = computed(() => {
+  const audioRegex = /\.(mp3|flac|ogg|wav|m4a)$/i;
+  return songsInternal.value.some(song => song.url && audioRegex.test(song.url));
+});
+
+// 新增：计算是否需要显示链接开关
+const canShowLinkSwitch = computed(() => {
+  const linkSources = [SongFrom.Netease, SongFrom.FiveSing, SongFrom.Kugou]; // Corrected sources
+  return songsInternal.value.some(song => song.url || (song.from != null && linkSources.includes(song.from))); // Check url OR valid from source
+});
+
 // 计算操作列的预定义宽度
 const actionColumnWidth = computed(() => {
-  const baseSelfWidth = 85; // 基础宽度 (isSelf=true, 编辑+删除)
+  const baseSelfWidth = 80; // 基础宽度 (isSelf=true, 编辑+删除)
   const basePublicWidth = 40; // 基础宽度 (isSelf=false)
   const listenButtonWidth = 40;
-  const linkButtonWidth = 40;
+  const linkButtonWidth = 50;
   const extraButtonWidth = 40; // 假设的额外按钮宽度
 
   let width = props.isSelf ? baseSelfWidth : basePublicWidth;
 
-  if (showListenButton.value) {
+  if (showListenButton.value && canShowListenSwitch.value) {
     width += listenButtonWidth;
   }
-  if (showLinkButton.value) {
+  if (showLinkButton.value && canShowLinkSwitch.value) {
     width += linkButtonWidth;
   }
   if (props.extraButton) {
@@ -351,7 +363,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
     {
       title: '标签',
       key: 'tags',
-      width: 150, // 调整宽度
+      minWidth: 100,
       resizable: true,
       // 列筛选选项
       filterOptions: tagsSelectOption.value,
@@ -452,17 +464,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
         // 使用 NSpace 渲染所有按钮
         return h(NSpace, { justify: 'end', size: 8, wrap: false }, () => buttons); // 增加间距，禁止换行
       },
-      // --- 动态计算宽度 --- START
-      /* width: (() => {
-        let calculatedWidth = 20; // 基础内边距
-        if (showLinkButton.value) calculatedWidth += 40; // 链接按钮宽度
-        if (showListenButton.value) calculatedWidth += 40; // 试听按钮宽度
-        if (props.isSelf) calculatedWidth += 80; // 编辑 + 删除按钮宽度
-        if (props.extraButton) calculatedWidth += 40; // 额外按钮预估宽度
-        return Math.max(calculatedWidth, props.isSelf ? 160 : 80); // 设置最小宽度防止太窄
-      })(), */
       width: actionColumnWidth.value, // 使用计算属性
-      // --- 动态计算宽度 --- END
     },
   ]
 }
@@ -763,20 +765,24 @@ onMounted(() => {
         item-style="display: flex; align-items: center;"
         size="small"
       >
-        <NSwitch
-          v-model:value="showListenButton"
-          size="small"
-        />
-        <NText style="font-size: 12px;">
-          试听
-        </NText>
-        <NSwitch
-          v-model:value="showLinkButton"
-          size="small"
-        />
-        <NText style="font-size: 12px;">
-          链接
-        </NText>
+        <template v-if="canShowListenSwitch">
+          <NSwitch
+            v-model:value="showListenButton"
+            size="small"
+          />
+          <NText style="font-size: 12px;">
+            试听
+          </NText>
+        </template>
+        <template v-if="canShowLinkSwitch">
+          <NSwitch
+            v-model:value="showLinkButton"
+            size="small"
+          />
+          <NText style="font-size: 12px;">
+            链接
+          </NText>
+        </template>
       </NSpace>
     </NSpace>
   </NCard>
