@@ -94,13 +94,43 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 : null,
             ])
           case PointFrom.Manual:
-            return h(
-              NTag,
-              { type: row.point > 0 ? 'success' : 'error', bordered: false, size: 'small' },
-              () => '主播' + (row.point > 0 ? '赠予' : '扣除'),
-            )
+            return h(NFlex, { align: 'center' }, () => [
+              h(
+                NTag,
+                { type: row.point > 0 ? 'success' : 'error', bordered: false, size: 'small' },
+                () => '主播' + (row.point > 0 ? '赠予' : '扣除'),
+              ),
+              row.extra?.user
+                ? h(
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: '/@' + row.extra.user?.name,
+                      target: '_blank',
+                      text: true,
+                      type: 'info',
+                    },
+                    () => row.extra.user?.name,
+                  )
+                : null,
+            ])
           case PointFrom.Use:
-            return h(NTag, { type: 'warning', bordered: false, size: 'small' }, () => '使用')
+            return h(NFlex, { align: 'center' }, () => [
+              h(NTag, { type: 'warning', bordered: false, size: 'small' }, () => '使用'),
+              row.extra?.user
+                ? h(
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: '/@' + row.extra.user?.name,
+                      target: '_blank',
+                      text: true,
+                      type: 'success',
+                    },
+                    () => row.extra.user?.name,
+                  )
+                : null,
+            ])
           case PointFrom.CheckIn:
             return h(NFlex, { align: 'center' }, () => [
               h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '签到'),
@@ -131,12 +161,12 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         case PointFrom.Danmaku:
           switch (row.type) {
             case EventDataTypes.Guard:
-              return h(NFlex, { justify: 'center', align: 'center' }, () => [
+              return h(NFlex, { align: 'center' }, () => [
                 h(NTag, { type: 'error', size: 'small' }, () => '上舰'),
                 row.extra?.danmaku.msg,
               ])
             case EventDataTypes.Gift:
-              return h(NFlex, { justify: 'center', align: 'center' }, () => [
+              return h(NFlex, { align: 'center' }, () => [
                 h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '礼物'),
                 row.extra?.danmaku.msg,
                 h(
@@ -146,7 +176,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 ),
               ])
             case EventDataTypes.SC:
-              return h(NFlex, { justify: 'center' }, () => [
+              return h(NFlex, { align: 'center' }, () => [
                 h(NTag, { type: 'warning', size: 'small', style: { margin: '0' } }, () => 'SC'),
                 row.extra?.danmaku.price,
               ])

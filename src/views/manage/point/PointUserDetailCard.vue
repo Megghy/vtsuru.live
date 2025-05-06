@@ -328,9 +328,10 @@ onMounted(async () => {
         <NButton
           type="primary"
           :loading="isLoading"
+          :disabled="!addPointCount || addPointCount === 0"
           @click="givePoint"
         >
-          {{ addPointCount > 0 ? '给予' : '扣除' }}
+          {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '给予' : '扣除') }}
         </NButton>
       </NFlex>
     </NModal>

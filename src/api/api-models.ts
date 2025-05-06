@@ -228,6 +228,7 @@ export interface Setting_Point {
   scPointPercent: number // double maps to number in TypeScript
   giftPointPercent: number // double maps to number in TypeScript
   giftAllowType: SettingPointGiftAllowType
+  shouldDiscontinueWhenSoldOut: boolean
 
   // 签到系统设置
   enableCheckIn: boolean           // 是否启用签到功能
