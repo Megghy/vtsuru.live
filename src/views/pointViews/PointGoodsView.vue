@@ -180,34 +180,6 @@ function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积�
     return '舰长等级不足'
   }
 
-  // 在当前模型中没有兑换时间限制字段，可以根据需要添加相关功能
-  // 如果将来添加了时间限制功能，可以取消下面注释并调整代码
-  /*
-  if (goods.startTime && new Date() < new Date(goods.startTime)) {
-    return '兑换时间未到'
-  }
-  if (goods.endTime && new Date() > new Date(goods.endTime)) {
-    return '兑换已结束'
-  }
-  */
-
-  // 检查用户兑换上限
-  // 注意：当前模型中没有 userBoughtCount 属性，
-  // 需要后端提供已购买数量信息才能实现此功能
-  /*
-  if (goods.userBoughtCount !== undefined && goods.maxBuyCount !== undefined &&
-      goods.userBoughtCount >= goods.maxBuyCount && goods.maxBuyCount > 0) {
-    return '已达兑换上限'
-  }
-  */
-
-  // 检查实物礼物的地址要求 - 仅对没有外部收集链接的实物礼物检查
-  if (goods.type === GoodsTypes.Physical &&
-      !goods.collectUrl && // 修复：如果有站外链接收集地址，不需要检查用户是否设置了地址
-      (!biliAuth.value.address || biliAuth.value.address.length === 0)) {
-    return '需要设置地址'
-  }
-
   return '开始兑换' // 可以兑换
 }
 
