@@ -54,6 +54,7 @@ const defaultSettingPoint: Setting_Point = {
   maxBonusPoints: 0,
   allowSelfCheckIn: false,
   requireAuth: false,
+  shouldDiscontinueWhenSoldOut: false,
 }
 
 // 响应式设置对象
@@ -259,6 +260,20 @@ async function SaveComboSetting() {
           @update:checked="SaveComboSetting"
         >
           积分礼物有新用户兑换时发送邮件
+        </NCheckbox>
+      </NFlex>
+
+      <NFlex
+        align="center"
+        :gap="12"
+      >
+        <span>其他: </span>
+        <NCheckbox
+          v-model:checked="setting.shouldDiscontinueWhenSoldOut"
+          :disabled="!canEdit"
+          @update:checked="updateSettings"
+        >
+          礼物售罄时自动下架
         </NCheckbox>
       </NFlex>
 
