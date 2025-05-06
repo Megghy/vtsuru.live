@@ -188,6 +188,7 @@ function exportData() {
           礼物总价: s.point,
           快递公司: s.expressCompany,
           快递单号: s.trackingNumber,
+          备注: s.remark ?? '',
           创建时间: format(s.createAt, 'yyyy-MM-dd HH:mm:ss'),
           更新时间: s.updateAt ? format(s.updateAt, 'yyyy-MM-dd HH:mm:ss') : '未更新',
         }

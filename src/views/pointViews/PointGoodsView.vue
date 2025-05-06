@@ -62,6 +62,7 @@ const showAddressSelect = ref(false)
 const currentGoods = ref<ResponsePointGoodModel>() // 当前选中的礼物
 const buyCount = ref(1) // 购买数量
 const selectedAddress = ref<AddressInfo>() // 选中的地址
+const remark = ref('') // 新增：用于存储用户备注
 
 // 筛选相关状态
 const selectedTag = ref<string>() // 选中的标签
@@ -217,6 +218,7 @@ function resetBuyModalState() {
   selectedAddress.value = undefined
   buyCount.value = 1
   currentGoods.value = undefined
+  remark.value = '' // 新增：重置备注
 }
 
 // 处理模态框显示状态变化
@@ -260,6 +262,7 @@ async function buyGoods() {
           goodsId: currentGoods.value?.id,
           count: buyCount.value,
           addressId: selectedAddress.value?.id ?? null, // 如果地址未选择，则传 null
+          remark: remark.value, // 新增：将备注添加到请求中
         })
 
         if (data.code === 200) {
@@ -638,7 +641,7 @@ onMounted(async () => {
       />
 
       <!-- 兑换选项 (仅对实物或需要数量选择的礼物显示) -->
-      <template v-if="currentGoods.type === GoodsTypes.Physical || (currentGoods.maxBuyCount ?? 1) > 1">
+      <template v-if="currentGoods.type === GoodsTypes.Physical || (currentGoods.maxBuyCount ?? 1) > 1 || true">
         <NDivider style="margin-top: 12px; margin-bottom: 12px;">
           兑换选项
         </NDivider>
@@ -688,6 +691,17 @@ onMounted(async () => {
             >
               管理地址
             </NButton>
+          </NFormItem>
+          <!-- 备注输入 -->
+          <NFormItem label="备注">
+            <NInput
+              v-model:value="remark"
+              type="textarea"
+              placeholder="可以在这里留下备注信息（可选）"
+              :autosize="{ minRows: 2, maxRows: 4 }"
+              maxlength="100"
+              show-count
+            />
           </NFormItem>
         </NForm>
       </template>
