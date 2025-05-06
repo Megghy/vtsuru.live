@@ -240,6 +240,17 @@ const orderColumn: DataTableColumns<OrderType> = [
     },
   },
   {
+    title: '备注',
+    key: 'remark',
+    minWidth: 100,
+    render: (row: OrderType) => {
+      if (!row.remark) {
+        return h(NText, { depth: 3, italic: true }, () => '无')
+      }
+      return h(NEllipsis, { style: { maxWidth: '100px' } }, () => row.remark)
+    },
+  },
+  {
     title: '地址',
     key: 'address',
     minWidth: 250,
@@ -281,6 +292,7 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '操作',
     key: 'action',
+    fixed: 'right',
     render: (row: OrderType) => {
       return h(
         NButton,
@@ -462,26 +474,41 @@ onMounted(() => {
         trigger="none"
       >
         <div class="order-detail-content">
+          <NDivider style="margin-top: 0">
+            礼物快照
+            <NTooltip>
+              <template #trigger>
+                <NIcon :component="Info24Filled" />
+              </template>
+              兑换成功时生成的礼物快照, 即使主播对礼物内容进行了修改这个地方也不会变化
+            </NTooltip>
+          </NDivider>
+
+          <NFlex justify="center">
+            <PointGoodsItem
+              v-if="currentGoods"
+              class="goods-item"
+              :goods="currentGoods"
+            />
+          </NFlex>
+
+          <!-- 移动并修改备注信息 -->
+          <template v-if="orderDetail.remark">
+            <NAlert
+              title="备注信息"
+              type="info"
+              style="margin-top: 16px; margin-bottom: 16px;"
+              closable
+            >
+              <template #icon>
+                <NIcon :component="Info24Filled" />
+              </template>
+              <NText>{{ orderDetail.remark }}</NText>
+            </NAlert>
+          </template>
+
           <!-- 用户视图 -->
           <template v-if="orderDetail.instanceOf === 'user'">
-            <NDivider style="margin-top: 0">
-              礼物快照
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                兑换成功时生成的礼物快照, 即使主播对礼物内容进行了修改这个地方也不会变化
-              </NTooltip>
-            </NDivider>
-
-            <NFlex justify="center">
-              <PointGoodsItem
-                v-if="currentGoods"
-                class="goods-item"
-                :goods="currentGoods"
-              />
-            </NFlex>
-
             <!-- 虚拟礼物内容 -->
             <template v-if="orderDetail.type === GoodsTypes.Virtual">
               <NDivider>虚拟礼物内容</NDivider>
@@ -531,14 +558,6 @@ onMounted(() => {
 
           <!-- 主播视图 -->
           <template v-else-if="orderDetail.instanceOf === 'owner'">
-            <NFlex justify="center">
-              <PointGoodsItem
-                v-if="currentGoods"
-                class="goods-item"
-                :goods="currentGoods"
-              />
-            </NFlex>
-
             <NDivider>订单状态管理</NDivider>
 
             <!-- 虚拟礼物提示 -->

@@ -777,7 +777,7 @@ export interface ResponsePointOrder2OwnerModel {
   createAt: number
   updateAt: number
   status: PointOrderStatus
-
+  remark?: string
   trackingNumber?: string
   expressCompany?: string
 }
@@ -791,6 +791,7 @@ export interface ResponsePointOrder2UserModel {
   goods: ResponsePointGoodModel
   status: PointOrderStatus
   createAt: number
+  remark?: string
 
   trackingNumber?: string
   expressCompany?: string
