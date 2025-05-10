@@ -7,6 +7,7 @@ import obs from './obs'
 import open_live from './open_live'
 import singlePage from './singlePage'
 import client from './client';
+import obs_store from './obs_store'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -89,6 +90,7 @@ const routes: Array<RouteRecordRaw> = [
   manage,
   obs,
   open_live,
+  obs_store,
   client,
   {
     path: '/@:id',

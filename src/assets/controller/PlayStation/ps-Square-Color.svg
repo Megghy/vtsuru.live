@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="45.529301mm"
+   height="45.529289mm"
+   viewBox="0 0 45.529301 45.529289"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="ps-Square-Color.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#3e8d2e"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="true"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="5.6568543"
+     inkscape:cx="70.003571"
+     inkscape:cy="90.156114"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1"
+     labelstyle="default"
+     showborder="true" />
+  <defs
+     id="defs1">
+    <rect
+       x="-329.58707"
+       y="426.24316"
+       width="115.7824"
+       height="107.24387"
+       id="rect2" />
+    <rect
+       x="-486.35437"
+       y="484.30515"
+       width="87.776039"
+       height="93.582237"
+       id="rect1" />
+  </defs>
+  <metadata
+     id="metadata8">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <cc:license
+           rdf:resource="https://opensource.org/license/mit" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Button Prompt Square"
+     id="layer1-7"
+     transform="translate(139.87891,-115.24219)"
+     style="display:inline">
+    <g
+       id="path1-6"
+       inkscape:label="Style - Outline (White)"
+       style="display:none">
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;fill-opacity:1;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -95.899378,138.00743 a 21.214285,21.214285 0 0 1 -21.214282,21.21429 21.214285,21.214285 0 0 1 -21.21429,-21.21429 21.214285,21.214285 0 0 1 21.21429,-21.21428 21.214285,21.214285 0 0 1 21.214282,21.21428 z"
+         id="path3-90"
+         inkscape:label="Circle" />
+      <path
+         style="color:#000000;display:inline;fill:#f69dc8;fill-opacity:1;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -117.11328,115.24219 c -12.554,0 -22.76563,10.21163 -22.76563,22.76562 0,12.554 10.21163,22.76367 22.76563,22.76367 12.55399,0 22.763671,-10.20967 22.763671,-22.76367 0,-12.55399 -10.209681,-22.76562 -22.763671,-22.76562 z m 0,3.10156 c 10.87863,0 19.664061,8.78543 19.664061,19.66406 0,10.87864 -8.785431,19.66406 -19.664061,19.66406 -10.87863,0 -19.66406,-8.78542 -19.66406,-19.66406 0,-10.87863 8.78543,-19.66406 19.66406,-19.66406 z"
+         id="path4-0"
+         inkscape:label="Outline" />
+      <path
+         id="path8-95"
+         style="color:#000000;display:inline;fill:#f69dc8;fill-opacity:1;stroke-width:1.2847;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m -128.2034,126.90579 v 22.20329 h 22.17947 v -22.20329 z m 2.66416,2.67276 h 16.89086 v 16.8505 h -16.89086 z"
+         inkscape:label="Symbol Square"
+         transform="translate(1.25e-6)" />
+    </g>
+    <g
+       id="g6-3"
+       inkscape:label="Style - Outline (Black)"
+       style="display:none">
+      <path
+         style="color:#000000;display:inline;fill:#000000;fill-opacity:1;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -95.899378,138.00743 a 21.214285,21.214285 0 0 1 -21.214282,21.21429 21.214285,21.214285 0 0 1 -21.21429,-21.21429 21.214285,21.214285 0 0 1 21.21429,-21.21428 21.214285,21.214285 0 0 1 21.214282,21.21428 z"
+         id="path5-4"
+         inkscape:label="Circle" />
+      <path
+         style="color:#000000;display:inline;fill:#f69dc8;fill-opacity:1;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -117.11328,115.24219 c -12.554,0 -22.76563,10.21163 -22.76563,22.76562 0,12.554 10.21163,22.76367 22.76563,22.76367 12.55399,0 22.763671,-10.20967 22.763671,-22.76367 0,-12.55399 -10.209681,-22.76562 -22.763671,-22.76562 z m 0,3.10156 c 10.87863,0 19.664061,8.78543 19.664061,19.66406 0,10.87864 -8.785431,19.66406 -19.664061,19.66406 -10.87863,0 -19.66406,-8.78542 -19.66406,-19.66406 0,-10.87863 8.78543,-19.66406 19.66406,-19.66406 z"
+         id="path6-6"
+         inkscape:label="Outline" />
+      <path
+         id="path7-2"
+         style="color:#000000;display:inline;fill:#f69dc8;fill-opacity:1;stroke-width:1.2847;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m -128.2034,126.90579 v 22.20329 h 22.17947 v -22.20329 z m 2.66416,2.67276 h 16.89086 v 16.8505 h -16.89086 z"
+         inkscape:label="Symbol Square"
+         transform="translate(1.25e-6)" />
+    </g>
+    <g
+       id="g8-1"
+       inkscape:label="Style - Transparent"
+       style="display:inline;fill:#ffffff;fill-opacity:1">
+      <path
+         style="color:#000000;display:inline;fill:#808080;fill-opacity:0.501031;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke markers fill"
+         d="m -117.11328,115.24219 c -12.554,-10e-6 -22.76562,10.21163 -22.76563,22.76562 0,12.554 10.21163,22.76368 22.76563,22.76367 12.554,0 22.763674,-10.20967 22.763671,-22.76367 -3e-6,-12.55399 -10.209681,-22.76562 -22.763671,-22.76562 z m 0,3.10156 c 10.87863,0 19.664059,8.78543 19.664061,19.66406 3e-6,10.87864 -8.785431,19.66406 -19.664061,19.66406 -10.87864,10e-6 -19.66407,-8.78542 -19.66406,-19.66406 0,-10.87863 8.78543,-19.66406 19.66406,-19.66406 z"
+         id="path9-64"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#333333;fill-opacity:1;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke markers fill"
+         d="m -95.899378,138.00743 a 21.214285,21.214285 0 0 1 -21.214282,21.21429 21.214285,21.214285 0 0 1 -21.21429,-21.21429 21.214285,21.214285 0 0 1 21.21429,-21.21428 21.214285,21.214285 0 0 1 21.214282,21.21428 z"
+         id="path10-7"
+         inkscape:label="Circle" />
+      <path
+         id="path11"
+         style="color:#000000;display:inline;fill:#f69dc8;fill-opacity:1;stroke-width:1.2847;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m -128.2034,126.90579 v 22.20329 h 22.17947 v -22.20329 z m 2.66416,2.67276 h 16.89086 v 16.8505 h -16.89086 z"
+         inkscape:label="Symbol Square"
+         transform="translate(1.25e-6)" />
+    </g>
+  </g>
+</svg>

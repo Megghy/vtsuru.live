@@ -4,8 +4,8 @@ import { UploadFileResponse, UserFileLocation } from '@/api/api-models';
 import { ConfigItemDefinition, DecorativeImageProperties, RGBAColor, rgbaToString } from '@/data/VTsuruConfigTypes';
 import { uploadFiles, UploadStage } from '@/data/fileUpload';
 import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent';
-import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSlider, NSpace, NText, NTooltip, NUpload, UploadFileInfo, useMessage } from 'naive-ui';
-import { h, onMounted, ref } from 'vue';
+import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NSpace, NText, NTooltip, NUpload, SelectOption, UploadFileInfo, useMessage } from 'naive-ui';
+import { computed, h, onMounted, ref } from 'vue';
 
   const message = useMessage();
 
@@ -31,6 +31,34 @@ import { h, onMounted, ref } from 'vue';
   const selectedImageId = ref<number | null>(null);
 
   const isUploading = ref(false);
+
+  // 检查配置项是否应该显示
+  function isItemVisible(item: ConfigItemDefinition): boolean {
+    if (!item.visibleWhen) return true;
+    try {
+      return item.visibleWhen(props.configData);
+    } catch (err) {
+      console.error(`执行条件显示判断出错: ${err}`);
+      return true; // 错误时默认显示
+    }
+  }
+
+  // 计算属性：过滤出应该显示的配置项
+  const visibleItems = computed(() => {
+    if (!props.config) return [];
+    return props.config.filter(item => isItemVisible(item));
+  });
+
+  // 获取select组件的选项
+  function getSelectOptions(item: ConfigItemDefinition): SelectOption[] {
+    if (item.type !== 'select') return [];
+
+    const options = typeof item.options === 'function'
+      ? item.options(props.configData)
+      : item.options;
+
+    return options || [];
+  }
 
   function OnFileListChange(key: string, files: UploadFileInfo[]) {
     if (files.length == 1) {
@@ -420,7 +448,7 @@ import { h, onMounted, ref } from 'vue';
       cols="1 600:2 1200:3 1600:4"
     >
       <NFormItemGi
-        v-for="item in config"
+        v-for="item in visibleItems"
         :key="item.name.toString()"
         :label="item.name.toString()"
       >
@@ -440,6 +468,14 @@ import { h, onMounted, ref } from 'vue';
             @update:value="configData[item.key] = $event"
           />
         </template>
+        <NSelect
+          v-else-if="item.type == 'select'"
+          :value="configData[item.key]"
+          :options="getSelectOptions(item)"
+          :placeholder="item.placeholder"
+          :clearable="item.clearable"
+          @update:value="configData[item.key] = $event"
+        />
         <NColorPicker
           v-else-if="item.type == 'color'"
           :value="safeRgbaToString(configData[item.key])"
