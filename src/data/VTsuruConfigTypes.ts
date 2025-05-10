@@ -1,4 +1,5 @@
 import { UploadFileResponse } from '@/api/api-models';
+import { SelectOption } from 'naive-ui';
 import { VNode, h } from 'vue'; // 导入 Vue 的 VNode 类型和 h 函数（用于示例）
 
 // --- 基础和通用类型 ---
@@ -12,6 +13,13 @@ interface TemplateConfigBase {
    * TemplateConfigRenderItem 会使用其是否存在来进行类型推断。
    */
   default?: any;
+  /**
+   * 可选的条件显示属性
+   * 根据一个函数决定当前配置项是否可见
+   * @param config 整个配置对象
+   * @returns 是否显示此配置项
+   */
+  visibleWhen?: (config: any) => boolean;
 }
 
 // 大多数项类型共享的通用属性 (暂时排除 RenderItem)
@@ -102,6 +110,14 @@ type Widen<T> =
 
 // --- 具体配置项类型定义 ---
 // T 在所有具体类型中默认为 unknown
+
+
+export type TemplateConfigSelectItem<T = unknown> = TemplateConfigItemWithType<T, string> & {
+  type: 'select';
+  options: SelectOption[] | ((config: T) => SelectOption[]); // 选项列表或者返回选项列表的函数
+  placeholder?: string; // 可选的占位符
+  clearable?: boolean;  // 是否可清空
+};
 
 export type TemplateConfigStringItem<T = unknown> = TemplateConfigItemWithType<T, string> & {
   type: 'string';
@@ -251,7 +267,8 @@ export type ConfigItemDefinition =
   | TemplateConfigDecorativeImagesItem<any>
   | TemplateConfigSliderNumberItem<any>
   | TemplateConfigBooleanItem<any>
-  | TemplateConfigColorItem<any>;
+  | TemplateConfigColorItem<any>
+  | TemplateConfigSelectItem<any>;
 
 /**
  * @description 从只读的配置项数组中提取最终的数据结构类型。
@@ -269,7 +286,7 @@ export type ExtractConfigData<
     // 如果有，使用 default 值的 Widen 处理后的类型
     ? Widen<DefaultType>
     // 如果没有 default，则根据 'type' 属性确定类型
-    : ItemWithKeyK extends { type: 'string'; } ? string
+    : ItemWithKeyK extends { type: 'string' | 'select'; } ? string
     : ItemWithKeyK extends { type: 'stringArray'; } ? string[]
     : ItemWithKeyK extends { type: 'number' | 'sliderNumber' ; } ? number
     : ItemWithKeyK extends { type: 'numberArray'; } ? number[]

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="137.40556mm"
+   height="69.341972mm"
+   viewBox="0 0 137.40556 69.341972"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="ps5-Touchpad.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#7fcf89"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="2.0257997"
+     inkscape:cx="263.10598"
+     inkscape:cy="226.82401"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g7" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="DualSense Touchpad"
+     id="layer1"
+     transform="translate(-43.357903,-131.95778)">
+    <g
+       id="path1"
+       inkscape:label="Style - Outline (White)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="M 52.637317,132.95778 H 171.48405 c 4.55997,0 8.77534,3.70364 8.23098,8.23098 l -6.20858,51.63538 c -0.4944,4.11186 -3.33412,7.47561 -7.47562,7.47561 H 58.090541 c -4.141502,0 -6.981229,-3.36375 -7.475634,-7.47561 l -6.208573,-51.63538 c -0.544362,-4.52734 3.671018,-8.23098 8.230983,-8.23098 z"
+         id="path4"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 52.636719,131.95703 c -5.101432,0 -9.847781,4.15254 -9.222657,9.35156 l 6.207032,51.63477 c 0.540868,4.49828 3.785782,8.35547 8.46875,8.35547 H 166.03125 c 4.68297,0 7.92789,-3.85719 8.46875,-8.35547 l 6.20703,-51.63477 c 0.62512,-5.19902 -4.12122,-9.35156 -9.22266,-9.35156 z m 0,2 H 171.48437 c 4.0185,0 7.70188,3.25763 7.23829,7.11328 l -6.20899,51.63477 c -0.44793,3.72543 -2.88239,6.59375 -6.48242,6.59375 H 58.089844 c -3.600028,0 -6.034481,-2.86832 -6.482422,-6.59375 l -6.208985,-51.63477 c -0.463598,-3.85565 3.219793,-7.11328 7.238282,-7.11328 z"
+         id="path5"
+         inkscape:label="Outline" />
+    </g>
+    <g
+       id="g7"
+       inkscape:label="Style - Outline (Black)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="M 52.637317,132.95778 H 171.48405 c 4.55997,0 8.77534,3.70364 8.23098,8.23098 l -6.20858,51.63538 c -0.4944,4.11186 -3.33412,7.47561 -7.47562,7.47561 H 58.090541 c -4.141502,0 -6.981229,-3.36375 -7.475634,-7.47561 l -6.208573,-51.63538 c -0.544362,-4.52734 3.671018,-8.23098 8.230983,-8.23098 z"
+         id="path6"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 52.636719,131.95703 c -5.101432,0 -9.847781,4.15254 -9.222657,9.35156 l 6.207032,51.63477 c 0.540868,4.49828 3.785782,8.35547 8.46875,8.35547 H 166.03125 c 4.68297,0 7.92789,-3.85719 8.46875,-8.35547 l 6.20703,-51.63477 c 0.62512,-5.19902 -4.12122,-9.35156 -9.22266,-9.35156 z m 0,2 H 171.48437 c 4.0185,0 7.70188,3.25763 7.23829,7.11328 l -6.20899,51.63477 c -0.44793,3.72543 -2.88239,6.59375 -6.48242,6.59375 H 58.089844 c -3.600028,0 -6.034481,-2.86832 -6.482422,-6.59375 l -6.208985,-51.63477 c -0.463598,-3.85565 3.219793,-7.11328 7.238282,-7.11328 z"
+         id="path7"
+         inkscape:label="Outline" />
+    </g>
+    <g
+       id="rect1"
+       inkscape:label="Style - Transparent"
+       style="display:inline">
+      <path
+         style="color:#000000;fill:#808080;fill-opacity:0.501961;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 52.636719,131.95703 c -5.101432,0 -9.847781,4.15254 -9.222657,9.35156 l 6.207032,51.63477 c 0.540868,4.49828 3.785782,8.35547 8.46875,8.35547 H 166.03125 c 4.68297,0 7.92789,-3.85719 8.46875,-8.35547 l 6.20703,-51.63477 c 0.62512,-5.19902 -4.12122,-9.35156 -9.22266,-9.35156 z m 0,2 H 171.48437 c 4.0185,0 7.70188,3.25763 7.23829,7.11328 l -6.20899,51.63477 c -0.44793,3.72543 -2.88239,6.59375 -6.48242,6.59375 H 58.089844 c -3.600028,0 -6.034481,-2.86832 -6.482422,-6.59375 l -6.208985,-51.63477 c -0.463598,-3.85565 3.219793,-7.11328 7.238282,-7.11328 z"
+         id="path2"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="M 52.637317,132.95778 H 171.48405 c 4.55997,0 8.77534,3.70364 8.23098,8.23098 l -6.20858,51.63538 c -0.4944,4.11186 -3.33412,7.47561 -7.47562,7.47561 H 58.090541 c -4.141502,0 -6.981229,-3.36375 -7.475634,-7.47561 l -6.208573,-51.63538 c -0.544362,-4.52734 3.671018,-8.23098 8.230983,-8.23098 z"
+         id="path3"
+         inkscape:label="Color" />
+    </g>
+  </g>
+</svg>

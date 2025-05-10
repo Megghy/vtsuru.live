@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64.791023mm"
+   height="64.791016mm"
+   viewBox="0 0 64.791025 64.791016"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="steam-Left Joystick Touch (2).svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#76ff8f"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="4.0515994"
+     inkscape:cx="113.53541"
+     inkscape:cy="143.77038"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Left Joystick Touch"
+     id="layer1"
+     transform="translate(-37.056411,-92.420153)">
+    <g
+       id="g5"
+       transform="translate(0.5564114,0.28148031)"
+       style="display:none"
+       inkscape:label="Style - Outline (White)">
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 68.830078,92.074219 c -17.867476,0 -32.394531,14.527051 -32.394531,32.394531 0,17.86748 14.527055,32.39453 32.394531,32.39453 17.867476,0 32.394532,-14.52705 32.394532,-32.39453 0,-17.86748 -14.527056,-32.394531 -32.394532,-32.394531 z m 0,3.996093 c 15.707895,0 28.398438,12.690538 28.398438,28.398438 0,15.7079 -12.690543,28.39844 -28.398438,28.39844 -15.707895,0 -28.398437,-12.69054 -28.398437,-28.39844 0,-15.7079 12.690542,-28.398438 28.398437,-28.398438 z"
+         id="path11"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="M 99.226643,124.46834 A 30.396824,30.396824 0 0 1 68.829819,154.86516 30.396824,30.396824 0 0 1 38.432995,124.46834 30.396824,30.396824 0 0 1 68.829819,94.071514 30.396824,30.396824 0 0 1 99.226643,124.46834 Z"
+         id="path12"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 68.830078,102.54297 c -12.102965,0 -21.92578,9.82282 -21.925781,21.92578 10e-7,12.10296 9.822816,21.92383 21.925781,21.92383 12.102964,0 21.92578,-9.82087 21.925781,-21.92383 -10e-7,-12.10296 -9.822817,-21.92578 -21.925781,-21.92578 z m 0,1 c 11.562525,0 20.92578,9.36326 20.925781,20.92578 -10e-7,11.56252 -9.363256,20.92383 -20.925781,20.92383 -11.562525,0 -20.92578,-9.3613 -20.925781,-20.92383 10e-7,-11.56253 9.363256,-20.92578 20.925781,-20.92578 z"
+         id="circle4"
+         inkscape:label="Joystick Grip Circle" />
+      <path
+         d="m 63.83315,134.65567 v -22.15644 h 3.106751 v 19.45887 h 9.623351 v 2.69757 z"
+         id="path26"
+         style="font-weight:500;font-size:31.0372px;line-height:0;font-family:'open sans';-inkscape-font-specification:'open sans Medium';letter-spacing:-0.396875px;word-spacing:0px;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round"
+         inkscape:label="Symbol L"
+         aria-label="L"
+         transform="translate(-0.55641243,-0.28147932)" />
+      <g
+         id="path1-2"
+         inkscape:label="Touch Sensor"
+         style="display:inline;stroke:none;stroke-opacity:1;paint-order:stroke fill markers"
+         transform="matrix(1.1519834,0,0,1.1519834,-250.29614,-68.616536)">
+        <path
+           style="color:#000000;fill:#808080;fill-opacity:0.7;stroke:none;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path10-2"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#000000;stroke:none;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path11-1"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+    <g
+       id="g24"
+       transform="translate(0.55641256,0.28148102)"
+       style="display:none"
+       inkscape:label="Style - Outline (Black)">
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 68.830078,92.074219 c -17.867476,0 -32.394531,14.527051 -32.394531,32.394531 0,17.86748 14.527055,32.39453 32.394531,32.39453 17.867476,0 32.394532,-14.52705 32.394532,-32.39453 0,-17.86748 -14.527056,-32.394531 -32.394532,-32.394531 z m 0,3.996093 c 15.707895,0 28.398438,12.690538 28.398438,28.398438 0,15.7079 -12.690543,28.39844 -28.398438,28.39844 -15.707895,0 -28.398437,-12.69054 -28.398437,-28.39844 0,-15.7079 12.690542,-28.398438 28.398437,-28.398438 z"
+         id="path17"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="M 99.226643,124.46834 A 30.396824,30.396824 0 0 1 68.829819,154.86516 30.396824,30.396824 0 0 1 38.432995,124.46834 30.396824,30.396824 0 0 1 68.829819,94.071514 30.396824,30.396824 0 0 1 99.226643,124.46834 Z"
+         id="path18"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 68.830078,102.54297 c -12.102965,0 -21.92578,9.82282 -21.925781,21.92578 10e-7,12.10296 9.822816,21.92383 21.925781,21.92383 12.102964,0 21.92578,-9.82087 21.925781,-21.92383 -10e-7,-12.10296 -9.822817,-21.92578 -21.925781,-21.92578 z m 0,1 c 11.562525,0 20.92578,9.36326 20.925781,20.92578 -10e-7,11.56252 -9.363256,20.92383 -20.925781,20.92383 -11.562525,0 -20.92578,-9.3613 -20.925781,-20.92383 10e-7,-11.56253 9.363256,-20.92578 20.925781,-20.92578 z"
+         id="path19"
+         inkscape:label="Joystick Grip Circle" />
+      <path
+         d="m 63.83315,134.65567 v -22.15644 h 3.106751 v 19.45887 h 9.623351 v 2.69757 z"
+         id="text1"
+         style="font-weight:500;font-size:31.0372px;line-height:0;font-family:'open sans';-inkscape-font-specification:'open sans Medium';letter-spacing:-0.396875px;word-spacing:0px;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round"
+         inkscape:label="Symbol L"
+         aria-label="L"
+         transform="translate(-0.55641359,-0.28148003)" />
+      <g
+         id="g15"
+         inkscape:label="Touch Sensor"
+         style="display:inline;stroke:none;stroke-opacity:1;paint-order:stroke fill markers"
+         transform="matrix(1.1519834,0,0,1.1519834,-250.29614,-68.616536)">
+        <path
+           style="color:#000000;fill:#808080;fill-opacity:0.7;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path14-8"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#ffffff;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path15"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+    <g
+       id="g1"
+       transform="translate(0.55641087,0.28148059)"
+       style="display:inline"
+       inkscape:label="Style - Transparent">
+      <path
+         style="color:#000000;display:inline;fill:#808080;fill-opacity:0.501961;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="M 68.894531,92.138672 C 51.026951,92.138672 36.5,106.66562 36.5,124.5332 c 0,17.86758 14.526951,32.39649 32.394531,32.39649 17.867581,0 32.396489,-14.52891 32.396489,-32.39649 0,-17.86758 -14.528908,-32.394528 -32.396489,-32.394528 z m 0,3.996094 c 15.707984,0 28.400391,12.690454 28.400391,28.398434 0,15.70799 -12.692407,28.40039 -28.400391,28.40039 -15.707984,0 -28.398437,-12.6924 -28.398437,-28.40039 0,-15.70798 12.690453,-28.398434 28.398437,-28.398434 z"
+         id="path7"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 99.292309,124.53383 a 30.396999,30.397001 0 0 1 -30.397,30.397 30.396999,30.397001 0 0 1 -30.396999,-30.397 30.396999,30.397001 0 0 1 30.396999,-30.397003 30.396999,30.397001 0 0 1 30.397,30.397003 z"
+         id="path10"
+         inkscape:label="Color" />
+      <circle
+         style="display:inline;fill:none;stroke:#808080;stroke-width:1.35021;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         id="circle3"
+         cx="68.829819"
+         cy="124.46834"
+         r="29.753023"
+         inkscape:label="Outline 2" />
+      <path
+         id="path1"
+         style="display:inline;fill:none;stroke:#808080;stroke-linecap:round;stroke-linejoin:round;paint-order:stroke fill markers"
+         d="m 90.254921,124.46834 a 21.425102,21.425102 0 0 1 -21.425102,21.4251 21.425102,21.425102 0 0 1 -21.425103,-21.4251 21.425102,21.425102 0 0 1 21.425103,-21.4251 21.425102,21.425102 0 0 1 21.425102,21.4251 z"
+         inkscape:label="Joystick Grip Circle" />
+      <path
+         d="m 63.83315,134.65567 v -22.15644 h 3.106751 v 19.45887 h 9.623351 v 2.69757 z"
+         id="path25"
+         style="font-weight:500;font-size:31.0372px;line-height:0;font-family:'open sans';-inkscape-font-specification:'open sans Medium';letter-spacing:-0.396875px;word-spacing:0px;display:inline;fill:#808080;stroke-linecap:round;stroke-linejoin:round"
+         inkscape:label="Symbol L"
+         aria-label="L"
+         transform="translate(-0.5564119,-0.2814796)" />
+      <g
+         id="g13"
+         inkscape:label="Touch Sensor"
+         style="display:inline;stroke:#777777;stroke-opacity:1;paint-order:stroke fill markers"
+         transform="matrix(1.1519834,0,0,1.1519834,-250.29612,-68.616536)">
+        <path
+           style="color:#000000;fill:#808080;fill-opacity:0.7;stroke:none;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path12-5"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#666666;fill-opacity:1;stroke:none;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path13-6"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+  </g>
+</svg>

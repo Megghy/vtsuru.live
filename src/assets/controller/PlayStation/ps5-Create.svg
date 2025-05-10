@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="19.690681mm"
+   height="42.800846mm"
+   viewBox="0 0 19.690682 42.800846"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="ps5-Create.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#46ff8c"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="5.7298267"
+     inkscape:cx="-18.936"
+     inkscape:cy="95.552628"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Button Create"
+     id="layer1"
+     transform="translate(-127.52917,-76.729167)">
+    <g
+       id="rect5"
+       transform="matrix(-0.95670777,0.29105024,0.29105024,0.95670777,6.8750002e-7,3.3333335e-7)"
+       inkscape:label="Style - Outline (White)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -101.02692,126.30241 c 3.588653,0 6.47771,2.76701 6.47771,6.20406 v 15.61161 c 0,3.43705 -2.889057,6.20407 -6.47771,6.20407 -3.58865,0 -6.4777,-2.76702 -6.4777,-6.20407 v -15.61161 c 0,-3.43705 2.88905,-6.20406 6.4777,-6.20406 z"
+         id="path8"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -101.02734,125.30273 c -4.10268,0 -7.47657,3.2057 -7.47657,7.20313 v 15.61133 c 0,3.99742 3.37389,7.20508 7.47657,7.20508 4.102673,0 7.478512,-3.20766 7.478512,-7.20508 v -15.61133 c 0,-3.99743 -3.375839,-7.20313 -7.478512,-7.20313 z m 0,2 c 3.074612,0 5.478512,2.32645 5.478512,5.20313 v 15.61133 c 0,2.87667 -2.4039,5.20508 -5.478512,5.20508 -3.07462,0 -5.47657,-2.32841 -5.47657,-5.20508 v -15.61133 c 0,-2.87668 2.40195,-5.20313 5.47657,-5.20313 z"
+         id="path9"
+         inkscape:label="Outline" />
+      <path
+         id="path5"
+         style="display:inline;fill:#000000;fill-opacity:1;stroke-width:0.490433"
+         d="m 134.18578,76.729167 v 7.555019 h 1.47268 v -7.555019 z m -5.38616,2.675478 -1.27045,0.746196 3.17717,5.419296 1.27044,-0.742677 z m 12.15975,0.0859 -3.17716,5.422815 1.27043,0.742677 3.17717,-5.419296 z"
+         inkscape:label="Symbol Create"
+         transform="matrix(-0.95670778,0.29105024,0.29105024,0.95670778,0,0)" />
+    </g>
+    <g
+       id="g12"
+       transform="matrix(-0.95670777,0.29105024,0.29105024,0.95670777,6.8750002e-7,3.3333335e-7)"
+       inkscape:label="Style - Outline (Black)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -101.02692,126.30241 c 3.588653,0 6.47771,2.76701 6.47771,6.20406 v 15.61161 c 0,3.43705 -2.889057,6.20407 -6.47771,6.20407 -3.58865,0 -6.4777,-2.76702 -6.4777,-6.20407 v -15.61161 c 0,-3.43705 2.88905,-6.20406 6.4777,-6.20406 z"
+         id="path10"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m -101.02734,125.30273 c -4.10268,0 -7.47657,3.2057 -7.47657,7.20313 v 15.61133 c 0,3.99742 3.37389,7.20508 7.47657,7.20508 4.102673,0 7.478512,-3.20766 7.478512,-7.20508 v -15.61133 c 0,-3.99743 -3.375839,-7.20313 -7.478512,-7.20313 z m 0,2 c 3.074612,0 5.478512,2.32645 5.478512,5.20313 v 15.61133 c 0,2.87667 -2.4039,5.20508 -5.478512,5.20508 -3.07462,0 -5.47657,-2.32841 -5.47657,-5.20508 v -15.61133 c 0,-2.87668 2.40195,-5.20313 5.47657,-5.20313 z"
+         id="path11"
+         inkscape:label="Outline" />
+      <path
+         id="path12"
+         style="display:inline;fill:#ffffff;fill-opacity:1;stroke-width:0.490433"
+         d="m 134.18578,76.729167 v 7.555019 h 1.47268 v -7.555019 z m -5.38616,2.675478 -1.27045,0.746196 3.17717,5.419296 1.27044,-0.742677 z m 12.15975,0.0859 -3.17716,5.422815 1.27043,0.742677 3.17717,-5.419296 z"
+         inkscape:label="Symbol Create"
+         transform="matrix(-0.95670778,0.29105024,0.29105024,0.95670778,0,0)" />
+    </g>
+    <g
+       id="g1"
+       inkscape:label="Style - Transparent"
+       style="display:inline">
+      <path
+         style="color:#000000;fill:#808080;fill-opacity:0.501961;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 133.12303,90.474064 c 3.92507,-1.194086 8.08591,0.890861 9.24937,4.715233 l 4.54368,14.935483 c 1.16345,3.82436 -1.13079,7.87513 -5.05585,9.06921 -3.92506,1.19409 -8.08834,-0.89217 -9.25179,-4.71653 l -4.54369,-14.935483 c -1.16345,-3.824372 1.13322,-7.873829 5.05828,-9.067913 z m 0.5821,1.913416 c -2.9415,0.894866 -4.56422,3.820255 -3.72696,6.572397 l 4.54368,14.935483 c 0.83726,2.75213 3.81477,4.28008 6.75628,3.38522 2.94151,-0.89487 4.56179,-3.82157 3.72453,-6.5737 l -4.54368,-14.935482 c -0.83726,-2.752143 -3.81234,-4.278787 -6.75385,-3.383918 z"
+         id="path6"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 133.41359,91.430588 c -3.4333,1.044478 -5.39194,4.532559 -4.39159,7.820811 l 4.54377,14.935751 c 1.00035,3.28825 4.56968,5.09462 8.00297,4.05014 3.43329,-1.04448 5.39192,-4.53256 4.39157,-7.82082 l -4.54376,-14.935746 c -1.00036,-3.288252 -4.56967,-5.094613 -8.00296,-4.050136 z"
+         id="path7"
+         inkscape:label="Color" />
+      <path
+         id="path35"
+         style="display:inline;fill:#808080;fill-opacity:1;stroke-width:0.490433"
+         d="m 134.18578,76.729167 v 7.555019 h 1.47268 v -7.555019 z m -5.38616,2.675478 -1.27045,0.746196 3.17717,5.419296 1.27044,-0.742677 z m 12.15975,0.0859 -3.17716,5.422815 1.27043,0.742677 3.17717,-5.419296 z"
+         inkscape:label="Symbol Create" />
+    </g>
+  </g>
+</svg>

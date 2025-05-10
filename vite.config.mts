@@ -11,17 +11,62 @@ import oxlintPlugin from 'vite-plugin-oxlint';
 import svgLoader from 'vite-svg-loader';
 import { VineVitePlugin } from 'vue-vine/vite';
 
+// 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
+const removeSodipodiInkscape = {
+  name: 'removeSodipodiInkscape',
+  description: '删除所有名称以sodipodi:和inkscape:开头的元素',
+  fn: () => {
+    return {
+      element: {
+        enter: (node, parentNode) => {
+          // 检查元素名称是否以sodipodi:或inkscape:开头
+          if (node.name && (node.name.startsWith('sodipodi:') || node.name.startsWith('inkscape:'))) {
+            // 从父节点的children数组中过滤掉当前节点
+            parentNode.children = parentNode.children.filter(child => child !== node);
+          }
+        },
+      },
+    };
+  },
+};
+
 export default defineConfig({
   plugins: [
     vue({
       script: { propsDestructure: true, defineModel: true },
       include: [/\.vue$/, /\.md$/],
       template: {
-        compilerOptions: { isCustomElement: (tag) => tag.startsWith('yt-') }
+        compilerOptions: {
+          isCustomElement: (tag) => {
+            return tag.includes(':') || tag.startsWith('yt-');
+          }
+        }
       }
     }),
     vueJsx(),
-    svgLoader(),
+    svgLoader({
+      svgoConfig: {
+        plugins: [
+          {
+            name: 'preset-default',
+            params: {
+              overrides: {
+                removeEditorsNSData: false,
+              }
+            }
+          },
+          removeSodipodiInkscape,
+          "convertStyleToAttrs",
+          "removeUselessDefs",
+          "removeUselessStrokeAndFill",
+          "removeUnusedNS",
+          "removeEmptyText",
+          "removeEmptyContainers",
+          "removeViewBox",
+          "cleanupIds",
+        ]
+      }
+    }),
     Markdown({
       /* options */
     }),

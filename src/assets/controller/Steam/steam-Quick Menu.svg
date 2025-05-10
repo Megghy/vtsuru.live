@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="51.170334mm"
+   height="21.310999mm"
+   viewBox="0 0 51.170334 21.310999"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="steamdeck-quick menu.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#b1ffb7"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="4"
+     inkscape:cx="38.5"
+     inkscape:cy="33.625"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Button Prompt Quick Menu Button"
+     id="layer1"
+     transform="translate(-51.734092,-114.66176)">
+    <g
+       id="rect3"
+       inkscape:label="Style - Outline (White)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 61.310077,115.4416 h 32.018366 c 4.873066,0 8.796147,4.40454 8.796147,9.87566 0,5.47112 -3.923081,9.87567 -8.796147,9.87567 H 61.310077 c -4.873067,0 -8.79615,-4.40455 -8.79615,-9.87567 0,-5.47112 3.923083,-9.87566 8.79615,-9.87566 z"
+         id="path7"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 61.310547,114.66211 c -5.342967,0 -9.576172,4.8104 -9.576172,10.6543 0,5.8439 4.233205,10.65625 9.576172,10.65625 h 32.017578 c 5.342967,0 9.576175,-4.81235 9.576175,-10.65625 0,-5.8439 -4.233208,-10.6543 -9.576175,-10.6543 z m 0,1.55859 h 32.017578 c 4.403157,0 8.017575,3.99738 8.017575,9.09571 0,5.09832 -3.614418,9.09765 -8.017575,9.09765 H 61.310547 c -4.403157,0 -8.017578,-3.99933 -8.017578,-9.09765 0,-5.09833 3.614421,-9.09571 8.017578,-9.09571 z"
+         id="path8"
+         inkscape:label="Outline" />
+      <path
+         id="path3"
+         style="display:inline;fill:#000000;stroke-width:1.98379;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.501961"
+         d="m 65.155434,122.24639 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071572,-3.07064 3.0711932,3.0711932 0 0 0 -3.071572,-3.0711 z m 11.941528,0 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z m 12.386122,0 a 3.0711932,3.0711932 0 0 0 -3.071572,3.0711 3.0711932,3.0711932 0 0 0 3.071572,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z"
+         inkscape:label="Symbol Quick Menu" />
+    </g>
+    <g
+       id="g10"
+       inkscape:label="Style - Outline (Black)"
+       style="display:none">
+      <path
+         style="color:#000000;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 61.310077,115.4416 h 32.018366 c 4.873066,0 8.796147,4.40454 8.796147,9.87566 0,5.47112 -3.923081,9.87567 -8.796147,9.87567 H 61.310077 c -4.873067,0 -8.79615,-4.40455 -8.79615,-9.87567 0,-5.47112 3.923083,-9.87566 8.79615,-9.87566 z"
+         id="path9"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 61.310547,114.66211 c -5.342967,0 -9.576172,4.8104 -9.576172,10.6543 0,5.8439 4.233205,10.65625 9.576172,10.65625 h 32.017578 c 5.342967,0 9.576175,-4.81235 9.576175,-10.65625 0,-5.8439 -4.233208,-10.6543 -9.576175,-10.6543 z m 0,1.55859 h 32.017578 c 4.403157,0 8.017575,3.99738 8.017575,9.09571 0,5.09832 -3.614418,9.09765 -8.017575,9.09765 H 61.310547 c -4.403157,0 -8.017578,-3.99933 -8.017578,-9.09765 0,-5.09833 3.614421,-9.09571 8.017578,-9.09571 z"
+         id="path10"
+         inkscape:label="Outline" />
+      <path
+         id="path14"
+         style="display:inline;fill:#ffffff;stroke-width:1.98379;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.501961"
+         d="m 65.155434,122.24639 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071572,-3.07064 3.0711932,3.0711932 0 0 0 -3.071572,-3.0711 z m 11.941528,0 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z m 12.386122,0 a 3.0711932,3.0711932 0 0 0 -3.071572,3.0711 3.0711932,3.0711932 0 0 0 3.071572,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z"
+         inkscape:label="Symbol Quick Menu" />
+    </g>
+    <g
+       id="rect1-5"
+       inkscape:label="Style - Transparent"
+       style="display:inline">
+      <path
+         style="color:#000000;display:inline;fill:#808080;fill-opacity:0.501961;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 61.310547,114.66211 c -5.342967,0 -9.576172,4.8104 -9.576172,10.6543 0,5.8439 4.233205,10.65625 9.576172,10.65625 h 32.017578 c 5.342967,0 9.576175,-4.81235 9.576175,-10.65625 0,-5.8439 -4.233208,-10.6543 -9.576175,-10.6543 z m 0,1.55859 h 32.017578 c 4.403157,0 8.017575,3.99738 8.017575,9.09571 0,5.09832 -3.614418,9.09765 -8.017575,9.09765 H 61.310547 c -4.403157,0 -8.017578,-3.99933 -8.017578,-9.09765 0,-5.09833 3.614421,-9.09571 8.017578,-9.09571 z"
+         id="path5"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 61.310077,115.4416 h 32.018366 c 4.873066,0 8.796147,4.40454 8.796147,9.87566 0,5.47112 -3.923081,9.87567 -8.796147,9.87567 H 61.310077 c -4.873067,0 -8.79615,-4.40455 -8.79615,-9.87567 0,-5.47112 3.923083,-9.87566 8.79615,-9.87566 z"
+         id="path6"
+         inkscape:label="Color" />
+      <path
+         id="path13"
+         style="display:inline;fill:#808080;stroke-width:1.98379;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:0.501961"
+         d="m 65.155434,122.24639 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071572,-3.07064 3.0711932,3.0711932 0 0 0 -3.071572,-3.0711 z m 11.941528,0 a 3.0711932,3.0711932 0 0 0 -3.071105,3.0711 3.0711932,3.0711932 0 0 0 3.071105,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z m 12.386122,0 a 3.0711932,3.0711932 0 0 0 -3.071572,3.0711 3.0711932,3.0711932 0 0 0 3.071572,3.07064 3.0711932,3.0711932 0 0 0 3.071105,-3.07064 3.0711932,3.0711932 0 0 0 -3.071105,-3.0711 z"
+         inkscape:label="Symbol Quick Menu" />
+    </g>
+  </g>
+</svg>

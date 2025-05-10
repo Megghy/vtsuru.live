@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="72.837891mm"
+   height="72.837891mm"
+   viewBox="0 0 72.83789 72.83789"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="steamcontroller-Right Trackpad Touch.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#9cff9a"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="4"
+     inkscape:cx="139.75"
+     inkscape:cy="115.5"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Steam Controller Right Trackpad Touch"
+     id="layer1"
+     transform="translate(-155.4043,-101.69336)">
+    <g
+       id="circle3"
+       inkscape:label="Style - Outline (White)"
+       style="display:none">
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;-inkscape-stroke:none"
+         d="m 227.04182,138.1125 a 35.218903,35.218903 0 0 1 -35.2189,35.21891 35.218903,35.218903 0 0 1 -35.2189,-35.21891 35.218903,35.218903 0 0 1 35.2189,-35.2189 35.218903,35.218903 0 0 1 35.2189,35.2189 z"
+         id="path6"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+         d="m 191.82227,101.69336 c -20.09938,0 -36.41797,16.32055 -36.41797,36.41992 0,20.09937 16.31859,36.41797 36.41797,36.41797 20.09937,0 36.41992,-16.3186 36.41992,-36.41797 0,-20.09937 -16.32055,-36.41992 -36.41992,-36.41992 z m 0,2.40039 c 18.80231,0 34.01953,15.21722 34.01953,34.01953 0,18.80232 -15.21722,34.01758 -34.01953,34.01758 -18.80232,0 -34.01758,-15.21526 -34.01758,-34.01758 0,-18.80231 15.21526,-34.01953 34.01758,-34.01953 z"
+         id="path7"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 191.82227,105.43555 c -18.03968,0 -32.67579,14.63806 -32.67579,32.67773 0,18.03968 14.63611,32.67578 32.67579,32.67578 18.03967,0 32.67773,-14.6361 32.67773,-32.67578 0,-18.03967 -14.63806,-32.67773 -32.67773,-32.67773 z m 0,1.23828 c 17.37083,0 31.43945,14.06861 31.43945,31.43945 0,17.37084 -14.06862,31.43945 -31.43945,31.43945 -17.37084,0 -31.43946,-14.06861 -31.43946,-31.43945 0,-17.37084 14.06862,-31.43945 31.43946,-31.43945 z"
+         id="circle1"
+         inkscape:label="Outline 2" />
+      <g
+         id="path1"
+         inkscape:label="Touch Sensor"
+         style="display:inline"
+         transform="matrix(0.76169623,0,0,0.76169623,-19.227611,10.400243)">
+        <path
+           style="color:#000000;fill:#000000;fill-opacity:0.5;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path10-2"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#000000;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path11-1"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+    <g
+       id="g14"
+       inkscape:label="Style - Outline (Black)"
+       style="display:none">
+      <path
+         style="color:#000000;display:inline;fill:#000000;-inkscape-stroke:none"
+         d="m 227.04182,138.1125 a 35.218903,35.218903 0 0 1 -35.2189,35.21891 35.218903,35.218903 0 0 1 -35.2189,-35.21891 35.218903,35.218903 0 0 1 35.2189,-35.2189 35.218903,35.218903 0 0 1 35.2189,35.2189 z"
+         id="path9"
+         inkscape:label="Color" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;-inkscape-stroke:none"
+         d="m 191.82227,101.69336 c -20.09938,0 -36.41797,16.32055 -36.41797,36.41992 0,20.09937 16.31859,36.41797 36.41797,36.41797 20.09937,0 36.41992,-16.3186 36.41992,-36.41797 0,-20.09937 -16.32055,-36.41992 -36.41992,-36.41992 z m 0,2.40039 c 18.80231,0 34.01953,15.21722 34.01953,34.01953 0,18.80232 -15.21722,34.01758 -34.01953,34.01758 -18.80232,0 -34.01758,-15.21526 -34.01758,-34.01758 0,-18.80231 15.21526,-34.01953 34.01758,-34.01953 z"
+         id="path10"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 191.82227,105.43555 c -18.03968,0 -32.67579,14.63806 -32.67579,32.67773 0,18.03968 14.63611,32.67578 32.67579,32.67578 18.03967,0 32.67773,-14.6361 32.67773,-32.67578 0,-18.03967 -14.63806,-32.67773 -32.67773,-32.67773 z m 0,1.23828 c 17.37083,0 31.43945,14.06861 31.43945,31.43945 0,17.37084 -14.06862,31.43945 -31.43945,31.43945 -17.37084,0 -31.43946,-14.06861 -31.43946,-31.43945 0,-17.37084 14.06862,-31.43945 31.43946,-31.43945 z"
+         id="path11"
+         inkscape:label="Outline 2" />
+      <g
+         id="g15"
+         inkscape:label="Touch Sensor"
+         style="display:inline"
+         transform="matrix(0.76169623,0,0,0.76169623,-19.227611,10.400243)">
+        <path
+           style="color:#000000;fill:#ffffff;fill-opacity:0.5;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path14"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#ffffff;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path15"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+    <g
+       id="circle1-6-9"
+       inkscape:label="Style - Transparent"
+       style="display:inline">
+      <path
+         style="color:#000000;display:inline;fill:#808080;fill-opacity:0.501961;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 191.82227,101.69336 c -20.09938,0 -36.41797,16.32055 -36.41797,36.41992 0,20.09937 16.31859,36.41797 36.41797,36.41797 20.09937,0 36.41992,-16.3186 36.41992,-36.41797 0,-20.09937 -16.32055,-36.41992 -36.41992,-36.41992 z m 0,2.40039 c 18.80231,0 34.01953,15.21722 34.01953,34.01953 0,18.80232 -15.21722,34.01758 -34.01953,34.01758 -18.80232,0 -34.01758,-15.21526 -34.01758,-34.01758 0,-18.80231 15.21526,-34.01953 34.01758,-34.01953 z"
+         id="path3"
+         inkscape:label="Outline" />
+      <path
+         style="color:#000000;display:inline;fill:#ffffff;-inkscape-stroke:none;paint-order:stroke fill markers"
+         d="m 227.04182,138.1125 a 35.218903,35.218903 0 0 1 -35.2189,35.21891 35.218903,35.218903 0 0 1 -35.2189,-35.21891 35.218903,35.218903 0 0 1 35.2189,-35.2189 35.218903,35.218903 0 0 1 35.2189,35.2189 z"
+         id="path4"
+         inkscape:label="Circle" />
+      <path
+         style="color:#000000;display:inline;fill:#808080;stroke-width:1.03036;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+         d="m 191.82224,104.44336 c -18.58743,0 -33.66795,15.08253 -33.66795,33.66995 0,18.58743 15.08052,33.66794 33.66795,33.66794 18.58742,0 33.66995,-15.08051 33.66995,-33.66794 0,-18.58742 -15.08253,-33.66995 -33.66995,-33.66995 z m 0,1.27588 c 17.89827,0 32.39407,14.49579 32.39407,32.39407 0,17.89828 -14.4958,32.39407 -32.39407,32.39407 -17.89828,0 -32.39408,-14.49579 -32.39408,-32.39407 0,-17.89828 14.4958,-32.39407 32.39408,-32.39407 z"
+         id="path8"
+         inkscape:label="Outline 2" />
+      <g
+         id="g13"
+         inkscape:label="Touch Sensor"
+         style="display:inline"
+         transform="matrix(0.76169623,0,0,0.76169623,-19.227611,10.400243)">
+        <path
+           style="color:#000000;fill:#808080;fill-opacity:0.5;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 296.92882,167.66777 a 19.849104,19.849104 0 0 1 -19.84911,19.8491 19.849104,19.849104 0 0 1 -19.8491,-19.8491 19.849104,19.849104 0 0 1 19.8491,-19.8491 19.849104,19.849104 0 0 1 19.84911,19.8491 z"
+           id="path12"
+           inkscape:label="Color" />
+        <path
+           style="color:#000000;display:inline;fill:#808080;stroke-linecap:round;stroke-linejoin:round;-inkscape-stroke:none"
+           d="m 277.08008,146.88672 c -11.46627,0 -20.78125,9.31498 -20.78125,20.78125 0,11.46627 9.31498,20.78125 20.78125,20.78125 11.46627,0 20.78125,-9.31498 20.78125,-20.78125 0,-11.46627 -9.31498,-20.78125 -20.78125,-20.78125 z m 0,1.86523 c 10.45842,0 18.91601,8.4576 18.91601,18.91602 0,10.45842 -8.45759,18.91601 -18.91601,18.91601 -10.45842,0 -18.91797,-8.45759 -18.91797,-18.91601 0,-10.45842 8.45955,-18.91602 18.91797,-18.91602 z"
+           id="path13"
+           inkscape:label="Outline" />
+      </g>
+    </g>
+  </g>
+</svg>
