@@ -52,9 +52,9 @@ export const DefaultConfig = {} as ConfigType
 export const Config = defineTemplateConfig([
     {
       name: '封面',
-      type: 'image',
-      imageLimit: 1,
-      key: 'cover',
+      type: 'file',
+      fileLimit: 1,
+      key: 'coverFile',
     },
     {
       name: '测试',

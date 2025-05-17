@@ -85,7 +85,7 @@
     "eslint": "^9.26.0",
     "eslint-plugin-vue": "^10.1.0",
     "stylus": "^0.64.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.0-dev.20250512",
     "vue-vine": "^0.4.4"
   }
 }

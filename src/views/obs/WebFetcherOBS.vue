@@ -32,7 +32,7 @@ onMounted(async () => {
     rpc.expose('status', () => {
       return {
         status: webFetcher.state,
-        type: webFetcher.client?.type,
+        type: webFetcher.webfetcherType,
         roomId: webFetcher.client instanceof OpenLiveClient ?
           webFetcher.client.roomAuthInfo?.anchor_info.room_id :
           webFetcher.client instanceof DirectClient ?

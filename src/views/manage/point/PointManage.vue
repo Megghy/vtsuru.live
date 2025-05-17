@@ -1,409 +1,409 @@
 <script setup lang="ts">
-import { copyToClipboard } from '@/Utils'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import {
-  FunctionTypes,
-  GoodsStatus,
-  GoodsTypes,
-  KeySelectionMode,
-  ResponsePointGoodModel,
-  UploadPointGoodsModel,
-  UserFileLocation
-} from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
-import { CURRENT_HOST, POINT_API_URL } from '@/data/constants'
-import { uploadFiles, UploadStage } from '@/data/fileUpload'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { Info24Filled } from '@vicons/fluent'
-import { useRouteHash } from '@vueuse/router'
-import {
-  FormItemRule,
-  NAlert,
-  NButton,
-  NCheckbox,
-  NDivider,
-  NDynamicTags,
-  NEmpty,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  NTooltip,
-  NUpload,
-  UploadFileInfo,
-  useDialog,
-  useMessage
-} from 'naive-ui'
-import { computed, onMounted, ref, watch } from 'vue'
-import PointOrderManage from './PointOrderManage.vue'
-import PointSettings from './PointSettings.vue'
-import PointUserManage from './PointUserManage.vue'
+  import { copyToClipboard } from '@/Utils';
+  import { DisableFunction, EnableFunction, useAccount } from '@/api/account';
+  import {
+    FunctionTypes,
+    GoodsStatus,
+    GoodsTypes,
+    KeySelectionMode,
+    ResponsePointGoodModel,
+    UploadPointGoodsModel,
+    UserFileLocation
+  } from '@/api/api-models';
+  import { QueryGetAPI, QueryPostAPI } from '@/api/query';
+  import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue';
+  import PointGoodsItem from '@/components/manage/PointGoodsItem.vue';
+  import { CURRENT_HOST, POINT_API_URL } from '@/data/constants';
+  import { uploadFiles, UploadStage } from '@/data/fileUpload';
+  import { useBiliAuth } from '@/store/useBiliAuth';
+  import { Info24Filled } from '@vicons/fluent';
+  import { useRouteHash } from '@vueuse/router';
+  import {
+    FormItemRule,
+    NAlert,
+    NButton,
+    NCheckbox,
+    NDivider,
+    NDynamicTags,
+    NEmpty,
+    NFlex,
+    NForm,
+    NFormItem,
+    NGrid,
+    NGridItem,
+    NIcon,
+    NInput,
+    NInputGroup,
+    NInputNumber,
+    NModal,
+    NPopconfirm,
+    NProgress,
+    NRadioButton,
+    NRadioGroup,
+    NScrollbar,
+    NSelect,
+    NSwitch,
+    NTabPane,
+    NTabs,
+    NText,
+    NTooltip,
+    NUpload,
+    UploadFileInfo,
+    useDialog,
+    useMessage
+  } from 'naive-ui';
+  import { computed, onMounted, ref, watch } from 'vue';
+  import PointOrderManage from './PointOrderManage.vue';
+  import PointSettings from './PointSettings.vue';
+  import PointUserManage from './PointUserManage.vue';
 
-const message = useMessage()
-const accountInfo = useAccount()
-const dialog = useDialog()
-const biliAuth = useBiliAuth()
-const formRef = ref()
-const isUpdating = ref(false)
-const isAllowedPrivacyPolicy = ref(false)
-const showAddGoodsModal = ref(false)
-const uploadProgress = ref(0)
-const isUploadingCover = ref(false)
+  const message = useMessage();
+  const accountInfo = useAccount();
+  const dialog = useDialog();
+  const biliAuth = useBiliAuth();
+  const formRef = ref();
+  const isUpdating = ref(false);
+  const isAllowedPrivacyPolicy = ref(false);
+  const showAddGoodsModal = ref(false);
+  const uploadProgress = ref(0);
+  const isUploadingCover = ref(false);
 
-// 路由哈希处理
-const realHash = useRouteHash('goods', { mode: 'replace' })
-const hash = computed({
-  get() {
-    return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods'
-  },
-  set(val) {
-    realHash.value = '#' + val
-  },
-})
-
-// 商品数据及模型
-const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
-const defaultGoodsModel = (): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } => ({
-  goods: {
-    type: GoodsTypes.Virtual,
-    status: GoodsStatus.Normal,
-    maxBuyCount: 1,
-    isAllowRebuy: false,
-    isPinned: false,
-    setting: {
-      allowGuardLevel: 0
+  // 路由哈希处理
+  const realHash = useRouteHash('goods', { mode: 'replace' });
+  const hash = computed({
+    get() {
+      return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods';
     },
-    virtualKeys: [],
-    keySelectionMode: KeySelectionMode.None,
-    currentKeyIndex: 0,
-    name: '',
-    price: 0,
-    tags: [],
-    description: '',
-    cover: undefined,
-  } as UploadPointGoodsModel,
-  fileList: [],
-})
-const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(
-  defaultGoodsModel()
-)
+    set(val) {
+      realHash.value = '#' + val;
+    },
+  });
 
-// 监听 fileList 变化，确保 cover 和 fileList 同步
-watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
-  if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
-    if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
-        currentGoodsModel.value.goods.cover = undefined
+  // 商品数据及模型
+  const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message));
+  const defaultGoodsModel = (): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[]; } => ({
+    goods: {
+      type: GoodsTypes.Virtual,
+      status: GoodsStatus.Normal,
+      maxBuyCount: 1,
+      isAllowRebuy: false,
+      isPinned: false,
+      setting: {
+        allowGuardLevel: 0
+      },
+      virtualKeys: [],
+      keySelectionMode: KeySelectionMode.None,
+      currentKeyIndex: 0,
+      name: '',
+      price: 0,
+      tags: [],
+      description: '',
+      cover: undefined,
+    } as UploadPointGoodsModel,
+    fileList: [],
+  });
+  const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[]; }>(
+    defaultGoodsModel()
+  );
+
+  // 监听 fileList 变化，确保 cover 和 fileList 同步
+  watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
+    if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
+      if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
+        currentGoodsModel.value.goods.cover = undefined;
+      }
     }
-  }
-}, { deep: true })
+  }, { deep: true });
 
-// 计算属性
-const allowedYearOptions = computed(() => {
-  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
-    label: item.toString() + '年',
-    value: item,
-  }))
-})
+  // 计算属性
+  const allowedYearOptions = computed(() => {
+    return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
+      label: item.toString() + '年',
+      value: item,
+    }));
+  });
 
-const allowedMonthOptions = computed(() => {
-  return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
-    label: item.toString() + '月',
-    value: item,
-  }))
-})
+  const allowedMonthOptions = computed(() => {
+    return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
+      label: item.toString() + '月',
+      value: item,
+    }));
+  });
 
-const existTags = computed(() => {
-  if (goods.value.length === 0) return []
+  const existTags = computed(() => {
+    if (goods.value.length === 0) return [];
 
-  const tempSet = new Set<string>()
-  for (const good of goods.value) {
-    if (!good.tags || good.tags.length === 0) continue
-    good.tags.forEach(tag => tempSet.add(tag))
-  }
-
-  return Array.from(tempSet).map(tag => ({ label: tag, value: tag }))
-})
-
-// 下拉菜单选项
-const dropDownActions = {
-  update: {
-    label: '修改',
-    key: 'update',
-    action: (item: ResponsePointGoodModel) => onUpdateClick(item),
-  },
-  delete: {
-    label: '删除',
-    key: 'delete',
-    action: (item: ResponsePointGoodModel) => onDeleteClick(item),
-  },
-} as { [key: string]: { label: string; key: string; action: (item: ResponsePointGoodModel) => void } }
-
-const dropDownOptions = computed(() => Object.values(dropDownActions))
-
-// 表单验证规则
-const rules = {
-  name: {
-    required: true,
-    message: '请输入礼物名称',
-  },
-  price: {
-    required: true,
-    message: '请输入礼物价格',
-  },
-  'goods.type': {
-    required: true,
-    message: '请选择是虚拟礼物或实物',
-  },
-  content: {
-    required: true,
-    message: '请输入虚拟礼物的具体内容',
-    validator: (rule: FormItemRule, value: string) =>
-      currentGoodsModel.value.goods.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0
-  },
-  privacy: {
-    required: true,
-    message: '需要阅读并同意本站隐私协议',
-    validator: (rule: FormItemRule, value: boolean) =>
-      (currentGoodsModel.value.goods.type != GoodsTypes.Physical &&
-      currentGoodsModel.value.goods.collectUrl != undefined) ||
-      isAllowedPrivacyPolicy.value
-  },
-  maxBuyCount: {
-    required: true,
-    message: '需要输入最大购买数量',
-    validator: (rule: FormItemRule, value: number) =>
-      currentGoodsModel.value.goods.type != GoodsTypes.Physical ||
-      (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0
-  },
-  'goods.url': {
-    required: true,
-    message: '请输入收集收货地址的链接',
-    validator: (rule: FormItemRule, value: string) => {
-      try {
-        new URL(value)
-        return true
-      } catch (err) {
-        return false
-      }
-    },
-  },
-}
-
-// 方法
-async function setFunctionEnable(enable: boolean) {
-  const success = enable ? await EnableFunction(FunctionTypes.Point) : await DisableFunction(FunctionTypes.Point)
-
-  if (success) {
-    message.success('已' + (enable ? '启用' : '禁用') + '积分系统')
-  } else {
-    message.error('无法' + (enable ? '启用' : '禁用') + '积分系统')
-  }
-}
-
-async function updateGoods(e: MouseEvent) {
-  if (isUpdating.value || !formRef.value) return
-  e.preventDefault()
-  isUpdating.value = true
-  isUploadingCover.value = false
-  uploadProgress.value = 0
-
-  try {
-    await formRef.value.validate()
-
-    const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
-    if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
-      isUploadingCover.value = true
-      message.info('正在上传封面...')
-      const uploadResults = await uploadFiles(
-        [newFilesToUpload[0].file],
-        undefined,
-        UserFileLocation.Local,
-        (stage: string) => {
-          if (stage === UploadStage.Uploading) {
-            uploadProgress.value = 0
-          }
-        }
-      )
-      isUploadingCover.value = false
-      if (uploadResults && uploadResults.length > 0) {
-        currentGoodsModel.value.goods.cover = uploadResults[0]
-        message.success('封面上传成功')
-        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id)
-        if (uploadedFileIndex > -1) {
-          currentGoodsModel.value.fileList[uploadedFileIndex] = {
-            ...currentGoodsModel.value.fileList[uploadedFileIndex],
-            id: uploadResults[0].id.toString(),
-            status: 'finished',
-            thumbnailUrl: uploadResults[0].path,
-            url: uploadResults[0].path
-          };
-        }
-      } else {
-        throw new Error('封面上传失败')
-      }
-    } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
-      currentGoodsModel.value.goods.cover = undefined
+    const tempSet = new Set<string>();
+    for (const good of goods.value) {
+      if (!good.tags || good.tags.length === 0) continue;
+      good.tags.forEach(tag => tempSet.add(tag));
     }
 
-    const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
-      POINT_API_URL + 'update-goods',
-      currentGoodsModel.value.goods
-    )
+    return Array.from(tempSet).map(tag => ({ label: tag, value: tag }));
+  });
 
-    if (code === 200) {
-      message.success('商品信息保存成功')
-      showAddGoodsModal.value = false
-      currentGoodsModel.value = defaultGoodsModel()
+  // 下拉菜单选项
+  const dropDownActions = {
+    update: {
+      label: '修改',
+      key: 'update',
+      action: (item: ResponsePointGoodModel) => onUpdateClick(item),
+    },
+    delete: {
+      label: '删除',
+      key: 'delete',
+      action: (item: ResponsePointGoodModel) => onDeleteClick(item),
+    },
+  } as { [key: string]: { label: string; key: string; action: (item: ResponsePointGoodModel) => void; }; };
 
-      const index = goods.value.findIndex(g => g.id === data.id)
-      if (index >= 0) {
-        goods.value[index] = data
-      } else {
-        goods.value.push(data)
-      }
+  const dropDownOptions = computed(() => Object.values(dropDownActions));
+
+  // 表单验证规则
+  const rules = {
+    name: {
+      required: true,
+      message: '请输入礼物名称',
+    },
+    price: {
+      required: true,
+      message: '请输入礼物价格',
+    },
+    'goods.type': {
+      required: true,
+      message: '请选择是虚拟礼物或实物',
+    },
+    content: {
+      required: true,
+      message: '请输入虚拟礼物的具体内容',
+      validator: (rule: FormItemRule, value: string) =>
+        currentGoodsModel.value.goods.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0
+    },
+    privacy: {
+      required: true,
+      message: '需要阅读并同意本站隐私协议',
+      validator: (rule: FormItemRule, value: boolean) =>
+        (currentGoodsModel.value.goods.type != GoodsTypes.Physical &&
+          currentGoodsModel.value.goods.collectUrl != undefined) ||
+        isAllowedPrivacyPolicy.value
+    },
+    maxBuyCount: {
+      required: true,
+      message: '需要输入最大购买数量',
+      validator: (rule: FormItemRule, value: number) =>
+        currentGoodsModel.value.goods.type != GoodsTypes.Physical ||
+        (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0
+    },
+    'goods.url': {
+      required: true,
+      message: '请输入收集收货地址的链接',
+      validator: (rule: FormItemRule, value: string) => {
+        try {
+          new URL(value);
+          return true;
+        } catch (err) {
+          return false;
+        }
+      },
+    },
+  };
+
+  // 方法
+  async function setFunctionEnable(enable: boolean) {
+    const success = enable ? await EnableFunction(FunctionTypes.Point) : await DisableFunction(FunctionTypes.Point);
+
+    if (success) {
+      message.success('已' + (enable ? '启用' : '禁用') + '积分系统');
     } else {
-      message.error('商品信息保存失败: ' + errMsg)
+      message.error('无法' + (enable ? '启用' : '禁用') + '积分系统');
     }
-  } catch (err: any) {
-    console.error(currentGoodsModel.value, err)
-    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错'
-    message.error(`失败: ${errorMsg}`)
-  } finally {
-    isUpdating.value = false
-    isUploadingCover.value = false
   }
-}
 
-function OnFileListChange(files: UploadFileInfo[]) {
-  if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
-    message.error('文件大小不能超过10MB')
-    currentGoodsModel.value.fileList = []
-  } else {
-    currentGoodsModel.value.fileList = files
-  }
-}
+  async function updateGoods(e: MouseEvent) {
+    if (isUpdating.value || !formRef.value) return;
+    e.preventDefault();
+    isUpdating.value = true;
+    isUploadingCover.value = false;
+    uploadProgress.value = 0;
 
-function onUpdateClick(item: ResponsePointGoodModel) {
-  currentGoodsModel.value = {
-    goods: JSON.parse(JSON.stringify({
-      ...item,
-    })),
-    fileList: item.cover
-      ? [
-        {
-          id: item.cover.id.toString(),
-          name: item.cover.name || '封面',
-          status: 'finished',
-          url: item.cover.path,
-          thumbnailUrl: item.cover.path,
-        },
-      ]
-      : [],
-  }
-  isAllowedPrivacyPolicy.value = true
-  showAddGoodsModal.value = true
-}
+    try {
+      await formRef.value.validate();
 
-async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
-  const d = dialog.warning({
-    title: '警告',
-    content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
-      const originStatus = item.status
-
-      try {
-        const { code, message: errMsg } = await QueryPostAPI(POINT_API_URL + 'update-goods-status', {
-          ids: [item.id],
-          status: status,
-        })
-
-        if (code === 200) {
-          message.success('成功')
-          const index = goods.value.findIndex(g => g.id === item.id)
-          if (index > -1) {
-            goods.value[index].status = status
+      const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished');
+      if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
+        isUploadingCover.value = true;
+        message.info('正在上传封面...');
+        const uploadResults = await uploadFiles(
+          [newFilesToUpload[0].file],
+          undefined,
+          UserFileLocation.Local,
+          (stage: string) => {
+            if (stage === UploadStage.Uploading) {
+              uploadProgress.value = 0;
+            }
+          }
+        );
+        isUploadingCover.value = false;
+        if (uploadResults && uploadResults.length > 0) {
+          currentGoodsModel.value.goods.cover = uploadResults[0];
+          message.success('封面上传成功');
+          const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id);
+          if (uploadedFileIndex > -1) {
+            currentGoodsModel.value.fileList[uploadedFileIndex] = {
+              ...currentGoodsModel.value.fileList[uploadedFileIndex],
+              id: uploadResults[0].id.toString(),
+              status: 'finished',
+              thumbnailUrl: uploadResults[0].path,
+              url: uploadResults[0].path
+            };
           }
         } else {
-          message.error('失败: ' + errMsg)
-          item.status = originStatus
-          console.error(errMsg)
+          throw new Error('封面上传失败');
         }
-      } catch (err) {
-        message.error('失败: ' + err)
-        item.status = originStatus
-        console.error(err)
-      } finally {
-        d.loading = false
+      } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
+        currentGoodsModel.value.goods.cover = undefined;
       }
-    },
-  })
-}
 
-function onDeleteClick(item: ResponsePointGoodModel) {
-  const d = dialog.warning({
-    title: '警告',
-    content: '你确定要删除这个礼物吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
+      const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
+        POINT_API_URL + 'update-goods',
+        currentGoodsModel.value.goods
+      );
 
-      try {
-        const { code, message: errMsg } = await QueryGetAPI(POINT_API_URL + 'delete-goods', {
-          id: item.id,
-        })
+      if (code === 200) {
+        message.success('商品信息保存成功');
+        showAddGoodsModal.value = false;
+        currentGoodsModel.value = defaultGoodsModel();
 
-        if (code === 200) {
-          message.success('成功')
-          goods.value = goods.value.filter(g => g.id !== item.id)
+        const index = goods.value.findIndex(g => g.id === data.id);
+        if (index >= 0) {
+          goods.value[index] = data;
         } else {
-          message.error('失败: ' + errMsg)
-          console.error(errMsg)
+          goods.value.push(data);
         }
-      } catch (err) {
-        message.error('失败: ' + err)
-        console.error(err)
-      } finally {
-        d.loading = false
+      } else {
+        message.error('商品信息保存失败: ' + errMsg);
       }
-    },
-  })
-}
-
-function onModalOpen() {
-  if (!currentGoodsModel.value.goods.id) {
-    resetGoods()
+    } catch (err: any) {
+      console.error(currentGoodsModel.value, err);
+      const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错';
+      message.error(`失败: ${errorMsg}`);
+    } finally {
+      isUpdating.value = false;
+      isUploadingCover.value = false;
+    }
   }
-  showAddGoodsModal.value = true
-}
 
-function resetGoods() {
-  currentGoodsModel.value = defaultGoodsModel()
-  isAllowedPrivacyPolicy.value = false
-}
+  function OnFileListChange(files: UploadFileInfo[]) {
+    if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
+      message.error('文件大小不能超过10MB');
+      currentGoodsModel.value.fileList = [];
+    } else {
+      currentGoodsModel.value.fileList = files;
+    }
+  }
 
-onMounted(() => { })
+  function onUpdateClick(item: ResponsePointGoodModel) {
+    currentGoodsModel.value = {
+      goods: JSON.parse(JSON.stringify({
+        ...item,
+      })),
+      fileList: item.cover
+        ? [
+          {
+            id: item.cover.id.toString(),
+            name: item.cover.name || '封面',
+            status: 'finished',
+            url: item.cover.path,
+            thumbnailUrl: item.cover.path,
+          },
+        ]
+        : [],
+    };
+    isAllowedPrivacyPolicy.value = true;
+    showAddGoodsModal.value = true;
+  }
+
+  async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
+    const d = dialog.warning({
+      title: '警告',
+      content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        d.loading = true;
+        const originStatus = item.status;
+
+        try {
+          const { code, message: errMsg } = await QueryPostAPI(POINT_API_URL + 'update-goods-status', {
+            ids: [item.id],
+            status: status,
+          });
+
+          if (code === 200) {
+            message.success('成功');
+            const index = goods.value.findIndex(g => g.id === item.id);
+            if (index > -1) {
+              goods.value[index].status = status;
+            }
+          } else {
+            message.error('失败: ' + errMsg);
+            item.status = originStatus;
+            console.error(errMsg);
+          }
+        } catch (err) {
+          message.error('失败: ' + err);
+          item.status = originStatus;
+          console.error(err);
+        } finally {
+          d.loading = false;
+        }
+      },
+    });
+  }
+
+  function onDeleteClick(item: ResponsePointGoodModel) {
+    const d = dialog.warning({
+      title: '警告',
+      content: '你确定要删除这个礼物吗？',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        d.loading = true;
+
+        try {
+          const { code, message: errMsg } = await QueryGetAPI(POINT_API_URL + 'delete-goods', {
+            id: item.id,
+          });
+
+          if (code === 200) {
+            message.success('成功');
+            goods.value = goods.value.filter(g => g.id !== item.id);
+          } else {
+            message.error('失败: ' + errMsg);
+            console.error(errMsg);
+          }
+        } catch (err) {
+          message.error('失败: ' + err);
+          console.error(err);
+        } finally {
+          d.loading = false;
+        }
+      },
+    });
+  }
+
+  function onModalOpen() {
+    if (!currentGoodsModel.value.goods.id) {
+      resetGoods();
+    }
+    showAddGoodsModal.value = true;
+  }
+
+  function resetGoods() {
+    currentGoodsModel.value = defaultGoodsModel();
+    isAllowedPrivacyPolicy.value = false;
+  }
+
+  onMounted(() => { });
 </script>
 
 <template>
@@ -543,9 +543,7 @@ onMounted(() => { })
             class="point-goods-card"
           >
             <template #footer>
-              <NFlex
-                :gap="8"
-              >
+              <NFlex :gap="8">
                 <NButton
                   type="info"
                   size="small"
@@ -882,7 +880,7 @@ onMounted(() => { })
                 @update:checked="
                   (v) => {
                     // @ts-ignore
-                    currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined
+                    currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined;
                   }
                 "
               >
@@ -1127,9 +1125,7 @@ onMounted(() => { })
       <div class="scroll-shadow-bottom" />
     </div>
     <template #footer>
-      <NFlex
-        justify="center"
-      >
+      <NFlex justify="center">
         <NButton
           type="primary"
           size="large"
@@ -1146,92 +1142,92 @@ onMounted(() => { })
 </template>
 
 <style scoped>
-.point-goods-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+  .point-goods-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 
-.point-goods-card :deep(.n-card-header) {
-  padding: 16px;
-}
+  .point-goods-card :deep(.n-card-header) {
+    padding: 16px;
+  }
 
-.point-goods-card :deep(.n-card-content) {
-  padding: 16px;
-  flex-grow: 1;
-}
+  .point-goods-card :deep(.n-card-content) {
+    padding: 16px;
+    flex-grow: 1;
+  }
 
-.point-goods-card :deep(.n-card-footer) {
-  padding: 16px;
-}
+  .point-goods-card :deep(.n-card-footer) {
+    padding: 16px;
+  }
 
-.goods-modal :deep(.n-card-header) {
-  padding: 16px 20px;
-}
+  .goods-modal :deep(.n-card-header) {
+    padding: 16px 20px;
+  }
 
-.goods-modal :deep(.n-card-content) {
-  padding: 0 20px 8px;
-}
+  .goods-modal :deep(.n-card-content) {
+    padding: 0 20px 8px;
+  }
 
-.goods-modal :deep(.n-card-footer) {
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--border-color);
-  background-color: var(--action-color);
-}
+  .goods-modal :deep(.n-card-footer) {
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--action-color);
+  }
 
-.scrollable-container {
-  position: relative;
-  background-color: var(--body-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  margin: 0 4px;
-}
+  .scrollable-container {
+    position: relative;
+    background-color: var(--body-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin: 0 4px;
+  }
 
-.goods-scrollbar {
-  padding: 12px 16px;
-  border-radius: 6px;
-  background-color: var(--card-color);
-}
+  .goods-scrollbar {
+    padding: 12px 16px;
+    border-radius: 6px;
+    background-color: var(--card-color);
+  }
 
-.goods-scrollbar :deep(.n-scrollbar-rail) {
-  right: 0;
-}
+  .goods-scrollbar :deep(.n-scrollbar-rail) {
+    right: 0;
+  }
 
-.goods-scrollbar :deep(.n-scrollbar-content) {
-  padding-bottom: 8px;
-}
+  .goods-scrollbar :deep(.n-scrollbar-content) {
+    padding-bottom: 8px;
+  }
 
-.scroll-shadow-top {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 12px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.06), transparent);
-  z-index: 1;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-}
+  .scroll-shadow-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.06), transparent);
+    z-index: 1;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
 
-.scroll-shadow-bottom {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 12px;
-  pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.06), transparent);
-  z-index: 1;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
+  .scroll-shadow-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.06), transparent);
+    z-index: 1;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
 
-.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
+  .goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
     width: 104px;
     height: 104px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
+  }
 </style>
