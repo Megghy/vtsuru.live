@@ -471,5 +471,6 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
     // 实例 (谨慎暴露，主要用于调试或特定场景)
     signalRClient: computed(() => signalRClient.value), // 返回计算属性以防直接修改
+    client
   };
 });

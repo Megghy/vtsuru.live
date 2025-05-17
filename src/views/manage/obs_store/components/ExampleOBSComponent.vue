@@ -4,7 +4,7 @@
     class="example-obs-component"
   >
     <NAlert
-      :type="localConfig.alertType || 'info'"
+      :type="localConfig.alertType as any || 'info'"
       :title="localConfig.alertTitle || '组件信息'"
     >
       <p>{{ localConfig.contentText || '这是示例 OBS 组件的内容。' }}</p>
@@ -31,7 +31,7 @@
 
 <script lang="ts">
 // Moved Config and DefaultConfig here to avoid linter errors with <script setup>
-import { ConfigItemType, defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
+import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
 
 export const Config = defineTemplateConfig([
   {
@@ -74,15 +74,6 @@ export const Config = defineTemplateConfig([
     type: 'boolean',
     default: false,
   },
-  {
-    name: '刷新间隔 (秒)',
-    key: 'refreshInterval',
-    type: ConfigItemType.Number,
-    default: 60,
-    min: 5,
-    description: '组件自动刷新的时间间隔（如果组件支持自动刷新）。',
-    if: (config: ExampleConfigType) => config.enableAdvanced === true, // 条件显示
-  }
 ]);
 
 export type ExampleConfigType = ExtractConfigData<typeof Config>;
@@ -93,7 +84,6 @@ export const DefaultConfig: ExampleConfigType = {
   alertTitle: '默认提示',
   contentText: '来自 DefaultConfig 的内容。点歌点歌点歌。关注vtsuru喵！',
   enableAdvanced: false,
-  refreshInterval: 30,
 };
 </script>
 

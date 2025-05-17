@@ -147,7 +147,7 @@ const accountInfo = useAccount();
 const biliAuth = useBiliAuth(); // 若需要B站授权信息
 const message = useMessage();
 
-const userInfo = ref<UserInfo | undefined>(accountInfo.value.id ? { id: accountInfo.value.id, name: accountInfo.value.username } as UserInfo : undefined); // 模拟
+const userInfo = ref<UserInfo | undefined>(accountInfo.value.id ? { id: accountInfo.value.id, name: accountInfo.value.name } as UserInfo : undefined); // 模拟
 
 const availableComponents = ref<OBSComponentDefinition[]>([]);
 const currentSelectedComponentId = ref<string | null>(null);
@@ -234,7 +234,7 @@ async function loadComponentConfig(settingName: string) {
 
   isLoading.value = true;
   try {
-    const configData = await DownloadConfig(settingName, userInfo.value.id);
+    const configData = await DownloadConfig<any>(settingName, userInfo.value.id);
     const defaultConfig = dynamicComponentRef.value?.DefaultConfig || {};
 
     if (configData.msg || Object.keys(configData.data || {}).length === 0) {
@@ -242,7 +242,7 @@ async function loadComponentConfig(settingName: string) {
       message.info('未找到在线配置，已加载默认配置。');
     } else {
       // 合并远程配置和默认配置，确保所有键都存在
-      componentConfig.value = { ...defaultConfig, ...configData.data };
+      componentConfig.value = configData.data;
     }
   } catch (error) {
     console.error('加载组件配置失败:', error);
@@ -261,11 +261,9 @@ async function saveComponentConfig() {
   }
   isLoading.value = true;
   try {
-    await UploadConfig({
-      name: currentSelectedComponent.value.settingName,
-      config: JSON.stringify(componentConfigForEditing.value), // 保存编辑后的配置
-      isPublic: false, // 或根据需要设置为 true
-    });
+    await UploadConfig(currentSelectedComponent.value.settingName,
+      JSON.stringify(componentConfigForEditing.value), // 保存编辑后的配置
+      false) // 或根据需要设置为 true);
     message.success('配置保存成功！');
     componentConfig.value = JSON.parse(JSON.stringify(componentConfigForEditing.value)); // 更新运行时配置
     showSettingModal.value = false;

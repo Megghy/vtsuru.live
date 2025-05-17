@@ -3,12 +3,13 @@ import { isDarkMode } from '@/Utils'
 import { APIRoot } from '@/api/api-models'
 import { GetHeaders } from '@/api/query'
 import '@/assets/editorDarkMode.css'
-import { BASE_URL, VTSURU_API_URL } from '@/data/constants'
+import { VTSURU_API_URL } from '@/data/constants'
 import { DomEditor, IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
+// @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { NotificationReactive, useMessage } from 'naive-ui'
-import { onBeforeUnmount, ref, shallowRef, onMounted } from 'vue'
+import { onBeforeUnmount, ref, shallowRef } from 'vue'
 
 type InsertFnType = (url: string, alt: string, href: string) => void
 
