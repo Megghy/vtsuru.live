@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FunctionTypes } from '@/api/api-models';
+import { FunctionTypes, Setting_LiveRequest } from '@/api/api-models';
 import { useLiveRequest } from '@/composables/useLiveRequest';
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
@@ -15,7 +15,30 @@ import {
   NSpin,
   useMessage
 } from 'naive-ui';
-import { computed } from 'vue';
+  import { computed } from 'vue';
+
+  const defaultSettings = {
+  orderPrefix: '点播',
+  onlyAllowSongList: false,
+  queueMaxSize: 10,
+  allowAllDanmaku: true,
+  allowFromWeb: true,
+  needWearFanMedal: false,
+  needJianzhang: false,
+  needTidu: false,
+  needZongdu: false,
+  allowSC: true,
+  scIgnoreLimit: true,
+  scMinPrice: 30,
+  fanMedalMinLevel: 0,
+  allowReorderSong: false,
+  enableCooldown: false,
+  cooldownSecond: 1200,
+  zongduCooldownSecond: 300,
+  tiduCooldownSecond: 600,
+  jianzhangCooldownSecond: 900,
+  isReverse: false,
+} as Setting_LiveRequest
 
 // 使用useLiveRequest
 const liveRequest = useLiveRequest()
@@ -29,6 +52,22 @@ const enableSongRequest = computed({
   set: async () => {
     await updateEnableFunctions()
   }
+})
+const configCanEdit = computed(() => {
+  return accountInfo.value != null && accountInfo.value != undefined
+})
+const settings = computed({
+  get: () => {
+    if (accountInfo.value.id) {
+      return accountInfo.value.settings.songRequest
+    }
+    return defaultSettings
+  },
+  set: (value) => {
+    if (accountInfo.value.id) {
+      accountInfo.value.settings.songRequest = value
+    }
+  },
 })
 
 // 控制歌曲请求功能开关
@@ -336,6 +375,45 @@ async function updateSettings() {
           </NButton>
         </NInputGroup>
       </NSpace>
+      <NDivider> OBS </NDivider>
+            <NSpace align="center">
+              <NInputGroup style="width: 220px">
+                <NInputGroupLabel> 标题 </NInputGroupLabel>
+                <template v-if="configCanEdit">
+                  <NInput
+                    v-model:value="settings.obsTitle"
+                    placeholder="默认为 点播"
+                  />
+                  <NButton
+                    type="primary"
+                    @click="updateSettings"
+                  >
+                    确定
+                  </NButton>
+                </template>
+              </NInputGroup>
+              <NCheckbox
+                v-model:checked="settings.showRequireInfo"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
+                显示底部的需求信息
+              </NCheckbox>
+              <NCheckbox
+                v-model:checked="settings.showUserName"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
+                显示点播用户名
+              </NCheckbox>
+              <NCheckbox
+                v-model:checked="settings.showFanMadelInfo"
+                :disabled="!configCanEdit"
+                @update:checked="updateSettings"
+              >
+                显示点播用户粉丝牌
+              </NCheckbox>
+            </NSpace>
       <NDivider> 警告消息 </NDivider>
       <NSpace>
         <NCheckbox

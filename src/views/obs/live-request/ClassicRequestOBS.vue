@@ -142,7 +142,7 @@ onUnmounted(() => {
           ref="listInnerRef"
           class="live-request-list"
           :class="{ animating: isMoreThanContainer }"
-          :style="`width: ${width}px;`"
+          :style="`width: ${width}px; --item-parent-width: ${width}px`"
         >
           <div
             v-for="(song, index) in activeSongs"
@@ -157,21 +157,26 @@ onUnmounted(() => {
             >
               {{ index + 1 }}
             </div>
-            <div class="live-request-list-item-song-name">
-              {{ song.songName || '未知歌曲' }}
-            </div>
-            <div
-              v-if="settings.showUserName"
-              class="live-request-list-item-name"
-            >
-              {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户' }}
-            </div>
-            <div
-              v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
-              class="live-request-list-item-level"
-              :has-level="(song.user?.fans_medal_level ?? 0) > 0"
-            >
-              {{ `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}` }}
+            <div class="live-request-list-item-scroll-view">
+              <div class="live-request-list-item-inner-scroll">
+                <div class="live-request-list-item-song-name">
+                  {{ song.songName || '未知歌曲' }}
+                </div>
+                <div
+                  v-if="settings.showUserName"
+                  class="live-request-list-item-name"
+                  :from="song.from as number"
+                >
+                  {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户' }}
+                </div>
+                <div
+                  v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
+                  class="live-request-list-item-level"
+                  :has-level="(song.user?.fans_medal_level ?? 0) > 0"
+                >
+                  {{ `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}` }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -420,55 +425,54 @@ onUnmounted(() => {
   align-self: flex-start;
   position: relative;
   align-items: center;
-  justify-content: left;
-  gap: 5px;
   padding: 4px 6px;
   margin-bottom: 5px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   min-height: 36px;
-  flex-wrap: wrap;
+  overflow: hidden;
+  gap: 5px;
+}
+
+.live-request-list-item-scroll-view {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.live-request-list-item-inner-scroll {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: max-content;
+  animation: item-horizontal-scroll 5s infinite alternate ease-in-out;
+}
+
+.live-request-list-item:hover .live-request-list-item-inner-scroll {
+  animation-play-state: paused;
+}
+
+@keyframes item-horizontal-scroll {
+  from {
+    transform: translateX(0px);
+  }
+  to {
+    transform: translateX(min(0px, calc(var(--item-parent-width) - 100% - 5px)));
+  }
 }
 
 .live-request-list-item-song-name {
   font-size: 16px;
   font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 60%;
-  flex-grow: 1;
   margin-right: 5px;
 }
-
-/* 只有在小屏幕/容器较窄时才允许换行 */
-@media (max-width: 300px) {
-  .live-request-list-item-song-name {
-    white-space: normal;
-    max-width: 100%;
-  }
-}
-
-/* 手动添加 */
-.live-request-list-item[from='0'] .live-request-list-item-name {
-  font-style: italic;
-  font-weight: bold;
-  color: #d2d8d6;
-  font-size: 12px;
-}
-
-.live-request-list-item[from='0'] .live-request-list-item-avatar {
-  display: none;
-}
-
-/* 弹幕点歌 */
-.live-request-list-item[from='1'] {}
 
 .live-request-list-item-name {
   font-style: italic;
   font-size: 12px;
   color: rgba(204, 204, 204, 0.993);
-  text-overflow: ellipsis;
   white-space: nowrap;
   margin-left: auto;
   background-color: rgba(0, 0, 0, 0.2);
@@ -487,6 +491,7 @@ onUnmounted(() => {
   background-color: #0f0f0f48;
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .live-request-list-item-level {
@@ -498,6 +503,7 @@ onUnmounted(() => {
   background-color: rgba(0, 0, 0, 0.3);
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .live-request-list-item-level[has-level='false'] {
