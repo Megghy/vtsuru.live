@@ -8,6 +8,7 @@ import {
   DanmakuUserInfo,
   EventDataTypes,
   EventModel,
+  FunctionTypes,
   QueueSortType,
   SongRequestFrom,
   SongRequestInfo,
@@ -392,10 +393,9 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   function checkMessage(msg: string) {
-    if (accountInfo.value?.settings?.enableFunctions?.includes(6) != true) {
+    if (accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest) != true) {
       return false
     }
-
     const prefix = accountInfo.value?.settings?.songRequest?.orderPrefix || defaultPrefix.value
     return msg.trim().toLowerCase().startsWith(prefix.toLowerCase())
   }
@@ -424,6 +424,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   function onGetDanmaku(danmaku: EventModel) {
+    console.log(checkMessage(danmaku.msg))
     if (checkMessage(danmaku.msg)) {
       addSong(danmaku)
     }

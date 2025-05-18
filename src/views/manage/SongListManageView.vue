@@ -615,7 +615,12 @@ function parseExcelFile() {
  * 解析多值字段（如作者、标签等）
  */
 function parseMultipleValues(value: string): string[] {
+  console.log(value)
   if (!value) return []
+  // @ts-ignore
+  if (value instanceof Boolean) {
+    value = value.toString()
+  }
   return value
     ?.replace('／', '/')
     .replace('，', ',')
