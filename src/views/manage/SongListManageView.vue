@@ -18,6 +18,8 @@ import {
   NAlert,
   NButton,
   NCheckbox,
+  NCollapse,
+  NCollapseItem,
   NDivider,
   NFlex,
   NForm,
@@ -59,6 +61,18 @@ const isLoading = ref(true)
 const showModal = ref(false)
 const showModalRenderKey = ref(0)
 const onlyResetNameOnAdded = ref(true)
+
+// 文件导入的列头映射配置
+const useCustomColumnMapping = ref(false)
+const columnMappings = useStorage('song-list-column-mappings', {
+  name: '名称,歌名,标题,title,name',
+  translateName: '翻译名称,译名,translated,translate',
+  author: '作者,歌手,演唱,singer,author,artist',
+  description: '描述,备注,说明,description,note,remark',
+  url: '链接,地址,url,link',
+  language: '语言,language',
+  tags: '标签,类别,分类,tag,tags,category'
+})
 
 // 歌曲列表数据
 const songs = ref<SongsInfo[]>([])
@@ -550,63 +564,81 @@ function parseExcelFile() {
 
     // 解析每一行数据
     const parsedSongs = rows.map((row) => {
-      const song = {} as SongsInfo
+      const song = {} as SongsInfo;
 
       for (let i = 0; i < headers.length; i++) {
-        const key = headers[i] as string
-        const value = row[i] as string
+        const headerFromFile = (headers[i] as string)?.toLowerCase().trim();
+        if (!headerFromFile) continue;
 
-        if (!key) continue
+        const value = row[i];
 
-        // 根据列头映射到歌曲属性
-        switch (key.toLowerCase().trim()) {
-          case 'id':
-          case 'name':
-          case '名称':
-          case '曲名':
-          case '歌名':
-            if (!value) {
-              console.log('忽略空歌名: ' + row)
-              continue
-            }
-            song.name = value
-            break
-          case 'author':
-          case 'singer':
-          case '作者':
-          case '歌手':
-            if (!value) break
-            song.author = parseMultipleValues(value)
-            break
-          case 'description':
-          case 'desc':
-          case '说明':
-          case '描述':
-            song.description = value
-            break
-          case 'url':
-          case '链接':
-            song.url = value
-            break
-          case 'language':
-          case '语言':
-            if (!value) break
-            song.language = parseMultipleValues(value)
-            break
-          case 'tags':
-          case 'tag':
-          case '标签':
-            if (!value) break
-            song.tags = parseMultipleValues(value)
-            break
+        // 歌曲名称 (必填)
+        const nameHeaders = columnMappings.value.name.split(/,|，/).map(h => h.trim().toLowerCase());
+        if (nameHeaders.includes(headerFromFile)) {
+          if (value) song.name = value;
+          // 注意：即使找到歌名，也不立即continue，因为一个列可能对应多个信息（虽然不推荐）
+          // 但标准做法是每个信息有独立列
+        }
+
+        // 翻译名称
+        if (columnMappings.value.translateName) {
+          const translateNameHeaders = columnMappings.value.translateName.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (translateNameHeaders.includes(headerFromFile)) {
+            if (value) song.translateName = value;
+          }
+        }
+
+        // 作者
+        if (columnMappings.value.author) {
+          const authorHeaders = columnMappings.value.author.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (authorHeaders.includes(headerFromFile)) {
+            if (value) song.author = parseMultipleValues(value as string);
+          }
+        }
+
+        // 描述
+        if (columnMappings.value.description) {
+          const descriptionHeaders = columnMappings.value.description.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (descriptionHeaders.includes(headerFromFile)) {
+            song.description = value;
+          }
+        }
+
+        // 链接
+        if (columnMappings.value.url) {
+          const urlHeaders = columnMappings.value.url.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (urlHeaders.includes(headerFromFile)) {
+            song.url = value;
+          }
+        }
+
+        // 语言
+        if (columnMappings.value.language) {
+          const languageHeaders = columnMappings.value.language.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (languageHeaders.includes(headerFromFile)) {
+            if (value) song.language = parseMultipleValues(value as string);
+          }
+        }
+
+        // 标签
+        if (columnMappings.value.tags) {
+          const tagsHeaders = columnMappings.value.tags.split(/,|，/).map(h => h.trim().toLowerCase());
+          if (tagsHeaders.includes(headerFromFile)) {
+            if (value) song.tags = parseMultipleValues(value as string);
+          }
         }
       }
 
-      return song
-    })
+      // 如果没有解析到歌名，则这条记录无效
+      if (!song.name) {
+        console.log('忽略无效记录（未找到歌名或歌名为空）: ' + row.join(','));
+        return null;
+      }
 
-    // 过滤掉没有名称的歌曲
-    uploadSongsFromFile.value = parsedSongs.filter((s) => s.name)
+      return song;
+    }).filter(s => s !== null) as SongsInfo[];
+
+    uploadSongsFromFile.value = parsedSongs;
     message.success('解析完成, 共获取 ' + uploadSongsFromFile.value.length + ' 首曲目')
   }
 }
@@ -615,10 +647,9 @@ function parseExcelFile() {
  * 解析多值字段（如作者、标签等）
  */
 function parseMultipleValues(value: string): string[] {
-  console.log(value)
   if (!value) return []
-  // @ts-ignore
-  if (value instanceof Boolean) {
+  if (typeof value !== 'string') {
+    // @ts-ignore
     value = value.toString()
   }
   return value
@@ -678,6 +709,31 @@ function resetAddingSong(onlyName = false) {
 
   showModalRenderKey.value++
   message.success('已重置')
+}
+
+/**
+ * 重置自定义列头映射
+ */
+function resetColumnMappings() {
+  columnMappings.value = {
+    name: '名称,歌名,标题,title,name',
+    translateName: '翻译名称,译名,translated,translate',
+    author: '作者,歌手,演唱,singer,author,artist',
+    description: '描述,备注,说明,description,note,remark',
+    url: '链接,地址,url,link',
+    language: '语言,language',
+    tags: '标签,类别,分类,tag,tags,category'
+  }
+  message.success('已重置为默认映射')
+}
+
+/**
+ * 保存自定义列头映射
+ */
+function saveColumnMappings() {
+  // 由于使用了useStorage，映射内容会自动保存
+  // 这里只需要提示用户保存成功
+  message.success('映射已保存，下次导入将使用当前设置')
 }
 
 // 组件挂载时加载歌曲列表
@@ -1144,6 +1200,99 @@ onMounted(async () => {
                 此页面
               </NButton>
             </NAlert>
+
+            <NDivider>
+              导入设置
+            </NDivider>
+
+            <NSpace vertical>
+              <NCheckbox v-model:checked="useCustomColumnMapping">
+                自定义列头映射
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  启用后可以自定义Excel文件中列头与歌曲信息的对应关系
+                </NTooltip>
+              </NCheckbox>
+
+              <NCollapse v-if="useCustomColumnMapping">
+                <NCollapseItem
+                  title="自定义列头映射"
+                  name="custom-mapping"
+                >
+                  <NSpace vertical>
+                    <NAlert type="info">
+                      请输入各字段对应的Excel列头名称，多个名称用逗号分隔。导入时会自动匹配这些名称，不区分大小写。
+                    </NAlert>
+                    <NFormItem label="歌曲名称 (必填)">
+                      <NInput
+                        v-model:value="columnMappings.name"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="翻译名称">
+                      <NInput
+                        v-model:value="columnMappings.translateName"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="作者">
+                      <NInput
+                        v-model:value="columnMappings.author"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="描述">
+                      <NInput
+                        v-model:value="columnMappings.description"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="链接">
+                      <NInput
+                        v-model:value="columnMappings.url"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="语言">
+                      <NInput
+                        v-model:value="columnMappings.language"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NFormItem label="标签">
+                      <NInput
+                        v-model:value="columnMappings.tags"
+                        placeholder="使用逗号分隔多个可能的列头名称"
+                      />
+                    </NFormItem>
+                    <NSpace>
+                      <NButton
+                        type="primary"
+                        @click="saveColumnMappings"
+                      >
+                        保存映射
+                      </NButton>
+                      <NButton
+                        type="warning"
+                        @click="resetColumnMappings"
+                      >
+                        重置为默认映射
+                      </NButton>
+                    </NSpace>
+                    <NAlert type="info">
+                      设置完成后请点击"保存映射"，设置将自动保存到本地浏览器，下次访问时仍会使用
+                    </NAlert>
+                  </NSpace>
+                </NCollapseItem>
+              </NCollapse>
+            </NSpace>
+
+            <NDivider>
+              文件上传
+            </NDivider>
+
             <NUpload
               v-model:file-list="uploadFiles"
               :default-upload="false"

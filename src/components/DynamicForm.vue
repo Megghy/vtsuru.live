@@ -414,7 +414,6 @@ import { computed, h, onMounted, ref } from 'vue';
   function getItems() { }
   onMounted(() => {
     props.config?.forEach(item => {
-      console.log(props.configData)
       if (item.default && !(item.key in props.configData)) {
         props.configData[item.key] = item.default;
       }

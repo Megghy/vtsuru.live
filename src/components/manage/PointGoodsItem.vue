@@ -160,6 +160,11 @@ import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'nai
         :line-clamp="2"
         class="description-text"
       >
+        <template #tooltip>
+          <div style="white-space: pre-wrap;">
+            {{ goods.description ? goods.description : '暂无描述' }}
+          </div>
+        </template>
         <NText
           :depth="goods.description ? 1 : 3"
           :italic="!goods.description"
@@ -284,6 +289,7 @@ import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'nai
 
 .description-text {
   margin-bottom: 4px;
+  white-space: pre-wrap;
 }
 
 .tags-container {
