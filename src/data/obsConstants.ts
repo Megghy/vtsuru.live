@@ -36,4 +36,18 @@ export const OBSComponentMap: Record<string, OBSComponentDefinition> = {
   //   settingName: 'obsExampleComponentSettings',
   //   version: '1.0.0',
   // },
+  Example: {
+    id: 'Example',
+    name: '示例组件',
+    description: '一个基础的OBS组件，用于演示和测试功能。',
+    component: defineAsyncComponent(() => import('@/views/obs_store/components/ExampleOBSComponent.vue')),
+    version: '1.0.0',
+  },
+  Controller: {
+    id: 'Controller',
+    name: '控制器',
+    description: '将用户手柄操作映射到OBS的场景中',
+    component: defineAsyncComponent(() => import('@/views/obs_store/components/gamepads/GamepadViewer.vue')),
+    version: '1.0.0',
+  },
 };

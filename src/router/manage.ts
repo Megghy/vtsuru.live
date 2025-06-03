@@ -94,6 +94,16 @@ export default //管理页面
       }
     },
     {
+      path: 'obs-store',
+      name: 'manage-obsStore',
+      component: () => import('@/views/obs_store/OBSComponentStoreView.vue'),
+      meta: {
+        title: 'OBS组件库',
+        keepAlive: true,
+        danmaku: true
+      }
+    },
+    {
       path: 'queue',
       name: 'manage-liveQueue',
       component: () => import('@/views/open_live/OpenQueue.vue'),
@@ -201,6 +211,24 @@ export default //管理页面
       component: () => import('@/views/manage/AnalyzeView.vue'),
       meta: {
         title: '数据分析'
+      }
+    },
+    {
+      path: 'tools',
+      name: 'manage-tools-dashboard',
+      component: () => import('@/views/manage/ToolsDashboardView.vue'),
+      meta: {
+        title: '直播工具箱',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'tools/dynamic-nine-grid',
+      name: 'ManageToolDynamicNineGrid',
+      component: () => import('@/components/manage/tools/ToolDynamicNineGrid.vue'),
+      meta: {
+        title: '动态九图生成器',
+        parent: 'manage-tools-dashboard' // 指向工具箱仪表盘
       }
     }
   ]
