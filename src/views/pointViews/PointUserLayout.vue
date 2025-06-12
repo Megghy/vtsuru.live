@@ -279,7 +279,7 @@ onMounted(async () => {
       <NResult
         status="error"
         title="你还未进行过B站账户验证"
-        description="请先进行认证"
+        description="请先进行认证. 如果你已经认证过, 请直接访问认证完成时给出的链接"
         style="padding-top: 64px"
       >
         <template #footer>
