@@ -604,7 +604,12 @@ onMounted(() => {
                         depth="3"
                         style="text-align: center; margin-top: 8px;"
                       >
-                        我们已向您的邮箱发送了验证链接，请查收并点击链接完成验证
+                        我们已向您的邮箱 <NText
+                          type="primary"
+                          strong
+                        >
+                          {{ accountInfo?.bindEmail }}
+                        </NText> 发送了验证链接，请查收并点击链接完成验证
                       </NText>
                     </NFlex>
 

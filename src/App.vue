@@ -63,45 +63,48 @@ watchEffect(() => {
 const themeOverrides = computed(() => {
   return {
     common: {
-      // 主色调 (中蓝色基调，调整对比度)
-      primaryColor: '#5A7A9E',
-      primaryColorHover: '#7390B1',      // 略微提亮悬浮色
-      primaryColorPressed: '#4F7094',     // 调整按下色，避免在暗色模式下过暗
-      primaryColorSuppl: '#8CA6C1',     // 调整补充色，使其与背景有区分
+      // 主色调 (中蓝色基调，提升可读性并增强对比)
+      primaryColor: '#4D6E9C',
+      primaryColorHover: '#6483A9',      // 略微提亮悬浮色
+      primaryColorPressed: '#365A7D',     // 调整按下色，避免在暗色模式下过暗
+      primaryColorSuppl: '#809BC1',     // 调整补充色，使其与背景有区分
 
-      // 信息色 (浅蓝色基调，调整对比度)
-      infoColor: '#8CB1C7',              // 稍微加深基础信息色
-      infoColorHover: '#A6C3D6',        // 提亮悬浮色
-      infoColorPressed: '#7DA0B5',       // 调整按下色
-      infoColorSuppl: '#D0DDE8',        // 调整补充色
+      // 信息色 (浅蓝色基调，提升对比度)
+      infoColorHover: '#79AFDE',        // 提亮悬浮色
+      infoColorPressed: '#4B8AC3',       // 调整按下色
 
-      // 成功色 (柔和青绿)
-      successColor: '#4DB6AC',
-      successColorHover: '#6BC4B9',      // 调整悬浮色
-      successColorPressed: '#3E9A90',     // 调整按下色
-      successColorSuppl: '#C1E7E2',      // 调整补充色
+      // 成功色 (柔和青绿, 增强对比)
+      successColor: '#3AA89C',
+      successColorHover: '#5AB9AE',      // 调整悬浮色
+      successColorPressed: '#2C8C82',     // 调整按下色
+      successColorSuppl: '#B4E4DF',      // 调整补充色
 
-      // 警告色 (柔和橙色)
-      warningColor: '#FFB74D',
-      warningColorHover: '#FFC870',      // 调整悬浮色
-      warningColorPressed: '#F8A830',     // 调整按下色
-      warningColorSuppl: '#FFE9C7',      // 调整补充色
+      // 警告色 (柔和橙色, 微调对比)
+      warningColor: '#FFA64D',
+      warningColorHover: '#FFBA70',      // 调整悬浮色
+      warningColorPressed: '#E89530',     // 调整按下色
+      warningColorSuppl: '#FFE2C2',      // 调整补充色
 
-      // 错误色 (柔和红色)
-      errorColor: '#E57373',
-      errorColorHover: '#EC8F8F',       // 调整悬浮色
-      errorColorPressed: '#D96060',      // 调整按下色
-      errorColorSuppl: '#F5C7C7',       // 调整补充色
-
+      // 错误色 (柔和红色, 微调对比)
+      errorColor: '#E16565',
+      errorColorHover: '#EA8282',       // 调整悬浮色
+      errorColorPressed: '#D44848',      // 调整按下色
+      errorColorSuppl: '#F3C0C0',       // 调整补充色
 
       // 保持字体设置
       fontFamily:
         'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
+
+      // 文本颜色 (提升可读性, 但不过度突兀)
+      textColorBase: isDarkMode.value ? '#ECECEC' : '#333333',
+      textColor1: isDarkMode.value ? '#E6E6E6' : '#333333',
+      textColor2: isDarkMode.value ? '#CCCCCC' : '#4F4F4F',
+      textColor3: isDarkMode.value ? '#AAAAAA' : '#656565',
     },
     Tooltip: {
       color: isDarkMode.value ? '#48484e' : '#FFFFFF',
-      textColor: isDarkMode.value ? '#FFFFFF' : '#333639',
-    }
+      textColor: isDarkMode.value ? '#FFFFFF' : '#333333',
+    },
   };
 })
 const body = document.body;

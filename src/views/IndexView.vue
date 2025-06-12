@@ -153,47 +153,95 @@ onMounted(async () => {
               一个给主播提供便利功能的网站 😊
             </NText>
             <span />
+            <!-- 主播 / 观众入口 -->
             <NSpace
               justify="center"
               align="center"
             >
-              <NSpace align="center">
-                <NSpace
-                  vertical
-                  justify="end"
-                >
-                  <NText
-                    style="font-size: medium"
-                    italic
-                  >
-                    我是主播
-                  </NText>
-                  <NButton
-                    type="primary"
-                    size="small"
-                    @click="$router.push({ name: 'manage-index' })"
-                  >
-                    开始使用
-                  </NButton>
-                </NSpace>
-                <NSpace vertical>
-                  <NText
-                    style="font-size: medium"
-                    italic
-                  >
-                    我是观众
-                  </NText>
-                  <NButton
-                    type="primary"
-                    size="small"
-                    secondary
-                    bordered
-                    @click="$router.push({ name: 'bili-user' })"
-                  >
-                    用户主页
-                  </NButton>
-                </NSpace>
-              </NSpace>
+              <NFlex
+                :wrap="false"
+                justify="center"
+                align="center"
+                style="gap: 24px; margin-top: 10px;"
+              >
+                <!-- 主播入口 -->
+                <NTooltip placement="bottom">
+                  <template #trigger>
+                    <NCard
+                      hoverable
+                      style="width: 240px; background: rgba(255, 255, 255, 0.15); cursor: pointer; border: none;"
+                      @click="$router.push({ name: 'manage-index' })"
+                    >
+                      <NFlex
+                        vertical
+                        align="center"
+                        justify="center"
+                        :size="8"
+                      >
+                        <NIcon
+                          :component="PersonFeedback24Filled"
+                          size="36"
+                          color="white"
+                        />
+                        <NText style="font-size: 1.2rem; font-weight: 500; color: white;">
+                          我是主播
+                        </NText>
+                        <NButton
+                          type="primary"
+                          secondary
+                          size="small"
+                        >
+                          开始使用
+                        </NButton>
+                      </NFlex>
+                    </NCard>
+                  </template>
+                  进入主播后台，管理直播相关工具与设置
+                </NTooltip>
+
+                <!-- 观众入口 -->
+                <NTooltip placement="bottom">
+                  <template #trigger>
+                    <NCard
+                      hoverable
+                      style="width: 240px; background: rgba(255, 255, 255, 0.15); cursor: pointer; border: none;"
+                      @click="$router.push({ name: 'bili-user' })"
+                    >
+                      <NFlex
+                        vertical
+                        align="center"
+                        justify="center"
+                        :size="8"
+                      >
+                        <NIcon
+                          :component="Chat24Filled"
+                          size="36"
+                          color="white"
+                        />
+                        <NText style="font-size: 1.2rem; font-weight: 500; color: white;">
+                          我是观众
+                        </NText>
+                        <NButton
+                          type="info"
+                          secondary
+                          size="small"
+                        >
+                          用户主页
+                        </NButton>
+                      </NFlex>
+                    </NCard>
+                  </template>
+                  进入个人主页，查看积分与互动记录
+                </NTooltip>
+              </NFlex>
+            </NSpace>
+
+            <!-- 其他操作按钮 -->
+            <NSpace
+              justify="center"
+              align="center"
+              style="margin-top: 20px;"
+            >
               <NButton
                 size="large"
                 @click="$router.push('/@Megghy')"
@@ -491,7 +539,9 @@ onMounted(async () => {
 
 <style lang="stylus" scoped>
 .index-background
-    display: abslute;
+    position: relative;
+    /* 保证全屏高度，避免底部留白 */
+    min-height: 100vh;
     background: #8360c3;  /* fallback for old browsers */
     background: -webkit-linear-gradient(to right, #2ebf91, #8360c3);  /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to right, #2ebf91, #8360c3); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
