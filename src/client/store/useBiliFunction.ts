@@ -21,63 +21,6 @@ const mixinKeyEncTab = [
 const getMixinKey = (orig: string): string =>
   mixinKeyEncTab.map(n => orig[n]).join('').slice(0, 32);
 
-// 为请求参数进行 wbi 签名
-function encWbi(
-  params: { [key: string]: string | number },
-  img_key: string,
-  sub_key: string
-): string {
-  const mixin_key = getMixinKey(img_key + sub_key);
-  const curr_time = Math.round(Date.now() / 1000);
-  const chr_filter = /[!'()*]/g;
-
-  Object.assign(params, { wts: curr_time.toString() }); // 添加 wts 字段
-
-  // 按照 key 重排参数
-  const query = Object.keys(params)
-    .sort()
-    .map(key => {
-      // 过滤 value 中的 "!'()*" 字符
-      const value = params[key].toString().replace(chr_filter, '');
-      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-    })
-    .join('&');
-
-  const wbi_sign = md5(query + mixin_key); // 计算 w_rid
-  return query + '&w_rid=' + wbi_sign;
-}
-
-// 获取最新的 img_key 和 sub_key
-async function getWbiKeys(cookie: string): Promise<{ img_key: string, sub_key: string }> {
-  try {
-    const response = await QueryBiliAPI('https://api.bilibili.com/x/web-interface/nav');
-
-    if (!response.ok) {
-      console.error("获取WBI密钥失败:", response.status);
-      throw new Error("获取WBI密钥失败");
-    }
-
-    const result = await response.json();
-    const { wbi_img } = result.data;
-
-    console.log(`获取WBI秘钥: img_key: ${wbi_img.img_url}, sub_key: ${wbi_img.sub_url}`);
-
-    return {
-      img_key: wbi_img.img_url.slice(
-        wbi_img.img_url.lastIndexOf('/') + 1,
-        wbi_img.img_url.lastIndexOf('.')
-      ),
-      sub_key: wbi_img.sub_url.slice(
-        wbi_img.sub_url.lastIndexOf('/') + 1,
-        wbi_img.sub_url.lastIndexOf('.')
-      )
-    };
-  } catch (error) {
-    console.error("获取WBI密钥时发生错误:", error);
-    throw error;
-  }
-}
-
 export const useBiliFunction = defineStore('biliFunction', () => {
   const biliCookieStore = useBiliCookie();
   const account = useAccount();
@@ -86,6 +29,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   const uid = computed(() => account.value.biliId);
   // 存储WBI密钥
   const wbiKeys = ref<{ img_key: string, sub_key: string } | null>(null);
+  const wbiKeysTimestamp = ref<number | null>(null);
 
   // 队列相关状态
   const danmakuQueue = ref<{ roomId: number, message: string, color?: string, fontsize?: number, mode?: number }[]>([]);
@@ -257,6 +201,77 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
   }
 
+  // 为请求参数进行 wbi 签名
+  async function encWbi(
+    params: { [key: string]: string | number },
+  ): Promise<string> {
+    const keys = await getWbiKeys();
+    const { img_key, sub_key } = keys;
+    const mixin_key = getMixinKey(img_key + sub_key);
+    const curr_time = Math.round(Date.now() / 1000);
+    const chr_filter = /[!'()*]/g;
+
+    Object.assign(params, { wts: curr_time.toString() }); // 添加 wts 字段
+
+    // 按照 key 重排参数
+    const query = Object.keys(params)
+      .sort()
+      .map(key => {
+        // 过滤 value 中的 "!'()*" 字符
+        const value = params[key].toString().replace(chr_filter, '');
+        return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+      })
+      .join('&');
+
+    const wbi_sign = md5(query + mixin_key); // 计算 w_rid
+    return query + '&w_rid=' + wbi_sign;
+  }
+
+  // 获取最新的 img_key 和 sub_key
+  async function _fetchWbiKeys(): Promise<{ img_key: string, sub_key: string }> {
+    try {
+      const response = await QueryBiliAPI('https://api.bilibili.com/x/web-interface/nav');
+
+      if (!response.ok) {
+        console.error("获取WBI密钥失败:", response.status);
+        throw new Error("获取WBI密钥失败");
+      }
+
+      const result = await response.json();
+      const { wbi_img } = result.data;
+
+      console.log(`获取WBI秘钥: img_key: ${wbi_img.img_url}, sub_key: ${wbi_img.sub_url}`);
+
+      return {
+        img_key: wbi_img.img_url.slice(
+          wbi_img.img_url.lastIndexOf('/') + 1,
+          wbi_img.img_url.lastIndexOf('.')
+        ),
+        sub_key: wbi_img.sub_url.slice(
+          wbi_img.sub_url.lastIndexOf('/') + 1,
+          wbi_img.sub_url.lastIndexOf('.')
+        )
+      };
+    } catch (error) {
+      console.error("获取WBI密钥时发生错误:", error);
+      throw error;
+    }
+  }
+
+  async function getWbiKeys(): Promise<{ img_key: string, sub_key: string }> {
+    const now = Date.now();
+    if (wbiKeys.value && wbiKeysTimestamp.value && (now - wbiKeysTimestamp.value < 10 * 60 * 1000)) {
+        console.log("使用缓存的WBI密钥");
+        return wbiKeys.value;
+    }
+
+    console.log("缓存不存在或已过期，获取新的WBI密钥");
+    const newKeys = await _fetchWbiKeys();
+    wbiKeys.value = newKeys;
+    wbiKeysTimestamp.value = now;
+    return newKeys;
+  }
+
   // 原始发送私信方法（重命名为_sendPrivateMessage）
   async function _sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
     if (!csrf.value || !cookie.value || !uid.value) {
@@ -288,17 +303,6 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
 
     try {
-      // 获取WBI密钥（如果还没有）
-      if (!wbiKeys.value) {
-        wbiKeys.value = await getWbiKeys(cookie.value);
-      }
-      if (!wbiKeys.value) {
-        const error = "获取WBI密钥失败，无法发送私信";
-        console.error(error);
-        onSendPrivateMessageFailed(receiverId, message, error);
-        return false;
-      }
-
       const dev_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16).toUpperCase();
@@ -315,11 +319,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
       };
 
       // 生成带WBI签名的URL查询字符串
-      const signedQuery = encWbi(
-        urlParams,
-        wbiKeys.value.img_key,
-        wbiKeys.value.sub_key
-      );
+      const signedQuery = await encWbi(urlParams);
 
       // 构建最终URL
       const url = `https://api.vc.bilibili.com/web_im/v1/web_im/send_msg?${signedQuery}`;
@@ -457,6 +457,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     pmInterval,
     setDanmakuInterval,
     setPmInterval,
+    encWbi
   };
 });
 

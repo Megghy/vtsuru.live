@@ -3,6 +3,7 @@ import { useBiliCookie } from '../store/useBiliCookie';
 import { QueryPostAPI } from '@/api/query';
 import { OPEN_LIVE_API_URL } from '@/data/constants';
 import { error } from '@tauri-apps/plugin-log';
+import { useBiliFunction } from '../store/useBiliFunction';
 
 export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true) {
   const u = new URL(url);
@@ -28,8 +29,12 @@ export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: 
 
 export async function getRoomKey(roomId: number, cookie: string) {
   try {
+    const wbiKeys = await useBiliFunction().encWbi({
+      id: roomId,
+      type: 0
+    });
     const result = await QueryBiliAPI(
-      'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=' + roomId
+      'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?' + wbiKeys
     );
     const json = await result.json();
     if (json.code === 0) return json.data.token;
