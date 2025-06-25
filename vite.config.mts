@@ -93,7 +93,11 @@ export default defineConfig({
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
-  define: { 'process.env': {}, global: 'window' },
+  define: {
+    'process.env': {},
+    global: 'window',
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+  },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
   },
