@@ -765,7 +765,6 @@ onMounted(async () => {
       添加歌曲
     </NButton>
     <NButton
-      secondary
       type="primary"
       @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
     >

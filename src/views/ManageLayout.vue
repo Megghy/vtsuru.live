@@ -66,6 +66,9 @@ const route = useRoute()
 const windowWidth = window.innerWidth
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
+// 收藏功能相关
+const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', [])
+
 // 侧边栏和布局相关
 const sider = ref()
 const { width } = useElementSize(sider)
