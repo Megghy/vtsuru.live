@@ -59,6 +59,7 @@
   } from 'naive-ui';
   import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef, markRaw } from 'vue';
   import { useRoute } from 'vue-router';
+  import { useRouteQuery } from '@vueuse/router';
 
   // 模板定义类型接口
   interface TemplateDefineTypes {
@@ -231,9 +232,9 @@
     { label: '日程表', value: 'schedule' },
   ] as SelectOption[];
 
-  // 路由查询参数优先级高于默认值
-  const selectedOption = ref(route.query.template?.toString() ?? 'index');
-  const selectedTab = ref(route.query.setting?.toString() ?? 'general');
+  // 使用 useRouteQuery 自动同步 URL 查询参数
+  const selectedOption = useRouteQuery('template', 'index', { transform: String });
+  const selectedTab = useRouteQuery('setting', 'general', { transform: String });
 
   // 动态表单相关
   const dynamicConfigRef = shallowRef();
@@ -582,14 +583,9 @@
     message.success('已保存');
   }
 
-  // 路由激活时更新选项卡
+  // 路由激活时的处理（useRouteQuery 已自动处理参数同步）
   onActivated(() => {
-    if (route.query.tab) {
-      selectedTab.value = route.query.setting?.toString() ?? 'general';
-    }
-    if (route.query.template) {
-      selectedOption.value = route.query.template.toString();
-    }
+    // useRouteQuery 会自动同步，这里可以添加其他激活时的逻辑
   });
 
   // 组件挂载时初始化数据

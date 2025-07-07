@@ -29,6 +29,7 @@ import {
   useMessage
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
+import { useRouteQuery } from '@vueuse/router'
 import VueTurnstile from 'vue-turnstile'
 import SettingPaymentView from './Setting_PaymentView.vue'
 import SettingsManageView from './SettingsManageView.vue'
@@ -40,6 +41,9 @@ const turnstile = ref()
 
 const accountInfo = useAccount()
 const message = useMessage()
+
+// 使用 useRouteQuery 自动同步 URL 查询参数
+const selectedTab = useRouteQuery('tab', 'info', { transform: String })
 
 const resetEmailModalVisiable = ref(false)
 const resetPasswordModalVisiable = ref(false)
@@ -311,10 +315,10 @@ onUnmounted(() => {
   >
     <NTabs
       v-if="accountInfo"
+      v-model:value="selectedTab"
       type="segment"
       animated
       style="width: 100%;"
-      :default-value="$route.query.tab?.toString() ?? 'info'"
     >
       <NTabPane
         name="info"
