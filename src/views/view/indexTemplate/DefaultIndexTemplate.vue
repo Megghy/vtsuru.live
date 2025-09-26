@@ -157,12 +157,16 @@ export const Config = defineTemplateConfig([
       <NButton
         type="primary"
         @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"
-      >个人主页</NButton>
+      >
+        个人主页
+      </NButton>
       <NButton
         type="primary"
         secondary
         @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"
-      >直播间</NButton>
+      >
+        直播间
+      </NButton>
     </NSpace>
     <template v-if="orderedLinks.length > 0">
       <NDivider> 相关链接 </NDivider>
@@ -186,7 +190,11 @@ export const Config = defineTemplateConfig([
       </NFlex>
     </template>
     <template v-if="indexInfo.videos?.length || 0 > 0">
-      <NDivider><NText style="font-size:18px">相关视频</NText></NDivider>
+      <NDivider>
+        <NText style="font-size:18px">
+          相关视频
+        </NText>
+      </NDivider>
       <NFlex justify="center">
         <SimpleVideoCard
           v-for="video in indexInfo.videos"

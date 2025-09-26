@@ -82,7 +82,7 @@
   "devDependencies": {
     "@types/bun": "^1.2.16",
     "@types/file-saver": "^2.0.7",
-    "@types/jszip": "^3.10.6",
+    "@types/jszip": "^3.4.1",
     "@types/uuid": "^10.0.0",
     "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-vue-jsx": "^4.2.0",
