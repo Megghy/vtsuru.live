@@ -7,7 +7,7 @@ import SimpleVideoCard from '@/components/SimpleVideoCard.vue';
 import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
 import { USER_INDEX_API_URL } from '@/data/constants';
 import { NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 defineExpose({ Config, DefaultConfig })
 const width = window.innerWidth
@@ -23,6 +23,20 @@ const message = useMessage()
 const accountInfo = useAccount()
 
 const indexInfo = ref<ResponseUserIndexModel>((await getIndexInfo()) || ({} as ResponseUserIndexModel))
+// 计算链接顺序（如果后端未提供 linkOrder 则使用对象键顺序）
+const orderedLinks = computed(() => {
+  if (!indexInfo.value) return [] as [string, string][];
+  const entries = Object.entries(indexInfo.value.links || {});
+  if (!indexInfo.value.links) return [];
+  const order = (accountInfo.value?.settings?.index?.linkOrder?.length
+    ? accountInfo.value.settings.index.linkOrder
+    : (indexInfo.value as any)?.linkOrder) as string[] | undefined;
+  if (order && order.length) {
+    const map = new Map(entries);
+    return order.filter(k => map.has(k)).map(k => [k, map.get(k)!]) as [string, string][];
+  }
+  return entries;
+});
 async function getIndexInfo() {
   try {
     isLoading.value = true
@@ -123,9 +137,9 @@ export const Config = defineTemplateConfig([
       <NText
         strong
         depth="3"
-        style="font-size: medium"
+        style="font-size: 16px"
       >
-        {{ userInfo.streamerInfo?.uId }}
+        UID: {{ userInfo.streamerInfo?.uId }}
       </NText>
       <NText
         strong
@@ -143,37 +157,36 @@ export const Config = defineTemplateConfig([
       <NButton
         type="primary"
         @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"
-      >
-        个人主页
-      </NButton>
+      >个人主页</NButton>
       <NButton
         type="primary"
         secondary
         @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"
-      >
-        直播间
-      </NButton>
-      <template v-if="Object.keys(indexInfo.links || {}).length > 0">
-        <NFlex align="center">
-          <NDivider vertical />
-          <NButton
-            v-for="link in Object.entries(indexInfo.links || {})"
-            :key="link[0] + link[1]"
-            type="info"
-            secondary
-            tag="a"
-            :href="link[1]"
-            target="_blank"
-          >
-            {{ link[0] }}
-          </NButton>
-        </NFlex>
-      </template>
+      >直播间</NButton>
     </NSpace>
+    <template v-if="orderedLinks.length > 0">
+      <NDivider> 相关链接 </NDivider>
+      <NFlex
+        justify="center"
+        wrap
+      >
+        <NButton
+          v-for="link in orderedLinks"
+          :key="link[0] + link[1]"
+          size="small"
+          type="info"
+          secondary
+          tag="a"
+          :href="link[1]"
+          target="_blank"
+          style="margin:4px"
+        >
+          {{ link[0] }}
+        </NButton>
+      </NFlex>
+    </template>
     <template v-if="indexInfo.videos?.length || 0 > 0">
-      <NDivider>
-        <NText>相关视频</NText>
-      </NDivider>
+      <NDivider><NText style="font-size:18px">相关视频</NText></NDivider>
       <NFlex justify="center">
         <SimpleVideoCard
           v-for="video in indexInfo.videos"

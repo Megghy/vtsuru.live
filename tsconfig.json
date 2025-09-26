@@ -12,7 +12,7 @@
     "allowJs": false,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["node", "vue-vine/macros"],
+    "types": ["node", "vue-vine/macros", "jszip"],
     "paths": {
       "@/*": ["src/*"]
     },

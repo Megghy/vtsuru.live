@@ -143,6 +143,11 @@ export interface Setting_Index {
   videos: string[]
   notification: string
   links: { [key: string]: string }
+  /**
+   * 自定义链接顺序（存储链接名称的有序数组）
+   * 旧数据无此字段时在前端初始化为 Object.keys(links)
+   */
+  linkOrder?: string[]
 }
 export interface Setting_LiveRequest {
   orderPrefix: string
@@ -824,6 +829,7 @@ export interface ResponseUserIndexModel {
   notification: string
   videos: VideoCollectVideo[]
   links: { [key: string]: string }
+  linkOrder?: string[]
 }
 
 // 签到排行信息

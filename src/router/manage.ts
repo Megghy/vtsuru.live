@@ -225,7 +225,7 @@ export default //管理页面
     {
       path: 'tools/dynamic-nine-grid',
       name: 'ManageToolDynamicNineGrid',
-      component: () => import('@/components/manage/tools/ToolDynamicNineGrid.vue'),
+      component: () => import('@/views/manage/tools/ToolDynamicNineGrid.vue'),
       meta: {
         title: '动态九图生成器',
         parent: 'manage-tools-dashboard' // 指向工具箱仪表盘
