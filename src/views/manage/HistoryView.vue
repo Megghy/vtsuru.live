@@ -15,8 +15,8 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
 
@@ -88,6 +88,26 @@ const isLoading = ref(true)
 const statisticStartDate = new Date(2023, 10, 4)
 const statisticStartDateTime = statisticStartDate.getTime()
 
+// 日期范围选择（毫秒时间戳区间）
+const dateRange = ref<[number, number] | null>(null)
+const dateShortcuts: Record<string, [number, number] | (() => [number, number])> = {
+  '最近7天': () => {
+    const end = endOfDay(new Date()).getTime()
+    const start = startOfDay(addDays(new Date(), -6)).getTime()
+    return [start, end] as [number, number]
+  },
+  '最近30天': () => {
+    const end = endOfDay(new Date()).getTime()
+    const start = startOfDay(addDays(new Date(), -29)).getTime()
+    return [start, end] as [number, number]
+  },
+  '最近90天': () => {
+    const end = endOfDay(new Date()).getTime()
+    const start = startOfDay(addDays(new Date(), -89)).getTime()
+    return [start, end] as [number, number]
+  },
+}
+
 // 响应式图表高度
 const chartHeight = computed(() => {
   // 可以根据窗口大小动态调整图表高度
@@ -151,102 +171,98 @@ function getBaseChartOptions() {
 }
 
 /**
+ * 生成每日时间序列数据的通用函数
+ * @param historyData 原始历史记录
+ * @param startTime 开始时间
+ * @param endTime 结束时间
+ * @param initialTimeIndex 起始索引
+ * @param initialCount 初始计数值
+ */
+function generateTimeSeries(
+  historyData: HistoryRecordModel[],
+  startTime: Date,
+  endTime: Date,
+  initialTimeIndex: number,
+  initialCount: number
+) {
+  const timeSeries: { time: Date; count: number; change: boolean; exist: boolean }[] = []
+  let lastDayCount = initialCount
+  let lastTimeIndex = initialTimeIndex
+  let currentTime = startTime
+
+  while (currentTime <= endTime) {
+    const dayEndTime = endOfDay(currentTime).getTime()
+    let dayExist = false
+
+    while (true) {
+      const data = historyData[lastTimeIndex]
+      if (!data) {
+        break
+      }
+
+      if ((historyData[lastTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
+        const changed = data.count !== lastDayCount
+        lastDayCount = data.count
+        dayExist = true
+        break
+      }
+      lastTimeIndex++
+    }
+
+    timeSeries.push({
+      time: currentTime,
+      count: lastDayCount,
+      change: lastDayCount !== (timeSeries[timeSeries.length - 1]?.count ?? initialCount),
+      exist: dayExist,
+    })
+
+    currentTime = addDays(currentTime, 1)
+  }
+
+  return timeSeries
+}
+
+/**
  * 处理粉丝历史数据并生成图表选项
  */
 function processFansChartOptions() {
   if (!fansHistory.value || fansHistory.value.length === 0) return
 
-  // 确定开始时间
-  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
-  startTime = startTime < statisticStartDate ? statisticStartDate : startTime
-  startTime = startOfDay(startTime)
-  const endTime = new Date()
+  let startTimeBase = new Date(accountInfo.value?.createAt ?? Date.now())
+  startTimeBase = startTimeBase < statisticStartDate ? statisticStartDate : startTimeBase
+  const startTime = startOfDay(dateRange.value ? new Date(dateRange.value[0]) : startTimeBase)
+  const endTime = dateRange.value ? new Date(dateRange.value[1]) : new Date()
 
-  // 用于存储完整的时间序列数据
-  const completeTimeSeries: { time: Date; count: number; change: boolean, exist: boolean }[] = []
-  // 用于存储粉丝增量数据
-  const fansIncreacement: { time: Date; count: number }[] = []
-
-  // 查找统计开始时间之后的第一个数据点
-  let lastFansTimeIndex = fansHistory.value.length > 0
-    ? fansHistory.value[0].time >= statisticStartDateTime
-      ? 0
-      : fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
-    : -1
-  let lastDayCount = lastFansTimeIndex >= 0 ? fansHistory.value[lastFansTimeIndex].count : 0
-
-  // 生成完整的天序列数据
-  let currentTime = startTime
-  while (currentTime <= endTime) {
-    const dayEndTime = endOfDay(currentTime).getTime()
-    while (true) {
-      const data = fansHistory.value[lastFansTimeIndex]
-      if (!data) {
-        completeTimeSeries.push({
-          time: currentTime,
-          count: lastDayCount,
-          change: false,
-          exist: false,
-        })
-        break
-      }
-      // 如果下一个数据的时间大于当前天的结束时间
-      if ((fansHistory.value[lastFansTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-        const changed = data.count !== lastDayCount
-        lastDayCount = data.count
-
-        completeTimeSeries.push({
-          time: currentTime,
-          count: lastDayCount,
-          change: changed,
-          exist: true,
-        })
-        break
-      }
-
-      lastFansTimeIndex++
-    }
-
-    currentTime = addDays(currentTime, 1) // 移动到下一天
+  if (startTime > endTime) {
+    fansOption.value = { ...getBaseChartOptions(), series: [] } // Simplified empty state
+    return
   }
 
-  // 计算粉丝增量数据
-  let previousDayCount = completeTimeSeries[0].count
-  completeTimeSeries.forEach((entry, index, array) => {
-    if (index === 0 || !isSameDay(entry.time, array[index - 1].time)) {
-      if (index > 0) {
-        const dailyIncrement = entry.count - previousDayCount
-        fansIncreacement.push({
-          time: startOfDay(array[index - 1].time),
-          count: dailyIncrement,
-        })
-      }
-      previousDayCount = entry.count
-    } else if (index === array.length - 1) {
+  const initialIndex = fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
+  const initialCount = initialIndex >= 0 ? fansHistory.value[initialIndex].count : 0
+
+  const completeTimeSeries = generateTimeSeries(fansHistory.value, startTime, endTime, initialIndex, initialCount)
+
+  const fansIncreacement: { time: Date; count: number }[] = []
+  let previousDayCount = completeTimeSeries[0]?.count ?? 0
+  completeTimeSeries.forEach((entry, index) => {
+    if (index > 0) {
       const dailyIncrement = entry.count - previousDayCount
-      fansIncreacement.push({
-        time: startOfDay(entry.time),
-        count: dailyIncrement,
-      })
+      fansIncreacement.push({ time: startOfDay(entry.time), count: dailyIncrement })
     }
+    previousDayCount = entry.count
   })
 
-  // 准备图表数据
   const chartData = {
     xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
-    hourlyCounts: completeTimeSeries.map((entry) => entry.count),
-    dailyIncrements: fansIncreacement.map((entry) => ({
-      date: format(entry.time, 'yyyy-MM-dd'),
-      count: entry.count,
-    })),
+    seriesData: completeTimeSeries.map((entry) => entry.count),
+    incrementData: fansIncreacement.map((entry) => entry.count),
   }
 
-  // 生成图表配置
-  const baseOptions = getBaseChartOptions()
   fansOption.value = {
-    ...baseOptions,
+    ...getBaseChartOptions(),
     tooltip: {
-      ...baseOptions.tooltip,
+      ...getBaseChartOptions().tooltip,
       formatter: (param: any) => {
         const name = param[0].name + '<br>'
         let str = ''
@@ -260,54 +276,22 @@ function processFansChartOptions() {
       },
     },
     yAxis: [
-      {
-        type: 'value',
-        name: '粉丝数',
-      },
-      {
-        type: 'value',
-        name: '每日增量',
-      },
+      { type: 'value', name: '粉丝数', min: 'dataMin' },
+      { type: 'value', name: '每日增量' },
     ],
     xAxis: [
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#5470C6',
-          },
-        },
-        data: chartData.xAxisData,
-      },
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#EE6666',
-          },
-        },
-        data: fansIncreacement.map((f) => format(f.time, 'yyyy-MM-dd')),
-      },
+      { type: 'category', data: chartData.xAxisData },
+      { type: 'category', data: chartData.xAxisData.slice(1) }, // Align increments
     ],
     series: [
       {
         name: '粉丝数',
         type: 'line',
-        emphasis: {
-          focus: 'series',
-        },
-        data: chartData.hourlyCounts,
+        data: chartData.seriesData,
         itemStyle: {
-          color: function (data: any) {
-            return completeTimeSeries[data.dataIndex].change ? '#18a058' : '#5470C6'
+          color: (data: any) => {
+            const item = completeTimeSeries[data.dataIndex]
+            return !item.exist ? '#cccccc' : item.change ? '#18a058' : '#5470C6'
           },
         },
       },
@@ -316,15 +300,8 @@ function processFansChartOptions() {
         type: 'bar',
         yAxisIndex: 1,
         xAxisIndex: 1,
-        emphasis: {
-          focus: 'series',
-        },
-        data: chartData.dailyIncrements.map((f) => f.count),
-        itemStyle: {
-          color: function (params: any) {
-            return params.value < 0 ? '#FF4D4F' : '#3398DB' // 负数时红色，正数时默认颜色
-          },
-        },
+        data: chartData.incrementData,
+        itemStyle: { color: (params: any) => (params.value < 0 ? '#FF4D4F' : '#3398DB') },
       },
     ],
   }
@@ -336,119 +313,142 @@ function processFansChartOptions() {
 function processGuardsChartOptions() {
   if (!guardHistory.value || guardHistory.value.length === 0) return
 
-  // 确定开始时间
-  let startTime = new Date(accountInfo.value?.createAt ?? Date.now())
-  startTime = startTime < statisticStartDate ? statisticStartDate : startTime
-  startTime = startOfDay(startTime)
-  const endTime = new Date()
+  let startTimeBase = new Date(accountInfo.value?.createAt ?? Date.now())
+  startTimeBase = startTimeBase < statisticStartDate ? statisticStartDate : startTimeBase
+  const startTime = startOfDay(dateRange.value ? new Date(dateRange.value[0]) : startTimeBase)
+  const endTime = dateRange.value ? new Date(dateRange.value[1]) : new Date()
 
-  // 生成完整的舰长天序列
-  const completeGuardTimeSeries: { time: Date; count: number }[] = []
-  let currentGuardTime = startTime
-  let lastGuardTimeIndex = 0
-  let lastDayGuardCount = 0
-
-  while (currentGuardTime <= endTime) {
-    const dayEndTime = endOfDay(currentGuardTime).getTime()
-    while (true) {
-      const data = guardHistory.value[lastGuardTimeIndex]
-      if (!data) {
-        completeGuardTimeSeries.push({
-          time: currentGuardTime,
-          count: lastDayGuardCount,
-        })
-        break
-      }
-
-      if ((guardHistory.value[lastGuardTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-        lastDayGuardCount = data.count
-        completeGuardTimeSeries.push({
-          time: currentGuardTime,
-          count: lastDayGuardCount,
-        })
-        break
-      }
-
-      lastGuardTimeIndex++
-    }
-
-    currentGuardTime = addDays(currentGuardTime, 1) // 移动到下一天
+  if (startTime > endTime) {
+    guardsOption.value = { ...getBaseChartOptions(), series: [] } // Simplified empty state
+    return
   }
 
-  // 计算守护增量数据
-  const guardsIncreacement: { time: number; count: number; timeString: string }[] = []
-  const guards: { time: number; count: number; timeString: string }[] = []
+  const initialIndex = guardHistory.value.findIndex((entry) => entry.time >= startTime.getTime())
+  const initialCount = initialIndex >= 0 ? guardHistory.value[initialIndex].count : 0
 
-  let lastDayGuards = 0
-  let lastDay = 0
+  const completeTimeSeries = generateTimeSeries(guardHistory.value, startTime, endTime, initialIndex, initialCount)
 
-  completeGuardTimeSeries.forEach((g) => {
-    if (!isSameDay(g.time, new Date(lastDay * 1000))) {
-      guardsIncreacement.push({
-        time: lastDayGuards,
-        count: lastDay === 0 ? 0 : g.count - lastDayGuards,
-        timeString: format(g.time, 'yyyy-MM-dd'),
-      })
-      guards.push({
-        time: g.time.getTime() / 1000,
-        count: g.count,
-        timeString: format(g.time, 'yyyy-MM-dd'),
-      })
-      lastDay = g.time.getTime() / 1000
-      lastDayGuards = g.count
+  const guardIncrements: number[] = []
+  let previousDayCount = completeTimeSeries[0]?.count ?? 0
+  completeTimeSeries.forEach((entry, index) => {
+    if (index > 0) {
+      guardIncrements.push(entry.count - previousDayCount)
     }
+    previousDayCount = entry.count
   })
 
-  // 生成图表配置
-  const baseOptions = getBaseChartOptions()
+  const xAxisData = completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd'))
+
   guardsOption.value = {
-    ...baseOptions,
+    ...getBaseChartOptions(),
     yAxis: [
-      {
-        type: 'value',
-      },
-      {
-        type: 'value',
-      },
+      { type: 'value', name: '舰长数', min: 'dataMin' },
+      { type: 'value', name: '日增' },
     ],
     xAxis: [
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#EE6666',
-          },
-        },
-        data: guardsIncreacement.map((f) => f.timeString),
-      },
+      { type: 'category', data: xAxisData },
+      { type: 'category', data: xAxisData.slice(1) },
     ],
     series: [
       {
         name: '舰长数',
         type: 'line',
         step: 'middle',
-        emphasis: {
-          focus: 'series',
+        data: completeTimeSeries.map(item => item.count),
+        itemStyle: {
+          color: (data: any) => completeTimeSeries[data.dataIndex].exist ? '#5470C6' : '#cccccc',
         },
-        data: guards.map((f) => f.count),
       },
       {
         name: '日增',
         type: 'bar',
         yAxisIndex: 1,
-        emphasis: {
-          focus: 'series',
-        },
-        data: guardsIncreacement.map((f) => f.count),
+        xAxisIndex: 1,
+        data: guardIncrements,
+        itemStyle: { color: (params: any) => (params.value < 0 ? '#FF4D4F' : '#3398DB') },
+      },
+    ],
+  }
+}
+
+/**
+ * 处理投稿数据并生成图表选项的通用函数
+ * @param {('views' | 'likes')} dataType - 要处理的数据类型 ('views' 或 'likes')
+ * @param {string} title - 图表主标题
+ */
+function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
+  if (!upstatHistory.value || upstatHistory.value.length === 0) {
+    return {
+      ...getBaseChartOptions(),
+      xAxis: [{ type: 'category', data: [] }],
+      yAxis: [{ type: 'value' }, { type: 'value' }],
+      series: [
+        { name: title, type: 'line', data: [] },
+        { name: '日增', type: 'bar', data: [], yAxisIndex: 1 },
+      ],
+    }
+  }
+
+  const rangeStart = dateRange.value ? dateRange.value[0] : -Infinity
+  const rangeEnd = dateRange.value ? dateRange.value[1] : Infinity
+  const filtered = upstatHistory.value.filter((u) => u.time >= rangeStart && u.time <= rangeEnd)
+
+  if (filtered.length === 0) {
+    return {
+      ...getBaseChartOptions(),
+      xAxis: [{ type: 'category', data: [] }],
+      yAxis: [{ type: 'value' }, { type: 'value' }],
+      series: [
+        { name: title, type: 'line', data: [] },
+        { name: '日增', type: 'bar', data: [], yAxisIndex: 1 },
+      ],
+    }
+  }
+
+  const increments: { time: number; value: number }[] = []
+  let lastValue = filtered[0].stats[dataType]
+
+  filtered.forEach((u) => {
+    const currentValue = u.stats[dataType]
+    increments.push({
+      time: u.time,
+      value: currentValue - lastValue,
+    })
+    lastValue = currentValue
+  })
+
+  return {
+    ...getBaseChartOptions(),
+    yAxis: [
+      { type: 'value', min: 'dataMin' },
+      { type: 'value' },
+    ],
+    xAxis: [
+      {
+        type: 'category',
+        axisTick: { alignWithLabel: true },
+        axisLine: { onZero: false, lineStyle: { color: '#EE6666' } },
+        data: filtered.map((f) => format(f.time, 'yyyy-MM-dd')),
+      },
+    ],
+    series: [
+      {
+        name: title,
+        type: 'line',
+        emphasis: { focus: 'series' },
+        data: filtered.map((f) => f.stats[dataType]),
         itemStyle: {
-          color: function (params: any) {
-            return params.value < 0 ? '#FF4D4F' : '#3398DB'
+          color: function (data: any) {
+            return increments[data.dataIndex].value !== 0 ? '#5470C6' : '#cccccc'
           },
         },
+      },
+      {
+        name: '日增',
+        type: 'bar',
+        yAxisIndex: 1,
+        emphasis: { focus: 'series' },
+        data: increments.map((f) => f.value),
       },
     ],
   }
@@ -458,134 +458,14 @@ function processGuardsChartOptions() {
  * 处理播放量历史数据并生成图表选项
  */
 function processUpstatViewChartOptions() {
-  if (!upstatHistory.value || upstatHistory.value.length === 0) return
-
-  // 计算播放量增量数据
-  const upstatViewIncreace: { time: number; value: number }[] = []
-  let lastUpstatView = upstatHistory.value[0].stats.views
-
-  upstatHistory.value.forEach((u) => {
-    upstatViewIncreace.push({
-      time: u.time,
-      value: u.stats.views - lastUpstatView,
-    })
-    lastUpstatView = u.stats.views
-  })
-
-  // 生成图表配置
-  const baseOptions = getBaseChartOptions()
-  upstatViewOption.value = {
-    ...baseOptions,
-    yAxis: [
-      {
-        type: 'value',
-      },
-      {
-        type: 'value',
-      },
-    ],
-    xAxis: [
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#EE6666',
-          },
-        },
-        data: upstatHistory.value.map((f) => format(f.time, 'yyyy-MM-dd')),
-      },
-    ],
-    series: [
-      {
-        name: '播放数',
-        type: 'line',
-        emphasis: {
-          focus: 'series',
-        },
-        data: upstatHistory.value.map((f) => f.stats.views),
-      },
-      {
-        name: '日增',
-        type: 'bar',
-        yAxisIndex: 1,
-        emphasis: {
-          focus: 'series',
-        },
-        data: upstatViewIncreace.map((f) => f.value),
-      },
-    ],
-  }
+  upstatViewOption.value = processUpstatChartOptions('views', '播放数')
 }
 
 /**
  * 处理点赞量历史数据并生成图表选项
  */
 function processUpstatLikeChartOptions() {
-  if (!upstatHistory.value || upstatHistory.value.length === 0) return
-
-  // 计算点赞量增量数据
-  const upstatLikeIncreace: { time: number; value: number }[] = []
-  let lastUpstatLike = upstatHistory.value[0].stats.likes
-
-  upstatHistory.value.forEach((u) => {
-    upstatLikeIncreace.push({
-      time: u.time,
-      value: u.stats.likes - lastUpstatLike,
-    })
-    lastUpstatLike = u.stats.likes
-  })
-
-  // 生成图表配置
-  const baseOptions = getBaseChartOptions()
-  upstatLikeOption.value = {
-    ...baseOptions,
-    yAxis: [
-      {
-        type: 'value',
-      },
-      {
-        type: 'value',
-      },
-    ],
-    xAxis: [
-      {
-        type: 'category',
-        axisTick: {
-          alignWithLabel: true,
-        },
-        axisLine: {
-          onZero: false,
-          lineStyle: {
-            color: '#EE6666',
-          },
-        },
-        data: upstatHistory.value.map((f) => format(f.time, 'yyyy-MM-dd')),
-      },
-    ],
-    series: [
-      {
-        name: '点赞数',
-        type: 'line',
-        emphasis: {
-          focus: 'series',
-        },
-        data: upstatHistory.value.map((f) => f.stats.likes),
-      },
-      {
-        name: '日增',
-        type: 'bar',
-        yAxisIndex: 1,
-        emphasis: {
-          focus: 'series',
-        },
-        data: upstatLikeIncreace.map((f) => f.value),
-      },
-    ],
-  }
+  upstatLikeOption.value = processUpstatChartOptions('likes', '点赞数')
 }
 
 /**
@@ -605,6 +485,14 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
+
+// 选择日期范围后，自动刷新图表
+watch(
+  () => dateRange.value,
+  () => {
+    if (!isLoading.value) processAllChartOptions()
+  }
+)
 </script>
 
 <template>
@@ -675,6 +563,17 @@ onMounted(async () => {
       </NSpace>
     </NTooltip>
     <br>
+    <br>
+    <NSpace align="center">
+      <NText depth="3">日期范围：</NText>
+      <NDatePicker
+        v-model:value="dateRange"
+        type="daterange"
+        clearable
+        separator="至"
+        :shortcuts="dateShortcuts"
+      />
+    </NSpace>
     <br>
     <NSpace
       vertical

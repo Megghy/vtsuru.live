@@ -48,6 +48,7 @@
     "file-saver": "^2.0.5",
     "grapheme-splitter": "^1.0.4",
     "html2canvas": "^1.4.1",
+    "jszip": "^3.10.1",
     "idb-keyval": "^6.2.2",
     "linqts": "^2.0.0",
     "lodash": "^4.17.21",
@@ -81,6 +82,7 @@
   "devDependencies": {
     "@types/bun": "^1.2.16",
     "@types/file-saver": "^2.0.7",
+    "@types/jszip": "^3.10.6",
     "@types/uuid": "^10.0.0",
     "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-vue-jsx": "^4.2.0",

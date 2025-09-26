@@ -239,8 +239,8 @@ onUnmounted(() => {
 
         <!-- 活跃歌曲列表 -->
         <SongRequestList
-          @update:sort-type="value => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
-          @update:is-reverse="value => {
+          @update:sort-type="(value: any) => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
+          @update:is-reverse="(value: any) => {
             if (songRequest.configCanEdit) {
               accountInfo.settings.songRequest.isReverse = value
               updateSettings()

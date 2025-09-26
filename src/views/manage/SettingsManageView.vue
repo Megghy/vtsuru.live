@@ -252,6 +252,8 @@
   const settingModalVisiable = ref(false);
   const showAddVideoModal = ref(false);
   const showAddLinkModal = ref(false);
+  const editingLinkName = ref<string | null>(null);
+  const newLinkName = ref('');
 
   // 主页数据
   const indexDisplayInfo = ref<ResponseUserIndexModel>();
@@ -259,6 +261,15 @@
   const addLinkName = ref('');
   const addLinkUrl = ref('');
   const linkKey = ref(0);
+  // 初始化 linkOrder (兼容旧数据)
+  onMounted(() => {
+    if (accountInfo.value?.settings?.index) {
+      const idx = accountInfo.value.settings.index;
+      if (!idx.linkOrder || idx.linkOrder.length === 0) {
+        idx.linkOrder = Object.keys(idx.links || {});
+      }
+    }
+  });
 
   /**
    * 获取B站用户数据
@@ -461,9 +472,55 @@
    */
   async function removeLink(name: string) {
     delete accountInfo.value.settings.index.links[name];
+    if (accountInfo.value.settings.index.linkOrder) {
+      accountInfo.value.settings.index.linkOrder = accountInfo.value.settings.index.linkOrder.filter(k => k !== name);
+    }
     await updateIndexSettings();
     location.reload();
   }
+
+  /** 上移/下移视频 */
+  function moveVideo(id: string, dir: 'up' | 'down') {
+    const list = accountInfo.value.settings.index.videos;
+    const i = list.indexOf(id);
+    if (i === -1) return;
+    const ni = dir === 'up' ? i - 1 : i + 1;
+    if (ni < 0 || ni >= list.length) return;
+    [list[i], list[ni]] = [list[ni], list[i]];
+    updateIndexSettings();
+  }
+  /** 上移/下移链接 */
+  function moveLink(name: string, dir: 'up' | 'down') {
+    const order = accountInfo.value.settings.index.linkOrder;
+    if (!order) return;
+    const i = order.indexOf(name);
+    const ni = dir === 'up' ? i - 1 : i + 1;
+    if (i === -1 || ni < 0 || ni >= order.length) return;
+    [order[i], order[ni]] = [order[ni], order[i]];
+    updateIndexSettings();
+    linkKey.value++;
+  }
+  /** 编辑链接名称 */
+  function startEditLink(name: string) {
+    editingLinkName.value = name;
+    newLinkName.value = name;
+  }
+  async function confirmEditLink(oldName: string) {
+    const idxSetting = accountInfo.value.settings.index;
+    if (!newLinkName.value || newLinkName.value === oldName) {
+      editingLinkName.value = null; return;
+    }
+    if (idxSetting.links[newLinkName.value]) { message.error('名称已存在'); return; }
+    idxSetting.links[newLinkName.value] = idxSetting.links[oldName];
+    delete idxSetting.links[oldName];
+    if (idxSetting.linkOrder) {
+      idxSetting.linkOrder = idxSetting.linkOrder.map(k => k === oldName ? newLinkName.value : k);
+    }
+    await updateIndexSettings();
+    editingLinkName.value = null;
+    linkKey.value++;
+  }
+  function cancelEditLink() { editingLinkName.value = null; }
 
   /**
    * 打开模板设置
@@ -719,12 +776,23 @@
             >
               <SimpleVideoCard :video="item" />
               <template #footer>
-                <NButton
-                  type="warning"
-                  @click="removeVideo(item.id)"
-                >
-                  删除
-                </NButton>
+                <NSpace>
+                  <NButton
+                    size="small"
+                    secondary
+                    @click="moveVideo(item.id, 'up')"
+                  >上移</NButton>
+                  <NButton
+                    size="small"
+                    secondary
+                    @click="moveVideo(item.id, 'down')"
+                  >下移</NButton>
+                  <NButton
+                    type="warning"
+                    size="small"
+                    @click="removeVideo(item.id)"
+                  >删除</NButton>
+                </NSpace>
               </template>
             </NCard>
           </NFlex>
@@ -743,35 +811,75 @@
             :key="linkKey"
           >
             <NFlex
-              v-for="item in Object.entries(indexDisplayInfo?.links ?? {})"
-              :key="item[0]"
+              v-for="name in (accountInfo.settings.index.linkOrder?.filter(n=>indexDisplayInfo?.links[n]) || Object.keys(indexDisplayInfo?.links||{}))"
+              :key="name"
               align="center"
             >
-              <NTooltip>
-                <template #trigger>
-                  <NTag
-                    :bordered="false"
-                    size="small"
-                    type="info"
-                  >
-                    {{ item[0] }}
-                  </NTag>
-                </template>
-                {{ item[1] }}
-              </NTooltip>
-              <NPopconfirm @positive-click="removeLink(item[0])">
-                <template #trigger>
+              <template v-if="editingLinkName === name">
+                <NInput
+                  v-model:value="newLinkName"
+                  size="small"
+                  style="width: 100px"
+                />
+                <NButton
+                  size="tiny"
+                  type="primary"
+                  text
+                  @click="confirmEditLink(name)"
+                >保存</NButton>
+                <NButton
+                  size="tiny"
+                  text
+                  @click="cancelEditLink"
+                >取消</NButton>
+              </template>
+              <template v-else>
+                <NTooltip>
+                  <template #trigger>
+                    <NTag
+                      :bordered="false"
+                      size="small"
+                      type="info"
+                    >
+                      {{ name }}
+                    </NTag>
+                  </template>
+                  {{ indexDisplayInfo?.links[name] }}
+                </NTooltip>
+                <NSpace>
                   <NButton
-                    type="error"
+                    size="tiny"
+                    secondary
                     text
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete24Regular" />
+                    @click="moveLink(name, 'up')"
+                  >↑</NButton>
+                  <NButton
+                    size="tiny"
+                    secondary
+                    text
+                    @click="moveLink(name, 'down')"
+                  >↓</NButton>
+                  <NButton
+                    size="tiny"
+                    text
+                    @click="startEditLink(name)"
+                  >改名</NButton>
+                  <NPopconfirm @positive-click="removeLink(name)">
+                    <template #trigger>
+                      <NButton
+                        type="error"
+                        text
+                        size="tiny"
+                      >
+                        <template #icon>
+                          <NIcon :component="Delete24Regular" />
+                        </template>
+                      </NButton>
                     </template>
-                  </NButton>
-                </template>
-                确定要删除这个链接吗?
-              </NPopconfirm>
+                    确定要删除这个链接吗?
+                  </NPopconfirm>
+                </NSpace>
+              </template>
             </NFlex>
           </NFlex>
         </NTabPane>
@@ -890,9 +998,6 @@
           </NSpace>
         </NTabPane>
       </NTabs>
-    </NSpin>
-  </NCard>
-
   <!-- 模板设置模态框 -->
   <NModal
     v-model:show="settingModalVisiable"
