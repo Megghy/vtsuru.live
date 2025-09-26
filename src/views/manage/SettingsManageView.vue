@@ -781,17 +781,23 @@
                     size="small"
                     secondary
                     @click="moveVideo(item.id, 'up')"
-                  >上移</NButton>
+                  >
+                    上移
+                  </NButton>
                   <NButton
                     size="small"
                     secondary
                     @click="moveVideo(item.id, 'down')"
-                  >下移</NButton>
+                  >
+                    下移
+                  </NButton>
                   <NButton
                     type="warning"
                     size="small"
                     @click="removeVideo(item.id)"
-                  >删除</NButton>
+                  >
+                    删除
+                  </NButton>
                 </NSpace>
               </template>
             </NCard>
@@ -826,12 +832,16 @@
                   type="primary"
                   text
                   @click="confirmEditLink(name)"
-                >保存</NButton>
+                >
+                  保存
+                </NButton>
                 <NButton
                   size="tiny"
                   text
                   @click="cancelEditLink"
-                >取消</NButton>
+                >
+                  取消
+                </NButton>
               </template>
               <template v-else>
                 <NTooltip>
@@ -852,18 +862,24 @@
                     secondary
                     text
                     @click="moveLink(name, 'up')"
-                  >↑</NButton>
+                  >
+                    ↑
+                  </NButton>
                   <NButton
                     size="tiny"
                     secondary
                     text
                     @click="moveLink(name, 'down')"
-                  >↓</NButton>
+                  >
+                    ↓
+                  </NButton>
                   <NButton
                     size="tiny"
                     text
                     @click="startEditLink(name)"
-                  >改名</NButton>
+                  >
+                    改名
+                  </NButton>
                   <NPopconfirm @positive-click="removeLink(name)">
                     <template #trigger>
                       <NButton
@@ -998,72 +1014,74 @@
           </NSpace>
         </NTabPane>
       </NTabs>
-  <!-- 模板设置模态框 -->
-  <NModal
-    v-model:show="settingModalVisiable"
-    preset="card"
-    closable
-    style="width: 1200px; max-width: 90vw"
-    title="模板设置"
-  >
-    <NSpin
-      v-if="!selectedTemplateData.Config"
-      show
-    />
-    <DynamicForm
-      v-else
-      :key="selectedTemplateData.Selected"
-      :name="selectedTemplateData.TemplateMap[selectedTemplateData.Selected].settingName"
-      :config-data="selectedTemplateData.Config"
-      :config="selectedTemplateConfig"
-    />
-  </NModal>
-
-  <!-- 添加视频模态框 -->
-  <NModal
-    v-model:show="showAddVideoModal"
-    preset="card"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="添加视频"
-  >
-    <NInput
-      v-model:value="addVideoUrl"
-      placeholder="请输入视频链接"
-    />
-    <NDivider />
-    <NButton
-      type="primary"
-      :loading="isLoading"
-      @click="addVideo"
-    >
-      添加视频
-    </NButton>
-  </NModal>
-
-  <!-- 添加链接模态框 -->
-  <NModal
-    v-model:show="showAddLinkModal"
-    preset="card"
-    closable
-    style="width: 600px; max-width: 90vw"
-    title="添加链接"
-  >
-    <NFlex vertical>
-      <NInput
-        v-model:value="addLinkName"
-        placeholder="链接名称"
-      />
-      <NInput
-        v-model:value="addLinkUrl"
-        placeholder="链接地址"
-      />
-      <NButton
-        type="primary"
-        @click="addLink"
+      <!-- 模板设置模态框 -->
+      <NModal
+        v-model:show="settingModalVisiable"
+        preset="card"
+        closable
+        style="width: 1200px; max-width: 90vw"
+        title="模板设置"
       >
-        添加
-      </NButton>
-    </NFlex>
-  </NModal>
+        <NSpin
+          v-if="!selectedTemplateData.Config"
+          show
+        />
+        <DynamicForm
+          v-else
+          :key="selectedTemplateData.Selected"
+          :name="selectedTemplateData.TemplateMap[selectedTemplateData.Selected].settingName"
+          :config-data="selectedTemplateData.Config"
+          :config="selectedTemplateConfig"
+        />
+      </NModal>
+
+      <!-- 添加视频模态框 -->
+      <NModal
+        v-model:show="showAddVideoModal"
+        preset="card"
+        closable
+        style="width: 600px; max-width: 90vw"
+        title="添加视频"
+      >
+        <NInput
+          v-model:value="addVideoUrl"
+          placeholder="请输入视频链接"
+        />
+        <NDivider />
+        <NButton
+          type="primary"
+          :loading="isLoading"
+          @click="addVideo"
+        >
+          添加视频
+        </NButton>
+      </NModal>
+
+      <!-- 添加链接模态框 -->
+      <NModal
+        v-model:show="showAddLinkModal"
+        preset="card"
+        closable
+        style="width: 600px; max-width: 90vw"
+        title="添加链接"
+      >
+        <NFlex vertical>
+          <NInput
+            v-model:value="addLinkName"
+            placeholder="链接名称"
+          />
+          <NInput
+            v-model:value="addLinkUrl"
+            placeholder="链接地址"
+          />
+          <NButton
+            type="primary"
+            @click="addLink"
+          >
+            添加
+          </NButton>
+        </NFlex>
+      </NModal>
+    </nspin>
+  </ncard>
 </template>
