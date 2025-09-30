@@ -23,7 +23,7 @@ import {
   VideoAdd20Filled,
   Mail24Filled,
 } from '@vicons/fluent'
-import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, Eye, PlayForward, PlayBack, Play, Pause, VolumeHigh, ChevronUp, ChevronDown, TrashBin } from '@vicons/ionicons5'
+import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, Eye, PlayForward, PlayBack, Play, Pause, VolumeHigh, ChevronUp, ChevronDown, TrashBin, Bookmark, BookmarkOutline } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
@@ -68,6 +68,50 @@ const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
 // 收藏功能相关
 const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', [])
+const isFavorite = (key: string) => favoriteMenuItems.value?.includes(key)
+const toggleFavorite = (key: string) => {
+  const list = favoriteMenuItems.value ?? []
+  const idx = list.indexOf(key)
+  if (idx === -1) list.unshift(key)
+  else list.splice(idx, 1)
+  favoriteMenuItems.value = [...list]
+}
+const renderFavoriteExtra = (key: string) => () =>
+  h(
+    'span',
+    { class: ['menu-fav', isFavorite(key) ? 'active' : ''] },
+    [
+      h(
+        NTooltip,
+        { placement: 'right' },
+        {
+          trigger: () =>
+            h(
+              NButton,
+              {
+                text: true,
+                size: 'tiny',
+                circle: true,
+                onClick: (e: MouseEvent) => {
+                  e.stopPropagation()
+                  toggleFavorite(key)
+                },
+                style: 'padding: 0; height: 18px; width: 18px;'
+              },
+              {
+                icon: () =>
+                  h(NIcon, {
+                    component: isFavorite(key) ? Bookmark : BookmarkOutline,
+                    size: 16,
+                    color: isFavorite(key) ? '#f5c451' : undefined,
+                  }),
+              },
+            ),
+          default: () => (isFavorite(key) ? '取消收藏' : '收藏'),
+        },
+      ),
+    ],
+  )
 
 // 侧边栏和布局相关
 const sider = ref()
@@ -130,259 +174,323 @@ const isBiliVerified = computed(() => accountInfo.value?.isBiliVerified)
 // 图标渲染函数 - 用于菜单项
 const renderIcon = (icon: any) => () => h(NIcon, null, { default: () => h(icon) })
 
-// 菜单配置
+// 菜单配置（支持分组与收藏置顶）
 const menuOptions = computed(() => {
-  return [
-    {
+  // 通用的菜单项工厂，自动挂载收藏按钮到叶子节点
+  const withFavoriteExtra = (item: any): any => {
+    if (item?.children?.length) {
+      return {
+        ...item,
+        children: item.children.map(withFavoriteExtra),
+      }
+    }
+    return {
+      ...item,
+      extra: width.value >= 180 ? renderFavoriteExtra(item.key) : undefined,
+    }
+  }
+
+  const commonItems = [
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-history' } }, { default: () => '历史' }),
       key: 'manage-history',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(AnalyticsSharp),
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-live' } }, { default: () => '直播记录' }),
       key: 'manage-live',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(Live24Filled),
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-analyze' } }, { default: () => '直播数据' }),
       key: 'manage-analyze',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(Eye),
-    },
-    {
+    }),
+  ]
+
+  const dataItems = [
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-event' } }, { default: () => '舰长和SC' }),
       key: 'manage-event',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(VehicleShip24Filled),
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-point' } }, { default: () => '积分和礼物' }),
       key: 'manage-point',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(BookCoins20Filled),
-    },
-    {
+    }),
+  ]
+
+  const toolsItems = [
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-schedule' } }, { default: () => '日程' }),
       key: 'manage-schedule',
       icon: renderIcon(CalendarClock24Filled),
       disabled: accountInfo.value?.isEmailVerified === false,
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-songList' } }, { default: () => '歌单' }),
       key: 'manage-songList',
       icon: renderIcon(MusicalNote),
       disabled: accountInfo.value?.isEmailVerified === false,
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-questionBox' } }, { default: () => '棉花糖 (提问箱' }),
       key: 'manage-questionBox',
       icon: renderIcon(Chatbox),
       disabled: accountInfo.value?.isEmailVerified === false,
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-videoCollect' } }, { default: () => '视频征集' }),
       key: 'manage-videoCollect',
       icon: renderIcon(VideoAdd20Filled),
       disabled: accountInfo.value?.isEmailVerified === false,
-    },
-    {
+    }),
+    withFavoriteExtra({
       label: () => h(RouterLink, { to: { name: 'manage-lottery' } }, { default: () => '动态抽奖' }),
       key: 'manage-lottery',
       icon: renderIcon(Lottery24Filled),
-    },
-    {
-      label: () => h(
-        NTooltip,
-        {},
-        {
-          trigger: () => h(
-            NText,
-            () => [
-              '弹幕相关',
-              h(
-                NTooltip,
-                { style: 'padding: 0;' },
-                {
-                  trigger: () => h(NIcon, { component: Info24Filled }),
-                  default: () => h(
-                    NAlert,
-                    {
-                      type: 'warning',
-                      size: 'small',
-                      title: '可用性警告',
-                      style: 'max-width: 600px;',
-                    },
-                    () => h('div', {}, [
-                      '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
-                      h(
-                        NButton,
-                        {
-                          text: true,
-                          tag: 'a',
-                          href: 'https://developer.chrome.com/blog/background_tabs/',
-                          target: '_blank',
-                          type: 'info',
-                        },
-                        () => '此文章',
-                      ),
-                      '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
-                      h('br'),
-                      '为避免这种情况, 建议注册本站账后使用',
-                      h(
-                        NButton,
-                        {
-                          type: 'primary',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
-                          target: '_blank',
-                        },
-                        () => 'VtsuruEventFetcher',
-                      ),
-                      ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
-                      h('br'),
-                      'Chrome: ',
-                      h(
-                        NButton,
-                        {
-                          type: 'info',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
-                          target: '_blank',
-                        },
-                        () => '让特定网站保持活动状态',
-                      ),
-                      ', Edge: ',
-                      h(
-                        NButton,
-                        {
-                          type: 'info',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
-                          target: '_blank',
-                        },
-                        () => '永远不想进入睡眠状态的网站',
-                      ),
-                    ]),
-                  ),
-                },
-              ),
-            ]
-          ),
-          default: () => isBiliVerified.value
-            ? '需要使用直播弹幕的功能'
-            : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
-        },
-      ),
-      key: 'manage-danmaku',
-      icon: renderIcon(Chat24Filled),
-      disabled: accountInfo.value?.isEmailVerified === false || !isBiliVerified.value,
-      children: [
-        {
-          label: () => !isBiliVerified.value ? '弹幕机' : h(
-            NBadge,
-            { value: '新', offset: [15, 12], type: 'info' },
-            () => h(
-              NTooltip,
-              {},
-              {
-                trigger: () => h(
-                  RouterLink,
-                  { to: { name: 'manage-danmuji' } },
-                  { default: () => '弹幕机' },
-                ),
-                default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
-              }
-            )
-          ),
-          key: 'manage-danmuji',
-          disabled: !isBiliVerified.value,
-          icon: renderIcon(Lottery24Filled),
-        },
-        {
-          label: () => !isBiliVerified.value ? '抽奖' : h(
-            RouterLink,
-            { to: { name: 'manage-liveLottery' } },
-            { default: () => '抽奖' },
-          ),
-          key: 'manage-liveLottery',
-          icon: renderIcon(Lottery24Filled),
-          disabled: !isBiliVerified.value,
-        },
-        {
-          label: () => !isBiliVerified.value ? '点播' : h(
-            NTooltip,
-            {},
-            {
-              trigger: () => h(
-                RouterLink,
-                { to: { name: 'manage-liveRequest' } },
-                { default: () => '点播' },
-              ),
-              default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
-            },
-          ),
-          key: 'manage-liveRequest',
-          icon: renderIcon(MusicalNote),
-          disabled: !isBiliVerified.value,
-        },
-        {
-          label: () => !isBiliVerified.value ? '点歌' : h(
-            NTooltip,
-            {},
-            {
-              trigger: () => h(
-                RouterLink,
-                { to: { name: 'manage-musicRequest' } },
-                { default: () => '点歌' },
-              ),
-              default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
-            },
-          ),
-          key: 'manage-musicRequest',
-          icon: renderIcon(MusicalNote),
-          disabled: !isBiliVerified.value,
-        },
-        {
-          label: () => !isBiliVerified.value ? '排队' : h(
-            RouterLink,
-            { to: { name: 'manage-liveQueue' } },
-            { default: () => '排队' },
-          ),
-          key: 'manage-liveQueue',
-          icon: renderIcon(PeopleQueue24Filled),
-          disabled: !isBiliVerified.value,
-        },
-        {
-          label: () => !isBiliVerified.value ? '读弹幕' : h(
-            RouterLink,
-            { to: { name: 'manage-speech' } },
-            { default: () => '读弹幕' },
-          ),
-          key: 'manage-speech',
-          icon: renderIcon(TabletSpeaker24Filled),
-          disabled: !isBiliVerified.value,
-        },
-        /*{
-          label: () => !isBiliVerified.value ? '弹幕投票' : h(
-            RouterLink,
-            { to: { name: 'manage-danmakuVote' } },
-            { default: () => '弹幕投票' },
-          ),
-          key: 'manage-danmakuVote',
-          icon: renderIcon(Chat24Filled),
-          disabled: !isBiliVerified.value,
-        },*/
-      ],
-    },
+    }),
   ]
+
+  const danmakuItem = {
+    label: () => h(
+      NTooltip,
+      {},
+      {
+        trigger: () => h(
+          NText,
+          () => [
+            '弹幕相关',
+            h(
+              NTooltip,
+              { style: 'padding: 0;' },
+              {
+                trigger: () => h(NIcon, { component: Info24Filled }),
+                default: () => h(
+                  NAlert,
+                  {
+                    type: 'warning',
+                    size: 'small',
+                    title: '可用性警告',
+                    style: 'max-width: 600px;',
+                  },
+                  () => h('div', {}, [
+                    '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
+                    h(
+                      NButton,
+                      {
+                        text: true,
+                        tag: 'a',
+                        href: 'https://developer.chrome.com/blog/background_tabs/',
+                        target: '_blank',
+                        type: 'info',
+                      },
+                      () => '此文章',
+                    ),
+                    '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
+                    h('br'),
+                    '为避免这种情况, 建议注册本站账后使用',
+                    h(
+                      NButton,
+                      {
+                        type: 'primary',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
+                        target: '_blank',
+                      },
+                      () => 'VtsuruEventFetcher',
+                    ),
+                    ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
+                    h('br'),
+                    'Chrome: ',
+                    h(
+                      NButton,
+                      {
+                        type: 'info',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
+                        target: '_blank',
+                      },
+                      () => '让特定网站保持活动状态',
+                    ),
+                    ', Edge: ',
+                    h(
+                      NButton,
+                      {
+                        type: 'info',
+                        text: true,
+                        size: 'small',
+                        tag: 'a',
+                        href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
+                        target: '_blank',
+                      },
+                      () => '永远不想进入睡眠状态的网站',
+                    ),
+                  ]),
+                ),
+              },
+            ),
+          ]
+        ),
+        default: () => (isBiliVerified.value
+          ? '需要使用直播弹幕的功能'
+          : '你尚未进行 Bilibili 认证, 请前往面板进行绑定'),
+      },
+    ),
+    key: 'manage-danmaku',
+    icon: renderIcon(Chat24Filled),
+    disabled: accountInfo.value?.isEmailVerified === false || !isBiliVerified.value,
+    children: [
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '弹幕机' : h(NTooltip,
+            {},
+            {
+              trigger: () => h(
+                RouterLink,
+                { to: { name: 'manage-danmuji' } },
+                { default: () => '弹幕机' },
+              ),
+              default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
+            }),
+        key: 'manage-danmuji',
+        disabled: !isBiliVerified.value,
+        icon: renderIcon(Lottery24Filled),
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '抽奖' : h(
+          RouterLink,
+          { to: { name: 'manage-liveLottery' } },
+          { default: () => '抽奖' },
+        ),
+        key: 'manage-liveLottery',
+        icon: renderIcon(Lottery24Filled),
+        disabled: !isBiliVerified.value,
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '点播' : h(
+          NTooltip,
+          {},
+          {
+            trigger: () => h(
+              RouterLink,
+              { to: { name: 'manage-liveRequest' } },
+              { default: () => '点播' },
+            ),
+            default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
+          },
+        ),
+        key: 'manage-liveRequest',
+        icon: renderIcon(MusicalNote),
+        disabled: !isBiliVerified.value,
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '点歌' : h(
+          NTooltip,
+          {},
+          {
+            trigger: () => h(
+              RouterLink,
+              { to: { name: 'manage-musicRequest' } },
+              { default: () => '点歌' },
+            ),
+            default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
+          },
+        ),
+        key: 'manage-musicRequest',
+        icon: renderIcon(MusicalNote),
+        disabled: !isBiliVerified.value,
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '排队' : h(
+          RouterLink,
+          { to: { name: 'manage-liveQueue' } },
+          { default: () => '排队' },
+        ),
+        key: 'manage-liveQueue',
+        icon: renderIcon(PeopleQueue24Filled),
+        disabled: !isBiliVerified.value,
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '读弹幕' : h(
+          RouterLink,
+          { to: { name: 'manage-speech' } },
+          { default: () => '读弹幕' },
+        ),
+        key: 'manage-speech',
+        icon: renderIcon(TabletSpeaker24Filled),
+        disabled: !isBiliVerified.value,
+      }),
+      /*withFavoriteExtra({
+        label: () => !isBiliVerified.value ? '弹幕投票' : h(
+          RouterLink,
+          { to: { name: 'manage-danmakuVote' } },
+          { default: () => '弹幕投票' },
+        ),
+        key: 'manage-danmakuVote',
+        icon: renderIcon(Chat24Filled),
+        disabled: !isBiliVerified.value,
+      }),*/
+    ],
+  }
+
+  // 扁平化叶子项用于收藏置顶
+  const flattenLeaf = (items: any[]): any[] => {
+    const result: any[] = []
+    for (const it of items) {
+      if (it.children?.length) {
+        result.push(...flattenLeaf(it.children))
+      } else {
+        result.push(it)
+      }
+    }
+    return result
+  }
+
+  const allLeaf = [
+    ...flattenLeaf(commonItems),
+    ...flattenLeaf(dataItems),
+    ...flattenLeaf(toolsItems),
+    ...flattenLeaf(danmakuItem.children ?? []),
+  ]
+  const leafMap = new Map(allLeaf.map(i => [i.key, i]))
+
+  const favorites = (favoriteMenuItems.value ?? [])
+    .map(k => leafMap.get(k))
+    .filter(Boolean) as any[]
+
+  const notFav = (i: any) => !isFavorite(i.key)
+  const danmakuChildren = (danmakuItem.children ?? []).filter(notFav)
+  const danmakuForGroup = danmakuChildren.length > 0 ? { ...danmakuItem, children: danmakuChildren } : null
+
+  const groups: any[] = []
+  if (favorites.length > 0) {
+    groups.push({ type: 'group', key: 'group-favorites', label: '我的收藏', children: favorites })
+  }
+  if (commonItems.filter(notFav).length > 0) {
+    groups.push({ type: 'group', key: 'group-common', label: '常用', children: commonItems.filter(notFav) })
+  }
+  if (dataItems.filter(notFav).length > 0) {
+    groups.push({ type: 'group', key: 'group-data', label: '数据', children: dataItems.filter(notFav) })
+  }
+  const toolsGroupChildren = [
+    ...(danmakuForGroup ? [danmakuForGroup] : []),
+    ...toolsItems.filter(notFav),
+  ]
+  if (toolsGroupChildren.length > 0) {
+    groups.push({ type: 'group', key: 'group-tools', label: '互动与工具', children: toolsGroupChildren })
+  }
+
+  return groups
 })
 
 // 重发验证邮件
@@ -590,11 +698,15 @@ onMounted(() => {
 
         <!-- 主导航菜单 -->
         <NMenu
+          class="manage-sider-menu"
           style="margin-top: 12px"
           :disabled="accountInfo?.isEmailVerified !== true"
           :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
           :collapsed-width="64"
           :collapsed-icon-size="22"
+          :icon-size="16"
+          :root-indent="10"
+          :indent="12"
           :options="menuOptions"
         />
 
@@ -1336,5 +1448,41 @@ onMounted(() => {
 
 .music-player-card .n-tag:hover {
   transform: scale(1.05);
+}
+
+/* 侧边栏菜单收藏按钮与紧凑样式 */
+:deep(.manage-sider-menu .menu-fav) {
+  opacity: 0;
+  width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  transition: opacity 0.15s ease, width 0.15s ease, margin-left 0.15s ease;
+  pointer-events: none; /* 不阻挡文字区域点击 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.manage-sider-menu .n-menu-item:hover .menu-fav),
+:deep(.manage-sider-menu .menu-fav.active) {
+  opacity: 1;
+  width: 18px;
+  margin-left: 6px;
+  pointer-events: auto;
+}
+
+:deep(.manage-sider-menu .menu-fav .n-button) {
+  padding: 0;
+  height: 18px;
+  width: 18px;
+}
+
+/* 略微收紧图标与文本的间距，提升有效可读宽度 */
+:deep(.manage-sider-menu .n-menu-item .n-menu-item-content .n-menu-item-content__icon) {
+  margin-right: 6px;
+}
+
+:deep(.manage-sider-menu .n-menu-item .n-menu-item-content) {
+  padding-right: 6px;
 }
 </style>

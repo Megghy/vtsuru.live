@@ -162,16 +162,20 @@ const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 // Formatted schedule data for display
 const formattedSchedule = computed(() => {
   if (!currentWeekData.value || !Array.isArray(currentWeekData.value.days)) return [];
-  const scheduleMap = new Map<string, ScheduleDayInfo>();
-  currentWeekData.value.days.forEach((day: ScheduleDayInfo, index: number) => {
-    const dayKey = daysOfWeek[index] || `day${index}`;
-    scheduleMap.set(dayKey, day);
+
+  return daysOfWeek.map((dayKey, index) => {
+    const dayList = currentWeekData.value!.days[index];
+    // 如果当天有多个行程，取第一个展示；如果没有则显示默认
+    const firstItem = Array.isArray(dayList) && dayList.length > 0
+      ? dayList[0]
+      : { time: '', tag: '', title: '', tagColor: '', id: null };
+
+    return {
+      key: dayKey,
+      label: dayMap[dayKey] || dayKey,
+      data: firstItem
+    };
   });
-  return daysOfWeek.map(dayKey => ({
-    key: dayKey,
-    label: dayMap[dayKey] || dayKey,
-    data: scheduleMap.get(dayKey) || { time: '', tag: '', title: '' }
-  }));
 });
 
 // --- 方法 ---

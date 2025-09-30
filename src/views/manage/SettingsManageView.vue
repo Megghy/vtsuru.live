@@ -99,48 +99,55 @@
           year: 2023,
           week: 30,
           days: [
-            {
+            [{
               title: '唱唱歌!',
               tag: '歌回',
               tagColor: '#61B589',
               time: '10:00 AM',
-            },
-            {
+              id: null,
+            }],
+            [{
               title: '玩点游戏',
               tag: '游戏',
               tagColor: '#A36565',
               time: '20:00 PM',
-            },
-            {
+              id: null,
+            }],
+            [{
               title: 'Title 3',
               tag: 'Tag 3',
               tagColor: '#7BCDEF',
               time: '11:00 PM',
-            },
-            {
+              id: null,
+            }],
+            [{
               title: null,
               tag: null,
               tagColor: null,
               time: null,
-            },
-            {
+              id: null,
+            }],
+            [{
               title: null,
               tag: null,
               tagColor: null,
               time: null,
-            },
-            {
+              id: null,
+            }],
+            [{
               title: null,
               tag: null,
               tagColor: null,
               time: null,
-            },
-            {
+              id: null,
+            }],
+            [{
               title: null,
               tag: null,
               tagColor: null,
               time: null,
-            },
+              id: null,
+            }],
           ],
         },
       ] as ScheduleWeekInfo[],

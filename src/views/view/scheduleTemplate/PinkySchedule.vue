@@ -21,6 +21,19 @@ const currentWeek = computed(() => {
     return isTodayInWeek(item.year, item.week)
   })
 })
+
+const formattedDays = computed(() => {
+  const weekData = currentWeek.value
+  if (!weekData || !Array.isArray(weekData.days)) return []
+  
+  return weekData.days.map((dayList) => {
+    // 取每天第一个行程展示
+    if (Array.isArray(dayList) && dayList.length > 0) {
+      return dayList[0]
+    }
+    return { time: '', tag: '', title: '', tagColor: '', id: null }
+  })
+})
 const options = computed(() => {
   return props.data?.map((item) => {
     return {
@@ -56,7 +69,7 @@ onMounted(() => {
     />
     <SaveCompoent
       :compoent="table"
-      :file-name="`周表_${selectedDate}_${userInfo?.name}`"
+      :file-name="`周表_${selectedDate}_${props.userInfo?.name}`"
     />
   </NSpace>
   <NDivider />
@@ -66,7 +79,7 @@ onMounted(() => {
   >
     <div class="schedule-template pinky day-container">
       <div
-        v-for="(item, index) in currentWeek?.days"
+        v-for="(item, index) in formattedDays"
         :id="index.toString()"
         :key="index"
         class="schedule-template pinky day-item"
@@ -76,15 +89,15 @@ onMounted(() => {
             {{ days[index] }}
           </span>
           <span class="schedule-template pinky time">
-            {{ item.time }}
+            {{ item?.time }}
           </span>
           <span class="schedule-template pinky tag">
-            {{ item.tag }}
+            {{ item?.tag }}
           </span>
         </div>
         <div class="schedule-template pinky day-content-container">
           <span
-            v-if="item.tag"
+            v-if="item?.tag"
             id="work"
             class="schedule-template pinky day-content"
           >
