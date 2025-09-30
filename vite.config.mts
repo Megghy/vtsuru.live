@@ -7,7 +7,6 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import Components from 'unplugin-vue-components/vite';
 import Markdown from 'unplugin-vue-markdown/vite';
 import { defineConfig } from 'vite';
-import oxlintPlugin from 'vite-plugin-oxlint';
 import svgLoader from 'vite-svg-loader';
 import { VineVitePlugin } from 'vue-vine/vite';
 
@@ -18,11 +17,11 @@ const removeSodipodiInkscape = {
   fn: () => {
     return {
       element: {
-        enter: (node, parentNode) => {
+        enter: (node: any, parentNode: any) => {
           // 检查元素名称是否以sodipodi:或inkscape:开头
           if (node.name && (node.name.startsWith('sodipodi:') || node.name.startsWith('inkscape:'))) {
             // 从父节点的children数组中过滤掉当前节点
-            parentNode.children = parentNode.children.filter(child => child !== node);
+            parentNode.children = parentNode.children.filter((child: any) => child !== node);
           }
         },
       },
@@ -85,10 +84,8 @@ export default defineConfig({
       resolvers: [NaiveUiResolver()],
       dts: 'src/components.d.ts',
       extensions: ['vue', 'md'],
-
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/, /\.vine$/],
     }),
-    oxlintPlugin(),
     VineVitePlugin(),
   ],
   server: { port: 51000 },
@@ -103,5 +100,16 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    target: 'esnext',
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'ui-vendor': ['naive-ui', '@vueuse/core'],
+        }
+      }
+    }
   },
 });

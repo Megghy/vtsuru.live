@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ScheduleWeekInfo } from '@/api/api-models'
+import { ScheduleWeekInfo, ScheduleDayInfo } from '@/api/api-models'
 import { useWindowSize } from '@vueuse/core'
-import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NList, NListItem, NPopconfirm, NSpace, NText, NTime } from 'naive-ui'
+import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NList, NListItem, NPopconfirm, NSpace, NText, NTime, useThemeVars } from 'naive-ui'
+import { Clock20Regular, Bed20Regular } from '@vicons/fluent'
+import { h } from 'vue'
 
 const { width } = useWindowSize()
+const themeVars = useThemeVars()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
@@ -24,6 +27,8 @@ const emit = defineEmits<{
   (e: 'onUpdate', schedule: ScheduleWeekInfo): void
   (e: 'onDelete', schedule: ScheduleWeekInfo): void
   (e: 'onCopy', schedule: ScheduleWeekInfo): void
+  (e: 'onEditItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
+  (e: 'onDeleteItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
 }>()
 </script>
 
@@ -78,67 +83,199 @@ const emit = defineEmits<{
         </template>
         <NGrid
           x-gap="8"
+          y-gap="8"
           cols="1 1200:7"
+          style="align-items: stretch;"
         >
           <NGridItem
-            v-for="(day, index) in item.days"
+            v-for="(daySchedules, index) in item.days"
             :key="index"
+            style="display: flex;"
           >
-            <NCard
-              size="small"
-              :style="{ height: '65px', backgroundColor: day.tagColor + '1f' }"
-              content-style="padding: 5px;"
-              header-style="padding: 0px 6px 0px 6px;"
-              :embedded="day?.tag != undefined"
-            >
-              <template #header-extra>
-                <template v-if="day.tag">
-                  <NSpace :size="5">
-                    <NBadge
-                      v-if="day.tagColor"
-                      dot
-                      :color="day.tagColor"
-                    />
-                    <NEllipsis>
-                      <NText :style="{ color: day.tagColor }">
-                        {{ day.tag }}
-                      </NText>
-                    </NEllipsis>
-                  </NSpace>
-                </template>
-                <template v-else>
-                  <NText
-                    depth="3"
-                    style="font-size: 11px"
-                    italic
-                  >
-                    休息
-                  </NText>
-                </template>
-              </template>
-              <template #header>
+            <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+              <div 
+                :style="{
+                  marginBottom: '6px',
+                  padding: '4px 8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  background: `linear-gradient(135deg, ${themeVars.primaryColorSuppl}15 0%, ${themeVars.primaryColorSuppl}25 100%)`,
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }"
+              >
+                <NTime
+                  :time="getDateFromWeek(item.year, item.week, index)"
+                  format="MM/dd"
+                  :style="{ color: themeVars.primaryColor }"
+                />
+                <NText>{{ weekdays[index] }}</NText>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; min-height: 65px;">
+              <NCard
+                v-if="daySchedules.length === 0"
+                size="small"
+                :style="{
+                  minHeight: '40px',
+                  background: `linear-gradient(135deg, ${themeVars.cardColor} 0%, ${themeVars.bodyColor} 100%)`,
+                  border: `1px dashed ${themeVars.dividerColor}`,
+                  cursor: isSelf ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                }"
+                :hoverable="isSelf"
+                content-style="display: flex; align-items: center; justify-content: center; gap: 4px;"
+                @click="isSelf && $emit('onUpdate', item)"
+              >
+                <NIcon :size="14" :component="Bed20Regular" :color="themeVars.textColor3" />
                 <NText
-                  :depth="3"
-                  style="font-size: 12px"
-                  strong
-                  :italic="!day.tag"
+                  depth="3"
+                  style="font-size: 11px; font-style: italic;"
+                  :style="{ opacity: isSelf ? 0.5 : 0.6 }"
                 >
-                  <NTime
-                    :time="getDateFromWeek(item.year, item.week, index)"
-                    format="MM/dd"
-                  />
-                  {{ weekdays[index] }}
-                  {{ day.time }}
+                  休息
                 </NText>
-              </template>
-              <template v-if="day?.title">
-                <NEllipsis>
-                  <NText style="font-size: 13px">
-                    {{ day.title }}
-                  </NText>
-                </NEllipsis>
-              </template>
-            </NCard>
+              </NCard>
+              <NSpace
+                v-else
+                vertical
+                :size="4"
+              >
+                <NCard
+                  v-for="(schedule, scheduleIndex) in daySchedules"
+                  :key="schedule.id || `${index}-${scheduleIndex}`"
+                  size="small"
+                  :style="{ 
+                    backgroundColor: schedule.tagColor ? schedule.tagColor + '12' : themeVars.cardColor,
+                    borderLeft: schedule.tagColor ? `3px solid ${schedule.tagColor}` : `3px solid ${themeVars.dividerColor}`,
+                    cursor: isSelf ? 'pointer' : 'default',
+                    transition: 'all 0.2s ease',
+                    padding: '0'
+                  }"
+                  :bordered="true"
+                  :hoverable="isSelf"
+                  content-style="padding: 3px; padding-left: 5px;padding-bottom: 1px;"
+                  @click="isSelf && $emit('onEditItem', item, index, schedule)"
+                >
+                  <div style="padding: 4px 6px;">
+                    <!-- 标签和时间行 (仅当有标签或时间时显示) -->
+                    <div 
+                      v-if="schedule.tag || schedule.time"
+                      style="
+                        display: flex; 
+                        align-items: center; 
+                        gap: 4px; 
+                        margin-bottom: 3px;
+                        flex-wrap: nowrap;
+                      "
+                    >
+                      <!-- 标签 -->
+                      <div 
+                        v-if="schedule.tag"
+                        :style="{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          padding: '1px 5px',
+                          borderRadius: '3px',
+                          backgroundColor: schedule.tagColor ? schedule.tagColor + '22' : themeVars.primaryColorSuppl + '22',
+                          flexShrink: 0
+                        }"
+                      >
+                        <NBadge
+                          v-if="schedule.tagColor"
+                          dot
+                          :color="schedule.tagColor"
+                          :style="{ transform: 'scale(0.85)' }"
+                        />
+                        <NText
+                          :style="{ 
+                            color: schedule.tagColor || themeVars.primaryColor, 
+                            fontWeight: '600',
+                            fontSize: '10.5px',
+                            whiteSpace: 'nowrap',
+                            lineHeight: '1.2'
+                          }"
+                        >
+                          {{ schedule.tag }}
+                        </NText>
+                      </div>
+                      <!-- 时间 -->
+                      <div
+                        v-if="schedule.time"
+                        :style="{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          flexShrink: 0
+                        }"
+                      >
+                        <NIcon :size="12" :component="Clock20Regular" :color="themeVars.textColor3" />
+                        <NText
+                          depth="2"
+                          :style="{
+                            fontSize: '10.5px',
+                            fontFamily: 'monospace',
+                            whiteSpace: 'nowrap',
+                            fontWeight: '500'
+                          }"
+                        >
+                          {{ schedule.time }}
+                        </NText>
+                      </div>
+                      <!-- 删除按钮 -->
+                      <NButton
+                        v-if="isSelf"
+                        size="tiny"
+                        type="error"
+                        quaternary
+                        circle
+                        style="margin-left: auto; flex-shrink: 0; width: 18px; height: 18px; padding: 0;"
+                        @click.stop="$emit('onDeleteItem', item, index, schedule)"
+                      >
+                        <template #icon>
+                          <span style="font-size: 14px; line-height: 1;">×</span>
+                        </template>
+                      </NButton>
+                    </div>
+                    <!-- 内容 -->
+                    <div v-if="schedule?.title">
+                      <NEllipsis :line-clamp="2">
+                        <NText 
+                          :style="{
+                            fontSize: '12.5px',
+                            lineHeight: '1.4',
+                            color: themeVars.textColor2
+                          }"
+                        >
+                          {{ schedule.title }}
+                        </NText>
+                      </NEllipsis>
+                    </div>
+                    <!-- 如果既没有标签也没有时间，但有删除按钮 -->
+                    <div 
+                      v-if="!schedule.tag && !schedule.time && isSelf && !schedule?.title"
+                      style="display: flex; justify-content: flex-end;"
+                    >
+                      <NButton
+                        size="tiny"
+                        type="error"
+                        quaternary
+                        circle
+                        style="width: 18px; height: 18px; padding: 0;"
+                        @click.stop="$emit('onDeleteItem', item, index, schedule)"
+                      >
+                        <template #icon>
+                          <span style="font-size: 14px; line-height: 1;">×</span>
+                        </template>
+                      </NButton>
+                    </div>
+                  </div>
+                </NCard>
+              </NSpace>
+              </div>
+            </div>
           </NGridItem>
         </NGrid>
       </NCard>

@@ -413,13 +413,22 @@ export interface LotteryUserCardInfo {
 export interface ScheduleWeekInfo {
   year: number
   week: number
-  days: ScheduleDayInfo[]
+  days: ScheduleDayInfo[][]
 }
 export interface ScheduleDayInfo {
   title: string | null
   tag: string | null
   tagColor: string | null
   time: string | null
+  id: string | null
+}
+
+export interface BatchScheduleRequest {
+  startYear: number
+  startWeek: number
+  count: number
+  dayOfWeek: number
+  schedule: ScheduleDayInfo
 }
 export enum ThemeType {
   Auto = 'auto',
