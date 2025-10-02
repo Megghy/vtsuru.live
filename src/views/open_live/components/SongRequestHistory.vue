@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { h, ref, computed } from 'vue'
-import { NCard, NSpace, NInputGroup, NInputGroupLabel, NInput, NCheckbox, NDataTable, NTime, NTag, NText, NIcon, NButton, NPopconfirm, NTooltip } from 'naive-ui'
-import { Delete24Filled, ArrowCounterclockwise24Regular } from '@vicons/fluent'
-import { SongRequestFrom, SongRequestInfo, SongRequestStatus } from '@/api/api-models'
-import { useLiveRequest } from '@/composables/useLiveRequest'
 import type { DataTableColumns } from 'naive-ui'
+import type { SongRequestInfo } from '@/api/api-models'
+import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
+import { NButton, NCard, NCheckbox, NDataTable, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { computed, h, ref } from 'vue'
+import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
+import { useLiveRequest } from '@/composables/useLiveRequest'
 
 // 使用useLiveRequest
 const songRequest = useLiveRequest()
@@ -13,7 +14,7 @@ const table = ref()
 
 const statusFilterOptions = computed(() => {
   return Object.values(SongRequestStatus)
-    .filter((t) => /^\d+$/.test(t.toString()))
+    .filter(t => /^\d+$/.test(t.toString()))
     .map((t) => {
       return {
         label: songRequest.STATUS_MAP[t as SongRequestStatus],
@@ -77,10 +78,10 @@ const columns: DataTableColumns<SongRequestInfo> = [
             return '弹幕'
           }
           case SongRequestFrom.SC: {
-            return 'SuperChat' + (row.price ? ` | ${row.price}` : '')
+            return `SuperChat${row.price ? ` | ${row.price}` : ''}`
           }
           case SongRequestFrom.Gift: {
-            return '礼物' + (row.price ? ` | ${row.price}` : '')
+            return `礼物${row.price ? ` | ${row.price}` : ''}`
           }
           case SongRequestFrom.Manual: {
             return '手动添加'
@@ -154,24 +155,24 @@ const columns: DataTableColumns<SongRequestInfo> = [
         () => [
           row.status == SongRequestStatus.Finish || row.status == SongRequestStatus.Cancel
             ? h(NTooltip, null, {
-              trigger: () =>
-                h(
-                  NButton,
-                  {
-                    size: 'small',
-                    type: 'info',
-                    circle: true,
-                    loading: songRequest.isLoading,
-                    onClick: () => {
-                      songRequest.updateSongStatus(row, SongRequestStatus.Waiting)
+                trigger: () =>
+                  h(
+                    NButton,
+                    {
+                      size: 'small',
+                      type: 'info',
+                      circle: true,
+                      loading: songRequest.isLoading,
+                      onClick: () => {
+                        songRequest.updateSongStatus(row, SongRequestStatus.Waiting)
+                      },
                     },
-                  },
-                  {
-                    icon: () => h(NIcon, { component: ArrowCounterclockwise24Regular }),
-                  },
-                ),
-              default: () => '重新放回等待列表',
-            })
+                    {
+                      icon: () => h(NIcon, { component: ArrowCounterclockwise24Regular }),
+                    },
+                  ),
+                default: () => '重新放回等待列表',
+              })
             : undefined,
           h(
             NPopconfirm,

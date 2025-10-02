@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { AddressInfo } from '@/api/api-models'
+import type { AddressInfo } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
-import { NButton, NFlex, NPopconfirm, NTag, NText } from 'naive-ui'
+import { NFlex, NTag, NText } from 'naive-ui'
 import { ref } from 'vue'
 
 const { size = 'default' } = defineProps<{

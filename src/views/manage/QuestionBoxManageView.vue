@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import { copyToClipboard, downloadImage } from '@/Utils'
-import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
-import { FunctionTypes, QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import QuestionItem from '@/components/QuestionItem.vue'
-import QuestionItems from '@/components/QuestionItems.vue'
-import { CURRENT_HOST } from '@/data/constants'
-import router from '@/router'
-import { useQuestionBox } from '@/store/useQuestionBox'
+import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, TrashBin } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
-import QuestionDisplayCard from './QuestionDisplayCard.vue'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
@@ -43,11 +35,20 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import { FunctionTypes } from '@/api/api-models'
+import QuestionItem from '@/components/QuestionItem.vue'
+import QuestionItems from '@/components/QuestionItems.vue'
+import { CURRENT_HOST } from '@/data/constants'
+import router from '@/router'
+import { useQuestionBox } from '@/store/useQuestionBox'
+import { copyToClipboard, downloadImage } from '@/Utils'
+import QuestionDisplayCard from './QuestionDisplayCard.vue'
 
 // --- 响应式状态和全局实例 ---
 const accountInfo = useAccount() // 获取账户信息
@@ -67,7 +68,7 @@ const selectedShareTag = ref<string | null>(null) // 分享时选择的标签
 const selectedDirectShareTag = ref<string | null>(null) // 主链接区域选择的标签
 const ps = ref(20) // 分页大小 (每页条数)
 const pn = ref(1) // 当前页码
-const savedCardSize = useStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', { // 问题展示卡片尺寸 (持久化存储)
+const savedCardSize = useStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', { // 问题展示卡片尺寸 (持久化存储)
   width: 400,
   height: 400,
 })
@@ -87,7 +88,7 @@ const setting = computed({
 })
 
 // 分享链接 (统一 Host, 根据选择的标签附加参数)
-const shareUrlWithTag = (tag: string | null) => {
+function shareUrlWithTag(tag: string | null) {
   const base = `${CURRENT_HOST}@${accountInfo.value?.name}/question-box`
   return tag ? `${base}?tag=${tag}` : base
 }
@@ -141,7 +142,7 @@ function onOpenModal(question: QAInfo) {
 // 刷新数据
 async function refresh() {
   // 重置页码为第一页
-  pn.value = 1;
+  pn.value = 1
   // 根据当前标签页重新获取数据
   if (selectedTabItem.value == '0') {
     await useQB.GetRecieveQAInfo()
@@ -150,9 +151,9 @@ async function refresh() {
   }
   // 如果在垃圾站或设置页, 额外刷新收到的问题列表 (可能需要更新状态)
   if (selectedTabItem.value === '2' || selectedTabItem.value === '3') {
-     await useQB.GetRecieveQAInfo()
-     // 如果需要，也可以刷新发送的列表
-     // await useQB.GetSendQAInfo()
+    await useQB.GetRecieveQAInfo()
+    // 如果需要，也可以刷新发送的列表
+    // await useQB.GetSendQAInfo()
   }
   message.success('已刷新')
 }
@@ -181,9 +182,9 @@ function saveShareImage() {
       'image/png', // 指定图片格式
       1, // 图片质量 (无损)
     )
-  }).catch(err => {
-    message.error('生成分享卡片失败: ' + err)
-    console.error("html2canvas error:", err);
+  }).catch((err) => {
+    message.error(`生成分享卡片失败: ${err}`)
+    console.error('html2canvas error:', err)
   })
 }
 
@@ -207,27 +208,27 @@ async function saveQuestionBoxSettings() {
       message.error('保存设置失败') // API 返回 false
     }
   } catch (err) {
-    message.error('保存设置时出错: ' + err)
-    console.error("SaveSetting error:", err);
+    message.error(`保存设置时出错: ${err}`)
+    console.error('SaveSetting error:', err)
   }
 }
 
 // 保存通知相关的账户设置
 async function saveNotificationSetting() {
-    if (!accountInfo.value?.settings?.sendEmail) return; // 防御
+  if (!accountInfo.value?.settings?.sendEmail) return // 防御
 
-    try {
-      const response = await SaveAccountSettings(); // API 应只保存账户相关的设置
-      if (response.code === 200) {
-        message.success('通知设置已保存');
-      } else {
-        message.error('修改通知设置失败: ' + response.message); // 使用后端返回的消息
-      }
-    } catch (err) {
-      message.error('修改通知设置失败: ' + err);
-      console.error("SaveAccountSettings error:", err);
+  try {
+    const response = await SaveAccountSettings() // API 应只保存账户相关的设置
+    if (response.code === 200) {
+      message.success('通知设置已保存')
+    } else {
+      message.error(`修改通知设置失败: ${response.message}`) // 使用后端返回的消息
     }
+  } catch (err) {
+    message.error(`修改通知设置失败: ${err}`)
+    console.error('SaveAccountSettings error:', err)
   }
+}
 
 // 启用或禁用提问箱功能
 async function setFunctionEnable(enable: boolean) {
@@ -243,24 +244,23 @@ async function setFunctionEnable(enable: boolean) {
       // 成功后可能需要更新 accountInfo 中的 enableFunctions 状态, useAccount 可能需要提供更新方法或自动刷新
       // 假设 useAccount() 会自动更新或有刷新机制
       if (accountInfo.value?.settings?.enableFunctions) {
-         if (enable && !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.QuestionBox)) {
-            accountInfo.value.settings.enableFunctions.push(FunctionTypes.QuestionBox)
-         } else if (!enable) {
-             const index = accountInfo.value.settings.enableFunctions.indexOf(FunctionTypes.QuestionBox);
-             if (index > -1) {
-                 accountInfo.value.settings.enableFunctions.splice(index, 1);
-             }
-         }
+        if (enable && !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.QuestionBox)) {
+          accountInfo.value.settings.enableFunctions.push(FunctionTypes.QuestionBox)
+        } else if (!enable) {
+          const index = accountInfo.value.settings.enableFunctions.indexOf(FunctionTypes.QuestionBox)
+          if (index > -1) {
+            accountInfo.value.settings.enableFunctions.splice(index, 1)
+          }
+        }
       }
-
     } else {
       message.error(`无法${enable ? '启用' : '禁用'}提问箱功能`)
     }
   } catch (err) {
-     message.error(`操作失败: ${err}`)
-     console.error("Enable/Disable Function error:", err);
-     // 操作失败时可能需要恢复 Switch 的状态,防止UI与实际状态不一致
-     // 这需要更复杂的逻辑,暂时不加
+    message.error(`操作失败: ${err}`)
+    console.error('Enable/Disable Function error:', err)
+    // 操作失败时可能需要恢复 Switch 的状态,防止UI与实际状态不一致
+    // 这需要更复杂的逻辑,暂时不加
   }
 }
 
@@ -273,22 +273,21 @@ onMounted(() => {
 
   // 初始化展示问题 (如果设置中存在)
   useQB.displayQuestion = useQB.recieveQuestions.find(
-    (s) => s.id == accountInfo.value?.settings?.questionDisplay?.currentQuestion,
+    s => s.id == accountInfo.value?.settings?.questionDisplay?.currentQuestion,
   )
 
   // 初始化安全等级滑块的临时值
   if (accountInfo.value?.settings?.questionBox?.saftyLevel !== undefined) {
-      tempSaftyLevel.value = accountInfo.value.settings.questionBox.saftyLevel;
+    tempSaftyLevel.value = accountInfo.value.settings.questionBox.saftyLevel
   }
-});
+})
 
 // 监听 accountInfo 变化, 以确保 tempSaftyLevel 能在 accountInfo 加载后正确初始化
 watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => {
-    if (newLevel !== undefined) {
-        tempSaftyLevel.value = newLevel;
-    }
-}, { immediate: true }); // 立即执行一次以设置初始值
-
+  if (newLevel !== undefined) {
+    tempSaftyLevel.value = newLevel
+  }
+}, { immediate: true }) // 立即执行一次以设置初始值
 </script>
 
 <template>
@@ -608,7 +607,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                         <NButton
                           text
                           type="info"
-                          @click="router.push('/user/' + item.target.id)"
+                          @click="router.push(`/user/${item.target.id}`)"
                         >
                           {{ item.target.name }}
                         </NButton>
@@ -831,7 +830,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                 style="max-width: 90%; margin: 10px auto;"
                 :format-tooltip="(v) => remarkLevelString[v]"
                 :disabled="useQB.isLoading"
-                @dragend="() => { if (accountInfo?.settings?.questionBox) { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveQuestionBoxSettings();} }"
+                @dragend="() => { if (accountInfo?.settings?.questionBox) { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveQuestionBoxSettings(); } }"
               />
 
               <!-- 标签/话题管理 -->
@@ -1150,11 +1149,11 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     <!-- OBS组件预览区域 -->
     <div
       :style="{
-        width: savedCardSize.width + 'px',
-        height: savedCardSize.height + 'px',
+        width: `${savedCardSize.width}px`,
+        height: `${savedCardSize.height}px`,
         border: '1px dashed #ccc',
         overflow: 'hidden', // 确保内容不溢出预览框
-        position: 'relative' // 用于定位内部组件
+        position: 'relative', // 用于定位内部组件
       }"
     >
       <QuestionDisplayCard

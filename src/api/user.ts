@@ -1,8 +1,8 @@
-import { QueryGetAPI } from '@/api/query'
-import { USER_API_URL, apiFail } from '@/data/constants'
+import type { APIRoot, UserBasicInfo, UserInfo } from './api-models'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { APIRoot, UserBasicInfo, UserInfo } from './api-models'
+import { QueryGetAPI } from '@/api/query'
+import { apiFail, USER_API_URL } from '@/data/constants'
 
 export const USERS = ref<{ [id: string]: UserInfo }>({})
 
@@ -24,7 +24,7 @@ export async function useUser(id: string | undefined = undefined) {
     }
     return USERS.value[id]
   } else {
-    console.error('指定id: ' + id + ' 无效')
+    console.error(`指定id: ${id} 无效`)
   }
 }
 export async function useUserWithUId(id: number) {
@@ -45,6 +45,6 @@ export async function getUserBasicInfo(id: string | number | undefined) {
 
 export async function GetInfo(id: string): Promise<APIRoot<UserInfo>> {
   return QueryGetAPI<UserInfo>(`${USER_API_URL}info`, {
-    id: id,
+    id,
   })
 }

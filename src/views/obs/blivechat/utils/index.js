@@ -1,9 +1,8 @@
-
 import { format } from 'date-fns'
 
 export function mergeConfig(config, defaultConfig) {
-  let res = {}
-  for (let i in defaultConfig) {
+  const res = {}
+  for (const i in defaultConfig) {
     res[i] = i in config ? config[i] : defaultConfig[i]
   }
   return res
@@ -11,13 +10,13 @@ export function mergeConfig(config, defaultConfig) {
 
 export function toBool(val) {
   if (typeof val === 'string') {
-    return ['false', 'no', 'off', '0', ''].indexOf(val.toLowerCase()) === -1
+    return !['false', 'no', 'off', '0', ''].includes(val.toLowerCase())
   }
   return Boolean(val)
 }
 
 export function toInt(val, _default) {
-  let res = parseInt(val)
+  let res = Number.parseInt(val)
   if (isNaN(res)) {
     res = _default
   }
@@ -25,7 +24,7 @@ export function toInt(val, _default) {
 }
 
 export function toFloat(val, _default) {
-  let res = parseFloat(val)
+  let res = Number.parseFloat(val)
   if (isNaN(res)) {
     res = _default
   }
@@ -34,7 +33,7 @@ export function toFloat(val, _default) {
 
 export function formatCurrency(price) {
   return new Intl.NumberFormat('zh-CN', {
-    minimumFractionDigits: price < 100 ? 2 : 0
+    minimumFractionDigits: price < 100 ? 2 : 0,
   }).format(price)
 }
 
@@ -43,9 +42,9 @@ export function getTimeTextHourMin(date) {
 }
 
 export function getUuid4Hex() {
-  let chars = []
+  const chars = []
   for (let i = 0; i < 32; i++) {
-    let char = Math.floor(Math.random() * 16).toString(16)
+    const char = Math.floor(Math.random() * 16).toString(16)
     chars.push(char)
   }
   return chars.join('')

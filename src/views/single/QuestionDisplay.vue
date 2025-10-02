@@ -1,13 +1,6 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
-import { SaveSetting, useAccount } from '@/api/account'
-import { QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
-import QuestionItem from '@/components/QuestionItem.vue'
-import QuestionItems from '@/components/QuestionItems.vue'
-import { CURRENT_HOST } from '@/data/constants'
-import { useQuestionBox } from '@/store/useQuestionBox'
-import { useWebRTC } from '@/store/useRTC'
-import QuestionDisplayCard from '@/views/manage/QuestionDisplayCard.vue'
+import type { Setting_QuestionDisplay } from '@/api/api-models'
 import {
   ArrowCircleLeft12Filled,
   ArrowCircleRight12Filled,
@@ -17,7 +10,7 @@ import {
   TextAlignRight16Filled,
 } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import { useDebounceFn, useElementSize, useStorage, useThrottleFn } from '@vueuse/core'
+import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
 import {
   NButton,
   NCard,
@@ -38,9 +31,17 @@ import {
   NScrollbar,
   NSelect,
   NTooltip,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+import { SaveSetting, useAccount } from '@/api/account'
+import { QuestionDisplayAlign } from '@/api/api-models'
+import QuestionItem from '@/components/QuestionItem.vue'
+import QuestionItems from '@/components/QuestionItems.vue'
+import { CURRENT_HOST } from '@/data/constants'
+import { useQuestionBox } from '@/store/useQuestionBox'
+import { useWebRTC } from '@/store/useRTC'
+import QuestionDisplayCard from '@/views/manage/QuestionDisplayCard.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -56,7 +57,7 @@ const isLoading = ref(false)
 
 const cardRef = ref<HTMLElement>()
 const cardSize = useElementSize(cardRef)
-const savedCardSize = useStorage<{ width: number; height: number }>('Settings.QuestionDisplay.CardSize', {
+const savedCardSize = useStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', {
   width: 400,
   height: 400,
 })
@@ -70,11 +71,10 @@ watch([cardSize.width, cardSize.height], () => {
     debouncedSize()
   }
 })
-const scrollInfo = ref<{ clientHeight: number; scrollHeight: number; scrollTop: number }>()
+const scrollInfo = ref<{ clientHeight: number, scrollHeight: number, scrollTop: number }>()
 const debouncedScroll = useDebounceFn(() => {
   rtc?.send('function.question.sync-scroll', scrollInfo.value)
 }, 200)
-
 
 const setting = computed({
   get: () => {
@@ -98,7 +98,7 @@ async function updateSettings() {
           message.success('已保存')
           return true
         } else {
-          message.error('保存失败: ' + msg)
+          message.error(`保存失败: ${msg}`)
         }
       })
       .finally(() => {
@@ -108,10 +108,10 @@ async function updateSettings() {
     message.success('完成')
   }
 }
-const fontsOptions = useStorage<{ label: string; value: string }[]>('Settings.Fonts', [])
+const fontsOptions = useStorage<{ label: string, value: string }[]>('Settings.Fonts', [])
 async function loadFonts() {
   if ('queryLocalFonts' in window) {
-    //@ts-expect-error 不知道为啥不存在
+    // @ts-expect-error 不知道为啥不存在
     const status = await navigator.permissions.query({ name: 'local-fonts' })
     if (status.state === 'granted') {
       console.log('Permission was granted 👍')
@@ -121,17 +121,17 @@ async function loadFonts() {
       console.log('Permission was denied 👎')
       message.error('你没有授予本地字体权限, 无法读取本地字体')
     }
-    //@ts-expect-error 不知道为啥不存在
+    // @ts-expect-error 不知道为啥不存在
     const fonts = await window.queryLocalFonts()
     fontsOptions.value = fonts.map((f: any) => {
       return { label: f.fullName, value: f.fullName }
     })
-    message.success('已获取字体列表, 共' + fontsOptions.value.length + '个字体')
+    message.success(`已获取字体列表, 共${fontsOptions.value.length}个字体`)
   } else {
     message.error('你的浏览器不支持获取字体列表')
   }
 }
-function syncScroll(value: { clientHeight: number; scrollHeight: number; scrollTop: number }) {
+function syncScroll(value: { clientHeight: number, scrollHeight: number, scrollTop: number }) {
   if (!setting.value.syncScroll) {
     return
   }
@@ -143,7 +143,7 @@ onMounted(() => {
   useQB.GetRecieveQAInfo()
 
   useQB.displayQuestion = useQB.recieveQuestions.find(
-    (s) => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
+    s => s.id == accountInfo.value?.settings.questionDisplay.currentQuestion,
   )
 })
 </script>
@@ -359,8 +359,8 @@ onMounted(() => {
               border: showGreenBorder ? '24px solid green' : '',
               background: showGreenBorder ? 'green' : '',
               padding: '10px',
-              width: savedCardSize.width + 'px',
-              height: savedCardSize.height + 'px',
+              width: `${savedCardSize.width}px`,
+              height: `${savedCardSize.height}px`,
             }"
           >
             <QuestionDisplayCard
@@ -376,7 +376,7 @@ onMounted(() => {
   </NFlex>
   <NDrawer
     v-model:show="showSettingDrawer"
-    :title="`设置`"
+    title="设置"
     :width="400"
     placement="left"
   >
@@ -495,7 +495,7 @@ onMounted(() => {
               <NFlex style="min-width: 80px">
                 字体颜色
                 <NColorPicker
-                  :value="setting.fontColor ? '#' + setting.fontColor : undefined"
+                  :value="setting.fontColor ? `#${setting.fontColor}` : undefined"
                   show-preview
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
@@ -510,7 +510,7 @@ onMounted(() => {
               <NFlex style="min-width: 80px">
                 背景颜色
                 <NColorPicker
-                  :value="setting.backgroundColor ? '#' + setting.backgroundColor : undefined"
+                  :value="setting.backgroundColor ? `#${setting.backgroundColor}` : undefined"
                   show-preview
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
@@ -525,7 +525,7 @@ onMounted(() => {
               <NFlex style="min-width: 80px">
                 边框颜色
                 <NColorPicker
-                  :value="setting.borderColor ? '#' + setting.borderColor : undefined"
+                  :value="setting.borderColor ? `#${setting.borderColor}` : undefined"
                   show-preview
                   :modes="['hex']"
                   :actions="['clear', 'confirm']"
@@ -599,7 +599,7 @@ onMounted(() => {
             <NFlex style="min-width: 80px">
               字体颜色
               <NColorPicker
-                :value="setting.nameFontColor ? '#' + setting.nameFontColor : undefined"
+                :value="setting.nameFontColor ? `#${setting.nameFontColor}` : undefined"
                 show-preview
                 :modes="['hex']"
                 :actions="['clear', 'confirm']"
@@ -641,8 +641,8 @@ onMounted(() => {
   >
     <div
       :style="{
-        width: savedCardSize.width + 'px',
-        height: savedCardSize.height + 'px',
+        width: `${savedCardSize.width}px`,
+        height: `${savedCardSize.height}px`,
       }"
     >
       <QuestionDisplayCard
@@ -653,7 +653,7 @@ onMounted(() => {
     <NDivider />
     <NInput
       readonly
-      :value="`${CURRENT_HOST}obs/question-display?token=` + accountInfo?.token"
+      :value="`${CURRENT_HOST}obs/question-display?token=${accountInfo?.token}`"
     />
   </NModal>
 </template>

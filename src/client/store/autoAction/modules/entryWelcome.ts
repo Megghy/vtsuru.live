@@ -1,14 +1,17 @@
-import { EventModel } from '@/api/api-models';
-import { ref, Ref } from 'vue';
-import {
-  executeActions,
-  filterValidActions
-} from '../actionUtils';
-import {
+import type { Ref } from 'vue'
+import type {
   AutoActionItem,
   RuntimeState,
-  TriggerType
-} from '../types';
+} from '../types'
+import type { EventModel } from '@/api/api-models'
+import { ref } from 'vue'
+import {
+  executeActions,
+  filterValidActions,
+} from '../actionUtils'
+import {
+  TriggerType,
+} from '../types'
 
 /**
  * 入场欢迎模块
@@ -21,10 +24,10 @@ export function useEntryWelcome(
   isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
   isTianXuanActive: Ref<boolean>,
-  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>
+  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
   // 运行时数据
-  const timer = ref<any | null>(null);
+  const timer = ref<any | null>(null)
 
   /**
    * 处理入场事件 - 支持新的AutoActionItem结构
@@ -35,12 +38,12 @@ export function useEntryWelcome(
   function processEnter(
     event: EventModel,
     actions: AutoActionItem[],
-    runtimeState: RuntimeState
+    runtimeState: RuntimeState,
   ) {
-    if (!roomId.value) return;
+    if (!roomId.value) return
 
     // 使用通用函数过滤有效的入场欢迎操作
-    const enterActions = filterValidActions(actions, TriggerType.ENTER, isLive, isTianXuanActive);
+    const enterActions = filterValidActions(actions, TriggerType.ENTER, isLive, isTianXuanActive)
 
     // 使用通用执行函数处理入场事件
     if (enterActions.length > 0 && roomId.value) {
@@ -55,15 +58,15 @@ export function useEntryWelcome(
           customFilters: [
             // 检查入场过滤条件
             (action, context) => {
-              if (action.triggerConfig.filterMode === 'blacklist' &&
-                  action.triggerConfig.filterGiftNames?.includes(event.uname)) {
-                return false;
+              if (action.triggerConfig.filterMode === 'blacklist'
+                && action.triggerConfig.filterGiftNames?.includes(event.uname)) {
+                return false
               }
-              return true;
-            }
-          ]
-        }
-      );
+              return true
+            },
+          ],
+        },
+      )
     }
   }
 
@@ -72,13 +75,13 @@ export function useEntryWelcome(
    */
   function clearTimer() {
     if (timer.value) {
-      clearTimeout(timer.value);
-      timer.value = null;
+      clearTimeout(timer.value)
+      timer.value = null
     }
   }
 
   return {
     processEnter,
-    clearTimer
-  };
+    clearTimer,
+  }
 }

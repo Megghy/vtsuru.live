@@ -1,3 +1,35 @@
+<script setup>
+import { computed } from 'vue'
+import * as constants from './constants'
+import ImgShadow from './ImgShadow.vue'
+import * as utils from './utils'
+
+const props = defineProps({
+  avatarUrl: String,
+  authorName: String,
+  price: Number, // 价格，人民币
+  priceText: String,
+  time: Date,
+  content: String,
+})
+
+const priceConfig = computed(() => {
+  return constants.getPriceConfig(props.price)
+})
+
+const color = computed(() => {
+  return priceConfig.value.colors
+})
+
+const showPriceText = computed(() => {
+  return props.priceText || `CN¥${utils.formatCurrency(props.price)}`
+})
+
+const timeText = computed(() => {
+  return utils.getTimeTextHourMin(props.time)
+})
+</script>
+
 <template>
   <yt-live-chat-paid-message-renderer
     class="style-scope yt-live-chat-item-list-renderer"
@@ -9,7 +41,7 @@
       '--yt-live-chat-paid-message-header-color': color.header,
       '--yt-live-chat-paid-message-author-name-color': color.authorName,
       '--yt-live-chat-paid-message-timestamp-color': color.time,
-      '--yt-live-chat-paid-message-color': color.content
+      '--yt-live-chat-paid-message-color': color.content,
     }"
     :blc-price-level="priceConfig.priceLevel"
   >
@@ -21,7 +53,7 @@
         id="header"
         class="style-scope yt-live-chat-paid-message-renderer"
       >
-        <img-shadow
+        <ImgShadow
           id="author-photo"
           height="40"
           width="40"
@@ -70,37 +102,5 @@
     </div>
   </yt-live-chat-paid-message-renderer>
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import ImgShadow from './ImgShadow.vue'
-import * as constants from './constants'
-import * as utils from './utils'
-
-const props = defineProps({
-  avatarUrl: String,
-  authorName: String,
-  price: Number, // 价格，人民币
-  priceText: String,
-  time: Date,
-  content: String
-})
-
-const priceConfig = computed(() => {
-  return constants.getPriceConfig(props.price)
-})
-
-const color = computed(() => {
-  return priceConfig.value.colors
-})
-
-const showPriceText = computed(() => {
-  return props.priceText || `CN¥${utils.formatCurrency(props.price)}`
-})
-
-const timeText = computed(() => {
-  return utils.getTimeTextHourMin(props.time)
-})
-</script>
 
 <style src="@/assets/css/youtube/yt-live-chat-paid-message-renderer.css"></style>

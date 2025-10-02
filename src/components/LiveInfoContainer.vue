@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ResponseLiveInfoModel } from '@/api/api-models'
+import type { ResponseLiveInfoModel } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
   NButton,
@@ -16,12 +16,11 @@ import {
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute()
-const router = useRouter()
-
 const { live } = defineProps<{
   live: ResponseLiveInfoModel
 }>()
+const route = useRoute()
+const router = useRouter()
 
 const defaultDanmakusCount = ref(0)
 function OnClickCover() {
@@ -48,7 +47,7 @@ watch(
           referrerpolicy="no-referrer"
           :style="!live.isFinish ? 'animation: animated-border 2.5s infinite;cursor: pointer' : 'cursor: pointer'"
           class="liveCover"
-          :src="live.coverUrl + '@200w'"
+          :src="`${live.coverUrl}@200w`"
           lazy
           preview-disabled
           @click="OnClickCover()"

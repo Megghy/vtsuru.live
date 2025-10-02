@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { SaveSetting, useAccount } from '@/api/account'
-import { EventDataTypes, SettingPointGiftAllowType, Setting_Point } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
+import type { Setting_Point } from '@/api/api-models'
 import { Delete24Regular, Info24Filled } from '@vicons/fluent'
 import {
   NAlert,
@@ -31,6 +28,8 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
+import { SaveSetting, useAccount } from '@/api/account'
+import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -73,11 +72,11 @@ const setting = computed({
 })
 
 // 添加礼物表单模型
-const addGiftModel = ref<{ name: string; point: number; nameError: string; pointError: string }>({
+const addGiftModel = ref<{ name: string, point: number, nameError: string, pointError: string }>({
   name: '',
   point: 1,
   nameError: '',
-  pointError: ''
+  pointError: '',
 })
 
 // 是否可以编辑设置
@@ -104,10 +103,10 @@ async function updateSettings() {
       message.success('已保存')
       return true
     } else {
-      message.error('保存失败: ' + msg)
+      message.error(`保存失败: ${msg}`)
     }
   } catch (err) {
-    message.error('保存失败: ' + err)
+    message.error(`保存失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -202,10 +201,10 @@ async function SaveComboSetting() {
       message.success('已保存')
       return true
     } else {
-      message.error('保存失败: ' + msg)
+      message.error(`保存失败: ${msg}`)
     }
   } catch (err) {
-    message.error('修改失败: ' + err)
+    message.error(`修改失败: ${err}`)
   } finally {
     isLoading.value = false
   }

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { SongFrom, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_API_URL } from '@/data/constants'
+import type { SongsInfo } from '@/api/api-models'
 import { NEmpty } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
+import { SongFrom } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { SONG_API_URL } from '@/data/constants'
 
 const props = defineProps<{
   song: SongsInfo | undefined
@@ -26,12 +27,13 @@ const temp = computed(() => {
 })
 
 watch(temp, (newV) => {
-  if (newV) console.log('开始播放: ' + newV.name)
+  if (newV) console.log(`开始播放: ${newV.name}`)
 })
 
 function OnPlayMusic(song: SongsInfo) {
-  if (song.from == SongFrom.Netease) GetLyric(song)
-  else {
+  if (song.from == SongFrom.Netease) {
+    GetLyric(song)
+  } else {
     aplayerMusic.value = {
       title: song.name,
       artist: song.author?.join('/') ?? '',
@@ -43,11 +45,11 @@ function OnPlayMusic(song: SongsInfo) {
 }
 async function GetLyric(song: SongsInfo) {
   emits('update:isLrcLoading', song.key)
-  QueryGetAPI<{ lyric: string; tlyric: string }>(SONG_API_URL + 'get-netease-lyric', { id: song.id })
+  QueryGetAPI<{ lyric: string, tlyric: string }>(`${SONG_API_URL}get-netease-lyric`, { id: song.id })
     .then((data) => {
       console.log(mergeLyrics(data.data.lyric, data.data.tlyric))
       if (data.code == 200) {
-        //props.song.value.lrc = data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric
+        // props.song.value.lrc = data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric
 
         aplayerMusic.value = {
           title: song.name,
@@ -56,7 +58,7 @@ async function GetLyric(song: SongsInfo) {
           pic: '',
           lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
         }
-        //aplayerMusic.value.lrc = data.data.lyric
+        // aplayerMusic.value.lrc = data.data.lyric
       } else {
         aplayerMusic.value = {
           title: song.name,
@@ -85,7 +87,7 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
 
     if (originalTimeMatch) {
       const originalTime = originalTimeMatch[1]
-      const translatedLineIndex = translatedLines.findIndex((line) => line.includes(originalTime))
+      const translatedLineIndex = translatedLines.findIndex(line => line.includes(originalTime))
 
       if (translatedLineIndex !== -1) {
         const translatedLine = translatedLines[translatedLineIndex]
@@ -101,7 +103,7 @@ function mergeLyrics(originalLyrics: string, translatedLyrics: string): string {
       }
     }
     if (!mergedLine.match(/^\[(\d{2}:\d{2}\.\d{2,3})\]$/)) {
-      //不是空行
+      // 不是空行
       mergedLyrics += `${mergedLine}\n`
     }
   }

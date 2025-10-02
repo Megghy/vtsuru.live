@@ -1,22 +1,19 @@
 <script setup lang="ts">
-import { downloadImage } from '@/Utils'
-import {
+import type {
+  FormRules,
+} from 'naive-ui'
+import type { VNode } from 'vue'
+import type {
   VideoCollectCreateModel,
   VideoCollectDetail,
   VideoCollectTable,
   VideoCollectVideo,
   VideoInfo,
-  VideoStatus,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/data/constants'
-import router from '@/router'
 import { Clock24Filled, Person24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { List } from 'linqts'
 import {
-  FormRules,
   NButton,
   NCard,
   NDatePicker,
@@ -40,8 +37,16 @@ import {
   useMessage,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
-import { VNode, computed, h, onActivated, ref } from 'vue'
+import { computed, h, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import {
+  VideoStatus,
+} from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
+import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/data/constants'
+import router from '@/router'
+import { downloadImage } from '@/Utils'
 
 const route = useRoute()
 const message = useMessage()
@@ -101,18 +106,18 @@ const createRules: FormRules = {
 }
 
 const paddingVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Pending) ?? []
+  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Pending) ?? []
 })
 const rejectVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Rejected) ?? []
+  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Rejected) ?? []
 })
 const acceptVideos = computed(() => {
-  return videoDetail.value?.videos?.filter((v) => v.info.status == VideoStatus.Accepted) ?? []
+  return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Accepted) ?? []
 })
 
 async function getData() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
     if (data.code == 200) {
       updateModel.value = {
         id: data.data.table.id,
@@ -128,9 +133,9 @@ async function getData() {
   }
   return {} as VideoCollectDetail
 }
-const gridRender = (type: 'padding' | 'reject' | 'accept') => {
+function gridRender(type: 'padding' | 'reject' | 'accept') {
   let footer: (arg0: VideoInfo) => VNode
-  let videos: { info: VideoInfo; video: VideoCollectVideo }[]
+  let videos: { info: VideoInfo, video: VideoCollectVideo }[]
   switch (type) {
     case 'padding':
       footer = paddingButtonGroup
@@ -148,77 +153,73 @@ const gridRender = (type: 'padding' | 'reject' | 'accept') => {
   return videos.length == 0
     ? h(NEmpty)
     : h(NGrid, { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' }, () =>
-      videos?.map((v) =>
-        h(NGridItem, () =>
-          h(
-            NCard,
-            { style: 'height: 330px;', embedded: true, size: 'small' },
-            {
-              cover: () =>
-                h('div', { style: 'position: relative;height: 150px;' }, [
-                  h('img', {
-                    src: v.video.cover.replace('http://', 'https://'),
-                    referrerpolicy: 'no-referrer',
-                    style: 'max-height: 100%; object-fit: contain;cursor: pointer',
-                    onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
-                  }),
-                  h(
-                    NSpace,
-                    {
-                      style: { position: 'relative', bottom: '20px', background: '#00000073' },
-                      justify: 'space-around',
-                    },
-                    () => [
-                      h('span', [
-                        h(NIcon, { component: Clock24Filled, color: 'lightgrey' }),
-                        h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length)),
-                      ]),
-                      h('span', [
-                        h(NIcon, { component: Person24Filled, color: 'lightgrey' }),
-                        h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName),
-                      ]),
-                    ],
-                  ),
-                ]),
-              header: () =>
-                h(
-                  NButton,
-                  {
-                    style: 'width: 100%;',
-                    text: true,
-                    onClick: () => window.open('https://www.bilibili.com/video/' + v.info.bvid, '_blank'),
-                  },
-                  () =>
+        videos?.map(v =>
+          h(NGridItem, () =>
+            h(
+              NCard,
+              { style: 'height: 330px;', embedded: true, size: 'small' },
+              {
+                cover: () =>
+                  h('div', { style: 'position: relative;height: 150px;' }, [
+                    h('img', {
+                      src: v.video.cover.replace('http://', 'https://'),
+                      referrerpolicy: 'no-referrer',
+                      style: 'max-height: 100%; object-fit: contain;cursor: pointer',
+                      onClick: () => window.open(`https://www.bilibili.com/video/${v.info.bvid}`, '_blank'),
+                    }),
                     h(
-                      NEllipsis,
-                      { style: 'max-width: 100%;' },
+                      NSpace,
                       {
-                        default: () => v.video.title,
-                        tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title),
+                        style: { position: 'relative', bottom: '20px', background: '#00000073' },
+                        justify: 'space-around',
                       },
+                      () => [
+                        h('span', [
+                          h(NIcon, { component: Clock24Filled, color: 'lightgrey' }),
+                          h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length)),
+                        ]),
+                        h('span', [
+                          h(NIcon, { component: Person24Filled, color: 'lightgrey' }),
+                          h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName),
+                        ]),
+                      ],
                     ),
-                ),
-              default: () =>
-                h(NScrollbar, { style: 'height: 65px;' }, () =>
-                  h(NCard, { contentStyle: 'padding: 5px;' }, () =>
-                    v.info.senders.map((s) => [
-                      h('div', { style: 'font-size: 12px;' }, [
-                        h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`),
-                        h('div', `推荐理由: ${s.description ?? '未填写'}`),
-                      ]),
-                      h(NSpace, { style: 'margin: 0;' }),
-                    ]),
+                  ]),
+                header: () =>
+                  h(
+                    NButton,
+                    {
+                      style: 'width: 100%;',
+                      text: true,
+                      onClick: () => window.open(`https://www.bilibili.com/video/${v.info.bvid}`, '_blank'),
+                    },
+                    () =>
+                      h(
+                        NEllipsis,
+                        { style: 'max-width: 100%;' },
+                        {
+                          default: () => v.video.title,
+                          tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title),
+                        },
+                      ),
                   ),
-                ),
-              footer: () => footer(v.info),
-            },
-          ),
-        ),
-      ),
-    )
+                default: () =>
+                  h(NScrollbar, { style: 'height: 65px;' }, () =>
+                    h(NCard, { contentStyle: 'padding: 5px;' }, () =>
+                      v.info.senders.map(s => [
+                        h('div', { style: 'font-size: 12px;' }, [
+                          h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`),
+                          h('div', `推荐理由: ${s.description ?? '未填写'}`),
+                        ]),
+                        h(NSpace, { style: 'margin: 0;' }),
+                      ]))),
+                footer: () => footer(v.info),
+              },
+            )),
+        ))
 }
-const paddingButtonGroup = (v: VideoInfo) =>
-  h(NSpace, { size: 'small', justify: 'space-around' }, () => [
+function paddingButtonGroup(v: VideoInfo) {
+  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
     h(
       NButton,
       { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
@@ -230,8 +231,9 @@ const paddingButtonGroup = (v: VideoInfo) =>
       () => '拒绝',
     ),
   ])
-const acceptButtonGroup = (v: VideoInfo) =>
-  h(NSpace, { size: 'small', justify: 'space-around' }, () => [
+}
+function acceptButtonGroup(v: VideoInfo) {
+  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
     h(
       NButton,
       { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) },
@@ -243,8 +245,9 @@ const acceptButtonGroup = (v: VideoInfo) =>
       () => '拒绝',
     ),
   ])
-const rejectButtonGroup = (v: VideoInfo) =>
-  h(NSpace, { size: 'small', justify: 'space-around' }, () => [
+}
+function rejectButtonGroup(v: VideoInfo) {
+  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
     h(
       NButton,
       { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
@@ -256,19 +259,20 @@ const rejectButtonGroup = (v: VideoInfo) =>
       () => '重设为未审核',
     ),
   ])
+}
 function setStatus(status: VideoStatus, video: VideoInfo) {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL + 'set-status', {
+  QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
     id: videoDetail.value.table.id,
     bvid: video.bvid,
-    status: status,
+    status,
   })
     .then((data) => {
       if (data.code == 200) {
         video.status = status
         message.success('设置成功')
       } else {
-        message.error('设置失败: ' + data.message)
+        message.error(`设置失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -293,13 +297,13 @@ function dateDisabled(ts: number) {
 function updateTable() {
   isLoading.value = true
   updateModel.value.id = videoDetail.value.table.id
-  QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL + 'update', updateModel.value)
+  QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}update`, updateModel.value)
     .then((data) => {
       if (data.code == 200) {
         message.success('更新成功')
         videoDetail.value.table = data.data
       } else {
-        message.error('更新失败: ' + data.message)
+        message.error(`更新失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -311,7 +315,7 @@ function updateTable() {
 }
 function deleteTable() {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL + 'del', {
+  QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, {
     id: videoDetail.value.table.id,
   })
     .then((data) => {
@@ -321,7 +325,7 @@ function deleteTable() {
           router.push({ name: 'manage-videoCollect' })
         }, 1000)
       } else {
-        message.error('删除失败: ' + data.message)
+        message.error(`删除失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -333,16 +337,16 @@ function deleteTable() {
 }
 function closeTable() {
   isLoading.value = true
-  QueryGetAPI(VIDEO_COLLECT_API_URL + 'finish', {
+  QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, {
     id: videoDetail.value.table.id,
     finish: !videoDetail.value.table.isFinish,
   })
     .then((data) => {
       if (data.code == 200) {
-        message.success('已' + (videoDetail.value.table.isFinish ? '开启表' : '关闭表'))
+        message.success(`已${videoDetail.value.table.isFinish ? '开启表' : '关闭表'}`)
         videoDetail.value.table.isFinish = !videoDetail.value.table.isFinish
       } else {
-        message.error('操作失败: ' + data.message)
+        message.error(`操作失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -354,7 +358,7 @@ function closeTable() {
 }
 function saveQRCode() {
   downloadImage(
-    `https://api.qrserver.com/v1/create-qr-code/?data=${'https://vtsuru.live/video-collect/' + videoDetail.value.table.shortId}`,
+    `https://api.qrserver.com/v1/create-qr-code/?data=${`https://vtsuru.live/video-collect/${videoDetail.value.table.shortId}`}`,
     `vtsuru-视频征集二维码-${videoDetail.value.table.name}.png`,
   )
 }
@@ -365,6 +369,7 @@ onActivated(async () => {
   }
 })
 </script>
+
 <template>
   <NSpace>
     <NButton
@@ -529,13 +534,13 @@ onActivated(async () => {
     style="width: 600px; max-width: 90vw"
   >
     <Qrcode
-      :value="`${CURRENT_HOST}video-collect/` + videoDetail.table.shortId"
+      :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
       level="Q"
       :size="100"
       background="#fff"
       :margin="1"
     />
-    <NInput :value="`${CURRENT_HOST}video-collect/` + videoDetail.table.shortId" />
+    <NInput :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`" />
     <NDivider />
     <NSpace justify="center">
       <NButton

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
-import { DanmakuUserInfo, EventModel, OpenLiveInfo, SongFrom, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
-import { MusicRequestSettings, useMusicRequestProvider } from '@/store/useMusicRequest'
+import type {
+  SelectOption,
+} from 'naive-ui'
+import type { DanmakuUserInfo, EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
+import type { MusicRequestSettings } from '@/store/useMusicRequest'
 import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
@@ -36,15 +35,20 @@ import {
   NTransfer,
   NUl,
   NVirtualList,
-  SelectOption,
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { SongFrom } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import MusicRequestOBS from '../obs/MusicRequestOBS.vue'
 
-type Music = {
+interface Music {
   id: number
   title: string
   artist: string
@@ -52,10 +56,16 @@ type Music = {
   pic: string
   lrc: string
 }
-type WaitMusicInfo = {
+interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: SongsInfo
 }
+
+const props = defineProps<{
+  roomInfo?: OpenLiveInfo
+  code?: string | undefined
+  isOpenLive?: boolean
+}>()
 
 const route = useRoute()
 
@@ -65,12 +75,6 @@ const settings = computed(() => {
 const cooldown = useStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
 const musicRquestStore = useMusicRequestProvider()
 const client = await useDanmakuClient().initOpenlive()
-
-const props = defineProps<{
-  roomInfo?: OpenLiveInfo
-  code?: string | undefined
-  isOpenLive?: boolean
-}>()
 
 const deviceList = ref<SelectOption[]>([])
 
@@ -110,22 +114,22 @@ const neteaseSongListId = computed(() => {
 })
 const neteaseSongs = ref<SongsInfo[]>([])
 const neteaseSongsOptions = computed(() => {
-  return neteaseSongs.value.map((s) => ({
+  return neteaseSongs.value.map(s => ({
     label: `${s.name} - ${s.author.join('/')}`,
     value: s.key,
-    disabled: originMusics.value.findIndex((exist) => exist.id == s.id) > -1,
+    disabled: originMusics.value.findIndex(exist => exist.id == s.id) > -1,
   }))
 })
 const selectedNeteaseSongs = ref<string[]>([])
 
 async function get() {
   try {
-    const data = await QueryGetAPI<SongsInfo[]>(MUSIC_REQUEST_API_URL + 'get')
+    const data = await QueryGetAPI<SongsInfo[]>(`${MUSIC_REQUEST_API_URL}get`)
     if (data.code == 200) {
       console.log('[OPEN-LIVE-Music-Request] 已获取所有数据')
-      return new List(data.data).OrderByDescending((s) => s.createTime).ToArray()
+      return new List(data.data).OrderByDescending(s => s.createTime).ToArray()
     } else {
-      message.error('无法获取数据: ' + data.message)
+      message.error(`无法获取数据: ${data.message}`)
       return []
     }
   } catch (err) {
@@ -134,38 +138,38 @@ async function get() {
   return []
 }
 async function searchMusic(keyword: string) {
-  const inSongList = originMusics.value.find((m) => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
+  const inSongList = originMusics.value.find(m => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
   if (inSongList) {
     return inSongList
   }
-  const data = await QueryGetAPI<SongsInfo>(MUSIC_REQUEST_API_URL + 'search-' + settings.value.platform, {
-    keyword: keyword,
+  const data = await QueryGetAPI<SongsInfo>(`${MUSIC_REQUEST_API_URL}search-${settings.value.platform}`, {
+    keyword,
   })
   if (data.code == 200) {
     return data.data
   } else if (data.code == 404) {
-    message.error('未找到包含关键词: ' + keyword + ' 的歌曲')
+    message.error(`未找到包含关键词: ${keyword} 的歌曲`)
   }
   return undefined
 }
 function switchTo() { }
 async function getNeteaseSongList() {
   isLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
+  await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}get-netease-list`, {
     id: neteaseSongListId.value,
   })
     .then((data) => {
       if (data.code == 200) {
         neteaseSongs.value = data.data
         message.success(
-          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
+          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter(s => s.disabled).length} 首`,
         )
       } else {
-        message.error('获取歌单失败: ' + data.message)
+        message.error(`获取歌单失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error('获取歌单失败: ' + err)
+      message.error(`获取歌单失败: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
@@ -173,14 +177,14 @@ async function getNeteaseSongList() {
 }
 async function addNeteaseSongs() {
   isLoading.value = true
-  const selected = neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.find((select) => s.key == select))
+  const selected = neteaseSongs.value.filter(s => selectedNeteaseSongs.value.find(select => s.key == select))
   await addSongs(selected, SongFrom.Netease)
     .then((data) => {
       if (data.code == 200) {
         message.success(`已添加 ${data.data.length} 首歌曲`)
         originMusics.value.push(...data.data)
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -192,8 +196,8 @@ async function addNeteaseSongs() {
 }
 async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   return QueryPostAPI<SongsInfo[]>(
-    MUSIC_REQUEST_API_URL + 'add',
-    songsShoudAdd.map((s) => ({
+    `${MUSIC_REQUEST_API_URL}add`,
+    songsShoudAdd.map(s => ({
       Name: s.name,
       Id: from == SongFrom.Custom ? -1 : s.id,
       From: from,
@@ -205,31 +209,31 @@ async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   )
 }
 function delMusic(song: SongsInfo) {
-  QueryPostAPI(MUSIC_REQUEST_API_URL + 'del', [song.key])
+  QueryPostAPI(`${MUSIC_REQUEST_API_URL}del`, [song.key])
     .then((data) => {
       if (data.code == 200) {
         message.success('已删除')
-        musicRquestStore.originMusics = originMusics.value.filter((s) => s.key != song.key)
+        musicRquestStore.originMusics = originMusics.value.filter(s => s.key != song.key)
       } else {
-        message.error('删除失败: ' + data.message)
+        message.error(`删除失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error('删除失败' + err)
+      message.error(`删除失败${err}`)
     })
 }
 function clearMusic() {
-  QueryGetAPI(MUSIC_REQUEST_API_URL + 'clear')
+  QueryGetAPI(`${MUSIC_REQUEST_API_URL}clear`)
     .then((data) => {
       if (data.code == 200) {
         message.success('已清空')
         musicRquestStore.originMusics = []
       } else {
-        message.error('清空失败: ' + data.message)
+        message.error(`清空失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error('清空失败' + err)
+      message.error(`清空失败${err}`)
     })
 }
 async function uploadConfig() {
@@ -249,7 +253,7 @@ async function downloadConfig() {
   await DownloadConfig<MusicRequestSettings>('MusicRequest')
     .then((data) => {
       if (data.msg) {
-        message.error('获取失败: ' + data.msg)
+        message.error(`获取失败: ${data.msg}`)
       } else {
         musicRquestStore.settings = data.data ?? ({} as MusicRequestSettings)
         message.success('已获取配置文件')
@@ -260,10 +264,10 @@ async function downloadConfig() {
     })
 }
 function startListen() {
-  /*if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
+  /* if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
     message.warning('使用这个点歌则需要先关闭歌势点歌 (SongRequest)')
     return
-  }*/
+  } */
   listening.value = true
   message.success('开始监听')
 }
@@ -331,23 +335,23 @@ async function getOutputDevice() {
     const list = await navigator.mediaDevices.enumerateDevices()
 
     deviceList.value = list
-      .filter((device) => device.kind === 'audiooutput')
-      .map((d) => ({ label: d.label, value: d.deviceId }))
+      .filter(device => device.kind === 'audiooutput')
+      .map(d => ({ label: d.label, value: d.deviceId }))
   } catch (err) {
     console.error(err)
-    message.error('获取音频输出设备失败, 获取你需要授予网页读取麦克风权限: ' + err)
+    message.error(`获取音频输出设备失败, 获取你需要授予网页读取麦克风权限: ${err}`)
   }
 }
 function blockMusic(song: SongsInfo) {
   settings.value.blacklist.push(song.name)
   musicRquestStore.waitingMusics.splice(
-    musicRquestStore.waitingMusics.findIndex((m) => m.music == song),
+    musicRquestStore.waitingMusics.findIndex(m => m.music == song),
     1,
   )
   message.success(`[${song.name}] 已添加到黑名单`)
 }
 function updateWaiting() {
-  QueryPostAPI(MUSIC_REQUEST_API_URL + 'update-waiting', {
+  QueryPostAPI(`${MUSIC_REQUEST_API_URL}update-waiting`, {
     playing: musicRquestStore.currentOriginMusic,
     waiting: musicRquestStore.waitingMusics,
   })
@@ -364,7 +368,7 @@ onMounted(async () => {
   }
   await getOutputDevice()
   if (deviceList.value.length > 0) {
-    if (!deviceList.value.find((d) => d.value == settings.value.deviceId)) {
+    if (!deviceList.value.find(d => d.value == settings.value.deviceId)) {
       settings.value.deviceId = undefined
     } else {
       musicRquestStore.setSinkId()
@@ -597,7 +601,7 @@ onUnmounted(() => {
       </NEmpty>
       <NVirtualList
         v-else
-        :style="`max-height: 1000px`"
+        style="max-height: 1000px"
         :item-size="30"
         :items="originMusics"
         item-resizable
@@ -666,7 +670,7 @@ onUnmounted(() => {
   <NModal
     v-model:show="showNeteaseModal"
     preset="card"
-    :title="`获取歌单`"
+    title="获取歌单"
     style="max-width: 600px"
   >
     <NInput
@@ -732,7 +736,7 @@ onUnmounted(() => {
       <MusicRequestOBS :id="accountInfo?.id" />
     </div>
     <br>
-    <NInput :value="`${CURRENT_HOST}obs/music-request?id=` + accountInfo?.id" />
+    <NInput :value="`${CURRENT_HOST}obs/music-request?id=${accountInfo?.id}`" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">

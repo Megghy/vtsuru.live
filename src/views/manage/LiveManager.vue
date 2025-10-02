@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import type { ResponseLiveInfoModel } from '@/api/api-models'
+import { NAlert, NDivider, NList, NListItem, NPagination, NSpace, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
-import { ResponseLiveInfoModel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/components/LiveInfoContainer.vue'
 import { LIVE_API_URL } from '@/data/constants'
-import { NAlert, NButton, NDivider, NList, NListItem, NPagination, NSpace, useMessage } from 'naive-ui'
-import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -21,11 +21,11 @@ const defaultDanmakusCount = ref(0)
 
 async function getAll() {
   try {
-    const data = await QueryGetAPI<ResponseLiveInfoModel[]>(LIVE_API_URL + 'get-all')
+    const data = await QueryGetAPI<ResponseLiveInfoModel[]>(`${LIVE_API_URL}get-all`)
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('无法获取数据: ' + data.message)
+      message.error(`无法获取数据: ${data.message}`)
       return []
     }
   } catch (err) {

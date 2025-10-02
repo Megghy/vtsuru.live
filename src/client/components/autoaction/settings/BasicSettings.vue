@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import { NSpace, NInput, NSwitch, NSelect } from 'naive-ui';
-import { AutoActionItem, TriggerType, ActionType, Priority } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NInput, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { ActionType, Priority, TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
+    required: true,
   },
   hideName: {
     type: Boolean,
-    default: false
+    default: false,
   },
   hideEnabled: {
     type: Boolean,
-    default: false
-  }
-});
+    default: false,
+  },
+})
 
 // 触发类型选项
 const triggerTypeOptions = [
@@ -26,14 +27,14 @@ const triggerTypeOptions = [
   { label: '入场欢迎', value: TriggerType.ENTER },
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
-];
+]
 
 // 操作类型选项
 const actionTypeOptions = [
   { label: '发送弹幕', value: ActionType.SEND_DANMAKU },
   { label: '发送私信', value: ActionType.SEND_PRIVATE_MSG },
   { label: '执行命令', value: ActionType.EXECUTE_COMMAND },
-];
+]
 
 // 优先级选项
 const priorityOptions = [
@@ -42,7 +43,7 @@ const priorityOptions = [
   { label: '普通', value: Priority.NORMAL },
   { label: '低', value: Priority.LOW },
   { label: '最低', value: Priority.LOWEST },
-];
+]
 </script>
 
 <template>

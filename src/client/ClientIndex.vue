@@ -1,25 +1,25 @@
 <script setup lang="ts">
-  import { cookie, useAccount } from '@/api/account';
-  import { useWebFetcher } from '@/store/useWebFetcher';
-  import { openUrl } from '@tauri-apps/plugin-opener';
-  import { useElementSize } from '@vueuse/core';
-  import { roomInfo, streamingInfo } from './data/info';
+import { openUrl } from '@tauri-apps/plugin-opener'
+import { useElementSize } from '@vueuse/core'
+import { cookie, useAccount } from '@/api/account'
+import { useWebFetcher } from '@/store/useWebFetcher'
+import { roomInfo } from './data/info'
 
-  const accountInfo = useAccount();
+const accountInfo = useAccount()
 
-  const webfetcher = useWebFetcher();
+const webfetcher = useWebFetcher()
 
-  const coverRef = ref();
-  const isHover = ref(false);
-  const roomCover = computed(() => {
-    return isHover.value ? roomInfo.value?.keyframe : roomInfo.value?.user_cover;
-  });
-  const { width, height } = useElementSize(coverRef);
+const coverRef = ref()
+const isHover = ref(false)
+const roomCover = computed(() => {
+  return isHover.value ? roomInfo.value?.keyframe : roomInfo.value?.user_cover
+})
+const { width, height } = useElementSize(coverRef)
 
-  function logout() {
-    cookie.value = undefined;
-    window.location.reload();
-  }
+function logout() {
+  cookie.value = undefined
+  window.location.reload()
+}
 </script>
 
 <template>

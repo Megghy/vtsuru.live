@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { copyToClipboard } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { VOTE_API_URL } from '@/data/constants'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
+import type { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
 import { Add24Filled, Delete24Regular, Info24Filled, Pause24Regular, Play24Regular, Settings24Regular, ShareAndroid24Regular } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import {
@@ -33,11 +28,16 @@ import {
   NTag,
   NText,
   NThing,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+import { useAccount } from '@/api/account'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { VOTE_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { copyToClipboard } from '@/Utils'
 
 const props = defineProps<{
   roomInfo?: OpenLiveInfo
@@ -56,22 +56,22 @@ const voteConfig = ref<VoteConfig>({
   isEnabled: false,
   showResults: true,
   voteDurationSeconds: 60,
-  voteCommand: "投票",
-  voteEndCommand: "结束投票",
-  voteTitle: "投票",
+  voteCommand: '投票',
+  voteEndCommand: '结束投票',
+  voteTitle: '投票',
   allowMultipleOptions: false,
   allowMultipleVotes: false,
   allowCustomOptions: false,
   logVotes: true,
-  defaultOptions: ["选项1", "选项2"],
-  backgroundColor: "#1e1e2e",
-  textColor: "#ffffff",
-  optionColor: "#89b4fa",
+  defaultOptions: ['选项1', '选项2'],
+  backgroundColor: '#1e1e2e',
+  textColor: '#ffffff',
+  optionColor: '#89b4fa',
   roundedCorners: true,
-  displayPosition: "right",
+  displayPosition: 'right',
   allowGiftVoting: false,
   minGiftPrice: 1,
-  voteResultMode: 0
+  voteResultMode: 0,
 })
 
 // 当前投票会话
@@ -177,7 +177,7 @@ async function createVote() {
     title: newVoteTitle.value,
     options: filteredOptions,
     allowMultipleVotes: newVoteAllowMultiple.value,
-    durationSeconds: newVoteDuration.value
+    durationSeconds: newVoteDuration.value,
   }
 
   try {
@@ -259,7 +259,7 @@ function copyObsLink() {
   const roomId = props.roomInfo?.anchor_info?.room_id || route.query.roomId
 
   // 获取配置哈希
-  fetchVoteHash().then(hash => {
+  fetchVoteHash().then((hash) => {
     if (hash) {
       const obsUrl = `${baseUrl}/obs/danmaku-vote?hash=${hash}`
       copyToClipboard(obsUrl)
@@ -291,7 +291,7 @@ function calculatePercentage(count: number, totalVotes: number) {
 }
 
 // 加载模板
-function loadTemplate(template: {title: string, options: string[]}) {
+function loadTemplate(template: { title: string, options: string[] }) {
   newVoteTitle.value = template.title
   newVoteOptions.value = [...template.options]
   // 确保至少有两个选项
@@ -329,7 +329,7 @@ watch(() => voteConfig.value, (newConfig) => {
 }, { immediate: true })
 
 // 初始模板
-const savedTemplates = useStorage<{title: string, options: string[]}[]>('DanmakuVoteTemplates', [])
+const savedTemplates = useStorage<{ title: string, options: string[] }[]>('DanmakuVoteTemplates', [])
 const templateName = ref('')
 
 // 保存模板
@@ -347,7 +347,7 @@ function saveTemplate() {
 
   savedTemplates.value.push({
     title: templateName.value,
-    options: filteredOptions
+    options: filteredOptions,
   })
 
   templateName.value = ''
@@ -771,7 +771,7 @@ function deleteTemplate(index: number) {
                   { label: '左侧', value: 'left' },
                   { label: '右侧', value: 'right' },
                   { label: '顶部', value: 'top' },
-                  { label: '底部', value: 'bottom' }
+                  { label: '底部', value: 'bottom' },
                 ]"
                 style="width: 120px"
               />

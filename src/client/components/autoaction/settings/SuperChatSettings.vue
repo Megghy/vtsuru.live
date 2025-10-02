@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { NSpace, NSwitch, NInputNumber, NSelect, NCollapseItem } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NCollapseItem, NInputNumber, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
 // SC过滤模式选项
 const scFilterModeOptions = [
   { label: '不过滤', value: 'none' },
-  { label: '最低价格', value: 'price' }
-];
+  { label: '最低价格', value: 'price' },
+]
 </script>
 
 <template>

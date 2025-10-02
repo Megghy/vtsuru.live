@@ -1,16 +1,14 @@
 <script lang="ts" setup>
-import { isDarkMode } from '@/Utils';
-import { useAccount } from '@/api/account';
-import { ResponseUserIndexModel, UserInfo } from '@/api/api-models';
-import { QueryGetAPI } from '@/api/query';
-import SimpleVideoCard from '@/components/SimpleVideoCard.vue';
-import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
-import { USER_INDEX_API_URL } from '@/data/constants';
-import { NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui';
-import { ref, computed } from 'vue';
-
-defineExpose({ Config, DefaultConfig })
-const width = window.innerWidth
+import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
+import type { ExtractConfigData } from '@/data/VTsuruConfigTypes'
+import { NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { QueryGetAPI } from '@/api/query'
+import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
+import { USER_INDEX_API_URL } from '@/data/constants'
+import { defineTemplateConfig } from '@/data/VTsuruConfigTypes'
+import { isDarkMode } from '@/Utils'
 
 const props = defineProps<{
   userInfo: UserInfo | undefined
@@ -18,6 +16,9 @@ const props = defineProps<{
   currentData?: any
   config?: any
 }>()
+defineExpose({ Config, DefaultConfig })
+const width = window.innerWidth
+
 const isLoading = ref(true)
 const message = useMessage()
 const accountInfo = useAccount()
@@ -25,30 +26,30 @@ const accountInfo = useAccount()
 const indexInfo = ref<ResponseUserIndexModel>((await getIndexInfo()) || ({} as ResponseUserIndexModel))
 // 计算链接顺序（如果后端未提供 linkOrder 则使用对象键顺序）
 const orderedLinks = computed(() => {
-  if (!indexInfo.value) return [] as [string, string][];
-  const entries = Object.entries(indexInfo.value.links || {});
-  if (!indexInfo.value.links) return [];
+  if (!indexInfo.value) return [] as [string, string][]
+  const entries = Object.entries(indexInfo.value.links || {})
+  if (!indexInfo.value.links) return []
   const order = (accountInfo.value?.settings?.index?.linkOrder?.length
     ? accountInfo.value.settings.index.linkOrder
-    : (indexInfo.value as any)?.linkOrder) as string[] | undefined;
+    : (indexInfo.value as any)?.linkOrder) as string[] | undefined
   if (order && order.length) {
-    const map = new Map(entries);
-    return order.filter(k => map.has(k)).map(k => [k, map.get(k)!]) as [string, string][];
+    const map = new Map(entries)
+    return order.filter(k => map.has(k)).map(k => [k, map.get(k)!]) as [string, string][]
   }
-  return entries;
-});
+  return entries
+})
 async function getIndexInfo() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponseUserIndexModel>(USER_INDEX_API_URL + 'get', { id: props.userInfo?.name })
+    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: props.userInfo?.name })
     if (data.code == 200) {
       return data.data
     } else if (data.code != 404) {
-      message?.error('无法获取数据: ' + data.message)
+      message?.error(`无法获取数据: ${data.message}`)
       return undefined
     }
   } catch (err) {
-    message?.error('无法获取数据: ' + err)
+    message?.error(`无法获取数据: ${err}`)
     return undefined
   } finally {
     isLoading.value = false
@@ -64,18 +65,18 @@ function navigate(url: string) {
 export type ConfigType = ExtractConfigData<typeof Config>
 export const DefaultConfig = {} as ConfigType
 export const Config = defineTemplateConfig([
-    {
-      name: '封面',
-      type: 'file',
-      fileLimit: 1,
-      key: 'coverFile',
-    },
-    {
-      name: '测试',
-      type: 'string',
-      key: 'test',
-    },
-  ])
+  {
+    name: '封面',
+    type: 'file',
+    fileLimit: 1,
+    key: 'coverFile',
+  },
+  {
+    name: '测试',
+    type: 'string',
+    key: 'test',
+  },
+])
 </script>
 
 <template>
@@ -156,14 +157,14 @@ export const Config = defineTemplateConfig([
     >
       <NButton
         type="primary"
-        @click="navigate('https://space.bilibili.com/' + userInfo?.biliId)"
+        @click="navigate(`https://space.bilibili.com/${userInfo?.biliId}`)"
       >
         个人主页
       </NButton>
       <NButton
         type="primary"
         secondary
-        @click="navigate('https://live.bilibili.com/' + userInfo?.biliRoomId)"
+        @click="navigate(`https://live.bilibili.com/${userInfo?.biliRoomId}`)"
       >
         直播间
       </NButton>

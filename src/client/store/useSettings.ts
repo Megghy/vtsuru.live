@@ -1,29 +1,29 @@
-import { useTauriStore } from './useTauriStore';
+import { useTauriStore } from './useTauriStore'
 
-export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'message-failed' | 'live-danmaku-failed';
-export type NotificationSettings = {
-  enableTypes: NotificationType[];
-};
-export type VTsuruClientSettings = {
-  useDanmakuClientType: 'openlive' | 'direct';
-  fallbackToOpenLive: boolean;
-  bootAsMinimized: boolean;
+export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'message-failed' | 'live-danmaku-failed'
+export interface NotificationSettings {
+  enableTypes: NotificationType[]
+}
+export interface VTsuruClientSettings {
+  useDanmakuClientType: 'openlive' | 'direct'
+  fallbackToOpenLive: boolean
+  bootAsMinimized: boolean
 
-  danmakuHistorySize: number;
+  danmakuHistorySize: number
   loginType: 'qrcode' | 'cookiecloud'
 
-  enableNotification: boolean;
-  notificationSettings: NotificationSettings;
+  enableNotification: boolean
+  notificationSettings: NotificationSettings
 
   // 消息队列间隔设置
-  danmakuInterval: number;
-  pmInterval: number;
+  danmakuInterval: number
+  pmInterval: number
 
-  dev_disableDanmakuClient: boolean;
-};
+  dev_disableDanmakuClient: boolean
+}
 
 export const useSettings = defineStore('settings', () => {
-  const store = useTauriStore().getTarget<VTsuruClientSettings>('settings');
+  const store = useTauriStore().getTarget<VTsuruClientSettings>('settings')
   const defaultSettings: VTsuruClientSettings = {
     useDanmakuClientType: 'openlive',
     fallbackToOpenLive: true,
@@ -41,22 +41,22 @@ export const useSettings = defineStore('settings', () => {
     pmInterval: 2000,
 
     dev_disableDanmakuClient: false,
-  };
-  const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings));
+  }
+  const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings))
 
   async function init() {
-    settings.value = (await store.get()) || Object.assign({}, defaultSettings);
-    settings.value.notificationSettings ??= defaultSettings.notificationSettings;
-    settings.value.notificationSettings.enableTypes ??= [ 'question-box', 'danmaku', 'message-failed' ];
+    settings.value = (await store.get()) || Object.assign({}, defaultSettings)
+    settings.value.notificationSettings ??= defaultSettings.notificationSettings
+    settings.value.notificationSettings.enableTypes ??= ['question-box', 'danmaku', 'message-failed']
     // 初始化消息队列间隔设置
-    settings.value.danmakuInterval ??= defaultSettings.danmakuInterval;
-    settings.value.pmInterval ??= defaultSettings.pmInterval;
+    settings.value.danmakuInterval ??= defaultSettings.danmakuInterval
+    settings.value.pmInterval ??= defaultSettings.pmInterval
   }
   async function save() {
-    await store.set(settings.value);
+    await store.set(settings.value)
   }
 
-  return { init, save, settings };
-});
+  return { init, save, settings }
+})
 
-if (import.meta.hot) import.meta.hot.accept(acceptHMRUpdate(useSettings, import.meta.hot));
+if (import.meta.hot) import.meta.hot.accept(acceptHMRUpdate(useSettings, import.meta.hot))

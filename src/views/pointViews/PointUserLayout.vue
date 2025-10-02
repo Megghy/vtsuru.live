@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { UserInfo } from '@/api/api-models'
-import { POINT_API_URL } from '@/data/constants'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import type { UserInfo } from '@/api/api-models'
 import { useRouteHash } from '@vueuse/router'
 import {
   NAlert,
@@ -21,27 +19,29 @@ import {
   NSpin,
   NTabPane,
   NTabs,
-  NText,
   NTag,
+  NText,
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { POINT_API_URL } from '@/data/constants'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import PointOrderView from './PointOrderView.vue'
 import PointUserHistoryView from './PointUserHistoryView.vue'
 import PointUserSettings from './PointUserSettings.vue'
 
 // 定义组件接口
 interface ComponentWithReset {
-  reset: () => void;
+  reset: () => void
 }
 
 interface OrderViewInstance extends ComponentWithReset {
-  getOrders: () => Promise<any>;
+  getOrders: () => Promise<any>
 }
 
 interface HistoryViewInstance extends ComponentWithReset {
-  getHistories: () => Promise<any>;
+  getHistories: () => Promise<any>
 }
 
 interface SettingsViewInstance extends ComponentWithReset {
@@ -58,14 +58,14 @@ const hash = computed({
     return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value
   },
   set(val) {
-    realHash.value = '#' + val
+    realHash.value = `#${val}`
   },
 })
 const router = useRouter()
 
 const biliAuth = computed(() => useAuth.biliAuth)
 const isLoading = ref(false)
-const points = ref<{ owner: UserInfo; points: number }[]>([])
+const points = ref<{ owner: UserInfo, points: number }[]>([])
 const isFirstMounted = ref(true)
 // 分别定义各组件引用，使用正确的类型
 const orderViewRef = ref<OrderViewInstance | null>(null)
@@ -77,7 +77,7 @@ const tabDataLoaded = ref({
   points: false,
   orders: false,
   histories: false,
-  settings: true // 设置页面不需要加载数据
+  settings: true, // 设置页面不需要加载数据
 })
 
 const pointColumn = [
@@ -92,7 +92,7 @@ const pointColumn = [
   {
     title: '更多',
     key: 'action',
-    render: (row: { owner: UserInfo; points: number }) => {
+    render: (row: { owner: UserInfo, points: number }) => {
       return h(NFlex, {}, () => [
         h(
           NButton,
@@ -114,8 +114,8 @@ const pointColumn = [
 async function getAllPoints() {
   isLoading.value = true
   try {
-    const data = await useAuth.QueryBiliAuthGetAPI<{ owner: UserInfo; points: number }[]>(
-      POINT_API_URL + 'user/get-all-point',
+    const data = await useAuth.QueryBiliAuthGetAPI<{ owner: UserInfo, points: number }[]>(
+      `${POINT_API_URL}user/get-all-point`,
     )
     if (data.code == 200) {
       console.log('[point] 已获取积分')
@@ -125,7 +125,7 @@ async function getAllPoints() {
     }
   } catch (err) {
     console.error(err)
-    message.error('获取积分失败: ' + err)
+    message.error(`获取积分失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -137,7 +137,7 @@ function resetData() {
   points.value = []
   isFirstMounted.value = true
   // 重置数据加载状态
-  Object.keys(tabDataLoaded.value).forEach(key => {
+  Object.keys(tabDataLoaded.value).forEach((key) => {
     tabDataLoaded.value[key as keyof typeof tabDataLoaded.value] = false
   })
   tabDataLoaded.value.settings = true // 设置页不需要加载数据
@@ -166,7 +166,7 @@ function onAllPointPaneMounted() {
 // 处理选项卡切换
 function onTabChange(tabName: string) {
   // 只在数据未加载时刷新
-  switch(tabName) {
+  switch (tabName) {
     case 'points':
       if (!tabDataLoaded.value.points) {
         getAllPoints()

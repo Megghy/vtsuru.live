@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 const timer = ref<any>()
 const visible = ref(true)
@@ -23,31 +23,31 @@ onMounted(async () => {
     await webfetcher.Start()
   }
 
-  //@ts-expect-error 这里获取不了
+  // @ts-expect-error 这里获取不了
   if (window.obsstudio) {
-    //@ts-expect-error 这里获取不了
+    // @ts-expect-error 这里获取不了
     window.obsstudio.onVisibilityChange = function (visibility: boolean) {
       visible.value = visibility
     }
-    //@ts-expect-error 这里获取不了
+    // @ts-expect-error 这里获取不了
     window.obsstudio.onActiveChange = function (a: boolean) {
       active.value = a
     }
   }
   // 使 .n-layout-content 背景透明
-  const layoutContent = document.querySelector('.n-layout-content');
+  const layoutContent = document.querySelector('.n-layout-content')
   if (layoutContent instanceof HTMLElement) {
     originalBackgroundColor.value = layoutContent.style.backgroundColor
-    layoutContent.style.setProperty('background-color', 'transparent');
+    layoutContent.style.setProperty('background-color', 'transparent')
   }
 })
 
 onUnmounted(() => {
   clearInterval(timer.value)
   // 还原 .n-layout-content 背景颜色
-  const layoutContent = document.querySelector('.n-layout-content');
+  const layoutContent = document.querySelector('.n-layout-content')
   if (layoutContent instanceof HTMLElement) {
-    layoutContent.style.setProperty('background-color', originalBackgroundColor.value);
+    layoutContent.style.setProperty('background-color', originalBackgroundColor.value)
   }
 })
 </script>

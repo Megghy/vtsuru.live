@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { QAInfo } from '@/api/api-models'
-import { NCard, NDivider, NFlex, NImage, NList, NListItem, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import type { QAInfo } from '@/api/api-models'
+import { NList, NListItem } from 'naive-ui'
 import QuestionItem from './QuestionItem.vue'
 
 const props = defineProps<{

@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account';
-import { BaseRTCClient, MasterRTCClient, SlaveRTCClient } from '@/data/RTCClient';
-import { useWebRTC } from '@/store/useRTC';
-import { NButton, NInput, NSpin } from 'naive-ui';
-import { computed, Ref, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import DanmujiOBS from './obs/DanmujiOBS.vue';
-import { useDanmakuClient } from '@/store/useDanmakuClient';
+import { NButton, NInput, NSpin } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAccount } from '@/api/account'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { useWebRTC } from '@/store/useRTC'
+import DanmujiOBS from './obs/DanmujiOBS.vue'
 
-const target = ref('');
+const target = ref('')
 const accountInfo = useAccount()
 const route = useRoute()
 const inputMsg = ref('')
@@ -19,7 +18,7 @@ const isMaster = computed(() => {
 const dc = useDanmakuClient()
 const customCss = ref('')
 
-let rtc= useWebRTC()
+const rtc = useWebRTC()
 const danmujiRef = ref()
 
 async function mount() {

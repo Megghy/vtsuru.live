@@ -1,13 +1,13 @@
-import { GetSelfAccount, UpdateAccountLoop, useAccount } from "@/api/account";
-import { QueryGetAPI } from "@/api/query";
-import { useBiliAuth } from "@/store/useBiliAuth";
-import { useNotificationStore } from "@/store/useNotificationStore";
-import { h } from "vue";
-import HyperDX from '@hyperdx/browser';
-import EasySpeech from "easy-speech";
-import { createDiscreteApi, NButton, NFlex, NText } from "naive-ui";
-import { apiFail, BASE_API_URL, isTauri } from "./constants";
-import { GetNotifactions } from "./notifactions";
+import HyperDX from '@hyperdx/browser'
+import EasySpeech from 'easy-speech'
+import { createDiscreteApi, NButton, NFlex, NText } from 'naive-ui'
+import { h } from 'vue'
+import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
+import { QueryGetAPI } from '@/api/query'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { useNotificationStore } from '@/store/useNotificationStore'
+import { apiFail, BASE_API_URL, isTauri } from './constants'
+import { GetNotifactions } from './notifactions'
 
 let currentVersion: string
 let isHaveNewVersion = false
@@ -16,37 +16,36 @@ const { notification } = createDiscreteApi(['notification'])
 
 export function InitVTsuru() {
   QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
-  .then((version) => {
-    if (version.code == 200) {
-      currentVersion = version.data
-      const savedVersion = localStorage.getItem('Version')
-      localStorage.setItem('Version', currentVersion)
+    .then((version) => {
+      if (version.code == 200) {
+        currentVersion = version.data
+        const savedVersion = localStorage.getItem('Version')
+        localStorage.setItem('Version', currentVersion)
 
-      if (currentVersion && savedVersion && savedVersion !== currentVersion) {
-        setTimeout(() => {
-          location.reload()
-        }, 1000)
-        // alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
-        notification.info({
-          title: '发现新的版本更新',
-          content: '将自动刷新页面',
-          duration: 5000,
-          meta: () => h(NText, { depth: 3 }, () => currentVersion),
-        })
+        if (currentVersion && savedVersion && savedVersion !== currentVersion) {
+          setTimeout(() => {
+            location.reload()
+          }, 1000)
+          // alert('发现新的版本更新, 请按 Ctrl+F5 强制刷新页面')
+          notification.info({
+            title: '发现新的版本更新',
+            content: '将自动刷新页面',
+            duration: 5000,
+            meta: () => h(NText, { depth: 3 }, () => currentVersion),
+          })
+        } else {
+          InitVersionCheck()
+        }
       }
-      else {
-        InitVersionCheck();
-      }
-    }
-    InitOther();
-  })
-  .catch(() => {
-    apiFail.value = true
-    console.log('默认API调用失败, 切换至故障转移节点')
-  })
-  .finally(async () => {
+      InitOther()
+    })
+    .catch(() => {
+      apiFail.value = true
+      console.log('默认API调用失败, 切换至故障转移节点')
+    })
+    .finally(async () => {
 
-  })
+    })
 }
 
 async function InitOther() {
@@ -55,7 +54,7 @@ async function InitOther() {
       apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
       service: 'vtsuru.live',
       tracePropagationTargets: [/vtsuru.suki.club/i], // Set to link traces from frontend to backend requests
-      //consoleCapture: true, // Capture console logs (default false)
+      // consoleCapture: true, // Capture console logs (default false)
       advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
       ignoreUrls: [/localhost/i],
     })
@@ -98,8 +97,7 @@ function InitVersionCheck() {
 
           if (window.$route.meta.forceReload || isTauri()) {
             location.reload()
-          }
-          else {
+          } else {
             const n = notification.info({
               title: '发现新的版本更新',
               content: '是否现在刷新?',
@@ -140,12 +138,10 @@ function InitTTS() {
       EasySpeech.init({ maxTimeout: 5000, interval: 250 })
         .then(() => console.log('[SpeechSynthesis] 已加载tts服务'))
         .catch(e => console.error(e))
-    }
-    else {
+    } else {
       console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
     }
-  }
-  catch (e) {
+  } catch (e) {
     console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
   }
 }

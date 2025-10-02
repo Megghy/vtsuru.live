@@ -1,167 +1,102 @@
-import type StickSvg from '@/assets/controller/Shared/shared-Left Joystick.svg?component';
-import type RightStickSvg from '@/assets/controller/Shared/shared-Right Joystick.svg?component';
-import type StickClickSvg from '@/assets/controller/Shared/shared-Left Stick Click.svg?component';
-import type RightStickClickSvg from '@/assets/controller/Shared/shared-Right Stick Click.svg?component';
+import StickSvgComp from '@/assets/controller/Shared/shared-Left Joystick.svg?component'
+import RightStickSvgComp from '@/assets/controller/Shared/shared-Right Joystick.svg?component'
+import StickClickSvgComp from '@/assets/controller/Shared/shared-Left Stick Click.svg?component'
+import RightStickClickSvgComp from '@/assets/controller/Shared/shared-Right Stick Click.svg?component'
 
-import type XboxBodyBlack from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component';
-import type XboxBodyWhite from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component';
-import type XboxBodyBlue from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component';
-import type XboxBodyRed from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component';
+import XboxBodyBlackComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component'
+import XboxBodyWhiteComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component'
+import XboxBodyBlueComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component'
+import XboxBodyRedComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component'
 
-import type PS4BodyBlack from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component';
-import type PS4BodyFront from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component';
-import type PS4V2BodyBlack from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component';
-import type PS4V2BodyWhite from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component';
-import type PS4V2BodyRed from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component';
-import type PS4V2BodyBlue from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component';
-import type PS4V2BodyGold from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component';
-import type PS5BodyBlack from '@/assets/controller/Body/DS/DualSense VSC SVG.svg?component';
-import type PS5BodyWhite from '@/assets/controller/Body/DS/DualSense VSC SVG - White.svg?component';
+import PS4BodyBlackComp from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component'
+import PS4BodyFrontComp from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component'
+import PS4V2BodyBlackComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component'
+import PS4V2BodyWhiteComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component'
+import PS4V2BodyRedComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component'
+import PS4V2BodyBlueComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component'
+import PS4V2BodyGoldComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component'
+import PS5BodyBlackComp from '@/assets/controller/Body/DS/DualSense VSCView SVG.svg?component'
+import PS5BodyWhiteComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component'
 
-import type SwitchProBody from '@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component';
+import SwitchProBodyComp from '@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component'
 
-import type XboxASvg from '@/assets/controller/Shared/shared-A.svg?component';
-import type XboxBSvg from '@/assets/controller/Shared/shared-B.svg?component';
-import type XboxXSvg from '@/assets/controller/Shared/shared-X.svg?component';
-import type XboxYSvg from '@/assets/controller/Shared/shared-Y.svg?component';
-import type XboxDpadUpSvg from '@/assets/controller/Shared/shared-D-PAD Up.svg?component';
-import type XboxDpadDownSvg from '@/assets/controller/Shared/shared-D-PA Down.svg?component';
-import type XboxDpadLeftSvg from '@/assets/controller/Shared/shared-D-PAD Left.svg?component';
-import type XboxDpadRightSvg from '@/assets/controller/Shared/shared-D-PAD Right.svg?component';
-import type XboxLBSvg from '@/assets/controller/Shared/shared-L1.svg?component';
-import type XboxRBSvg from '@/assets/controller/Shared/shared-R1.svg?component';
-import type XboxLTSvg from '@/assets/controller/Shared/shared-L2.svg?component';
-import type XboxRTSvg from '@/assets/controller/Shared/shared-R2.svg?component';
-import type XboxViewSvg from '@/assets/controller/Xbox/xbox-View.svg?component';
-import type XboxMenuSvg from '@/assets/controller/Xbox/xbox-Menu.svg?component';
-import type XboxGuideSvg from '@/assets/controller/Xbox/xbox-Guide.svg?component';
+import XboxASvgComp from '@/assets/controller/Shared/shared-A.svg?component'
+import XboxBSvgComp from '@/assets/controller/Shared/shared-B.svg?component'
+import XboxXSvgComp from '@/assets/controller/Shared/shared-X.svg?component'
+import XboxYSvgComp from '@/assets/controller/Shared/shared-Y.svg?component'
+import XboxDpadUpSvgComp from '@/assets/controller/Shared/shared-D-PAD Up.svg?component'
+import XboxDpadDownSvgComp from '@/assets/controller/Shared/shared-D-PA Down.svg?component'
+import XboxDpadLeftSvgComp from '@/assets/controller/Shared/shared-D-PAD Left.svg?component'
+import XboxDpadRightSvgComp from '@/assets/controller/Shared/shared-D-PAD Right.svg?component'
+import XboxLBSvgComp from '@/assets/controller/Shared/shared-L1.svg?component'
+import XboxRBSvgComp from '@/assets/controller/Shared/shared-R1.svg?component'
+import XboxLTSvgComp from '@/assets/controller/Shared/shared-L2.svg?component'
+import XboxRTSvgComp from '@/assets/controller/Shared/shared-R2.svg?component'
+import XboxViewSvgComp from '@/assets/controller/Xbox/xbox-View.svg?component'
+import XboxMenuSvgComp from '@/assets/controller/Xbox/xbox-Menu.svg?component'
+import XboxGuideSvgComp from '@/assets/controller/Xbox/xbox-Guide.svg?component'
 
-import type PsCrossSvg from '@/assets/controller/PlayStation/ps-Cross.svg?component';
-import type PsCircleSvg from '@/assets/controller/PlayStation/ps-Circle.svg?component';
-import type PsSquareSvg from '@/assets/controller/PlayStation/ps-Square.svg?component';
-import type PsTriangleSvg from '@/assets/controller/PlayStation/ps-Triangle.svg?component';
-import type PsTouchpadSvg from '@/assets/controller/PlayStation/ps5-Touchpad.svg?component';
-import type PsL1Svg from '@/assets/controller/PlayStation/ps-D-PAD Left.svg?component';
-import type PsR1Svg from '@/assets/controller/PlayStation/ps-D-PAD Right.svg?component';
-import type PsL2Svg from '@/assets/controller/Shared/shared-L2.svg?component';
-import type PsR2Svg from '@/assets/controller/Shared/shared-R2.svg?component';
-import type PsCreateSvg from '@/assets/controller/PlayStation/ps5-Create.svg?component';
-import type PsOptionsSvg from '@/assets/controller/PlayStation/ps5-Option.svg?component';
-import type PsGuideSvg from '@/assets/controller/PlayStation/ps-Guide.svg?component';
+import PsCrossSvgComp from '@/assets/controller/PlayStation/ps-Cross.svg?component'
+import PsCircleSvgComp from '@/assets/controller/PlayStation/ps-Circle.svg?component'
+import PsSquareSvgComp from '@/assets/controller/PlayStation/ps-Square.svg?component'
+import PsTriangleSvgComp from '@/assets/controller/PlayStation/ps-Triangle.svg?component'
+import PsTouchpadSvgComp from '@/assets/controller/PlayStation/ps5-Touchpad.svg?component'
+import PsL1SvgComp from '@/assets/controller/PlayStation/ps-D-PAD Left.svg?component'
+import PsR1SvgComp from '@/assets/controller/PlayStation/ps-D-PAD Right.svg?component'
+import PsL2SvgComp from '@/assets/controller/Shared/shared-L2.svg?component'
+import PsR2SvgComp from '@/assets/controller/Shared/shared-R2.svg?component'
+import PsCreateSvgComp from '@/assets/controller/PlayStation/ps5-Create.svg?component'
+import PsOptionsSvgComp from '@/assets/controller/PlayStation/ps5-Option.svg?component'
+import PsGuideSvgComp from '@/assets/controller/PlayStation/ps-Guide.svg?component'
 
-import type NintendoASvg from '@/assets/controller/Nintendo/nintendo-positional prompt A.svg?component';
-import type NintendoBSvg from '@/assets/controller/Nintendo/nintendo-positional prompt B.svg?component';
-import type NintendoXSvg from '@/assets/controller/Nintendo/nintendo-positional prompt X.svg?component';
-import type NintendoYSvg from '@/assets/controller/Nintendo/nintendo-positional prompt Y.svg?component';
-import type NintendoCaptureSvg from '@/assets/controller/Nintendo/nintendoswitch-Capture.svg?component';
-import type NintendoLSvg from '@/assets/controller/Nintendo/nintendo-L.svg?component';
-import type NintendoRSvg from '@/assets/controller/Nintendo/nintendo-R.svg?component';
-import type NintendoZLSvg from '@/assets/controller/Nintendo/nintendo-ZL.svg?component';
-import type NintendoZRSvg from '@/assets/controller/Nintendo/nintendo-ZR.svg?component';
-import type NintendoPlusSvg from '@/assets/controller/Nintendo/nintendo-Plus.svg?component';
-import type NintendoMinusSvg from '@/assets/controller/Nintendo/nintendo-Minus.svg?component';
+import NintendoASvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt A.svg?component'
+import NintendoBSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt B.svg?component'
+import NintendoXSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt X.svg?component'
+import NintendoYSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt Y.svg?component'
+import NintendoCaptureSvgComp from '@/assets/controller/Nintendo/nintendoswitch-Capture.svg?component'
+import NintendoLSvgComp from '@/assets/controller/Nintendo/nintendo-L.svg?component'
+import NintendoRSvgComp from '@/assets/controller/Nintendo/nintendo-R.svg?component'
+import NintendoZLSvgComp from '@/assets/controller/Nintendo/nintendo-ZL.svg?component'
+import NintendoZRSvgComp from '@/assets/controller/Nintendo/nintendo-ZR.svg?component'
+import NintendoPlusSvgComp from '@/assets/controller/Nintendo/nintendo-Plus.svg?component'
+import NintendoMinusSvgComp from '@/assets/controller/Nintendo/nintendo-Minus.svg?component'
 
-import StickSvgComp from '@/assets/controller/Shared/shared-Left Joystick.svg?component';
-import RightStickSvgComp from '@/assets/controller/Shared/shared-Right Joystick.svg?component';
-import StickClickSvgComp from '@/assets/controller/Shared/shared-Left Stick Click.svg?component';
-import RightStickClickSvgComp from '@/assets/controller/Shared/shared-Right Stick Click.svg?component';
-
-import XboxBodyBlackComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component';
-import XboxBodyWhiteComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component';
-import XboxBodyBlueComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component';
-import XboxBodyRedComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component';
-
-import PS4BodyBlackComp from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component';
-import PS4BodyFrontComp from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component';
-import PS4V2BodyBlackComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component';
-import PS4V2BodyWhiteComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component';
-import PS4V2BodyRedComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component';
-import PS4V2BodyBlueComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component';
-import PS4V2BodyGoldComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component';
-import PS5BodyBlackComp from '@/assets/controller/Body/DS/DualSense VSCView SVG.svg?component';
-import PS5BodyWhiteComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component';
-
-import SwitchProBodyComp from '@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component';
-
-import XboxASvgComp from '@/assets/controller/Shared/shared-A.svg?component';
-import XboxBSvgComp from '@/assets/controller/Shared/shared-B.svg?component';
-import XboxXSvgComp from '@/assets/controller/Shared/shared-X.svg?component';
-import XboxYSvgComp from '@/assets/controller/Shared/shared-Y.svg?component';
-import XboxDpadUpSvgComp from '@/assets/controller/Shared/shared-D-PAD Up.svg?component';
-import XboxDpadDownSvgComp from '@/assets/controller/Shared/shared-D-PA Down.svg?component';
-import XboxDpadLeftSvgComp from '@/assets/controller/Shared/shared-D-PAD Left.svg?component';
-import XboxDpadRightSvgComp from '@/assets/controller/Shared/shared-D-PAD Right.svg?component';
-import XboxLBSvgComp from '@/assets/controller/Shared/shared-L1.svg?component';
-import XboxRBSvgComp from '@/assets/controller/Shared/shared-R1.svg?component';
-import XboxLTSvgComp from '@/assets/controller/Shared/shared-L2.svg?component';
-import XboxRTSvgComp from '@/assets/controller/Shared/shared-R2.svg?component';
-import XboxViewSvgComp from '@/assets/controller/Xbox/xbox-View.svg?component';
-import XboxMenuSvgComp from '@/assets/controller/Xbox/xbox-Menu.svg?component';
-import XboxGuideSvgComp from '@/assets/controller/Xbox/xbox-Guide.svg?component';
-
-import PsCrossSvgComp from '@/assets/controller/PlayStation/ps-Cross.svg?component';
-import PsCircleSvgComp from '@/assets/controller/PlayStation/ps-Circle.svg?component';
-import PsSquareSvgComp from '@/assets/controller/PlayStation/ps-Square.svg?component';
-import PsTriangleSvgComp from '@/assets/controller/PlayStation/ps-Triangle.svg?component';
-import PsTouchpadSvgComp from '@/assets/controller/PlayStation/ps5-Touchpad.svg?component';
-import PsL1SvgComp from '@/assets/controller/PlayStation/ps-D-PAD Left.svg?component';
-import PsR1SvgComp from '@/assets/controller/PlayStation/ps-D-PAD Right.svg?component';
-import PsL2SvgComp from '@/assets/controller/Shared/shared-L2.svg?component';
-import PsR2SvgComp from '@/assets/controller/Shared/shared-R2.svg?component';
-import PsCreateSvgComp from '@/assets/controller/PlayStation/ps5-Create.svg?component';
-import PsOptionsSvgComp from '@/assets/controller/PlayStation/ps5-Option.svg?component';
-import PsGuideSvgComp from '@/assets/controller/PlayStation/ps-Guide.svg?component';
-
-import NintendoASvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt A.svg?component';
-import NintendoBSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt B.svg?component';
-import NintendoXSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt X.svg?component';
-import NintendoYSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt Y.svg?component';
-import NintendoCaptureSvgComp from '@/assets/controller/Nintendo/nintendoswitch-Capture.svg?component';
-import NintendoLSvgComp from '@/assets/controller/Nintendo/nintendo-L.svg?component';
-import NintendoRSvgComp from '@/assets/controller/Nintendo/nintendo-R.svg?component';
-import NintendoZLSvgComp from '@/assets/controller/Nintendo/nintendo-ZL.svg?component';
-import NintendoZRSvgComp from '@/assets/controller/Nintendo/nintendo-ZR.svg?component';
-import NintendoPlusSvgComp from '@/assets/controller/Nintendo/nintendo-Plus.svg?component';
-import NintendoMinusSvgComp from '@/assets/controller/Nintendo/nintendo-Minus.svg?component';
-
-import { AllGamepadConfigs, LogicalButton, GamepadType } from '@/types/gamepad';
-import type { Component } from 'vue';
-import { h, markRaw } from 'vue';
-
+import type { AllGamepadConfigs, GamepadType, LogicalButton } from '@/types/gamepad'
+import type { Component } from 'vue'
+import { markRaw } from 'vue'
 
 export interface BodyOptionConfig {
-  name: string;
-  body: Component;
-  defaultViewBox?: string;
+  name: string
+  body: Component
+  defaultViewBox?: string
 }
 
-const L3 = 'LEFT_STICK_PRESS' as LogicalButton;
-const R3 = 'RIGHT_STICK_PRESS' as LogicalButton;
-const ACTIONDOWN = 'ACTION_DOWN' as LogicalButton;
-const ACTIONRIGHT = 'ACTION_RIGHT' as LogicalButton;
-const ACTIONLEFT = 'ACTION_LEFT' as LogicalButton;
-const ACTIONUP = 'ACTION_UP' as LogicalButton;
-const DPADUP = 'DPAD_UP' as LogicalButton;
-const DPADDOWN = 'DPAD_DOWN' as LogicalButton;
-const DPADLEFT = 'DPAD_LEFT' as LogicalButton;
-const DPADRIGHT = 'DPAD_RIGHT' as LogicalButton;
-const L1 = 'LEFT_SHOULDER_1' as LogicalButton;
-const R1 = 'RIGHT_SHOULDER_1' as LogicalButton;
-const L2 = 'LEFT_SHOULDER_2' as LogicalButton;
-const R2 = 'RIGHT_SHOULDER_2' as LogicalButton;
-const SELECT = 'SELECT' as LogicalButton;
-const START = 'START' as LogicalButton;
-const GUIDE = 'HOME' as LogicalButton;
-const PSTOUCHPAD = 'PS_TOUCHPAD' as LogicalButton;
-const NINTENDOCAPTURE = 'NINTENDO_CAPTURE' as LogicalButton;
-
+const L3 = 'LEFT_STICK_PRESS' as LogicalButton
+const R3 = 'RIGHT_STICK_PRESS' as LogicalButton
+const ACTIONDOWN = 'ACTION_DOWN' as LogicalButton
+const ACTIONRIGHT = 'ACTION_RIGHT' as LogicalButton
+const ACTIONLEFT = 'ACTION_LEFT' as LogicalButton
+const ACTIONUP = 'ACTION_UP' as LogicalButton
+const DPADUP = 'DPAD_UP' as LogicalButton
+const DPADDOWN = 'DPAD_DOWN' as LogicalButton
+const DPADLEFT = 'DPAD_LEFT' as LogicalButton
+const DPADRIGHT = 'DPAD_RIGHT' as LogicalButton
+const L1 = 'LEFT_SHOULDER_1' as LogicalButton
+const R1 = 'RIGHT_SHOULDER_1' as LogicalButton
+const L2 = 'LEFT_SHOULDER_2' as LogicalButton
+const R2 = 'RIGHT_SHOULDER_2' as LogicalButton
+const SELECT = 'SELECT' as LogicalButton
+const START = 'START' as LogicalButton
+const GUIDE = 'HOME' as LogicalButton
+const PSTOUCHPAD = 'PS_TOUCHPAD' as LogicalButton
+const NINTENDOCAPTURE = 'NINTENDO_CAPTURE' as LogicalButton
 
 export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
   xbox: [
     { name: 'Xbox One 黑色', body: markRaw(XboxBodyBlackComp), defaultViewBox: '0 0 1543 956' },
     { name: 'Xbox One 白色', body: markRaw(XboxBodyWhiteComp), defaultViewBox: '0 0 1543 956' },
     { name: 'Xbox One S 蓝色', body: markRaw(XboxBodyBlueComp), defaultViewBox: '0 0 1543 956' },
-    { name: 'Xbox One S 红色', body: markRaw(XboxBodyRedComp), defaultViewBox: '0 0 1543 956' }
+    { name: 'Xbox One S 红色', body: markRaw(XboxBodyRedComp), defaultViewBox: '0 0 1543 956' },
   ],
   ps: [
     { name: 'PS5 DualSense 黑色', body: markRaw(PS5BodyBlackComp), defaultViewBox: '0 0 544.707 302.911' },
@@ -172,31 +107,31 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
     { name: 'PS4 V2 冰川白', body: markRaw(PS4V2BodyWhiteComp), defaultViewBox: '0 0 544.707 302.911' },
     { name: 'PS4 V2 熔岩红', body: markRaw(PS4V2BodyRedComp), defaultViewBox: '0 0 544.707 302.911' },
     { name: 'PS4 V2 午夜蓝', body: markRaw(PS4V2BodyBlueComp), defaultViewBox: '0 0 544.707 302.911' },
-    { name: 'PS4 V2 金色', body: markRaw(PS4V2BodyGoldComp), defaultViewBox: '0 0 544.707 302.911' }
+    { name: 'PS4 V2 金色', body: markRaw(PS4V2BodyGoldComp), defaultViewBox: '0 0 544.707 302.911' },
   ],
   nintendo: [
-    { name: 'Switch Pro', body: markRaw(SwitchProBodyComp), defaultViewBox: '0 0 1200 780' }
-  ]
-};
+    { name: 'Switch Pro', body: markRaw(SwitchProBodyComp), defaultViewBox: '0 0 1200 780' },
+  ],
+}
 
 function parseAspectRatioToViewBox(aspectRatio: string): string | undefined {
-  const parts = aspectRatio.split('/');
+  const parts = aspectRatio.split('/')
   if (parts.length === 2) {
-    const width = parseFloat(parts[0]);
-    const height = parseFloat(parts[1]);
+    const width = Number.parseFloat(parts[0])
+    const height = Number.parseFloat(parts[1])
     if (!isNaN(width) && !isNaN(height)) {
-      return `0 0 ${width} ${height}`;
+      return `0 0 ${width} ${height}`
     }
   }
-  return undefined;
+  return undefined
 }
 
 export interface ControllerComponentStructure {
-  name: string;
-  path?: string;
-  type: 'button' | 'stick' | 'dpad' | 'trigger' | 'group';
-  logicalButton?: LogicalButton | string;
-  childComponents?: ControllerComponentStructure[];
+  name: string
+  path?: string
+  type: 'button' | 'stick' | 'dpad' | 'trigger' | 'group'
+  logicalButton?: LogicalButton | string
+  childComponents?: ControllerComponentStructure[]
 }
 
 const xboxControllerStructure: ControllerComponentStructure[] = [
@@ -216,8 +151,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         path: 'Left Stick',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Left Stick Color' },
+        ],
       },
       {
         name: '右摇杆',
@@ -226,10 +161,10 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         path: 'Right Stick',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' }
-        ]
-      }
-    ]
+          { name: 'Color', type: 'group', path: 'Right Stick Color' },
+        ],
+      },
+    ],
   },
   {
     name: '中央按钮',
@@ -243,8 +178,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Xbox Guide Button Outline' },
           { name: 'Color', type: 'group', path: 'Xbox Guide Button Color' },
-          { name: 'Icon', type: 'group', path: 'Xbox Icon (OG)' }
-        ]
+          { name: 'Icon', type: 'group', path: 'Xbox Icon (OG)' },
+        ],
       },
       {
         name: 'View按钮',
@@ -254,8 +189,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'View Button Outline' },
           { name: 'Color', type: 'group', path: 'View Button Color' },
-          { name: 'Icon', type: 'group', path: 'View Button Icon' }
-        ]
+          { name: 'Icon', type: 'group', path: 'View Button Icon' },
+        ],
       },
       {
         name: 'Menu按钮',
@@ -265,10 +200,10 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Menu Button Outline' },
           { name: 'Color', type: 'group', path: 'Menu Button Color' },
-          { name: 'Icon', type: 'group', path: 'Menu Button Icon' }
-        ]
-      }
-    ]
+          { name: 'Icon', type: 'group', path: 'Menu Button Icon' },
+        ],
+      },
+    ],
   },
   {
     name: '面部按钮',
@@ -278,7 +213,7 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
       {
         name: '面部按钮点',
         type: 'group',
-        path: 'Face Button Dot'
+        path: 'Face Button Dot',
       },
       {
         name: 'A按钮',
@@ -288,8 +223,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'A Button Outline' },
           { name: 'Color', type: 'group', path: 'A Button Color' },
-          { name: 'Text', type: 'group', path: 'A Button Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'A Button Text' },
+        ],
       },
       {
         name: 'B按钮',
@@ -299,8 +234,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Text', type: 'group', path: 'Text' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Outline', type: 'group', path: 'B Button Outline' }
-        ]
+          { name: 'Outline', type: 'group', path: 'B Button Outline' },
+        ],
       },
       {
         name: 'X按钮',
@@ -310,8 +245,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'X Button Outline' },
           { name: 'Color', type: 'group', path: 'X Button Color' },
-          { name: 'Text', type: 'group', path: 'X Button Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'X Button Text' },
+        ],
       },
       {
         name: 'Y按钮',
@@ -321,10 +256,10 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Y Button Outline' },
           { name: 'Color', type: 'group', path: 'Y Button Color' },
-          { name: 'Text', type: 'group', path: 'Y Button Text' }
-        ]
-      }
-    ]
+          { name: 'Text', type: 'group', path: 'Y Button Text' },
+        ],
+      },
+    ],
   },
   {
     name: '方向键组',
@@ -339,34 +274,34 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
           { name: 'D-PAD正面轮廓', type: 'group', path: 'D-PAD Outline Front' },
           { name: 'D-PAD底部轮廓', type: 'group', path: 'D-PAD Outline Bottom' },
           { name: 'D-PAD相关主体轮廓', type: 'group', path: 'Body Outline' },
-          { name: 'D-PAD颜色', type: 'group', path: 'Color' }
-        ]
+          { name: 'D-PAD颜色', type: 'group', path: 'Color' },
+        ],
       },
       {
         name: '上 (逻辑)',
         type: 'button',
         logicalButton: DPADUP,
-        path: 'D-PAD Up'
+        path: 'D-PAD Up',
       },
       {
         name: '下 (逻辑)',
         type: 'button',
         logicalButton: DPADDOWN,
-        path: 'D-PAD Down'
+        path: 'D-PAD Down',
       },
       {
         name: '左 (逻辑)',
         type: 'button',
         logicalButton: DPADLEFT,
-        path: 'D-PAD Left'
+        path: 'D-PAD Left',
       },
       {
         name: '右 (逻辑)',
         type: 'button',
         logicalButton: DPADRIGHT,
-        path: 'D-PAD Right'
-      }
-    ]
+        path: 'D-PAD Right',
+      },
+    ],
   },
   {
     name: '肩部按钮',
@@ -381,8 +316,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'LB Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'LB Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'LB Text' },
+        ],
       },
       {
         name: '右肩按钮',
@@ -392,18 +327,18 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'RB Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'RB Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'RB Text' },
+        ],
       },
       {
         name: '配对按钮',
         type: 'button',
-        path: 'Pair Button'
+        path: 'Pair Button',
       },
-      { name: 'Xbox One 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One Controller Outline'},
-      { name: 'Xbox One S 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One S Controller Outline'},
-      { name: '肩部整体颜色', type: 'group', path: 'Color'}
-    ]
+      { name: 'Xbox One 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One Controller Outline' },
+      { name: 'Xbox One S 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One S Controller Outline' },
+      { name: '肩部整体颜色', type: 'group', path: 'Color' },
+    ],
   },
   {
     name: '扳机键',
@@ -418,8 +353,8 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'LT Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'LT Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'LT Text' },
+        ],
       },
       {
         name: '右扳机',
@@ -429,12 +364,12 @@ const xboxControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'RT Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'RT Text' }
-        ]
-      }
-    ]
-  }
-];
+          { name: 'Text', type: 'group', path: 'RT Text' },
+        ],
+      },
+    ],
+  },
+]
 
 const psControllerStructure: ControllerComponentStructure[] = [
   {
@@ -450,28 +385,28 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Symbol', type: 'group', path: 'Symbol' },
           { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Color' },
+        ],
       },
       {
         name: 'D-PAD Down',
         type: 'button',
         logicalButton: DPADDOWN,
-        path: 'D-PAD Down'
+        path: 'D-PAD Down',
       },
       {
         name: 'D-PAD Left',
         type: 'button',
         logicalButton: DPADLEFT,
-        path: 'D-PAD Left'
+        path: 'D-PAD Left',
       },
       {
         name: 'D-PAD Up',
         type: 'button',
         logicalButton: DPADUP,
-        path: 'D-PAD Up'
-      }
-    ]
+        path: 'D-PAD Up',
+      },
+    ],
   },
   {
     name: '摇杆',
@@ -484,8 +419,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         path: 'Left Stick',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Left Stick Color' },
+        ],
       },
       {
         name: '右摇杆',
@@ -494,10 +429,10 @@ const psControllerStructure: ControllerComponentStructure[] = [
         path: 'Right Stick',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' }
-        ]
-      }
-    ]
+          { name: 'Color', type: 'group', path: 'Right Stick Color' },
+        ],
+      },
+    ],
   },
   {
     name: '面部按钮',
@@ -506,13 +441,13 @@ const psControllerStructure: ControllerComponentStructure[] = [
       {
         name: 'Face Button',
         type: 'group',
-        path: 'Face Button'
+        path: 'Face Button',
       },
       {
         name: 'Option Button',
         type: 'button',
         logicalButton: START,
-        path: 'Option Button'
+        path: 'Option Button',
       },
       {
         name: 'Create Button',
@@ -522,8 +457,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Symbol', type: 'group', path: 'Symbol' }
-        ]
+          { name: 'Symbol', type: 'group', path: 'Symbol' },
+        ],
       },
       {
         name: '十字按钮',
@@ -532,8 +467,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         logicalButton: ACTIONDOWN,
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Cross Outline' },
-          { name: 'Color', type: 'group', path: 'Cross Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Cross Color' },
+        ],
       },
       {
         name: '圆形按钮',
@@ -542,8 +477,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         logicalButton: ACTIONRIGHT,
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Circle Outline' },
-          { name: 'Color', type: 'group', path: 'Circle Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Circle Color' },
+        ],
       },
       {
         name: '方形按钮',
@@ -552,8 +487,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         logicalButton: ACTIONLEFT,
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Square Outline' },
-          { name: 'Color', type: 'group', path: 'Square Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Square Color' },
+        ],
       },
       {
         name: '三角按钮',
@@ -562,10 +497,10 @@ const psControllerStructure: ControllerComponentStructure[] = [
         logicalButton: ACTIONUP,
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Triangle Outline' },
-          { name: 'Color', type: 'group', path: 'Triangle Color' }
-        ]
-      }
-    ]
+          { name: 'Color', type: 'group', path: 'Triangle Color' },
+        ],
+      },
+    ],
   },
   {
     name: '静音按钮',
@@ -580,10 +515,10 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Mute With LED', type: 'group', path: 'Mute With LED' },
           { name: 'Mute Without LED', type: 'group', path: 'Mute Without LED' },
-          { name: 'Mute Icon', type: 'group', path: 'Mute Icon' }
-        ]
-      }
-    ]
+          { name: 'Mute Icon', type: 'group', path: 'Mute Icon' },
+        ],
+      },
+    ],
   },
   {
     name: 'Misc.',
@@ -592,8 +527,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
     childComponents: [
       { name: 'PS Button', type: 'button', logicalButton: GUIDE, path: 'PS Button' },
       { name: 'Speakers', type: 'group', path: 'Speakers' },
-      { name: 'USB-C Plug', type: 'group', path: 'USB-C Plug' }
-    ]
+      { name: 'USB-C Plug', type: 'group', path: 'USB-C Plug' },
+    ],
   },
   {
     name: '触摸板',
@@ -602,8 +537,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
     path: 'Touchpad',
     childComponents: [
       { name: 'Outline', type: 'group', path: 'Touchpad Outline' },
-      { name: 'Color', type: 'group', path: 'Touchpad Color' }
-    ]
+      { name: 'Color', type: 'group', path: 'Touchpad Color' },
+    ],
   },
   {
     name: '分享按钮',
@@ -612,8 +547,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
     path: 'Create Button',
     childComponents: [
       { name: 'Outline', type: 'group', path: 'Outline' },
-      { name: 'Color', type: 'group', path: 'Color' }
-    ]
+      { name: 'Color', type: 'group', path: 'Color' },
+    ],
   },
   {
     name: '菜单按钮',
@@ -622,10 +557,10 @@ const psControllerStructure: ControllerComponentStructure[] = [
     path: 'Option Button',
     childComponents: [
       { name: 'Outline', type: 'group', path: 'Outline' },
-      { name: 'Color', type: 'group', path: 'Color' }
-    ]
+      { name: 'Color', type: 'group', path: 'Color' },
+    ],
   },
-{
+  {
     name: '肩部按钮',
     type: 'group',
     childComponents: [
@@ -637,8 +572,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'Text' },
+        ],
       },
       {
         name: '右肩按钮',
@@ -648,10 +583,10 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'Text' },
+        ],
       },
-    ]
+    ],
   },
   {
     name: '扳机键',
@@ -665,8 +600,8 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' }
-        ]
+          { name: 'Text', type: 'group', path: 'Text' },
+        ],
       },
       {
         name: '右扳机',
@@ -676,12 +611,12 @@ const psControllerStructure: ControllerComponentStructure[] = [
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Outline' },
           { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' }
-        ]
-      }
-    ]
-  }
-];
+          { name: 'Text', type: 'group', path: 'Text' },
+        ],
+      },
+    ],
+  },
+]
 
 const nintendoControllerStructure: ControllerComponentStructure[] = [
   {
@@ -694,8 +629,8 @@ const nintendoControllerStructure: ControllerComponentStructure[] = [
         logicalButton: 'LEFT_STICK',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' }
-        ]
+          { name: 'Color', type: 'group', path: 'Left Stick Color' },
+        ],
       },
       {
         name: '右摇杆',
@@ -703,18 +638,18 @@ const nintendoControllerStructure: ControllerComponentStructure[] = [
         logicalButton: 'RIGHT_STICK',
         childComponents: [
           { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' }
-        ]
-      }
-    ]
-  }
-];
+          { name: 'Color', type: 'group', path: 'Right Stick Color' },
+        ],
+      },
+    ],
+  },
+]
 
 export const controllerStructures: Record<GamepadType, ControllerComponentStructure[]> = {
   xbox: xboxControllerStructure,
   ps: psControllerStructure,
-  nintendo: nintendoControllerStructure
-};
+  nintendo: nintendoControllerStructure,
+}
 
 export const gamepadConfigs: AllGamepadConfigs = {
   xbox: {
@@ -742,7 +677,7 @@ export const gamepadConfigs: AllGamepadConfigs = {
       { type: 'button', logicalButton: SELECT, name: 'View', svg: markRaw(XboxViewSvgComp), position: { top: '35%', left: '52%', width: '6%' } },
       { type: 'button', logicalButton: START, name: 'Menu', svg: markRaw(XboxMenuSvgComp), position: { top: '35%', left: '62%', width: '6%' } },
       { type: 'button', logicalButton: GUIDE, name: 'Guide', svg: markRaw(XboxGuideSvgComp), position: { top: '20%', left: '50%', width: '8%' } },
-    ]
+    ],
   },
   ps: {
     name: 'PlayStation Controller',
@@ -766,7 +701,7 @@ export const gamepadConfigs: AllGamepadConfigs = {
       { type: 'button', logicalButton: SELECT, name: 'Create', svg: markRaw(PsCreateSvgComp), position: { top: '35%', left: '30%', width: '6%' } },
       { type: 'button', logicalButton: START, name: 'Options', svg: markRaw(PsOptionsSvgComp), position: { top: '35%', left: '70%', width: '6%' } },
       { type: 'button', logicalButton: GUIDE, name: 'PS Button', svg: markRaw(PsGuideSvgComp), position: { top: '40%', left: '50%', width: '8%' } },
-    ]
+    ],
   },
   nintendo: {
     name: 'Nintendo Switch Pro Controller',
@@ -789,6 +724,6 @@ export const gamepadConfigs: AllGamepadConfigs = {
       { type: 'button', logicalButton: R2, name: 'ZR', svg: markRaw(NintendoZRSvgComp), position: { top: '10%', left: '65%', width: '10%' } },
       { type: 'button', logicalButton: SELECT, name: '-', svg: markRaw(NintendoMinusSvgComp), position: { top: '35%', left: '35%', width: '5%' } },
       { type: 'button', logicalButton: START, name: '+', svg: markRaw(NintendoPlusSvgComp), position: { top: '35%', left: '65%', width: '5%' } },
-    ]
-  }
-};
+    ],
+  },
+}

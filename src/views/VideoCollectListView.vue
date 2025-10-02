@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { NavigateToNewTab } from '@/Utils'
-import { VideoCollectDetail, VideoCollectVideo, VideoInfo, VideoStatus } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { VIDEO_COLLECT_API_URL } from '@/data/constants'
+import type { VideoCollectDetail, VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { Clock24Regular, Person24Regular, Question24Regular } from '@vicons/fluent'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
@@ -26,6 +23,10 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { VideoStatus } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { VIDEO_COLLECT_API_URL } from '@/data/constants'
+import { NavigateToNewTab } from '@/Utils'
 
 const route = useRoute()
 const message = useMessage()
@@ -36,21 +37,21 @@ const { width } = useElementSize(card)
 
 const videoDetail = ref<VideoCollectDetail | null>(await get())
 const acceptVideos = computed(() => {
-  return videoDetail.value?.videos.filter((v) => v.info.status == VideoStatus.Accepted)
+  return videoDetail.value?.videos.filter(v => v.info.status == VideoStatus.Accepted)
 })
 const watchedVideos = computed(() => {
-  return videoDetail.value?.videos.filter((v) => v.video.watched == true) ?? []
+  return videoDetail.value?.videos.filter(v => v.video.watched == true) ?? []
 })
 const watchedTime = computed(() => {
-  return new List(watchedVideos.value).Sum((v) => v?.video.length ?? 0)
+  return new List(watchedVideos.value).Sum(v => v?.video.length ?? 0)
 })
 const totalTime = computed(() => {
-  return new List(videoDetail.value?.videos).Sum((v) => v?.video.length ?? 0)
+  return new List(videoDetail.value?.videos).Sum(v => v?.video.length ?? 0)
 })
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
     if (data.code == 200) {
       return data.data
     }
@@ -64,13 +65,13 @@ function onClick(video: VideoCollectVideo) {
     video.watched = true
   }
   // 将视频对象移动到数组的末尾
-  const index = videoDetail.value?.videos.findIndex((v) => v.video == video) ?? -1
-  const tempVideo = videoDetail.value?.videos[index] ?? ({} as { info: VideoInfo; video: VideoCollectVideo })
+  const index = videoDetail.value?.videos.findIndex(v => v.video == video) ?? -1
+  const tempVideo = videoDetail.value?.videos[index] ?? ({} as { info: VideoInfo, video: VideoCollectVideo })
   if (index > -1) {
     videoDetail.value?.videos.splice(index, 1)
     videoDetail.value?.videos.push(tempVideo)
   }
-  NavigateToNewTab('https://bilibili.com/video/' + video.id)
+  NavigateToNewTab(`https://bilibili.com/video/${video.id}`)
 }
 function formatSeconds(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
@@ -172,7 +173,7 @@ function formatSecondsToTime(seconds: number): string {
           >
             <NSpace>
               <NImage
-                :src="item.video.cover + '@100h'"
+                :src="`${item.video.cover}@100h`"
                 lazy
                 :img-props="{ referrerpolicy: 'no-referrer' }"
                 height="75"

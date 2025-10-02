@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import ManageLayout from '@/views/ManageLayout.vue';
-import ViewerLayout from '@/views/ViewerLayout.vue';
 import {
   dateZhCN,
   NConfigProvider,
@@ -13,83 +11,80 @@ import {
   NNotificationProvider,
   NSpin,
   zhCN,
-} from 'naive-ui';
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-import TempComponent from './components/TempComponent.vue';
-import { isDarkMode, theme } from './Utils';
-import OBSLayout from './views/OBSLayout.vue';
-import OpenLiveLayout from './views/OpenLiveLayout.vue';
-import ClientLayout from './client/ClientLayout.vue';
-import { ThemeType } from './api/api-models';
+} from 'naive-ui'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import ManageLayout from '@/views/ManageLayout.vue'
+import ViewerLayout from '@/views/ViewerLayout.vue'
+import { ThemeType } from './api/api-models'
+import ClientLayout from './client/ClientLayout.vue'
+import TempComponent from './components/TempComponent.vue'
+import { isDarkMode, theme } from './Utils'
+import OBSLayout from './views/OBSLayout.vue'
+import OpenLiveLayout from './views/OpenLiveLayout.vue'
 
-const route = useRoute();
-const themeType = useStorage('Settings.Theme', ThemeType.Auto);
+const route = useRoute()
+const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
-    document.title = `${route.meta.title} · ${route.params.id} · VTsuru`;
-    return 'viewer';
+    document.title = `${route.meta.title} · ${route.params.id} · VTsuru`
+    return 'viewer'
+  } else if (route.path.startsWith('/manage')) {
+    document.title = `${route.meta.title} · 管理 · VTsuru`
+    return 'manage'
+  } else if (route.path.startsWith('/open-live')) {
+    document.title = `${route.meta.title} · 开放平台 · VTsuru`
+    return 'open-live'
+  } else if (route.path.startsWith('/obs')) {
+    document.title = `${route.meta.title} · OBS · VTsuru`
+    return 'obs'
+  } else if (route.path.startsWith('/client')) {
+    document.title = `${route.meta.title} · 客户端 · VTsuru`
+    return 'client'
+  } else {
+    document.title = `${route.meta.title} · VTsuru`
+    return ''
   }
-  else if (route.path.startsWith('/manage')) {
-    document.title = `${route.meta.title} · 管理 · VTsuru`;
-    return 'manage';
-  }
-  else if (route.path.startsWith('/open-live')) {
-    document.title = `${route.meta.title} · 开放平台 · VTsuru`;
-    return 'open-live';
-  }
-  else if (route.path.startsWith('/obs')) {
-    document.title = `${route.meta.title} · OBS · VTsuru`;
-    return 'obs';
-  }
-  else if (route.path.startsWith('/client')) {
-    document.title = `${route.meta.title} · 客户端 · VTsuru`;
-    return 'client';
-  }
-  else {
-    document.title = `${route.meta.title} · VTsuru`;
-    return '';
-  }
-});
+})
 watchEffect(() => {
   if (isDarkMode.value) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add('dark')
   } else {
-    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove('dark')
   }
-});
+})
 
 const themeOverrides = computed(() => {
   return {
     common: {
       // 主色调 (中蓝色基调，提升可读性并增强对比)
       primaryColor: '#4D6E9C',
-      primaryColorHover: '#6483A9',      // 略微提亮悬浮色
-      primaryColorPressed: '#365A7D',     // 调整按下色，避免在暗色模式下过暗
-      primaryColorSuppl: '#809BC1',     // 调整补充色，使其与背景有区分
+      primaryColorHover: '#6483A9', // 略微提亮悬浮色
+      primaryColorPressed: '#365A7D', // 调整按下色，避免在暗色模式下过暗
+      primaryColorSuppl: '#809BC1', // 调整补充色，使其与背景有区分
 
       // 信息色 (浅蓝色基调，提升对比度)
-      infoColorHover: '#79AFDE',        // 提亮悬浮色
-      infoColorPressed: '#4B8AC3',       // 调整按下色
+      infoColorHover: '#79AFDE', // 提亮悬浮色
+      infoColorPressed: '#4B8AC3', // 调整按下色
 
       // 成功色 (柔和青绿, 增强对比)
       successColor: '#3AA89C',
-      successColorHover: '#5AB9AE',      // 调整悬浮色
-      successColorPressed: '#2C8C82',     // 调整按下色
-      successColorSuppl: '#B4E4DF',      // 调整补充色
+      successColorHover: '#5AB9AE', // 调整悬浮色
+      successColorPressed: '#2C8C82', // 调整按下色
+      successColorSuppl: '#B4E4DF', // 调整补充色
 
       // 警告色 (柔和橙色, 微调对比)
       warningColor: '#FFA64D',
-      warningColorHover: '#FFBA70',      // 调整悬浮色
-      warningColorPressed: '#E89530',     // 调整按下色
-      warningColorSuppl: '#FFE2C2',      // 调整补充色
+      warningColorHover: '#FFBA70', // 调整悬浮色
+      warningColorPressed: '#E89530', // 调整按下色
+      warningColorSuppl: '#FFE2C2', // 调整补充色
 
       // 错误色 (柔和红色, 微调对比)
       errorColor: '#E16565',
-      errorColorHover: '#EA8282',       // 调整悬浮色
-      errorColorPressed: '#D44848',      // 调整按下色
-      errorColorSuppl: '#F3C0C0',       // 调整补充色
+      errorColorHover: '#EA8282', // 调整悬浮色
+      errorColorPressed: '#D44848', // 调整按下色
+      errorColorSuppl: '#F3C0C0', // 调整补充色
 
       // 保持字体设置
       fontFamily:
@@ -105,15 +100,15 @@ const themeOverrides = computed(() => {
       color: isDarkMode.value ? '#48484e' : '#FFFFFF',
       textColor: isDarkMode.value ? '#FFFFFF' : '#333333',
     },
-  };
+  }
 })
-const body = document.body;
+const body = document.body
 
 onMounted(() => {
   if (isDarkMode.value) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add('dark')
   }
-});
+})
 </script>
 
 <template>

@@ -1,25 +1,26 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "strict": true,
-    "moduleResolution": "Bundler",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"],
     "useDefineForClassFields": true,
-    "allowJs": false,
-    "sourceMap": true,
     "baseUrl": ".",
-    "types": ["node", "vue-vine/macros", "jszip"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "paths": {
       "@/*": ["src/*"]
     },
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"],
     "resolveJsonModule": true,
+    "types": ["node", "vue-vine/macros", "jszip"],
+    "allowJs": false,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
     "isolatedModules": true
   },
+  "references": [{ "path": "./tsconfig.node.json" }],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
@@ -32,6 +33,5 @@
     "src/data/chat/models.js",
     "src/store/useDanmakuClient.ts"
   ],
-  "exclude": ["node_modules"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "exclude": ["node_modules"]
 }

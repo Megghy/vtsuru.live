@@ -1,18 +1,17 @@
-import { ConfigItemDefinition } from './VTsuruConfigTypes';
-import type { Component, DefineComponent } from 'vue';
+import type { Component, DefineComponent } from 'vue'
 
 /**
  * OBS 组件定义接口
  */
-export type OBSComponentDefinition = {
-  id: string; // 唯一标识符
-  name: string; // 显示名称
-  description: string; // 组件描述
-  component: DefineComponent<{}, {}, any> | Component; // Vue 组件本身 (异步或同步)
-  settingName?: string; // 用于在数据库中存储配置的名称，可选
-  icon?: string; // 组件图标的路径 (可选)
-  version?: string; // 组件版本 (可选)
-  props?: Record<string, any>; // 传递给组件的额外props (可选)
+export interface OBSComponentDefinition {
+  id: string // 唯一标识符
+  name: string // 显示名称
+  description: string // 组件描述
+  component: DefineComponent<{}, {}, any> | Component // Vue 组件本身 (异步或同步)
+  settingName?: string // 用于在数据库中存储配置的名称，可选
+  icon?: string // 组件图标的路径 (可选)
+  version?: string // 组件版本 (可选)
+  props?: Record<string, any> // 传递给组件的额外props (可选)
   // 子组件需要暴露 Config 和 DefaultConfig 才能使用 DynamicForm
   // Config?: ConfigItemDefinition[];
   // DefaultConfig?: any;
@@ -40,14 +39,14 @@ export const OBSComponentMap: Record<string, OBSComponentDefinition> = {
     id: 'Example',
     name: '示例组件',
     description: '一个基础的OBS组件，用于演示和测试功能。',
-    component: defineAsyncComponent(() => import('@/views/obs_store/components/ExampleOBSComponent.vue')),
+    component: defineAsyncComponent(async () => import('@/views/obs_store/components/ExampleOBSComponent.vue')),
     version: '1.0.0',
   },
   Controller: {
     id: 'Controller',
     name: '控制器',
     description: '将用户手柄操作映射到OBS的场景中',
-    component: defineAsyncComponent(() => import('@/views/obs_store/components/gamepads/GamepadViewer.vue')),
+    component: defineAsyncComponent(async () => import('@/views/obs_store/components/gamepads/GamepadViewer.vue')),
     version: '1.0.0',
   },
-};
+}

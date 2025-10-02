@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { OpenLiveLotteryType, UpdateLiveLotteryUsersModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { LOTTERY_API_URL } from '@/data/constants'
+import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
 import { NDivider, NEmpty, NSpace, NText, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
+import { useRoute } from 'vue-router'
+import { OpenLiveLotteryType } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { LOTTERY_API_URL } from '@/data/constants'
 
 const props = defineProps<{
   code?: string
@@ -30,7 +31,7 @@ const isMoreThanContainer = computed(() => {
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
       code: currentCode.value,
     })
     if (data.code == 200) {
@@ -90,7 +91,7 @@ onUnmounted(() => {
           >
             <img
               class="lottery-avatar"
-              :src="user.avatar + '@30h'"
+              :src="`${user.avatar}@30h`"
               referrerpolicy="no-referrer"
             >
             <div>
@@ -135,7 +136,7 @@ onUnmounted(() => {
                 height="50"
                 width="50"
                 style="border-radius: 50%"
-                :src="user.avatar + '@50h_50w'"
+                :src="`${user.avatar}@50h_50w`"
                 referrerpolicy="no-referrer"
               >
               <NText style="font-size: large">
@@ -165,7 +166,7 @@ onUnmounted(() => {
               height="50"
               width="50"
               style="border-radius: 50%"
-              :src="user.avatar + '@50h_50w'"
+              :src="`${user.avatar}@50h_50w`"
               referrerpolicy="no-referrer"
             >
             <NText style="font-size: large; margin-top: 10px">

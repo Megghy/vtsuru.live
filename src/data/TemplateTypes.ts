@@ -1,9 +1,9 @@
-import {
+import type {
   ScheduleWeekInfo,
   Setting_LiveRequest,
   SongRequestInfo,
   SongsInfo,
-  UserInfo
+  UserInfo,
 } from '@/api/api-models'
 
 export interface SongListConfigType {

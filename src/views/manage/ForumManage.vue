@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useForumStore } from '@/store/useForumStore'
-import {
+import type {
   DataTableColumns,
+} from 'naive-ui'
+import type { UserBasicInfo } from '@/api/api-models'
+import type { ForumModel, ForumUserModel } from '@/api/models/forum'
+import {
   NAlert,
   NButton,
   NCard,
@@ -19,7 +20,6 @@ import {
   NModal,
   NSelect,
   NSpin,
-  NSwitch,
   NTabPane,
   NTabs,
   NTag,
@@ -27,12 +27,14 @@ import {
   useMessage,
 } from 'naive-ui'
 import { h, onMounted, ref } from 'vue'
-import { ForumModel, ForumUserLevels, ForumUserModel } from '@/api/models/forum'
+import { useAccount } from '@/api/account'
+import { ForumUserLevels } from '@/api/models/forum'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import UserBasicInfoCard from '@/components/UserBasicInfoCard.vue'
 import { FORUM_API_URL } from '@/data/constants'
 // @ts-ignore
 import Agreement from '@/document/EnableForumAgreement.md'
-import { UserBasicInfo } from '@/api/api-models'
-import UserBasicInfoCard from '@/components/UserBasicInfoCard.vue'
+import { useForumStore } from '@/store/useForumStore'
 
 const useForum = useForumStore()
 const accountInfo = useAccount()
@@ -90,19 +92,19 @@ async function createForum() {
     return
   }
   try {
-    const data = await QueryPostAPI<ForumModel>(FORUM_API_URL + 'create', {
+    const data = await QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, {
       name: create_Name.value,
     })
     if (data.code == 200) {
       message.success('创建成功')
       currentForum.value = data.data
     } else {
-      message.error('创建失败:' + data.message)
+      message.error(`创建失败:${data.message}`)
       console.error(data.message)
     }
   } catch (err) {
     console.error(err)
-    message.error('创建失败:' + err)
+    message.error(`创建失败:${err}`)
   }
 }
 async function SwitchForum(owner: number) {
@@ -139,7 +141,7 @@ const applyingColumns: DataTableColumns<ForumUserModel> = [
           onClick: () =>
             useForum.ConfirmApply(currentForum.value.owner.id, row.id).then((success) => {
               if (success) message.success('操作成功')
-              currentForum.value.applying = currentForum.value.applying.filter((u) => u.id != row.id)
+              currentForum.value.applying = currentForum.value.applying.filter(u => u.id != row.id)
             }),
         },
         { default: () => '通过申请' },
@@ -227,9 +229,9 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
 
 async function addAdmin(id: number) {
   try {
-    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/add-admin', {
+    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, {
       forum: currentForum.value.owner.id,
-      id: id,
+      id,
     })
     if (data.code == 200) {
       message.success('已设置为管理员')
@@ -237,15 +239,15 @@ async function addAdmin(id: number) {
       addAdminName.value = ''
       showAddAdminModal.value = false
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
   }
 }
 async function removeAdmin(id: number) {
   try {
-    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/del-admin', {
+    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, {
       forum: currentForum.value.owner.id,
       id,
     })
@@ -253,31 +255,31 @@ async function removeAdmin(id: number) {
       message.success('已取消管理员权限')
       refreshForumInfo()
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
   }
 }
 async function banUser(id: number) {
   try {
-    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/ban', {
+    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, {
       forum: currentForum.value.owner.id,
-      id: id,
+      id,
     })
     if (data.code == 200) {
       message.success('已封禁用户')
       refreshForumInfo()
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
   }
 }
 async function unbanUser(id: number) {
   try {
-    const data = await QueryGetAPI<ForumModel>(FORUM_API_URL + 'manage/unban', {
+    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, {
       forum: currentForum.value.owner.id,
       id,
     })
@@ -285,21 +287,21 @@ async function unbanUser(id: number) {
       message.success('已解禁')
       refreshForumInfo()
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
   }
 }
 async function updateForumSettings() {
   try {
-    const data = await QueryPostAPI(FORUM_API_URL + 'manage/update-setting', currentForum.value.settings)
+    const data = await QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings)
     if (data.code == 200) {
     } else {
-      message.error('修改失败: ' + data.message)
+      message.error(`修改失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('修改失败: ' + err)
+    message.error(`修改失败: ${err}`)
   }
 }
 
@@ -321,7 +323,7 @@ onMounted(() => {
     v-model:value="selectedForum"
     :options="
       managedForums.map((f) => ({
-        label: (f.owner.id == accountInfo.id ? '[我的] ' : '') + f.name + ` (${f.owner.name})`,
+        label: `${(f.owner.id == accountInfo.id ? '[我的] ' : '') + f.name} (${f.owner.name})`,
         value: f.owner.id,
       }))
     "

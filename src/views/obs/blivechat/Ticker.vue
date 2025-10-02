@@ -1,99 +1,19 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<template>
-  <yt-live-chat-ticker-renderer :hidden="showMessages.length === 0">
-    <div
-      id="container"
-      dir="ltr"
-      class="style-scope yt-live-chat-ticker-renderer"
-    >
-      <transition-group
-        id="items"
-        tag="div"
-        :css="false"
-        class="style-scope yt-live-chat-ticker-renderer"
-        @enter="onTickerItemEnter"
-        @leave="onTickerItemLeave"
-      >
-        <yt-live-chat-ticker-paid-message-item-renderer
-          v-for="message in showMessages"
-          :key="message.raw.id"
-          tabindex="0"
-          class="style-scope yt-live-chat-ticker-renderer"
-          style="overflow: hidden;"
-          @click="onItemClick(message.raw)"
-        >
-          <div
-            id="container"
-            dir="ltr"
-            class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
-            :style="{
-              background: message.bgColor,
-            }"
-          >
-            <div
-              id="content"
-              class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
-              :style="{
-                color: message.color
-              }"
-            >
-              <img-shadow
-                id="author-photo"
-                height="24"
-                width="24"
-                class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
-                :img-url="message.raw.avatarUrl"
-              />
-              <span
-                id="text"
-                dir="ltr"
-                class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
-              >{{ message.text }}</span>
-            </div>
-          </div>
-        </yt-live-chat-ticker-paid-message-item-renderer>
-      </transition-group>
-    </div>
-    <template v-if="pinnedMessage">
-      <membership-item
-        v-if="pinnedMessage.type === MESSAGE_TYPE_MEMBER"
-        :key="pinnedMessage.id"
-        class="style-scope yt-live-chat-ticker-renderer"
-        :avatar-url="pinnedMessage.avatarUrl"
-        :author-name="getShowAuthorName(pinnedMessage)"
-        :privilege-type="pinnedMessage.privilegeType"
-        :title="pinnedMessage.title"
-        :time="pinnedMessage.time"
-      />
-      <paid-message
-        v-else
-        :key="pinnedMessage.id"
-        class="style-scope yt-live-chat-ticker-renderer"
-        :price="pinnedMessage.price"
-        :avatar-url="pinnedMessage.avatarUrl"
-        :author-name="getShowAuthorName(pinnedMessage)"
-        :time="pinnedMessage.time"
-        :content="pinnedMessageShowContent"
-      />
-    </template>
-  </yt-live-chat-ticker-renderer>
-</template>
-
 <script setup>
 // @ts-nocheck
-import { ref, computed, onBeforeUnmount, nextTick } from 'vue'
-import { formatCurrency } from './utils'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import * as constants from './constants'
 import ImgShadow from './ImgShadow.vue'
 import MembershipItem from './MembershipItem.vue'
 import PaidMessage from './PaidMessage.vue'
-import * as constants from './constants'
+import { formatCurrency } from './utils'
 
 const props = defineProps({
   messages: Array,
   showGiftName: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:messages'])
@@ -109,8 +29,8 @@ onBeforeUnmount(() => {
 })
 
 const showMessages = computed(() => {
-  let res = []
-  for (let message of props.messages) {
+  const res = []
+  for (const message of props.messages) {
     if (!needToShow(message)) {
       continue
     }
@@ -118,7 +38,7 @@ const showMessages = computed(() => {
       raw: message,
       bgColor: getBgColor(message),
       color: getColor(message),
-      text: getText(message)
+      text: getText(message),
     })
   }
   return res
@@ -136,7 +56,7 @@ const pinnedMessageShowContent = computed(() => {
 })
 
 async function onTickerItemEnter(el, done) {
-  let width = el.clientWidth
+  const width = el.clientWidth
   if (width === 0) {
     // CSS指定了不显示固定栏
     done()
@@ -165,7 +85,7 @@ function onTickerItemLeave(el, done) {
 const getShowAuthorName = constants.getShowAuthorName
 
 function needToShow(message) {
-  let pinTime = getPinTime(message)
+  const pinTime = getPinTime(message)
   return (new Date() - message.addTime) / (60 * 1000) < pinTime
 }
 
@@ -175,11 +95,11 @@ function getBgColor(message) {
     color1 = 'rgba(15,157,88,1)'
     color2 = 'rgba(11,128,67,1)'
   } else {
-    let config = constants.getPriceConfig(message.price)
+    const config = constants.getPriceConfig(message.price)
     color1 = config.colors.contentBg
     color2 = config.colors.headerBg
   }
-  let pinTime = getPinTime(message)
+  const pinTime = getPinTime(message)
   let progress = (1 - ((curTime.value - message.addTime) / (60 * 1000) / pinTime)) * 100
   if (progress < 0) {
     progress = 0
@@ -215,10 +135,10 @@ function updateProgress() {
   curTime.value = new Date()
 
   // 删除过期的消息
-  let filteredMessages = []
+  const filteredMessages = []
   let messagesChanged = false
-  for (let message of props.messages) {
-    let pinTime = getPinTime(message)
+  for (const message of props.messages) {
+    const pinTime = getPinTime(message)
     if ((curTime.value - message.addTime) / (60 * 1000) >= pinTime) {
       messagesChanged = true
       if (pinnedMessage.value === message) {
@@ -242,5 +162,86 @@ function onItemClick(message) {
 }
 </script>
 
+<template>
+  <yt-live-chat-ticker-renderer :hidden="showMessages.length === 0">
+    <div
+      id="container"
+      dir="ltr"
+      class="style-scope yt-live-chat-ticker-renderer"
+    >
+      <transition-group
+        id="items"
+        tag="div"
+        :css="false"
+        class="style-scope yt-live-chat-ticker-renderer"
+        @enter="onTickerItemEnter"
+        @leave="onTickerItemLeave"
+      >
+        <yt-live-chat-ticker-paid-message-item-renderer
+          v-for="message in showMessages"
+          :key="message.raw.id"
+          tabindex="0"
+          class="style-scope yt-live-chat-ticker-renderer"
+          style="overflow: hidden;"
+          @click="onItemClick(message.raw)"
+        >
+          <div
+            id="container"
+            dir="ltr"
+            class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
+            :style="{
+              background: message.bgColor,
+            }"
+          >
+            <div
+              id="content"
+              class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
+              :style="{
+                color: message.color,
+              }"
+            >
+              <ImgShadow
+                id="author-photo"
+                height="24"
+                width="24"
+                class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
+                :img-url="message.raw.avatarUrl"
+              />
+              <span
+                id="text"
+                dir="ltr"
+                class="style-scope yt-live-chat-ticker-paid-message-item-renderer"
+              >{{ message.text }}</span>
+            </div>
+          </div>
+        </yt-live-chat-ticker-paid-message-item-renderer>
+      </transition-group>
+    </div>
+    <template v-if="pinnedMessage">
+      <MembershipItem
+        v-if="pinnedMessage.type === MESSAGE_TYPE_MEMBER"
+        :key="pinnedMessage.id"
+        class="style-scope yt-live-chat-ticker-renderer"
+        :avatar-url="pinnedMessage.avatarUrl"
+        :author-name="getShowAuthorName(pinnedMessage)"
+        :privilege-type="pinnedMessage.privilegeType"
+        :title="pinnedMessage.title"
+        :time="pinnedMessage.time"
+      />
+      <PaidMessage
+        v-else
+        :key="pinnedMessage.id"
+        class="style-scope yt-live-chat-ticker-renderer"
+        :price="pinnedMessage.price"
+        :avatar-url="pinnedMessage.avatarUrl"
+        :author-name="getShowAuthorName(pinnedMessage)"
+        :time="pinnedMessage.time"
+        :content="pinnedMessageShowContent"
+      />
+    </template>
+  </yt-live-chat-ticker-renderer>
+</template>
+
 <style src="@/assets/css/youtube/yt-live-chat-ticker-renderer.css"></style>
+
 <style src="@/assets/css/youtube/yt-live-chat-ticker-paid-message-item-renderer.css"></style>

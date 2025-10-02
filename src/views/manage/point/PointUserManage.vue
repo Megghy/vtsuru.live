@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
-import { objectsToCSV } from '@/Utils'
-import { Info24Filled } from '@vicons/fluent'
-import { Warning24Regular } from '@vicons/fluent'
+import type {
+  DataTableColumns,
+} from 'naive-ui'
+
+import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
+import { Info24Filled, Warning24Regular } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import {
-  DataTableColumns,
   NButton,
   NCard,
   NCheckbox,
@@ -34,12 +32,16 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { QueryGetAPI } from '@/api/query'
+import { POINT_API_URL } from '@/data/constants'
+import { objectsToCSV } from '@/Utils'
 import PointUserDetailCard from './PointUserDetailCard.vue'
 
 // 用户积分设置类型定义
-type PointUserSettings = {
-  onlyAuthed: boolean       // 只显示已认证用户
-  searchKeyword?: string    // 搜索关键词
+interface PointUserSettings {
+  onlyAuthed: boolean // 只显示已认证用户
+  searchKeyword?: string // 搜索关键词
 }
 
 const props = defineProps<{
@@ -91,8 +93,8 @@ const filteredUsers = computed(() => {
       if (settings.value.searchKeyword) {
         const keyword = settings.value.searchKeyword.toLowerCase()
         return (
-          user.info.name?.toLowerCase().includes(keyword) == true ||
-          user.info.userId?.toString() == keyword
+          user.info.name?.toLowerCase().includes(keyword) == true
+          || user.info.userId?.toString() == keyword
         )
       }
 
@@ -105,7 +107,7 @@ const filteredUsers = computed(() => {
 const currentUser = ref<ResponsePointUserModel>()
 
 // 渲染用户名或用户ID
-const renderUsername = (user: ResponsePointUserModel) => {
+function renderUsername(user: ResponsePointUserModel) {
   if (user.info?.name) {
     return user.info.name
   }
@@ -117,13 +119,13 @@ const renderUsername = (user: ResponsePointUserModel) => {
 }
 
 // 渲染订单数量，更友好的显示方式
-const renderOrderCount = (user: ResponsePointUserModel) => {
+function renderOrderCount(user: ResponsePointUserModel) {
   if (!user.isAuthed) return h(NText, { depth: 3 }, { default: () => '未认证' })
   return user.orderCount > 0 ? h(NText, {}, { default: () => formatNumber(user.orderCount) }) : h(NText, { depth: 3 }, { default: () => '无订单' })
 }
 
 // 渲染时间戳为相对时间和绝对时间
-const renderTime = (timestamp: number) => {
+function renderTime(timestamp: number) {
   return h(NTooltip, null, {
     trigger: () => h(NTime, { time: timestamp, type: 'relative' }),
     default: () => h(NTime, { time: timestamp }),
@@ -131,7 +133,7 @@ const renderTime = (timestamp: number) => {
 }
 
 // 渲染操作按钮
-const renderActions = (user: ResponsePointUserModel) => {
+function renderActions(user: ResponsePointUserModel) {
   return h(NFlex, { justify: 'center', gap: 8 }, () => [
     h(
       NButton,
@@ -165,12 +167,12 @@ const renderActions = (user: ResponsePointUserModel) => {
 }
 
 // 格式化数字，添加千位符
-const formatNumber = (num: number) => {
+function formatNumber(num: number) {
   return num.toLocaleString('zh-CN')
 }
 
 // 渲染积分，添加千位符并加粗
-const renderPoint = (num: number) => {
+function renderPoint(num: number) {
   return h(NText, { strong: true }, { default: () => formatNumber(num) })
 }
 
@@ -216,15 +218,15 @@ const column: DataTableColumns<ResponsePointUserModel> = [
 async function getUsers() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointUserModel[]>(POINT_API_URL + 'get-all-users')
+    const data = await QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`)
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('获取用户失败: ' + data.message)
+      message.error(`获取用户失败: ${data.message}`)
     }
   } catch (err) {
     console.log(err)
-    message.error('获取用户失败: ' + err)
+    message.error(`获取用户失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -251,7 +253,7 @@ async function givePoint() {
 
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(POINT_API_URL + 'give-point', {
+    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, {
       uId: addPointTarget.value,
       count: addPointCount.value,
       reason: addPointReason.value || '',
@@ -271,10 +273,10 @@ async function givePoint() {
       addPointReason.value = ''
       addPointTarget.value = undefined
     } else {
-      message.error('添加失败: ' + data.message)
+      message.error(`添加失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('添加失败: ' + err)
+    message.error(`添加失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -291,16 +293,16 @@ async function deleteUser(user: ResponsePointUserModel) {
         ? { uId: user.info.userId }
         : { uId: user.info.openId }
 
-    const data = await QueryGetAPI(POINT_API_URL + 'delete-user', params)
+    const data = await QueryGetAPI(`${POINT_API_URL}delete-user`, params)
 
     if (data.code == 200) {
       message.success('已删除')
-      users.value = users.value.filter((u) => u != user)
+      users.value = users.value.filter(u => u != user)
     } else {
-      message.error('删除失败: ' + data.message)
+      message.error(`删除失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('删除失败: ' + err)
+    message.error(`删除失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -316,7 +318,7 @@ async function resetAllPoints() {
 
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(POINT_API_URL + 'reset')
+    const data = await QueryGetAPI(`${POINT_API_URL}reset`)
 
     if (data.code == 200) {
       message.success('已重置所有用户积分')
@@ -328,10 +330,10 @@ async function resetAllPoints() {
         refresh()
       }, 1500)
     } else {
-      message.error('重置失败: ' + data.message)
+      message.error(`重置失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('重置失败: ' + err)
+    message.error(`重置失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -350,11 +352,11 @@ function exportData() {
           订单数量: user.orderCount || 0,
           最后更新时间: format(user.updateAt, 'yyyy-MM-dd HH:mm:ss'),
         }
-      })
+      }),
     )
 
     // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
 
@@ -365,7 +367,7 @@ function exportData() {
 
     message.success('导出成功')
   } catch (error) {
-    message.error('导出失败: ' + error)
+    message.error(`导出失败: ${error}`)
     console.error('导出失败:', error)
   }
 }
@@ -486,7 +488,7 @@ onMounted(async () => {
         showSizePicker: true,
         pageSizes: [10, 25, 50, 100],
         onUpdatePage: (page) => (pn = page),
-        onUpdatePageSize: (pageSize) => (ps = pageSize)
+        onUpdatePageSize: (pageSize) => (ps = pageSize),
       }"
       :loading="isLoading"
     />

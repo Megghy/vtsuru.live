@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { EventDataTypes, PointFrom, ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
-import {
+import type {
   DataTableColumns,
+} from 'naive-ui'
+import type { ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
+import {
   NButton,
   NDataTable,
   NDivider,
+  NEmpty,
   NFlex,
   NInput,
   NModal,
@@ -12,9 +15,9 @@ import {
   NText,
   NTime,
   NTooltip,
-  NEmpty
 } from 'naive-ui'
 import { h, ref } from 'vue'
+import { EventDataTypes, PointFrom } from '@/api/api-models'
 import PointGoodsItem from './PointGoodsItem.vue'
 
 const props = defineProps<{
@@ -81,16 +84,16 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               h(NTag, { type: 'info', bordered: false, size: 'small' }, () => '直播间'),
               row.extra?.user
                 ? h(
-                  NButton,
-                  {
-                    tag: 'a',
-                    href: '/@' + row.extra.user?.name,
-                    target: '_blank',
-                    text: true,
-                    type: 'success',
-                  },
-                  () => row.extra.user?.name,
-                )
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: `/@${row.extra.user?.name}`,
+                      target: '_blank',
+                      text: true,
+                      type: 'success',
+                    },
+                    () => row.extra.user?.name,
+                  )
                 : null,
             ])
           case PointFrom.Manual:
@@ -98,14 +101,14 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               h(
                 NTag,
                 { type: row.point > 0 ? 'success' : 'error', bordered: false, size: 'small' },
-                () => '主播' + (row.point > 0 ? '赠予' : '扣除'),
+                () => `主播${row.point > 0 ? '赠予' : '扣除'}`,
               ),
               row.extra?.user
                 ? h(
                     NButton,
                     {
                       tag: 'a',
-                      href: '/@' + row.extra.user?.name,
+                      href: `/@${row.extra.user?.name}`,
                       target: '_blank',
                       text: true,
                       type: 'info',
@@ -122,7 +125,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                     NButton,
                     {
                       tag: 'a',
-                      href: '/@' + row.extra.user?.name,
+                      href: `/@${row.extra.user?.name}`,
                       target: '_blank',
                       text: true,
                       type: 'success',
@@ -136,16 +139,16 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               h(NTag, { type: 'success', bordered: false, size: 'small' }, () => '签到'),
               row.extra?.user
                 ? h(
-                  NButton,
-                  {
-                    tag: 'a',
-                    href: '/@' + row.extra.user?.name,
-                    target: '_blank',
-                    text: true,
-                    type: 'success',
-                  },
-                  () => row.extra.user?.name,
-                )
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: `/@${row.extra.user?.name}`,
+                      target: '_blank',
+                      text: true,
+                      type: 'success',
+                    },
+                    () => row.extra.user?.name,
+                  )
                 : null,
             ])
         }
@@ -172,7 +175,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 h(
                   NTag,
                   { type: 'warning', size: 'tiny', style: { margin: '0' }, bordered: false },
-                  () => (row.count ?? 1) + '个',
+                  () => `${row.count ?? 1}个`,
                 ),
               ])
             case EventDataTypes.SC:
@@ -189,7 +192,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
               NButton,
               {
                 tag: 'a',
-                href: '/@' + row.extra.user?.name,
+                href: `/@${row.extra.user?.name}`,
                 target: '_blank',
                 text: true,
                 type: 'info',
@@ -238,7 +241,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
       showSizePicker: true,
       pageSizes: [10, 25, 50, 100],
       defaultPageSize: 10,
-      size: 'small'
+      size: 'small',
     }"
   />
 

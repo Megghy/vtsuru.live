@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { QAInfo, UserInfo, Setting_QuestionBox, UploadFileResponse } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY, FILE_API_URL } from '@/data/constants'
-import { uploadFiles, UploadStage } from '@/data/fileUpload'
+import type { QAInfo, Setting_QuestionBox, UserInfo } from '@/api/api-models'
+import { AddCircle24Regular, DismissCircle24Regular } from '@vicons/fluent'
 import GraphemeSplitter from 'grapheme-splitter'
 import {
   NAlert,
@@ -13,27 +10,26 @@ import {
   NCheckbox,
   NDivider,
   NEmpty,
+  NIcon,
   NImage,
   NInput,
   NList,
   NListItem,
-  NSelect,
   NSpace,
+  NSpin,
   NTag,
   NText,
   NTime,
   NTooltip,
-  NSpin,
-  NIcon,
   useMessage,
-  NCarousel,
-  NCarouselItem,
 } from 'naive-ui'
-import { AddCircle24Regular, DismissCircle24Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import VueTurnstile from 'vue-turnstile'
 import { useRoute } from 'vue-router'
-import { getUserAvatarUrl } from '@/Utils'
+import VueTurnstile from 'vue-turnstile'
+import { useAccount } from '@/api/account'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { AVATAR_URL, FILE_API_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { uploadFiles } from '@/data/fileUpload'
 
 const { biliInfo, userInfo } = defineProps<{
   biliInfo: any | undefined
@@ -81,196 +77,196 @@ function countGraphemes(value: string) {
 }
 
 // 图片处理公共方法
-function validateImageFile(file: File): {valid: boolean, message?: string} {
+function validateImageFile(file: File): { valid: boolean, message?: string } {
   if (file.size > MAX_FILE_SIZE) {
-    return {valid: false, message: '文件大小不能超过10MB'};
+    return { valid: false, message: '文件大小不能超过10MB' }
   }
 
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return {valid: false, message: '只支持上传 PNG, JPG, GIF, WEBP, SVG, ICO 格式的图片'};
+    return { valid: false, message: '只支持上传 PNG, JPG, GIF, WEBP, SVG, ICO 格式的图片' }
   }
 
-  return {valid: true};
+  return { valid: true }
 }
 
 function clearImageURLs(urls: string[]) {
-  urls.forEach(url => {
-    if (url) URL.revokeObjectURL(url);
-  });
+  urls.forEach((url) => {
+    if (url) URL.revokeObjectURL(url)
+  })
 }
 
 // 匿名图片上传
 async function uploadAnonymousImage(file: File) {
   if (!userInfo?.id) {
-    message.error('无法获取目标用户信息');
-    return;
+    message.error('无法获取目标用户信息')
+    return
   }
 
-  const validation = validateImageFile(file);
+  const validation = validateImageFile(file)
   if (!validation.valid) {
-    message.error(validation.message || '图片上传失败');
-    return;
+    message.error(validation.message || '图片上传失败')
+    return
   }
 
-  isUploadingAnonymousImage.value = true;
-  removeAnonymousImage();
+  isUploadingAnonymousImage.value = true
+  removeAnonymousImage()
 
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('targetUserId', userInfo.id.toString());
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('targetUserId', userInfo.id.toString())
 
   try {
-    const data = await QueryPostAPI<string>(FILE_API_URL + 'upload-anonymous', formData);
+    const data = await QueryPostAPI<string>(`${FILE_API_URL}upload-anonymous`, formData)
     if (data.code === 200 && data.data) {
-      anonymousImageToken.value = data.data;
-      const url = URL.createObjectURL(file);
-      anonymousImagePreviewUrl.value = url;
-      message.success('匿名图片准备就绪');
+      anonymousImageToken.value = data.data
+      const url = URL.createObjectURL(file)
+      anonymousImagePreviewUrl.value = url
+      message.success('匿名图片准备就绪')
     } else {
-      message.error(data.message || '匿名图片上传失败');
-      removeAnonymousImage();
+      message.error(data.message || '匿名图片上传失败')
+      removeAnonymousImage()
     }
   } catch (err: any) {
-    message.error('匿名图片上传失败: ' + (err.message || err));
-    removeAnonymousImage();
+    message.error(`匿名图片上传失败: ${err.message || err}`)
+    removeAnonymousImage()
   } finally {
-    isUploadingAnonymousImage.value = false;
+    isUploadingAnonymousImage.value = false
   }
 }
 
 function handleAnonymousFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement;
+  const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
-    const file = input.files[0];
+    const file = input.files[0]
 
     // 如果已经有图片，提示不能多选
     if (anonymousImageToken.value) {
-      message.warning('匿名模式下只能上传一张图片');
-      input.value = '';
-      return;
+      message.warning('匿名模式下只能上传一张图片')
+      input.value = ''
+      return
     }
 
-    uploadAnonymousImage(file);
-    input.value = '';
+    uploadAnonymousImage(file)
+    input.value = ''
   }
 }
 
 function removeAnonymousImage() {
   if (anonymousImagePreviewUrl.value) {
-    URL.revokeObjectURL(anonymousImagePreviewUrl.value as string);
-    anonymousImagePreviewUrl.value = null;
+    URL.revokeObjectURL(anonymousImagePreviewUrl.value as string)
+    anonymousImagePreviewUrl.value = null
   }
-  anonymousImageToken.value = null;
+  anonymousImageToken.value = null
 }
 
 // 已登录用户图片上传
 function handleLoggedInFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement;
+  const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
     // 处理多个文件 - 支持多选
-    const newFiles = Array.from(input.files);
+    const newFiles = Array.from(input.files)
 
     // 检查每个文件
     for (const file of newFiles) {
       // 验证文件类型和大小
-      const validation = validateImageFile(file);
+      const validation = validateImageFile(file)
       if (!validation.valid) {
-        message.error(validation.message || '图片上传失败');
-        continue;
+        message.error(validation.message || '图片上传失败')
+        continue
       }
 
       // 检查是否超出最大数量限制
       if (loggedInSelectedFiles.value.length >= MAX_LOGGED_IN_IMAGES) {
-        message.warning(`最多只能上传${MAX_LOGGED_IN_IMAGES}张图片`);
-        break;
+        message.warning(`最多只能上传${MAX_LOGGED_IN_IMAGES}张图片`)
+        break
       }
 
       // 检查文件是否重复（通过文件名、大小和最后修改时间判断）
       // 避免重复选择相同图片
       const isDuplicate = loggedInSelectedFiles.value.some(existingFile =>
-        existingFile.name === file.name &&
-        existingFile.size === file.size &&
-        existingFile.lastModified === file.lastModified
-      );
+        existingFile.name === file.name
+        && existingFile.size === file.size
+        && existingFile.lastModified === file.lastModified,
+      )
 
       if (isDuplicate) {
-        message.warning(`文件"${file.name}"已存在，不会重复添加`);
-        continue;
+        message.warning(`文件"${file.name}"已存在，不会重复添加`)
+        continue
       }
 
       // 添加到已选文件列表
-      loggedInSelectedFiles.value.push(file);
-      const url = URL.createObjectURL(file);
-      loggedInImagePreviewUrls.value.push(url);
+      loggedInSelectedFiles.value.push(file)
+      const url = URL.createObjectURL(file)
+      loggedInImagePreviewUrls.value.push(url)
     }
 
     // 清空输入框，允许重新选择文件
-    input.value = '';
+    input.value = ''
   }
 }
 
 function removeLoggedInImage(index: number) {
-  const url = loggedInImagePreviewUrls.value[index];
+  const url = loggedInImagePreviewUrls.value[index]
   if (url) {
-    URL.revokeObjectURL(url as string);
+    URL.revokeObjectURL(url as string)
   }
-  loggedInImagePreviewUrls.value.splice(index, 1);
-  loggedInSelectedFiles.value.splice(index, 1);
+  loggedInImagePreviewUrls.value.splice(index, 1)
+  loggedInSelectedFiles.value.splice(index, 1)
 }
 
 function clearAllLoggedInImages() {
-  loggedInImagePreviewUrls.value.forEach(url => {
-    if (url) URL.revokeObjectURL(url as string);
-  });
-  loggedInImagePreviewUrls.value = [];
-  loggedInSelectedFiles.value = [];
+  loggedInImagePreviewUrls.value.forEach((url) => {
+    if (url) URL.revokeObjectURL(url as string)
+  })
+  loggedInImagePreviewUrls.value = []
+  loggedInSelectedFiles.value = []
 }
 
 // API 交互方法
 async function SendQuestion() {
   if (countGraphemes(questionMessage.value) < 3) {
-    message.error('内容最少需要3个字');
-    return;
+    message.error('内容最少需要3个字')
+    return
   }
 
   if (nextSendQuestionTime.value > Date.now()) {
-    message.error('冷却中, 剩余 ' + Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000) + '秒');
-    return;
+    message.error(`冷却中, 剩余 ${Math.ceil((nextSendQuestionTime.value - Date.now()) / 1000)}秒`)
+    return
   }
 
-  isSending.value = true;
-  let uploadedFileIds: number[] = [];
-  let imagePayload: { id: number }[] | undefined = undefined;
-  let tokenPayload: string | undefined = undefined;
+  isSending.value = true
+  let uploadedFileIds: number[] = []
+  let imagePayload: { id: number }[] | undefined
+  let tokenPayload: string | undefined
 
   try {
     // 处理图片上传
     if (!isUserLoggedIn.value) {
       if (anonymousImageToken.value) {
-        tokenPayload = anonymousImageToken.value;
+        tokenPayload = anonymousImageToken.value
       }
     } else if (loggedInSelectedFiles.value.length > 0) {
-      message.info('正在上传图片...');
+      message.info('正在上传图片...')
 
       // 上传多张图片
       const uploadPromises = loggedInSelectedFiles.value.map(file =>
         uploadFiles(file, undefined, undefined, (stage) => {
-          console.log('上传阶段:', stage);
-        })
-      );
+          console.log('上传阶段:', stage)
+        }),
+      )
 
-      const uploadResults = await Promise.all(uploadPromises);
+      const uploadResults = await Promise.all(uploadPromises)
 
       // 提取所有上传的文件ID
       uploadedFileIds = uploadResults
         .filter(result => result && result.length > 0)
-        .map(result => result[0].id);
+        .map(result => result[0].id)
 
       if (uploadedFileIds.length > 0) {
-        imagePayload = uploadedFileIds.map(id => ({ id }));
-        message.success('图片上传成功');
+        imagePayload = uploadedFileIds.map(id => ({ id }))
+        message.success('图片上传成功')
       } else if (loggedInSelectedFiles.value.length > 0) {
-        throw new Error('图片上传失败，未返回文件信息');
+        throw new Error('图片上传失败，未返回文件信息')
       }
     }
 
@@ -282,51 +278,51 @@ async function SendQuestion() {
       Tag: selectedTag.value,
       Images: imagePayload,
       ImageTokens: tokenPayload ? [tokenPayload] : undefined,
-    };
+    }
 
     const data = await QueryPostAPI<QAInfo>(
-      QUESTION_API_URL + 'send',
+      `${QUESTION_API_URL}send`,
       payload,
       [['Turnstile', token.value]],
-    );
+    )
 
     if (data.code == 200) {
-      message.success('成功发送棉花糖');
-      questionMessage.value = '';
-      removeAnonymousImage();
-      clearAllLoggedInImages();
-      nextSendQuestionTime.value = Date.now() + minSendQuestionTime;
-      getPublicQuestions();
+      message.success('成功发送棉花糖')
+      questionMessage.value = ''
+      removeAnonymousImage()
+      clearAllLoggedInImages()
+      nextSendQuestionTime.value = Date.now() + minSendQuestionTime
+      getPublicQuestions()
     } else {
-      message.error(data.message || '发送失败');
+      message.error(data.message || '发送失败')
       if (tokenPayload && (data.message.includes('token') || data.code === 400)) {
-        removeAnonymousImage();
+        removeAnonymousImage()
       }
     }
   } catch (err: any) {
-    message.error('发送失败: ' + (err.message || err));
+    message.error(`发送失败: ${err.message || err}`)
     if (loggedInSelectedFiles.value.length > 0 && uploadedFileIds.length === 0) {
-      clearAllLoggedInImages();
+      clearAllLoggedInImages()
     }
     if (tokenPayload && (err.message?.includes('token'))) {
-      removeAnonymousImage();
+      removeAnonymousImage()
     }
   } finally {
-    isSending.value = false;
-    turnstile.value?.reset();
+    isSending.value = false
+    turnstile.value?.reset()
   }
 }
 
 function getPublicQuestions() {
   isGetting.value = true
-  QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-public', {
+  QueryGetAPI<QAInfo[]>(`${QUESTION_API_URL}get-public`, {
     id: userInfo?.id,
   })
     .then((data) => {
       if (data.code == 200) {
         publicQuestions.value = data.data
       } else {
-        message.error('获取公开提问失败:' + data.message)
+        message.error(`获取公开提问失败:${data.message}`)
       }
     })
     .catch((err) => {
@@ -338,30 +334,30 @@ function getPublicQuestions() {
 }
 
 async function getTagsAndSettings() {
-  if (!userInfo?.id) return;
-  isGetting.value = true;
+  if (!userInfo?.id) return
+  isGetting.value = true
   try {
-    const tagsData = await QueryGetAPI<string[]>(QUESTION_API_URL + 'get-tags', { id: userInfo.id });
+    const tagsData = await QueryGetAPI<string[]>(`${QUESTION_API_URL}get-tags`, { id: userInfo.id })
 
     if (tagsData.code == 200) {
       if (userInfo?.id == accountInfo.value?.id) {
         tags.value = tagsData.data.map((tag: any) =>
-          typeof tag === 'object' && tag !== null ? tag.name : tag
-        );
+          typeof tag === 'object' && tag !== null ? tag.name : tag,
+        )
       } else {
-        tags.value = tagsData.data;
+        tags.value = tagsData.data
       }
       const tagFromQuery = route.query.tag as string | undefined
       if (tagFromQuery && tags.value.includes(tagFromQuery)) {
         selectedTag.value = tagFromQuery
       }
     } else {
-      message.error('获取标签失败:' + tagsData.message);
+      message.error(`获取标签失败:${tagsData.message}`)
     }
   } catch (err: any) {
-    message.error('获取信息失败: ' + (err.message || err));
+    message.error(`获取信息失败: ${err.message || err}`)
   } finally {
-    isGetting.value = false;
+    isGetting.value = false
   }
 }
 
@@ -377,8 +373,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   turnstile.value?.remove()
-  removeAnonymousImage();
-  clearAllLoggedInImages();
+  removeAnonymousImage()
+  clearAllLoggedInImages()
 })
 </script>
 
@@ -696,7 +692,7 @@ onUnmounted(() => {
                 hoverable
                 size="small"
                 class="question-card"
-                :class="{ 'unread': !item.isReaded }"
+                :class="{ unread: !item.isReaded }"
               >
                 <!-- 问题头部 -->
                 <template #header>
@@ -775,7 +771,7 @@ onUnmounted(() => {
                       class="answer-content"
                     >
                       <NAvatar
-                        :src="AVATAR_URL + userInfo?.biliId + '?size=64'"
+                        :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
                         circle
                         class="answer-avatar"
                         :img-props="{ referrerpolicy: 'no-referrer' }"

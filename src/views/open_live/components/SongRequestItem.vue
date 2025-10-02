@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import type { SongRequestInfo } from '@/api/api-models'
 import {
   Checkmark12Regular,
   Dismiss16Filled,
@@ -8,17 +8,18 @@ import {
   PresenceBlocked16Regular,
 } from '@vicons/fluent'
 import {
+  NButton,
+  NCard,
+  NIcon,
+  NPopconfirm,
   NSpace,
-  NText,
   NTag,
+  NText,
   NTime,
   NTooltip,
-  NButton,
-  NIcon,
-  NCard,
-  NPopconfirm
 } from 'naive-ui'
-import { SongRequestInfo, SongRequestStatus, SongsInfo, SongRequestFrom } from '@/api/api-models'
+import { computed, inject } from 'vue'
+import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 
 const props = defineProps<{
@@ -138,8 +139,8 @@ const hasOtherSingSong = computed(() => {
         </template>
         <NSpace
           v-if="
-            (song.from == SongRequestFrom.Danmaku || song.from == SongRequestFrom.SC) &&
-              song.user?.fans_medal_wearing_status
+            (song.from == SongRequestFrom.Danmaku || song.from == SongRequestFrom.SC)
+              && song.user?.fans_medal_wearing_status
           "
         >
           <NTag
@@ -281,9 +282,9 @@ const hasOtherSingSong = computed(() => {
         </NPopconfirm>
         <NPopconfirm
           v-if="
-            song.from == SongRequestFrom.Danmaku &&
-              song.user?.uid &&
-              song.status !== SongRequestStatus.Cancel
+            song.from == SongRequestFrom.Danmaku
+              && song.user?.uid
+              && song.status !== SongRequestStatus.Cancel
           "
           @positive-click="onBlockUser"
         >

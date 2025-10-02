@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { useDanmakuUtils, BaseDanmakuItemProps } from './components/danmaku/danmakuUtils';
-import CardStyleDanmakuItem from './components/danmaku/CardStyleDanmakuItem.vue';
-import TextStyleDanmakuItem from './components/danmaku/TextStyleDanmakuItem.vue';
-import { useDanmakuWindow } from './store/useDanmakuWindow';
+import type { BaseDanmakuItemProps } from './components/danmaku/danmakuUtils'
+import CardStyleDanmakuItem from './components/danmaku/CardStyleDanmakuItem.vue'
+import { useDanmakuUtils } from './components/danmaku/danmakuUtils'
+import TextStyleDanmakuItem from './components/danmaku/TextStyleDanmakuItem.vue'
+import { useDanmakuWindow } from './store/useDanmakuWindow'
 
-const props = defineProps<BaseDanmakuItemProps>();
+const props = defineProps<BaseDanmakuItemProps>()
 
 // 使用工具函数获取基础计算属性
-const emojiData = useDanmakuWindow().emojiData;
-const { typeClass } = useDanmakuUtils(props, emojiData);
+const emojiData = useDanmakuWindow().emojiData
+const { typeClass } = useDanmakuUtils(props, emojiData)
 </script>
 
 <template>
   <div
-    :class="['danmaku-item-content', typeClass]"
+    class="danmaku-item-content" :class="[typeClass]"
     :data-disappear="item.disappearAt"
   >
     <!-- 根据设置选择显示风格 -->

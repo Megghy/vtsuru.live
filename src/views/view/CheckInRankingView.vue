@@ -1,3 +1,162 @@
+<script setup lang="ts">
+import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
+import { Info24Filled } from '@vicons/fluent'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NEmpty,
+  NIcon,
+  NInput,
+  NPagination,
+  NSelect,
+  NSpace,
+  NSpin,
+  NTooltip,
+} from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+import { QueryGetAPI } from '@/api/query'
+import { CHECKIN_API_URL } from '@/data/constants'
+
+const props = defineProps<{
+  biliInfo: any | undefined
+  userInfo: UserInfo | undefined
+  template?: string | undefined
+}>()
+
+// 状态变量
+const isLoading = ref(false)
+const rankingData = ref<CheckInRankingInfo[]>([])
+const timeRange = ref<string>('all')
+const userFilter = ref<string>('')
+const checkInKeyword = ref('签到') // 默认签到关键词
+const pagination = ref({
+  page: 1,
+  pageSize: 10,
+})
+
+// 时间段选项
+const timeRangeOptions = [
+  { label: '全部时间', value: 'all' },
+  { label: '今日', value: 'today' },
+  { label: '本周', value: 'week' },
+  { label: '本月', value: 'month' },
+]
+
+// 过滤后的排行榜数据
+const filteredRankingData = computed(() => {
+  let filtered = rankingData.value
+
+  // 按时间范围筛选
+  if (timeRange.value !== 'all') {
+    const now = new Date()
+    let startTime: Date
+
+    if (timeRange.value === 'today') {
+      // 今天凌晨
+      startTime = new Date(now)
+      startTime.setHours(0, 0, 0, 0)
+    } else if (timeRange.value === 'week') {
+      // 本周一
+      const dayOfWeek = now.getDay() || 7 // 把周日作为7处理
+      startTime = new Date(now)
+      startTime.setDate(now.getDate() - (dayOfWeek - 1))
+      startTime.setHours(0, 0, 0, 0)
+    } else if (timeRange.value === 'month') {
+      // 本月1号
+      startTime = new Date(now.getFullYear(), now.getMonth(), 1)
+    }
+
+    filtered = filtered.filter((user) => {
+      const checkInTime = new Date(user.lastCheckInTime)
+      return checkInTime >= startTime
+    })
+  }
+
+  // 按用户名筛选
+  if (userFilter.value) {
+    const keyword = userFilter.value.toLowerCase()
+    filtered = filtered.filter(user =>
+      user.name.toLowerCase().includes(keyword),
+    )
+  }
+
+  return filtered
+})
+
+// 处理分页后的数据
+const pagedData = computed(() => {
+  const { page, pageSize } = pagination.value
+  const startIndex = (page - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  return filteredRankingData.value.slice(startIndex, endIndex)
+})
+
+// 格式化日期
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp)
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+
+  return `${month}月${day}日 ${hours}:${minutes}`
+}
+
+// 加载签到排行榜数据
+async function loadCheckInRanking() {
+  isLoading.value = true
+  try {
+    // 使用用户视角的签到排行API
+    const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}ranking`, {
+      vId: props.userInfo?.id,
+      count: 100,
+    })
+
+    if (response.code === 200) {
+      rankingData.value = response.data
+      pagination.value.page = 1 // 重置为第一页
+    } else {
+      rankingData.value = []
+      window.$message?.error?.(`获取签到排行榜失败: ${response.message}`)
+    }
+  } catch (error) {
+    console.error('加载签到排行榜失败:', error)
+    rankingData.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 获取签到关键词
+async function fetchCheckInKeyword() {
+  if (!props.userInfo?.id) return
+
+  try {
+    // 获取主播的签到关键词设置
+    const response = await QueryGetAPI<{
+      keyword: string
+      isEnabled: boolean
+      requireAuth: boolean
+    }>(`${CHECKIN_API_URL}keyword`, {
+      vId: props.userInfo?.id,
+    })
+
+    if (response.code === 200 && response.data) {
+      checkInKeyword.value = response.data.keyword
+    }
+  } catch (error) {
+    console.error('获取签到关键词失败:', error)
+  }
+}
+
+// 组件挂载时获取签到排行和关键词
+onMounted(() => {
+  fetchCheckInKeyword()
+  loadCheckInRanking()
+})
+</script>
+
 <template>
   <div class="checkin-ranking-view">
     <NSpace vertical>
@@ -79,7 +238,7 @@
                   v-for="(item, index) in pagedData"
                   :key="index"
                   class="ranking-row"
-                  :class="{'top-three': index < 3}"
+                  :class="{ 'top-three': index < 3 }"
                 >
                   <!-- 排名列 -->
                   <div class="col-rank">
@@ -88,7 +247,7 @@
                       :class="{
                         'rank-1': index === 0,
                         'rank-2': index === 1,
-                        'rank-3': index === 2
+                        'rank-3': index === 2,
                       }"
                     >
                       {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
@@ -185,165 +344,6 @@
     </NSpace>
   </div>
 </template>
-
-<script setup lang="ts">
-import { CheckInRankingInfo, UserInfo } from '@/api/api-models';
-import { QueryGetAPI } from '@/api/query';
-import { CHECKIN_API_URL } from '@/data/constants';
-import { Info24Filled } from '@vicons/fluent';
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NInput,
-  NPagination,
-  NSelect,
-  NSpace,
-  NSpin,
-  NTooltip,
-} from 'naive-ui';
-import { computed, onMounted, ref } from 'vue';
-
-const props = defineProps<{
-  biliInfo: any | undefined
-  userInfo: UserInfo | undefined
-  template?: string | undefined
-}>()
-
-// 状态变量
-const isLoading = ref(false);
-const rankingData = ref<CheckInRankingInfo[]>([]);
-const timeRange = ref<string>('all');
-const userFilter = ref<string>('');
-const checkInKeyword = ref('签到'); // 默认签到关键词
-const pagination = ref({
-  page: 1,
-  pageSize: 10,
-});
-
-// 时间段选项
-const timeRangeOptions = [
-  { label: '全部时间', value: 'all' },
-  { label: '今日', value: 'today' },
-  { label: '本周', value: 'week' },
-  { label: '本月', value: 'month' },
-];
-
-// 过滤后的排行榜数据
-const filteredRankingData = computed(() => {
-  let filtered = rankingData.value;
-
-  // 按时间范围筛选
-  if (timeRange.value !== 'all') {
-    const now = new Date();
-    let startTime: Date;
-
-    if (timeRange.value === 'today') {
-      // 今天凌晨
-      startTime = new Date(now);
-      startTime.setHours(0, 0, 0, 0);
-    } else if (timeRange.value === 'week') {
-      // 本周一
-      const dayOfWeek = now.getDay() || 7; // 把周日作为7处理
-      startTime = new Date(now);
-      startTime.setDate(now.getDate() - (dayOfWeek - 1));
-      startTime.setHours(0, 0, 0, 0);
-    } else if (timeRange.value === 'month') {
-      // 本月1号
-      startTime = new Date(now.getFullYear(), now.getMonth(), 1);
-    }
-
-    filtered = filtered.filter(user => {
-      const checkInTime = new Date(user.lastCheckInTime);
-      return checkInTime >= startTime;
-    });
-  }
-
-  // 按用户名筛选
-  if (userFilter.value) {
-    const keyword = userFilter.value.toLowerCase();
-    filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(keyword)
-    );
-  }
-
-  return filtered;
-});
-
-// 处理分页后的数据
-const pagedData = computed(() => {
-  const { page, pageSize } = pagination.value;
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  return filteredRankingData.value.slice(startIndex, endIndex);
-});
-
-// 格式化日期
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-
-  return `${month}月${day}日 ${hours}:${minutes}`;
-}
-
-// 加载签到排行榜数据
-async function loadCheckInRanking() {
-  isLoading.value = true;
-  try {
-    // 使用用户视角的签到排行API
-    const response = await QueryGetAPI<CheckInRankingInfo[]>(`${CHECKIN_API_URL}ranking`, {
-      vId: props.userInfo?.id,
-      count: 100
-    });
-
-    if (response.code === 200) {
-      rankingData.value = response.data;
-      pagination.value.page = 1; // 重置为第一页
-    } else {
-      rankingData.value = [];
-      window.$message?.error?.(`获取签到排行榜失败: ${response.message}`);
-    }
-  } catch (error) {
-    console.error('加载签到排行榜失败:', error);
-    rankingData.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-// 获取签到关键词
-async function fetchCheckInKeyword() {
-  if (!props.userInfo?.id) return;
-
-  try {
-    // 获取主播的签到关键词设置
-    const response = await QueryGetAPI<{
-      keyword: string
-      isEnabled: boolean
-      requireAuth: boolean
-    }>(`${CHECKIN_API_URL}keyword`, {
-      vId: props.userInfo?.id
-    });
-
-    if (response.code === 200 && response.data) {
-      checkInKeyword.value = response.data.keyword;
-    }
-  } catch (error) {
-    console.error('获取签到关键词失败:', error);
-  }
-}
-
-// 组件挂载时获取签到排行和关键词
-onMounted(() => {
-  fetchCheckInKeyword();
-  loadCheckInRanking();
-});
-</script>
 
 <style scoped>
 .checkin-ranking-view {

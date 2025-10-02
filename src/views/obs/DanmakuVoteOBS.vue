@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { EventModel, VoteConfig, VoteOBSData, VoteOption } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { VOTE_API_URL } from '@/data/constants'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
+import type { EventModel, VoteConfig, VoteOBSData, VoteOption } from '@/api/api-models'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+import { QueryGetAPI } from '@/api/query'
+import { VOTE_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 const props = defineProps<{
   roomId?: number
@@ -37,7 +37,7 @@ async function fetchVoteData() {
       voteData.value = result.data
       // 更新每个选项的百分比
       if (voteData.value && voteData.value.options && voteData.value.totalVotes > 0) {
-        voteData.value.options.forEach(option => {
+        voteData.value.options.forEach((option) => {
           option.percentage = calculatePercentage(option.count, voteData.value!.totalVotes)
         })
       }
@@ -150,13 +150,13 @@ onMounted(async () => {
     :class="[
       `theme-${theme}`,
       `position-${voteData.displayPosition || 'right'}`,
-      { 'rounded': voteData.roundedCorners }
+      { rounded: voteData.roundedCorners },
     ]"
     :style="{
       '--bg-color': voteData.backgroundColor || '#1e1e2e',
       '--text-color': voteData.textColor || '#ffffff',
       '--option-color': voteData.optionColor || '#89b4fa',
-      '--bg-image': voteData.backgroundImage ? `url(${voteData.backgroundImage})` : 'none'
+      '--bg-image': voteData.backgroundImage ? `url(${voteData.backgroundImage})` : 'none',
     }"
   >
     <div class="vote-container">

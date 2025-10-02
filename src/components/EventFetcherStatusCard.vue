@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { EventFetcherType } from '@/api/api-models'
 import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
 import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
+import { useAccount } from '@/api/account'
+import { EventFetcherType } from '@/api/api-models'
 
 const accountInfo = useAccount()
-  const state = accountInfo.value?.eventFetcherState
+const state = accountInfo.value?.eventFetcherState
 
-  const eventFetcherVersionName = computed(() => {
-    if (state?.type == EventFetcherType.OBS) {
-      return 'OBS/网页端'
-    } else if (state?.type == EventFetcherType.Application) {
-      return '控制台应用'
-    } else if (state?.type == EventFetcherType.Server) {
-      return '本站监听 (已删除)'
-    } else if (state?.type == EventFetcherType.Tauri) {
-      return 'Tauri 应用'
-    } else {
-      return state?.version ?? '未知'
-    }
-  })
+const eventFetcherVersionName = computed(() => {
+  if (state?.type == EventFetcherType.OBS) {
+    return 'OBS/网页端'
+  } else if (state?.type == EventFetcherType.Application) {
+    return '控制台应用'
+  } else if (state?.type == EventFetcherType.Server) {
+    return '本站监听 (已删除)'
+  } else if (state?.type == EventFetcherType.Tauri) {
+    return 'Tauri 应用'
+  } else {
+    return state?.version ?? '未知'
+  }
+})
 
 const status = computed(() => {
   if (state.online == true) {

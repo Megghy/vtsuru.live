@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { AddressInfo } from '@/api/api-models'
-import AddressDisplay from '@/components/manage/AddressDisplay.vue'
-import { CURRENT_HOST, POINT_API_URL, THINGS_URL } from '@/data/constants'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import type {
+  FormRules,
+} from 'naive-ui'
+import type { AddressInfo } from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
 import {
-  FormRules,
   NButton,
   NCard,
   NCheckbox,
@@ -29,11 +28,14 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
-//@ts-expect-error 导入有点问题
+import AddressDisplay from '@/components/manage/AddressDisplay.vue'
+import { CURRENT_HOST, POINT_API_URL } from '@/data/constants'
+// @ts-expect-error 导入有点问题
 import UserAgreement from '@/document/UserAgreement.md'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 // 地区数据类型定义
-type AreaData = {
+interface AreaData {
   [province: string]: {
     [city: string]: {
       [district: string]: string[]
@@ -61,28 +63,28 @@ const areas = useStorage<{
 
 // 计算属性：获取省份选项
 const provinceOptions = computed(() => {
-  return Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p }))
+  return Object.keys(areas.value?.data ?? {}).map(p => ({ label: p, value: p }))
 })
 
 // 计算属性：当前用户授权信息
 const biliAuth = computed(() => useAuth.biliAuth)
 
 // 获取城市选项
-const cityOptions = (province: string) => {
+function cityOptions(province: string) {
   if (!areas.value?.data[province]) return []
-  return Object.keys(areas.value?.data[province] ?? {}).map((c) => ({ label: c, value: c }))
+  return Object.keys(areas.value?.data[province] ?? {}).map(c => ({ label: c, value: c }))
 }
 
 // 获取区/县选项
-const districtOptions = (province: string, city: string) => {
+function districtOptions(province: string, city: string) {
   if (!areas.value?.data[province]?.[city]) return []
-  return Object.keys(areas.value?.data[province][city] ?? {}).map((d) => ({ label: d, value: d }))
+  return Object.keys(areas.value?.data[province][city] ?? {}).map(d => ({ label: d, value: d }))
 }
 
 // 获取街道选项
-const streetOptions = (province: string, city: string, district: string) => {
+function streetOptions(province: string, city: string, district: string) {
   if (!areas.value?.data[province]?.[city]?.[district]) return []
-  return areas.value?.data[province][city][district]?.map((s) => ({ label: s, value: s })) ?? []
+  return areas.value?.data[province][city][district]?.map(s => ({ label: s, value: s })) ?? []
 }
 
 // 表单验证规则
@@ -119,7 +121,7 @@ const rules: FormRules = {
 }
 
 // 处理API错误的工具函数
-const handleApiError = (action: string, err: any) => {
+function handleApiError(action: string, err: any) {
   message.error(`${action}失败: ${err}`)
   console.error(err)
 }
@@ -132,7 +134,7 @@ async function updateAddress() {
     isLoading.value = true
 
     const data = await useAuth.QueryBiliAuthPostAPI<AddressInfo>(
-      POINT_API_URL + 'user/update-address',
+      `${POINT_API_URL}user/update-address`,
       currentAddress.value,
     )
 
@@ -142,7 +144,7 @@ async function updateAddress() {
 
       // 更新本地地址列表
       if (biliAuth.value.address) {
-        const index = biliAuth.value.address?.findIndex((a) => a.id == data.data.id) ?? -1
+        const index = biliAuth.value.address?.findIndex(a => a.id == data.data.id) ?? -1
         if (index >= 0) {
           biliAuth.value.address[index] = data.data
         } else {
@@ -169,11 +171,11 @@ async function updateAddress() {
 async function deleteAddress(id: string) {
   isLoading.value = true
   try {
-    const data = await useAuth.QueryBiliAuthGetAPI(POINT_API_URL + 'user/del-address', { id })
+    const data = await useAuth.QueryBiliAuthGetAPI(`${POINT_API_URL}user/del-address`, { id })
     if (data.code == 200) {
       message.success('已删除')
       if (biliAuth.value.address) {
-        biliAuth.value.address = biliAuth.value.address?.filter((a) => a.id != id)
+        biliAuth.value.address = biliAuth.value.address?.filter(a => a.id != id)
       }
     } else {
       handleApiError('删除地址', data.message)
@@ -263,7 +265,7 @@ function reset() {
 
 // 暴露方法给父组件
 defineExpose({
-  reset
+  reset,
 })
 </script>
 
@@ -333,7 +335,7 @@ defineExpose({
           >
             <NInput
               type="textarea"
-              :value="`${CURRENT_HOST}bili-user?auth=` + useAuth.biliToken"
+              :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
               readonly
             />
           </NCollapseItem>

@@ -1,9 +1,58 @@
+<script setup>
+import { NBadge } from 'naive-ui'
+import { computed } from 'vue'
+import AuthorChip from './AuthorChip.vue'
+import * as constants from './constants'
+import ImgShadow from './ImgShadow.vue'
+import * as utils from './utils'
+
+const props = defineProps({
+  avatarUrl: String,
+  time: Date,
+  authorName: String,
+  authorType: Number,
+  contentParts: Array,
+  privilegeType: Number,
+  repeated: Number,
+})
+// HSL
+const REPEATED_MARK_COLOR_START = [210, 100.0, 62.5]
+const REPEATED_MARK_COLOR_END = [360, 87.3, 69.2]
+
+const CONTENT_TYPE_TEXT = constants.CONTENT_TYPE_TEXT
+const CONTENT_TYPE_IMAGE = constants.CONTENT_TYPE_IMAGE
+
+const timeText = computed(() => {
+  return utils.getTimeTextHourMin(props.time)
+})
+
+const authorTypeText = computed(() => {
+  return constants.AUTHOR_TYPE_TO_TEXT[props.authorType]
+})
+
+const repeatedMarkColor = computed(() => {
+  let color
+  if (props.repeated <= 2) {
+    color = REPEATED_MARK_COLOR_START
+  } else if (props.repeated >= 10) {
+    color = REPEATED_MARK_COLOR_END
+  } else {
+    color = [0, 0, 0]
+    const t = (props.repeated - 2) / (10 - 2)
+    for (let i = 0; i < 3; i++) {
+      color[i] = REPEATED_MARK_COLOR_START[i] + ((REPEATED_MARK_COLOR_END[i] - REPEATED_MARK_COLOR_START[i]) * t)
+    }
+  }
+  return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`
+})
+</script>
+
 <template>
   <yt-live-chat-text-message-renderer
     :author-type="authorTypeText"
     :blc-guard-level="privilegeType"
   >
-    <img-shadow
+    <ImgShadow
       id="author-photo"
       height="24"
       width="24"
@@ -18,7 +67,7 @@
         id="timestamp"
         class="style-scope yt-live-chat-text-message-renderer"
       >{{ timeText }}</span>
-      <author-chip
+      <AuthorChip
         class="style-scope yt-live-chat-text-message-renderer"
         :is-in-member-message="false"
         :author-name="authorName"
@@ -38,7 +87,7 @@
           <img
             v-else-if="content.type === CONTENT_TYPE_IMAGE"
             :id="`emoji-${content.text}`"
-            :key="'_' + index"
+            :key="`_${index}`"
             class="emoji yt-formatted-string style-scope yt-live-chat-text-message-renderer"
             :src="content.url"
             :alt="content.text"
@@ -60,56 +109,6 @@
     </div>
   </yt-live-chat-text-message-renderer>
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import ImgShadow from './ImgShadow.vue'
-import AuthorChip from './AuthorChip.vue'
-import * as constants from './constants'
-import * as utils from './utils'
-import { NBadge } from 'naive-ui'
-
-// HSL
-const REPEATED_MARK_COLOR_START = [210, 100.0, 62.5]
-const REPEATED_MARK_COLOR_END = [360, 87.3, 69.2]
-
-const CONTENT_TYPE_TEXT = constants.CONTENT_TYPE_TEXT
-const CONTENT_TYPE_IMAGE = constants.CONTENT_TYPE_IMAGE
-
-const props = defineProps({
-  avatarUrl: String,
-  time: Date,
-  authorName: String,
-  authorType: Number,
-  contentParts: Array,
-  privilegeType: Number,
-  repeated: Number
-})
-
-const timeText = computed(() => {
-  return utils.getTimeTextHourMin(props.time)
-})
-
-const authorTypeText = computed(() => {
-  return constants.AUTHOR_TYPE_TO_TEXT[props.authorType]
-})
-
-const repeatedMarkColor = computed(() => {
-  let color
-  if (props.repeated <= 2) {
-    color = REPEATED_MARK_COLOR_START
-  } else if (props.repeated >= 10) {
-    color = REPEATED_MARK_COLOR_END
-  } else {
-    color = [0, 0, 0]
-    let t = (props.repeated - 2) / (10 - 2)
-    for (let i = 0; i < 3; i++) {
-      color[i] = REPEATED_MARK_COLOR_START[i] + ((REPEATED_MARK_COLOR_END[i] - REPEATED_MARK_COLOR_START[i]) * t)
-    }
-  }
-  return `hsl(${color[0]}, ${color[1]}%, ${color[2]}%)`
-})
-</script>
 
 <style>
 yt-live-chat-text-message-renderer>#content>#message>.el-badge {

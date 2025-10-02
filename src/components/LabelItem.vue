@@ -1,3 +1,9 @@
+<script lang="ts" setup>
+defineProps<{
+  label: string
+}>()
+</script>
+
 <template>
   <span class="label-item">
     <p>
@@ -6,12 +12,6 @@
     <slot />
   </span>
 </template>
-
-<script lang="ts" setup>
-defineProps<{
-  label: string;
-}>();
-</script>
 
 <style scoped>
 .label-item {

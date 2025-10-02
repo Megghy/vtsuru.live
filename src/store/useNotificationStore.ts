@@ -1,10 +1,10 @@
-import { QueryGetAPI } from '@/api/query'
-import { NOTIFACTION_API_URL } from '@/data/constants'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { QueryGetAPI } from '@/api/query'
+import { NOTIFACTION_API_URL } from '@/data/constants'
 
-export type NotificationData = {
+export interface NotificationData {
   title: string
 }
 
@@ -19,7 +19,7 @@ export const useNotificationStore = defineStore('notification', () => {
     return // 暂时没写这部分相关逻辑
     try {
       const result = await QueryGetAPI<NotificationData[]>(
-        NOTIFACTION_API_URL + 'get-unread'
+        `${NOTIFACTION_API_URL}get-unread`,
       )
       if (result.code == 200) {
         unread.value = result.data
@@ -40,6 +40,6 @@ export const useNotificationStore = defineStore('notification', () => {
   }
   return {
     init,
-    unread
+    unread,
   }
 })

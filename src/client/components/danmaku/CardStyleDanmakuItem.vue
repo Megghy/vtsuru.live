@@ -1,27 +1,28 @@
 <script setup lang="ts">
-  import { EventDataTypes } from '@/api/api-models';
-  import { AVATAR_URL } from '@/data/constants';
-  import { BaseDanmakuItemProps, useDanmakuUtils } from './danmakuUtils';
-  import { useDanmakuWindow } from '../../store/useDanmakuWindow';
-import { VehicleShip24Filled } from '@vicons/fluent';
+import type { BaseDanmakuItemProps } from './danmakuUtils'
+import { VehicleShip24Filled } from '@vicons/fluent'
+import { EventDataTypes } from '@/api/api-models'
+import { AVATAR_URL } from '@/data/constants'
+import { useDanmakuWindow } from '../../store/useDanmakuWindow'
+import { useDanmakuUtils } from './danmakuUtils'
 
-  // 继承基础属性
-  const props = defineProps<BaseDanmakuItemProps>();
+// 继承基础属性
+const props = defineProps<BaseDanmakuItemProps>()
 
-  // 使用工具函数获取所有计算属性
-  const emojiData = useDanmakuWindow().emojiData;
-  const danmakuUtils = useDanmakuUtils(props, emojiData);
+// 使用工具函数获取所有计算属性
+const emojiData = useDanmakuWindow().emojiData
+const danmakuUtils = useDanmakuUtils(props, emojiData)
 
-  // 直接从工具函数获取计算属性，不再需要getBaseProp方法
-  const {
-    typeClass,
-    guardLevelClass,
-    showAvatar,
-    guardColor,
-    scColorClass,
-    parsedMessage,
-    medalColor
-  } = danmakuUtils;
+// 直接从工具函数获取计算属性，不再需要getBaseProp方法
+const {
+  typeClass,
+  guardLevelClass,
+  showAvatar,
+  guardColor,
+  scColorClass,
+  parsedMessage,
+  medalColor,
+} = danmakuUtils
 </script>
 
 <template>
@@ -148,7 +149,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
             <span v-if="segment.type === 'text'">{{ segment.content }}</span>
             <img
               v-else-if="segment.type === 'emoji'"
-              :src="segment.url + '@64w'"
+              :src="`${segment.url}@64w`"
               :alt="segment.name"
               class="inline-emoji"
               referrerpolicy="no-referrer"
@@ -160,7 +161,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
           class="message-text"
         >
           <img
-            :src="item.emoji + '@64w'"
+            :src="`${item.emoji}@64w`"
             alt="emoji"
             class="emoji-image"
             referrerpolicy="no-referrer"
@@ -176,8 +177,7 @@ import { VehicleShip24Filled } from '@vicons/fluent';
 </template>
 
 <style scoped>
-
-  /* 头像 */
+/* 头像 */
   .avatar {
     flex-shrink: 0;
     border-radius: 50%;

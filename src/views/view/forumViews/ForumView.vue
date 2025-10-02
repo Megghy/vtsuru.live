@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { UserInfo } from '@/api/api-models'
-import { ForumPostTopicModel, ForumTopicBaseModel, ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
-import TurnstileVerify from '@/components/TurnstileVerify.vue'
-import VEditor from '@/components/VEditor.vue'
-import { TURNSTILE_KEY } from '@/data/constants'
-import { useForumStore } from '@/store/useForumStore'
+import type { UserInfo } from '@/api/api-models'
+import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { useStorage } from '@vueuse/core'
 import {
   NAlert,
@@ -21,10 +17,12 @@ import {
   useMessage,
 } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
-import VueTurnstile from 'vue-turnstile'
-import ForumPreviewItem from './ForumPreviewItem.vue'
-import ForumCommentItem from './ForumCommentItem.vue'
 import { useAccount } from '@/api/account'
+import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
+import TurnstileVerify from '@/components/TurnstileVerify.vue'
+import VEditor from '@/components/VEditor.vue'
+import { useForumStore } from '@/store/useForumStore'
+import ForumPreviewItem from './ForumPreviewItem.vue'
 
 const { biliInfo, userInfo } = defineProps<{
   biliInfo: any | undefined
@@ -47,7 +45,7 @@ const pn = ref(0)
 const sort = ref(ForumTopicSortTypes.Time)
 
 const forumInfo = ref(await useForum.GetForumInfo(userInfo?.id ?? -1))
-const topics = ref<{ data: ForumTopicBaseModel[]; total: number; more: boolean } | undefined>({
+const topics = ref<{ data: ForumTopicBaseModel[], total: number, more: boolean } | undefined>({
   data: [],
   total: 0,
   more: false,
@@ -109,8 +107,8 @@ onUnmounted(() => {
   </NAlert>
   <NCard
     v-else-if="
-      (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply) ||
-        forumInfo.settings.allowedViewerLevel > forumInfo.level
+      (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply)
+        || forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
   >
     <NAlert type="warning">

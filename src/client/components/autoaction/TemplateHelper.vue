@@ -1,3 +1,26 @@
+<script setup lang="ts">
+import { NSpace, NTag, NTooltip, useMessage } from 'naive-ui'
+
+const props = defineProps({
+  placeholders: {
+    type: Array as () => { name: string, description: string }[],
+    required: true,
+  },
+})
+
+const message = useMessage()
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      message.success('已复制到剪贴板')
+    })
+    .catch(() => {
+      message.error('复制失败')
+    })
+}
+</script>
+
 <template>
   <div class="template-helper">
     <NSpace vertical>
@@ -29,30 +52,6 @@
     </NSpace>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent';
-import { NSpace, NTag, NAlert, NTooltip, NIcon, useMessage, NDivider } from 'naive-ui';
-
-const props = defineProps({
-  placeholders: {
-    type: Array as () => { name: string; description: string }[],
-    required: true
-  }
-});
-
-const message = useMessage();
-
-function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text)
-    .then(() => {
-      message.success('已复制到剪贴板');
-    })
-    .catch(() => {
-      message.error('复制失败');
-    });
-}
-</script>
 
 <style scoped>
 .template-helper {

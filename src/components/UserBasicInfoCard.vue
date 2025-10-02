@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { UserBasicInfo } from '@/api/api-models'
+import type { UserBasicInfo } from '@/api/api-models'
+import { useDebounceFn } from '@vueuse/core'
+import { NAvatar, NCard, NDivider, NEmpty, NFlex, NSpin, NText } from 'naive-ui'
+import { onMounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { USER_API_URL } from '@/data/constants'
 import { getUserAvatarUrl } from '@/Utils'
-import { useDebounceFn } from '@vueuse/core'
-import { NAvatar, NCard, NDescriptions, NDescriptionsItem, NDivider, NEmpty, NFlex, NSpin, NTag, NText } from 'naive-ui'
-import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps<{
   user: string | number
@@ -31,7 +31,7 @@ async function getUserInfo(user: string | number) {
       return
     }
     isLoading.value = true
-    const data = await QueryGetAPI<UserBasicInfo>(USER_API_URL + 'basic/' + user)
+    const data = await QueryGetAPI<UserBasicInfo>(`${USER_API_URL}basic/${user}`)
     if (data.code == 200) {
       currentUser.value = data.data
     } else {

@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { GuidUtils } from '@/Utils'
-import {
+import type {
   ResponsePointGoodModel,
   ResponsePointHisrotyModel,
   ResponsePointOrder2OwnerModel,
   ResponsePointUserModel,
 } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
-import PointOrderCard from '@/components/manage/PointOrderCard.vue'
-import { POINT_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
 import {
   NButton,
@@ -24,12 +19,15 @@ import {
   NModal,
   NSpin,
   NTag,
-  NText,
   NTime,
   NTooltip,
   useMessage,
 } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+import { QueryGetAPI } from '@/api/query'
+import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
+import PointOrderCard from '@/components/manage/PointOrderCard.vue'
+import { POINT_API_URL } from '@/data/constants'
 
 // 组件属性定义
 const props = defineProps<{
@@ -59,18 +57,18 @@ async function getOrders() {
 
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(POINT_API_URL + 'get-user-orders', {
+    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-user-orders`, {
       authId: props.user.info?.id,
     })
 
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('获取订单失败: ' + data.message)
+      message.error(`获取订单失败: ${data.message}`)
       console.error(data)
     }
   } catch (err) {
-    message.error('获取订单失败: ' + err)
+    message.error(`获取订单失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -90,18 +88,18 @@ async function getPointHistory() {
       : { id: props.user.info.userId > 0 ? props.user.info.userId : props.user.info.openId }
 
     const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
-      POINT_API_URL + 'get-user-histories',
-      params
+      `${POINT_API_URL}get-user-histories`,
+      params,
     )
 
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('获取积分历史失败: ' + data.message)
+      message.error(`获取积分历史失败: ${data.message}`)
       console.error(data)
     }
   } catch (err) {
-    message.error('获取积分历史失败: ' + err)
+    message.error(`获取积分历史失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -143,7 +141,7 @@ async function givePoint() {
       }
     }
 
-    const data = await QueryGetAPI(POINT_API_URL + 'give-point', params)
+    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, params)
 
     if (data.code == 200) {
       message.success('添加成功')
@@ -159,11 +157,11 @@ async function givePoint() {
       addPointCount.value = 0
       addPointReason.value = ''
     } else {
-      message.error('添加积分失败: ' + data.message)
+      message.error(`添加积分失败: ${data.message}`)
       console.error(data)
     }
   } catch (err) {
-    message.error('添加积分失败: ' + err)
+    message.error(`添加积分失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false

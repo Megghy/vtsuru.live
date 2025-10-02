@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account';
 import { NAlert, NButton } from 'naive-ui'
+import { useAccount } from '@/api/account'
 
 const accountInfo = useAccount()
 </script>

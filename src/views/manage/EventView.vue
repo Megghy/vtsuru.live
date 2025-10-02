@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { QueryGetAPI } from '@/api/query'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import EventFetcherAlert from '@/components/EventFetcherAlert.vue' // 添加缺失的组件导入
-import { AVATAR_URL, BASE_API_URL, EVENT_API_URL } from '@/data/constants'
+import type { EventModel } from '@/api/api-models'
 import { Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
@@ -23,6 +18,7 @@ import {
   NGridItem,
   NH3,
   NIcon,
+  NInfiniteScroll,
   NLi,
   NRadioButton,
   NRadioGroup,
@@ -34,10 +30,15 @@ import {
   NTime,
   NUl,
   useMessage,
-  NInfiniteScroll,
 } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
-import { EventDataTypes, EventModel } from '@/api/api-models'
+import { useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import EventFetcherAlert from '@/components/EventFetcherAlert.vue' // 添加缺失的组件导入
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import { AVATAR_URL, EVENT_API_URL } from '@/data/constants'
+import { isDarkMode } from '@/Utils'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -73,13 +74,13 @@ const hasMore = ref(true) // 是否还有更多数据
 // 根据类型过滤事件 - 这个计算属性现在可能只显示当前已加载的事件
 // 如果需要导出 *所有* 选定日期/类型的数据，导出逻辑需要调整
 const selectedEvents = computed(() => {
-  return events.value.filter((e) => e.type == selectedType.value)
+  return events.value.filter(e => e.type == selectedType.value)
 })
 
 // API请求获取数据 - 修改为支持分页
 async function get(currentOffset: number, currentLimit: number) {
   try {
-    const data = await QueryGetAPI<EventModel[]>(EVENT_API_URL + 'get', {
+    const data = await QueryGetAPI<EventModel[]>(`${EVENT_API_URL}get`, {
       start: selectedDate.value[0],
       end: selectedDate.value[1],
       offset: currentOffset, // 添加 offset 参数
@@ -89,11 +90,11 @@ async function get(currentOffset: number, currentLimit: number) {
       message.success(`成功获取 ${data.data.length} 条数据`) // 调整提示
       return data.data // 直接返回数据数组
     } else {
-      message.error('获取数据失败: ' + data.message)
+      message.error(`获取数据失败: ${data.message}`)
       return []
     }
   } catch (err) {
-    message.error('获取数据失败: ' + (err as Error).message) // 提供更详细的错误信息
+    message.error(`获取数据失败: ${(err as Error).message}`) // 提供更详细的错误信息
     return []
   }
 }
@@ -116,7 +117,7 @@ async function fetchData(isInitialLoad = false) {
 
   if (fetchedData.length > 0) {
     // 使用 Linqts 进行排序后追加或设置
-    const sortedData = new List(fetchedData).OrderByDescending((d) => d.time).ToArray()
+    const sortedData = new List(fetchedData).OrderByDescending(d => d.time).ToArray()
     events.value = isInitialLoad ? sortedData : [...events.value, ...sortedData]
     offset.value += fetchedData.length // 更新偏移量
     hasMore.value = fetchedData.length === limit.value // 如果返回的数量等于请求的数量，则可能还有更多
@@ -172,7 +173,7 @@ function GetGuardColor(price: number | null | undefined): string {
 
 // 导出数据功能 - 注意：这现在只导出已加载的数据
 function exportData() {
-  if(hasMore.value) {
+  if (hasMore.value) {
     message.warning('当前导出的是已加载的部分数据，并非所有数据。')
   }
   let text = ''
@@ -185,7 +186,7 @@ function exportData() {
     }
     case 'csv': {
       text = objectsToCSV(
-        selectedEvents.value.map((v) => ({
+        selectedEvents.value.map(v => ({
           type: v.type,
           time: format(v.time, 'yyyy-MM-dd HH:mm:ss'),
           name: v.uname,
@@ -201,7 +202,7 @@ function exportData() {
 
   saveAs(
     new Blob([text], { type: 'text/plain;charset=utf-8' }),
-    fileName
+    fileName,
   )
 }
 
@@ -343,7 +344,7 @@ function objectsToCSV(arr: any[]) {
               >
                 <NGridItem
                   v-for="item in selectedEvents"
-                  :key="item.time + '_' + item.uid + '_' + item.price"
+                  :key="`${item.time}_${item.uid}_${item.price}`"
                 >
                   <NCard
                     size="small"
@@ -453,7 +454,7 @@ function objectsToCSV(arr: any[]) {
             <tbody>
               <tr
                 v-for="item in selectedEvents"
-                :key="item.time + '_' + item.uid + '_' + item.price"
+                :key="`${item.time}_${item.uid}_${item.price}`"
               >
                 <td>{{ item.uname }}</td>
                 <td>{{ item.uid }}</td>

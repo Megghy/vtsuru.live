@@ -1,18 +1,18 @@
-import { useAccount } from '@/api/account'
-import { QAInfo, ViolationTypes } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
+import type { QAInfo } from '@/api/api-models'
 import { List } from 'linqts'
-import { useMessage } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { ViolationTypes } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
 
-export type QATagInfo = {
+export interface QATagInfo {
   name: string
   createAt: number
   visiable: boolean
 }
-//SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION, EMOTIONAL
+// SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION, EMOTIONAL
 
 export const useQuestionBox = defineStore('QuestionBox', () => {
   const isLoading = ref(false)
@@ -25,7 +25,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const sendQuestions = ref<QAInfo[]>([])
   const trashQuestions = computed(() => {
     return recieveQuestions.value.filter(
-      (q) => q.reviewResult && q.reviewResult.isApproved == false
+      q => q.reviewResult && q.reviewResult.isApproved == false,
     )
   })
   const tags = ref<QATagInfo[]>([])
@@ -37,60 +37,60 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
 
   const recieveQuestionsFiltered = computed(() => {
     const result = recieveQuestions.value.filter((q) => {
-      /*if (q.id == displayQuestion.value?.id) {
+      /* if (q.id == displayQuestion.value?.id) {
         return false
-      }*/
+      } */
       return (
-        (!q.reviewResult || q.reviewResult.isApproved == true) &&
-        (q.isFavorite || !onlyFavorite.value) &&
-        (q.isPublic || !onlyPublic.value) &&
-        (!q.isReaded || !onlyUnread.value) &&
-        (!displayTag.value || q.tag == displayTag.value)
+        (!q.reviewResult || q.reviewResult.isApproved == true)
+        && (q.isFavorite || !onlyFavorite.value)
+        && (q.isPublic || !onlyPublic.value)
+        && (!q.isReaded || !onlyUnread.value)
+        && (!displayTag.value || q.tag == displayTag.value)
       )
     })
     return result
-    //displayQuestion排在最前面
-    //return displayQuestion.value ? [displayQuestion.value, ...result] : result
+    // displayQuestion排在最前面
+    // return displayQuestion.value ? [displayQuestion.value, ...result] : result
   })
   const currentQuestion = ref<QAInfo>()
   const displayQuestion = ref<QAInfo>()
   const displayTag = ref<string>()
 
   let isRevieveGetted = false
-  //const isSendGetted = false
+  // const isSendGetted = false
 
   const message = window.$message
 
   async function GetRecieveQAInfo() {
     isLoading.value = true
-    await QueryGetAPI<{ questions: QAInfo[]; reviewCount: number }>(
-      QUESTION_API_URL + 'get-recieve'
+    await QueryGetAPI<{ questions: QAInfo[], reviewCount: number }>(
+      `${QUESTION_API_URL}get-recieve`,
     )
       .then((data) => {
         if (data.code == 200) {
           if (data.data.questions.length > 0) {
             recieveQuestions.value = new List(data.data.questions)
-              .OrderBy((d) => d.isReaded)
-              .ThenByDescending((d) => d.sendAt)
+              .OrderBy(d => d.isReaded)
+              .ThenByDescending(d => d.sendAt)
               .ToArray()
             reviewing.value = data.data.reviewCount
 
-            const displayId =
-              accountInfo.value?.settings.questionDisplay.currentQuestion
+            const displayId
+              = accountInfo.value?.settings.questionDisplay.currentQuestion
             if (displayId && displayQuestion.value?.id != displayId) {
               displayQuestion.value = recieveQuestions.value.find(
-                (q) => q.id == displayId
+                q => q.id == displayId,
               )
             }
           }
-          //message.success('共收取 ' + data.data.length + ' 条提问')
+          // message.success('共收取 ' + data.data.length + ' 条提问')
           isRevieveGetted = true
         } else {
           message.error(data.message)
         }
       })
       .catch((err) => {
-        message.error('发生错误: ' + err)
+        message.error(`发生错误: ${err}`)
       })
       .finally(() => {
         isLoading.value = false
@@ -98,44 +98,44 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   }
   async function GetSendQAInfo() {
     isLoading.value = true
-    await QueryGetAPI<QAInfo[]>(QUESTION_API_URL + 'get-send')
+    await QueryGetAPI<QAInfo[]>(`${QUESTION_API_URL}get-send`)
       .then((data) => {
         if (data.code == 200) {
           sendQuestions.value = data.data
-          //message.success('共发送 ' + data.data.length + ' 条提问')
+          // message.success('共发送 ' + data.data.length + ' 条提问')
         } else {
           message.error(data.message)
         }
       })
       .catch((err) => {
-        message.error('发生错误: ' + err)
+        message.error(`发生错误: ${err}`)
       })
       .finally(() => {
         isLoading.value = false
       })
   }
   async function DelQA(id: number) {
-    await QueryGetAPI(QUESTION_API_URL + 'del', {
-      id: id
+    await QueryGetAPI(`${QUESTION_API_URL}del`, {
+      id,
     })
       .then((data) => {
         if (data.code == 200) {
           message.success('删除成功')
           recieveQuestions.value = recieveQuestions.value.filter(
-            (q) => q.id != id
+            q => q.id != id,
           )
         } else {
           message.error(data.message)
         }
       })
       .catch((err) => {
-        message.error('发生错误: ' + err)
+        message.error(`发生错误: ${err}`)
       })
   }
   async function GetTags() {
     isLoading.value = true
-    await QueryGetAPI<QATagInfo[]>(QUESTION_API_URL + 'get-tags', {
-      id: accountInfo.value?.id
+    await QueryGetAPI<QATagInfo[]>(`${QUESTION_API_URL}get-tags`, {
+      id: accountInfo.value?.id,
     })
       .then((data) => {
         if (data.code == 200) {
@@ -145,14 +145,14 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('发生错误: ' + err)
+        message.error(`发生错误: ${err}`)
       })
       .finally(() => {
         isLoading.value = false
       })
   }
   function getViolationString(violation: ViolationTypes) {
-    //SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
+    // SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
     switch (violation) {
       case ViolationTypes.SENSITIVE_TERM:
         return '敏感词'
@@ -175,23 +175,23 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       message.warning('请输入标签')
       return
     }
-    if (tags.value.find((t) => t.name == tag)) {
+    if (tags.value.find(t => t.name == tag)) {
       message.warning('标签已存在')
       return
     }
-    await QueryGetAPI(QUESTION_API_URL + 'add-tag', {
-      tag: tag
+    await QueryGetAPI(`${QUESTION_API_URL}add-tag`, {
+      tag,
     })
       .then((data) => {
         if (data.code == 200) {
           message.success('添加成功')
           GetTags()
         } else {
-          message.error('添加失败: ' + data.message)
+          message.error(`添加失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('添加失败: ' + err)
+        message.error(`添加失败: ${err}`)
       })
   }
   async function delTag(tag: string) {
@@ -199,23 +199,23 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       message.warning('请输入标签')
       return
     }
-    if (!tags.value.find((t) => t.name == tag)) {
+    if (!tags.value.find(t => t.name == tag)) {
       message.warning('标签不存在')
       return
     }
-    await QueryGetAPI(QUESTION_API_URL + 'del-tag', {
-      tag: tag
+    await QueryGetAPI(`${QUESTION_API_URL}del-tag`, {
+      tag,
     })
       .then((data) => {
         if (data.code == 200) {
           message.success('删除成功')
           GetTags()
         } else {
-          message.error('删除失败: ' + data.message)
+          message.error(`删除失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('删除失败: ' + err)
+        message.error(`删除失败: ${err}`)
       })
   }
   async function updateTagVisiable(tag: string, visiable: boolean) {
@@ -223,85 +223,85 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       message.warning('请输入标签')
       return
     }
-    if (!tags.value.find((t) => t.name == tag)) {
+    if (!tags.value.find(t => t.name == tag)) {
       message.warning('标签不存在')
       return
     }
-    await QueryGetAPI(QUESTION_API_URL + 'update-tag-visiable', {
-      tag: tag,
-      visiable: visiable
+    await QueryGetAPI(`${QUESTION_API_URL}update-tag-visiable`, {
+      tag,
+      visiable,
     })
       .then((data) => {
         if (data.code == 200) {
           message.success('修改成功')
           GetTags()
         } else {
-          message.error('修改失败: ' + data.message)
+          message.error(`修改失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('修改失败: ' + err)
+        message.error(`修改失败: ${err}`)
       })
   }
   async function reply(id: number, msg: string) {
     isRepling.value = true
-    await QueryPostAPI<QAInfo>(QUESTION_API_URL + 'reply', {
+    await QueryPostAPI<QAInfo>(`${QUESTION_API_URL}reply`, {
       Id: id,
-      Message: msg
+      Message: msg,
     })
       .then((data) => {
         if (data.code == 200) {
-          const index = recieveQuestions.value.findIndex((q) => q.id == id)
+          const index = recieveQuestions.value.findIndex(q => q.id == id)
           if (index > -1) {
             recieveQuestions.value[index] = data.data
           }
           message.success('回复成功')
           currentQuestion.value = undefined
-          //replyModalVisiable.value = false
+          // replyModalVisiable.value = false
         } else {
-          message.error('发送失败: ' + data.message)
+          message.error(`发送失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('发送失败: ' + err)
+        message.error(`发送失败: ${err}`)
       })
       .finally(() => {
         isRepling.value = false
       })
   }
   async function read(question: QAInfo, read: boolean) {
-    await QueryGetAPI(QUESTION_API_URL + 'read', {
+    await QueryGetAPI(`${QUESTION_API_URL}read`, {
       id: question.id,
-      read: read ? 'true' : 'false'
+      read: read ? 'true' : 'false',
     })
       .then((data) => {
         if (data.code == 200) {
           question.isReaded = read
           if (read && displayQuestion.value?.id == question.id) {
-            setCurrentQuestion(question) //取消设为当前展示的问题
+            setCurrentQuestion(question) // 取消设为当前展示的问题
           }
         } else {
-          message.error('修改失败: ' + data.message)
+          message.error(`修改失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('修改失败: ' + err)
+        message.error(`修改失败: ${err}`)
       })
   }
   async function favorite(question: QAInfo, fav: boolean) {
-    await QueryGetAPI(QUESTION_API_URL + 'favorite', {
+    await QueryGetAPI(`${QUESTION_API_URL}favorite`, {
       id: question.id,
-      favorite: fav
+      favorite: fav,
     })
       .then((data) => {
         if (data.code == 200) {
           question.isFavorite = fav
         } else {
-          message.error('修改失败: ' + data.message)
+          message.error(`修改失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('修改失败: ' + err)
+        message.error(`修改失败: ${err}`)
       })
   }
   async function approve(question: QAInfo, approve: boolean) {
@@ -309,15 +309,15 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       message.error('暂时不支持取消审核')
       return
     }
-    await QueryGetAPI(QUESTION_API_URL + 'approve', {
+    await QueryGetAPI(`${QUESTION_API_URL}approve`, {
       id: question.id,
-      approve: approve ? 'true' : 'false'
+      approve: approve ? 'true' : 'false',
     })
       .then((data) => {
         if (data.code == 200) {
           question.reviewResult = undefined
           const trashIndex = trashQuestions.value.findIndex(
-            (q) => q.id == question.id
+            q => q.id == question.id,
           )
           if (trashIndex > -1) {
             trashQuestions.value.splice(trashIndex, 1)
@@ -325,60 +325,60 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
           recieveQuestions.value.unshift(question)
           message.success('已标记为审核通过')
         } else {
-          message.error('修改失败: ' + data.message)
+          message.error(`修改失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('修改失败: ' + err)
+        message.error(`修改失败: ${err}`)
       })
   }
   async function setPublic(pub: boolean) {
     isChangingPublic.value = true
-    await QueryGetAPI(QUESTION_API_URL + 'public', {
+    await QueryGetAPI(`${QUESTION_API_URL}public`, {
       id: currentQuestion.value?.id,
-      public: pub
+      public: pub,
     })
       .then((data) => {
         if (data.code == 200) {
           if (currentQuestion.value) currentQuestion.value.isPublic = pub
           message.success('已修改公开状态')
         } else {
-          message.error('修改失败: ' + data.message)
+          message.error(`修改失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('修改失败: ' + err)
+        message.error(`修改失败: ${err}`)
       })
       .finally(() => {
         isChangingPublic.value = false
       })
   }
   async function blacklist(question: QAInfo) {
-    await QueryGetAPI(ACCOUNT_API_URL + 'black-list/add', {
-      id: question.sender.id
+    await QueryGetAPI(`${ACCOUNT_API_URL}black-list/add`, {
+      id: question.sender.id,
     })
       .then(async (data) => {
         if (data.code == 200) {
-          await QueryGetAPI(QUESTION_API_URL + 'del', {
-            id: question.id
+          await QueryGetAPI(`${QUESTION_API_URL}del`, {
+            id: question.id,
           }).then((data) => {
             if (data.code == 200) {
-              message.success('已拉黑 ' + question.sender.name)
+              message.success(`已拉黑 ${question.sender.name}`)
             } else {
-              message.error('修改失败: ' + data.message)
+              message.error(`修改失败: ${data.message}`)
             }
           })
         } else {
-          message.error('拉黑失败: ' + data.message)
+          message.error(`拉黑失败: ${data.message}`)
         }
       })
       .catch((err) => {
-        message.error('拉黑失败: ' + err)
+        message.error(`拉黑失败: ${err}`)
       })
   }
   async function markAsNormal(question: QAInfo) {
-    await QueryGetAPI(QUESTION_API_URL + 'mark-as-normal', {
-      id: question.id
+    await QueryGetAPI(`${QUESTION_API_URL}mark-as-normal`, {
+      id: question.id,
     })
       .then((data) => {
         if (data.code == 200) {
@@ -387,7 +387,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         }
       })
       .catch((err) => {
-        message.error('标记失败: ' + err)
+        message.error(`标记失败: ${err}`)
       })
   }
   async function setCurrentQuestion(item: QAInfo | undefined) {
@@ -399,20 +399,20 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     }
     try {
       const data = await QueryGetAPI(
-        QUESTION_API_URL + 'set-current',
+        `${QUESTION_API_URL}set-current`,
         isCurrent || !item
           ? null
           : {
-              id: item.id
-            }
+              id: item.id,
+            },
       )
       if (data.code == 200) {
-        //message.success('设置成功')
+        // message.success('设置成功')
       } else {
-        message.error('设置失败: ' + data.message)
+        message.error(`设置失败: ${data.message}`)
       }
     } catch (err) {
-      message.error('设置失败:' + err)
+      message.error(`设置失败:${err}`)
     }
   }
 
@@ -447,6 +447,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     blacklist,
     markAsNormal,
     setCurrentQuestion,
-    getViolationString
+    getViolationString,
   }
 })

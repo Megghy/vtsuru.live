@@ -1,9 +1,26 @@
 <script setup lang="ts">
-import { AccountInfo, DanmakuModel, EventDataTypes } from '@/api/api-models'
+import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
+import { EventDataTypes } from '@/api/api-models'
 
+const {
+  danmaku,
+  accountInfo,
+  height = 30,
+  showName = true,
+  showAvatar = true,
+} = defineProps<{
+  danmaku: DanmakuModel
+  accountInfo: AccountInfo | undefined
+  showName?: boolean
+  showAvatar?: boolean
+  height?: number
+}>()
+defineEmits<{
+  (e: 'onClickName', uId: number, ouId: string): void
+}>()
 function GetSCColor(price: number): string {
   if (price === 0) return `#2a60b2`
   if (price > 0 && price < 30) return `#2a60b2`
@@ -24,23 +41,6 @@ function GetGuardColor(price: number | null | undefined): string {
   }
   return ''
 }
-
-const {
-  danmaku,
-  accountInfo,
-  height = 30,
-  showName = true,
-  showAvatar = true,
-} = defineProps<{
-  danmaku: DanmakuModel
-  accountInfo: AccountInfo | undefined
-  showName?: boolean
-  showAvatar?: boolean
-  height?: number
-}>()
-defineEmits<{
-  (e: 'onClickName', uId: number, ouId: string): void
-}>()
 </script>
 
 <template>
@@ -48,7 +48,7 @@ defineEmits<{
     v-if="danmaku.type == EventDataTypes.SC"
     :style="`margin-top: 5px;margin-bottom: 5px;max-width:500px;background-color: ${GetSCColor(danmaku.price ?? 0)};`"
     content-style="border-radius: 3px;padding:5px;min-height:45px;display:flex;align-items:center;"
-    :header-style="`padding:5px;background: rgba(255, 255, 255, 15%);font-size: 14px;`"
+    header-style="padding:5px;background: rgba(255, 255, 255, 15%);font-size: 14px;"
     size="small"
     hoverable
   >
@@ -175,13 +175,13 @@ defineEmits<{
           <NTooltip>
             <template #trigger>
               <img
-                :src="'https://' + danmaku.msg + `@22h`"
+                :src="`https://${danmaku.msg}@22h`"
                 referrerpolicy="no-referrer"
                 :style="`max-height: ${height}px;display:inline-flex;`"
               >
             </template>
             <img
-              :src="'https://' + danmaku.msg"
+              :src="`https://${danmaku.msg}`"
               referrerpolicy="no-referrer"
             >
           </NTooltip>
@@ -192,7 +192,7 @@ defineEmits<{
       </span>
       <span
         v-else-if="danmaku.type == EventDataTypes.Gift"
-        :style="'color:' + ((danmaku.price ?? 0) > 0 ? '#DD2F2F' : '#E9A8A8')"
+        :style="`color:${(danmaku.price ?? 0) > 0 ? '#DD2F2F' : '#E9A8A8'}`"
       >
         <NTag
           v-if="(danmaku.price ?? 0) > 0"

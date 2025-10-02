@@ -1,51 +1,51 @@
 <script setup lang="ts">
-import { AutoActionItem, TriggerType, useAutoAction } from '@/client/store/useAutoAction';
-import { useDanmakuClient } from '@/store/useDanmakuClient';
-import { useBiliCookie } from '@/client/store/useBiliCookie';
-import { useWebFetcher } from '@/store/useWebFetcher';
-import { useBiliFunction } from '@/client/store/useBiliFunction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { ArrowDown24Regular, ArrowUp24Regular, Edit16Regular, Target24Filled } from '@vicons/fluent'
 import {
   NAlert,
   NButton,
   NCard,
-  NCountdown,
+  NDataTable,
+  NDivider,
   NDropdown,
   NEmpty,
+  NIcon,
+  NInput,
+  NInputNumber,
   NModal,
   NPopconfirm,
   NSelect,
   NSpace,
+  NSwitch,
   NTabPane,
   NTabs,
   NTag,
-  useMessage,
-  NDataTable,
-  NSwitch,
-  NDivider,
-  NIcon,
   NText,
   NTooltip,
-  NInput,
-  NInputNumber
-} from 'naive-ui';
-import { computed, h, onMounted, onUnmounted, ref, watch, reactive } from 'vue';
-import { ArrowUp24Regular, ArrowDown24Regular, Target24Filled, Edit16Regular } from '@vicons/fluent';
-import AutoActionEditor from './components/autoaction/AutoActionEditor.vue';
-import GlobalScheduledSettings from './components/autoaction/settings/GlobalScheduledSettings.vue';
-import TimerCountdown from './components/autoaction/TimerCountdown.vue';
-import DataManager from './components/autoaction/DataManager.vue';
-import ActionHistoryViewer from './components/autoaction/ActionHistoryViewer.vue';
-import CheckInSettings from './components/autoaction/settings/CheckInSettings.vue';
+  useMessage,
+} from 'naive-ui'
+import { computed, h, reactive, ref } from 'vue'
+import { TriggerType, useAutoAction } from '@/client/store/useAutoAction'
+import { useBiliCookie } from '@/client/store/useBiliCookie'
+import { useBiliFunction } from '@/client/store/useBiliFunction'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { useWebFetcher } from '@/store/useWebFetcher'
+import ActionHistoryViewer from './components/autoaction/ActionHistoryViewer.vue'
+import AutoActionEditor from './components/autoaction/AutoActionEditor.vue'
+import DataManager from './components/autoaction/DataManager.vue'
+import CheckInSettings from './components/autoaction/settings/CheckInSettings.vue'
+import GlobalScheduledSettings from './components/autoaction/settings/GlobalScheduledSettings.vue'
+import TimerCountdown from './components/autoaction/TimerCountdown.vue'
 
-const autoActionStore = useAutoAction();
-const message = useMessage();
-const danmakuClient = useDanmakuClient();
-const biliCookieStore = useBiliCookie();
-const webFetcherStore = useWebFetcher();
-const biliFunc = useBiliFunction();
+const autoActionStore = useAutoAction()
+const message = useMessage()
+const danmakuClient = useDanmakuClient()
+const biliCookieStore = useBiliCookie()
+const webFetcherStore = useWebFetcher()
+const biliFunc = useBiliFunction()
 
 // 从 store 获取 enabledTriggerTypes
-const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes);
+const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes)
 
 // 分类标签
 const typeMap = {
@@ -56,18 +56,18 @@ const typeMap = {
   [TriggerType.ENTER]: '入场欢迎',
   [TriggerType.SCHEDULED]: '定时发送',
   [TriggerType.SUPER_CHAT]: 'SC感谢',
-};
+}
 
-const activeTab = ref(TriggerType.GIFT);
-const activeMainTab = ref('action-management');
-const showAddModal = ref(false);
-const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT);
-const editingActionId = ref<string | null>(null);
-const showSetNextModal = ref(false);
-const targetNextActionId = ref<string | null>(null);
-const showTestModal = ref(false);
-const testUid = ref<string>('10004');
-const currentTestType = ref<TriggerType | null>(null);
+const activeTab = ref(TriggerType.GIFT)
+const activeMainTab = ref('action-management')
+const showAddModal = ref(false)
+const selectedTriggerType = ref<TriggerType>(TriggerType.GIFT)
+const editingActionId = ref<string | null>(null)
+const showSetNextModal = ref(false)
+const targetNextActionId = ref<string | null>(null)
+const showTestModal = ref(false)
+const testUid = ref<string>('10004')
+const currentTestType = ref<TriggerType | null>(null)
 
 const triggerTypeOptions = [
   { label: '自动回复', value: TriggerType.DANMAKU },
@@ -77,46 +77,46 @@ const triggerTypeOptions = [
   { label: '入场欢迎', value: TriggerType.ENTER },
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
-];
+]
 
-const customColumnsByType = reactive<Record<string, any[]>>({});
+const customColumnsByType = reactive<Record<string, any[]>>({})
 
 function toggleActionStatus(action: AutoActionItem) {
-  autoActionStore.toggleAutoAction(action.id, !action.enabled);
-  message.success(`已${!action.enabled ? '启用' : '禁用'}操作: ${action.name || '未命名自动操作'}`);
+  autoActionStore.toggleAutoAction(action.id, !action.enabled)
+  message.success(`已${!action.enabled ? '启用' : '禁用'}操作: ${action.name || '未命名自动操作'}`)
 }
 
 function getStatusTag(action: AutoActionItem) {
   // 检查是否需要登录且未登录
-  const config = action.actionConfig as any; // 使用类型断言访问 type
-  const requiresLogin = config.type === 'sendDanmaku' || config.type === 'sendMessage';
+  const config = action.actionConfig as any // 使用类型断言访问 type
+  const requiresLogin = config.type === 'sendDanmaku' || config.type === 'sendMessage'
   if (requiresLogin && !biliCookieStore.isCookieValid) {
-    return { type: 'error' as const, text: '需登录', tooltip: '发送弹幕或私信需要登录B站账号' };
+    return { type: 'error' as const, text: '需登录', tooltip: '发送弹幕或私信需要登录B站账号' }
   }
   // 1. Check type enable switch (从 store 读取)
   if (!enabledTriggerTypes.value[action.triggerType]) {
-    return { type: 'warning' as const, text: '类型已禁用', tooltip: `所有${typeMap[action.triggerType]}类型的操作已禁用` };
+    return { type: 'warning' as const, text: '类型已禁用', tooltip: `所有${typeMap[action.triggerType]}类型的操作已禁用` }
   }
   // 2. Check action self enabled
   if (!action.enabled) {
-    return { type: 'error' as const, text: '已禁用', tooltip: '此操作已被手动禁用' };
+    return { type: 'error' as const, text: '已禁用', tooltip: '此操作已被手动禁用' }
   }
   // 3. Check if template is empty
-  if (!action.template ||
-      (typeof action.template === 'string' && action.template.trim() === '') ||
-      (Array.isArray(action.template) && action.template.length === 0)) {
-    return { type: 'warning' as const, text: '模板为空', tooltip: '请设置有效的模板内容' };
+  if (!action.template
+    || (typeof action.template === 'string' && action.template.trim() === '')
+    || (Array.isArray(action.template) && action.template.length === 0)) {
+    return { type: 'warning' as const, text: '模板为空', tooltip: '请设置有效的模板内容' }
   }
   // 4. Check onlyDuringLive condition
   if (action.triggerConfig.onlyDuringLive && !autoActionStore.isLive) {
-    return { type: 'warning' as const, text: '待机中', tooltip: '此操作设置为仅在直播时触发' };
+    return { type: 'warning' as const, text: '待机中', tooltip: '此操作设置为仅在直播时触发' }
   }
   // 5. Check ignoreTianXuan condition
   if (action.triggerConfig.ignoreTianXuan && autoActionStore.isTianXuanActive) {
-    return { type: 'warning' as const, text: '暂停中', tooltip: '此操作设置为忽略天选时刻，当前正在进行天选' };
+    return { type: 'warning' as const, text: '暂停中', tooltip: '此操作设置为忽略天选时刻，当前正在进行天选' }
   }
   // 6. All conditions met, enabled
-  return { type: 'success' as const, text: '已启用', tooltip: '此操作当前处于活动状态' };
+  return { type: 'success' as const, text: '已启用', tooltip: '此操作当前处于活动状态' }
 }
 
 const baseColumns = [
@@ -124,15 +124,15 @@ const baseColumns = [
     title: '名称',
     key: 'name',
     render: (row: AutoActionItem) => {
-      return h('div', { style: 'font-weight: 500' }, row.name || '未命名自动操作');
-    }
+      return h('div', { style: 'font-weight: 500' }, row.name || '未命名自动操作')
+    },
   },
   {
     title: '状态',
     key: 'enabled',
     width: 100,
     render: (row: AutoActionItem) => {
-      const status = getStatusTag(row);
+      const status = getStatusTag(row)
 
       const options = [
         {
@@ -140,52 +140,54 @@ const baseColumns = [
           key: 'toggleEnable',
           props: {
             onClick: () => {
-              autoActionStore.toggleAutoAction(row.id, !row.enabled);
-              message.success(`已${!row.enabled ? '启用' : '禁用'}操作: ${row.name || '未命名自动操作'}`);
-            }
-          }
+              autoActionStore.toggleAutoAction(row.id, !row.enabled)
+              message.success(`已${!row.enabled ? '启用' : '禁用'}操作: ${row.name || '未命名自动操作'}`)
+            },
+          },
         },
         {
           label: row.triggerConfig.onlyDuringLive ? '取消"仅直播触发"' : '设为"仅直播触发"',
           key: 'toggleLive',
           props: {
             onClick: () => {
-              row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive;
-              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.onlyDuringLive ? '设为' : '取消'}仅直播触发`);
+              row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
+              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.onlyDuringLive ? '设为' : '取消'}仅直播触发`)
               if (row.triggerType === TriggerType.SCHEDULED) {
-                if (row.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer();
-                else {
-                  autoActionStore.stopIndividualTimer(row.id);
-                  autoActionStore.startIndividualTimer(row);
+                if (row.triggerConfig.useGlobalTimer) {
+                  autoActionStore.restartGlobalTimer()
+                } else {
+                  autoActionStore.stopIndividualTimer(row.id)
+                  autoActionStore.startIndividualTimer(row)
                 }
               }
-            }
-          }
+            },
+          },
         },
         {
           label: row.triggerConfig.ignoreTianXuan ? '取消"忽略天选暂停"' : '设为"忽略天选暂停"',
           key: 'toggleTianXuan',
           props: {
             onClick: () => {
-              row.triggerConfig.ignoreTianXuan = !row.triggerConfig.ignoreTianXuan;
-              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.ignoreTianXuan ? '设为' : '取消'}忽略天选暂停`);
+              row.triggerConfig.ignoreTianXuan = !row.triggerConfig.ignoreTianXuan
+              message.success(`操作"${row.name || '未命名'}"已${row.triggerConfig.ignoreTianXuan ? '设为' : '取消'}忽略天选暂停`)
               if (row.triggerType === TriggerType.SCHEDULED) {
-                if (row.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer();
-                else {
-                  autoActionStore.stopIndividualTimer(row.id);
-                  autoActionStore.startIndividualTimer(row);
+                if (row.triggerConfig.useGlobalTimer) {
+                  autoActionStore.restartGlobalTimer()
+                } else {
+                  autoActionStore.stopIndividualTimer(row.id)
+                  autoActionStore.startIndividualTimer(row)
                 }
               }
-            }
-          }
-        }
-      ];
+            },
+          },
+        },
+      ]
 
       return h(
         NDropdown,
         {
           trigger: 'click',
-          options: options,
+          options,
           showArrow: true,
         },
         {
@@ -199,18 +201,18 @@ const baseColumns = [
                   type: status.type,
                   size: 'small',
                   round: true,
-                  style: 'cursor: pointer;'
+                  style: 'cursor: pointer;',
                 },
-                { default: () => status.text }
+                { default: () => status.text },
               ),
-              default: () => status.tooltip
-            }
-          )
-        }
-      );
-    }
+              default: () => status.tooltip,
+            },
+          ),
+        },
+      )
+    },
   },
-];
+]
 
 const remainingTimeColumn = {
   title: '下一次发送 (估算)',
@@ -218,13 +220,13 @@ const remainingTimeColumn = {
   width: 180,
   render: (row: AutoActionItem) => {
     if (!enabledTriggerTypes.value[TriggerType.SCHEDULED]) {
-      return h(NText, { depth: 3 }, '类型已禁用');
+      return h(NText, { depth: 3 }, '类型已禁用')
     }
-    return h(TimerCountdown, { actionId: row.id });
-  }
-};
+    return h(TimerCountdown, { actionId: row.id })
+  },
+}
 
-const createActionsColumn = (type: TriggerType, items: AutoActionItem[]) => {
+function createActionsColumn(type: TriggerType, items: AutoActionItem[]) {
   return {
     title: '操作',
     key: 'actions',
@@ -237,38 +239,32 @@ const createActionsColumn = (type: TriggerType, items: AutoActionItem[]) => {
             size: 'small',
             type: 'primary',
             ghost: true,
-            onClick: () => editAction(row.id)
+            onClick: () => editAction(row.id),
           },
-          { default: () => '编辑' }
-        )
-      ];
+          { default: () => '编辑' },
+        ),
+      ]
 
       if (type === TriggerType.SCHEDULED) {
         buttons.unshift(
-          h(NButton,
-            {
-              size: 'small',
-              circle: true,
-              tertiary: true,
-              disabled: index === 0,
-              onClick: () => moveAction(row.id, 'up'),
-              title: '上移'
-            },
-            { icon: () => h(NIcon, { component: ArrowUp24Regular }) }
-          ),
-          h(NButton,
-            {
-              size: 'small',
-              circle: true,
-              tertiary: true,
-              style: 'margin-left: 6px;',
-              disabled: index === items.length - 1,
-              onClick: () => moveAction(row.id, 'down'),
-              title: '下移'
-            },
-            { icon: () => h(NIcon, { component: ArrowDown24Regular }) }
-          )
-        );
+          h(NButton, {
+            size: 'small',
+            circle: true,
+            tertiary: true,
+            disabled: index === 0,
+            onClick: () => moveAction(row.id, 'up'),
+            title: '上移',
+          }, { icon: () => h(NIcon, { component: ArrowUp24Regular }) }),
+          h(NButton, {
+            size: 'small',
+            circle: true,
+            tertiary: true,
+            style: 'margin-left: 6px;',
+            disabled: index === items.length - 1,
+            onClick: () => moveAction(row.id, 'down'),
+            title: '下移',
+          }, { icon: () => h(NIcon, { component: ArrowDown24Regular }) }),
+        )
       }
 
       buttons.push(
@@ -278,162 +274,162 @@ const createActionsColumn = (type: TriggerType, items: AutoActionItem[]) => {
             trigger: 'hover',
             options: [
               { label: '复制', key: 'duplicate' },
-              { label: '删除', key: 'delete' }
+              { label: '删除', key: 'delete' },
             ],
             onSelect: (key: string) => {
-              if (key === 'duplicate') duplicateAutoAction(row);
-              if (key === 'delete') removeAutoAction(row);
-            }
+              if (key === 'duplicate') duplicateAutoAction(row)
+              if (key === 'delete') removeAutoAction(row)
+            },
           },
           {
             default: () => h(
               NButton,
               { size: 'small', tertiary: true, style: 'padding: 0 8px; margin-left: 6px;' },
-              { default: () => '•••' }
-            )
-          }
-        )
-      );
+              { default: () => '•••' },
+            ),
+          },
+        ),
+      )
 
-      return h(NSpace, { justify: 'end', align: 'center' }, { default: () => buttons });
-    }
-  };
-};
+      return h(NSpace, { justify: 'end', align: 'center' }, { default: () => buttons })
+    },
+  }
+}
 
-const getColumnsForType = (type: TriggerType) => {
-  const items = groupedActions.value[type] || [];
-  const customCols = customColumnsByType[type] || [];
-  const actionsCol = createActionsColumn(type, items);
+function getColumnsForType(type: TriggerType) {
+  const items = groupedActions.value[type] || []
+  const customCols = customColumnsByType[type] || []
+  const actionsCol = createActionsColumn(type, items)
 
   if (type === TriggerType.SCHEDULED) {
-    return [...baseColumns, remainingTimeColumn, ...customCols, actionsCol];
+    return [...baseColumns, remainingTimeColumn, ...customCols, actionsCol]
   }
 
-  return [...baseColumns, ...customCols, actionsCol];
-};
+  return [...baseColumns, ...customCols, actionsCol]
+}
 
 const groupedActions = computed(() => {
-  const grouped: Record<string, AutoActionItem[]> = {};
-  Object.values(TriggerType).forEach(type => {
-    grouped[type as string] = [];
-  });
-  autoActionStore.autoActions.forEach(action => {
+  const grouped: Record<string, AutoActionItem[]> = {}
+  Object.values(TriggerType).forEach((type) => {
+    grouped[type as string] = []
+  })
+  autoActionStore.autoActions.forEach((action) => {
     if (grouped[action.triggerType]) {
-      grouped[action.triggerType].push(action);
+      grouped[action.triggerType].push(action)
     }
-  });
-  Object.keys(grouped).forEach(type => {
+  })
+  Object.keys(grouped).forEach((type) => {
     grouped[type].sort((a, b) => {
-      if (a.enabled === b.enabled) return 0;
-      return a.enabled ? -1 : 1;
-    });
-  });
-  return grouped;
-});
+      if (a.enabled === b.enabled) return 0
+      return a.enabled ? -1 : 1
+    })
+  })
+  return grouped
+})
 
 const eligibleGlobalActions = computed(() => {
-  if (!enabledTriggerTypes.value) return [];
+  if (!enabledTriggerTypes.value) return []
   return autoActionStore.autoActions.filter(action =>
-    action.triggerType === TriggerType.SCHEDULED &&
-    enabledTriggerTypes.value[TriggerType.SCHEDULED] &&
-    action.enabled &&
-    action.triggerConfig.useGlobalTimer &&
-    (!action.triggerConfig.onlyDuringLive || autoActionStore.isLive) &&
-    (!action.triggerConfig.ignoreTianXuan || !autoActionStore.isTianXuanActive)
+    action.triggerType === TriggerType.SCHEDULED
+    && enabledTriggerTypes.value[TriggerType.SCHEDULED]
+    && action.enabled
+    && action.triggerConfig.useGlobalTimer
+    && (!action.triggerConfig.onlyDuringLive || autoActionStore.isLive)
+    && (!action.triggerConfig.ignoreTianXuan || !autoActionStore.isTianXuanActive),
   ).map(action => ({
     label: action.name || '未命名操作',
-    value: action.id
-  }));
-});
+    value: action.id,
+  }))
+})
 
 function openSetNextModal() {
-  targetNextActionId.value = autoActionStore.nextScheduledAction?.id ?? null;
-  showSetNextModal.value = true;
+  targetNextActionId.value = autoActionStore.nextScheduledAction?.id ?? null
+  showSetNextModal.value = true
 }
 
 function confirmSetNextAction() {
   if (targetNextActionId.value) {
-    autoActionStore.setNextGlobalAction(targetNextActionId.value);
-    message.success('已指定下一条执行的操作');
+    autoActionStore.setNextGlobalAction(targetNextActionId.value)
+    message.success('已指定下一条执行的操作')
   }
-  showSetNextModal.value = false;
+  showSetNextModal.value = false
 }
 
 function addAutoAction() {
   if (!selectedTriggerType.value) {
-    message.error('请选择触发类型');
-    return;
+    message.error('请选择触发类型')
+    return
   }
-  const newAction = autoActionStore.addAutoAction(selectedTriggerType.value);
-  showAddModal.value = false;
-  activeTab.value = selectedTriggerType.value;
-  editingActionId.value = newAction.id;
-  message.success('已添加新的自动操作');
+  const newAction = autoActionStore.addAutoAction(selectedTriggerType.value)
+  showAddModal.value = false
+  activeTab.value = selectedTriggerType.value
+  editingActionId.value = newAction.id
+  message.success('已添加新的自动操作')
 }
 
 function removeAutoAction(action: AutoActionItem) {
-  autoActionStore.removeAutoAction(action.id);
+  autoActionStore.removeAutoAction(action.id)
   if (editingActionId.value === action.id) {
-    editingActionId.value = null;
+    editingActionId.value = null
   }
-  message.success('已删除自动操作');
+  message.success('已删除自动操作')
 }
 
 function duplicateAutoAction(action: AutoActionItem) {
-  const newActionData = JSON.parse(JSON.stringify(action));
-  const newActionId = `auto-action-${Date.now()}`;
-  newActionData.id = newActionId;
-  newActionData.name += ' (复制)';
-  autoActionStore.autoActions.push(newActionData);
+  const newActionData = JSON.parse(JSON.stringify(action))
+  const newActionId = `auto-action-${Date.now()}`
+  newActionData.id = newActionId
+  newActionData.name += ' (复制)'
+  autoActionStore.autoActions.push(newActionData)
   if (newActionData.triggerType === TriggerType.SCHEDULED) {
-    const addedAction = autoActionStore.autoActions.find(a => a.id === newActionId);
+    const addedAction = autoActionStore.autoActions.find(a => a.id === newActionId)
     if (addedAction) {
       if (addedAction.triggerConfig.useGlobalTimer) {
-        autoActionStore.restartGlobalTimer();
+        autoActionStore.restartGlobalTimer()
       } else {
-        autoActionStore.startIndividualTimer(addedAction);
+        autoActionStore.startIndividualTimer(addedAction)
       }
     } else {
-      console.error("[ClientAutoAction] Could not find duplicated action after pushing.");
+      console.error('[ClientAutoAction] Could not find duplicated action after pushing.')
     }
   }
-  message.success('已复制自动操作');
+  message.success('已复制自动操作')
 }
 
 function moveAction(actionId: string, direction: 'up' | 'down') {
-  autoActionStore.moveAction(actionId, direction);
+  autoActionStore.moveAction(actionId, direction)
 }
 
 function editAction(actionId: string) {
-  editingActionId.value = actionId;
+  editingActionId.value = actionId
 }
 
 function backToOverview() {
-  editingActionId.value = null;
+  editingActionId.value = null
 }
 
 function toggleTypeStatus(type: string) {
-  const triggerType = type as TriggerType;
-  const newState = !enabledTriggerTypes.value[triggerType];
-  autoActionStore.setTriggerTypeEnabled(triggerType, newState);
-  message.success(`已${newState ? '启用' : '禁用'}所有 ${typeMap[triggerType]}`);
+  const triggerType = type as TriggerType
+  const newState = !enabledTriggerTypes.value[triggerType]
+  autoActionStore.setTriggerTypeEnabled(triggerType, newState)
+  message.success(`已${newState ? '启用' : '禁用'}所有 ${typeMap[triggerType]}`)
 }
 
 function handleTestClick(type: TriggerType) {
-  const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type);
+  const requiresLogin = [TriggerType.DANMAKU, TriggerType.GUARD, TriggerType.SUPER_CHAT].includes(type)
   if (requiresLogin && !biliCookieStore.isCookieValid) {
-    message.error('此测试需要登录B站账号，请先前往设置页面登录');
-    return;
+    message.error('此测试需要登录B站账号，请先前往设置页面登录')
+    return
   }
 
   if (type === TriggerType.GUARD) {
     // 为舰长相关(私信)测试显示UID输入对话框
-    currentTestType.value = type;
-    testUid.value = '10004'; // 默认值
-    showTestModal.value = true;
+    currentTestType.value = type
+    testUid.value = '10004' // 默认值
+    showTestModal.value = true
   } else {
     // 其他类型直接测试
-    autoActionStore.triggerTestActionByType(type);
+    autoActionStore.triggerTestActionByType(type)
   }
 }
 
@@ -441,18 +437,18 @@ function confirmTest() {
   if (currentTestType.value === TriggerType.GUARD) {
     // 在执行私信测试前再次确认登录状态
     if (!biliCookieStore.isCookieValid) {
-        message.error('无法发送私信测试，请先登录B站账号');
-        showTestModal.value = false;
-        return;
+      message.error('无法发送私信测试，请先登录B站账号')
+      showTestModal.value = false
+      return
     }
-    const uid = parseInt(testUid.value);
+    const uid = Number.parseInt(testUid.value)
     if (isNaN(uid) || uid <= 0) {
-      message.error('请输入有效的UID');
-      return;
+      message.error('请输入有效的UID')
+      return
     }
-    autoActionStore.triggerTestActionByType(currentTestType.value, uid);
+    autoActionStore.triggerTestActionByType(currentTestType.value, uid)
   }
-  showTestModal.value = false;
+  showTestModal.value = false
 }
 </script>
 
@@ -513,7 +509,7 @@ function confirmTest() {
                   <span
                     :style="{
                       color: enabledTriggerTypes && enabledTriggerTypes[type] ? '#18a058' : '#d03050',
-                      fontWeight: 'medium'
+                      fontWeight: 'medium',
                     }"
                     :title="enabledTriggerTypes && enabledTriggerTypes[type] ? '已启用' : '已禁用'"
                   >
@@ -548,8 +544,8 @@ function confirmTest() {
                     style="margin-bottom: 12px;"
                   >
                     <NPopconfirm
-                      :negative-text="'取消'"
-                      :positive-text="'确认测试'"
+                      negative-text="取消"
+                      positive-text="确认测试"
                       @positive-click="() => handleTestClick(type as TriggerType)"
                     >
                       <template #trigger>

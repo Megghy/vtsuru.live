@@ -1,6 +1,6 @@
-import UpdateNoteContainer from "@/components/UpdateNoteContainer.vue";
-import { NButton, NImage } from "naive-ui";
-import { VNode } from "vue";
+import type { VNode } from 'vue'
+import { NButton, NImage } from 'naive-ui'
+import UpdateNoteContainer from '@/components/UpdateNoteContainer.vue'
 
 export const updateNotes: updateNoteType[] = [
   {
@@ -18,9 +18,9 @@ export const updateNotes: updateNoteType[] = [
             '现在支持为礼物附加key, 可以在兑换礼物之后自动选择一个附加到礼物内容中',
           ],
           [
-            '礼物页面样式优化'
-          ]
-        ]
+            '礼物页面样式优化',
+          ],
+        ],
       },
       {
         type: 'new',
@@ -33,10 +33,10 @@ export const updateNotes: updateNoteType[] = [
           [
             '签到功能增加仅签到功能, 可以只签到不给予积分, 修改设置项',
             () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202025-05-01%20080506.png', width: 300 }),
-          ]
-        ]
-      }
-    ]
+          ],
+        ],
+      },
+    ],
   },
   {
     ver: 6,
@@ -53,9 +53,13 @@ export const updateNotes: updateNoteType[] = [
           [
             '客户端安装方式:',
             () => h(NButton, {
-              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+              text: true,
+              tag: 'a',
+              href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii',
+              target: '_blank',
+              type: 'info',
             }, () => '查看介绍'),
-          ]
+          ],
         ],
       },
       {
@@ -64,10 +68,10 @@ export const updateNotes: updateNoteType[] = [
         content: [
           [
             '读弹幕现在支持进入直播间消息',
-          ]
-        ]
-      }
-    ]
+          ],
+        ],
+      },
+    ],
   },
   {
     ver: 5,
@@ -83,11 +87,11 @@ export const updateNotes: updateNoteType[] = [
           ],
           [
             '大部分功能都和 blivechat 一致, 不过目前还无法提供本地文件访问, 部分css中需要使用图片等本地资源样式的需要等 EventFetcher 更新相关功能后才能使用\r\n',
-            '配置上传之后会自动同步到obs中'
-          ]
+            '配置上传之后会自动同步到obs中',
+          ],
         ],
       },
-    ]
+    ],
   },
   {
     ver: 4,
@@ -106,12 +110,16 @@ export const updateNotes: updateNoteType[] = [
             '数据持久化存储，各类操作配置和运行状态不会丢失\r\n\r\n',
             '发送弹幕和私信需要客户端扫码登录, 客户端安装方式:',
             () => h(NButton, {
-              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+              text: true,
+              tag: 'a',
+              href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii',
+              target: '_blank',
+              type: 'info',
             }, () => '查看介绍'),
-          ]
+          ],
         ],
       },
-    ]
+    ],
   },
   {
     ver: 3,
@@ -125,10 +133,10 @@ export const updateNotes: updateNoteType[] = [
             'Tauri 客户端新增弹幕机功能, 可以在自己电脑上显示弹幕礼物等. ',
             '客户端需更新至0.1.2版本, 重启客户端后会自动更新',
             () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/81d76a89-96b8-44e9-be79-6caaa5741f64.png', width: 200 }),
-          ]
+          ],
         ],
       },
-    ]
+    ],
   },
   {
     ver: 2,
@@ -142,28 +150,40 @@ export const updateNotes: updateNoteType[] = [
           [
             '安装方式: ',
             () => h(NButton, {
-              text: true, tag: 'a', href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii', target: '_blank', type: 'info'
+              text: true,
+              tag: 'a',
+              href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii',
+              target: '_blank',
+              type: 'info',
             }, () => '查看介绍'),
           ],
           [
-            '当前可能存在一些问题, 可以加入秋秋群 873260337 进行反馈, 有功能需求也可以提出'
+            '当前可能存在一些问题, 可以加入秋秋群 873260337 进行反馈, 有功能需求也可以提出',
           ],
           [],
           [
             '源码: ',
             () => h(NButton, {
-              text: true, tag: 'a', href: 'https://github.com/Megghy/vtsuru-fetvher-client', target: '_blank', type: 'info'
+              text: true,
+              tag: 'a',
+              href: 'https://github.com/Megghy/vtsuru-fetvher-client',
+              target: '_blank',
+              type: 'info',
             }, () => ' 客户端 Repo '),
             ' | ',
             () => h(NButton, {
-              text: true, tag: 'a', href: 'https://github.com/Megghy/vtsuru.live/tree/master/src/client', target: '_blank', type: 'info'
+              text: true,
+              tag: 'a',
+              href: 'https://github.com/Megghy/vtsuru.live/tree/master/src/client',
+              target: '_blank',
+              type: 'info',
             }, () => ' UI/逻辑 '),
           ],
           [
             () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/01295402D7FBBF192FE5608179A4A7A6.png', width: 200 }),
-          ]
-        ]
-      }
+          ],
+        ],
+      },
     ],
   },
   {
@@ -177,16 +197,16 @@ export const updateNotes: updateNoteType[] = [
           [
             '新增一个歌单样式: 列表',
             () => h(NImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250408-134631.png', width: 300, height: 200 }),
-          ]
+          ],
         ],
       },
     ],
   },
-];
+]
 
-export const currentUpdateNoteVer = updateNotes.sort((a, b) => b.ver - a.ver)[0].ver;
-export const currentUpdateNote = updateNotes.sort((a, b) => b.ver - a.ver)[0].items;
-export const savedUpdateNoteVer = useStorage('UpdateNoteVer', 0);
+export const currentUpdateNoteVer = updateNotes.sort((a, b) => b.ver - a.ver)[0].ver
+export const currentUpdateNote = updateNotes.sort((a, b) => b.ver - a.ver)[0].items
+export const savedUpdateNoteVer = useStorage('UpdateNoteVer', 0)
 
 export function checkUpdateNote() {
   if (savedUpdateNoteVer.value < currentUpdateNoteVer) {
@@ -200,24 +220,24 @@ export function checkUpdateNote() {
       negativeText: '确定',
       positiveText: '下次更新前不再提示',
       onPositiveClick: () => {
-        savedUpdateNoteVer.value = currentUpdateNoteVer;
+        savedUpdateNoteVer.value = currentUpdateNoteVer
       },
       onClose: () => {
-        savedUpdateNoteVer.value = currentUpdateNoteVer;
-      }
-    });
+        savedUpdateNoteVer.value = currentUpdateNoteVer
+      },
+    })
   }
 }
 
-export type updateType = 'fix' | 'new' | 'optimize' | 'other';
-export type updateNoteType = {
-  ver: number;
-  date: string;
-  items: updateNoteItemType[];
-};
-export type updateNoteItemType = {
-  title?: string | (() => VNode);
-  type: updateType;
-  content: updateNoteItemContentType[];
-};
-export type updateNoteItemContentType = (() => VNode) | string | updateNoteItemContentType[];
+export type updateType = 'fix' | 'new' | 'optimize' | 'other'
+export interface updateNoteType {
+  ver: number
+  date: string
+  items: updateNoteItemType[]
+}
+export interface updateNoteItemType {
+  title?: string | (() => VNode)
+  type: updateType
+  content: updateNoteItemContentType[]
+}
+export type updateNoteItemContentType = (() => VNode) | string | updateNoteItemContentType[]

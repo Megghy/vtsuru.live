@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/data/constants'
+import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import {
   NAlert,
   NButton,
@@ -19,6 +16,9 @@ import {
 import { onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
+import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/data/constants'
 
 interface AddVideoModel {
   id: string
@@ -40,7 +40,7 @@ const isLoading = ref(false)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(VIDEO_COLLECT_API_URL + 'get', { id: route.params.id })
+    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
     if (data.code == 200) {
       return data.data.table
     }
@@ -56,7 +56,7 @@ async function add() {
   }
   isLoading.value = true
   addModel.value.id = table.value?.id ?? route.params.id.toString()
-  await QueryPostAPI(VIDEO_COLLECT_API_URL + 'add', addModel.value, [['Turnstile', token.value]])
+  await QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, [['Turnstile', token.value]])
     .then((data) => {
       if (data.code == 200) {
         message.success('已成功推荐视频')
@@ -64,7 +64,7 @@ async function add() {
           location.reload()
         }, 1000)
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .catch((err) => {

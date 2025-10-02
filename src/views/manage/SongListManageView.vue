@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { copyToClipboard, objectsToCSV } from '@/Utils'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { FunctionTypes, SongFrom, SongLanguage, SongRequestOption, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import SongList from '@/components/SongList.vue'
-import { CN_HOST, CURRENT_HOST, FETCH_API, SONG_API_URL } from '@/data/constants'
+import type {
+  FormInst,
+  FormRules,
+  UploadFileInfo,
+} from 'naive-ui'
+import type { Option } from 'naive-ui/es/transfer/src/interface'
+import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import { ArchiveOutline } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
@@ -13,8 +14,6 @@ import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
-  FormInst,
-  FormRules,
   NAlert,
   NButton,
   NCheckbox,
@@ -37,8 +36,8 @@ import {
   NSpace,
   NSpin,
   NSwitch,
-  NTabPane,
   NTable,
+  NTabPane,
   NTabs,
   NTag,
   NText,
@@ -46,12 +45,16 @@ import {
   NTransfer,
   NUpload,
   NUploadDragger,
-  UploadFileInfo,
   useMessage,
 } from 'naive-ui'
-import { Option } from 'naive-ui/es/transfer/src/interface'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import * as XLSX from 'xlsx'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { FunctionTypes, SongFrom } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import SongList from '@/components/SongList.vue'
+import { CURRENT_HOST, FETCH_API, SONG_API_URL } from '@/data/constants'
+import { copyToClipboard, objectsToCSV } from '@/Utils'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -71,7 +74,7 @@ const columnMappings = useStorage('song-list-column-mappings', {
   description: '描述,备注,说明,description,note,remark',
   url: '链接,地址,url,link',
   language: '语言,language',
-  tags: '标签,类别,分类,tag,tags,category'
+  tags: '标签,类别,分类,tag,tags,category',
 })
 
 // 歌曲列表数据
@@ -130,19 +133,19 @@ const neteaseSongListId = computed(() => {
 // 从歌曲列表中提取所有作者
 const authors = computed(() => {
   return new List(songs.value)
-    .SelectMany((s) => new List(s?.author || []))
+    .SelectMany(s => new List(s?.author || []))
     .Distinct()
     .ToArray()
-    .map((t) => ({ label: t, value: t }))
+    .map(t => ({ label: t, value: t }))
 })
 
 // 从歌曲列表中提取所有标签
 const tags = computed(() => {
   return new List(songs.value)
-    .SelectMany((s) => new List(s?.tags || []))
+    .SelectMany(s => new List(s?.tags || []))
     .Distinct()
     .ToArray()
-    .map((t) => ({ label: t, value: t }))
+    .map(t => ({ label: t, value: t }))
 })
 
 // 语言选项列表
@@ -158,21 +161,21 @@ const songSelectOption = [
 
 // 从已有歌曲中提取所有语言
 const languageSelectOption = computed(() => {
-  const languages = new Set<string>(songSelectOption.map((s) => s.label))
+  const languages = new Set<string>(songSelectOption.map(s => s.label))
   songs.value.forEach((s) => {
     if (s.language) {
-      s.language.forEach((l) => languages.add(l))
+      s.language.forEach(l => languages.add(l))
     }
   })
-  return [...languages].map((t) => ({ label: t, value: t }))
+  return [...languages].map(t => ({ label: t, value: t }))
 })
 
 // 从上传文件中读取的歌曲列表选项
 const uploadSongsOptions = computed(() => {
-  return uploadSongsFromFile.value.map((s) => ({
+  return uploadSongsFromFile.value.map(s => ({
     label: `${s.name} - ${!s.author ? '未知' : s.author.join('/')}`,
     value: s.name,
-    disabled: songs.value.findIndex((exist) => exist.name == s.name) > -1,
+    disabled: songs.value.findIndex(exist => exist.name == s.name) > -1,
   }))
 })
 
@@ -183,7 +186,7 @@ const selecteduploadSongs = ref<string[]>([])
  */
 async function addCustomSong() {
   // 检查歌曲名称是否已存在
-  if (songs.value.findIndex((s) => s.name == addSongModel.value.name) > -1) {
+  if (songs.value.findIndex(s => s.name == addSongModel.value.name) > -1) {
     message.error('已存在相同名称的歌曲')
     return
   }
@@ -196,14 +199,14 @@ async function addCustomSong() {
         .then((data) => {
           if (data.code == 200) {
             if (data.data.length == 1) {
-              message.success('成功添加歌曲: ' + addSongModel.value.name)
+              message.success(`成功添加歌曲: ${addSongModel.value.name}`)
               songs.value.push(data.data[0])
               resetAddingSong(onlyResetNameOnAdded.value)
             } else {
               message.error('未能添加歌曲, 已存在相同名称的曲目')
             }
           } else {
-            message.error('添加失败: ' + data.message)
+            message.error(`添加失败: ${data.message}`)
           }
         })
         .catch((err) => {
@@ -220,7 +223,7 @@ async function addCustomSong() {
  */
 async function addNeteaseSongs() {
   isModalLoading.value = true
-  const selected = neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.find((select) => s.key == select))
+  const selected = neteaseSongs.value.filter(s => selectedNeteaseSongs.value.find(select => s.key == select))
 
   await addSongs(selected, SongFrom.Netease)
     .then((data) => {
@@ -230,7 +233,7 @@ async function addNeteaseSongs() {
         // 更新选项禁用状态
         updateNeteaseSongsOptions(data.data)
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -245,12 +248,12 @@ async function addNeteaseSongs() {
  * 更新网易云歌曲选项的禁用状态
  */
 function updateNeteaseSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
-  neteaseSongsOptions.value = neteaseSongs.value.map((s) => ({
+  neteaseSongsOptions.value = neteaseSongs.value.map(s => ({
     label: `${s.name} - ${s.author.join('/')}`,
     value: s.key,
     disabled:
-      songs.value.findIndex((exist) => exist.id == s.id) > -1 ||
-      newlyAddedSongs.findIndex((add) => add.id == s.id) > -1,
+      songs.value.findIndex(exist => exist.id == s.id) > -1
+      || newlyAddedSongs.findIndex(add => add.id == s.id) > -1,
   }))
 }
 
@@ -278,7 +281,7 @@ async function addFingsingSongs(song: SongsInfo) {
         addSongModel.value = {} as SongsInfo
         songs.value.push(...data.data)
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -300,8 +303,8 @@ async function addUploadFileSong() {
   }
 
   isModalLoading.value = true
-  const songsToAdd = uploadSongsFromFile.value.filter((s) =>
-    selecteduploadSongs.value.find((select) => s.name == select)
+  const songsToAdd = uploadSongsFromFile.value.filter(s =>
+    selecteduploadSongs.value.find(select => s.name == select),
   )
 
   await addSongs(songsToAdd, SongFrom.Custom)
@@ -310,11 +313,11 @@ async function addUploadFileSong() {
         message.success(`已添加 ${data.data.length} 首歌曲`)
         songs.value.push(...data.data)
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error('添加失败: ' + err)
+      message.error(`添加失败: ${err}`)
       console.error(err)
     })
     .finally(() => {
@@ -327,8 +330,8 @@ async function addUploadFileSong() {
  */
 async function addSongs(songsShoudAdd: SongsInfo[], from: SongFrom) {
   return QueryPostAPI<SongsInfo[]>(
-    SONG_API_URL + 'add',
-    songsShoudAdd.map((s) => ({
+    `${SONG_API_URL}add`,
+    songsShoudAdd.map(s => ({
       Name: s.name,
       Id: from == SongFrom.Custom ? -1 : s.id,
       From: from,
@@ -354,7 +357,7 @@ async function getNeteaseSongList() {
   }
 
   isModalLoading.value = true
-  await QueryGetAPI<SongsInfo[]>(SONG_API_URL + 'get-netease-list', {
+  await QueryGetAPI<SongsInfo[]>(`${SONG_API_URL}get-netease-list`, {
     id: neteaseSongListId.value,
   })
     .then((data) => {
@@ -362,14 +365,14 @@ async function getNeteaseSongList() {
         neteaseSongs.value = data.data
         updateNeteaseSongsOptions()
         message.success(
-          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
+          `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter(s => s.disabled).length} 首`,
         )
       } else {
-        message.error('获取歌单失败: ' + data.message)
+        message.error(`获取歌单失败: ${data.message}`)
       }
     })
     .catch((err) => {
-      message.error('获取歌单失败: ' + err)
+      message.error(`获取歌单失败: ${err}`)
     })
     .finally(() => {
       isModalLoading.value = false
@@ -413,7 +416,7 @@ async function getFivesingSearchList(isRestart = false) {
       message.success(`成功获取搜索信息, 共 ${json.pageInfo.totalCount} 条, 当前第 ${fivesingCurrentPage.value} 页`)
     })
     .catch((err) => {
-      message.error('获取歌单失败: ' + err)
+      message.error(`获取歌单失败: ${err}`)
     })
     .finally(() => {
       isModalLoading.value = false
@@ -443,7 +446,7 @@ async function playFivesingSong(song: SongsInfo) {
       song.url = data
     })
     .catch((err) => {
-      message.error('获取歌曲链接失败: ' + err)
+      message.error(`获取歌曲链接失败: ${err}`)
     })
     .finally(() => {
       isGettingFivesingSongPlayUrl.value = 0
@@ -471,7 +474,7 @@ async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
  */
 async function getSongs() {
   isLoading.value = true
-  await QueryGetAPI<any>(SONG_API_URL + 'get', {
+  await QueryGetAPI<any>(`${SONG_API_URL}get`, {
     id: accountInfo.value?.id,
   })
     .then((data) => {
@@ -480,7 +483,7 @@ async function getSongs() {
       }
     })
     .catch((err) => {
-      message.error('获取歌曲失败: ' + err)
+      message.error(`获取歌曲失败: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
@@ -501,7 +504,7 @@ function exportData() {
   }
 
   // 构建CSV数据
-  const csvData = songs.value.map((s) => ({
+  const csvData = songs.value.map(s => ({
     id: s.id,
     名称: s.name,
     翻译名称: s.translateName,
@@ -518,7 +521,7 @@ function exportData() {
   const text = objectsToCSV(csvData)
 
   // 添加UTF-8 BOM以支持中文
-  const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+  const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
   const utf8encoder = new TextEncoder()
   const utf8array = utf8encoder.encode(text)
 
@@ -526,7 +529,7 @@ function exportData() {
   const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`
   saveAs(
     new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }),
-    fileName
+    fileName,
   )
 }
 
@@ -564,82 +567,82 @@ function parseExcelFile() {
 
     // 解析每一行数据
     const parsedSongs = rows.map((row) => {
-      const song = {} as SongsInfo;
+      const song = {} as SongsInfo
 
       for (let i = 0; i < headers.length; i++) {
-        const headerFromFile = (headers[i] as string)?.toLowerCase().trim();
-        if (!headerFromFile) continue;
+        const headerFromFile = (headers[i] as string)?.toLowerCase().trim()
+        if (!headerFromFile) continue
 
-        const value = row[i];
+        const value = row[i]
 
         // 歌曲名称 (必填)
-        const nameHeaders = columnMappings.value.name.split(/,|，/).map(h => h.trim().toLowerCase());
+        const nameHeaders = columnMappings.value.name.split(/,|，/).map(h => h.trim().toLowerCase())
         if (nameHeaders.includes(headerFromFile)) {
-          if (value) song.name = value;
+          if (value) song.name = value
           // 注意：即使找到歌名，也不立即continue，因为一个列可能对应多个信息（虽然不推荐）
           // 但标准做法是每个信息有独立列
         }
 
         // 翻译名称
         if (columnMappings.value.translateName) {
-          const translateNameHeaders = columnMappings.value.translateName.split(/,|，/).map(h => h.trim().toLowerCase());
+          const translateNameHeaders = columnMappings.value.translateName.split(/,|，/).map(h => h.trim().toLowerCase())
           if (translateNameHeaders.includes(headerFromFile)) {
-            if (value) song.translateName = value;
+            if (value) song.translateName = value
           }
         }
 
         // 作者
         if (columnMappings.value.author) {
-          const authorHeaders = columnMappings.value.author.split(/,|，/).map(h => h.trim().toLowerCase());
+          const authorHeaders = columnMappings.value.author.split(/,|，/).map(h => h.trim().toLowerCase())
           if (authorHeaders.includes(headerFromFile)) {
-            if (value) song.author = parseMultipleValues(value as string);
+            if (value) song.author = parseMultipleValues(value as string)
           }
         }
 
         // 描述
         if (columnMappings.value.description) {
-          const descriptionHeaders = columnMappings.value.description.split(/,|，/).map(h => h.trim().toLowerCase());
+          const descriptionHeaders = columnMappings.value.description.split(/,|，/).map(h => h.trim().toLowerCase())
           if (descriptionHeaders.includes(headerFromFile)) {
-            song.description = value;
+            song.description = value
           }
         }
 
         // 链接
         if (columnMappings.value.url) {
-          const urlHeaders = columnMappings.value.url.split(/,|，/).map(h => h.trim().toLowerCase());
+          const urlHeaders = columnMappings.value.url.split(/,|，/).map(h => h.trim().toLowerCase())
           if (urlHeaders.includes(headerFromFile)) {
-            song.url = value;
+            song.url = value
           }
         }
 
         // 语言
         if (columnMappings.value.language) {
-          const languageHeaders = columnMappings.value.language.split(/,|，/).map(h => h.trim().toLowerCase());
+          const languageHeaders = columnMappings.value.language.split(/,|，/).map(h => h.trim().toLowerCase())
           if (languageHeaders.includes(headerFromFile)) {
-            if (value) song.language = parseMultipleValues(value as string);
+            if (value) song.language = parseMultipleValues(value as string)
           }
         }
 
         // 标签
         if (columnMappings.value.tags) {
-          const tagsHeaders = columnMappings.value.tags.split(/,|，/).map(h => h.trim().toLowerCase());
+          const tagsHeaders = columnMappings.value.tags.split(/,|，/).map(h => h.trim().toLowerCase())
           if (tagsHeaders.includes(headerFromFile)) {
-            if (value) song.tags = parseMultipleValues(value as string);
+            if (value) song.tags = parseMultipleValues(value as string)
           }
         }
       }
 
       // 如果没有解析到歌名，则这条记录无效
       if (!song.name) {
-        console.log('忽略无效记录（未找到歌名或歌名为空）: ' + row.join(','));
-        return null;
+        console.log(`忽略无效记录（未找到歌名或歌名为空）: ${row.join(',')}`)
+        return null
       }
 
-      return song;
-    }).filter(s => s !== null) as SongsInfo[];
+      return song
+    }).filter(s => s !== null) as SongsInfo[]
 
-    uploadSongsFromFile.value = parsedSongs;
-    message.success('解析完成, 共获取 ' + uploadSongsFromFile.value.length + ' 首曲目')
+    uploadSongsFromFile.value = parsedSongs
+    message.success(`解析完成, 共获取 ${uploadSongsFromFile.value.length} 首曲目`)
   }
 }
 
@@ -658,14 +661,14 @@ function parseMultipleValues(value: string): string[] {
     .split(/\/|,/)
     .map((a: string) => a.trim())
     .filter((value: string, index: number, self: string[]) =>
-      value && self.indexOf(value) === index
+      value && self.indexOf(value) === index,
     )
 }
 
 /**
  * 上传前验证文件类型
  */
-function beforeUpload(data: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
+function beforeUpload(data: { file: UploadFileInfo, fileList: UploadFileInfo[] }) {
   const validExtensions = ['.xlsx', '.xls', '.csv']
   const isValid = validExtensions.some(ext => data.file.name.endsWith(ext))
 
@@ -690,9 +693,9 @@ async function setFunctionEnable(enable: boolean) {
   }
 
   if (success) {
-    message.success('已' + (enable ? '启用' : '禁用'))
+    message.success(`已${enable ? '启用' : '禁用'}`)
   } else {
-    message.error('无法' + (enable ? '启用' : '禁用'))
+    message.error(`无法${enable ? '启用' : '禁用'}`)
   }
 }
 
@@ -722,7 +725,7 @@ function resetColumnMappings() {
     description: '描述,备注,说明,description,note,remark',
     url: '链接,地址,url,link',
     language: '语言,language',
-    tags: '标签,类别,分类,tag,tags,category'
+    tags: '标签,类别,分类,tag,tags,category',
   }
   message.success('已重置为默认映射')
 }

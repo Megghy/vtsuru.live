@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { QueryGetAPI } from '@/api/query'
-import { VTSURU_API_URL } from '@/data/constants'
 import {
   BookCoins20Filled,
+  Chat24Filled,
   Info24Filled,
   Lottery24Filled,
   MoreHorizontal24Filled,
+  PersonFeedback24Filled,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
   VideoAdd20Filled,
-  Chat24Filled,
-  PersonFeedback24Filled
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NDivider, NEllipsis, NFlex, NGradientText, NGrid, NGridItem, NIcon, NNumberAnimation, NSpace, NText, NTooltip, NAlert, NCard, NStatistic, NTag, NBadge } from 'naive-ui'
+import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip } from 'naive-ui'
 import { onMounted, ref } from 'vue'
+import { QueryGetAPI } from '@/api/query'
+import { VTSURU_API_URL } from '@/data/constants'
 import vtb from '@/svgs/ic_vtuber.svg'
 
 const { width } = useWindowSize()
@@ -102,7 +102,7 @@ const functions = [
     icon: MoreHorizontal24Filled,
   },
 ]
-type IndexDataType = {
+interface IndexDataType {
   userCount: number
   streamers: { name: string, uname: string, avatar: string, uid: number, roomId: number }[]
 }
@@ -111,7 +111,7 @@ const iconColor = 'white'
 const indexData = ref<IndexDataType>()
 
 onMounted(async () => {
-  const data = await QueryGetAPI<IndexDataType>(VTSURU_API_URL + 'get-index-data')
+  const data = await QueryGetAPI<IndexDataType>(`${VTSURU_API_URL}get-index-data`)
   if (data.code == 200) {
     indexData.value = data.data
   }
@@ -482,7 +482,7 @@ onMounted(async () => {
               >
                 <div>
                   <img
-                    :src="streamer.avatar + '@64w'"
+                    :src="`${streamer.avatar}@64w`"
                     referrerpolicy="no-referrer"
                     height="32"
                     style="border-radius: 50%;"
@@ -490,7 +490,7 @@ onMounted(async () => {
                 </div>
                 <NButton
                   tag="a"
-                  :href="'@' + streamer.name"
+                  :href="`@${streamer.name}`"
                   text
                 >
                   {{ streamer.uname || streamer.name }}

@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account';
-import {
+import type {
+  DataTableColumns,
+} from 'naive-ui'
+import type { CSSProperties, VNodeChild } from 'vue'
+import type {
   DanmakuUserInfo,
-  EventDataTypes,
   EventModel,
-  FunctionTypes,
-  KeywordMatchType,
-  OpenLiveInfo, // 保留 props 类型定义
-  QueueFrom,
-  QueueGiftFilterType,
-  QueueSortType,
-  QueueStatus,
+  OpenLiveInfo,
   ResponseQueueModel,
   Setting_Queue,
-} from '@/api/api-models';
-import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query';
-import { CURRENT_HOST, QUEUE_API_URL } from '@/data/constants'; // CURRENT_HOST 用于 OBS Modal
-import { useDanmakuClient } from '@/store/useDanmakuClient';
+} from '@/api/api-models'
 import {
   Checkmark12Regular,
   ClipboardTextLtr24Filled,
@@ -25,13 +18,12 @@ import {
   Info24Filled,
   PeopleQueue24Filled,
   PresenceBlocked16Regular,
-} from '@vicons/fluent';
-import { ReloadCircleSharp } from '@vicons/ionicons5';
-import { useStorage } from '@vueuse/core';
-import { isSameDay } from 'date-fns';
-import { List } from 'linqts';
+} from '@vicons/fluent'
+import { ReloadCircleSharp } from '@vicons/ionicons5'
+import { useStorage } from '@vueuse/core'
+import { isSameDay } from 'date-fns'
+import { List } from 'linqts'
 import {
-  DataTableColumns,
   NAlert,
   NButton,
   NCard,
@@ -66,11 +58,31 @@ import {
   NUl,
   useMessage,
   useNotification,
-} from 'naive-ui';
-import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, VNodeChild, CSSProperties } from 'vue';
+} from 'naive-ui'
+import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
+import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import {
+  EventDataTypes,
+  FunctionTypes,
+  KeywordMatchType, // 保留 props 类型定义
+  QueueFrom,
+  QueueGiftFilterType,
+  QueueSortType,
+  QueueStatus,
+} from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
+import { CURRENT_HOST, QUEUE_API_URL } from '@/data/constants' // CURRENT_HOST 用于 OBS Modal
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { copyToClipboard } from '@/Utils'
 // import { useRoute } from 'vue-router' // 未使用
-import QueueOBS from '../obs/QueueOBS.vue';
-import { copyToClipboard } from '@/Utils';
+import QueueOBS from '../obs/QueueOBS.vue'
+
+// Props 定义 (虽然未在逻辑中直接使用，但可能由父组件传入或用于类型检查)
+const props = defineProps<{
+  roomInfo?: OpenLiveInfo
+  code?: string | undefined
+  isOpenLive?: boolean
+}>()
 
 // 默认队列设置
 const defaultSettings = {
@@ -103,7 +115,7 @@ const defaultSettings = {
   showPayment: true,
   sendGiftDirectJoin: true,
   sendGiftIgnoreLimit: false,
-} as Setting_Queue;
+} as Setting_Queue
 
 // 队列状态映射
 const STATUS_MAP = {
@@ -111,134 +123,127 @@ const STATUS_MAP = {
   [QueueStatus.Progressing]: '处理中',
   [QueueStatus.Finish]: '已完成',
   [QueueStatus.Cancel]: '已取消',
-};
+}
 
 // const route = useRoute() // 未使用
-const accountInfo = useAccount();
-const message = useMessage();
-const notice = useNotification();
-const client = await useDanmakuClient().initOpenlive(); // 初始化弹幕客户端
+const accountInfo = useAccount()
+const message = useMessage()
+const notice = useNotification()
+const client = await useDanmakuClient().initOpenlive() // 初始化弹幕客户端
 
-const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false); // 警告消息是否自动关闭
-const isReverse = useStorage('Queue.Settings.Reverse', false); // 本地存储的倒序设置 (未登录时使用)
+const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false) // 警告消息是否自动关闭
+const isReverse = useStorage('Queue.Settings.Reverse', false) // 本地存储的倒序设置 (未登录时使用)
 // const volumn = useStorage('Settings.Volumn', 0.5) // 未使用
 
-const isLoading = ref(false); // 加载状态
-const showOBSModal = ref(false); // OBS 组件模态框显示状态
-const obsScrollSpeed = ref(1.0); // OBS 组件滚动速度
+const isLoading = ref(false) // 加载状态
+const showOBSModal = ref(false) // OBS 组件模态框显示状态
+const obsScrollSpeed = ref(1.0) // OBS 组件滚动速度
 
-const filterName = ref(''); // 历史记录筛选用户名
-const filterNameContains = ref(false); // 历史记录筛选是否包含
+const filterName = ref('') // 历史记录筛选用户名
+const filterNameContains = ref(false) // 历史记录筛选是否包含
 
 // 队列设置 (登录后使用账户设置, 否则使用默认设置)
 const settings = computed({
   get: () => {
     if (accountInfo.value.id) {
-      return accountInfo.value.settings.queue;
+      return accountInfo.value.settings.queue
     }
-    return defaultSettings;
+    return defaultSettings
   },
   set: (value) => {
     if (accountInfo.value.id) {
-      accountInfo.value.settings.queue = value;
+      accountInfo.value.settings.queue = value
     }
   },
-});
+})
 
-// Props 定义 (虽然未在逻辑中直接使用，但可能由父组件传入或用于类型检查)
-const props = defineProps<{
-  roomInfo?: OpenLiveInfo;
-  code?: string | undefined;
-  isOpenLive?: boolean;
-}>();
-
-const localQueues = useStorage('Local.Queue', [] as ResponseQueueModel[]); // 本地存储的队列 (未登录时使用)
-const originQueue = ref<ResponseQueueModel[]>([]); // 从 API 获取或本地存储的原始队列数据
+const localQueues = useStorage('Local.Queue', [] as ResponseQueueModel[]) // 本地存储的队列 (未登录时使用)
+const originQueue = ref<ResponseQueueModel[]>([]) // 从 API 获取或本地存储的原始队列数据
 const queue = computed(() => { // 当前显示的活动队列 (过滤、排序后)
   let list = new List(accountInfo.value ? originQueue.value : localQueues.value)
     .Where( // 按用户名筛选
-      (q) =>
-        !filterName.value ||
-        (filterNameContains.value
+      q =>
+        !filterName.value
+        || (filterNameContains.value
           ? q?.user?.name.toLowerCase().includes(filterName.value.toLowerCase()) == true
           : q?.user?.name.toLowerCase() == filterName.value.toLowerCase()),
     )
-    .Where((q) => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish); // 仅显示未完成或取消的
+    .Where(q => (q?.status ?? QueueStatus.Cancel) < QueueStatus.Finish) // 仅显示未完成或取消的
 
   // 根据设置进行排序
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: { // 时间优先
-      list = list.OrderBy((q) => q.createAt);
-      break;
+      list = list.OrderBy(q => q.createAt)
+      break
     }
     case QueueSortType.GuardFirst: { // 舰长优先 (总督 > 提督 > 舰长 > 普通)
       list = list
-        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-        .ThenBy((q) => q.createAt);
-      break;
+        .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy(q => q.createAt)
+      break
     }
     case QueueSortType.PaymentFist: { // 付费优先
-      list = list.OrderByDescending((q) => q.giftPrice).ThenBy((q) => q.createAt);
-      break;
+      list = list.OrderByDescending(q => q.giftPrice).ThenBy(q => q.createAt)
+      break
     }
     case QueueSortType.FansMedalFirst: { // 粉丝牌优先 (佩戴 > 未佩戴, 等级高 > 等级低)
       list = list
-        .OrderByDescending((q) => (q.user?.fans_medal_wearing_status ? 1 : 0))
-        .ThenByDescending((q) => q.user?.fans_medal_level ?? 0)
-        .ThenBy((q) => q.createAt);
-      break;
+        .OrderByDescending(q => (q.user?.fans_medal_wearing_status ? 1 : 0))
+        .ThenByDescending(q => q.user?.fans_medal_level ?? 0)
+        .ThenBy(q => q.createAt)
+      break
     }
   }
   // 处理倒序
   if (configCanEdit.value ? settings.value.isReverse : isReverse.value) {
-    list = list.Reverse();
+    list = list.Reverse()
   }
   // 将处理中的项置顶
-  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0));
-  return list.ToArray();
-});
+  list = list.OrderByDescending(q => (q.status == QueueStatus.Progressing ? 1 : 0))
+  return list.ToArray()
+})
 const historySongs = computed(() => { // 历史队列 (已完成或取消)
   return (accountInfo.value ? originQueue.value : localQueues.value)
     .filter((song) => {
-      return song.status == QueueStatus.Finish || song.status == QueueStatus.Cancel;
+      return song.status == QueueStatus.Finish || song.status == QueueStatus.Cancel
     })
-    .sort((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt)); // 按完成/创建时间降序
-});
+    .sort((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt)) // 按完成/创建时间降序
+})
 
-const newQueueName = ref(''); // 手动添加的用户名
+const newQueueName = ref('') // 手动添加的用户名
 
-const defaultKeyword = useStorage('Settings.Queue.DefaultKeyword', '排队'); // 本地存储的默认关键词
+const defaultKeyword = useStorage('Settings.Queue.DefaultKeyword', '排队') // 本地存储的默认关键词
 const configCanEdit = computed(() => { // 配置是否可编辑 (是否已登录)
-  return accountInfo.value != null && accountInfo.value != undefined;
-});
+  return accountInfo.value != null && accountInfo.value != undefined
+})
 
-const table = ref(); // NDataTable 引用
+const table = ref() // NDataTable 引用
 
 // 获取所有队列数据
 async function getAll() {
   if (accountInfo.value.id) {
     try {
-      isLoading.value = true;
-      const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-all', {
+      isLoading.value = true
+      const data = await QueryGetAPI<ResponseQueueModel[]>(`${QUEUE_API_URL}get-all`, {
         id: accountInfo.value.id,
-      });
+      })
       if (data.code == 200) {
-        console.log('[OPEN-LIVE-Queue] 已获取所有数据');
-        return data.data ?? []; // 确保返回数组
+        console.log('[OPEN-LIVE-Queue] 已获取所有数据')
+        return data.data ?? [] // 确保返回数组
       } else {
-        message.error('无法获取队列数据: ' + data.message);
-        return [];
+        message.error(`无法获取队列数据: ${data.message}`)
+        return []
       }
     } catch (err: any) {
-      message.error('获取队列数据失败: ' + (err.message || err));
-      console.error('[OPEN-LIVE-Queue] 获取数据失败:', err);
-      return [];
+      message.error(`获取队列数据失败: ${err.message || err}`)
+      console.error('[OPEN-LIVE-Queue] 获取数据失败:', err)
+      return []
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   } else {
     // 未登录时返回本地数据
-    return localQueues.value;
+    return localQueues.value
   }
 }
 
@@ -246,52 +251,52 @@ async function getAll() {
 async function add(danmaku: EventModel) {
   // 检查消息是否符合加入条件
   if (!checkMessage(danmaku)) {
-    return;
+    return
   }
-  console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.uname}] 的排队请求`);
+  console.log(`[OPEN-LIVE-QUEUE] 收到 [${danmaku.uname}] 的排队请求`)
   // 检查是否仅直播时允许加入
   if (settings.value.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
-    message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入');
-    return;
+    message.info('当前未在直播中, 无法添加排队请求. 或者关闭设置中的仅允许直播时加入')
+    return
   }
 
   if (accountInfo.value.id) { // 已登录，调用 API
     // 检查功能是否启用
     if (!accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.Queue)) {
-      return;
+      return
     }
     try {
-      const data = await QueryPostAPI<ResponseQueueModel>(QUEUE_API_URL + 'try-add', danmaku);
+      const data = await QueryPostAPI<ResponseQueueModel>(`${QUEUE_API_URL}try-add`, danmaku)
       if (data.code == 200) {
         if (data.message != 'EventFetcher') { // 避免重复处理 EventFetcher 的消息
-          const existingIndex = originQueue.value.findIndex((q) => q.id == data.data.id);
+          const existingIndex = originQueue.value.findIndex(q => q.id == data.data.id)
           if (existingIndex > -1) { // 用户已在队列中 (通常是送礼增加金额)
-            const oldPrice = originQueue.value[existingIndex]?.giftPrice ?? 0;
-            const newPrice = data.data?.giftPrice ?? 0;
+            const oldPrice = originQueue.value[existingIndex]?.giftPrice ?? 0
+            const newPrice = data.data?.giftPrice ?? 0
             if (newPrice > oldPrice) {
               message.info(
                 `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${(newPrice - oldPrice).toFixed(1)}, 当前总计付费: ¥ ${newPrice.toFixed(1)}`,
-              );
+              )
             }
-            originQueue.value.splice(existingIndex, 1, data.data); // 替换现有条目
+            originQueue.value.splice(existingIndex, 1, data.data) // 替换现有条目
           } else { // 新用户加入
-            originQueue.value.push(data.data); // 添加到末尾 (排序由 computed 处理)
-            message.success(`[${danmaku.uname}] 添加至队列`);
+            originQueue.value.push(data.data) // 添加到末尾 (排序由 computed 处理)
+            message.success(`[${danmaku.uname}] 添加至队列`)
           }
         }
       } else { // 添加失败
-        const time = Date.now();
+        const time = Date.now()
         notice.warning({
-          title: danmaku.uname + ' 排队失败',
+          title: `${danmaku.uname} 排队失败`,
           description: data.message,
           duration: isWarnMessageAutoClose.value ? 3000 : 0,
-          meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }), // 使用 updateKey 强制更新时间显示
-        });
-        console.log(`[OPEN-LIVE-QUEUE] [${danmaku.uname}] 排队失败: ${data.message}`);
+          meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }), // 使用 updateKey 强制更新时间显示
+        })
+        console.log(`[OPEN-LIVE-QUEUE] [${danmaku.uname}] 排队失败: ${data.message}`)
       }
     } catch (err: any) {
-      message.error(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`);
-      console.error(`[OPEN-LIVE-QUEUE] 添加队列出错:`, err);
+      message.error(`[${danmaku.uname}] 添加队列时出错: ${err.message || err}`)
+      console.error(`[OPEN-LIVE-QUEUE] 添加队列出错:`, err)
     }
   } else { // 未登录，操作本地队列
     const songData = {
@@ -309,35 +314,35 @@ async function add(danmaku: EventModel) {
       } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
-      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max((s) => s.id) + 1, // 本地 ID
-    } as ResponseQueueModel;
-    localQueues.value.unshift(songData); // 添加到本地队列开头
-    message.success(`[${danmaku.uname}] 添加至本地队列`);
+      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max(s => s.id) + 1, // 本地 ID
+    } as ResponseQueueModel
+    localQueues.value.unshift(songData) // 添加到本地队列开头
+    message.success(`[${danmaku.uname}] 添加至本地队列`)
   }
 }
 
 // 手动添加用户至队列
 async function addManual() {
   if (!newQueueName.value) {
-    message.error('请输入用户名');
-    return;
+    message.error('请输入用户名')
+    return
   }
   if (accountInfo.value.id) { // 已登录，调用 API
     try {
-      const data = await QueryPostAPIWithParams<ResponseQueueModel>(QUEUE_API_URL + 'add', {
+      const data = await QueryPostAPIWithParams<ResponseQueueModel>(`${QUEUE_API_URL}add`, {
         name: newQueueName.value,
-      });
+      })
       if (data.code == 200) {
-        message.success(`已手动添加用户至队列: ${data.data.user?.name}`);
-        originQueue.value.unshift(data.data); // 添加到原始队列开头
-        newQueueName.value = '';
-        console.log(`[OPEN-LIVE-QUEUE] 已手动添加用户至队列: ${data.data.user?.name}`);
+        message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
+        originQueue.value.unshift(data.data) // 添加到原始队列开头
+        newQueueName.value = ''
+        console.log(`[OPEN-LIVE-QUEUE] 已手动添加用户至队列: ${data.data.user?.name}`)
       } else {
-        message.error(`手动添加失败: ${data.message}`);
+        message.error(`手动添加失败: ${data.message}`)
       }
     } catch (err: any) {
-      message.error(`手动添加时出错: ${err.message || err}`);
-      console.error(`[OPEN-LIVE-QUEUE] 手动添加出错:`, err);
+      message.error(`手动添加时出错: ${err.message || err}`)
+      console.error(`[OPEN-LIVE-QUEUE] 手动添加出错:`, err)
     }
   } else { // 未登录，操作本地队列
     const songData = {
@@ -347,138 +352,138 @@ async function addManual() {
       user: { name: newQueueName.value } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
-      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max((s) => s.id) + 1,
-    } as ResponseQueueModel;
-    localQueues.value.unshift(songData);
-    message.success(`已手动添加用户至队列: ${newQueueName.value}`);
-    newQueueName.value = '';
+      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max(s => s.id) + 1,
+    } as ResponseQueueModel
+    localQueues.value.unshift(songData)
+    message.success(`已手动添加用户至队列: ${newQueueName.value}`)
+    newQueueName.value = ''
   }
 }
 
 // 更新队列状态
 async function updateStatus(queueData: ResponseQueueModel, status: QueueStatus) {
   if (!configCanEdit.value) { // 未登录，直接修改本地状态
-    const localItem = localQueues.value.find(q => q.id === queueData.id);
+    const localItem = localQueues.value.find(q => q.id === queueData.id)
     if (localItem) {
-      localItem.status = status;
+      localItem.status = status
       if (status > QueueStatus.Progressing) {
-        localItem.finishAt = Date.now();
+        localItem.finishAt = Date.now()
       }
-      message.success(`已更新本地 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`);
+      message.success(`已更新本地 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
     }
-    return;
+    return
   }
   // 已登录，调用 API
-  isLoading.value = true;
+  isLoading.value = true
   try {
-    const data = await QueryGetAPI(QUEUE_API_URL + 'set-status', {
+    const data = await QueryGetAPI(`${QUEUE_API_URL}set-status`, {
       id: queueData.id,
-      status: status,
-    });
+      status,
+    })
     if (data.code == 200) {
-      console.log(`[OPEN-LIVE-QUEUE] 更新队列状态: ${queueData.user?.name} -> ${STATUS_MAP[status]}`);
+      console.log(`[OPEN-LIVE-QUEUE] 更新队列状态: ${queueData.user?.name} -> ${STATUS_MAP[status]}`)
       // 直接修改原始数据以触发响应式更新
-      const itemInOrigin = originQueue.value.find(q => q.id === queueData.id);
+      const itemInOrigin = originQueue.value.find(q => q.id === queueData.id)
       if (itemInOrigin) {
-        itemInOrigin.status = status;
+        itemInOrigin.status = status
         if (status > QueueStatus.Progressing) {
-          itemInOrigin.finishAt = Date.now();
+          itemInOrigin.finishAt = Date.now()
         }
       }
-      message.success(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`);
+      message.success(`已更新 [${queueData.user?.name}] 队列状态为: ${STATUS_MAP[status]}`)
     } else {
-      console.log(`[OPEN-LIVE-QUEUE] 更新队列状态失败: ${data.message}`);
-      message.error(`更新队列状态失败: ${data.message}`);
+      console.log(`[OPEN-LIVE-QUEUE] 更新队列状态失败: ${data.message}`)
+      message.error(`更新队列状态失败: ${data.message}`)
     }
   } catch (err: any) {
-    message.error(`更新队列状态时出错: ${err.message || err}`);
-    console.error(`[OPEN-LIVE-QUEUE] 更新状态出错:`, err);
+    message.error(`更新队列状态时出错: ${err.message || err}`)
+    console.error(`[OPEN-LIVE-QUEUE] 更新状态出错:`, err)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
 // 弹幕事件处理
 function onGetDanmaku(danmaku: EventModel) {
-  add(danmaku);
+  add(danmaku)
 }
 // 礼物事件处理
 function onGetGift(danmaku: EventModel) {
-  add(danmaku);
+  add(danmaku)
 }
 
 // 检查消息是否符合加入队列的条件
 function checkMessage(eventData: EventModel): boolean {
   // 未登录时，如果用户已在本地队列，则不允许重复添加 (简单检查)
-  if (!configCanEdit.value && localQueues.value.some((q) => q.user?.uid == eventData.uid && q.status < QueueStatus.Finish)) {
-    console.log(`[OPEN-LIVE-QUEUE] 本地队列已存在用户 [${eventData.uname}]，跳过`);
-    return false;
+  if (!configCanEdit.value && localQueues.value.some(q => q.user?.uid == eventData.uid && q.status < QueueStatus.Finish)) {
+    console.log(`[OPEN-LIVE-QUEUE] 本地队列已存在用户 [${eventData.uname}]，跳过`)
+    return false
   }
 
   // 检查弹幕消息
   if (eventData.type === EventDataTypes.Message) {
-    if (!settings.value.keyword) return false; // 未设置关键词则不允许弹幕加入
+    if (!settings.value.keyword) return false // 未设置关键词则不允许弹幕加入
     if (!checkMatch(eventData.msg)) {
-      return false; // 弹幕内容不匹配关键词
+      return false // 弹幕内容不匹配关键词
     }
   }
   // 检查礼物消息
   else if (eventData.type === EventDataTypes.Gift) {
     // 如果不允许礼物加入，并且不允许通过送礼增加金额，则直接拒绝
     if (!settings.value.allowGift && !settings.value.allowIncreasePaymentBySendGift) {
-      return false;
+      return false
     }
     // 如果允许礼物加入，则进行详细检查
     if (settings.value.allowGift) {
-      const nameMatch = (settings.value.giftNames?.length ?? 0) === 0 || // 未设置礼物名要求
-        settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) == true; // 礼物名匹配
-      const priceMatch = !settings.value.minGiftPrice || eventData.price >= settings.value.minGiftPrice; // 价格匹配
+      const nameMatch = (settings.value.giftNames?.length ?? 0) === 0 // 未设置礼物名要求
+        || settings.value.giftNames?.some(n => eventData.msg.toLowerCase() === n.toLowerCase()) == true // 礼物名匹配
+      const priceMatch = !settings.value.minGiftPrice || eventData.price >= settings.value.minGiftPrice // 价格匹配
 
       if (settings.value.giftFilterType === QueueGiftFilterType.Or) { // 或逻辑：满足任一即可
-        if (!nameMatch && !priceMatch) return false; // 名称和价格都不满足
+        if (!nameMatch && !priceMatch) return false // 名称和价格都不满足
       } else { // 与逻辑：必须同时满足
-        if (!nameMatch || !priceMatch) return false; // 名称或价格不满足
+        if (!nameMatch || !priceMatch) return false // 名称或价格不满足
       }
       // 如果设置了送礼直接加入，则检查通过
-      if (settings.value.sendGiftDirectJoin) return true;
+      if (settings.value.sendGiftDirectJoin) return true
       // 如果未设置直接加入，则送礼本身不触发加入，需要额外发弹幕
-      else return false;
+      else return false
     }
     // 如果只允许通过送礼增加金额 (不允许直接通过礼物加入)
     else if (settings.value.allowIncreasePaymentBySendGift) {
       // 检查是否允许任意礼物叠加 或 礼物是否在指定列表内
-      const isAllowedGiftForIncrease = settings.value.allowIncreaseByAnyPayment ||
-        settings.value.giftNames?.some((n) => eventData.msg.toLowerCase() === n.toLowerCase()) == true;
+      const isAllowedGiftForIncrease = settings.value.allowIncreaseByAnyPayment
+        || settings.value.giftNames?.some(n => eventData.msg.toLowerCase() === n.toLowerCase()) == true
       // 只有当礼物允许叠加时，才认为这是一个有效的（潜在增加金额的）事件，但不直接触发加入
-      return isAllowedGiftForIncrease;
+      return isAllowedGiftForIncrease
     } else {
-      return false; // 其他情况不允许
+      return false // 其他情况不允许
     }
   }
   // 检查 SC 消息 (如果需要单独处理)
   // else if (eventData.type === EventDataTypes.SC) { ... }
 
-  return true; // 默认通过 (例如，手动添加或网页添加不经过此检查)
+  return true // 默认通过 (例如，手动添加或网页添加不经过此检查)
 
   // 内部函数：检查关键词匹配
   function checkMatch(word: string): boolean {
-    const keyword = settings.value.keyword?.trim().toLowerCase();
-    if (!keyword) return false; // 没有关键词直接返回 false
-    const message = word.trim().toLowerCase();
+    const keyword = settings.value.keyword?.trim().toLowerCase()
+    if (!keyword) return false // 没有关键词直接返回 false
+    const message = word.trim().toLowerCase()
     switch (settings.value.matchType) {
       case KeywordMatchType.Full:
-        return keyword === message;
+        return keyword === message
       case KeywordMatchType.Contains:
-        return message.includes(keyword);
+        return message.includes(keyword)
       case KeywordMatchType.Regex:
         try {
-          return new RegExp(settings.value.keyword).test(word); // 使用原始 keyword 进行正则匹配
+          return new RegExp(settings.value.keyword).test(word) // 使用原始 keyword 进行正则匹配
         } catch (e) {
-          console.warn('[OPEN-LIVE-QUEUE] 正则表达式无效:', settings.value.keyword, e);
-          return false;
+          console.warn('[OPEN-LIVE-QUEUE] 正则表达式无效:', settings.value.keyword, e)
+          return false
         }
       default:
-        return false;
+        return false
     }
   }
 }
@@ -486,41 +491,41 @@ function checkMessage(eventData: EventModel): boolean {
 // 更新功能启用状态
 async function onUpdateFunctionEnable() {
   if (accountInfo.value.id) {
-    const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions));
-    const isEnabling = !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.Queue);
+    const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
+    const isEnabling = !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.Queue)
 
     if (isEnabling) {
-      accountInfo.value.settings.enableFunctions.push(FunctionTypes.Queue);
+      accountInfo.value.settings.enableFunctions.push(FunctionTypes.Queue)
       // 启用时检查并设置默认关键词
       if (!accountInfo.value.settings.queue.keyword) {
-        accountInfo.value.settings.queue.keyword = defaultKeyword.value;
+        accountInfo.value.settings.queue.keyword = defaultKeyword.value
         // 同时保存一次设置以确保关键词生效
-        await updateSettings();
+        await updateSettings()
       }
     } else {
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        (f) => f != FunctionTypes.Queue,
-      );
+        f => f != FunctionTypes.Queue,
+      )
     }
 
     try {
-      const data = await SaveEnableFunctions(accountInfo.value?.settings.enableFunctions);
+      const data = await SaveEnableFunctions(accountInfo.value?.settings.enableFunctions)
       if (data.code == 200) {
-        message.success(`已${isEnabling ? '启用' : '禁用'}队列功能`);
+        message.success(`已${isEnabling ? '启用' : '禁用'}队列功能`)
       } else {
         // 回滚状态
         if (accountInfo.value.id) {
-          accountInfo.value.settings.enableFunctions = oldValue;
+          accountInfo.value.settings.enableFunctions = oldValue
         }
-        message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${data.message}`);
+        message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${data.message}`)
       }
     } catch (err: any) {
       // 回滚状态
       if (accountInfo.value.id) {
-        accountInfo.value.settings.enableFunctions = oldValue;
+        accountInfo.value.settings.enableFunctions = oldValue
       }
-      message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${err.message || err}`);
-      console.error(`[OPEN-LIVE-QUEUE] 更新功能状态失败:`, err);
+      message.error(`队列功能${isEnabling ? '启用' : '禁用'}失败: ${err.message || err}`)
+      console.error(`[OPEN-LIVE-QUEUE] 更新功能状态失败:`, err)
     }
   }
 }
@@ -528,87 +533,87 @@ async function onUpdateFunctionEnable() {
 // 更新设置
 async function updateSettings() {
   if (accountInfo.value.id) {
-    isLoading.value = true;
+    isLoading.value = true
     try {
-      const success = await SaveSetting('Queue', settings.value);
+      const success = await SaveSetting('Queue', settings.value)
       if (success) {
-        message.success('设置已保存');
+        message.success('设置已保存')
       } else {
-        message.error('设置保存失败'); // API 应该返回更详细的信息，但这里简化处理
+        message.error('设置保存失败') // API 应该返回更详细的信息，但这里简化处理
       }
     } catch (err: any) {
-      message.error(`保存设置失败: ${err.message || err}`);
-      console.error(`[OPEN-LIVE-QUEUE] 保存设置失败:`, err);
+      message.error(`保存设置失败: ${err.message || err}`)
+      console.error(`[OPEN-LIVE-QUEUE] 保存设置失败:`, err)
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   } else {
-    message.success('本地设置已更新 (未登录)'); // 对于未登录用户，设置是响应式的，无需显式保存
+    message.success('本地设置已更新 (未登录)') // 对于未登录用户，设置是响应式的，无需显式保存
   }
 }
 
 // 删除队列记录
 async function deleteQueue(values: ResponseQueueModel[]) {
-  if (!values || values.length === 0) return;
+  if (!values || values.length === 0) return
 
   if (accountInfo.value.id) { // 已登录，调用 API
-    isLoading.value = true;
+    isLoading.value = true
     try {
-      const idsToDelete = values.map((s) => s.id);
-      const data = await QueryPostAPI(QUEUE_API_URL + 'del', idsToDelete);
+      const idsToDelete = values.map(s => s.id)
+      const data = await QueryPostAPI(`${QUEUE_API_URL}del`, idsToDelete)
       if (data.code == 200) {
-        message.success(`成功删除 ${values.length} 条记录`);
+        message.success(`成功删除 ${values.length} 条记录`)
         // 从原始数据中移除已删除项
-        originQueue.value = originQueue.value.filter((s) => !idsToDelete.includes(s.id));
+        originQueue.value = originQueue.value.filter(s => !idsToDelete.includes(s.id))
       } else {
-        message.error('删除失败: ' + data.message);
-        console.error('[OPEN-LIVE-QUEUE] 删除失败: ' + data.message);
+        message.error(`删除失败: ${data.message}`)
+        console.error(`[OPEN-LIVE-QUEUE] 删除失败: ${data.message}`)
       }
     } catch (err: any) {
-      message.error(`删除记录时出错: ${err.message || err}`);
-      console.error('[OPEN-LIVE-QUEUE] 删除记录出错:', err);
+      message.error(`删除记录时出错: ${err.message || err}`)
+      console.error('[OPEN-LIVE-QUEUE] 删除记录出错:', err)
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   } else { // 未登录，操作本地队列
-    const idsToDelete = values.map(v => v.id);
-    localQueues.value = localQueues.value.filter(q => !idsToDelete.includes(q.id));
-    message.success(`成功删除 ${values.length} 条本地记录`);
+    const idsToDelete = values.map(v => v.id)
+    localQueues.value = localQueues.value.filter(q => !idsToDelete.includes(q.id))
+    message.success(`成功删除 ${values.length} 条本地记录`)
   }
 }
 
 // 取消所有活动队列项
 async function deactiveAllSongs() {
   if (accountInfo.value.id) { // 已登录，调用 API
-    isLoading.value = true;
+    isLoading.value = true
     try {
-      const data = await QueryGetAPI(QUEUE_API_URL + 'deactive');
+      const data = await QueryGetAPI(`${QUEUE_API_URL}deactive`)
       if (data.code == 200) {
-        message.success('已全部取消');
+        message.success('已全部取消')
         // 更新本地状态
         originQueue.value.forEach((s) => {
           if (s.status <= QueueStatus.Progressing) {
-            s.status = QueueStatus.Cancel;
-            s.finishAt = Date.now(); // 标记完成时间
+            s.status = QueueStatus.Cancel
+            s.finishAt = Date.now() // 标记完成时间
           }
-        });
+        })
       } else {
-        message.error('全部取消失败: ' + data.message);
+        message.error(`全部取消失败: ${data.message}`)
       }
     } catch (err: any) {
-      message.error(`全部取消时出错: ${err.message || err}`);
-      console.error('[OPEN-LIVE-QUEUE] 全部取消出错:', err);
+      message.error(`全部取消时出错: ${err.message || err}`)
+      console.error('[OPEN-LIVE-QUEUE] 全部取消出错:', err)
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   } else { // 未登录，操作本地队列
     localQueues.value.forEach((s) => {
       if (s.status <= QueueStatus.Progressing) {
-        s.status = QueueStatus.Cancel;
-        s.finishAt = Date.now();
+        s.status = QueueStatus.Cancel
+        s.finishAt = Date.now()
       }
-    });
-    message.success('已全部取消本地活动队列');
+    })
+    message.success('已全部取消本地活动队列')
   }
 }
 
@@ -620,9 +625,9 @@ const statusFilterOptions = computed(() => {
       return {
         label: STATUS_MAP[t],
         value: t,
-      };
-    });
-});
+      }
+    })
+})
 
 // 历史记录表格列定义
 const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
@@ -637,47 +642,47 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
           trigger: () => data.user?.name || '未知用户',
           default: () => (data.from == QueueFrom.Manual ? '主播手动添加' : `UID: ${data.user?.uid ?? 'N/A'}`),
         },
-      );
+      )
     },
     filterOptionValue: null, // 用于触发筛选
     filter: (value, row) => { // 使用 NDataTable 内置筛选
-      const name = row.user?.name?.toLowerCase() ?? '';
-      const filterVal = filterName.value.toLowerCase();
-      if (!filterVal) return true;
-      return filterNameContains.value ? name.includes(filterVal) : name === filterVal;
-    }
+      const name = row.user?.name?.toLowerCase() ?? ''
+      const filterVal = filterName.value.toLowerCase()
+      if (!filterVal) return true
+      return filterNameContains.value ? name.includes(filterVal) : name === filterVal
+    },
   },
   {
     title: '来源',
     key: 'from',
     width: 120,
     render(data) {
-      let fromType: 'info' | 'success' | 'default' | 'error' = 'default';
-      let text = '';
+      let fromType: 'info' | 'success' | 'default' | 'error' = 'default'
+      let text = ''
       switch (data.from) {
         case QueueFrom.Danmaku: {
-          fromType = 'info';
-          text = '弹幕' + (data.giftPrice ? ` | ¥${data.giftPrice.toFixed(1)}` : '');
-          break;
+          fromType = 'info'
+          text = `弹幕${data.giftPrice ? ` | ¥${data.giftPrice.toFixed(1)}` : ''}`
+          break
         }
         case QueueFrom.Gift: {
-          fromType = 'error';
-          text = '礼物 | ¥' + (data.giftPrice?.toFixed(1) ?? '0.0');
-          break;
+          fromType = 'error'
+          text = `礼物 | ¥${data.giftPrice?.toFixed(1) ?? '0.0'}`
+          break
         }
         case QueueFrom.Web: {
-          fromType = 'success';
-          text = '网页添加';
-          break;
+          fromType = 'success'
+          text = '网页添加'
+          break
         }
         case QueueFrom.Manual: {
-          fromType = 'default';
-          text = '手动添加';
-          break;
+          fromType = 'default'
+          text = '手动添加'
+          break
         }
-        default: text = '未知';
+        default: text = '未知'
       }
-      return h(NTag, { size: 'small', type: fromType, bordered: false }, () => text);
+      return h(NTag, { size: 'small', type: fromType, bordered: false }, () => text)
     },
   },
   {
@@ -686,26 +691,26 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
     filterMultiple: false, // 只允许单选
     filterOptions: statusFilterOptions.value, // 使用计算属性
     filter: (value, row) => {
-      return row.status === value;
+      return row.status === value
     },
     render(data) {
-      let statusType: 'info' | 'success' | 'warning' | 'error';
+      let statusType: 'info' | 'success' | 'warning' | 'error'
       switch (data.status) {
         case QueueStatus.Progressing: {
-          statusType = 'success';
-          break;
+          statusType = 'success'
+          break
         }
         case QueueStatus.Waiting: {
-          statusType = 'warning';
-          break;
+          statusType = 'warning'
+          break
         }
         case QueueStatus.Finish: {
-          statusType = 'info';
-          break;
+          statusType = 'info'
+          break
         }
         case QueueStatus.Cancel: {
-          statusType = 'error';
-          break;
+          statusType = 'error'
+          break
         }
       }
       return h(
@@ -718,7 +723,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
           style: data.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : '',
         },
         () => STATUS_MAP[data.status] ?? '未知状态',
-      );
+      )
     },
   },
   {
@@ -726,7 +731,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
     key: 'createAt', // 使用 createAt 作为 key 以便排序
     sorter: 'default', // 使用 NDataTable 内置排序
     render: (data) => {
-      return h(NTime, { time: data.createAt, type: 'datetime' }); // 显示完整时间
+      return h(NTime, { time: data.createAt, type: 'datetime' }) // 显示完整时间
     },
   },
   {
@@ -735,7 +740,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
     width: 120, // 稍微加宽以容纳按钮
     align: 'center',
     render(data) {
-      const buttons: VNodeChild[] = [];
+      const buttons: VNodeChild[] = []
 
       // 重新排队按钮 (仅对已完成或取消的显示)
       if (data.status == QueueStatus.Finish || data.status == QueueStatus.Cancel) {
@@ -750,8 +755,8 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
                   circle: true,
                   loading: isLoading.value && queueDataBeingManaged.value === data.id, // 仅当前操作项显示 loading
                   onClick: () => {
-                    queueDataBeingManaged.value = data.id; // 标记正在操作的项
-                    updateStatus(data, QueueStatus.Waiting);
+                    queueDataBeingManaged.value = data.id // 标记正在操作的项
+                    updateStatus(data, QueueStatus.Waiting)
                   },
                   style: 'margin: 0 2px;',
                 },
@@ -761,7 +766,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
               ),
             default: () => '重新放回等待',
           }),
-        );
+        )
       }
 
       // 删除按钮
@@ -792,155 +797,152 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
             default: () => `确定删除 ${data.user?.name} 的记录吗?`,
           },
         ),
-      );
+      )
 
-      return h(NSpace, { justify: 'center', size: 4 }, () => buttons); // 减小间距
+      return h(NSpace, { justify: 'center', size: 4 }, () => buttons) // 减小间距
     },
   },
-]);
+])
 
 // 用于标记历史记录表格中正在操作的行，以显示 loading
-const queueDataBeingManaged = ref<number | null>(null);
+const queueDataBeingManaged = ref<number | null>(null)
 
 // 监听筛选条件变化，手动触发 NDataTable 筛选
 watch([filterName, filterNameContains], () => {
   if (table.value) {
     // 更新第一列的 filterOptionValue 来触发筛选
-    const cols = table.value.columns;
-    cols[0].filterOptionValue = filterName.value + filterNameContains.value.toString();
-    table.value.filter(cols[0]);
+    const cols = table.value.columns
+    cols[0].filterOptionValue = filterName.value + filterNameContains.value.toString()
+    table.value.filter(cols[0])
   }
-});
-
+})
 
 // 获取舰长等级对应的颜色
 function GetGuardColor(level: number | null | undefined): string {
   if (level) {
     switch (level) {
-      case 1: return 'rgb(122, 4, 35)'; // 总督
-      case 2: return 'rgb(157, 155, 255)'; // 提督 (颜色可能需要调整)
-      case 3: return 'rgb(104, 136, 241)'; // 舰长
+      case 1: return 'rgb(122, 4, 35)' // 总督
+      case 2: return 'rgb(157, 155, 255)' // 提督 (颜色可能需要调整)
+      case 3: return 'rgb(104, 136, 241)' // 舰长
     }
   }
-  return '#999'; // 默认颜色或无舰长
+  return '#999' // 默认颜色或无舰长
 }
 
 // 定时更新活动队列信息 (增量更新)
 async function updateActive() {
-  if (!accountInfo.value.id) return; // 未登录则不执行
+  if (!accountInfo.value.id) return // 未登录则不执行
   try {
-    const data = await QueryGetAPI<ResponseQueueModel[]>(QUEUE_API_URL + 'get-active', {
+    const data = await QueryGetAPI<ResponseQueueModel[]>(`${QUEUE_API_URL}get-active`, {
       id: accountInfo.value?.id,
-    });
+    })
     if (data.code == 200) {
-      const activeItems = data.data ?? [];
+      const activeItems = data.data ?? []
       activeItems.forEach((item) => {
-        const queueDataIndex = originQueue.value.findIndex((s) => s.id == item.id);
+        const queueDataIndex = originQueue.value.findIndex(s => s.id == item.id)
         if (queueDataIndex > -1) { // 更新现有项
-          const queueData = originQueue.value[queueDataIndex];
+          const queueData = originQueue.value[queueDataIndex]
           // 仅在状态或价格变化时更新，减少不必要的响应式触发
-          let updated = false;
+          let updated = false
           if (queueData.status !== item.status) {
-            queueData.status = item.status;
-            updated = true;
+            queueData.status = item.status
+            updated = true
           }
           if (queueData.giftPrice !== item.giftPrice) {
-            const oldPrice = queueData.giftPrice ?? 0;
-            const newPrice = item.giftPrice ?? 0;
+            const oldPrice = queueData.giftPrice ?? 0
+            const newPrice = item.giftPrice ?? 0
             if (newPrice > oldPrice) { // 仅在价格增加时提示
               message.info(
                 `${queueData.user?.name} 通过发送礼物再次付费: ¥ ${(newPrice - oldPrice).toFixed(1)}, 当前总计付费: ¥ ${newPrice.toFixed(1)}`,
-              );
+              )
             }
-            queueData.giftPrice = item.giftPrice;
-            updated = true;
+            queueData.giftPrice = item.giftPrice
+            updated = true
           }
           // 如果有其他需要同步的字段，在此处添加比较和更新
           // if (updated) {
           //   // 可以考虑是否需要强制更新整个对象以确保响应性，但通常直接修改属性即可
           //   // originQueue.value.splice(queueDataIndex, 1, { ...queueData });
           // }
-
         } else { // 添加新项
-          originQueue.value.unshift(item); // 添加到开头，让排序处理
+          originQueue.value.unshift(item) // 添加到开头，让排序处理
           if (item.from == QueueFrom.Web) {
-            message.success(`[${item.user?.name}] 通过网页加入队列`);
+            message.success(`[${item.user?.name}] 通过网页加入队列`)
           } else if (item.from == QueueFrom.Gift && settings.value.sendGiftDirectJoin) {
-            message.success(`[${item.user?.name}] 通过礼物加入队列`);
+            message.success(`[${item.user?.name}] 通过礼物加入队列`)
           }
           // 其他来源的添加消息在 add 函数中处理
         }
-      });
+      })
       // 可选：移除本地存在但远程 active 接口未返回的非终态项 (表示可能被后台清理)
       // const activeIds = new Set(activeItems.map(i => i.id));
       // originQueue.value = originQueue.value.filter(q => q.status >= QueueStatus.Finish || activeIds.has(q.id));
-
     } else {
       // message.error('无法获取活动队列: ' + data.message) // 频繁请求，失败时不提示用户
-      console.warn('[OPEN-LIVE-Queue] 无法获取活动队列: ' + data.message);
+      console.warn(`[OPEN-LIVE-Queue] 无法获取活动队列: ${data.message}`)
     }
   } catch (err: any) {
-    console.warn('[OPEN-LIVE-Queue] 更新活动队列失败:', err.message || err);
+    console.warn('[OPEN-LIVE-Queue] 更新活动队列失败:', err.message || err)
   }
 }
 
 // 拉黑用户 (仅限弹幕来源)
 function blockUser(item: ResponseQueueModel) {
   if (item.from != QueueFrom.Danmaku && item.from != QueueFrom.Gift) { // 允许拉黑礼物用户
-    message.error(`[${item.user?.name}] 不是来自弹幕或礼物的用户，无法拉黑`);
-    return;
+    message.error(`[${item.user?.name}] 不是来自弹幕或礼物的用户，无法拉黑`)
+    return
   }
   if (item.user?.uid) { // 确保有 UID
-    isLoading.value = true; // 开始加载
-    queueDataBeingManaged.value = item.id; // 标记操作项
+    isLoading.value = true // 开始加载
+    queueDataBeingManaged.value = item.id // 标记操作项
     AddBiliBlackList(item.user.uid, item.user.name)
       .then((data) => {
         if (data.code == 200) {
-          message.success(`[${item.user?.name}] 已添加到 B站黑名单`);
-          updateStatus(item, QueueStatus.Cancel); // 拉黑后自动取消排队
+          message.success(`[${item.user?.name}] 已添加到 B站黑名单`)
+          updateStatus(item, QueueStatus.Cancel) // 拉黑后自动取消排队
         } else {
-          message.error(`拉黑失败: ${data.message}`);
+          message.error(`拉黑失败: ${data.message}`)
         }
       })
       .catch((err: any) => {
-        message.error(`拉黑时发生错误: ${err.message || err}`);
-        console.error('[OPEN-LIVE-QUEUE] 拉黑用户出错:', err);
+        message.error(`拉黑时发生错误: ${err.message || err}`)
+        console.error('[OPEN-LIVE-QUEUE] 拉黑用户出错:', err)
       })
       .finally(() => {
-        isLoading.value = false;
-        queueDataBeingManaged.value = null;
-      });
+        isLoading.value = false
+        queueDataBeingManaged.value = null
+      })
   } else {
-    message.error(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`);
+    message.error(`用户 [${item.user?.name}] 没有有效的 UID，无法拉黑`)
   }
 }
 
-let timer: any; // 用于更新相对时间的计时器
-let updateActiveTimer: any; // 用于轮询活动队列的计时器
-const updateKey = ref(0); // 用于强制更新 NTime 组件
+let timer: any // 用于更新相对时间的计时器
+let updateActiveTimer: any // 用于轮询活动队列的计时器
+const updateKey = ref(0) // 用于强制更新 NTime 组件
 
 // 初始化操作
 async function init() {
-  dispose(); // 先清理旧的计时器
+  dispose() // 先清理旧的计时器
   // 如果登录了，获取一次全量数据
   if (accountInfo.value.id) {
-    originQueue.value = await getAll();
+    originQueue.value = await getAll()
   }
   // 设置定时器
   timer = setInterval(() => {
-    updateKey.value++; // 每秒更新 key，强制 NTime 更新相对时间
-  }, 1000);
+    updateKey.value++ // 每秒更新 key，强制 NTime 更新相对时间
+  }, 1000)
   updateActiveTimer = setInterval(() => {
-    updateActive(); // 定期更新活动队列
-  }, 5000); // 轮询间隔调整为 5 秒
+    updateActive() // 定期更新活动队列
+  }, 5000) // 轮询间隔调整为 5 秒
 }
 
 // 清理操作
 function dispose() {
-  clearInterval(timer);
-  clearInterval(updateActiveTimer);
-  timer = null;
-  updateActiveTimer = null;
+  clearInterval(timer)
+  clearInterval(updateActiveTimer)
+  timer = null
+  updateActiveTimer = null
 }
 
 // --- 生命周期钩子 ---
@@ -948,52 +950,52 @@ onMounted(async () => {
   // 挂载时初始化
   if (accountInfo.value.id) {
     // 如果已登录，同步一次设置到本地状态 (虽然 computed 会处理，但显式同步更清晰)
-    settings.value = accountInfo.value.settings.queue;
+    settings.value = accountInfo.value.settings.queue
   }
   // 绑定弹幕和礼物事件监听器
-  client.onEvent('danmaku', onGetDanmaku);
-  client.onEvent('gift', onGetGift);
-  await init(); // 初始化数据和定时器
-});
+  client.onEvent('danmaku', onGetDanmaku)
+  client.onEvent('gift', onGetGift)
+  await init() // 初始化数据和定时器
+})
 
 onActivated(async () => {
   // 组件被 keep-alive 激活时重新初始化
-  await init();
-});
+  await init()
+})
 
 onDeactivated(() => {
   // 组件被 keep-alive 停用时清理定时器
-  dispose();
-});
+  dispose()
+})
 
 onUnmounted(() => {
   // 组件卸载时彻底清理
-  client.offEvent('danmaku', onGetDanmaku);
-  client.offEvent('gift', onGetGift);
-  dispose();
-});
+  client.offEvent('danmaku', onGetDanmaku)
+  client.offEvent('gift', onGetGift)
+  dispose()
+})
 
 // --- 辅助函数 ---
 function getIndexStyle(status: QueueStatus): CSSProperties {
   // 基础颜色定义 - 扁平化风格
-  let backgroundColor;
+  let backgroundColor
 
   // 根据状态设置不同的颜色
   switch (status) {
     case QueueStatus.Progressing:
-      backgroundColor = '#18a058';  // 处理中 - 绿色
-      break;
+      backgroundColor = '#18a058' // 处理中 - 绿色
+      break
     case QueueStatus.Waiting:
-      backgroundColor = '#2080f0';  // 等待中 - 蓝色
-      break;
+      backgroundColor = '#2080f0' // 等待中 - 蓝色
+      break
     case QueueStatus.Finish:
-      backgroundColor = '#86909c';  // 已完成 - 灰色
-      break;
+      backgroundColor = '#86909c' // 已完成 - 灰色
+      break
     case QueueStatus.Cancel:
-      backgroundColor = '#d03050';  // 已取消 - 红色
-      break;
+      backgroundColor = '#d03050' // 已取消 - 红色
+      break
     default:
-      backgroundColor = '#2080f0';  // 默认 - 蓝色
+      backgroundColor = '#2080f0' // 默认 - 蓝色
   }
 
   const style: CSSProperties = {
@@ -1001,16 +1003,16 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 'bold',
-    width: '24px',               // 确保宽高一致以形成完美圆形
-    height: '24px',              // 保持一致的宽高
-    borderRadius: '50%',         // 圆形
+    width: '24px', // 确保宽高一致以形成完美圆形
+    height: '24px', // 保持一致的宽高
+    borderRadius: '50%', // 圆形
     color: 'white',
-    fontSize: '13px',            // 适当调整字体大小
-    backgroundColor,             // 扁平化的纯色背景
-    transition: 'opacity 0.2s',  // 仅保留简单的过渡效果
-  };
+    fontSize: '13px', // 适当调整字体大小
+    backgroundColor, // 扁平化的纯色背景
+    transition: 'opacity 0.2s', // 仅保留简单的过渡效果
+  }
 
-  return style;
+  return style
 }
 </script>
 
@@ -1315,7 +1317,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                       >
                         <template #header>
                           <span style="font-size: small; color: gray;">
-                            {{ '来自' + (queueData?.from == QueueFrom.Gift ? '礼物' : '弹幕') + ': ' }}
+                            {{ `来自${queueData?.from == QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
                           </span>
                         </template>
                         {{ queueData?.content }}
@@ -1857,7 +1859,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     <NInputGroup style="margin-bottom: 15px;">
       <NInputGroupLabel> URL </NInputGroupLabel>
       <NInput
-        :value="`${CURRENT_HOST}obs/queue?id=` + accountInfo?.id"
+        :value="`${CURRENT_HOST}obs/queue?id=${accountInfo?.id}`"
         readonly
       />
       <NButton

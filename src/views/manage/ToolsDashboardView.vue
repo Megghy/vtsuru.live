@@ -1,45 +1,17 @@
-<template>
-  <n-layout class="tools-dashboard">
-    <n-layout-header bordered class="header">
-      <n-h1 style="margin: 0; padding: 16px;">直播工具箱</n-h1>
-    </n-layout-header>
-    <n-layout-content style="padding: 24px;">
-      <n-grid cols="1 s:2 m:3 l:4 xl:4 xxl:5" responsive="screen" :x-gap="16" :y-gap="16">
-        <n-grid-item v-for="tool in availableTools" :key="tool.name">
-          <n-card :title="tool.displayName" hoverable @click="navigateToTool(tool.routeName)">
-            <template #cover v-if="tool.icon">
-              <!-- Placeholder for an icon or image -->
-              <div style="font-size: 48px; text-align: center; padding: 20px 0;">
-                <n-icon :component="tool.icon" />
-              </div>
-            </template>
-            {{ tool.description }}
-             <template #action>
-              <n-button type="primary" block @click.stop="navigateToTool(tool.routeName)">
-                打开工具
-              </n-button>
-            </template>
-          </n-card>
-        </n-grid-item>
-      </n-grid>
-    </n-layout-content>
-  </n-layout>
-</template>
-
 <script setup lang="ts">
-import { shallowRef } from 'vue';
-import { useRouter } from 'vue-router';
-import { NLayout, NLayoutHeader, NLayoutContent, NGrid, NGridItem, NCard, NH1, NIcon, NButton } from 'naive-ui';
-import { ImagesOutline as NineGridIcon } from '@vicons/ionicons5'; // Example Icon
+import { ImagesOutline as NineGridIcon } from '@vicons/ionicons5' // Example Icon
+import { NButton, NCard, NGrid, NGridItem, NH1, NIcon, NLayout, NLayoutContent, NLayoutHeader } from 'naive-ui'
+import { shallowRef } from 'vue'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
+const router = useRouter()
 
 interface ToolDefinition {
-  name: string;
-  displayName: string;
-  description: string;
-  routeName: string;
-  icon?: any; // Using 'any' for icon component type for simplicity
+  name: string
+  displayName: string
+  description: string
+  routeName: string
+  icon?: any // Using 'any' for icon component type for simplicity
 }
 
 const availableTools = shallowRef<ToolDefinition[]>([
@@ -58,12 +30,42 @@ const availableTools = shallowRef<ToolDefinition[]>([
   //   routeName: 'ManageToolAnotherTool',
   //   icon: AnotherIconComponent,
   // },
-]);
+])
 
-const navigateToTool = (routeName: string) => {
-  router.push({ name: routeName });
-};
+function navigateToTool(routeName: string) {
+  router.push({ name: routeName })
+}
 </script>
+
+<template>
+  <NLayout class="tools-dashboard">
+    <NLayoutHeader bordered class="header">
+      <NH1 style="margin: 0; padding: 16px;">
+        直播工具箱
+      </NH1>
+    </NLayoutHeader>
+    <NLayoutContent style="padding: 24px;">
+      <NGrid cols="1 s:2 m:3 l:4 xl:4 xxl:5" responsive="screen" :x-gap="16" :y-gap="16">
+        <NGridItem v-for="tool in availableTools" :key="tool.name">
+          <NCard :title="tool.displayName" hoverable @click="navigateToTool(tool.routeName)">
+            <template v-if="tool.icon" #cover>
+              <!-- Placeholder for an icon or image -->
+              <div style="font-size: 48px; text-align: center; padding: 20px 0;">
+                <NIcon :component="tool.icon" />
+              </div>
+            </template>
+            {{ tool.description }}
+            <template #action>
+              <NButton type="primary" block @click.stop="navigateToTool(tool.routeName)">
+                打开工具
+              </NButton>
+            </template>
+          </NCard>
+        </NGridItem>
+      </NGrid>
+    </NLayoutContent>
+  </NLayout>
+</template>
 
 <style scoped>
 .tools-dashboard {

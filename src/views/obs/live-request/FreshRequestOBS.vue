@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 // Remove Vue3Marquee import if no longer needed elsewhere
 // import { Vue3Marquee } from 'vue3-marquee'
-import { NDivider, NEmpty, NBadge, NAvatar, NTag } from 'naive-ui'
+import { NEmpty, NTag } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { SongRequestFrom } from '@/api/api-models'
 import { useLiveRequestData } from './useLiveRequestData'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
+  id?: number
+  active?: boolean
+  visible?: boolean
   speedMultiplier?: number
 }>()
 
@@ -26,7 +26,7 @@ const speedMultiplier = computed(() => {
     return props.speedMultiplier
   }
   const speedParam = route.query.speed
-  const speed = parseFloat(speedParam?.toString() ?? '1')
+  const speed = Number.parseFloat(speedParam?.toString() ?? '1')
   return isNaN(speed) || speed <= 0 ? 1 : speed
 })
 
@@ -38,7 +38,7 @@ const {
   allowGuardTypes,
   key,
   update,
-  initRTC
+  initRTC,
 } = useLiveRequestData(currentId.value?.toString() ?? '')
 
 const containerRef = ref()

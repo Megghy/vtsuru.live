@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/data/constants'
-import { useWebRTC } from '@/store/useRTC'
+import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
 import { NDivider, NEmpty, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
+import { useRoute } from 'vue-router'
+import { QueryGetAPI } from '@/api/query'
+import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/data/constants'
+import { useWebRTC } from '@/store/useRTC'
 
-type WaitMusicInfo = {
+interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: SongsInfo
 }
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
+  id?: number
+  active?: boolean
+  visible?: boolean
 }>()
 
 const message = useMessage()
@@ -37,14 +37,14 @@ const itemHeight = 40
 
 const key = ref(Date.now())
 
-const originSongs = ref<{ playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }>({
+const originSongs = ref<{ playing?: WaitMusicInfo, waiting: WaitMusicInfo[] }>({
   waiting: [],
 })
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ playing: WaitMusicInfo; waiting: WaitMusicInfo[] }>(
-      MUSIC_REQUEST_API_URL + 'get-waiting',
+    const data = await QueryGetAPI<{ playing: WaitMusicInfo, waiting: WaitMusicInfo[] }>(
+      `${MUSIC_REQUEST_API_URL}get-waiting`,
       {
         id: currentId.value,
       },

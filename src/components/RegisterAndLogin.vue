@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { cookie } from '@/api/account';
-import { AccountInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
-import { useLocalStorage } from '@vueuse/core'
-import {
+import type {
   FormInst,
   FormItemInst,
   FormItemRule,
   FormRules,
+} from 'naive-ui'
+import type { AccountInfo } from '@/api/api-models'
+import {
   NAlert,
   NButton,
   NCard,
@@ -24,6 +22,9 @@ import {
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+import { cookie } from '@/api/account'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
 
 interface RegisterModel {
   username: string
@@ -105,9 +106,9 @@ const loginRules: FormRules = {
 }
 function validatePasswordStartWith(rule: FormItemRule, value: string): boolean {
   return (
-    !!registerModel.value.password &&
-    registerModel.value.password.startsWith(value) &&
-    registerModel.value.password.length >= value.length
+    !!registerModel.value.password
+    && registerModel.value.password.startsWith(value)
+    && registerModel.value.password.length >= value.length
   )
 }
 function validatePasswordSame(rule: FormItemRule, value: string): boolean {
@@ -122,7 +123,7 @@ function onRegisterButtonClick() {
   formRef.value?.validate().then(async () => {
     isLoading.value = true
     await QueryPostAPI<string>(
-      ACCOUNT_API_URL + 'register',
+      `${ACCOUNT_API_URL}register`,
       {
         name: registerModel.value.username,
         email: registerModel.value.email,
@@ -135,7 +136,7 @@ function onRegisterButtonClick() {
           message.success(`注册成功`)
           cookie.value = {
             cookie: data.data,
-            refreshDate: Date.now()
+            refreshDate: Date.now(),
           }
           setTimeout(() => {
             location.reload()
@@ -156,7 +157,7 @@ function onLoginButtonClick() {
     await QueryPostAPI<{
       account: AccountInfo
       token: string
-    }>(ACCOUNT_API_URL + 'login', {
+    }>(`${ACCOUNT_API_URL}login`, {
       nameOrEmail: loginModel.value.account,
       password: loginModel.value.password,
     })
@@ -164,7 +165,7 @@ function onLoginButtonClick() {
         if (data.code == 200) {
           cookie.value = {
             cookie: data.data.token,
-            refreshDate: Date.now()
+            refreshDate: Date.now(),
           }
           message.success(`成功登陆为 ${data?.data.account.name}`)
           location.reload()
@@ -182,7 +183,7 @@ function onLoginButtonClick() {
 }
 async function onForgetPassword() {
   canSendForgetPassword.value = false
-  await QueryGetAPI(ACCOUNT_API_URL + 'reset-password', { email: inputForgetPasswordValue.value }, [
+  await QueryGetAPI(`${ACCOUNT_API_URL}reset-password`, { email: inputForgetPasswordValue.value }, [
     ['Turnstile', token.value],
   ])
     .then(async (data) => {

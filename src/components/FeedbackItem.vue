@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-models'
-import { NCard, NTag, NEllipsis, NDivider, NSpin, NText, NSpace, NTooltip, NTime, NFlex } from 'naive-ui'
-import { computed } from 'vue'
+import type { ResponseFeedbackModel } from '@/api/api-models'
+import { NCard, NDivider, NEllipsis, NFlex, NSpace, NSpin, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { FeedbackStatus, FeedbackType } from '@/api/api-models'
 
 defineProps<{
   item: ResponseFeedbackModel
@@ -139,7 +139,7 @@ defineProps<{
         align="center"
         :wrap="false"
       >
-        <div :style="`border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px`" />
+        <div style="border-radius: 4px; background-color: #75c37f; width: 10px; height: 15px" />
         <NEllipsis :line-clamp="1">
           <NText>
             {{ item.replyMessage }}

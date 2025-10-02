@@ -1,23 +1,25 @@
 <script setup lang="ts">
-import {
-  QueueSortType,
+import type {
   Setting_LiveRequest,
-  SongRequestFrom,
-  SongRequestInfo
+  SongRequestInfo,
 } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { SONG_REQUEST_API_URL } from '@/data/constants'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
 import { NDivider, NEmpty, NMessageProvider, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
+import { useRoute } from 'vue-router'
+import {
+  QueueSortType,
+  SongRequestFrom,
+} from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { SONG_REQUEST_API_URL } from '@/data/constants'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
+  id?: number
+  active?: boolean
+  visible?: boolean
 }>()
 
 const message = useMessage()
@@ -38,24 +40,23 @@ const songs = computed(() => {
   let result = new List(originSongs.value)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      result = result.ThenBy((q) => q.createAt)
+      result = result.ThenBy(q => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
       result = result
-        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-        .ThenBy((q) => q.createAt)
+        .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy(q => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
-      result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+      result = result.OrderByDescending(q => q.price ?? 0).ThenBy(q => q.createAt)
     }
     case QueueSortType.FansMedalFirst: {
-      result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+      result = result.OrderByDescending(q => q.user?.fans_medal_level ?? 0).ThenBy(q => q.createAt)
     }
   }
   if (settings.value.isReverse) {
-     
     return result.Reverse().ToArray()
   } else {
     return result.ToArray()
@@ -70,8 +71,8 @@ const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
-      SONG_REQUEST_API_URL + 'get-today',
+    const data = await QueryGetAPI<{ songs: SongRequestInfo[], setting: Setting_LiveRequest }>(
+      `${SONG_REQUEST_API_URL}get-today`,
       {
         id: currentId.value,
       },
@@ -80,7 +81,7 @@ async function get() {
       return data.data
     }
   } catch (err) { }
-  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+  return {} as { songs: SongRequestInfo[], setting: Setting_LiveRequest }
 }
 const allowGuardTypes = computed(() => {
   const types = []

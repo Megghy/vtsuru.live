@@ -1,40 +1,331 @@
+<script setup lang="ts">
+import type { UploadFileInfo } from 'naive-ui'
+import { saveAs } from 'file-saver'
+import JSZip from 'jszip'
+import { NButton, NCard, NH4, NInputNumber, NSelect, NSpace, NSwitch, NText, NUpload, useMessage } from 'naive-ui'
+import { computed, ref } from 'vue'
+import VueCropper from 'vue-cropperjs'
+
+const message = useMessage()
+
+const originalImage = ref<string | null>(null)
+const croppedSquareImage = ref<string | null>(null)
+
+const additionalImages = ref<(string | null)[]>(Array.from({ length: 9 }, () => null))
+const finalImages = ref<string[]>([])
+
+// 导出设置
+const tileSize = ref<number>(1024)
+const exportFormat = ref<'png' | 'jpeg'>('png')
+const jpegQuality = ref<number>(0.92)
+const formatOptions: { label: string, value: 'png' | 'jpeg' }[] = [
+  { label: 'PNG（无损）', value: 'png' },
+  { label: 'JPEG（有损）', value: 'jpeg' },
+]
+
+const isGenerating = ref<boolean>(false)
+
+// 裁剪相关
+const enableManualCrop = ref<boolean>(false)
+const cropperRef = ref<any>(null)
+
+function handleFileChange(data: { file: UploadFileInfo }) {
+  const file = data.file.file
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      originalImage.value = e.target?.result as string
+      await updateImageMetaAndDefaultCrop()
+      finalImages.value = [] // Reset final images
+      additionalImages.value = Array.from({ length: 9 }, () => null) // Reset additional images
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+async function updateImageMetaAndDefaultCrop() {
+  if (!originalImage.value) return
+  const img = new Image()
+  img.src = originalImage.value
+  await new Promise(resolve => img.onload = resolve)
+  // 默认：如果不是正方形，打开手动裁剪；但也先生成一次中心裁剪的预览
+  enableManualCrop.value = img.width !== img.height
+  await generatePreview()
+}
+
+async function generatePreview() {
+  if (!originalImage.value) return
+
+  const img = new Image()
+  img.src = originalImage.value
+  await new Promise(resolve => img.onload = resolve)
+
+  // 创建方形预览图
+  const size = Math.min(img.width, img.height)
+  const tempCanvas = document.createElement('canvas')
+  const tempCtx = tempCanvas.getContext('2d')
+
+  if (!tempCtx) return
+
+  const offsetX = (img.width - size) / 2
+  const offsetY = (img.height - size) / 2
+
+  tempCanvas.width = size
+  tempCanvas.height = size
+
+  tempCtx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size)
+  croppedSquareImage.value = tempCanvas.toDataURL()
+
+  message.success('图片已准备就绪，可以查看九宫格预览')
+}
+
+function applyCrop() {
+  if (!enableManualCrop.value || !cropperRef.value) return
+  try {
+    const canvas: HTMLCanvasElement = cropperRef.value.getCroppedCanvas({
+      // 不做强制缩放，保持裁剪原分辨率
+      fillColor: '#fff',
+    })
+    if (!canvas) {
+      message.error('无法获取裁剪结果')
+      return
+    }
+    croppedSquareImage.value = exportFormat.value === 'jpeg'
+      ? canvas.toDataURL('image/jpeg', jpegQuality.value)
+      : canvas.toDataURL('image/png')
+    message.success('已应用裁剪')
+  } catch (e) {
+    console.error(e)
+    message.error('裁剪失败，请重试')
+  }
+}
+
+function resetCrop() {
+  cropperRef.value?.reset?.()
+}
+
+// 预览瓦片背景位置（背景图按 300% 缩放，位置采用 0/50/100%）
+function bgPosition(index: number) {
+  const row = Math.floor(index / 3)
+  const col = index % 3
+  const x = col * 50
+  const y = row * 50
+  return `${x}% ${y}%`
+}
+
+function handleAdditionalImageChange(data: { file: UploadFileInfo }, index: number) {
+  const file = data.file.file
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      additionalImages.value[index] = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+async function generateFinalImages() {
+  const sourceUrl = croppedSquareImage.value || originalImage.value
+  if (!sourceUrl) {
+    message.error('请先上传一张图片')
+    return
+  }
+  isGenerating.value = true
+  finalImages.value = []
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+
+  if (!ctx) {
+    message.error('无法创建画布')
+    isGenerating.value = false
+    return
+  }
+
+  // 加载源图片（优先使用正方形预览）
+  const srcImg = new Image()
+  srcImg.src = sourceUrl
+  await new Promise(resolve => srcImg.onload = resolve)
+
+  // 源图的正方形区域
+  const s = Math.min(srcImg.width, srcImg.height)
+  const offX = (srcImg.width - s) / 2
+  const offY = (srcImg.height - s) / 2
+  const cellSrcSize = s / 3 // 每格源区域尺寸
+
+  try {
+    for (let i = 0; i < 9; i++) {
+      const row = Math.floor(i / 3)
+      const col = i % 3
+      const srcX = offX + col * cellSrcSize
+      const srcY = offY + row * cellSrcSize
+
+      // 附加图片（如果有）
+      let additionalImg: HTMLImageElement | null = null
+      let additionalHeight = 0
+      if (additionalImages.value[i]) {
+        additionalImg = new Image()
+        additionalImg.src = additionalImages.value[i] as string
+        await new Promise(resolve => additionalImg!.onload = resolve)
+        additionalHeight = (tileSize.value / additionalImg.width) * additionalImg.height
+      }
+
+      // 画布尺寸
+      canvas.width = tileSize.value
+      canvas.height = tileSize.value + additionalHeight
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // 绘制主图格子
+      ctx.drawImage(
+        srcImg,
+        srcX,
+        srcY,
+        cellSrcSize,
+        cellSrcSize,
+        0,
+        0,
+        tileSize.value,
+        tileSize.value,
+      )
+
+      // 绘制附加图片
+      if (additionalImg) {
+        ctx.drawImage(
+          additionalImg,
+          0,
+          tileSize.value,
+          tileSize.value,
+          additionalHeight,
+        )
+      }
+
+      // 导出设置
+      const mime = exportFormat.value === 'png' ? 'image/png' : 'image/jpeg'
+      const dataUrl = exportFormat.value === 'jpeg'
+        ? canvas.toDataURL(mime, jpegQuality.value)
+        : canvas.toDataURL(mime)
+      finalImages.value.push(dataUrl)
+    }
+    message.success('九宫格图片已生成！可以单独下载每张图片')
+  } catch (e) {
+    console.error(e)
+    message.error('生成过程中出现问题，请重试')
+  } finally {
+    isGenerating.value = false
+  }
+}
+
+function downloadImage(dataUrl: string, filename: string) {
+  const link = document.createElement('a')
+  link.href = dataUrl
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// 计算是否存在任一附加图片
+const hasAnyAdditional = computed(() => additionalImages.value.some(Boolean))
+
+function removeAllAdditionalImages() {
+  if (!hasAnyAdditional.value) return
+  additionalImages.value = Array.from({ length: 9 }, () => null)
+  message.success('已清空所有附加图片')
+}
+
+function removeAdditionalImage(index: number) {
+  additionalImages.value[index] = null
+  message.success('已删除附加图片')
+}
+
+function dataUrlToBlob(dataUrl: string): Blob {
+  const arr = dataUrl.split(',')
+  const mimeMatch = arr[0].match(/:(.*?);/)
+  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream'
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new Blob([u8arr], { type: mime })
+}
+
+async function downloadAllAsZip() {
+  if (finalImages.value.length === 0) {
+    message.error('请先生成九宫格图片')
+    return
+  }
+  try {
+    const zip = new JSZip()
+    finalImages.value.forEach((dataUrl, index) => {
+      const blob = dataUrlToBlob(dataUrl)
+      zip.file(getFileName(index), blob)
+    })
+    const content = await zip.generateAsync({ type: 'blob' })
+    saveAs(content, 'dynamic-nine-grid.zip')
+    message.success('ZIP 已开始下载')
+  } catch (e) {
+    console.error(e)
+    message.error('打包失败，请重试')
+  }
+}
+
+// 下载文件名（根据导出格式）
+function getFileName(index: number) {
+  const ext = exportFormat.value === 'png' ? 'png' : 'jpg'
+  return `grid_image_${index + 1}.${ext}`
+}
+</script>
+
 <template>
   <div class="dynamic-nine-grid-tool">
-    <n-card title="动态九图生成器">
-      <n-space vertical size="large">
+    <NCard title="动态九图生成器">
+      <NSpace vertical size="large">
         <div class="upload-section">
-          <n-upload
+          <NUpload
             action="#"
             :show-file-list="false"
-            @change="handleFileChange"
             accept="image/*"
+            @change="handleFileChange"
           >
-            <n-button type="primary">上传原始图片</n-button>
-          </n-upload>
-          <n-text depth="3" class="mt-1">
+            <NButton type="primary">
+              上传原始图片
+            </NButton>
+          </NUpload>
+          <NText depth="3" class="mt-1">
             请上传一张方形或长方形图片，将会自动分割成3x3的九宫格图片
-          </n-text>
+          </NText>
         </div>
         <div v-if="originalImage" class="two-column-layout">
           <div class="left-pane">
             <div class="cropper-container">
               <div class="cropper-toolbar">
                 <div class="toolbar-left">
-                  <n-text depth="3">手动裁剪</n-text>
-                  <n-switch v-model:value="enableManualCrop" />
+                  <NText depth="3">
+                    手动裁剪
+                  </NText>
+                  <NSwitch v-model:value="enableManualCrop" />
                 </div>
                 <div class="toolbar-actions">
-                  <n-button size="small" tertiary @click="generatePreview">自动中心裁剪</n-button>
-                  <n-button size="small" type="primary" @click="applyCrop" :disabled="!enableManualCrop">应用裁剪</n-button>
-                  <n-button size="small" @click="resetCrop" :disabled="!enableManualCrop">重置裁剪</n-button>
-                  <n-upload
+                  <NButton size="small" tertiary @click="generatePreview">
+                    自动中心裁剪
+                  </NButton>
+                  <NButton size="small" type="primary" :disabled="!enableManualCrop" @click="applyCrop">
+                    应用裁剪
+                  </NButton>
+                  <NButton size="small" :disabled="!enableManualCrop" @click="resetCrop">
+                    重置裁剪
+                  </NButton>
+                  <NUpload
                     action="#"
                     :show-file-list="false"
-                    @change="handleFileChange"
                     accept="image/*"
+                    @change="handleFileChange"
                   >
-                    <n-button size="small" type="warning">重新选择图片</n-button>
-                  </n-upload>
+                    <NButton size="small" type="warning">
+                      重新选择图片
+                    </NButton>
+                  </NUpload>
                 </div>
               </div>
               <div class="image-preview">
@@ -49,47 +340,59 @@
                   :responsive="true"
                   style="width: 100%; height: 480px;"
                 />
-                <img v-else :src="originalImage || ''" alt="原始图片" class="original-image-preview" />
+                <img v-else :src="originalImage || ''" alt="原始图片" class="original-image-preview">
               </div>
             </div>
           </div>
 
-          <div class="right-pane" v-if="croppedSquareImage">
+          <div v-if="croppedSquareImage" class="right-pane">
             <div class="preview-section">
-              <n-h4>九宫格预览</n-h4>
-              <n-text depth="3">
+              <NH4>九宫格预览</NH4>
+              <NText depth="3">
                 九宫格预览显示了图片分割后的效果，每个格子都可以添加下方图片
-              </n-text>
+              </NText>
 
               <div class="whole-image-preview">
-                <img :src="croppedSquareImage" alt="完整预览" class="whole-preview-img" />
+                <img :src="croppedSquareImage" alt="完整预览" class="whole-preview-img">
                 <div class="grid-overlay">
                   <div v-for="i in 9" :key="`overlay-${i}`" class="grid-overlay-cell">
-                    <div class="cell-number">{{ i }}</div>
+                    <div class="cell-number">
+                      {{ i }}
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- 导出设置 -->
               <div class="export-settings">
-                <n-text depth="3">导出设置：</n-text>
+                <NText depth="3">
+                  导出设置：
+                </NText>
                 <div class="export-item">
-                  <n-text depth="3">单张边长</n-text>
-                  <n-input-number v-model:value="tileSize" :min="128" :max="4096" :step="128" />
-                  <n-text depth="3">px</n-text>
+                  <NText depth="3">
+                    单张边长
+                  </NText>
+                  <NInputNumber v-model:value="tileSize" :min="128" :max="4096" :step="128" />
+                  <NText depth="3">
+                    px
+                  </NText>
                 </div>
                 <div class="export-item">
-                  <n-text depth="3">格式</n-text>
-                  <n-select v-model:value="exportFormat" :options="formatOptions" style="min-width: 120px" />
+                  <NText depth="3">
+                    格式
+                  </NText>
+                  <NSelect v-model:value="exportFormat" :options="formatOptions" style="min-width: 120px" />
                 </div>
-                <div class="export-item" v-if="exportFormat === 'jpeg'">
-                  <n-text depth="3">JPEG质量</n-text>
-                  <n-input-number v-model:value="jpegQuality" :min="0.1" :max="1" :step="0.05" />
+                <div v-if="exportFormat === 'jpeg'" class="export-item">
+                  <NText depth="3">
+                    JPEG质量
+                  </NText>
+                  <NInputNumber v-model:value="jpegQuality" :min="0.1" :max="1" :step="0.05" />
                 </div>
                 <div class="export-item">
-                  <n-button tertiary size="small" @click="removeAllAdditionalImages" :disabled="!hasAnyAdditional">
+                  <NButton tertiary size="small" :disabled="!hasAnyAdditional" @click="removeAllAdditionalImages">
                     清空所有下方图片
-                  </n-button>
+                  </NButton>
                 </div>
               </div>
 
@@ -100,336 +403,73 @@
                   class="grid-item-container"
                 >
                   <div class="grid-image-container">
-                    <div class="grid-position-indicator">第{{ i }}格</div>
+                    <div class="grid-position-indicator">
+                      第{{ i }}格
+                    </div>
                     <div class="grid-image-wrapper">
                       <div
                         class="grid-bg-tile"
-                        :style="{ backgroundImage: 'url(' + croppedSquareImage + ')', backgroundPosition: bgPosition(i-1) }"
-                      ></div>
+                        :style="{ backgroundImage: `url(${croppedSquareImage})`, backgroundPosition: bgPosition(i - 1) }"
+                      />
                     </div>
                   </div>
-                  <div v-if="additionalImages[i-1]" class="additional-image-preview">
-                    <img :src="additionalImages[i-1] || ''" alt="附加图片" />
+                  <div v-if="additionalImages[i - 1]" class="additional-image-preview">
+                    <img :src="additionalImages[i - 1] || ''" alt="附加图片">
                   </div>
                   <div class="grid-controls">
-                    <n-upload
+                    <NUpload
                       action="#"
                       :show-file-list="false"
-                      @change="(data) => handleAdditionalImageChange(data, i - 1)"
                       accept="image/*"
+                      @change="(data) => handleAdditionalImageChange(data, i - 1)"
                     >
-                      <n-button size="tiny">添加下方图片</n-button>
-                    </n-upload>
-                    <n-button
-                      v-if="additionalImages[i-1]"
+                      <NButton size="tiny">
+                        添加下方图片
+                      </NButton>
+                    </NUpload>
+                    <NButton
+                      v-if="additionalImages[i - 1]"
                       size="tiny"
                       type="error"
-                      @click="() => removeAdditionalImage(i-1)"
+                      @click="() => removeAdditionalImage(i - 1)"
                     >
                       删除下方图片
-                    </n-button>
+                    </NButton>
                   </div>
                 </div>
               </div>
               <div class="action-buttons">
-                <n-button @click="generateFinalImages" type="success" class="mt-2" :loading="isGenerating">生成九张图片</n-button>
-                <n-button @click="downloadAllAsZip" type="info" class="mt-2" :disabled="finalImages.length === 0 || isGenerating">
+                <NButton type="success" class="mt-2" :loading="isGenerating" @click="generateFinalImages">
+                  生成九张图片
+                </NButton>
+                <NButton type="info" class="mt-2" :disabled="finalImages.length === 0 || isGenerating" @click="downloadAllAsZip">
                   打包下载 ZIP
-                </n-button>
+                </NButton>
               </div>
             </div>
           </div>
         </div>
         <div v-if="finalImages.length > 0" class="final-images-section">
-          <n-h4>最终图片</n-h4>
-          <n-text depth="3">
+          <NH4>最终图片</NH4>
+          <NText depth="3">
             以下是生成的九宫格图片，您可以单独下载每张图片
-          </n-text>
+          </NText>
           <div class="final-images-grid">
             <div v-for="(imgDataUrl, index) in finalImages" :key="`final-${index}`" class="final-image-item">
-              <img :src="imgDataUrl" :alt="`最终图片 ${index + 1}`" />
-              <div class="image-number">{{ index + 1 }}</div>
-              <n-button size="small" @click="() => downloadImage(imgDataUrl, getFileName(index))" class="download-button">
+              <img :src="imgDataUrl" :alt="`最终图片 ${index + 1}`">
+              <div class="image-number">
+                {{ index + 1 }}
+              </div>
+              <NButton size="small" class="download-button" @click="() => downloadImage(imgDataUrl, getFileName(index))">
                 下载
-              </n-button>
+              </NButton>
             </div>
           </div>
         </div>
-
-      </n-space>
-    </n-card>
+      </NSpace>
+    </NCard>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { NCard, NButton, NUpload, NSpace, NH4, NText, NInputNumber, NSelect, NSwitch, useMessage } from 'naive-ui';
-import type { UploadFileInfo } from 'naive-ui';
-import VueCropper from 'vue-cropperjs';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
-
-const message = useMessage();
-
-const originalImage = ref<string | null>(null);
-const croppedSquareImage = ref<string | null>(null);
-
-const additionalImages = ref<(string | null)[]>(Array(9).fill(null));
-const finalImages = ref<string[]>([]);
-
-// 导出设置
-const tileSize = ref<number>(1024);
-const exportFormat = ref<'png' | 'jpeg'>('png');
-const jpegQuality = ref<number>(0.92);
-const formatOptions: { label: string; value: 'png' | 'jpeg' }[] = [
-  { label: 'PNG（无损）', value: 'png' },
-  { label: 'JPEG（有损）', value: 'jpeg' },
-];
-
-const isGenerating = ref<boolean>(false);
-
-// 裁剪相关
-const enableManualCrop = ref<boolean>(false);
-const cropperRef = ref<any>(null);
-
-const handleFileChange = (data: { file: UploadFileInfo }) => {
-  const file = data.file.file;
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      originalImage.value = e.target?.result as string;
-      await updateImageMetaAndDefaultCrop();
-      finalImages.value = []; // Reset final images
-      additionalImages.value = Array(9).fill(null); // Reset additional images
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const updateImageMetaAndDefaultCrop = async () => {
-  if (!originalImage.value) return;
-  const img = new Image();
-  img.src = originalImage.value;
-  await new Promise(resolve => img.onload = resolve);
-  // 默认：如果不是正方形，打开手动裁剪；但也先生成一次中心裁剪的预览
-  enableManualCrop.value = img.width !== img.height;
-  await generatePreview();
-};
-
-const generatePreview = async () => {
-  if (!originalImage.value) return;
-
-  const img = new Image();
-  img.src = originalImage.value;
-  await new Promise(resolve => img.onload = resolve);
-
-  // 创建方形预览图
-  const size = Math.min(img.width, img.height);
-  const tempCanvas = document.createElement('canvas');
-  const tempCtx = tempCanvas.getContext('2d');
-
-  if (!tempCtx) return;
-
-  const offsetX = (img.width - size) / 2;
-  const offsetY = (img.height - size) / 2;
-
-  tempCanvas.width = size;
-  tempCanvas.height = size;
-
-  tempCtx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
-  croppedSquareImage.value = tempCanvas.toDataURL();
-
-  message.success('图片已准备就绪，可以查看九宫格预览');
-};
-
-const applyCrop = () => {
-  if (!enableManualCrop.value || !cropperRef.value) return;
-  try {
-    const canvas: HTMLCanvasElement = cropperRef.value.getCroppedCanvas({
-      // 不做强制缩放，保持裁剪原分辨率
-      fillColor: '#fff'
-    });
-    if (!canvas) {
-      message.error('无法获取裁剪结果');
-      return;
-    }
-    croppedSquareImage.value = exportFormat.value === 'jpeg'
-      ? canvas.toDataURL('image/jpeg', jpegQuality.value)
-      : canvas.toDataURL('image/png');
-    message.success('已应用裁剪');
-  } catch (e) {
-    console.error(e);
-    message.error('裁剪失败，请重试');
-  }
-};
-
-const resetCrop = () => {
-  cropperRef.value?.reset?.();
-};
-
-// 预览瓦片背景位置（背景图按 300% 缩放，位置采用 0/50/100%）
-const bgPosition = (index: number) => {
-  const row = Math.floor(index / 3);
-  const col = index % 3;
-  const x = col * 50;
-  const y = row * 50;
-  return `${x}% ${y}%`;
-};
-
-const handleAdditionalImageChange = (data: { file: UploadFileInfo }, index: number) => {
-  const file = data.file.file;
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      additionalImages.value[index] = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const generateFinalImages = async () => {
-  const sourceUrl = croppedSquareImage.value || originalImage.value;
-  if (!sourceUrl) {
-    message.error('请先上传一张图片');
-    return;
-  }
-  isGenerating.value = true;
-  finalImages.value = [];
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    message.error('无法创建画布');
-    isGenerating.value = false;
-    return;
-  }
-
-  // 加载源图片（优先使用正方形预览）
-  const srcImg = new Image();
-  srcImg.src = sourceUrl;
-  await new Promise(resolve => srcImg.onload = resolve);
-
-  // 源图的正方形区域
-  const s = Math.min(srcImg.width, srcImg.height);
-  const offX = (srcImg.width - s) / 2;
-  const offY = (srcImg.height - s) / 2;
-  const cellSrcSize = s / 3; // 每格源区域尺寸
-
-  try {
-    for (let i = 0; i < 9; i++) {
-      const row = Math.floor(i / 3);
-      const col = i % 3;
-      const srcX = offX + col * cellSrcSize;
-      const srcY = offY + row * cellSrcSize;
-
-      // 附加图片（如果有）
-      let additionalImg: HTMLImageElement | null = null;
-      let additionalHeight = 0;
-      if (additionalImages.value[i]) {
-        additionalImg = new Image();
-        additionalImg.src = additionalImages.value[i] as string;
-        await new Promise(resolve => additionalImg!.onload = resolve);
-        additionalHeight = (tileSize.value / additionalImg.width) * additionalImg.height;
-      }
-
-      // 画布尺寸
-      canvas.width = tileSize.value;
-      canvas.height = tileSize.value + additionalHeight;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 绘制主图格子
-      ctx.drawImage(
-        srcImg,
-        srcX, srcY, cellSrcSize, cellSrcSize,
-        0, 0, tileSize.value, tileSize.value
-      );
-
-      // 绘制附加图片
-      if (additionalImg) {
-        ctx.drawImage(
-          additionalImg,
-          0, tileSize.value, tileSize.value, additionalHeight
-        );
-      }
-
-      // 导出设置
-      const mime = exportFormat.value === 'png' ? 'image/png' : 'image/jpeg';
-      const dataUrl = exportFormat.value === 'jpeg'
-        ? canvas.toDataURL(mime, jpegQuality.value)
-        : canvas.toDataURL(mime);
-      finalImages.value.push(dataUrl);
-    }
-    message.success('九宫格图片已生成！可以单独下载每张图片');
-  } catch (e) {
-    console.error(e);
-    message.error('生成过程中出现问题，请重试');
-  } finally {
-    isGenerating.value = false;
-  }
-};
-
-const downloadImage = (dataUrl: string, filename: string) => {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
-// 计算是否存在任一附加图片
-const hasAnyAdditional = computed(() => additionalImages.value.some(Boolean));
-
-const removeAllAdditionalImages = () => {
-  if (!hasAnyAdditional.value) return;
-  additionalImages.value = Array(9).fill(null);
-  message.success('已清空所有附加图片');
-};
-
-const removeAdditionalImage = (index: number) => {
-  additionalImages.value[index] = null;
-  message.success('已删除附加图片');
-};
-
-const dataUrlToBlob = (dataUrl: string): Blob => {
-  const arr = dataUrl.split(',');
-  const mimeMatch = arr[0].match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new Blob([u8arr], { type: mime });
-};
-
-const downloadAllAsZip = async () => {
-  if (finalImages.value.length === 0) {
-    message.error('请先生成九宫格图片');
-    return;
-  }
-  try {
-    const zip = new JSZip();
-    finalImages.value.forEach((dataUrl, index) => {
-      const blob = dataUrlToBlob(dataUrl);
-      zip.file(getFileName(index), blob);
-    });
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, 'dynamic-nine-grid.zip');
-    message.success('ZIP 已开始下载');
-  } catch (e) {
-    console.error(e);
-    message.error('打包失败，请重试');
-  }
-};
-
-// 下载文件名（根据导出格式）
-const getFileName = (index: number) => {
-  const ext = exportFormat.value === 'png' ? 'png' : 'jpg';
-  return `grid_image_${index + 1}.${ext}`;
-};
-</script>
 
 <style scoped>
 .dynamic-nine-grid-tool {

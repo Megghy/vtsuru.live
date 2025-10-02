@@ -1,13 +1,4 @@
 <script setup lang="ts">
-import { NavigateToNewTab, isDarkMode } from '@/Utils'
-import { cookie, isLoadingAccount, useAccount } from '@/api/account'
-import { ThemeType } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { checkUpdateNote } from '@/data/UpdateNote';
-import { ACCOUNT_API_URL } from '@/data/constants'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import {
   BookCoins20Filled,
   CalendarClock24Filled,
@@ -15,21 +6,21 @@ import {
   Info24Filled,
   Live24Filled,
   Lottery24Filled,
+  Mail24Filled,
   PeopleQueue24Filled,
   Person48Filled,
   PersonFeedback24Filled,
   TabletSpeaker24Filled,
   VehicleShip24Filled,
   VideoAdd20Filled,
-  Mail24Filled,
 } from '@vicons/fluent'
-import { AnalyticsSharp, BrowsersOutline, Chatbox, Moon, MusicalNote, Sunny, Eye, PlayForward, PlayBack, Play, Pause, VolumeHigh, ChevronUp, ChevronDown, TrashBin, Bookmark, BookmarkOutline } from '@vicons/ionicons5'
+import { AnalyticsSharp, Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronDown, ChevronUp, Eye, Moon, MusicalNote, Pause, Play, PlayBack, PlayForward, Sunny, TrashBin, VolumeHigh } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
   NBackTop,
-  NBadge,
   NButton,
+  NCard,
   NCountdown,
   NDivider,
   NElement,
@@ -44,6 +35,7 @@ import {
   NPageHeader,
   NPopconfirm,
   NScrollbar,
+  NSlider,
   NSpace,
   NSpin,
   NSwitch,
@@ -51,13 +43,19 @@ import {
   NText,
   NTooltip,
   useMessage,
-  NCard,
-  NSlider,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
+import { RouterLink, useRoute } from 'vue-router'
+import { cookie, isLoadingAccount, useAccount } from '@/api/account'
+import { ThemeType } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { ACCOUNT_API_URL } from '@/data/constants'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { useMusicRequestProvider } from '@/store/useMusicRequest'
+import { isDarkMode, NavigateToNewTab } from '@/Utils'
 
 // 全局状态和工具
 const accountInfo = useAccount()
@@ -69,49 +67,51 @@ const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 // 收藏功能相关
 const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', [])
 const isFavorite = (key: string) => favoriteMenuItems.value?.includes(key)
-const toggleFavorite = (key: string) => {
+function toggleFavorite(key: string) {
   const list = favoriteMenuItems.value ?? []
   const idx = list.indexOf(key)
   if (idx === -1) list.unshift(key)
   else list.splice(idx, 1)
   favoriteMenuItems.value = [...list]
 }
-const renderFavoriteExtra = (key: string) => () =>
-  h(
-    'span',
-    { class: ['menu-fav', isFavorite(key) ? 'active' : ''] },
-    [
-      h(
-        NTooltip,
-        { placement: 'right' },
-        {
-          trigger: () =>
-            h(
-              NButton,
-              {
-                text: true,
-                size: 'tiny',
-                circle: true,
-                onClick: (e: MouseEvent) => {
-                  e.stopPropagation()
-                  toggleFavorite(key)
+function renderFavoriteExtra(key: string) {
+  return () =>
+    h(
+      'span',
+      { class: ['menu-fav', isFavorite(key) ? 'active' : ''] },
+      [
+        h(
+          NTooltip,
+          { placement: 'right' },
+          {
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  text: true,
+                  size: 'tiny',
+                  circle: true,
+                  onClick: (e: MouseEvent) => {
+                    e.stopPropagation()
+                    toggleFavorite(key)
+                  },
+                  style: 'padding: 0; height: 18px; width: 18px;',
                 },
-                style: 'padding: 0; height: 18px; width: 18px;'
-              },
-              {
-                icon: () =>
-                  h(NIcon, {
-                    component: isFavorite(key) ? Bookmark : BookmarkOutline,
-                    size: 16,
-                    color: isFavorite(key) ? '#f5c451' : undefined,
-                  }),
-              },
-            ),
-          default: () => (isFavorite(key) ? '取消收藏' : '收藏'),
-        },
-      ),
-    ],
-  )
+                {
+                  icon: () =>
+                    h(NIcon, {
+                      component: isFavorite(key) ? Bookmark : BookmarkOutline,
+                      size: 16,
+                      color: isFavorite(key) ? '#f5c451' : undefined,
+                    }),
+                },
+              ),
+            default: () => (isFavorite(key) ? '取消收藏' : '收藏'),
+          },
+        ),
+      ],
+    )
+}
 
 // 侧边栏和布局相关
 const sider = ref()
@@ -136,14 +136,14 @@ const aplayerHeight = computed(() => {
 
 // 播放器是否可见
 const isPlayerVisible = computed(
-  () => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0
+  () => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0,
 )
 
 // 音乐播放器相关状态
 const isPlayerMinimized = useStorage('Settings.MusicPlayer.Minimized', false)
 const playerVolume = computed({
   get: () => musicRquestStore.settings.volume,
-  set: (value) => musicRquestStore.settings.volume = value
+  set: value => musicRquestStore.settings.volume = value,
 })
 
 const aplayer = ref()
@@ -156,12 +156,12 @@ const currentPlayingInfo = computed(() => {
   if (musicRquestStore.currentOriginMusic && musicRquestStore.isPlayingOrderMusic) {
     return {
       type: 'request',
-      info: `正在播放 ${musicRquestStore.currentOriginMusic.from.name} 点的歌`
+      info: `正在播放 ${musicRquestStore.currentOriginMusic.from.name} 点的歌`,
     }
   } else if (musicRquestStore.currentMusic && musicRquestStore.currentMusic.title) {
     return {
       type: 'normal',
-      info: '正在播放背景音乐'
+      info: '正在播放背景音乐',
     }
   }
   return null
@@ -340,7 +340,7 @@ const menuOptions = computed(() => {
                 ),
               },
             ),
-          ]
+          ],
         ),
         default: () => (isBiliVerified.value
           ? '需要使用直播弹幕的功能'
@@ -352,9 +352,9 @@ const menuOptions = computed(() => {
     disabled: accountInfo.value?.isEmailVerified === false || !isBiliVerified.value,
     children: [
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '弹幕机' : h(NTooltip,
-            {},
-            {
+        label: () => !isBiliVerified.value
+          ? '弹幕机'
+          : h(NTooltip, {}, {
               trigger: () => h(
                 RouterLink,
                 { to: { name: 'manage-danmuji' } },
@@ -367,70 +367,80 @@ const menuOptions = computed(() => {
         icon: renderIcon(Lottery24Filled),
       }),
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '抽奖' : h(
-          RouterLink,
-          { to: { name: 'manage-liveLottery' } },
-          { default: () => '抽奖' },
-        ),
+        label: () => !isBiliVerified.value
+          ? '抽奖'
+          : h(
+              RouterLink,
+              { to: { name: 'manage-liveLottery' } },
+              { default: () => '抽奖' },
+            ),
         key: 'manage-liveLottery',
         icon: renderIcon(Lottery24Filled),
         disabled: !isBiliVerified.value,
       }),
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '点播' : h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-liveRequest' } },
-              { default: () => '点播' },
+        label: () => !isBiliVerified.value
+          ? '点播'
+          : h(
+              NTooltip,
+              {},
+              {
+                trigger: () => h(
+                  RouterLink,
+                  { to: { name: 'manage-liveRequest' } },
+                  { default: () => '点播' },
+                ),
+                default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
+              },
             ),
-            default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
-          },
-        ),
         key: 'manage-liveRequest',
         icon: renderIcon(MusicalNote),
         disabled: !isBiliVerified.value,
       }),
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '点歌' : h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-musicRequest' } },
-              { default: () => '点歌' },
+        label: () => !isBiliVerified.value
+          ? '点歌'
+          : h(
+              NTooltip,
+              {},
+              {
+                trigger: () => h(
+                  RouterLink,
+                  { to: { name: 'manage-musicRequest' } },
+                  { default: () => '点歌' },
+                ),
+                default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
+              },
             ),
-            default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
-          },
-        ),
         key: 'manage-musicRequest',
         icon: renderIcon(MusicalNote),
         disabled: !isBiliVerified.value,
       }),
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '排队' : h(
-          RouterLink,
-          { to: { name: 'manage-liveQueue' } },
-          { default: () => '排队' },
-        ),
+        label: () => !isBiliVerified.value
+          ? '排队'
+          : h(
+              RouterLink,
+              { to: { name: 'manage-liveQueue' } },
+              { default: () => '排队' },
+            ),
         key: 'manage-liveQueue',
         icon: renderIcon(PeopleQueue24Filled),
         disabled: !isBiliVerified.value,
       }),
       withFavoriteExtra({
-        label: () => !isBiliVerified.value ? '读弹幕' : h(
-          RouterLink,
-          { to: { name: 'manage-speech' } },
-          { default: () => '读弹幕' },
-        ),
+        label: () => !isBiliVerified.value
+          ? '读弹幕'
+          : h(
+              RouterLink,
+              { to: { name: 'manage-speech' } },
+              { default: () => '读弹幕' },
+            ),
         key: 'manage-speech',
         icon: renderIcon(TabletSpeaker24Filled),
         disabled: !isBiliVerified.value,
       }),
-      /*withFavoriteExtra({
+      /* withFavoriteExtra({
         label: () => !isBiliVerified.value ? '弹幕投票' : h(
           RouterLink,
           { to: { name: 'manage-danmakuVote' } },
@@ -439,7 +449,7 @@ const menuOptions = computed(() => {
         key: 'manage-danmakuVote',
         icon: renderIcon(Chat24Filled),
         disabled: !isBiliVerified.value,
-      }),*/
+      }), */
     ],
   }
 
@@ -496,7 +506,7 @@ const menuOptions = computed(() => {
 // 重发验证邮件
 async function resendEmail() {
   try {
-    const data = await QueryGetAPI(ACCOUNT_API_URL + 'send-verify-email')
+    const data = await QueryGetAPI(`${ACCOUNT_API_URL}send-verify-email`)
     if (data.code === 200) {
       canResendEmail.value = false
       message.success('发送成功, 请检查你的邮箱. 如果没有收到, 请检查垃圾邮件')
@@ -504,7 +514,7 @@ async function resendEmail() {
         accountInfo.value.nextSendEmailTime += 1000 * 60
       }
     } else {
-      message.error('发送失败: ' + data.message)
+      message.error(`发送失败: ${data.message}`)
     }
   } catch (err) {
     message.error('发送失败')
@@ -542,7 +552,7 @@ function onPreviousMusic() {
     } else {
       // 否则播放上一首
       const currentIndex = musicRquestStore.aplayerMusics.findIndex(
-        music => music.id === musicRquestStore.currentMusic.id
+        music => music.id === musicRquestStore.currentMusic.id,
       )
       if (currentIndex > 0) {
         musicRquestStore.currentMusic = musicRquestStore.aplayerMusics[currentIndex - 1]
@@ -880,11 +890,11 @@ onMounted(() => {
             :content-style="isPlayerMinimized ? 'padding: 0' : undefined"
             size="small"
             class="music-player-card"
-            :style="`
+            style="
               margin: 8px;
               border-radius: 12px;
               backdrop-filter: blur(10px);
-            `"
+            "
           >
             <!-- 播放器头部控制栏 -->
             <template #header>
@@ -1019,7 +1029,7 @@ onMounted(() => {
                     v-model:shuffle="musicRquestStore.settings.shuffle"
                     v-model:repeat="musicRquestStore.settings.repeat"
                     :list="musicRquestStore.aplayerMusics"
-                    :list-max-height="'200'"
+                    list-max-height="200"
                     mutex
                     list-folded
                     style="border-radius: 8px;"

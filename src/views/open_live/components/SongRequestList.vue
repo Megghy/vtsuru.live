@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { computed, provide } from 'vue'
-import { NCard, NSpace, NTag, NIcon, NInput, NInputGroup, NButton, NPopconfirm, NRadioGroup, NRadioButton, NCheckbox, NEmpty, NList, NListItem, NDivider } from 'naive-ui'
-import { PeopleQueue24Filled } from '@vicons/fluent'
-import { Checkmark12Regular } from '@vicons/fluent'
+import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
 import { isSameDay } from 'date-fns'
-import { SongRequestInfo, SongRequestStatus, QueueSortType } from '@/api/api-models'
-import SongRequestItem from './SongRequestItem.vue'
+import { NButton, NCard, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NList, NListItem, NPopconfirm, NRadioButton, NRadioGroup, NSpace, NTag } from 'naive-ui'
+import { computed, provide } from 'vue'
+import { SaveSetting, useAccount } from '@/api/account'
+import { QueueSortType, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
-import { useAccount } from '@/api/account'
-import { SaveSetting } from '@/api/account'
+import SongRequestItem from './SongRequestItem.vue'
 
 // 使用useLiveRequest
 const songRequest = useLiveRequest()
@@ -18,8 +16,8 @@ const accountInfo = useAccount()
 provide('activeSongs', songRequest.activeSongs)
 
 const todayFinishedCount = computed(() => {
-  return songRequest.songs.filter(s => s.status != SongRequestStatus.Cancel &&
-    isSameDay(s.finishAt ?? 0, Date.now())).length
+  return songRequest.songs.filter(s => s.status != SongRequestStatus.Cancel
+    && isSameDay(s.finishAt ?? 0, Date.now())).length
 })
 
 const waitingCount = computed(() => {
@@ -28,7 +26,7 @@ const waitingCount = computed(() => {
 
 // 当前的排序顺序
 const currentIsReverse = computed(() =>
-  songRequest.configCanEdit ? accountInfo.value?.settings?.songRequest?.isReverse : songRequest.isReverse
+  songRequest.configCanEdit ? accountInfo.value?.settings?.songRequest?.isReverse : songRequest.isReverse,
 )
 
 // 保存排序设置
@@ -41,7 +39,7 @@ async function updateSettings() {
           window.$message.success('已保存')
           return true
         } else {
-          window.$message.error('保存失败: ' + msg)
+          window.$message.error(`保存失败: ${msg}`)
         }
       })
       .finally(() => {
@@ -114,7 +112,8 @@ async function updateSettings() {
           if (songRequest.configCanEdit) {
             accountInfo.settings.songRequest.isReverse = value
             updateSettings()
-          } else {
+          }
+          else {
             songRequest.isReverse = value
           }
         }"

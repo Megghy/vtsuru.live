@@ -1,5 +1,6 @@
 import antfu from '@antfu/eslint-config'
 import VueVine from '@vue-vine/eslint-config'
+import oxlint from 'eslint-plugin-oxlint'
 
 export default antfu(
   {
@@ -64,7 +65,7 @@ export default antfu(
       // 通用规则
       'no-console': 'off',
       'unused-imports/no-unused-vars': 'warn',
-      
+
       // 关闭一些过于严格的规则
       'antfu/if-newline': 'off',
       'style/brace-style': ['error', '1tbs'],
@@ -72,4 +73,6 @@ export default antfu(
   },
   // 集成 VueVine 配置
   ...VueVine(),
+  // 集成 oxlint 配置 - 必须放在最后以禁用与 oxlint 冲突的 ESLint 规则
+  oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 )

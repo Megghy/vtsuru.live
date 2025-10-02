@@ -1,230 +1,231 @@
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils';
-import { useAccount } from '@/api/account';
-import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models';
-import { SongListConfigTypeWithConfig } from '@/data/TemplateTypes';
-import { defineTemplateConfig, ExtractConfigData } from '@/data/VTsuruConfigTypes';
-import { useBiliAuth } from '@/store/useBiliAuth';
-import bilibili from '@/svgs/bilibili.svg';
-import douyin from '@/svgs/douyin.svg';
-import FiveSingIcon from '@/svgs/fivesing.svg';
-import neteaseMusic from '@/svgs/neteaseMusic.svg';
-import qqMusic from '@/svgs/qqMusic.svg';
-import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent';
-import { List } from 'linqts';
-import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui';
-import { computed, h, ref, VNode, watch } from 'vue';
-import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils';
+import type { VNode } from 'vue'
+import type { SongRequestOption, SongsInfo } from '@/api/api-models'
+import type { SongListConfigTypeWithConfig } from '@/data/TemplateTypes'
+import type { ExtractConfigData } from '@/data/VTsuruConfigTypes'
+import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent'
+import { List } from 'linqts'
+import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui'
+import { computed, h, ref, watch } from 'vue'
+import { useAccount } from '@/api/account'
+import { SongFrom } from '@/api/api-models'
+import { defineTemplateConfig } from '@/data/VTsuruConfigTypes'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import bilibili from '@/svgs/bilibili.svg'
+import douyin from '@/svgs/douyin.svg'
+import FiveSingIcon from '@/svgs/fivesing.svg'
+import neteaseMusic from '@/svgs/neteaseMusic.svg'
+import qqMusic from '@/svgs/qqMusic.svg'
+import { isDarkMode } from '@/Utils'
+import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils'
 
 // Interface Tab - can be reused for both language and tag buttons
 interface FilterButton {
-  id: number;
-  name: string;
+  id: number
+  name: string
 }
 
-const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>();
-defineExpose({ Config, DefaultConfig });
-const emits = defineEmits(['requestSong']);
-
-const isHovering = ref(false);
+const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
+const emits = defineEmits(['requestSong'])
+defineExpose({ Config, DefaultConfig })
+const isHovering = ref(false)
 
 // --- State for Filters ---
-const selectedLanguage = ref<string | undefined>();
-const selectedTag = ref<string | undefined>(); // Renamed from activeTab for clarity
-const searchQuery = ref<string>('');
-const selectedArtist = ref<string | null>(null);
+const selectedLanguage = ref<string | undefined>()
+const selectedTag = ref<string | undefined>() // Renamed from activeTab for clarity
+const searchQuery = ref<string>('')
+const selectedArtist = ref<string | null>(null)
 // 添加点歌条件筛选状态
-const selectedOption = ref<string | undefined>();
+const selectedOption = ref<string | undefined>()
 
 // --- New: Sorting State ---
-type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description' | null;
-const sortKey = ref<SortKey>(null); // 当前排序列
-const sortOrder = ref<'asc' | 'desc'>('asc'); // 当前排序顺序
+type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description' | null
+const sortKey = ref<SortKey>(null) // 当前排序列
+const sortOrder = ref<'asc' | 'desc'>('asc') // 当前排序顺序
 
 // --- Computed Properties for Filter Buttons ---
 
 // Extract unique languages
 const allUniqueLanguages = computed<string[]>(() => {
-  const languages = new Set<string>();
+  const languages = new Set<string>()
 
   // 添加"未设定"语言选项
-  languages.add('未设定');
+  languages.add('未设定')
 
-  props.data?.forEach(song => {
-    song.language?.forEach(lang => {
+  props.data?.forEach((song) => {
+    song.language?.forEach((lang) => {
       if (lang?.trim()) {
-        languages.add(lang.trim());
+        languages.add(lang.trim())
       }
-    });
-  });
-  return Array.from(languages).sort();
-});
+    })
+  })
+  return Array.from(languages).sort()
+})
 
 // Create structure for language buttons
 const languageButtons = computed<FilterButton[]>(() =>
-  allUniqueLanguages.value.map((lang, index) => ({ id: index, name: lang }))
-);
+  allUniqueLanguages.value.map((lang, index) => ({ id: index, name: lang })),
+)
 
 // Extract unique tags (similar to original 'tabs' logic)
 const allUniqueTags = computed<string[]>(() => {
-  const tags = new Set<string>();
+  const tags = new Set<string>()
 
   // 添加"未设定"标签选项
-  tags.add('未设定');
+  tags.add('未设定')
 
-  props.data?.forEach(song => {
-    song.tags?.forEach(tag => {
+  props.data?.forEach((song) => {
+    song.tags?.forEach((tag) => {
       if (tag?.trim()) {
-        tags.add(tag.trim());
+        tags.add(tag.trim())
       }
-    });
-  });
-  return Array.from(tags).sort();
-});
+    })
+  })
+  return Array.from(tags).sort()
+})
 
 // Create structure for tag buttons (reuse FilterButton interface)
 const tagButtons = computed<FilterButton[]>(() =>
-  allUniqueTags.value.map((tag, index) => ({ id: index, name: tag }))
-);
+  allUniqueTags.value.map((tag, index) => ({ id: index, name: tag })),
+)
 
 // --- 添加点歌条件筛选按钮 ---
 // 提取所有唯一的点歌条件类型
 const allOptionTypes = computed<string[]>(() => {
-  const optionTypes = new Set<string>();
+  const optionTypes = new Set<string>()
 
   // 添加"未设定"选项
-  optionTypes.add('未设定');
+  optionTypes.add('未设定')
   // 添加基本选项类型
-  optionTypes.add('舰长');
-  optionTypes.add('提督');
-  optionTypes.add('总督');
-  optionTypes.add('粉丝牌');
-  optionTypes.add('SC');
+  optionTypes.add('舰长')
+  optionTypes.add('提督')
+  optionTypes.add('总督')
+  optionTypes.add('粉丝牌')
+  optionTypes.add('SC')
 
-  return Array.from(optionTypes);
-});
+  return Array.from(optionTypes)
+})
 
 // 创建点歌条件筛选按钮
 const optionButtons = computed<FilterButton[]>(() =>
-  allOptionTypes.value.map((option, index) => ({ id: index, name: option }))
-);
-
+  allOptionTypes.value.map((option, index) => ({ id: index, name: option })),
+)
 
 // --- Computed Properties for Data ---
 
 // Get unique artists for the dropdown (unchanged)
 const allArtists = computed(() => {
-  const artists = new Set<string>();
-  props.data?.forEach(song => {
-    song.author?.forEach(author => {
+  const artists = new Set<string>()
+  props.data?.forEach((song) => {
+    song.author?.forEach((author) => {
       if (author?.trim()) {
-        artists.add(author.trim());
+        artists.add(author.trim())
       }
-    });
-  });
-  return Array.from(artists).sort();
-});
+    })
+  })
+  return Array.from(artists).sort()
+})
 
 // Format artists for NSelect options (unchanged)
 const artistOptions = computed(() => {
-  return allArtists.value.map(artist => ({ label: artist, value: artist }));
-});
+  return allArtists.value.map(artist => ({ label: artist, value: artist }))
+})
 
 // --- Updated Filtered & Sorted Songs Logic using linq-ts ---
 const filteredAndSortedSongs = computed(() => {
-  if (!props.data) return [];
+  if (!props.data) return []
 
-  let query = new List<SongsInfo>(props.data);
+  let query = new List<SongsInfo>(props.data)
 
   // 1. Filter by Selected Language
   if (selectedLanguage.value) {
-    const lang = selectedLanguage.value;
+    const lang = selectedLanguage.value
     if (lang === '未设定') {
       // 筛选没有设置语言或语言数组为空的歌曲
-      query = query.Where(song => !song.language || song.language.length === 0);
+      query = query.Where(song => !song.language || song.language.length === 0)
     } else {
-      query = query.Where(song => song.language?.includes(lang));
+      query = query.Where(song => song.language?.includes(lang))
     }
   }
 
   // 2. Filter by Selected Tag
   if (selectedTag.value) {
-    const tag = selectedTag.value;
+    const tag = selectedTag.value
     if (tag === '未设定') {
       // 筛选没有设置标签或标签数组为空的歌曲
-      query = query.Where(song => !song.tags || song.tags.length === 0);
+      query = query.Where(song => !song.tags || song.tags.length === 0)
     } else {
-      query = query.Where(song => song.tags?.includes(tag) ?? false);
+      query = query.Where(song => song.tags?.includes(tag) ?? false)
     }
   }
 
   // 3. Filter by Selected Artist
   if (selectedArtist.value) {
-    const artist = selectedArtist.value;
-    query = query.Where(song => song.author?.includes(artist) ?? false);
+    const artist = selectedArtist.value
+    query = query.Where(song => song.author?.includes(artist) ?? false)
   }
 
   // 新增: 4. 根据点歌条件筛选
   if (selectedOption.value) {
-    const option = selectedOption.value;
+    const option = selectedOption.value
 
     if (option === '未设定') {
       // 筛选没有设置点歌条件的歌曲
-      query = query.Where(song => !song.options);
+      query = query.Where(song => !song.options)
     } else if (option === '舰长') {
-      query = query.Where(song => song.options?.needJianzhang === true);
+      query = query.Where(song => song.options?.needJianzhang === true)
     } else if (option === '提督') {
-      query = query.Where(song => song.options?.needTidu === true);
+      query = query.Where(song => song.options?.needTidu === true)
     } else if (option === '总督') {
-      query = query.Where(song => song.options?.needZongdu === true);
+      query = query.Where(song => song.options?.needZongdu === true)
     } else if (option === '粉丝牌') {
-      query = query.Where(song => (song.options?.fanMedalMinLevel ?? 0) > 0);
+      query = query.Where(song => (song.options?.fanMedalMinLevel ?? 0) > 0)
     } else if (option === 'SC') {
-      query = query.Where(song => (song.options?.scMinPrice ?? 0) > 0);
+      query = query.Where(song => (song.options?.scMinPrice ?? 0) > 0)
     }
   }
 
   // 原有的搜索逻辑
   // 4. Filter by Search Query (case-insensitive, including tags)
   if (searchQuery.value.trim()) {
-    const lowerSearch = searchQuery.value.toLowerCase().trim();
+    const lowerSearch = searchQuery.value.toLowerCase().trim()
     query = query.Where(song =>
-      song.name.toLowerCase().includes(lowerSearch) ||
-      (song.author?.some(a => a.toLowerCase().includes(lowerSearch)) ?? false) ||
-      (song.language?.some(l => l.toLowerCase().includes(lowerSearch)) ?? false) ||
-      (song.tags?.some(t => t.toLowerCase().includes(lowerSearch)) ?? false) ||
-      (song.description?.toLowerCase().includes(lowerSearch) ?? false)
-    );
+      song.name.toLowerCase().includes(lowerSearch)
+      || (song.author?.some(a => a.toLowerCase().includes(lowerSearch)) ?? false)
+      || (song.language?.some(l => l.toLowerCase().includes(lowerSearch)) ?? false)
+      || (song.tags?.some(t => t.toLowerCase().includes(lowerSearch)) ?? false)
+      || (song.description?.toLowerCase().includes(lowerSearch) ?? false),
+    )
   }
 
   // 5. Sort the filtered songs using linq-ts
   if (sortKey.value) {
-    const key = sortKey.value;
+    const key = sortKey.value
 
     // Define selector function for linq-ts
     const keySelector = (song: SongsInfo): any => {
-        if (key === 'options') {
-            // Prefer sorting by specific conditions first if needed, then by presence
-            // Example: Sort by 'needZongdu' first if key is 'options'
-            // For simplicity, just sorting by presence (1) vs absence (0)
-            return song.options ? 1 : 0;
-        }
-        let val = song[key];
-        // Handle potential array values for sorting (simple join)
-        if (Array.isArray(val)) return val.join('').toLowerCase(); // Lowercase for consistent string sort
-        // Handle strings and other types, provide default for null/undefined
-        return (typeof val === 'string' ? val.toLowerCase() : val) ?? '';
-    };
+      if (key === 'options') {
+        // Prefer sorting by specific conditions first if needed, then by presence
+        // Example: Sort by 'needZongdu' first if key is 'options'
+        // For simplicity, just sorting by presence (1) vs absence (0)
+        return song.options ? 1 : 0
+      }
+      const val = song[key]
+      // Handle potential array values for sorting (simple join)
+      if (Array.isArray(val)) return val.join('').toLowerCase() // Lowercase for consistent string sort
+      // Handle strings and other types, provide default for null/undefined
+      return (typeof val === 'string' ? val.toLowerCase() : val) ?? ''
+    }
 
     // Define a stable secondary sort key selector
     const secondaryKeySelector = (song: SongsInfo): string | number => {
-        return song.id ?? (song.name + '-' + (song.author?.join('/') ?? '')); // Use ID or fallback key
-    };
+      return song.id ?? (`${song.name}-${song.author?.join('/') ?? ''}`) // Use ID or fallback key
+    }
 
     if (sortOrder.value === 'asc') {
-        query = query.OrderBy(keySelector).ThenBy(secondaryKeySelector); // Add ThenBy for stability
+      query = query.OrderBy(keySelector).ThenBy(secondaryKeySelector) // Add ThenBy for stability
     } else {
-        query = query.OrderByDescending(keySelector).ThenBy(secondaryKeySelector); // Add ThenBy for stability
+      query = query.OrderByDescending(keySelector).ThenBy(secondaryKeySelector) // Add ThenBy for stability
     }
   }
   // else if no primary sort key, maybe apply a default sort? e.g., by name
@@ -232,112 +233,112 @@ const filteredAndSortedSongs = computed(() => {
   //    query = query.OrderBy(s => s.name);
   // }
 
-  return query.ToArray(); // Get the final array
-});
+  return query.ToArray() // Get the final array
+})
 
 // --- Methods ---
 
 // Select/Deselect Language
-const selectLanguage = (langName: string) => {
+function selectLanguage(langName: string) {
   if (langName === selectedLanguage.value) {
-    selectedLanguage.value = undefined; // Clear filter if clicking the active one
+    selectedLanguage.value = undefined // Clear filter if clicking the active one
   } else {
-    selectedLanguage.value = langName;
+    selectedLanguage.value = langName
   }
-};
+}
 
 // Select/Deselect Tag
-const selectTag = (tagName: string) => {
+function selectTag(tagName: string) {
   if (tagName === selectedTag.value) {
-    selectedTag.value = undefined; // Clear filter if clicking the active one
+    selectedTag.value = undefined // Clear filter if clicking the active one
   } else {
-    selectedTag.value = tagName;
+    selectedTag.value = tagName
   }
-};
+}
 
 // 新增: 选择/取消选择点歌条件
-const selectOption = (optionName: string) => {
+function selectOption(optionName: string) {
   if (optionName === selectedOption.value) {
-    selectedOption.value = undefined; // 点击已激活的按钮则取消筛选
+    selectedOption.value = undefined // 点击已激活的按钮则取消筛选
   } else {
-    selectedOption.value = optionName;
+    selectedOption.value = optionName
   }
-};
+}
 
 // Select Artist (from table click, updated to allow deselect)
-const selectArtistFromTable = (artist: string) => {
+function selectArtistFromTable(artist: string) {
   if (selectedArtist.value === artist) {
-    selectedArtist.value = null; // Deselect if clicking the already selected artist
+    selectedArtist.value = null // Deselect if clicking the already selected artist
   } else {
-    selectedArtist.value = artist; // Select the new artist
+    selectedArtist.value = artist // Select the new artist
   }
-};
+}
 
 // Select Language (from table click, allows deselect)
-const selectLanguageFromTable = (lang: string) => {
+function selectLanguageFromTable(lang: string) {
   if (selectedLanguage.value === lang) {
-    selectedLanguage.value = undefined; // Use undefined based on existing filter logic
+    selectedLanguage.value = undefined // Use undefined based on existing filter logic
   } else {
-    selectedLanguage.value = lang;
+    selectedLanguage.value = lang
   }
-};
+}
 
 // --- New: Clear All Filters ---
-const clearFilters = () => {
-  selectedLanguage.value = undefined;
-  selectedTag.value = undefined;
-  selectedArtist.value = null; // Reset NSelect value
-  selectedOption.value = undefined; // 清除点歌条件筛选
-  searchQuery.value = '';
-};
+function clearFilters() {
+  selectedLanguage.value = undefined
+  selectedTag.value = undefined
+  selectedArtist.value = null // Reset NSelect value
+  selectedOption.value = undefined // 清除点歌条件筛选
+  searchQuery.value = ''
+}
 
 // --- Updated Sorting Method ---
-const handleSort = (key: SortKey) => {
+function handleSort(key: SortKey) {
   if (sortKey.value === key) {
     // Cycle through asc -> desc -> null (clear sort)
     if (sortOrder.value === 'asc') {
-      sortOrder.value = 'desc';
+      sortOrder.value = 'desc'
     } else {
       // If already desc, clear the sort
-      sortKey.value = null;
+      sortKey.value = null
       // Optional: Reset sortOrder, though it doesn't matter when sortKey is null
       // sortOrder.value = 'asc';
     }
   } else {
     // Set new key and default to ascending order
-    sortKey.value = key;
-    sortOrder.value = 'asc';
+    sortKey.value = key
+    sortOrder.value = 'asc'
   }
-};
+}
 
 // --- Updated Helper function for Sort Icons ---
-const getSortIcon = (key: SortKey) => {
+function getSortIcon(key: SortKey) {
   if (sortKey.value !== key) {
     // Show inactive sort icon (down arrow as placeholder)
-    return h(NIcon, { component: ArrowSortDown20Filled, style: { opacity: 0.3, marginLeft: '4px', verticalAlign: 'middle' } });
+    return h(NIcon, { component: ArrowSortDown20Filled, style: { opacity: 0.3, marginLeft: '4px', verticalAlign: 'middle' } })
   }
   // Show active sort icon (up or down)
-  return h(NIcon, { component: sortOrder.value === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled, style: { marginLeft: '4px', verticalAlign: 'middle' } });
+  return h(NIcon, { component: sortOrder.value === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled, style: { marginLeft: '4px', verticalAlign: 'middle' } })
   // Note: We don't need a specific 'clear' icon here, as clicking 'desc' clears the sort and the icon reverts to inactive.
-};
+}
 
 // Watcher for artist selection (unchanged, good practice)
 watch(allArtists, (newArtists) => {
   if (selectedArtist.value && !newArtists.includes(selectedArtist.value)) {
-    selectedArtist.value = null;
+    selectedArtist.value = null
   }
-});
+})
 
-const accountInfo = useAccount();
-const biliAuth = useBiliAuth();
+const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 
-const randomOrder = () => {
-  const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : props.data ?? [];
+function randomOrder() {
+  const songsToChooseFrom = filteredAndSortedSongs.value.length > 0 ? filteredAndSortedSongs.value : props.data ?? []
   if (songsToChooseFrom.length === 0) {
-    window.$message?.warning('歌单为空或当前筛选无结果，无法随机点歌');
-    return;
+    window.$message?.warning('歌单为空或当前筛选无结果，无法随机点歌')
+    return
   }
-  const song = songsToChooseFrom[Math.floor(Math.random() * songsToChooseFrom.length)];
+  const song = songsToChooseFrom[Math.floor(Math.random() * songsToChooseFrom.length)]
   window.$modal.create({
     preset: 'dialog',
     type: 'success',
@@ -346,76 +347,76 @@ const randomOrder = () => {
     positiveText: '点歌',
     negativeText: '算了',
     onPositiveClick: () => {
-      emits('requestSong', song);
+      emits('requestSong', song)
     },
-  });
-};
+  })
+}
 
 function onSongClick(song: SongsInfo) {
-  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings);
-  const confirmText = getSongRequestConfirmText(song);
+  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings)
+  const confirmText = getSongRequestConfirmText(song)
   window.$modal.create({
     preset: 'dialog',
     title: '点歌',
-    content: `${confirmText}${tooltip !== '点歌' ? '\n' + tooltip : ''}`,
+    content: `${confirmText}${tooltip !== '点歌' ? `\n${tooltip}` : ''}`,
     positiveText: '点歌',
     negativeText: '算了',
     onPositiveClick: () => {
-      emits('requestSong', song);
+      emits('requestSong', song)
     },
-  });
+  })
 }
 
 // GetPlayButton function remains the same
 function GetPlayButton(song: SongsInfo) {
   // ... (GetPlayButton function implementation - unchanged) ...
   switch (song.from) {
-      case SongFrom.FiveSing: {
-        return h(NTooltip, null, {
-          trigger: () =>
-            h(
-              h(
-                NButton,
-                {
-                  size: 'small',
-                  color: '#00BBB3',
-                  text: true,
-                  onClick: (e) => {
-                    e.stopPropagation(); // Prevent row click
-                    window.open(`http://5sing.kugou.com/bz/${song.id}.html`);
-                  },
-                },
-                {
-                  icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
-                },
-              ),
-            ),
-          default: () => '在5sing打开',
-        });
-      }
-      case SongFrom.Netease:
-        return h(NTooltip, null, {
-          trigger: () =>
+    case SongFrom.FiveSing: {
+      return h(NTooltip, null, {
+        trigger: () =>
+          h(
             h(
               NButton,
               {
                 size: 'small',
-                color: '#C20C0C',
+                color: '#00BBB3',
                 text: true,
                 onClick: (e) => {
-                  e.stopPropagation(); // Prevent row click
-                  window.open(`https://music.163.com/#/song?id=${song.id}`);
+                  e.stopPropagation() // Prevent row click
+                  window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
                 },
               },
               {
-                icon: () => h(neteaseMusic, { class: 'svg-icon netease' }),
+                icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
               },
             ),
-          default: () => '在网易云打开',
-        });
-      case SongFrom.Custom:
-        return song.url
-          ? h(NTooltip, null, {
+          ),
+        default: () => '在5sing打开',
+      })
+    }
+    case SongFrom.Netease:
+      return h(NTooltip, null, {
+        trigger: () =>
+          h(
+            NButton,
+            {
+              size: 'small',
+              color: '#C20C0C',
+              text: true,
+              onClick: (e) => {
+                e.stopPropagation() // Prevent row click
+                window.open(`https://music.163.com/#/song?id=${song.id}`)
+              },
+            },
+            {
+              icon: () => h(neteaseMusic, { class: 'svg-icon netease' }),
+            },
+          ),
+        default: () => '在网易云打开',
+      })
+    case SongFrom.Custom:
+      return song.url
+        ? h(NTooltip, null, {
             trigger: () =>
               h(
                 NButton,
@@ -424,8 +425,8 @@ function GetPlayButton(song: SongsInfo) {
                   color: '#6b95bd',
                   text: true,
                   onClick: (e) => {
-                    e.stopPropagation(); // Prevent row click
-                    window.open(song.url);
+                    e.stopPropagation() // Prevent row click
+                    window.open(song.url)
                   },
                 },
                 {
@@ -434,55 +435,54 @@ function GetPlayButton(song: SongsInfo) {
               ),
             default: () => '打开链接',
           })
-          : null;
-    }
+        : null
+  }
 }
 
 // --- New: Helper function for Song Request Options ---
 function getOptionDisplay(options?: SongRequestOption) {
   if (!options) {
     // 直接返回空元素，不显示"无特殊要求"
-    return h('span', {});
+    return h('span', {})
   }
 
-  const conditions: VNode[] = [];
+  const conditions: VNode[] = []
 
   if (options.needJianzhang) {
-    conditions.push(h(NTag, { size: 'small', type: 'info', style: { marginRight: '4px', marginBottom: '2px'} }, () => '舰长'));
+    conditions.push(h(NTag, { size: 'small', type: 'info', style: { marginRight: '4px', marginBottom: '2px' } }, () => '舰长'))
   }
   if (options.needTidu) {
-    conditions.push(h(NTag, { size: 'small', type: 'warning', style: { marginRight: '4px', marginBottom: '2px'} }, () => '提督'));
+    conditions.push(h(NTag, { size: 'small', type: 'warning', style: { marginRight: '4px', marginBottom: '2px' } }, () => '提督'))
   }
   if (options.needZongdu) {
-    conditions.push(h(NTag, { size: 'small', type: 'error', style: { marginRight: '4px', marginBottom: '2px'} }, () => '总督'));
+    conditions.push(h(NTag, { size: 'small', type: 'error', style: { marginRight: '4px', marginBottom: '2px' } }, () => '总督'))
   }
   if (options.fanMedalMinLevel && options.fanMedalMinLevel > 0) {
-    conditions.push(h(NTag, { size: 'small', type: 'success', style: { marginRight: '4px', marginBottom: '2px'} }, () => `粉丝牌 ${options.fanMedalMinLevel}级`));
+    conditions.push(h(NTag, { size: 'small', type: 'success', style: { marginRight: '4px', marginBottom: '2px' } }, () => `粉丝牌 ${options.fanMedalMinLevel}级`))
   }
   if (options.scMinPrice && options.scMinPrice > 0) {
-    conditions.push(h(NTag, { size: 'small', color: { color: '#E85A4F', textColor: '#fff' }, style: { marginRight: '4px', marginBottom: '2px'} }, () => `SC ¥${options.scMinPrice}`));
+    conditions.push(h(NTag, { size: 'small', color: { color: '#E85A4F', textColor: '#fff' }, style: { marginRight: '4px', marginBottom: '2px' } }, () => `SC ¥${options.scMinPrice}`))
   }
 
   if (conditions.length === 0) {
     // 如果没有条件，直接返回空元素，不显示"无特殊要求"
-    return h('span', {});
+    return h('span', {})
   }
 
   // Use NFlex for better wrapping
-  return h(NFlex, { size: 4, wrap: true, style: { gap: '4px' } }, () => conditions);
+  return h(NFlex, { size: 4, wrap: true, style: { gap: '4px' } }, () => conditions)
 }
-
 </script>
 
 <script lang="ts">
 // --- Config section remains the same ---
-const tempLinks = ref<{ name: string, url: string; }>({
+const tempLinks = ref<{ name: string, url: string }>({
   name: '',
-  url: ''
-});
+  url: '',
+})
 
-export type TraditionalConfigType = ExtractConfigData<typeof Config>;
-export const DefaultConfig = {} as TraditionalConfigType;
+export type TraditionalConfigType = ExtractConfigData<typeof Config>
+export const DefaultConfig = {} as TraditionalConfigType
 export const Config = defineTemplateConfig([
   {
     name: '背景',
@@ -490,8 +490,8 @@ export const Config = defineTemplateConfig([
     fileLimit: 1,
     key: 'backgroundFile',
     onUploaded: (file, config) => {
-      console.log(file, config);
-      config.backgroundFile = file;
+      console.log(file, config)
+      config.backgroundFile = file
     },
   },
   {
@@ -505,7 +505,7 @@ export const Config = defineTemplateConfig([
     name: '标题',
     type: 'string',
     key: 'title',
-    default: '我的歌单'
+    default: '我的歌单',
   },
   {
     name: '简介',
@@ -523,7 +523,7 @@ export const Config = defineTemplateConfig([
     type: 'string',
     key: 'longDescription',
     placeholder: '链接页里头的',
-    inputType: 'textarea'
+    inputType: 'textarea',
   },
   {
     type: 'string',
@@ -551,10 +551,9 @@ export const Config = defineTemplateConfig([
       {
         name: '📺 哔哩哔哩',
         url: 'https://www.bilibili.com/',
-      }
+      },
     ],
     render: (config) => {
-
       return h(
         NFlex,
         {
@@ -567,7 +566,7 @@ export const Config = defineTemplateConfig([
           },
         },
         () => [
-          config.links?.map((link: { name: string; url: string; }) => {
+          config.links?.map((link: { name: string, url: string }) => {
             return h(
               NTag,
               {
@@ -576,58 +575,58 @@ export const Config = defineTemplateConfig([
                   cursor: 'pointer',
                 },
                 onClick: () => {
-                  window.open(link.url, '_blank');
+                  window.open(link.url, '_blank')
                 },
                 closable: true,
                 onClose: () => {
-                  config.links = config.links.filter((l: { name: string; url: string; }) => l.name !== link.name);
+                  config.links = config.links.filter((l: { name: string, url: string }) => l.name !== link.name)
                 },
               },
-              () => link.name
-            );
+              () => link.name,
+            )
           }),
-          h(NFlex, { style: { marginTop: '5px', flexGrow: 1, minWidth: '300px' }, align:'center' }, () => [ // Wrap inputs and button
-              h(NInputGroup, { size: 'small', style:{ marginRight: '5px'} }, () => [
-                h(NInputGroupLabel, { style: { width: 'auto' } }, () => '名称'), // Auto width
-                h(NInput, {
-                  placeholder: '链接名称',
-                  value: tempLinks.value.name,
-                  onUpdateValue: (value) => {
-                    tempLinks.value.name = value;
-                  },
-                }),
-              ]),
-              h(NInputGroup, { size: 'small', style:{ marginRight: '5px'} }, () => [
-                h(NInputGroupLabel, { style: { width: 'auto' } }, () => '地址'), // Auto width
-                h(NInput, {
-                  placeholder: 'http(s)://...',
-                  value: tempLinks.value.url,
-                  onUpdateValue: (value) => {
-                    tempLinks.value.url = value;
-                  },
-                }),
-              ]),
-              h(NButton, {
-                type: 'primary',
-                size: 'small',
-                onClick: () => {
-                  if (tempLinks.value.name && tempLinks.value.url) { // Basic validation
-                    config.links = config.links || [];
-                    config.links.push({ ...tempLinks.value }); // Push a copy
-                    tempLinks.value = { // Reset
-                      name: '',
-                      url: '',
-                    };
-                  } else {
-                    window.$message?.warning("请输入链接名称和地址");
-                  }
+          h(NFlex, { style: { marginTop: '5px', flexGrow: 1, minWidth: '300px' }, align: 'center' }, () => [ // Wrap inputs and button
+            h(NInputGroup, { size: 'small', style: { marginRight: '5px' } }, () => [
+              h(NInputGroupLabel, { style: { width: 'auto' } }, () => '名称'), // Auto width
+              h(NInput, {
+                placeholder: '链接名称',
+                value: tempLinks.value.name,
+                onUpdateValue: (value) => {
+                  tempLinks.value.name = value
                 },
-                disabled: !tempLinks.value.name || !tempLinks.value.url // Disable if fields are empty
-              }, () => '添加'),
-          ])
+              }),
+            ]),
+            h(NInputGroup, { size: 'small', style: { marginRight: '5px' } }, () => [
+              h(NInputGroupLabel, { style: { width: 'auto' } }, () => '地址'), // Auto width
+              h(NInput, {
+                placeholder: 'http(s)://...',
+                value: tempLinks.value.url,
+                onUpdateValue: (value) => {
+                  tempLinks.value.url = value
+                },
+              }),
+            ]),
+            h(NButton, {
+              type: 'primary',
+              size: 'small',
+              onClick: () => {
+                if (tempLinks.value.name && tempLinks.value.url) { // Basic validation
+                  config.links = config.links || []
+                  config.links.push({ ...tempLinks.value }) // Push a copy
+                  tempLinks.value = { // Reset
+                    name: '',
+                    url: '',
+                  }
+                } else {
+                  window.$message?.warning('请输入链接名称和地址')
+                }
+              },
+              disabled: !tempLinks.value.name || !tempLinks.value.url, // Disable if fields are empty
+            }, () => '添加'),
+          ]),
 
-        ]
-      );
+        ],
+      )
     },
     // onUploaded seems irrelevant here, keep if needed elsewhere
     // onUploaded(data, config) {
@@ -636,7 +635,7 @@ export const Config = defineTemplateConfig([
     //     url: '',
     //   };
     // },
-  }
+  },
 ])
 </script>
 
@@ -660,7 +659,7 @@ export const Config = defineTemplateConfig([
         >
           <!-- Avatar -->
           <img
-            :src="'https://fetch.vtsuru.live/' + props.userInfo?.streamerInfo?.faceUrl + '@256w_256h'"
+            :src="`https://fetch.vtsuru.live/${props.userInfo?.streamerInfo?.faceUrl}@256w_256h`"
             alt="Avatar"
             class="profile-avatar"
             referrerpolicy="no-referrer"
@@ -689,7 +688,7 @@ export const Config = defineTemplateConfig([
               <!-- Add actual icons here -->
               <a
                 v-if="props.userInfo?.biliId"
-                :href="'https://space.bilibili.com/' + props.userInfo?.biliId"
+                :href="`https://space.bilibili.com/${props.userInfo?.biliId}`"
                 class="icon icon-bilibili"
                 title="Bilibili 链接"
                 target="_blank"
@@ -799,19 +798,19 @@ export const Config = defineTemplateConfig([
           <div class="filter-divider" />
 
           <!-- Filter/Search Bar Row -->
-          <n-flex
+          <NFlex
             class="song-list-filter"
             justify="space-between"
             align="center"
           >
             <!-- Left side filters: Artist, Search, Clear -->
-            <n-flex
+            <NFlex
               align="center"
               :wrap="true"
               style="flex-grow: 1;"
             >
               <!-- Artist Filter Dropdown -->
-              <n-select
+              <NSelect
                 v-model:value="selectedArtist"
                 :options="artistOptions"
                 placeholder="筛选歌手"
@@ -836,7 +835,7 @@ export const Config = defineTemplateConfig([
               </div>
 
               <!-- Clear Filters Button -->
-              <n-button
+              <NButton
                 size="small"
                 class="clear-button"
                 ghost
@@ -844,22 +843,22 @@ export const Config = defineTemplateConfig([
                 @click="clearFilters"
               >
                 <template #icon>
-                  <n-icon :component="ArrowCounterclockwise20Filled" />
+                  <NIcon :component="ArrowCounterclockwise20Filled" />
                 </template>
                 清空筛选
-              </n-button>
-            </n-flex>
+              </NButton>
+            </NFlex>
 
             <!-- Right side: Random Button -->
-            <n-button
+            <NButton
               class="refresh-button"
               size="small"
               ghost
               @click="randomOrder"
             >
               随机点歌
-            </n-button>
-          </n-flex>
+            </NButton>
+          </NFlex>
 
           <!-- Song Table -->
           <NScrollbar
@@ -927,7 +926,7 @@ export const Config = defineTemplateConfig([
                 </tr>
                 <tr
                   v-for="song in filteredAndSortedSongs"
-                  :key="song.key || (song.name + '-' + song.author?.join('/'))"
+                  :key="song.key || (`${song.name}-${song.author?.join('/')}`)"
                   :style="{
                     textShadow: isDarkMode ? '0px 1px 2px rgba(0, 0, 0, 0.4)' : '0px 1px 2px rgba(255, 255, 255, 0.4)',
                   }"
@@ -991,14 +990,14 @@ export const Config = defineTemplateConfig([
                     <!-- 移除了 "未知" 占位文本 -->
                   </td>
                   <td>
-                    <n-flex
+                    <NFlex
                       v-if="song.tags && song.tags.length > 0"
                       :size="4"
                       :wrap="true"
                       style="gap: 4px;"
                     >
                       <!-- Use NFlex for tag wrapping -->
-                      <n-tag
+                      <NTag
                         v-for="tag in song.tags"
                         :key="tag"
                         size="small"
@@ -1007,8 +1006,8 @@ export const Config = defineTemplateConfig([
                         @update:checked="selectTag(tag)"
                       >
                         {{ tag }}
-                      </n-tag>
-                    </n-flex>
+                      </NTag>
+                    </NFlex>
                     <!-- 移除了 "无标签" 占位文本 -->
                   </td>
                   <td>
@@ -1175,7 +1174,6 @@ html.dark .filter-input::placeholder {
   line-height: 28px; /* Adjust if needed */
 }
 
-
 /* --- Random Button Styling (Keep Existing) --- */
 .refresh-button {
   height: 30px;
@@ -1238,7 +1236,6 @@ html.dark .song-list-template {
   &::-webkit-scrollbar-thumb { background: var(--scrollbar-color-hover); }
   &::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-color-active); }
 }
-
 
 /* --- MODIFIED: Main Content Container --- */
 .profile-card-container {
@@ -1426,7 +1423,6 @@ html.dark .song-list-table thead th {
 .song-list-table th:nth-child(5) { width: 15%; }
 .song-list-table th:nth-child(6) { width: 25%; }
 
-
 .song-list-table tbody tr { transition: background-color 0.15s ease; }
 
 .song-list-table tbody td {
@@ -1547,5 +1543,4 @@ html.dark .language-link.selected-language {
 html.dark .empty-placeholder {
   color: var(--text-color-3); /* Use theme variable for dark mode */
 }
-
 </style>

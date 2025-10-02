@@ -1,44 +1,50 @@
 <script setup lang="ts">
-import { useDanmakuClient } from '@/store/useDanmakuClient';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import MessageRender from './blivechat/MessageRender.vue';
+import type { EventModel } from '@/api/api-models'
+import { NAlert } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 // @ts-ignore
-import * as constants from './blivechat/constants';
+import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { defaultDanmujiCss, VTSURU_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 // @ts-ignore
-import { useAccount, DownloadConfig, GetConfigHash } from '@/api/account';
-import { QueryGetAPI } from '@/api/query';
-import { defaultDanmujiCss, VTSURU_API_URL } from '@/data/constants';
-import { useWebRTC } from '@/store/useRTC';
-import { NAlert } from 'naive-ui';
-import { useRoute } from 'vue-router';
+import * as constants from './blivechat/constants'
+import MessageRender from './blivechat/MessageRender.vue'
 // @ts-ignore
-import * as pronunciation from './blivechat/utils/pronunciation';
-import { EventDataTypes, EventModel } from '@/api/api-models';
+import * as pronunciation from './blivechat/utils/pronunciation'
 // @ts-ignore
-import * as trie from './blivechat/utils/trie';
+import * as trie from './blivechat/utils/trie'
 
 export interface DanmujiConfig {
-  minGiftPrice: number,
-  showDanmaku: boolean,
-  showGift: boolean,
-  showGiftName: boolean,
-  mergeSimilarDanmaku: boolean,
-  mergeGift: boolean,
-  maxNumber: number,
+  minGiftPrice: number
+  showDanmaku: boolean
+  showGift: boolean
+  showGiftName: boolean
+  mergeSimilarDanmaku: boolean
+  mergeGift: boolean
+  maxNumber: number
 
-  blockLevel: number,
-  blockKeywords: string,
-  blockUsers: string,
-  blockMedalLevel: number,
+  blockLevel: number
+  blockKeywords: string
+  blockUsers: string
+  blockMedalLevel: number
 
-  giftUsernamePronunciation: string,
+  giftUsernamePronunciation: string
   importPresetCss: boolean
 
   emoticons: {
-    keyword: string,
+    keyword: string
     url: string
   }[]
 }
+
+const props = defineProps<{
+  active?: boolean
+  visible?: boolean
+  config?: DanmujiConfig
+}>()
 
 // 默认配置
 const defaultConfig: DanmujiConfig = {
@@ -58,17 +64,11 @@ const defaultConfig: DanmujiConfig = {
   giftUsernamePronunciation: '',
   importPresetCss: false,
 
-  emoticons: []
+  emoticons: [],
 }
 
 defineExpose({ setCss, testAddMessage })
-const props = defineProps<{
-  active?: boolean,
-  visible?: boolean,
-  config?: DanmujiConfig
-}>()
-
-const customCss = useStorage('danmuji-css', '');
+const customCss = useStorage('danmuji-css', '')
 
 const isOBS = computed(() => {
   // @ts-ignore
@@ -139,10 +139,10 @@ async function onAddText(event: EventModel, command: unknown) {
     authorName: event.uname,
     authorType: getAuthorType(event.open_id, event.guard_level),
     content: event.msg,
-    richContent: richContent,
+    richContent,
     privilegeType: event.guard_level,
     repeated: 1,
-    translation: ''
+    translation: '',
   }
   messageRender.value.addMessage(message)
 }
@@ -173,9 +173,9 @@ function onAddGift(event: EventModel, command: unknown) {
     time: new Date(),
     authorName: event.uname,
     authorNamePronunciation: getPronunciation(event.uname),
-    price: price,
+    price,
     giftName: event.msg,
-    num: event.num
+    num: event.num,
   }
   messageRender.value.addMessage(message)
 }
@@ -196,7 +196,7 @@ function onAddMember(event: EventModel, command: unknown) {
     authorName: event.uname,
     authorNamePronunciation: getPronunciation(event.uname),
     privilegeType: event.guard_level,
-    title: '新舰长'
+    title: '新舰长',
   }
   messageRender.value.addMessage(message)
 }
@@ -222,7 +222,7 @@ function onAddSuperChat(event: EventModel, command: unknown) {
     price: event.price,
     time: new Date(),
     content: event.msg.trim(),
-    translation: ''
+    translation: '',
   }
   messageRender.value.addMessage(message)
 }
@@ -231,29 +231,29 @@ function onAddSuperChat(event: EventModel, command: unknown) {
  * 处理SC撤回
  */
 function onDelSuperChat(event: EventModel, command: unknown) {
-  let messageIdsToDelete: string[] = [];
+  let messageIdsToDelete: string[] = []
 
   // 尝试从command中获取需要删除的SC ID
   if (command && typeof command === 'object' && 'data' in command) {
-    const commandData = command.data;
+    const commandData = command.data
     if (commandData && typeof commandData === 'object') {
       if ('message_ids' in commandData && Array.isArray(commandData.message_ids)) {
-        messageIdsToDelete = commandData.message_ids.map(id => String(id));
+        messageIdsToDelete = commandData.message_ids.map(id => String(id))
       } else if ('message_id' in commandData) {
-        messageIdsToDelete.push(String(commandData.message_id));
+        messageIdsToDelete.push(String(commandData.message_id))
       }
     }
   }
   // 尝试使用消息内容作为ID
   else if (event.msg) {
-    messageIdsToDelete.push(event.msg);
+    messageIdsToDelete.push(event.msg)
   }
 
   if (messageIdsToDelete.length > 0) {
-    console.log(`正在删除SC，ID: ${messageIdsToDelete.join(', ')}`);
-    messageIdsToDelete.forEach(id => messageRender.value.deleteMessage(id));
+    console.log(`正在删除SC，ID: ${messageIdsToDelete.join(', ')}`)
+    messageIdsToDelete.forEach(id => messageRender.value.deleteMessage(id))
   } else {
-    console.warn("收到删除SC事件但无法确定要删除的消息ID", event, command);
+    console.warn('收到删除SC事件但无法确定要删除的消息ID', event, command)
   }
 }
 
@@ -270,11 +270,11 @@ function getAuthorType(open_id: string, guard_level: number): number {
   }
 }
 
-type RichContentType = {
-  type: number,
-  text: string,
-  url?: string,
-  width?: number,
+interface RichContentType {
+  type: number
+  text: string
+  url?: string
+  width?: number
   height?: number
 }
 
@@ -289,9 +289,9 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
     richContent.push({
       type: constants.CONTENT_TYPE_IMAGE,
       text: data.msg,
-      url: data.emoji + '@256w_256h_1e_1c',
+      url: `${data.emoji}@256w_256h_1e_1c`,
       width: 256,
-      height: 256
+      height: 256,
     })
     return richContent
   }
@@ -300,7 +300,7 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
   if (config.value.emoticons.length === 0 && textEmoticons.length === 0) {
     richContent.push({
       type: constants.CONTENT_TYPE_TEXT,
-      text: data.msg
+      text: data.msg,
     })
     return richContent
   }
@@ -320,7 +320,7 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
     if (pos !== startPos) {
       richContent.push({
         type: constants.CONTENT_TYPE_TEXT,
-        text: data.msg.slice(startPos, pos)
+        text: data.msg.slice(startPos, pos),
       })
     }
 
@@ -330,7 +330,7 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
       text: matchEmoticon.keyword,
       url: matchEmoticon.url,
       width: 0,
-      height: 0
+      height: 0,
     })
     pos += matchEmoticon.keyword.length
     startPos = pos
@@ -340,7 +340,7 @@ async function getRichContent(data: EventModel): Promise<RichContentType[]> {
   if (pos !== startPos) {
     richContent.push({
       type: constants.CONTENT_TYPE_TEXT,
-      text: data.msg.slice(startPos, pos)
+      text: data.msg.slice(startPos, pos),
     })
   }
 
@@ -368,7 +368,7 @@ async function fillImageContentSizes(richContent: RichContentType[]) {
   // 并行加载所有图片获取尺寸
   const promises = []
   for (const url of urlSizeMap.keys()) {
-    promises.push(new Promise<void>(resolve => {
+    promises.push(new Promise<void>((resolve) => {
       const img = document.createElement('img')
       img.onload = () => {
         const size = urlSizeMap.get(url)
@@ -497,27 +497,27 @@ async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventD
     fans_medal_wearing_status: rawEventData.fans_medal_wearing_status ?? false,
     emoji: rawEventData.emoji,
     ouid: rawEventData.ouid ?? '',
-    ...(rawEventData.data ? { data: rawEventData.data } : {})
-  };
+    ...(rawEventData.data ? { data: rawEventData.data } : {}),
+  }
 
   switch (event.type) {
     case EventDataTypes.Message:
-      await onAddText(event, null);
-      break;
+      await onAddText(event, null)
+      break
     case EventDataTypes.Gift:
-      onAddGift(event, null);
-      break;
+      onAddGift(event, null)
+      break
     case EventDataTypes.Guard:
-      onAddMember(event, null);
-      break;
+      onAddMember(event, null)
+      break
     case EventDataTypes.SC:
-      onAddSuperChat(event, null);
-      break;
+      onAddSuperChat(event, null)
+      break
     case EventDataTypes.SCDel:
-      onDelSuperChat(event, null);
-      break;
+      onDelSuperChat(event, null)
+      break
     default:
-      console.warn('Unsupported test event type:', event.type);
+      console.warn('Unsupported test event type:', event.type)
   }
 }
 // --- 结束修改测试方法 ---
@@ -526,7 +526,7 @@ async function testAddMessage(rawEventData: Partial<EventModel> & { type: EventD
  * 添加系统通知消息
  */
 function addSystemNotice(message: string) {
-  if (!messageRender.value) return;
+  if (!messageRender.value) return
 
   const systemMessage = {
     id: `system-${Date.now()}`,
@@ -538,67 +538,67 @@ function addSystemNotice(message: string) {
     content: message,
     richContent: [{
       type: constants.CONTENT_TYPE_TEXT,
-      text: message
+      text: message,
     }],
     privilegeType: 0,
     repeated: 1,
     translation: '',
-    isSystem: true // 添加标记以便在UI中特殊处理
+    isSystem: true, // 添加标记以便在UI中特殊处理
   }
 
   messageRender.value.addMessage(systemMessage)
 }
 
-let configHashCheckTimer: ReturnType<typeof setInterval> | null = null;
-let currentConfigHash: string | null = null;
+let configHashCheckTimer: ReturnType<typeof setInterval> | null = null
+let currentConfigHash: string | null = null
 
 // 从服务器获取配置
 async function getConfigFromServer() {
   try {
-    const result = await DownloadConfig<DanmujiConfig>('danmuji-config');
+    const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
     if (result.status === 'success' && result.data) {
-      Object.assign(config.value, result.data);
-      console.log('已从服务器获取弹幕姬配置');
-      addSystemNotice('配置已从服务器更新');
-      return true;
+      Object.assign(config.value, result.data)
+      console.log('已从服务器获取弹幕姬配置')
+      addSystemNotice('配置已从服务器更新')
+      return true
     } else if (result.status === 'notfound') {
-      console.log('服务器上未找到弹幕姬配置');
+      console.log('服务器上未找到弹幕姬配置')
     } else {
-      console.error(`获取配置失败: ${result.msg}`);
+      console.error(`获取配置失败: ${result.msg}`)
     }
   } catch (error) {
-    console.error('获取配置文件出错:', error);
+    console.error('获取配置文件出错:', error)
   }
-  return false;
+  return false
 }
 
 // 检查配置文件哈希值
 async function checkConfigHash() {
-  if (!isOBS.value) return;
+  if (!isOBS.value) return
 
   try {
-    const hash = await GetConfigHash('danmuji-config');
+    const hash = await GetConfigHash('danmuji-config')
     if (hash && hash !== currentConfigHash) {
-      console.log('配置文件已更新，正在获取新配置...');
-      currentConfigHash = hash;
-      await getConfigFromServer();
+      console.log('配置文件已更新，正在获取新配置...')
+      currentConfigHash = hash
+      await getConfigFromServer()
     }
   } catch (error) {
-    console.error('检查配置哈希值出错:', error);
+    console.error('检查配置哈希值出错:', error)
   }
 }
 
 // 启动定时检查配置
 function startConfigHashCheck() {
-  if (!isOBS.value) return;
+  if (!isOBS.value) return
 
   // 先获取一次当前哈希值
-  GetConfigHash('danmuji-config').then(hash => {
-    currentConfigHash = hash;
-  });
+  GetConfigHash('danmuji-config').then((hash) => {
+    currentConfigHash = hash
+  })
 
   // 设置定时检查，每5秒检查一次
-  configHashCheckTimer = setInterval(checkConfigHash, 5000);
+  configHashCheckTimer = setInterval(checkConfigHash, 5000)
 }
 
 onMounted(async () => {
@@ -609,7 +609,7 @@ onMounted(async () => {
   client.onEvent('scDel', onDelSuperChat)
 
   try {
-    const result = await QueryGetAPI<{ keyword: string, url: string }[]>(VTSURU_API_URL + 'blivechat/emoticon')
+    const result = await QueryGetAPI<{ keyword: string, url: string }[]>(`${VTSURU_API_URL}blivechat/emoticon`)
     if (result.code === 200) {
       textEmoticons = result.data
     }
@@ -624,14 +624,14 @@ onMounted(async () => {
 
   // 显示弹幕姬加载完成的通知
   setTimeout(() => {
-    addSystemNotice('加载完成');
-  }, 300);
+    addSystemNotice('加载完成')
+  }, 300)
 
   // 在OBS环境下，获取配置并启动配置检查
   // @ts-ignore
   if (window.obsstudio) {
-    await getConfigFromServer();
-    startConfigHashCheck();
+    await getConfigFromServer()
+    startConfigHashCheck()
 
     messageRender.value?.setCss(defaultDanmujiCss)
     console.log('设置默认CSS')
@@ -649,8 +649,8 @@ onUnmounted(() => {
 
   // 清除定时器
   if (configHashCheckTimer) {
-    clearInterval(configHashCheckTimer);
-    configHashCheckTimer = null;
+    clearInterval(configHashCheckTimer)
+    configHashCheckTimer = null
   }
 })
 </script>
@@ -676,4 +676,3 @@ onUnmounted(() => {
   background-color: transparent;
 }
 </style>
-

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { getUserAvatarUrl } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
-import { useForumStore } from '@/store/useForumStore'
+import type { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui'
+import { NAvatar, NButton, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
+import { useAccount } from '@/api/account'
+import { useForumStore } from '@/store/useForumStore'
+import { getUserAvatarUrl } from '@/Utils'
 
 const props = defineProps<{
   item: ForumReplyModel
@@ -16,15 +16,15 @@ const props = defineProps<{
   showReplyButton?: boolean
 }>()
 
+const emits = defineEmits<{
+  (e: 'delete', id: number): void
+}>()
 const useForum = useForumStore()
 const accountInfo = useAccount()
 
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
-const emits = defineEmits<{
-  (e: 'delete', id: number): void
-}>()
 </script>
 
 <template>

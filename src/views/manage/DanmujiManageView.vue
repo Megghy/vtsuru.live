@@ -1,19 +1,14 @@
 <script setup lang="ts">
-import { useAccount, UploadConfig, DownloadConfig } from '@/api/account';
-import { EventDataTypes, GuardLevel } from '@/api/api-models';
-import { CURRENT_HOST, defaultDanmujiCss } from '@/data/constants';
-import { isDarkMode } from '@/Utils';
-import { VueMonacoEditor } from '@guolao/vue-monaco-editor';
+import type { DanmujiConfig } from '../obs/DanmujiOBS.vue'
+import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import {
-  NAlert,
   NButton,
   NCard,
   NCheckbox,
-  NCollapse,
-  NCollapseItem,
   NDivider,
   NFlex,
-  NForm, NFormItem,
+  NForm,
+  NFormItem,
   NInput,
   NInputNumber,
   NPopconfirm,
@@ -21,20 +16,22 @@ import {
   NSpace,
   NSplit,
   NSwitch,
-  NTag,
-  NTabs,
   NTabPane,
-  useMessage
-} from 'naive-ui';
-import { reactive, ref, onMounted, onUnmounted, watch } from 'vue';
-import DanmujiOBS from '../obs/DanmujiOBS.vue';
-import type { DanmujiConfig } from '../obs/DanmujiOBS.vue';
+  NTabs,
+  useMessage,
+} from 'naive-ui'
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { CURRENT_HOST, defaultDanmujiCss } from '@/data/constants'
+import { isDarkMode } from '@/Utils'
+import DanmujiOBS from '../obs/DanmujiOBS.vue'
 
-const accountInfo = useAccount();
-const css = useStorage('danmuji-css', defaultDanmujiCss);
-const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null);
-const message = useMessage();
-const windowWidth = useWindowSize().width;
+const accountInfo = useAccount()
+const css = useStorage('danmuji-css', defaultDanmujiCss)
+const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
+const message = useMessage()
+const windowWidth = useWindowSize().width
 
 const testFormData = reactive({
   type: EventDataTypes.Message,
@@ -46,8 +43,8 @@ const testFormData = reactive({
   guard_level: GuardLevel.Jianzhang,
   fans_medal_level: 10,
   fans_medal_name: '测试牌子',
-  sc_id_to_delete: ''
-});
+  sc_id_to_delete: '',
+})
 
 const messageTypeOptions = [
   { label: '弹幕 (Message)', value: EventDataTypes.Message },
@@ -55,13 +52,13 @@ const messageTypeOptions = [
   { label: '舰长 (Guard)', value: EventDataTypes.Guard },
   { label: '醒目留言 (SC)', value: EventDataTypes.SC },
   { label: '删除SC (SCDel)', value: EventDataTypes.SCDel },
-];
+]
 
 const guardLevelOptions = [
-    { label: '非舰长', value: GuardLevel.None },
-    { label: '舰长', value: GuardLevel.Jianzhang },
-    { label: '提督', value: GuardLevel.Tidu },
-    { label: '总督', value: GuardLevel.Zongdu },
+  { label: '非舰长', value: GuardLevel.None },
+  { label: '舰长', value: GuardLevel.Jianzhang },
+  { label: '提督', value: GuardLevel.Tidu },
+  { label: '总督', value: GuardLevel.Zongdu },
 ]
 
 // 随机弹幕内容库
@@ -95,8 +92,8 @@ const randomMessages = [
   '皮套萌萌哒',
   '这个建模好精致',
   '有没有录播组',
-  '狗头保命'
-];
+  '狗头保命',
+]
 
 // 随机用户名库
 const randomUsernames = [
@@ -124,8 +121,8 @@ const randomUsernames = [
   '白上单推人',
   'ぺこら推し',
   '星街永远爱',
-  '吹雪的狗'
-];
+  '吹雪的狗',
+]
 
 // 随机礼物名库
 const randomGifts = [
@@ -143,8 +140,8 @@ const randomGifts = [
   '棒棒糖',
   '荧光棒',
   '小黄鸭',
-  '小飞船'
-];
+  '小飞船',
+]
 
 // 随机粉丝牌名称库
 const randomMedalNames = [
@@ -162,8 +159,8 @@ const randomMedalNames = [
   '虹团',
   '杏仁',
   '梦追人',
-  'VVota'
-];
+  'VVota',
+]
 
 // 保存DanmujiConfig的配置
 const danmujiConfig = useStorage<DanmujiConfig>('danmuji-config', {
@@ -183,16 +180,16 @@ const danmujiConfig = useStorage<DanmujiConfig>('danmuji-config', {
   giftUsernamePronunciation: '',
   importPresetCss: false,
 
-  emoticons: []
-});
+  emoticons: [],
+})
 
 // 修改为使用标签页的活动键存储
-const activeTab = useStorage('danmuji-active-tab', 'style');
+const activeTab = useStorage('danmuji-active-tab', 'style')
 
 // 自动生成弹幕设置
-const isAutoGenerating = ref(true);
-const autoGenerateInterval = ref(1); // 默认间隔3秒
-let autoGenerateTimer: ReturnType<typeof setTimeout> | null = null;
+const isAutoGenerating = ref(true)
+const autoGenerateInterval = ref(1) // 默认间隔3秒
+let autoGenerateTimer: ReturnType<typeof setTimeout> | null = null
 
 // 自动生成弹幕的独立数据对象，不影响表单
 const autoGenData = reactive({
@@ -205,11 +202,11 @@ const autoGenData = reactive({
   guard_level: GuardLevel.None,
   fans_medal_level: 0,
   fans_medal_name: '',
-});
+})
 
 // 重设CSS为默认值
 function resetCssToDefault() {
-  css.value = defaultDanmujiCss;
+  css.value = defaultDanmujiCss
 }
 
 // 重设配置为默认值
@@ -231,73 +228,73 @@ function resetConfigToDefault() {
     giftUsernamePronunciation: '',
     importPresetCss: false,
 
-    emoticons: []
-  };
-  message.success('配置已重置为默认值');
+    emoticons: [],
+  }
+  message.success('配置已重置为默认值')
 }
 
 // 随机生成测试弹幕内容
 function generateRandomContent() {
   // 随机生成用户名
-  testFormData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)];
+  testFormData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)]
 
   // 随机生成用户ID (10000-99999)
-  testFormData.uid = Math.floor(Math.random() * 90000) + 10000;
+  testFormData.uid = Math.floor(Math.random() * 90000) + 10000
 
   // 根据消息类型随机生成相应内容
   switch (testFormData.type) {
     case EventDataTypes.Message:
       // 随机弹幕内容
-      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
       // 随机粉丝牌等级 (0-30)
-      testFormData.fans_medal_level = Math.floor(Math.random() * 31);
+      testFormData.fans_medal_level = Math.floor(Math.random() * 31)
       // 随机粉丝牌名称
-      testFormData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)];
+      testFormData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)]
       // 随机舰长等级
-      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length);
-      testFormData.guard_level = guardLevelOptions[guardRandomIndex].value;
-      break;
+      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
+      testFormData.guard_level = guardLevelOptions[guardRandomIndex].value
+      break
 
     case EventDataTypes.Gift:
       // 随机礼物名称
-      testFormData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)];
+      testFormData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)]
       // 随机礼物数量 (1-99)
-      testFormData.num = Math.floor(Math.random() * 99) + 1;
+      testFormData.num = Math.floor(Math.random() * 99) + 1
       // 随机礼物价值 (1-50)
-      testFormData.price = Math.floor(Math.random() * 50) + 1;
-      break;
+      testFormData.price = Math.floor(Math.random() * 50) + 1
+      break
 
     case EventDataTypes.Guard:
       // 随机舰长等级 (排除非舰长选项)
-      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None);
-      const guardIndex = Math.floor(Math.random() * guardOptions.length);
-      testFormData.guard_level = guardOptions[guardIndex].value;
-      break;
+      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None)
+      const guardIndex = Math.floor(Math.random() * guardOptions.length)
+      testFormData.guard_level = guardOptions[guardIndex].value
+      break
 
     case EventDataTypes.SC:
       // 随机SC内容
-      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
       // 随机SC价格 (5-500)
-      testFormData.price = Math.floor(Math.random() * 496) + 5;
-      break;
+      testFormData.price = Math.floor(Math.random() * 496) + 5
+      break
 
     case EventDataTypes.SCDel:
       // 生成一个假的SC ID
-      testFormData.sc_id_to_delete = `test-sc-${Date.now() - Math.floor(Math.random() * 10000)}`;
-      break;
+      testFormData.sc_id_to_delete = `test-sc-${Date.now() - Math.floor(Math.random() * 10000)}`
+      break
   }
 }
 
 function sendTestMessage() {
   if (!danmujiObsRef.value) {
-    console.error("DanmujiOBS component instance not found.");
-    return;
+    console.error('DanmujiOBS component instance not found.')
+    return
   }
 
-  let dataPayload: any = {};
-  const baseMsg = testFormData.msg;
-  const basePrice = testFormData.price;
-  const baseGuardLevel = testFormData.guard_level;
+  let dataPayload: any = {}
+  const baseMsg = testFormData.msg
+  const basePrice = testFormData.price
+  const baseGuardLevel = testFormData.guard_level
 
   switch (testFormData.type) {
     case EventDataTypes.Message:
@@ -310,8 +307,8 @@ function sendTestMessage() {
         guard_level: testFormData.guard_level,
         fans_medal_level: testFormData.fans_medal_level,
         fans_medal_name: testFormData.fans_medal_name,
-      };
-      break;
+      }
+      break
     case EventDataTypes.Gift:
       dataPayload = {
         msg_id: `test-gift-${Date.now()}`,
@@ -322,20 +319,20 @@ function sendTestMessage() {
         paid: true,
         uname: testFormData.uname,
         uid: testFormData.uid,
-      };
-      break;
+      }
+      break
     case EventDataTypes.Guard:
       dataPayload = {
         msg_id: `test-guard-${Date.now()}`,
         timestamp: Date.now() / 1000,
         guard_level: testFormData.guard_level,
         user_info: {
-            uname: testFormData.uname,
-            uid: testFormData.uid,
-            uface: ''
-        }
-      };
-      break;
+          uname: testFormData.uname,
+          uid: testFormData.uid,
+          uface: '',
+        },
+      }
+      break
     case EventDataTypes.SC:
       dataPayload = {
         msg_id: `test-sc-${Date.now()}`,
@@ -344,13 +341,13 @@ function sendTestMessage() {
         rmb: testFormData.price,
         uname: testFormData.uname,
         uid: testFormData.uid,
-      };
-      break;
+      }
+      break
     case EventDataTypes.SCDel:
       dataPayload = {
-        message_ids: [testFormData.sc_id_to_delete || `test-sc-${Date.now() - 5000}`]
-      };
-      break;
+        message_ids: [testFormData.sc_id_to_delete || `test-sc-${Date.now() - 5000}`],
+      }
+      break
   }
 
   const eventToSend = {
@@ -364,129 +361,129 @@ function sendTestMessage() {
     fans_medal_level: Number(testFormData.fans_medal_level ?? 0),
     fans_medal_name: testFormData.fans_medal_name,
     time: dataPayload.timestamp ?? Date.now() / 1000,
-    data: dataPayload
-  };
+    data: dataPayload,
+  }
 
-  danmujiObsRef.value.testAddMessage(eventToSend as any);
+  danmujiObsRef.value.testAddMessage(eventToSend as any)
 }
 
 // 添加初始测试数据
 function addInitialTestMessages() {
-  if (!danmujiObsRef.value) return;
+  if (!danmujiObsRef.value) return
 
   // 延迟执行，确保组件已完全渲染
   setTimeout(() => {
     // 添加普通弹幕消息
     for (let i = 0; i < 5; i++) {
-      autoGenData.type = EventDataTypes.Message;
-      generateAutoContent();
-      sendAutoMessage();
+      autoGenData.type = EventDataTypes.Message
+      generateAutoContent()
+      sendAutoMessage()
     }
 
     // 添加礼物消息
-    autoGenData.type = EventDataTypes.Gift;
-    generateAutoContent();
-    sendAutoMessage();
+    autoGenData.type = EventDataTypes.Gift
+    generateAutoContent()
+    sendAutoMessage()
 
     // 添加舰长消息
-    autoGenData.type = EventDataTypes.Guard;
-    generateAutoContent();
-    sendAutoMessage();
+    autoGenData.type = EventDataTypes.Guard
+    generateAutoContent()
+    sendAutoMessage()
 
     // 添加SC消息
-    autoGenData.type = EventDataTypes.SC;
-    generateAutoContent();
-    sendAutoMessage();
-  }, 500);
+    autoGenData.type = EventDataTypes.SC
+    generateAutoContent()
+    sendAutoMessage()
+  }, 500)
 }
 
 // 开始自动生成弹幕
 function startAutoGenerate() {
   if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer);
+    clearTimeout(autoGenerateTimer)
   }
 
-  if (!isAutoGenerating.value) return;
+  if (!isAutoGenerating.value) return
 
   // 生成随机消息类型
   const messageTypes = [
     EventDataTypes.Message,
     EventDataTypes.Gift,
     EventDataTypes.Guard,
-    EventDataTypes.SC
-  ];
+    EventDataTypes.SC,
+  ]
 
   // 50%概率为普通弹幕，50%概率为其他类型
   autoGenData.type = Math.random() < 0.5
     ? EventDataTypes.Message
-    : messageTypes[Math.floor(Math.random() * messageTypes.length)];
+    : messageTypes[Math.floor(Math.random() * messageTypes.length)]
 
   // 为自动生成数据随机生成内容
-  generateAutoContent();
+  generateAutoContent()
 
   // 发送自动生成的消息
-  sendAutoMessage();
+  sendAutoMessage()
 
   // 随机间隔时间（基础间隔的50%-150%）
-  const randomInterval = autoGenerateInterval.value * (0.5 + Math.random());
-  autoGenerateTimer = setTimeout(startAutoGenerate, randomInterval * 1000);
+  const randomInterval = autoGenerateInterval.value * (0.5 + Math.random())
+  autoGenerateTimer = setTimeout(startAutoGenerate, randomInterval * 1000)
 }
 
 // 为自动生成弹幕生成随机内容
 function generateAutoContent() {
   // 随机生成用户名
-  autoGenData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)];
+  autoGenData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)]
 
   // 随机生成用户ID (10000-99999)
-  autoGenData.uid = Math.floor(Math.random() * 90000) + 10000;
+  autoGenData.uid = Math.floor(Math.random() * 90000) + 10000
 
   // 根据消息类型随机生成相应内容
   switch (autoGenData.type) {
     case EventDataTypes.Message:
       // 随机弹幕内容
-      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
       // 随机粉丝牌等级 (0-30)
-      autoGenData.fans_medal_level = Math.floor(Math.random() * 31);
+      autoGenData.fans_medal_level = Math.floor(Math.random() * 31)
       // 随机粉丝牌名称
-      autoGenData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)];
+      autoGenData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)]
       // 随机舰长等级
-      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length);
-      autoGenData.guard_level = guardLevelOptions[guardRandomIndex].value;
-      break;
+      const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
+      autoGenData.guard_level = guardLevelOptions[guardRandomIndex].value
+      break
 
     case EventDataTypes.Gift:
       // 随机礼物名称
-      autoGenData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)];
+      autoGenData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)]
       // 随机礼物数量 (1-99)
-      autoGenData.num = Math.floor(Math.random() * 99) + 1;
+      autoGenData.num = Math.floor(Math.random() * 99) + 1
       // 随机礼物价值 (1-50)
-      autoGenData.price = Math.floor(Math.random() * 50) + 1;
-      break;
+      autoGenData.price = Math.floor(Math.random() * 50) + 1
+      break
 
     case EventDataTypes.Guard:
       // 随机舰长等级 (排除非舰长选项)
-      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None);
-      const guardIndex = Math.floor(Math.random() * guardOptions.length);
-      autoGenData.guard_level = guardOptions[guardIndex].value;
-      break;
+      const guardOptions = guardLevelOptions.filter(option => option.value !== GuardLevel.None)
+      const guardIndex = Math.floor(Math.random() * guardOptions.length)
+      autoGenData.guard_level = guardOptions[guardIndex].value
+      break
 
     case EventDataTypes.SC:
       // 随机SC内容
-      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
       // 随机SC价格 (5-500)
-      autoGenData.price = Math.floor(Math.random() * 496) + 5;
-      break;
+      autoGenData.price = Math.floor(Math.random() * 496) + 5
+      break
   }
 }
 
 // 发送自动生成的消息
 function sendAutoMessage() {
   if (!danmujiObsRef.value) {
-    console.error("DanmujiOBS component instance not found.");
-    return;
+    console.error('DanmujiOBS component instance not found.')
+    return
   }
 
-  let dataPayload: any = {};
+  let dataPayload: any = {}
 
   switch (autoGenData.type) {
     case EventDataTypes.Message:
@@ -499,8 +496,8 @@ function sendAutoMessage() {
         guard_level: autoGenData.guard_level,
         fans_medal_level: autoGenData.fans_medal_level,
         fans_medal_name: autoGenData.fans_medal_name,
-      };
-      break;
+      }
+      break
     case EventDataTypes.Gift:
       dataPayload = {
         msg_id: `test-gift-${Date.now()}`,
@@ -511,20 +508,20 @@ function sendAutoMessage() {
         paid: true,
         uname: autoGenData.uname,
         uid: autoGenData.uid,
-      };
-      break;
+      }
+      break
     case EventDataTypes.Guard:
       dataPayload = {
         msg_id: `test-guard-${Date.now()}`,
         timestamp: Date.now() / 1000,
         guard_level: autoGenData.guard_level,
         user_info: {
-            uname: autoGenData.uname,
-            uid: autoGenData.uid,
-            uface: ''
-        }
-      };
-      break;
+          uname: autoGenData.uname,
+          uid: autoGenData.uid,
+          uface: '',
+        },
+      }
+      break
     case EventDataTypes.SC:
       dataPayload = {
         msg_id: `test-sc-${Date.now()}`,
@@ -533,8 +530,8 @@ function sendAutoMessage() {
         rmb: autoGenData.price,
         uname: autoGenData.uname,
         uid: autoGenData.uid,
-      };
-      break;
+      }
+      break
   }
 
   const eventToSend = {
@@ -548,69 +545,69 @@ function sendAutoMessage() {
     fans_medal_level: Number(autoGenData.fans_medal_level ?? 0),
     fans_medal_name: autoGenData.fans_medal_name,
     time: dataPayload.timestamp ?? Date.now() / 1000,
-    data: dataPayload
-  };
+    data: dataPayload,
+  }
 
-  danmujiObsRef.value.testAddMessage(eventToSend as any);
+  danmujiObsRef.value.testAddMessage(eventToSend as any)
 }
 
 // 监听自动生成状态变化
 watch(isAutoGenerating, (newValue) => {
   if (newValue) {
-    startAutoGenerate();
+    startAutoGenerate()
   } else if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer);
-    autoGenerateTimer = null;
+    clearTimeout(autoGenerateTimer)
+    autoGenerateTimer = null
   }
-}, { immediate: true });
+}, { immediate: true })
 
 // 从服务器获取配置
 async function downloadConfigFromServer() {
-  const result = await DownloadConfig<DanmujiConfig>('danmuji-config');
+  const result = await DownloadConfig<DanmujiConfig>('danmuji-config')
   if (result.status === 'success' && result.data) {
-    danmujiConfig.value = result.data;
-    message.success('已从服务器获取弹幕姬配置');
-    return true;
+    danmujiConfig.value = result.data
+    message.success('已从服务器获取弹幕姬配置')
+    return true
   } else if (result.status === 'notfound') {
-    //message.info('服务器上未找到弹幕姬配置，将使用本地配置');
-    uploadConfigToServer();
+    // message.info('服务器上未找到弹幕姬配置，将使用本地配置');
+    uploadConfigToServer()
   } else {
-    message.error(`获取配置失败: ${result.msg}`);
+    message.error(`获取配置失败: ${result.msg}`)
   }
-  return false;
+  return false
 }
 
 // 组件挂载后添加初始测试数据
 onMounted(async () => {
   // 先尝试从服务器获取配置
-  await downloadConfigFromServer();
+  await downloadConfigFromServer()
 
   // 添加初始测试数据
-  addInitialTestMessages();
+  addInitialTestMessages()
 
   // 确保在添加初始测试数据后启动自动生成
   setTimeout(() => {
     if (isAutoGenerating.value && !autoGenerateTimer) {
-      startAutoGenerate();
+      startAutoGenerate()
     }
-  }, 1000);
-});
+  }, 1000)
+})
 
 // 组件卸载时清除定时器
 onUnmounted(() => {
   if (autoGenerateTimer) {
-    clearTimeout(autoGenerateTimer);
-    autoGenerateTimer = null;
+    clearTimeout(autoGenerateTimer)
+    autoGenerateTimer = null
   }
-});
+})
 
 // 上传配置到服务器
 async function uploadConfigToServer() {
-  const result = await UploadConfig('danmuji-config', danmujiConfig.value);
+  const result = await UploadConfig('danmuji-config', danmujiConfig.value)
   if (result) {
-    message.success('弹幕姬配置已上传到服务器');
+    message.success('弹幕姬配置已上传到服务器')
   } else {
-    message.error('上传弹幕姬配置失败');
+    message.error('上传弹幕姬配置失败')
   }
 }
 </script>
@@ -672,7 +669,7 @@ async function uploadConfigToServer() {
                     style="height: 400px; width: 100%;"
                     :options="{
                       minimap: {
-                        enabled: false
+                        enabled: false,
                       },
                       fontSize: 14,
                       automaticLayout: true,
@@ -682,11 +679,11 @@ async function uploadConfigToServer() {
                       wordWrap: 'on',
                       tabSize: 2,
                       bracketPairColorization: {
-                        enabled: true
+                        enabled: true,
                       },
                       guides: {
                         bracketPairs: true,
-                        indentation: true
+                        indentation: true,
                       },
                       autoIndent: 'full',
                       cursorBlinking: 'smooth',
@@ -700,8 +697,8 @@ async function uploadConfigToServer() {
                       colorDecorators: true,
                       scrollbar: {
                         verticalScrollbarSize: 10,
-                        horizontalScrollbarSize: 10
-                      }
+                        horizontalScrollbarSize: 10,
+                      },
                     }"
                     :theme="isDarkMode ? 'vs-dark' : 'vs'"
                   />

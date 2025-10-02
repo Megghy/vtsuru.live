@@ -1,230 +1,239 @@
 <script setup lang="ts">
-  import { NavigateToNewTab, isDarkMode } from '@/Utils';
-  import { useAccount } from '@/api/account';
-  import { FunctionTypes, ThemeType, UserInfo } from '@/api/api-models';
-  import { useUser } from '@/api/user';
-  import RegisterAndLogin from '@/components/RegisterAndLogin.vue';
-  import { FETCH_API } from '@/data/constants'; // 移除了未使用的 AVATAR_URL
-  import { useBiliAuth } from '@/store/useBiliAuth';
-  import {
-    BookCoins20Filled,
-    CalendarClock24Filled,
-    Person48Filled,
-    VideoAdd20Filled,
-    WindowWrench20Filled,
-    CheckmarkCircle24Filled,
-  } from '@vicons/fluent';
-  import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5';
-  import { useElementSize, useStorage } from '@vueuse/core';
-  import {
-    MenuOption,
-    NAvatar,
-    NBackTop,
-    NButton,
-    NDivider,
-    NEllipsis,
-    NIcon,
-    NLayout,
-    NLayoutContent,
-    NLayoutHeader,
-    NLayoutSider,
-    NMenu,
-    NModal,
-    NPageHeader,
-    NResult,
-    NSpace,
-    NSpin,
-    NSwitch,
-    NText,
-    useMessage,
-    // NSpin 已默认导入，如果单独使用需确保导入
-  } from 'naive-ui';
-  import { computed, h, onMounted, ref, watch, defineAsyncComponent } from 'vue'; // 引入 watch
-  import { RouterLink, useRoute, useRouter } from 'vue-router'; // 引入 useRouter
+import type {
+  MenuOption,
+} from 'naive-ui'
+import type { UserInfo } from '@/api/api-models'
+import {
+  BookCoins20Filled,
+  CalendarClock24Filled,
+  CheckmarkCircle24Filled,
+  Person48Filled,
+  VideoAdd20Filled,
+  WindowWrench20Filled,
+} from '@vicons/fluent'
+import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { useElementSize, useStorage } from '@vueuse/core'
+import {
+  NAvatar,
+  NBackTop,
+  NButton,
+  NDivider,
+  NEllipsis,
+  NIcon,
+  NLayout,
+  NLayoutContent,
+  NLayoutHeader,
+  NLayoutSider,
+  NMenu,
+  NModal,
+  NPageHeader,
+  NResult,
+  NSpace,
+  NSpin,
+  NSwitch,
+  NText,
+  useMessage,
+  // NSpin 已默认导入，如果单独使用需确保导入
+} from 'naive-ui'
+import { computed, h, ref, watch } from 'vue' // 引入 watch
+import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 useRouter
+import { useAccount } from '@/api/account'
+import { FunctionTypes, ThemeType } from '@/api/api-models'
+import { useUser } from '@/api/user'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { FETCH_API } from '@/data/constants' // 移除了未使用的 AVATAR_URL
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { isDarkMode, NavigateToNewTab } from '@/Utils'
 
-  // --- 响应式状态和常量 ---
-  const route = useRoute();
-  const router = useRouter(); // 获取 router 实例
-  const message = useMessage();
-  const accountInfo = useAccount(); // 获取当前登录账户信息
-  const useAuth = useBiliAuth(); // 获取认证状态 Store
+// --- 响应式状态和常量 ---
+const route = useRoute()
+const router = useRouter() // 获取 router 实例
+const message = useMessage()
+const accountInfo = useAccount() // 获取当前登录账户信息
+const useAuth = useBiliAuth() // 获取认证状态 Store
 
-  // 路由参数
-  const id = computed(() => route.params.id);
+// 路由参数
+const id = computed(() => route.params.id)
 
-  // 主题设置
-  const themeType = useStorage('Settings.Theme', ThemeType.Auto);
+// 主题设置
+const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
-  // 用户和页面状态
-  const userInfo = ref<UserInfo | null>(null); // 用户信息，初始化为 null
-  const biliUserInfo = ref<any>(null); // B站用户信息
-  const isLoading = ref(true); // 是否正在加载数据
-  const notFound = ref(false); // 是否未找到用户
+// 用户和页面状态
+const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
+const biliUserInfo = ref<any>(null) // B站用户信息
+const isLoading = ref(true) // 是否正在加载数据
+const notFound = ref(false) // 是否未找到用户
 
-  // UI 控制状态
-  const registerAndLoginModalVisiable = ref(false); // 注册/登录弹窗可见性
-  const sider = ref(); // 侧边栏 DOM 引用
-  const { width: siderWidth } = useElementSize(sider); // 侧边栏宽度
-  const windowWidth = window.innerWidth; // 窗口宽度，用于响应式显示
+// UI 控制状态
+const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
+const sider = ref() // 侧边栏 DOM 引用
+const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
+const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
 
-  // 侧边栏菜单项
-  const menuOptions = ref<MenuOption[]>([]); // 初始化为空数组
+// 侧边栏菜单项
+const menuOptions = ref<MenuOption[]>([]) // 初始化为空数组
 
-  // --- 方法 ---
+// --- 方法 ---
 
-  /** 渲染图标的辅助函数 */
-  function renderIcon(icon: unknown) {
-    return () => h(NIcon, null, { default: () => h(icon as any) });
+/** 渲染图标的辅助函数 */
+function renderIcon(icon: unknown) {
+  return () => h(NIcon, null, { default: () => h(icon as any) })
+}
+
+/** 根据 userInfo 更新侧边栏菜单 */
+function updateMenuOptions() {
+  // 如果没有用户信息，清空菜单
+  if (!userInfo.value) {
+    menuOptions.value = []
+    return
   }
-
-  /** 根据 userInfo 更新侧边栏菜单 */
-  function updateMenuOptions() {
-    // 如果没有用户信息，清空菜单
-    if (!userInfo.value) {
-      menuOptions.value = [];
-      return;
-    }
-    // 基于 userInfo.extra.enableFunctions 构建菜单项
-    menuOptions.value = [
-      {
-        label: () => h(RouterLink, { to: { name: 'user-index' } }, { default: () => '主页' }),
-        key: 'user-index', icon: renderIcon(Home),
-        // 主页通常都显示
-        show: true
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-songList' } }, { default: () => '歌单' }),
-        key: 'user-songList', icon: renderIcon(MusicalNote),
-        // 根据用户配置判断是否显示
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.SongList)
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-schedule' } }, { default: () => '日程' }),
-        key: 'user-schedule', icon: renderIcon(CalendarClock24Filled),
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Schedule)
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-questionBox' } }, { default: () => '棉花糖 (提问箱)' }),
-        key: 'user-questionBox', icon: renderIcon(Chatbox),
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.QuestionBox)
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-video-collect' } }, { default: () => '视频征集' }),
-        key: 'user-video-collect', icon: renderIcon(VideoAdd20Filled),
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.VideoCollect)
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-goods' } }, { default: () => '积分' }),
-        key: 'user-goods', icon: renderIcon(BookCoins20Filled),
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point)
-      },
-      {
-        label: () => h(RouterLink, { to: { name: 'user-checkin' } }, { default: () => '签到排行' }),
-        key: 'user-checkin', icon: renderIcon(CheckmarkCircle24Filled),
-        show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking)
-      },
-    ].filter(option => option.show !== false) as MenuOption[]; // 过滤掉 show 为 false 的菜单项
-  }
-
-
-  /** 获取 Bilibili 用户信息 */
-  async function RequestBiliUserData() {
-    // 确保 userInfo 和 biliId 存在
-    if (!userInfo.value?.biliId) return;
-
-    try {
-      const response = await fetch(FETCH_API + `https://workers.vrp.moe/api/bilibili/user-info/${userInfo.value.biliId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.code === 0) {
-        biliUserInfo.value = data.card; // 存储获取到的 B 站信息
-      } else {
-        console.error('Bili User API Error:', data.message);
-        // message.warning('获取B站信息失败: ' + data.message) // 可选: 轻微提示用户
-      }
-    } catch (error) {
-      console.error('Failed to fetch Bili user data:', error);
-      // message.error('获取B站信息时网络错误') // 可选: 提示用户网络问题
-    }
-  }
-
-  /** 获取 Vtsuru 用户信息和相关数据 */
-  async function fetchUserData(userId: string | string[] | undefined) {
-    // 验证 userId 的有效性
-    if (!userId || Array.isArray(userId)) {
-      notFound.value = true; // 标记为未找到
-      isLoading.value = false; // 加载结束
-      userInfo.value = null; // 清空用户信息
-      menuOptions.value = []; // 清空菜单
-      console.error("无效的用户 ID:", userId);
-      return;
-    }
-
-    // 重置状态，准备加载新数据
-    isLoading.value = true;
-    notFound.value = false;
-    userInfo.value = null;
-    menuOptions.value = [];
-    biliUserInfo.value = null;
-
-    try {
-      // 调用 API 获取用户信息
-      const fetchedUserInfo = await useUser(userId as string); // 强制转换为 string
-
-      if (!fetchedUserInfo) {
-        // 如果 API 返回 null 或 undefined，则视为未找到
-        notFound.value = true;
-        userInfo.value = null;
-      } else {
-        // 成功获取用户信息
-        userInfo.value = fetchedUserInfo;
-        // 基于新的用户信息更新菜单
-        updateMenuOptions();
-        // 异步获取 B 站信息（不阻塞主流程）
-        RequestBiliUserData();
-      }
-    } catch (error) {
-      console.error("获取用户信息时出错:", error);
-      message.error("加载用户信息时发生错误");
-      notFound.value = true; // 标记为未找到状态
-      userInfo.value = null;
-    } finally {
-      // 无论成功或失败，加载状态都结束
-      isLoading.value = false;
-    }
-  }
-
-  /** 跳转到 Bilibili 认证用户中心 */
-  function gotoAuthPage() {
-    if (!accountInfo.value?.biliUserAuthInfo) {
-      message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定');
-      return;
-    }
-    NavigateToNewTab('/bili-user'); // 在新标签页打开
-  }
-
-  // --- Watcher ---
-
-  // 监听路由参数 id 的变化
-  watch(
-    () => route.params.id,
-    (newId, oldId) => {
-      // 只有当 newId 有效且与 oldId 不同时才重新加载数据
-      if (newId && newId !== oldId) {
-        fetchUserData(newId);
-      } else if (!newId) {
-        // 如果 id 从路由中移除，处理相应的状态
-        notFound.value = true;
-        isLoading.value = false;
-        userInfo.value = null;
-        menuOptions.value = [];
-      }
+  // 基于 userInfo.extra.enableFunctions 构建菜单项
+  menuOptions.value = [
+    {
+      label: () => h(RouterLink, { to: { name: 'user-index' } }, { default: () => '主页' }),
+      key: 'user-index',
+      icon: renderIcon(Home),
+      // 主页通常都显示
+      show: true,
     },
-    { immediate: true } // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
-  );
-  // --- 组件模板 ---
+    {
+      label: () => h(RouterLink, { to: { name: 'user-songList' } }, { default: () => '歌单' }),
+      key: 'user-songList',
+      icon: renderIcon(MusicalNote),
+      // 根据用户配置判断是否显示
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.SongList),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'user-schedule' } }, { default: () => '日程' }),
+      key: 'user-schedule',
+      icon: renderIcon(CalendarClock24Filled),
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Schedule),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'user-questionBox' } }, { default: () => '棉花糖 (提问箱)' }),
+      key: 'user-questionBox',
+      icon: renderIcon(Chatbox),
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.QuestionBox),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'user-video-collect' } }, { default: () => '视频征集' }),
+      key: 'user-video-collect',
+      icon: renderIcon(VideoAdd20Filled),
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.VideoCollect),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'user-goods' } }, { default: () => '积分' }),
+      key: 'user-goods',
+      icon: renderIcon(BookCoins20Filled),
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point),
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'user-checkin' } }, { default: () => '签到排行' }),
+      key: 'user-checkin',
+      icon: renderIcon(CheckmarkCircle24Filled),
+      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking),
+    },
+  ].filter(option => option.show !== false) as MenuOption[] // 过滤掉 show 为 false 的菜单项
+}
+
+/** 获取 Bilibili 用户信息 */
+async function RequestBiliUserData() {
+  // 确保 userInfo 和 biliId 存在
+  if (!userInfo.value?.biliId) return
+
+  try {
+    const response = await fetch(`${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/${userInfo.value.biliId}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const data = await response.json()
+    if (data.code === 0) {
+      biliUserInfo.value = data.card // 存储获取到的 B 站信息
+    } else {
+      console.error('Bili User API Error:', data.message)
+      // message.warning('获取B站信息失败: ' + data.message) // 可选: 轻微提示用户
+    }
+  } catch (error) {
+    console.error('Failed to fetch Bili user data:', error)
+    // message.error('获取B站信息时网络错误') // 可选: 提示用户网络问题
+  }
+}
+
+/** 获取 Vtsuru 用户信息和相关数据 */
+async function fetchUserData(userId: string | string[] | undefined) {
+  // 验证 userId 的有效性
+  if (!userId || Array.isArray(userId)) {
+    notFound.value = true // 标记为未找到
+    isLoading.value = false // 加载结束
+    userInfo.value = null // 清空用户信息
+    menuOptions.value = [] // 清空菜单
+    console.error('无效的用户 ID:', userId)
+    return
+  }
+
+  // 重置状态，准备加载新数据
+  isLoading.value = true
+  notFound.value = false
+  userInfo.value = null
+  menuOptions.value = []
+  biliUserInfo.value = null
+
+  try {
+    // 调用 API 获取用户信息
+    const fetchedUserInfo = await useUser(userId as string) // 强制转换为 string
+
+    if (!fetchedUserInfo) {
+      // 如果 API 返回 null 或 undefined，则视为未找到
+      notFound.value = true
+      userInfo.value = null
+    } else {
+      // 成功获取用户信息
+      userInfo.value = fetchedUserInfo
+      // 基于新的用户信息更新菜单
+      updateMenuOptions()
+      // 异步获取 B 站信息（不阻塞主流程）
+      RequestBiliUserData()
+    }
+  } catch (error) {
+    console.error('获取用户信息时出错:', error)
+    message.error('加载用户信息时发生错误')
+    notFound.value = true // 标记为未找到状态
+    userInfo.value = null
+  } finally {
+    // 无论成功或失败，加载状态都结束
+    isLoading.value = false
+  }
+}
+
+/** 跳转到 Bilibili 认证用户中心 */
+function gotoAuthPage() {
+  if (!accountInfo.value?.biliUserAuthInfo) {
+    message.error('你尚未进行 Bilibili 认证, 请前往面板进行认证和绑定')
+    return
+  }
+  NavigateToNewTab('/bili-user') // 在新标签页打开
+}
+
+// --- Watcher ---
+
+// 监听路由参数 id 的变化
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    // 只有当 newId 有效且与 oldId 不同时才重新加载数据
+    if (newId && newId !== oldId) {
+      fetchUserData(newId)
+    } else if (!newId) {
+      // 如果 id 从路由中移除，处理相应的状态
+      notFound.value = true
+      isLoading.value = false
+      userInfo.value = null
+      menuOptions.value = []
+    }
+  },
+  { immediate: true }, // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
+)
+// --- 组件模板 ---
 </script>
 
 <template>
@@ -492,7 +501,7 @@
           <NBackTop
             :right="40"
             :bottom="40"
-            :listen-to="'.viewer-page-content'"
+            listen-to=".viewer-page-content"
           />
         </div>
         <!-- 如果 !isLoading && notFound, 会显示顶部的 NResult，这里不需要 else -->
@@ -528,7 +537,7 @@
           <NButton
             type="primary"
             size="small"
-            @click="$router.push({ name: 'bili-user'})"
+            @click="$router.push({ name: 'bili-user' })"
           >
             <template #icon>
               <NIcon :component="BrowsersOutline" />

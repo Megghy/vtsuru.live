@@ -1,6 +1,7 @@
-import { AccountInfo, DanmakuModel, EventDataTypes, ResponseLiveInfoModel } from '@/api/api-models'
+import type { AccountInfo, DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { XMLBuilder } from 'fast-xml-parser'
 import { List } from 'linqts'
+import { EventDataTypes } from '@/api/api-models'
 
 const builder = new XMLBuilder({
   attributeNamePrefix: '@',
@@ -28,7 +29,7 @@ export function GetString(
     })
     .ToArray()
   const obj = {
-    live: live,
+    live,
     danmakus: tempDanmakus,
   }
   switch (type) {

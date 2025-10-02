@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account';
-import { useLoadingBarStore } from '@/store/useLoadingBarStore'
-import { useStorage } from '@vueuse/core';
 import { NSpin, useLoadingBar, useMessage, useModal } from 'naive-ui'
 import { onMounted } from 'vue'
-import { useRoute } from 'vue-router';
-import { cookie } from '@/api/account';
+import { useRoute } from 'vue-router'
+import { cookie, useAccount } from '@/api/account'
+
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
 

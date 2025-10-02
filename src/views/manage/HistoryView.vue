@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { QueryGetAPI } from '@/api/query'
-import { HISTORY_API_URL } from '@/data/constants'
 import { Info24Filled } from '@vicons/fluent'
-import { addDays, endOfDay, format, isSameDay, startOfDay } from 'date-fns'
+import { addDays, endOfDay, format, startOfDay } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -18,7 +15,9 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
-
+import { useAccount } from '@/api/account'
+import { QueryGetAPI } from '@/api/query'
+import { HISTORY_API_URL } from '@/data/constants'
 
 // 初始化ECharts组件
 use([
@@ -35,7 +34,7 @@ use([
 ])
 
 // 定义数据模型类型
-type HistoryModel = {
+interface HistoryModel {
   fan: {
     records: HistoryRecordModel[]
     updateAt: number
@@ -50,12 +49,12 @@ type HistoryModel = {
   }
 }
 
-type HistoryRecordModel = {
+interface HistoryRecordModel {
   time: number
   count: number
 }
 
-type HistoryUpstatRecordModel = {
+interface HistoryUpstatRecordModel {
   time: number
   stats: {
     views: number
@@ -91,17 +90,17 @@ const statisticStartDateTime = statisticStartDate.getTime()
 // 日期范围选择（毫秒时间戳区间）
 const dateRange = ref<[number, number] | null>(null)
 const dateShortcuts: Record<string, [number, number] | (() => [number, number])> = {
-  '最近7天': () => {
+  最近7天: () => {
     const end = endOfDay(new Date()).getTime()
     const start = startOfDay(addDays(new Date(), -6)).getTime()
     return [start, end] as [number, number]
   },
-  '最近30天': () => {
+  最近30天: () => {
     const end = endOfDay(new Date()).getTime()
     const start = startOfDay(addDays(new Date(), -29)).getTime()
     return [start, end] as [number, number]
   },
-  '最近90天': () => {
+  最近90天: () => {
     const end = endOfDay(new Date()).getTime()
     const start = startOfDay(addDays(new Date(), -89)).getTime()
     return [start, end] as [number, number]
@@ -119,7 +118,7 @@ const chartHeight = computed(() => {
  */
 async function getHistory() {
   try {
-    const response = await QueryGetAPI<HistoryModel>(HISTORY_API_URL + 'get-all')
+    const response = await QueryGetAPI<HistoryModel>(`${HISTORY_API_URL}get-all`)
     if (response.code == 200) {
       fansHistory.value = response.data.fan.records
       guardHistory.value = response.data.guard.records
@@ -128,7 +127,7 @@ async function getHistory() {
       guardUpdateAt.value = response.data.guard.updateAt
       upstatUpdateAt.value = response.data.upstat.updateAt
     } else {
-      message.error('加载失败: ' + response.message)
+      message.error(`加载失败: ${response.message}`)
     }
   } catch (err) {
     message.error('加载失败')
@@ -183,9 +182,9 @@ function generateTimeSeries(
   startTime: Date,
   endTime: Date,
   initialTimeIndex: number,
-  initialCount: number
+  initialCount: number,
 ) {
-  const timeSeries: { time: Date; count: number; change: boolean; exist: boolean }[] = []
+  const timeSeries: { time: Date, count: number, change: boolean, exist: boolean }[] = []
   let lastDayCount = initialCount
   let lastTimeIndex = initialTimeIndex
   let currentTime = startTime
@@ -238,12 +237,12 @@ function processFansChartOptions() {
     return
   }
 
-  const initialIndex = fansHistory.value.findIndex((entry) => entry.time >= statisticStartDateTime)
+  const initialIndex = fansHistory.value.findIndex(entry => entry.time >= statisticStartDateTime)
   const initialCount = initialIndex >= 0 ? fansHistory.value[initialIndex].count : 0
 
   const completeTimeSeries = generateTimeSeries(fansHistory.value, startTime, endTime, initialIndex, initialCount)
 
-  const fansIncreacement: { time: Date; count: number }[] = []
+  const fansIncreacement: { time: Date, count: number }[] = []
   let previousDayCount = completeTimeSeries[0]?.count ?? 0
   completeTimeSeries.forEach((entry, index) => {
     if (index > 0) {
@@ -254,9 +253,9 @@ function processFansChartOptions() {
   })
 
   const chartData = {
-    xAxisData: completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd')),
-    seriesData: completeTimeSeries.map((entry) => entry.count),
-    incrementData: fansIncreacement.map((entry) => entry.count),
+    xAxisData: completeTimeSeries.map(entry => format(entry.time, 'yyyy-MM-dd')),
+    seriesData: completeTimeSeries.map(entry => entry.count),
+    incrementData: fansIncreacement.map(entry => entry.count),
   }
 
   fansOption.value = {
@@ -264,13 +263,13 @@ function processFansChartOptions() {
     tooltip: {
       ...getBaseChartOptions().tooltip,
       formatter: (param: any) => {
-        const name = param[0].name + '<br>'
+        const name = `${param[0].name}<br>`
         let str = ''
-        for (var i = 0; i < param.length; i++) {
-          const status =
-            param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
-          const statusHtml = status == '' ? '' : '&nbsp;<span style="color:gray">' + status + '</span>'
-          str += param[i].marker + param[i].seriesName + '：' + param[i].data + statusHtml + '<br>'
+        for (let i = 0; i < param.length; i++) {
+          const status
+            = param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
+          const statusHtml = status == '' ? '' : `&nbsp;<span style="color:gray">${status}</span>`
+          str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
       },
@@ -323,7 +322,7 @@ function processGuardsChartOptions() {
     return
   }
 
-  const initialIndex = guardHistory.value.findIndex((entry) => entry.time >= startTime.getTime())
+  const initialIndex = guardHistory.value.findIndex(entry => entry.time >= startTime.getTime())
   const initialCount = initialIndex >= 0 ? guardHistory.value[initialIndex].count : 0
 
   const completeTimeSeries = generateTimeSeries(guardHistory.value, startTime, endTime, initialIndex, initialCount)
@@ -337,7 +336,7 @@ function processGuardsChartOptions() {
     previousDayCount = entry.count
   })
 
-  const xAxisData = completeTimeSeries.map((entry) => format(entry.time, 'yyyy-MM-dd'))
+  const xAxisData = completeTimeSeries.map(entry => format(entry.time, 'yyyy-MM-dd'))
 
   guardsOption.value = {
     ...getBaseChartOptions(),
@@ -391,7 +390,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
 
   const rangeStart = dateRange.value ? dateRange.value[0] : -Infinity
   const rangeEnd = dateRange.value ? dateRange.value[1] : Infinity
-  const filtered = upstatHistory.value.filter((u) => u.time >= rangeStart && u.time <= rangeEnd)
+  const filtered = upstatHistory.value.filter(u => u.time >= rangeStart && u.time <= rangeEnd)
 
   if (filtered.length === 0) {
     return {
@@ -405,7 +404,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
     }
   }
 
-  const increments: { time: number; value: number }[] = []
+  const increments: { time: number, value: number }[] = []
   let lastValue = filtered[0].stats[dataType]
 
   filtered.forEach((u) => {
@@ -428,7 +427,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         type: 'category',
         axisTick: { alignWithLabel: true },
         axisLine: { onZero: false, lineStyle: { color: '#EE6666' } },
-        data: filtered.map((f) => format(f.time, 'yyyy-MM-dd')),
+        data: filtered.map(f => format(f.time, 'yyyy-MM-dd')),
       },
     ],
     series: [
@@ -436,9 +435,9 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         name: title,
         type: 'line',
         emphasis: { focus: 'series' },
-        data: filtered.map((f) => f.stats[dataType]),
+        data: filtered.map(f => f.stats[dataType]),
         itemStyle: {
-          color: function (data: any) {
+          color(data: any) {
             return increments[data.dataIndex].value !== 0 ? '#5470C6' : '#cccccc'
           },
         },
@@ -448,7 +447,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         type: 'bar',
         yAxisIndex: 1,
         emphasis: { focus: 'series' },
-        data: increments.map((f) => f.value),
+        data: increments.map(f => f.value),
       },
     ],
   }
@@ -491,7 +490,7 @@ watch(
   () => dateRange.value,
   () => {
     if (!isLoading.value) processAllChartOptions()
-  }
+  },
 )
 </script>
 
@@ -565,7 +564,9 @@ watch(
     <br>
     <br>
     <NSpace align="center">
-      <NText depth="3">日期范围：</NText>
+      <NText depth="3">
+        日期范围：
+      </NText>
       <NDatePicker
         v-model:value="dateRange"
         type="daterange"

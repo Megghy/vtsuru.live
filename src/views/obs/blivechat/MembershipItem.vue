@@ -1,3 +1,22 @@
+<script setup>
+import { computed } from 'vue'
+import AuthorChip from './AuthorChip.vue'
+import ImgShadow from './ImgShadow.vue'
+import * as utils from './utils'
+
+const props = defineProps({
+  avatarUrl: String,
+  authorName: String,
+  privilegeType: Number,
+  title: String,
+  time: Date,
+})
+
+const timeText = computed(() => {
+  return utils.getTimeTextHourMin(props.time)
+})
+</script>
+
 <template>
   <yt-live-chat-membership-item-renderer
     class="style-scope yt-live-chat-item-list-renderer"
@@ -12,7 +31,7 @@
         id="header"
         class="style-scope yt-live-chat-membership-item-renderer"
       >
-        <img-shadow
+        <ImgShadow
           id="author-photo"
           height="40"
           width="40"
@@ -31,7 +50,7 @@
               id="header-content-inner-column"
               class="style-scope yt-live-chat-membership-item-renderer"
             >
-              <author-chip
+              <AuthorChip
                 class="style-scope yt-live-chat-membership-item-renderer"
                 is-in-member-message
                 :author-name="authorName"
@@ -57,24 +76,5 @@
     </div>
   </yt-live-chat-membership-item-renderer>
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import ImgShadow from './ImgShadow.vue'
-import AuthorChip from './AuthorChip.vue'
-import * as utils from './utils'
-
-const props = defineProps({
-  avatarUrl: String,
-  authorName: String,
-  privilegeType: Number,
-  title: String,
-  time: Date
-})
-
-const timeText = computed(() => {
-  return utils.getTimeTextHourMin(props.time)
-})
-</script>
 
 <style src="@/assets/css/youtube/yt-live-chat-membership-item-renderer.css"></style>

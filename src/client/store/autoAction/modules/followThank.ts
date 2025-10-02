@@ -1,17 +1,18 @@
-import { ref, Ref } from 'vue';
-import { EventModel } from '@/api/api-models';
-import {
-  buildExecutionContext
-} from '../utils';
-import {
+import type { Ref } from 'vue'
+import type {
   AutoActionItem,
-  TriggerType,
-  RuntimeState
-} from '../types';
+  RuntimeState,
+} from '../types'
+import type { EventModel } from '@/api/api-models'
+
+import { ref } from 'vue'
 import {
+  executeActions,
   filterValidActions,
-  executeActions
-} from '../actionUtils';
+} from '../actionUtils'
+import {
+  TriggerType,
+} from '../types'
 
 /**
  * 关注感谢模块
@@ -24,11 +25,11 @@ export function useFollowThank(
   isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
   isTianXuanActive: Ref<boolean>,
-  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>
+  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
   // 运行时数据
-  const aggregatedFollows = ref<{uid: number, name: string, timestamp: number}[]>([]);
-  const timer = ref<any | null>(null);
+  const aggregatedFollows = ref<{ uid: number, name: string, timestamp: number }[]>([])
+  const timer = ref<any | null>(null)
 
   /**
    * 处理关注事件 - 支持新的AutoActionItem结构
@@ -39,12 +40,12 @@ export function useFollowThank(
   function processFollow(
     event: EventModel,
     actions: AutoActionItem[],
-    runtimeState: RuntimeState
+    runtimeState: RuntimeState,
   ) {
-    if (!roomId.value) return;
+    if (!roomId.value) return
 
     // 使用通用函数过滤有效的关注感谢操作
-    const followActions = filterValidActions(actions, TriggerType.FOLLOW, isLive, isTianXuanActive);
+    const followActions = filterValidActions(actions, TriggerType.FOLLOW, isLive, isTianXuanActive)
 
     // 使用通用执行函数处理关注事件
     if (followActions.length > 0 && roomId.value) {
@@ -54,8 +55,8 @@ export function useFollowThank(
         TriggerType.FOLLOW,
         roomId.value,
         runtimeState,
-        { sendLiveDanmaku }
-      );
+        { sendLiveDanmaku },
+      )
     }
   }
 
@@ -64,13 +65,13 @@ export function useFollowThank(
    */
   function clearTimer() {
     if (timer.value) {
-      clearTimeout(timer.value);
-      timer.value = null;
+      clearTimeout(timer.value)
+      timer.value = null
     }
   }
 
   return {
     processFollow,
-    clearTimer
-  };
+    clearTimer,
+  }
 }

@@ -1,57 +1,58 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NSpace, NInput, NButton, NTag, NSelect, NSwitch, NDivider, NCollapseItem, useMessage } from 'naive-ui';
-import { AutoActionItem, TriggerType, ActionType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NButton, NCollapseItem, NDivider, NInput, NSelect, NSpace, NSwitch, NTag, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { ActionType, TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
-const message = useMessage();
+const message = useMessage()
 
 // 舰长礼品码相关
-const tempGiftCodeLevel = ref(3); // 默认为舰长等级
-const tempGiftCode = ref('');
+const tempGiftCodeLevel = ref(3) // 默认为舰长等级
+const tempGiftCode = ref('')
 
 // 添加礼品码
 function addGiftCode() {
-  if (!tempGiftCode.value.trim()) return;
+  if (!tempGiftCode.value.trim()) return
 
   if (!props.action.triggerConfig.giftCodes) {
-    props.action.triggerConfig.giftCodes = [];
+    props.action.triggerConfig.giftCodes = []
   }
 
   // 查找对应等级的礼品码数组
-  let levelCodes = props.action.triggerConfig.giftCodes.find(gc => gc.level === tempGiftCodeLevel.value);
+  let levelCodes = props.action.triggerConfig.giftCodes.find(gc => gc.level === tempGiftCodeLevel.value)
 
   if (!levelCodes) {
     // 如果没有此等级的礼品码数组，创建一个
-    levelCodes = { level: tempGiftCodeLevel.value, codes: [] };
-    props.action.triggerConfig.giftCodes.push(levelCodes);
+    levelCodes = { level: tempGiftCodeLevel.value, codes: [] }
+    props.action.triggerConfig.giftCodes.push(levelCodes)
   }
 
   // 添加礼品码
   if (!levelCodes.codes.includes(tempGiftCode.value.trim())) {
-    levelCodes.codes.push(tempGiftCode.value.trim());
-    tempGiftCode.value = '';
+    levelCodes.codes.push(tempGiftCode.value.trim())
+    tempGiftCode.value = ''
   } else {
-    message.warning('此礼品码已存在');
+    message.warning('此礼品码已存在')
   }
 }
 
 // 移除礼品码
 function removeGiftCode(levelIndex: number, codeIndex: number) {
-  if (props.action.triggerConfig.giftCodes &&
-      props.action.triggerConfig.giftCodes[levelIndex] &&
-      props.action.triggerConfig.giftCodes[levelIndex].codes) {
-    props.action.triggerConfig.giftCodes[levelIndex].codes.splice(codeIndex, 1);
+  if (props.action.triggerConfig.giftCodes
+    && props.action.triggerConfig.giftCodes[levelIndex]
+    && props.action.triggerConfig.giftCodes[levelIndex].codes) {
+    props.action.triggerConfig.giftCodes[levelIndex].codes.splice(codeIndex, 1)
 
     // 如果该等级没有礼品码了，移除这个等级
     if (props.action.triggerConfig.giftCodes[levelIndex].codes.length === 0) {
-      props.action.triggerConfig.giftCodes.splice(levelIndex, 1);
+      props.action.triggerConfig.giftCodes.splice(levelIndex, 1)
     }
   }
 }
@@ -59,10 +60,10 @@ function removeGiftCode(levelIndex: number, codeIndex: number) {
 // 舰长等级名称映射
 function getGuardLevelName(level: number): string {
   switch (level) {
-    case 1: return '总督';
-    case 2: return '提督';
-    case 3: return '舰长';
-    default: return '通用';
+    case 1: return '总督'
+    case 2: return '提督'
+    case 3: return '舰长'
+    default: return '通用'
   }
 }
 </script>
@@ -95,7 +96,7 @@ function getGuardLevelName(level: number): string {
               { label: '总督', value: 1 },
               { label: '提督', value: 2 },
               { label: '舰长', value: 3 },
-              { label: '通用', value: 0 }
+              { label: '通用', value: 0 },
             ]"
           />
           <NInput
