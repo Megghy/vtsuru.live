@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ResponsePointHisrotyModel, PointFrom } from '@/api/api-models'
+import type { ResponsePointHisrotyModel } from '@/api/api-models'
+import { NButton, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+import { PointFrom } from '@/api/api-models'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { NButton, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
 
+// 定义加载完成的事件
+const emit = defineEmits(['dataLoaded'])
 const message = useMessage()
 const useAuth = useBiliAuth()
 const isLoading = ref(false)
@@ -13,14 +16,11 @@ const isLoading = ref(false)
 const history = ref<ResponsePointHisrotyModel[]>([])
 const streamerFilter = ref<string | null>('')
 
-// 定义加载完成的事件
-const emit = defineEmits(['dataLoaded'])
-
 // 获取积分历史记录
 async function getHistories() {
   try {
     isLoading.value = true
-    const data = await useAuth.QueryBiliAuthGetAPI<ResponsePointHisrotyModel[]>(POINT_API_URL + 'user/get-histories')
+    const data = await useAuth.QueryBiliAuthGetAPI<ResponsePointHisrotyModel[]>(`${POINT_API_URL}user/get-histories`)
     if (data.code == 200) {
       console.log('[point] 已获取积分历史')
       history.value = data.data
@@ -28,11 +28,11 @@ async function getHistories() {
       emit('dataLoaded')
       return data.data
     } else {
-      message.error('获取积分历史失败: ' + data.message)
+      message.error(`获取积分历史失败: ${data.message}`)
       console.error(data)
     }
   } catch (err) {
-    message.error('获取积分历史失败: ' + err)
+    message.error(`获取积分历史失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -49,7 +49,7 @@ function reset() {
 // 暴露方法给父组件
 defineExpose({
   getHistories,
-  reset
+  reset,
 })
 
 onMounted(async () => {
@@ -61,7 +61,7 @@ const filteredHistory = computed(() => {
   if (streamerFilter.value === '' || streamerFilter.value === null) {
     return history.value
   }
-  return history.value.filter(item => {
+  return history.value.filter((item) => {
     // 只筛选主播操作、弹幕来源和签到
     if ([PointFrom.Manual, PointFrom.Danmaku, PointFrom.CheckIn].includes(item.from)) {
       // 精确匹配主播名称
@@ -79,14 +79,14 @@ const filteredHistory = computed(() => {
 // 计算可选的主播列表
 const streamerOptions = computed(() => {
   const names = new Set<string>()
-  history.value.forEach(item => {
+  history.value.forEach((item) => {
     if ([PointFrom.Manual, PointFrom.Danmaku, PointFrom.CheckIn].includes(item.from) && item.extra?.user?.name) {
       names.add(item.extra.user.name)
     }
   })
   // 添加"全部主播"选项
   const options = [{ label: '全部主播', value: '' }]
-  names.forEach(name => {
+  names.forEach((name) => {
     options.push({ label: name, value: name })
   })
   return options

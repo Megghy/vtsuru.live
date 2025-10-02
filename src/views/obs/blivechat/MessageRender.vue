@@ -1,97 +1,12 @@
-<template>
-  <yt-live-chat-renderer
-    class="style-scope yt-live-chat-app"
-    style="--scrollbar-width:11px;"
-    hide-timestamps
-    @mousemove="refreshCantScrollStartTime"
-  >
-    <ticker
-      v-model:messages="paidMessages"
-      class="style-scope yt-live-chat-renderer"
-      :show-gift-name="showGiftName || undefined"
-    />
-    <yt-live-chat-item-list-renderer
-      class="style-scope yt-live-chat-renderer"
-      allow-scroll
-    >
-      <div
-        id="item-scroller"
-        ref="scroller"
-        class="style-scope yt-live-chat-item-list-renderer animated"
-        @scroll="onScroll"
-      >
-        <div
-          id="item-offset"
-          ref="itemOffset"
-          class="style-scope yt-live-chat-item-list-renderer"
-        >
-          <div
-            id="items"
-            ref="items"
-            class="style-scope yt-live-chat-item-list-renderer"
-            style="overflow: hidden"
-            :style="{ transform: `translateY(${Math.floor(scrollPixelsRemaining)}px)` }"
-          >
-            <template
-              v-for="message in messages"
-              :key="message.id"
-            >
-              <text-message
-                v-if="message.type === MESSAGE_TYPE_TEXT"
-                class="style-scope yt-live-chat-item-list-renderer"
-                :time="message.time"
-                :avatar-url="message.avatarUrl"
-                :author-name="message.authorName"
-                :author-type="message.authorType"
-                :privilege-type="message.privilegeType"
-                :content-parts="getShowContentParts(message)"
-                :repeated="message.repeated"
-              />
-              <paid-message
-                v-else-if="message.type === MESSAGE_TYPE_GIFT"
-                class="style-scope yt-live-chat-item-list-renderer"
-                :time="message.time"
-                :avatar-url="message.avatarUrl"
-                :author-name="getShowAuthorName(message)"
-                :price="message.price"
-                :price-text="message.price <= 0 ? getGiftShowNameAndNum(message) : ''"
-                :content="message.price <= 0 ? '' : getGiftShowContent(message, showGiftName)"
-              />
-              <membership-item
-                v-else-if="message.type === MESSAGE_TYPE_MEMBER"
-                class="style-scope yt-live-chat-item-list-renderer"
-                :time="message.time"
-                :avatar-url="message.avatarUrl"
-                :author-name="getShowAuthorName(message)"
-                :privilege-type="message.privilegeType"
-                :title="message.title"
-              />
-              <paid-message
-                v-else-if="message.type === MESSAGE_TYPE_SUPER_CHAT"
-                class="style-scope yt-live-chat-item-list-renderer"
-                :time="message.time"
-                :avatar-url="message.avatarUrl"
-                :author-name="getShowAuthorName(message)"
-                :price="message.price"
-                :content="getShowContent(message)"
-              />
-            </template>
-          </div>
-        </div>
-      </div>
-    </yt-live-chat-item-list-renderer>
-  </yt-live-chat-renderer>
-</template>
-
 <script>
+import { useDebounceFn } from '@vueuse/core'
 import _ from 'lodash'
-import Ticker from './Ticker.vue'
-import TextMessage from './TextMessage.vue'
+import { defineComponent } from 'vue'
+import * as constants from './constants'
 import MembershipItem from './MembershipItem.vue'
 import PaidMessage from './PaidMessage.vue'
-import * as constants from './constants'
-import { defineComponent } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import TextMessage from './TextMessage.vue'
+import Ticker from './Ticker.vue'
 
 // 要添加的消息类型
 const ADD_MESSAGE_TYPES = [
@@ -116,24 +31,24 @@ export default defineComponent({
     Ticker,
     TextMessage,
     MembershipItem,
-    PaidMessage
+    PaidMessage,
   },
   props: {
     maxNumber: {
       type: Number,
-      default: 60
+      default: 60,
     },
     showGiftName: {
       type: Boolean,
-      default: false
+      default: false,
     },
     customCss: {
       type: String,
-      default: ''
+      default: '',
     },
   },
   data() {
-    let customStyleElement = document.createElement('style')
+    const customStyleElement = document.createElement('style')
     document.head.appendChild(customStyleElement)
     const setCssDebounce = useDebounceFn(() => {
       customStyleElement.innerHTML = this.customCss ?? ''
@@ -145,27 +60,27 @@ export default defineComponent({
       MESSAGE_TYPE_MEMBER: constants.MESSAGE_TYPE_MEMBER,
       MESSAGE_TYPE_SUPER_CHAT: constants.MESSAGE_TYPE_SUPER_CHAT,
 
-      messages: [],                        // 显示的消息
-      paidMessages: [],                    // 固定在上方的消息
+      messages: [], // 显示的消息
+      paidMessages: [], // 固定在上方的消息
 
-      smoothedMessageQueue: [],            // 平滑消息队列，由外部调用addMessages等方法添加
-      emitSmoothedMessageTimerId: null,    // 消费平滑消息队列的定时器ID
-      enqueueIntervals: [],                // 最近进队列的时间间隔，用来估计下次进队列的时间
-      lastEnqueueTime: null,               // 上次进队列的时间
-      estimatedEnqueueInterval: null,      // 估计的下次进队列时间间隔
+      smoothedMessageQueue: [], // 平滑消息队列，由外部调用addMessages等方法添加
+      emitSmoothedMessageTimerId: null, // 消费平滑消息队列的定时器ID
+      enqueueIntervals: [], // 最近进队列的时间间隔，用来估计下次进队列的时间
+      lastEnqueueTime: null, // 上次进队列的时间
+      estimatedEnqueueInterval: null, // 估计的下次进队列时间间隔
 
-      messagesBuffer: [],                  // 暂时未显示的消息，当不能自动滚动时会积压在这
-      preinsertHeight: 0,                  // 插入新消息之前items的高度
-      isSmoothed: true,                    // 是否平滑滚动，当消息太快时不平滑滚动
-      chatRateMs: 1000,                    // 用来计算消息速度
-      scrollPixelsRemaining: 0,            // 平滑滚动剩余像素
-      scrollTimeRemainingMs: 0,            // 平滑滚动剩余时间
-      lastSmoothChatMessageAddMs: null,    // 上次showNewMessages时间
-      smoothScrollRafHandle: null,         // 平滑滚动requestAnimationFrame句柄
-      lastSmoothScrollUpdate: null,        // 平滑滚动上一帧时间
+      messagesBuffer: [], // 暂时未显示的消息，当不能自动滚动时会积压在这
+      preinsertHeight: 0, // 插入新消息之前items的高度
+      isSmoothed: true, // 是否平滑滚动，当消息太快时不平滑滚动
+      chatRateMs: 1000, // 用来计算消息速度
+      scrollPixelsRemaining: 0, // 平滑滚动剩余像素
+      scrollTimeRemainingMs: 0, // 平滑滚动剩余时间
+      lastSmoothChatMessageAddMs: null, // 上次showNewMessages时间
+      smoothScrollRafHandle: null, // 平滑滚动requestAnimationFrame句柄
+      lastSmoothScrollUpdate: null, // 平滑滚动上一帧时间
 
-      atBottom: true,                      // 滚动到底部，用来判断能否自动滚动
-      cantScrollStartTime: null,            // 开始不能自动滚动的时间，用来防止卡住
+      atBottom: true, // 滚动到底部，用来判断能否自动滚动
+      cantScrollStartTime: null, // 开始不能自动滚动的时间，用来防止卡住
 
       customStyleElement,
 
@@ -175,7 +90,7 @@ export default defineComponent({
   computed: {
     canScrollToBottom() {
       return this.atBottom/* || this.allowScroll */
-    }
+    },
   },
   watch: {
     canScrollToBottom(val) {
@@ -185,8 +100,8 @@ export default defineComponent({
       immediate: true,
       handler(val, oldVal) {
         this.setCssDebounce(val)
-      }
-    }
+      },
+    },
   },
   mounted() {
     this.scrollToBottom()
@@ -220,12 +135,12 @@ export default defineComponent({
     // 后悔加这个功能了
     mergeSimilarText(content) {
       content = content.trim().toLowerCase()
-      for (let message of this.iterRecentMessages(5)) {
+      for (const message of this.iterRecentMessages(5)) {
         if (message.type !== constants.MESSAGE_TYPE_TEXT) {
           continue
         }
 
-        let messageContent = message.content.trim().toLowerCase()
+        const messageContent = message.content.trim().toLowerCase()
         let longer, shorter
         if (messageContent.length > content.length) {
           longer = messageContent
@@ -236,13 +151,13 @@ export default defineComponent({
         }
 
         if (
-          longer.indexOf(shorter) !== -1 // 长的包含短的
+          longer.includes(shorter) // 长的包含短的
           && longer.length - shorter.length < shorter.length // 长度差较小
         ) {
           this.updateMessage(message.id, {
             $add: {
-              repeated: 1
-            }
+              repeated: 1,
+            },
           })
           return true
         }
@@ -250,7 +165,7 @@ export default defineComponent({
       return false
     },
     mergeSimilarGift(authorName, price, _freePrice, giftName, num) {
-      for (let message of this.iterRecentMessages(5)) {
+      for (const message of this.iterRecentMessages(5)) {
         if (
           message.type === constants.MESSAGE_TYPE_GIFT
           && message.authorName === authorName
@@ -258,10 +173,10 @@ export default defineComponent({
         ) {
           this.updateMessage(message.id, {
             $add: {
-              price: price,
+              price,
               // freePrice: freePrice, // 暂时没用到
-              num: num
-            }
+              num,
+            },
           })
           return true
         }
@@ -269,13 +184,13 @@ export default defineComponent({
       return false
     },
     // 从新到老迭代num条消息，注意会迭代smoothedMessageQueue，不会迭代paidMessages
-    *iterRecentMessages(num, onlyCountAddMessages = true) {
+    * iterRecentMessages(num, onlyCountAddMessages = true) {
       if (num <= 0) {
         return
       }
-      for (let arr of this.iterMessageArrs()) {
+      for (const arr of this.iterMessageArrs()) {
         for (let i = arr.length - 1; i >= 0 && num > 0; i--) {
-          let message = arr[i]
+          const message = arr[i]
           yield message
           if (!onlyCountAddMessages || this.isAddMessage(message)) {
             num--
@@ -287,7 +202,7 @@ export default defineComponent({
       }
     },
     // 从新到老迭代消息的数组
-    *iterMessageArrs() {
+    * iterMessageArrs() {
       for (let i = this.smoothedMessageQueue.length - 1; i >= 0; i--) {
         yield this.smoothedMessageQueue[i]
       }
@@ -301,8 +216,8 @@ export default defineComponent({
       this.enqueueMessages(ids.map(
         id => ({
           type: constants.MESSAGE_TYPE_DEL,
-          id
-        })
+          id,
+        }),
       ))
     },
     clearMessages() {
@@ -326,7 +241,7 @@ export default defineComponent({
       this.enqueueMessages([{
         type: constants.MESSAGE_TYPE_UPDATE,
         id,
-        newValuesObj
+        newValuesObj,
       }])
     },
 
@@ -335,8 +250,8 @@ export default defineComponent({
       if (!this.lastEnqueueTime) {
         this.lastEnqueueTime = new Date()
       } else {
-        let curTime = new Date()
-        let interval = curTime - this.lastEnqueueTime
+        const curTime = new Date()
+        const interval = curTime - this.lastEnqueueTime
         // 真实的进队列时间间隔模式大概是这样：2500, 300, 300, 300, 2500, 300, ...
         // B站消息有缓冲，会一次发多条消息。这里把波峰视为发送了一次真实的WS消息，所以要过滤掉间隔太小的
         if (interval > 1000 || this.enqueueIntervals.length < 5) {
@@ -354,7 +269,7 @@ export default defineComponent({
 
       // 把messages分成messageGroup，每个组里最多有1个需要平滑的消息
       let messageGroup = []
-      for (let message of messages) {
+      for (const message of messages) {
         messageGroup.push(message)
         if (this.isAddMessage(message)) {
           this.smoothedMessageQueue.push(messageGroup)
@@ -365,8 +280,8 @@ export default defineComponent({
       if (messageGroup.length > 0) {
         if (this.smoothedMessageQueue.length > 0) {
           // 和上一组合并
-          let lastMessageGroup = this.smoothedMessageQueue[this.smoothedMessageQueue.length - 1]
-          for (let message of messageGroup) {
+          const lastMessageGroup = this.smoothedMessageQueue[this.smoothedMessageQueue.length - 1]
+          for (const message of messageGroup) {
             lastMessageGroup.push(message)
           }
         } else {
@@ -380,7 +295,7 @@ export default defineComponent({
       }
     },
     isAddMessage({ type }) {
-      return ADD_MESSAGE_TYPES.indexOf(type) !== -1
+      return ADD_MESSAGE_TYPES.includes(type)
     },
     emitSmoothedMessages() {
       this.emitSmoothedMessageTimerId = null
@@ -395,9 +310,9 @@ export default defineComponent({
       }
       // 计算发送的消息数，保证在下次进队列之前发完
       // 下次进队列之前应该发多少条消息
-      let shouldEmitGroupNum = Math.max(this.smoothedMessageQueue.length, 0)
+      const shouldEmitGroupNum = Math.max(this.smoothedMessageQueue.length, 0)
       // 下次进队列之前最多能发多少次
-      let maxCanEmitCount = estimatedNextEnqueueRemainTime / MESSAGE_MIN_INTERVAL
+      const maxCanEmitCount = estimatedNextEnqueueRemainTime / MESSAGE_MIN_INTERVAL
       // 这次发多少条消息
       let groupNumToEmit
       if (shouldEmitGroupNum < maxCanEmitCount) {
@@ -409,10 +324,10 @@ export default defineComponent({
       }
 
       // 发消息
-      let messageGroups = this.smoothedMessageQueue.splice(0, groupNumToEmit)
-      let mergedGroup = []
-      for (let messageGroup of messageGroups) {
-        for (let message of messageGroup) {
+      const messageGroups = this.smoothedMessageQueue.splice(0, groupNumToEmit)
+      const mergedGroup = []
+      for (const messageGroup of messageGroups) {
+        for (const message of messageGroup) {
           mergedGroup.push(message)
         }
       }
@@ -444,7 +359,7 @@ export default defineComponent({
         return
       }
 
-      for (let message of messageGroup) {
+      for (const message of messageGroup) {
         switch (message.type) {
           case constants.MESSAGE_TYPE_TEXT:
           case constants.MESSAGE_TYPE_GIFT:
@@ -482,9 +397,9 @@ export default defineComponent({
       this.messagesBuffer.push(message)
     },
     handleDelMessage({ id }) {
-      let arrs = [this.messages, this.paidMessages, this.messagesBuffer]
+      const arrs = [this.messages, this.paidMessages, this.messagesBuffer]
       let needResetSmoothScroll = false
-      for (let arr of arrs) {
+      for (const arr of arrs) {
         for (let i = 0; i < arr.length; i++) {
           if (arr[i].id !== id) {
             continue
@@ -501,10 +416,10 @@ export default defineComponent({
       }
     },
     handleUpdateMessage({ id, newValuesObj }) {
-      let arrs = [this.messages, this.paidMessages, this.messagesBuffer]
+      const arrs = [this.messages, this.paidMessages, this.messagesBuffer]
       let needResetSmoothScroll = false
-      for (let arr of arrs) {
-        for (let message of arr) {
+      for (const arr of arrs) {
+        for (const message of arr) {
           if (message.id !== id) {
             continue
           }
@@ -521,15 +436,15 @@ export default defineComponent({
     },
     doUpdateMessage(message, newValuesObj) {
       // +=
-      let addValuesObj = newValuesObj.$add
+      const addValuesObj = newValuesObj.$add
       if (addValuesObj !== undefined) {
-        for (let name in addValuesObj) {
+        for (const name in addValuesObj) {
           message[name] += addValuesObj[name]
         }
       }
 
       // =
-      for (let name in newValuesObj) {
+      for (const name in newValuesObj) {
         if (!name.startsWith('$')) {
           message[name] = newValuesObj[name]
         }
@@ -548,7 +463,7 @@ export default defineComponent({
         return
       }
 
-      let removeNum = Math.max(this.messages.length + this.messagesBuffer.length - this.maxNumber, 0)
+      const removeNum = Math.max(this.messages.length + this.messagesBuffer.length - this.maxNumber, 0)
       if (removeNum > 0) {
         this.messages.splice(0, removeNum)
         // 防止同时添加和删除项目时所有的项目重新渲染 https://github.com/vuejs/vue/issues/6857
@@ -556,7 +471,7 @@ export default defineComponent({
       }
 
       this.preinsertHeight = this.$refs.items.clientHeight
-      for (let message of this.messagesBuffer) {
+      for (const message of this.messagesBuffer) {
         this.messages.push(message)
       }
       this.messagesBuffer = []
@@ -565,7 +480,7 @@ export default defineComponent({
       this.showNewMessages()
     },
     showNewMessages() {
-      let hasScrollBar = this.$refs.items.clientHeight > this.$refs.scroller.clientHeight
+      const hasScrollBar = this.$refs.items.clientHeight > this.$refs.scroller.clientHeight
       this.$refs.itemOffset.style.height = `${this.$refs.items.clientHeight}px`
       if (!this.canScrollToBottomOrTimedOut() || !hasScrollBar) {
         return
@@ -579,7 +494,7 @@ export default defineComponent({
       if (!this.lastSmoothChatMessageAddMs) {
         this.lastSmoothChatMessageAddMs = performance.now()
       }
-      let interval = performance.now() - this.lastSmoothChatMessageAddMs
+      const interval = performance.now() - this.lastSmoothChatMessageAddMs
       this.chatRateMs = (0.9 * this.chatRateMs) + (0.1 * interval)
       if (this.isSmoothed) {
         if (this.chatRateMs < 400) {
@@ -605,9 +520,9 @@ export default defineComponent({
         return
       }
 
-      let interval = time - this.lastSmoothScrollUpdate
+      const interval = time - this.lastSmoothScrollUpdate
       if (
-        this.scrollPixelsRemaining <= 0 || this.scrollPixelsRemaining >= 400  // 已经滚动到底部或者离底部太远则结束
+        this.scrollPixelsRemaining <= 0 || this.scrollPixelsRemaining >= 400 // 已经滚动到底部或者离底部太远则结束
         || interval >= 1000 // 离上一帧时间太久，可能用户切换到其他网页
         || this.scrollTimeRemainingMs <= 0 // 时间已结束
       ) {
@@ -615,7 +530,7 @@ export default defineComponent({
         return
       }
 
-      let pixelsToScroll = interval / this.scrollTimeRemainingMs * this.scrollPixelsRemaining
+      const pixelsToScroll = interval / this.scrollTimeRemainingMs * this.scrollPixelsRemaining
       this.scrollPixelsRemaining -= pixelsToScroll
       if (this.scrollPixelsRemaining < 0) {
         this.scrollPixelsRemaining = 0
@@ -647,12 +562,12 @@ export default defineComponent({
       }
     },
     scrollToBottom() {
-      this.$refs.scroller.scrollTop = Math.pow(2, 24)
+      this.$refs.scroller.scrollTop = 2 ** 24
       this.atBottom = true
     },
     onScroll() {
       this.refreshCantScrollStartTime()
-      let scroller = this.$refs.scroller
+      const scroller = this.$refs.scroller
       this.atBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < SCROLLED_TO_BOTTOM_EPSILON
       this.flushMessagesBuffer()
     },
@@ -668,11 +583,98 @@ export default defineComponent({
       if (this.cantScrollStartTime) {
         this.cantScrollStartTime = new Date()
       }
-    }
-  }
+    },
+  },
 })
 </script>
 
+<template>
+  <yt-live-chat-renderer
+    class="style-scope yt-live-chat-app"
+    style="--scrollbar-width:11px;"
+    hide-timestamps
+    @mousemove="refreshCantScrollStartTime"
+  >
+    <Ticker
+      v-model:messages="paidMessages"
+      class="style-scope yt-live-chat-renderer"
+      :show-gift-name="showGiftName || undefined"
+    />
+    <yt-live-chat-item-list-renderer
+      class="style-scope yt-live-chat-renderer"
+      allow-scroll
+    >
+      <div
+        id="item-scroller"
+        ref="scroller"
+        class="style-scope yt-live-chat-item-list-renderer animated"
+        @scroll="onScroll"
+      >
+        <div
+          id="item-offset"
+          ref="itemOffset"
+          class="style-scope yt-live-chat-item-list-renderer"
+        >
+          <div
+            id="items"
+            ref="items"
+            class="style-scope yt-live-chat-item-list-renderer"
+            style="overflow: hidden"
+            :style="{ transform: `translateY(${Math.floor(scrollPixelsRemaining)}px)` }"
+          >
+            <template
+              v-for="message in messages"
+              :key="message.id"
+            >
+              <TextMessage
+                v-if="message.type === MESSAGE_TYPE_TEXT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="message.authorName"
+                :author-type="message.authorType"
+                :privilege-type="message.privilegeType"
+                :content-parts="getShowContentParts(message)"
+                :repeated="message.repeated"
+              />
+              <PaidMessage
+                v-else-if="message.type === MESSAGE_TYPE_GIFT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :price="message.price"
+                :price-text="message.price <= 0 ? getGiftShowNameAndNum(message) : ''"
+                :content="message.price <= 0 ? '' : getGiftShowContent(message, showGiftName)"
+              />
+              <MembershipItem
+                v-else-if="message.type === MESSAGE_TYPE_MEMBER"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :privilege-type="message.privilegeType"
+                :title="message.title"
+              />
+              <PaidMessage
+                v-else-if="message.type === MESSAGE_TYPE_SUPER_CHAT"
+                class="style-scope yt-live-chat-item-list-renderer"
+                :time="message.time"
+                :avatar-url="message.avatarUrl"
+                :author-name="getShowAuthorName(message)"
+                :price="message.price"
+                :content="getShowContent(message)"
+              />
+            </template>
+          </div>
+        </div>
+      </div>
+    </yt-live-chat-item-list-renderer>
+  </yt-live-chat-renderer>
+</template>
+
 <style src="@/assets/css/youtube/yt-html.css"></style>
+
 <style src="@/assets/css/youtube/yt-live-chat-renderer.css"></style>
+
 <style src="@/assets/css/youtube/yt-live-chat-item-list-renderer.css"></style>

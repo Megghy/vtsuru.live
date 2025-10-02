@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { NSpace, NSwitch, NInputNumber, NSelect, NCollapseItem } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NCollapseItem, NInputNumber, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
 // 入场过滤模式选项
 const enterFilterModeOptions = [
@@ -15,8 +16,8 @@ const enterFilterModeOptions = [
   { label: '用户黑名单', value: 'blacklist' },
   { label: '用户白名单', value: 'whitelist' },
   { label: '仅舰长', value: 'guard' },
-  { label: '仅勋章', value: 'medal' }
-];
+  { label: '仅勋章', value: 'medal' },
+]
 </script>
 
 <template>

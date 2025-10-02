@@ -1,14 +1,15 @@
+import type {
+  Setting_LiveRequest,
+  SongRequestInfo,
+} from '@/api/api-models'
+import { List } from 'linqts'
+import { computed, ref } from 'vue'
 import {
   QueueSortType,
-  Setting_LiveRequest,
-  SongRequestFrom,
-  SongRequestInfo,
   SongRequestStatus,
 } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/data/constants'
-import { computed, ref, Ref } from 'vue'
-import { List } from 'linqts'
 import { useWebRTC } from '@/store/useRTC'
 
 export function useLiveRequestData(currentId: string) {
@@ -22,21 +23,21 @@ export function useLiveRequestData(currentId: string) {
     let result = new List(originSongs.value)
     switch (settings.value.sortType) {
       case QueueSortType.TimeFirst: {
-        result = result.ThenBy((q) => q.createAt)
+        result = result.ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.GuardFirst: {
         result = result
-          .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-          .ThenBy((q) => q.createAt)
+          .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+          .ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.PaymentFist: {
-        result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+        result = result.OrderByDescending(q => q.price ?? 0).ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.FansMedalFirst: {
-        result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+        result = result.OrderByDescending(q => q.user?.fans_medal_level ?? 0).ThenBy(q => q.createAt)
         break
       }
     }
@@ -48,11 +49,11 @@ export function useLiveRequestData(currentId: string) {
   })
 
   const singing = computed(() => {
-    return songs.value.find((s) => s.status == SongRequestStatus.Singing)
+    return songs.value.find(s => s.status == SongRequestStatus.Singing)
   })
 
   const activeSongs = computed(() => {
-    return songs.value.filter((s) => s.status == SongRequestStatus.Waiting)
+    return songs.value.filter(s => s.status == SongRequestStatus.Waiting)
   })
 
   const allowGuardTypes = computed(() => {
@@ -72,8 +73,8 @@ export function useLiveRequestData(currentId: string) {
   // 数据获取方法
   async function get() {
     try {
-      const data = await QueryGetAPI<{ songs: SongRequestInfo[]; setting: Setting_LiveRequest }>(
-        SONG_REQUEST_API_URL + 'get-active-and-settings',
+      const data = await QueryGetAPI<{ songs: SongRequestInfo[], setting: Setting_LiveRequest }>(
+        `${SONG_REQUEST_API_URL}get-active-and-settings`,
         {
           id: currentId,
         },
@@ -87,7 +88,7 @@ export function useLiveRequestData(currentId: string) {
     return {
       songs: [],
       setting: {} as Setting_LiveRequest,
-    } as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+    } as { songs: SongRequestInfo[], setting: Setting_LiveRequest }
   }
 
   async function update() {
@@ -108,7 +109,7 @@ export function useLiveRequestData(currentId: string) {
   async function initRTC() {
     rtc.value = await useWebRTC().Init('slave')
     // 接收点播结果消息
-    rtc.value.on('function.live-request.add', () => update())
+    rtc.value.on('function.live-request.add', async () => update())
   }
 
   return {
@@ -121,6 +122,6 @@ export function useLiveRequestData(currentId: string) {
     key,
     get,
     update,
-    initRTC
+    initRTC,
   }
 }

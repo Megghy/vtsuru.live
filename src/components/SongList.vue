@@ -1,20 +1,13 @@
 <script setup lang="ts">
-// [导入] 依赖项和类型
-import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models'; // API 数据模型
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'; // API 请求方法
-import { SONG_API_URL } from '@/data/constants'; // API 地址常量
-import { GetPlayButton } from '@/Utils'; // 公用方法：获取播放/信息按钮
-import SongPlayer from './SongPlayer.vue'; // 子组件：歌曲播放器
-
 // [导入] UI 组件和图标
 import {
   Delete24Filled,
   Info24Filled,
   NotepadEdit20Filled,
-  Play24Filled
-} from '@vicons/fluent';
-import { useLocalStorage, refDebounced } from '@vueuse/core'; // VueUse 工具函数
-import { List } from 'linqts'; // LINQ for TypeScript
+  Play24Filled,
+} from '@vicons/fluent'
+import { refDebounced, useLocalStorage } from '@vueuse/core' // VueUse 工具函数
+import { List } from 'linqts' // LINQ for TypeScript
 import {
   DataTableBaseColumn,
   DataTableColumns,
@@ -26,7 +19,6 @@ import {
   NCheckbox,
   NDataTable,
   NDivider,
-  NEllipsis,
   NForm,
   NFormItem,
   NIcon,
@@ -38,15 +30,22 @@ import {
   NPopconfirm,
   NSelect,
   NSpace,
+  NSwitch,
   NTabPane,
   NTabs,
   NTag,
   NText,
   NTooltip,
-  NSwitch,
   useMessage, // Naive UI 组件
-} from 'naive-ui';
-import { VNodeChild, computed, h, onMounted, ref, watch } from 'vue'; // Vue 核心 API
+} from 'naive-ui'
+import { computed, h, onMounted, ref, VNodeChild, watch } from 'vue' // Vue 核心 API
+
+// [导入] 依赖项和类型
+import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models' // API 数据模型
+import { QueryGetAPI, QueryPostAPI } from '@/api/query' // API 请求方法
+import { SONG_API_URL } from '@/data/constants' // API 地址常量
+import { GetPlayButton } from '@/Utils' // 公用方法：获取播放/信息按钮
+import SongPlayer from './SongPlayer.vue' // 子组件：歌曲播放器
 
 // --- Props 定义 ---
 const props = defineProps<{
@@ -71,7 +70,7 @@ const pageSize = ref(25) // 每页大小
 const searchMusicKeyword = ref('') // 歌曲名称搜索关键词
 const debouncedInput = refDebounced(searchMusicKeyword, 500) // 防抖处理的搜索关键词
 const selectedLanguageFilter = ref<string[]>([]) // 顶部语言筛选器选中值
-const selectedTagFilter = ref<string[]>([])      // 顶部标签筛选器选中值
+const selectedTagFilter = ref<string[]>([]) // 顶部标签筛选器选中值
 const selectedAuthorFilter = ref<string | null>(null) // 顶部作者筛选器选中值 (直接控制列筛选)
 
 // --- 弹窗状态 ---
@@ -92,19 +91,19 @@ const selectedColumn = ref<DataTableRowKey[]>([]) // 表格选中行的 Key 数�
 
 // 分页相关
 const currentPage = ref(1) // 当前页码
-const handlePageChange = (page: number) => {
+function handlePageChange(page: number) {
   currentPage.value = page
 }
 
 // 暴露分页方法
-const nextPage = () => {
+function nextPage() {
   const pagination = songsComputed.value.length > 0 ? Math.ceil(songsComputed.value.length / pageSize.value) : 1
   if (currentPage.value < pagination) {
     currentPage.value++
   }
 }
 
-const prevPage = () => {
+function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--
   }
@@ -114,92 +113,97 @@ const prevPage = () => {
 defineExpose({
   nextPage,
   prevPage,
-  currentPage
+  currentPage,
 })
 
 // --- 计算属性 ---
 
 // 新增：计算是否需要显示试听开关
 const canShowListenSwitch = computed(() => {
-  const audioRegex = /\.(mp3|flac|ogg|wav|m4a)$/i;
-  return songsInternal.value.some(song => song.url && audioRegex.test(song.url));
-});
+  const audioRegex = /\.(mp3|flac|ogg|wav|m4a)$/i
+  return songsInternal.value.some(song => song.url && audioRegex.test(song.url))
+})
 
 // 新增：计算是否需要显示链接开关
 const canShowLinkSwitch = computed(() => {
-  const linkSources = [SongFrom.Netease, SongFrom.FiveSing, SongFrom.Kugou]; // Corrected sources
-  return songsInternal.value.some(song => song.url || (song.from != null && linkSources.includes(song.from))); // Check url OR valid from source
-});
+  const linkSources = [SongFrom.Netease, SongFrom.FiveSing, SongFrom.Kugou] // Corrected sources
+  return songsInternal.value.some(song => song.url || (song.from != null && linkSources.includes(song.from))) // Check url OR valid from source
+})
 
 // 计算操作列的预定义宽度
 const actionColumnWidth = computed(() => {
-  const baseSelfWidth = 80; // 基础宽度 (isSelf=true, 编辑+删除)
-  const basePublicWidth = 40; // 基础宽度 (isSelf=false)
-  const listenButtonWidth = 40;
-  const linkButtonWidth = 50;
-  const extraButtonWidth = 40; // 假设的额外按钮宽度
+  const baseSelfWidth = 80 // 基础宽度 (isSelf=true, 编辑+删除)
+  const basePublicWidth = 40 // 基础宽度 (isSelf=false)
+  const listenButtonWidth = 40
+  const linkButtonWidth = 50
+  const extraButtonWidth = 40 // 假设的额外按钮宽度
 
-  let width = props.isSelf ? baseSelfWidth : basePublicWidth;
+  let width = props.isSelf ? baseSelfWidth : basePublicWidth
 
   if (showListenButton.value && canShowListenSwitch.value) {
-    width += listenButtonWidth;
+    width += listenButtonWidth
   }
   if (showLinkButton.value && canShowLinkSwitch.value) {
-    width += linkButtonWidth;
+    width += linkButtonWidth
   }
   if (props.extraButton) {
-    width += extraButtonWidth;
+    width += extraButtonWidth
   }
 
   // 返回一个合理的宽度值，例如，可以设定几个档位
   // 这里用之前的计算逻辑，但可以替换为固定档位如 80, 120, 160, 200, 240
   // 为了精确，我们还是用计算值，但它是响应式的
-  return width;
-});
+  return width
+})
 
 // 筛选后的歌曲列表
 const songsComputed = computed(() => {
-  let filteredSongs = songsInternal.value;
+  let filteredSongs = songsInternal.value
 
   // 1. 搜索框筛选 (曲名或翻译名，防抖)
-  const searchTerm = debouncedInput.value?.trim().toLowerCase();
+  const searchTerm = debouncedInput.value?.trim().toLowerCase()
   if (searchTerm) {
-    filteredSongs = filteredSongs.filter((s) =>
-      s.name.toLowerCase().includes(searchTerm) ||
-      s.translateName?.toLowerCase().includes(searchTerm) // 同时搜索翻译名称
-    );
+    filteredSongs = filteredSongs.filter(s =>
+      s.name.toLowerCase().includes(searchTerm)
+      || s.translateName?.toLowerCase().includes(searchTerm), // 同时搜索翻译名称
+    )
   }
 
   // 2. 顶部语言筛选
   if (selectedLanguageFilter.value.length > 0) {
-    filteredSongs = filteredSongs.filter((s) =>
-      s.language?.some(lang => selectedLanguageFilter.value.includes(lang))
-    );
+    filteredSongs = filteredSongs.filter(s =>
+      s.language?.some(lang => selectedLanguageFilter.value.includes(lang)),
+    )
   }
 
   // 3. 顶部标签筛选
   if (selectedTagFilter.value.length > 0) {
-    filteredSongs = filteredSongs.filter((s) =>
-      s.tags?.some(tag => selectedTagFilter.value.includes(tag))
-    );
+    filteredSongs = filteredSongs.filter(s =>
+      s.tags?.some(tag => selectedTagFilter.value.includes(tag)),
+    )
   }
 
   // 注意: 作者筛选主要通过列筛选器实现 (由 selectedAuthorFilter 控制)
   // 如果需要整合到这里，需要额外逻辑
 
-  return filteredSongs;
-});
-
+  return filteredSongs
+})
 
 // 语言下拉选项 (包含预设和歌曲数据中存在的)
 const languageSelectOption = computed(() => {
   const languages = new Set<string>([ // 预设一些常用语言
-    '中文', '日语', '英语', '韩语', '法语', '西语', '其他'
+    '中文',
+    '日语',
+    '英语',
+    '韩语',
+    '法语',
+    '西语',
+    '其他'
   ])
   songsInternal.value.forEach((s) => {
-    s.language?.forEach((l) => languages.add(l))
+    s.language?.forEach(l => languages.add(l))
   })
-  return [...languages].sort().map((t) => ({ // 排序增加用户体验
+  return [...languages].sort().map(t => ({ // 排序增加用户体验
     label: t,
     value: t,
   }))
@@ -208,11 +212,11 @@ const languageSelectOption = computed(() => {
 // 标签下拉选项 (从歌曲数据中动态生成)
 const tagsSelectOption = computed(() => {
   return new List(songsInternal.value)
-    .SelectMany((s) => new List(s?.tags ?? [])) // 使用 ?? [] 避免 undefined
+    .SelectMany(s => new List(s?.tags ?? [])) // 使用 ?? [] 避免 undefined
     .Distinct()
     .OrderBy(tag => tag) // 排序
     .ToArray()
-    .map((t) => ({
+    .map(t => ({
       label: t,
       value: t,
     }))
@@ -221,11 +225,11 @@ const tagsSelectOption = computed(() => {
 // 作者下拉选项 (从歌曲数据中动态生成)
 const authorsOptions = computed(() => {
   return new List(songsInternal.value)
-    .SelectMany((s) => new List(s?.author ?? [])) // 使用 ?? [] 避免 undefined
+    .SelectMany(s => new List(s?.author ?? [])) // 使用 ?? [] 避免 undefined
     .Distinct()
     .OrderBy(author => author) // 排序
     .ToArray()
-    .map((t) => ({
+    .map(t => ({
       label: t,
       value: t,
     }))
@@ -239,7 +243,7 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   resizable: true,
   // 列筛选函数：检查行的作者数组是否包含筛选值
   filter(value, row) {
-    return row.author?.includes(value.toString()) ?? false;
+    return row.author?.includes(value.toString()) ?? false
   },
   // 列筛选选项：使用计算属性动态生成
   filterOptions: authorsOptions.value, // 初始值
@@ -248,30 +252,30 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   render(data) {
     // 渲染作者按钮，点击时更新列筛选状态
     return h(NSpace, { size: 5 }, () =>
-      data.author?.map((a) => // 使用 ?. 防止 author 为空
+      data.author?.map(a => // 使用 ?. 防止 author 为空
         h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a),
-      ) ?? null // 如果 author 为空则不渲染
+      ) ?? null, // 如果 author 为空则不渲染
     )
   },
 })
 
 // 点击作者按钮的处理函数：更新列筛选值
-const onAuthorClick = (author: string) => {
+function onAuthorClick(author: string) {
   if (authorColumn.value.filterOptionValue === author) {
     // 如果当前筛选值就是点击的作者，则清除筛选
-    authorColumn.value.filterOptionValue = null;
-    selectedAuthorFilter.value = null; // 同步更新顶部筛选状态
+    authorColumn.value.filterOptionValue = null
+    selectedAuthorFilter.value = null // 同步更新顶部筛选状态
   } else {
     // 否则，设置筛选值为点击的作者
-    authorColumn.value.filterOptionValue = author;
-    selectedAuthorFilter.value = author; // 同步更新顶部筛选状态
+    authorColumn.value.filterOptionValue = author
+    selectedAuthorFilter.value = author // 同步更新顶部筛选状态
   }
 }
 
 // 监听顶部作者筛选器变化，更新列筛选状态
 watch(selectedAuthorFilter, (newVal) => {
-  authorColumn.value.filterOptionValue = newVal;
-});
+  authorColumn.value.filterOptionValue = newVal
+})
 
 // 创建表格列配置的函数
 function createColumns(): DataTableColumns<SongsInfo> {
@@ -309,14 +313,13 @@ function createColumns(): DataTableColumns<SongsInfo> {
       filterOptions: languageSelectOption.value,
       // 列筛选函数
       filter(value, row) {
-        return row.language?.includes(value.toString()) ?? false;
+        return row.language?.includes(value.toString()) ?? false
       },
       render(data) {
         // 使用 NTag 显示语言
         return data.language?.length // 使用 ?.length 检查
           ? h(NSpace, { size: 5 }, () =>
-            data.language?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)),
-          )
+              data.language?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a))          )
           : null
       },
     },
@@ -326,8 +329,8 @@ function createColumns(): DataTableColumns<SongsInfo> {
       minWidth: 100, // 增加最小宽度
       resizable: true,
       ellipsis: { // 使用 Naive UI 的省略配置
-        tooltip: true // 鼠标悬浮显示完整内容
-      }
+        tooltip: true, // 鼠标悬浮显示完整内容
+      },
       // render(data) { // 使用 ellipsis 配置后，不再需要手动渲染 NEllipsis
       //   return h(NEllipsis, { tooltip: { placement: 'top'} }, () => data.description)
       // },
@@ -340,7 +343,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         // 渲染点歌要求的标签
         const tags: VNodeChild[] = []
-        if (!data.options) return null; // 没有选项直接返回
+        if (!data.options) return null // 没有选项直接返回
 
         if (data.options.needJianzhang) {
           tags.push(h(NTag, { color: { textColor: 'white', color: GetGuardColor(3), borderColor: 'white' }, size: 'small' }, () => '舰长'))
@@ -357,7 +360,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
         if (data.options.fanMedalMinLevel) {
           tags.push(h(NTag, { type: 'info', size: 'small' }, () => `粉丝牌 ≥ ${data.options?.fanMedalMinLevel}`)) // 优化显示
         }
-        return tags.length > 0 ? h(NSpace, { size: 5 }, () => tags) : null;
+        return tags.length > 0 ? h(NSpace, { size: 5 }, () => tags) : null
       },
     },
     {
@@ -369,12 +372,12 @@ function createColumns(): DataTableColumns<SongsInfo> {
       filterOptions: tagsSelectOption.value,
       // 列筛选函数
       filter(value, row) {
-        return row.tags?.includes(value.toString()) ?? false;
+        return row.tags?.includes(value.toString()) ?? false
       },
       render(data) {
         // 使用 NTag 显示标签
         return data.tags?.length
-          ? h(NSpace, { size: 5 }, () => data.tags?.map((a) => h(NTag, { bordered: false, size: 'small' }, () => a)))
+          ? h(NSpace, { size: 5 }, () => data.tags?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a)))
           : null
       },
     },
@@ -383,16 +386,16 @@ function createColumns(): DataTableColumns<SongsInfo> {
       key: 'manage',
       fixed: 'right', // 固定操作列在右侧
       render(data) {
-        const buttons: VNodeChild[] = [];
+        const buttons: VNodeChild[] = []
 
         // 1. 获取播放/信息按钮 (来自 Utils)
         if (showLinkButton.value) { // 添加条件
-          const playButton = GetPlayButton(data);
-          if (playButton) buttons.push(playButton);
+          const playButton = GetPlayButton(data)
+          if (playButton) buttons.push(playButton)
         }
 
         // 2. 试听按钮 (仅对音频文件显示)
-        const isAudio = /\.(mp3|flac|ogg|wav|m4a)$/i.test(data.url ?? ''); // 正则判断音频后缀
+        const isAudio = /\.(mp3|flac|ogg|wav|m4a)$/i.test(data.url ?? '') // 正则判断音频后缀
         if (showListenButton.value && isAudio) { // 添加条件
           buttons.push(
             h(NTooltip, null, {
@@ -404,13 +407,15 @@ function createColumns(): DataTableColumns<SongsInfo> {
                     size: 'small',
                     circle: true,
                     loading: isLrcLoading.value === data.key, // 绑定加载状态
-                    onClick: () => { playingSong.value = data }, // 点击播放
+                    onClick: () => {
+                      playingSong.value = data
+                    }, // 点击播放
                   },
-                  { icon: () => h(NIcon, { component: Play24Filled }) }
+                  { icon: () => h(NIcon, { component: Play24Filled }) },
                 ),
               default: () => '试听',
-            })
-          );
+            }),
+          )
         }
 
         // 3. 编辑和删除按钮 (仅自己的歌单显示)
@@ -426,15 +431,15 @@ function createColumns(): DataTableColumns<SongsInfo> {
                     secondary: true, // 次要按钮样式
                     onClick: () => {
                       // 深拷贝防止修改影响原数据
-                      updateSongModel.value = JSON.parse(JSON.stringify(data));
-                      showModal.value = true; // 打开编辑弹窗
+                      updateSongModel.value = JSON.parse(JSON.stringify(data))
+                      showModal.value = true // 打开编辑弹窗
                     },
                   },
-                  { icon: () => h(NIcon, { component: NotepadEdit20Filled }) }
+                  { icon: () => h(NIcon, { component: NotepadEdit20Filled }) },
                 ),
               default: () => '修改',
-            })
-          );
+            }),
+          )
           buttons.push(
             h(NTooltip, null, {
               trigger: () =>
@@ -446,23 +451,23 @@ function createColumns(): DataTableColumns<SongsInfo> {
                       h(
                         NButton,
                         { type: 'error', size: 'small', circle: true },
-                        { icon: () => h(NIcon, { component: Delete24Filled }) }
+                        { icon: () => h(NIcon, { component: Delete24Filled }) },
                       ),
                     default: () => `确认删除歌曲《${data.name}》？`, // 确认提示语
-                  }
+                  },
                 ),
               default: () => '删除',
-            })
-          );
+            }),
+          )
         }
 
         // 4. 额外的按钮 (通过 props 传入)
         if (props.extraButton) {
-          buttons.push(...props.extraButton(data));
+          buttons.push(...props.extraButton(data))
         }
 
         // 使用 NSpace 渲染所有按钮
-        return h(NSpace, { justify: 'end', size: 8, wrap: false }, () => buttons); // 增加间距，禁止换行
+        return h(NSpace, { justify: 'end', size: 8, wrap: false }, () => buttons) // 增加间距，禁止换行
       },
       width: actionColumnWidth.value, // 使用计算属性
     },
@@ -482,148 +487,148 @@ const updateSongRules: FormRules = {
 watch(
   () => props.songs,
   (newV) => {
-    console.log('Props songs updated, refreshing internal list and columns.'); // 调试信息
-    songsInternal.value = [...newV]; // 使用扩展运算符创建新数组，确保响应性
+    console.log('Props songs updated, refreshing internal list and columns.') // 调试信息
+    songsInternal.value = [...newV] // 使用扩展运算符创建新数组，确保响应性
     // 重新生成列定义 (确保筛选选项等是最新的)
     // 使用 nextTick 替代 setTimeout，确保 DOM 更新后再操作
     // nextTick(() => {
     //   columns.value = createColumns();
     // });
     // 实测 watch 触发时直接更新列定义即可，NaiveUI 会处理
-    columns.value = createColumns();
+    columns.value = createColumns()
   },
-  { deep: true } // 深度监听，如果 songs 数组内部对象变化也触发
+  { deep: true }, // 深度监听，如果 songs 数组内部对象变化也触发
 )
 
 // 监听按钮显示状态变化，重新计算列定义以更新宽度
 watch([showListenButton, showLinkButton], () => {
-  console.log('Button visibility changed, recalculating columns.');
-  columns.value = createColumns();
-});
+  console.log('Button visibility changed, recalculating columns.')
+  columns.value = createColumns()
+})
 
 // 更新单首歌曲信息
 async function updateSong() {
   try {
-    await formRef.value?.validate(); // 触发表单验证
+    await formRef.value?.validate() // 触发表单验证
     // 检查是否存在同名歌曲 (排除当前正在编辑的歌曲)
     if (songsInternal.value.some(s => s.name === updateSongModel.value.name && s.key !== updateSongModel.value.key)) {
-      message.error('已存在相同名称的歌曲');
-      return;
+      message.error('已存在相同名称的歌曲')
+      return
     }
-    isLoading.value = true; // 开始加载
-    const { code, data, message: errMsg } = await QueryPostAPI<SongsInfo>(SONG_API_URL + 'update', {
+    isLoading.value = true // 开始加载
+    const { code, data, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL }update`, {
       key: updateSongModel.value.key,
       song: updateSongModel.value,
-    });
+    })
     if (code === 200 && data) {
-      const index = songsInternal.value.findIndex((s) => s.key === data.key);
+      const index = songsInternal.value.findIndex(s => s.key === data.key)
       if (index !== -1) {
-        songsInternal.value.splice(index, 1, data); // 更新内部列表数据
+        songsInternal.value.splice(index, 1, data) // 更新内部列表数据
       }
-      message.success('已更新歌曲信息');
-      showModal.value = false; // 关闭弹窗
+      message.success('已更新歌曲信息')
+      showModal.value = false // 关闭弹窗
     } else {
-      message.error(`未能更新歌曲信息: ${errMsg || '未知错误'}`);
+      message.error(`未能更新歌曲信息: ${errMsg || '未知错误'}`)
     }
   } catch (errors) {
     // 表单验证失败
-    console.error('Form validation failed:', errors);
-    message.warning('请检查表单填写是否正确');
+    console.error('Form validation failed:', errors)
+    message.warning('请检查表单填写是否正确')
   } finally {
-    isLoading.value = false; // 结束加载
+    isLoading.value = false // 结束加载
   }
 }
 
 // 删除单首歌曲
 async function delSong(song: SongsInfo) {
-  isLoading.value = true; // 开始加载 (虽然删除很快，但保持一致性)
+  isLoading.value = true // 开始加载 (虽然删除很快，但保持一致性)
   try {
-    const { code, message: errMsg } = await QueryGetAPI<SongsInfo>(SONG_API_URL + 'del', { key: song.key });
+    const { code, message: errMsg } = await QueryGetAPI<SongsInfo>(`${SONG_API_URL }del`, { key: song.key })
     if (code === 200) {
       // 从内部列表中移除
-      songsInternal.value = songsInternal.value.filter((s) => s.key !== song.key);
-      message.success(`已删除歌曲《${song.name}》`);
+      songsInternal.value = songsInternal.value.filter(s => s.key !== song.key)
+      message.success(`已删除歌曲《${song.name}》`)
       // 如果删除的是正在播放的歌曲，停止播放
       if (playingSong.value?.key === song.key) {
-        playingSong.value = undefined;
+        playingSong.value = undefined
       }
       // 如果删除的是选中的歌曲，也从选中列表中移除
-      selectedColumn.value = selectedColumn.value.filter(key => key !== song.key);
+      selectedColumn.value = selectedColumn.value.filter(key => key !== song.key)
     } else {
-      message.error(`未能删除歌曲: ${errMsg || '未知错误'}`);
+      message.error(`未能删除歌曲: ${errMsg || '未知错误'}`)
     }
   } catch (error: any) {
-    message.error(`删除歌曲时出错: ${error.message || error}`);
+    message.error(`删除歌曲时出错: ${error.message || error}`)
   } finally {
-    isLoading.value = false; // 结束加载
+    isLoading.value = false // 结束加载
   }
 }
 
 // 批量删除歌曲
 async function delBatchSong() {
   if (selectedColumn.value.length === 0) {
-    message.warning('请先选择要删除的歌曲');
-    return;
+    message.warning('请先选择要删除的歌曲')
+    return
   }
-  const ids = selectedColumn.value.map((s) => s.toString());
-  isLoading.value = true;
+  const ids = selectedColumn.value.map(s => s.toString())
+  isLoading.value = true
   try {
-    const { code, message: errMsg } = await QueryPostAPI<SongsInfo>(SONG_API_URL + 'del-batch', ids);
+    const { code, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL }del-batch`, ids)
     if (code === 200) {
-      songsInternal.value = songsInternal.value.filter((s) => !ids.includes(s.key));
-      message.success(`已删除 ${ids.length} 首歌曲`);
-      showBatchModal.value = false; // 关闭批量编辑弹窗
-      selectedColumn.value = []; // 清空选择
+      songsInternal.value = songsInternal.value.filter(s => !ids.includes(s.key))
+      message.success(`已删除 ${ids.length} 首歌曲`)
+      showBatchModal.value = false // 关闭批量编辑弹窗
+      selectedColumn.value = [] // 清空选择
       // 如果删除的歌曲包含正在播放的歌曲，停止播放
       if (playingSong.value && ids.includes(playingSong.value.key)) {
-          playingSong.value = undefined;
+        playingSong.value = undefined
       }
     } else {
-      message.error(`未能批量删除歌曲: ${errMsg || '未知错误'}`);
+      message.error(`未能批量删除歌曲: ${errMsg || '未知错误'}`)
     }
   } catch (error: any) {
-    message.error(`批量删除歌曲时出错: ${error.message || error}`);
+    message.error(`批量删除歌曲时出错: ${error.message || error}`)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
 // --- 批量更新函数 (通用逻辑提取) ---
 async function executeBatchUpdate<T>(
-    endpoint: string,
-    payload: { ids: string[]; data: T },
-    updateField: keyof SongsInfo,
-    successMessage: string
+  endpoint: string,
+  payload: { ids: string[], data: T },
+  updateField: keyof SongsInfo,
+  successMessage: string,
 ) {
   if (selectedColumn.value.length === 0) {
-    message.warning('请先选择要更新的歌曲');
-    return false; // 返回 false 表示未执行
+    message.warning('请先选择要更新的歌曲')
+    return false // 返回 false 表示未执行
   }
-  isLoading.value = true;
+  isLoading.value = true
   try {
-    const { code, message: errMsg } = await QueryPostAPI<SongsInfo[]>(`${SONG_API_URL}${endpoint}`, payload);
+    const { code, message: errMsg } = await QueryPostAPI<SongsInfo[]>(`${SONG_API_URL}${endpoint}`, payload)
     if (code === 200) {
-      message.success(successMessage);
+      message.success(successMessage)
       // 更新本地数据
       songsInternal.value.forEach((song, index) => {
         if (payload.ids.includes(song.key)) {
           // 直接修改会破坏响应性，需要创建新对象或使用 Vue.set (或直接修改 ref 的 value)
           // songsInternal.value[index][updateField] = payload.data; // 这种方式可能不触发视图更新
-          const updatedSong = { ...songsInternal.value[index], [updateField]: payload.data };
-          songsInternal.value.splice(index, 1, updatedSong);
+          const updatedSong = { ...songsInternal.value[index], [updateField]: payload.data }
+          songsInternal.value.splice(index, 1, updatedSong)
         }
-      });
+      })
       // 可能需要清空批量编辑表单的值
-      return true; // 返回 true 表示成功
+      return true // 返回 true 表示成功
     } else {
-      message.error(`未能更新歌曲: ${errMsg || '未知错误'}`);
-      return false;
+      message.error(`未能更新歌曲: ${errMsg || '未知错误'}`)
+      return false
     }
   } catch (err: any) {
-    message.error(`未能更新歌曲: ${err.message || err}`);
-    return false;
+    message.error(`未能更新歌曲: ${err.message || err}`)
+    return false
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
@@ -633,9 +638,9 @@ async function batchUpdateAuthor() {
     'update-batch-author',
     { ids: selectedColumn.value.map(String), data: batchUpdate_Author.value },
     'author',
-    `已为 ${selectedColumn.value.length} 首歌曲更新作者`
-  );
-  if (success) batchUpdate_Author.value = []; // 成功后清空输入
+    `已为 ${selectedColumn.value.length} 首歌曲更新作者`,
+  )
+  if (success) batchUpdate_Author.value = [] // 成功后清空输入
 }
 
 // 批量更新标签
@@ -644,9 +649,9 @@ async function batchUpdateTag() {
     'update-batch-tag',
     { ids: selectedColumn.value.map(String), data: batchUpdate_Tag.value },
     'tags',
-    `已为 ${selectedColumn.value.length} 首歌曲更新标签`
-  );
-  if (success) batchUpdate_Tag.value = []; // 成功后清空输入
+    `已为 ${selectedColumn.value.length} 首歌曲更新标签`,
+  )
+  if (success) batchUpdate_Tag.value = [] // 成功后清空输入
 }
 
 // 批量更新语言
@@ -655,9 +660,9 @@ async function batchUpdateLanguage() {
     'update-batch-language',
     { ids: selectedColumn.value.map(String), data: batchUpdate_Language.value },
     'language',
-    `已为 ${selectedColumn.value.length} 首歌曲更新语言`
-  );
-  if (success) batchUpdate_Language.value = []; // 成功后清空输入
+    `已为 ${selectedColumn.value.length} 首歌曲更新语言`,
+  )
+  if (success) batchUpdate_Language.value = [] // 成功后清空输入
 }
 
 // 批量更新点歌选项
@@ -666,43 +671,42 @@ async function batchUpdateOption() {
     'update-batch-option',
     { ids: selectedColumn.value.map(String), data: batchUpdate_Option.value ?? null }, // 如果为 undefined 发送 null
     'options',
-    `已为 ${selectedColumn.value.length} 首歌曲更新点歌选项`
-  );
-   if (success) batchUpdate_Option.value = undefined; // 成功后清空输入
+    `已为 ${selectedColumn.value.length} 首歌曲更新点歌选项`,
+  )
+  if (success) batchUpdate_Option.value = undefined // 成功后清空输入
 }
 
 // --- 辅助函数 ---
 
 // 根据 SC 价格获取颜色
 function GetSCColor(price: number): string {
-  if (price <= 0) return `#2a60b2`; // 默认蓝色 (或根据实际需要调整)
-  if (price < 30) return `#2a60b2`; // 蓝色
-  if (price < 50) return `#2a60b2`; // 蓝色 (合并)
-  if (price < 100) return `#427d9e`; // 青色
-  if (price < 500) return `#c99801`; // 黄色
-  if (price < 1000) return `#e09443`; // 橙色
-  if (price < 2000) return `#e54d4d`; // 红色
-  return `#ab1a32`; // 深红色 (>= 2000)
+  if (price <= 0) return `#2a60b2` // 默认蓝色 (或根据实际需要调整)
+  if (price < 30) return `#2a60b2` // 蓝色
+  if (price < 50) return `#2a60b2` // 蓝色 (合并)
+  if (price < 100) return `#427d9e` // 青色
+  if (price < 500) return `#c99801` // 黄色
+  if (price < 1000) return `#e09443` // 橙色
+  if (price < 2000) return `#e54d4d` // 红色
+  return `#ab1a32` // 深红色 (>= 2000)
 }
 
 // 根据大航海等级获取颜色
 function GetGuardColor(level: number | null | undefined): string {
   switch (level) {
-    case 1: return 'rgb(122, 4, 35)'; // 总督
-    case 2: return 'rgb(157, 155, 255)'; // 提督
-    case 3: return 'rgb(104, 136, 241)'; // 舰长
-    default: return ''; // 默认或无效值
+    case 1: return 'rgb(122, 4, 35)' // 总督
+    case 2: return 'rgb(157, 155, 255)' // 提督
+    case 3: return 'rgb(104, 136, 241)' // 舰长
+    default: return '' // 默认或无效值
   }
 }
 
 // --- 生命周期钩子 ---
 onMounted(() => {
-  //console.log('Component mounted, initializing...'); // 调试信息
-  songsInternal.value = [...props.songs]; // 初始化时复制 props 数据
+  // console.log('Component mounted, initializing...'); // 调试信息
+  songsInternal.value = [...props.songs] // 初始化时复制 props 数据
   // 初始加载列定义
-  columns.value = createColumns();
-});
-
+  columns.value = createColumns()
+})
 </script>
 
 <template>
@@ -841,7 +845,7 @@ onMounted(() => {
       showSizePicker: true,
       showQuickJumper: true,
       page: currentPage,
-      onUpdatePage: handlePageChange
+      onUpdatePage: handlePageChange,
     }"
     :loading="isLoading && songsComputed.length === 0"
     striped

@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent'; // Maximize 和 Restore 图标
-import { Close, RemoveOutline as Minus } from '@vicons/ionicons5'; // Close 和 Minimize 图标
-import { NFlex, NButton } from 'naive-ui'; // 显式导入 Naive UI 组件（好习惯）
-import { UnlistenFn } from '@tauri-apps/api/event';
+import type { UnlistenFn } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
+import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
+import { NButton, NFlex } from 'naive-ui' // 显式导入 Naive UI 组件（好习惯）
+import { onMounted, onUnmounted, ref } from 'vue'
 
-const appWindow = getCurrentWindow();
-const isMaximized = ref(false);
-let unlisten: UnlistenFn | null = null;
+const appWindow = getCurrentWindow()
+const isMaximized = ref(false)
+let unlisten: UnlistenFn | null = null
 
 // --- Window State Handling ---
 
 // 更新最大化状态的函数
-const updateMaximizedState = async () => {
-  isMaximized.value = await appWindow.isMaximized();
-};
+async function updateMaximizedState() {
+  isMaximized.value = await appWindow.isMaximized()
+}
 
 // --- Event Handlers ---
 
 // 处理标题栏的鼠标按下事件 (拖动/双击最大化)
-const handleTitlebarMouseDown = (event: MouseEvent) => {
+function handleTitlebarMouseDown(event: MouseEvent) {
   // 确保是鼠标左键按下
   if (event.buttons === 1) {
     // event.detail 在 mousedown 事件中可以用来检测点击次数
     if (event.detail === 2) {
       // 双击：切换最大化
-      appWindow.toggleMaximize();
+      appWindow.toggleMaximize()
     } else {
       // 单击：开始拖动
-      appWindow.startDragging();
+      appWindow.startDragging()
     }
   }
-};
+}
 
 // --- Lifecycle Hooks ---
 
 onMounted(async () => {
   // 1. 组件挂载时，获取并设置初始的最大化状态
-  await updateMaximizedState();
+  await updateMaximizedState()
 
   // 2. 监听窗口大小变化事件，当窗口状态改变时（包括最大化/恢复）更新状态
   //    Tauri v1 使用 'tauri://resize'， Tauri v2 可能有更具体的事件，但 resize 通常会触发
   unlisten = await appWindow.onResized(() => {
-    updateMaximizedState();
-  });
+    updateMaximizedState()
+  })
 
   // 注意：某些情况下 (如 Linux 上的某些窗口管理器)，
   // toggleMaximize 可能不会立即触发 onResized。
@@ -55,20 +55,19 @@ onMounted(async () => {
   //   setTimeout(updateMaximizedState, 100); // 略微延迟更新
   // }
   // 然后在 maximize 按钮上使用 @click="handleToggleMaximize"
-});
+})
 
 onUnmounted(() => {
   // 组件卸载时，移除事件监听器，防止内存泄漏
   if (unlisten) {
-    unlisten();
+    unlisten()
   }
-});
+})
 
 // --- Window Control Functions ---
-const minimizeWindow = () => appWindow.minimize();
-const toggleMaximizeWindow = () => appWindow.toggleMaximize();
-const closeWindow = () => appWindow.hide();
-
+const minimizeWindow = () => appWindow.minimize()
+const toggleMaximizeWindow = () => appWindow.toggleMaximize()
+const closeWindow = () => appWindow.hide()
 </script>
 
 <template>

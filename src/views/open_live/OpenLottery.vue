@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { OpenLiveInfo, OpenLiveLotteryType, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { CURRENT_HOST, LOTTERY_API_URL } from '@/data/constants'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
-import { Delete24Filled, Info24Filled, Add24Filled, PersonAdd24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
+import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
+import type { DanmakuInfo, GiftInfo } from '@/data/DanmakuClients/OpenLiveClient'
+import { Add24Filled, Delete24Filled, Info24Filled, PersonAdd24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import {
@@ -18,8 +15,8 @@ import {
   NCollapseTransition,
   NDivider,
   NEmpty,
-  NGrid,
-  NGridItem,
+  NForm,
+  NFormItem,
   NIcon,
   NInput,
   NInputGroup,
@@ -29,6 +26,7 @@ import {
   NList,
   NListItem,
   NModal,
+  NProgress,
   NRadioButton,
   NRadioGroup,
   NResult,
@@ -40,18 +38,15 @@ import {
   NUl,
   useMessage,
   useNotification,
-  NProgress,
-  NDrawer,
-  NDrawerContent,
-  NTabPane,
-  NTabs,
-  NForm,
-  NFormItem,
 } from 'naive-ui'
-import { h, onMounted, onUnmounted, ref, computed, nextTick, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAccount } from '@/api/account'
+import { OpenLiveLotteryType } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { CURRENT_HOST, LOTTERY_API_URL } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
 import LiveLotteryOBS from '../obs/LiveLotteryOBS.vue'
-import { DanmakuInfo, GiftInfo } from '@/data/DanmakuClients/OpenLiveClient'
 
 interface LotteryOption {
   resultCount: number
@@ -72,11 +67,15 @@ interface LotteryHistory {
   time: number
 }
 
-type CardState = {
+interface CardState {
   flipped: boolean
   isWinner: boolean
   eliminated: boolean
 }
+const props = defineProps<{
+  roomInfo?: OpenLiveInfo
+  code?: string | undefined
+}>()
 const CMD_CALLBACK_MAP = {
   LIVE_OPEN_PLATFORM_DM: onDanmaku,
   LIVE_OPEN_PLATFORM_SEND_GIFT: onGift,
@@ -166,11 +165,6 @@ function syncCardStates(users: OpenLiveLotteryUserInfo[], options: { reset?: boo
   cardStates.value = nextStates
 }
 
-const props = defineProps<{
-  roomInfo?: OpenLiveInfo
-  code?: string | undefined
-}>()
-
 const refinedCode = computed(() => {
   if (props.code) {
     return props.code
@@ -180,7 +174,7 @@ const refinedCode = computed(() => {
 
 async function getUsers() {
   try {
-    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(LOTTERY_API_URL + 'live/get-users', {
+    const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
       code: props.code,
     })
     if (data.code == 200) {
@@ -190,7 +184,7 @@ async function getUsers() {
   return null
 }
 function updateUsers() {
-  QueryPostAPI(LOTTERY_API_URL + 'live/update-users', {
+  QueryPostAPI(`${LOTTERY_API_URL}live/update-users`, {
     code: props.code,
     users: originUsers.value,
     resultUsers: resultUsers.value,
@@ -200,11 +194,11 @@ function updateUsers() {
   })
 }
 function addUser(user: OpenLiveLotteryUserInfo, danmu?: any) {
-  if (originUsers.value.find((u) => u.openId == user.openId) || (!isStartLottery.value && danmu)) {
+  if (originUsers.value.find(u => u.openId == user.openId) || (!isStartLottery.value && danmu)) {
     return
   }
   if ((danmu && isUserValid(user, danmu)) || !danmu) {
-    if (!originUsers.value.find((u) => u.openId == user.openId)) {
+    if (!originUsers.value.find(u => u.openId == user.openId)) {
       originUsers.value.push(user)
       currentUsers.value.push(user)
       ensureCardState(user.openId)
@@ -223,10 +217,10 @@ function addManualUser() {
     message.error('请输入用户名')
     return
   }
-  
+
   const newUser: OpenLiveLotteryUserInfo = {
     uId: Date.now(),
-    openId: 'manual_' + Date.now(),
+    openId: `manual_${Date.now()}`,
     name: manualUserForm.value.name,
     avatar: manualUserForm.value.avatar,
     fans_medal_level: manualUserForm.value.fans_medal_level,
@@ -234,10 +228,10 @@ function addManualUser() {
     fans_medal_wearing_status: manualUserForm.value.fans_medal_level > 0,
     guard_level: manualUserForm.value.guard_level,
   }
-  
+
   addUser(newUser)
   message.success(`已添加用户: ${newUser.name}`)
-  
+
   // 重置表单
   manualUserForm.value = {
     name: '',
@@ -283,7 +277,7 @@ function startLottery() {
     lotteryProgress.value = 0
     currentLotteryStep.value = 0
     eliminatedUsers.value = []
-    
+
     try {
       if (originUsers.value.length < lotteryOption.value.resultCount) {
         message.warning('符合条件的抽奖人数达不到抽选人数')
@@ -326,18 +320,18 @@ function startSingleLottery() {
     onFinishLottery()
     return
   }
-  
+
   function removeSingleUser() {
     if (currentUsers.value.length > lotteryOption.value.resultCount) {
       const randomIndex = getRandomInt(currentUsers.value.length)
       const eliminatedUser = currentUsers.value.splice(randomIndex, 1)[0]
       eliminatedUsers.value.push(eliminatedUser)
-      
+
       ensureCardState(eliminatedUser.openId).eliminated = true
       lotteryProgress.value = ((totalSteps - (currentUsers.value.length - lotteryOption.value.resultCount)) / totalSteps) * 100
-      
+
       console.log(`[${currentUsers.value.length}] 移除 ${eliminatedUser.name}`)
-      
+
       setTimeout(() => {
         removeSingleUser()
       }, lotteryOption.value.animationSpeed / 2)
@@ -362,7 +356,7 @@ function startHalfLottery() {
   } else {
     const half = Math.floor(currentUsers.value.length / 2)
     console.log(`[OPEN-LIVE-Lottery] 人数减半至${half}人`)
-    message.success('人数减半至 ' + half + ' 人')
+    message.success(`人数减半至 ${half} 人`)
     while (currentUsers.value.length > half) {
       const randomIndex = getRandomInt(currentUsers.value.length)
       const eliminatedUser = currentUsers.value.splice(randomIndex, 1)[0]
@@ -376,16 +370,16 @@ function startHalfLottery() {
 // 翻牌模式
 function startFlipLottery() {
   console.log('开始翻牌模式')
-  
+
   // 预先随机选择获奖者
   const shuffledUsers = [...currentUsers.value].sort(() => Math.random() - 0.5)
   const winners = shuffledUsers.slice(0, Math.min(lotteryOption.value.resultCount, currentUsers.value.length))
-  
+
   syncCardStates(currentUsers.value, { reset: true })
   winners.forEach((winner) => {
     ensureCardState(winner.openId).isWinner = true
   })
-  
+
   message.info('点击用户卡片进行翻牌抽取！')
   // 开启翻牌可点击
   flipEnabled.value = true
@@ -405,14 +399,14 @@ function startWheelLottery() {
   }
   wheelSpinning.value = true
   wheelRotation.value = 0
-  
+
   // 随机转动角度
   const spins = 3 + Math.random() * 3 // 3-6圈
   const finalAngle = Math.random() * 360
   const totalRotation = spins * 360 + finalAngle
-  
+
   wheelRotation.value = totalRotation
-  
+
   setTimeout(() => {
     wheelSpinning.value = false
     // 根据最终角度选择获奖者
@@ -421,7 +415,7 @@ function startWheelLottery() {
     const pointerAngle = 90
     const preAngle = (pointerAngle - (finalAngle % 360) + 360) % 360
     const winnerIndex = Math.floor(preAngle / anglePerUser) % currentUsers.value.length
-    
+
     const winner = currentUsers.value[winnerIndex]
     resultUsers.value = [winner]
     // 不再改变 currentUsers，让转盘保持原样
@@ -433,24 +427,24 @@ function startWheelLottery() {
 function startCardsLottery() {
   console.log('开始抽卡模式')
   message.info('正在随机选择获奖卡片...')
-  
+
   // 随机选择获奖者
   const shuffledUsers = [...currentUsers.value].sort(() => Math.random() - 0.5)
   const winners = shuffledUsers.slice(0, Math.min(lotteryOption.value.resultCount, currentUsers.value.length))
-  
+
   // 设置获奖者标记
   syncCardStates(currentUsers.value, { reset: true })
   winners.forEach((user) => {
     ensureCardState(user.openId).isWinner = true
   })
-  
+
   // 延迟显示结果
   setTimeout(() => {
     // 翻开所有卡片
-    currentUsers.value.forEach(user => {
+    currentUsers.value.forEach((user) => {
       ensureCardState(user.openId).flipped = true
     })
-    
+
     setTimeout(() => {
       resultUsers.value = winners
       currentUsers.value = winners
@@ -465,20 +459,20 @@ function startEliminationLottery() {
   const ratio = currentUsers.value.length / lotteryOption.value.resultCount
   const totalRounds = ratio > 1 ? Math.ceil(Math.log2(ratio)) : 1
   currentLotteryStep.value = 1
-  
+
   function nextRound() {
     if (currentUsers.value.length <= lotteryOption.value.resultCount) {
       onFinishLottery()
       return
     }
-    
+
     const targetCount = Math.max(
       lotteryOption.value.resultCount,
-      Math.floor(currentUsers.value.length / 2)
+      Math.floor(currentUsers.value.length / 2),
     )
-    
+
     message.info(`第 ${currentLotteryStep.value} 轮淘汰赛，目标人数: ${targetCount}`)
-    
+
     // 随机淘汰到目标人数
     while (currentUsers.value.length > targetCount) {
       const randomIndex = getRandomInt(currentUsers.value.length)
@@ -486,10 +480,10 @@ function startEliminationLottery() {
       eliminatedUsers.value.push(eliminatedUser)
       cardStates.value[eliminatedUser.openId].eliminated = true
     }
-    
+
     lotteryProgress.value = ((totalRounds - Math.ceil(Math.log2(currentUsers.value.length / lotteryOption.value.resultCount))) / totalRounds) * 100
     currentLotteryStep.value++
-    
+
     if (currentUsers.value.length > lotteryOption.value.resultCount) {
       setTimeout(() => {
         nextRound()
@@ -498,7 +492,7 @@ function startEliminationLottery() {
       onFinishLottery()
     }
   }
-  
+
   nextRound()
 }
 function getRandomInt(max: number) {
@@ -514,17 +508,16 @@ function onFinishLottery() {
   flipEnabled.value = false
   notification.create({
     title: '抽奖完成',
-    description: '共' + resultUsers.value?.length + '人',
+    description: `共${resultUsers.value?.length}人`,
     duration: 3000,
     content: () =>
       h(NSpace, { vertical: true }, () =>
-        resultUsers.value?.map((user) =>
+        resultUsers.value?.map(user =>
           h(NSpace, null, () => [
-            h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }),
+            h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
             h('span', user.name),
           ]),
-        ),
-      ),
+        )),
     meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
     onAfterLeave: () => {
       message.success('已保存至历史')
@@ -539,16 +532,16 @@ function onFinishLottery() {
 // 翻牌点击处理
 function flipCard(user: OpenLiveLotteryUserInfo) {
   if (lotteryOption.value.lotteryType !== 'flip' || isLottering.value || !flipEnabled.value) return
-  
+
   const state = ensureCardState(user.openId)
   // 再次点击可翻回去
   state.flipped = !state.flipped
-  
+
   // 检查是否已经选够了获奖者
-  const flippedWinners = currentUsers.value.filter(u => 
-    ensureCardState(u.openId).flipped && ensureCardState(u.openId).isWinner
+  const flippedWinners = currentUsers.value.filter(u =>
+    ensureCardState(u.openId).flipped && ensureCardState(u.openId).isWinner,
   )
-  
+
   if (flippedWinners.length >= lotteryOption.value.resultCount) {
     // 已满足中奖人数，延迟展示并完成
     if (flipFinishTimer) {
@@ -556,7 +549,7 @@ function flipCard(user: OpenLiveLotteryUserInfo) {
       flipFinishTimer = null
     }
     flipFinishTimer = setTimeout(() => {
-      currentUsers.value.forEach(u => {
+      currentUsers.value.forEach((u) => {
         const st = ensureCardState(u.openId)
         if (!st.flipped) st.flipped = true
       })
@@ -622,7 +615,7 @@ function shuffleFlipCards() {
   currentUsers.value = [...currentUsers.value].sort(() => Math.random() - 0.5)
   // 重置翻牌状态，但保留 isWinner 标记
   const next: Record<string, CardState> = {}
-  currentUsers.value.forEach(u => {
+  currentUsers.value.forEach((u) => {
     const st = ensureCardState(u.openId)
     next[u.openId] = { flipped: false, isWinner: st?.isWinner ?? false, eliminated: false }
   })
@@ -635,8 +628,8 @@ function shuffleFlipCards() {
   message.success('已洗牌')
 }
 function removeUser(user: OpenLiveLotteryUserInfo) {
-  currentUsers.value = currentUsers.value.filter((u) => u.openId != user.openId)
-  originUsers.value = originUsers.value.filter((u) => u.openId != user.openId)
+  currentUsers.value = currentUsers.value.filter(u => u.openId != user.openId)
+  originUsers.value = originUsers.value.filter(u => u.openId != user.openId)
   syncCardStates(currentUsers.value)
   updateUsers()
 }
@@ -646,12 +639,12 @@ function getAvatarUrl(avatar: string) {
   if (!avatar || avatar === 'https://i2.hdslb.com/bfs/face/member/noface.jpg') {
     return 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
   }
-  
+
   // 确保头像URL有正确的尺寸参数
   if (avatar.includes('@')) {
     return avatar.replace(/@\w+/, '@96w_96h')
   } else {
-    return avatar + '@96w_96h'
+    return `${avatar}@96w_96h`
   }
 }
 
@@ -710,9 +703,9 @@ onMounted(async () => {
     const users = (await getUsers())?.users ?? []
     originUsers.value = users
     currentUsers.value = JSON.parse(JSON.stringify(users))
-    console.log('[OPEN-LIVE-Lottery] 从历史记录中加载 ' + users.length + ' 位用户')
+    console.log(`[OPEN-LIVE-Lottery] 从历史记录中加载 ${users.length} 位用户`)
     if (users.length > 0) {
-      message.info('从历史记录中加载 ' + users.length + ' 位用户')
+      message.info(`从历史记录中加载 ${users.length} 位用户`)
     }
   }
   client?.on('danmaku', onDanmaku)
@@ -781,8 +774,8 @@ onUnmounted(() => {
           <NButton
             type="primary"
             size="small"
-            @click="showAddUserModal = true"
             :disabled="isLottering"
+            @click="showAddUserModal = true"
           >
             <template #icon>
               <NIcon :component="PersonAdd24Filled" />
@@ -1058,11 +1051,11 @@ onUnmounted(() => {
             淘汰赛第 {{ currentLotteryStep }} 轮
           </template>
         </NDivider>
-        
+
         <!-- 进度条 -->
         <div v-if="isLottering || lotteryProgress > 0" style="margin: 10px 0">
-          <NProgress 
-            :percentage="lotteryProgress" 
+          <NProgress
+            :percentage="lotteryProgress"
             :show-indicator="true"
             type="line"
             :status="isLottering ? 'info' : 'success'"
@@ -1106,31 +1099,33 @@ onUnmounted(() => {
         <!-- 转轮模式特殊显示 -->
         <div v-if="lotteryOption.lotteryType === 'wheel' && currentUsers.length >= 2" class="wheel-container">
           <div class="wheel-area">
-            <div 
+            <div
               class="lottery-wheel"
               :style="{
                 transform: `rotate(${wheelRotation}deg)`,
-                transition: wheelSpinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+                transition: wheelSpinning ? 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
               }"
             >
-              <div 
+              <div
                 v-for="(user, index) in currentUsers"
                 :key="user.openId"
                 class="wheel-slice"
                 :style="{
                   '--slice-angle': `${360 / currentUsers.length}deg`,
                   '--slice-offset': `${index * (360 / currentUsers.length)}deg`,
-                  '--slice-bg': `hsl(${index * (360 / currentUsers.length)}, 70%, 80%)`
+                  '--slice-bg': `hsl(${index * (360 / currentUsers.length)}, 70%, 80%)`,
                 }"
               >
-                <div class="wheel-user-name">{{ user.name }}</div>
+                <div class="wheel-user-name">
+                  {{ user.name }}
+                </div>
               </div>
             </div>
-            <div class="wheel-pointer"></div>
+            <div class="wheel-pointer" />
           </div>
-          <NButton 
+          <NButton
             v-if="!wheelSpinning && !isLottering"
-            type="primary" 
+            type="primary"
             size="large"
             style="margin-top: 20px"
             @click="startWheelLottery"
@@ -1153,14 +1148,13 @@ onUnmounted(() => {
           <div
             v-for="item in currentUsers"
             :key="item.openId"
-            :class="[
-              'lottery-card-wrapper',
+            class="lottery-card-wrapper" :class="[
               {
                 'flip-mode': lotteryOption.lotteryType === 'flip' && flipEnabled,
                 'flipped': (lotteryOption.lotteryType !== 'flip' && lotteryOption.lotteryType !== 'cards') || cardStates[item.openId]?.flipped,
                 'eliminated': cardStates[item.openId]?.eliminated,
-                'winner': cardStates[item.openId]?.isWinner && cardStates[item.openId]?.flipped
-              }
+                'winner': cardStates[item.openId]?.isWinner && cardStates[item.openId]?.flipped,
+              },
             ]"
             @click="onCardClick(item)"
           >
@@ -1171,36 +1165,40 @@ onUnmounted(() => {
                   <div class="mystery-icon">
                     <NIcon :component="Sparkle24Filled" size="40" />
                   </div>
-                  <div class="mystery-text">点击翻开</div>
-                  <div class="card-pattern"></div>
+                  <div class="mystery-text">
+                    点击翻开
+                  </div>
+                  <div class="card-pattern" />
                 </div>
               </NCard>
-              
+
               <!-- 卡片正面 -->
-              <NCard 
-                class="card-face card-front" 
-                :class="{'winner-card': cardStates[item.openId]?.isWinner}"
+              <NCard
+                class="card-face card-front"
+                :class="{ 'winner-card': cardStates[item.openId]?.isWinner }"
                 :bordered="cardStates[item.openId]?.isWinner"
                 content-style="padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;"
               >
                 <div class="user-card-content">
                   <div class="user-avatar-wrapper">
-                    <NAvatar 
-                      :src="getAvatarUrl(item.avatar)" 
+                    <NAvatar
+                      :src="getAvatarUrl(item.avatar)"
                       :size="80"
                       circle
-                      @error="handleImageError"
                       :img-props="{
-                        referrerpolicy: 'no-referrer'
+                        referrerpolicy: 'no-referrer',
                       }"
+                      @error="handleImageError"
                     />
                     <div v-if="cardStates[item.openId]?.isWinner" class="winner-badge">
                       <NIcon :component="Sparkle24Filled" size="16" />
                     </div>
                   </div>
-                  
+
                   <div class="user-info">
-                    <div class="user-name">{{ item.name }}</div>
+                    <div class="user-name">
+                      {{ item.name }}
+                    </div>
                     <div class="user-badges">
                       <NTag v-if="item.fans_medal_wearing_status" :bordered="false" size="small" type="info">
                         <template #icon>
@@ -1208,15 +1206,19 @@ onUnmounted(() => {
                         </template>
                         {{ item.fans_medal_name }}
                       </NTag>
-                      <NTag v-else :bordered="false" size="small">无粉丝牌</NTag>
+                      <NTag v-else :bordered="false" size="small">
+                        无粉丝牌
+                      </NTag>
                       <NTag v-if="item.guard_level > 0" :bordered="false" size="small" type="warning">
                         舰长{{ item.guard_level }}
                       </NTag>
                     </div>
                   </div>
-                  
+
                   <div v-if="cardStates[item.openId]?.isWinner && cardStates[item.openId]?.flipped" class="winner-celebration">
-                    <div class="winner-text">🎉 中奖了！</div>
+                    <div class="winner-text">
+                      🎉 中奖了！
+                    </div>
                   </div>
 
                   <NButton
@@ -1289,7 +1291,7 @@ onUnmounted(() => {
                 <NAvatar
                   round
                   lazy
-                  :src="user.avatar + '@64w_64h'"
+                  :src="`${user.avatar}@64w_64h`"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                 />
                 {{ user.name }}
@@ -1323,7 +1325,7 @@ onUnmounted(() => {
       <LiveLotteryOBS :code="code" />
     </div>
     <br>
-    <NInput :value="`${CURRENT_HOST}obs/live-lottery?code=` + code" />
+    <NInput :value="`${CURRENT_HOST}obs/live-lottery?code=${code}`" />
     <NDivider />
     <NCollapse>
       <NCollapseItem title="使用说明">
@@ -1338,7 +1340,7 @@ onUnmounted(() => {
 
     <NDivider />
   </NModal>
-  
+
   <!-- 手动添加用户模态框 -->
   <NModal
     v-model:show="showAddUserModal"
@@ -1386,7 +1388,7 @@ onUnmounted(() => {
         />
       </NFormItem>
     </NForm>
-    
+
     <template #footer>
       <NSpace justify="end">
         <NButton @click="showAddUserModal = false">
@@ -1508,7 +1510,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
     radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 2px, transparent 2px),
     radial-gradient(circle at 40% 60%, rgba(255,255,255,0.1) 2px, transparent 2px);
@@ -1606,7 +1608,7 @@ onUnmounted(() => {
 
 /* 转轮样式 */
 .wheel-container {
-  text-align: center; 
+  text-align: center;
   margin: 20px 0;
   display: flex;
   flex-direction: column;
@@ -1699,7 +1701,7 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  
+
   .lottery-card-wrapper {
     height: 200px;
   }

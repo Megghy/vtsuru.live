@@ -1,5 +1,5 @@
+import type { LoadingBarApi } from 'naive-ui'
 import { defineStore } from 'pinia'
-import { LoadingBarApi } from 'naive-ui'
 import { ref } from 'vue'
 
 export const useLoadingBarStore = defineStore('provider', () => {

@@ -6,7 +6,7 @@ export class Trie {
   _createNode() {
     return {
       children: {}, // char -> node
-      value: null
+      value: null,
     }
   }
 
@@ -15,7 +15,7 @@ export class Trie {
       throw new Error('key is empty')
     }
     let node = this._root
-    for (let char of key) {
+    for (const char of key) {
       let nextNode = node.children[char]
       if (nextNode === undefined) {
         nextNode = node.children[char] = this._createNode()
@@ -27,8 +27,8 @@ export class Trie {
 
   get(key) {
     let node = this._root
-    for (let char of key) {
-      let nextNode = node.children[char]
+    for (const char of key) {
+      const nextNode = node.children[char]
       if (nextNode === undefined) {
         return null
       }
@@ -43,8 +43,8 @@ export class Trie {
 
   lazyMatch(str) {
     let node = this._root
-    for (let char of str) {
-      let nextNode = node.children[char]
+    for (const char of str) {
+      const nextNode = node.children[char]
       if (nextNode === undefined) {
         return null
       }

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { QUESTION_API_URL } from '@/data/constants'
+import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { useRouteQuery } from '@vueuse/router'
 import { onMounted, onUnmounted, ref } from 'vue'
-import QuestionDisplayCard from '../manage/QuestionDisplayCard.vue'
+import { QueryGetAPI } from '@/api/query'
+import { QUESTION_API_URL } from '@/data/constants'
 import { useWebRTC } from '@/store/useRTC'
+import QuestionDisplayCard from '../manage/QuestionDisplayCard.vue'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
+  id?: number
+  active?: boolean
+  visible?: boolean
 }>()
 
 const hash = ref('')
@@ -24,7 +24,7 @@ const cardRef = ref()
 
 async function checkIfChanged() {
   try {
-    const data = await QueryGetAPI<string>(QUESTION_API_URL + 'get-hash', {
+    const data = await QueryGetAPI<string>(`${QUESTION_API_URL}get-hash`, {
       token: token.value,
     })
     if (data.code == 200) {
@@ -42,7 +42,7 @@ async function getQuestionAndSetting() {
     const data = await QueryGetAPI<{
       question: QAInfo
       setting: Setting_QuestionDisplay
-    }>(QUESTION_API_URL + 'get-current-and-settings', {
+    }>(`${QUESTION_API_URL}get-current-and-settings`, {
       token: token.value,
     })
     if (data.code == 200) {

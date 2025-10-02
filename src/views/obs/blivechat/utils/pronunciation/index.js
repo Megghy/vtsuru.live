@@ -9,19 +9,19 @@ export class PronunciationConverter {
   async loadDict(dictName) {
     let promise
     switch (dictName) {
-    case DICT_PINYIN:
-      promise = import('./dictPinyin')
-      break
-    case DICT_KANA:
-      promise = import('./dictKana')
-      break
-    default:
-      return
+      case DICT_PINYIN:
+        promise = import('./dictPinyin')
+        break
+      case DICT_KANA:
+        promise = import('./dictKana')
+        break
+      default:
+        return
     }
 
-    let dictTxt = (await promise).default
-    let pronunciationMap = new Map()
-    for (let item of dictTxt.split('\n')) {
+    const dictTxt = (await promise).default
+    const pronunciationMap = new Map()
+    for (const item of dictTxt.split('\n')) {
       if (item.length === 0) {
         continue
       }
@@ -31,10 +31,10 @@ export class PronunciationConverter {
   }
 
   getPronunciation(text) {
-    let res = []
+    const res = []
     let lastHasPronunciation = null
-    for (let char of text) {
-      let pronunciation = this.pronunciationMap.get(char)
+    for (const char of text) {
+      const pronunciation = this.pronunciationMap.get(char)
       if (pronunciation === undefined) {
         if (lastHasPronunciation !== null && lastHasPronunciation) {
           res.push(' ')

@@ -1,38 +1,39 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NHighlight, NInput, NScrollbar, NSpace, NModal, useMessage, NTabs, NTabPane, NFlex, NAlert, NIcon, NCollapse, NCollapseItem, NBadge, NText } from 'naive-ui';
-import { computed, ref, watch } from 'vue';
-import TemplateHelper from './TemplateHelper.vue';
-import { containsJsExpression, convertToJsExpressions, evaluateTemplateExpressions, extractJsExpressions, JS_EXPRESSION_REGEX } from '@/client/store/autoAction/expressionEvaluator';
-import { buildExecutionContext } from '@/client/store/autoAction/utils';
-import { AutoActionItem, TriggerType } from '@/client/store/autoAction/types';
-import { Info24Filled, Code24Regular, LiveOff24Regular } from '@vicons/fluent';
-import { EventDataTypes, EventModel } from '@/api/api-models';
-import GraphemeSplitter from 'grapheme-splitter';
+import type { AutoActionItem } from '@/client/store/autoAction/types'
+import { Code24Regular, Info24Filled, LiveOff24Regular } from '@vicons/fluent'
+import GraphemeSplitter from 'grapheme-splitter'
+import { NAlert, NBadge, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { EventDataTypes } from '@/api/api-models'
+import { containsJsExpression, convertToJsExpressions, evaluateTemplateExpressions, extractJsExpressions } from '@/client/store/autoAction/expressionEvaluator'
+import { TriggerType } from '@/client/store/autoAction/types'
+import { buildExecutionContext } from '@/client/store/autoAction/utils'
+import TemplateHelper from './TemplateHelper.vue'
 
 const props = defineProps({
   template: {
     type: Object as () => AutoActionItem,
-    required: true
+    required: true,
   },
   title: {
     type: String,
-    default: '模板编辑'
+    default: '模板编辑',
   },
   description: {
     type: String,
-    default: ''
+    default: '',
   },
   checkLength: {
     type: Boolean,
-    default: true
+    default: true,
   },
   customTestContext: {
     type: Object,
-    default: undefined
-  }
-});
+    default: undefined,
+  },
+})
 
-const emit = defineEmits(['update:template']);
+const emit = defineEmits(['update:template'])
 
 const mergedPlaceholders = computed(() => {
   const basePlaceholders = [
@@ -50,62 +51,62 @@ const mergedPlaceholders = computed(() => {
     { name: '{{date.minute}}', description: '当前分钟' },
     { name: '{{date.second}}', description: '当前秒数' },
     { name: '{{timeOfDay}}', description: '当前时段 (凌晨/早上/上午/中午/下午/晚上/深夜)' },
-    { name: '{{event}}', description: '原始事件对象 (高级用法)' }
-  ];
+    { name: '{{event}}', description: '原始事件对象 (高级用法)' },
+  ]
 
-  const specificPlaceholders: { name: string, description: string }[] = [];
+  const specificPlaceholders: { name: string, description: string }[] = []
 
   switch (props.template.triggerType) {
     case TriggerType.DANMAKU:
       specificPlaceholders.push(
         { name: '{{message}}', description: '弹幕内容' },
-        { name: '{{danmaku}}', description: '弹幕事件对象' }
-      );
-      break;
+        { name: '{{danmaku}}', description: '弹幕事件对象' },
+      )
+      break
     case TriggerType.GIFT:
       specificPlaceholders.push(
         { name: '{{gift.name}}', description: '礼物名称' },
         { name: '{{gift.count}}', description: '礼物数量' },
         { name: '{{gift.price}}', description: '礼物单价(元)' },
         { name: '{{gift.totalPrice}}', description: '礼物总价值(元)' },
-        { name: '{{gift.summary}}', description: '礼物概要 (例如: 5个小心心)' }
-      );
-      break;
+        { name: '{{gift.summary}}', description: '礼物概要 (例如: 5个小心心)' },
+      )
+      break
     case TriggerType.GUARD:
       specificPlaceholders.push(
         { name: '{{guard.level}}', description: '开通的舰队等级 (1:总督, 2:提督, 3:舰长)' },
         { name: '{{guard.levelName}}', description: '开通的舰队等级名称' },
-        { name: '{{guard.giftCode}}', description: '舰长礼物代码 (预留字段)' }
-      );
-      break;
+        { name: '{{guard.giftCode}}', description: '舰长礼物代码 (预留字段)' },
+      )
+      break
     case TriggerType.SUPER_CHAT:
       specificPlaceholders.push(
         { name: '{{sc.message}}', description: 'SC留言内容' },
-        { name: '{{sc.price}}', description: 'SC金额(元)' }
-      );
-      break;
+        { name: '{{sc.price}}', description: 'SC金额(元)' },
+      )
+      break
   }
 
-  const finalPlaceholders = [...specificPlaceholders, ...basePlaceholders];
-  return Array.from(new Map(finalPlaceholders.map(item => [item.name, item])).values());
-});
+  const finalPlaceholders = [...specificPlaceholders, ...basePlaceholders]
+  return Array.from(new Map(finalPlaceholders.map(item => [item.name, item])).values())
+})
 
 // 深度合并两个对象的辅助函数
 function deepMerge(target: any, source: any): any {
-  if (!source) return target;
-  if (!target) return source;
+  if (!source) return target
+  if (!target) return source
 
-  const result = { ...target };
+  const result = { ...target }
 
-  Object.keys(source).forEach(key => {
+  Object.keys(source).forEach((key) => {
     if (typeof source[key] === 'object' && source[key] !== null && typeof target[key] === 'object' && target[key] !== null) {
-      result[key] = deepMerge(target[key], source[key]);
+      result[key] = deepMerge(target[key], source[key])
     } else if (source[key] !== undefined) {
-      result[key] = source[key];
+      result[key] = source[key]
     }
-  });
+  })
 
-  return result;
+  return result
 }
 
 const testContext = computed(() => {
@@ -127,115 +128,115 @@ const testContext = computed(() => {
     fans_medal_wearing_status: true,
     guard_level_name: '测试舰队',
     guard_level_price: 100,
-  }, undefined, props.template.triggerType);
+  }, undefined, props.template.triggerType)
 
   // 如果有自定义上下文，将其与默认上下文合并
   if (props.customTestContext) {
-    return deepMerge(defaultContext, props.customTestContext);
+    return deepMerge(defaultContext, props.customTestContext)
   }
 
-  return defaultContext;
-});
+  return defaultContext
+})
 
-const message = useMessage();
-const activeTab = ref('editor');
-const showLivePreview = ref(true);
-const splitter = new GraphemeSplitter();
-const showSyntaxModal = ref(false);
+const message = useMessage()
+const activeTab = ref('editor')
+const showLivePreview = ref(true)
+const splitter = new GraphemeSplitter()
+const showSyntaxModal = ref(false)
 
 function countGraphemes(value: string) {
-  return splitter.countGraphemes(value);
+  return splitter.countGraphemes(value)
 }
 
 function convertPlaceholders() {
   if (!props.template.template) {
-    message.warning('请先输入模板内容');
-    return;
+    message.warning('请先输入模板内容')
+    return
   }
-  const converted = convertToJsExpressions(props.template.template, mergedPlaceholders.value);
+  const converted = convertToJsExpressions(props.template.template, mergedPlaceholders.value)
   if (converted !== props.template.template) {
-    props.template.template = converted;
-    message.success('已转换占位符为表达式格式');
+    props.template.template = converted
+    message.success('已转换占位符为表达式格式')
   } else {
-    message.info('模板中没有需要转换的占位符');
+    message.info('模板中没有需要转换的占位符')
   }
 }
 
 function hasJsExpression(template: string): boolean {
-  return containsJsExpression(template);
+  return containsJsExpression(template)
 }
 
 const highlightPatterns = computed(() => {
-  const simplePlaceholders = mergedPlaceholders.value.map(p => p.name);
-  const jsExpressionsInTemplate = extractJsExpressions(props.template.template || '');
-  const allPatterns = [...new Set([...simplePlaceholders, ...jsExpressionsInTemplate])];
-  return allPatterns;
-});
+  const simplePlaceholders = mergedPlaceholders.value.map(p => p.name)
+  const jsExpressionsInTemplate = extractJsExpressions(props.template.template || '')
+  const allPatterns = [...new Set([...simplePlaceholders, ...jsExpressionsInTemplate])]
+  return allPatterns
+})
 
-const MAX_LENGTH = 20;
-const WARNING_THRESHOLD = 16;
+const MAX_LENGTH = 20
+const WARNING_THRESHOLD = 16
 
 function evaluateTemplateForUI(template: string): string {
   // 深度合并默认上下文和自定义上下文
-  const executionContext = buildExecutionContext(testContext.value.event, undefined, props.template.triggerType);
+  const executionContext = buildExecutionContext(testContext.value.event, undefined, props.template.triggerType)
 
   // 如果有自定义上下文，将其深度合并到执行上下文中
   if (props.customTestContext) {
-    Object.keys(props.customTestContext).forEach(key => {
+    Object.keys(props.customTestContext).forEach((key) => {
       if (typeof props.customTestContext?.[key] === 'object' && props.customTestContext[key] !== null) {
-        executionContext.variables[key] = deepMerge(executionContext.variables[key] || {}, props.customTestContext[key]);
+        executionContext.variables[key] = deepMerge(executionContext.variables[key] || {}, props.customTestContext[key])
       } else {
-        executionContext.variables[key] = props.customTestContext?.[key];
+        executionContext.variables[key] = props.customTestContext?.[key]
       }
-    });
+    })
   }
 
   try {
-    return evaluateTemplateExpressions(template, executionContext);
+    return evaluateTemplateExpressions(template, executionContext)
   } catch (error) {
-    console.error("Preview evaluation error:", error);
-    return `[预览错误: ${(error as Error).message}]`;
+    console.error('Preview evaluation error:', error)
+    return `[预览错误: ${(error as Error).message}]`
   }
 }
 
 const evaluatedTemplateResult = computed(() => {
-  if (!props.template.template || !showLivePreview.value) return '';
-  return evaluateTemplateForUI(props.template.template);
-});
+  if (!props.template.template || !showLivePreview.value) return ''
+  return evaluateTemplateForUI(props.template.template)
+})
 
 const previewResult = computed(() => {
-  return evaluatedTemplateResult.value;
-});
+  return evaluatedTemplateResult.value
+})
 
 const lengthStatus = computed(() => {
   if (!props.template.template || !props.checkLength || !showLivePreview.value) {
-    return { status: 'normal' as const, message: '' };
+    return { status: 'normal' as const, message: '' }
   }
   try {
-    const formattedText = evaluatedTemplateResult.value;
+    const formattedText = evaluatedTemplateResult.value
     if (formattedText.startsWith('[预览错误:')) {
-      return { status: 'normal' as const, message: '' };
+      return { status: 'normal' as const, message: '' }
     }
 
-    const formattedLength = countGraphemes(formattedText);
+    const formattedLength = countGraphemes(formattedText)
     if (formattedLength > MAX_LENGTH) {
-      return { status: 'error' as const, message: `格式化后长度超出限制（${formattedLength}/${MAX_LENGTH}字）` };
+      return { status: 'error' as const, message: `格式化后长度超出限制（${formattedLength}/${MAX_LENGTH}字）` }
     } else if (formattedLength >= WARNING_THRESHOLD) {
-      return { status: 'warning' as const, message: `格式化后长度接近限制（${formattedLength}/${MAX_LENGTH}字）` };
+      return { status: 'warning' as const, message: `格式化后长度接近限制（${formattedLength}/${MAX_LENGTH}字）` }
     }
-    return { status: 'normal' as const, message: '' };
+    return { status: 'normal' as const, message: '' }
   } catch (error) {
-    return { status: 'normal' as const, message: '' };
+    return { status: 'normal' as const, message: '' }
   }
-});
+})
 
 const templateExamples = [
   {
     title: '基础变量',
     examples: [
       { label: '用户名', template: '你好 {{user.name}}！' },
-      { label: '条件回复', template: '{{js: user.guardLevel > 0 ? "欢迎舰长" : "欢迎"}} {{user.name}}！' }
-    ]
+      { label: '条件回复', template: '{{js: user.guardLevel > 0 ? "欢迎舰长" : "欢迎"}} {{user.name}}！' },
+    ],
   },
   {
     title: '高级用法',
@@ -245,34 +246,34 @@ const templateExamples = [
       { label: '日期时间', template: '{{js: new Date().toLocaleTimeString()}}，{{timeOfDay}}好！' },
       {
         label: '运行时计数',
-        template: '{{js+: const count = (getData(\'messageCount\') || 0) + 1; setData(\'messageCount\', count); return `这是你本次对话的第 ${count} 条消息。`; }}'
+        template: '{{js+: const count = (getData(\'messageCount\') || 0) + 1; setData(\'messageCount\', count); return `这是你本次对话的第 ${count} 条消息。`; }}',
       },
       {
         label: '运行时频率检查',
-        template: '{{js+: const warns = (getData(\'warnings\') || 0) + 1; setData(\'warnings\', warns); return warns > 3 ? "发言太频繁啦！" : "收到你的消息~"; }}'
+        template: '{{js+: const warns = (getData(\'warnings\') || 0) + 1; setData(\'warnings\', warns); return warns > 3 ? "发言太频繁啦！" : "收到你的消息~"; }}',
       },
       {
         label: '触发持久化计数 (异步)',
-        template: '{{js+: const key = `user:${user.uid}:totalMessages`; getStorageData(key, 0).then(c => setStorageData(key, (c || 0) + 1)); return `正在为你累计总发言数...`; }}'
+        template: '{{js+: const key = `user:${user.uid}:totalMessages`; getStorageData(key, 0).then(c => setStorageData(key, (c || 0) + 1)); return `正在为你累计总发言数...`; }}',
       },
       {
         label: '问候一次 (持久化)',
-        template: '{{js+: const key = `greeted:${user.uid}`; hasStorageData(key).then(exists => { if (!exists) { setStorageData(key, true); /* 这里可以接发送欢迎消息的逻辑 */ } }); return \'检查问候状态...\'; }}'
-      }
-    ]
+        template: '{{js+: const key = `greeted:${user.uid}`; hasStorageData(key).then(exists => { if (!exists) { setStorageData(key, true); /* 这里可以接发送欢迎消息的逻辑 */ } }); return \'检查问候状态...\'; }}',
+      },
+    ],
   },
   {
     title: '弹幕功能',
     examples: [
       { label: '提取内容', template: '你说的是 "{{js: message.substring(0, 5)}}{{js: message.length > 5 ? "..." : ""}}" 吗？' },
-      { label: '回复问候', template: '{{js: message.includes("早上好") ? "早安" : "你好"}}，{{user.name}}！' }
-    ]
-  }
-];
+      { label: '回复问候', template: '{{js: message.includes("早上好") ? "早安" : "你好"}}，{{user.name}}！' },
+    ],
+  },
+]
 
 function insertExample(template: string) {
-  props.template.template = template;
-  message.success('已插入示例模板');
+  props.template.template = template
+  message.success('已插入示例模板')
 }
 </script>
 
@@ -661,4 +662,3 @@ function insertExample(template: string) {
   padding: 0;
 }
 </style>
-

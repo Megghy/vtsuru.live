@@ -19,7 +19,6 @@ declare module 'vue' {
     LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
     MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
-    NCard: typeof import('naive-ui')['NCard']
     NFlex: typeof import('naive-ui')['NFlex']
     NFormItemGi: typeof import('naive-ui')['NFormItemGi']
     NGridItem: typeof import('naive-ui')['NGridItem']

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NLayoutContent, NSpace, NText, NTimeline, NTimelineItem, NTag, NIcon } from 'naive-ui'
-import { h, computed } from 'vue'
-import { CodeOutline, ServerOutline, HeartOutline, LogoGithub } from '@vicons/ionicons5'
+import { CodeOutline, HeartOutline, LogoGithub, ServerOutline } from '@vicons/ionicons5'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { NButton, NCard, NDivider, NIcon, NLayoutContent, NSpace, NTag, NText, NTimeline, NTimelineItem } from 'naive-ui'
+import { computed } from 'vue'
 
 // 获取编译时间
 const buildTime = computed(() => {
@@ -11,16 +11,17 @@ const buildTime = computed(() => {
     const buildDate = new Date(__BUILD_TIME__)
     return {
       date: buildDate.toLocaleString('zh-CN'),
-      relative: formatDistanceToNow(buildDate, { addSuffix: true, locale: zhCN })
+      relative: formatDistanceToNow(buildDate, { addSuffix: true, locale: zhCN }),
     }
   } catch {
     return {
       date: '未知',
-      relative: '未知'
+      relative: '未知',
     }
   }
 })
 </script>
+
 <template>
   <NLayoutContent style="height: 100vh; padding: 20px 0;">
     <NSpace

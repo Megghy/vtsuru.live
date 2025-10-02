@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import { copyToClipboard } from '@/Utils'
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
-import { EventDataTypes, EventModel, OpenLiveInfo } from '@/api/api-models'
-import { FETCH_API } from '@/data/constants'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
+import type { EventModel, OpenLiveInfo } from '@/api/api-models'
 import { Info24Filled, Mic24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
@@ -41,6 +37,11 @@ import {
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
+import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
+import { FETCH_API } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { copyToClipboard } from '@/Utils'
 
 const props = defineProps<{
   roomInfo?: OpenLiveInfo
@@ -48,7 +49,7 @@ const props = defineProps<{
   isOpenLive?: boolean
 }>()
 
-type SpeechSettings = {
+interface SpeechSettings {
   speechInfo: SpeechInfo
   danmakuTemplate: string
   scTemplate: string
@@ -63,14 +64,14 @@ type SpeechSettings = {
   combineGiftDelay: number | undefined
 }
 
-type SpeechInfo = {
+interface SpeechInfo {
   volume: number
   pitch: number
   rate: number
   voice: string
 }
 
-type SpeechState = {
+interface SpeechState {
   isSpeaking: boolean
   speakingText: string
   isApiAudioLoading: boolean
@@ -133,10 +134,10 @@ const voiceOptions = computed(() => {
         value: v.name,
       }
     })
-    .DistinctBy((v) => v.value)
+    .DistinctBy(v => v.value)
     .ToArray()
 })
-const speakQueue = ref<{ updateAt: number; combineCount?: number; data: EventModel }[]>([])
+const speakQueue = ref<{ updateAt: number, combineCount?: number, data: EventModel }[]>([])
 const giftCombineMap = new Map<string, number>() // 用于快速查找礼物合并项
 const MAX_QUEUE_SIZE = 50 // 最大队列长度限制
 const isVtsuruVoiceAPI = computed(() => {
@@ -209,7 +210,7 @@ function forceSpeak(data: EventModel) {
   cancelSpeech()
 
   speakQueue.value.splice(
-    speakQueue.value.findIndex((v) => v.data == data),
+    speakQueue.value.findIndex(v => v.data == data),
     1,
   )
   speakQueue.value.unshift({
@@ -231,9 +232,9 @@ async function speak() {
     const item = speakQueue.value[i]
 
     // 如果是礼物且还在等待合并期间，跳过
-    if (item.data.type == EventDataTypes.Gift &&
-        combineDelay > 0 &&
-        item.updateAt > now - combineDelay) {
+    if (item.data.type == EventDataTypes.Gift
+      && combineDelay > 0
+      && item.updateAt > now - combineDelay) {
       continue
     }
 
@@ -285,10 +286,10 @@ async function speak() {
 }
 function insertSpaces(sentence: string) {
   // First, insert spaces around English words and numbers
-  //sentence = sentence.replace(/([a-zA-Z]+)/g, "'$1'")
+  // sentence = sentence.replace(/([a-zA-Z]+)/g, "'$1'")
 
   // Then, split all-caps words into single letters, each surrounded by spaces
-  sentence = sentence.replace(/\b([A-Z]{2,})\b/g, function (match) {
+  sentence = sentence.replace(/\b([A-Z]{2,})\b/g, (match) => {
     return match.split('').join(' ')
   })
 
@@ -313,7 +314,7 @@ function speakDirect(text: string) {
     const u = new SpeechSynthesisUtterance()
     u.text = text
     const voices = synth.getVoices()
-    const voice = voices.find((v) => v.name === settings.value.speechInfo.voice)
+    const voice = voices.find(v => v.name === settings.value.speechInfo.voice)
     if (voice) {
       u.voice = voice
       u.volume = settings.value.speechInfo.volume
@@ -328,7 +329,7 @@ function speakDirect(text: string) {
           return
         }
         console.log(err)
-        message.error('无法播放语音: ' + err.error)
+        message.error(`无法播放语音: ${err.error}`)
         cancelSpeech()
       }
     }
@@ -350,14 +351,14 @@ function buildApiUrl(text: string): string | null {
     message.error('未设置语音API')
     return null
   }
-  const scheme =
-    settings.value.voiceAPISchemeType === 'https'
+  const scheme
+    = settings.value.voiceAPISchemeType === 'https'
       ? 'https://'
       : settings.value.useAPIDirectly
         ? 'http://'
         : `${FETCH_API}http://`
 
-  const url = `${scheme}${settings.value.voiceAPI.trim().replace(/^(?:https?:\/\/)/, '')}`.replace(
+  const url = `${scheme}${settings.value.voiceAPI.trim().replace(/^https?:\/\//, '')}`.replace(
     /\{\{\s*text\s*\}\}/,
     encodeURIComponent(text),
   )
@@ -374,7 +375,7 @@ function buildApiUrl(text: string): string | null {
     return tempURL.toString()
   } catch (err) {
     console.log(err)
-    message.error('无效的API地址: ' + url)
+    message.error(`无效的API地址: ${url}`)
     return null
   }
 }
@@ -407,7 +408,7 @@ function speakFromAPI(text: string) {
             return
           }
           console.error('[speakFromAPI] 音频播放失败:', err)
-          message.error('无法播放语音: ' + err.message)
+          message.error(`无法播放语音: ${err.message}`)
           cancelSpeech()
         })
       }
@@ -461,9 +462,9 @@ function onGetEvent(data: EventModel) {
 
     if (existIndex !== undefined && existIndex < speakQueue.value.length) {
       const exist = speakQueue.value[existIndex]
-      if (exist &&
-          exist.data.type == EventDataTypes.Gift &&
-          exist.updateAt > Date.now() - (settings.value.combineGiftDelay * 1000)) {
+      if (exist
+        && exist.data.type == EventDataTypes.Gift
+        && exist.updateAt > Date.now() - (settings.value.combineGiftDelay * 1000)) {
         // 更新现有礼物数据
         exist.updateAt = Date.now()
         exist.data.num += data.num
@@ -546,21 +547,21 @@ function getTextFromDanmaku(data: EventModel | undefined) {
     .trim()
 
   if (data.type === EventDataTypes.Message) {
-    text = text.replace(/\[.*?\]/g, ' ') //删除 [表情], B站的表情是 [生气了] 这样的格式
+    text = text.replace(/\[.*?\]/g, ' ') // 删除 [表情], B站的表情是 [生气了] 这样的格式
   } else if (data.type === EventDataTypes.Gift) {
     text = text.replace(templateConstants.gift_name.regex, data.msg)
   } else if (data.type === EventDataTypes.Guard) {
     text = text.replace(templateConstants.guard_num.regex, data.num.toString())
   }
   text = fullWidthToHalfWidth(text)
-    .replace(/[^0-9a-zA-Z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF ,.:'"\s]/gi, '')
+    .replace(/[^0-9a-z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF,.:'"\s]/gi, '')
     .normalize('NFKC')
   return text
 }
 function fullWidthToHalfWidth(str: string) {
   // Convert full-width characters to half-width ones
-  var result = str.replace(/[\uff01-\uff5e]/g, function (ch) {
-    return String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+  let result = str.replace(/[\uFF01-\uFF5E]/g, (ch) => {
+    return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
   })
 
   // Convert full-width space (u3000) to half-width one
@@ -586,7 +587,7 @@ async function uploadConfig() {
     }
   } catch (error) {
     console.error('[uploadConfig] 上传配置失败:', error)
-    message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'))
+    message.error(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 async function downloadConfig() {
@@ -598,11 +599,11 @@ async function downloadConfig() {
     } else if (result.status === 'notfound') {
       message.error('未上传配置文件')
     } else {
-      message.error('获取失败: ' + result.msg)
+      message.error(`获取失败: ${result.msg}`)
     }
   } catch (error) {
     console.error('[downloadConfig] 下载配置失败:', error)
-    message.error('获取失败: ' + (error instanceof Error ? error.message : '未知错误'))
+    message.error(`获取失败: ${error instanceof Error ? error.message : '未知错误'}`)
   }
 }
 
@@ -680,8 +681,8 @@ function cleanupQueue() {
 
   speakQueue.value.forEach((item, index) => {
     // 保留非礼物事件或未过期的礼物事件
-    if (item.data.type !== EventDataTypes.Gift ||
-        item.updateAt > now - (settings.value.combineGiftDelay ?? 0) * 1000) {
+    if (item.data.type !== EventDataTypes.Gift
+      || item.updateAt > now - (settings.value.combineGiftDelay ?? 0) * 1000) {
       validItems.push(item)
     } else {
       // 从Map中移除过期的礼物项
@@ -1037,7 +1038,7 @@ onUnmounted(() => {
           :options="voiceOptions"
           :fallback-option="() => ({
             label: settings.speechInfo.voice ? `已选择: ${settings.speechInfo.voice}` : '未选择, 将使用默认语音',
-            value: settings.speechInfo.voice || ''
+            value: settings.speechInfo.voice || '',
           })"
         />
         <span style="width: 100%">

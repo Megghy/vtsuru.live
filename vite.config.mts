@@ -1,14 +1,14 @@
+import path from 'node:path'
 // vite.config.ts
-import vue from '@vitejs/plugin-vue';
-import vueJsx from '@vitejs/plugin-vue-jsx';
-import path from 'path';
-import AutoImport from 'unplugin-auto-import/vite';
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
-import Components from 'unplugin-vue-components/vite';
-import Markdown from 'unplugin-vue-markdown/vite';
-import { defineConfig } from 'vite';
-import svgLoader from 'vite-svg-loader';
-import { VineVitePlugin } from 'vue-vine/vite';
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import AutoImport from 'unplugin-auto-import/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+import Markdown from 'unplugin-vue-markdown/vite'
+import { defineConfig } from 'vite'
+import svgLoader from 'vite-svg-loader'
+import { VineVitePlugin } from 'vue-vine/vite'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -21,13 +21,13 @@ const removeSodipodiInkscape = {
           // 检查元素名称是否以sodipodi:或inkscape:开头
           if (node.name && (node.name.startsWith('sodipodi:') || node.name.startsWith('inkscape:'))) {
             // 从父节点的children数组中过滤掉当前节点
-            parentNode.children = parentNode.children.filter((child: any) => child !== node);
+            parentNode.children = parentNode.children.filter((child: any) => child !== node)
           }
         },
       },
-    };
+    }
   },
-};
+}
 
 export default defineConfig({
   plugins: [
@@ -37,10 +37,10 @@ export default defineConfig({
       template: {
         compilerOptions: {
           isCustomElement: (tag) => {
-            return tag.includes(':') || tag.startsWith('yt-');
-          }
-        }
-      }
+            return tag.includes(':') || tag.startsWith('yt-')
+          },
+        },
+      },
     }),
     vueJsx(),
     svgLoader({
@@ -51,20 +51,20 @@ export default defineConfig({
             params: {
               overrides: {
                 removeEditorsNSData: false,
-              }
-            }
+              },
+            },
           },
           removeSodipodiInkscape,
-          "convertStyleToAttrs",
-          "removeUselessDefs",
-          "removeUselessStrokeAndFill",
-          "removeUnusedNS",
-          "removeEmptyText",
-          "removeEmptyContainers",
-          "removeViewBox",
-          "cleanupIds",
-        ]
-      }
+          'convertStyleToAttrs',
+          'removeUselessDefs',
+          'removeUselessStrokeAndFill',
+          'removeUnusedNS',
+          'removeEmptyText',
+          'removeEmptyContainers',
+          'removeViewBox',
+          'cleanupIds',
+        ],
+      },
     }),
     Markdown({
       /* options */
@@ -75,10 +75,10 @@ export default defineConfig({
           'useDialog',
           'useMessage',
           'useNotification',
-          'useLoadingBar'
-        ]
+          'useLoadingBar',
+        ],
       }],
-      dts: 'src/auto-imports.d.ts'
+      dts: 'src/auto-imports.d.ts',
     }),
     Components({
       resolvers: [NaiveUiResolver()],
@@ -92,11 +92,11 @@ export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     'process.env': {},
-    global: 'window',
-    __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+    'global': 'window',
+    '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {
-    include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router']
+    include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
   },
   build: {
     sourcemap: true,
@@ -104,12 +104,24 @@ export default defineConfig({
     minify: 'esbuild',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'ui-vendor': ['naive-ui', '@vueuse/core'],
-        }
-      }
-    }
+      output: { // @ts-ignore
+        advancedChunks: {
+          groups: [
+            {
+              name: 'vue-vendor',
+              test: /[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/,
+              priority: -10,
+              enforce: true,
+            },
+            {
+              name: 'ui-vendor',
+              test: /[\\/]node_modules[\\/](naive-ui|@vueuse[\\/]core)[\\/]/,
+              priority: -10,
+              enforce: true,
+            },
+          ],
+        },
+      },
+    },
   },
-});
+})

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { UserInfo, VideoCollectTable } from '@/api/api-models'
+import type { UserInfo, VideoCollectTable } from '@/api/api-models'
+import { NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
+import { ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
-import { NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
-import { ref } from 'vue'
 
 const props = defineProps<{
   biliInfo: any | undefined
@@ -19,14 +19,14 @@ const videoTables = ref<VideoCollectTable[]>(await get())
 async function get() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<VideoCollectTable[]>(VIDEO_COLLECT_API_URL + 'get-active', {
+    const data = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-active`, {
       id: props.userInfo.id,
     })
     if (data.code == 200) {
-      //videoTables.value = data.data
+      // videoTables.value = data.data
       return data.data
     } else {
-      message.error('获取失败: ' + data.message)
+      message.error(`获取失败: ${data.message}`)
       return []
     }
   } catch (err) {

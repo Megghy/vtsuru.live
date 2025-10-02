@@ -1,16 +1,9 @@
 // 这是LiveRequest重构后的代码
 
 <script setup lang="ts">
-import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
-import {
-  EventModel,
-  FunctionTypes,
+import type {
   OpenLiveInfo,
-  QueueSortType
 } from '@/api/api-models'
-import { CURRENT_HOST } from '@/data/constants'
-import SongPlayer from '@/components/SongPlayer.vue'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { Info24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import {
@@ -34,21 +27,32 @@ import {
   NTabPane,
   NTabs,
   NText,
-  NTime,
   NTooltip,
   NUl,
-  useMessage
+  useMessage,
 } from 'naive-ui'
-import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
+import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import LiveRequestOBS from '../obs/LiveRequestOBS.vue'
+import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import {
+  FunctionTypes,
+} from '@/api/api-models'
+import SongPlayer from '@/components/SongPlayer.vue'
 import { useLiveRequest } from '@/composables/useLiveRequest'
+import { CURRENT_HOST } from '@/data/constants'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import LiveRequestOBS from '../obs/LiveRequestOBS.vue'
 
+import SongRequestHistory from './components/SongRequestHistory.vue'
 // 子组件
 import SongRequestList from './components/SongRequestList.vue'
-import SongRequestHistory from './components/SongRequestHistory.vue'
 import SongRequestSettings from './components/SongRequestSettings.vue'
 
+const props = defineProps<{
+  roomInfo?: OpenLiveInfo
+  code?: string | undefined
+  isOpenLive?: boolean
+}>()
 const route = useRoute()
 const accountInfo = useAccount()
 const message = useMessage()
@@ -66,19 +70,13 @@ const songRequest = useLiveRequest()
 // 提供activeSongs给子组件
 provide('activeSongs', songRequest.activeSongs)
 
-const props = defineProps<{
-  roomInfo?: OpenLiveInfo
-  code?: string | undefined
-  isOpenLive?: boolean
-}>()
-
 // 控制歌曲请求功能开关
 async function onUpdateFunctionEnable() {
   if (accountInfo.value.id) {
     const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
     if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)) {
       accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        (f) => f != FunctionTypes.LiveRequest,
+        f => f != FunctionTypes.LiveRequest,
       )
     } else {
       accountInfo.value.settings.enableFunctions.push(FunctionTypes.LiveRequest)
@@ -119,7 +117,7 @@ async function updateSettings() {
           message.success('已保存')
           return true
         } else {
-          message.error('保存失败: ' + msg)
+          message.error(`保存失败: ${msg}`)
         }
       })
       .finally(() => {
@@ -244,7 +242,8 @@ onUnmounted(() => {
             if (songRequest.configCanEdit) {
               accountInfo.settings.songRequest.isReverse = value
               updateSettings()
-            } else {
+            }
+            else {
               songRequest.isReverse = value
             }
           }"

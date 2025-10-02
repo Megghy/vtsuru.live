@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
+import { useDebounceFn, useScroll } from '@vueuse/core'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { QAInfo, QuestionDisplayAlign, Setting_QuestionDisplay } from '@/api/api-models'
-import { useDebounceFn, useScroll, useStorage } from '@vueuse/core'
+import { QuestionDisplayAlign } from '@/api/api-models'
 
 const props = defineProps<{
   question: QAInfo | undefined
@@ -10,9 +11,8 @@ const props = defineProps<{
   showGreenBorder?: boolean
   css?: string
 }>()
-defineExpose({ setScroll, setScrollTop })
 const emit = defineEmits<{ scroll: [value: { clientHeight: number, scrollHeight: number, scrollTop: number }] }>()
-
+defineExpose({ setScroll, setScrollTop })
 let styleElement: HTMLStyleElement
 const cssDebounce = useDebounceFn(() => {
   if (styleElement) {
@@ -24,7 +24,6 @@ watch(() => props.css, cssDebounce)
 
 const contentRef = ref()
 const { x, y, isScrolling, arrivedState, directions } = useScroll(contentRef)
-
 
 const align = computed(() => {
   switch (props.setting.align) {
@@ -39,7 +38,7 @@ const align = computed(() => {
 })
 function setScrollTop(top: number) {
   contentRef.value?.scrollTo({
-    top: top,
+    top,
     behavior: 'smooth',
   })
 }
@@ -47,8 +46,8 @@ function setScroll(value: { clientHeight: number, scrollHeight: number, scrollTo
   if (contentRef.value.clientHeight == contentRef.value.scrollHeight) {
     setScrollTop(value.scrollTop)
   } else {
-    const scrollRatio1 = value.scrollTop / (value.scrollHeight - value.clientHeight);
-    const scrollTop = scrollRatio1 * (contentRef.value.scrollHeight - contentRef.value.clientHeight);
+    const scrollRatio1 = value.scrollTop / (value.scrollHeight - value.clientHeight)
+    const scrollTop = scrollRatio1 * (contentRef.value.scrollHeight - contentRef.value.clientHeight)
     setScrollTop(scrollTop)
   }
 }
@@ -56,7 +55,7 @@ function scrollCallback(e: Event) {
   emit('scroll', {
     clientHeight: contentRef.value?.clientHeight ?? 0,
     scrollHeight: contentRef.value?.scrollHeight ?? 0,
-    scrollTop: contentRef.value?.scrollTop ?? 0
+    scrollTop: contentRef.value?.scrollTop ?? 0,
   })
 }
 
@@ -81,9 +80,9 @@ onUnmounted(() => {
   <div
     class="question-display-root"
     :style="{
-      backgroundColor: '#' + setting.borderColor,
-      borderColor: setting.borderColor ? '#' + setting.borderColor : undefined,
-      borderWidth: setting.borderWidth ? setting.borderWidth + 'px' : undefined,
+      backgroundColor: `#${setting.borderColor}`,
+      borderColor: setting.borderColor ? `#${setting.borderColor}` : undefined,
+      borderWidth: setting.borderWidth ? `${setting.borderWidth}px` : undefined,
       borderTopWidth: setting.showUserName && question ? 0 : setting.borderWidth,
     }"
     :display="question ? 1 : 0"
@@ -96,8 +95,8 @@ onUnmounted(() => {
         v-if="setting.showUserName && question"
         class="question-display-user-name"
         :style="{
-          color: '#' + setting.nameFontColor,
-          fontSize: setting.nameFontSize + 'px',
+          color: `#${setting.nameFontColor}`,
+          fontSize: `${setting.nameFontSize}px`,
           fontWeight: setting.nameFontWeight ? setting.nameFontWeight : undefined,
           fontFamily: setting.nameFont,
         }"
@@ -109,9 +108,9 @@ onUnmounted(() => {
       ref="contentRef"
       class="question-display-content"
       :style="{
-        color: '#' + setting.fontColor,
-        backgroundColor: '#' + setting.backgroundColor,
-        fontSize: setting.fontSize + 'px',
+        color: `#${setting.fontColor}`,
+        backgroundColor: `#${setting.backgroundColor}`,
+        fontSize: `${setting.fontSize}px`,
         fontWeight: setting.fontWeight ? setting.fontWeight : undefined,
         textAlign: align,
         fontFamily: setting.font,
@@ -141,9 +140,9 @@ onUnmounted(() => {
         <div
           v-else
           class="question-display-loading loading"
-          :style="{ color: '#' + setting.fontColor }"
+          :style="{ color: `#${setting.fontColor}` }"
         >
-          <div :style="{ color: '#' + setting.fontColor }" />
+          <div :style="{ color: `#${setting.fontColor}` }" />
           <div />
           <div />
           <div />

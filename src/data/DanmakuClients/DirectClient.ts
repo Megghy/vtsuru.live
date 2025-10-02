@@ -1,60 +1,65 @@
-import { KeepLiveWS } from 'bilibili-live-ws/browser';
-import BaseDanmakuClient from './BaseDanmakuClient';
-import { EventDataTypes, GuardLevel } from '@/api/api-models';
-import { getUserAvatarUrl, GuidUtils } from '@/Utils';
-import { AVATAR_URL } from '../constants';
-export type DirectClientAuthInfo = {
-  token: string;
-  roomId: number;
-  tokenUserId: number;
-  buvid: string;
-};
-/** 直播间弹幕客户端, 只能在vtsuru.client环境使用
+import { KeepLiveWS } from 'bilibili-live-ws/browser'
+import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { GuidUtils } from '@/Utils'
+import { AVATAR_URL } from '../constants'
+import BaseDanmakuClient from './BaseDanmakuClient'
+
+export interface DirectClientAuthInfo {
+  token: string
+  roomId: number
+  tokenUserId: number
+  buvid: string
+}
+/**
+ * 直播间弹幕客户端, 只能在vtsuru.client环境使用
  *
  */
 export default class DirectClient extends BaseDanmakuClient {
-  public serverUrl: string = 'wss://broadcastlv.chat.bilibili.com/sub';
+  public serverUrl: string = 'wss://broadcastlv.chat.bilibili.com/sub'
 
   constructor(auth: DirectClientAuthInfo) {
-    super();
-    this.authInfo = auth;
+    super()
+    this.authInfo = auth
   }
 
-  public type = 'direct' as const;
+  public type = 'direct' as const
 
-  public readonly authInfo: DirectClientAuthInfo;
+  public readonly authInfo: DirectClientAuthInfo
 
-  protected async initClient(): Promise<{ success: boolean; message: string; }> {
+  protected async initClient(): Promise<{ success: boolean, message: string }> {
     if (this.authInfo) {
       const chatClient = new KeepLiveWS(this.authInfo.roomId, {
         key: this.authInfo.token,
         buvid: this.authInfo.buvid,
         uid: this.authInfo.tokenUserId,
-        protover: 3
-      });
+        protover: 3,
+      })
 
       chatClient.on('live', () => {
-        console.log('[direct] 已连接房间: ' + this.authInfo.roomId);
-      });
-      chatClient.on('DANMU_MSG', (data) => this.onDanmaku(data));
-      chatClient.on('SEND_GIFT', (data) => this.onGift(data));
-      chatClient.on('GUARD_BUY', (data) => this.onGuard(data));
-      chatClient.on('SUPER_CHAT_MESSAGE', (data) => this.onSC(data));
-      chatClient.on('INTERACT_WORD', (data) => this.onEnter(data));
-      chatClient.on('SUPER_CHAT_MESSAGE_DELETE', (data) => this.onScDel(data));
+        console.log(`[direct] 已连接房间: ${this.authInfo.roomId}`)
+      })
+      chatClient.on('DANMU_MSG', data => this.onDanmaku(data))
+      chatClient.on('SEND_GIFT', data => this.onGift(data))
+      chatClient.on('GUARD_BUY', data => this.onGuard(data))
+      chatClient.on('SUPER_CHAT_MESSAGE', data => this.onSC(data))
+      chatClient.on('INTERACT_WORD', data => this.onEnter(data))
+      chatClient.on('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
 
-      return await super.initClientInner(chatClient);
+      return super.initClientInner(chatClient)
     } else {
-      console.log('[direct] 无法开启场次, 未提供弹幕客户端认证信息');
+      console.log('[direct] 无法开启场次, 未提供弹幕客户端认证信息')
       return {
         success: false,
-        message: '未提供弹幕客户端认证信息'
-      };
+        message: '未提供弹幕客户端认证信息',
+      }
     }
   }
+
   public onDanmaku(command: any): void {
-    const info = command.info;
-    this.eventsRaw?.danmaku?.forEach((d) => { d(info, command); });
+    const info = command.info
+    this.eventsRaw?.danmaku?.forEach((d) => {
+      d(info, command)
+    })
     this.eventsAsModel.danmaku?.forEach((d) => {
       d(
         {
@@ -69,18 +74,21 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_level: info[0][15].user.medal?.level,
           fans_medal_name: info[0][15].user.medal?.name,
           fans_medal_wearing_status: info[0][15].user.medal?.is_light === 1,
-          emoji: info[0]?.[13]?.url?.replace("http://", "https://") || '',
-          uface: info[0][15].user.base.face.replace("http://", "https://"),
+          emoji: info[0]?.[13]?.url?.replace('http://', 'https://') || '',
+          uface: info[0][15].user.base.face.replace('http://', 'https://'),
           open_id: '',
-          ouid: GuidUtils.numToGuid(info[2][0])
+          ouid: GuidUtils.numToGuid(info[2][0]),
         },
-        command
-      );
-    });
+        command,
+      )
+    })
   }
+
   public onGift(command: any): void {
-    const data = command.data;
-    this.eventsRaw?.gift?.forEach((d) => { d(data, command); });
+    const data = command.data
+    this.eventsRaw?.gift?.forEach((d) => {
+      d(data, command)
+    })
     this.eventsAsModel.gift?.forEach((d) => {
       d(
         {
@@ -95,17 +103,20 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_level: data.medal_info.medal_level,
           fans_medal_name: data.medal_info.medal_name,
           fans_medal_wearing_status: data.medal_info.is_lighted === 1,
-          uface: data.face.replace("http://", "https://"),
+          uface: data.face.replace('http://', 'https://'),
           open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid)
+          ouid: GuidUtils.numToGuid(data.uid),
         },
-        command
-      );
-    });
+        command,
+      )
+    })
   }
+
   public onSC(command: any): void {
-    const data = command.data;
-    this.eventsRaw?.sc?.forEach((d) => { d(data, command); });
+    const data = command.data
+    this.eventsRaw?.sc?.forEach((d) => {
+      d(data, command)
+    })
     this.eventsAsModel.sc?.forEach((d) => {
       d(
         {
@@ -120,17 +131,20 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_level: data.medal_info.medal_level,
           fans_medal_name: data.medal_info.medal_name,
           fans_medal_wearing_status: data.medal_info.is_lighted === 1,
-          uface: data.user_info.face.replace("http://", "https://"),
+          uface: data.user_info.face.replace('http://', 'https://'),
           open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid)
+          ouid: GuidUtils.numToGuid(data.uid),
         },
-        command
-      );
-    });
+        command,
+      )
+    })
   }
+
   public onGuard(command: any): void {
-    const data = command.data;
-    this.eventsRaw?.guard?.forEach((d) => { d(data, command); });
+    const data = command.data
+    this.eventsRaw?.guard?.forEach((d) => {
+      d(data, command)
+    })
     this.eventsAsModel.guard?.forEach((d) => {
       d(
         {
@@ -147,18 +161,21 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_wearing_status: false,
           uface: AVATAR_URL + data.uid,
           open_id: '',
-          ouid: GuidUtils.numToGuid(data.uid)
+          ouid: GuidUtils.numToGuid(data.uid),
         },
-        command
-      );
-    });
+        command,
+      )
+    })
   }
+
   public onEnter(command: any): void {
-    const data = command.data;
-    const msgType = data.msg_type;
+    const data = command.data
+    const msgType = data.msg_type
 
     if (msgType === 1) {
-      this.eventsRaw?.enter?.forEach((d) => { d(data, command); });
+      this.eventsRaw?.enter?.forEach((d) => {
+        d(data, command)
+      })
       this.eventsAsModel.enter?.forEach((d) => {
         d(
           {
@@ -173,16 +190,17 @@ export default class DirectClient extends BaseDanmakuClient {
             fans_medal_level: data.fans_medal?.medal_level || 0,
             fans_medal_name: data.fans_medal?.medal_name || '',
             fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-            uface: data.face?.replace("http://", "https://") || (AVATAR_URL + data.uid),
+            uface: data.face?.replace('http://', 'https://') || (AVATAR_URL + data.uid),
             open_id: '',
-            ouid: GuidUtils.numToGuid(data.uid)
+            ouid: GuidUtils.numToGuid(data.uid),
           },
-          command
-        );
-      });
-    }
-    else if (msgType === 2) {
-      this.eventsRaw?.follow?.forEach((d) => { d(data, command); });
+          command,
+        )
+      })
+    } else if (msgType === 2) {
+      this.eventsRaw?.follow?.forEach((d) => {
+        d(data, command)
+      })
       this.eventsAsModel.follow?.forEach((d) => {
         d(
           {
@@ -197,18 +215,21 @@ export default class DirectClient extends BaseDanmakuClient {
             fans_medal_level: data.fans_medal?.medal_level || 0,
             fans_medal_name: data.fans_medal?.medal_name || '',
             fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-            uface: data.face?.replace("http://", "https://") || (AVATAR_URL + data.uid),
+            uface: data.face?.replace('http://', 'https://') || (AVATAR_URL + data.uid),
             open_id: '',
-            ouid: GuidUtils.numToGuid(data.uid)
+            ouid: GuidUtils.numToGuid(data.uid),
           },
-          command
-        );
-      });
+          command,
+        )
+      })
     }
   }
+
   public onScDel(command: any): void {
-    const data = command.data;
-    this.eventsRaw?.scDel?.forEach((d) => { d(data, command); });
+    const data = command.data
+    this.eventsRaw?.scDel?.forEach((d) => {
+      d(data, command)
+    })
     this.eventsAsModel.scDel?.forEach((d) => {
       d(
         {
@@ -225,10 +246,10 @@ export default class DirectClient extends BaseDanmakuClient {
           fans_medal_wearing_status: false,
           uface: '',
           open_id: '',
-          ouid: ''
+          ouid: '',
         },
-        command
-      );
-    });
+        command,
+      )
+    })
   }
 }

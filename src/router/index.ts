@@ -1,13 +1,14 @@
+import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import IndexView from '../views/IndexView.vue'
+import client from './client'
 import manage from './manage'
-import user from './user'
 import obs from './obs'
+import obs_store from './obs_store'
 import open_live from './open_live'
 import singlePage from './singlePage'
-import client from './client';
-import obs_store from './obs_store'
+import user from './user'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -21,7 +22,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/verify',
     name: 'verify',
-    component: () => import('@/views/VerifyView.vue'),
+    component: async () => import('@/views/VerifyView.vue'),
     meta: {
       title: '认证',
     },
@@ -29,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/AboutView.vue'),
+    component: async () => import('@/views/AboutView.vue'),
     meta: {
       title: '关于',
     },
@@ -37,7 +38,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/reset-password',
     name: 'resetPassword',
-    component: () => import('@/views/ChangePasswordView.vue'),
+    component: async () => import('@/views/ChangePasswordView.vue'),
     meta: {
       title: '重置密码',
     },
@@ -45,7 +46,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/video-collect/:id',
     name: 'video-collect',
-    component: () => import('@/views/VideoCollectPublic.vue'),
+    component: async () => import('@/views/VideoCollectPublic.vue'),
     meta: {
       title: '推荐 · 视频征集',
       keepAlive: true,
@@ -54,7 +55,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/video-collect/list/:id',
     name: 'video-collect-list',
-    component: () => import('@/views/VideoCollectListView.vue'),
+    component: async () => import('@/views/VideoCollectListView.vue'),
     meta: {
       title: '结果 · 视频征集',
       keepAlive: true,
@@ -63,7 +64,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/feedback',
     name: 'feedback',
-    component: () => import('@/views/ViewerFeedbackView.vue'),
+    component: async () => import('@/views/ViewerFeedbackView.vue'),
     meta: {
       title: '反馈',
       keepAlive: true,
@@ -72,7 +73,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/bili-auth',
     name: 'bili-auth',
-    component: () => import('@/views/BiliAuthView.vue'),
+    component: async () => import('@/views/BiliAuthView.vue'),
     meta: {
       title: 'Bilibili 账户认证',
       keepAlive: true,
@@ -81,7 +82,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/bili-user',
     name: 'bili-user',
-    component: () => import('@/views/pointViews/PointUserLayout.vue'),
+    component: async () => import('@/views/pointViews/PointUserLayout.vue'),
     meta: {
       title: 'Bilibili 账户',
       keepAlive: true,
@@ -101,7 +102,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/:pathMatch(.*)*',
     name: 'notfound',
-    component: () => import('@/views/NotfoundView.vue'),
+    component: async () => import('@/views/NotfoundView.vue'),
     meta: {
       title: '页面不存在',
     },

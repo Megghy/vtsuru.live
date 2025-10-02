@@ -1,29 +1,28 @@
 <script setup lang="ts">
+import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
+import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
+import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
+import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { computed } from 'vue'
 import { useAccount } from '@/api/account'
-import { ForumCommentModel, ForumModel, ForumTopicModel } from '@/api/models/forum'
 import { VTSURU_API_URL } from '@/data/constants'
 import { useForumStore } from '@/store/useForumStore'
-import { ArrowHookUpLeft24Filled, ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
-import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import { NAvatar, NButton, NCard, NDivider, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip } from 'naive-ui'
 import ForumReplyItem from './ForumReplyItem.vue'
-import { computed } from 'vue'
 
 const props = defineProps<{
   item: ForumCommentModel
   topic: ForumTopicModel
 }>()
 
+const emits = defineEmits<{
+  (e: 'delete', id: number): void
+}>()
 const useForum = useForumStore()
 const accountInfo = useAccount()
 
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
-
-const emits = defineEmits<{
-  (e: 'delete', id: number): void
-}>()
 
 function delComment(id: number) {
   useForum.DelComment(id).then((success) => {
@@ -42,7 +41,7 @@ function restoreComment(id: number) {
 function delReply(id: number) {
   useForum.DelReply(id).then((success) => {
     if (success) {
-      props.item.replies = props.item.replies.filter((reply) => reply.id !== id)
+      props.item.replies = props.item.replies.filter(reply => reply.id !== id)
     }
   })
 }
@@ -51,7 +50,7 @@ function delReply(id: number) {
 <template>
   <NFlex>
     <NAvatar
-      :src="VTSURU_API_URL + 'user-face/' + item.user.id + '?size=64'"
+      :src="`${VTSURU_API_URL}user-face/${item.user.id}?size=64`"
       :img-props="{ referrerpolicy: 'no-referrer' }"
     />
     <NFlex

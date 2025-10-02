@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { QAInfo } from '@/api/api-models'
-import { useQuestionBox } from '@/store/useQuestionBox';
-import { NButton, NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip, NSpace } from 'naive-ui'
-import { ref } from 'vue';
+import type { QAInfo } from '@/api/api-models'
+import { NCard, NDivider, NFlex, NImage, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { ref } from 'vue'
+import { useQuestionBox } from '@/store/useQuestionBox'
 
 const props = defineProps<{
   item: QAInfo
@@ -15,16 +15,16 @@ const showContent = ref(!isViolation)
 // 计算得分颜色的函数
 function getScoreColor(score: number | undefined): string {
   if (score === undefined) {
-    return 'grey'; // 如果没有分数，返回灰色
+    return 'grey' // 如果没有分数，返回灰色
   }
   // 将分数限制在 0 到 100 之间
-  const clampedScore = Math.max(0, Math.min(100, score));
+  const clampedScore = Math.max(0, Math.min(100, score))
   // 插值计算色相: 0 (红色) for score 0, 120 (绿色) for score 100
-  const hue = 120 * (clampedScore / 100); // 反转插值逻辑
+  const hue = 120 * (clampedScore / 100) // 反转插值逻辑
   // 固定饱和度和亮度 (可根据需要调整)
-  const saturation = 50;
-  const lightness = 45; // 稍暗以提高与白色文本的对比度
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  const saturation = 50
+  const lightness = 45 // 稍暗以提高与白色文本的对比度
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
 </script>
 
@@ -162,7 +162,7 @@ function getScoreColor(score: number | undefined): string {
       :style="{
         filter: isViolation && !showContent ? 'blur(3.7px)' : '',
         cursor: isViolation && !showContent ? 'pointer' : '',
-        whiteSpace: 'pre-wrap'
+        whiteSpace: 'pre-wrap',
       }"
       @click="isViolation ? (showContent = !showContent) : null"
     >

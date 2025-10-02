@@ -1,16 +1,17 @@
-import { useAccount } from '@/api/account'
-import { BASE_HUB_URL } from '@/data/constants'
 import {
   HttpTransportType,
   HubConnectionBuilder,
-  LogLevel
+  LogLevel,
 } from '@microsoft/signalr'
+import type { HubConnection } from '@microsoft/signalr'
 import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { BASE_HUB_URL } from '@/data/constants'
 
 export const useVTsuruHub = defineStore('VTsuruHub', () => {
-  const signalRClient = ref<signalR.HubConnection>()
+  const signalRClient = ref<HubConnection>()
   const isInited = ref(false)
   const isIniting = ref(false)
   const accountInfo = useAccount()
@@ -18,14 +19,18 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
   async function connectSignalR() {
     if (isIniting.value) return
     isIniting.value = true
-    while (!accountInfo.value.id || accountInfo.value.id < 1)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    //console.log('[Components-Event] 正在连接到 VTsuru 服务器...')
+
+    let currentAccount = accountInfo.value
+    while (!currentAccount || !currentAccount.id || currentAccount.id < 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      currentAccount = accountInfo.value
+    }
+    // console.log('[Components-Event] 正在连接到 VTsuru 服务器...')
     const connection = new HubConnectionBuilder()
-      .withUrl(BASE_HUB_URL + 'main?token=' + accountInfo.value.token, {
+      .withUrl(`${BASE_HUB_URL}main?token=${currentAccount.token}`, {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
-        logger: LogLevel.Error
+        logger: LogLevel.Error,
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000])
       .withHubProtocol(new MessagePackHubProtocol())
@@ -34,7 +39,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
       connection.send('Finished')
     })
     connection.on('Disconnect', (reason: unknown) => {
-      console.log('[Hub] 被 VTsuru 服务器断开连接: ' + reason)
+      console.log(`[Hub] 被 VTsuru 服务器断开连接: ${reason}`)
     })
 
     connection.onclose(reconnect)
@@ -45,7 +50,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
       isInited.value = true
       return true
     } catch (e) {
-      console.log('[Hub] 无法连接到 VTsuru 服务器: ' + e)
+      console.log(`[Hub] 无法连接到 VTsuru 服务器: ${e}`)
       return false
     } finally {
       isIniting.value = false
@@ -62,31 +67,31 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     }
   }
 
-  async function send(methodName: string, ...args: any[]) {
+  async function send(methodName: string, ...args: unknown[]) {
     if (!isInited.value) {
       await connectSignalR()
     }
     signalRClient.value?.send(methodName, ...args)
   }
-  async function invoke<T>(methodName: string, ...args: any[]) {
+  async function invoke<T>(methodName: string, ...args: unknown[]) {
     if (!isInited.value) {
       await connectSignalR()
     }
     return signalRClient.value?.invoke<T>(methodName, ...args)
   }
-  async function on(eventName: string, listener: (args: any) => any) {
+  async function on(eventName: string, listener: (...args: unknown[]) => void) {
     if (!isInited.value) {
       await connectSignalR()
     }
     signalRClient.value?.on(eventName, listener)
   }
-  async function off(eventName: string, listener: (args: any) => any) {
+  async function off(eventName: string, listener: (...args: unknown[]) => void) {
     if (!isInited.value) {
       await connectSignalR()
     }
     signalRClient.value?.off(eventName, listener)
   }
-  async function onreconnected(listener: (id: any) => any) {
+  async function onreconnected(listener: (connectionId?: string) => void) {
     if (!isInited.value) {
       await connectSignalR()
     }

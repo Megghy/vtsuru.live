@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { NavigateToNewTab } from '@/Utils'
-import { LotteryUserInfo } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import type { LotteryUserInfo } from '@/api/api-models'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { List } from 'linqts'
@@ -36,6 +33,9 @@ import {
 } from 'naive-ui'
 import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+import { QueryGetAPI } from '@/api/query'
+import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { NavigateToNewTab } from '@/Utils'
 
 interface TempLotteryResponseModel {
   users: LotteryUserInfo[]
@@ -125,7 +125,7 @@ function getCurrentUsers() {
   return undefined
 }
 const validUsers = computed(() => {
-  return currentUsers.value?.users.filter((u) => isUserValid(u))
+  return currentUsers.value?.users.filter(u => isUserValid(u))
 })
 
 async function onGet() {
@@ -139,12 +139,12 @@ async function onGet() {
       break
     }
   }
-  currentUsers.value?.users.forEach((u) => (u.visiable = true))
+  currentUsers.value?.users.forEach(u => (u.visiable = true))
 }
 async function getCommentsUsers() {
   isLoading.value = true
   await QueryGetAPI<TempLotteryResponseModel>(
-    LOTTERY_API_URL + 'comments',
+    `${LOTTERY_API_URL}comments`,
     {
       id: inputDynamicId.value,
     },
@@ -152,14 +152,14 @@ async function getCommentsUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
-        data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
+        data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
         data.data.total = data.data.users.length
 
         originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
         commentUsers.value = data.data
         isCommentCountDown.value = false
       } else {
-        message.error('获取用户失败: ' + data.message)
+        message.error(`获取用户失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -173,7 +173,7 @@ async function getCommentsUsers() {
 async function getForwardUsers() {
   isLoading.value = true
   await QueryGetAPI<TempLotteryResponseModel>(
-    LOTTERY_API_URL + 'forward',
+    `${LOTTERY_API_URL}forward`,
     {
       id: inputDynamicId.value,
     },
@@ -181,14 +181,14 @@ async function getForwardUsers() {
   )
     .then((data) => {
       if (data.code == 200) {
-        data.data.users = new List(data.data.users).DistinctBy((u) => u.uId).ToArray()
+        data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
         data.data.total = data.data.users.length
 
         originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
         forwardUsers.value = data.data
         isCommentCountDown.value = false
       } else {
-        message.error('获取用户失败: ' + data.message)
+        message.error(`获取用户失败: ${data.message}`)
       }
     })
     .catch((err) => {
@@ -237,7 +237,7 @@ function startLottery() {
           removeSingleUser()
           function removeSingleUser() {
             if (data.users.length > lotteryOption.value.resultCount) {
-              console.log(`[${data.users.length}] 移除` + data.users.splice(getRandomInt(data.users.length), 1)[0].name)
+              console.log(`[${data.users.length}] 移除${data.users.splice(getRandomInt(data.users.length), 1)[0].name}`)
               setTimeout(() => {
                 removeSingleUser()
               }, 500)
@@ -259,15 +259,15 @@ function onFinishLottery() {
   isLotteried.value = true
   notification.create({
     title: '抽奖完成',
-    description: '共' + resultUsers.value?.length + '人',
+    description: `共${resultUsers.value?.length}人`,
     duration: 3000,
     content: () =>
       h(
         NSpace,
         { vertical: true },
-        resultUsers.value?.map((user) =>
+        resultUsers.value?.map(user =>
           h(NSpace, null, [
-            h(NAvatar, { src: user.avatar + '@32w_32h', imgProps: { referrerpolicy: 'no-referrer' } }),
+            h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
             h('span', user.name),
           ]),
         ),
@@ -281,7 +281,7 @@ function onFinishLottery() {
     users: currentUsers.value?.users ?? [],
     time: Date.now(),
     type: currentType.value,
-    url: inputDynamicId.value ? 'https://t.bilibili.com/' + inputDynamicId.value : inputDynamic.value ?? '',
+    url: inputDynamicId.value ? `https://t.bilibili.com/${inputDynamicId.value}` : inputDynamic.value ?? '',
   })
 }
 function reset() {
@@ -494,7 +494,7 @@ onUnmounted(() => {
                   lazy
                   borderd
                   :size="64"
-                  :src="item.avatar + '@64w_64h'"
+                  :src="`${item.avatar}@64w_64h`"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                   style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
                 />
@@ -591,7 +591,7 @@ onUnmounted(() => {
                 <NAvatar
                   round
                   lazy
-                  :src="user.avatar + '@64w_64h'"
+                  :src="`${user.avatar}@64w_64h`"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                 />
                 {{ user.name }}

@@ -1,122 +1,123 @@
 <script setup lang="ts">
-  import { useColorMode } from '@vueuse/core';
-  import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
-  import { ref, watch, onMounted } from 'vue';
-  import {
-    NGrid,
-    NGridItem,
-    NMenu,
-    NRadio,
-    NRadioGroup,
-    NSwitch,
-    NSpace,
-    NCard,
-    NSpin,
-    NFormItem,
-    NAlert,
-    NCheckboxGroup,
-    NCheckbox,
-    NDivider,
-  } from 'naive-ui';
-  import type { MenuOption } from 'naive-ui';
-  import { ThemeType } from '@/api/api-models';
-  import { NotificationType, useSettings } from './store/useSettings';
-  import { getVersion } from '@tauri-apps/api/app';
-import { invoke } from '@tauri-apps/api/core';
+import type { MenuOption } from 'naive-ui'
+import type { NotificationType } from './store/useSettings'
+import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/core'
+import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
+import {
+  NAlert,
+  NCard,
+  NCheckbox,
+  NDivider,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NMenu,
+  NRadio,
+  NRadioGroup,
+  NSpace,
+  NSpin,
+  NSwitch,
+} from 'naive-ui'
+import { onMounted, ref, watch } from 'vue'
+import { ThemeType } from '@/api/api-models'
+import { useSettings } from './store/useSettings'
 
-  // --- State ---
+// --- State ---
 
-  const currentTab = ref('general');
-  const isLoading = ref(true);
-  const errorMsg = ref<string | null>(null);
-  const titleClickCount = ref(0); // 添加计数器状态变量
-  let resetTimeout: number | null = null; // 用于重置计数器的超时ID
+const currentTab = ref('general')
+const isLoading = ref(true)
+const errorMsg = ref<string | null>(null)
+const titleClickCount = ref(0) // 添加计数器状态变量
+let resetTimeout: number | null = null // 用于重置计数器的超时ID
 
-  const setting = useSettings();
-  const currentVersion = await getVersion();
+const setting = useSettings()
+const currentVersion = await getVersion()
 
-  // Navigation
-  const navOptions: MenuOption[] = [
-    { label: '常规', key: 'general' },
-    { label: '通知', key: 'notification' },
-    { label: '其他', key: 'other' },
-    { label: '关于', key: 'about' },
-  ];
+// Navigation
+const navOptions: MenuOption[] = [
+  { label: '常规', key: 'general' },
+  { label: '通知', key: 'notification' },
+  { label: '其他', key: 'other' },
+  { label: '关于', key: 'about' },
+]
 
-  // Theme
+// Theme
 
-  const themeType = useStorage('Settings.Theme', ThemeType.Auto);
+const themeType = useStorage('Settings.Theme', ThemeType.Auto)
 
-  // Autostart Settings
-  const isStartOnBoot = ref(false);
-  const minimizeOnStart = ref(false);
+// Autostart Settings
+const isStartOnBoot = ref(false)
+const minimizeOnStart = ref(false)
 
-  // --- Lifecycle Hooks ---
+// --- Lifecycle Hooks ---
 
-  onMounted(async () => {
-    isLoading.value = true;
-    errorMsg.value = null;
-    try {
-      isStartOnBoot.value = await isEnabled();
-    } catch (err) {
-      console.error("Failed to fetch autostart status:", err);
-      errorMsg.value = "无法获取开机启动状态，请稍后重试。";
-    } finally {
-      isLoading.value = false;
+onMounted(async () => {
+  isLoading.value = true
+  errorMsg.value = null
+  try {
+    isStartOnBoot.value = await isEnabled()
+  } catch (err) {
+    console.error('Failed to fetch autostart status:', err)
+    errorMsg.value = '无法获取开机启动状态，请稍后重试。'
+  } finally {
+    isLoading.value = false
+  }
+})
+
+// --- Watchers for Side Effects ---
+
+watch(isStartOnBoot, async (newValue, oldValue) => {
+  if (isLoading.value || newValue === oldValue) return
+
+  errorMsg.value = null
+  try {
+    if (newValue) {
+      await enable()
+    } else {
+      await disable()
     }
-  });
+  } catch (err) {
+    console.error('Failed to update autostart status:', err)
+    errorMsg.value = `设置开机启动失败: ${err instanceof Error ? err.message : '未知错误'}`
+    isStartOnBoot.value = oldValue
+    window.$message.error('设置开机启动失败')
+  }
+})
 
-  // --- Watchers for Side Effects ---
-
-  watch(isStartOnBoot, async (newValue, oldValue) => {
-    if (isLoading.value || newValue === oldValue) return;
-
-    errorMsg.value = null;
-    try {
-      if (newValue) {
-        await enable();
-      } else {
-        await disable();
-      }
-    } catch (err) {
-      console.error("Failed to update autostart status:", err);
-      errorMsg.value = `设置开机启动失败: ${err instanceof Error ? err.message : '未知错误'}`;
-      isStartOnBoot.value = oldValue;
-      window.$message.error('设置开机启动失败');
-    }
-  });
-
-  const renderNotifidactionEnable = (name: NotificationType) => h(NCheckbox, {
+function renderNotifidactionEnable(name: NotificationType) {
+  return h(NCheckbox, {
     checked: setting.settings.notificationSettings?.enableTypes.includes(name),
     onUpdateChecked: (value) => {
-      setting.settings.notificationSettings.enableTypes ??= [];
+      setting.settings.notificationSettings.enableTypes ??= []
       if (value) {
-        setting.settings.notificationSettings.enableTypes.push(name);
+        setting.settings.notificationSettings.enableTypes.push(name)
       } else {
-        setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(type => type !== name);
+        setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(type => type !== name)
       }
     },
-  }, () => '启用');
+  }, () => '启用')
+}
 
-  // --- 隐藏功能处理函数 ---
-  const handleTitleClick = () => {
-    titleClickCount.value++;
+// --- 隐藏功能处理函数 ---
+function handleTitleClick() {
+  titleClickCount.value++
 
-    if (resetTimeout !== null) {
-      clearTimeout(resetTimeout);
-    }
+  if (resetTimeout !== null) {
+    clearTimeout(resetTimeout)
+  }
 
-    resetTimeout = setTimeout(() => {
-      titleClickCount.value = 0;
-    }, 3000) as unknown as number;
+  resetTimeout = setTimeout(() => {
+    titleClickCount.value = 0
+  }, 3000) as unknown as number
 
-    if (titleClickCount.value === 10) {
-      invoke('open_dev_tools')
-        .then(() => {
-          window.$message.success('已打开 Dev Tools');
-        })
-    }
-  };
+  if (titleClickCount.value === 10) {
+    invoke('open_dev_tools')
+      .then(() => {
+        window.$message.success('已打开 Dev Tools')
+      })
+  }
+}
 </script>
 
 <template>
@@ -375,8 +376,7 @@ import { invoke } from '@tauri-apps/api/core';
 </template>
 
 <style scoped>
-
-  .fade-enter-active,
+.fade-enter-active,
   .fade-leave-active {
     transition: opacity 0.2s ease;
   }

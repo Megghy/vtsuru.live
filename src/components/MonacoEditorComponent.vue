@@ -1,21 +1,13 @@
-<template>
-  <div
-    ref="editorContainer"
-    :style="`height: ${height}px;`"
-    
-  />
-</template>
-
 <script setup lang="ts">
-import { editor } from 'monaco-editor';	// 全部导入
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-
-const value = defineModel<string>('value')
+import { editor } from 'monaco-editor'	// 全部导入
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const { language, height = 400 } = defineProps<{
   language: string
   height?: number
 }>()
+
+const value = defineModel<string>('value')
 
 const editorContainer = ref<HTMLElement>()
 let editorInstance: editor.IStandaloneCodeEditor | null = null
@@ -25,12 +17,12 @@ onMounted(() => {
 
   editorInstance = editor.create(editorContainer.value, {
     value: value.value,
-    language: language,
+    language,
     minimap: {
-      enabled: true
+      enabled: true,
     },
     colorDecorators: true,
-    automaticLayout: true
+    automaticLayout: true,
   })
 
   editorInstance.onDidChangeModelContent(() => {
@@ -65,3 +57,10 @@ watch(() => language, (newLang) => {
   }
 })
 </script>
+
+<template>
+  <div
+    ref="editorContainer"
+    :style="`height: ${height}px;`"
+  />
+</template>

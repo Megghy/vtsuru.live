@@ -1,28 +1,24 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { ConsumptionTypes } from '@/api/models/consumption'
+import { CheckmarkCircle24Filled } from '@vicons/fluent'
 import {
-  NFlex,
+  NDivider,
   NIcon,
-  NLayout,
-  NLayoutSider,
-  NMenu,
   NTabPane,
   NTabs,
-  NDivider
 } from 'naive-ui'
-import { h, onMounted, ref, defineComponent, shallowRef } from 'vue'
-import { useConsumptionSettingStore } from '@/store/usePaymentSettingStore'
-import { CheckmarkCircle24Filled } from '@vicons/fluent'
+import { defineComponent, h, onMounted, shallowRef } from 'vue'
+import { useAccount } from '@/api/account'
+import { ConsumptionTypes } from '@/api/models/consumption'
 import { isDev } from '@/data/constants'
+import { useConsumptionSettingStore } from '@/store/usePaymentSettingStore'
 
 const DanmakuStorageView = defineComponent({
   setup() {
     return () => h('div', [
       h(NDivider),
-      h('div', 'WIP...')
+      h('div', 'WIP...'),
     ])
-  }
+  },
 })
 
 const accountInfo = useAccount()
@@ -31,11 +27,11 @@ const currentComponent = shallowRef(DanmakuStorageView)
 
 const enabledIcon = h(NIcon, {
   component: CheckmarkCircle24Filled,
-  color: 'lightgrey'
+  color: 'lightgrey',
 })
 const disabledIcon = h(NIcon, {
   component: CheckmarkCircle24Filled,
-  color: 'red'
+  color: 'red',
 })
 
 function tabDisplay(type: ConsumptionTypes) {

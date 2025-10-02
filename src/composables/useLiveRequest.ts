@@ -1,27 +1,28 @@
-import { ref, computed, Ref } from 'vue'
+import type {
+  DanmakuUserInfo,
+  EventModel,
+  SongRequestInfo,
+  SongsInfo,
+} from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
-import { NTime, useMessage, useNotification } from 'naive-ui'
-import { h } from 'vue'
+import { NTime } from 'naive-ui'
 
+import { computed, h, ref } from 'vue'
+import { AddBiliBlackList, useAccount } from '@/api/account'
 import {
-  DanmakuUserInfo,
   EventDataTypes,
-  EventModel,
   FunctionTypes,
   QueueSortType,
   SongRequestFrom,
-  SongRequestInfo,
   SongRequestStatus,
-  SongsInfo
 } from '@/api/api-models'
 import {
   QueryGetAPI,
   QueryPostAPI,
-  QueryPostAPIWithParams
+  QueryPostAPIWithParams,
 } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/data/constants'
-import { AddBiliBlackList, useAccount } from '@/api/account'
 
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()
@@ -46,7 +47,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     return accountInfo.value != null && accountInfo.value?.id !== undefined
   })
 
-  const songs = computed(() => {
+  const songs = computed<SongRequestInfo[]>(() => {
     let result = new List(originSongs.value).Where((s) => {
       if (filterName.value) {
         if (filterNameContains.value) {
@@ -72,21 +73,21 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
     switch (settings.sortType) {
       case QueueSortType.TimeFirst: {
-        result = result.ThenBy((q) => q.createAt)
+        result = result.ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.GuardFirst: {
         result = result
-          .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-          .ThenBy((q) => q.createAt)
+          .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+          .ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.PaymentFist: {
-        result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
+        result = result.OrderByDescending(q => q.price ?? 0).ThenBy(q => q.createAt)
         break
       }
       case QueueSortType.FansMedalFirst: {
-        result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
+        result = result.OrderByDescending(q => q.user?.fans_medal_level ?? 0).ThenBy(q => q.createAt)
         break
       }
     }
@@ -124,17 +125,18 @@ export const useLiveRequest = defineStore('songRequest', () => {
   async function getAllSong() {
     if (accountInfo.value?.id) {
       try {
-        const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-all', {
+        const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-all`, {
           id: accountInfo.value.id,
         })
         if (data.code == 200) {
           console.log('[SONG-REQUEST] 已获取所有数据')
-          return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
+          return new List(data.data).OrderByDescending(s => s.createAt).ToArray()
         } else {
-          window.$message.error('无法获取数据: ' + data.message)
+          window.$message.error(`无法获取数据: ${data.message}`)
           return []
         }
-      } catch (err) {
+      } catch (_err) {
+        console.error('[SONG-REQUEST] 无法获取数据', _err)
         window.$message.error('无法获取数据')
       }
       return []
@@ -164,17 +166,17 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (accountInfo.value?.id) {
-      await QueryPostAPI<SongRequestInfo>(SONG_REQUEST_API_URL + 'try-add', danmaku).then((data) => {
+      await QueryPostAPI<SongRequestInfo>(`${SONG_REQUEST_API_URL}try-add`, danmaku).then((data) => {
         if (data.code == 200) {
           window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
           if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
         } else {
           const time = Date.now()
           window.$notification.warning({
-            title: danmaku.uname + ' 点播失败',
+            title: `${danmaku.uname} 点播失败`,
             description: data.message,
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time: time, key: updateKey.value }),
+            meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }),
           })
           console.log(`[SONG-REQUEST] [${danmaku.uname}] 添加曲目失败: ${data.message}`)
         }
@@ -198,7 +200,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         } as DanmakuUserInfo,
         createAt: Date.now(),
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
+        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max(s => s.id) ?? 0) + 1,
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -213,7 +215,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     }
 
     if (accountInfo.value?.id) {
-      await QueryPostAPIWithParams<SongRequestInfo>(SONG_REQUEST_API_URL + 'add', {
+      await QueryPostAPIWithParams<SongRequestInfo>(`${SONG_REQUEST_API_URL}add`, {
         name: newSongName.value,
       }).then((data) => {
         if (data.code == 200) {
@@ -235,7 +237,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         user: undefined,
         createAt: Date.now(),
         isInLocal: true,
-        id: songs.value.length == 0 ? 1 : new List(songs.value).Max((s) => s.id) + 1,
+        id: songs.value.length == 0 ? 1 : (new List(songs.value).Max(s => s.id) ?? 0) + 1,
       } as SongRequestInfo
 
       localActiveSongs.value.unshift(songData)
@@ -289,7 +291,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
           window.$message.error(`更新状态失败: ${data.message}`)
         }
       })
-      .catch((err) => {
+      .catch((_err) => {
         window.$message.error(`更新状态失败`)
       })
       .finally(() => {
@@ -302,17 +304,18 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
     try {
       const data = await QueryPostAPI(
-        SONG_REQUEST_API_URL + 'del',
-        values.map((s) => s.id),
+        `${SONG_REQUEST_API_URL}del`,
+        values.map(s => s.id),
       )
 
       if (data.code == 200) {
         window.$message.success('删除成功')
-        originSongs.value = originSongs.value.filter((s) => !values.includes(s))
+        originSongs.value = originSongs.value.filter(s => !values.includes(s))
       } else {
-        window.$message.error('删除失败: ' + data.message)
+        window.$message.error(`删除失败: ${data.message}`)
       }
-    } catch (err) {
+    } catch (_err) {
+      console.error('[SONG-REQUEST] 删除请求失败', _err)
       window.$message.error('删除失败')
     } finally {
       isLoading.value = false
@@ -323,7 +326,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     isLoading.value = true
 
     try {
-      const data = await QueryGetAPI(SONG_REQUEST_API_URL + 'deactive')
+      const data = await QueryGetAPI(`${SONG_REQUEST_API_URL}deactive`)
 
       if (data.code == 200) {
         window.$message.success('已全部取消')
@@ -333,9 +336,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
           }
         })
       } else {
-        window.$message.error('取消失败: ' + data.message)
+        window.$message.error(`取消失败: ${data.message}`)
       }
-    } catch (err) {
+    } catch (_err) {
+      console.error('[SONG-REQUEST] 取消全部失败', _err)
       window.$message.error('取消失败')
     } finally {
       isLoading.value = false
@@ -346,13 +350,13 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (!accountInfo.value?.id) return
 
     try {
-      const data = await QueryGetAPI<SongRequestInfo[]>(SONG_REQUEST_API_URL + 'get-active', {
+      const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-active`, {
         id: accountInfo.value?.id,
       })
 
       if (data.code == 200) {
         data.data.forEach((item) => {
-          const song = originSongs.value.find((s) => s.id == item.id)
+          const song = originSongs.value.find(s => s.id == item.id)
           if (song) {
             if (song.status != item.status) song.status = item.status
           } else {
@@ -363,10 +367,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
           }
         })
       } else {
-        window.$message.error('无法获取点播队列: ' + data.message)
+        window.$message.error(`无法获取点播队列: ${data.message}`)
       }
-    } catch (err) {
-      console.error('[SONG-REQUEST] 更新活跃歌曲失败', err)
+    } catch (_err) {
+      console.error('[SONG-REQUEST] 更新活跃歌曲失败', _err)
     }
   }
 
@@ -386,7 +390,8 @@ export const useLiveRequest = defineStore('songRequest', () => {
         } else {
           window.$message.error(data.message)
         }
-      } catch (err) {
+      } catch (_err) {
+        console.error('[SONG-REQUEST] 添加黑名单失败', _err)
         window.$message.error('添加黑名单失败')
       }
     }
@@ -518,6 +523,6 @@ export const useLiveRequest = defineStore('songRequest', () => {
     onGetDanmaku,
     onGetSC,
     getSCColor,
-    getGuardColor
+    getGuardColor,
   }
 })

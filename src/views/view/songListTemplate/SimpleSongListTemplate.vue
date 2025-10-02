@@ -1,15 +1,9 @@
 <script setup lang="ts">
-import { GetGuardColor } from '@/Utils'
-import { useAccount } from '@/api/account'
-import { FunctionTypes, SongsInfo } from '@/api/api-models'
-import SongPlayer from '@/components/SongPlayer.vue'
-import { SongListConfigType } from '@/data/TemplateTypes'
-import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
-import { getSongRequestTooltip, getSongRequestButtonType } from './utils/songRequestUtils'
+import type { SongsInfo } from '@/api/api-models'
+import type { SongListConfigType } from '@/data/TemplateTypes'
 import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import {
   NButton,
   NCard,
@@ -30,6 +24,13 @@ import {
   NTooltip,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { FunctionTypes } from '@/api/api-models'
+import SongPlayer from '@/components/SongPlayer.vue'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { GetGuardColor } from '@/Utils'
+import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
+import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -81,9 +82,9 @@ const songs = computed(() => {
     return props.data
       .filter((item) => {
         return (
-          (!selectedTag.value || item.tags?.includes(selectedTag.value)) &&
-          (!searchKeyword.value || item.name.toLowerCase().includes(searchKeyword.value.toLowerCase())) &&
-          (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
+          (!selectedTag.value || item.tags?.includes(selectedTag.value))
+          && (!searchKeyword.value || item.name.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+          && (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
         )
       })
       .slice(0, index.value)
@@ -102,6 +103,7 @@ function loadMore() {
   }
 }
 </script>
+
 <template>
   <div
     :style="{

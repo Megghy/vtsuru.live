@@ -1,4 +1,4 @@
-import { UserBasicInfo } from '../api-models'
+import type { UserBasicInfo } from '../api-models'
 
 export enum ForumTopicSortTypes {
   Time,
@@ -26,9 +26,9 @@ export interface ForumSetting {
   sendTopicDelay: number // Assuming the default value is handled elsewhere
 }
 export interface ForumUserModel extends UserBasicInfo {
- isAdmin: boolean
+  isAdmin: boolean
 }
-export type ForumModel = {
+export interface ForumModel {
   id: number
   name: string
   owner: ForumUserModel
@@ -51,7 +51,7 @@ export type ForumModel = {
   isAdmin: boolean
   isMember: boolean
 }
-export type ForumSectionModel = {
+export interface ForumSectionModel {
   id: number
   name: string
   description: string
@@ -61,7 +61,7 @@ export enum ForumTopicTypes {
   Default,
   Vote,
 }
-export type ForumTopicSetting = {
+export interface ForumTopicSetting {
   canReply?: boolean
 }
 export interface ForumTopicBaseModel {

@@ -1,5 +1,4 @@
-import { ExtendedDock24Filled } from '@vicons/fluent'
-import { UserConsumptionSetting } from './models/consumption'
+import type { UserConsumptionSetting } from './models/consumption'
 
 export interface APIRoot<T> {
   code: number
@@ -13,16 +12,16 @@ export interface PaginationResponse<T> extends APIRoot<T> {
   more: boolean
 }
 export enum IndexTypes {
-  Default
+  Default,
 }
 export enum SongListTypes {
-  Default
+  Default,
 }
 export enum GuardLevel {
   None = 0,
   Zongdu = 1,
   Tidu = 2,
-  Jianzhang = 3
+  Jianzhang = 3,
 }
 export interface UserBasicInfo {
   name: string
@@ -40,7 +39,7 @@ export interface UserInfo extends UserBasicInfo {
     isInBlackList: boolean
     templateTypes: { [key: string]: string }
     streamerInfo?: StreamerModel
-    allowCheckInRanking?: boolean  // 是否允许查看签到排行
+    allowCheckInRanking?: boolean // 是否允许查看签到排行
     allowQuestionBoxUploadImage?: boolean // 是否允许问题箱上传图片
   }
 }
@@ -57,7 +56,7 @@ export enum EventFetcherType {
   Application,
   OBS,
   Tauri,
-  Server
+  Server,
 }
 export interface AccountInfo extends UserInfo {
   isEmailVerified: boolean
@@ -105,7 +104,7 @@ export enum BiliAuthCodeStatusType {
   NotBind,
   Active,
   Notfound,
-  Inactive
+  Inactive,
 }
 export interface Setting_SendEmail {
   recieveQA: boolean
@@ -116,7 +115,7 @@ export enum SaftyLevels {
   Disabled,
   Low,
   Medium,
-  High
+  High,
 }
 export interface Setting_QuestionBox {
   allowUnregistedUser: boolean
@@ -236,15 +235,15 @@ export interface Setting_Point {
   shouldDiscontinueWhenSoldOut: boolean
 
   // 签到系统设置
-  enableCheckIn: boolean           // 是否启用签到功能
-  checkInKeyword: string           // 签到关键词
-  givePointsForCheckIn: boolean    // 是否为签到提供积分
-  baseCheckInPoints: number        // 基础签到积分
-  enableConsecutiveBonus: boolean  // 是否启用连续签到奖励
-  bonusPointsPerDay: number        // 每天额外奖励积分
-  maxBonusPoints: number           // 最大奖励积分
-  allowSelfCheckIn: boolean        // 是否允许自己签到
-  requireAuth: boolean             // 是否需要认证
+  enableCheckIn: boolean // 是否启用签到功能
+  checkInKeyword: string // 签到关键词
+  givePointsForCheckIn: boolean // 是否为签到提供积分
+  baseCheckInPoints: number // 基础签到积分
+  enableConsecutiveBonus: boolean // 是否启用连续签到奖励
+  bonusPointsPerDay: number // 每天额外奖励积分
+  maxBonusPoints: number // 最大奖励积分
+  allowSelfCheckIn: boolean // 是否允许自己签到
+  requireAuth: boolean // 是否需要认证
 }
 export interface Setting_QuestionDisplay {
   font?: string // Optional string, with a maximum length of 30 characters
@@ -271,28 +270,28 @@ export interface Setting_QuestionDisplay {
 export enum QuestionDisplayAlign {
   Left,
   Right,
-  Center
+  Center,
 }
 export enum SettingPointGiftAllowType {
   All,
-  WhiteList
+  WhiteList,
 }
 export enum KeywordMatchType {
   Full,
   Contains,
-  Regex
+  Regex,
 }
 
 export enum QueueSortType {
   GuardFirst,
   PaymentFist,
   TimeFirst,
-  FansMedalFirst
+  FansMedalFirst,
 }
 
 export enum QueueGiftFilterType {
   Or,
-  And
+  And,
 }
 export enum FunctionTypes {
   SongList,
@@ -312,7 +311,7 @@ export enum SongFrom {
   Custom,
   Netease,
   FiveSing,
-  Kugou
+  Kugou,
 }
 export interface SongsInfo {
   id: number
@@ -327,7 +326,7 @@ export interface SongsInfo {
   tags?: string[]
   createTime: number
   updateTime: number
-  //paidSong: boolean
+  // paidSong: boolean
   options?: SongRequestOption
   cover?: string
 }
@@ -344,13 +343,13 @@ export enum SongLanguage {
   Japanese, // 日文
   Spanish, // 西班牙文
   French, // 法文
-  Other //其他
+  Other, // 其他
 }
 export enum LevelTypes {
   Info,
   Success,
   Warn,
-  Error
+  Error,
 }
 export interface NotifactionInfo {
   id: string
@@ -359,7 +358,7 @@ export interface NotifactionInfo {
   message: string
   type: LevelTypes
 }
-//SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
+// SENSITIVE_TERM, HATE, VIOLENCE, PORNOGRAPHY, POLITICS, ADVERTISING, AGGRESSION
 export enum ViolationTypes {
   SENSITIVE_TERM,
   HATE,
@@ -367,9 +366,9 @@ export enum ViolationTypes {
   PORNOGRAPHY,
   POLITICS,
   ADVERTISING,
-  AGGRESSION
+  AGGRESSION,
 }
-export type QAReviewInfo = {
+export interface QAReviewInfo {
   isApproved: boolean
   saftyScore: number
   violationType: ViolationTypes[]
@@ -378,8 +377,8 @@ export interface QAInfo {
   id: number
   sender: UserBasicInfo
   target: UserBasicInfo
-  question: { message: string;  }
-  answer?: { message: string; createdAt: number }
+  question: { message: string }
+  answer?: { message: string, createdAt: number }
   isReaded?: boolean
   isSenderRegisted: boolean
   isPublic: boolean
@@ -433,7 +432,7 @@ export interface BatchScheduleRequest {
 export enum ThemeType {
   Auto = 'auto',
   Light = 'light',
-  Dark = 'dark'
+  Dark = 'dark',
 }
 export interface VideoCollectCreateModel {
   id?: string
@@ -467,12 +466,12 @@ export interface VideoCollectVideo {
 }
 export enum VideoFrom {
   Collect,
-  Spam
+  Spam,
 }
 export enum VideoStatus {
   Pending,
   Accepted,
-  Rejected
+  Rejected,
 }
 export interface VideoSender {
   sendAt: number
@@ -488,7 +487,7 @@ export interface VideoInfo {
 }
 export interface VideoCollectDetail {
   table: VideoCollectTable
-  videos: { info: VideoInfo; video: VideoCollectVideo }[]
+  videos: { info: VideoInfo, video: VideoCollectVideo }[]
 }
 export interface GameInfo {
   game_id: string
@@ -519,13 +518,13 @@ export interface OpenLiveLotteryUserInfo {
   level?: number
   avatar: string
   fans_medal_level: number
-  fans_medal_name: string //粉丝勋章名
-  fans_medal_wearing_status: boolean //该房间粉丝勋章佩戴情况
+  fans_medal_name: string // 粉丝勋章名
+  fans_medal_wearing_status: boolean // 该房间粉丝勋章佩戴情况
   guard_level: number
 }
 export enum OpenLiveLotteryType {
   Waiting,
-  Result
+  Result,
 }
 export interface UpdateLiveLotteryUsersModel {
   users: OpenLiveLotteryUserInfo[]
@@ -560,26 +559,26 @@ export enum SongRequestFrom {
   Danmaku,
   SC,
   Web,
-  Gift
+  Gift,
 }
 export enum QueueFrom {
   Manual,
   Danmaku,
   Gift,
-  Web
+  Web,
 }
 
 export enum SongRequestStatus {
   Waiting,
   Singing,
   Finish,
-  Cancel
+  Cancel,
 }
 export enum QueueStatus {
   Waiting,
   Progressing,
   Finish,
-  Cancel
+  Cancel,
 }
 export interface EventModel {
   type: EventDataTypes
@@ -606,7 +605,7 @@ export enum EventDataTypes {
   Like,
   SCDel,
   Enter,
-  Follow
+  Follow,
 }
 export interface ResponseQueueModel {
   id: number
@@ -659,7 +658,7 @@ export enum FeedbackType {
   Opinion,
   Bug,
   FunctionRequest,
-  Other
+  Other,
 }
 export enum FeedbackStatus {
   Padding,
@@ -667,7 +666,7 @@ export enum FeedbackStatus {
   Finish,
   Todo,
   Reject,
-  Developing
+  Developing,
 }
 export interface TagInfo {
   name: string
@@ -675,23 +674,23 @@ export interface TagInfo {
 }
 export enum GoodsStatus {
   Normal, // 商品正常
-  //OutOfStock,  // 商品无货
-  Discontinued // 商品下架
+  // OutOfStock,  // 商品无货
+  Discontinued, // 商品下架
 }
 export enum GoodsTypes {
   Physical,
-  Virtual
+  Virtual,
 }
 
 // 添加密钥选择模式枚举
 export enum KeySelectionMode {
   None,
-  Random,    // 随机选择
-  Sequential  // 顺序选择
+  Random, // 随机选择
+  Sequential, // 顺序选择
 }
 
 export interface PointGoodsSetting {
-  guardFree?: { year: number; month: number }
+  guardFree?: { year: number, month: number }
   allowGuardLevel?: GuardLevel
 }
 export interface ResponsePointGoodModel {
@@ -814,7 +813,7 @@ export interface ResponsePointOrder2UserModel {
 export enum PointOrderStatus {
   Pending, // 订单正在等待处理
   Shipped, // 订单已发货
-  Completed // 订单已完成
+  Completed, // 订单已完成
 }
 export interface ResponsePointHisrotyModel {
   point: number
@@ -831,7 +830,7 @@ export enum PointFrom {
   Danmaku,
   Manual,
   Use,
-  CheckIn
+  CheckIn,
 }
 
 export interface ResponseUserIndexModel {
@@ -850,7 +849,7 @@ export interface CheckInRankingInfo {
   lastCheckInTime: number
   isAuthed: boolean
   monthlyCheckInCount?: number // 本月签到次数
-  totalCheckInCount?: number   // 总签到次数
+  totalCheckInCount?: number // 总签到次数
 }
 
 // 签到结果
@@ -870,108 +869,108 @@ export enum UserFileTypes {
   Audio = 1,
   Video = 2,
   Document = 3,
-  Other = 4
+  Other = 4,
 }
 
 /**
  * 文件存储位置枚举
  */
 export enum UserFileLocation {
-  Local = 0
+  Local = 0,
 }
 
 /**
  * 文件上传响应接口
  */
 export interface UploadFileResponse {
-  id: number;
-  path: string;
-  name: string;
-  hash: string;
+  id: number
+  path: string
+  name: string
+  hash: string
 }
 
 /**
  * 扩展的文件信息接口，用于文件上传组件
  */
 export interface ExtendedUploadFileInfo {
-  id: string;  // 文件唯一标识符
-  name: string; // 文件名称
-  status: 'uploading' | 'finished' | 'error' | 'removed'; // 上传状态
-  thumbnailUrl?: string; // 缩略图URL
-  file?: File; // 可选的文件对象
+  id: string // 文件唯一标识符
+  name: string // 文件名称
+  status: 'uploading' | 'finished' | 'error' | 'removed' // 上传状态
+  thumbnailUrl?: string // 缩略图URL
+  file?: File // 可选的文件对象
 }
 
 // 弹幕投票相关类型定义
 export enum VoteResultMode {
-  ByCount = 0,    // 按人数计票
-  ByGiftValue = 1 // 按礼物价值计票
+  ByCount = 0, // 按人数计票
+  ByGiftValue = 1, // 按礼物价值计票
 }
 
 export interface APIFileModel {
-  id: number;
-  path: string;
-  name: string;
-  hash: string;
+  id: number
+  path: string
+  name: string
+  hash: string
 }
 
 export interface VoteConfig {
-  isEnabled: boolean;
-  showResults: boolean;
-  voteDurationSeconds: number;
-  voteCommand: string;
-  voteEndCommand: string;
-  voteTitle: string;
-  allowMultipleOptions: boolean;
-  allowMultipleVotes: boolean;
-  allowCustomOptions: boolean;
-  logVotes: boolean;
-  defaultOptions: string[];
-  backgroundFile?: APIFileModel;
-  backgroundColor: string;
-  textColor: string;
-  optionColor: string;
-  roundedCorners: boolean;
-  displayPosition: string;
-  allowGiftVoting: boolean;
-  minGiftPrice?: number;
-  voteResultMode: VoteResultMode;
+  isEnabled: boolean
+  showResults: boolean
+  voteDurationSeconds: number
+  voteCommand: string
+  voteEndCommand: string
+  voteTitle: string
+  allowMultipleOptions: boolean
+  allowMultipleVotes: boolean
+  allowCustomOptions: boolean
+  logVotes: boolean
+  defaultOptions: string[]
+  backgroundFile?: APIFileModel
+  backgroundColor: string
+  textColor: string
+  optionColor: string
+  roundedCorners: boolean
+  displayPosition: string
+  allowGiftVoting: boolean
+  minGiftPrice?: number
+  voteResultMode: VoteResultMode
 }
 
 export interface VoteOption {
-  text: string;
-  count: number;
-  voters: string[];
-  percentage?: number; // 用于OBS显示
+  text: string
+  count: number
+  voters: string[]
+  percentage?: number // 用于OBS显示
 }
 
 export interface ResponseVoteSession {
-  id: number;
-  title: string;
-  options: VoteOption[];
-  startTime: number;
-  endTime?: number;
-  isActive: boolean;
-  totalVotes: number;
-  creator?: UserBasicInfo;
+  id: number
+  title: string
+  options: VoteOption[]
+  startTime: number
+  endTime?: number
+  isActive: boolean
+  totalVotes: number
+  creator?: UserBasicInfo
 }
 
 export interface RequestCreateBulletVote {
-  title: string;
-  options: string[];
-  allowMultipleVotes: boolean;
-  durationSeconds?: number;
+  title: string
+  options: string[]
+  allowMultipleVotes: boolean
+  durationSeconds?: number
 }
 
 export interface VoteOBSData {
-  title: string;
-  options: VoteOption[];
-  totalVotes: number;
-  showResults: boolean;
-  isEnding: boolean;
-  backgroundImage?: string;
-  backgroundColor: string;
-  textColor: string;
-  optionColor: string;
-  roundedCorners: boolean;
-  displayPosition: string;
+  title: string
+  options: VoteOption[]
+  totalVotes: number
+  showResults: boolean
+  isEnding: boolean
+  backgroundImage?: string
+  backgroundColor: string
+  textColor: string
+  optionColor: string
+  roundedCorners: boolean
+  displayPosition: string
 }

@@ -1,12 +1,26 @@
 <script lang="ts">
-export const Config = defineTemplateConfig([
+</script>
+
+<script setup lang="ts">
+import type { WritableComputedRef } from 'vue'
+import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models';
+import type { ScheduleConfigTypeWithConfig } from '@/data/TemplateTypes' // Use base type
+import type { ExtractConfigData, RGBAColor } from '@/data/VTsuruConfigTypes'
+import { getWeek, getYear } from 'date-fns'
+import { NDivider, NSelect, NSpace, useMessage } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
+import { ScheduleDayInfo } from '@/api/api-models'
+import SaveCompoent from '@/components/SaveCompoent.vue' // 引入截图组件
+import { defineTemplateConfig, rgbaToString } from '@/data/VTsuruConfigTypes'
+
+const Config = defineTemplateConfig([
   {
     name: '背景图', // Removed 'as const'
     type: 'file',
     key: 'backgroundFile', // Removed 'as const'
     fileLimit: 1,
     onUploaded: (files: UploadFileResponse[], config: any) => {
-      config.backgroundFile = files;
+      config.backgroundFile = files
     },
   },
   {
@@ -56,30 +70,15 @@ export const Config = defineTemplateConfig([
     type: 'decorativeImages',
     key: 'decorativeFile',
   },
-]);
-export type KawaiiConfigType = ExtractConfigData<typeof Config>;
-export const DefaultConfig = {
+])
+type KawaiiConfigType = ExtractConfigData<typeof Config>
 
-} as KawaiiConfigType;
-</script>
-
-
-<script setup lang="ts">
-import { ScheduleDayInfo, ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models';
-import SaveCompoent from '@/components/SaveCompoent.vue'; // 引入截图组件
-import { ScheduleConfigTypeWithConfig } from '@/data/TemplateTypes'; // Use base type
-import { defineTemplateConfig, ExtractConfigData, RGBAColor, rgbaToString } from '@/data/VTsuruConfigTypes';
-import { getWeek, getYear } from 'date-fns';
-import { NDivider, NSelect, NSpace, useMessage } from 'naive-ui';
-import { computed, ref, watch, WritableComputedRef } from 'vue';
+const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
 
 // Get message instance
-const message = useMessage();
+const message = useMessage()
 
-const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>();
-
-// --- 默认配置 --- Define DefaultConfig using KawaiiConfigType
-// No export needed here
+// --- 默认配置 ---
 const DefaultConfig: KawaiiConfigType = {
   backgroundFile: [],
   containerColor: { r: 255, g: 255, b: 255, a: 0.8 },
@@ -89,107 +88,108 @@ const DefaultConfig: KawaiiConfigType = {
   timeLabelBgColor: { r: 245, g: 189, b: 189, a: 1 },
   timeLabelTextColor: { r: 255, g: 255, b: 255, a: 1 },
   decorativeFile: [],
-};
+}
 
 // --- 状态 ---
-const tableRef = ref<HTMLElement | null>(null);
-const _selectedDate = ref<string>(); // Internal state
+const tableRef = ref<HTMLElement | null>(null)
+const _selectedDate = ref<string>() // Internal state
 
 // --- Computed Properties ---
 
 // 合并默认配置和传入的配置
 const effectiveConfig = computed(() => {
-  return { ...DefaultConfig, ...props.config };
-});
+  return { ...DefaultConfig, ...props.config }
+})
 
 // Writable computed for selectedDate to handle potential side effects safely
 const selectedDate: WritableComputedRef<string | undefined> = computed({
   get: () => _selectedDate.value,
-  set: (val) => { _selectedDate.value = val; }
-});
+  set: (val) => {
+    _selectedDate.value = val
+  },
+})
 
 // 周选择器选项
 const weekOptions = computed(() => {
   return props.data?.map((item: ScheduleWeekInfo) => ({
     label: `${item.year}年 第${item.week}周`,
     value: `${item.year}-${item.week}`,
-  })) ?? [];
-});
+  })) ?? []
+})
 
 // Find current/selected week data without side effects
 const currentWeekData = computed<ScheduleWeekInfo | null>(() => {
-  if (!props.data || props.data.length === 0) return null;
-  const findPredicateSelected = (item: ScheduleWeekInfo) => `${item.year}-${item.week}` === _selectedDate.value;
-  const findPredicateCurrent = (item: ScheduleWeekInfo) => isTodayInWeek(item.year, item.week);
+  if (!props.data || props.data.length === 0) return null
+  const findPredicateSelected = (item: ScheduleWeekInfo) => `${item.year}-${item.week}` === _selectedDate.value
+  const findPredicateCurrent = (item: ScheduleWeekInfo) => isTodayInWeek(item.year, item.week)
 
   let target = _selectedDate.value
     ? props.data.find(findPredicateSelected)
-    : props.data.find(findPredicateCurrent);
+    : props.data.find(findPredicateCurrent)
 
   // Fallback if target not found (e.g., selected date no longer exists)
   if (!target) {
-    target = props.data.find(findPredicateCurrent) || props.data[0];
+    target = props.data.find(findPredicateCurrent) || props.data[0]
   }
-  return target || null;
-});
+  return target || null
+})
 
 // Watcher to initialize or update selectedDate based on available data
 watch([() => props.data, currentWeekData], ([newDataArray, newCurrentWeek], [oldDataArray, oldCurrentWeek]) => {
-  const currentSelection = _selectedDate.value;
-  const dataAvailable = newDataArray && newDataArray.length > 0;
+  const currentSelection = _selectedDate.value
+  const dataAvailable = newDataArray && newDataArray.length > 0
 
   if (!currentSelection && newCurrentWeek) {
     // Initialize selection if empty and current week data is available
-    _selectedDate.value = `${newCurrentWeek.year}-${newCurrentWeek.week}`;
+    _selectedDate.value = `${newCurrentWeek.year}-${newCurrentWeek.week}`
   } else if (currentSelection && dataAvailable) {
     // Check if the currently selected date still exists in the new data array
-    const selectionExists = newDataArray.some((d: ScheduleWeekInfo) => `${d.year}-${d.week}` === currentSelection);
+    const selectionExists = newDataArray.some((d: ScheduleWeekInfo) => `${d.year}-${d.week}` === currentSelection)
     if (!selectionExists) {
       // If selection no longer exists, fallback to current week or first available
-      const fallbackWeek = newDataArray.find((d: ScheduleWeekInfo) => isTodayInWeek(d.year, d.week)) || newDataArray[0];
-      _selectedDate.value = fallbackWeek ? `${fallbackWeek.year}-${fallbackWeek.week}` : undefined;
+      const fallbackWeek = newDataArray.find((d: ScheduleWeekInfo) => isTodayInWeek(d.year, d.week)) || newDataArray[0]
+      _selectedDate.value = fallbackWeek ? `${fallbackWeek.year}-${fallbackWeek.week}` : undefined
     }
   } else if (!dataAvailable) {
     // Clear selection if no data is available
-    _selectedDate.value = undefined;
+    _selectedDate.value = undefined
   }
-}, { immediate: true });
+}, { immediate: true })
 
 // Day mapping and order
-const dayMap: Record<string, string> = { Mon: '周一', Tue: '周二', Wed: '周三', Thu: '周四', Fri: '周五', Sat: '周六', Sun: '周日' };
-const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const dayMap: Record<string, string> = { Mon: '周一', Tue: '周二', Wed: '周三', Thu: '周四', Fri: '周五', Sat: '周六', Sun: '周日' }
+const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // Formatted schedule data for display
 const formattedSchedule = computed(() => {
-  if (!currentWeekData.value || !Array.isArray(currentWeekData.value.days)) return [];
+  if (!currentWeekData.value || !Array.isArray(currentWeekData.value.days)) return []
 
   return daysOfWeek.map((dayKey, index) => {
-    const dayList = currentWeekData.value!.days[index];
+    const dayList = currentWeekData.value!.days[index]
     // 如果当天有多个行程，取第一个展示；如果没有则显示默认
     const firstItem = Array.isArray(dayList) && dayList.length > 0
       ? dayList[0]
-      : { time: '', tag: '', title: '', tagColor: '', id: null };
+      : { time: '', tag: '', title: '', tagColor: '', id: null }
 
     return {
       key: dayKey,
       label: dayMap[dayKey] || dayKey,
-      data: firstItem
-    };
-  });
-});
+      data: firstItem,
+    }
+  })
+})
 
 // --- 方法 ---
 function isTodayInWeek(year: number, week: number): boolean {
-  const today = new Date();
-  const todayYear = getYear(today);
-  const todayWeek = getWeek(today, { weekStartsOn: 1 });
-  return todayYear === year && todayWeek === week;
+  const today = new Date()
+  const todayYear = getYear(today)
+  const todayWeek = getWeek(today, { weekStartsOn: 1 })
+  return todayYear === year && todayWeek === week
 }
 
 // --- Expose Config and DefaultConfig for template system ---
 // These need to be the actual constant values
-defineExpose({ Config, DefaultConfig });
-
+defineExpose({ Config, DefaultConfig })
 </script>
 
 <template>
@@ -223,7 +223,7 @@ defineExpose({ Config, DefaultConfig });
       '--day-content-text-color': rgbaToString(effectiveConfig.dayContentTextColor),
       '--time-label-bg-color': rgbaToString(effectiveConfig.timeLabelBgColor),
       '--time-label-text-color': rgbaToString(effectiveConfig.timeLabelTextColor),
-      backgroundImage: effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0 ? `url(${effectiveConfig.backgroundFile[0].path})` : 'none',
+      'backgroundImage': effectiveConfig.backgroundFile && effectiveConfig.backgroundFile.length > 0 ? `url(${effectiveConfig.backgroundFile[0].path})` : 'none',
     }"
   >
     <!-- 装饰图片渲染 -->
@@ -345,7 +345,6 @@ defineExpose({ Config, DefaultConfig });
   /* Ensure image fits within its bounds */
 }
 
-
 /* --- Layout Grid --- */
 .schedule-main-grid {
   position: relative;
@@ -433,7 +432,6 @@ defineExpose({ Config, DefaultConfig });
   width: 100%;
   /* Take full width */
 }
-
 
 /* --- Week Selector Area --- */
 .kawaii-schedule-selector {

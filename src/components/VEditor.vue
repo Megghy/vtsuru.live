@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils'
-import { APIRoot } from '@/api/api-models'
-import { GetHeaders } from '@/api/query'
-import '@/assets/editorDarkMode.css'
-import { VTSURU_API_URL } from '@/data/constants'
-import { DomEditor, IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
+import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
+import type { NotificationReactive } from 'naive-ui'
+import type { APIRoot } from '@/api/api-models'
+import { DomEditor } from '@wangeditor/editor'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import '@wangeditor/editor/dist/css/style.css' // 引入 css
-import { NotificationReactive, useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 import { onBeforeUnmount, ref, shallowRef } from 'vue'
+import { GetHeaders } from '@/api/query'
+import { VTSURU_API_URL } from '@/data/constants'
+import { isDarkMode } from '@/Utils'
+import '@/assets/editorDarkMode.css'
+import '@wangeditor/editor/dist/css/style.css' // 引入 css
 
 type InsertFnType = (url: string, alt: string, href: string) => void
 
@@ -44,10 +46,10 @@ const editorConfig: Partial<IEditorConfig> = {
       maxFileSize: 10 * 1024 * 1024,
       maxNumberOfFiles: 10,
       async customUpload(file: File, insertFn: InsertFnType) {
-        const formData = new FormData() //创建一个FormData实例。
+        const formData = new FormData() // 创建一个FormData实例。
         message.info('图片上传中')
         formData.append('file', file)
-        const resp = await fetch(VTSURU_API_URL + 'image/upload', {
+        const resp = await fetch(`${VTSURU_API_URL}image/upload`, {
           method: 'POST',
           body: formData,
           headers: GetHeaders(),
@@ -57,10 +59,10 @@ const editorConfig: Partial<IEditorConfig> = {
           if (data.code == 200) {
             insertFn(data.data, '', '')
           } else {
-            message.error('图片上传失败: ' + data.message)
+            message.error(`图片上传失败: ${data.message}`)
           }
         } else {
-          message.error('图片上传失败: ' + resp.statusText)
+          message.error(`图片上传失败: ${resp.statusText}`)
         }
       },
       onProgress(progress: number) {
@@ -82,7 +84,7 @@ onBeforeUnmount(() => {
   editor.destroy()
 })
 onMounted(() => {
-  //editorRef.value?.setHtml(props.defaultValue)
+  // editorRef.value?.setHtml(props.defaultValue)
 })
 function handleCreated(editor: unknown) {
   editorRef.value = editor // 记录 editor 实例，重要！

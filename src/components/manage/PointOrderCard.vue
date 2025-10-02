@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import {
-  GoodsTypes,
-  PointOrderStatus,
-  ResponsePointOrder2OwnerModel,
-  ResponsePointOrder2UserModel
-} from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
-import { Info24Filled } from '@vicons/fluent'
-import {
+import type {
   DataTableColumns,
   DataTableRowKey,
+} from 'naive-ui'
+import type {
+  ResponsePointOrder2OwnerModel,
+  ResponsePointOrder2UserModel,
+} from '@/api/api-models'
+import { Info24Filled } from '@vicons/fluent'
+import {
   NAlert,
   NAutoComplete,
   NButton,
@@ -37,6 +35,12 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
+import {
+  GoodsTypes,
+  PointOrderStatus,
+} from '@/api/api-models'
+import { QueryPostAPI } from '@/api/query'
+import { POINT_API_URL } from '@/data/constants'
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
 
@@ -48,11 +52,9 @@ const props = defineProps<{
   loading?: boolean
 }>()
 
-
+const emit = defineEmits(['selectedItem'])
 const message = useMessage()
 const dialog = useDialog()
-const emit = defineEmits(['selectedItem'])
-
 // 状态管理
 const isLoading = ref(false)
 const showDetailModal = ref(false)
@@ -81,7 +83,7 @@ const expressOptions = computed(() => {
   const companies = [...new Set(
     orderAsOwner.value
       .map(o => o.expressCompany)
-      .filter(Boolean)
+      .filter(Boolean),
   )]
 
   return companies.map(company => ({
@@ -98,7 +100,7 @@ const statusMap = {
     description: '订单创建完成，等待主播发货',
     action: '发货',
     nextStatusText: '确认发货后，订单状态将变为"已发货"',
-    prevStatusText: ''
+    prevStatusText: '',
   },
   [PointOrderStatus.Shipped]: {
     text: (hasExpress: boolean) => hasExpress ? '已发货 | 已填写单号' : '已发货 | 未填写单号',
@@ -106,7 +108,7 @@ const statusMap = {
     description: '订单已发货，可以添加快递信息',
     action: '完成订单',
     nextStatusText: '确认后将可以进行发货信息填写',
-    prevStatusText: '回退到"等待发货"状态，适用于发货信息填写错误等情况'
+    prevStatusText: '回退到"等待发货"状态，适用于发货信息填写错误等情况',
   },
   [PointOrderStatus.Completed]: {
     text: '已完成',
@@ -114,7 +116,7 @@ const statusMap = {
     description: '订单已完成',
     action: '',
     nextStatusText: '完成后无法再进行状态修改',
-    prevStatusText: '回退到"已发货"状态（仅限实体礼物）'
+    prevStatusText: '回退到"已发货"状态（仅限实体礼物）',
   },
 }
 
@@ -131,8 +133,8 @@ const orderColumn: DataTableColumns<OrderType> = [
         key: 'f2',
         onSelect: (pageData) => {
           selectedItem.value = pageData
-            .filter((row) => row.status === PointOrderStatus.Pending)
-            .map((row) => row.id)
+            .filter(row => row.status === PointOrderStatus.Pending)
+            .map(row => row.id)
         },
       },
     ],
@@ -217,7 +219,7 @@ const orderColumn: DataTableColumns<OrderType> = [
       return h(NTag, {
         size: 'small',
         type: type as any,
-        bordered: false
+        bordered: false,
       }, () => text)
     },
   },
@@ -235,7 +237,7 @@ const orderColumn: DataTableColumns<OrderType> = [
       return h(NTag, {
         type: 'success',
         bordered: false,
-        size: 'small'
+        size: 'small',
       }, () => row.type === GoodsTypes.Physical ? '实体礼物' : '虚拟礼物')
     },
   },
@@ -264,7 +266,7 @@ const orderColumn: DataTableColumns<OrderType> = [
               href: goodsCollectUrl,
               target: '_blank',
               text: true,
-              type: 'info'
+              type: 'info',
             }, () => h(NText, { italic: true }, () => '通过站外链接收集'))
           : h(AddressDisplay, { address: row.address, size: 'small' })
       } else {
@@ -342,8 +344,8 @@ function onChangeStatus(id: number, status: PointOrderStatus) {
   const currentStatusInfo = orderDetail.value ? statusMap[orderDetail.value.status] : null
   const currentStatusText = currentStatusInfo
     ? (typeof currentStatusInfo.text === 'function'
-      ? currentStatusInfo.text(!!orderDetail.value?.expressCompany)
-      : currentStatusInfo.text)
+        ? currentStatusInfo.text(!!orderDetail.value?.expressCompany)
+        : currentStatusInfo.text)
     : '当前状态'
 
   const newStatusText = typeof statusInfo.text === 'function'
@@ -366,7 +368,7 @@ function onChangeStatus(id: number, status: PointOrderStatus) {
     title: '修改订单状态',
     content: () => h('div', null, [
       h('p', null, `确认将订单状态从「${currentStatusText}」修改为「${newStatusText}」吗？`),
-      tipText ? h('p', { style: 'color: #f90; margin-top: 8px;' }, tipText) : null
+      tipText ? h('p', { style: 'color: #f90; margin-top: 8px;' }, tipText) : null,
     ]),
     positiveText: '确认',
     negativeText: '取消',
@@ -381,7 +383,7 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
 
   try {
     isLoading.value = true
-    const data = await QueryPostAPI(POINT_API_URL + 'update-orders-status', {
+    const data = await QueryPostAPI(`${POINT_API_URL}update-orders-status`, {
       ids,
       status,
     })
@@ -394,10 +396,10 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
         }
       })
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -412,7 +414,7 @@ async function updateExpress(item: ResponsePointOrder2OwnerModel) {
 
   try {
     isLoading.value = true
-    const data = await QueryPostAPI(POINT_API_URL + 'update-order-express', {
+    const data = await QueryPostAPI(`${POINT_API_URL}update-order-express`, {
       id: item.id,
       trackingNumber: item.trackingNumber,
       expressCompany: item.expressCompany,
@@ -421,10 +423,10 @@ async function updateExpress(item: ResponsePointOrder2OwnerModel) {
     if (data.code === 200) {
       message.success('操作成功')
     } else {
-      message.error('操作失败: ' + data.message)
+      message.error(`操作失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('操作失败: ' + err)
+    message.error(`操作失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -451,7 +453,7 @@ onMounted(() => {
         showSizePicker: true,
         pageSizes: [10, 25, 50, 100],
         defaultPageSize: 10,
-        size: 'small'
+        size: 'small',
       }"
       size="small"
       @update:checked-row-keys="keys => emit('selectedItem', keys)"
@@ -524,10 +526,10 @@ onMounted(() => {
             <!-- 实体礼物地址收集 -->
             <template
               v-if="
-                orderDetail.type === GoodsTypes.Physical &&
-                  orderDetail.status === PointOrderStatus.Pending &&
-                  (orderDetail as ResponsePointOrder2UserModel).goods.embedCollectUrl &&
-                  (orderDetail as ResponsePointOrder2UserModel).goods.collectUrl
+                orderDetail.type === GoodsTypes.Physical
+                  && orderDetail.status === PointOrderStatus.Pending
+                  && (orderDetail as ResponsePointOrder2UserModel).goods.embedCollectUrl
+                  && (orderDetail as ResponsePointOrder2UserModel).goods.collectUrl
               "
             >
               <NDivider>填写收货地址</NDivider>

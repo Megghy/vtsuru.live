@@ -1,15 +1,14 @@
-import { DanmakuUserInfo, SongFrom, SongsInfo } from '@/api/api-models'
-import { createNaiveUIApi, theme } from '@/Utils'
+import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
-import { ConfigProviderProps, createDiscreteApi, zhCN } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { SongFrom } from '@/api/api-models'
 
-export type WaitMusicInfo = {
+export interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: SongsInfo
 }
-export type Music = {
+export interface Music {
   id: number
   title: string
   artist: string
@@ -17,7 +16,7 @@ export type Music = {
   pic: string
   lrc: string
 }
-export type MusicRequestSettings = {
+export interface MusicRequestSettings {
   playMusicWhenFree: boolean
 
   repeat: 'repeat-one' | 'repeat-all' | 'no-repeat'
@@ -37,11 +36,11 @@ export type MusicRequestSettings = {
 export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const waitingMusics = useStorage<WaitMusicInfo[]>(
     'Setting.MusicRequest.Waiting',
-    []
+    [],
   )
   const originMusics = ref<SongsInfo[]>([])
   const aplayerMusics = computed(() =>
-    originMusics.value.map((m) => songToMusic(m))
+    originMusics.value.map(m => songToMusic(m)),
   )
   const currentMusic = ref<Music>({
     id: -1,
@@ -49,7 +48,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     artist: '',
     src: '',
     pic: '',
-    lrc: ''
+    lrc: '',
   } as Music)
   const currentOriginMusic = ref<WaitMusicInfo>()
   const isPlayingOrderMusic = ref(false)
@@ -66,28 +65,28 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     orderMusicFirst: true,
     platform: 'netease',
 
-    blacklist: []
+    blacklist: [],
   })
 
-const message = window.$message
+  const message = window.$message
 
   function addWaitingMusic(info: WaitMusicInfo) {
     if (
-      (settings.value.orderMusicFirst && !isPlayingOrderMusic.value) ||
-      aplayerRef.value?.audio.paused == true
+      (settings.value.orderMusicFirst && !isPlayingOrderMusic.value)
+      || aplayerRef.value?.audio.paused == true
     ) {
       playMusic(info.music)
       isPlayingOrderMusic.value = true
       console.log(
-        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`
+        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`,
       )
       message.success(
-        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`
+        `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`,
       )
     } else {
       waitingMusics.value.push(info)
       message.success(
-        `[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`
+        `[${info.from.name}] 点了一首 ${info.music.name} - ${info.music.author?.join('/')}`,
       )
     }
   }
@@ -128,7 +127,7 @@ const message = window.$message
     }
   }
   function playMusic(music: SongsInfo) {
-    //pauseMusic()
+    // pauseMusic()
     currentMusic.value = songToMusic(music)
     aplayerRef.value?.thenPlay()
   }
@@ -147,16 +146,16 @@ const message = window.$message
           ? `https://music.163.com/song/media/outer/url?id=${s.id}.mp3`
           : s.url,
       pic: s.cover ?? '',
-      lrc: ''
+      lrc: '',
     } as Music
   }
   function setSinkId() {
     try {
       aplayerRef.value?.audio.setSinkId(settings.value.deviceId ?? 'default')
-      console.log('设置音频输出设备为 ' + (settings.value.deviceId ?? '默认'))
+      console.log(`设置音频输出设备为 ${settings.value.deviceId ?? '默认'}`)
     } catch (err) {
       console.error(err)
-      message.error('设置音频输出设备失败: ' + err)
+      message.error(`设置音频输出设备失败: ${err}`)
     }
   }
   function nextMusic() {
@@ -184,6 +183,6 @@ const message = window.$message
     onMusicPlay,
     pauseMusic,
     nextMusic,
-    aplayerRef
+    aplayerRef,
   }
 })

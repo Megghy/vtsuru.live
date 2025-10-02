@@ -1,4 +1,4 @@
-export default //管理页面
+export default // 管理页面
 {
   path: '/manage',
   name: 'manage',
@@ -6,230 +6,230 @@ export default //管理页面
     {
       path: '',
       name: 'manage-index',
-      component: () => import('@/views/manage/DashboardView.vue'),
+      component: async () => import('@/views/manage/DashboardView.vue'),
       meta: {
-        title: '面板'
-      }
+        title: '面板',
+      },
     },
     {
       path: 'song-list',
       name: 'manage-songList',
-      component: () => import('@/views/manage/SongListManageView.vue'),
+      component: async () => import('@/views/manage/SongListManageView.vue'),
       meta: {
         title: '歌单',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'question-box',
       name: 'manage-questionBox',
-      component: () => import('@/views/manage/QuestionBoxManageView.vue'),
+      component: async () => import('@/views/manage/QuestionBoxManageView.vue'),
       meta: {
         title: '提问箱',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'lottery',
       name: 'manage-lottery',
-      component: () => import('@/views/manage/LotteryView.vue'),
+      component: async () => import('@/views/manage/LotteryView.vue'),
       meta: {
         title: '动态抽奖',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'history',
       name: 'manage-history',
-      component: () => import('@/views/manage/HistoryView.vue'),
+      component: async () => import('@/views/manage/HistoryView.vue'),
       meta: {
         title: '数据跟踪',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'schedule',
       name: 'manage-schedule',
-      component: () => import('@/views/manage/ScheduleManageView.vue'),
+      component: async () => import('@/views/manage/ScheduleManageView.vue'),
       meta: {
         title: '日程',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'event',
       name: 'manage-event',
-      component: () => import('@/views/manage/EventView.vue'),
+      component: async () => import('@/views/manage/EventView.vue'),
       meta: {
         title: '事件记录',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'video-collect',
       name: 'manage-videoCollect',
-      component: () => import('@/views/manage/VideoCollectManageView.vue'),
+      component: async () => import('@/views/manage/VideoCollectManageView.vue'),
       meta: {
         title: '视频征集',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'video-collect/:id',
       name: 'manage-videoCollect-Detail',
-      component: () => import('@/views/manage/VideoCollectDetailView.vue'),
+      component: async () => import('@/views/manage/VideoCollectDetailView.vue'),
       meta: {
         title: '详情 · 视频征集',
-        parent: 'manage-videoCollect'
-      }
+        parent: 'manage-videoCollect',
+      },
     },
     {
       path: 'live-lottery',
       name: 'manage-liveLottery',
-      component: () => import('@/views/open_live/OpenLottery.vue'),
+      component: async () => import('@/views/open_live/OpenLottery.vue'),
       meta: {
         title: '直播抽奖',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'obs-store',
       name: 'manage-obsStore',
-      component: () => import('@/views/obs_store/OBSComponentStoreView.vue'),
+      component: async () => import('@/views/obs_store/OBSComponentStoreView.vue'),
       meta: {
         title: 'OBS组件库',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'queue',
       name: 'manage-liveQueue',
-      component: () => import('@/views/open_live/OpenQueue.vue'),
+      component: async () => import('@/views/open_live/OpenQueue.vue'),
       meta: {
         title: '排队',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'speech',
       name: 'manage-speech',
-      component: () => import('@/views/open_live/ReadDanmaku.vue'),
+      component: async () => import('@/views/open_live/ReadDanmaku.vue'),
       meta: {
         title: '读弹幕',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'live-request',
       name: 'manage-liveRequest',
-      component: () => import('@/views/open_live/LiveRequest.vue'),
+      component: async () => import('@/views/open_live/LiveRequest.vue'),
       meta: {
         title: '点播',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'music-request',
       name: 'manage-musicRequest',
-      component: () => import('@/views/open_live/MusicRequest.vue'),
+      component: async () => import('@/views/open_live/MusicRequest.vue'),
       meta: {
         title: '点歌',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'danmuji',
       name: 'manage-danmuji',
-      component: () => import('@/views/manage/DanmujiManageView.vue'),
+      component: async () => import('@/views/manage/DanmujiManageView.vue'),
       meta: {
         title: '弹幕姬',
         keepAlive: true,
         danmaku: true,
-        isNew: true
-      }
+        isNew: true,
+      },
     },
     {
       path: 'vote',
       name: 'manage-danmakuVote',
-      component: () => import('@/views/open_live/DanmakuVote.vue'),
+      component: async () => import('@/views/open_live/DanmakuVote.vue'),
       meta: {
         title: '弹幕投票',
         keepAlive: true,
-        danmaku: true
-      }
+        danmaku: true,
+      },
     },
     {
       path: 'live',
       name: 'manage-live',
-      component: () => import('@/views/manage/LiveManager.vue'),
+      component: async () => import('@/views/manage/LiveManager.vue'),
       meta: {
         title: '直播记录',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'live/:id',
       name: 'manage-liveDetail',
-      component: () => import('@/views/manage/LiveDetailManage.vue'),
+      component: async () => import('@/views/manage/LiveDetailManage.vue'),
       meta: {
-        title: '直播详情'
-      }
+        title: '直播详情',
+      },
     },
     {
       path: 'feedback',
       name: 'manage-feedback',
-      component: () => import('@/views/FeedbackManage.vue'),
+      component: async () => import('@/views/FeedbackManage.vue'),
       meta: {
-        title: '反馈'
-      }
+        title: '反馈',
+      },
     },
     {
       path: 'point',
       name: 'manage-point',
-      component: () => import('@/views/manage/point/PointManage.vue'),
+      component: async () => import('@/views/manage/point/PointManage.vue'),
       meta: {
-        title: '积分'
-      }
+        title: '积分',
+      },
     },
     {
       path: 'forum',
       name: 'manage-forum',
-      component: () => import('@/views/manage/ForumManage.vue'),
+      component: async () => import('@/views/manage/ForumManage.vue'),
       meta: {
-        title: '粉丝讨论区'
-      }
+        title: '粉丝讨论区',
+      },
     },
     {
       path: 'analyze',
       name: 'manage-analyze',
-      component: () => import('@/views/manage/AnalyzeView.vue'),
+      component: async () => import('@/views/manage/AnalyzeView.vue'),
       meta: {
-        title: '数据分析'
-      }
+        title: '数据分析',
+      },
     },
     {
       path: 'tools',
       name: 'manage-tools-dashboard',
-      component: () => import('@/views/manage/ToolsDashboardView.vue'),
+      component: async () => import('@/views/manage/ToolsDashboardView.vue'),
       meta: {
         title: '直播工具箱',
-        keepAlive: true
-      }
+        keepAlive: true,
+      },
     },
     {
       path: 'tools/dynamic-nine-grid',
       name: 'ManageToolDynamicNineGrid',
-      component: () => import('@/views/manage/tools/ToolDynamicNineGrid.vue'),
+      component: async () => import('@/views/manage/tools/ToolDynamicNineGrid.vue'),
       meta: {
         title: '动态九图生成器',
-        parent: 'manage-tools-dashboard' // 指向工具箱仪表盘
-      }
-    }
-  ]
+        parent: 'manage-tools-dashboard', // 指向工具箱仪表盘
+      },
+    },
+  ],
 }

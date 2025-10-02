@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import DanmakuContainer from '@/components/DanmakuContainer.vue'
-import { LIVE_API_URL } from '@/data/constants'
+import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { NButton, NEmpty, NSpin, useMessage } from 'naive-ui'
 import { onActivated, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAccount } from '@/api/account'
+import { QueryGetAPI } from '@/api/query'
+import DanmakuContainer from '@/components/DanmakuContainer.vue'
+import { LIVE_API_URL } from '@/data/constants'
 
 interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
@@ -25,14 +25,14 @@ const liveInfo = ref<ResponseLiveDetail | undefined>(await get())
 async function get() {
   isLoading.value = true
   try {
-    const data = await QueryGetAPI<ResponseLiveDetail>(LIVE_API_URL + 'get', {
+    const data = await QueryGetAPI<ResponseLiveDetail>(`${LIVE_API_URL}get`, {
       id: route.params.id,
       useEmoji: true,
     })
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('无法获取数据: ' + data.message)
+      message.error(`无法获取数据: ${data.message}`)
       return undefined
     }
   } catch (err) {

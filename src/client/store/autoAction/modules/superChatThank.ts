@@ -1,14 +1,16 @@
-import { EventModel } from '@/api/api-models';
-import { Ref } from 'vue';
-import {
-  executeActions,
-  filterValidActions
-} from '../actionUtils';
-import {
+import type { Ref } from 'vue'
+import type {
   AutoActionItem,
   RuntimeState,
-  TriggerType
-} from '../types';
+} from '../types'
+import type { EventModel } from '@/api/api-models'
+import {
+  executeActions,
+  filterValidActions,
+} from '../actionUtils'
+import {
+  TriggerType,
+} from '../types'
 
 /**
  * 醒目留言感谢模块
@@ -21,9 +23,8 @@ export function useSuperChatThank(
   isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
   isTianXuanActive: Ref<boolean>,
-  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>
+  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-
   /**
    * 处理醒目留言事件
    * @param event 醒目留言事件
@@ -33,12 +34,12 @@ export function useSuperChatThank(
   function processSuperChat(
     event: EventModel,
     actions: AutoActionItem[],
-    runtimeState: RuntimeState
+    runtimeState: RuntimeState,
   ) {
-    if (!roomId.value) return;
+    if (!roomId.value) return
 
     // 使用通用函数过滤有效的SC感谢操作
-    const scActions = filterValidActions(actions, TriggerType.SUPER_CHAT, isLive, isTianXuanActive);
+    const scActions = filterValidActions(actions, TriggerType.SUPER_CHAT, isLive, isTianXuanActive)
 
     // 使用通用执行函数处理SC事件
     if (scActions.length > 0 && roomId.value) {
@@ -55,25 +56,25 @@ export function useSuperChatThank(
             (action, context) => {
               // 如果未设置SC过滤或选择了不过滤模式
               if (!action.triggerConfig.scFilterMode || action.triggerConfig.scFilterMode === 'none') {
-                return true;
+                return true
               }
 
               // 价格过滤模式
-              if (action.triggerConfig.scFilterMode === 'price' &&
-                  action.triggerConfig.scMinPrice &&
-                  event.price < action.triggerConfig.scMinPrice * 1000) {
-                return false;
+              if (action.triggerConfig.scFilterMode === 'price'
+                && action.triggerConfig.scMinPrice
+                && event.price < action.triggerConfig.scMinPrice * 1000) {
+                return false
               }
 
-              return true;
-            }
-          ]
-        }
-      );
+              return true
+            },
+          ],
+        },
+      )
     }
   }
 
   return {
     processSuperChat,
-  };
+  }
 }

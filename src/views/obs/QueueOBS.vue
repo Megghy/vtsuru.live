@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import {
-  QueueFrom,
-  QueueSortType,
-  QueueStatus,
+import type {
   ResponseQueueModel,
-  Setting_Queue
+  Setting_Queue,
 } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
-import { QUEUE_API_URL } from '@/data/constants'
-import { useWebRTC } from '@/store/useRTC'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
 import { NDivider, NEmpty, useMessage } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import {
+  QueueFrom,
+  QueueSortType,
+  QueueStatus,
+} from '@/api/api-models'
+import { QueryGetAPI } from '@/api/query'
+import { QUEUE_API_URL } from '@/data/constants'
+import { useWebRTC } from '@/store/useRTC'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
-  speedMultiplier?: number,
+  id?: number
+  active?: boolean
+  visible?: boolean
+  speedMultiplier?: number
 }>()
 
 const message = useMessage()
@@ -34,7 +36,7 @@ const speedMultiplier = computed(() => {
     return props.speedMultiplier
   }
   const speedParam = route.query.speed
-  const speed = parseFloat(speedParam?.toString() ?? '1')
+  const speed = Number.parseFloat(speedParam?.toString() ?? '1')
   return isNaN(speed) || speed <= 0 ? 1 : speed
 })
 
@@ -61,39 +63,39 @@ const totalContentHeightWithLastMargin = computed(() => {
 const queue = ref<ResponseQueueModel[]>([])
 const settings = ref<Setting_Queue>({} as Setting_Queue)
 const progressing = computed(() => {
-  return queue.value.find((s) => s.status == QueueStatus.Progressing)
+  return queue.value.find(s => s.status == QueueStatus.Progressing)
 })
 const activeItems = computed(() => {
   let list = new List(queue.value)
-    .Where((q) => q?.status == QueueStatus.Waiting)
-    .OrderByDescending((q) => q.from == QueueFrom.Manual)
+    .Where(q => q?.status == QueueStatus.Waiting)
+    .OrderByDescending(q => q.from == QueueFrom.Manual)
   switch (settings.value.sortType) {
     case QueueSortType.TimeFirst: {
-      list = list.OrderBy((q) => q.createAt)
+      list = list.OrderBy(q => q.createAt)
       break
     }
     case QueueSortType.GuardFirst: {
       list = list
-        .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-        .ThenBy((q) => q.createAt)
+        .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
+        .ThenBy(q => q.createAt)
       break
     }
     case QueueSortType.PaymentFist: {
-      list = list.OrderByDescending((q) => q.giftPrice).ThenBy((q) => q.createAt)
+      list = list.OrderByDescending(q => q.giftPrice).ThenBy(q => q.createAt)
       break
     }
     case QueueSortType.FansMedalFirst: {
       list = list
-        .OrderByDescending((q) => (q.user?.fans_medal_wearing_status ? 1 : 0))
-        .ThenByDescending((q) => q.user?.fans_medal_level ?? 0)
-        .ThenBy((q) => q.createAt)
+        .OrderByDescending(q => (q.user?.fans_medal_wearing_status ? 1 : 0))
+        .ThenByDescending(q => q.user?.fans_medal_level ?? 0)
+        .ThenBy(q => q.createAt)
       break
     }
   }
   if (settings.value.isReverse) {
     list = list.Reverse()
   }
-  list = list.OrderByDescending((q) => (q.status == QueueStatus.Progressing ? 1 : 0))
+  list = list.OrderByDescending(q => (q.status == QueueStatus.Progressing ? 1 : 0))
   return list.ToArray()
 })
 const itemNum = computed(() => {
@@ -102,8 +104,8 @@ const itemNum = computed(() => {
 
 async function get() {
   try {
-    const data = await QueryGetAPI<{ queue: ResponseQueueModel[]; setting: Setting_Queue }>(
-      QUEUE_API_URL + 'get-active-and-settings',
+    const data = await QueryGetAPI<{ queue: ResponseQueueModel[], setting: Setting_Queue }>(
+      `${QUEUE_API_URL}get-active-and-settings`,
       {
         id: currentId.value,
       },
@@ -112,7 +114,7 @@ async function get() {
       return data.data
     }
   } catch (err) { }
-  return {} as { queue: ResponseQueueModel[]; setting: Setting_Queue }
+  return {} as { queue: ResponseQueueModel[], setting: Setting_Queue }
 }
 
 const isMoreThanContainer = computed(() => {
@@ -246,7 +248,7 @@ onUnmounted(() => {
               v-if="item.from == QueueFrom.Manual || ((item.giftPrice ?? 0) > 0 || settings.showPayment)"
               class="queue-list-item-payment"
             >
-              {{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : '¥ ' + item.giftPrice }}
+              {{ item.from == QueueFrom.Manual ? '主播添加' : item.giftPrice == undefined ? '无' : `¥ ${item.giftPrice}` }}
             </div>
           </span>
         </div>
@@ -294,7 +296,7 @@ onUnmounted(() => {
             type="price"
           >
             <span class="tag-label">最低价格</span>
-            <span class="tag-value">{{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}</span>
+            <span class="tag-value">{{ settings.minGiftPrice ? `> ¥${settings.minGiftPrice}` : '任意' }}</span>
           </div>
           <div
             class="queue-footer-tag"
@@ -312,7 +314,7 @@ onUnmounted(() => {
               {{
                 settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
                   ? settings.fanMedalMinLevel > 0
-                    ? '> ' + settings.fanMedalMinLevel
+                    ? `> ${settings.fanMedalMinLevel}`
                     : '佩戴'
                   : '无需'
               }}
@@ -345,7 +347,7 @@ onUnmounted(() => {
             type="price"
           >
             <span class="tag-label">最低价格</span>
-            <span class="tag-value">{{ settings.minGiftPrice ? '> ¥' + settings.minGiftPrice : '任意' }}</span>
+            <span class="tag-value">{{ settings.minGiftPrice ? `> ¥${settings.minGiftPrice}` : '任意' }}</span>
           </div>
           <div
             v-if="settings.giftNames && settings.giftNames.length > 0"
@@ -364,7 +366,7 @@ onUnmounted(() => {
               {{
                 settings.fanMedalMinLevel != undefined && !settings.allowAllDanmaku
                   ? settings.fanMedalMinLevel > 0
-                    ? '> ' + settings.fanMedalMinLevel
+                    ? `> ${settings.fanMedalMinLevel}`
                     : '佩戴'
                   : '无需'
               }}

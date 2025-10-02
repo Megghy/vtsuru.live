@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NSpace, NInput, NButton, NTag, NSelect, NInputNumber, NSwitch, NCollapseItem, useMessage } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NButton, NCollapseItem, NInput, NInputNumber, NSelect, NSpace, NSwitch, NTag, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
-const message = useMessage();
+const message = useMessage()
 
 // 礼物过滤模式选项
 const giftFilterModeOptions = [
@@ -18,32 +19,32 @@ const giftFilterModeOptions = [
   { label: '礼物黑名单', value: 'blacklist' },
   { label: '礼物白名单', value: 'whitelist' },
   { label: '最低价值', value: 'value' },
-  { label: '过滤免费礼物', value: 'free' }
-];
+  { label: '过滤免费礼物', value: 'free' },
+]
 
 // 礼物名称相关
-const tempGiftName = ref('');
+const tempGiftName = ref('')
 
 // 添加礼物名称到过滤列表
 function addGiftName() {
-  if (!tempGiftName.value.trim()) return;
+  if (!tempGiftName.value.trim()) return
 
   if (!props.action.triggerConfig.filterGiftNames) {
-    props.action.triggerConfig.filterGiftNames = [];
+    props.action.triggerConfig.filterGiftNames = []
   }
 
   if (!props.action.triggerConfig.filterGiftNames.includes(tempGiftName.value.trim())) {
-    props.action.triggerConfig.filterGiftNames.push(tempGiftName.value.trim());
-    tempGiftName.value = '';
+    props.action.triggerConfig.filterGiftNames.push(tempGiftName.value.trim())
+    tempGiftName.value = ''
   } else {
-    message.warning('此礼物名称已存在');
+    message.warning('此礼物名称已存在')
   }
 }
 
 // 移除礼物名称
 function removeGiftName(index: number) {
   if (props.action.triggerConfig.filterGiftNames) {
-    props.action.triggerConfig.filterGiftNames.splice(index, 1);
+    props.action.triggerConfig.filterGiftNames.splice(index, 1)
   }
 }
 </script>

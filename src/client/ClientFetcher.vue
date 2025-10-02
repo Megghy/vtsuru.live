@@ -1,468 +1,555 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted, watch, nextTick, shallowRef } from 'vue';
+import type { FetcherStatisticData } from './data/models'
 
+import type { CookieCloudConfig } from './store/useBiliCookie'
+import { invoke } from '@tauri-apps/api/core'
+import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
+import { openUrl } from '@tauri-apps/plugin-opener'
 
-  // ECharts
-  import { use } from 'echarts/core';
-  import { CanvasRenderer } from 'echarts/renderers';
-  import { LineChart, BarChart, PieChart, GaugeChart } from 'echarts/charts';
-  import {
-    TitleComponent, TooltipComponent, GridComponent, LegendComponent,
-    ToolboxComponent, MarkLineComponent, MarkPointComponent, DataZoomComponent
-  } from 'echarts/components';
-  import VChart, { THEME_KEY } from 'vue-echarts';
+// Tauri APIs (Optional - Remove if not using Tauri)
+import { platform, type, version } from '@tauri-apps/plugin-os'
+import {
+  AlertCircleOutline,
+  BarChartOutline,
+  CheckmarkCircleOutline,
+  CloseCircleOutline,
+  HardwareChipOutline,
+  HelpCircle,
+  LogInOutline,
+  LogOutOutline,
+  PeopleOutline,
+  PersonCircleOutline,
+  TimeOutline,
+  TimerOutline,
+  TrendingUpOutline,
+  TvOutline,
+  WifiOutline,
+} from '@vicons/ionicons5'
 
-  // Naive UI & Icons
-  import {
-    NCard, NFlex, NTag, NText, NStatistic, NSpin, NGrid, NGi, NEmpty,
-    NScrollbar, NDescriptions, NDescriptionsItem, NEllipsis, NIcon, NButton,
-    NRadioGroup, NRadioButton, NTooltip, NAlert, NQrCode, NInput, NDivider, NSpace, useMessage,
-    NInputGroup,
-    NInputGroupLabel,
-    NTabs,
-    NTabPane
-  } from 'naive-ui';
-  import {
-    CheckmarkCircleOutline, CloseCircleOutline, AlertCircleOutline, WifiOutline, TimeOutline, BarChartOutline, PieChartOutline, HardwareChipOutline, CodeSlashOutline, InformationCircleOutline, PersonCircleOutline, LogInOutline, LogOutOutline, TvOutline, PeopleOutline, LinkOutline, CloudOutline, ServerOutline, FlashOutline, DownloadOutline, TimerOutline, HelpCircle, TrendingUpOutline
-  } from '@vicons/ionicons5';
+// Date & Formatters
+import { formatDistanceToNow, intervalToDuration } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 
-  // Date & Formatters
-  import { formatDistanceToNow, intervalToDuration, format } from 'date-fns';
-  import { zhCN } from 'date-fns/locale';
+import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
+import {
+  DataZoomComponent,
+  GridComponent,
+  LegendComponent,
+  MarkLineComponent,
+  MarkPointComponent,
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from 'echarts/components'
+// ECharts
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+// Naive UI & Icons
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDescriptions,
+  NDescriptionsItem,
+  NDivider,
+  NEllipsis,
+  NEmpty,
+  NFlex,
+  NGi,
+  NGrid,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputGroupLabel,
+  NQrCode,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NSpin,
+  NStatistic,
+  NTabPane,
+  NTabs,
+  NTag,
+  NText,
+  NTooltip,
+  useMessage,
+} from 'naive-ui'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import VChart from 'vue-echarts'
+import { useAccount } from '@/api/account'
+import { useWebFetcher } from '@/store/useWebFetcher'
+import { getLoginInfoAsync, getLoginUrlDataAsync } from './data/biliLogin'
+import { currentStatistic, getHistoricalStatistics, streamingInfo } from './data/info'
+import { callStartDanmakuClient } from './data/initialize'
+import { COOKIE_CLOUD_KEY, useBiliCookie } from './store/useBiliCookie'
+import { useSettings } from './store/useSettings'
+import { useTauriStore } from './store/useTauriStore'
 
-  // Tauri APIs (Optional - Remove if not using Tauri)
-  import { platform, OsType, type, version } from '@tauri-apps/plugin-os';
-  import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-  import { openUrl } from '@tauri-apps/plugin-opener';
-  import { info as logInfo, error as logError } from '@tauri-apps/plugin-log';
-  import { useWebFetcher } from '@/store/useWebFetcher';
-  import { COOKIE_CLOUD_KEY, CookieCloudConfig, useBiliCookie } from './store/useBiliCookie';
-  import { useSettings } from './store/useSettings';
-  import { FetcherStatisticData } from './data/models';
-  import { currentStatistic, getHistoricalStatistics, streamingInfo } from './data/info';
-  import { invoke } from '@tauri-apps/api/core';
-  import { getLoginInfoAsync, getLoginUrlDataAsync } from './data/biliLogin';
-  import { QueryBiliAPI } from './data/utils';
-  import { useAccount } from '@/api/account';
-  import { useTauriStore } from './store/useTauriStore';
-  import { callStartDanmakuClient } from './data/initialize';
+// --- ECharts Setup ---
+use([
+  CanvasRenderer,
+  LineChart,
+  BarChart,
+  PieChart,
+  GaugeChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  ToolboxComponent,
+  MarkLineComponent,
+  MarkPointComponent,
+  DataZoomComponent,
+])
 
-  // --- ECharts Setup ---
-  use([
-    CanvasRenderer, LineChart, BarChart, PieChart, GaugeChart, TitleComponent,
-    TooltipComponent, GridComponent, LegendComponent, ToolboxComponent,
-    MarkLineComponent, MarkPointComponent, DataZoomComponent
-  ]);
+// --- Store Access ---
+const webfetcher = useWebFetcher()
+const biliCookie = useBiliCookie()
+const settings = useSettings()
+const message = useMessage()
+const accountInfo = useAccount()
+// currentStatistic and streamingInfo are directly imported refs
 
-  // --- Store Access ---
-  const webfetcher = useWebFetcher();
-  const biliCookie = useBiliCookie();
-  const settings = useSettings();
-  const message = useMessage();
-  const accountInfo = useAccount();
-  // currentStatistic and streamingInfo are directly imported refs
+// --- Component State ---
+const uptime = ref<string>('N/A')
+const eventsPerSecond = ref<number>(0)
+const historicalData = ref<FetcherStatisticData[]>([])
+const isLoadingHistory = ref(false)
+const showCharts = ref(false) // Delay rendering charts until connected
 
-  // --- Component State ---
-  const uptime = ref<string>('N/A');
-  const eventsPerSecond = ref<number>(0);
-  const historicalData = ref<FetcherStatisticData[]>([]);
-  const isLoadingHistory = ref(false);
-  const showCharts = ref(false); // Delay rendering charts until connected
+// 添加图表实例引用
+const gaugeChart = shallowRef()
+const historyChart = shallowRef()
+const typeDistributionChart = shallowRef()
 
-  // 添加图表实例引用
-  const gaugeChart = shallowRef();
-  const historyChart = shallowRef();
-  const typeDistributionChart = shallowRef();
+// Chart Options
+const gaugeOption = ref({})
+const historyOption = ref({})
+const typeDistributionOption = ref({})
 
-  // Chart Options
-  const gaugeOption = ref({});
-  const historyOption = ref({});
-  const typeDistributionOption = ref({});
+// System & Network Info (Tauri / Browser Fallback)
+const osInfo = ref<string>('未知')
+const memoryInfo = ref<{ total?: number, free?: number, used?: number }>({}) // More detailed for Tauri
+const networkStatus = ref<'online' | 'offline'>('online')
 
-  // System & Network Info (Tauri / Browser Fallback)
-  const osInfo = ref<string>('未知');
-  const memoryInfo = ref<{ total?: number, free?: number, used?: number; }>({}); // More detailed for Tauri
-  const networkStatus = ref<'online' | 'offline'>('online');
+// Login State (Copied from original snippet)
+const isQRCodeLogining = ref(false)
+const loginUrl = ref('')
+const loginKey = ref('')
+const cookie = ref<string>() // Local ref for display
+const timer = ref(0)
+const expiredTimer = ref(0)
+const countdownTimer = ref(0)
+const countdownKey = ref(0)
+const loginStatus = ref<'expired' | 'unknown' | 'scanned' | 'waiting' | 'confirmed'>()
+const startAt = ref(Date.now())
 
-  // Login State (Copied from original snippet)
-  const isQRCodeLogining = ref(false);
-  const loginUrl = ref('');
-  const loginKey = ref('');
-  const cookie = ref<string>(); // Local ref for display
-  const timer = ref(0);
-  const expiredTimer = ref(0);
-  const countdownTimer = ref(0);
-  const countdownKey = ref(0);
-  const loginStatus = ref<'expired' | 'unknown' | 'scanned' | 'waiting' | 'confirmed'>();
-  const startAt = ref(Date.now());
+const cookieCloud = useTauriStore().getTarget<CookieCloudConfig>(COOKIE_CLOUD_KEY, {
+  host: 'https://cookie.vtsuru.live',
+  key: '',
+  password: '',
+})
+// 新增 Cookie Cloud 配置字段
+const cookieCloudData = ref((await cookieCloud.get())!)
+const isLoadingCookiecloud = ref(false)
 
+async function setCookieCloud() {
+  try {
+    isLoadingCookiecloud.value = true
+    await biliCookie.setCookieCloudConfig(cookieCloudData.value)
+    message.success('Cookie Cloud 配置已保存')
+  } catch (err: any) {
+    message.error(err.message)
+  } finally {
+    isLoadingCookiecloud.value = false
+  }
+}
 
-  const cookieCloud = useTauriStore().getTarget<CookieCloudConfig>(COOKIE_CLOUD_KEY, {
-    host: 'https://cookie.vtsuru.live',
-    key: '',
-    password: ''
-  });
-  // 新增 Cookie Cloud 配置字段
-  const cookieCloudData = ref((await cookieCloud.get())!);
-  const isLoadingCookiecloud = ref(false);
+// --- Timers ---
+let uptimeTimer: number | undefined
+let epsTimer: number | undefined
+let lastEventCount = 0
+let networkPollTimer: number | undefined
 
-  async function setCookieCloud() {
-    try {
-      isLoadingCookiecloud.value = true;
-      await biliCookie.setCookieCloudConfig(cookieCloudData.value);
-      message.success("Cookie Cloud 配置已保存");
-    } catch (err: any) {
-      message.error(err.message);
-    } finally {
-      isLoadingCookiecloud.value = false;
-    }
+// --- Computed Properties ---
+const isConnected = computed(() => webfetcher.state === 'connected')
+const connectionStatusType = computed(() => {
+  switch (webfetcher.state) {
+    case 'connected': return 'success'
+    case 'connecting': return 'info'
+    case 'disconnected': return 'error'
+    default: return 'default'
+  }
+})
+const connectionStatusText = computed(() => {
+  switch (webfetcher.state) {
+    case 'connected': return '运行中'
+    case 'connecting': return '连接中'
+    case 'disconnected': return '已停止'
+    default: return '未知'
+  }
+})
+const formattedStartedAt = computed(() => {
+  return webfetcher.startedAt ? new Date(webfetcher.startedAt).toLocaleString() : 'N/A'
+})
+
+const danmakuClientStateText = computed(() => {
+  // Assuming webfetcher exposes danmakuClient.state as danmakuClientState
+  switch (webfetcher.danmakuClientState) { // Replace with actual exposed state
+    case 'connected': return '已连接'
+    case 'connecting': return '连接中'
+    case 'stopped': return '已停止'
+    default: return '未知'
+  }
+})
+const danmakuClientStateType = computed(() => {
+  switch (webfetcher.danmakuClientState) { // Replace with actual exposed state
+    case 'connected': return 'success'
+    case 'connecting': 'info'
+    case 'stopped': 'error'
+    default: return 'default'
+  }
+})
+
+const signalRStateText = computed(() => {
+  // Assuming webfetcher exposes signalRClient.state (it likely does via webfetcher.state)
+  switch (webfetcher.state) {
+    case 'connected': return '已连接'
+    case 'connecting': return '连接中'
+    case 'disconnected': return '已断开'
+    default: return '未知'
+  }
+})
+const signalRStateType = computed(() => connectionStatusType.value) // Same as overall
+
+const isStreaming = computed(() => streamingInfo.value?.status === 'streaming')
+const streamingDuration = computed(() => {
+  if (isStreaming.value && streamingInfo.value?.streamAt) {
+    // Assuming live_time is a Unix timestamp (seconds)
+    return formatDistanceToNow(streamingInfo.value.streamAt, { locale: zhCN, addSuffix: true })
+  }
+  return '未开播'
+})
+
+const sortedTodayTypes = computed(() => {
+  // ... same as before ...
+  if (!currentStatistic.value || !currentStatistic.value.eventTypeCounts) return []
+  return Object.entries(currentStatistic.value.eventTypeCounts)
+    .sort(([, countA], [, countB]) => countB - countA)
+})
+
+// Login Status (Computed from original snippet)
+const loginStatusString = computed(() => {
+  switch (loginStatus.value) {
+    case 'expired': return '过期'
+    case 'unknown': return '未知'
+    case 'scanned': return '已扫描, 等待确认'
+    case 'waiting': return '等待扫描'
+    case 'confirmed': return '已登录'
+    default: return undefined
+  }
+})
+
+// --- Functions ---
+
+// Chart Updates (Keep existing: updateGaugeChart, updateHistoryChart, updateTypeDistributionChart)
+function updateGaugeChart() {
+  const option = {
+    tooltip: { formatter: '{a} <br/>{b} : {c}/s' },
+    series: [{
+      name: '实时速率',
+      type: 'gauge',
+      min: 0,
+      max: 20,
+      splitNumber: 5,
+      progress: { show: true, width: 12 },
+      axisLine: { lineStyle: { width: 12 } },
+      axisTick: { show: false },
+      splitLine: { length: 8, lineStyle: { width: 2, color: '#999' } },
+      axisLabel: { distance: 15, color: '#999', fontSize: 12 },
+      anchor: { show: true, showAbove: true, size: 15, itemStyle: { borderWidth: 8 } },
+      title: { show: false },
+      detail: { valueAnimation: true, fontSize: 24, offsetCenter: [0, '60%'], formatter: '{value}/s' },
+      data: [{ value: eventsPerSecond.value, name: '事件/秒' }],
+    }],
+  }
+  gaugeOption.value ??= option // 保留原始option用于初始化
+  if (gaugeChart.value) {
+    gaugeChart.value.setOption(option, false)
+  }
+}
+
+function updateHistoryChart() {
+  const option = {
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '5%', bottom: '10%', containLabel: true }, // Adjust grid
+    xAxis: [{ type: 'category', data: historicalData.value.map(d => d.date.substring(5)), axisTick: { alignWithLabel: true } }],
+    yAxis: [{ type: 'value', name: '事件总数' }],
+    dataZoom: [{ type: 'inside', start: 0, end: 100 }, { type: 'slider', start: 0, end: 100, bottom: 5 }], // Add zoom
+    series: [{
+      name: '每日事件数',
+      type: 'bar',
+      barWidth: '60%',
+      data: historicalData.value.map(d => d.count),
+      itemStyle: { borderRadius: [4, 4, 0, 0] },
+      emphasis: { focus: 'series' },
+      markPoint: { data: [{ type: 'max', name: '最大值' }, { type: 'min', name: '最小值' }] },
+      markLine: { data: [{ type: 'average', name: '平均值' }] },
+    }],
+  }
+  historyOption.value ??= option // 保留原始option用于初始化
+  if (historyChart.value) {
+    historyChart.value.setOption(option, false)
+  }
+}
+
+function updateTypeDistributionChart() {
+  const typeData = Object.entries(webfetcher.sessionEventTypeCounts || {})
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+  const option = {
+    tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+    legend: { type: 'scroll', orient: 'vertical', right: 10, top: 20, bottom: 20, data: typeData.map(d => d.name) }, // Scrollable legend
+    series: [{
+      name: '事件类型分布 (本次)',
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['40%', '50%'], // Adjust center for legend
+      avoidLabelOverlap: true,
+      itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 1 },
+      label: { show: false, position: 'center' },
+      emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
+      labelLine: { show: false },
+      data: typeData,
+    }],
+  }
+  typeDistributionOption.value ??= option // 保留原始option用于初始化
+  if (typeDistributionChart.value) {
+    typeDistributionChart.value.setOption(option, false)
+  }
+}
+
+// Data Fetching
+async function loadHistoricalData() { /* ... same as before ... */
+  isLoadingHistory.value = true
+  try {
+    historicalData.value = await getHistoricalStatistics(30) // Fetch more days?
+    updateHistoryChart()
+  } catch (error) {
+    console.error('Failed to load historical statistics:', error)
+  } finally {
+    isLoadingHistory.value = false
+  }
+}
+
+async function fetchSystemInfo() {
+  // Tauri specific (replace with browser fallbacks if needed)
+  try {
+    const os = type()
+    const plat = platform()
+    const ver = version()
+    osInfo.value = `${os} (${plat} ${ver})`
+  } catch (e) {
+    logError(`Failed to get OS info: ${e}`)
+    // Fallback (Browser)
+    osInfo.value = navigator.userAgent // Less specific
   }
 
-  // --- Timers ---
-  let uptimeTimer: number | undefined;
-  let epsTimer: number | undefined;
-  let lastEventCount = 0;
-  let networkPollTimer: number | undefined;
-
-  // --- Computed Properties ---
-  const isConnected = computed(() => webfetcher.state === 'connected');
-  const connectionStatusType = computed(() => {
-    switch (webfetcher.state) {
-      case 'connected': return 'success';
-      case 'connecting': return 'info';
-      case 'disconnected': return 'error';
-      default: return 'default';
+  try {
+    // Assumes a Tauri plugin or command `get_memory_info` returning { total: number, free: number } in KB/MB/GB
+    // Adjust the command name and response structure as needed
+    const mem: { total: number, free: number } = await invoke('get_memory_info') // Example command
+    memoryInfo.value = {
+      total: mem.total,
+      free: mem.free,
+      used: mem.total - mem.free,
     }
-  });
-  const connectionStatusText = computed(() => {
-    switch (webfetcher.state) {
-      case 'connected': return '运行中';
-      case 'connecting': return '连接中';
-      case 'disconnected': return '已停止';
-      default: return '未知';
-    }
-  });
-  const formattedStartedAt = computed(() => {
-    return webfetcher.startedAt ? new Date(webfetcher.startedAt).toLocaleString() : 'N/A';
-  });
-
-  const danmakuClientStateText = computed(() => {
-    // Assuming webfetcher exposes danmakuClient.state as danmakuClientState
-    switch (webfetcher.danmakuClientState) { // Replace with actual exposed state
-      case 'connected': return '已连接';
-      case 'connecting': return '连接中';
-      case 'stopped': return '已停止';
-      default: return '未知';
-    }
-  });
-  const danmakuClientStateType = computed(() => {
-    switch (webfetcher.danmakuClientState) { // Replace with actual exposed state
-      case 'connected': return 'success';
-      case 'connecting': 'info';
-      case 'stopped': 'error';
-      default: return 'default';
-    }
-  });
-
-  const signalRStateText = computed(() => {
-    // Assuming webfetcher exposes signalRClient.state (it likely does via webfetcher.state)
-    switch (webfetcher.state) {
-      case 'connected': return '已连接';
-      case 'connecting': return '连接中';
-      case 'disconnected': return '已断开';
-      default: return '未知';
-    }
-  });
-  const signalRStateType = computed(() => connectionStatusType.value); // Same as overall
-
-  const isStreaming = computed(() => streamingInfo.value?.status === 'streaming');
-  const streamingDuration = computed(() => {
-    if (isStreaming.value && streamingInfo.value?.streamAt) {
-      // Assuming live_time is a Unix timestamp (seconds)
-      return formatDistanceToNow(streamingInfo.value.streamAt, { locale: zhCN, addSuffix: true });
-    }
-    return '未开播';
-  });
-
-  const sortedTodayTypes = computed(() => {
-    // ... same as before ...
-    if (!currentStatistic.value || !currentStatistic.value.eventTypeCounts) return [];
-    return Object.entries(currentStatistic.value.eventTypeCounts)
-      .sort(([, countA], [, countB]) => countB - countA);
-  });
-
-  // Login Status (Computed from original snippet)
-  const loginStatusString = computed(() => {
-    switch (loginStatus.value) {
-      case 'expired': return '过期';
-      case 'unknown': return '未知';
-      case 'scanned': return '已扫描, 等待确认';
-      case 'waiting': return '等待扫描';
-      case 'confirmed': return '已登录';
-      default: return undefined;
-    }
-  });
-
-  // --- Functions ---
-
-  // Chart Updates (Keep existing: updateGaugeChart, updateHistoryChart, updateTypeDistributionChart)
-  function updateGaugeChart() {
-    const option = {
-      tooltip: { formatter: '{a} <br/>{b} : {c}/s' },
-      series: [{
-        name: '实时速率', type: 'gauge', min: 0, max: 20, splitNumber: 5,
-        progress: { show: true, width: 12 }, axisLine: { lineStyle: { width: 12 } },
-        axisTick: { show: false }, splitLine: { length: 8, lineStyle: { width: 2, color: '#999' } },
-        axisLabel: { distance: 15, color: '#999', fontSize: 12 },
-        anchor: { show: true, showAbove: true, size: 15, itemStyle: { borderWidth: 8 } },
-        title: { show: false }, detail: { valueAnimation: true, fontSize: 24, offsetCenter: [0, '60%'], formatter: '{value}/s' },
-        data: [{ value: eventsPerSecond.value, name: '事件/秒' }]
-      }]
-    };
-    gaugeOption.value ??= option; // 保留原始option用于初始化
-    if (gaugeChart.value) {
-      gaugeChart.value.setOption(option, false);
+  } catch (e) {
+    logError(`Failed to get Memory info: ${e}`)
+    // Fallback (Browser - Limited)
+    if ('memory' in performance && (performance as any).memory.totalJSHeapSize) {
+      memoryInfo.value = { total: (performance as any).memory.totalJSHeapSize } // Only JS Heap
     }
   }
+}
 
-  function updateHistoryChart() {
-    const option = {
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      grid: { left: '3%', right: '5%', bottom: '10%', containLabel: true }, // Adjust grid
-      xAxis: [{ type: 'category', data: historicalData.value.map(d => d.date.substring(5)), axisTick: { alignWithLabel: true } }],
-      yAxis: [{ type: 'value', name: '事件总数' }],
-      dataZoom: [{ type: 'inside', start: 0, end: 100 }, { type: 'slider', start: 0, end: 100, bottom: 5 }], // Add zoom
-      series: [{
-        name: '每日事件数', type: 'bar', barWidth: '60%', data: historicalData.value.map(d => d.count),
-        itemStyle: { borderRadius: [4, 4, 0, 0] }, emphasis: { focus: 'series' },
-        markPoint: { data: [{ type: 'max', name: '最大值' }, { type: 'min', name: '最小值' }] },
-        markLine: { data: [{ type: 'average', name: '平均值' }] }
-      }]
-    };
-    historyOption.value ??= option; // 保留原始option用于初始化
-    if (historyChart.value) {
-      historyChart.value.setOption(option, false);
-    }
+// Uptime & EPS (Keep existing: updateUptime, calculateEPS)
+function updateUptime() { /* ... same logic ... */
+  if (webfetcher.startedAt) {
+    uptime.value = formatDistanceToNow(new Date(webfetcher.startedAt), { addSuffix: true, locale: zhCN })
+  } else {
+    uptime.value = 'N/A'; clearInterval(uptimeTimer); uptimeTimer = undefined
   }
+}
+function calculateEPS() { /* ... same logic ... */
+  const currentCount = webfetcher.sessionEventCount
+  eventsPerSecond.value = currentCount - lastEventCount
+  lastEventCount = currentCount
+}
 
-  function updateTypeDistributionChart() {
-    const typeData = Object.entries(webfetcher.sessionEventTypeCounts || {})
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
-    const option = {
-      tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
-      legend: { type: 'scroll', orient: 'vertical', right: 10, top: 20, bottom: 20, data: typeData.map(d => d.name) }, // Scrollable legend
-      series: [{
-        name: '事件类型分布 (本次)', type: 'pie', radius: ['40%', '70%'], center: ['40%', '50%'], // Adjust center for legend
-        avoidLabelOverlap: true, itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 1 },
-        label: { show: false, position: 'center' }, emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
-        labelLine: { show: false }, data: typeData
-      }]
-    };
-    typeDistributionOption.value ??= option; // 保留原始option用于初始化
-    if (typeDistributionChart.value) {
-      typeDistributionChart.value.setOption(option, false);
-    }
+async function startLogin() { /* ... same logic ... */
+  if (isQRCodeLogining.value) return
+  isQRCodeLogining.value = true
+  try {
+    const data = await getLoginUrlDataAsync() // Assumes this function exists
+    loginUrl.value = data.url
+    loginKey.value = data.qrcode_key
+    loginStatus.value = 'waiting'
+    startAt.value = Date.now()
+    expiredTimer.value = window.setTimeout(() => {
+      loginStatus.value = 'expired'; clearInterval(timer.value)
+    }, 3 * 60 * 1000)
+    countdownTimer.value = window.setInterval(() => {
+      countdownKey.value++
+    }, 500)
+    timer.value = window.setInterval(async () => {
+      const login = await getLoginInfoAsync(loginKey.value) // Assumes this exists
+      loginStatus.value = login.status
+      if (login.status === 'confirmed') {
+        biliCookie.setBiliCookie(login.cookie, login.refresh_token)
+        cookie.value = login.cookie // Update local display ref
+        logInfo(`扫码登录成功`)
+        message.success('登录成功')
+        finishLogin()
+        await biliCookie.check()
+      } else if (login.status === 'expired') {
+        finishLogin(); message.error('二维码已过期')
+      } else { /* console.log(`Scan status: ${login.status}`) */ }
+    }, 2000)
+  } catch (err: any) {
+    logError(err.toString()); message.error('获取登录二维码失败')
+    isQRCodeLogining.value = false; loginStatus.value = undefined
   }
-
-  // Data Fetching
-  async function loadHistoricalData() { /* ... same as before ... */
-    isLoadingHistory.value = true;
-    try {
-      historicalData.value = await getHistoricalStatistics(30); // Fetch more days?
-      updateHistoryChart();
-    } catch (error) { console.error("Failed to load historical statistics:", error); }
-    finally { isLoadingHistory.value = false; }
+}
+function finishLogin() { /* ... same logic ... */
+  clearInterval(timer.value); clearTimeout(expiredTimer.value); clearInterval(countdownTimer.value)
+  isQRCodeLogining.value = false; loginStatus.value = undefined
+  loginUrl.value = ''; loginKey.value = ''; cookie.value = '' // Clear local display ref
+}
+function formatTimeDifference(startUnix: number, endUnix: number) { /* ... same logic ... */
+  const duration = intervalToDuration({ start: new Date(startUnix), end: new Date(endUnix) })
+  const minutes = duration.minutes || 0; const seconds = duration.seconds || 0
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boolean = false) {
+  if (webfetcher.webfetcherType === type && !force) {
+    message.info('当前已是该模式'); return
   }
-
-  async function fetchSystemInfo() {
-    // Tauri specific (replace with browser fallbacks if needed)
-    try {
-      const os = type();
-      const plat = platform();
-      const ver = version();
-      osInfo.value = `${os} (${plat} ${ver})`;
-    } catch (e) {
-      logError("Failed to get OS info: " + e);
-      // Fallback (Browser)
-      osInfo.value = navigator.userAgent; // Less specific
-    }
-
-    try {
-      // Assumes a Tauri plugin or command `get_memory_info` returning { total: number, free: number } in KB/MB/GB
-      // Adjust the command name and response structure as needed
-      const mem: { total: number, free: number; } = await invoke('get_memory_info'); // Example command
-      memoryInfo.value = {
-        total: mem.total,
-        free: mem.free,
-        used: mem.total - mem.free
-      };
-    } catch (e) {
-      logError("Failed to get Memory info: " + e);
-      // Fallback (Browser - Limited)
-      if ('memory' in performance && (performance as any).memory.totalJSHeapSize) {
-        memoryInfo.value = { total: (performance as any).memory.totalJSHeapSize }; // Only JS Heap
-      }
-    }
-  }
-
-  // Uptime & EPS (Keep existing: updateUptime, calculateEPS)
-  function updateUptime() { /* ... same logic ... */
-    if (webfetcher.startedAt) { uptime.value = formatDistanceToNow(new Date(webfetcher.startedAt), { addSuffix: true, locale: zhCN }); }
-    else { uptime.value = 'N/A'; clearInterval(uptimeTimer); uptimeTimer = undefined; }
-  }
-  function calculateEPS() { /* ... same logic ... */
-    const currentCount = webfetcher.sessionEventCount;
-    eventsPerSecond.value = currentCount - lastEventCount;
-    lastEventCount = currentCount;
-  }
-
-  async function startLogin() { /* ... same logic ... */
-    if (isQRCodeLogining.value) return;
-    isQRCodeLogining.value = true;
-    try {
-      const data = await getLoginUrlDataAsync(); // Assumes this function exists
-      loginUrl.value = data.url;
-      loginKey.value = data.qrcode_key;
-      loginStatus.value = 'waiting';
-      startAt.value = Date.now();
-      expiredTimer.value = window.setTimeout(() => { loginStatus.value = 'expired'; clearInterval(timer.value); }, 3 * 60 * 1000);
-      countdownTimer.value = window.setInterval(() => { countdownKey.value++; }, 500);
-      timer.value = window.setInterval(async () => {
-        const login = await getLoginInfoAsync(loginKey.value); // Assumes this exists
-        loginStatus.value = login.status;
-        if (login.status === 'confirmed') {
-          biliCookie.setBiliCookie(login.cookie, login.refresh_token);
-          cookie.value = login.cookie; // Update local display ref
-          logInfo(`扫码登录成功`);
-          message.success('登录成功');
-          finishLogin();
-          await biliCookie.check();
-        } else if (login.status === 'expired') {
-          finishLogin(); message.error('二维码已过期');
-        } else { /* console.log(`Scan status: ${login.status}`) */ }
-      }, 2000);
-    } catch (err: any) {
-      logError(err.toString()); message.error('获取登录二维码失败');
-      isQRCodeLogining.value = false; loginStatus.value = undefined;
-    }
-  }
-  function finishLogin() { /* ... same logic ... */
-    clearInterval(timer.value); clearTimeout(expiredTimer.value); clearInterval(countdownTimer.value);
-    isQRCodeLogining.value = false; loginStatus.value = undefined;
-    loginUrl.value = ''; loginKey.value = ''; cookie.value = ''; // Clear local display ref
-  }
-  function formatTimeDifference(startUnix: number, endUnix: number) { /* ... same logic ... */
-    const duration = intervalToDuration({ start: new Date(startUnix), end: new Date(endUnix) });
-    const minutes = duration.minutes || 0; const seconds = duration.seconds || 0;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  }
-  async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boolean = false) {
-    if (webfetcher.webfetcherType === type && !force) {
-      message.info('当前已是该模式'); return;
-    }
-    const noticeRef = window.$notification.info({
+  const noticeRef = window.$notification.info({
+    title: 'WebEventFetcher',
+    content: '正在关闭弹幕服务器...',
+    closable: false,
+  })
+  settings.settings.useDanmakuClientType = type
+  settings.save()
+  webfetcher.Stop()
+  noticeRef.content = '正在连接弹幕服务器...'
+  const result = await callStartDanmakuClient()
+  noticeRef.destroy()
+  if (result.success) {
+    window.$notification.success({
       title: 'WebEventFetcher',
-      content: '正在关闭弹幕服务器...',
-      closable: false,
-    });
-    settings.settings.useDanmakuClientType = type;
-    settings.save();
-    webfetcher.Stop();
-    noticeRef.content = '正在连接弹幕服务器...';
-    const result = await callStartDanmakuClient();
-    noticeRef.destroy();
-    if (result.success) {
-      window.$notification.success({
-        title: 'WebEventFetcher',
-        content: webfetcher.webfetcherType + ' 弹幕客户端连接成功',
-        closable: true,
-        duration: 3000,
-      });
-    } else {
-      window.$notification.error({
-        title: 'WebEventFetcher',
-        content: '弹幕服务器连接失败: ' + result.message,
-        closable: true,
-      });
-    }
+      content: `${webfetcher.webfetcherType} 弹幕客户端连接成功`,
+      closable: true,
+      duration: 3000,
+    })
+  } else {
+    window.$notification.error({
+      title: 'WebEventFetcher',
+      content: `弹幕服务器连接失败: ${result.message}`,
+      closable: true,
+    })
   }
-  async function logout() {
-    await biliCookie.logout();
-    message.info('已退出登录');
+}
+async function logout() {
+  await biliCookie.logout()
+  message.info('已退出登录')
+}
+
+// --- Watchers ---
+watch(() => webfetcher.state, (newState) => {
+  if (newState === 'connected') {
+    if (!uptimeTimer) {
+      updateUptime(); uptimeTimer = window.setInterval(updateUptime, 60 * 1000)
+    }
+    if (!epsTimer) {
+      lastEventCount = webfetcher.sessionEventCount; epsTimer = window.setInterval(() => {
+        calculateEPS(); updateGaugeChart()
+      }, 1000)
+    }
+    loadHistoricalData() // Load history on connect
+    showCharts.value = true
+    fetchSystemInfo() // Fetch system info on connect
+    nextTick(() => {
+      updateGaugeChart(); updateTypeDistributionChart()
+    })
+  } else {
+    clearInterval(uptimeTimer); clearInterval(epsTimer)
+    uptimeTimer = undefined; epsTimer = undefined
+    uptime.value = 'N/A'; eventsPerSecond.value = 0
+    showCharts.value = false
+  }
+})
+
+watch(() => webfetcher.sessionEventTypeCounts, () => {
+  if (isConnected.value) {
+    updateTypeDistributionChart()
+  }
+}, { deep: true })
+
+watch(currentStatistic, (newDailyStat) => {
+  if (newDailyStat && historicalData.value.length > 0) {
+    const todayIndex = historicalData.value.findIndex(d => d.date === newDailyStat.date)
+    if (todayIndex !== -1) {
+      historicalData.value[todayIndex].count = newDailyStat.count
+      // Maybe debounce history chart update if daily stats update frequently
+      updateHistoryChart()
+    } else {
+      // Add today if missing (e.g., after midnight)
+      historicalData.value.push(JSON.parse(JSON.stringify(newDailyStat))) // Add copy
+      historicalData.value.sort((a, b) => a.date.localeCompare(b.date)) // Keep sorted
+      updateHistoryChart()
+    }
+  } else if (newDailyStat && historicalData.value.length === 0) {
+    // Handle first data point case
+    historicalData.value = [JSON.parse(JSON.stringify(newDailyStat))]
+    updateHistoryChart()
+  }
+}, { deep: true })
+
+// --- Lifecycle Hooks ---
+onMounted(async () => {
+  // Initial setup based on current state
+  if (webfetcher.state === 'connected') {
+    updateUptime()
+    uptimeTimer = window.setInterval(updateUptime, 60 * 1000)
+    lastEventCount = webfetcher.sessionEventCount; epsTimer = window.setInterval(() => {
+      calculateEPS(); updateGaugeChart()
+    }, 1000)
+    loadHistoricalData(); showCharts.value = true
+    fetchSystemInfo()
+    nextTick(() => {
+      updateGaugeChart(); updateTypeDistributionChart()
+    })
   }
 
-  // --- Watchers ---
-  watch(() => webfetcher.state, (newState) => {
-    if (newState === 'connected') {
-      if (!uptimeTimer) { updateUptime(); uptimeTimer = window.setInterval(updateUptime, 60 * 1000); }
-      if (!epsTimer) { lastEventCount = webfetcher.sessionEventCount; epsTimer = window.setInterval(() => { calculateEPS(); updateGaugeChart(); }, 1000); }
-      loadHistoricalData(); // Load history on connect
-      showCharts.value = true;
-      fetchSystemInfo(); // Fetch system info on connect
-      nextTick(() => { updateGaugeChart(); updateTypeDistributionChart(); });
-    } else {
-      clearInterval(uptimeTimer); clearInterval(epsTimer);
-      uptimeTimer = undefined; epsTimer = undefined;
-      uptime.value = 'N/A'; eventsPerSecond.value = 0;
-      showCharts.value = false;
-    }
-  });
+  // Fetch initial Bili cookie for display
+  cookie.value = await biliCookie.getBiliCookie()
+  // Initial Bili user info fetch handled by watcher
 
-  watch(() => webfetcher.sessionEventTypeCounts, () => {
-    if (isConnected.value) { updateTypeDistributionChart(); }
-  }, { deep: true });
+  // Initialize statistics logic (ensure it runs)
+  // initInfo(); // Assuming this is called elsewhere or on app startup
+})
 
-  watch(currentStatistic, (newDailyStat) => {
-    if (newDailyStat && historicalData.value.length > 0) {
-      const todayIndex = historicalData.value.findIndex(d => d.date === newDailyStat.date);
-      if (todayIndex !== -1) {
-        historicalData.value[todayIndex].count = newDailyStat.count;
-        // Maybe debounce history chart update if daily stats update frequently
-        updateHistoryChart();
-      } else {
-        // Add today if missing (e.g., after midnight)
-        historicalData.value.push(JSON.parse(JSON.stringify(newDailyStat))); // Add copy
-        historicalData.value.sort((a, b) => a.date.localeCompare(b.date)); // Keep sorted
-        updateHistoryChart();
-      }
-    } else if (newDailyStat && historicalData.value.length === 0) {
-      // Handle first data point case
-      historicalData.value = [JSON.parse(JSON.stringify(newDailyStat))];
-      updateHistoryChart();
-    }
-  }, { deep: true });
-
-  // --- Lifecycle Hooks ---
-  onMounted(async () => {
-    // Initial setup based on current state
-    if (webfetcher.state === 'connected') {
-      updateUptime();
-      uptimeTimer = window.setInterval(updateUptime, 60 * 1000);
-      lastEventCount = webfetcher.sessionEventCount; epsTimer = window.setInterval(() => { calculateEPS(); updateGaugeChart(); }, 1000);
-      loadHistoricalData(); showCharts.value = true;
-      fetchSystemInfo();
-      nextTick(() => { updateGaugeChart(); updateTypeDistributionChart(); });
-    }
-
-    // Fetch initial Bili cookie for display
-    cookie.value = await biliCookie.getBiliCookie();
-    // Initial Bili user info fetch handled by watcher
-
-    // Initialize statistics logic (ensure it runs)
-    // initInfo(); // Assuming this is called elsewhere or on app startup
-  });
-
-  onUnmounted(() => {
-    clearInterval(uptimeTimer);
-    clearInterval(epsTimer);
-    clearInterval(networkPollTimer);
-    // Clean up login timers if component unmounts during login
-    clearInterval(timer.value);
-    clearTimeout(expiredTimer.value);
-    clearInterval(countdownTimer.value);
-  });
-
+onUnmounted(() => {
+  clearInterval(uptimeTimer)
+  clearInterval(epsTimer)
+  clearInterval(networkPollTimer)
+  // Clean up login timers if component unmounts during login
+  clearInterval(timer.value)
+  clearTimeout(expiredTimer.value)
+  clearInterval(countdownTimer.value)
+})
 </script>
 
 <template>

@@ -1,87 +1,92 @@
 <script setup lang="ts">
-  import { copyToClipboard } from '@/Utils';
-  import { DisableFunction, EnableFunction, useAccount } from '@/api/account';
-  import {
-    FunctionTypes,
-    GoodsStatus,
-    GoodsTypes,
-    KeySelectionMode,
-    ResponsePointGoodModel,
-    UploadPointGoodsModel,
-    UserFileLocation
-  } from '@/api/api-models';
-  import { QueryGetAPI, QueryPostAPI } from '@/api/query';
-  import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue';
-  import PointGoodsItem from '@/components/manage/PointGoodsItem.vue';
-  import { CURRENT_HOST, POINT_API_URL } from '@/data/constants';
-  import { uploadFiles, UploadStage } from '@/data/fileUpload';
-  import { useBiliAuth } from '@/store/useBiliAuth';
-  import { Info24Filled } from '@vicons/fluent';
-  import { useRouteHash } from '@vueuse/router';
-  import {
-    FormItemRule,
-    NAlert,
-    NButton,
-    NCheckbox,
-    NDivider,
-    NDynamicTags,
-    NEmpty,
-    NFlex,
-    NForm,
-    NFormItem,
-    NGrid,
-    NGridItem,
-    NIcon,
-    NInput,
-    NInputGroup,
-    NInputNumber,
-    NModal,
-    NPopconfirm,
-    NProgress,
-    NRadioButton,
-    NRadioGroup,
-    NScrollbar,
-    NSelect,
-    NSwitch,
-    NTabPane,
-    NTabs,
-    NText,
-    NTooltip,
-    NUpload,
-    UploadFileInfo,
-    useDialog,
-    useMessage
-  } from 'naive-ui';
-  import { computed, onMounted, ref, watch } from 'vue';
-  import PointOrderManage from './PointOrderManage.vue';
-  import PointSettings from './PointSettings.vue';
-  import PointUserManage from './PointUserManage.vue';
+import type {
+  FormItemRule,
+  UploadFileInfo,
+} from 'naive-ui'
+import type {
+  ResponsePointGoodModel,
+  UploadPointGoodsModel,
+} from '@/api/api-models'
+import { Info24Filled } from '@vicons/fluent'
+import { useRouteHash } from '@vueuse/router'
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NDivider,
+  NDynamicTags,
+  NEmpty,
+  NFlex,
+  NForm,
+  NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NModal,
+  NPopconfirm,
+  NProgress,
+  NRadioButton,
+  NRadioGroup,
+  NScrollbar,
+  NSelect,
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NText,
+  NTooltip,
+  NUpload,
+  useDialog,
+  useMessage,
+} from 'naive-ui'
+import { computed, onMounted, ref, watch } from 'vue'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import {
+  FunctionTypes,
+  GoodsStatus,
+  GoodsTypes,
+  KeySelectionMode,
+  UserFileLocation,
+} from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
+import { CURRENT_HOST, POINT_API_URL } from '@/data/constants'
+import { uploadFiles, UploadStage } from '@/data/fileUpload'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { copyToClipboard } from '@/Utils'
+import PointOrderManage from './PointOrderManage.vue'
+import PointSettings from './PointSettings.vue'
+import PointUserManage from './PointUserManage.vue'
 
-  const message = useMessage();
-  const accountInfo = useAccount();
-  const dialog = useDialog();
-  const biliAuth = useBiliAuth();
-  const formRef = ref();
-  const isUpdating = ref(false);
-  const isAllowedPrivacyPolicy = ref(false);
-  const showAddGoodsModal = ref(false);
-  const uploadProgress = ref(0);
-  const isUploadingCover = ref(false);
+const message = useMessage()
+const accountInfo = useAccount()
+const dialog = useDialog()
+const biliAuth = useBiliAuth()
+const formRef = ref()
+const isUpdating = ref(false)
+const isAllowedPrivacyPolicy = ref(false)
+const showAddGoodsModal = ref(false)
+const uploadProgress = ref(0)
+const isUploadingCover = ref(false)
 
-  // 路由哈希处理
-  const realHash = useRouteHash('goods', { mode: 'replace' });
-  const hash = computed({
-    get() {
-      return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods';
-    },
-    set(val) {
-      realHash.value = '#' + val;
-    },
-  });
+// 路由哈希处理
+const realHash = useRouteHash('goods', { mode: 'replace' })
+const hash = computed({
+  get() {
+    return realHash.value?.startsWith('#') ? realHash.value.slice(1) : realHash.value || 'goods'
+  },
+  set(val) {
+    realHash.value = `#${val}`
+  },
+})
 
-  // 商品数据及模型
-  const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message));
-  const defaultGoodsModel = (): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[]; } => ({
+// 商品数据及模型
+const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
+function defaultGoodsModel(): { goods: UploadPointGoodsModel, fileList: UploadFileInfo[] } {
+  return {
     goods: {
       type: GoodsTypes.Virtual,
       status: GoodsStatus.Normal,
@@ -89,7 +94,7 @@
       isAllowRebuy: false,
       isPinned: false,
       setting: {
-        allowGuardLevel: 0
+        allowGuardLevel: 0,
       },
       virtualKeys: [],
       keySelectionMode: KeySelectionMode.None,
@@ -101,213 +106,214 @@
       cover: undefined,
     } as UploadPointGoodsModel,
     fileList: [],
-  });
-  const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[]; }>(
-    defaultGoodsModel()
-  );
+  }
+}
+const currentGoodsModel = ref<{ goods: UploadPointGoodsModel, fileList: UploadFileInfo[] }>(
+  defaultGoodsModel(),
+)
 
-  // 监听 fileList 变化，确保 cover 和 fileList 同步
-  watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
-    if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
-      if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
-        currentGoodsModel.value.goods.cover = undefined;
-      }
-    }
-  }, { deep: true });
-
-  // 计算属性
-  const allowedYearOptions = computed(() => {
-    return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
-      label: item.toString() + '年',
-      value: item,
-    }));
-  });
-
-  const allowedMonthOptions = computed(() => {
-    return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
-      label: item.toString() + '月',
-      value: item,
-    }));
-  });
-
-  const existTags = computed(() => {
-    if (goods.value.length === 0) return [];
-
-    const tempSet = new Set<string>();
-    for (const good of goods.value) {
-      if (!good.tags || good.tags.length === 0) continue;
-      good.tags.forEach(tag => tempSet.add(tag));
-    }
-
-    return Array.from(tempSet).map(tag => ({ label: tag, value: tag }));
-  });
-
-  // 下拉菜单选项
-  const dropDownActions = {
-    update: {
-      label: '修改',
-      key: 'update',
-      action: (item: ResponsePointGoodModel) => onUpdateClick(item),
-    },
-    delete: {
-      label: '删除',
-      key: 'delete',
-      action: (item: ResponsePointGoodModel) => onDeleteClick(item),
-    },
-  } as { [key: string]: { label: string; key: string; action: (item: ResponsePointGoodModel) => void; }; };
-
-  const dropDownOptions = computed(() => Object.values(dropDownActions));
-
-  // 表单验证规则
-  const rules = {
-    name: {
-      required: true,
-      message: '请输入礼物名称',
-    },
-    price: {
-      required: true,
-      message: '请输入礼物价格',
-    },
-    'goods.type': {
-      required: true,
-      message: '请选择是虚拟礼物或实物',
-    },
-    content: {
-      required: true,
-      message: '请输入虚拟礼物的具体内容',
-      validator: (rule: FormItemRule, value: string) =>
-        currentGoodsModel.value.goods.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0
-    },
-    privacy: {
-      required: true,
-      message: '需要阅读并同意本站隐私协议',
-      validator: (rule: FormItemRule, value: boolean) =>
-        (currentGoodsModel.value.goods.type != GoodsTypes.Physical &&
-          currentGoodsModel.value.goods.collectUrl != undefined) ||
-        isAllowedPrivacyPolicy.value
-    },
-    maxBuyCount: {
-      required: true,
-      message: '需要输入最大购买数量',
-      validator: (rule: FormItemRule, value: number) =>
-        currentGoodsModel.value.goods.type != GoodsTypes.Physical ||
-        (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0
-    },
-    'goods.url': {
-      required: true,
-      message: '请输入收集收货地址的链接',
-      validator: (rule: FormItemRule, value: string) => {
-        try {
-          new URL(value);
-          return true;
-        } catch (err) {
-          return false;
-        }
-      },
-    },
-  };
-
-  // 方法
-  async function setFunctionEnable(enable: boolean) {
-    const success = enable ? await EnableFunction(FunctionTypes.Point) : await DisableFunction(FunctionTypes.Point);
-
-    if (success) {
-      message.success('已' + (enable ? '启用' : '禁用') + '积分系统');
-    } else {
-      message.error('无法' + (enable ? '启用' : '禁用') + '积分系统');
+// 监听 fileList 变化，确保 cover 和 fileList 同步
+watch(() => currentGoodsModel.value.fileList, (newFileList, oldFileList) => {
+  if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
+    if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
+      currentGoodsModel.value.goods.cover = undefined
     }
   }
+}, { deep: true })
 
-  async function updateGoods(e: MouseEvent) {
-    if (isUpdating.value || !formRef.value) return;
-    e.preventDefault();
-    isUpdating.value = true;
-    isUploadingCover.value = false;
-    uploadProgress.value = 0;
+// 计算属性
+const allowedYearOptions = computed(() => {
+  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map(item => ({
+    label: `${item.toString()}年`,
+    value: item,
+  }))
+})
 
-    try {
-      await formRef.value.validate();
+const allowedMonthOptions = computed(() => {
+  return Array.from({ length: 12 }, (_, i) => i + 1).map(item => ({
+    label: `${item.toString()}月`,
+    value: item,
+  }))
+})
 
-      const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished');
-      if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
-        isUploadingCover.value = true;
-        message.info('正在上传封面...');
-        const uploadResults = await uploadFiles(
-          [newFilesToUpload[0].file],
-          undefined,
-          UserFileLocation.Local,
-          (stage: string) => {
-            if (stage === UploadStage.Uploading) {
-              uploadProgress.value = 0;
-            }
-          }
-        );
-        isUploadingCover.value = false;
-        if (uploadResults && uploadResults.length > 0) {
-          currentGoodsModel.value.goods.cover = uploadResults[0];
-          message.success('封面上传成功');
-          const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id);
-          if (uploadedFileIndex > -1) {
-            currentGoodsModel.value.fileList[uploadedFileIndex] = {
-              ...currentGoodsModel.value.fileList[uploadedFileIndex],
-              id: uploadResults[0].id.toString(),
-              status: 'finished',
-              thumbnailUrl: uploadResults[0].path,
-              url: uploadResults[0].path
-            };
-          }
-        } else {
-          throw new Error('封面上传失败');
-        }
-      } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
-        currentGoodsModel.value.goods.cover = undefined;
+const existTags = computed(() => {
+  if (goods.value.length === 0) return []
+
+  const tempSet = new Set<string>()
+  for (const good of goods.value) {
+    if (!good.tags || good.tags.length === 0) continue
+    good.tags.forEach(tag => tempSet.add(tag))
+  }
+
+  return Array.from(tempSet).map(tag => ({ label: tag, value: tag }))
+})
+
+// 下拉菜单选项
+const dropDownActions = {
+  update: {
+    label: '修改',
+    key: 'update',
+    action: (item: ResponsePointGoodModel) => onUpdateClick(item),
+  },
+  delete: {
+    label: '删除',
+    key: 'delete',
+    action: (item: ResponsePointGoodModel) => onDeleteClick(item),
+  },
+} as { [key: string]: { label: string, key: string, action: (item: ResponsePointGoodModel) => void } }
+
+const dropDownOptions = computed(() => Object.values(dropDownActions))
+
+// 表单验证规则
+const rules = {
+  'name': {
+    required: true,
+    message: '请输入礼物名称',
+  },
+  'price': {
+    required: true,
+    message: '请输入礼物价格',
+  },
+  'goods.type': {
+    required: true,
+    message: '请选择是虚拟礼物或实物',
+  },
+  'content': {
+    required: true,
+    message: '请输入虚拟礼物的具体内容',
+    validator: (rule: FormItemRule, value: string) =>
+      currentGoodsModel.value.goods.type != GoodsTypes.Virtual || (value?.length ?? 0) > 0,
+  },
+  'privacy': {
+    required: true,
+    message: '需要阅读并同意本站隐私协议',
+    validator: (rule: FormItemRule, value: boolean) =>
+      (currentGoodsModel.value.goods.type != GoodsTypes.Physical
+        && currentGoodsModel.value.goods.collectUrl != undefined)
+      || isAllowedPrivacyPolicy.value,
+  },
+  'maxBuyCount': {
+    required: true,
+    message: '需要输入最大购买数量',
+    validator: (rule: FormItemRule, value: number) =>
+      currentGoodsModel.value.goods.type != GoodsTypes.Physical
+      || (currentGoodsModel.value.goods.maxBuyCount ?? 0) > 0,
+  },
+  'goods.url': {
+    required: true,
+    message: '请输入收集收货地址的链接',
+    validator: (rule: FormItemRule, value: string) => {
+      try {
+        new URL(value)
+        return true
+      } catch (err) {
+        return false
       }
+    },
+  },
+}
 
-      const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
-        POINT_API_URL + 'update-goods',
-        currentGoodsModel.value.goods
-      );
+// 方法
+async function setFunctionEnable(enable: boolean) {
+  const success = enable ? await EnableFunction(FunctionTypes.Point) : await DisableFunction(FunctionTypes.Point)
 
-      if (code === 200) {
-        message.success('商品信息保存成功');
-        showAddGoodsModal.value = false;
-        currentGoodsModel.value = defaultGoodsModel();
+  if (success) {
+    message.success(`已${enable ? '启用' : '禁用'}积分系统`)
+  } else {
+    message.error(`无法${enable ? '启用' : '禁用'}积分系统`)
+  }
+}
 
-        const index = goods.value.findIndex(g => g.id === data.id);
-        if (index >= 0) {
-          goods.value[index] = data;
-        } else {
-          goods.value.push(data);
+async function updateGoods(e: MouseEvent) {
+  if (isUpdating.value || !formRef.value) return
+  e.preventDefault()
+  isUpdating.value = true
+  isUploadingCover.value = false
+  uploadProgress.value = 0
+
+  try {
+    await formRef.value.validate()
+
+    const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
+    if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
+      isUploadingCover.value = true
+      message.info('正在上传封面...')
+      const uploadResults = await uploadFiles(
+        [newFilesToUpload[0].file],
+        undefined,
+        UserFileLocation.Local,
+        (stage: string) => {
+          if (stage === UploadStage.Uploading) {
+            uploadProgress.value = 0
+          }
+        },
+      )
+      isUploadingCover.value = false
+      if (uploadResults && uploadResults.length > 0) {
+        currentGoodsModel.value.goods.cover = uploadResults[0]
+        message.success('封面上传成功')
+        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex(f => f.id === newFilesToUpload[0].id)
+        if (uploadedFileIndex > -1) {
+          currentGoodsModel.value.fileList[uploadedFileIndex] = {
+            ...currentGoodsModel.value.fileList[uploadedFileIndex],
+            id: uploadResults[0].id.toString(),
+            status: 'finished',
+            thumbnailUrl: uploadResults[0].path,
+            url: uploadResults[0].path,
+          }
         }
       } else {
-        message.error('商品信息保存失败: ' + errMsg);
+        throw new Error('封面上传失败')
       }
-    } catch (err: any) {
-      console.error(currentGoodsModel.value, err);
-      const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错';
-      message.error(`失败: ${errorMsg}`);
-    } finally {
-      isUpdating.value = false;
-      isUploadingCover.value = false;
+    } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
+      currentGoodsModel.value.goods.cover = undefined
     }
-  }
 
-  function OnFileListChange(files: UploadFileInfo[]) {
-    if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
-      message.error('文件大小不能超过10MB');
-      currentGoodsModel.value.fileList = [];
+    const { code, data, message: errMsg } = await QueryPostAPI<ResponsePointGoodModel>(
+      `${POINT_API_URL}update-goods`,
+      currentGoodsModel.value.goods,
+    )
+
+    if (code === 200) {
+      message.success('商品信息保存成功')
+      showAddGoodsModal.value = false
+      currentGoodsModel.value = defaultGoodsModel()
+
+      const index = goods.value.findIndex(g => g.id === data.id)
+      if (index >= 0) {
+        goods.value[index] = data
+      } else {
+        goods.value.push(data)
+      }
     } else {
-      currentGoodsModel.value.fileList = files;
+      message.error(`商品信息保存失败: ${errMsg}`)
     }
+  } catch (err: any) {
+    console.error(currentGoodsModel.value, err)
+    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错'
+    message.error(`失败: ${errorMsg}`)
+  } finally {
+    isUpdating.value = false
+    isUploadingCover.value = false
   }
+}
 
-  function onUpdateClick(item: ResponsePointGoodModel) {
-    currentGoodsModel.value = {
-      goods: JSON.parse(JSON.stringify({
-        ...item,
-      })),
-      fileList: item.cover
-        ? [
+function OnFileListChange(files: UploadFileInfo[]) {
+  if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
+    message.error('文件大小不能超过10MB')
+    currentGoodsModel.value.fileList = []
+  } else {
+    currentGoodsModel.value.fileList = files
+  }
+}
+
+function onUpdateClick(item: ResponsePointGoodModel) {
+  currentGoodsModel.value = {
+    goods: JSON.parse(JSON.stringify({
+      ...item,
+    })),
+    fileList: item.cover
+      ? [
           {
             id: item.cover.id.toString(),
             name: item.cover.name || '封面',
@@ -316,94 +322,94 @@
             thumbnailUrl: item.cover.path,
           },
         ]
-        : [],
-    };
-    isAllowedPrivacyPolicy.value = true;
-    showAddGoodsModal.value = true;
+      : [],
   }
+  isAllowedPrivacyPolicy.value = true
+  showAddGoodsModal.value = true
+}
 
-  async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
-    const d = dialog.warning({
-      title: '警告',
-      content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
-      positiveText: '确定',
-      negativeText: '取消',
-      onPositiveClick: async () => {
-        d.loading = true;
-        const originStatus = item.status;
+async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
+  const d = dialog.warning({
+    title: '警告',
+    content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      d.loading = true
+      const originStatus = item.status
 
-        try {
-          const { code, message: errMsg } = await QueryPostAPI(POINT_API_URL + 'update-goods-status', {
-            ids: [item.id],
-            status: status,
-          });
+      try {
+        const { code, message: errMsg } = await QueryPostAPI(`${POINT_API_URL}update-goods-status`, {
+          ids: [item.id],
+          status,
+        })
 
-          if (code === 200) {
-            message.success('成功');
-            const index = goods.value.findIndex(g => g.id === item.id);
-            if (index > -1) {
-              goods.value[index].status = status;
-            }
-          } else {
-            message.error('失败: ' + errMsg);
-            item.status = originStatus;
-            console.error(errMsg);
+        if (code === 200) {
+          message.success('成功')
+          const index = goods.value.findIndex(g => g.id === item.id)
+          if (index > -1) {
+            goods.value[index].status = status
           }
-        } catch (err) {
-          message.error('失败: ' + err);
-          item.status = originStatus;
-          console.error(err);
-        } finally {
-          d.loading = false;
+        } else {
+          message.error(`失败: ${errMsg}`)
+          item.status = originStatus
+          console.error(errMsg)
         }
-      },
-    });
-  }
+      } catch (err) {
+        message.error(`失败: ${err}`)
+        item.status = originStatus
+        console.error(err)
+      } finally {
+        d.loading = false
+      }
+    },
+  })
+}
 
-  function onDeleteClick(item: ResponsePointGoodModel) {
-    const d = dialog.warning({
-      title: '警告',
-      content: '你确定要删除这个礼物吗？',
-      positiveText: '确定',
-      negativeText: '取消',
-      onPositiveClick: async () => {
-        d.loading = true;
+function onDeleteClick(item: ResponsePointGoodModel) {
+  const d = dialog.warning({
+    title: '警告',
+    content: '你确定要删除这个礼物吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      d.loading = true
 
-        try {
-          const { code, message: errMsg } = await QueryGetAPI(POINT_API_URL + 'delete-goods', {
-            id: item.id,
-          });
+      try {
+        const { code, message: errMsg } = await QueryGetAPI(`${POINT_API_URL}delete-goods`, {
+          id: item.id,
+        })
 
-          if (code === 200) {
-            message.success('成功');
-            goods.value = goods.value.filter(g => g.id !== item.id);
-          } else {
-            message.error('失败: ' + errMsg);
-            console.error(errMsg);
-          }
-        } catch (err) {
-          message.error('失败: ' + err);
-          console.error(err);
-        } finally {
-          d.loading = false;
+        if (code === 200) {
+          message.success('成功')
+          goods.value = goods.value.filter(g => g.id !== item.id)
+        } else {
+          message.error(`失败: ${errMsg}`)
+          console.error(errMsg)
         }
-      },
-    });
-  }
+      } catch (err) {
+        message.error(`失败: ${err}`)
+        console.error(err)
+      } finally {
+        d.loading = false
+      }
+    },
+  })
+}
 
-  function onModalOpen() {
-    if (!currentGoodsModel.value.goods.id) {
-      resetGoods();
-    }
-    showAddGoodsModal.value = true;
+function onModalOpen() {
+  if (!currentGoodsModel.value.goods.id) {
+    resetGoods()
   }
+  showAddGoodsModal.value = true
+}
 
-  function resetGoods() {
-    currentGoodsModel.value = defaultGoodsModel();
-    isAllowedPrivacyPolicy.value = false;
-  }
+function resetGoods() {
+  currentGoodsModel.value = defaultGoodsModel()
+  isAllowedPrivacyPolicy.value = false
+}
 
-  onMounted(() => { });
+onMounted(() => { })
 </script>
 
 <template>
@@ -830,7 +836,7 @@
                 v-if="isUploadingCover"
                 type="line"
                 :percentage="uploadProgress"
-                :indicator-placement="'inside'"
+                indicator-placement="inside"
                 processing
               />
             </NFlex>
@@ -1091,7 +1097,6 @@
                 </NText>
               </NFlex>
             </NFormItem>
-
 
             <NFormItem
               path="goods.content"

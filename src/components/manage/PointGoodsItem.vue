@@ -1,17 +1,18 @@
 <script setup lang="ts">
-  import { GoodsTypes, ResponsePointGoodModel } from '@/api/api-models';
-import { IMGUR_URL } from '@/data/constants';
-import { Pin16Filled } from '@vicons/fluent';
-import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui';
+import type { ResponsePointGoodModel } from '@/api/api-models'
+import { Pin16Filled } from '@vicons/fluent'
+import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui'
+import { GoodsTypes } from '@/api/api-models'
+import { IMGUR_URL } from '@/data/constants'
 
-  const props = defineProps<{
-    goods: ResponsePointGoodModel | undefined;
-    contentStyle?: string | undefined;
-    size?: 'small' | 'default';
-  }>();
+const props = defineProps<{
+  goods: ResponsePointGoodModel | undefined
+  contentStyle?: string | undefined
+  size?: 'small' | 'default'
+}>()
 
-  // 默认封面图片
-  const emptyCover = IMGUR_URL + 'None.png';
+// 默认封面图片
+const emptyCover = `${IMGUR_URL}None.png`
 </script>
 
 <template>
@@ -63,7 +64,7 @@ import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'nai
             :style="{
               color: goods.type == GoodsTypes.Physical ? '#006633' : '#0066cc',
               borderColor: goods.type == GoodsTypes.Physical ? '#009966' : '#3399ff',
-              backgroundColor: goods.type == GoodsTypes.Physical ? '#c2e6d290' : '#c2d6eb90'
+              backgroundColor: goods.type == GoodsTypes.Physical ? '#c2e6d290' : '#c2d6eb90',
             }"
           >
             {{ goods.type == GoodsTypes.Physical ? '实物' : '虚拟' }}

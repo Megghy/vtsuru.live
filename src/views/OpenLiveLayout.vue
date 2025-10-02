@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { isDarkMode } from '@/Utils' // 引入暗黑模式判断工具
-import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
-import { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
-import { useDanmakuClient } from '@/store/useDanmakuClient'; // 引入弹幕客户端状态管理
+import type { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent' // 引入 Fluent UI 图标
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
 import { useElementSize, useStorage } from '@vueuse/core' // 引入 VueUse 组合式函数
@@ -28,15 +25,18 @@ import {
   NText,
   useMessage,
 } from 'naive-ui' // 引入 Naive UI 组件
-import { h, onMounted, onUnmounted, ref, computed } from 'vue' // 引入 Vue 相关 API
+import { computed, h, onMounted, ref } from 'vue' // 引入 Vue 相关 API
 import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 相关 API
+import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
+import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
+import { isDarkMode } from '@/Utils' // 引入暗黑模式判断工具
 
 // -- 基本状态和工具 --
 const route = useRoute() // 获取当前路由信息
 const router = useRouter() // 获取路由实例
 const message = useMessage() // 获取 Naive UI 消息提示 API
 const themeType = useStorage('Settings.Theme', ThemeType.Auto) // 使用 useStorage 持久化主题设置 (默认自动)
-const danmakuClient = useDanmakuClient(); // 获取弹幕客户端实例
+const danmakuClient = useDanmakuClient() // 获取弹幕客户端实例
 
 // -- 侧边栏状态 --
 const sider = ref<HTMLElement | null>(null) // 侧边栏 DOM 引用
@@ -124,9 +124,9 @@ function renderIcon(icon: unknown) {
 const isDarkValue = computed({
   get: () => themeType.value === ThemeType.Dark || (themeType.value === ThemeType.Auto && isDarkMode.value),
   set: (value) => {
-    themeType.value = value ? ThemeType.Dark : ThemeType.Light;
-  }
-});
+    themeType.value = value ? ThemeType.Dark : ThemeType.Light
+  },
+})
 
 // -- 生命周期钩子 --
 onMounted(async () => {
@@ -142,15 +142,15 @@ onMounted(async () => {
       // message.success('弹幕客户端连接中...')
     } catch (error: any) {
       // 4. 处理初始化错误
-      console.error("Danmaku client initialization failed:", error);
-      danmakuClientError.value = `弹幕客户端初始化失败: ${error.message || '未知错误'}`;
-      message.error(danmakuClientError.value);
+      console.error('Danmaku client initialization failed:', error)
+      danmakuClientError.value = `弹幕客户端初始化失败: ${error.message || '未知错误'}`
+      message.error(danmakuClientError.value)
     }
   } else {
     // 5. 如果缺少 Code, 显示错误信息
     message.error('无效访问: 缺少必要的认证参数 (Code)。请通过幻星平台获取链接。')
     // authInfo 清空, 触发 v-if 显示错误页
-    authInfo.value = undefined;
+    authInfo.value = undefined
   }
 })
 
@@ -158,7 +158,6 @@ onMounted(async () => {
 // onUnmounted(() => {
 //   danmakuClient.dispose(); // 示例: 如果有清理逻辑
 // })
-
 </script>
 
 <template>

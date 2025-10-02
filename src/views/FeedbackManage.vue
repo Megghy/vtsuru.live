@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { FeedbackStatus, FeedbackType, ResponseFeedbackModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import FeedbackItem from '@/components/FeedbackItem.vue'
-import { FEEDBACK_API_URL } from '@/data/constants'
+import type { ResponseFeedbackModel } from '@/api/api-models'
 import { List } from 'linqts'
 import {
   NButton,
@@ -20,6 +16,11 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { FeedbackStatus, FeedbackType } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import FeedbackItem from '@/components/FeedbackItem.vue'
+import { FEEDBACK_API_URL } from '@/data/constants'
 
 interface FeedbackModel {
   message: string
@@ -59,11 +60,11 @@ const newFeedback = ref<FeedbackModel>({
 
 async function get() {
   try {
-    const data = await QueryGetAPI<ResponseFeedbackModel[]>(FEEDBACK_API_URL + 'get')
+    const data = await QueryGetAPI<ResponseFeedbackModel[]>(`${FEEDBACK_API_URL}get`)
     if (data.code == 200) {
-      return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
+      return new List(data.data).OrderByDescending(s => s.createAt).ToArray()
     } else {
-      message.error('无法获取数据: ' + data.message)
+      message.error(`无法获取数据: ${data.message}`)
       return []
     }
   } catch (err) {
@@ -76,7 +77,7 @@ async function add() {
     message.error('反馈内容不能为空')
     return
   }
-  await QueryPostAPI<ResponseFeedbackModel>(FEEDBACK_API_URL + 'add', newFeedback.value)
+  await QueryPostAPI<ResponseFeedbackModel>(`${FEEDBACK_API_URL}add`, newFeedback.value)
     .then((data) => {
       if (data.code == 200) {
         message.success('发送成功, 感谢你的反馈!')

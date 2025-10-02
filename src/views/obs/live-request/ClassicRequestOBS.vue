@@ -1,19 +1,19 @@
 <script setup lang="ts">
+import { useElementSize } from '@vueuse/core'
+import { NDivider, NEmpty } from 'naive-ui'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   SongRequestFrom,
   SongRequestStatus,
 } from '@/api/api-models'
-import { useElementSize } from '@vueuse/core'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { NDivider, NEmpty } from 'naive-ui'
 import { useLiveRequestData } from './useLiveRequestData'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
-  speedMultiplier?: number,
+  id?: number
+  active?: boolean
+  visible?: boolean
+  speedMultiplier?: number
 }>()
 
 const route = useRoute()
@@ -26,7 +26,7 @@ const speedMultiplier = computed(() => {
     return props.speedMultiplier
   }
   const speedParam = route.query.speed
-  const speed = parseFloat(speedParam?.toString() ?? '1')
+  const speed = Number.parseFloat(speedParam?.toString() ?? '1')
   return isNaN(speed) || speed <= 0 ? 1 : speed
 })
 
@@ -38,7 +38,7 @@ const {
   allowGuardTypes,
   key,
   update,
-  initRTC
+  initRTC,
 } = useLiveRequestData(currentId.value?.toString() ?? '')
 
 const cardRef = ref()
@@ -217,7 +217,7 @@ onUnmounted(() => {
             type="sc"
           >
             <span class="tag-label">SC点歌</span>
-            <span class="tag-value">{{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}</span>
+            <span class="tag-value">{{ settings.allowSC ? `> ¥${settings.scMinPrice}` : '不允许' }}</span>
           </div>
           <div
             class="live-request-footer-tag"
@@ -228,7 +228,7 @@ onUnmounted(() => {
               {{
                 settings.needWearFanMedal
                   ? settings.fanMedalMinLevel > 0
-                    ? '> ' + settings.fanMedalMinLevel
+                    ? `> ${settings.fanMedalMinLevel}`
                     : '佩戴'
                   : '无需'
               }}
@@ -253,7 +253,7 @@ onUnmounted(() => {
             type="sc"
           >
             <span class="tag-label">SC点歌</span>
-            <span class="tag-value">{{ settings.allowSC ? '> ¥' + settings.scMinPrice : '不允许' }}</span>
+            <span class="tag-value">{{ settings.allowSC ? `> ¥${settings.scMinPrice}` : '不允许' }}</span>
           </div>
           <div
             class="live-request-footer-tag"
@@ -264,7 +264,7 @@ onUnmounted(() => {
               {{
                 settings.needWearFanMedal
                   ? settings.fanMedalMinLevel > 0
-                    ? '> ' + settings.fanMedalMinLevel
+                    ? `> ${settings.fanMedalMinLevel}`
                     : '佩戴'
                   : '无需'
               }}

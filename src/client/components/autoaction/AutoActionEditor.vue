@@ -1,61 +1,62 @@
 <script setup lang="ts">
-import { NCard, NSpace, NCollapse, NDivider } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NCollapse, NDivider, NSpace } from 'naive-ui'
+import { TriggerType } from '@/client/store/useAutoAction'
 
+import AdvancedSettings from './settings/AdvancedSettings.vue'
 // 引入拆分的子组件
-import BasicSettings from './settings/BasicSettings.vue';
-import AdvancedSettings from './settings/AdvancedSettings.vue';
-import DanmakuSettings from './settings/DanmakuSettings.vue';
-import GiftSettings from './settings/GiftSettings.vue';
-import GuardSettings from './settings/GuardSettings.vue';
-import ScheduledSettings from './settings/ScheduledSettings.vue';
-import TemplateSettings from './settings/TemplateSettings.vue';
-import FollowSettings from './settings/FollowSettings.vue';
-import EnterSettings from './settings/EnterSettings.vue';
-import SuperChatSettings from './settings/SuperChatSettings.vue';
+import BasicSettings from './settings/BasicSettings.vue'
+import DanmakuSettings from './settings/DanmakuSettings.vue'
+import EnterSettings from './settings/EnterSettings.vue'
+import FollowSettings from './settings/FollowSettings.vue'
+import GiftSettings from './settings/GiftSettings.vue'
+import GuardSettings from './settings/GuardSettings.vue'
+import ScheduledSettings from './settings/ScheduledSettings.vue'
+import SuperChatSettings from './settings/SuperChatSettings.vue'
+import TemplateSettings from './settings/TemplateSettings.vue'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
+    required: true,
   },
   hideName: {
     type: Boolean,
-    default: false
+    default: false,
   },
   hideEnabled: {
     type: Boolean,
-    default: false
+    default: false,
   },
   customTestContext: {
     type: Object,
-    default: undefined
-  }
-});
+    default: undefined,
+  },
+})
 
 // 根据触发类型获取对应的设置组件
-const getTriggerSettings = () => {
+function getTriggerSettings() {
   switch (props.action.triggerType) {
     case TriggerType.DANMAKU:
-      return DanmakuSettings;
+      return DanmakuSettings
     case TriggerType.GIFT:
-      return GiftSettings;
+      return GiftSettings
     case TriggerType.GUARD:
-      return GuardSettings;
+      return GuardSettings
     case TriggerType.FOLLOW:
-      return FollowSettings;
+      return FollowSettings
     case TriggerType.ENTER:
-      return EnterSettings;
+      return EnterSettings
     case TriggerType.SCHEDULED:
-      return ScheduledSettings;
+      return ScheduledSettings
     case TriggerType.SUPER_CHAT:
-      return SuperChatSettings;
+      return SuperChatSettings
     default:
-      return null;
+      return null
   }
-};
+}
 
-const TriggerSettings = getTriggerSettings();
+const TriggerSettings = getTriggerSettings()
 </script>
 
 <template>

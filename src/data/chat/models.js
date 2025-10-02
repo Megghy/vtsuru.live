@@ -1,8 +1,8 @@
-import { getUuid4Hex } from '../../views/obs/blivechat/utils'
 import * as constants from '../../views/obs/blivechat/constants'
+import { getUuid4Hex } from '../../views/obs/blivechat/utils'
 
 export function getDefaultMsgHandler() {
-  let dummyFunc = () => {}
+  const dummyFunc = () => {}
   return {
     onAddText: dummyFunc,
     onAddGift: dummyFunc,
@@ -12,12 +12,12 @@ export function getDefaultMsgHandler() {
     onUpdateTranslation: dummyFunc,
 
     onFatalError: dummyFunc,
-    onDebugMsg: dummyFunc
+    onDebugMsg: dummyFunc,
   }
 }
 
-export const DEFAULT_AVATAR_URL =
-  'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
+export const DEFAULT_AVATAR_URL
+  = 'https://i0.hdslb.com/bfs/face/member/noface.jpg@64w_64h'
 
 export class AddTextMsg {
   constructor({
@@ -34,7 +34,7 @@ export class AddTextMsg {
     medalLevel = 0,
     id = getUuid4Hex(),
     translation = '',
-    emoticon = null
+    emoticon = null,
   } = {}) {
     this.avatarUrl = avatarUrl
     this.timestamp = timestamp
@@ -62,7 +62,7 @@ export class AddGiftMsg {
     totalCoin = 0,
     totalFreeCoin = 0,
     giftName = '',
-    num = 1
+    num = 1,
   } = {}) {
     this.id = id
     this.avatarUrl = avatarUrl
@@ -81,7 +81,7 @@ export class AddMemberMsg {
     avatarUrl = DEFAULT_AVATAR_URL,
     timestamp = new Date().getTime() / 1000,
     authorName = '',
-    privilegeType = 1
+    privilegeType = 1,
   } = {}) {
     this.id = id
     this.avatarUrl = avatarUrl
@@ -99,7 +99,7 @@ export class AddSuperChatMsg {
     authorName = '',
     price = 0,
     content = '',
-    translation = ''
+    translation = '',
   } = {}) {
     this.id = id
     this.avatarUrl = avatarUrl
@@ -142,7 +142,7 @@ export class DebugMsg {
 }
 export function processAvatarUrl(avatarUrl) {
   // 去掉协议，兼容HTTP、HTTPS
-  let m = avatarUrl.match(/(?:https?:)?(.*)/)
+  const m = avatarUrl.match(/(?:https?:)?(.*)/)
   if (m) {
     avatarUrl = m[1]
   }

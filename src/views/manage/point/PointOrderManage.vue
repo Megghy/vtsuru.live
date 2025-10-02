@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { GoodsTypes, PointOrderStatus, ResponsePointGoodModel, ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import PointOrderCard from '@/components/manage/PointOrderCard.vue'
-import { POINT_API_URL } from '@/data/constants'
-import { objectsToCSV } from '@/Utils'
+import type {
+  DataTableRowKey,
+} from 'naive-ui'
+import type { ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
-  DataTableRowKey,
   NButton,
   NCard,
   NCheckbox,
@@ -26,13 +23,18 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
-import PointUserDetailCard from './PointUserDetailCard.vue'
+import { useAccount } from '@/api/account'
+import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import PointOrderCard from '@/components/manage/PointOrderCard.vue'
+import { POINT_API_URL } from '@/data/constants'
+import { objectsToCSV } from '@/Utils'
 
 // 订单筛选设置类型定义
-type OrderFilterSettings = {
-  type?: GoodsTypes       // 订单类型（实体/虚拟）
+interface OrderFilterSettings {
+  type?: GoodsTypes // 订单类型（实体/虚拟）
   status?: PointOrderStatus // 订单状态
-  customer?: number       // 用户ID
+  customer?: number // 用户ID
   onlyRequireShippingInfo: boolean // 是否只显示需要物流信息的订单
 }
 
@@ -73,15 +75,15 @@ const showStatusModal = ref(false)
 async function getOrders() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(POINT_API_URL + 'get-orders')
+    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-orders`)
     if (data.code == 200) {
       return data.data
     } else {
-      message.error('获取订单失败: ' + data.message)
+      message.error(`获取订单失败: ${data.message}`)
     }
   } catch (err) {
     console.log(err)
-    message.error('获取订单失败: ' + err)
+    message.error(`获取订单失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -96,16 +98,16 @@ async function deleteOrder() {
   }
 
   try {
-    const data = await QueryPostAPI(POINT_API_URL + 'delete-orders', selectedItem.value)
+    const data = await QueryPostAPI(`${POINT_API_URL}delete-orders`, selectedItem.value)
     if (data.code == 200) {
       message.success('删除成功')
-      orders.value = orders.value.filter((o) => !selectedItem.value?.includes(o.id))
+      orders.value = orders.value.filter(o => !selectedItem.value?.includes(o.id))
       selectedItem.value = undefined
     } else {
-      message.error('删除失败: ' + data.message)
+      message.error(`删除失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('删除失败: ' + err)
+    message.error(`删除失败: ${err}`)
     console.log(err)
   }
 }
@@ -134,14 +136,14 @@ async function batchUpdateOrderStatus() {
   try {
     const requestData = {
       orderIds: selectedItem.value,
-      status: targetStatus.value
+      status: targetStatus.value,
     }
 
-    const data = await QueryPostAPI<number[]>(POINT_API_URL + 'batch-update-order-status', requestData)
+    const data = await QueryPostAPI<number[]>(`${POINT_API_URL}batch-update-order-status`, requestData)
     if (data.code == 200) {
       message.success('更新成功')
       // 更新本地订单状态
-      orders.value.forEach(order => {
+      orders.value.forEach((order) => {
         if (data.data.includes(order.id)) {
           order.status = targetStatus.value as PointOrderStatus
           order.updateAt = Date.now()
@@ -150,10 +152,10 @@ async function batchUpdateOrderStatus() {
       targetStatus.value = undefined
       showStatusModal.value = false
     } else {
-      message.error('更新失败: ' + data.message)
+      message.error(`更新失败: ${data.message}`)
     }
   } catch (err) {
-    message.error('更新失败: ' + err)
+    message.error(`更新失败: ${err}`)
     console.log(err)
   }
 }
@@ -196,7 +198,7 @@ function exportData() {
     )
 
     // 添加BOM标记，确保Excel正确识别UTF-8编码
-    const BOM = new Uint8Array([0xef, 0xbb, 0xbf])
+    const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
     const utf8encoder = new TextEncoder()
     const utf8array = utf8encoder.encode(text)
 
@@ -207,7 +209,7 @@ function exportData() {
 
     message.success('导出成功')
   } catch (error) {
-    message.error('导出失败: ' + error)
+    message.error(`导出失败: ${error}`)
     console.error('导出失败:', error)
   }
 }

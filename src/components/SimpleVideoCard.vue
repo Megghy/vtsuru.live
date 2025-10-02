@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VideoCollectVideo } from '@/api/api-models'
+import type { VideoCollectVideo } from '@/api/api-models'
 import { NCard, NEllipsis, NImage, NText } from 'naive-ui'
 
 const props = defineProps<{

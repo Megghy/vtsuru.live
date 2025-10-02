@@ -3,13 +3,13 @@
  */
 
 // 导入ExecutionContext类型
-import { ExecutionContext } from './types';
+import type { ExecutionContext } from './types'
 
 // 表达式模式匹配
 // {{js: expression}} - 简单的JavaScript表达式 (隐式return)
 // {{js+: code block}} - JavaScript代码块 (需要显式return)
 // {{js-run: code block}} - JavaScript代码块 (需要显式return)
-export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|\-run)?):\s*(.*?)\s*\}\}/gs; // 使用 s 标志允许多行匹配
+export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|-run)?):\s*(.*?)\s*\}\}/gs // 使用 s 标志允许多行匹配
 
 /**
  * 处理模板中的表达式
@@ -20,14 +20,14 @@ export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|\-run)?):\s*(.*?)\s*\}\}/gs;
 export function evaluateTemplateExpressions(template: string, context: ExecutionContext): string {
   // 增加严格的类型检查
   if (typeof template !== 'string') {
-    console.error('[evaluateTemplateExpressions] Error: Expected template to be a string, but received:', typeof template, template);
-    return ""; // 或者抛出错误，或者返回一个默认值
+    console.error('[evaluateTemplateExpressions] Error: Expected template to be a string, but received:', typeof template, template)
+    return '' // 或者抛出错误，或者返回一个默认值
   }
 
-  if (!template) return "";
+  if (!template) return ''
 
   // 获取基础变量和数据管理函数
-  const variables = context.variables;
+  const variables = context.variables
   const dataFunctions = {
     getData: context.getData,
     setData: context.setData,
@@ -38,72 +38,71 @@ export function evaluateTemplateExpressions(template: string, context: Execution
     hasStorageData: context.hasStorageData,
     removeStorageData: context.removeStorageData,
     clearStorageData: context.clearStorageData,
-  };
+  }
 
   // 合并基础变量和数据管理函数的作用域
-  const scopeVariables = { ...variables, ...dataFunctions };
-  const scopeKeys = Object.keys(scopeVariables);
-  const scopeValues = Object.values(scopeVariables);
+  const scopeVariables = { ...variables, ...dataFunctions }
+  const scopeKeys = Object.keys(scopeVariables)
+  const scopeValues = Object.values(scopeVariables)
 
   // 第一步：处理简单的文本替换 {{variable.path}}
-  let result = template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
+  const result = template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
     if (path.trim().startsWith('js:') || path.trim().startsWith('js+:') || path.trim().startsWith('js-run:')) {
-      return match; // 跳过所有JS变体，留给下一步
+      return match // 跳过所有JS变体，留给下一步
     }
 
     try {
       // 解析路径
-      const parts = path.trim().split('.');
-      let value: any = scopeVariables;
+      const parts = path.trim().split('.')
+      let value: any = scopeVariables
 
       // 递归获取嵌套属性
       for (const part of parts) {
-        if (value === undefined || value === null) return match;
+        if (value === undefined || value === null) return match
         if (dataFunctions.hasOwnProperty(part) && parts.length === 1) {
-          value = value[part]; // 不要调用顶层函数
+          value = value[part] // 不要调用顶层函数
         } else if (typeof value[part] === 'function') {
-          value = value[part]();
+          value = value[part]()
         } else {
-          value = value[part];
+          value = value[part]
         }
-        if (typeof value === 'function' && !dataFunctions.hasOwnProperty(part)) value = value();
+        if (typeof value === 'function' && !dataFunctions.hasOwnProperty(part)) value = value()
       }
 
-      return value !== undefined && value !== null ? String(value) : match;
+      return value !== undefined && value !== null ? String(value) : match
     } catch (error) {
-      console.error('模板格式化错误:', error);
-      return match; // 出错时返回原始匹配项
+      console.error('模板格式化错误:', error)
+      return match // 出错时返回原始匹配项
     }
-  });
+  })
 
   // 第二步：处理 JS 表达式和代码块 {{js: ...}}, {{js+: ...}}, {{js-run: ...}}
   return result.replace(JS_EXPRESSION_REGEX, (match, type, code) => {
     try {
-      let functionBody: string;
+      let functionBody: string
 
       if (type === 'js') {
         // 简单表达式: 隐式 return
-        functionBody = `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return \"[表达式错误: \" + e.message + \"]\"; }`;
+        functionBody = `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[表达式错误: " + e.message + "]"; }`
       } else { // js+ 或 js-run
         // 代码块: 需要显式 return
-        functionBody = `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return \"[代码块错误: \" + e.message + \"]\"; }`;
+        functionBody = `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[代码块错误: " + e.message + "]"; }`
       }
 
-      const evalInContext = new Function(...scopeKeys, functionBody);
+      const evalInContext = new Function(...scopeKeys, functionBody)
 
-      const evalResult = evalInContext(...scopeValues);
+      const evalResult = evalInContext(...scopeValues)
 
       // 对结果进行处理，将 undefined/null 转换为空字符串，除非是错误消息
       return typeof evalResult === 'string' && (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
         ? evalResult
-        : String(evalResult ?? '');
-
+        : String(evalResult ?? '')
     } catch (error) {
       // 捕获 Function 构造或顶层执行错误
-      console.error("JS占位符处理错误:", error, "类型:", type, "代码:", code);
-      return `[处理错误: ${(error as Error).message}]`;
+      console.error('JS占位符处理错误:', error, '类型:', type, '代码:', code)
+      return `[处理错误: ${(error as Error).message}]`
     }
-  });
+  })
 }
 
 /**
@@ -112,7 +111,7 @@ export function evaluateTemplateExpressions(template: string, context: Execution
  * @returns 是否包含表达式
  */
 export function containsJsExpression(template: string): boolean {
-  return JS_EXPRESSION_REGEX.test(template);
+  return JS_EXPRESSION_REGEX.test(template)
 }
 
 /**
@@ -121,7 +120,7 @@ export function containsJsExpression(template: string): boolean {
  * @returns 转义后的字符串
  */
 export function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -132,16 +131,16 @@ export function escapeRegExp(string: string): string {
  * @returns 转换后的模板
  */
 export function convertToJsExpressions(template: string, placeholders: { name: string, description: string }[]): string {
-  let result = template;
+  let result = template
 
-  placeholders.forEach(p => {
-    const placeholder = p.name;
-    const path = placeholder.replace(/\{\{|\}\}/g, '').trim();
-    const regex = new RegExp(escapeRegExp(placeholder), 'g');
-    result = result.replace(regex, `{{js: ${path}}}`);
-  });
+  placeholders.forEach((p) => {
+    const placeholder = p.name
+    const path = placeholder.replace(/\{\{|\}\}/g, '').trim()
+    const regex = new RegExp(escapeRegExp(placeholder), 'g')
+    result = result.replace(regex, `{{js: ${path}}}`)
+  })
 
-  return result;
+  return result
 }
 
 /**
@@ -153,11 +152,11 @@ export function convertToJsExpressions(template: string, placeholders: { name: s
  */
 export function extractJsExpressions(template: string): string[] {
   if (!template) {
-    return [];
+    return []
   }
   // 使用全局匹配来查找所有出现
-  const matches = template.match(JS_EXPRESSION_REGEX);
-  return matches || []; // match 返回 null 或字符串数组
+  const matches = template.match(JS_EXPRESSION_REGEX)
+  return matches || [] // match 返回 null 或字符串数组
 }
 
 /**
@@ -166,8 +165,7 @@ export function extractJsExpressions(template: string): string[] {
  * @param gift 礼物信息
  * @returns 上下文对象
  */
-export function createGiftThankContext(user: { uid: number; name: string },
-  gift: { name: string; count: number; price: number }): Record<string, any> {
+export function createGiftThankContext(user: { uid: number, name: string }, gift: { name: string, count: number, price: number }): Record<string, any> {
   return {
     user: {
       uid: user.uid,
@@ -182,7 +180,7 @@ export function createGiftThankContext(user: { uid: number; name: string },
       totalPrice: gift.count * gift.price,
       // 工具方法
       summary: `${gift.count}个${gift.name}`,
-      isExpensive: gift.price >= 50
+      isExpensive: gift.price >= 50,
     },
     // 工具函数
     format: {
@@ -193,7 +191,7 @@ export function createGiftThankContext(user: { uid: number; name: string },
     date: {
       now: new Date(),
       timestamp: Date.now(),
-      formatted: new Intl.DateTimeFormat('zh-CN').format(new Date())
-    }
-  };
+      formatted: new Intl.DateTimeFormat('zh-CN').format(new Date()),
+    },
+  }
 }

@@ -7,7 +7,7 @@ export const AUTHOR_TYPE_TO_TEXT = [
   '',
   'member', // 舰队
   'moderator', // 房管
-  'owner' // 主播
+  'owner', // 主播
 ]
 
 export function getShowGuardLevelText(guardLevel) {
@@ -45,7 +45,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(0,0,0,1)',
       authorName: 'rgba(0,0,0,0.701961)',
       time: 'rgba(0,0,0,0.501961)',
-      content: 'rgba(0,0,0,1)'
+      content: 'rgba(0,0,0,1)',
     },
     pinTime: 0,
     priceLevel: 0,
@@ -59,7 +59,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(255,255,255,1)',
       authorName: 'rgba(255,255,255,0.701961)',
       time: 'rgba(255,255,255,0.501961)',
-      content: 'rgba(255,255,255,1)'
+      content: 'rgba(255,255,255,1)',
     },
     pinTime: 0,
     priceLevel: 1,
@@ -73,7 +73,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(0,0,0,1)',
       authorName: 'rgba(0,0,0,0.701961)',
       time: 'rgba(0,0,0,0.501961)',
-      content: 'rgba(0,0,0,1)'
+      content: 'rgba(0,0,0,1)',
     },
     pinTime: 0,
     priceLevel: 2,
@@ -87,7 +87,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(0,0,0,1)',
       authorName: 'rgba(0,0,0,0.541176)',
       time: 'rgba(0,0,0,0.501961)',
-      content: 'rgba(0,0,0,1)'
+      content: 'rgba(0,0,0,1)',
     },
     pinTime: 2,
     priceLevel: 3,
@@ -101,7 +101,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(0,0,0,0.87451)',
       authorName: 'rgba(0,0,0,0.541176)',
       time: 'rgba(0,0,0,0.501961)',
-      content: 'rgba(0,0,0,0.87451)'
+      content: 'rgba(0,0,0,0.87451)',
     },
     pinTime: 5,
     priceLevel: 4,
@@ -115,7 +115,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(255,255,255,0.87451)',
       authorName: 'rgba(255,255,255,0.701961)',
       time: 'rgba(255,255,255,0.501961)',
-      content: 'rgba(255,255,255,0.87451)'
+      content: 'rgba(255,255,255,0.87451)',
     },
     pinTime: 10,
     priceLevel: 5,
@@ -129,7 +129,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(255,255,255,1)',
       authorName: 'rgba(255,255,255,0.701961)',
       time: 'rgba(255,255,255,0.501961)',
-      content: 'rgba(255,255,255,1)'
+      content: 'rgba(255,255,255,1)',
     },
     pinTime: 30,
     priceLevel: 6,
@@ -143,7 +143,7 @@ const PRICE_CONFIGS = [
       header: 'rgba(255,255,255,1)',
       authorName: 'rgba(255,255,255,0.701961)',
       time: 'rgba(255,255,255,0.501961)',
-      content: 'rgba(255,255,255,1)'
+      content: 'rgba(255,255,255,1)',
     },
     pinTime: 60,
     priceLevel: 7,
@@ -154,7 +154,7 @@ export function getPriceConfig(price) {
   let i = 0
   // 根据先验知识，从小找到大通常更快结束
   for (; i < PRICE_CONFIGS.length - 1; i++) {
-    let nextConfig = PRICE_CONFIGS[i + 1]
+    const nextConfig = PRICE_CONFIGS[i + 1]
     if (price < nextConfig.price) {
       return PRICE_CONFIGS[i]
     }
@@ -170,22 +170,22 @@ export function getShowContent(message) {
 }
 
 export function getShowRichContent(message) {
-  let richContent = [...message.richContent]
+  const richContent = [...message.richContent]
   if (message.translation) {
     richContent.push({
       type: CONTENT_TYPE_TEXT,
-      text: `（${message.translation}）`
+      text: `（${message.translation}）`,
     })
   }
   return richContent
 }
 
 export function getShowContentParts(message) {
-  let contentParts = [...message.contentParts || []]
+  const contentParts = [...message.contentParts || []]
   if (message.translation) {
     contentParts.push({
       type: CONTENT_TYPE_TEXT,
-      text: `（${message.translation}）`
+      text: `（${message.translation}）`,
     })
   }
   return contentParts

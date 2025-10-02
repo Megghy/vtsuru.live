@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { FunctionTypes, Setting_LiveRequest } from '@/api/api-models';
-import { useLiveRequest } from '@/composables/useLiveRequest';
-import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import type { Setting_LiveRequest } from '@/api/api-models'
 import {
   NAlert,
   NButton,
@@ -13,11 +11,14 @@ import {
   NInputNumber,
   NSpace,
   NSpin,
-  useMessage
-} from 'naive-ui';
-  import { computed } from 'vue';
+  useMessage,
+} from 'naive-ui'
+import { computed } from 'vue'
+import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+import { FunctionTypes } from '@/api/api-models'
+import { useLiveRequest } from '@/composables/useLiveRequest'
 
-  const defaultSettings = {
+const defaultSettings = {
   orderPrefix: '点播',
   onlyAllowSongList: false,
   queueMaxSize: 10,
@@ -51,7 +52,7 @@ const enableSongRequest = computed({
   },
   set: async () => {
     await updateEnableFunctions()
-  }
+  },
 })
 const configCanEdit = computed(() => {
   return accountInfo.value != null && accountInfo.value != undefined
@@ -117,7 +118,7 @@ async function updateSettings() {
           message.success('已保存')
           return true
         } else {
-          message.error('保存失败: ' + msg)
+          message.error(`保存失败: ${msg}`)
         }
       })
       .finally(() => {
@@ -376,44 +377,44 @@ async function updateSettings() {
         </NInputGroup>
       </NSpace>
       <NDivider> OBS </NDivider>
-            <NSpace align="center">
-              <NInputGroup style="width: 220px">
-                <NInputGroupLabel> 标题 </NInputGroupLabel>
-                <template v-if="configCanEdit">
-                  <NInput
-                    v-model:value="settings.obsTitle"
-                    placeholder="默认为 点播"
-                  />
-                  <NButton
-                    type="primary"
-                    @click="updateSettings"
-                  >
-                    确定
-                  </NButton>
-                </template>
-              </NInputGroup>
-              <NCheckbox
-                v-model:checked="settings.showRequireInfo"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
-                显示底部的需求信息
-              </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.showUserName"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
-                显示点播用户名
-              </NCheckbox>
-              <NCheckbox
-                v-model:checked="settings.showFanMadelInfo"
-                :disabled="!configCanEdit"
-                @update:checked="updateSettings"
-              >
-                显示点播用户粉丝牌
-              </NCheckbox>
-            </NSpace>
+      <NSpace align="center">
+        <NInputGroup style="width: 220px">
+          <NInputGroupLabel> 标题 </NInputGroupLabel>
+          <template v-if="configCanEdit">
+            <NInput
+              v-model:value="settings.obsTitle"
+              placeholder="默认为 点播"
+            />
+            <NButton
+              type="primary"
+              @click="updateSettings"
+            >
+              确定
+            </NButton>
+          </template>
+        </NInputGroup>
+        <NCheckbox
+          v-model:checked="settings.showRequireInfo"
+          :disabled="!configCanEdit"
+          @update:checked="updateSettings"
+        >
+          显示底部的需求信息
+        </NCheckbox>
+        <NCheckbox
+          v-model:checked="settings.showUserName"
+          :disabled="!configCanEdit"
+          @update:checked="updateSettings"
+        >
+          显示点播用户名
+        </NCheckbox>
+        <NCheckbox
+          v-model:checked="settings.showFanMadelInfo"
+          :disabled="!configCanEdit"
+          @update:checked="updateSettings"
+        >
+          显示点播用户粉丝牌
+        </NCheckbox>
+      </NSpace>
       <NDivider> 警告消息 </NDivider>
       <NSpace>
         <NCheckbox

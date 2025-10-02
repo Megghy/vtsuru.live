@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { FunctionTypes, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import ScheduleList from '@/components/ScheduleList.vue'
-import { CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
-import { copyToClipboard } from '@/Utils'
+import type { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
+import type { VNode } from 'vue'
+import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { TagQuestionMark16Filled } from '@vicons/fluent'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
@@ -12,7 +9,6 @@ import {
   NBadge,
   NButton,
   NCard,
-  NCheckbox,
   NColorPicker,
   NDivider,
   NFlex,
@@ -30,8 +26,13 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
-import { VNode, computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { FunctionTypes } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import ScheduleList from '@/components/ScheduleList.vue'
+import { CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
+import { copyToClipboard } from '@/Utils'
 
 const rules = {
   user: {
@@ -67,8 +68,8 @@ const weekOptions = computed(() => {
   const weeks = [] as SelectMixedOption[]
   const all = getAllWeeks(selectedScheduleYear.value)
   all.forEach((week) => {
-    const isExist =
-      (schedules.value?.findIndex((s) => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
+    const isExist
+      = (schedules.value?.findIndex(s => s.year == selectedScheduleYear.value && s.week == week[0] + 1) ?? -1) > -1
     weeks.push({
       label: `${isExist ? '(已安排)' : ''} 第${week[0] + 1}周 (${week[1]})`,
       value: week[0] + 1,
@@ -145,7 +146,7 @@ function normalizeColor(color: any): string | null {
 
     const toHex = (c: number) => {
       const hex = Math.round(Math.min(Math.max(c, 0), 1) * 255).toString(16)
-      return hex.length === 1 ? '0' + hex : hex
+      return hex.length === 1 ? `0${hex}` : hex
     }
 
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
@@ -173,18 +174,18 @@ function normalizeColor(color: any): string | null {
     // 2) 处理 hsla/hsl 字符串
     const hslMatch = str.match(/^hsla?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*(?:,\s*([+-]?\d*(?:\.\d+)?)\s*)?\)$/i)
     if (hslMatch) {
-      const h = parseFloat(hslMatch[1])
-      const s = parseFloat(hslMatch[2])
-      const l = parseFloat(hslMatch[3])
+      const h = Number.parseFloat(hslMatch[1])
+      const s = Number.parseFloat(hslMatch[2])
+      const l = Number.parseFloat(hslMatch[3])
       return hslToHex(h, s, l)
     }
 
     // 3) 处理 rgba/rgb 字符串，忽略 alpha
     const rgbMatch = str.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([+-]?\d*(?:\.\d+)?)\s*)?\)$/i)
     if (rgbMatch) {
-      const r = Math.min(255, Math.max(0, parseInt(rgbMatch[1])))
-      const g = Math.min(255, Math.max(0, parseInt(rgbMatch[2])))
-      const b = Math.min(255, Math.max(0, parseInt(rgbMatch[3])))
+      const r = Math.min(255, Math.max(0, Number.parseInt(rgbMatch[1])))
+      const g = Math.min(255, Math.max(0, Number.parseInt(rgbMatch[2])))
+      const b = Math.min(255, Math.max(0, Number.parseInt(rgbMatch[3])))
       const toHex = (n: number) => n.toString(16).padStart(2, '0')
       return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
     }
@@ -222,7 +223,7 @@ function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
     if (!Array.isArray(list)) return [] as ScheduleDayInfo[]
     return list
       .filter(Boolean)
-      .map((item) => ({
+      .map(item => ({
         title: item?.title ?? null,
         tag: item?.tag ?? null,
         tagColor: normalizeColor(item?.tagColor),
@@ -245,8 +246,8 @@ function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {})
   return {
     year: normalized.year,
     week: normalized.week,
-    days: normalized.days.map((dayList) =>
-      dayList.map((item) => ({
+    days: normalized.days.map(dayList =>
+      dayList.map(item => ({
         title: item.title ?? null,
         tag: item.tag ?? null,
         tagColor: normalizeColor(item.tagColor),
@@ -281,8 +282,8 @@ function sanitizeDays(days?: ScheduleDayInfo[][]): ScheduleDayInfo[][] {
   return Array.from({ length: 7 }, (_, index) => {
     const list = days?.[index] ?? []
     return list
-      .filter((item) => !!item && (item.title?.trim() || item.tag?.trim() || item.time?.trim()))
-      .map((item) => ({
+      .filter(item => !!item && (item.title?.trim() || item.tag?.trim() || item.time?.trim()))
+      .map(item => ({
         title: item.title?.trim() || null,
         tag: item.tag?.trim() || null,
         tagColor: normalizeColor(item.tagColor),
@@ -333,8 +334,8 @@ watch(showUpdateModal, (visible) => {
   if (visible) {
     ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
     // 清理所有可能的数组格式颜色值
-    updateScheduleModel.value.days.forEach(dayList => {
-      dayList.forEach(item => {
+    updateScheduleModel.value.days.forEach((dayList) => {
+      dayList.forEach((item) => {
         if (item.tagColor && Array.isArray(item.tagColor)) {
           item.tagColor = normalizeColor(item.tagColor)
         }
@@ -347,15 +348,15 @@ watch(showUpdateModal, (visible) => {
 watch(
   () => updateScheduleModel.value.days,
   (days) => {
-    days?.forEach(dayList => {
-      dayList?.forEach(item => {
+    days?.forEach((dayList) => {
+      dayList?.forEach((item) => {
         if (item.tagColor && Array.isArray(item.tagColor)) {
           item.tagColor = normalizeColor(item.tagColor)
         }
       })
     })
   },
-  { deep: true }
+  { deep: true },
 )
 
 watch(selectedDay, (value) => {
@@ -364,14 +365,14 @@ watch(selectedDay, (value) => {
 
 async function get() {
   isLoading.value = true
-  await QueryGetAPI<ScheduleWeekInfo[]>(SCHEDULE_API_URL + 'get', {
+  await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, {
     id: accountInfo.value?.id ?? -1,
   })
     .then((data) => {
       if (data.code == 200) {
-        schedules.value = (data.data ?? []).map((week) => normalizeWeek(week))
+        schedules.value = (data.data ?? []).map(week => normalizeWeek(week))
       } else {
-        message.error('加载失败: ' + data.message)
+        message.error(`加载失败: ${data.message}`)
       }
     })
     .catch(() => {
@@ -383,7 +384,7 @@ const isFetching = ref(false)
 async function addSchedule() {
   isFetching.value = true
   const emptyWeek = createEmptyWeek(selectedScheduleYear.value, selectedScheduleWeek.value)
-  await QueryPostAPI(SCHEDULE_API_URL + 'update', {
+  await QueryPostAPI(`${SCHEDULE_API_URL}update`, {
     year: emptyWeek.year,
     week: emptyWeek.week,
     days: emptyWeek.days,
@@ -394,7 +395,7 @@ async function addSchedule() {
         showAddModal.value = false
         schedules.value = [...schedules.value, emptyWeek]
       } else {
-        message.error('添加失败: ' + data.message)
+        message.error(`添加失败: ${data.message}`)
       }
     })
     .finally(() => {
@@ -402,7 +403,7 @@ async function addSchedule() {
     })
 }
 async function onCopySchedule() {
-  if (schedules.value?.find((s) => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
+  if (schedules.value?.find(s => s.year == selectedScheduleYear.value && s.week == selectedScheduleWeek.value)) {
     message.error('想要复制到的周已存在')
   } else {
     updateScheduleModel.value.year = selectedScheduleYear.value
@@ -430,7 +431,7 @@ async function saveSchedule(day: number | null) {
     payload.day = day
   }
 
-  await QueryPostAPI(SCHEDULE_API_URL + 'update', payload)
+  await QueryPostAPI(`${SCHEDULE_API_URL}update`, payload)
     .then((data) => {
       if (data.code == 200) {
         message.success('成功')
@@ -441,7 +442,7 @@ async function saveSchedule(day: number | null) {
         })
 
         const index = schedules.value.findIndex(
-          (s) => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
+          s => s.year == updateScheduleModel.value.year && s.week == updateScheduleModel.value.week,
         )
 
         if (index >= 0) {
@@ -462,7 +463,7 @@ async function saveSchedule(day: number | null) {
         })
         ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
       } else {
-        message.error('修改失败: ' + data.message)
+        message.error(`修改失败: ${data.message}`)
       }
     })
     .finally(() => {
@@ -473,7 +474,7 @@ async function onUpdateSchedule() {
   await saveSchedule(selectedDay.value)
 }
 async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
-  await QueryGetAPI(SCHEDULE_API_URL + 'del', {
+  await QueryGetAPI(`${SCHEDULE_API_URL}del`, {
     year: schedule.year,
     week: schedule.week,
   }).then((data) => {
@@ -481,7 +482,7 @@ async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
       message.success('已删除')
       get()
     } else {
-      message.error('删除失败: ' + data.message)
+      message.error(`删除失败: ${data.message}`)
     }
   })
 }
@@ -506,21 +507,21 @@ function onEditScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, item: 
 async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo) {
   const targetSchedule = schedules.value.find(s => s.year === schedule.year && s.week === schedule.week)
   if (!targetSchedule) return
-  
-  const itemIndex = targetSchedule.days[dayIndex].findIndex(i => 
-    i.id === item.id || (i.title === item.title && i.time === item.time && i.tag === item.tag)
+
+  const itemIndex = targetSchedule.days[dayIndex].findIndex(i =>
+    i.id === item.id || (i.title === item.title && i.time === item.time && i.tag === item.tag),
   )
-  
+
   if (itemIndex === -1) return
-  
+
   const updatedDays = targetSchedule.days.map((dayList, idx) => {
     if (idx === dayIndex) {
       return dayList.filter((_, i) => i !== itemIndex)
     }
     return dayList
   })
-  
-  await QueryPostAPI(SCHEDULE_API_URL + 'update', {
+
+  await QueryPostAPI(`${SCHEDULE_API_URL}update`, {
     year: schedule.year,
     week: schedule.week,
     days: sanitizeDays(updatedDays),
@@ -536,7 +537,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
         })
       }
     } else {
-      message.error('删除失败: ' + data.message)
+      message.error(`删除失败: ${data.message}`)
     }
   })
 }
@@ -569,19 +570,20 @@ function removeScheduleItem(index: number) {
 function moveScheduleItem(index: number, direction: 'up' | 'down') {
   const dayList = updateScheduleModel.value.days[selectedDay.value]
   if (!dayList) return
-  
+
   const targetIndex = direction === 'up' ? index - 1 : index + 1
   if (targetIndex < 0 || targetIndex >= dayList.length) return
-  
+
   const temp = dayList[index]
   dayList[index] = dayList[targetIndex]
   dayList[targetIndex] = temp
 }
-const renderOption = ({ node, option }: { node: VNode; option: SelectOption }) =>
-  h(NSpace, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
+function renderOption({ node, option }: { node: VNode, option: SelectOption }) {
+  return h(NSpace, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
     option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null,
     node,
   ])
+}
 async function setFunctionEnable(enable: boolean) {
   let success = false
   if (enable) {
@@ -590,9 +592,9 @@ async function setFunctionEnable(enable: boolean) {
     success = await DisableFunction(FunctionTypes.Schedule)
   }
   if (success) {
-    message.success('已' + (enable ? '启用' : '禁用'))
+    message.success(`已${enable ? '启用' : '禁用'}`)
   } else {
-    message.error('无法' + (enable ? '启用' : '禁用'))
+    message.error(`无法${enable ? '启用' : '禁用'}`)
   }
 }
 
@@ -740,10 +742,10 @@ onMounted(() => {
     />
     <NDivider />
     <template v-if="updateScheduleModel">
-      <div 
+      <div
         style="
-          max-height: calc(90vh - 300px); 
-          overflow-y: auto; 
+          max-height: calc(90vh - 300px);
+          overflow-y: auto;
           padding-right: 8px;
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -760,111 +762,119 @@ onMounted(() => {
           >
             + 添加行程项
           </NButton>
-        <NCard
-          v-for="(item, itemIndex) in updateScheduleModel.days[selectedDay]"
-          :key="itemIndex"
-          size="small"
-          :bordered="true"
-          :style="{ 
-            borderLeft: item.tagColor ? `4px solid ${item.tagColor}` : 'none',
-            backgroundColor: item.tagColor ? item.tagColor + '08' : 'transparent'
-          }"
-        >
-          <template #header>
-            <NSpace align="center" :size="8">
-              <NText strong style="font-size: 14px;">行程 {{ itemIndex + 1 }}</NText>
-              <NButton
-                v-if="itemIndex > 0"
-                size="tiny"
-                quaternary
-                @click="moveScheduleItem(itemIndex, 'up')"
-              >
-                ↑
-              </NButton>
-              <NButton
-                v-if="itemIndex < updateScheduleModel.days[selectedDay].length - 1"
-                size="tiny"
-                quaternary
-                @click="moveScheduleItem(itemIndex, 'down')"
-              >
-                ↓
-              </NButton>
-            </NSpace>
-          </template>
-          <template #header-extra>
-            <NButton
-              size="tiny"
-              type="error"
-              quaternary
-              @click="removeScheduleItem(itemIndex)"
-            >
-              删除
-            </NButton>
-          </template>
-          <NSpace
-            vertical
-            :size="12"
+          <NCard
+            v-for="(item, itemIndex) in updateScheduleModel.days[selectedDay]"
+            :key="itemIndex"
+            size="small"
+            :bordered="true"
+            :style="{
+              borderLeft: item.tagColor ? `4px solid ${item.tagColor}` : 'none',
+              backgroundColor: item.tagColor ? `${item.tagColor}08` : 'transparent',
+            }"
           >
-            <NSpace align="center" :size="8" style="flex-wrap: wrap;">
-              <NInputGroup style="width: auto; min-width: 200px;">
-                <NInputGroupLabel type="primary" style="min-width: 50px;">
-                  标签
+            <template #header>
+              <NSpace align="center" :size="8">
+                <NText strong style="font-size: 14px;">
+                  行程 {{ itemIndex + 1 }}
+                </NText>
+                <NButton
+                  v-if="itemIndex > 0"
+                  size="tiny"
+                  quaternary
+                  @click="moveScheduleItem(itemIndex, 'up')"
+                >
+                  ↑
+                </NButton>
+                <NButton
+                  v-if="itemIndex < updateScheduleModel.days[selectedDay].length - 1"
+                  size="tiny"
+                  quaternary
+                  @click="moveScheduleItem(itemIndex, 'down')"
+                >
+                  ↓
+                </NButton>
+              </NSpace>
+            </template>
+            <template #header-extra>
+              <NButton
+                size="tiny"
+                type="error"
+                quaternary
+                @click="removeScheduleItem(itemIndex)"
+              >
+                删除
+              </NButton>
+            </template>
+            <NSpace
+              vertical
+              :size="12"
+            >
+              <NSpace align="center" :size="8" style="flex-wrap: wrap;">
+                <NInputGroup style="width: auto; min-width: 200px;">
+                  <NInputGroupLabel type="primary" style="min-width: 50px;">
+                    标签
+                  </NInputGroupLabel>
+                  <NInput
+                    v-model:value="item.tag"
+                    placeholder="标签名称"
+                    style="width: 150px;"
+                    maxlength="10"
+                    show-count
+                  />
+                </NInputGroup>
+                <NSelect
+                  :value="null"
+                  :options="existTagOptions"
+                  filterable
+                  clearable
+                  placeholder="选择已用标签"
+                  style="width: 140px;"
+                  :render-option="renderOption"
+                  @update:value="(val, opt) => onSelectChange(val, opt, itemIndex)"
+                />
+              </NSpace>
+              <NInputGroup>
+                <NInputGroupLabel style="min-width: 50px;">
+                  内容
                 </NInputGroupLabel>
                 <NInput
-                  v-model:value="item.tag"
-                  placeholder="标签名称"
-                  style="width: 150px;"
-                  maxlength="10"
+                  v-model:value="item.title"
+                  placeholder="事件内容描述"
+                  maxlength="50"
                   show-count
                 />
               </NInputGroup>
-              <NSelect
-                :value="null"
-                :options="existTagOptions"
-                filterable
-                clearable
-                placeholder="选择已用标签"
-                style="width: 140px;"
-                :render-option="renderOption"
-                @update:value="(val, opt) => onSelectChange(val, opt, itemIndex)"
-              />
+              <NSpace align="center" :size="8">
+                <NInputGroup style="width: auto;">
+                  <NInputGroupLabel style="min-width: 50px;">
+                    时间
+                  </NInputGroupLabel>
+                  <NTimePicker
+                    v-model:formatted-value="item.time"
+                    default-formatted-value="20:00"
+                    format="HH:mm"
+                    style="width: 120px"
+                    clearable
+                  />
+                </NInputGroup>
+                <NInputGroup style="width: auto;">
+                  <NInputGroupLabel style="min-width: 50px;">
+                    颜色
+                  </NInputGroupLabel>
+                  <NColorPicker
+                    :key="`color-${selectedDay}-${itemIndex}-${item.id || 'new'}`"
+                    :value="normalizeColor(item.tagColor)"
+                    :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
+                    default-value="#2080F0"
+                    :show-alpha="false"
+                    :modes="['hex']"
+                    style="width: 120px;"
+                    @update:value="(val) => item.tagColor = normalizeColor(val)"
+                  />
+                </NInputGroup>
+              </NSpace>
             </NSpace>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 50px;"> 内容 </NInputGroupLabel>
-              <NInput
-                v-model:value="item.title"
-                placeholder="事件内容描述"
-                maxlength="50"
-                show-count
-              />
-            </NInputGroup>
-            <NSpace align="center" :size="8">
-              <NInputGroup style="width: auto;">
-                <NInputGroupLabel style="min-width: 50px;">时间</NInputGroupLabel>
-                <NTimePicker
-                  v-model:formatted-value="item.time"
-                  default-formatted-value="20:00"
-                  format="HH:mm"
-                  style="width: 120px"
-                  clearable
-                />
-              </NInputGroup>
-              <NInputGroup style="width: auto;">
-                <NInputGroupLabel style="min-width: 50px;">颜色</NInputGroupLabel>
-                <NColorPicker
-                  :key="`color-${selectedDay}-${itemIndex}-${item.id || 'new'}`"
-                  :value="normalizeColor(item.tagColor)"
-                  @update:value="(val) => item.tagColor = normalizeColor(val)"
-                  :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
-                  default-value="#2080F0"
-                  :show-alpha="false"
-                  :modes="['hex']"
-                  style="width: 120px;"
-                />
-              </NInputGroup>
-            </NSpace>
-          </NSpace>
-        </NCard>
+          </NCard>
         </NSpace>
       </div>
       <NDivider />

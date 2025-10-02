@@ -1,3 +1,26 @@
+<script setup>
+import { ref, watch } from 'vue'
+import * as models from '../../../data/chat/models'
+
+const props = defineProps({
+  imgUrl: String,
+  height: String,
+  width: String,
+})
+
+const showImgUrl = ref(props.imgUrl)
+
+watch(() => props.imgUrl, (val) => {
+  showImgUrl.value = val
+})
+
+function onLoadError() {
+  if (showImgUrl.value !== models.DEFAULT_AVATAR_URL) {
+    showImgUrl.value = models.DEFAULT_AVATAR_URL
+  }
+}
+</script>
+
 <template>
   <yt-img-shadow
     class="no-transition"
@@ -18,28 +41,5 @@
     >
   </yt-img-shadow>
 </template>
-
-<script setup>
-import { ref, watch } from 'vue'
-import * as models from '../../../data/chat/models'
-
-const props = defineProps({
-  imgUrl: String,
-  height: String,
-  width: String
-})
-
-const showImgUrl = ref(props.imgUrl)
-
-watch(() => props.imgUrl, (val) => {
-  showImgUrl.value = val
-})
-
-function onLoadError() {
-  if (showImgUrl.value !== models.DEFAULT_AVATAR_URL) {
-    showImgUrl.value = models.DEFAULT_AVATAR_URL
-  }
-}
-</script>
 
 <style src="@/assets/css/youtube/yt-img-shadow.css"></style>

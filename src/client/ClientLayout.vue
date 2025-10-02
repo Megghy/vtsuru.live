@@ -1,134 +1,134 @@
 <script setup lang="ts">
-  import { ref, h, computed } from 'vue'; // 引入 ref, h, computed
-  import { RouterLink, RouterView } from 'vue-router'; // 引入 Vue Router 组件
+// 引入 Naive UI 组件 和 图标
+import type { MenuOption } from 'naive-ui'
+// 引入 Tauri 插件
+import { openUrl } from '@tauri-apps/plugin-opener'
 
-  // 引入 Naive UI 组件 和 图标
-  import { NA, NButton, NCard, NInput, NLayout, NLayoutSider, NLayoutContent, NMenu, NSpace, NSpin, NText, NTooltip, MenuOption } from 'naive-ui';
-  import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5';
+import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Settings24Filled } from '@vicons/fluent'
+import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
+import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NText, NTooltip } from 'naive-ui'
 
-  // 引入 Tauri 插件
-  import { openUrl } from '@tauri-apps/plugin-opener';
+import { computed, h, ref } from 'vue' // 引入 ref, h, computed
 
-  // 引入自定义 API 和状态管理
-  import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn, useAccount } from '@/api/account';
-  import { useWebFetcher } from '@/store/useWebFetcher';
+import { RouterLink, RouterView } from 'vue-router' // 引入 Vue Router 组件
+// 引入自定义 API 和状态管理
+import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
 
-  // 引入子组件
-  import WindowBar from './WindowBar.vue';
-  import { initAll, OnClientUnmounted } from './data/initialize';
-  import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Settings24Filled } from '@vicons/fluent';
-  import { isTauri } from '@/data/constants';
-import { useDanmakuWindow } from './store/useDanmakuWindow';
+import { useWebFetcher } from '@/store/useWebFetcher'
+import { initAll, OnClientUnmounted } from './data/initialize'
+import { useDanmakuWindow } from './store/useDanmakuWindow'
+// 引入子组件
+import WindowBar from './WindowBar.vue'
 
-  // --- 响应式状态 ---
+// --- 响应式状态 ---
 
-  // 获取 webfetcher 状态管理的实例
-  const webfetcher = useWebFetcher();
-  const danmakuWindow = useDanmakuWindow();
-  // 用于存储用户输入的 Token
-  const token = ref('');
+// 获取 webfetcher 状态管理的实例
+const webfetcher = useWebFetcher()
+const danmakuWindow = useDanmakuWindow()
+// 用于存储用户输入的 Token
+const token = ref('')
 
-  // --- 计算属性 ---
-  // (这里没有显式的计算属性，但 isLoggedIn 本身可能是一个来自 account 模块的计算属性)
+// --- 计算属性 ---
+// (这里没有显式的计算属性，但 isLoggedIn 本身可能是一个来自 account 模块的计算属性)
 
-  // --- 方法 ---
+// --- 方法 ---
 
-  /**
-   * @description 处理用户登录逻辑
-   */
-  async function login() {
-    // 校验 Token 是否为空
-    if (!token.value.trim()) {
-      window.$message.error('请输入 Token'); // 使用全局消息提示
-      return;
-    }
-
-    isLoadingAccount.value = true; // 开始加载状态
-    try {
-      // 调用 API 获取账户信息
-      const result = await GetSelfAccount(token.value.trim());
-
-      // 处理 API 返回结果
-      if (!result) {
-        // 登录失败：无效 Token
-        window.$notification.error({ // 使用全局通知
-          title: '登陆失败',
-          content: '无效的Token',
-          duration: 3000
-        });
-      } else {
-        // 检查 B站主播码是否绑定
-        if (!result.isBiliAuthed) {
-          window.$notification.error({
-            title: '登陆失败',
-            content: 'B站主播码未绑定, 请先在网站管理页进行绑定',
-            duration: 3000
-          });
-        } else {
-          // 登录成功
-          window.$message.success('登陆成功');
-          ACCOUNT.value = result; // 更新全局账户信息
-          // isLoadingAccount.value = false; // 状态在 finally 中统一处理
-          //initAll(false); // 初始化 WebFetcher
-        }
-      }
-    } catch (error) {
-      // 处理请求过程中的意外错误
-      console.error("Login failed:", error);
-      window.$notification.error({
-        title: '登陆出错',
-        content: '发生未知错误，请稍后再试或联系管理员。',
-        duration: 3000
-      });
-    } finally {
-      // 无论成功或失败，最终都结束加载状态
-      isLoadingAccount.value = false;
-    }
+/**
+ * @description 处理用户登录逻辑
+ */
+async function login() {
+  // 校验 Token 是否为空
+  if (!token.value.trim()) {
+    window.$message.error('请输入 Token') // 使用全局消息提示
+    return
   }
 
-  // --- 导航菜单配置 ---
-  // 将菜单项定义为常量，使模板更清晰
-  const menuOptions = computed(() => {
-    return [
-      {
-        label: () =>
-          h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
-        key: 'go-back-home',
-        icon: () => h(Home)
-      },
-      {
-        label: () =>
-          h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
-        key: 'fetcher',
-        icon: () => h(CloudArchive24Filled)
-      },
-      {
-        label: () =>
-          h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
-        key: 'danmaku-window-manage',
-        icon: () => h(Chat24Filled),
-        show: danmakuWindow.danmakuWindow != undefined
-      },
-      {
-        label: () =>
-          h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
-        key: 'danmaku-auto-action-manage',
-        icon: () => h(FlashAuto24Filled),
-      },
-      {
-        label: () =>
-          h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
-        key: 'settings',
-        icon: () => h(Settings24Filled)
-      },
-    ] as MenuOption[];
-  });
+  isLoadingAccount.value = true // 开始加载状态
+  try {
+    // 调用 API 获取账户信息
+    const result = await GetSelfAccount(token.value.trim())
 
-  onMounted(() => {
-    window.addEventListener('beforeunload', (event) => {
-      OnClientUnmounted(); // 调用清理函数
-    });
-  });
+    // 处理 API 返回结果
+    if (!result) {
+      // 登录失败：无效 Token
+      window.$notification.error({ // 使用全局通知
+        title: '登陆失败',
+        content: '无效的Token',
+        duration: 3000,
+      })
+    } else {
+      // 检查 B站主播码是否绑定
+      if (!result.isBiliAuthed) {
+        window.$notification.error({
+          title: '登陆失败',
+          content: 'B站主播码未绑定, 请先在网站管理页进行绑定',
+          duration: 3000,
+        })
+      } else {
+        // 登录成功
+        window.$message.success('登陆成功')
+        ACCOUNT.value = result // 更新全局账户信息
+        // isLoadingAccount.value = false; // 状态在 finally 中统一处理
+        // initAll(false); // 初始化 WebFetcher
+      }
+    }
+  } catch (error) {
+    // 处理请求过程中的意外错误
+    console.error('Login failed:', error)
+    window.$notification.error({
+      title: '登陆出错',
+      content: '发生未知错误，请稍后再试或联系管理员。',
+      duration: 3000,
+    })
+  } finally {
+    // 无论成功或失败，最终都结束加载状态
+    isLoadingAccount.value = false
+  }
+}
+
+// --- 导航菜单配置 ---
+// 将菜单项定义为常量，使模板更清晰
+const menuOptions = computed(() => {
+  return [
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-index' } }, () => '主页'), // 使用 h 函数渲染 RouterLink
+      key: 'go-back-home',
+      icon: () => h(Home),
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
+      key: 'fetcher',
+      icon: () => h(CloudArchive24Filled),
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
+      key: 'danmaku-window-manage',
+      icon: () => h(Chat24Filled),
+      show: danmakuWindow.danmakuWindow != undefined,
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
+      key: 'danmaku-auto-action-manage',
+      icon: () => h(FlashAuto24Filled),
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-settings' } }, () => '设置'),
+      key: 'settings',
+      icon: () => h(Settings24Filled),
+    },
+  ] as MenuOption[]
+})
+
+onMounted(() => {
+  window.addEventListener('beforeunload', (event) => {
+    OnClientUnmounted() // 调用清理函数
+  })
+})
 </script>
 
 <template>
@@ -251,7 +251,7 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
 
         <NMenu
           :options="menuOptions"
-          :default-value="'go-back-home'"
+          default-value="go-back-home"
           class="sider-menu"
         />
       </div>
@@ -261,7 +261,7 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
       class="main-layout-content"
       :native-scrollbar="false"
       :scrollbar-props="{
-        trigger: 'none'
+        trigger: 'none',
       }"
     >
       <div style="padding: 12px; padding-right: 15px;">
@@ -289,8 +289,7 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
 </template>
 
 <style scoped>
-
-  /* 登录容器样式 */
+/* 登录容器样式 */
   .login-container {
     display: flex;
     align-items: center;
@@ -370,7 +369,6 @@ import { useDanmakuWindow } from './store/useDanmakuWindow';
     flex-direction: column;
     height: 100%;
   }
-
 
   /* 侧边栏头部样式 */
   .sider-header {

@@ -1,3 +1,33 @@
+<script setup>
+import { NTooltip } from 'naive-ui'
+import { computed } from 'vue'
+import { FILE_BASE_URL } from '@/data/constants'
+import * as constants from './constants'
+
+const props = defineProps({
+  isAdmin: Boolean,
+  privilegeType: Number,
+})
+
+const authorTypeText = computed(() => {
+  if (props.isAdmin) {
+    return 'moderator'
+  }
+  return props.privilegeType > 0 ? 'member' : ''
+})
+
+const readableAuthorTypeText = computed(() => {
+  if (props.isAdmin) {
+    return '管理员'
+  }
+  return constants.getShowGuardLevelText(props.privilegeType)
+})
+
+const fileServerUrl = computed(() => {
+  return FILE_BASE_URL
+})
+</script>
+
 <template>
   <yt-live-chat-author-badge-renderer :type="authorTypeText">
     <NTooltip
@@ -41,35 +71,6 @@
   </yt-live-chat-author-badge-renderer>
 </template>
 
-<script setup>
-import { computed } from 'vue'
-import { NTooltip } from 'naive-ui'
-import * as constants from './constants'
-import { FILE_BASE_URL } from '@/data/constants'
-
-const props = defineProps({
-  isAdmin: Boolean,
-  privilegeType: Number
-})
-
-const authorTypeText = computed(() => {
-  if (props.isAdmin) {
-    return 'moderator'
-  }
-  return props.privilegeType > 0 ? 'member' : ''
-})
-
-const readableAuthorTypeText = computed(() => {
-  if (props.isAdmin) {
-    return '管理员'
-  }
-  return constants.getShowGuardLevelText(props.privilegeType)
-})
-
-const fileServerUrl = computed(() => {
-  return FILE_BASE_URL
-})
-</script>
-
 <style src="@/assets/css/youtube/yt-live-chat-author-badge-renderer.css"></style>
+
 <style src="@/assets/css/youtube/yt-icon.css"></style>

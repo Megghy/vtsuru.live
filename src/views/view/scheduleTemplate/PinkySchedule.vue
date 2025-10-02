@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import SaveCompoent from '@/components/SaveCompoent.vue'
-import { ScheduleConfigType } from '@/data/TemplateTypes'
+import type { ScheduleConfigType } from '@/data/TemplateTypes'
 import { getWeek, getYear } from 'date-fns'
 import { NDivider, NSelect, NSpace } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
-
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const table = ref()
+import SaveCompoent from '@/components/SaveCompoent.vue'
 
 const props = defineProps<ScheduleConfigType>()
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const table = ref()
 
 const currentWeek = computed(() => {
   if (props.data?.length == 1) {
@@ -16,7 +15,7 @@ const currentWeek = computed(() => {
   }
   return props.data?.find((item) => {
     if (selectedDate.value) {
-      return item.year + '-' + item.week === selectedDate.value
+      return `${item.year}-${item.week}` === selectedDate.value
     }
     return isTodayInWeek(item.year, item.week)
   })
@@ -25,7 +24,7 @@ const currentWeek = computed(() => {
 const formattedDays = computed(() => {
   const weekData = currentWeek.value
   if (!weekData || !Array.isArray(weekData.days)) return []
-  
+
   return weekData.days.map((dayList) => {
     // 取每天第一个行程展示
     if (Array.isArray(dayList) && dayList.length > 0) {
@@ -37,8 +36,8 @@ const formattedDays = computed(() => {
 const options = computed(() => {
   return props.data?.map((item) => {
     return {
-      label: item.year + '年' + item.week + '周',
-      value: item.year + '-' + item.week,
+      label: `${item.year}年${item.week}周`,
+      value: `${item.year}-${item.week}`,
     }
   })
 })
@@ -54,7 +53,7 @@ function isTodayInWeek(year: number, week: number): boolean {
 
 onMounted(() => {
   if (currentWeek.value) {
-    selectedDate.value = currentWeek.value.year + '-' + currentWeek.value.week
+    selectedDate.value = `${currentWeek.value.year}-${currentWeek.value.week}`
   }
 })
 </script>

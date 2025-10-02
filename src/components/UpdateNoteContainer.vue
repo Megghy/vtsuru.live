@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { updateNoteItemContentType, updateNotes } from '@/data/UpdateNote';
-import { NDivider, NGrid } from 'naive-ui';
-import { VNode } from 'vue';
+import type { VNode } from 'vue'
+import type { updateNoteItemContentType } from '@/data/UpdateNote'
+import { NDivider, NGrid } from 'naive-ui'
+import { updateNotes } from '@/data/UpdateNote'
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
   if (Array.isArray(content)) {

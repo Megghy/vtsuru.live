@@ -5,7 +5,7 @@ name: Bun CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
 
 env:
   DOCKERHUB_SLUG: megghy/vtsuru_live
@@ -21,47 +21,47 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use bun
-      uses: oven-sh/setup-bun@v2
+      - name: Use bun
+        uses: oven-sh/setup-bun@v2
 
-    - name: 📥 Install dependencies
-      run: bun install
+      - name: 📥 Install dependencies
+        run: bun install
 
-    - name: 📦 Build
-      run: bun run build
+      - name: 📦 Build
+        run: bun run build
 
-    - name: 📦 Upload SourceMap
-      run: bunx @hyperdx/cli upload-sourcemaps --serviceKey ${{ secrets.HYPERDX_SERVICE_KEY }} --path dist/assets
-      
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: 📦 Upload SourceMap
+        run: bunx @hyperdx/cli upload-sourcemaps --serviceKey ${{ secrets.HYPERDX_SERVICE_KEY }} --path dist/assets
 
-    - name: Docker meta
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          ${{ env.DOCKERHUB_SLUG }}
-          ${{ env.GHCR_SLUG }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Get current time
-      uses: josStorer/get-current-time@v2
-      id: time
-      with:
-        format: YYYYMMDD_HHmmss
-        utcOffset: "+08:00"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.DOCKERHUB_SLUG }}
+            ${{ env.GHCR_SLUG }}
 
-    - name: Build Docker image and push
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ env.GHCR_SLUG }}:latest
-          ${{ env.GHCR_SLUG }}:${{ steps.time.outputs.formattedTime }}
+      - name: Get current time
+        uses: josStorer/get-current-time@v2
+        id: time
+        with:
+          format: YYYYMMDD_HHmmss
+          utcOffset: '+08:00'
+
+      - name: Build Docker image and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.GHCR_SLUG }}:latest
+            ${{ env.GHCR_SLUG }}:${{ steps.time.outputs.formattedTime }}

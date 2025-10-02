@@ -1,13 +1,14 @@
-import { cookie, useAccount } from '@/api/account'
-import {
+import type {
   BaseRTCClient,
-  MasterRTCClient,
-  SlaveRTCClient
 } from '@/data/RTCClient'
-import { useStorage } from '@vueuse/core'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { cookie, useAccount } from '@/api/account'
+import {
+  MasterRTCClient,
+  SlaveRTCClient,
+} from '@/data/RTCClient'
 
 export const useWebRTC = defineStore('WebRTC', () => {
   const client = ref<BaseRTCClient>()
@@ -42,7 +43,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
               return
             }
             while (!accountInfo.value.id) {
-              await new Promise((resolve) => setTimeout(resolve, 500))
+              await new Promise(resolve => setTimeout(resolve, 500))
             }
             if (client.value) {
               return client.value
@@ -50,12 +51,12 @@ export const useWebRTC = defineStore('WebRTC', () => {
             if (type == 'master') {
               client.value = new MasterRTCClient(
                 accountInfo.value.id.toString(),
-                accountInfo.value.token
+                accountInfo.value.token,
               )
             } else {
               client.value = new SlaveRTCClient(
                 accountInfo.value.id?.toString(),
-                accountInfo.value.token
+                accountInfo.value.token,
               )
             }
             await client.value.Init()
@@ -63,7 +64,7 @@ export const useWebRTC = defineStore('WebRTC', () => {
           } else {
             return useWebRTC()
           }
-        }
+        },
       )
       return useWebRTC()
     } catch (e) {

@@ -1,29 +1,28 @@
 <script setup lang="ts">
 import {
   NCard,
-  NSpace,
+  NDivider,
   NInputNumber,
-  NRadioGroup,
   NRadio,
+  NRadioGroup,
+  NSpace,
   NText,
-  NDivider
-} from 'naive-ui';
-import { useAutoAction } from '@/client/store/useAutoAction';
-import { watch } from 'vue';
+} from 'naive-ui'
+import { watch } from 'vue'
+import { useAutoAction } from '@/client/store/useAutoAction'
 
-const autoActionStore = useAutoAction();
+const autoActionStore = useAutoAction()
 
 // 定时模式选项
 const schedulingModeOptions = [
   { label: '随机模式', value: 'random' },
-  { label: '顺序模式', value: 'sequential' }
-];
+  { label: '顺序模式', value: 'sequential' },
+]
 
 // 监听变化，触发定时器重启（如果间隔改变）
 watch(() => autoActionStore.globalIntervalSeconds, () => {
-  autoActionStore.restartGlobalTimer(); // 确保间隔改变时定时器更新
-});
-
+  autoActionStore.restartGlobalTimer() // 确保间隔改变时定时器更新
+})
 </script>
 
 <template>

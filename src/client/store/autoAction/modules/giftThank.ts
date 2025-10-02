@@ -1,19 +1,17 @@
-import { ref, Ref } from 'vue';
-import { EventModel, EventDataTypes } from '@/api/api-models';
-import {
-  getRandomTemplate,
-  buildExecutionContext
-} from '../utils';
-import { evaluateTemplateExpressions } from '../expressionEvaluator';
-import {
+import type { Ref } from 'vue'
+import type {
   AutoActionItem,
-  TriggerType,
-  RuntimeState
-} from '../types';
+  RuntimeState,
+} from '../types'
+import type { EventModel } from '@/api/api-models'
+
 import {
+  executeActions,
   filterValidActions,
-  executeActions
-} from '../actionUtils';
+} from '../actionUtils'
+import {
+  TriggerType,
+} from '../types'
 
 /**
  * 礼物感谢模块
@@ -26,9 +24,8 @@ export function useGiftThank(
   isLive: Ref<boolean>,
   roomId: Ref<number | undefined>,
   isTianXuanActive: Ref<boolean>,
-  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>
+  sendLiveDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-
   /**
    * 处理礼物事件
    * @param event 礼物事件
@@ -38,18 +35,18 @@ export function useGiftThank(
   function processGift(
     event: EventModel,
     actions: AutoActionItem[],
-    runtimeState: RuntimeState
+    runtimeState: RuntimeState,
   ) {
-    if (!roomId.value) return;
+    if (!roomId.value) return
 
     // 使用通用函数过滤有效的礼物感谢操作
-    const giftActions = filterValidActions(actions, TriggerType.GIFT, isLive, isTianXuanActive);
+    const giftActions = filterValidActions(actions, TriggerType.GIFT, isLive, isTianXuanActive)
 
     // 使用通用执行函数处理礼物事件
     if (giftActions.length > 0 && roomId.value) {
       // 礼物基本信息
-      const giftName = event.msg;
-      const giftPrice = event.price / 1000;
+      const giftName = event.msg
+      const giftPrice = event.price / 1000
 
       executeActions(
         giftActions,
@@ -63,31 +60,31 @@ export function useGiftThank(
             // 礼物过滤逻辑
             (action, context) => {
               // 黑名单模式
-              if (action.triggerConfig.filterMode === 'blacklist' &&
-                  action.triggerConfig.filterGiftNames?.includes(giftName)) {
-                return false;
+              if (action.triggerConfig.filterMode === 'blacklist'
+                && action.triggerConfig.filterGiftNames?.includes(giftName)) {
+                return false
               }
 
               // 白名单模式
-              if (action.triggerConfig.filterMode === 'whitelist' &&
-                  !action.triggerConfig.filterGiftNames?.includes(giftName)) {
-                return false;
+              if (action.triggerConfig.filterMode === 'whitelist'
+                && !action.triggerConfig.filterGiftNames?.includes(giftName)) {
+                return false
               }
 
               // 礼物价值过滤
               if (action.triggerConfig.minValue && giftPrice < action.triggerConfig.minValue) {
-                return false;
+                return false
               }
 
-              return true;
-            }
-          ]
-        }
-      );
+              return true
+            },
+          ],
+        },
+      )
     }
   }
 
   return {
     processGift,
-  };
+  }
 }

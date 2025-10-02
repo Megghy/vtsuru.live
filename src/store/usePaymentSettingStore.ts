@@ -1,9 +1,10 @@
-import { useAccount } from '@/api/account'
-import { ConsumptionTypes, IDeductionSetting, UserConsumptionSetting } from '@/api/models/consumption'
-import { QueryPostAPIWithParams } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/data/constants'
+import type { IDeductionSetting, UserConsumptionSetting } from '@/api/models/consumption'
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
+import { useAccount } from '@/api/account'
+import { ConsumptionTypes } from '@/api/models/consumption'
+import { QueryPostAPIWithParams } from '@/api/query'
+import { ACCOUNT_API_URL } from '@/data/constants'
 
 export const useConsumptionSettingStore = defineStore(
   'consumptionSetting',
@@ -15,20 +16,20 @@ export const useConsumptionSettingStore = defineStore(
     const consumptionTypeMap = {
       [ConsumptionTypes.DanmakuStorage]: {
         name: '弹幕存储',
-        key: 'danmakuStorage'
-      }
+        key: 'danmakuStorage',
+      },
     }
 
     async function UpdateConsumptionSetting(
       type: ConsumptionTypes,
-      value: unknown
+      value: unknown,
     ) {
-      return await QueryPostAPIWithParams(
-        ACCOUNT_API_URL + 'update-consumption-setting',
+      return QueryPostAPIWithParams(
+        `${ACCOUNT_API_URL}update-consumption-setting`,
         {
-          type: type
+          type,
         },
-        value
+        value,
       )
     }
     function GetSetting(type: ConsumptionTypes) {
@@ -37,5 +38,5 @@ export const useConsumptionSettingStore = defineStore(
     }
 
     return { consumptionSetting, consumptionTypeMap, UpdateConsumptionSetting, GetSetting }
-  }
+  },
 )

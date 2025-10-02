@@ -1,48 +1,48 @@
 <script setup lang="ts">
+import type { AutoActionItem } from '@/client/store/useAutoAction'
 import {
-  NSpace,
-  NInputNumber,
-  NRadioGroup,
-  NRadio,
   NCollapseItem,
-  NSwitch,
   NDivider,
-  NText
-} from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
-import { computed, ref, watch } from 'vue';
+  NInputNumber,
+  NRadio,
+  NRadioGroup,
+  NSpace,
+  NSwitch,
+  NText,
+} from 'naive-ui'
+import { ref, watch } from 'vue'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
 // 初始化配置项
 if (props.action.triggerConfig.useGlobalTimer === undefined) {
-  props.action.triggerConfig.useGlobalTimer = false; // 默认不使用全局定时器
+  props.action.triggerConfig.useGlobalTimer = false // 默认不使用全局定时器
 }
 if (props.action.triggerConfig.schedulingMode === undefined) {
-  props.action.triggerConfig.schedulingMode = 'random'; // 默认随机模式
+  props.action.triggerConfig.schedulingMode = 'random' // 默认随机模式
 }
 if (props.action.triggerConfig.intervalSeconds === undefined) {
-  props.action.triggerConfig.intervalSeconds = 300; // 默认5分钟
+  props.action.triggerConfig.intervalSeconds = 300 // 默认5分钟
 }
 
-const useGlobalTimer = ref(props.action.triggerConfig.useGlobalTimer);
+const useGlobalTimer = ref(props.action.triggerConfig.useGlobalTimer)
 
 // 同步到 action
 watch(useGlobalTimer, (value) => {
-  props.action.triggerConfig.useGlobalTimer = value;
-});
+  props.action.triggerConfig.useGlobalTimer = value
+})
 
 // 定时模式选项
 const schedulingModeOptions = [
   { label: '随机模式', value: 'random' },
-  { label: '顺序模式', value: 'sequential' }
-];
-
+  { label: '顺序模式', value: 'sequential' },
+]
 </script>
 
 <template>

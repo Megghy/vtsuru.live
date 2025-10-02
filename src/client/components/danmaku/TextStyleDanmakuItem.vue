@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { AVATAR_URL } from '@/data/constants';
-import { BaseDanmakuItemProps, useDanmakuUtils } from './danmakuUtils';
-import { useDanmakuWindow } from '../../store/useDanmakuWindow';
+import type { BaseDanmakuItemProps } from './danmakuUtils'
+import { AVATAR_URL } from '@/data/constants'
+import { useDanmakuWindow } from '../../store/useDanmakuWindow'
+import { useDanmakuUtils } from './danmakuUtils'
 
 // 继承基础属性
-const props = defineProps<BaseDanmakuItemProps>();
+const props = defineProps<BaseDanmakuItemProps>()
 
 // 使用工具函数获取所有计算属性
-const emojiData = useDanmakuWindow().emojiData;
-const danmakuUtils = useDanmakuUtils(props, emojiData);
+const emojiData = useDanmakuWindow().emojiData
+const danmakuUtils = useDanmakuUtils(props, emojiData)
 
 // 直接从工具函数获取计算属性，不再需要getBaseProp方法
 const {
@@ -19,14 +20,14 @@ const {
   displayContent,
   priceText,
   textModeColor,
-  parsedMessage
-} = danmakuUtils;
+  parsedMessage,
+} = danmakuUtils
 </script>
 
 <template>
   <div
     class="danmaku-text-mode"
-    :class="{ 'compact': setting.textStyleCompact }"
+    :class="{ compact: setting.textStyleCompact }"
   >
     <!-- 头像 -->
     <img
@@ -84,7 +85,7 @@ const {
           <span v-if="segment.type === 'text'">{{ segment.content }}</span>
           <img
             v-else-if="segment.type === 'emoji'"
-            :src="segment.url + '@64w'"
+            :src="`${segment.url}@64w`"
             :alt="segment.name"
             class="inline-emoji-text-mode"
             referrerpolicy="no-referrer"
@@ -96,7 +97,7 @@ const {
         class="content-text-mode"
       >
         <img
-          :src="item.emoji + '@64w'"
+          :src="`${item.emoji}@64w`"
           alt="emoji"
           class="emoji-image-text-mode"
           referrerpolicy="no-referrer"

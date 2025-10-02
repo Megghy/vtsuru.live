@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { TURNSTILE_KEY } from '@/data/constants'
-import { isDarkMode } from '@/Utils';
 import { onUnmounted, ref } from 'vue'
-import { onMounted } from 'vue'
 
 import VueTurnstile from 'vue-turnstile'
+import { TURNSTILE_KEY } from '@/data/constants'
+
+import { isDarkMode } from '@/Utils'
+
 const turnstile = ref()
 
 const token = defineModel<string>('token', {
   default: '',
 })
 
-    // Set theme based on dark mode status
-    const theme = computed(() => {
-      return isDarkMode ? 'dark' : 'light'
-    })
+// Set theme based on dark mode status
+const theme = computed(() => {
+  return isDarkMode ? 'dark' : 'light'
+})
 onUnmounted(() => {
   turnstile.value?.remove()
 })

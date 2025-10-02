@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account';
-import { OpenLiveInfo } from '@/api/api-models';
-import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui';
+import type { OpenLiveInfo } from '@/api/api-models'
+import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui'
+import { useAccount } from '@/api/account'
 
 const props = defineProps<{
   roomInfo?: OpenLiveInfo

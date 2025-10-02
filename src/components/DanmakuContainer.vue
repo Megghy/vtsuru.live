@@ -1,10 +1,6 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <script setup lang="ts">
-import { useAccount } from '@/api/account'
-import { DanmakuModel, EventDataTypes, ResponseLiveInfoModel } from '@/api/api-models'
-import DanmakuItem from '@/components/DanmakuItem.vue'
-import { GetString } from '@/data/DanmakuExport'
-import router from '@/router'
+import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
 import { useDebounceFn, useLocalStorage, useWindowSize } from '@vueuse/core'
 import { saveAs } from 'file-saver'
@@ -36,6 +32,11 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
+import DanmakuItem from '@/components/DanmakuItem.vue'
+import { GetString } from '@/data/DanmakuExport'
+import router from '@/router'
 import LiveInfoContainer from './LiveInfoContainer.vue'
 import SimpleVirtualList from './SimpleVirtualList.vue'
 
@@ -50,6 +51,32 @@ interface RankInfo {
   Danmakus: number
   Index: number
 }
+
+const {
+  currentDanmakus,
+  currentLive,
+  defaultFilterSelected = [EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.Message, EventDataTypes.SC],
+  height = 1000,
+  itemHeight = 30,
+  showLiveInfo = true,
+  showLiver = false,
+  // to = ClickNameTo.UserHistory,
+  isInModal = false,
+  showName = true,
+  showBorder = true,
+  showTools = true,
+  showStatistic = true,
+  animeNum = true,
+  showRank = false,
+  bordered = true,
+  toolsVisiable = true,
+  itemRange = 30,
+  to = 'space',
+} = defineProps<Props>()
+
+const emit = defineEmits<{
+  (e: 'onClickName', uId: number, ouId: string): boolean
+}>()
 
 const accountInfo = useAccount()
 
@@ -72,7 +99,7 @@ interface Props {
   showLiver?: boolean
   showLiveInfo?: boolean
   showName?: boolean
-  //to?: ClickNameTo;
+  // to?: ClickNameTo;
   isInModal?: boolean
   showRank?: boolean
   showBorder?: boolean
@@ -85,30 +112,6 @@ interface Props {
   to: 'userDanmakus' | 'space'
 }
 
-const {
-  currentDanmakus,
-  currentLive,
-  defaultFilterSelected = [EventDataTypes.Gift, EventDataTypes.Guard, EventDataTypes.Message, EventDataTypes.SC],
-  height = 1000,
-  itemHeight = 30,
-  showLiveInfo = true,
-  showLiver = false,
-  //to = ClickNameTo.UserHistory,
-  isInModal = false,
-  showName = true,
-  showBorder = true,
-  showTools = true,
-  showStatistic = true,
-  animeNum = true,
-  showRank = false,
-  bordered = true,
-  toolsVisiable = true,
-  itemRange = 30,
-  to = 'space',
-} = defineProps<Props>()
-const emit = defineEmits<{
-  (e: 'onClickName', uId: number, ouId: string): boolean
-}>()
 defineExpose({
   InsertDanmakus,
 })
@@ -120,7 +123,7 @@ watch(
   },
 )
 const danmakuRef = computed(() => {
-  //不知道为啥不能直接watch
+  // 不知道为啥不能直接watch
   return currentDanmakus
 })
 watch(danmakuRef, (newValue) => {
@@ -156,7 +159,7 @@ function OnNameClick(uId: number, ouId: string) {
   }
   switch (to) {
     case 'userDanmakus': {
-      userDanmakus.value = currentDanmakus.filter((d) => (d.uId ? d.uId == uId : d.ouId == ouId))
+      userDanmakus.value = currentDanmakus.filter(d => (d.uId ? d.uId == uId : d.ouId == ouId))
       showModal.value = true
       break
     }
@@ -167,7 +170,7 @@ function OnNameClick(uId: number, ouId: string) {
       }
       showModal.value = false
       nextTick(() => {
-        window.open('https://space.bilibili.com/' + uId, '_blank')
+        window.open(`https://space.bilibili.com/${uId}`, '_blank')
       })
       break
     }
@@ -185,8 +188,9 @@ function ToUserSpace(uId: number) {
   })
 }
 function ChangePrice(p: number) {
-  if (p == price.value) price.value = undefined
-  else {
+  if (p == price.value) {
+    price.value = undefined
+  } else {
     price.value = p
   }
   UpdateDanmakus()
@@ -199,7 +203,7 @@ function UpdateDanmakus() {
       danmakus.value = GetFilteredDanmakus()
       setTimeout(() => {
         canInsert = true
-      }, 1000) //立马就能的话会莫名key重复
+      }, 1000) // 立马就能的话会莫名key重复
       processing.value = false
     }, 50)
   })
@@ -209,7 +213,7 @@ function OnRank(isRank: boolean) {
 }
 function OnRankDirect(type: RankType, refresh: boolean, orderByDescending = true) {
   if (refresh) {
-    var rank = {} as {
+    const rank = {} as {
       [ouId: string]: RankInfo
     }
     currentDanmakus.forEach((danmaku) => {
@@ -218,7 +222,7 @@ function OnRankDirect(type: RankType, refresh: boolean, orderByDescending = true
         rank[danmaku.ouId].Paid += danmaku.price ?? 0
       } else {
         rank[danmaku.ouId] = {
-          //uId: danmaku.uId,
+          // uId: danmaku.uId,
           ouId: danmaku.ouId,
           uName: danmaku.uName,
           Paid: danmaku.price ?? 0,
@@ -229,20 +233,20 @@ function OnRankDirect(type: RankType, refresh: boolean, orderByDescending = true
     })
     rankInfo.value = new List(Object.entries(rank)).Select(([uId, user]) => user).ToArray()
   }
-  var ienum = {} as List<RankInfo>
+  let ienum = {} as List<RankInfo>
   switch (rankType.value) {
     case RankType.Danmaku: {
-      ienum = new List(rankInfo.value).OrderByDescending((user) => user.Danmakus)
+      ienum = new List(rankInfo.value).OrderByDescending(user => user.Danmakus)
       break
     }
     case RankType.Paid: {
-      ienum = new List(rankInfo.value).Where((user) => (user?.Paid ?? 0) > 0).OrderByDescending((user) => user.Paid)
+      ienum = new List(rankInfo.value).Where(user => (user?.Paid ?? 0) > 0).OrderByDescending(user => user.Paid)
       break
     }
   }
   if (!orderByDescending) ienum = ienum.Reverse()
   currentRankInfo.value = ienum.Take(100).ToArray()
-  var index = 1
+  let index = 1
   currentRankInfo.value.forEach((info) => {
     info.Index = index
     index++
@@ -283,7 +287,7 @@ function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
   if (processing.value || !canInsert) {
     return
   }
-  var data = GetFilteredDanmakus(targetDanmakus)
+  const data = GetFilteredDanmakus(targetDanmakus)
   if (orderDecreasing.value) {
     danmakus.value.unshift(...data)
     currentDanmakus.unshift(...data)
@@ -294,36 +298,34 @@ function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
 }
 function GetFilteredDanmakus(targetDanmakus?: DanmakuModel[]) {
   if (!targetDanmakus) targetDanmakus = currentDanmakus
-  var tempDanmakus = targetDanmakus.filter((d) => filterSelected.value.includes(d.type))
+  let tempDanmakus = targetDanmakus.filter(d => filterSelected.value.includes(d.type))
   if (hideEmoji.value) {
-    tempDanmakus = tempDanmakus.filter((d) => d.type != EventDataTypes.Message || !d.isEmoji)
+    tempDanmakus = tempDanmakus.filter(d => d.type != EventDataTypes.Message || !d.isEmoji)
   }
   if (orderByPrice.value) {
     tempDanmakus = tempDanmakus
-      .filter((d) => d.type != EventDataTypes.Message)
+      .filter(d => d.type != EventDataTypes.Message)
       .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
   } else {
     tempDanmakus = tempDanmakus.sort((a, b) => a.time - b.time)
   }
 
   if (keyword.value && keyword.value != '') {
-    tempDanmakus = tempDanmakus.filter((d) => (deselect.value ? !CheckKeyword(d) : CheckKeyword(d)))
+    tempDanmakus = tempDanmakus.filter(d => (deselect.value ? !CheckKeyword(d) : CheckKeyword(d)))
   }
   function CheckKeyword(d: DanmakuModel) {
     if (d.uId.toString() == keyword.value || d.uName == keyword.value) {
       return true
     }
     return enableRegex.value
-      ? d.msg?.match(keyword.value)
-        ? true
-        : false
+      ? !!d.msg?.match(keyword.value)
       : d.msg?.toLowerCase().includes(keyword.value.toLowerCase()) == true
   }
   if (price.value && price.value > 0) {
-    tempDanmakus = tempDanmakus.filter((d) => (d.price ?? 0) >= (price.value ?? 0))
+    tempDanmakus = tempDanmakus.filter(d => (d.price ?? 0) >= (price.value ?? 0))
   }
   if (orderDecreasing.value) tempDanmakus = tempDanmakus.reverse()
-  var index = 0
+  let index = 0
   tempDanmakus.forEach((d) => {
     d.id = `${d.ouId}_${d.time}_${index}`
     index++
@@ -340,8 +342,8 @@ function RoundNumber(num: number) {
 
 onMounted(() => {
   danmakus.value = GetFilteredDanmakus()
-  existEnterMessage.value = danmakus.value.some((d) => d.type == EventDataTypes.Message)
-  //defaultFilterSelected.push(EventDataTypes.Enter)
+  existEnterMessage.value = danmakus.value.some(d => d.type == EventDataTypes.Message)
+  // defaultFilterSelected.push(EventDataTypes.Enter)
 })
 </script>
 
@@ -354,7 +356,7 @@ onMounted(() => {
     <NModal
       v-model:show="showModal"
       preset="card"
-      :style="'width: 600px;max-width: 90vw;max-height: 90vh;'"
+      style="width: 600px;max-width: 90vw;max-height: 90vh;"
       content-style="overflow-y: auto"
       @after-leave="userDanmakus = undefined"
     >

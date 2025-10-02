@@ -1,75 +1,75 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NSpace, NInput, NButton, NTag, NDivider, NCollapseItem, useMessage, NRadioGroup, NRadioButton } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
-import { KeywordMatchType } from '@/client/store/autoAction/types';
-import SingleTemplateEditor from '../SingleTemplateEditor.vue';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NButton, NCollapseItem, NDivider, NInput, NRadioButton, NRadioGroup, NSpace, NTag, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { KeywordMatchType } from '@/client/store/autoAction/types'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
-const message = useMessage();
+const message = useMessage()
 
 // 弹幕关键词相关
-const tempKeyword = ref('');
-const tempBlockword = ref('');
+const tempKeyword = ref('')
+const tempBlockword = ref('')
 
 // 初始化匹配类型配置
 if (!props.action.triggerConfig.keywordMatchType) {
-  props.action.triggerConfig.keywordMatchType = KeywordMatchType.Contains;
+  props.action.triggerConfig.keywordMatchType = KeywordMatchType.Contains
 }
 
 if (!props.action.triggerConfig.blockwordMatchType) {
-  props.action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains;
+  props.action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains
 }
 
 // 添加关键词
 function addKeyword() {
-  if (!tempKeyword.value.trim()) return;
+  if (!tempKeyword.value.trim()) return
 
   if (!props.action.triggerConfig.keywords) {
-    props.action.triggerConfig.keywords = [];
+    props.action.triggerConfig.keywords = []
   }
 
   if (!props.action.triggerConfig.keywords.includes(tempKeyword.value.trim())) {
-    props.action.triggerConfig.keywords.push(tempKeyword.value.trim());
-    tempKeyword.value = '';
+    props.action.triggerConfig.keywords.push(tempKeyword.value.trim())
+    tempKeyword.value = ''
   } else {
-    message.warning('此关键词已存在');
+    message.warning('此关键词已存在')
   }
 }
 
 // 移除关键词
 function removeKeyword(index: number) {
   if (props.action.triggerConfig.keywords) {
-    props.action.triggerConfig.keywords.splice(index, 1);
+    props.action.triggerConfig.keywords.splice(index, 1)
   }
 }
 
 // 添加屏蔽词
 function addBlockword() {
-  if (!tempBlockword.value.trim()) return;
+  if (!tempBlockword.value.trim()) return
 
   if (!props.action.triggerConfig.blockwords) {
-    props.action.triggerConfig.blockwords = [];
+    props.action.triggerConfig.blockwords = []
   }
 
   if (!props.action.triggerConfig.blockwords.includes(tempBlockword.value.trim())) {
-    props.action.triggerConfig.blockwords.push(tempBlockword.value.trim());
-    tempBlockword.value = '';
+    props.action.triggerConfig.blockwords.push(tempBlockword.value.trim())
+    tempBlockword.value = ''
   } else {
-    message.warning('此屏蔽词已存在');
+    message.warning('此屏蔽词已存在')
   }
 }
 
 // 移除屏蔽词
 function removeBlockword(index: number) {
   if (props.action.triggerConfig.blockwords) {
-    props.action.triggerConfig.blockwords.splice(index, 1);
+    props.action.triggerConfig.blockwords.splice(index, 1)
   }
 }
 
@@ -82,7 +82,7 @@ const danmakuPlaceholders = [
   { name: '{{user.medalName}}', description: '粉丝勋章名称' },
   { name: '{{message}}', description: '弹幕内容' },
   { name: '{{js: message.substring(0, 10)}}', description: '弹幕内容的前10个字符' },
-];
+]
 </script>
 
 <template>

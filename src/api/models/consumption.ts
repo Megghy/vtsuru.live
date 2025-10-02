@@ -1,16 +1,16 @@
-export enum ConsumptionTypes{
+export enum ConsumptionTypes {
   DanmakuStorage,
 }
 
 export interface IDeductionSetting {
   isEnabled: boolean
- }
+}
 export interface UserConsumptionSetting {
   danmakuStorage: DanmakuStorageDeductionSetting
 }
 export enum DeductionStorageType {
   Time,
-  Count
+  Count,
 }
 export interface DanmakuStorageDeductionSetting extends IDeductionSetting {
   storageType: DeductionStorageType

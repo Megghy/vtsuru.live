@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useAccount } from '@/api/account';
-import ScheduleList from '@/components/ScheduleList.vue';
-import { ScheduleConfigType } from '@/data/TemplateTypes';
-import { NDivider } from 'naive-ui';
-
-const accountInfo = useAccount()
+import type { ScheduleConfigType } from '@/data/TemplateTypes'
+import { NDivider } from 'naive-ui'
+import { useAccount } from '@/api/account'
+import ScheduleList from '@/components/ScheduleList.vue'
 
 defineProps<ScheduleConfigType>()
+
+const accountInfo = useAccount()
 </script>
 
 <template>

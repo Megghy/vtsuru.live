@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { UpdateFunctionEnable, useAccount } from '@/api/account'
-import { FunctionTypes, VideoCollectTable } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import { VIDEO_COLLECT_API_URL } from '@/data/constants'
-import {
+import type {
   FormRules,
+} from 'naive-ui'
+import type { VideoCollectTable } from '@/api/api-models'
+import {
   NAlert,
   NButton,
   NDatePicker,
@@ -25,6 +23,11 @@ import {
   useMessage,
 } from 'naive-ui'
 import { ref } from 'vue'
+import { UpdateFunctionEnable, useAccount } from '@/api/account'
+import { FunctionTypes } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
+import { VIDEO_COLLECT_API_URL } from '@/data/constants'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -87,12 +90,12 @@ const isLoading2 = ref(false)
 async function get() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<VideoCollectTable[]>(VIDEO_COLLECT_API_URL + 'get-all')
+    const data = await QueryGetAPI<VideoCollectTable[]>(`${VIDEO_COLLECT_API_URL}get-all`)
     if (data.code == 200) {
-      //videoTables.value = data.data
+      // videoTables.value = data.data
       return data.data
     } else {
-      message.error('获取失败: ' + data.message)
+      message.error(`获取失败: ${data.message}`)
       return []
     }
   } catch (err) {
@@ -105,7 +108,7 @@ async function get() {
 function createTable() {
   formRef.value?.validate().then(async () => {
     isLoading2.value = true
-    QueryPostAPI<VideoCollectTable>(VIDEO_COLLECT_API_URL + 'create', createVideoModel.value)
+    QueryPostAPI<VideoCollectTable>(`${VIDEO_COLLECT_API_URL}create`, createVideoModel.value)
       .then((data) => {
         if (data.code == 200) {
           videoTables.value.push(data.data)
@@ -113,7 +116,7 @@ function createTable() {
           message.success('创建成功')
           createVideoModel.value = JSON.parse(JSON.stringify(defaultModel))
         } else {
-          message.error('创建失败: ' + data.message)
+          message.error(`创建失败: ${data.message}`)
         }
       })
       .catch((err) => {

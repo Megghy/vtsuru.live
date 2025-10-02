@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { cookie, useAccount } from '@/api/account'
-import { BiliAuthCodeStatusType, BiliAuthModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import { ACCOUNT_API_URL, CN_HOST, TURNSTILE_KEY } from '@/data/constants'
+import type { BiliAuthModel } from '@/api/api-models'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
+import { useRouteQuery } from '@vueuse/router'
 import {
   NAlert,
   NButton,
@@ -26,15 +23,18 @@ import {
   NText,
   NTime,
   NTooltip,
-  useMessage
+  useMessage,
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
-import { useRouteQuery } from '@vueuse/router'
 import VueTurnstile from 'vue-turnstile'
+import { cookie, useAccount } from '@/api/account'
+import { BiliAuthCodeStatusType } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import { ACCOUNT_API_URL, CN_HOST, TURNSTILE_KEY } from '@/data/constants'
+import { checkUpdateNote } from '@/data/UpdateNote'
 import SettingPaymentView from './Setting_PaymentView.vue'
 import SettingsManageView from './SettingsManageView.vue'
-import { checkUpdateNote } from '@/data/UpdateNote'
-
 
 const token = ref('')
 const turnstile = ref()
@@ -69,7 +69,7 @@ function logout() {
 }
 function resetBili() {
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL + 'reset-bili')
+  QueryGetAPI(`${ACCOUNT_API_URL}reset-bili`)
     .then((data) => {
       if (data.code == 200) {
         message.success('已解绑 Bilibili 主播账号')
@@ -86,7 +86,7 @@ function resetBili() {
 }
 function resetBiliAuthBind() {
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL + 'reset-bili-auth')
+  QueryGetAPI(`${ACCOUNT_API_URL}reset-bili-auth`)
     .then((data) => {
       if (data.code == 200) {
         message.success('已解绑 Bilibili 用户账号')
@@ -103,10 +103,10 @@ function resetBiliAuthBind() {
 }
 function resetEmail() {
   isLoading.value = true
-  QueryGetAPI(ACCOUNT_API_URL + 'reset-email', { email: newEmailAddress.value, code: newEmailVerifyCode.value })
+  QueryGetAPI(`${ACCOUNT_API_URL}reset-email`, { email: newEmailAddress.value, code: newEmailVerifyCode.value })
     .then((data) => {
       if (data.code == 200) {
-        message.success('已将邮箱改绑为 ' + newEmailAddress.value)
+        message.success(`已将邮箱改绑为 ${newEmailAddress.value}`)
         setTimeout(() => {
           location.reload()
         }, 1000)
@@ -119,7 +119,7 @@ function resetEmail() {
     })
 }
 function sendEmailVerifyCode() {
-  QueryGetAPI(ACCOUNT_API_URL + 'reset-email/code', { email: newEmailAddress.value })
+  QueryGetAPI(`${ACCOUNT_API_URL}reset-email/code`, { email: newEmailAddress.value })
     .then((data) => {
       if (data.code == 200) {
         message.success('发送成功, 请检查目标邮箱. 如果没有收到, 请检查垃圾邮件')
@@ -140,7 +140,7 @@ async function resetPassword() {
     message.error('两次密码不一致')
     return
   }
-  await QueryGetAPI(ACCOUNT_API_URL + 'verify/reset-password', { password: newPassword.value })
+  await QueryGetAPI(`${ACCOUNT_API_URL}verify/reset-password`, { password: newPassword.value })
     .then(async (data) => {
       if (data.code == 200) {
         message.success('密码已修改')
@@ -161,7 +161,7 @@ async function resetName() {
     return
   }
   isLoading.value = true
-  await QueryGetAPI(ACCOUNT_API_URL + 'change-name', { name: newName.value })
+  await QueryGetAPI(`${ACCOUNT_API_URL}change-name`, { name: newName.value })
     .then(async (data) => {
       if (data.code == 200) {
         message.success('用户名已修改')
@@ -181,7 +181,7 @@ async function resetName() {
 }
 async function resetToken() {
   isLoading.value = true
-  await QueryPostAPI<string>(ACCOUNT_API_URL + 'reset-token')
+  await QueryPostAPI<string>(`${ACCOUNT_API_URL}reset-token`)
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已重新生成 Token')
@@ -192,7 +192,7 @@ async function resetToken() {
       }
     })
     .catch((err) => {
-      message.error('发生错误: ' + err)
+      message.error(`发生错误: ${err}`)
     })
     .finally(() => {
       isLoading.value = false
@@ -209,7 +209,7 @@ async function BindBili() {
     uid: number
     uface: string
     room_id: number
-  }>(ACCOUNT_API_URL + 'bind-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+  }>(`${ACCOUNT_API_URL}bind-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已绑定, 如无特殊情况请勿刷新身份码, 如果刷新了且还需要使用本站直播相关功能请更新身份码')
@@ -234,10 +234,10 @@ async function BindBiliAuth() {
     return
   }
   isLoading.value = true
-  await QueryGetAPI<BiliAuthModel>(ACCOUNT_API_URL + 'bind-bili-auth', { token: biliAuthText.value })
+  await QueryGetAPI<BiliAuthModel>(`${ACCOUNT_API_URL}bind-bili-auth`, { token: biliAuthText.value })
     .then(async (data) => {
       if (data.code == 200) {
-        message.success('已绑定用户: ' + data.data.userId)
+        message.success(`已绑定用户: ${data.data.userId}`)
         setTimeout(() => {
           location.reload()
         }, 1000)
@@ -263,7 +263,7 @@ async function ChangeBili() {
     uid: number
     uface: string
     room_id: number
-  }>(ACCOUNT_API_URL + 'change-bili', { code: biliCode.value }, [['Turnstile', token.value]])
+  }>(`${ACCOUNT_API_URL}change-bili`, { code: biliCode.value }, [['Turnstile', token.value]])
     .then(async (data) => {
       if (data.code == 200) {
         message.success('已更新身份码')
@@ -283,8 +283,7 @@ async function ChangeBili() {
     })
 }
 onMounted(() => {
-
-  checkUpdateNote();
+  checkUpdateNote()
 })
 onUnmounted(() => {
   turnstile.value?.remove()

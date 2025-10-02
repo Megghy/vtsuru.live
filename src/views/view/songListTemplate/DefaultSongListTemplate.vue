@@ -1,45 +1,44 @@
 <script setup lang="ts">
+import type { SongsInfo } from '@/api/api-models'
+import type { SongListConfigType } from '@/data/TemplateTypes'
+import { ChevronLeft24Filled, ChevronRight24Filled, CloudAdd20Filled } from '@vicons/fluent'
+import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
+import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
-import { SongsInfo } from '@/api/api-models'
 import SongList from '@/components/SongList.vue'
-import { SongListConfigType } from '@/data/TemplateTypes'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import LiveRequestOBS from '@/views/obs/LiveRequestOBS.vue'
 import { getSongRequestTooltip } from './utils/songRequestUtils'
-import { CloudAdd20Filled, ChevronLeft24Filled, ChevronRight24Filled } from '@vicons/fluent'
-import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip, useMessage } from 'naive-ui'
-import { h, ref, onMounted, onUnmounted } from 'vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
 
-const accountInfo = useAccount()
-const biliAuth = useBiliAuth()
-
-//所有模板都应该有这些
+// 所有模板都应该有这些
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
+const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 
 const isLoading = ref('')
 const message = useMessage()
 const songListRef = ref<InstanceType<typeof SongList> | null>(null)
 
 // 处理翻页逻辑
-const handlePrevPage = () => {
+function handlePrevPage() {
   if (songListRef.value) {
     songListRef.value.prevPage()
   }
 }
 
-const handleNextPage = () => {
+function handleNextPage() {
   if (songListRef.value) {
     songListRef.value.nextPage()
   }
 }
 
 // 键盘快捷键处理函数
-const handleKeyDown = (event: KeyboardEvent) => {
+function handleKeyDown(event: KeyboardEvent) {
   // 忽略在输入框内的按键
-  if (event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement ||
-      event.target instanceof HTMLSelectElement) {
+  if (event.target instanceof HTMLInputElement
+    || event.target instanceof HTMLTextAreaElement
+    || event.target instanceof HTMLSelectElement) {
     return
   }
 
@@ -64,36 +63,38 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
 
-const buttons = (song: SongsInfo) => [
-  accountInfo.value?.id != props.userInfo?.id
-    ? h(
-      NTooltip,
-      { trigger: 'hover' },
-      {
-        trigger: () =>
-          h(
-            NButton,
-            {
-              type: 'warning',
-              size: 'small',
-              circle: true,
-              loading: isLoading.value == song.key,
-              disabled: !accountInfo.value,
-              onClick: () => {
-                isLoading.value = song.key
-                emits('requestSong', song)
-                isLoading.value = ''
-              },
-            },
-            {
-              icon: () => h(NIcon, { component: CloudAdd20Filled }),
-            },
-          ),
-        default: () => getSongRequestTooltip(song, props.liveRequestSettings)
-      },
-    )
-    : undefined,
-]
+function buttons(song: SongsInfo) {
+  return [
+    accountInfo.value?.id != props.userInfo?.id
+      ? h(
+          NTooltip,
+          { trigger: 'hover' },
+          {
+            trigger: () =>
+              h(
+                NButton,
+                {
+                  type: 'warning',
+                  size: 'small',
+                  circle: true,
+                  loading: isLoading.value == song.key,
+                  disabled: !accountInfo.value,
+                  onClick: () => {
+                    isLoading.value = song.key
+                    emits('requestSong', song)
+                    isLoading.value = ''
+                  },
+                },
+                {
+                  icon: () => h(NIcon, { component: CloudAdd20Filled }),
+                },
+              ),
+            default: () => getSongRequestTooltip(song, props.liveRequestSettings),
+          },
+        )
+      : undefined,
+  ]
+}
 </script>
 
 <template>

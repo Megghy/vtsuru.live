@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { NSpace, NSwitch, NInputNumber, NCollapseItem } from 'naive-ui';
-import { AutoActionItem, TriggerType } from '@/client/store/useAutoAction';
+import type { AutoActionItem } from '@/client/store/useAutoAction'
+import { NCollapseItem, NInputNumber, NSpace, NSwitch } from 'naive-ui'
+import { TriggerType } from '@/client/store/useAutoAction'
 
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 </script>
 
 <template>

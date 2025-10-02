@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NDivider, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSpace, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { useDanmakuWindow } from './store/useDanmakuWindow';
-
 import {
-  ResizeTable24Filled
-} from '@vicons/fluent';
+  ResizeTable24Filled,
+} from '@vicons/fluent'
+import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NDivider, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSpace, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
-const danmakuWindow = useDanmakuWindow();
-const message = useMessage();
-const route = useRoute();
+import { useDanmakuWindow } from './store/useDanmakuWindow'
 
-const isSettingPositionMode = ref(false);
-const isLoading = ref(false);
+const danmakuWindow = useDanmakuWindow()
+const message = useMessage()
+const route = useRoute()
+
+const isSettingPositionMode = ref(false)
+const isLoading = ref(false)
 
 // 计算属性，类型映射
 const filterTypeOptions = [
@@ -21,27 +21,27 @@ const filterTypeOptions = [
   { label: '礼物', value: 'Gift' },
   { label: 'SC', value: 'SC' },
   { label: '舰长', value: 'Guard' },
-  { label: '进场', value: 'Enter' }
-];
+  { label: '进场', value: 'Enter' },
+]
 
 // 分组预设
 const presets = {
   dark: {
     backgroundColor: 'rgba(0,0,0,0.8)',
     textColor: '#ffffff',
-    shadowColor: 'rgba(0,0,0,0.7)'
+    shadowColor: 'rgba(0,0,0,0.7)',
   },
   light: {
     backgroundColor: 'rgba(255,255,255,0.8)',
     textColor: '#333333',
-    shadowColor: 'rgba(0,0,0,0.2)'
+    shadowColor: 'rgba(0,0,0,0.2)',
   },
   transparent: {
     backgroundColor: 'rgba(0,0,0,0.3)',
     textColor: '#ffffff',
-    shadowColor: 'rgba(0,0,0,0.0)'
-  }
-};
+    shadowColor: 'rgba(0,0,0,0.0)',
+  },
+}
 
 // 自动消失时间选项
 const autoDisappearOptions = [
@@ -51,29 +51,29 @@ const autoDisappearOptions = [
   { label: '1分钟', value: 60 },
   { label: '3分钟', value: 180 },
   { label: '5分钟', value: 300 },
-];
+]
 
 // 应用预设
 function applyPreset(preset: 'dark' | 'light' | 'transparent') {
-  const presetData = presets[preset];
-  danmakuWindow.danmakuWindowSetting.backgroundColor = presetData.backgroundColor;
-  danmakuWindow.danmakuWindowSetting.textColor = presetData.textColor;
-  danmakuWindow.danmakuWindowSetting.shadowColor = presetData.shadowColor;
-  message.success(`已应用${preset === 'dark' ? '暗黑' : preset === 'light' ? '明亮' : '透明'}主题预设`);
+  const presetData = presets[preset]
+  danmakuWindow.danmakuWindowSetting.backgroundColor = presetData.backgroundColor
+  danmakuWindow.danmakuWindowSetting.textColor = presetData.textColor
+  danmakuWindow.danmakuWindowSetting.shadowColor = presetData.shadowColor
+  message.success(`已应用${preset === 'dark' ? '暗黑' : preset === 'light' ? '明亮' : '透明'}主题预设`)
 }
 
 // 重置位置到屏幕中央
-  async function resetPosition() {
+async function resetPosition() {
   console.log(danmakuWindow.danmakuWindowSetting.height)
-  danmakuWindow.setDanmakuWindowPosition(0, 0);
-  message.success('窗口位置已重置');
+  danmakuWindow.setDanmakuWindowPosition(0, 0)
+  message.success('窗口位置已重置')
 }
 
 // 新增：弹幕展示风格选项
 const displayStyleOptions = [
   { label: '卡片风格', value: 'card' },
-  { label: '纯文本风格', value: 'text' }
-];
+  { label: '纯文本风格', value: 'text' },
+]
 
 // 新增：分隔符选项
 const separatorOptions = [
@@ -83,7 +83,7 @@ const separatorOptions = [
   { label: '| ', value: '| ' },
   { label: '- ', value: '- ' },
   { label: '→ ', value: '→ ' },
-];
+]
 </script>
 
 <template>
@@ -452,7 +452,7 @@ const separatorOptions = [
                     :marks="{
                       0: '不消失',
                       60: '1分钟',
-                      300: '5分钟'
+                      300: '5分钟',
                     }"
                   />
                   <NSpace justify="space-between">

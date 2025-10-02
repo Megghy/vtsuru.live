@@ -1,29 +1,25 @@
 <script setup lang="ts">
-import { NavigateToNewTab } from '@/Utils'
+import type {
+  SelectOption,
+} from 'naive-ui'
 // 移除未使用的 useAccount
-import {
+import type {
   AddressInfo,
-  GoodsTypes,
   ResponsePointGoodModel,
   ResponsePointOrder2UserModel,
   UserInfo,
 } from '@/api/api-models'
-import AddressDisplay from '@/components/manage/AddressDisplay.vue'
-import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
-import { POINT_API_URL } from '@/data/constants'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import {
   NAlert,
   NButton,
-  NCard,
   NCheckbox,
   NDivider,
   NEmpty,
   NFlex,
   NForm,
   NFormItem,
-  NGrid,
   NGi,
+  NGrid,
   NInput,
   NInputNumber,
   NModal,
@@ -32,12 +28,19 @@ import {
   NTag,
   NText,
   NTooltip,
-  SelectOption,
   useDialog,
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import {
+  GoodsTypes,
+} from '@/api/api-models'
+import AddressDisplay from '@/components/manage/AddressDisplay.vue'
+import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
+import { POINT_API_URL } from '@/data/constants'
+import { useBiliAuth } from '@/store/useBiliAuth'
+import { NavigateToNewTab } from '@/Utils'
 
 // 移除未使用的 biliInfo prop
 const props = defineProps<{
@@ -77,7 +80,7 @@ const searchKeyword = ref('') // 搜索关键词
 const addressOptions = computed(() => {
   if (!biliAuth.value.id) return []
   return (
-    biliAuth.value.address?.map((item) => ({
+    biliAuth.value.address?.map(item => ({
       label: item.address, // 使用地址作为标签
       value: item.id, // 使用地址ID作为值
     })) ?? []
@@ -90,33 +93,33 @@ const canDoBuy = computed(() => {
   // 检查积分是否足够
   const pointCheck = currentGoods.value.price * buyCount.value <= currentPoint.value
   // 如果是实物礼物且没有外部收集链接，则必须选择地址
-  const addressCheck =
-    currentGoods.value.type !== GoodsTypes.Physical ||
-    currentGoods.value.collectUrl ||
-    !!selectedAddress.value
+  const addressCheck
+    = currentGoods.value.type !== GoodsTypes.Physical
+      || currentGoods.value.collectUrl
+      || !!selectedAddress.value
   return pointCheck && addressCheck
 })
 
 // 礼物标签列表
 const tags = computed(() => {
-  return Array.from(new Set(goods.value.flatMap((g) => g.tags)))
+  return Array.from(new Set(goods.value.flatMap(g => g.tags)))
 })
 
 // 经过筛选和排序后的礼物列表
 const selectedItems = computed(() => {
   let filteredItems = goods.value
     // 标签筛选
-    .filter((item) => !selectedTag.value || item.tags.includes(selectedTag.value))
+    .filter(item => !selectedTag.value || item.tags.includes(selectedTag.value))
     // 可兑换筛选 (只显示 getTooltip 返回 '开始兑换' 的礼物)
-    .filter((item) => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
+    .filter(item => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
     // 舰长等级筛选 (只显示允许所有等级或忽略舰长限制的礼物)
-    .filter((item) => !ignoreGuard.value || item.allowGuardLevel === 0)
+    .filter(item => !ignoreGuard.value || item.allowGuardLevel === 0)
     // 关键词搜索 (匹配名称或描述)
     .filter(
-      (item) =>
-        !searchKeyword.value ||
-        item.name.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-        (item.description && item.description.toLowerCase().includes(searchKeyword.value.toLowerCase())),
+      item =>
+        !searchKeyword.value
+        || item.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+        || (item.description && item.description.toLowerCase().includes(searchKeyword.value.toLowerCase())),
     )
 
   // 应用排序方式
@@ -151,19 +154,19 @@ const selectedItems = computed(() => {
   // 无论是否有其他排序，置顶礼物始终排在前面
   return filteredItems.sort((a, b) => {
     // 先按置顶状态排序
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
+    if (a.isPinned && !b.isPinned) return -1
+    if (!a.isPinned && b.isPinned) return 1
     // 如果已有排序方式，则不再进行额外排序
-    if (sortOrder.value) return 0;
+    if (sortOrder.value) return 0
     // 默认排序逻辑
-    return 0;
+    return 0
   })
 })
 
 // 获取商品标签颜色
 function getTagColor(index: number): 'default' | 'info' | 'success' | 'warning' | 'error' | 'primary' {
-  const colors: Array<'default' | 'info' | 'success' | 'warning' | 'error' | 'primary'> = ['default', 'info', 'success', 'warning', 'error'];
-  return colors[index % colors.length];
+  const colors: Array<'default' | 'info' | 'success' | 'warning' | 'error' | 'primary'> = ['default', 'info', 'success', 'warning', 'error']
+  return colors[index % colors.length]
 }
 
 // --- 方法 ---
@@ -212,9 +215,9 @@ async function buyGoods() {
     return
   }
   if (
-    currentGoods.value?.type === GoodsTypes.Physical && // 是实物
-    !currentGoods.value.collectUrl && // 没有外部收集链接
-    !selectedAddress.value // 且没有选择地址
+    currentGoods.value?.type === GoodsTypes.Physical // 是实物
+    && !currentGoods.value.collectUrl // 没有外部收集链接
+    && !selectedAddress.value // 且没有选择地址
   ) {
     message.error('请选择收货地址')
     return
@@ -229,7 +232,7 @@ async function buyGoods() {
     onPositiveClick: async () => {
       try {
         isLoading.value = true
-        const data = await useAuth.QueryBiliAuthPostAPI<ResponsePointOrder2UserModel>(POINT_API_URL + 'buy', {
+        const data = await useAuth.QueryBiliAuthPostAPI<ResponsePointOrder2UserModel>(`${POINT_API_URL}buy`, {
           vId: props.userInfo.id,
           goodsId: currentGoods.value?.id,
           count: buyCount.value,
@@ -256,14 +259,14 @@ async function buyGoods() {
             },
           })
           // 重新获取礼物列表
-          goods.value = await useAuth.GetGoods(props.userInfo.id, message);
+          goods.value = await useAuth.GetGoods(props.userInfo.id, message)
         } else {
-          message.error('兑换失败: ' + data.message)
+          message.error(`兑换失败: ${data.message}`)
           console.error('Buy failed:', data)
         }
       } catch (err: any) {
         console.error('Buy error:', err)
-        message.error('兑换失败: ' + (err.message || err))
+        message.error(`兑换失败: ${err.message || err}`)
       } finally {
         isLoading.value = false
         // 无论成功失败，如果模态框还开着，理论上应该重置部分状态或关闭模态框
@@ -282,14 +285,14 @@ function onBuyClick(good: ResponsePointGoodModel) {
 }
 
 // 自定义渲染地址选择器的标签
-const renderLabel = (option: SelectOption) => {
-  const address = biliAuth.value.address?.find((a) => a.id === option.value)
-  return h(AddressDisplay, { address: address, size: 'small' })
+function renderLabel(option: SelectOption) {
+  const address = biliAuth.value.address?.find(a => a.id === option.value)
+  return h(AddressDisplay, { address, size: 'small' })
 }
 
 // 自定义渲染地址选择器的选项
-const renderOption = ({ option }: { node: any; option: SelectOption }) => {
-  const address = biliAuth.value.address?.find((a) => a.id === option.value)
+function renderOption({ option }: { node: any, option: SelectOption }) {
+  const address = biliAuth.value.address?.find(a => a.id === option.value)
   return h(
     NButton,
     {
@@ -302,7 +305,7 @@ const renderOption = ({ option }: { node: any; option: SelectOption }) => {
       },
     },
     // 按钮内容为地址显示组件
-    () => h(AddressDisplay, { address: address }),
+    () => h(AddressDisplay, { address }),
   )
 }
 
@@ -339,8 +342,8 @@ onMounted(async () => {
     // 获取礼物列表
     goods.value = await useAuth.GetGoods(props.userInfo.id, message)
   } catch (error) {
-    console.error("Error loading initial data:", error)
-    message.error("加载数据时出错")
+    console.error('Error loading initial data:', error)
+    message.error('加载数据时出错')
   } finally {
     isLoading.value = false // 结束加载
   }
@@ -501,7 +504,7 @@ onMounted(async () => {
                 { label: '名称 ↑', value: 'name_asc' },
                 { label: '名称 ↓', value: 'name_desc' },
                 { label: '类型', value: 'type' },
-                { label: '置顶', value: 'popular' }
+                { label: '置顶', value: 'popular' },
               ]"
               placeholder="排序方式"
               size="small"

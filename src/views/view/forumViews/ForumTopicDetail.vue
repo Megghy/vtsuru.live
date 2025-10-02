@@ -1,14 +1,7 @@
 <script setup lang="ts">
-import { getUserAvatarUrl } from '@/Utils'
-import { PaginationResponse, UserInfo } from '@/api/api-models'
-import { ForumCommentModel, ForumCommentSortTypes, ForumTopicModel } from '@/api/models/forum'
-import '@/assets/forumContentStyle.css'
-import TurnstileVerify from '@/components/TurnstileVerify.vue'
-import VEditor from '@/components/VEditor.vue'
-import { VTSURU_API_URL } from '@/data/constants'
-import { useForumStore } from '@/store/useForumStore'
+import type { PaginationResponse, UserInfo } from '@/api/api-models'
+import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import {
-  ArrowCircleLeft12Filled,
   ArrowCircleLeft12Regular,
   Comment24Regular,
   Delete24Filled,
@@ -41,16 +34,23 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAccount } from '@/api/account'
+import { ForumCommentSortTypes } from '@/api/models/forum'
+import TurnstileVerify from '@/components/TurnstileVerify.vue'
+import VEditor from '@/components/VEditor.vue'
+import { VTSURU_API_URL } from '@/data/constants'
+import router from '@/router'
+import { useForumStore } from '@/store/useForumStore'
+import { getUserAvatarUrl } from '@/Utils'
 import ForumCommentItem from './ForumCommentItem.vue'
 import ForumReplyItem from './ForumReplyItem.vue'
-import { useAccount } from '@/api/account'
-import router from '@/router'
+import '@/assets/forumContentStyle.css'
 
-type PostCommentModel = {
+interface PostCommentModel {
   content: string
   topic: number
 }
-type PostReplyModel = {
+interface PostReplyModel {
   content: string
   comment: number
   replyTo?: number
@@ -136,7 +136,7 @@ async function refreshComments() {
 }
 function onDeleteComment(id: number) {
   if (comments.value) {
-    comments.value.data = comments.value.data.filter((c) => c.id !== id)
+    comments.value.data = comments.value.data.filter(c => c.id !== id)
   }
 }
 async function delTopic(topicId: number) {
@@ -230,7 +230,7 @@ onMounted(async () => {
             :size="5"
           >
             <NAvatar
-              :src="VTSURU_API_URL + 'user-face/' + topic?.user?.id + '?size=64'"
+              :src="`${VTSURU_API_URL}user-face/${topic?.user?.id}?size=64`"
               :img-props="{ referrerpolicy: 'no-referrer' }"
             />
             <NDivider vertical />

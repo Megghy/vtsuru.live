@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { QueryGetAPI } from '@/api/query'
-import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/data/constants'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { useStorage, useBreakpoints as useVueUseBreakpoints, breakpointsTailwind } from '@vueuse/core'
+import { breakpointsTailwind, useStorage, useBreakpoints as useVueUseBreakpoints } from '@vueuse/core'
 import {
   NAlert,
   NButton,
   NCard,
   NCountdown,
-  NFlex,
   NInput,
   NInputGroup,
   NPopconfirm,
-  NSpace,
   NSpin,
   NStep,
   NSteps,
@@ -21,8 +16,11 @@ import {
 } from 'naive-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onMounted, ref } from 'vue'
+import { QueryGetAPI } from '@/api/query'
+import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/data/constants'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
-type AuthStartModel = {
+interface AuthStartModel {
   code: string
   endAt: number
   startAt: number
@@ -50,7 +48,7 @@ const timeOut = ref(false)
 const timer = ref()
 
 function onStartVerify() {
-  QueryGetAPI<AuthStartModel>(BILI_AUTH_API_URL + 'start', {
+  QueryGetAPI<AuthStartModel>(`${BILI_AUTH_API_URL}start`, {
     key: guidKey.value,
   }).then((data) => {
     if (data.code == 200) {
@@ -60,12 +58,12 @@ function onStartVerify() {
       timer.value = setInterval(checkStatus, 2500)
       startModel.value = data.data
     } else {
-      message.error('无法开启认证流程: ' + data.message)
+      message.error(`无法开启认证流程: ${data.message}`)
     }
   })
 }
 async function checkStatus() {
-  const data = await QueryGetAPI(BILI_AUTH_API_URL + 'status', {
+  const data = await QueryGetAPI(`${BILI_AUTH_API_URL}status`, {
     key: guidKey.value,
   })
   if (data.code == 201) {
@@ -203,7 +201,7 @@ onMounted(async () => {
                 <NButton
                   type="info"
                   tag="a"
-                  :href="'https://live.bilibili.com/' + startModel?.targetRoomId"
+                  :href="`https://live.bilibili.com/${startModel?.targetRoomId}`"
                   target="_blank"
                   class="live-room-button"
                   size="large"

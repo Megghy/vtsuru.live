@@ -5,16 +5,16 @@ import ClassicRequestOBS from './live-request/ClassicRequestOBS.vue'
 import FreshRequestOBS from './live-request/FreshRequestOBS.vue'
 
 const props = defineProps<{
-  id?: number,
-  active?: boolean,
-  visible?: boolean,
-  style?: 'classic' | 'fresh',
+  id?: number
+  active?: boolean
+  visible?: boolean
+  style?: 'classic' | 'fresh'
 }>()
 
 const route = useRoute()
 const currentId = computed(() => {
   const queryId = route.query.id
-  return props.id ?? (typeof queryId === 'string' ? parseInt(queryId) : undefined)
+  return props.id ?? (typeof queryId === 'string' ? Number.parseInt(queryId) : undefined)
 })
 
 // 渲染哪种样式
