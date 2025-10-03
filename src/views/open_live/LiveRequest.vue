@@ -65,10 +65,10 @@ const obsScrollSpeedMultiplierRef = ref(1)
 const volumn = useStorage('Settings.Volumn', 0.5)
 
 // 使用composable管理歌曲请求核心逻辑
-const songRequest = useLiveRequest()
+const liveRequest = useLiveRequest()
 
 // 提供activeSongs给子组件
-provide('activeSongs', songRequest.activeSongs)
+provide('activeSongs', liveRequest.activeSongs)
 
 // 控制歌曲请求功能开关
 async function onUpdateFunctionEnable() {
@@ -82,7 +82,7 @@ async function onUpdateFunctionEnable() {
       accountInfo.value.settings.enableFunctions.push(FunctionTypes.LiveRequest)
     }
     if (!accountInfo.value.settings.songRequest.orderPrefix) {
-      accountInfo.value.settings.songRequest.orderPrefix = songRequest.defaultPrefix
+      accountInfo.value.settings.songRequest.orderPrefix = liveRequest.defaultPrefix
     }
     await SaveEnableFunctions(accountInfo.value?.settings.enableFunctions)
       .then((data) => {
@@ -110,7 +110,7 @@ async function onUpdateFunctionEnable() {
 // 更新歌曲请求设置
 async function updateSettings() {
   if (accountInfo.value.id) {
-    songRequest.isLoading = true
+    liveRequest.isLoading = true
     await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
       .then((msg) => {
         if (msg) {
@@ -121,7 +121,7 @@ async function updateSettings() {
         }
       })
       .finally(() => {
-        songRequest.isLoading = false
+        liveRequest.isLoading = false
       })
   } else {
     message.success('完成')
@@ -130,26 +130,23 @@ async function updateSettings() {
 
 // 生命周期钩子
 onMounted(() => {
-  if (accountInfo.value.id) {
-    accountInfo.value.settings.songRequest = accountInfo.value.settings.songRequest
-  }
-  client.onEvent('danmaku', songRequest.onGetDanmaku)
-  client.onEvent('sc', songRequest.onGetSC)
-  songRequest.init()
+  client.onEvent('danmaku', liveRequest.onGetDanmaku)
+  client.onEvent('sc', liveRequest.onGetSC)
+  liveRequest.init()
 })
 
 onActivated(() => {
-  songRequest.init()
+  liveRequest.init()
 })
 
 onDeactivated(() => {
-  songRequest.dispose()
+  liveRequest.dispose()
 })
 
 onUnmounted(() => {
-  client.offEvent('danmaku', songRequest.onGetDanmaku)
-  client.offEvent('sc', songRequest.onGetSC)
-  songRequest.dispose()
+  client.offEvent('danmaku', liveRequest.onGetDanmaku)
+  client.offEvent('sc', liveRequest.onGetSC)
+  liveRequest.dispose()
 })
 </script>
 
@@ -206,7 +203,7 @@ onUnmounted(() => {
             OBS 组件
           </NButton>
         </template>
-        {{ songRequest.configCanEdit ? '' : '登陆后才可以使用此功能' }}
+        {{ liveRequest.configCanEdit ? '' : '登陆后才可以使用此功能' }}
       </NTooltip>
     </NSpace>
   </NCard>
@@ -224,12 +221,12 @@ onUnmounted(() => {
         <!-- 歌曲播放器 -->
         <Transition>
           <div
-            v-if="songRequest.selectedSong"
+            v-if="liveRequest.selectedSong"
             class="song-list"
           >
             <SongPlayer
-              v-model:is-lrc-loading="songRequest.isLrcLoading"
-              :song="songRequest.selectedSong"
+              v-model:is-lrc-loading="liveRequest.isLrcLoading"
+              :song="liveRequest.selectedSong"
             />
             <NDivider style="margin: 15px 0 15px 0" />
           </div>
@@ -239,12 +236,12 @@ onUnmounted(() => {
         <SongRequestList
           @update:sort-type="(value: any) => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
           @update:is-reverse="(value: any) => {
-            if (songRequest.configCanEdit) {
+            if (liveRequest.configCanEdit) {
               accountInfo.settings.songRequest.isReverse = value
               updateSettings()
             }
             else {
-              songRequest.isReverse = value
+              liveRequest.isReverse = value
             }
           }"
         />
