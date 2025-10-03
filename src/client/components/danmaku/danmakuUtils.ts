@@ -92,6 +92,7 @@ export function useDanmakuUtils(
       case EventDataTypes.SC: return `sc-item ${scColorClass.value}`
       case EventDataTypes.Guard: return 'guard-item'
       case EventDataTypes.Enter: return 'enter-item'
+      case EventDataTypes.Like: return 'like-item'
       default: return ''
     }
   })
@@ -171,6 +172,7 @@ export function useDanmakuUtils(
       case EventDataTypes.SC: return '【SC】'
       case EventDataTypes.Guard: return '【舰长】'
       case EventDataTypes.Enter: return '【进场】'
+      case EventDataTypes.Like: return '【点赞】'
       default: return ''
     }
   })
@@ -202,6 +204,8 @@ export function useDanmakuUtils(
         return props.item.msg || '开通了舰长'
       case EventDataTypes.Enter:
         return '进入了直播间'
+      case EventDataTypes.Like:
+        return '点赞了'
       default:
         return ''
     }
@@ -217,6 +221,8 @@ export function useDanmakuUtils(
       return guardColor.value // 舰长消息使用舰长颜色
     } else if (props.item.type === EventDataTypes.Enter) {
       return '#67C23A' // 入场消息绿色
+    } else if (props.item.type === EventDataTypes.Like) {
+      return '#F56C6C' // 点赞消息红色
     }
     return undefined // 普通消息使用默认颜色
   })
