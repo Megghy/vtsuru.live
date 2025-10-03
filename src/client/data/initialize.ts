@@ -39,7 +39,7 @@ async function sendHeartbeat() {
   }
 }
 
-function startHeartbeat() {
+export function startHeartbeat() {
   // 立即发送一次，确保后端在加载后快速收到心跳
   void sendHeartbeat()
 
@@ -50,7 +50,7 @@ function startHeartbeat() {
   info('[心跳] 定时器已启动，间隔 2 秒')
 }
 
-function stopHeartbeat() {
+export function stopHeartbeat() {
   if (heartbeatTimer !== null) {
     clearInterval(heartbeatTimer)
     heartbeatTimer = null
@@ -179,7 +179,7 @@ export async function initAll(isOnBoot: boolean) {
   useAutoAction().init()
   useBiliFunction().init()
 
-  startHeartbeat()
+  //startHeartbeat()
   clientInited.value = true
 }
 export function OnClientUnmounted() {

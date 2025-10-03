@@ -1,4 +1,4 @@
-import type { KeepLiveWS } from 'bilibili-live-ws/browser' // 导入 bilibili-live-ws 库
+import { LiveWS } from "bilibili-live-danmaku";
 // BaseDanmakuClient.ts
 import type { EventModel } from '@/api/api-models'
 // 导入事件模型和类型枚举
@@ -13,7 +13,7 @@ export default abstract class BaseDanmakuClient {
   }
 
   // WebSocket 客户端实例
-  public client: KeepLiveWS | null
+  public client: LiveWS | null
 
   // 客户端连接状态
   public state: 'padding' | 'connected' | 'connecting' | 'disconnected'
@@ -35,6 +35,7 @@ export default abstract class BaseDanmakuClient {
     scDel: ((arg1: EventModel, arg2?: any) => void)[] // 新增: SC 删除事件
     all: ((arg1: any) => void)[] // 'all' 事件监听器接收原始消息或特定事件包
     follow: ((arg1: EventModel, arg2?: any) => void)[] // 新增: 关注事件
+    like: ((arg1: EventModel, arg2?: any) => void)[] // 新增: 点赞事件
   }
 
   // --- 事件系统 2: 使用原始数据类型 ---
@@ -48,6 +49,7 @@ export default abstract class BaseDanmakuClient {
     scDel: ((arg1: any, arg2?: any) => void)[] // 新增: SC 删除事件
     all: ((arg1: any) => void)[] // 'all' 事件监听器接收原始消息或特定事件包
     follow: ((arg1: any, arg2?: any) => void)[] // 新增: 关注事件
+    like: ((arg1: any, arg2?: any) => void)[] // 新增: 点赞事件
   }
 
   // 创建空的 EventModel 监听器对象
@@ -61,6 +63,7 @@ export default abstract class BaseDanmakuClient {
       scDel: [],
       all: [],
       follow: [], // 初始化 follow 事件
+      like: [],
     }
   }
 
@@ -75,6 +78,7 @@ export default abstract class BaseDanmakuClient {
       scDel: [],
       all: [],
       follow: [], // 初始化 follow 事件
+      like: [],
     }
   }
 
@@ -178,27 +182,27 @@ export default abstract class BaseDanmakuClient {
    * @returns Promise<{ success: boolean; message: string }> 连接结果
    */
   protected async initClientInner(
-    chatClient: KeepLiveWS,
+    chatClient: LiveWS,
   ): Promise<{ success: boolean, message: string }> {
     let isConnected = false // 标记是否连接成功
     let isError = false // 标记是否发生错误
     let errorMsg = '' // 存储错误信息
 
     // 监听错误事件
-    chatClient.on('error', (err: any) => {
+    chatClient.addEventListener('error', (err: any) => {
       console.error(`[${this.type}] 客户端发生错误:`, err)
       isError = true
       errorMsg = err?.message || err?.toString() || '未知错误'
     })
 
     // 监听连接成功事件
-    chatClient.on('live', () => {
+    chatClient.addEventListener('CONNECT_SUCCESS', () => {
       console.log(`[${this.type}] 弹幕客户端连接成功`)
       isConnected = true
     })
 
     // 监听连接关闭事件
-    chatClient.on('close', () => {
+    chatClient.addEventListener('close', () => {
       console.log(`[${this.type}] 弹幕客户端连接已关闭`)
       if (this.state !== 'disconnected') {
         this.state = 'disconnected'
@@ -209,7 +213,7 @@ export default abstract class BaseDanmakuClient {
 
     // 监听原始消息事件 (通用)
     // 注意: 子类可能也会监听特定事件名, 这里的 'msg' 是备用或处理未被特定监听器捕获的事件
-    chatClient.on('msg', (command: any) => this.onRawMessage(command))
+    chatClient.addEventListener('MESSAGE', (command: any) => this.onRawMessage(command.data))
 
     this.client = chatClient // 保存客户端实例
 
@@ -301,6 +305,12 @@ export default abstract class BaseDanmakuClient {
    * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
    */
   public abstract onScDel(comand: any): void
+  /**
+   * 处理点赞消息 (子类实现)
+   * @param data - 原始消息数据部分 (any 类型)
+   * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
+   */
+  public abstract onLike(comand: any): void
 
   // --- 事件系统 1: on/off (使用 EventModel) ---
   public onEvent(eventName: 'danmaku', listener: (arg1: EventModel, arg2?: any) => void): this
@@ -311,6 +321,7 @@ export default abstract class BaseDanmakuClient {
   public onEvent(eventName: 'scDel', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
   public onEvent(eventName: 'all', listener: (arg1: any) => void): this
   public onEvent(eventName: 'follow', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
+  public onEvent(eventName: 'like', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
   public onEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: (...args: any[]) => void): this {
     if (!this.eventsAsModel[eventName]) {
       // @ts-ignore
@@ -342,6 +353,7 @@ export default abstract class BaseDanmakuClient {
   public on(eventName: 'scDel', listener: (arg1: any, arg2?: any) => void): this // 新增
   public on(eventName: 'all', listener: (arg1: any) => void): this
   public on(eventName: 'follow', listener: (arg1: any, arg2?: any) => void): this // 新增
+  public on(eventName: 'like', listener: (arg1: any, arg2?: any) => void): this // 新增
   public on(eventName: keyof BaseDanmakuClient['eventsRaw'], listener: (...args: any[]) => void): this {
     if (!this.eventsRaw[eventName]) {
       // @ts-ignore

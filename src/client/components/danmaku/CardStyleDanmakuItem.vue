@@ -133,6 +133,9 @@ const {
         <template v-if="item.type === EventDataTypes.Enter">
           <span class="enter-badge">进入了直播间</span>
         </template>
+        <template v-else-if="item.type === EventDataTypes.Like">
+          <span class="like-badge">❤️ 点赞了</span>
+        </template>
       </div>
       <div
         v-if="item.type === EventDataTypes.Message && (item?.msg || parsedMessage.length > 0 || item.emoji)"
@@ -449,5 +452,16 @@ const {
     color: var(--dw-text-color);
     word-break: break-all;
     white-space: normal;
+  }
+
+  .like-badge {
+    color: #F56C6C;
+    font-size: 0.85em;
+    font-weight: 500;
+    padding: 1px 6px;
+    background-color: rgba(245, 108, 108, 0.1);
+    border-radius: 4px;
+    margin-left: auto;
+    white-space: nowrap;
   }
 </style>

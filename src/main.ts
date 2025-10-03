@@ -5,6 +5,8 @@ import App from './App.vue'
 import { InitVTsuru } from './data/Initializer'
 import emitter from './mitt'
 import router from './router'
+import { isTauri } from './data/constants'
+import { startHeartbeat } from './client/data/initialize'
 
 loader.config({
   'paths': {
@@ -24,5 +26,8 @@ const app = createApp(App)
 app.use(router).use(pinia).mount('#app')
 
 InitVTsuru()
+if (isTauri()) {
+  startHeartbeat();
+}
 
 window.$mitt = emitter

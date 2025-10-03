@@ -50,6 +50,7 @@ import {
   NAlert,
   NButton,
   NCard,
+  NDataTable,
   NDescriptions,
   NDescriptionsItem,
   NDivider,
@@ -65,7 +66,6 @@ import {
   NQrCode,
   NRadioButton,
   NRadioGroup,
-  NScrollbar,
   NSpin,
   NStatistic,
   NTabPane,
@@ -75,7 +75,8 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import type { DataTableColumns } from 'naive-ui'
+import { computed, h, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -237,6 +238,60 @@ const sortedTodayTypes = computed(() => {
   return Object.entries(currentStatistic.value.eventTypeCounts)
     .sort(([, countA], [, countB]) => countB - countA)
 })
+
+type TodayTypeRow = {
+  key: string
+  rank: number
+  type: string
+  count: number
+}
+
+const todayTypeColumns: DataTableColumns<TodayTypeRow> = [
+  {
+    title: '排名',
+    key: 'rank',
+    align: 'center',
+    width: 72,
+  },
+  {
+    title: '类型',
+    key: 'type',
+    minWidth: 160,
+    ellipsis: {
+      tooltip: true,
+    },
+    render: row => h(
+      NTag,
+      {
+        size: 'small',
+        type: 'info',
+        bordered: false,
+        style: 'max-width: 100%; justify-content: flex-start;',
+      },
+      {
+        default: () => row.type,
+      },
+    ),
+  },
+  {
+    title: '事件数',
+    key: 'count',
+    align: 'right',
+    width: 120,
+    render: row => row.count.toLocaleString(),
+  },
+]
+
+const todayTypeTableData = computed<TodayTypeRow[]>(() => {
+  return sortedTodayTypes.value.map(([type, count], index) => ({
+    key: type,
+    rank: index + 1,
+    type,
+    count,
+  }))
+})
+
+const todayTypeRowKey = (row: TodayTypeRow) => row.key
 
 // Login Status (Computed from original snippet)
 const loginStatusString = computed(() => {
@@ -1039,6 +1094,7 @@ onUnmounted(() => {
                 <VChart
                   ref="gaugeChart"
                   :option="gaugeOption"
+                  :manual-update="true"
                   autoresize
                 />
               </div>
@@ -1055,6 +1111,7 @@ onUnmounted(() => {
                 <VChart
                   ref="typeDistributionChart"
                   :option="typeDistributionOption"
+                  :manual-update="true"
                   autoresize
                 />
               </div>
@@ -1123,36 +1180,26 @@ onUnmounted(() => {
             <NText strong>
               类型明细:
             </NText>
-            <NScrollbar style="max-height: 200px; margin-top: 8px;">
-              <div v-if="sortedTodayTypes.length > 0">
-                <NFlex
-                  vertical
-                  spacing="small"
-                >
-                  <NFlex
-                    v-for="[type, count] in sortedTodayTypes"
-                    :key="type"
-                    justify="space-between"
-                    align="center"
-                  >
-                    <NTag
-                      size="small"
-                      :bordered="false"
-                      type="info"
-                      style="max-width: 70%;"
-                    >
-                      <NEllipsis>{{ type }}</NEllipsis>
-                    </NTag>
-                    <NText>{{ count.toLocaleString() }}</NText>
-                  </NFlex>
-                </NFlex>
-              </div>
+            <div style="margin-top: 8px;">
+              <NDataTable
+                v-if="todayTypeTableData.length > 0"
+                :columns="todayTypeColumns"
+                :data="todayTypeTableData"
+                :row-key="todayTypeRowKey"
+                size="small"
+                :bordered="false"
+                striped
+                :pagination="false"
+                :max-height="220"
+                single-line
+                :scrollbar-props="{ size: 6 }"
+              />
               <NEmpty
                 v-else
                 description="今日暂无数据"
                 size="small"
               />
-            </NScrollbar>
+            </div>
           </NGi>
         </NGrid>
       </div>
@@ -1174,6 +1221,7 @@ onUnmounted(() => {
             v-if="historicalData.length > 0"
             ref="historyChart"
             :option="historyOption"
+            :manual-update="true"
             autoresize
           />
           <NEmpty

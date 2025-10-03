@@ -143,23 +143,7 @@ export function recordEvent(eventType: string) {
  * (需要根据实际接收到的数据结构调整)
  */
 export function getEventType(command: any): string {
-  if (typeof command === 'string') {
-    try {
-      command = JSON.parse(command)
-    } catch (e) {
-      return 'UNKNOWN_FORMAT'
-    }
-  }
-
-  if (command && typeof command === 'object') {
-    // 优先使用 'cmd' 字段 (常见于 Web 或 OpenLive)
-    if (command.cmd) return command.cmd
-    // 备选 'command' 字段
-    if (command.command) return command.command
-    // 备选 'type' 字段
-    if (command.type) return command.type
-  }
-  return 'UNKNOWN' // 未知类型
+  return command.cmd
 }
 
 /**

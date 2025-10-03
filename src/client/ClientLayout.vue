@@ -19,6 +19,7 @@ import { initAll, OnClientUnmounted } from './data/initialize'
 import { useDanmakuWindow } from './store/useDanmakuWindow'
 // 引入子组件
 import WindowBar from './WindowBar.vue'
+import { BASE_URL } from '@/data/constants'
 
 // --- 响应式状态 ---
 
@@ -166,7 +167,7 @@ onMounted(() => {
               <template #trigger>
                 <NA
                   class="token-get-link"
-                  @click="openUrl('https://vtsuru.suki.club/manage')"
+                  @click="openUrl(`https://${BASE_URL}/manage`)"
                 >
                   前往获取
                 </NA>

@@ -1,5 +1,5 @@
 import type { OpenLiveInfo } from '@/api/api-models'
-import { KeepLiveWS } from 'bilibili-live-ws/browser'
+import { LiveWS } from 'bilibili-live-danmaku'
 import { clearInterval, setInterval } from 'worker-timers'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
@@ -41,17 +41,35 @@ export default class OpenLiveClient extends BaseDanmakuClient {
   protected async initClient(): Promise<{ success: boolean, message: string }> {
     const auth = await this.getAuthInfo()
     if (auth.data) {
-      const chatClient = new KeepLiveWS(auth.data.anchor_info.room_id, {
+      const chatClient = new LiveWS(auth.data.anchor_info.room_id, {
         authBody: JSON.parse(auth.data.websocket_info.auth_body),
         address: auth.data.websocket_info.wss_link[0],
       })
-      chatClient.on('LIVE_OPEN_PLATFORM_DM', cmd => this.onDanmaku(cmd))
-      chatClient.on('LIVE_OPEN_PLATFORM_GIFT', cmd => this.onGift(cmd))
-      chatClient.on('LIVE_OPEN_PLATFORM_GUARD', cmd => this.onGuard(cmd))
-      chatClient.on('LIVE_OPEN_PLATFORM_SC', cmd => this.onSC(cmd))
-      chatClient.on('LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER', cmd => this.onEnter(cmd))
-      chatClient.on('LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL', cmd => this.onScDel(cmd))
-      chatClient.on('live', () => {
+      chatClient.addEventListener('MESSAGE', cmd => {
+        switch (cmd.data.cmd as string) {
+          case 'LIVE_OPEN_PLATFORM_DM':
+            this.onDanmaku(cmd.data)
+            break
+          case 'LIVE_OPEN_PLATFORM_GIFT':
+            this.onGift(cmd.data)
+            break
+          case 'LIVE_OPEN_PLATFORM_GUARD':
+            this.onGuard(cmd.data)
+            break
+          case 'LIVE_OPEN_PLATFORM_SC':
+            this.onSC(cmd.data)
+            break
+          case 'LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER':
+            this.onEnter(cmd.data)
+            break
+          case 'LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL':
+            this.onScDel(cmd.data)
+            break
+          default:
+            break
+        }
+      })
+      chatClient.addEventListener('CONNECT_SUCCESS', () => {
         console.log(
           `[${this.type}] 已连接房间: ${auth.data?.anchor_info.room_id}`,
         )
@@ -268,6 +286,10 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         command,
       )
     })
+  }
+
+  public onLike(_command: any): void {
+    // OpenLiveClient does not support like events
   }
 
   public onScDel(command: any): void {

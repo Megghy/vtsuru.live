@@ -22,6 +22,7 @@ const filterTypeOptions = [
   { label: 'SC', value: 'SC' },
   { label: '舰长', value: 'Guard' },
   { label: '进场', value: 'Enter' },
+  { label: '点赞', value: 'Like' },
 ]
 
 // 分组预设
@@ -211,8 +212,6 @@ const separatorOptions = [
               <NGi>
                 <NFormItem label="背景颜色">
                   <NColorPicker
-                    v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
-                    :show-alpha="true"
                   />
                 </NFormItem>
               </NGi>

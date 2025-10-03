@@ -1,8 +1,9 @@
-import { KeepLiveWS } from 'bilibili-live-ws/browser'
+import { DataEvent, LiveWS, MessageData } from 'bilibili-live-danmaku'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { GuidUtils } from '@/Utils'
 import { AVATAR_URL } from '../constants'
 import BaseDanmakuClient from './BaseDanmakuClient'
+import Long from 'long'
 
 export interface DirectClientAuthInfo {
   token: string
@@ -28,22 +29,34 @@ export default class DirectClient extends BaseDanmakuClient {
 
   protected async initClient(): Promise<{ success: boolean, message: string }> {
     if (this.authInfo) {
-      const chatClient = new KeepLiveWS(this.authInfo.roomId, {
+      const chatClient = new LiveWS(this.authInfo.roomId, {
         key: this.authInfo.token,
         buvid: this.authInfo.buvid,
         uid: this.authInfo.tokenUserId,
         protover: 3,
       })
 
-      chatClient.on('live', () => {
+      chatClient.addEventListener('CONNECT_SUCCESS', () => {
         console.log(`[direct] 已连接房间: ${this.authInfo.roomId}`)
       })
-      chatClient.on('DANMU_MSG', data => this.onDanmaku(data))
-      chatClient.on('SEND_GIFT', data => this.onGift(data))
-      chatClient.on('GUARD_BUY', data => this.onGuard(data))
-      chatClient.on('SUPER_CHAT_MESSAGE', data => this.onSC(data))
-      chatClient.on('INTERACT_WORD', data => this.onEnter(data))
-      chatClient.on('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
+      chatClient.addEventListener('DANMU_MSG', data => this.onDanmaku(data.data))
+      chatClient.addEventListener('SEND_GIFT', data => this.onGift(data.data))
+      chatClient.addEventListener('GUARD_BUY', data => this.onGuard(data.data))
+      chatClient.addEventListener('SUPER_CHAT_MESSAGE', data => this.onSC(data.data))
+      //chatClient.addEventListener('INTERACT_WORD', data => this.onEnter(data.data))
+      chatClient.addEventListener('MESSAGE', data => {
+        switch (data.data.cmd) {
+          case 'INTERACT_WORD_V2':
+            this.onEnter(data.data)
+            break
+          case 'LIKE_INFO_V3_CLICK':
+            this.onLike(data.data)
+            break
+          default:
+            break
+        }
+      })
+      //chatClient.addEventListener('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
 
       return super.initClientInner(chatClient)
     } else {
@@ -55,7 +68,7 @@ export default class DirectClient extends BaseDanmakuClient {
     }
   }
 
-  public onDanmaku(command: any): void {
+  public onDanmaku(command: MessageData.DANMU_MSG): void {
     const info = command.info
     this.eventsRaw?.danmaku?.forEach((d) => {
       d(info, command)
@@ -84,7 +97,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onGift(command: any): void {
+  public onGift(command: MessageData.SEND_GIFT): void {
     const data = command.data
     this.eventsRaw?.gift?.forEach((d) => {
       d(data, command)
@@ -96,13 +109,13 @@ export default class DirectClient extends BaseDanmakuClient {
           uname: data.uname,
           uid: data.uid,
           msg: data.giftName,
-          price: data.price / 1000,
+          price: data.total_coin / 1000,
           num: data.num,
           time: Date.now(),
           guard_level: data.guard_level,
-          fans_medal_level: data.medal_info.medal_level,
-          fans_medal_name: data.medal_info.medal_name,
-          fans_medal_wearing_status: data.medal_info.is_lighted === 1,
+          fans_medal_level: data.fans_medal?.medal_level,
+          fans_medal_name: data.fans_medal?.medal_name,
+          fans_medal_wearing_status: data.fans_medal !== null || data.fans_medal !== undefined,
           uface: data.face.replace('http://', 'https://'),
           open_id: '',
           ouid: GuidUtils.numToGuid(data.uid),
@@ -112,7 +125,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onSC(command: any): void {
+  public onSC(command: MessageData.SUPER_CHAT_MESSAGE): void {
     const data = command.data
     this.eventsRaw?.sc?.forEach((d) => {
       d(data, command)
@@ -130,7 +143,7 @@ export default class DirectClient extends BaseDanmakuClient {
           guard_level: data.user_info.guard_level,
           fans_medal_level: data.medal_info.medal_level,
           fans_medal_name: data.medal_info.medal_name,
-          fans_medal_wearing_status: data.medal_info.is_lighted === 1,
+          fans_medal_wearing_status: data.medal_info !== null || data.medal_info !== undefined,
           uface: data.user_info.face.replace('http://', 'https://'),
           open_id: '',
           ouid: GuidUtils.numToGuid(data.uid),
@@ -140,7 +153,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onGuard(command: any): void {
+  public onGuard(command: MessageData.GUARD_BUY): void {
     const data = command.data
     this.eventsRaw?.guard?.forEach((d) => {
       d(data, command)
@@ -168,9 +181,9 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onEnter(command: any): void {
-    const data = command.data
-    const msgType = data.msg_type
+  public onEnter(command: MessageData.INTERACT_WORD_V2): void {
+    const data = command.decoded
+    const msgType = data?.msgType
 
     if (msgType === 1) {
       this.eventsRaw?.enter?.forEach((d) => {
@@ -180,19 +193,19 @@ export default class DirectClient extends BaseDanmakuClient {
         d(
           {
             type: EventDataTypes.Enter,
-            uname: data.uname,
-            uid: data.uid,
+            uname: data?.uname || '',
+            uid: this.convertToNumber(data?.uid) || 0,
             msg: '',
             price: 0,
             num: 1,
-            time: data.timestamp ? data.timestamp * 1000 : Date.now(),
-            guard_level: data.privilege_type || GuardLevel.None,
-            fans_medal_level: data.fans_medal?.medal_level || 0,
-            fans_medal_name: data.fans_medal?.medal_name || '',
-            fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-            uface: data.face?.replace('http://', 'https://') || (AVATAR_URL + data.uid),
+            time: data?.timestamp ? this.convertToNumber(data.timestamp) * 1000 : Date.now(),
+            guard_level: this.convertToNumber(data?.privilegeType) || GuardLevel.None,
+            fans_medal_level: this.convertToNumber(data?.fansMedal?.medalLevel) || 0,
+            fans_medal_name: data?.fansMedal?.medalName || '',
+            fans_medal_wearing_status: data?.fansMedal?.isLighted === 1,
+            uface: data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') || (AVATAR_URL + this.convertToNumber(data?.uid)),
             open_id: '',
-            ouid: GuidUtils.numToGuid(data.uid),
+            ouid: GuidUtils.numToGuid(this.convertToNumber(data?.uid)),
           },
           command,
         )
@@ -205,24 +218,59 @@ export default class DirectClient extends BaseDanmakuClient {
         d(
           {
             type: EventDataTypes.Follow,
-            uname: data.uname,
-            uid: data.uid,
+            uname: data?.uname || '',
+            uid: this.convertToNumber(data?.uid),
             msg: '关注了主播',
             price: 0,
             num: 1,
-            time: data.timestamp ? data.timestamp * 1000 : Date.now(),
-            guard_level: data.privilege_type || GuardLevel.None,
-            fans_medal_level: data.fans_medal?.medal_level || 0,
-            fans_medal_name: data.fans_medal?.medal_name || '',
-            fans_medal_wearing_status: data.fans_medal?.is_lighted === 1,
-            uface: data.face?.replace('http://', 'https://') || (AVATAR_URL + data.uid),
+            time: data?.timestamp ? this.convertToNumber(data.timestamp) * 1000 : Date.now(),
+            guard_level: this.convertToNumber(data?.privilegeType) || GuardLevel.None,
+            fans_medal_level: this.convertToNumber(data?.fansMedal?.medalLevel) || 0,
+            fans_medal_name: data?.fansMedal?.medalName || '',
+            fans_medal_wearing_status: data?.fansMedal?.isLighted === 1,
+            uface: data?.uinfo?.uheadFrame?.frameImg?.replace('http://', 'https://') || (AVATAR_URL + data?.uid),
             open_id: '',
-            ouid: GuidUtils.numToGuid(data.uid),
+            ouid: GuidUtils.numToGuid(this.convertToNumber(data?.uid)),
           },
           command,
         )
       })
     }
+  }
+
+  convertToNumber(value: number | Long | null | undefined): number {
+    if (value instanceof Long) {
+      return value.toNumber()
+    }
+    return value || 0
+  }
+
+  public onLike(command: any): void {
+    const data = command.data
+    this.eventsRaw?.like?.forEach((d) => {
+      d(data, command)
+    })
+    this.eventsAsModel.like?.forEach((d) => {
+      d(
+        {
+          type: EventDataTypes.Like,
+          uname: data.uname,
+          uid: data.uid,
+          msg: '为直播间点赞',
+          price: 0,
+          num: 1,
+          time: Date.now(),
+          guard_level: 0,
+          fans_medal_level: data.medal_info?.medal_level ?? 0,
+          fans_medal_name: data.medal_info?.medal_name ?? '',
+          fans_medal_wearing_status: data.medal_info?.is_lighted === 1,
+          uface: data.uface.replace('http://', 'https://'),
+          open_id: '',
+          ouid: GuidUtils.numToGuid(data.uid),
+        },
+        command,
+      )
+    })
   }
 
   public onScDel(command: any): void {
