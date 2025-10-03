@@ -314,7 +314,7 @@ async function add(danmaku: EventModel) {
       } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
-      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max(s => s.id) + 1, // 本地 ID
+      id: localQueues.value.length == 0 ? 1 : (new List(localQueues.value).Max(s => s.id) ?? 0) + 1, // 本地 ID
     } as ResponseQueueModel
     localQueues.value.unshift(songData) // 添加到本地队列开头
     message.success(`[${danmaku.uname}] 添加至本地队列`)
@@ -352,7 +352,7 @@ async function addManual() {
       user: { name: newQueueName.value } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
-      id: localQueues.value.length == 0 ? 1 : new List(localQueues.value).Max(s => s.id) + 1,
+      id: localQueues.value.length == 0 ? 1 : (new List(localQueues.value).Max(s => s.id) ?? 0) + 1,
     } as ResponseQueueModel
     localQueues.value.unshift(songData)
     message.success(`已手动添加用户至队列: ${newQueueName.value}`)

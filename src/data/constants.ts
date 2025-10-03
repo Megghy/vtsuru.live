@@ -5,7 +5,7 @@ const debugAPI
   = import.meta.env.VITE_API == 'dev'
     ? import.meta.env.VITE_DEBUG_DEV_API
     : import.meta.env.VITE_DEBUG_RELEASE_API
-const releseAPI = `https://vtsuru.suki.club/`
+const releseAPI = `https://api.vtsuru.suki.club/`
 const failoverAPI = `https://failover-api.vtsuru.suki.club/`
 
 export const isBackendUsable = ref(true)

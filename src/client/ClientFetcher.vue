@@ -1,3 +1,4 @@
+// oxlint-disable no-unused-expressions
 <script setup lang="ts">
 import type { FetcherStatisticData } from './data/models'
 
@@ -169,7 +170,6 @@ async function setCookieCloud() {
 let uptimeTimer: number | undefined
 let epsTimer: number | undefined
 let lastEventCount = 0
-let networkPollTimer: number | undefined
 
 // --- Computed Properties ---
 const isConnected = computed(() => webfetcher.state === 'connected')
@@ -544,7 +544,6 @@ onMounted(async () => {
 onUnmounted(() => {
   clearInterval(uptimeTimer)
   clearInterval(epsTimer)
-  clearInterval(networkPollTimer)
   // Clean up login timers if component unmounts during login
   clearInterval(timer.value)
   clearTimeout(expiredTimer.value)
