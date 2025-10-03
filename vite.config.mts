@@ -101,7 +101,7 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: 'esnext',
-    minify: 'esbuild',
+    minify: 'oxc',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: { // @ts-ignore
@@ -111,13 +111,11 @@ export default defineConfig({
               name: 'vue-vendor',
               test: /[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/,
               priority: -10,
-              enforce: true,
             },
             {
               name: 'ui-vendor',
               test: /[\\/]node_modules[\\/](naive-ui|@vueuse[\\/]core)[\\/]/,
               priority: -10,
-              enforce: true,
             },
           ],
         },
