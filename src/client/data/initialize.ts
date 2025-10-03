@@ -29,6 +29,35 @@ const accountInfo = useAccount()
 
 export const clientInited = ref(false)
 let tray: TrayIcon
+let heartbeatTimer: number | null = null
+
+async function sendHeartbeat() {
+  try {
+    await invoke('heartbeat')
+  } catch (error) {
+    console.error('发送心跳失败:', error)
+  }
+}
+
+function startHeartbeat() {
+  // 立即发送一次，确保后端在加载后快速收到心跳
+  void sendHeartbeat()
+
+  // 之后每 5 秒发送一次心跳（后端超时时间为 15 秒）
+  heartbeatTimer = window.setInterval(() => {
+    void sendHeartbeat()
+  }, 2000)
+  info('[心跳] 定时器已启动，间隔 2 秒')
+}
+
+function stopHeartbeat() {
+  if (heartbeatTimer !== null) {
+    clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+    info('[心跳] 定时器已停止')
+  }
+}
+
 export async function initAll(isOnBoot: boolean) {
   const setting = useSettings()
   if (clientInited.value) {
@@ -150,6 +179,7 @@ export async function initAll(isOnBoot: boolean) {
   useAutoAction().init()
   useBiliFunction().init()
 
+  startHeartbeat()
   clientInited.value = true
 }
 export function OnClientUnmounted() {
@@ -157,6 +187,7 @@ export function OnClientUnmounted() {
     clientInited.value = false
   }
 
+  stopHeartbeat()
   tray.close()
   // useDanmakuWindow().closeWindow();
 }
