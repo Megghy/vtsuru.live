@@ -124,13 +124,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 1600, // 调整警告阈值，gamepad-assets 会比较大
     cssCodeSplit: true,
     cssMinify: 'lightningcss',
-    // 报告压缩后的文件大小
-    reportCompressedSize: true,
-    // 优化模块预加载策略
-    modulePreload: {
-      polyfill: true,
-    },
-    // 静态资源内联阈值（小于此大小的资源会被内联为 base64）
     assetsInlineLimit: 4096, // 4KB，默认值，可根据需要调整
     rollupOptions: {
       output: {
@@ -235,23 +228,6 @@ export default defineConfig({
               },
             },
           ],
-        },
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: (assetInfo: any) => {
-          // 根据资源类型分类存放
-          const info = assetInfo.name?.split('.') ?? []
-          const ext = info[info.length - 1]
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
-            return 'assets/images/[name]-[hash][extname]'
-          }
-          if (/woff2?|ttf|otf|eot/i.test(ext)) {
-            return 'assets/fonts/[name]-[hash][extname]'
-          }
-          if (/css/i.test(ext)) {
-            return 'assets/css/[name]-[hash][extname]'
-          }
-          return 'assets/[ext]/[name]-[hash][extname]'
         },
       },
     },
