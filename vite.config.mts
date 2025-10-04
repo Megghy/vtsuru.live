@@ -138,25 +138,18 @@ export default defineConfig({
           groups: [
             {
               name: (id: string) => {
-                // 核心框架
-                if (id.includes('node_modules/vue/') || id.includes('node_modules/@vue/')) {
-                  return 'vue-core'
-                }
-                if (id.includes('node_modules/vue-router/')) {
-                  return 'vue-router'
-                }
-                if (id.includes('node_modules/pinia/')) {
-                  return 'pinia'
+                // 核心框架 - Vue 全家桶保持在一起，避免循环依赖
+                if (id.includes('node_modules/vue/') || 
+                    id.includes('node_modules/@vue/') ||
+                    id.includes('node_modules/vue-router/') ||
+                    id.includes('node_modules/pinia/') ||
+                    id.includes('node_modules/@vueuse/')) {
+                  return 'vue-vendor'
                 }
 
                 // UI 框架及相关
                 if (id.includes('node_modules/naive-ui/') || id.includes('node_modules/vueuc/')) {
                   return 'naive-ui'
-                }
-
-                // VueUse 系列
-                if (id.includes('node_modules/@vueuse/')) {
-                  return 'vueuse'
                 }
 
                 // 图标库
