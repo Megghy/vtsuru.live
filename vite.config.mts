@@ -132,13 +132,13 @@ export default defineConfig({
             {
               name: (id: string) => {
                 // 核心框架 - Vue 全家桶保持在一起，避免循环依赖
-                if (id.includes('node_modules/vue/') || 
+                /*if (id.includes('node_modules/vue/') || 
                     id.includes('node_modules/@vue/') ||
                     id.includes('node_modules/vue-router/') ||
                     id.includes('node_modules/pinia/') ||
                     id.includes('node_modules/@vueuse/')) {
                   return 'vue-vendor'
-                }
+                }*/
 
                 // UI 框架及相关
                 if (id.includes('node_modules/naive-ui/') || id.includes('node_modules/vueuc/')) {
