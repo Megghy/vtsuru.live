@@ -9,7 +9,6 @@ import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
 import { VineVitePlugin } from 'vue-vine/vite'
-import { visualizer } from 'rollup-plugin-visualizer';
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -88,14 +87,6 @@ export default defineConfig({
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/, /\.vine$/],
     }),
     VineVitePlugin(),
-    visualizer({
-      open: false, // 不自动打开浏览器，避免影响 CI/CD
-      gzipSize: true, // 显示 Gzip 压缩后的大小
-      brotliSize: true, // 显示 Brotli 压缩后的大小
-      filename: 'dist/stats.html', // 分析报告的输出路径
-      template: 'treemap', // 使用树图模式展示
-      sourcemap: true, // 使用 sourcemap 进行更精确的分析
-    }),
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
@@ -105,29 +96,28 @@ export default defineConfig({
     '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {
-    include: [
-      'vue',
-      'vue-router',
-      'pinia',
-      '@vueuse/core',
-      'naive-ui',
-      'date-fns',
-      '@vicons/fluent',
-      '@vicons/ionicons5',
-    ],
-    exclude: ['@tauri-apps/api', '@tauri-apps/plugin-autostart', '@tauri-apps/plugin-http'],
+    include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
   },
   build: {
     sourcemap: true,
     target: 'esnext',
     minify: 'oxc',
-    chunkSizeWarningLimit: 1600, // 调整警告阈值，gamepad-assets 会比较大
-    cssCodeSplit: true,
-    cssMinify: 'lightningcss',
-    assetsInlineLimit: 4096, // 4KB，默认值，可根据需要调整
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      output: {
+      output: { // @ts-ignore
         advancedChunks: {
+          groups: [
+            {
+              name: 'vue-vendor',
+              test: /[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/,
+              priority: -10,
+            },
+            {
+              name: 'ui-vendor',
+              test: /[\\/]node_modules[\\/](naive-ui|@vueuse[\\/]core)[\\/]/,
+              priority: -10,
+            },
+          ],
         },
       },
     },
