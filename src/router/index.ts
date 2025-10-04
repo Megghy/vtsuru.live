@@ -14,7 +14,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'index',
-    component: IndexView,
+    component: async () => import('@/views/IndexView.vue'),
     meta: {
       title: '你好',
     },
