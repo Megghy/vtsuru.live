@@ -1,4 +1,4 @@
-import type { ComputedRef } from 'vue'
+import type { ComputedRef, Ref } from 'vue'
 import type { DanmakuWindowSettings } from '../../store/useDanmakuWindow'
 import type { EventModel } from '@/api/api-models'
 import { computed } from 'vue'
@@ -67,7 +67,8 @@ export interface BaseDanmakuItemProps {
 
 export function useDanmakuUtils(
   props: BaseDanmakuItemProps,
-  emojiData: { data: { inline: { [key: string]: string }, plain: { [key: string]: string } } },
+  emojiData: Ref<{ updateAt?: number, data: { inline: { [key: string]: string }, plain: { [key: string]: string } } }>
+    | { data: { inline: { [key: string]: string }, plain: { [key: string]: string } } },
 ) {
   // 计算SC弹幕的颜色类
   const scColorClass = computed(() => {
@@ -124,7 +125,12 @@ export function useDanmakuUtils(
     let match
 
     try {
-      const availableEmojis = emojiData.data || {} // 确保 emojiData 已加载
+      // 兼容 Ref 和 普通对象两种传参
+      const store = (emojiData as any)?.value ?? emojiData
+      const availableEmojis = (store?.data ?? { inline: {}, plain: {} }) as {
+        inline?: { [key: string]: string }
+        plain?: { [key: string]: string }
+      }
 
       while ((match = regex.exec(props.item.msg)) !== null) {
         // 添加表情前的文本部分
@@ -133,7 +139,12 @@ export function useDanmakuUtils(
         }
 
         const emojiFullName = match[0] // 完整匹配，例如 "[哈哈]"
-        const emojiInfo = availableEmojis.inline[emojiFullName] || availableEmojis.plain[emojiFullName]
+        const emojiName = match[1] // 去除方括号后的名称，例如 "哈哈"
+        // 兼容键名为带/不带方括号的两种情况
+        const emojiInfo = (availableEmojis.inline?.[emojiFullName]
+          ?? availableEmojis.inline?.[emojiName]
+          ?? availableEmojis.plain?.[emojiFullName]
+          ?? availableEmojis.plain?.[emojiName]) as string | undefined
 
         if (emojiInfo) {
           // 找到了表情

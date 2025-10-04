@@ -90,8 +90,10 @@
     "eslint": "^9.36.0",
     "eslint-plugin-oxlint": "^1.19.0",
     "oxlint": "^1.19.0",
+    "rollup-plugin-visualizer": "^6.0.4",
     "stylus": "^0.64.0",
     "typescript": "^5.9.2",
+    "vite-plugin-cdn-import": "^1.0.1",
     "vue-vine": "^1.7.6"
   }
 }
