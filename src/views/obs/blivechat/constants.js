@@ -181,7 +181,15 @@ export function getShowRichContent(message) {
 }
 
 export function getShowContentParts(message) {
-  const contentParts = [...message.contentParts || []]
+  const contentParts = Array.isArray(message.contentParts)
+    ? [...message.contentParts]
+    : []
+  if (contentParts.length === 0 && message.content) {
+    contentParts.push({
+      type: CONTENT_TYPE_TEXT,
+      text: message.content,
+    })
+  }
   if (message.translation) {
     contentParts.push({
       type: CONTENT_TYPE_TEXT,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DanmujiConfig } from '../obs/DanmujiOBS.vue'
-import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import {
   NButton,
   NCard,
@@ -20,7 +20,7 @@ import {
   NTabs,
   useMessage,
 } from 'naive-ui'
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import MonacoEditorComponent from '@/components/MonacoEditorComponent.vue'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { CURRENT_HOST, defaultDanmujiCss } from '@/data/constants'
@@ -61,106 +61,35 @@ const guardLevelOptions = [
   { label: '总督', value: GuardLevel.Zongdu },
 ]
 
-// 随机弹幕内容库
-const randomMessages = [
-  '草草草草草',
-  '?????',
-  '来了来了',
-  '呜呜呜呜呜',
-  '寄！',
-  '笑死我了',
-  '这也太可爱了吧！',
-  'awsl',
-  '哈↑哈↑哈↑哈↑',
-  '前方高能',
-  '妈妈爱你',
-  '三连了！',
-  '给大佬递茶',
-  '答应我，别鸽了',
-  '好耶！',
-  '啊这',
-  '我超，好听！',
-  '永远的神！',
-  '给大家笑一个',
-  '555555',
-  '鸽子本鸽',
-  '主播牛逼',
-  '下次一定充钱',
-  '摸摸头',
-  '刚来，错过了什么',
-  '老板大气，老板身体健康',
-  '皮套萌萌哒',
-  '这个建模好精致',
-  '有没有录播组',
-  '狗头保命',
-]
+function randomDigits(length = 4) {
+  const min = length > 1 ? 10 ** (length - 1) : 0
+  const max = 10 ** length - 1
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
 
-// 随机用户名库
-const randomUsernames = [
-  '嘉晚饭',
-  '嘉心糖',
-  '阿梓的狗',
-  '向晚大魔王',
-  '贝极星',
-  '泰文一',
-  '一个魂们',
-  '琳狼粉丝',
-  '乃贝时光',
-  '呜米小籽',
-  '柚恩家人',
-  '冰糖嘎嘣脆',
-  '柠宝推推',
-  '七海Nana7mi',
-  '鸟P',
-  '珈乐厨',
-  '珈乐时代',
-  '乃琳Queen',
-  '贝拉kira',
-  '小希厨子',
-  '阿夸单推',
-  '白上单推人',
-  'ぺこら推し',
-  '星街永远爱',
-  '吹雪的狗',
-]
+function generateTestUsername() {
+  return `测试用户${randomDigits(5)}`
+}
 
-// 随机礼物名库
-const randomGifts = [
-  '小心心',
-  '告白气球',
-  '打call',
-  '奶茶',
-  '小花花',
-  '小星星',
-  '蛋糕',
-  '冰阔落',
-  '告白气球',
-  '比心',
-  '小电视',
-  '棒棒糖',
-  '荧光棒',
-  '小黄鸭',
-  '小飞船',
-]
+function generateTestMessage() {
+  const templates = [
+    '测试消息',
+    '这是一条测试消息',
+    '测试弹幕内容',
+    '系统测试消息',
+    '模拟展示消息',
+  ]
+  const template = templates[Math.floor(Math.random() * templates.length)]
+  return `${template}${randomDigits(4)}`
+}
 
-// 随机粉丝牌名称库
-const randomMedalNames = [
-  '魂组',
-  'DD団',
-  '天狗部',
-  '单推人',
-  '崩坏',
-  '幸运星',
-  '白上组',
-  '星街家',
-  '兔田团',
-  '夜空社',
-  '天使党',
-  '虹团',
-  '杏仁',
-  '梦追人',
-  'VVota',
-]
+function generateTestGiftName() {
+  return `测试礼物${randomDigits(3)}`
+}
+
+function generateTestMedalName() {
+  return `测试粉丝牌${randomDigits(3)}`
+}
 
 // 保存DanmujiConfig的配置
 const danmujiConfig = useStorage<DanmujiConfig>('danmuji-config', {
@@ -236,7 +165,7 @@ function resetConfigToDefault() {
 // 随机生成测试弹幕内容
 function generateRandomContent() {
   // 随机生成用户名
-  testFormData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)]
+  testFormData.uname = generateTestUsername()
 
   // 随机生成用户ID (10000-99999)
   testFormData.uid = Math.floor(Math.random() * 90000) + 10000
@@ -245,11 +174,11 @@ function generateRandomContent() {
   switch (testFormData.type) {
     case EventDataTypes.Message:
       // 随机弹幕内容
-      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
+      testFormData.msg = generateTestMessage()
       // 随机粉丝牌等级 (0-30)
       testFormData.fans_medal_level = Math.floor(Math.random() * 31)
       // 随机粉丝牌名称
-      testFormData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)]
+      testFormData.fans_medal_name = generateTestMedalName()
       // 随机舰长等级
       const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
       testFormData.guard_level = guardLevelOptions[guardRandomIndex].value
@@ -257,7 +186,7 @@ function generateRandomContent() {
 
     case EventDataTypes.Gift:
       // 随机礼物名称
-      testFormData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)]
+      testFormData.msg = generateTestGiftName()
       // 随机礼物数量 (1-99)
       testFormData.num = Math.floor(Math.random() * 99) + 1
       // 随机礼物价值 (1-50)
@@ -273,7 +202,7 @@ function generateRandomContent() {
 
     case EventDataTypes.SC:
       // 随机SC内容
-      testFormData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
+      testFormData.msg = generateTestMessage()
       // 随机SC价格 (5-500)
       testFormData.price = Math.floor(Math.random() * 496) + 5
       break
@@ -432,7 +361,7 @@ function startAutoGenerate() {
 // 为自动生成弹幕生成随机内容
 function generateAutoContent() {
   // 随机生成用户名
-  autoGenData.uname = randomUsernames[Math.floor(Math.random() * randomUsernames.length)]
+  autoGenData.uname = generateTestUsername()
 
   // 随机生成用户ID (10000-99999)
   autoGenData.uid = Math.floor(Math.random() * 90000) + 10000
@@ -441,11 +370,11 @@ function generateAutoContent() {
   switch (autoGenData.type) {
     case EventDataTypes.Message:
       // 随机弹幕内容
-      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
+      autoGenData.msg = generateTestMessage()
       // 随机粉丝牌等级 (0-30)
       autoGenData.fans_medal_level = Math.floor(Math.random() * 31)
       // 随机粉丝牌名称
-      autoGenData.fans_medal_name = randomMedalNames[Math.floor(Math.random() * randomMedalNames.length)]
+      autoGenData.fans_medal_name = generateTestMedalName()
       // 随机舰长等级
       const guardRandomIndex = Math.floor(Math.random() * guardLevelOptions.length)
       autoGenData.guard_level = guardLevelOptions[guardRandomIndex].value
@@ -453,7 +382,7 @@ function generateAutoContent() {
 
     case EventDataTypes.Gift:
       // 随机礼物名称
-      autoGenData.msg = randomGifts[Math.floor(Math.random() * randomGifts.length)]
+      autoGenData.msg = generateTestGiftName()
       // 随机礼物数量 (1-99)
       autoGenData.num = Math.floor(Math.random() * 99) + 1
       // 随机礼物价值 (1-50)
@@ -469,7 +398,7 @@ function generateAutoContent() {
 
     case EventDataTypes.SC:
       // 随机SC内容
-      autoGenData.msg = randomMessages[Math.floor(Math.random() * randomMessages.length)]
+      autoGenData.msg = generateTestMessage()
       // 随机SC价格 (5-500)
       autoGenData.price = Math.floor(Math.random() * 496) + 5
       break
@@ -663,7 +592,7 @@ async function uploadConfigToServer() {
                       确定要重设为默认CSS吗？这将清除所有自定义样式。
                     </NPopconfirm>
                   </template>
-                  <VueMonacoEditor
+                  <MonacoEditorComponent
                     v-model:value="css"
                     language="css"
                     style="height: 400px; width: 100%;"

@@ -12,16 +12,18 @@ import {
   NSpin,
   zhCN,
 } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import ManageLayout from '@/views/ManageLayout.vue'
-import ViewerLayout from '@/views/ViewerLayout.vue'
 import { ThemeType } from './api/api-models'
-import ClientLayout from './client/ClientLayout.vue'
 import TempComponent from './components/TempComponent.vue'
 import { isDarkMode, theme } from './Utils'
-import OBSLayout from './views/OBSLayout.vue'
-import OpenLiveLayout from './views/OpenLiveLayout.vue'
+
+// 将大型布局组件改为异步组件，避免打入入口包
+const ManageLayout = defineAsyncComponent(() => import('@/views/ManageLayout.vue'))
+const ViewerLayout = defineAsyncComponent(() => import('@/views/ViewerLayout.vue'))
+const ClientLayout = defineAsyncComponent(() => import('./client/ClientLayout.vue'))
+const OBSLayout = defineAsyncComponent(() => import('./views/OBSLayout.vue'))
+const OpenLiveLayout = defineAsyncComponent(() => import('./views/OpenLiveLayout.vue'))
 
 const route = useRoute()
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)

@@ -274,55 +274,71 @@ defineExpose({
     <NFlex
       justify="center"
       align="center"
+      vertical
+      :gap="16"
     >
       <NCard
         title="更多"
         embedded
+        style="width: 100%; max-width: 800px"
       >
         <NCollapse>
           <NCollapseItem
             title="收货地址"
             name="1"
           >
-            <NFlex vertical>
+            <NFlex
+              vertical
+              :gap="12"
+            >
               <NButton
                 type="primary"
+                block
                 @click="onOpenAddressModal"
               >
                 添加地址
               </NButton>
+              <NEmpty
+                v-if="!biliAuth.address || biliAuth.address.length === 0"
+                description="暂无收货地址"
+                style="margin: 20px 0"
+              />
               <NList
+                v-else
                 size="small"
                 bordered
               >
                 <NListItem
                   v-for="address in biliAuth.address"
                   :key="address.id"
+                  class="address-item"
                 >
                   <AddressDisplay :address="address">
                     <template #actions>
-                      <NButton
-                        size="small"
-                        type="info"
-                        @click="() => {
-                          currentAddress = address
-                          showAddressModal = true
-                        }
-                        "
-                      >
-                        修改
-                      </NButton>
-                      <NPopconfirm @positive-click="() => deleteAddress(address?.id ?? '')">
-                        <template #trigger>
-                          <NButton
-                            size="small"
-                            type="error"
-                          >
-                            删除
-                          </NButton>
-                        </template>
-                        确定要删除这个收货信息吗?
-                      </NPopconfirm>
+                      <NFlex :gap="8">
+                        <NButton
+                          size="small"
+                          type="info"
+                          @click="() => {
+                            currentAddress = address
+                            showAddressModal = true
+                          }
+                          "
+                        >
+                          修改
+                        </NButton>
+                        <NPopconfirm @positive-click="() => deleteAddress(address?.id ?? '')">
+                          <template #trigger>
+                            <NButton
+                              size="small"
+                              type="error"
+                            >
+                              删除
+                            </NButton>
+                          </template>
+                          确定要删除这个收货信息吗?
+                        </NPopconfirm>
+                      </NFlex>
                     </template>
                   </AddressDisplay>
                 </NListItem>
@@ -333,59 +349,93 @@ defineExpose({
             title="登录链接"
             name="2"
           >
-            <NInput
-              type="textarea"
-              :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
-              readonly
-            />
+            <NFlex
+              vertical
+              :gap="8"
+            >
+              <NText depth="3">
+                使用此链接可以直接登录到您的账号
+              </NText>
+              <NInput
+                type="textarea"
+                :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
+                readonly
+                :autosize="{ minRows: 2, maxRows: 4 }"
+              />
+            </NFlex>
           </NCollapseItem>
         </NCollapse>
       </NCard>
       <NCard
         title="账号操作"
         embedded
+        style="width: 100%; max-width: 800px"
       >
-        <NFlex>
+        <NFlex
+          vertical
+          :gap="12"
+        >
           <NPopconfirm @positive-click="logout">
             <template #trigger>
               <NButton
                 type="warning"
                 size="small"
               >
-                登出
+                登出当前账号
               </NButton>
             </template>
             确定要登出吗?
           </NPopconfirm>
-        </NFlex>
-        <NDivider> 切换账号 </NDivider>
-        <NList
-          clickable
-          bordered
-        >
-          <NListItem
-            v-for="item in useAuth.biliTokens"
-            :key="item.token"
-            @click="switchAuth(item.token)"
+          <NDivider style="margin: 8px 0">
+            切换账号
+          </NDivider>
+          <NEmpty
+            v-if="useAuth.biliTokens.length === 0"
+            description="暂无其他账号"
+          />
+          <NList
+            v-else
+            clickable
+            bordered
           >
-            <NFlex align="center">
-              <NTag
-                v-if="useAuth.biliToken == item.token"
-                type="info"
+            <NListItem
+              v-for="item in useAuth.biliTokens"
+              :key="item.token"
+              class="account-item"
+              :class="{ 'current-account': useAuth.biliToken === item.token }"
+              @click="switchAuth(item.token)"
+            >
+              <NFlex
+                align="center"
+                justify="space-between"
+                style="width: 100%"
               >
-                当前账号
-              </NTag>
-              {{ item.name }}
-              <NDivider
-                vertical
-                style="margin: 0"
-              />
-              <NText depth="3">
-                {{ item.uId }}
-              </NText>
-            </NFlex>
-          </NListItem>
-        </NList>
+                <NFlex
+                  align="center"
+                  :gap="8"
+                >
+                  <NTag
+                    v-if="useAuth.biliToken === item.token"
+                    type="success"
+                    size="small"
+                  >
+                    当前账号
+                  </NTag>
+                  <NText strong>
+                    {{ item.name }}
+                  </NText>
+                  <NDivider
+                    vertical
+                    style="margin: 0"
+                  />
+                  <NText depth="3">
+                    {{ item.uId }}
+                  </NText>
+                </NFlex>
+              </NFlex>
+            </NListItem>
+          </NList>
+        </NFlex>
       </NCard>
     </NFlex>
   </NSpin>
@@ -403,18 +453,23 @@ defineExpose({
         ref="formRef"
         :model="currentAddress"
         :rules="rules"
+        label-placement="top"
       >
         <NFormItem
-          label="地址"
+          label="地区选择"
           path="area"
           required
         >
-          <NFlex style="width: 100%">
+          <NFlex
+            style="width: 100%"
+            :gap="8"
+            wrap
+          >
             <NSelect
               v-model:value="currentAddress.province"
               :options="provinceOptions"
-              placeholder="请选择省"
-              style="width: 100px"
+              placeholder="省"
+              style="flex: 1; min-width: 100px"
               filterable
               @update:value="onAreaSelectChange(0)"
             />
@@ -423,8 +478,8 @@ defineExpose({
               v-model:value="currentAddress.city"
               :options="cityOptions(currentAddress.province)"
               :disabled="!currentAddress?.province"
-              placeholder="请选择市"
-              style="width: 100px"
+              placeholder="市"
+              style="flex: 1; min-width: 100px"
               filterable
               @update:value="onAreaSelectChange(1)"
             />
@@ -433,8 +488,8 @@ defineExpose({
               v-model:value="currentAddress.district"
               :options="currentAddress.city ? districtOptions(currentAddress.province, currentAddress.city) : []"
               :disabled="!currentAddress?.city"
-              placeholder="请选择区"
-              style="width: 100px"
+              placeholder="区"
+              style="flex: 1; min-width: 100px"
               filterable
               @update:value="onAreaSelectChange(2)"
             />
@@ -443,8 +498,8 @@ defineExpose({
               v-model:value="currentAddress.street"
               :options="currentAddress.city && currentAddress.district ? streetOptions(currentAddress.province, currentAddress.city, currentAddress.district) : []"
               :disabled="!currentAddress?.district"
-              placeholder="请选择街道"
-              style="width: 150px"
+              placeholder="街道"
+              style="flex: 1; min-width: 120px"
               filterable
             />
           </NFlex>
@@ -456,39 +511,43 @@ defineExpose({
         >
           <NInput
             v-model:value="currentAddress.address"
-            placeholder="详细地址"
+            placeholder="请输入详细地址（楼栋号、单元号、门牌号等）"
             type="textarea"
+            :autosize="{ minRows: 2, maxRows: 4 }"
           />
         </NFormItem>
-        <NFormItem
-          label="联系电话"
-          path="phone"
-          required
-        >
-          <NInputNumber
-            v-model:value="currentAddress.phone"
-            placeholder="联系电话"
-            :show-button="false"
-            style="width: 200px"
-          />
-        </NFormItem>
-        <NFormItem
-          label="联系人"
-          path="name"
-          required
-        >
-          <NInput
-            v-model:value="currentAddress.name"
-            placeholder="联系人"
-            style="max-width: 150px"
-          />
-        </NFormItem>
+        <NFlex :gap="12">
+          <NFormItem
+            label="联系电话"
+            path="phone"
+            required
+            style="flex: 1"
+          >
+            <NInputNumber
+              v-model:value="currentAddress.phone"
+              placeholder="请输入联系电话"
+              :show-button="false"
+              style="width: 100%"
+            />
+          </NFormItem>
+          <NFormItem
+            label="联系人"
+            path="name"
+            required
+            style="flex: 1"
+          >
+            <NInput
+              v-model:value="currentAddress.name"
+              placeholder="请输入联系人姓名"
+            />
+          </NFormItem>
+        </NFlex>
         <NFormItem
           label="用户协议"
           required
         >
           <NCheckbox v-model:checked="userAgree">
-            阅读并同意本站
+            我已阅读并同意本站
             <NButton
               text
               type="info"
@@ -498,13 +557,23 @@ defineExpose({
             </NButton>
           </NCheckbox>
         </NFormItem>
-        <NButton
-          type="info"
-          :loading="isLoading"
-          @click="updateAddress"
+        <NFlex
+          justify="end"
+          :gap="12"
         >
-          保存
-        </NButton>
+          <NButton
+            @click="showAddressModal = false"
+          >
+            取消
+          </NButton>
+          <NButton
+            type="primary"
+            :loading="isLoading"
+            @click="updateAddress"
+          >
+            保存
+          </NButton>
+        </NFlex>
       </NForm>
     </NSpin>
   </NModal>
@@ -519,3 +588,37 @@ defineExpose({
     </NScrollbar>
   </NModal>
 </template>
+
+<style scoped>
+.address-item {
+  transition: all 0.3s ease;
+}
+
+.address-item:hover {
+  background-color: var(--hover-color);
+}
+
+.account-item {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.account-item:hover {
+  background-color: var(--hover-color);
+}
+
+.current-account {
+  background-color: var(--primary-color-hover);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  :deep(.n-card) {
+    margin: 0 8px;
+  }
+
+  :deep(.n-form-item-label) {
+    font-size: 14px;
+  }
+}
+</style>

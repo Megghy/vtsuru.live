@@ -20,22 +20,32 @@ const themeVars = useThemeVars()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
+// 常量定义
+const MILLISECONDS_PER_DAY = 86400000
+
 function getISOWeek(date: Date) {
   const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNumber = target.getUTCDay() || 7
   target.setUTCDate(target.getUTCDate() + 4 - dayNumber)
   const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1))
-  const week = Math.ceil(((target.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  const week = Math.ceil(((target.getTime() - yearStart.getTime()) / MILLISECONDS_PER_DAY + 1) / 7)
   return {
     year: target.getUTCFullYear(),
     week,
   }
 }
 
-const currentISOWeek = getISOWeek(new Date())
+const now = new Date()
+const currentISOWeek = getISOWeek(now)
+const currentDayOfWeek = (now.getDay() + 6) % 7 // 转换为周一=0的格式
 
 function isCurrentWeek(year: number, week: number) {
   return year === currentISOWeek.year && week === currentISOWeek.week
+}
+
+function isCurrentDay(year: number, week: number, dayIndex: number) {
+  if (!isCurrentWeek(year, week)) return false
+  return dayIndex === currentDayOfWeek
 }
 
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -51,17 +61,40 @@ function getWeekRangeLabel(year: number, week: number) {
 
 function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
   // week starts from 1-52, dayOfWeek starts from 0-6 where 0 is Monday
-  const simple = new Date(year, 0, 1 + (week - 1) * 7)
-  const dow = simple.getDay()
-  const ISOweekStart = simple
-  if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1)
-  else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay())
-  return new Date(ISOweekStart.getFullYear(), ISOweekStart.getMonth(), ISOweekStart.getDate() + dayOfWeek)
+  const januaryFourth = new Date(year, 0, 4)
+  const startOfWeekOne = new Date(januaryFourth)
+  const dayOfWeekJan4 = (januaryFourth.getDay() + 6) % 7
+  startOfWeekOne.setDate(januaryFourth.getDate() - dayOfWeekJan4)
+  
+  const targetDate = new Date(startOfWeekOne)
+  targetDate.setDate(startOfWeekOne.getDate() + (week - 1) * 7 + dayOfWeek)
+  return targetDate
+}
+
+// 样式工具函数
+function getDayHeaderStyle(year: number, week: number, dayIndex: number, primaryColor: string, primaryColorSuppl: string) {
+  const isToday = isCurrentDay(year, week, dayIndex)
+  
+  return {
+    marginBottom: '6px',
+    padding: '4px 8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    background: isToday
+      ? `linear-gradient(135deg, ${primaryColor}25 0%, ${primaryColor}40 100%)`
+      : `linear-gradient(135deg, ${primaryColorSuppl}15 0%, ${primaryColorSuppl}25 100%)`,
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    boxShadow: isToday ? `0 0 0 2px ${primaryColor}66` : undefined,
+    transition: 'all 0.3s ease',
+  }
 }
 </script>
 
 <template>
-  <NEmpty v-if="(schedules?.length ?? 0) == 0" />
+  <NEmpty v-if="(schedules?.length ?? 0) === 0" />
   <NList
     v-else
     style="padding: 0"
@@ -156,24 +189,25 @@ function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
           >
             <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
               <div
-                :style="{
-                  marginBottom: '6px',
-                  padding: '4px 8px',
-                  fontSize: '13px',
-                  fontWeight: '600',
-                  background: `linear-gradient(135deg, ${themeVars.primaryColorSuppl}15 0%, ${themeVars.primaryColorSuppl}25 100%)`,
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }"
+                :style="getDayHeaderStyle(item.year, item.week, index, themeVars.primaryColor, themeVars.primaryColorSuppl)"
               >
                 <NTime
                   :time="getDateFromWeek(item.year, item.week, index)"
                   format="MM/dd"
-                  :style="{ color: themeVars.primaryColor }"
+                  :style="{
+                    color: isCurrentDay(item.year, item.week, index) ? themeVars.primaryColor : themeVars.primaryColorSuppl,
+                    fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '600',
+                  }"
                 />
-                <NText>{{ weekdays[index] }}</NText>
+                <NText :style="{ fontWeight: isCurrentDay(item.year, item.week, index) ? '700' : '500' }">
+                  {{ weekdays[index] }}
+                </NText>
+                <NBadge
+                  v-if="isCurrentDay(item.year, item.week, index)"
+                  dot
+                  :color="themeVars.primaryColor"
+                  :style="{ marginLeft: 'auto' }"
+                />
               </div>
               <div style="flex: 1; display: flex; flex-direction: column; min-height: 65px;">
                 <NCard
@@ -181,8 +215,10 @@ function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
                   size="small"
                   :style="{
                     minHeight: '40px',
-                    background: `linear-gradient(135deg, ${themeVars.cardColor} 0%, ${themeVars.bodyColor} 100%)`,
-                    border: `1px dashed ${themeVars.dividerColor}`,
+                    background: isCurrentDay(item.year, item.week, index)
+                      ? `linear-gradient(135deg, ${themeVars.primaryColorSuppl}08 0%, ${themeVars.primaryColorSuppl}15 100%)`
+                      : `linear-gradient(135deg, ${themeVars.cardColor} 0%, ${themeVars.bodyColor} 100%)`,
+                    border: `1px dashed ${isCurrentDay(item.year, item.week, index) ? themeVars.primaryColorSuppl : themeVars.dividerColor}`,
                     cursor: isSelf ? 'pointer' : 'default',
                     transition: 'all 0.2s ease',
                   }"

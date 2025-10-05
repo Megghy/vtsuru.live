@@ -9,6 +9,7 @@ import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
 import { VineVitePlugin } from 'vue-vine/vite'
+// import MonacoEditorNlsPlugin, { esbuildPluginMonacoEditorNls, Languages } from 'vite-plugin-monaco-editor-nls'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -87,6 +88,8 @@ export default defineConfig({
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/, /\.vine$/],
     }),
     VineVitePlugin(),
+    // Monaco 中文本地化
+    // MonacoEditorNlsPlugin({ locale: Languages.zh_hans }),
   ],
   server: { port: 51000 },
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
@@ -97,9 +100,15 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
+    esbuildOptions: {
+      // plugins: [
+      //   esbuildPluginMonacoEditorNls({ locale: Languages.zh_hans }),
+      // ],
+    },
   },
   build: {
-    sourcemap: true,
+    // 生产环境建议关闭以减少产物体积与网络请求
+    sourcemap: false,
     target: 'esnext',
     minify: 'oxc',
     chunkSizeWarningLimit: 1000,
@@ -116,6 +125,37 @@ export default defineConfig({
               name: 'ui-vendor',
               test: /[\\/]node_modules[\\/](naive-ui|@vueuse[\\/]core)[\\/]/,
               priority: -10,
+            },
+            // 精细化切分大体积依赖，提升缓存与首屏体积可控性
+            {
+              name: 'echarts-vendor',
+              test: /[\\/]node_modules[\\/](echarts|zrender|vue-echarts)[\\/]/,
+              priority: -20,
+            },
+            {
+              name: 'wangeditor-vendor',
+              test: /[\\/]node_modules[\\/]@wangeditor[\\/]/,
+              priority: -20,
+            },
+            {
+              name: 'hyperdx-vendor',
+              test: /[\\/]node_modules[\\/]@hyperdx[\\/]/,
+              priority: -20,
+            },
+            {
+              name: 'xlsx-vendor',
+              test: /[\\/]node_modules[\\/]xlsx[\\/]/,
+              priority: -20,
+            },
+            {
+              name: 'jszip-vendor',
+              test: /[\\/]node_modules[\\/]jszip[\\/]/,
+              priority: -20,
+            },
+            {
+              name: 'html2canvas-vendor',
+              test: /[\\/]node_modules[\\/]html2canvas[\\/]/,
+              priority: -20,
             },
           ],
         },

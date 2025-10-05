@@ -622,8 +622,8 @@ watch(
         :style="{ height: chartHeight }"
         class="chart"
       />
-
-      <NDivider>
+      <NDivider />
+      <!-- <NDivider>
         投稿播放量
         <NDivider vertical />
         <NTooltip>
@@ -665,7 +665,7 @@ watch(
         :option="upstatLikeOption"
         :style="{ height: chartHeight }"
         class="chart"
-      />
+      /> -->
     </NSpace>
   </NCard>
 </template>
