@@ -65,7 +65,7 @@ function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
   const startOfWeekOne = new Date(januaryFourth)
   const dayOfWeekJan4 = (januaryFourth.getDay() + 6) % 7
   startOfWeekOne.setDate(januaryFourth.getDate() - dayOfWeekJan4)
-  
+
   const targetDate = new Date(startOfWeekOne)
   targetDate.setDate(startOfWeekOne.getDate() + (week - 1) * 7 + dayOfWeek)
   return targetDate
@@ -74,7 +74,7 @@ function getDateFromWeek(year: number, week: number, dayOfWeek: number): Date {
 // 样式工具函数
 function getDayHeaderStyle(year: number, week: number, dayIndex: number, primaryColor: string, primaryColorSuppl: string) {
   const isToday = isCurrentDay(year, week, dayIndex)
-  
+
   return {
     marginBottom: '6px',
     padding: '4px 8px',
@@ -111,10 +111,10 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
         :style="
           isCurrentWeek(item.year, item.week)
             ? {
-                boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
-                borderRadius: '8px',
-                transition: 'box-shadow 0.2s ease',
-              }
+              boxShadow: `0 0 0 1px ${themeVars.primaryColorSuppl}99 inset`,
+              borderRadius: '8px',
+              transition: 'box-shadow 0.2s ease',
+            }
             : undefined
         "
       >
