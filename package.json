@@ -11,7 +11,6 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@guolao/vue-monaco-editor": "^1.5.5",
     "@hyperdx/browser": "^0.21.2",
     "@hyperdx/cli": "^0.1.0",
     "@microsoft/signalr": "^9.0.6",
@@ -52,6 +51,7 @@
     "jszip": "^3.10.1",
     "linqts": "^3.2.0",
     "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "md5": "^2.3.0",
     "mitt": "^3.0.1",
     "monaco-editor": "^0.53.0",
@@ -65,6 +65,7 @@
     "unplugin-vue-markdown": "^29.2.0",
     "uuid": "^13.0.0",
     "vite": "npm:rolldown-vite@latest",
+    "vite-plugin-monaco-editor-nls": "^3.0.1",
     "vite-svg-loader": "^5.1.0",
     "vue": "3.5.22",
     "vue-cropperjs": "^5.0.0",
@@ -94,6 +95,7 @@
     "stylus": "^0.64.0",
     "typescript": "^5.9.2",
     "vite-plugin-cdn-import": "^1.0.1",
+    "vscode-loc": "git+https://github.com/microsoft/vscode-loc.git",
     "vue-vine": "^1.7.6"
   }
 }

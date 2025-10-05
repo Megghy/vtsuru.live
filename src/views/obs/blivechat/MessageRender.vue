@@ -1,6 +1,6 @@
 <script>
 import { useDebounceFn } from '@vueuse/core'
-import _ from 'lodash'
+import { cloneDeep } from 'lodash-es'
 import { defineComponent } from 'vue'
 import * as constants from './constants'
 import MembershipItem from './MembershipItem.vue'
@@ -51,7 +51,7 @@ export default defineComponent({
     const customStyleElement = document.createElement('style')
     document.head.appendChild(customStyleElement)
     const setCssDebounce = useDebounceFn(() => {
-      customStyleElement.innerHTML = this.customCss ?? ''
+      customStyleElement.innerHTML = this.customCss || ''
       console.log('[blivechat] 已设置自定义样式')
     }, 1000)
     return {
@@ -96,10 +96,10 @@ export default defineComponent({
     canScrollToBottom(val) {
       this.cantScrollStartTime = val ? null : new Date()
     },
-    watchCustomCss: {
+    customCss: {
       immediate: true,
-      handler(val, oldVal) {
-        this.setCssDebounce(val)
+      handler() {
+        this.setCssDebounce()
       },
     },
   },
@@ -260,7 +260,7 @@ export default defineComponent({
             this.enqueueIntervals.splice(0, this.enqueueIntervals.length - 5)
           }
           // 这边估计得尽量大，只要不太早把消息缓冲发完就是平滑的。有MESSAGE_MAX_INTERVAL保底，不会让消息延迟太大
-          // 其实可以用单调队列求最大值，偷懒不写了
+          // 使用Math.max计算最大值来估计下次入队时间间隔
           this.estimatedEnqueueInterval = Math.max(...this.enqueueIntervals)
         }
         // 上次入队时间还是要设置，否则会太早把消息缓冲发完，然后较长时间没有新消息
@@ -280,10 +280,8 @@ export default defineComponent({
       if (messageGroup.length > 0) {
         if (this.smoothedMessageQueue.length > 0) {
           // 和上一组合并
-          const lastMessageGroup = this.smoothedMessageQueue[this.smoothedMessageQueue.length - 1]
-          for (const message of messageGroup) {
-            lastMessageGroup.push(message)
-          }
+          const lastMessageGroup = this.smoothedMessageQueue.at(-1)
+          lastMessageGroup.push(...messageGroup)
         } else {
           // 自己一个组
           this.smoothedMessageQueue.push(messageGroup)
@@ -325,12 +323,7 @@ export default defineComponent({
 
       // 发消息
       const messageGroups = this.smoothedMessageQueue.splice(0, groupNumToEmit)
-      const mergedGroup = []
-      for (const messageGroup of messageGroups) {
-        for (const message of messageGroup) {
-          mergedGroup.push(message)
-        }
-      }
+      const mergedGroup = messageGroups.flat()
       this.handleMessageGroup(mergedGroup)
 
       if (this.smoothedMessageQueue.length <= 0) {
@@ -386,7 +379,7 @@ export default defineComponent({
       message.addTime = new Date()
 
       if (message.type !== constants.MESSAGE_TYPE_TEXT) {
-        this.paidMessages.unshift(_.cloneDeep(message))
+        this.paidMessages.unshift(cloneDeep(message))
         const MAX_PAID_MESSAGE_NUM = 100
         if (this.paidMessages.length > MAX_PAID_MESSAGE_NUM) {
           this.paidMessages.splice(MAX_PAID_MESSAGE_NUM, this.paidMessages.length - MAX_PAID_MESSAGE_NUM)

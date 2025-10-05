@@ -327,7 +327,12 @@ onMounted(async () => {
           justify="center"
         >
           <div style="max-width: 95vw; width: 1200px">
-            <NCard title="我的信息">
+            <NCard
+              title="我的信息"
+              :bordered="false"
+              size="small"
+              class="info-card"
+            >
               <NDescriptions
                 label-placement="left"
                 bordered
@@ -350,24 +355,27 @@ onMounted(async () => {
                   <NTag
                     v-if="biliAuth.id > 0"
                     type="success"
+                    size="small"
                   >
                     已认证
                   </NTag>
                   <NTag
                     v-else
                     type="error"
+                    size="small"
                   >
                     未认证
                   </NTag>
                 </NDescriptionsItem>
               </NDescriptions>
             </NCard>
-            <NDivider />
+            <NDivider style="margin: 16px 0" />
             <NTabs
               v-if="hash"
               v-model:value="hash"
               default-value="points"
               animated
+              type="line"
               @update:value="onTabChange"
             >
               <NTabPane
@@ -440,3 +448,54 @@ onMounted(async () => {
     </template>
   </NLayout>
 </template>
+
+<style scoped>
+.info-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.n-tabs-nav) {
+  padding: 0 12px;
+}
+
+:deep(.n-tabs-tab) {
+  transition: all 0.3s ease;
+}
+
+:deep(.n-tabs-tab:hover) {
+  color: var(--primary-color);
+}
+
+:deep(.n-tab-pane) {
+  padding-top: 16px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  :deep(.n-layout-header) {
+    padding: 8px !important;
+  }
+
+  :deep(.n-layout-content) {
+    padding: 16px 8px !important;
+  }
+
+  :deep(.n-descriptions) {
+    font-size: 13px;
+  }
+
+  :deep(.n-tabs-nav) {
+    padding: 0 4px;
+  }
+}
+
+/* 加载动画优化 */
+:deep(.n-spin-container) {
+  min-height: 200px;
+}
+</style>

@@ -5,7 +5,7 @@ import type {
 
 import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
 import { Info24Filled, Warning24Regular } from '@vicons/fluent'
-import { useStorage } from '@vueuse/core'
+import { useDebounceFn, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import {
@@ -31,7 +31,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
@@ -80,6 +80,20 @@ const RESET_CONFIRM_TEXT = '我确认删除'
 
 // 用户数据
 const users = ref<ResponsePointUserModel[]>([])
+
+// 搜索关键词
+const searchKeyword = ref('')
+const debouncedSearchKeyword = ref('')
+
+// 防抖搜索
+const updateSearch = useDebounceFn((value: string) => {
+  debouncedSearchKeyword.value = value
+}, 300)
+
+watch(searchKeyword, (newVal) => {
+  updateSearch(newVal)
+})
+
 // 根据筛选条件过滤后的用户
 const filteredUsers = computed(() => {
   return users.value
@@ -90,17 +104,29 @@ const filteredUsers = computed(() => {
       }
 
       // 根据关键词搜索
-      if (settings.value.searchKeyword) {
-        const keyword = settings.value.searchKeyword.toLowerCase()
+      if (debouncedSearchKeyword.value) {
+        const keyword = debouncedSearchKeyword.value.toLowerCase()
         return (
-          user.info.name?.toLowerCase().includes(keyword) == true
-          || user.info.userId?.toString() == keyword
+          user.info.name?.toLowerCase().includes(keyword) === true
+          || user.info.userId?.toString() === keyword
         )
       }
 
       return true
     })
     .sort((a, b) => b.updateAt - a.updateAt) // 按更新时间降序排序
+})
+
+// 用户统计
+const userStats = computed(() => {
+  return {
+    total: users.value.length,
+    authed: users.value.filter(u => u.isAuthed).length,
+    totalPoints: users.value.reduce((sum, u) => sum + u.point, 0),
+    totalOrders: users.value.reduce((sum, u) => sum + (u.orderCount || 0), 0),
+    avgPoints: users.value.length > 0 ? Math.round(users.value.reduce((sum, u) => sum + u.point, 0) / users.value.length) : 0,
+    filtered: filteredUsers.value.length,
+  }
 })
 
 // 当前查看的用户详情
@@ -383,6 +409,60 @@ onMounted(async () => {
     :show="isLoading"
     class="user-manage-container"
   >
+    <!-- 统计卡片 -->
+    <NCard
+      size="small"
+      :bordered="false"
+      style="margin-bottom: 16px"
+    >
+      <NFlex
+        justify="space-around"
+        wrap
+        :gap="16"
+      >
+        <div class="stat-item">
+          <div class="stat-value">
+            {{ userStats.total }}
+          </div>
+          <div class="stat-label">
+            总用户
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value success">
+            {{ userStats.authed }}
+          </div>
+          <div class="stat-label">
+            已认证
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value primary">
+            {{ userStats.totalPoints }}
+          </div>
+          <div class="stat-label">
+            总积分
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value info">
+            {{ userStats.totalOrders }}
+          </div>
+          <div class="stat-label">
+            总订单
+          </div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">
+            {{ userStats.avgPoints }}
+          </div>
+          <div class="stat-label">
+            平均积分
+          </div>
+        </div>
+      </NFlex>
+    </NCard>
+
     <!-- 设置卡片 -->
     <NCard title="设置">
       <template #header-extra>
@@ -442,11 +522,16 @@ onMounted(async () => {
           :gap="5"
         >
           <NInput
-            v-model:value="settings.searchKeyword"
+            v-model:value="searchKeyword"
             placeholder="搜索用户 (用户名或UID)"
-            style="max-width: 200px"
+            style="width: 220px"
             clearable
-          />
+            size="small"
+          >
+            <template #prefix>
+              🔍
+            </template>
+          </NInput>
           <NTooltip>
             <template #trigger>
               <NIcon :component="Info24Filled" />
@@ -638,6 +723,35 @@ onMounted(async () => {
   max-width: 300px;
 }
 
+.stat-item {
+  text-align: center;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-color-1);
+  margin-bottom: 4px;
+}
+
+.stat-value.primary {
+  color: var(--primary-color);
+}
+
+.stat-value.success {
+  color: var(--success-color);
+}
+
+.stat-value.info {
+  color: var(--info-color);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-color-3);
+}
+
 @media (max-width: 768px) {
   .table-actions {
     flex-direction: column;
@@ -646,6 +760,14 @@ onMounted(async () => {
 
   .table-actions > * {
     margin-bottom: 8px;
+  }
+
+  .stat-item {
+    min-width: 70px;
+  }
+
+  .stat-value {
+    font-size: 20px;
   }
 }
 </style>

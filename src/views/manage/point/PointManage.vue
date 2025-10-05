@@ -7,7 +7,15 @@ import type {
   ResponsePointGoodModel,
   UploadPointGoodsModel,
 } from '@/api/api-models'
-import { Info24Filled } from '@vicons/fluent'
+import {
+  Add24Filled,
+  ArrowSync24Filled,
+  Delete24Filled,
+  Edit24Filled,
+  Eye24Filled,
+  Info24Filled,
+  ShoppingBag24Filled,
+} from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
 import {
   NAlert,
@@ -517,14 +525,22 @@ onMounted(() => { })
       >
         <NButton
           type="primary"
+          size="medium"
           @click="onModalOpen"
         >
+          <template #icon>
+            <NIcon :component="Add24Filled" />
+          </template>
           添加礼物
         </NButton>
         <NButton
           secondary
+          size="medium"
           @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
         >
+          <template #icon>
+            <NIcon :component="Eye24Filled" />
+          </template>
           前往展示页
         </NButton>
       </NFlex>
@@ -549,28 +565,56 @@ onMounted(() => { })
             class="point-goods-card"
           >
             <template #footer>
-              <NFlex :gap="8">
-                <NButton
-                  type="info"
-                  size="small"
-                  @click="onUpdateClick(item)"
+              <NFlex
+                vertical
+                :gap="8"
+                style="width: 100%"
+              >
+                <NText style="font-size: 14px; color: var(--primary-color); font-weight: 500;">
+                  <NIcon
+                    :component="ShoppingBag24Filled"
+                    style="vertical-align: -0.15em; margin-right: 4px"
+                  />
+                  积分: {{ item.price }}
+                </NText>
+                <NFlex
+                  justify="space-between"
+                  :gap="8"
                 >
-                  修改
-                </NButton>
-                <NButton
-                  type="warning"
-                  size="small"
-                  @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
-                >
-                  下架
-                </NButton>
-                <NButton
-                  type="error"
-                  size="small"
-                  @click="onDeleteClick(item)"
-                >
-                  删除
-                </NButton>
+                  <NButton
+                    type="info"
+                    size="small"
+                    style="flex: 1"
+                    @click="onUpdateClick(item)"
+                  >
+                    <template #icon>
+                      <NIcon :component="Edit24Filled" />
+                    </template>
+                    修改
+                  </NButton>
+                  <NButton
+                    type="warning"
+                    size="small"
+                    style="flex: 1"
+                    @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
+                  >
+                    <template #icon>
+                      <NIcon :component="ArrowSync24Filled" />
+                    </template>
+                    下架
+                  </NButton>
+                  <NButton
+                    type="error"
+                    size="small"
+                    style="flex: 1"
+                    @click="onDeleteClick(item)"
+                  >
+                    <template #icon>
+                      <NIcon :component="Delete24Filled" />
+                    </template>
+                    删除
+                  </NButton>
+                </NFlex>
               </NFlex>
             </template>
           </PointGoodsItem>
@@ -605,7 +649,13 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <span>价格: {{ item.price }}</span>
+                <NText style="font-size: 14px; color: var(--primary-color); font-weight: 500;">
+                  <NIcon
+                    :component="ShoppingBag24Filled"
+                    style="vertical-align: -0.15em; margin-right: 4px"
+                  />
+                  积分: {{ item.price }}
+                </NText>
                 <NFlex
                   justify="space-between"
                   :gap="8"
@@ -613,22 +663,34 @@ onMounted(() => { })
                   <NButton
                     type="info"
                     size="small"
+                    style="flex: 1"
                     @click="onUpdateClick(item)"
                   >
+                    <template #icon>
+                      <NIcon :component="Edit24Filled" />
+                    </template>
                     修改
                   </NButton>
                   <NButton
                     type="success"
                     size="small"
+                    style="flex: 1"
                     @click="onSetShelfClick(item, GoodsStatus.Normal)"
                   >
+                    <template #icon>
+                      <NIcon :component="ArrowSync24Filled" />
+                    </template>
                     上架
                   </NButton>
                   <NButton
                     type="error"
                     size="small"
+                    style="flex: 1"
                     @click="onDeleteClick(item)"
                   >
+                    <template #icon>
+                      <NIcon :component="Delete24Filled" />
+                    </template>
                     删除
                   </NButton>
                 </NFlex>
@@ -1151,10 +1213,18 @@ onMounted(() => { })
     height: 100%;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+  }
+
+  .point-goods-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   }
 
   .point-goods-card :deep(.n-card-header) {
     padding: 16px;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .point-goods-card :deep(.n-card-content) {
@@ -1163,7 +1233,9 @@ onMounted(() => { })
   }
 
   .point-goods-card :deep(.n-card-footer) {
-    padding: 16px;
+    padding: 12px 16px;
+    background-color: var(--card-color);
+    border-top: 1px solid var(--border-color);
   }
 
   .goods-modal :deep(.n-card-header) {
@@ -1234,5 +1306,19 @@ onMounted(() => { })
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* 按钮样式增强 */
+  .point-goods-card :deep(.n-button) {
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .point-goods-card :deep(.n-button:hover) {
+    transform: translateY(-1px);
+  }
+
+  .point-goods-card :deep(.n-button:active) {
+    transform: translateY(0);
   }
 </style>

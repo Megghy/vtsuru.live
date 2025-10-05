@@ -1,5 +1,4 @@
 import { defineAsyncComponent, markRaw, ref } from 'vue'
-import DefaultIndexTemplateVue from '@/views/view/indexTemplate/DefaultIndexTemplate.vue'
 
 const debugAPI
   = import.meta.env.VITE_API == 'dev'
@@ -126,7 +125,9 @@ export const IndexTemplateMap: TemplateMapType = {
   '': {
     name: '默认',
     // settingName: 'Template.Index.Default',
-    component: markRaw(DefaultIndexTemplateVue),
+    component: markRaw(defineAsyncComponent(
+      async () => import('@/views/view/indexTemplate/DefaultIndexTemplate.vue'),
+    )),
   },
 }
 

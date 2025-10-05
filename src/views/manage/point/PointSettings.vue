@@ -16,8 +16,6 @@ import {
   NInputGroup,
   NInputGroupLabel,
   NInputNumber,
-  NList,
-  NListItem,
   NModal,
   NPopconfirm,
   NRadioButton,
@@ -470,26 +468,42 @@ async function SaveComboSetting() {
                 justify="space-between"
                 align="center"
               >
-                <span class="section-title">自定义礼物列表</span>
+                <span class="section-title">
+                  自定义礼物列表
+                  <NTag
+                    v-if="Object.keys(setting.giftPercentMap).length > 0"
+                    :bordered="false"
+                    size="small"
+                    type="info"
+                    style="margin-left: 8px"
+                  >
+                    {{ Object.keys(setting.giftPercentMap).length }} 个礼物
+                  </NTag>
+                </span>
                 <NButton
                   type="primary"
                   :disabled="!canEdit"
-                  class="add-gift-button"
+                  size="small"
                   @click="showAddGiftModal = true"
                 >
                   添加礼物
                 </NButton>
               </NFlex>
 
-              <NList bordered>
-                <NEmpty
-                  v-if="!Object.keys(setting.giftPercentMap).length"
-                  description="暂无自定义礼物"
-                />
+              <NEmpty
+                v-if="!Object.keys(setting.giftPercentMap).length"
+                description="暂无自定义礼物"
+                style="margin: 12px 0"
+              />
 
-                <NListItem
+              <div
+                v-else
+                class="gift-list"
+              >
+                <div
                   v-for="item in Object.entries(setting.giftPercentMap)"
                   :key="item[0]"
+                  class="gift-item"
                 >
                   <NFlex
                     align="center"
@@ -498,29 +512,34 @@ async function SaveComboSetting() {
                   >
                     <NFlex
                       align="center"
-                      :gap="8"
+                      :gap="12"
                     >
                       <NTag
                         :bordered="false"
                         size="medium"
                         type="success"
+                        class="gift-name-tag"
                       >
                         {{ item[0] }}
                       </NTag>
+                      <NText depth="2">
+                        {{ setting.giftPercentMap[item[0]] }} 积分
+                      </NText>
                     </NFlex>
 
                     <NFlex
                       align="center"
-                      :gap="12"
+                      :gap="8"
                     >
                       <NInputGroup
-                        style="width: 180px"
+                        style="width: 140px"
                         :disabled="!canEdit"
                       >
                         <NInputNumber
                           :value="setting.giftPercentMap[item[0]]"
                           :disabled="!canEdit"
                           min="0"
+                          size="small"
                           @update:value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
                         />
                         <NButton
@@ -542,15 +561,14 @@ async function SaveComboSetting() {
                             <template #icon>
                               <NIcon :component="Delete24Regular" />
                             </template>
-                            删除
                           </NButton>
                         </template>
                         确定要删除这个礼物吗?
                       </NPopconfirm>
                     </NFlex>
                   </NFlex>
-                </NListItem>
-              </NList>
+                </div>
+              </div>
             </NFlex>
           </NCard>
         </NFlex>
@@ -656,6 +674,8 @@ async function SaveComboSetting() {
   font-size: 16px;
   font-weight: 500;
   margin: 4px 0;
+  display: flex;
+  align-items: center;
 }
 
 .gift-card {
@@ -663,8 +683,29 @@ async function SaveComboSetting() {
   margin-top: 8px;
 }
 
-.add-gift-button {
-  max-width: 120px;
+.gift-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gift-item {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--card-color);
+  transition: all 0.3s ease;
+}
+
+.gift-item:hover {
+  background-color: var(--hover-color);
+  border-color: var(--primary-color-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gift-name-tag {
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .modal-input {
@@ -690,6 +731,14 @@ async function SaveComboSetting() {
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  .gift-item {
+    padding: 10px;
+  }
+
+  .section-title {
+    font-size: 14px;
   }
 }
 </style>

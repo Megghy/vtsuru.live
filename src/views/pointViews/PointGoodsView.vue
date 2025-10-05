@@ -9,6 +9,7 @@ import type {
   ResponsePointOrder2UserModel,
   UserInfo,
 } from '@/api/api-models'
+import { useDebounceFn } from '@vueuse/core'
 import {
   NAlert,
   NButton,
@@ -31,7 +32,7 @@ import {
   useDialog,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   GoodsTypes,
@@ -73,6 +74,16 @@ const onlyCanBuy = ref(false) // 只显示可兑换
 const ignoreGuard = ref(false) // 忽略舰长限制
 const sortOrder = ref<string | null>(null) // 排序方式
 const searchKeyword = ref('') // 搜索关键词
+const debouncedSearchKeyword = ref('') // 防抖后的搜索关键词
+
+// 防抖搜索
+const updateSearch = useDebounceFn((value: string) => {
+  debouncedSearchKeyword.value = value
+}, 300)
+
+watch(searchKeyword, (newVal) => {
+  updateSearch(newVal)
+})
 
 // --- 计算属性 ---
 
@@ -117,9 +128,9 @@ const selectedItems = computed(() => {
     // 关键词搜索 (匹配名称或描述)
     .filter(
       item =>
-        !searchKeyword.value
-        || item.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-        || (item.description && item.description.toLowerCase().includes(searchKeyword.value.toLowerCase())),
+        !debouncedSearchKeyword.value
+        || item.name.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())
+        || (item.description && item.description.toLowerCase().includes(debouncedSearchKeyword.value.toLowerCase())),
     )
 
   // 应用排序方式
@@ -162,12 +173,6 @@ const selectedItems = computed(() => {
     return 0
   })
 })
-
-// 获取商品标签颜色
-function getTagColor(index: number): 'default' | 'info' | 'success' | 'warning' | 'error' | 'primary' {
-  const colors: Array<'default' | 'info' | 'success' | 'warning' | 'error' | 'primary'> = ['default', 'info', 'success', 'warning', 'error']
-  return colors[index % colors.length]
-}
 
 // --- 方法 ---
 
@@ -746,7 +751,7 @@ onMounted(async () => {
 }
 
 .filter-section {
-  padding: 12px 16px;
+  padding: 10px;
   background-color: var(--action-color);
 }
 
@@ -777,22 +782,25 @@ onMounted(async () => {
 
 .search-filter-row {
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .search-input {
-  max-width: 200px;
+  min-width: 180px;
+  max-width: 250px;
+  flex: 1 1 200px;
 }
 
 .filter-options {
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-checkbox {
   margin: 0;
-}
 
-.sort-select {
-  width: 120px;
+  white-space: nowrap;
 }
 
 .goods-list-container {
@@ -807,25 +815,64 @@ onMounted(async () => {
 .goods-item {
   break-inside: avoid;
   background-color: var(--card-color);
-  transition: all 0.3s ease-in-out;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
   margin: 0 auto;
 }
 
-.goods-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.goods-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.6s ease;
   z-index: 1;
+  pointer-events: none;
+}
+
+.goods-item:hover::before {
+  left: 100%;
+}
+
+.goods-item:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  border-color: var(--primary-color-hover);
+}
+
+.goods-item:active {
+  transform: translateY(-6px) scale(1.01);
+  transition: all 0.1s ease;
 }
 
 .pinned-item {
   border: 2px solid var(--primary-color);
-  box-shadow: 0 2px 12px rgba(var(--primary-color-rgb), 0.15);
+  box-shadow: 0 4px 20px rgba(24, 160, 88, 0.25), 0 0 0 1px rgba(24, 160, 88, 0.1);
   position: relative;
+  background: linear-gradient(135deg, var(--card-color) 0%, rgba(24, 160, 88, 0.04) 100%);
+  animation: subtle-glow 3s ease-in-out infinite;
+}
+
+.pinned-item:hover {
+  box-shadow: 0 12px 32px rgba(24, 160, 88, 0.35), 0 4px 16px rgba(24, 160, 88, 0.2);
+  border-color: var(--primary-color-hover);
+}
+
+@keyframes subtle-glow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(24, 160, 88, 0.25), 0 0 0 1px rgba(24, 160, 88, 0.1);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(24, 160, 88, 0.35), 0 0 0 2px rgba(24, 160, 88, 0.15);
+  }
 }
 
 .pinned-item::before {
@@ -897,16 +944,29 @@ onMounted(async () => {
 }
 
 .goods-footer {
-  padding: 8px;
-  border-top: 1px solid var(--border-color-1);
-  background-color: rgba(var(--card-color-rgb), 0.7);
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-color);
+  background: linear-gradient(to bottom, rgba(var(--card-color-rgb), 0.5), var(--card-color));
+  backdrop-filter: blur(2px);
 }
 
 .exchange-btn {
-  min-width: 80px;
+  min-width: 90px;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(24, 160, 88, 0.2);
+}
+
+.exchange-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 160, 88, 0.35);
+}
+
+.exchange-btn:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(24, 160, 88, 0.2);
 }
 
 .exchange-btn::after {
@@ -919,7 +979,7 @@ onMounted(async () => {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.3),
     transparent
   );
   transition: all 0.6s ease;

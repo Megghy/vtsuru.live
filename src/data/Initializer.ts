@@ -1,4 +1,3 @@
-import HyperDX from '@hyperdx/browser'
 import EasySpeech from 'easy-speech'
 import { createDiscreteApi, NButton, NFlex, NText } from 'naive-ui'
 import { h } from 'vue'
@@ -50,6 +49,8 @@ export function InitVTsuru() {
 
 async function InitOther() {
   if (process.env.NODE_ENV !== 'development' && !window.$route.path.startsWith('/obs')) {
+    const mod = await import('@hyperdx/browser')
+    const HyperDX = (mod as any).default ?? mod
     HyperDX.init({
       apiKey: '7d1eb66c-24b8-445e-a406-dc2329fa9423',
       service: 'vtsuru.live',
@@ -58,6 +59,8 @@ async function InitOther() {
       advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
       ignoreUrls: [/localhost/i],
     })
+    // 将实例挂到窗口，便于后续设置全局属性（可选）
+    ;(window as any).__HyperDX__ = HyperDX
   }
   // 加载其他数据
   InitTTS()
@@ -68,7 +71,8 @@ async function InitOther() {
     if (account.value.biliUserAuthInfo && !useAuth.currentToken) {
       useAuth.currentToken = account.value.biliUserAuthInfo.token
     }
-    HyperDX.setGlobalAttributes({
+    const HyperDX = (window as any).__HyperDX__
+    HyperDX?.setGlobalAttributes({
       userId: account.value.id.toString(),
       userName: account.value.name,
     })
@@ -141,7 +145,7 @@ function InitTTS() {
     } else {
       console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
     }
-  } catch (e) {
+  } catch {
     console.log('[SpeechSynthesis] 当前浏览器不支持tts服务')
   }
 }

@@ -28,10 +28,10 @@ import {
   NText,
   NTree,
 } from 'naive-ui'
-import { computed, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'
-import GamepadDisplay from './GamepadDisplay.vue'
+const GamepadDisplay = defineAsyncComponent(() => import('./GamepadDisplay.vue'))
 
 interface Props {
   viewBox?: string
@@ -90,6 +90,8 @@ const bodyOptions = computed(() => availableBodies.value.map(body => ({
 
 const bodyIdStorageKey = computed(() => `gamepad-body-${selectedType.value}`)
 const selectedBodyId = useStorage<string>(bodyIdStorageKey, '')
+// 是否显示实时预览（避免首次进入即加载大体积渲染资源）
+const showPreview = ref(false)
 
 // 当手柄类型变化时重置相关配置
 watch(selectedType, () => {
@@ -423,7 +425,12 @@ const gamepadDisplayUrl = computed(() => {
         size="small"
         style="margin-top: 10px;"
       >
-        <div style="position: relative; width: 100%; height: 300px; background-color: #333; border-radius: 8px; overflow: hidden;">
+        <NSpace align="center" size="small" style="margin-bottom: 6px;">
+          <NButton size="small" type="info" @click="showPreview = !showPreview">
+            {{ showPreview ? '隐藏预览' : '显示预览' }}
+          </NButton>
+        </NSpace>
+        <div v-if="showPreview" style="position: relative; width: 100%; height: 300px; background-color: #333; border-radius: 8px; overflow: hidden;">
           <GamepadDisplay
             :key="selectedType"
             :type="selectedType"

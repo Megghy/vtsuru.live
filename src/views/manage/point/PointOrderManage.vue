@@ -71,6 +71,20 @@ const selectedItem = ref<DataTableRowKey[]>()
 const targetStatus = ref<PointOrderStatus>()
 const showStatusModal = ref(false)
 
+// 订单统计
+const orderStats = computed(() => {
+  return {
+    total: orders.value.length,
+    pending: orders.value.filter(o => o.status === PointOrderStatus.Pending).length,
+    shipped: orders.value.filter(o => o.status === PointOrderStatus.Shipped).length,
+    completed: orders.value.filter(o => o.status === PointOrderStatus.Completed).length,
+    physical: orders.value.filter(o => o.type === GoodsTypes.Physical).length,
+    virtual: orders.value.filter(o => o.type === GoodsTypes.Virtual).length,
+    totalPoints: orders.value.reduce((sum, o) => sum + o.point, 0),
+    filteredCount: filteredOrders.value.length,
+  }
+})
+
 // 获取所有订单
 async function getOrders() {
   try {
@@ -227,10 +241,72 @@ onMounted(async () => {
 <template>
   <NSpin :show="isLoading">
     <NEmpty
-      v-if="orders.length == 0"
+      v-if="orders.length === 0"
       description="暂无订单"
     />
     <template v-else>
+      <!-- 统计卡片 -->
+      <NCard
+        size="small"
+        :bordered="false"
+        style="margin-bottom: 16px"
+      >
+        <NFlex
+          justify="space-around"
+          wrap
+          :gap="16"
+        >
+          <div class="stat-item">
+            <div class="stat-value">
+              {{ orderStats.total }}
+            </div>
+            <div class="stat-label">
+              总订单
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value warning">
+              {{ orderStats.pending }}
+            </div>
+            <div class="stat-label">
+              待发货
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value info">
+              {{ orderStats.shipped }}
+            </div>
+            <div class="stat-label">
+              已发货
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value success">
+              {{ orderStats.completed }}
+            </div>
+            <div class="stat-label">
+              已完成
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">
+              {{ orderStats.physical }} / {{ orderStats.virtual }}
+            </div>
+            <div class="stat-label">
+              实体 / 虚拟
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value primary">
+              {{ orderStats.totalPoints }}
+            </div>
+            <div class="stat-label">
+              总积分
+            </div>
+          </div>
+        </NFlex>
+      </NCard>
+
       <!-- 操作按钮 -->
       <NFlex
         :wrap="false"
@@ -392,5 +468,53 @@ onMounted(async () => {
 <style scoped>
 .action-buttons {
   margin: 12px 0;
+}
+
+.stat-item {
+  text-align: center;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-color-1);
+  margin-bottom: 4px;
+}
+
+.stat-value.primary {
+  color: var(--primary-color);
+}
+
+.stat-value.success {
+  color: var(--success-color);
+}
+
+.stat-value.info {
+  color: var(--info-color);
+}
+
+.stat-value.warning {
+  color: var(--warning-color);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-color-3);
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .stat-item {
+    min-width: 70px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
 }
 </style>
