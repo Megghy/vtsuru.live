@@ -64,7 +64,7 @@ interface HistoryUpstatRecordModel {
 }
 
 interface GuardMemberModel {
-  guardUid: number
+  guardOUId: string
   username: string
   guardLevel: string
   accompanyDays: number
@@ -127,9 +127,12 @@ const guardPagination = computed(() => ({
 // 舰长列表表格列定义
 const guardColumns: DataTableColumns<GuardMemberModel> = [
   {
-    title: 'UID',
-    key: 'guardUid',
-    width: 100,
+    title: 'OUID',
+    key: 'guardOUId',
+    width: 250,
+    ellipsis: {
+      tooltip: true,
+    },
   },
   {
     title: '用户名',
