@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { TrendingDown, TrendingUp } from '@vicons/ionicons5'
+import { RefreshOutline, TrendingDown, TrendingUp } from '@vicons/ionicons5'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -12,7 +12,7 @@ import {
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NCard, NDivider, NGrid, NGridItem, NIcon, NSpace, NSpin, NStatistic, NTabPane, NTabs, NTag, useMessage, useThemeVars } from 'naive-ui'
+import { NButton, NCard, NDivider, NEmpty, NGrid, NGridItem, NIcon, NSpace, NSpin, NStatistic, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui'
 
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
@@ -83,14 +83,17 @@ interface AnalyzeData {
 
 // 状态管理
 const loading = ref(true)
+const refreshing = ref(false)
 const message = useMessage()
 const analyzeData = ref<AnalyzeData>()
 const summaryData = computed(() => analyzeData.value?.summary)
 const activeChart = ref('income')
 const themeVars = useThemeVars()
+const lastUpdateTime = ref<number>(0)
+const hasData = computed(() => analyzeData.value && Object.keys(analyzeData.value.chartData || {}).length > 0)
 
 // 处理标签页变化
-function onTabChange(value: string) {
+function onTabChange(_value: string) {
   nextTick(() => {
     handleResize()
   })
@@ -212,7 +215,7 @@ function initCharts() {
     grid: {
       left: '3%',
       right: '4%',
-      bottom: '3%',
+      bottom: '15%',
       top: '60px',
       containLabel: true,
     },
@@ -418,14 +421,22 @@ function updateChartTheme() {
 }
 
 // 获取分析数据
-async function fetchAnalyzeData() {
+async function fetchAnalyzeData(isRefresh = false) {
   try {
-    loading.value = true
+    if (isRefresh) {
+      refreshing.value = true
+    } else {
+      loading.value = true
+    }
     const data = await QueryGetAPI<AnalyzeData>(`${ANALYZE_API_URL}all`)
 
     if (data.code === 200) {
       analyzeData.value = data.data
+      lastUpdateTime.value = Date.now()
       nextTick(() => initCharts())
+      if (isRefresh) {
+        message.success('数据已刷新')
+      }
     } else {
       message.error(`获取数据失败: ${data.message}`)
     }
@@ -434,7 +445,13 @@ async function fetchAnalyzeData() {
     console.error('获取数据出错:', error)
   } finally {
     loading.value = false
+    refreshing.value = false
   }
+}
+
+// 刷新数据
+function handleRefresh() {
+  fetchAnalyzeData(true)
 }
 
 // 窗口大小变化时重绘图表
@@ -465,246 +482,395 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="analyze-container">
+    <!-- 顶部操作栏 -->
     <NSpace
       align="center"
+      justify="space-between"
+      class="header-actions"
     >
-      <EventFetcherAlert />
-      <EventFetcherStatusCard />
+      <NSpace align="center">
+        <EventFetcherAlert />
+        <EventFetcherStatusCard />
+      </NSpace>
+      <NSpace align="center">
+        <NTooltip v-if="lastUpdateTime > 0">
+          <template #trigger>
+            <NTag size="small" :bordered="false">
+              <NIcon :component="TrendingUp" style="margin-right: 4px;" />
+              <NTime :time="lastUpdateTime" type="relative" />更新
+            </NTag>
+          </template>
+          <NTime :time="lastUpdateTime" />
+        </NTooltip>
+        <NButton
+          :loading="refreshing"
+          :disabled="loading"
+          @click="handleRefresh"
+        >
+          <template #icon>
+            <NIcon :component="RefreshOutline" />
+          </template>
+          刷新数据
+        </NButton>
+      </NSpace>
     </NSpace>
     <NDivider />
+    
     <NSpin :show="loading">
-      <!-- 数据概览卡片 -->
-      <div class="summary-cards">
-        <NGrid
-          cols="1 800:2 1200:3"
-          :x-gap="12"
-          :y-gap="12"
-        >
-          <NGridItem>
-            <NCard
-              title="近7天统计"
-              size="small"
-              class="summary-card"
-            >
-              <div class="stat-grid">
-                <NStatistic
-                  label="总收入"
-                  :value="formatCurrency(summaryData?.last7Days?.totalIncome || 0)"
-                />
-                <NStatistic
-                  label="总互动数"
-                  :value="summaryData?.last7Days?.totalInteractions || 0"
-                />
-                <NStatistic
-                  label="弹幕数"
-                  :value="summaryData?.last7Days?.totalDanmakuCount || 0"
-                />
-                <NStatistic
-                  label="直播时长(小时)"
-                  :value="((summaryData?.last7Days?.totalLiveMinutes || 0) / 60).toFixed(1)"
-                />
-                <NStatistic
-                  label="互动人数"
-                  :value="summaryData?.last7Days?.interactionUsers || 0"
-                >
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last7Days?.interactionUsersTrend || 0)"
-                      size="small"
-                    >
-                      {{ formatTrend(summaryData?.last7Days?.interactionUsersTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="付费人数"
-                  :value="summaryData?.last7Days?.payingUsers || 0"
-                >
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last7Days?.payingUsersTrend || 0)"
-                      size="small"
-                    >
-                      {{ formatTrend(summaryData?.last7Days?.payingUsersTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="日均收入"
-                  :value="formatCurrency(summaryData?.last7Days?.dailyAvgIncome || 0)"
-                />
-                <NStatistic
-                  label="日均弹幕"
-                  :value="summaryData?.last7Days?.dailyAvgDanmaku || 0"
-                />
-                <NStatistic
-                  label="活跃直播天数"
-                  :value="summaryData?.last7Days?.activeLiveDays || 0"
-                />
-              </div>
-            </NCard>
-          </NGridItem>
-          <NGridItem>
-            <NCard
-              title="近30天统计"
-              size="small"
-              class="summary-card"
-            >
-              <div class="stat-grid">
-                <NStatistic
-                  label="总收入"
-                  :value="formatCurrency(summaryData?.last30Days?.totalIncome || 0)"
-                />
-                <NStatistic
-                  label="总互动数"
-                  :value="summaryData?.last30Days?.totalInteractions || 0"
-                />
-                <NStatistic
-                  label="弹幕数"
-                  :value="summaryData?.last30Days?.totalDanmakuCount || 0"
-                />
-                <NStatistic
-                  label="直播时长(小时)"
-                  :value="((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1)"
-                />
-                <NStatistic
-                  label="互动人数"
-                  :value="summaryData?.last30Days?.interactionUsers || 0"
-                >
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last30Days?.interactionTrend || 0)"
-                      size="small"
-                    >
-                      {{ formatTrend(summaryData?.last30Days?.interactionTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="付费人数"
-                  :value="summaryData?.last30Days?.payingUsers || 0"
-                >
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last30Days?.incomeTrend || 0)"
-                      size="small"
-                    >
-                      {{ formatTrend(summaryData?.last30Days?.incomeTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="日均收入"
-                  :value="formatCurrency(summaryData?.last30Days?.dailyAvgIncome || 0)"
-                />
-                <NStatistic
-                  label="日均弹幕"
-                  :value="summaryData?.last30Days?.dailyAvgDanmaku || 0"
-                />
-                <NStatistic
-                  label="活跃直播天数"
-                  :value="summaryData?.last30Days?.activeLiveDays || 0"
-                />
-              </div>
-            </NCard>
-          </NGridItem>
-          <NGridItem>
-            <NCard
-              title="关键指标"
-              size="small"
-              class="summary-card"
-            >
-              <div class="stat-grid">
-                <NStatistic
-                  label="月收入增长"
-                  :value="formatTrend(summaryData?.last30Days?.incomeTrend || 0)"
-                >
-                  <template #prefix>
-                    <NIcon :color="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? '#18A058' : '#D03050'">
-                      <TrendingUp v-if="(summaryData?.last30Days?.incomeTrend || 0) >= 0" />
-                      <TrendingDown v-else />
-                    </NIcon>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="月互动增长"
-                  :value="formatTrend(summaryData?.last30Days?.interactionTrend || 0)"
-                >
-                  <template #prefix>
-                    <NIcon
-                      :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown"
-                      :color="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? '#18A058' : '#D03050'"
-                    >
-                      <TrendingUp v-if="(summaryData?.last30Days?.interactionTrend || 0) >= 0" />
-                      <TrendingDown v-else />
-                    </NIcon>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="单次直播平均时长"
-                  :value="`${((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1)}小时`"
-                />
-                <NStatistic
-                  label="互动转化率"
-                  :value="`${((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1)}%`"
-                />
-                <NStatistic
-                  label="每付费用户平均打米"
-                  :value="formatCurrency((summaryData?.last30Days?.totalIncome || 0) / (summaryData?.last30Days?.payingUsers || 1))"
-                />
-              </div>
-            </NCard>
-          </NGridItem>
-        </NGrid>
-      </div>
-      <NDivider />
-      <!-- 图表选择器 -->
-      <div class="chart-selector">
-        <NTabs
-          v-model:value="activeChart"
-          type="line"
-          animated
-          @update:value="onTabChange"
-        >
-          <NTabPane
-            name="income"
-            tab="收入分析"
-            display-directive="show"
+      <!-- 空状态 -->
+      <NEmpty
+        v-if="!loading && !hasData"
+        description="暂无数据"
+        size="large"
+        style="margin: 60px 0"
+      >
+        <template #extra>
+          <NButton @click="() => fetchAnalyzeData()">
+            重新加载
+          </NButton>
+        </template>
+      </NEmpty>
+
+      <!-- 数据展示 -->
+      <template v-else>
+        <!-- 数据概览卡片 -->
+        <div class="summary-cards">
+          <NGrid
+            cols="1 800:2 1200:3"
+            :x-gap="16"
+            :y-gap="16"
           >
-            <div
-              ref="incomeChartRef"
-              class="chart"
-            />
-          </NTabPane>
-          <NTabPane
-            name="interaction"
-            tab="互动分析"
-            display-directive="show"
+            <NGridItem>
+              <NCard
+                title="近7天统计"
+                size="small"
+                class="summary-card"
+                hoverable
+              >
+                <template #header-extra>
+                  <NTag :bordered="false" size="small" type="info">
+                    最近一周
+                  </NTag>
+                </template>
+                <div class="stat-grid">
+                  <NStatistic
+                    label="总收入"
+                    tabular-nums
+                  >
+                    <template #default>
+                      <span class="stat-value-primary">
+                        {{ formatCurrency(summaryData?.last7Days?.totalIncome || 0) }}
+                      </span>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="总互动数"
+                    :value="summaryData?.last7Days?.totalInteractions || 0"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="弹幕数"
+                    :value="summaryData?.last7Days?.totalDanmakuCount || 0"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="直播时长"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ ((summaryData?.last7Days?.totalLiveMinutes || 0) / 60).toFixed(1) }} 小时
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="互动人数"
+                    :value="summaryData?.last7Days?.interactionUsers || 0"
+                    tabular-nums
+                  >
+                    <template #suffix>
+                      <NTag
+                        :type="getTrendType(summaryData?.last7Days?.interactionUsersTrend || 0)"
+                        size="small"
+                        :bordered="false"
+                      >
+                        <NIcon v-if="(summaryData?.last7Days?.interactionUsersTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        <NIcon v-else-if="(summaryData?.last7Days?.interactionUsersTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        {{ formatTrend(summaryData?.last7Days?.interactionUsersTrend || 0) }}
+                      </NTag>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="付费人数"
+                    :value="summaryData?.last7Days?.payingUsers || 0"
+                    tabular-nums
+                  >
+                    <template #suffix>
+                      <NTag
+                        :type="getTrendType(summaryData?.last7Days?.payingUsersTrend || 0)"
+                        size="small"
+                        :bordered="false"
+                      >
+                        <NIcon v-if="(summaryData?.last7Days?.payingUsersTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        <NIcon v-else-if="(summaryData?.last7Days?.payingUsersTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        {{ formatTrend(summaryData?.last7Days?.payingUsersTrend || 0) }}
+                      </NTag>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="日均收入"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ formatCurrency(summaryData?.last7Days?.dailyAvgIncome || 0) }}
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="日均弹幕"
+                    :value="(summaryData?.last7Days?.dailyAvgDanmaku || 0).toFixed(0)"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="活跃直播天数"
+                    :value="summaryData?.last7Days?.activeLiveDays || 0"
+                    tabular-nums
+                  />
+                </div>
+              </NCard>
+            </NGridItem>
+            
+            <NGridItem>
+              <NCard
+                title="近30天统计"
+                size="small"
+                class="summary-card"
+                hoverable
+              >
+                <template #header-extra>
+                  <NTag :bordered="false" size="small" type="warning">
+                    最近一月
+                  </NTag>
+                </template>
+                <div class="stat-grid">
+                  <NStatistic
+                    label="总收入"
+                    tabular-nums
+                  >
+                    <template #default>
+                      <span class="stat-value-primary">
+                        {{ formatCurrency(summaryData?.last30Days?.totalIncome || 0) }}
+                      </span>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="总互动数"
+                    :value="summaryData?.last30Days?.totalInteractions || 0"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="弹幕数"
+                    :value="summaryData?.last30Days?.totalDanmakuCount || 0"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="直播时长"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }} 小时
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="互动人数"
+                    :value="summaryData?.last30Days?.interactionUsers || 0"
+                    tabular-nums
+                  >
+                    <template #suffix>
+                      <NTag
+                        :type="getTrendType(summaryData?.last30Days?.interactionTrend || 0)"
+                        size="small"
+                        :bordered="false"
+                      >
+                        <NIcon v-if="(summaryData?.last30Days?.interactionTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        <NIcon v-else-if="(summaryData?.last30Days?.interactionTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        {{ formatTrend(summaryData?.last30Days?.interactionTrend || 0) }}
+                      </NTag>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="付费人数"
+                    :value="summaryData?.last30Days?.payingUsers || 0"
+                    tabular-nums
+                  >
+                    <template #suffix>
+                      <NTag
+                        :type="getTrendType(summaryData?.last30Days?.incomeTrend || 0)"
+                        size="small"
+                        :bordered="false"
+                      >
+                        <NIcon v-if="(summaryData?.last30Days?.incomeTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        <NIcon v-else-if="(summaryData?.last30Days?.incomeTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
+                        {{ formatTrend(summaryData?.last30Days?.incomeTrend || 0) }}
+                      </NTag>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="日均收入"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ formatCurrency(summaryData?.last30Days?.dailyAvgIncome || 0) }}
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="日均弹幕"
+                    :value="(summaryData?.last30Days?.dailyAvgDanmaku || 0).toFixed(0)"
+                    tabular-nums
+                  />
+                  <NStatistic
+                    label="活跃直播天数"
+                    :value="summaryData?.last30Days?.activeLiveDays || 0"
+                    tabular-nums
+                  />
+                </div>
+              </NCard>
+            </NGridItem>
+            
+            <NGridItem>
+              <NCard
+                title="关键指标"
+                size="small"
+                class="summary-card summary-card-highlight"
+                hoverable
+              >
+                <template #header-extra>
+                  <NTag :bordered="false" size="small" type="success">
+                    核心数据
+                  </NTag>
+                </template>
+                <div class="stat-grid">
+                  <NStatistic
+                    label="月收入增长"
+                    tabular-nums
+                  >
+                    <template #default>
+                      <span class="trend-value" :class="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? 'trend-up' : 'trend-down'">
+                        {{ formatTrend(summaryData?.last30Days?.incomeTrend || 0) }}
+                      </span>
+                    </template>
+                    <template #prefix>
+                      <NIcon :color="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? '#18A058' : '#D03050'">
+                        <TrendingUp v-if="(summaryData?.last30Days?.incomeTrend || 0) >= 0" />
+                        <TrendingDown v-else />
+                      </NIcon>
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="月互动增长"
+                    tabular-nums
+                  >
+                    <template #default>
+                      <span class="trend-value" :class="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? 'trend-up' : 'trend-down'">
+                        {{ formatTrend(summaryData?.last30Days?.interactionTrend || 0) }}
+                      </span>
+                    </template>
+                    <template #prefix>
+                      <NIcon
+                        :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown"
+                        :color="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? '#18A058' : '#D03050'"
+                      />
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="单次直播平均时长"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }} 小时
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="互动转化率"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}%
+                    </template>
+                  </NStatistic>
+                  <NStatistic
+                    label="每付费用户平均收入"
+                    tabular-nums
+                  >
+                    <template #default>
+                      {{ formatCurrency((summaryData?.last30Days?.totalIncome || 0) / (summaryData?.last30Days?.payingUsers || 1)) }}
+                    </template>
+                  </NStatistic>
+                </div>
+              </NCard>
+            </NGridItem>
+          </NGrid>
+        </div>
+        
+        <NDivider />
+        
+        <!-- 图表选择器 -->
+        <div class="chart-selector">
+          <NTabs
+            v-model:value="activeChart"
+            type="line"
+            animated
+            @update:value="onTabChange"
           >
-            <div
-              ref="interactionChartRef"
-              class="chart"
-            />
-          </NTabPane>
-          <NTabPane
-            name="users"
-            tab="用户分析"
-            display-directive="show"
-          >
-            <div
-              ref="usersChartRef"
-              class="chart"
-            />
-          </NTabPane>
-        </NTabs>
-      </div>
-      <NDivider />
+            <NTabPane
+              name="income"
+              tab="收入分析"
+              display-directive="show"
+            >
+              <div
+                ref="incomeChartRef"
+                class="chart"
+              />
+            </NTabPane>
+            <NTabPane
+              name="interaction"
+              tab="互动分析"
+              display-directive="show"
+            >
+              <div
+                ref="interactionChartRef"
+                class="chart"
+              />
+            </NTabPane>
+            <NTabPane
+              name="users"
+              tab="用户分析"
+              display-directive="show"
+            >
+              <div
+                ref="usersChartRef"
+                class="chart"
+              />
+            </NTabPane>
+          </NTabs>
+        </div>
+      </template>
     </NSpin>
   </div>
 </template>
 
 <style scoped>
+.analyze-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+.header-actions {
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .analyze-card {
   margin-bottom: 20px;
 }
@@ -715,33 +881,154 @@ onUnmounted(() => {
 
 .summary-card {
   height: 100%;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
 }
 
 .summary-card:hover {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.summary-card-highlight {
+  background: linear-gradient(135deg, rgba(24, 160, 88, 0.03) 0%, rgba(24, 160, 88, 0.01) 100%);
 }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
+}
+
+.stat-value-primary {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--n-text-color);
+}
+
+.trend-value {
+  font-weight: 600;
+  font-size: 1.1em;
+  transition: all 0.3s;
+}
+
+.trend-up {
+  color: #18A058;
+}
+
+.trend-down {
+  color: #D03050;
 }
 
 .chart-selector {
   margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .chart {
-  height: 450px;
+  height: 500px;
   width: 100%;
   margin-top: 10px;
+  transition: height 0.3s ease;
+}
+
+/* 响应式设计 */
+@media (max-width: 1400px) {
+  .chart {
+    height: 450px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .chart {
+    height: 400px;
+  }
 }
 
 @media (max-width: 768px) {
+  .analyze-container {
+    padding: 0;
+  }
+
   .stat-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
+
+  .chart {
+    height: 350px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .header-actions :deep(.n-space) {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart {
+    height: 300px;
+  }
+
+  .stat-value-primary {
+    font-size: 1.1em;
+  }
+
+  .trend-value {
+    font-size: 1em;
+  }
+}
+
+/* 骨架屏动画 */
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+/* 标签优化 */
+:deep(.n-statistic-value__prefix) {
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+:deep(.n-statistic-value__suffix) {
+  margin-left: 8px;
+}
+
+/* 图表容器优化 */
+:deep(.n-tabs-nav) {
+  padding: 0 12px;
+}
+
+/* 卡片标题优化 */
+:deep(.n-card-header__main) {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+/* Hover效果 */
+.summary-card :deep(.n-statistic) {
+  transition: transform 0.2s;
+}
+
+.summary-card:hover :deep(.n-statistic) {
+  transform: scale(1.02);
 }
 </style>

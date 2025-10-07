@@ -51,6 +51,10 @@ export async function GetSelfAccount(token?: string) {
 
 export function UpdateAccountLoop() {
   setInterval(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('as')) {
+      return
+    }
     if (ACCOUNT.value && window.$route?.name != 'question-display') {
       // 防止在问题详情页刷新
       GetSelfAccount()
