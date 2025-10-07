@@ -4,7 +4,7 @@ import type { MenuOption } from 'naive-ui'
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Settings24Filled } from '@vicons/fluent'
+import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
 import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NText, NTooltip } from 'naive-ui'
 
@@ -115,6 +115,12 @@ const menuOptions = computed(() => {
         h(RouterLink, { to: { name: 'client-auto-action-manage' } }, () => '自动操作'),
       key: 'danmaku-auto-action-manage',
       icon: () => h(FlashAuto24Filled),
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-read-danmaku' } }, () => '读弹幕'),
+      key: 'read-danmaku',
+      icon: () => h(Mic24Filled),
     },
     {
       label: () =>

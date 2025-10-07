@@ -84,6 +84,8 @@ export default antfu(
       'ts/switch-exhaustiveness-check': 'warn', // 允许 switch 不覆盖所有情况
       'ts/restrict-template-expressions': 'off', // 允许模板字符串表达式不受限制
 
+      'perfectionist/sort-imports': 'off',
+
       // JSON 相关规则
       'jsonc/sort-keys': 'off', // 关闭 JSON key 排序要求
     },

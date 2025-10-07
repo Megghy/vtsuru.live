@@ -14,12 +14,14 @@ import {
   BarChartOutline,
   CheckmarkCircleOutline,
   CloseCircleOutline,
+  CloudDownloadOutline,
   HardwareChipOutline,
   HelpCircle,
   LogInOutline,
   LogOutOutline,
   PeopleOutline,
   PersonCircleOutline,
+  RefreshOutline,
   TimeOutline,
   TimerOutline,
   TrendingUpOutline,
@@ -63,6 +65,7 @@ import {
   NInput,
   NInputGroup,
   NInputGroupLabel,
+  NPopconfirm,
   NQrCode,
   NRadioButton,
   NRadioGroup,
@@ -155,6 +158,35 @@ const cookieCloud = useTauriStore().getTarget<CookieCloudConfig>(COOKIE_CLOUD_KE
 const cookieCloudData = ref((await cookieCloud.get())!)
 const isLoadingCookiecloud = ref(false)
 
+// Cookie Cloud 手动操作相关状态
+const isSyncingFromCloud = ref(false)
+const isCheckingCookie = ref(false)
+const lastSyncTime = ref<number>(0)
+const lastCheckTime = ref<number>(0)
+const COOLDOWN_DURATION = 5 * 1000 // 30秒冷却时间
+
+// 计算剩余冷却时间
+const syncCooldownRemaining = ref(0)
+const checkCooldownRemaining = ref(0)
+let syncCooldownTimer: number | undefined
+let checkCooldownTimer: number | undefined
+
+// 更新冷却时间显示
+function updateCooldowns() {
+  const now = Date.now()
+  syncCooldownRemaining.value = Math.max(0, Math.ceil((lastSyncTime.value + COOLDOWN_DURATION - now) / 1000))
+  checkCooldownRemaining.value = Math.max(0, Math.ceil((lastCheckTime.value + COOLDOWN_DURATION - now) / 1000))
+}
+
+// 启动冷却计时器
+function startCooldownTimers() {
+  if (syncCooldownTimer) clearInterval(syncCooldownTimer)
+  if (checkCooldownTimer) clearInterval(checkCooldownTimer)
+
+  syncCooldownTimer = window.setInterval(updateCooldowns, 1000)
+  checkCooldownTimer = window.setInterval(updateCooldowns, 1000)
+}
+
 async function setCookieCloud() {
   try {
     isLoadingCookiecloud.value = true
@@ -164,6 +196,60 @@ async function setCookieCloud() {
     message.error(err.message)
   } finally {
     isLoadingCookiecloud.value = false
+  }
+}
+
+// 手动从 Cookie Cloud 同步
+async function manualSyncFromCloud() {
+  const now = Date.now()
+  if (now - lastSyncTime.value < COOLDOWN_DURATION) {
+    message.warning(`请等待 ${syncCooldownRemaining.value} 秒后再试`)
+    return
+  }
+
+  try {
+    isSyncingFromCloud.value = true
+    await biliCookie.check(true) // 强制从 CookieCloud 同步
+    lastSyncTime.value = Date.now()
+    updateCooldowns()
+
+    if (biliCookie.isCookieValid) {
+      message.success('Cookie 同步成功')
+    } else {
+      message.error('Cookie 同步失败或无效')
+    }
+  } catch (err: any) {
+    logError(`手动同步 Cookie 失败: ${err}`)
+    message.error(`同步失败: ${err.message || '未知错误'}`)
+  } finally {
+    isSyncingFromCloud.value = false
+  }
+}
+
+// 手动检查 Cookie 有效性
+async function manualCheckCookie() {
+  const now = Date.now()
+  if (now - lastCheckTime.value < COOLDOWN_DURATION) {
+    message.warning(`请等待 ${checkCooldownRemaining.value} 秒后再试`)
+    return
+  }
+
+  try {
+    isCheckingCookie.value = true
+    await biliCookie.check(false) // 只检查本地 Cookie
+    lastCheckTime.value = Date.now()
+    updateCooldowns()
+
+    if (biliCookie.isCookieValid) {
+      message.success('Cookie 有效')
+    } else {
+      message.error('Cookie 已失效')
+    }
+  } catch (err: any) {
+    logError(`手动检查 Cookie 失败: ${err}`)
+    message.error(`检查失败: ${err.message || '未知错误'}`)
+  } finally {
+    isCheckingCookie.value = false
   }
 }
 
@@ -206,8 +292,8 @@ const danmakuClientStateText = computed(() => {
 const danmakuClientStateType = computed(() => {
   switch (webfetcher.danmakuClientState) { // Replace with actual exposed state
     case 'connected': return 'success'
-    case 'connecting': 'info'
-    case 'stopped': 'error'
+    case 'connecting': return 'info'
+    case 'stopped': return 'error'
     default: return 'default'
   }
 })
@@ -594,6 +680,9 @@ onMounted(async () => {
 
   // Initialize statistics logic (ensure it runs)
   // initInfo(); // Assuming this is called elsewhere or on app startup
+
+  // 启动冷却计时器
+  startCooldownTimers()
 })
 
 onUnmounted(() => {
@@ -603,6 +692,9 @@ onUnmounted(() => {
   clearInterval(timer.value)
   clearTimeout(expiredTimer.value)
   clearInterval(countdownTimer.value)
+  // Clean up cooldown timers
+  clearInterval(syncCooldownTimer)
+  clearInterval(checkCooldownTimer)
 })
 </script>
 
@@ -940,8 +1032,14 @@ onUnmounted(() => {
               style="width: 100%; max-width: 800px; margin-bottom: 1rem;"
             >
               <template #header-extra>
-                <NTag>
-                  {{ }}
+                <NTag
+                  :type="biliCookie.cookieCloudState === 'valid' ? 'success' : biliCookie.cookieCloudState === 'syncing' ? 'info' : biliCookie.cookieCloudState === 'invalid' ? 'error' : 'default'"
+                >
+                  {{
+                    biliCookie.cookieCloudState === 'valid' ? '已配置' :
+                      biliCookie.cookieCloudState === 'syncing' ? '同步中' :
+                        biliCookie.cookieCloudState === 'invalid' ? '配置无效' : '未配置'
+                  }}
                 </NTag>
               </template>
               <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -980,30 +1078,67 @@ onUnmounted(() => {
                     placeholder="请输入 Host (可选)"
                   />
                 </NInputGroup>
-                <NButton
-                  v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
-                  type="primary"
-                  :loading="isLoadingCookiecloud"
-                  @click="setCookieCloud"
-                >
-                  保存配置
-                </NButton>
-                <NPopconfirm
-                  v-else
-                  type="error"
-                  @positive-click="async () => {
-                    await biliCookie.clearCookieCloudConfig();
-                    cookieCloudData = { key: '', password: '' };
-                    message.success('配置已清除');
-                  }"
-                >
-                  <template #trigger>
-                    <NButton type="error">
-                      清除配置
-                    </NButton>
-                  </template>
-                  确定要清除配置吗？
-                </NPopconfirm>
+                <NFlex gap="small">
+                  <NButton
+                    v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
+                    type="primary"
+                    :loading="isLoadingCookiecloud"
+                    @click="setCookieCloud"
+                  >
+                    保存配置
+                  </NButton>
+                  <NPopconfirm
+                    v-else
+                    type="error"
+                    @positive-click="async () => {
+                      await biliCookie.clearCookieCloudConfig();
+                      cookieCloudData = { key: '', password: '', host: 'https://cookie.vtsuru.live' };
+                      message.success('配置已清除');
+                    }"
+                  >
+                    <template #trigger>
+                      <NButton type="error">
+                        清除配置
+                      </NButton>
+                    </template>
+                    确定要清除配置吗？
+                  </NPopconfirm>
+                </NFlex>
+                <NDivider style="margin: 8px 0;">
+                  手动操作
+                </NDivider>
+                <NFlex gap="small">
+                  <NTooltip>
+                    <template #trigger>
+                      <NButton
+                        :disabled="biliCookie.cookieCloudState !== 'valid' || syncCooldownRemaining > 0"
+                        :loading="isSyncingFromCloud"
+                        @click="manualSyncFromCloud"
+                      >
+                        <template #icon>
+                          <NIcon :component="CloudDownloadOutline" />
+                        </template>
+                        {{ syncCooldownRemaining > 0 ? `同步 Cookie (${syncCooldownRemaining}s)` : '从云端同步 Cookie' }}
+                      </NButton>
+                    </template>
+                    {{ biliCookie.cookieCloudState !== 'valid' ? '请先配置有效的 Cookie Cloud' : syncCooldownRemaining > 0 ? `请等待 ${syncCooldownRemaining} 秒` : '手动从 Cookie Cloud 拉取最新的 Cookie' }}
+                  </NTooltip>
+                  <NTooltip>
+                    <template #trigger>
+                      <NButton
+                        :disabled="!biliCookie.hasBiliCookie || checkCooldownRemaining > 0"
+                        :loading="isCheckingCookie"
+                        @click="manualCheckCookie"
+                      >
+                        <template #icon>
+                          <NIcon :component="RefreshOutline" />
+                        </template>
+                        {{ checkCooldownRemaining > 0 ? `检查状态 (${checkCooldownRemaining}s)` : '检查 Cookie 状态' }}
+                      </NButton>
+                    </template>
+                    {{ !biliCookie.hasBiliCookie ? '当前没有 Cookie' : checkCooldownRemaining > 0 ? `请等待 ${checkCooldownRemaining} 秒` : '手动检查当前 Cookie 的有效性' }}
+                  </NTooltip>
+                </NFlex>
               </div>
             </NCard>
           </NTabPane>

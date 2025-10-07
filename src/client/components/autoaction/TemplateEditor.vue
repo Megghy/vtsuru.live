@@ -173,7 +173,7 @@ const highlightPatterns = computed(() => {
   return allPatterns
 })
 
-const MAX_LENGTH = 20
+const MAX_LENGTH = 40
 const WARNING_THRESHOLD = 16
 
 function evaluateTemplateForUI(template: string): string {
