@@ -316,10 +316,15 @@ function OnFileListChange(files: UploadFileInfo[]) {
 }
 
 function onUpdateClick(item: ResponsePointGoodModel) {
+  const copiedItem = JSON.parse(JSON.stringify(item))
+  // 确保 setting 对象存在
+  if (!copiedItem.setting) {
+    copiedItem.setting = {
+      allowGuardLevel: 0,
+    }
+  }
   currentGoodsModel.value = {
-    goods: JSON.parse(JSON.stringify({
-      ...item,
-    })),
+    goods: copiedItem,
     fileList: item.cover
       ? [
           {
@@ -949,6 +954,9 @@ onMounted(() => { })
                 :checked="currentGoodsModel.goods.setting?.guardFree != undefined"
                 @update:checked="
                   (v) => {
+                    if (!currentGoodsModel.goods.setting) {
+                      currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                    }
                     // @ts-ignore
                     currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined;
                   }
@@ -978,12 +986,22 @@ onMounted(() => { })
                 :gap="8"
               >
                 <NSelect
-                  v-model:value="currentGoodsModel.goods.setting.guardFree.year"
+                  :value="currentGoodsModel.goods.setting?.guardFree?.year"
+                  @update:value="(v) => {
+                    if (currentGoodsModel.goods.setting?.guardFree) {
+                      currentGoodsModel.goods.setting.guardFree.year = v;
+                    }
+                  }"
                   :options="allowedYearOptions"
                   placeholder="请选择年份"
                 />
                 <NSelect
-                  v-model:value="currentGoodsModel.goods.setting.guardFree.month"
+                  :value="currentGoodsModel.goods.setting?.guardFree?.month"
+                  @update:value="(v) => {
+                    if (currentGoodsModel.goods.setting?.guardFree) {
+                      currentGoodsModel.goods.setting.guardFree.month = v;
+                    }
+                  }"
                   :options="allowedMonthOptions"
                   placeholder="请选择月份"
                 />
@@ -1009,7 +1027,15 @@ onMounted(() => { })
                 </NTooltip>
               </NText>
 
-              <NRadioGroup v-model:value="currentGoodsModel.goods.setting.allowGuardLevel">
+              <NRadioGroup 
+                :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
+                @update:value="(v) => {
+                  if (!currentGoodsModel.goods.setting) {
+                    currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                  }
+                  currentGoodsModel.goods.setting.allowGuardLevel = v;
+                }"
+              >
                 <NRadioButton :value="0">
                   不限
                 </NRadioButton>
