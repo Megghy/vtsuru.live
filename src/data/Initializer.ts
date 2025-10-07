@@ -48,7 +48,7 @@ export function InitVTsuru() {
 }
 
 async function InitOther() {
-  if (process.env.NODE_ENV !== 'development' && !window.$route.path.startsWith('/obs')) {
+  if (import.meta.env.MODE !== 'development' && !window.$route.path.startsWith('/obs')) {
     const mod = await import('@hyperdx/browser')
     const HyperDX = (mod as any).default ?? mod
     HyperDX.init({
@@ -59,7 +59,7 @@ async function InitOther() {
       advancedNetworkCapture: true, // Capture full HTTP request/response headers and bodies (default false)
       ignoreUrls: [/localhost/i],
     })
-    // 将实例挂到窗口，便于后续设置全局属性（可选）
+    // 将实例挂到窗口,便于后续设置全局属性(可选)
     ;(window as any).__HyperDX__ = HyperDX
   }
   // 加载其他数据

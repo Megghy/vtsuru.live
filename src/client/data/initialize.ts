@@ -14,6 +14,7 @@ import {
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
+import { h } from 'vue'
 import { isLoggedIn, useAccount } from '@/api/account'
 import { CN_HOST, isDev } from '@/data/constants'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -30,6 +31,8 @@ const accountInfo = useAccount()
 export const clientInited = ref(false)
 let tray: TrayIcon
 let heartbeatTimer: number | null = null
+let updateCheckTimer: number | null = null
+let updateNotificationRef: any = null
 
 async function sendHeartbeat() {
   try {
@@ -58,12 +61,162 @@ export function stopHeartbeat() {
   }
 }
 
+export function startUpdateCheck() {
+  // 立即检查一次更新
+  void checkUpdatePeriodically()
+
+  // 之后每 6 小时检查一次更新
+  updateCheckTimer = window.setInterval(() => {
+    void checkUpdatePeriodically()
+  }, 6 * 60 * 60 * 1000) // 6 hours
+  info('[更新检查] 定时器已启动，间隔 6 小时')
+}
+
+export function stopUpdateCheck() {
+  if (updateCheckTimer !== null) {
+    clearInterval(updateCheckTimer)
+    updateCheckTimer = null
+    info('[更新检查] 定时器已停止')
+  }
+  if (updateNotificationRef) {
+    updateNotificationRef.destroy()
+    updateNotificationRef = null
+  }
+}
+
+async function checkUpdatePeriodically() {
+  try {
+    info('[更新检查] 开始检查更新...')
+    const update = await check()
+    
+    if (update) {
+      info(`[更新检查] 发现新版本: ${update.version}`)
+      
+      // 发送 Windows 通知
+      const permissionGranted = await isPermissionGranted()
+      if (permissionGranted) {
+        sendNotification({
+          title: 'VTsuru.Client 更新可用',
+          body: `发现新版本 ${update.version}，点击通知查看详情`,
+        })
+      }
+      
+      // 显示不可关闭的 NaiveUI notification
+      if (!updateNotificationRef) {
+        updateNotificationRef = window.$notification.warning({
+          title: '发现新版本',
+          content: `VTsuru.Client ${update.version} 现已可用`,
+          meta: update.date,
+          action: () => {
+            return h('div', { style: 'display: flex; gap: 8px; margin-top: 8px;' }, [
+              h(
+                'button',
+                {
+                  class: 'n-button n-button--primary-type n-button--small-type',
+                  onClick: () => { void handleUpdateInstall(update) },
+                },
+                '立即更新'
+              ),
+              h(
+                'button',
+                {
+                  class: 'n-button n-button--default-type n-button--small-type',
+                  onClick: () => handleUpdateDismiss(),
+                },
+                '稍后提醒'
+              ),
+            ])
+          },
+          closable: false,
+          duration: 0, // 不自动关闭
+        })
+      }
+    } else {
+      info('[更新检查] 当前已是最新版本')
+    }
+  } catch (error) {
+    warn(`[更新检查] 检查更新失败: ${error}`)
+  }
+}
+
+async function handleUpdateInstall(update: any) {
+  try {
+    // 关闭提示
+    if (updateNotificationRef) {
+      updateNotificationRef.destroy()
+      updateNotificationRef = null
+    }
+    
+    // 显示下载进度通知
+    let downloaded = 0
+    let contentLength = 0
+    const progressNotification = window.$notification.info({
+      title: '正在下载更新',
+      content: '更新下载中，请稍候...',
+      closable: false,
+      duration: 0,
+    })
+    
+    info('[更新] 开始下载并安装更新')
+    await update.downloadAndInstall((event: any) => {
+      switch (event.event) {
+        case 'Started':
+          contentLength = event.data.contentLength || 0
+          info(`[更新] 开始下载 ${contentLength} 字节`)
+          break
+        case 'Progress': {
+          downloaded += event.data.chunkLength
+          const progress = contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0
+          progressNotification.content = `下载进度: ${progress}% (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(contentLength / 1024 / 1024)}MB)`
+          info(`[更新] 已下载 ${downloaded} / ${contentLength} 字节`)
+          break
+        }
+        case 'Finished':
+          info('[更新] 下载完成')
+          progressNotification.content = '下载完成，正在安装...'
+          break
+      }
+    })
+    
+    progressNotification.destroy()
+    info('[更新] 更新安装完成，准备重启应用')
+    
+    window.$notification.success({
+      title: '更新完成',
+      content: '应用将在 3 秒后重启',
+      duration: 3000,
+    })
+    
+    // 延迟 3 秒后重启
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    await relaunch()
+  } catch (error) {
+    warn(`[更新] 安装更新失败: ${error}`)
+    window.$notification.error({
+      title: '更新失败',
+      content: `更新安装失败: ${error}`,
+      duration: 5000,
+    })
+  }
+}
+
+function handleUpdateDismiss() {
+  if (updateNotificationRef) {
+    updateNotificationRef.destroy()
+    updateNotificationRef = null
+  }
+  info('[更新] 用户选择稍后更新')
+}
+
 export async function initAll(isOnBoot: boolean) {
   const setting = useSettings()
   if (clientInited.value) {
     return
   }
-  checkUpdate()
+  // 初始检查更新（不阻塞初始化）
+  if (!isDev) {
+    void checkUpdate()
+  }
   const appWindow = getCurrentWindow()
   let permissionGranted = await isPermissionGranted()
 
@@ -86,7 +239,7 @@ export async function initAll(isOnBoot: boolean) {
     }
   }
   initNotificationHandler()
-  const detach = await attachConsole()
+  await attachConsole()
   const settings = useSettings()
   const biliCookie = useBiliCookie()
   await settings.init()
@@ -135,13 +288,9 @@ export async function initAll(isOnBoot: boolean) {
     tooltip: 'VTsuru 事件收集器',
     icon: iconData,
     action: (event) => {
-      switch (event.type) {
-        case 'DoubleClick':
-          appWindow.show()
-          break
-        case 'Click':
-          appWindow.show()
-          break
+      if (event.type === 'DoubleClick' || event.type === 'Click') {
+        appWindow.show()
+        appWindow.setFocus()
       }
     },
   }
@@ -180,6 +329,12 @@ export async function initAll(isOnBoot: boolean) {
   useBiliFunction().init()
 
   //startHeartbeat()
+  
+  // 启动定期更新检查
+  if (!isDev) {
+    startUpdateCheck()
+  }
+  
   clientInited.value = true
 }
 export function OnClientUnmounted() {
@@ -188,39 +343,14 @@ export function OnClientUnmounted() {
   }
 
   stopHeartbeat()
+  stopUpdateCheck()
   tray.close()
   // useDanmakuWindow().closeWindow();
 }
 
-async function checkUpdate() {
-  const update = await check()
-  console.log(update)
-  if (update) {
-    console.log(
-      `found update ${update.version} from ${update.date} with notes ${update.body}`,
-    )
-    let downloaded = 0
-    let contentLength = 0
-    // alternatively we could also call update.download() and update.install() separately
-    await update.downloadAndInstall((event) => {
-      switch (event.event) {
-        case 'Started':
-          contentLength = event.data.contentLength || 0
-          console.log(`started downloading ${event.data.contentLength} bytes`)
-          break
-        case 'Progress':
-          downloaded += event.data.chunkLength
-          console.log(`downloaded ${downloaded} from ${contentLength}`)
-          break
-        case 'Finished':
-          console.log('download finished')
-          break
-      }
-    })
-
-    console.log('update installed')
-    await relaunch()
-  }
+export async function checkUpdate() {
+  // 手动检查更新（保留用于手动触发）
+  await checkUpdatePeriodically()
 }
 
 export const isInitedDanmakuClient = ref(false)

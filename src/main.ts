@@ -18,7 +18,10 @@ void import('./data/Initializer').then(m => m.InitVTsuru())
 const isTauri = () => (window as any).__TAURI__ !== undefined || (window as any).__TAURI_INTERNAL__ !== undefined || '__TAURI__' in window
 if (isTauri()) {
   // 仅在 Tauri 环境下才动态加载相关初始化，避免把 @tauri-apps/* 打入入口
-  void import('./client/data/initialize').then(m => m.startHeartbeat())
+  void import('./client/data/initialize').then(m => {
+    m.startHeartbeat();
+    m.checkUpdate();
+  })
 }
 
 window.$mitt = emitter
