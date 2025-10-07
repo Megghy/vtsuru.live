@@ -553,6 +553,7 @@ onMounted(async () => {
       </div>
     </div>
 
+    <NDivider v-if="goods.length > 0" />
     <!-- 礼物列表区域 -->
     <NSpin
       :show="isLoading"
@@ -651,6 +652,7 @@ onMounted(async () => {
         </NGi>
       </NGrid>
     </NSpin>
+    <NDivider v-if="goods.length > 0" />
 
     <!-- 兑换确认模态框 -->
     <NModal
