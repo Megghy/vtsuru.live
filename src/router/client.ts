@@ -48,6 +48,15 @@ export default {
       },
     },
     {
+      path: 'read-danmaku',
+      name: 'client-read-danmaku',
+      component: async () => import('@/client/ClientReadDanmaku.vue'),
+      meta: {
+        title: '读弹幕',
+        forceReload: true,
+      },
+    },
+    {
       path: 'danmaku-window',
       name: 'client-danmaku-window-redirect',
       redirect: {

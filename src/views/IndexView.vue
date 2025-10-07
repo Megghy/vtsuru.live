@@ -463,7 +463,7 @@ onMounted(async () => {
               background: cardBgMedium,
               border: borderSystem.light,
               borderRadius: borderRadius.large,
-              boxShadow: shadowSystem.light,
+              boxShadow: 'none',
             }" hoverable class="feature-card">
               <NFlex vertical>
                 <NFlex align="center" style="margin-bottom: 10px;">
@@ -486,7 +486,7 @@ onMounted(async () => {
               background: cardBgMedium,
               border: borderSystem.light,
               borderRadius: borderRadius.large,
-              boxShadow: shadowSystem.light,
+              boxShadow: 'none',
             }" hoverable class="feature-card">
               <NFlex vertical>
                 <NFlex align="center" style="margin-bottom: 10px;">
@@ -534,7 +534,7 @@ onMounted(async () => {
         width: '90vw',
         maxWidth: '1400px',
         borderRadius: borderRadius.xlarge,
-        boxShadow: shadowSystem.light,
+        boxShadow: 'none',
       }">
         <NFlex vertical>
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
@@ -677,7 +677,7 @@ onMounted(async () => {
 
     &:hover
         transform: translateY(-4px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 
         &::before
             left: 100%;
@@ -700,14 +700,14 @@ onMounted(async () => {
 
     &:hover
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
 .entry-card
     transition: all 0.2s ease;
 
     &:hover
         transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
 .streamer-avatar
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -738,7 +738,7 @@ onMounted(async () => {
     transition: all 0.2s ease;
 
     &:hover
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
 :deep(.n-button--small)
     border-radius: 8px;
@@ -843,7 +843,7 @@ onMounted(async () => {
 
     &:hover
         transform: translateY(-3px);
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
         border-color: rgba(255, 255, 255, 0.25);
         background: rgba(255, 255, 255, 0.15);
 

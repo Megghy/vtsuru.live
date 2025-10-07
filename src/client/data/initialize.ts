@@ -36,7 +36,9 @@ let updateNotificationRef: any = null
 
 async function sendHeartbeat() {
   try {
-    await invoke('heartbeat')
+    await invoke('heartbeat', undefined, {
+      headers: [['Origin', location.host]]
+    })
   } catch (error) {
     console.error('发送心跳失败:', error)
   }
@@ -88,10 +90,10 @@ async function checkUpdatePeriodically() {
   try {
     info('[更新检查] 开始检查更新...')
     const update = await check()
-    
+
     if (update) {
       info(`[更新检查] 发现新版本: ${update.version}`)
-      
+
       // 发送 Windows 通知
       const permissionGranted = await isPermissionGranted()
       if (permissionGranted) {
@@ -100,7 +102,7 @@ async function checkUpdatePeriodically() {
           body: `发现新版本 ${update.version}，点击通知查看详情`,
         })
       }
-      
+
       // 显示不可关闭的 NaiveUI notification
       if (!updateNotificationRef) {
         updateNotificationRef = window.$notification.warning({
@@ -113,9 +115,11 @@ async function checkUpdatePeriodically() {
                 'button',
                 {
                   class: 'n-button n-button--primary-type n-button--small-type',
-                  onClick: () => { void handleUpdateInstall(update) },
+                  onClick: () => {
+                    void handleUpdateInstall(update)
+                  },
                 },
-                '立即更新'
+                '立即更新',
               ),
               h(
                 'button',
@@ -123,7 +127,7 @@ async function checkUpdatePeriodically() {
                   class: 'n-button n-button--default-type n-button--small-type',
                   onClick: () => handleUpdateDismiss(),
                 },
-                '稍后提醒'
+                '稍后提醒',
               ),
             ])
           },
@@ -146,7 +150,7 @@ async function handleUpdateInstall(update: any) {
       updateNotificationRef.destroy()
       updateNotificationRef = null
     }
-    
+
     // 显示下载进度通知
     let downloaded = 0
     let contentLength = 0
@@ -156,7 +160,7 @@ async function handleUpdateInstall(update: any) {
       closable: false,
       duration: 0,
     })
-    
+
     info('[更新] 开始下载并安装更新')
     await update.downloadAndInstall((event: any) => {
       switch (event.event) {
@@ -177,16 +181,16 @@ async function handleUpdateInstall(update: any) {
           break
       }
     })
-    
+
     progressNotification.destroy()
     info('[更新] 更新安装完成，准备重启应用')
-    
+
     window.$notification.success({
       title: '更新完成',
       content: '应用将在 3 秒后重启',
       duration: 3000,
     })
-    
+
     // 延迟 3 秒后重启
     await new Promise(resolve => setTimeout(resolve, 3000))
     await relaunch()
@@ -328,13 +332,13 @@ export async function initAll(isOnBoot: boolean) {
   useAutoAction().init()
   useBiliFunction().init()
 
-  //startHeartbeat()
-  
+  // startHeartbeat()
+
   // 启动定期更新检查
   if (!isDev) {
     startUpdateCheck()
   }
-  
+
   clientInited.value = true
 }
 export function OnClientUnmounted() {

@@ -8,6 +8,7 @@ import {
   MicOff24Filled,
   Play20Filled,
   Settings20Filled,
+  Speaker124Filled,
 } from '@vicons/fluent'
 import {
   NAlert,
@@ -41,18 +42,12 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
+import { copyToClipboard } from '@/Utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { templateConstants, useSpeechService } from '@/store/useSpeechService'
-import { copyToClipboard } from '@/Utils'
-
-const props = defineProps<{
-  roomInfo?: any
-  code?: string | undefined
-  isOpenLive?: boolean
-}>()
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -67,6 +62,11 @@ const {
   speechSynthesisInfo,
   apiAudio,
 } = speechService
+
+// 音频输出设备相关
+const availableDevices = ref<MediaDeviceInfo[]>([])
+const selectedDeviceId = ref<string>('default')
+const isLoadingDevices = ref(false)
 
 // 计算属性
 const isVtsuruVoiceAPI = computed(() => {
@@ -92,6 +92,62 @@ const queueStats = computed(() => {
   ).length
 
   return { total, gifts, messages, waiting }
+})
+
+const deviceOptions = computed(() => {
+  return [
+    { label: '默认设备', value: 'default' },
+    ...availableDevices.value.map(device => ({
+      label: device.label || `设备 ${device.deviceId.substring(0, 8)}`,
+      value: device.deviceId,
+    })),
+  ]
+})
+
+// 获取音频输出设备列表
+async function loadAudioDevices() {
+  try {
+    isLoadingDevices.value = true
+
+    // 请求权限
+    await navigator.mediaDevices.getUserMedia({ audio: true })
+
+    // 获取设备列表
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    availableDevices.value = devices.filter(device => device.kind === 'audiooutput')
+
+    console.log('[TTS] 已加载音频输出设备:', availableDevices.value.length)
+  } catch (error) {
+    console.error('[TTS] 获取音频设备失败:', error)
+    message.warning('无法获取音频设备列表，将使用默认设备')
+  } finally {
+    isLoadingDevices.value = false
+  }
+}
+
+// 切换音频输出设备
+async function changeAudioDevice(deviceId: string) {
+  if (!apiAudio.value) return
+
+  try {
+    // @ts-ignore - setSinkId 可能在某些浏览器中不可用
+    if (typeof apiAudio.value.setSinkId === 'function') {
+      // @ts-ignore
+      await apiAudio.value.setSinkId(deviceId)
+      message.success(`已切换到: ${deviceOptions.value.find(d => d.value === deviceId)?.label}`)
+      console.log('[TTS] 音频输出设备已切换:', deviceId)
+    } else {
+      message.warning('当前浏览器不支持切换音频输出设备')
+    }
+  } catch (error) {
+    console.error('[TTS] 切换音频设备失败:', error)
+    message.error('切换音频设备失败')
+  }
+}
+
+// 监听设备选择变化
+watch(selectedDeviceId, (newDeviceId) => {
+  changeAudioDevice(newDeviceId)
 })
 
 // 方法
@@ -223,12 +279,16 @@ function onAPIError(_e: Event) {
 // 生命周期
 onMounted(async () => {
   await speechService.initialize()
+  await loadAudioDevices()
 
   client.onEvent('danmaku', onGetEvent)
   client.onEvent('sc', onGetEvent)
   client.onEvent('guard', onGetEvent)
   client.onEvent('gift', onGetEvent)
   client.onEvent('enter', onGetEvent)
+
+  // 监听设备变化
+  navigator.mediaDevices.addEventListener('devicechange', loadAudioDevices)
 })
 
 onUnmounted(() => {
@@ -239,6 +299,9 @@ onUnmounted(() => {
   client.offEvent('enter', onGetEvent)
 
   speechService.stopSpeech()
+
+  // 移除设备变化监听
+  navigator.mediaDevices.removeEventListener('devicechange', loadAudioDevices)
 })
 </script>
 
@@ -320,82 +383,125 @@ onUnmounted(() => {
         style="margin-top: 16px"
       >
         <NSpace
-          align="center"
-          justify="space-between"
-          :wrap="false"
+          vertical
+          :size="16"
         >
-          <NSpace align="center">
-            <NButton
-              :type="speechState.canSpeech ? 'error' : 'primary'"
-              size="large"
-              :loading="speechState.isApiAudioLoading"
-              data-umami-event="Use TTS"
-              :data-umami-event-uid="accountInfo?.id"
-              @click="speechState.canSpeech ? stopSpeech() : startSpeech()"
-            >
-              <template #icon>
-                <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
-              </template>
-              {{ speechState.canSpeech ? '停止监听' : '开始监听' }}
-            </NButton>
+          <NSpace
+            align="center"
+            justify="space-between"
+            :wrap="false"
+          >
+            <NSpace align="center">
+              <NButton
+                :type="speechState.canSpeech ? 'error' : 'primary'"
+                size="large"
+                :loading="speechState.isApiAudioLoading"
+                data-umami-event="Use TTS"
+                :data-umami-event-uid="accountInfo?.id"
+                @click="speechState.canSpeech ? stopSpeech() : startSpeech()"
+              >
+                <template #icon>
+                  <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
+                </template>
+                {{ speechState.canSpeech ? '停止监听' : '开始监听' }}
+              </NButton>
 
-            <NDivider vertical />
+              <NDivider vertical />
 
-            <NButton
-              :type="speechState.isSpeaking ? 'error' : 'default'"
-              :disabled="!speechState.isSpeaking"
-              @click="cancelSpeech"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss20Filled" />
-              </template>
-              取消当前
-            </NButton>
+              <NButton
+                :type="speechState.isSpeaking ? 'error' : 'default'"
+                :disabled="!speechState.isSpeaking"
+                @click="cancelSpeech"
+              >
+                <template #icon>
+                  <NIcon :component="Dismiss20Filled" />
+                </template>
+                取消当前
+              </NButton>
 
-            <NButton
-              type="warning"
-              secondary
-              :disabled="speakQueue.length === 0"
-              @click="clearQueue"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss20Filled" />
-              </template>
-              清空队列
-            </NButton>
+              <NButton
+                type="warning"
+                secondary
+                :disabled="speakQueue.length === 0"
+                @click="clearQueue"
+              >
+                <template #icon>
+                  <NIcon :component="Dismiss20Filled" />
+                </template>
+                清空队列
+              </NButton>
+            </NSpace>
+
+            <NSpace align="center">
+              <NPopconfirm @positive-click="downloadConfig">
+                <template #trigger>
+                  <NButton
+                    type="primary"
+                    secondary
+                    size="small"
+                    :disabled="!accountInfo"
+                  >
+                    <template #icon>
+                      <NIcon :component="Settings20Filled" />
+                    </template>
+                    获取配置
+                  </NButton>
+                </template>
+                这将覆盖当前设置，确定？
+              </NPopconfirm>
+
+              <NButton
+                type="primary"
+                secondary
+                size="small"
+                :disabled="!accountInfo"
+                @click="uploadConfig"
+              >
+                <template #icon>
+                  <NIcon :component="CheckmarkCircle20Filled" />
+                </template>
+                保存配置
+              </NButton>
+            </NSpace>
           </NSpace>
 
-          <NSpace align="center">
-            <NPopconfirm @positive-click="downloadConfig">
-              <template #trigger>
-                <NButton
-                  type="primary"
-                  secondary
-                  size="small"
-                  :disabled="!accountInfo"
-                >
-                  <template #icon>
-                    <NIcon :component="Settings20Filled" />
-                  </template>
-                  获取配置
-                </NButton>
-              </template>
-              这将覆盖当前设置，确定？
-            </NPopconfirm>
-
+          <!-- 音频输出设备选择 -->
+          <NDivider style="margin: 8px 0">
+            音频输出设置
+          </NDivider>
+          <NSpace
+            align="center"
+            :size="12"
+          >
+            <NIcon
+              :component="Speaker124Filled"
+              :size="20"
+            />
+            <NText>输出设备：</NText>
+            <NSelect
+              v-model:value="selectedDeviceId"
+              :options="deviceOptions"
+              :loading="isLoadingDevices"
+              style="min-width: 250px; flex: 1"
+              :disabled="availableDevices.length === 0"
+            />
             <NButton
-              type="primary"
-              secondary
-              size="small"
-              :disabled="!accountInfo"
-              @click="uploadConfig"
+              :loading="isLoadingDevices"
+              @click="loadAudioDevices"
             >
-              <template #icon>
-                <NIcon :component="CheckmarkCircle20Filled" />
-              </template>
-              保存配置
+              刷新设备
             </NButton>
           </NSpace>
+          <NAlert
+            v-if="availableDevices.length === 0 && !isLoadingDevices"
+            type="warning"
+            :bordered="false"
+          >
+            <template #icon>
+              <NIcon :component="Info24Filled" />
+            </template>
+            未检测到音频输出设备或浏览器不支持设备选择功能
+          </NAlert>
         </NSpace>
       </NCard>
 
@@ -771,10 +877,10 @@ onUnmounted(() => {
                       text
                       type="info"
                       tag="a"
-                      href="https://github.com/Artrajz/vits-simple-api"
+                      href="https://github.com/fishaudio/Bert-VITS2"
                       target="_blank"
                     >
-                      vits-simple-api
+                      Bert-VITS2
                     </NButton>
                   </NSpace>
                 </NCollapseItem>
