@@ -101,13 +101,24 @@ const addressOptions = computed(() => {
 // 判断是否可以执行购买操作
 const canDoBuy = computed(() => {
   if (!currentGoods.value) return false
+
+  // 优先使用后端返回的购买状态
+  if (!currentGoods.value.canPurchase) return false
+
+  // 额外的前端检查
+  // 检查购买数量是否超出限制
+  const totalCount = (currentGoods.value.purchasedCount ?? 0) + buyCount.value
+  if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) return false
+
   // 检查积分是否足够
   const pointCheck = currentGoods.value.price * buyCount.value <= currentPoint.value
+
   // 如果是实物礼物且没有外部收集链接，则必须选择地址
   const addressCheck
     = currentGoods.value.type !== GoodsTypes.Physical
       || currentGoods.value.collectUrl
       || !!selectedAddress.value
+
   return pointCheck && addressCheck
 })
 
@@ -177,18 +188,26 @@ const selectedItems = computed(() => {
 // --- 方法 ---
 
 // 获取礼物兑换按钮的提示文本
-function getTooltip(goods: ResponsePointGoodModel): '开始兑换' | '当前积分不足' | '请先进行账号认证' | '库存不足' | '舰长等级不足' | '兑换时间未到' | '已达兑换上限' | '需要设置地址' {
-  if (!biliAuth.value.id) return '请先进行账号认证' // 未认证
-  if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足' // 库存不足
-  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return '当前积分不足' // 积分不足且不能免费兑换
+function getTooltip(goods: ResponsePointGoodModel): string {
+  // 优先使用后端返回的购买状态信息
+  if (!goods.canPurchase && goods.cannotPurchaseReason) {
+    return goods.cannotPurchaseReason
+  }
+
+  // 后备检查逻辑
+  if (!biliAuth.value.id) return '请先进行账号认证'
+  if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
+  if (!goods.isAllowRebuy && goods.hasPurchased) return '该礼物不允许重复兑换'
+  if (goods.purchasedCount >= (goods.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${goods.maxBuyCount})`
+  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return '当前积分不足'
+
   // 检查舰长等级要求
-  // 使用 guardInfo 判断用户在当前主播房间的舰长等级
   const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
   if (goods.allowGuardLevel > 0 && currentGuardLevel < goods.allowGuardLevel) {
     return '舰长等级不足'
   }
 
-  return '开始兑换' // 可以兑换
+  return '开始兑换'
 }
 
 // 重置购买模态框状态
@@ -219,6 +238,20 @@ async function buyGoods() {
     message.error('兑换数量必须为整数')
     return
   }
+
+  // 检查后端购买状态
+  if (!currentGoods.value?.canPurchase) {
+    message.error(currentGoods.value?.cannotPurchaseReason || '无法兑换该礼物')
+    return
+  }
+
+  // 检查是否超出兑换次数限制
+  const totalCount = (currentGoods.value.purchasedCount ?? 0) + buyCount.value
+  if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) {
+    message.error(`超出最大兑换次数限制(${currentGoods.value.maxBuyCount})`)
+    return
+  }
+
   if (
     currentGoods.value?.type === GoodsTypes.Physical // 是实物
     && !currentGoods.value.collectUrl // 没有外部收集链接
@@ -559,28 +592,59 @@ onMounted(async () => {
             :goods="item"
             content-style="max-width: 300px; min-width: 250px; height: 380px;"
             class="goods-item"
-            :class="{ 'pinned-item': item.isPinned }"
+            :class="{
+              'pinned-item': item.isPinned,
+              'purchased-item': item.hasPurchased,
+              'cannot-purchase-item': !item.canPurchase,
+            }"
           >
             <template #footer>
               <NFlex
-                justify="space-between"
-                align="center"
-                class="goods-footer"
+                vertical
+                :size="8"
               >
-                <NTooltip placement="bottom">
-                  <template #trigger>
-                    <NButton
-                      :disabled="getTooltip(item) !== '开始兑换'"
-                      size="small"
-                      type="primary"
-                      class="exchange-btn"
-                      @click="onBuyClick(item)"
-                    >
-                      {{ item.isPinned ? '🔥 兑换' : '兑换' }}
-                    </NButton>
-                  </template>
-                  {{ getTooltip(item) }}
-                </NTooltip>
+                <NFlex
+                  v-if="item.hasPurchased || !item.canPurchase"
+                  :size="4"
+                  wrap
+                >
+                  <NTag
+                    v-if="item.hasPurchased"
+                    :type="item.isAllowRebuy ? 'info' : 'warning'"
+                    size="small"
+                    :bordered="false"
+                  >
+                    {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
+                  </NTag>
+                  <NTag
+                    v-if="!item.canPurchase && item.cannotPurchaseReason"
+                    type="error"
+                    size="small"
+                    :bordered="false"
+                  >
+                    {{ item.cannotPurchaseReason }}
+                  </NTag>
+                </NFlex>
+                <NFlex
+                  justify="space-between"
+                  align="center"
+                  class="goods-footer"
+                >
+                  <NTooltip placement="bottom">
+                    <template #trigger>
+                      <NButton
+                        :disabled="getTooltip(item) !== '开始兑换'"
+                        size="small"
+                        type="primary"
+                        class="exchange-btn"
+                        @click="onBuyClick(item)"
+                      >
+                        {{ item.isPinned ? '🔥 兑换' : '兑换' }}
+                      </NButton>
+                    </template>
+                    {{ getTooltip(item) }}
+                  </NTooltip>
+                </NFlex>
               </NFlex>
             </template>
           </PointGoodsItem>
@@ -620,6 +684,23 @@ onMounted(async () => {
         content-style="height: auto;"
       />
 
+      <!-- 购买历史提示 -->
+      <NAlert
+        v-if="currentGoods.hasPurchased"
+        :type="currentGoods.isAllowRebuy ? 'info' : 'warning'"
+        style="margin-top: 12px;"
+      >
+        <template #header>
+          {{ currentGoods.isAllowRebuy ? '购买记录' : '重要提示' }}
+        </template>
+        你已兑换过此礼物 <strong>{{ currentGoods.purchasedCount }}</strong> 次
+        <span v-if="!currentGoods.isAllowRebuy">，该礼物不允许重复兑换</span>
+        <span v-else-if="currentGoods.maxBuyCount">
+          ，最多可兑换 <strong>{{ currentGoods.maxBuyCount }}</strong> 次
+          (剩余 <strong>{{ currentGoods.maxBuyCount - currentGoods.purchasedCount }}</strong> 次)
+        </span>
+      </NAlert>
+
       <!-- 兑换选项 (仅对实物或需要数量选择的礼物显示) -->
       <template v-if="currentGoods.type === GoodsTypes.Physical || (currentGoods.maxBuyCount ?? 1) > 1 || true">
         <NDivider style="margin-top: 12px; margin-bottom: 12px;">
@@ -636,7 +717,10 @@ onMounted(async () => {
             <NInputNumber
               v-model:value="buyCount"
               :min="1"
-              :max="currentGoods.maxBuyCount ?? 100000"
+              :max="Math.min(
+                currentGoods.maxBuyCount ?? 100000,
+                (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0),
+              )"
               style="max-width: 120px"
               step="1"
               :precision="0"
@@ -645,7 +729,13 @@ onMounted(async () => {
               depth="3"
               style="margin-left: 8px;"
             >
-              (最多可兑换 {{ currentGoods.maxBuyCount ?? '无限' }} 个)
+              ({{
+                currentGoods.hasPurchased
+                  ? `已兑换 ${currentGoods.purchasedCount} 个，还可兑换 ${
+                    (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0)
+                  } 个`
+                  : `最多可兑换 ${currentGoods.maxBuyCount ?? '无限'} 个`
+              }})
             </NText>
           </NFormItem>
           <!-- 地址选择 (仅对无外部收集链接的实物礼物显示) -->
@@ -688,7 +778,11 @@ onMounted(async () => {
 
       <NDivider style="margin-top: 16px; margin-bottom: 16px;">
         <NTag :type="!canDoBuy ? 'error' : 'success'">
-          {{ !canDoBuy ? (currentGoods.price * buyCount > currentPoint ? '积分不足' : '信息不完整') : '可兑换' }}
+          {{
+            !canDoBuy
+              ? (currentGoods.cannotPurchaseReason || (currentGoods.price * buyCount > currentPoint ? '积分不足' : '信息不完整'))
+              : '可兑换'
+          }}
         </NTag>
       </NDivider>
 
@@ -877,6 +971,20 @@ onMounted(async () => {
 
 .pinned-item::before {
   content: none;
+}
+
+.purchased-item {
+  opacity: 0.92;
+}
+
+.cannot-purchase-item {
+  opacity: 0.7;
+  filter: grayscale(0.3);
+}
+
+.cannot-purchase-item:hover {
+  opacity: 0.85;
+  filter: grayscale(0.15);
 }
 
 .pin-icon {

@@ -764,7 +764,7 @@ onMounted(() => {
       <NLayout>
         <!-- 主内容区域 -->
         <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${aplayerHeight}px)`">
-          <NLayoutContent content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px)">
+          <NLayoutContent content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px); padding-bottom: 32px;">
             <NElement>
               <!-- 已验证邮箱的用户显示内容 -->
               <RouterView

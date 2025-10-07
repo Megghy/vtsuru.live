@@ -9,6 +9,7 @@ const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
   contentStyle?: string | undefined
   size?: 'small' | 'default'
+  isManage?: boolean
 }>()
 
 // 默认封面图片
@@ -62,16 +63,16 @@ const emptyCover = `${IMGUR_URL}None.png`
             :bordered="true"
             style="background-color: transparent;"
             :style="{
-              color: goods.type == GoodsTypes.Physical ? '#006633' : '#0066cc',
-              borderColor: goods.type == GoodsTypes.Physical ? '#009966' : '#3399ff',
-              backgroundColor: goods.type == GoodsTypes.Physical ? '#c2e6d290' : '#c2d6eb90',
+              color: goods.type === GoodsTypes.Physical ? '#006633' : '#0066cc',
+              borderColor: goods.type === GoodsTypes.Physical ? '#009966' : '#3399ff',
+              backgroundColor: goods.type === GoodsTypes.Physical ? '#c2e6d290' : '#c2d6eb90',
             }"
           >
-            {{ goods.type == GoodsTypes.Physical ? '实物' : '虚拟' }}
+            {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
           </NTag>
           <!-- 状态标签 -->
           <NTag
-            v-if="goods.count == 0"
+            v-if="goods.count === 0"
             size="small"
             type="error"
             :bordered="false"
@@ -133,7 +134,7 @@ const emptyCover = `${IMGUR_URL}None.png`
               {{ goods.count }}
             </NText>
             <NText
-              v-else-if="goods.count == 0"
+              v-else-if="goods.count === 0"
               size="small"
               type="error"
             >
@@ -174,12 +175,152 @@ const emptyCover = `${IMGUR_URL}None.png`
         </NText>
       </NEllipsis>
 
+      <!-- 礼物信息卡片 - 仅在后台管理页面显示 -->
+      <div
+        v-if="isManage"
+        class="info-cards"
+      >
+        <!-- 兑换数量限制 -->
+        <div
+          v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount"
+          class="info-item"
+        >
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            📦 限购
+          </NText>
+          <NText class="info-value">
+            {{ goods.maxBuyCount }}件
+          </NText>
+        </div>
+
+        <!-- 是否允许重复兑换 -->
+        <div class="info-item">
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            🔄 重购
+          </NText>
+          <NText
+            class="info-value"
+            :type="goods.isAllowRebuy ? 'success' : 'error'"
+          >
+            {{ goods.isAllowRebuy ? '允许' : '禁止' }}
+          </NText>
+        </div>
+
+        <!-- 舰长等级限制 -->
+        <div
+          v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0"
+          class="info-item"
+        >
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            ⚓ 等级
+          </NText>
+          <NText
+            class="info-value"
+            type="warning"
+          >
+            {{ goods.setting.allowGuardLevel === 1 ? '总督' : goods.setting.allowGuardLevel === 2 ? '提督' : '舰长' }}+
+          </NText>
+        </div>
+
+        <!-- 舰长免费 -->
+        <div
+          v-if="goods.setting?.guardFree"
+          class="info-item"
+        >
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            ⭐ 舰长
+          </NText>
+          <NText
+            class="info-value"
+            type="success"
+          >
+            免费
+          </NText>
+        </div>
+
+        <!-- 虚拟礼物密钥数量 -->
+        <div
+          v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys && goods.virtualKeys.length > 0"
+          class="info-item"
+        >
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            🔑 密钥
+          </NText>
+          <NText class="info-value">
+            {{ goods.virtualKeys.length }}个
+          </NText>
+        </div>
+
+        <!-- 收集地址方式 -->
+        <div
+          v-if="goods.type === GoodsTypes.Physical"
+          class="info-item"
+        >
+          <NText
+            depth="3"
+            class="info-label"
+          >
+            📮 地址
+          </NText>
+          <NText class="info-value">
+            {{ goods.collectUrl ? '站外' : '本站' }}
+          </NText>
+        </div>
+      </div>
+
       <!-- 用户自定义标签展示 -->
       <div
-        v-if="goods.tags && goods.tags.length > 0"
+        v-if="(goods.tags && goods.tags.length > 0) || (!isManage && ((goods.setting?.allowGuardLevel ?? 0) > 0 || goods.setting?.guardFree || !goods.isAllowRebuy))"
         class="tags-container"
       >
         <div class="tags-wrapper">
+          <!-- 用户页面：显示重要信息标签 -->
+          <template v-if="!isManage">
+            <NTag
+              v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0"
+              :bordered="false"
+              size="tiny"
+              class="user-tag important-tag"
+              style="color: #fff; background-color: rgba(255, 170, 0, 0.85);"
+            >
+              ⚓ {{ goods.setting.allowGuardLevel === 1 ? '总督' : goods.setting.allowGuardLevel === 2 ? '提督' : '舰长' }}+
+            </NTag>
+            <NTag
+              v-if="goods.setting?.guardFree"
+              :bordered="false"
+              size="tiny"
+              class="user-tag important-tag"
+              style="color: #fff; background-color: rgba(24, 160, 88, 0.85);"
+            >
+              ⭐ 舰长免费
+            </NTag>
+            <NTag
+              v-if="!goods.isAllowRebuy"
+              :bordered="false"
+              size="tiny"
+              class="user-tag important-tag"
+              style="color: #fff; background-color: rgba(208, 48, 80, 0.85);"
+            >
+              🔒 限购一次
+            </NTag>
+          </template>
+
+          <!-- 用户自定义标签 -->
           <NTag
             v-for="tag in goods.tags"
             :key="tag"
@@ -399,6 +540,18 @@ const emptyCover = `${IMGUR_URL}None.png`
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* 重要信息标签样式 */
+.important-tag {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.important-tag:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px) scale(1.08);
+}
+
 .stock-info {
   font-size: 0.85em;
   color: var(--text-color-3);
@@ -407,5 +560,46 @@ const emptyCover = `${IMGUR_URL}None.png`
   background-color: var(--action-color);
   border-radius: 4px;
   font-weight: 500;
+}
+
+/* 信息卡片样式 */
+.info-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px;
+  background-color: var(--action-color);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: var(--card-color);
+  border-radius: 4px;
+  border: 1px solid var(--divider-color);
+  transition: all 0.2s ease;
+  font-size: 0.85em;
+}
+
+.info-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color-hover);
+}
+
+.info-label {
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.info-value {
+  font-weight: 600;
+  font-size: 0.95em;
+  white-space: nowrap;
 }
 </style>

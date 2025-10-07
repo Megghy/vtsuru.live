@@ -562,6 +562,7 @@ onMounted(() => { })
         >
           <PointGoodsItem
             :goods="item"
+            :is-manage="true"
             class="point-goods-card"
           >
             <template #footer>
@@ -641,6 +642,7 @@ onMounted(() => { })
         >
           <PointGoodsItem
             :goods="item"
+            :is-manage="true"
             class="point-goods-card"
           >
             <template #footer>

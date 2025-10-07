@@ -715,6 +715,12 @@ export interface ResponsePointGoodModel {
   allowGuardLevel: GuardLevel
   setting: PointGoodsSetting
 
+  // 购买状态信息
+  purchasedCount: number
+  hasPurchased: boolean
+  canPurchase: boolean
+  cannotPurchaseReason?: string
+
   // 添加虚拟礼物多Key支持
   virtualKeys?: string[]
   keySelectionMode?: KeySelectionMode

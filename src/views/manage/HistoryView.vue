@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DataTableColumns } from 'naive-ui'
 import { Info24Filled } from '@vicons/fluent'
 import { addDays, endOfDay, format, startOfDay } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
@@ -12,8 +13,8 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
-import { computed, onMounted, ref, watch } from 'vue'
+import { NAlert, NButton, NCard, NDataTable, NDatePicker, NDivider, NEmpty, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
@@ -62,6 +63,25 @@ interface HistoryUpstatRecordModel {
   }
 }
 
+interface GuardMemberModel {
+  guardUid: number
+  username: string
+  guardLevel: string
+  accompanyDays: number
+  isActive: boolean
+  lastUpdateTime: string
+}
+
+interface GuardStatsModel {
+  totalCount: number
+  governorCount: number
+  admiralCount: number
+  captainCount: number
+  avgAccompanyDays: number
+  maxAccompanyDays: number
+  lastUpdateTime: string
+}
+
 const accountInfo = useAccount()
 const message = useMessage()
 
@@ -82,6 +102,66 @@ const upstatViewOption = ref()
 const upstatLikeOption = ref()
 
 const isLoading = ref(true)
+
+// 舰长列表相关
+const guardList = ref<GuardMemberModel[]>([])
+const guardStats = ref<GuardStatsModel | null>(null)
+const guardListLoading = ref(false)
+const guardPaginationPage = ref(1)
+const guardPaginationPageSize = ref(30)
+const guardPagination = computed(() => ({
+  page: guardPaginationPage.value,
+  pageSize: guardPaginationPageSize.value,
+  itemCount: guardList.value.length,
+  showSizePicker: true,
+  pageSizes: [10, 20, 30, 50],
+  onChange: (page: number) => {
+    guardPaginationPage.value = page
+  },
+  onUpdatePageSize: (pageSize: number) => {
+    guardPaginationPageSize.value = pageSize
+    guardPaginationPage.value = 1
+  },
+}))
+
+// 舰长列表表格列定义
+const guardColumns: DataTableColumns<GuardMemberModel> = [
+  {
+    title: 'UID',
+    key: 'guardUid',
+    width: 100,
+  },
+  {
+    title: '用户名',
+    key: 'username',
+    ellipsis: {
+      tooltip: true,
+    },
+  },
+  {
+    title: '等级',
+    key: 'guardLevel',
+    width: 80,
+    render: (row) => {
+      const colorMap: Record<string, string> = {
+        总督: '#FF6B9D',
+        提督: '#C59AFF',
+        舰长: '#00D1FF',
+      }
+      return h(
+        'span',
+        { style: { color: colorMap[row.guardLevel] || '#333', fontWeight: 'bold' } },
+        row.guardLevel,
+      )
+    },
+  },
+  {
+    title: '陪伴天数',
+    key: 'accompanyDays',
+    width: 100,
+    sorter: (a, b) => a.accompanyDays - b.accompanyDays,
+  },
+]
 
 // 统计开始日期
 const statisticStartDate = new Date(2023, 10, 4)
@@ -119,7 +199,7 @@ const chartHeight = computed(() => {
 async function getHistory() {
   try {
     const response = await QueryGetAPI<HistoryModel>(`${HISTORY_API_URL}get-all`)
-    if (response.code == 200) {
+    if (response.code === 200) {
       fansHistory.value = response.data.fan.records
       guardHistory.value = response.data.guard.records
       upstatHistory.value = response.data.upstat.records
@@ -129,7 +209,7 @@ async function getHistory() {
     } else {
       message.error(`加载失败: ${response.message}`)
     }
-  } catch (err) {
+  } catch {
     message.error('加载失败')
   }
 }
@@ -200,7 +280,7 @@ function generateTimeSeries(
       }
 
       if ((historyData[lastTimeIndex + 1]?.time ?? Number.MAX_VALUE) > dayEndTime) {
-        const changed = data.count !== lastDayCount
+        const _changed = data.count !== lastDayCount
         lastDayCount = data.count
         dayExist = true
         break
@@ -267,8 +347,8 @@ function processFansChartOptions() {
         let str = ''
         for (let i = 0; i < param.length; i++) {
           const status
-            = param[i].seriesName == '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
-          const statusHtml = status == '' ? '' : `&nbsp;<span style="color:gray">${status}</span>`
+            = param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
+          const statusHtml = status === '' ? '' : `&nbsp;<span style="color:gray">${status}</span>`
           str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
@@ -468,6 +548,38 @@ function processUpstatLikeChartOptions() {
 }
 
 /**
+ * 加载舰长列表
+ */
+async function loadGuardList() {
+  guardListLoading.value = true
+  try {
+    const [listResponse, statsResponse] = await Promise.all([
+      QueryGetAPI<GuardMemberModel[]>(
+        `${HISTORY_API_URL}guards-list?activeOnly=true`,
+      ),
+      QueryGetAPI<GuardStatsModel>(`${HISTORY_API_URL}guards/stats`),
+    ])
+
+    if (listResponse.code === 200) {
+      guardList.value = listResponse.data
+    } else {
+      message.error(`加载舰长列表失败: ${listResponse.message}`)
+    }
+
+    if (statsResponse.code === 200) {
+      guardStats.value = statsResponse.data
+    } else {
+      message.error(`加载舰长统计失败: ${statsResponse.message}`)
+    }
+  } catch (err) {
+    message.error('加载舰长数据失败')
+    console.error(err)
+  } finally {
+    guardListLoading.value = false
+  }
+}
+
+/**
  * 处理所有图表选项
  */
 function processAllChartOptions() {
@@ -478,9 +590,10 @@ function processAllChartOptions() {
 }
 
 onMounted(async () => {
-  if (accountInfo.value?.isBiliVerified == true) {
+  if (accountInfo.value?.isBiliVerified === true) {
     await getHistory()
     processAllChartOptions()
+    await loadGuardList() // 加载舰长列表
     isLoading.value = false
   }
 })
@@ -496,7 +609,7 @@ watch(
 
 <template>
   <NAlert
-    v-if="accountInfo?.isBiliVerified != true"
+    v-if="accountInfo?.isBiliVerified !== true"
     type="info"
   >
     尚未进行Bilibili认证
@@ -622,6 +735,45 @@ watch(
         :style="{ height: chartHeight }"
         class="chart"
       />
+
+      <!-- 舰长列表 -->
+      <NCard
+        title="当前在舰用户"
+        size="small"
+        style="margin-top: 16px"
+      >
+        <NSpace
+          vertical
+          size="small"
+        >
+          <NSpace align="center">
+            <NButton
+              type="primary"
+              :loading="guardListLoading"
+              @click="loadGuardList"
+            >
+              刷新列表
+            </NButton>
+            <NText v-if="guardStats">
+              总计: {{ guardStats.totalCount }} (总督: {{ guardStats.governorCount }}, 提督: {{ guardStats.admiralCount }}, 舰长: {{ guardStats.captainCount }})
+            </NText>
+          </NSpace>
+
+          <NDataTable
+            v-if="guardList?.length > 0"
+            :columns="guardColumns"
+            :data="guardList"
+            :pagination="guardPagination"
+            :bordered="false"
+            size="small"
+          />
+          <NEmpty
+            v-else-if="!guardListLoading"
+            description="暂无在舰用户"
+          />
+        </NSpace>
+      </NCard>
+
       <NDivider />
       <!-- <NDivider>
         投稿播放量
