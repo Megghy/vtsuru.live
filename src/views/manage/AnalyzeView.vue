@@ -516,7 +516,7 @@ onUnmounted(() => {
       </NSpace>
     </NSpace>
     <NDivider />
-    
+
     <NSpin :show="loading">
       <!-- 空状态 -->
       <NEmpty
@@ -637,7 +637,7 @@ onUnmounted(() => {
                 </div>
               </NCard>
             </NGridItem>
-            
+
             <NGridItem>
               <NCard
                 title="近30天统计"
@@ -734,7 +734,7 @@ onUnmounted(() => {
                 </div>
               </NCard>
             </NGridItem>
-            
+
             <NGridItem>
               <NCard
                 title="关键指标"
@@ -809,9 +809,9 @@ onUnmounted(() => {
             </NGridItem>
           </NGrid>
         </div>
-        
+
         <NDivider />
-        
+
         <!-- 图表选择器 -->
         <div class="chart-selector">
           <NTabs

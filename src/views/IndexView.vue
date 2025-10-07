@@ -410,7 +410,7 @@ onMounted(async () => {
               background: cardBgMedium,
               border: borderSystem.medium,
               borderRadius: borderRadius.large,
-              boxShadow: shadowSystem.light,
+              boxShadow: 'none',
               cursor: item.route ? 'pointer' : 'default',
             }" hoverable class="feature-card" @click="handleFunctionClick(item)">
               <NFlex vertical>
@@ -643,7 +643,7 @@ onMounted(async () => {
     overflow-x: hidden;
     overflow-y: auto;
     padding-bottom: 60px;
-    
+
     &::before
         content: '';
         position: absolute;
@@ -664,7 +664,7 @@ onMounted(async () => {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    
+
     &::before
         content: '';
         position: absolute;
@@ -674,11 +674,11 @@ onMounted(async () => {
         height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         transition: left 0.6s;
-    
+
     &:hover
         transform: translateY(-4px);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        
+
         &::before
             left: 100%;
 
@@ -697,14 +697,14 @@ onMounted(async () => {
 
 .feature-card
     transition: all 0.2s ease;
-    
+
     &:hover
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 
 .entry-card
     transition: all 0.2s ease;
-    
+
     &:hover
         transform: translateY(-2px);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -736,7 +736,7 @@ onMounted(async () => {
 :deep(.n-button)
     border-radius: 12px;
     transition: all 0.2s ease;
-    
+
     &:hover
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
@@ -751,13 +751,13 @@ onMounted(async () => {
     .main-container
         padding-top: 20px;
         padding-bottom: 20px;
-    
+
     .section-title
         font-size: 1.1rem;
-    
+
     .feature-card:hover
         transform: translateY(-1px);
-    
+
     .entry-card:hover
         transform: translateY(-1px);
 
@@ -794,7 +794,7 @@ onMounted(async () => {
 /* 新增样式 */
 .section-header
     text-align: center;
-    
+
 .section-subtitle
     margin-top: 8px;
 
@@ -840,13 +840,13 @@ onMounted(async () => {
     min-width: 85px;
     max-width: 95px;
     backdrop-filter: blur(10px);
-    
+
     &:hover
         transform: translateY(-3px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
         border-color: rgba(255, 255, 255, 0.25);
         background: rgba(255, 255, 255, 0.15);
-        
+
         .streamer-avatar-wrapper img
             transform: scale(1.08);
 
@@ -855,7 +855,7 @@ onMounted(async () => {
     width: 50px;
     height: 50px;
     flex-shrink: 0;
-    
+
     img
         width: 100%;
         height: 100%;
@@ -897,10 +897,10 @@ onMounted(async () => {
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.5);
     animation: pulse-dot 1.8s ease-in-out infinite;
-    
+
     &:nth-child(2)
         animation-delay: 0.3s;
-    
+
     &:nth-child(3)
         animation-delay: 0.6s;
 
@@ -917,12 +917,12 @@ onMounted(async () => {
     .streamers-grid-modern
         gap: 8px;
         padding: 0 4px;
-    
+
     .streamer-card-modern
         min-width: 80px;
         max-width: 90px;
         padding: 8px 6px;
-        
+
         &:hover
             transform: translateY(-2px);
 
@@ -930,16 +930,16 @@ onMounted(async () => {
     .streamers-grid-modern
         gap: 6px;
         padding: 0 4px;
-    
+
     .streamer-card-modern
         min-width: 75px;
         max-width: 85px;
         padding: 8px 6px;
-    
+
     .streamer-avatar-wrapper
         width: 45px;
         height: 45px;
-    
+
     .streamer-name
         font-size: 0.8rem;
 
