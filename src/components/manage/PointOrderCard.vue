@@ -184,7 +184,7 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '时间',
     key: 'time',
-    sorter: 'default',
+    sorter: (row1: OrderType, row2: OrderType) => row1.createAt - row2.createAt,
     minWidth: 80,
     render: (row: OrderType) => {
       return h(NTooltip, null, {
@@ -196,7 +196,10 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '使用积分',
     key: 'point',
-    sorter: 'default',
+    sorter: (row1: OrderType, row2: OrderType) => row1.point - row2.point,
+    render: (row: OrderType) => {
+      return Number(row.point.toFixed(1))
+    },
   },
   {
     title: '订单状态',

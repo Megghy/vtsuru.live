@@ -146,7 +146,7 @@ async function givePoint() {
     if (data.code == 200) {
       message.success('添加成功')
       showAddPointModal.value = false
-      props.user.point += addPointCount.value
+      props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
 
       // 重新加载积分历史
       setTimeout(async () => {
@@ -227,7 +227,7 @@ onMounted(async () => {
         </NDescriptionsItem>
 
         <NDescriptionsItem label="积分">
-          {{ user.point }}
+          {{ Number(user.point.toFixed(1)) }}
         </NDescriptionsItem>
 
         <NDescriptionsItem
