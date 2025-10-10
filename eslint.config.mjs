@@ -85,6 +85,7 @@ export default antfu(
       'ts/restrict-template-expressions': 'off', // 允许模板字符串表达式不受限制
 
       'perfectionist/sort-imports': 'off',
+      'ts/no-unsafe-argument': 'off', // 允许不安全的参数传递
 
       // JSON 相关规则
       'jsonc/sort-keys': 'off', // 关闭 JSON key 排序要求
