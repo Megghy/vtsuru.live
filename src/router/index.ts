@@ -116,6 +116,19 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
   useLoadingBarStore().loadingBar?.start()
+  
+  // 保留 as 参数（如果存在）
+  if (from.query.as && !to.query.as) {
+    next({
+      ...to,
+      query: {
+        ...to.query,
+        as: from.query.as,
+      },
+    })
+    return
+  }
+  
   next()
 })
 router.afterEach(() => {

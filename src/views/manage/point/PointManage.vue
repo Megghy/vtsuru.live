@@ -1027,7 +1027,7 @@ onMounted(() => { })
                 </NTooltip>
               </NText>
 
-              <NRadioGroup 
+              <NRadioGroup
                 :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
                 @update:value="(v) => {
                   if (!currentGoodsModel.goods.setting) {

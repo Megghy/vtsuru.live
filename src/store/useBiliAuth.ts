@@ -110,7 +110,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       return []
     }
     try {
-      const resp = await QueryGetAPI<ResponsePointGoodModel[]>(`${POINT_API_URL}get-goods`, {
+      const resp = await QueryBiliAuthGetAPI<ResponsePointGoodModel[]>(`${POINT_API_URL}get-goods`, {
         id,
       })
       if (resp.code == 200) {
