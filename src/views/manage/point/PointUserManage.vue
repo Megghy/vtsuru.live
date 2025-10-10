@@ -119,12 +119,14 @@ const filteredUsers = computed(() => {
 
 // 用户统计
 const userStats = computed(() => {
+  const totalPoints = users.value.reduce((sum, u) => sum + u.point, 0)
+  const avgPoints = users.value.length > 0 ? users.value.reduce((sum, u) => sum + u.point, 0) / users.value.length : 0
   return {
     total: users.value.length,
     authed: users.value.filter(u => u.isAuthed).length,
-    totalPoints: users.value.reduce((sum, u) => sum + u.point, 0),
+    totalPoints: Number(totalPoints.toFixed(1)),
     totalOrders: users.value.reduce((sum, u) => sum + (u.orderCount || 0), 0),
-    avgPoints: users.value.length > 0 ? Math.round(users.value.reduce((sum, u) => sum + u.point, 0) / users.value.length) : 0,
+    avgPoints: Number(avgPoints.toFixed(1)),
     filtered: filteredUsers.value.length,
   }
 })
@@ -197,9 +199,10 @@ function formatNumber(num: number) {
   return num.toLocaleString('zh-CN')
 }
 
-// 渲染积分，添加千位符并加粗
+// 渲染积分，添加千位符并加粗，保留一位小数
 function renderPoint(num: number) {
-  return h(NText, { strong: true }, { default: () => formatNumber(num) })
+  const formattedNum = Number(num.toFixed(1))
+  return h(NText, { strong: true }, { default: () => formatNumber(formattedNum) })
 }
 
 // 数据表格列定义
@@ -219,7 +222,7 @@ const column: DataTableColumns<ResponsePointUserModel> = [
   {
     title: '积分',
     key: 'point',
-    sorter: 'default',
+    sorter: (row1: ResponsePointUserModel, row2: ResponsePointUserModel) => row1.point - row2.point,
     render: (row: ResponsePointUserModel) => renderPoint(row.point),
   },
   {
@@ -230,7 +233,7 @@ const column: DataTableColumns<ResponsePointUserModel> = [
   {
     title: '最后更新于',
     key: 'updateAt',
-    sorter: 'default',
+    sorter: (row1: ResponsePointUserModel, row2: ResponsePointUserModel) => row1.updateAt - row2.updateAt,
     render: (row: ResponsePointUserModel) => renderTime(row.updateAt),
   },
   {
@@ -374,7 +377,7 @@ function exportData() {
           用户ID: user.info.userId || user.info.openId,
           用户名: user.info.name || '未知',
           认证状态: user.isAuthed ? '已认证' : '未认证',
-          积分: user.point,
+          积分: Number(user.point.toFixed(1)),
           订单数量: user.orderCount || 0,
           最后更新时间: format(user.updateAt, 'yyyy-MM-dd HH:mm:ss'),
         }

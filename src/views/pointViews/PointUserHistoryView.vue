@@ -23,10 +23,13 @@ const dateRange = ref<[number, number] | null>(null)
 
 // 积分历史统计
 const historyStats = computed(() => {
+  const totalIncrease = history.value.filter(h => h.point > 0).reduce((sum, h) => sum + h.point, 0)
+  const totalDecrease = Math.abs(history.value.filter(h => h.point < 0).reduce((sum, h) => sum + h.point, 0))
   return {
     total: history.value.length,
-    totalIncrease: history.value.filter(h => h.point > 0).reduce((sum, h) => sum + h.point, 0),
-    totalDecrease: Math.abs(history.value.filter(h => h.point < 0).reduce((sum, h) => sum + h.point, 0)),
+    totalIncrease: Number(totalIncrease.toFixed(1)),
+    totalDecrease: Number(totalDecrease.toFixed(1)),
+    netIncrease: Number((totalIncrease - totalDecrease).toFixed(1)),
     fromManual: history.value.filter(h => h.from === PointFrom.Manual).length,
     fromDanmaku: history.value.filter(h => h.from === PointFrom.Danmaku).length,
     fromCheckIn: history.value.filter(h => h.from === PointFrom.CheckIn).length,
@@ -140,7 +143,7 @@ function exportHistoryData() {
       filteredHistory.value.map((item) => {
         return {
           时间: format(item.createAt, 'yyyy-MM-dd HH:mm:ss'),
-          积分变化: item.point,
+          积分变化: Number(item.point.toFixed(1)),
           来源: pointFromText[item.from] || '未知',
           主播: item.extra?.user?.name || '-',
           数量: item.count || '-',
@@ -206,7 +209,7 @@ function exportHistoryData() {
         </div>
         <div class="stat-item">
           <div class="stat-value primary">
-            {{ historyStats.totalIncrease - historyStats.totalDecrease }}
+            {{ historyStats.netIncrease }}
           </div>
           <div class="stat-label">
             净增加

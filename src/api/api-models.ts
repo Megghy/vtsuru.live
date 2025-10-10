@@ -391,6 +391,8 @@ export interface QAInfo {
 
   tag?: string
   reviewResult?: QAReviewInfo
+  anonymousName?: string
+  anonymousEmail?: string
 }
 export interface LotteryUserInfo {
   name: string
@@ -829,7 +831,7 @@ export interface ResponsePointHisrotyModel {
   createAt: number
   count: number
 
-  extra?: any
+  extra?: any // Use 时包含: { user, goods, isDiscontinued, remark }; Manual 时包含: { user, reason }; Danmaku 时包含: { user, danmaku }; CheckIn 时包含: { user }
 }
 
 export enum PointFrom {

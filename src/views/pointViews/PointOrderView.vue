@@ -42,12 +42,13 @@ const filteredOrders = computed(() => {
 
 // 订单统计
 const orderStats = computed(() => {
+  const totalPoints = orders.value.reduce((sum, o) => sum + o.point, 0)
   return {
     total: orders.value.length,
     pending: orders.value.filter(o => o.status === PointOrderStatus.Pending).length,
     shipped: orders.value.filter(o => o.status === PointOrderStatus.Shipped).length,
     completed: orders.value.filter(o => o.status === PointOrderStatus.Completed).length,
-    totalPoints: orders.value.reduce((sum, o) => sum + o.point, 0),
+    totalPoints: Number(totalPoints.toFixed(1)),
   }
 })
 

@@ -80,7 +80,7 @@ const orderStats = computed(() => {
     completed: orders.value.filter(o => o.status === PointOrderStatus.Completed).length,
     physical: orders.value.filter(o => o.type === GoodsTypes.Physical).length,
     virtual: orders.value.filter(o => o.type === GoodsTypes.Virtual).length,
-    totalPoints: orders.value.reduce((sum, o) => sum + o.point, 0),
+    totalPoints: Number(orders.value.reduce((sum, o) => sum + o.point, 0).toFixed(1)),
     filteredCount: filteredOrders.value.length,
   }
 })
@@ -200,8 +200,8 @@ function exportData() {
             : '无',
           礼物名: gift?.name ?? '已删除',
           礼物数量: s.count,
-          礼物单价: gift?.price,
-          礼物总价: s.point,
+          礼物单价: gift?.price ? Number(gift.price.toFixed(1)) : 0,
+          礼物总价: Number(s.point.toFixed(1)),
           快递公司: s.expressCompany,
           快递单号: s.trackingNumber,
           备注: s.remark ?? '',

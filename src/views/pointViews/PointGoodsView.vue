@@ -87,6 +87,12 @@ watch(searchKeyword, (newVal) => {
 
 // --- 计算属性 ---
 
+// 格式化积分显示，保留一位小数
+const formattedCurrentPoint = computed(() => {
+  if (currentPoint.value < 0) return currentPoint.value
+  return Number(currentPoint.value.toFixed(1))
+})
+
 // 地址选项，用于地址选择器
 const addressOptions = computed(() => {
   if (!biliAuth.value.id) return []
@@ -264,7 +270,7 @@ async function buyGoods() {
   // 确认对话框
   dialog.warning({
     title: '确认兑换',
-    content: `确定要花费 ${currentGoods.value!.price * buyCount.value} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`,
+    content: `确定要花费 ${Number((currentGoods.value!.price * buyCount.value).toFixed(1))} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
@@ -281,7 +287,7 @@ async function buyGoods() {
         if (data.code === 200) {
           message.success('兑换成功')
           // 更新本地积分显示
-          currentPoint.value -= currentGoods.value!.price * buyCount.value
+          currentPoint.value = Number((currentPoint.value - currentGoods.value!.price * buyCount.value).toFixed(1))
           // 显示成功对话框
           dialog.success({
             title: '成功',
@@ -426,7 +432,7 @@ onMounted(async () => {
               v-if="currentPoint >= 0"
               class="point-info"
             >
-              你在本直播间的积分: <strong>{{ currentPoint }}</strong>
+              你在本直播间的积分: <strong>{{ formattedCurrentPoint }}</strong>
             </NText>
             <NText
               v-else
@@ -802,9 +808,9 @@ onMounted(async () => {
           确认兑换
         </NButton>
         <NText depth="2">
-          所需积分: {{ currentGoods.price * buyCount }}
+          所需积分: {{ Number((currentGoods.price * buyCount).toFixed(1)) }}
           <NDivider vertical />
-          当前积分: {{ currentPoint >= 0 ? currentPoint : '加载中' }}
+          当前积分: {{ currentPoint >= 0 ? formattedCurrentPoint : '加载中' }}
         </NText>
       </NFlex>
     </NModal>

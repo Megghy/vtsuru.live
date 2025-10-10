@@ -49,8 +49,10 @@ const isLoading = ref(false)
 const userAgree = ref(false)
 const showAddressModal = ref(false)
 const showAgreementModal = ref(false)
+const showAddAccountModal = ref(false)
 const formRef = ref()
 const currentAddress = ref<AddressInfo>()
+const authCodeInput = ref('')
 
 // 本地存储区域数据
 const areas = useStorage<{
@@ -255,11 +257,53 @@ function logout() {
   useAuth.logout()
 }
 
+// 添加账号
+async function addAccount() {
+  if (!authCodeInput.value.trim()) {
+    message.warning('请输入登录链接或authcode')
+    return
+  }
+
+  isLoading.value = true
+  try {
+    let authCode = authCodeInput.value.trim()
+
+    // 检查是否是完整的登录链接
+    const urlMatch = authCode.match(/[?&]auth=([^&]+)/)
+    if (urlMatch) {
+      authCode = urlMatch[1]
+    }
+
+    // 验证authCode格式（这里假设是token格式）
+    if (!authCode) {
+      message.error('无效的authcode格式')
+      return
+    }
+
+    // 尝试使用authCode登录
+    await useAuth.setCurrentAuth(authCode)
+
+    // 检查是否登录成功
+    if (useAuth.isInvalid) {
+      message.error('无效的authcode，请检查后重试')
+    } else {
+      message.success('账号添加成功')
+      showAddAccountModal.value = false
+      authCodeInput.value = ''
+    }
+  } catch (err) {
+    handleApiError('添加账号', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // 提供给父组件调用的重置方法
 function reset() {
   // 重置表单数据或其他状态
   currentAddress.value = {} as AddressInfo
   userAgree.value = false
+  authCodeInput.value = ''
   // 可能还需要重置其他状态
 }
 
@@ -375,17 +419,26 @@ defineExpose({
           vertical
           :gap="12"
         >
-          <NPopconfirm @positive-click="logout">
-            <template #trigger>
-              <NButton
-                type="warning"
-                size="small"
-              >
-                登出当前账号
-              </NButton>
-            </template>
-            确定要登出吗?
-          </NPopconfirm>
+          <NFlex :gap="8">
+            <NPopconfirm @positive-click="logout">
+              <template #trigger>
+                <NButton
+                  type="warning"
+                  size="small"
+                >
+                  登出当前账号
+                </NButton>
+              </template>
+              确定要登出吗?
+            </NPopconfirm>
+            <NButton
+              type="primary"
+              size="small"
+              @click="showAddAccountModal = true"
+            >
+              添加账号
+            </NButton>
+          </NFlex>
           <NDivider style="margin: 8px 0">
             切换账号
           </NDivider>
@@ -419,7 +472,7 @@ defineExpose({
                     type="success"
                     size="small"
                   >
-                    当前账号
+                    当前
                   </NTag>
                   <NText strong>
                     {{ item.name }}
@@ -587,6 +640,46 @@ defineExpose({
       <UserAgreement />
     </NScrollbar>
   </NModal>
+  <NModal
+    v-model:show="showAddAccountModal"
+    preset="card"
+    style="width: 600px; max-width: 90vw"
+    title="添加账号"
+  >
+    <NSpin :show="isLoading">
+      <NFlex
+        vertical
+        :gap="12"
+      >
+        <NText depth="3">
+          请输入登录链接或authcode
+        </NText>
+        <NInput
+          v-model:value="authCodeInput"
+          type="textarea"
+          placeholder="可以直接粘贴完整的登录链接，例如：\nhttps://example.com/bili-user?auth=xxxxxx\n\n或者只粘贴authcode：\nxxxxxx"
+          :autosize="{ minRows: 3, maxRows: 6 }"
+        />
+        <NFlex
+          justify="end"
+          :gap="12"
+        >
+          <NButton
+            @click="showAddAccountModal = false"
+          >
+            取消
+          </NButton>
+          <NButton
+            type="primary"
+            :loading="isLoading"
+            @click="addAccount"
+          >
+            添加
+          </NButton>
+        </NFlex>
+      </NFlex>
+    </NSpin>
+  </NModal>
 </template>
 
 <style scoped>
@@ -608,7 +701,8 @@ defineExpose({
 }
 
 .current-account {
-  background-color: var(--primary-color-hover);
+  background-color: rgba(24, 160, 88, 0.1);
+  border-left: 3px solid var(--success-color);
 }
 
 /* 移动端优化 */

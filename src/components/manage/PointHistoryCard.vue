@@ -33,7 +33,7 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
   {
     title: '时间',
     key: 'createAt',
-    sorter: 'default',
+    sorter: (row1: ResponsePointHisrotyModel, row2: ResponsePointHisrotyModel) => row1.createAt - row2.createAt,
     render: (row: ResponsePointHisrotyModel) => {
       return h(NTooltip, null, {
         trigger: () => h(NTime, { time: row.createAt, type: 'relative' }),
@@ -44,11 +44,13 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
   {
     title: '积分变动',
     key: 'point',
+    sorter: (row1: ResponsePointHisrotyModel, row2: ResponsePointHisrotyModel) => row1.point - row2.point,
     render: (row: ResponsePointHisrotyModel) => {
+      const point = Number(row.point.toFixed(1))
       return h(
         NText,
-        { style: { color: row.point < 0 ? 'red' : 'green' } },
-        () => (row.point < 0 ? '' : '+') + row.point,
+        { style: { color: point < 0 ? 'red' : 'green' } },
+        () => (point < 0 ? '' : '+') + point,
       )
     },
   },
@@ -205,18 +207,29 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         case PointFrom.Use:
           return h(NFlex, { align: 'center' }, () => [
             h(NTag, { type: 'success', size: 'small', style: { margin: '0' }, strong: true }, () => '兑换'),
-            h(
-              NButton,
-              {
-                text: true,
-                type: 'info',
-                onClick: () => {
-                  currentGoods.value = row.extra
-                  showGoodsModal.value = true
-                },
-              },
-              () => row.extra?.name,
-            ),
+            row.extra?.goods
+              ? h(
+                  NButton,
+                  {
+                    text: true,
+                    type: 'info',
+                    onClick: () => {
+                      currentGoods.value = row.extra?.goods
+                      showGoodsModal.value = true
+                    },
+                  },
+                  () => row.extra?.goods?.name,
+                )
+              : h(NText, { depth: 3, italic: true }, () => '(商品已删除)'),
+            row.extra?.isDiscontinued
+              ? h(NTag, { type: 'error', size: 'tiny', bordered: false }, () => '已下架')
+              : null,
+            row.extra?.remark
+              ? h(NTooltip, null, {
+                  trigger: () => h(NTag, { type: 'info', size: 'tiny', bordered: false }, () => '留言'),
+                  default: () => row.extra.remark,
+                })
+              : null,
           ])
       }
       return null
