@@ -16,6 +16,7 @@ import {
 import { QueryGetAPI } from '@/api/query'
 import { QUEUE_API_URL } from '@/data/constants'
 import { useWebRTC } from '@/store/useRTC'
+import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
   id?: number
@@ -159,7 +160,10 @@ async function update() {
   }
 }
 
+const obsNotification = useOBSNotification()
 onMounted(() => {
+  // 只接收 queue 类型的通知
+  void obsNotification.init(['queue'])
   update()
   window.$mitt.on('onOBSComponentUpdate', () => {
     update()

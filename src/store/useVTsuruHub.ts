@@ -98,9 +98,9 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     signalRClient.value?.onreconnected(listener)
   }
 
-  function Init() {
+  async function Init() {
     if (!isInited.value && !isIniting.value) {
-      connectSignalR()
+      await connectSignalR()
     }
     return useVTsuruHub()
   }

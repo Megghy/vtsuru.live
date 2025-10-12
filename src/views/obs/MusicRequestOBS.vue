@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import { AVATAR_URL, MUSIC_REQUEST_API_URL } from '@/data/constants'
 import { useWebRTC } from '@/store/useRTC'
+import { useOBSNotification } from '@/store/useOBSNotification'
 
 interface WaitMusicInfo {
   from: DanmakuUserInfo
@@ -64,7 +65,11 @@ async function update() {
     originSongs.value = r
   }
 }
+
+const obsNotification = useOBSNotification()
 onMounted(() => {
+  // 只接收 live-request 类型的通知
+  void obsNotification.init(['live-request'])
   update()
   window.$mitt.on('onOBSComponentUpdate', () => {
     update()
@@ -312,9 +317,6 @@ onUnmounted(() => {
 .music-request-list-item[from='0'] .music-request-list-item-avatar {
   display: none;
 }
-
-/* 弹幕点歌 */
-.music-request-list-item[from='1'] {}
 
 .music-request-list-item-name {
   font-style: italic;

@@ -368,18 +368,6 @@ const menuOptions = computed(() => {
       }),
       withFavoriteExtra({
         label: () => !isBiliVerified.value
-          ? '抽奖'
-          : h(
-              RouterLink,
-              { to: { name: 'manage-liveLottery' } },
-              { default: () => '抽奖' },
-            ),
-        key: 'manage-liveLottery',
-        icon: renderIcon(Lottery24Filled),
-        disabled: !isBiliVerified.value,
-      }),
-      withFavoriteExtra({
-        label: () => !isBiliVerified.value
           ? '点播'
           : h(
               NTooltip,
@@ -399,6 +387,18 @@ const menuOptions = computed(() => {
       }),
       withFavoriteExtra({
         label: () => !isBiliVerified.value
+          ? '抽奖'
+          : h(
+              RouterLink,
+              { to: { name: 'manage-liveLottery' } },
+              { default: () => '抽奖' },
+            ),
+        key: 'manage-liveLottery',
+        icon: renderIcon(Lottery24Filled),
+        disabled: !isBiliVerified.value,
+      }),
+      withFavoriteExtra({
+        label: () => !isBiliVerified.value
           ? '点歌'
           : h(
               NTooltip,
@@ -407,7 +407,7 @@ const menuOptions = computed(() => {
                 trigger: () => h(
                   RouterLink,
                   { to: { name: 'manage-musicRequest' } },
-                  { default: () => '点歌' },
+                  { default: () => '点歌机' },
                 ),
                 default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
               },

@@ -1,6 +1,7 @@
 import type {
   DanmakuUserInfo,
   EventModel,
+  Setting_LiveRequest,
   SongRequestInfo,
   SongsInfo,
 } from '@/api/api-models'
@@ -69,7 +70,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       return true
     })
 
-    const settings = accountInfo.value?.settings?.songRequest || {}
+    const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
 
     switch (settings.sortType) {
       case QueueSortType.TimeFirst: {
@@ -154,7 +155,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       `[SONG-REQUEST] 收到 [${danmaku.uname}] 的点播${danmaku.type == EventDataTypes.SC ? 'SC' : '弹幕'}: ${danmaku.msg}`,
     )
 
-    const settings = accountInfo.value?.settings?.songRequest || {}
+    const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
 
     if (settings.enableOnStreaming && accountInfo.value?.streamerInfo?.isStreaming != true) {
       window.$notification.info({
@@ -436,7 +437,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   function onGetSC(danmaku: EventModel) {
-    const settings = accountInfo.value?.settings?.songRequest || {}
+    const settings = accountInfo.value?.settings?.songRequest
 
     if (settings.allowSC && checkMessage(danmaku.msg)) {
       addSong(danmaku)
