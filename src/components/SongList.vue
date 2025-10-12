@@ -294,7 +294,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       resizable: true,
       minWidth: 150, // 增加最小宽度
       width: 300,
-      sorter: 'default', // 启用默认排序
+      sorter: true, // 启用默认排序
       render(data) {
         // 同时显示原名和翻译名 (如果存在)
         return h(NSpace, { vertical: true, size: 0, wrap: false }, () => [

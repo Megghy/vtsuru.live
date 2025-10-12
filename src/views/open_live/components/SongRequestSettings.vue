@@ -293,6 +293,13 @@ async function updateSettings() {
           内的歌曲
         </NCheckbox>
         <NCheckbox
+          v-model:checked="accountInfo.settings.songRequest.allowReorderSong"
+          :disabled="!liveRequest.configCanEdit"
+          @update:checked="updateSettings"
+        >
+          允许重复点歌
+        </NCheckbox>
+        <NCheckbox
           v-model:checked="accountInfo.settings.songRequest.allowFromWeb"
           :disabled="!liveRequest.configCanEdit"
           @update:checked="updateSettings"

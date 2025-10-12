@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import ClassicRequestOBS from './live-request/ClassicRequestOBS.vue'
 import FreshRequestOBS from './live-request/FreshRequestOBS.vue'
+import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
   id?: number
@@ -21,6 +22,12 @@ const currentId = computed(() => {
 const styleType = computed(() => {
   const queryStyle = route.query.style
   return props.style || (typeof queryStyle === 'string' ? queryStyle : 'classic')
+})
+
+const obsNotification = useOBSNotification()
+onMounted(() => {
+  // 只接收 live-request 类型的通知
+  void obsNotification.init(['live-request'])
 })
 </script>
 

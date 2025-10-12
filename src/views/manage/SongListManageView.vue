@@ -105,6 +105,12 @@ const isGettingFivesingSongPlayUrl = ref(0)
 const uploadFiles = ref<UploadFileInfo[]>([])
 const uploadSongsFromFile = ref<SongsInfo[]>([])
 
+// 文件夹读取相关
+const folderSongs = ref<SongsInfo[]>([])
+const folderSongsOptions = ref<Option[]>([])
+const selectedFolderSongs = ref<string[]>([])
+const isScanningFolder = ref(false)
+
 // 模态框加载状态
 const isModalLoading = ref(false)
 
@@ -180,6 +186,265 @@ const uploadSongsOptions = computed(() => {
 })
 
 const selecteduploadSongs = ref<string[]>([])
+
+// 支持的音频文件扩展名
+const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma', '.ape']
+
+/**
+ * 选择文件夹并扫描音频文件
+ */
+async function selectFolder() {
+  try {
+    // 检查浏览器是否支持 File System Access API
+    if (!('showDirectoryPicker' in window)) {
+      message.error('您的浏览器不支持文件夹选择功能，请使用最新版本的 Chrome、Edge 或其他现代浏览器')
+      return
+    }
+
+    isScanningFolder.value = true
+    folderSongs.value = []
+
+    // @ts-ignore
+    const directoryHandle = await window.showDirectoryPicker({
+      mode: 'read'
+    })
+
+    message.info('正在扫描文件夹...')
+
+    const audioFiles: { name: string, file: File, path: string }[] = []
+
+    // 递归扫描文件夹
+    await scanDirectory(directoryHandle, audioFiles, '')
+
+    if (audioFiles.length === 0) {
+      message.warning('未在文件夹中找到音频文件')
+      isScanningFolder.value = false
+      return
+    }
+
+    message.info(`找到 ${audioFiles.length} 个音频文件，正在解析...`)
+
+    // 解析音频文件信息
+    for (const audioFile of audioFiles) {
+      const songInfo = parseAudioFileName(audioFile.name, audioFile.file, audioFile.path)
+      if (songInfo) {
+        folderSongs.value.push(songInfo)
+      }
+    }
+
+    // 更新选项
+    updateFolderSongsOptions()
+
+    message.success(`成功解析 ${folderSongs.value.length} 首歌曲`)
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      message.info('已取消选择')
+    } else {
+      console.error(err)
+      message.error(`扫描文件夹失败: ${err.message}`)
+    }
+  } finally {
+    isScanningFolder.value = false
+  }
+}
+
+/**
+ * 递归扫描目录
+ */
+async function scanDirectory(
+  directoryHandle: any,
+  audioFiles: { name: string, file: File, path: string }[],
+  currentPath: string
+) {
+  for await (const entry of directoryHandle.values()) {
+    const entryPath = currentPath ? `${currentPath}/${entry.name}` : entry.name
+
+    if (entry.kind === 'file') {
+      // 检查是否为音频文件
+      const ext = entry.name.substring(entry.name.lastIndexOf('.')).toLowerCase()
+      if (AUDIO_EXTENSIONS.includes(ext)) {
+        const file = await entry.getFile()
+        audioFiles.push({
+          name: entry.name,
+          file: file,
+          path: entryPath
+        })
+      }
+    } else if (entry.kind === 'directory') {
+      // 递归扫描子目录
+      await scanDirectory(entry, audioFiles, entryPath)
+    }
+  }
+}
+
+/**
+ * 解析音频文件名，提取歌曲信息
+ * 支持的格式:
+ * - "歌名.mp3"
+ * - "歌手 - 歌名.mp3"
+ * - "歌名 - 歌手.mp3"
+ * - "歌手-歌名.mp3"
+ * - "[歌手] 歌名.mp3"
+ * - "歌手 《歌名》.mp3"
+ */
+function parseAudioFileName(fileName: string, file: File, filePath: string): SongsInfo | null {
+  // 移除文件扩展名
+  const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
+
+  let name = ''
+  let author: string[] = []
+
+  // 尝试各种格式
+
+  // 格式: "歌手 - 歌名" 或 "歌名 - 歌手"
+  if (nameWithoutExt.includes(' - ')) {
+    const parts = nameWithoutExt.split(' - ').map(p => p.trim())
+    if (parts.length >= 2) {
+      // 假设第一部分是歌手，第二部分是歌名
+      author = parts[0].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      name = parts.slice(1).join(' - ')
+
+      // 如果第二部分更像歌手名（包含多个分隔符），交换
+      if (parts[1].match(/[/、&]/)) {
+        name = parts[0]
+        author = parts.slice(1).join(' - ').split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      }
+    }
+  }
+  // 格式: "歌手-歌名" (无空格)
+  else if (nameWithoutExt.includes('-') && !nameWithoutExt.startsWith('-')) {
+    const parts = nameWithoutExt.split('-').map(p => p.trim())
+    if (parts.length >= 2) {
+      author = parts[0].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      name = parts.slice(1).join('-')
+    }
+  }
+  // 格式: "[歌手] 歌名" 或 "【歌手】歌名"
+  else if (nameWithoutExt.match(/^[[【](.+?)[\]】]\s*(.+)$/)) {
+    const match = nameWithoutExt.match(/^[[【](.+?)[\]】]\s*(.+)$/)
+    if (match) {
+      author = match[1].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      name = match[2].trim()
+    }
+  }
+  // 格式: "歌手 《歌名》" 或 "歌手《歌名》"
+  else if (nameWithoutExt.match(/^(.+?)\s*[《<](.+?)[》>]$/)) {
+    const match = nameWithoutExt.match(/^(.+?)\s*[《<](.+?)[》>]$/)
+    if (match) {
+      author = match[1].split(/[/、&]/).map(a => a.trim()).filter(a => a)
+      name = match[2].trim()
+    }
+  }
+  // 默认: 整个文件名作为歌名
+  else {
+    name = nameWithoutExt.trim()
+  }
+
+  if (!name) {
+    return null
+  }
+
+  // 创建一个本地URL（用于后续可能的播放预览）
+  const url = URL.createObjectURL(file)
+
+  return {
+    id: 0,
+    key: '',
+    name,
+    author: author.length > 0 ? author : ['未知'],
+    url,
+    description: `从文件导入: ${filePath}`,
+    language: [],
+    tags: [],
+    from: SongFrom.Custom,
+    createTime: Date.now(),
+    updateTime: Date.now(),
+    // 存储原始文件信息，以便后续可能需要上传
+    // @ts-ignore
+    _originalFile: file,
+    // @ts-ignore
+    _filePath: filePath
+  } as SongsInfo
+}
+
+/**
+ * 更新文件夹歌曲选项
+ */
+function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
+  folderSongsOptions.value = folderSongs.value.map(s => ({
+    label: `${s.name} - ${s.author?.join('/') || '未知'}`,
+    value: s.name + '_' + (s as any)._filePath, // 使用组合键避免重名
+    disabled:
+      songs.value.findIndex(exist => exist.name === s.name) > -1
+      || newlyAddedSongs.findIndex(add => add.name === s.name) > -1,
+  }))
+}
+
+/**
+ * 添加从文件夹选择的歌曲
+ */
+async function addFolderSongs() {
+  if (selectedFolderSongs.value.length === 0) {
+    message.error('请选择要添加的歌曲')
+    return
+  }
+
+  isModalLoading.value = true
+
+  try {
+    const songsToAdd = folderSongs.value.filter(s =>
+      selectedFolderSongs.value.find(select => select === (s.name + '_' + (s as any)._filePath))
+    )
+
+    // 注意: 由于歌曲URL是本地Blob URL，需要根据实际需求处理
+    // 选项1: 直接使用本地URL（仅在当前会话有效）
+    // 选项2: 上传文件到服务器（需要实现文件上传接口）
+    // 这里使用选项1，但添加提示
+
+    const result = await addSongs(songsToAdd.map(s => ({
+      ...s,
+      description: (s.description || '') + ' [注意: 链接为本地文件，刷新页面后可能失效]'
+    })), SongFrom.Custom)
+
+    if (result.code === 200) {
+      message.success(`已添加 ${result.data.length} 首歌曲`)
+      songs.value.push(...result.data)
+
+      // 更新选项禁用状态
+      updateFolderSongsOptions(result.data)
+    } else {
+      message.error(`添加失败: ${result.message}`)
+    }
+  } catch (err: any) {
+    message.error(`添加失败: ${err.message}`)
+    console.error(err)
+  } finally {
+    isModalLoading.value = false
+  }
+}
+
+/**
+ * 批量编辑文件夹歌曲信息
+ */
+function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: string[]) {
+  const selectedSongs = folderSongs.value.filter(s =>
+    selectedFolderSongs.value.find(select => select === (s.name + '_' + (s as any)._filePath))
+  )
+
+  selectedSongs.forEach(song => {
+    if (field === 'author') {
+      song.author = value
+    } else if (field === 'language') {
+      song.language = value
+    } else if (field === 'tags') {
+      song.tags = value
+    }
+  })
+
+  // 更新选项显示
+  updateFolderSongsOptions()
+  message.success(`已更新 ${selectedSongs.length} 首歌曲的${field === 'author' ? '作者' : field === 'language' ? '语言' : '标签'}信息`)
+}
 
 /**
  * 添加自定义歌曲
@@ -1351,7 +1616,114 @@ onMounted(async () => {
             name="directory"
             tab="从文件夹读取"
           >
-            开发中...
+            <NAlert
+              type="info"
+              style="margin-bottom: 16px"
+            >
+              <template #header>
+                功能说明
+              </template>
+              <NSpace vertical>
+                <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
+                <div>支持的文件名格式：</div>
+                <ul style="margin: 8px 0; padding-left: 20px">
+                  <li>歌名.mp3</li>
+                  <li>歌手 - 歌名.mp3</li>
+                  <li>歌手-歌名.mp3</li>
+                  <li>[歌手] 歌名.mp3</li>
+                  <li>歌手 《歌名》.mp3</li>
+                </ul>
+                <div style="color: #ff6b6b">
+                  <strong>注意：</strong>导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
+                </div>
+              </NSpace>
+            </NAlert>
+
+            <NButton
+              type="primary"
+              :loading="isScanningFolder"
+              @click="selectFolder"
+            >
+              <template #icon>
+                <NIcon :component="ArchiveOutline" />
+              </template>
+              选择文件夹
+            </NButton>
+
+            <template v-if="folderSongsOptions.length > 0">
+              <NDivider style="margin: 16px 0" />
+
+              <!-- 批量编辑工具 -->
+              <NCollapse>
+                <NCollapseItem
+                  title="批量编辑工具"
+                  name="batch-edit"
+                >
+                  <NSpace
+                    vertical
+                    style="width: 100%"
+                  >
+                    <NAlert type="info">
+                      选中歌曲后，可以批量设置作者、语言或标签信息
+                    </NAlert>
+                    <NSpace align="center">
+                      <span>批量设置作者：</span>
+                      <NSelect
+                        style="width: 300px"
+                        :options="authors"
+                        filterable
+                        multiple
+                        tag
+                        placeholder="选择或输入作者"
+                        @update:value="(value) => batchEditFolderSongs('author', value)"
+                      />
+                    </NSpace>
+                    <NSpace align="center">
+                      <span>批量设置语言：</span>
+                      <NSelect
+                        style="width: 300px"
+                        :options="languageSelectOption"
+                        filterable
+                        multiple
+                        tag
+                        placeholder="选择或输入语言"
+                        @update:value="(value) => batchEditFolderSongs('language', value)"
+                      />
+                    </NSpace>
+                    <NSpace align="center">
+                      <span>批量设置标签：</span>
+                      <NSelect
+                        style="width: 300px"
+                        :options="tags"
+                        filterable
+                        multiple
+                        tag
+                        placeholder="选择或输入标签"
+                        @update:value="(value) => batchEditFolderSongs('tags', value)"
+                      />
+                    </NSpace>
+                  </NSpace>
+                </NCollapseItem>
+              </NCollapse>
+
+              <NDivider style="margin: 16px 0" />
+
+              <NButton
+                type="primary"
+                @click="addFolderSongs"
+              >
+                添加到歌单 | {{ selectedFolderSongs.length }} 首
+              </NButton>
+
+              <NDivider style="margin: 16px 0" />
+
+              <NTransfer
+                v-model:value="selectedFolderSongs"
+                style="height: 500px"
+                :options="folderSongsOptions"
+                source-filterable
+              />
+            </template>
           </NTabPane>
         </NTabs>
       </NSpin>

@@ -3,12 +3,14 @@ import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'
+import { useOBSNotification } from '@/store/useOBSNotification'
 
 const timer = ref<any>()
 const visible = ref(true)
 const active = ref(true)
 const webfetcher = useWebFetcher()
 const accountInfo = useAccount()
+const obsNotification = useOBSNotification()
 
 const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
 

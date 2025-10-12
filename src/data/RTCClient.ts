@@ -46,6 +46,7 @@ export abstract class BaseRTCClient {
 
     this.send('VTsuru.RTCEvent.On', eventName)
   }
+
   public off(eventName: string, listener: (args: any) => void) {
     if (this.events[eventName]) {
       const index = this.events[eventName].indexOf(listener)
@@ -99,14 +100,14 @@ export class SlaveRTCClient extends BaseRTCClient {
   type: 'slave' = 'slave' as const
 
   protected async getAllRTC(): Promise<ComponentsEventHubModel[]> {
-    return await this.vhub.invoke<ComponentsEventHubModel[]>('GetAllRTC') || []
+    return await this.vhub.invoke<ComponentsEventHubModel[]>('GetOnlineRTC') || []
   }
 
   public async connectToAllMaster() {
     const masters = (await this.getAllRTC()).filter(
       (item: ComponentsEventHubModel) =>
         item.IsMaster
-        && item.Token != this.peer!.id
+        && item.Token != this.peer.id
         && !this.connections.some(conn => conn.peer == item.Token),
     )
     masters.forEach((item: ComponentsEventHubModel) => {

@@ -241,10 +241,10 @@ const hasOtherSingSong = computed(() => {
           </template>
           {{
             hasOtherSingSong
-              ? '还有其他正在演唱的歌曲'
+              ? '还有其他正在进行的点播'
               : song.status == SongRequestStatus.Waiting && song.id
-                ? '开始演唱'
-                : '停止演唱'
+                ? '开始处理'
+                : '停止处理'
           }}
         </NTooltip>
         <NTooltip>
@@ -263,45 +263,56 @@ const hasOtherSingSong = computed(() => {
           </template>
           完成
         </NTooltip>
-        <NPopconfirm
-          @positive-click="onUpdateStatus(SongRequestStatus.Cancel)"
-        >
+        <NTooltip>
           <template #trigger>
-            <NButton
-              circle
-              type="error"
-              style="height: 30px; width: 30px"
-              :loading="isLoading"
+            <NPopconfirm
+              @positive-click="onUpdateStatus(SongRequestStatus.Cancel)"
             >
-              <template #icon>
-                <NIcon :component="Dismiss16Filled" />
+              <template #trigger>
+                <NButton
+                  circle
+                  type="error"
+                  style="height: 30px; width: 30px"
+                  :loading="isLoading"
+                >
+                  <template #icon>
+                    <NIcon :component="Dismiss16Filled" />
+                  </template>
+                </NButton>
               </template>
-            </NButton>
+              是否取消处理?
+            </NPopconfirm>
           </template>
-          是否取消处理?
-        </NPopconfirm>
-        <NPopconfirm
+          取消
+        </NTooltip>
+        <NTooltip
           v-if="
             song.from == SongRequestFrom.Danmaku
               && song.user?.uid
               && song.status !== SongRequestStatus.Cancel
           "
-          @positive-click="onBlockUser"
         >
           <template #trigger>
-            <NButton
-              circle
-              type="error"
-              style="height: 30px; width: 30px"
-              :loading="isLoading"
+            <NPopconfirm
+              @positive-click="onBlockUser"
             >
-              <template #icon>
-                <NIcon :component="PresenceBlocked16Regular" />
+              <template #trigger>
+                <NButton
+                  circle
+                  type="error"
+                  style="height: 30px; width: 30px"
+                  :loading="isLoading"
+                >
+                  <template #icon>
+                    <NIcon :component="PresenceBlocked16Regular" />
+                  </template>
+                </NButton>
               </template>
-            </NButton>
+              是否拉黑此用户?
+            </NPopconfirm>
           </template>
-          是否拉黑此用户?
-        </NPopconfirm>
+          拉黑用户
+        </NTooltip>
       </NSpace>
     </NSpace>
   </NCard>

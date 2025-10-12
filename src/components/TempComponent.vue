@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NSpin, useLoadingBar, useMessage, useModal } from 'naive-ui'
+import { NSpin, useDialog, useLoadingBar, useMessage, useModal, useNotification } from 'naive-ui'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { cookie, useAccount } from '@/api/account'

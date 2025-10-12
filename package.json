@@ -72,6 +72,7 @@
     "vue-echarts": "^8.0.0",
     "vue-request": "^2.0.4",
     "vue-router": "^4.5.1",
+    "vue-toastification": "^1.7.14",
     "vue-turnstile": "^1.0.11",
     "vue3-aplayer": "^1.7.3",
     "vue3-marquee": "^4.2.2",
