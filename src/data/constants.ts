@@ -19,7 +19,7 @@ export const THINGS_URL = `${FILE_BASE_URL}/things/`
 export const apiFail = ref(false)
 
 export const BASE_URL
-  = process.env.NODE_ENV === 'development'
+  = import.meta.env.NODE_ENV === 'development'
     ? debugAPI
     : apiFail.value
       ? failoverAPI
@@ -27,7 +27,7 @@ export const BASE_URL
 export const BASE_API_URL = `${BASE_URL}api/`
 export const FETCH_API = 'https://fetch.vtsuru.live/'
 export const BASE_HUB_URL
-  = `${process.env.NODE_ENV === 'development'
+  = `${import.meta.env.NODE_ENV === 'development'
     ? debugAPI
     : apiFail.value
       ? failoverAPI
@@ -65,6 +65,7 @@ export const CHECKIN_API_URL = `${BASE_API_URL}checkin/`
 export const USER_CONFIG_API_URL = `${BASE_API_URL}user-config/`
 export const FILE_API_URL = `${BASE_API_URL}files/`
 export const VOTE_API_URL = `${BASE_API_URL}vote/`
+export const TTS_API_URL = `${BASE_API_URL}tts/`
 
 export interface TemplateMapType {
   [key: string]: {

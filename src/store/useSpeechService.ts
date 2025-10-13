@@ -7,7 +7,7 @@ import { clearInterval, setInterval } from 'worker-timers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
-import { FETCH_API } from '@/data/constants'
+import { FETCH_API, TTS_API_URL } from '@/data/constants'
 
 export interface SpeechSettings {
   speechInfo: SpeechInfo
@@ -16,12 +16,14 @@ export interface SpeechSettings {
   guardTemplate: string
   giftTemplate: string
   enterTemplate: string
-  voiceType: 'local' | 'api'
+  voiceType: 'local' | 'api' | 'azure'
   voiceAPISchemeType: 'http' | 'https'
   voiceAPI: string
   splitText: boolean
   useAPIDirectly: boolean
   combineGiftDelay: number | undefined
+  azureVoice: string
+  azureLanguage: string
 }
 
 export interface SpeechInfo {
@@ -65,6 +67,8 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   useAPIDirectly: false,
   splitText: false,
   combineGiftDelay: 2,
+  azureVoice: 'zh-CN-XiaoxiaoNeural',
+  azureLanguage: 'zh-CN',
 }
 
 export const templateConstants = {
@@ -134,6 +138,7 @@ function createSpeechService() {
 
   const apiAudio = ref<HTMLAudioElement>()
   let checkTimer: number | undefined
+  let loadingTimeoutTimer: number | undefined // 音频加载超时计时器
   let speechQueueTimer: number | undefined
 
   const speechSynthesisInfo = ref<{
@@ -202,6 +207,11 @@ function createSpeechService() {
     if (checkTimer) {
       clearInterval(checkTimer)
       checkTimer = undefined
+    }
+
+    if (loadingTimeoutTimer) {
+      clearInterval(loadingTimeoutTimer)
+      loadingTimeoutTimer = undefined
     }
 
     cancelSpeech()
@@ -294,10 +304,7 @@ function createSpeechService() {
       text = text.replace(templateConstants.guard_num.regex, (data.num ?? 0).toString())
     }
 
-    text = fullWidthToHalfWidth(text)
-      .replace(/[^0-9a-z\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF,.:'"\s]/gi, '')
-      .normalize('NFKC')
-
+    console.log(text)
     return text
   }
 
@@ -359,6 +366,13 @@ function createSpeechService() {
    * 构建API请求URL
    */
   function buildApiUrl(text: string): string | null {
+    // Azure TTS
+    if (settings.value.voiceType === 'azure') {
+      const apiUrl = `${TTS_API_URL}azure?text=${encodeURIComponent(text)}`
+      return apiUrl
+    }
+
+    // 自定义 API
     if (!settings.value.voiceAPI) {
       message.error('未设置语音API')
       return null
@@ -400,15 +414,47 @@ function createSpeechService() {
    * 使用API TTS朗读
    */
   function speakFromAPI(text: string) {
-    const url = buildApiUrl(text)
+    let url = buildApiUrl(text)
     if (!url) {
       cancelSpeech()
       return
     }
 
+    // 如果是 Azure TTS，添加额外参数
+    if (settings.value.voiceType === 'azure') {
+      const azureUrl = new URL(url)
+      azureUrl.searchParams.set('voice', settings.value.azureVoice)
+      azureUrl.searchParams.set('language', settings.value.azureLanguage)
+      azureUrl.searchParams.set('rate', settings.value.speechInfo.rate.toString())
+      azureUrl.searchParams.set('pitch', settings.value.speechInfo.pitch.toString())
+      azureUrl.searchParams.set('streaming', 'true')
+      url = azureUrl.toString()
+    }
+
     speechState.isSpeaking = true
     speechState.isApiAudioLoading = true
-    speechState.apiAudioSrc = url
+    
+    // 先清空 apiAudioSrc，确保 audio 元素能够正确重新加载
+    // 这样可以避免连续播放时 src 更新不触发加载的问题
+    speechState.apiAudioSrc = ''
+    
+    // 使用 nextTick 确保 DOM 更新后再设置新的 src
+    // 但由于这是在 store 中，我们使用 setTimeout 来模拟
+    setTimeout(() => {
+      speechState.apiAudioSrc = url
+    }, 0)
+
+    // 设置 10 秒加载超时
+    if (loadingTimeoutTimer) {
+      clearInterval(loadingTimeoutTimer)
+    }
+    loadingTimeoutTimer = setInterval(() => {
+      if (speechState.isApiAudioLoading) {
+        console.error('[TTS] 音频加载超时 (10秒)')
+        message.error('音频加载超时，请检查网络连接或API状态')
+        cancelSpeech()
+      }
+    }, 10000) // 10 秒超时
   }
 
   /**
@@ -470,7 +516,10 @@ function createSpeechService() {
       if (settings.value.voiceType == 'local') {
         speakDirect(text)
       } else {
-        text = settings.value.splitText ? insertSpaces(text) : text
+        // 只有自定义 API 且启用了 splitText 才进行文本拆分
+        if (settings.value.voiceType === 'api' && settings.value.splitText) {
+          text = insertSpaces(text)
+        }
         speakFromAPI(text)
       }
 
@@ -489,14 +538,32 @@ function createSpeechService() {
       checkTimer = undefined
     }
 
+    if (loadingTimeoutTimer) {
+      clearInterval(loadingTimeoutTimer)
+      loadingTimeoutTimer = undefined
+    }
+
     speechState.isApiAudioLoading = false
 
     if (apiAudio.value && !apiAudio.value.paused) {
       apiAudio.value.pause()
     }
 
+    // 清空音频源，确保下次播放时能正确加载新的音频
+    speechState.apiAudioSrc = ''
+
     EasySpeech.cancel()
     speechState.speakingText = ''
+  }
+
+  /**
+   * 清除音频加载超时计时器
+   */
+  function clearLoadingTimeout() {
+    if (loadingTimeoutTimer) {
+      clearInterval(loadingTimeoutTimer)
+      loadingTimeoutTimer = undefined
+    }
   }
 
   /**
@@ -680,6 +747,7 @@ function createSpeechService() {
     startSpeech,
     stopSpeech,
     cancelSpeech,
+    clearLoadingTimeout,
     uploadConfig,
     downloadConfig,
     getTextFromDanmaku,

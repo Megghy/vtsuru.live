@@ -47,6 +47,7 @@ import { EventDataTypes } from '@/api/api-models'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { templateConstants, useSpeechService } from '@/store/useSpeechService'
 import { copyToClipboard } from '@/Utils'
+import { TTS_API_URL } from '@/data/constants';
 
 const props = defineProps<{
   roomInfo?: any
@@ -67,6 +68,10 @@ const {
   speechSynthesisInfo,
   apiAudio,
 } = speechService
+
+// Azure 语音列表
+const azureVoices = ref<Array<{ label: string; value: string; locale: string }>>([])
+const azureVoicesLoading = ref(false)
 
 // 计算属性
 const isVtsuruVoiceAPI = computed(() => {
@@ -197,6 +202,61 @@ function testAPI() {
   }
 }
 
+/**
+ * 获取 Azure 语音列表
+ */
+async function fetchAzureVoices() {
+  if (azureVoices.value.length > 0) {
+    return
+  }
+
+  azureVoicesLoading.value = true
+  try {
+    const response = await fetch(`${TTS_API_URL}voices`)
+    if (!response.ok) {
+      throw new Error('获取语音列表失败')
+    }
+
+    const voices = await response.json()
+
+    azureVoices.value = voices
+      .filter((v: any) => {
+        const locale = v.Locale || v.locale || ''
+        return locale.startsWith('zh-') || locale.startsWith('ja-') || locale.startsWith('en-')
+      })
+      .map((v: any) => {
+        const shortName = v.ShortName || v.shortName || ''
+        const localeName = v.LocaleName || v.localeName || ''
+        const localName = v.LocalName || v.localName || v.DisplayName || v.displayName || ''
+        const gender = v.Gender || v.gender || ''
+        const isMultilingual = shortName.toLowerCase().includes('multilingual')
+
+        return {
+          label: `[${localeName}] ${localName} (${gender === 'Male' ? '男' : '女'})${isMultilingual ? ' 🌍' : ''}`,
+          value: shortName,
+          locale: v.Locale || v.locale || '',
+        }
+      })
+      .sort((a: any, b: any) => {
+        // 多语言模型优先
+        const aMulti = a.value.toLowerCase().includes('multilingual')
+        const bMulti = b.value.toLowerCase().includes('multilingual')
+        if (aMulti && !bMulti) return -1
+        if (!aMulti && bMulti) return 1
+
+        // 然后按语言排序：中文排前面，日文其次，英文最后
+        const aScore = a.locale.startsWith('zh-') ? 0 : a.locale.startsWith('ja-') ? 1 : 2
+        const bScore = b.locale.startsWith('zh-') ? 0 : b.locale.startsWith('ja-') ? 1 : 2
+        return aScore - bScore
+      })
+  } catch (error) {
+    console.error('[Azure TTS] 获取语音列表失败:', error)
+    message.error('获取 Azure 语音列表失败')
+  } finally {
+    azureVoicesLoading.value = false
+  }
+}
+
 function getEventTypeTag(type: EventDataTypes) {
   switch (type) {
     case EventDataTypes.Message:
@@ -220,6 +280,16 @@ function onAPIError(_e: Event) {
   cancelSpeech()
 }
 
+function onAudioCanPlay() {
+  speechState.isApiAudioLoading = false
+  speechService.clearLoadingTimeout()
+}
+
+function onAudioError(e: Event) {
+  speechService.clearLoadingTimeout()
+  onAPIError(e)
+}
+
 // 生命周期
 onMounted(async () => {
   await speechService.initialize()
@@ -229,6 +299,11 @@ onMounted(async () => {
   client.onEvent('guard', onGetEvent)
   client.onEvent('gift', onGetEvent)
   client.onEvent('enter', onGetEvent)
+
+  // 如果默认使用 Azure TTS，则预加载语音列表
+  if (settings.value.voiceType === 'azure') {
+    fetchAzureVoices()
+  }
 })
 
 onUnmounted(() => {
@@ -646,6 +721,21 @@ onUnmounted(() => {
               </NSpace>
             </NRadioButton>
 
+            <NRadioButton value="azure">
+              <NSpace :size="4">
+                <span>Azure TTS</span>
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon
+                      :component="Info24Filled"
+                      :size="16"
+                    />
+                  </template>
+                  使用 Microsoft Azure 语音合成服务, 混合语言输出效果和音质好, 略有延迟
+                </NTooltip>
+              </NSpace>
+            </NRadioButton>
+
             <NRadioButton value="api">
               <NSpace :size="4">
                 <span>API 语音</span>
@@ -737,6 +827,127 @@ onUnmounted(() => {
                 <NSlider
                   v-model:value="settings.speechInfo.rate"
                   :min="0"
+                  :max="2"
+                  :step="0.01"
+                  style="margin-top: 8px"
+                />
+              </div>
+            </NSpace>
+
+            <!-- Azure TTS 设置 -->
+            <NSpace
+              v-else-if="settings.voiceType === 'azure'"
+              vertical
+              :size="16"
+            >
+              <NAlert
+                type="success"
+                :bordered="false"
+              >
+                <template #icon>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                使用本站提供的 Microsoft Azure 语音合成服务，效果最好
+              </NAlert>
+
+              <div>
+                <NSpace justify="space-between" align="center">
+                  <NText strong>语音选择</NText>
+                  <NButton
+                    v-if="azureVoices.length === 0"
+                    text
+                    type="primary"
+                    size="small"
+                    :loading="azureVoicesLoading"
+                    @click="fetchAzureVoices"
+                  >
+                    加载语音列表
+                  </NButton>
+                  <NText v-else depth="3" style="font-size: 12px">
+                    共 {{ azureVoices.length }} 个语音
+                  </NText>
+                </NSpace>
+                <NSelect
+                  v-model:value="settings.azureVoice"
+                  :options="azureVoices.length > 0 ? azureVoices : [
+                    { label: '中文(普通话)女 - 晓晓', value: 'zh-CN-XiaoxiaoNeural' },
+                    { label: '中文(普通话)女 - 晓伊', value: 'zh-CN-XiaoyiNeural' },
+                    { label: '中文(普通话)女 - 晓梦', value: 'zh-CN-XiaomengNeural' },
+                    { label: '中文(普通话)女 - 晓莫', value: 'zh-CN-XiaomoNeural' },
+                    { label: '中文(普通话)女 - 晓秋', value: 'zh-CN-XiaoqiuNeural' },
+                    { label: '中文(普通话)女 - 晓双', value: 'zh-CN-XiaoshuangNeural' },
+                    { label: '中文(普通话)女 - 晓纯', value: 'zh-CN-XiaochenNeural' },
+                    { label: '中文(普通话)女 - 晓翔', value: 'zh-CN-XiaoxiangNeural' },
+                    { label: '中文(普通话)女 - 晓蕾', value: 'zh-CN-XiaorouNeural' },
+                    { label: '中文(普通话)女 - 晓瑶', value: 'zh-CN-XiaoyouNeural' },
+                    { label: '中文(普通话)男 - 云希', value: 'zh-CN-YunxiNeural' },
+                    { label: '中文(普通话)男 - 云扬', value: 'zh-CN-YunyangNeural' },
+                    { label: '中文(普通话)男 - 云健', value: 'zh-CN-YunjianNeural' },
+                    { label: '中文(普通话)儿童 - 晓晋', value: 'zh-CN-XiaozhenNeural' },
+                    { label: '中文(普通话)儿童 - 云夏', value: 'zh-CN-YunxiaNeural' },
+                  ]"
+                  :loading="azureVoicesLoading"
+                  :fallback-option="() => ({
+                    label: settings.azureVoice ? `已选择: ${settings.azureVoice}` : '未选择',
+                    value: settings.azureVoice || '',
+                  })"
+                  style="margin-top: 8px"
+                  filterable
+                  @focus="fetchAzureVoices"
+                />
+              </div>
+
+              <div>
+                <NSpace
+                  justify="space-between"
+                  align="center"
+                >
+                  <NText>音量</NText>
+                  <NText depth="3">
+                    {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
+                  </NText>
+                </NSpace>
+                <NSlider
+                  v-model:value="settings.speechInfo.volume"
+                  :min="0"
+                  :max="1"
+                  :step="0.01"
+                  style="margin-top: 8px"
+                />
+              </div>
+
+              <div>
+                <NSpace
+                  justify="space-between"
+                  align="center"
+                >
+                  <NText>音调</NText>
+                  <NText depth="3">
+                    {{ settings.speechInfo.pitch.toFixed(2) }}
+                  </NText>
+                </NSpace>
+                <NSlider
+                  v-model:value="settings.speechInfo.pitch"
+                  :min="0.5"
+                  :max="2"
+                  :step="0.01"
+                  style="margin-top: 8px"
+                />
+              </div>
+
+              <div>
+                <NSpace
+                  justify="space-between"
+                  align="center"
+                >
+                  <NText>语速</NText>
+                  <NText depth="3">
+                    {{ settings.speechInfo.rate.toFixed(2) }}
+                  </NText>
+                </NSpace>
+                <NSlider
+                  v-model:value="settings.speechInfo.rate"
+                  :min="0.5"
                   :max="2"
                   :step="0.01"
                   style="margin-top: 8px"
@@ -865,19 +1076,21 @@ onUnmounted(() => {
                   style="margin-top: 8px"
                 />
               </div>
-
-              <!-- 隐藏的音频元素 -->
-              <audio
-                ref="apiAudio"
-                :src="speechState.apiAudioSrc"
-                :volume="settings.speechInfo.volume"
-                style="display: none"
-                @ended="cancelSpeech"
-                @canplay="speechState.isApiAudioLoading = false"
-                @error="onAPIError"
-              />
             </NSpace>
           </Transition>
+
+          <!-- 隐藏的音频元素 - 用于 API 和 Azure TTS -->
+          <audio
+            v-if="settings.voiceType !== 'local'"
+            ref="apiAudio"
+            :src="speechState.apiAudioSrc"
+            :volume="settings.speechInfo.volume"
+            style="display: none"
+            autoplay
+            @ended="cancelSpeech"
+            @canplay="onAudioCanPlay"
+            @error="onAudioError"
+          />
         </NSpace>
       </NCard>
 
@@ -1063,7 +1276,10 @@ onUnmounted(() => {
             </NInputGroup>
           </NSpace>
 
-          <NCheckbox v-model:checked="settings.splitText">
+          <NCheckbox
+            v-if="settings.voiceType === 'api'"
+            v-model:checked="settings.splitText"
+          >
             <NSpace
               :size="4"
               align="center"
