@@ -24,6 +24,7 @@ export interface SpeechSettings {
   combineGiftDelay: number | undefined
   azureVoice: string
   azureLanguage: string
+  outputDeviceId: string
 }
 
 export interface SpeechInfo {
@@ -69,6 +70,7 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   combineGiftDelay: 2,
   azureVoice: 'zh-CN-XiaoxiaoNeural',
   azureLanguage: 'zh-CN',
+  outputDeviceId: 'default',
 }
 
 export const templateConstants = {
@@ -433,11 +435,11 @@ function createSpeechService() {
 
     speechState.isSpeaking = true
     speechState.isApiAudioLoading = true
-    
+
     // 先清空 apiAudioSrc，确保 audio 元素能够正确重新加载
     // 这样可以避免连续播放时 src 更新不触发加载的问题
     speechState.apiAudioSrc = ''
-    
+
     // 使用 nextTick 确保 DOM 更新后再设置新的 src
     // 但由于这是在 store 中，我们使用 setTimeout 来模拟
     setTimeout(() => {

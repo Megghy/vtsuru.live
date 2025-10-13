@@ -73,6 +73,10 @@ const {
 const azureVoices = ref<Array<{ label: string; value: string; locale: string }>>([])
 const azureVoicesLoading = ref(false)
 
+// 音频输出设备列表
+const audioOutputDevices = ref<Array<{ label: string; value: string }>>([])
+const audioOutputDevicesLoading = ref(false)
+
 // 计算属性
 const isVtsuruVoiceAPI = computed(() => {
   return (
@@ -290,6 +294,58 @@ function onAudioError(e: Event) {
   onAPIError(e)
 }
 
+/**
+ * 获取音频输出设备列表
+ */
+async function fetchAudioOutputDevices() {
+  audioOutputDevicesLoading.value = true
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      message.warning('当前浏览器不支持设备枚举')
+      return
+    }
+
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const outputDevices = devices.filter(device => device.kind === 'audiooutput')
+
+    audioOutputDevices.value = [
+      { label: '默认设备', value: 'default' },
+      ...outputDevices.map(device => ({
+        label: device.label || `设备 ${device.deviceId.substring(0, 8)}`,
+        value: device.deviceId,
+      })),
+    ]
+
+    console.log('[TTS] 音频输出设备列表:', audioOutputDevices.value)
+  } catch (error) {
+    console.error('[TTS] 获取音频输出设备失败:', error)
+    message.error('获取音频输出设备失败，可能需要授予麦克风权限')
+  } finally {
+    audioOutputDevicesLoading.value = false
+  }
+}
+
+/**
+ * 设置音频元素的输出设备
+ */
+async function setAudioOutputDevice() {
+  if (!apiAudio.value || !settings.value.outputDeviceId) {
+    return
+  }
+
+  try {
+    if (typeof apiAudio.value.setSinkId === 'function') {
+      await apiAudio.value.setSinkId(settings.value.outputDeviceId)
+      console.log(`[TTS] 已切换到输出设备: ${settings.value.outputDeviceId}`)
+    } else {
+      console.warn('[TTS] 当前浏览器不支持选择输出设备')
+    }
+  } catch (error) {
+    console.error('[TTS] 设置输出设备失败:', error)
+    message.error('设置输出设备失败')
+  }
+}
+
 // 生命周期
 onMounted(async () => {
   await speechService.initialize()
@@ -304,6 +360,14 @@ onMounted(async () => {
   if (settings.value.voiceType === 'azure') {
     fetchAzureVoices()
   }
+
+  // 获取音频输出设备列表
+  await fetchAudioOutputDevices()
+
+  // 监听输出设备变化
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.addEventListener('devicechange', fetchAudioOutputDevices)
+  }
 })
 
 onUnmounted(() => {
@@ -314,6 +378,11 @@ onUnmounted(() => {
   client.offEvent('enter', onGetEvent)
 
   speechService.stopSpeech()
+
+  // 移除设备变化监听器
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.removeEventListener('devicechange', fetchAudioOutputDevices)
+  }
 })
 </script>
 
@@ -702,6 +771,47 @@ onUnmounted(() => {
           vertical
           :size="16"
         >
+          <!-- 输出设备选择 -->
+          <div>
+            <NSpace justify="space-between" align="center">
+              <NText strong>输出设备</NText>
+              <NButton
+                v-if="audioOutputDevices.length === 0"
+                text
+                type="primary"
+                size="small"
+                :loading="audioOutputDevicesLoading"
+                @click="fetchAudioOutputDevices"
+              >
+                加载设备列表
+              </NButton>
+            </NSpace>
+            <NSelect
+              v-model:value="settings.outputDeviceId"
+              :options="audioOutputDevices"
+              :loading="audioOutputDevicesLoading"
+              :fallback-option="() => ({
+                label: settings.outputDeviceId === 'default' ? '默认设备' : `已选择: ${settings.outputDeviceId.substring(0, 16)}...`,
+                value: settings.outputDeviceId || 'default',
+              })"
+              style="margin-top: 8px"
+              @update:value="setAudioOutputDevice"
+            />
+            <NAlert
+              v-if="audioOutputDevices.length === 1"
+              type="info"
+              :bordered="false"
+              style="margin-top: 8px; font-size: 12px"
+            >
+              <template #icon>
+                <NIcon :component="Info24Filled" :size="16" />
+              </template>
+              未检测到其他音频设备。某些浏览器需要授予麦克风权限才能列出所有设备。
+            </NAlert>
+          </div>
+
+          <NDivider style="margin: 8px 0" />
+
           <NRadioGroup
             v-model:value="settings.voiceType"
             size="large"
@@ -1090,6 +1200,7 @@ onUnmounted(() => {
             @ended="cancelSpeech"
             @canplay="onAudioCanPlay"
             @error="onAudioError"
+            @loadedmetadata="setAudioOutputDevice"
           />
         </NSpace>
       </NCard>
