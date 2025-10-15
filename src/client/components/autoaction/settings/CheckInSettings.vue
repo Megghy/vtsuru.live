@@ -65,6 +65,8 @@ const defaultPointSetting: Setting_Point = {
   dailyFirstGiftPoints: 10,
   useDailyFirstGiftPercent: false,
   dailyFirstGiftPercent: 0.1,
+  dailyFirstOnlyOnStreaming: false,
+  checkInOnlyOnStreaming: false,
 }
 const serverSetting = computed<Setting_Point>(() => {
   return (accountInfo.value?.settings?.point ?? defaultPointSetting)
