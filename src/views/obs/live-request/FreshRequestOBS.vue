@@ -145,7 +145,7 @@ onUnmounted(() => {
           v-else
           class="fresh-request-no-song"
         >
-          当前暂无演唱
+          当前暂无项目
         </div>
       </div>
     </div>
