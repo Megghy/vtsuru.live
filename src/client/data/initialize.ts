@@ -37,7 +37,7 @@ let updateNotificationRef: any = null
 async function sendHeartbeat() {
   try {
     await invoke('heartbeat', undefined, {
-      headers: [['Origin', location.host]]
+      headers: [['Origin', location.host]],
     })
   } catch (error) {
     console.error('发送心跳失败:', error)
@@ -439,7 +439,7 @@ export async function callStartDanmakuClient() {
   if (settings.settings.useDanmakuClientType === 'direct') {
     info('开始初始化弹幕客户端 [direct]')
     const key = await getRoomKey(
-      accountInfo.value.biliRoomId!,
+      accountInfo.value.biliRoomId,
       await biliCookie.getBiliCookie() || '',
     )
     if (!key) {
@@ -452,10 +452,10 @@ export async function callStartDanmakuClient() {
       return { success: false, message: '无法获取buvid' }
     }
     return webFetcher.Start('direct', {
-      roomId: accountInfo.value.biliRoomId!,
+      roomId: accountInfo.value.biliRoomId,
       buvid: buvid.data,
       token: key,
-      tokenUserId: biliCookie.uId!,
+      tokenUserId: biliCookie.uId,
     }, true)
   } else {
     info('开始初始化弹幕客户端 [openlive]')

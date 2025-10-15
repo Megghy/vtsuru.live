@@ -1,7 +1,6 @@
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
-import { useLoadingBarStore } from '@/store/useLoadingBarStore'
-import IndexView from '../views/IndexView.vue'
 import client from './client'
 import manage from './manage'
 import obs from './obs'
@@ -92,11 +91,13 @@ const routes: Array<RouteRecordRaw> = [
   obs,
   open_live,
   obs_store,
+  // @ts-expect-error
   client,
   {
     path: '/@:id',
     name: 'user',
     alias: '/user/:id',
+    // @ts-expect-error
     children: user,
   },
   {

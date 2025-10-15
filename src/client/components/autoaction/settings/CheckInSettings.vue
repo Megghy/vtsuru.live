@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { DataTableColumns } from 'naive-ui'
-import type { CheckInRankingInfo, CheckInResult } from '@/api/api-models'
+import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
+
 import { Info24Filled } from '@vicons/fluent'
 import { NAlert, NButton, NCard, NDataTable, NDivider, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, NText, NTime, NTooltip } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
@@ -38,9 +39,35 @@ const checkInPlaceholders = [
   { name: '{{checkin.time}}', description: '签到时间对象' },
 ]
 
-// 服务端签到设置
-const serverSetting = computed(() => {
-  return accountInfo.value?.settings?.point || {}
+// 服务端签到设置（提供强类型默认值，避免模板中访问属性时报错）
+const defaultPointSetting: Setting_Point = {
+  allowType: [],
+  jianzhangPoint: 0,
+  tiduPoint: 0,
+  zongduPoint: 0,
+  giftPercentMap: {},
+  scPointPercent: 0,
+  giftPointPercent: 0,
+  giftAllowType: 0,
+  shouldDiscontinueWhenSoldOut: false,
+  enableCheckIn: false,
+  checkInKeyword: '',
+  givePointsForCheckIn: false,
+  baseCheckInPoints: 0,
+  enableConsecutiveBonus: false,
+  bonusPointsPerDay: 0,
+  maxBonusPoints: 0,
+  allowSelfCheckIn: false,
+  requireAuth: false,
+  enableDailyFirstDanmaku: false,
+  dailyFirstDanmakuPoints: 5,
+  enableDailyFirstGift: false,
+  dailyFirstGiftPoints: 10,
+  useDailyFirstGiftPercent: false,
+  dailyFirstGiftPercent: 0.1,
+}
+const serverSetting = computed<Setting_Point>(() => {
+  return (accountInfo.value?.settings?.point ?? defaultPointSetting)
 })
 
 // 是否可以编辑设置
@@ -184,12 +211,12 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
   {
     title: '连续签到天数',
     key: 'consecutiveDays',
-    sorter: 'default',
+    sorter: true,
   },
   {
     title: '积分',
     key: 'points',
-    sorter: 'default',
+    sorter: true,
   },
   {
     title: '最近签到时间',
@@ -204,7 +231,7 @@ const rankingColumns: DataTableColumns<CheckInRankingInfo> = [
         default: () => new Date(row.lastCheckInTime).toLocaleString(),
       })
     },
-    sorter: 'default',
+    sorter: true,
   },
   {
     title: '已认证',

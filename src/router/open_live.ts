@@ -1,6 +1,9 @@
+import { RouterView } from 'vue-router'
+
 export default {
   path: '/open-live',
   name: 'open-live',
+  component: RouterView,
   children: [
     {
       path: '',

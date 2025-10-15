@@ -144,41 +144,47 @@ onUnmounted(() => {
           :class="{ animating: isMoreThanContainer }"
           :style="`width: ${width}px; --item-parent-width: ${width}px`"
         >
-          <div
-            v-for="(song, index) in activeSongs"
-            :key="song.id"
-            class="live-request-list-item"
-            :from="song.from as number"
-            :status="song.status as number"
+          <TransitionGroup
+            name="live-request-transition"
+            tag="div"
+            class="live-request-transition-group"
           >
             <div
-              class="live-request-list-item-index"
-              :index="index + 1"
+              v-for="(song, index) in activeSongs"
+              :key="song.id"
+              class="live-request-list-item"
+              :from="song.from as number"
+              :status="song.status as number"
             >
-              {{ index + 1 }}
-            </div>
-            <div class="live-request-list-item-scroll-view">
-              <div class="live-request-list-item-inner-scroll">
-                <div class="live-request-list-item-song-name">
-                  {{ song.songName || '未知歌曲' }}
-                </div>
-                <div
-                  v-if="settings.showUserName"
-                  class="live-request-list-item-name"
-                  :from="song.from as number"
-                >
-                  {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户' }}
-                </div>
-                <div
-                  v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
-                  class="live-request-list-item-level"
-                  :has-level="(song.user?.fans_medal_level ?? 0) > 0"
-                >
-                  {{ `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}` }}
+              <div
+                class="live-request-list-item-index"
+                :index="index + 1"
+              >
+                {{ index + 1 }}
+              </div>
+              <div class="live-request-list-item-scroll-view">
+                <div class="live-request-list-item-inner-scroll">
+                  <div class="live-request-list-item-song-name">
+                    {{ song.songName || '未知歌曲' }}
+                  </div>
+                  <div
+                    v-if="settings.showUserName"
+                    class="live-request-list-item-name"
+                    :from="song.from as number"
+                  >
+                    {{ song.from == SongRequestFrom.Manual ? '主播添加' : song.user?.name || '未知用户' }}
+                  </div>
+                  <div
+                    v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
+                    class="live-request-list-item-level"
+                    :has-level="(song.user?.fans_medal_level ?? 0) > 0"
+                  >
+                    {{ `${song.user?.fans_medal_name || ''} ${song.user?.fans_medal_level || ''}` }}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
       </template>
       <div
@@ -398,6 +404,33 @@ onUnmounted(() => {
   position: relative;
 }
 
+.live-request-transition-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+}
+
+.live-request-transition-enter-active,
+.live-request-transition-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.live-request-transition-enter-from,
+.live-request-transition-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.live-request-transition-leave-active {
+  position: absolute;
+  width: 100%;
+}
+
+.live-request-transition-move {
+  transition: transform 0.3s ease;
+}
+
 @keyframes vertical-ping-pong {
   0% {
     transform: translateY(0);
@@ -426,7 +459,7 @@ onUnmounted(() => {
   position: relative;
   align-items: center;
   padding: 4px 6px;
-  margin-bottom: 5px;
+  margin-bottom: 0;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   min-height: 36px;

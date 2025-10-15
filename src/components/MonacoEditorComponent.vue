@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-
 
 const { language, height = 400, theme = 'vs-dark', options, path } = defineProps<{
   language: string
@@ -110,12 +109,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div :style="`height: ${height}px; width: 100%; position: relative;`">
-    <div v-if="!ready" :style="`position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color: var(--text-color, #888); text-align:center; padding:8px;`">
+    <div v-if="!ready" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color: var(--text-color, #888); text-align:center; padding:8px;">
       <div>
         <div>正在加载编辑器…</div>
-        <div v-if="initError" style="margin-top:6px; color:#d9534f; font-size:12px;">{{ initError }}</div>
+        <div v-if="initError" style="margin-top:6px; color:#d9534f; font-size:12px;">
+          {{ initError }}
+        </div>
       </div>
     </div>
-    <div ref="containerRef" :style="`height: ${height}px; width: 100%;`"></div>
+    <div ref="containerRef" :style="`height: ${height}px; width: 100%;`" />
   </div>
 </template>

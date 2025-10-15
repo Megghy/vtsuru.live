@@ -1,7 +1,7 @@
 import type { APIRoot, PaginationResponse } from './api-models'
 import { apiFail } from '@/data/constants'
 import { cookie } from './account'
-import { useBiliAuth } from '@/store/useBiliAuth';
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 export async function QueryPostAPI<T>(
   urlString: string,
@@ -58,9 +58,9 @@ async function QueryPostAPIWithParamsInternal<T>(
     h[header[0]] = header[1]
   })
   if (cookie.value.cookie) h.Authorization = `Bearer ${cookie.value.cookie}`
-  const biliAuth = useBiliAuth();
+  const biliAuth = useBiliAuth()
   if (biliAuth.currentToken) {
-    h['Bili-Auth'] = biliAuth.currentToken;
+    h['Bili-Auth'] = biliAuth.currentToken
   }
 
   // 当使用FormData时，不手动设置Content-Type，让浏览器自动添加boundary
@@ -122,9 +122,9 @@ async function QueryGetAPIInternal<T>(
     if (cookie.value.cookie) {
       h.Authorization = `Bearer ${cookie.value.cookie}`
     }
-    const biliAuth = useBiliAuth();
+    const biliAuth = useBiliAuth()
     if (biliAuth.currentToken) {
-      h['Bili-Auth'] = biliAuth.currentToken;
+      h['Bili-Auth'] = biliAuth.currentToken
     }
     return await QueryAPIInternal<T>(url, { method: 'get', headers: h })
   } catch (err) {

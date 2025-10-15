@@ -1,7 +1,10 @@
+import { RouterView } from 'vue-router'
+
 export default // 管理页面
 {
   path: '/manage',
   name: 'manage',
+  component: RouterView,
   children: [
     {
       path: '',

@@ -8,12 +8,13 @@ import {
 } from '@vicons/fluent'
 import { refDebounced, useLocalStorage } from '@vueuse/core' // VueUse 工具函数
 import { List } from 'linqts' // LINQ for TypeScript
-import {
+import type {
   DataTableBaseColumn,
   DataTableColumns,
   DataTableRowKey,
   FormInst,
-  FormRules,
+  FormRules} from 'naive-ui';
+import {
   NButton,
   NCard,
   NCheckbox,
@@ -38,10 +39,12 @@ import {
   NTooltip,
   useMessage, // Naive UI 组件
 } from 'naive-ui'
-import { computed, h, onMounted, ref, VNodeChild, watch } from 'vue' // Vue 核心 API
+import type { VNodeChild} from 'vue';
+import { computed, h, onMounted, ref, watch } from 'vue' // Vue 核心 API
 
 // [导入] 依赖项和类型
-import { SongFrom, SongRequestOption, SongsInfo } from '@/api/api-models' // API 数据模型
+import type { SongRequestOption, SongsInfo } from '@/api/api-models';
+import { SongFrom } from '@/api/api-models' // API 数据模型
 import { QueryGetAPI, QueryPostAPI } from '@/api/query' // API 请求方法
 import { SONG_API_URL } from '@/data/constants' // API 地址常量
 import { GetPlayButton } from '@/Utils' // 公用方法：获取播放/信息按钮
@@ -198,7 +201,7 @@ const languageSelectOption = computed(() => {
     '韩语',
     '法语',
     '西语',
-    '其他'
+    '其他',
   ])
   songsInternal.value.forEach((s) => {
     s.language?.forEach(l => languages.add(l))
@@ -252,9 +255,9 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   render(data) {
     // 渲染作者按钮，点击时更新列筛选状态
     return h(NSpace, { size: 5 }, () =>
-      data.author?.map(a => // 使用 ?. 防止 author 为空
+      (data.author?.map(a => // 使用 ?. 防止 author 为空
         h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a),
-      ) ?? null, // 如果 author 为空则不渲染
+      ) ?? null) // 如果 author 为空则不渲染
     )
   },
 })
@@ -319,7 +322,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
         // 使用 NTag 显示语言
         return data.language?.length // 使用 ?.length 检查
           ? h(NSpace, { size: 5 }, () =>
-              data.language?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a))          )
+              data.language?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a)) )
           : null
       },
     },
@@ -516,7 +519,7 @@ async function updateSong() {
       return
     }
     isLoading.value = true // 开始加载
-    const { code, data, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL }update`, {
+    const { code, data, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL}update`, {
       key: updateSongModel.value.key,
       song: updateSongModel.value,
     })
@@ -543,7 +546,7 @@ async function updateSong() {
 async function delSong(song: SongsInfo) {
   isLoading.value = true // 开始加载 (虽然删除很快，但保持一致性)
   try {
-    const { code, message: errMsg } = await QueryGetAPI<SongsInfo>(`${SONG_API_URL }del`, { key: song.key })
+    const { code, message: errMsg } = await QueryGetAPI<SongsInfo>(`${SONG_API_URL}del`, { key: song.key })
     if (code === 200) {
       // 从内部列表中移除
       songsInternal.value = songsInternal.value.filter(s => s.key !== song.key)
@@ -573,7 +576,7 @@ async function delBatchSong() {
   const ids = selectedColumn.value.map(s => s.toString())
   isLoading.value = true
   try {
-    const { code, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL }del-batch`, ids)
+    const { code, message: errMsg } = await QueryPostAPI<SongsInfo>(`${SONG_API_URL}del-batch`, ids)
     if (code === 200) {
       songsInternal.value = songsInternal.value.filter(s => !ids.includes(s.key))
       message.success(`已删除 ${ids.length} 首歌曲`)

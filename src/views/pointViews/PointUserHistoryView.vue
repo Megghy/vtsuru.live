@@ -2,7 +2,7 @@
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NDatePicker, NEmpty, NFlex, NRadioButton, NRadioGroup, NSelect, NSpin, NStatistic, useMessage } from 'naive-ui'
+import { NButton, NCard, NDatePicker, NEmpty, NFlex, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { PointFrom } from '@/api/api-models'
 import PointHistoryCard from '@/components/manage/PointHistoryCard.vue'

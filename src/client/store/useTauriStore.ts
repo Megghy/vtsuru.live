@@ -21,7 +21,7 @@ export class StoreTarget<T> {
 
     if (result === undefined && this.defaultValue !== undefined) {
       await this.set(this.defaultValue)
-      return this.defaultValue as T
+      return this.defaultValue
     }
     return result
   }

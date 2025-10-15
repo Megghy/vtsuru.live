@@ -987,23 +987,23 @@ onMounted(() => { })
               >
                 <NSelect
                   :value="currentGoodsModel.goods.setting?.guardFree?.year"
+                  :options="allowedYearOptions"
+                  placeholder="请选择年份"
                   @update:value="(v) => {
                     if (currentGoodsModel.goods.setting?.guardFree) {
                       currentGoodsModel.goods.setting.guardFree.year = v;
                     }
                   }"
-                  :options="allowedYearOptions"
-                  placeholder="请选择年份"
                 />
                 <NSelect
                   :value="currentGoodsModel.goods.setting?.guardFree?.month"
+                  :options="allowedMonthOptions"
+                  placeholder="请选择月份"
                   @update:value="(v) => {
                     if (currentGoodsModel.goods.setting?.guardFree) {
                       currentGoodsModel.goods.setting.guardFree.month = v;
                     }
                   }"
-                  :options="allowedMonthOptions"
-                  placeholder="请选择月份"
                 />
               </NFlex>
 

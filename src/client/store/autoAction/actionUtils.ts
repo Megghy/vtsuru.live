@@ -259,7 +259,7 @@ export function executeActions(
             // 更新冷却时间
             runtimeState.lastExecutionTime[action.id] = Date.now()
 
-            const sendAction = async () => sendAndLogDanmaku(handlers.sendLiveDanmaku!, action, roomId, message)
+            const sendAction = async () => sendAndLogDanmaku(handlers.sendLiveDanmaku, action, roomId, message)
 
             // 延迟发送
             if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
@@ -285,7 +285,7 @@ export function executeActions(
             runtimeState.lastExecutionTime[action.id] = Date.now()
 
             const sendPmPromise = async (uid: number, msg: string) => {
-              return handlers.sendPrivateMessage!(uid, msg)
+              return handlers.sendPrivateMessage(uid, msg)
                 .then((success) => {
                   // 记录私信发送历史
                   logPrivateMsgHistory(

@@ -1,4 +1,5 @@
-import { DataEvent, LiveWS, MessageData } from 'bilibili-live-danmaku'
+import type { MessageData } from 'bilibili-live-danmaku'
+import { LiveWS } from 'bilibili-live-danmaku'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { GuidUtils } from '@/Utils'
 import { AVATAR_URL } from '../constants'
@@ -43,8 +44,8 @@ export default class DirectClient extends BaseDanmakuClient {
       chatClient.addEventListener('SEND_GIFT', data => this.onGift(data.data))
       chatClient.addEventListener('GUARD_BUY', data => this.onGuard(data.data))
       chatClient.addEventListener('SUPER_CHAT_MESSAGE', data => this.onSC(data.data))
-      //chatClient.addEventListener('INTERACT_WORD', data => this.onEnter(data.data))
-      chatClient.addEventListener('MESSAGE', data => {
+      // chatClient.addEventListener('INTERACT_WORD', data => this.onEnter(data.data))
+      chatClient.addEventListener('MESSAGE', (data) => {
         switch (data.data.cmd) {
           case 'INTERACT_WORD_V2':
             this.onEnter(data.data)
@@ -56,7 +57,7 @@ export default class DirectClient extends BaseDanmakuClient {
             break
         }
       })
-      //chatClient.addEventListener('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
+      // chatClient.addEventListener('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
 
       return super.initClientInner(chatClient)
     } else {

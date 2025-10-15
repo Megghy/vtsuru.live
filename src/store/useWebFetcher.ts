@@ -192,7 +192,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     if (client.connected) {
       console.log(`${prefix.value}弹幕客户端连接成功, 开始监听弹幕`)
       danmakuClientState.value = 'connected' // 明确设置状态
-      danmakuServerUrl.value = client.danmakuClient!.serverUrl // 获取服务器地址
+      danmakuServerUrl.value = client.danmakuClient.serverUrl // 获取服务器地址
       // 启动事件发送定时器 (如果之前没有启动)
       timer ??= setInterval(sendEvents, 2000) // 每 2 秒尝试发送一次事件
       return { success: true, message: '弹幕客户端已启动' }

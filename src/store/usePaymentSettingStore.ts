@@ -1,4 +1,5 @@
 import type { IDeductionSetting, UserConsumptionSetting } from '@/api/models/consumption'
+
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { useAccount } from '@/api/account'
@@ -18,7 +19,7 @@ export const useConsumptionSettingStore = defineStore(
         name: '弹幕存储',
         key: 'danmakuStorage',
       },
-    }
+    } as const satisfies Record<ConsumptionTypes, { name: string, key: keyof UserConsumptionSetting }>
 
     async function UpdateConsumptionSetting(
       type: ConsumptionTypes,
@@ -33,8 +34,8 @@ export const useConsumptionSettingStore = defineStore(
       )
     }
     function GetSetting(type: ConsumptionTypes) {
-      // @ts-expect-error 直接从对象获取key
-      return consumptionSetting.value[consumptionTypeMap[type].key] as IDeductionSetting
+      const key = consumptionTypeMap[type].key
+      return consumptionSetting.value[key] as IDeductionSetting
     }
 
     return { consumptionSetting, consumptionTypeMap, UpdateConsumptionSetting, GetSetting }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
-import { NButton, NCard, NDataTable, NEmpty, NFlex, NSelect, NSpin, NTag, useMessage } from 'naive-ui'
+import { NButton, NCard, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { PointOrderStatus } from '@/api/api-models'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'

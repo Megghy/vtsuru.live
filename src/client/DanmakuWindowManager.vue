@@ -211,8 +211,7 @@ const separatorOptions = [
             >
               <NGi>
                 <NFormItem label="背景颜色">
-                  <NColorPicker
-                  />
+                  <NColorPicker />
                 </NFormItem>
               </NGi>
               <NGi>

@@ -1,6 +1,9 @@
+import { RouterView } from 'vue-router'
+
 export default {
   path: '/client',
   name: 'client',
+  component: RouterView,
   children: [
     {
       path: '',

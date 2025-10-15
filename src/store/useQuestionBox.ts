@@ -383,7 +383,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       .then((data) => {
         if (data.code == 200) {
           message.success('已标记为正常')
-          question.reviewResult!.isApproved = true
+          question.reviewResult.isApproved = true
         }
       })
       .catch((err) => {

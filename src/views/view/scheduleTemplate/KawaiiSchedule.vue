@@ -3,16 +3,16 @@
 
 <script setup lang="ts">
 import type { WritableComputedRef } from 'vue'
-import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models';
+import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/data/TemplateTypes' // Use base type
 import type { ExtractConfigData, RGBAColor } from '@/data/VTsuruConfigTypes'
 import { getWeek, getYear } from 'date-fns'
 import { NDivider, NSelect, NSpace, useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
-import { ScheduleDayInfo } from '@/api/api-models'
 import SaveCompoent from '@/components/SaveCompoent.vue' // 引入截图组件
 import { defineTemplateConfig, rgbaToString } from '@/data/VTsuruConfigTypes'
 
+const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
 const Config = defineTemplateConfig([
   {
     name: '背景图', // Removed 'as const'
@@ -72,8 +72,6 @@ const Config = defineTemplateConfig([
   },
 ])
 type KawaiiConfigType = ExtractConfigData<typeof Config>
-
-const props = defineProps<ScheduleConfigTypeWithConfig<KawaiiConfigType>>()
 
 // Get message instance
 const message = useMessage()

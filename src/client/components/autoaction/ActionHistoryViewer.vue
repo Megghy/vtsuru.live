@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
+
 import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled } from '@vicons/fluent'
 import {
   NButton,
@@ -16,6 +17,8 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
+import type { DataTableColumns } from 'naive-ui'
+
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { clearAllHistory, clearHistory, getHistoryByType, HistoryType } from '../../store/autoAction/utils/historyLogger'
 
@@ -40,7 +43,7 @@ const refreshInterval = 10000
 let refreshTimer: number | null = null
 
 // 列定义
-const columns = [
+const columns: DataTableColumns<HistoryItem> = [
   {
     title: '时间',
     key: 'timestamp',
@@ -67,7 +70,7 @@ const columns = [
     key: 'content',
     ellipsis: {
       tooltip: true,
-    },
+    } as const,
   },
   {
     title: '目标',

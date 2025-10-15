@@ -244,6 +244,14 @@ export interface Setting_Point {
   maxBonusPoints: number // 最大奖励积分
   allowSelfCheckIn: boolean // 是否允许自己签到
   requireAuth: boolean // 是否需要认证
+
+  // 每日首次互动奖励设置
+  enableDailyFirstDanmaku: boolean // 是否启用每日首次弹幕奖励
+  dailyFirstDanmakuPoints: number // 每日首次弹幕积分
+  enableDailyFirstGift: boolean // 是否启用每日首次礼物奖励
+  dailyFirstGiftPoints: number // 每日首次礼物积分（固定积分）
+  useDailyFirstGiftPercent: boolean // 是否使用礼物价值比例计算
+  dailyFirstGiftPercent: number // 每日首次礼物价值比例
 }
 export interface Setting_QuestionDisplay {
   font?: string // Optional string, with a maximum length of 30 characters
@@ -823,6 +831,22 @@ export enum PointOrderStatus {
   Shipped, // 订单已发货
   Completed, // 订单已完成
 }
+// 积分历史记录的 extra 字段类型定义
+// 为了保持向后兼容并避免类型检查问题，使用通用的 extra 接口，但提供详细注释
+export interface PointHistoryExtraBase {
+  user?: UserBasicInfo
+  // Danmaku 类型特有字段
+  danmaku?: DanmakuModel
+  // Manual 类型特有字段
+  reason?: string
+  // Use 类型特有字段
+  goods?: ResponsePointGoodModel | null
+  isDiscontinued?: boolean
+  remark?: string
+  // DailyFirstInteraction 类型特有字段
+  interactionType?: string // 'danmaku' | 'gift'
+}
+
 export interface ResponsePointHisrotyModel {
   point: number
   ouId: string
@@ -831,7 +855,15 @@ export interface ResponsePointHisrotyModel {
   createAt: number
   count: number
 
-  extra?: any // Use 时包含: { user, goods, isDiscontinued, remark }; Manual 时包含: { user, reason }; Danmaku 时包含: { user, danmaku }; CheckIn 时包含: { user }
+  /**
+   * 根据 from 字段，extra 包含不同的数据：
+   * - PointFrom.Danmaku: { user: UserBasicInfo, danmaku: DanmakuModel }
+   * - PointFrom.Manual: { user: UserBasicInfo, reason?: string }
+   * - PointFrom.Use: { user: UserBasicInfo, goods: ResponsePointGoodModel | null, isDiscontinued: boolean, remark?: string }
+   * - PointFrom.CheckIn: { user: UserBasicInfo }
+   * - PointFrom.DailyFirstInteraction: { user: UserBasicInfo, interactionType: string, danmaku?: DanmakuModel | null }
+   */
+  extra?: PointHistoryExtraBase
 }
 
 export enum PointFrom {
@@ -839,6 +871,7 @@ export enum PointFrom {
   Manual,
   Use,
   CheckIn,
+  DailyFirstInteraction,
 }
 
 export interface ResponseUserIndexModel {

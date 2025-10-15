@@ -9,8 +9,6 @@ import {
   NButton,
   NCard,
   NCheckbox,
-  NCollapse,
-  NCollapseItem,
   NDivider,
   NDrawer,
   NDrawerContent,
@@ -109,7 +107,7 @@ function countGraphemes(value: string) {
 
 function isValidEmail(email: string): boolean {
   if (!email) return true // 空邮箱是允许的
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
@@ -459,620 +457,624 @@ onUnmounted(() => {
     <NDivider />
     <div class="question-box-container">
       <!-- 提问按钮 -->
-    <transition
-      name="fade-slide-down"
-      appear
-    >
-      <div class="question-toggle-section">
-        <NSpace :size="16" justify="center">
-          <NButton
-            type="primary"
-            size="large"
-            class="question-toggle-button"
-            :disabled="isSelf"
-            @click="isQuestionFormExpanded = !isQuestionFormExpanded"
-          >
-            <template #icon>
-              <NIcon :component="isQuestionFormExpanded ? DismissCircle24Regular : AddCircle24Regular" />
-            </template>
-            {{ isQuestionFormExpanded ? '收起' : '我要提问' }}
-          </NButton>
-
-          <!-- 未登录用户显示本地历史按钮 -->
-          <template v-if="!isUserLoggedIn">
-            <NBadge :value="localQuestions.length" :max="99" :show="localQuestions.length > 0">
-              <NButton
-                type="info"
-                size="large"
-                class="local-history-button"
-                @click="showLocalQuestionsDrawer = true"
-              >
-                <template #icon>
-                  <NIcon :component="History24Regular" />
-                </template>
-                本地记录
-              </NButton>
-            </NBadge>
-          </template>
-        </NSpace>
-      </div>
-    </transition>
-
-    <!-- 提问表单 - 使用折叠动画 -->
-    <transition name="question-form">
-      <NCard
-        v-show="isQuestionFormExpanded"
-        embedded
-        class="question-form-card"
-        :class="{ 'self-user': isSelf }"
+      <transition
+        name="fade-slide-down"
+        appear
       >
-        <NSpace vertical>
-          <!-- 话题选择区域 -->
-          <transition
-            name="fade-scale"
-            appear
-          >
-            <NCard
-              v-if="tags.length > 0"
-              title="投稿话题 (可选)"
-              size="small"
-              class="topic-card"
-            >
-              <transition-group
-                name="tag-list"
-                tag="div"
-                class="tag-container"
-              >
-                <NTag
-                  v-for="tag in tags"
-                  :key="tag"
-                  class="tag-item"
-                  :bordered="false"
-                  :type="selectedTag === tag ? 'primary' : 'default'"
-                  :clearable="false"
-                  @click="onSelectTag(tag)"
-                >
-                  {{ tag }}
-                </NTag>
-              </transition-group>
-            </NCard>
-          </transition>
-
-          <!-- 问题输入区域 -->
-          <div class="question-input-area">
-            <NInput
-              v-model:value="questionMessage"
+        <div class="question-toggle-section">
+          <NSpace :size="16" justify="center">
+            <NButton
+              type="primary"
+              size="large"
+              class="question-toggle-button"
               :disabled="isSelf"
-              show-count
-              maxlength="5000"
-              type="textarea"
-              :count-graphemes="countGraphemes"
-              class="question-textarea"
-              placeholder="随便说点"
-            />
-          </div>
+              @click="isQuestionFormExpanded = !isQuestionFormExpanded"
+            >
+              <template #icon>
+                <NIcon :component="isQuestionFormExpanded ? DismissCircle24Regular : AddCircle24Regular" />
+              </template>
+              {{ isQuestionFormExpanded ? '收起' : '我要提问' }}
+            </NButton>
 
-          <!-- 匿名用户信息输入 -->
-          <transition
-            name="fade"
-            appear
-          >
-            <div
-              v-if="!isUserLoggedIn && !isSelf"
-              class="anonymous-info-section"
+            <!-- 未登录用户显示本地历史按钮 -->
+            <template v-if="!isUserLoggedIn">
+              <NBadge :value="localQuestions.length" :max="99" :show="localQuestions.length > 0">
+                <NButton
+                  type="info"
+                  size="large"
+                  class="local-history-button"
+                  @click="showLocalQuestionsDrawer = true"
+                >
+                  <template #icon>
+                    <NIcon :component="History24Regular" />
+                  </template>
+                  本地记录
+                </NButton>
+              </NBadge>
+            </template>
+          </NSpace>
+        </div>
+      </transition>
+
+      <!-- 提问表单 - 使用折叠动画 -->
+      <transition name="question-form">
+        <NCard
+          v-show="isQuestionFormExpanded"
+          embedded
+          class="question-form-card"
+          :class="{ 'self-user': isSelf }"
+        >
+          <NSpace vertical>
+            <!-- 话题选择区域 -->
+            <transition
+              name="fade-scale"
+              appear
             >
               <NCard
+                v-if="tags.length > 0"
+                title="投稿话题 (可选)"
                 size="small"
-                class="anonymous-info-card"
-                title="可选信息"
+                class="topic-card"
               >
-                <NSpace
-                  vertical
-                  :size="12"
+                <transition-group
+                  name="tag-list"
+                  tag="div"
+                  class="tag-container"
                 >
-                  <div class="info-field">
-                    <NText depth="3" class="field-label">
-                      昵称（可选）
-                    </NText>
-                    <NInput
-                      v-model:value="anonymousName"
-                      placeholder="可以留下你的昵称"
-                      maxlength="20"
-                      show-count
-                      clearable
-                    />
-                  </div>
-                  <div class="info-field">
-                    <NText depth="3" class="field-label">
-                      邮箱（可选）
-                    </NText>
-                    <NInput
-                      v-model:value="anonymousEmail"
-                      placeholder="主播回答后会收到邮件通知"
-                      maxlength="100"
-                      clearable
-                      :status="anonymousEmail && !isValidEmail(anonymousEmail) ? 'error' : undefined"
-                    />
-                    <NText
-                      v-if="anonymousEmail && !isValidEmail(anonymousEmail)"
-                      type="error"
-                      depth="3"
-                      style="font-size: 12px; margin-top: 4px;"
-                    >
-                      邮箱格式不正确
-                    </NText>
-                  </div>
-                </NSpace>
+                  <NTag
+                    v-for="tag in tags"
+                    :key="tag"
+                    class="tag-item"
+                    :bordered="false"
+                    :type="selectedTag === tag ? 'primary' : 'default'"
+                    :clearable="false"
+                    @click="onSelectTag(tag)"
+                  >
+                    {{ tag }}
+                  </NTag>
+                </transition-group>
               </NCard>
-            </div>
-          </transition>
+            </transition>
 
-          <!-- 图片上传区域 - 重构为更简洁的条件块 -->
-          <div class="image-upload-container">
-            <!-- 已登录用户图片上传 -->
-            <template v-if="isUserLoggedIn && !isSelf">
-              <NSpin :show="isSending && loggedInSelectedFiles.length > 0">
+            <!-- 问题输入区域 -->
+            <div class="question-input-area">
+              <NInput
+                v-model:value="questionMessage"
+                :disabled="isSelf"
+                show-count
+                maxlength="5000"
+                type="textarea"
+                :count-graphemes="countGraphemes"
+                class="question-textarea"
+                placeholder="随便说点"
+              />
+            </div>
+
+            <!-- 匿名用户信息输入 -->
+            <transition
+              name="fade"
+              appear
+            >
+              <div
+                v-if="!isUserLoggedIn && !isSelf"
+                class="anonymous-info-section"
+              >
                 <NCard
                   size="small"
-                  class="image-upload-card"
+                  class="anonymous-info-card"
+                  title="可选信息"
                 >
-                  <div class="upload-header">
-                    <NText class="upload-title">
-                      图片 (最多{{ MAX_LOGGED_IN_IMAGES }}张)
-                    </NText>
-                  </div>
-
-                  <div class="upload-images-grid">
-                    <div
-                      v-for="(url, index) in loggedInImagePreviewUrls"
-                      :key="index"
-                      class="upload-image-item"
-                    >
-                      <div class="image-preview-wrapper">
-                        <NImage
-                          :src="url"
-                          object-fit="cover"
-                          class="upload-preview-image"
-                        />
-                        <NButton
-                          circle
-                          size="tiny"
-                          type="error"
-                          class="remove-image-btn"
-                          @click="removeLoggedInImage(index)"
-                        >
-                          <template #icon>
-                            <NIcon :component="DismissCircle24Regular" />
-                          </template>
-                        </NButton>
-                      </div>
-                    </div>
-
-                    <div
-                      v-if="loggedInSelectedFiles.length < MAX_LOGGED_IN_IMAGES"
-                      class="upload-add-item"
-                      @click="($refs.loggedInFileInput as HTMLInputElement)?.click()"
-                    >
-                      <NIcon
-                        :component="AddCircle24Regular"
-                        class="add-icon"
+                  <NSpace
+                    vertical
+                    :size="12"
+                  >
+                    <div class="info-field">
+                      <NText depth="3" class="field-label">
+                        昵称（可选）
+                      </NText>
+                      <NInput
+                        v-model:value="anonymousName"
+                        placeholder="可以留下你的昵称"
+                        maxlength="20"
+                        show-count
+                        clearable
                       />
                     </div>
-                  </div>
-
-                  <input
-                    ref="loggedInFileInput"
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
-                    style="display: none;"
-                    multiple
-                    @change="handleLoggedInFileSelect"
-                  >
+                    <div class="info-field">
+                      <NText depth="3" class="field-label">
+                        邮箱（可选）
+                      </NText>
+                      <NInput
+                        v-model:value="anonymousEmail"
+                        placeholder="主播回答后会收到邮件通知"
+                        maxlength="100"
+                        clearable
+                        :status="anonymousEmail && !isValidEmail(anonymousEmail) ? 'error' : undefined"
+                      />
+                      <NText
+                        v-if="anonymousEmail && !isValidEmail(anonymousEmail)"
+                        type="error"
+                        depth="3"
+                        style="font-size: 12px; margin-top: 4px;"
+                      >
+                        邮箱格式不正确
+                      </NText>
+                    </div>
+                  </NSpace>
                 </NCard>
-              </NSpin>
-            </template>
+              </div>
+            </transition>
 
-            <!-- 匿名用户图片上传 -->
-            <template v-else-if="!isUserLoggedIn && !isSelf && allowUploadImage">
-              <NSpin :show="isUploadingAnonymousImage">
-                <NCard
-                  size="small"
-                  class="image-upload-card"
-                >
-                  <div class="upload-header">
-                    <NText class="upload-title">
-                      匿名图片
-                    </NText>
-                  </div>
+            <!-- 图片上传区域 - 重构为更简洁的条件块 -->
+            <div class="image-upload-container">
+              <!-- 已登录用户图片上传 -->
+              <template v-if="isUserLoggedIn && !isSelf">
+                <NSpin :show="isSending && loggedInSelectedFiles.length > 0">
+                  <NCard
+                    size="small"
+                    class="image-upload-card"
+                  >
+                    <div class="upload-header">
+                      <NText class="upload-title">
+                        图片 (最多{{ MAX_LOGGED_IN_IMAGES }}张)
+                      </NText>
+                    </div>
 
-                  <div class="anonymous-upload-container">
-                    <template v-if="!anonymousImageToken">
+                    <div class="upload-images-grid">
                       <div
-                        class="anonymous-upload-btn"
-                        @click="($refs.anonymousFileInput as HTMLInputElement)?.click()"
+                        v-for="(url, index) in loggedInImagePreviewUrls"
+                        :key="index"
+                        class="upload-image-item"
+                      >
+                        <div class="image-preview-wrapper">
+                          <NImage
+                            :src="url"
+                            object-fit="cover"
+                            class="upload-preview-image"
+                          />
+                          <NButton
+                            circle
+                            size="tiny"
+                            type="error"
+                            class="remove-image-btn"
+                            @click="removeLoggedInImage(index)"
+                          >
+                            <template #icon>
+                              <NIcon :component="DismissCircle24Regular" />
+                            </template>
+                          </NButton>
+                        </div>
+                      </div>
+
+                      <div
+                        v-if="loggedInSelectedFiles.length < MAX_LOGGED_IN_IMAGES"
+                        class="upload-add-item"
+                        @click="($refs.loggedInFileInput as HTMLInputElement)?.click()"
                       >
                         <NIcon
                           :component="AddCircle24Regular"
                           class="add-icon"
                         />
                       </div>
-                    </template>
-                    <template v-else>
-                      <div class="image-preview-wrapper">
-                        <NImage
-                          v-if="anonymousImagePreviewUrl"
-                          :src="anonymousImagePreviewUrl"
-                          object-fit="cover"
-                          class="upload-preview-image"
-                        />
-                        <NButton
-                          circle
-                          size="tiny"
-                          type="error"
-                          class="remove-image-btn"
-                          @click="removeAnonymousImage"
-                        >
-                          <template #icon>
-                            <NIcon :component="DismissCircle24Regular" />
-                          </template>
-                        </NButton>
-                      </div>
-                    </template>
-                  </div>
+                    </div>
 
-                  <input
-                    ref="anonymousFileInput"
-                    type="file"
-                    accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
-                    style="display: none;"
-                    @change="handleAnonymousFileSelect"
-                  >
-                </NCard>
-              </NSpin>
-            </template>
+                    <input
+                      ref="loggedInFileInput"
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+                      style="display: none;"
+                      multiple
+                      @change="handleLoggedInFileSelect"
+                    >
+                  </NCard>
+                </NSpin>
+              </template>
 
-            <!-- 未开启匿名图片上传提示 -->
-            <template v-else-if="!isUserLoggedIn && !isSelf && !allowUploadImage && targetUserSetting !== null">
-              <NTooltip>
-                <template #trigger>
+              <!-- 匿名用户图片上传 -->
+              <template v-else-if="!isUserLoggedIn && !isSelf && allowUploadImage">
+                <NSpin :show="isUploadingAnonymousImage">
                   <NCard
                     size="small"
-                    class="image-upload-card upload-disabled"
+                    class="image-upload-card"
                   >
                     <div class="upload-header">
                       <NText class="upload-title">
-                        图片
+                        匿名图片
                       </NText>
                     </div>
-                    <div class="disabled-container">
-                      <NText depth="3">
-                        未开启匿名图片上传
+
+                    <div class="anonymous-upload-container">
+                      <template v-if="!anonymousImageToken">
+                        <div
+                          class="anonymous-upload-btn"
+                          @click="($refs.anonymousFileInput as HTMLInputElement)?.click()"
+                        >
+                          <NIcon
+                            :component="AddCircle24Regular"
+                            class="add-icon"
+                          />
+                        </div>
+                      </template>
+                      <template v-else>
+                        <div class="image-preview-wrapper">
+                          <NImage
+                            v-if="anonymousImagePreviewUrl"
+                            :src="anonymousImagePreviewUrl"
+                            object-fit="cover"
+                            class="upload-preview-image"
+                          />
+                          <NButton
+                            circle
+                            size="tiny"
+                            type="error"
+                            class="remove-image-btn"
+                            @click="removeAnonymousImage"
+                          >
+                            <template #icon>
+                              <NIcon :component="DismissCircle24Regular" />
+                            </template>
+                          </NButton>
+                        </div>
+                      </template>
+                    </div>
+
+                    <input
+                      ref="anonymousFileInput"
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico"
+                      style="display: none;"
+                      @change="handleAnonymousFileSelect"
+                    >
+                  </NCard>
+                </NSpin>
+              </template>
+
+              <!-- 未开启匿名图片上传提示 -->
+              <template v-else-if="!isUserLoggedIn && !isSelf && !allowUploadImage && targetUserSetting !== null">
+                <NTooltip>
+                  <template #trigger>
+                    <NCard
+                      size="small"
+                      class="image-upload-card upload-disabled"
+                    >
+                      <div class="upload-header">
+                        <NText class="upload-title">
+                          图片
+                        </NText>
+                      </div>
+                      <div class="disabled-container">
+                        <NText depth="3">
+                          未开启匿名图片上传
+                        </NText>
+                      </div>
+                    </NCard>
+                  </template>
+                  主播不允许上传图片
+                </NTooltip>
+              </template>
+            </div>
+
+            <NDivider class="form-divider" />
+
+            <!-- 提示区域 - 合并条件 -->
+            <NAlert
+              v-if="!isUserLoggedIn && !isSelf && !allowUploadImage"
+              type="info"
+              class="login-alert"
+            >
+              {{ '主播不允许上传图片' }}
+            </NAlert>
+
+            <!-- 匿名选项 -->
+            <transition
+              name="fade"
+              appear
+            >
+              <NSpace
+                v-if="isUserLoggedIn"
+                vertical
+                class="anonymous-option"
+              >
+                <NCheckbox
+                  v-model:checked="isAnonymous"
+                  :disabled="isSelf"
+                  label="匿名提问"
+                />
+                <NDivider class="form-divider" />
+              </NSpace>
+            </transition>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+              <NButton
+                :disabled="isSelf || isUploadingAnonymousImage"
+                type="primary"
+                :loading="isSending || !token"
+                class="send-button"
+                @click="SendQuestion"
+              >
+                发送
+              </NButton>
+              <NButton
+                :disabled="isSelf || !isUserLoggedIn"
+                type="info"
+                class="my-questions-button"
+                @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
+              >
+                我发送的
+              </NButton>
+            </div>
+
+            <!-- 验证组件 -->
+            <div class="turnstile-container">
+              <VueTurnstile
+                ref="turnstile"
+                v-model="token"
+                :site-key="TURNSTILE_KEY"
+                theme="auto"
+              />
+            </div>
+
+            <!-- 自己提示 -->
+            <transition
+              name="fade-slide-up"
+              appear
+            >
+              <NAlert
+                v-if="isSelf"
+                type="warning"
+                class="self-alert"
+              >
+                不能给自己提问
+              </NAlert>
+            </transition>
+          </NSpace>
+        </NCard>
+      </transition>
+
+      <!-- 公开提问列表 -->
+      <transition
+        name="fade"
+        appear
+      >
+        <div>
+          <NDivider class="public-divider">
+            <div class="divider-content">
+              公开回复
+            </div>
+          </NDivider>
+          <transition-group
+            name="list-fade"
+            tag="div"
+            class="questions-list-container"
+          >
+            <NList
+              v-if="publicQuestions.length > 0"
+              class="questions-list"
+            >
+              <NListItem
+                v-for="item in publicQuestions"
+                :key="item.id"
+                class="question-list-item"
+              >
+                <NCard
+                  :embedded="!item.isReaded"
+                  hoverable
+                  size="small"
+                  class="question-card"
+                  :class="{ unread: !item.isReaded }"
+                >
+                  <!-- 问题头部 -->
+                  <template #header>
+                    <NSpace
+                      :size="5"
+                      align="center"
+                      class="question-header"
+                    >
+                      <NText
+                        depth="3"
+                        class="time-text"
+                        style="margin-left: 8px;"
+                      >
+                        <NTooltip>
+                          <template #trigger>
+                            <NTime
+                              :time="item.sendAt"
+                              :to="Date.now()"
+                              type="relative"
+                            />
+                          </template>
+                          <NTime :time="item.sendAt" />
+                        </NTooltip>
                       </NText>
+                      <div
+                        v-if="item.tag"
+                        class="question-tag"
+                      >
+                        <NTag
+                          size="small"
+                          type="info"
+                        >
+                          {{ item.tag }}
+                        </NTag>
+                      </div>
+                    </NSpace>
+                  </template>
+
+                  <!-- 问题内容 -->
+                  <NCard
+                    class="question-content"
+                    size="small"
+                  >
+                    <div
+                      v-if="item.question.message"
+                      class="question-message"
+                    >
+                      {{ item.question.message }}
+                    </div>
+                    <NDivider style="margin: 0;" />
+                    <div
+                      v-if="item.questionImages && item.questionImages.length > 0"
+                      class="question-image-container"
+                    >
+                      <NImage
+                        v-for="(img, index) in item.questionImages"
+                        :key="index"
+                        :src="img.path"
+                        class="question-image"
+                        :img-props="{ height: '100px' }"
+                        lazy
+                        object-fit="contain"
+                      />
                     </div>
                   </NCard>
-                </template>
-                主播不允许上传图片
-              </NTooltip>
-            </template>
-          </div>
 
-          <NDivider class="form-divider" />
-
-          <!-- 提示区域 - 合并条件 -->
-          <NAlert
-            v-if="!isUserLoggedIn && !isSelf && !allowUploadImage"
-            type="info"
-            class="login-alert"
-          >
-            {{ '主播不允许上传图片' }}
-          </NAlert>
-
-          <!-- 匿名选项 -->
-          <transition
-            name="fade"
-            appear
-          >
-            <NSpace
-              v-if="isUserLoggedIn"
-              vertical
-              class="anonymous-option"
-            >
-              <NCheckbox
-                v-model:checked="isAnonymous"
-                :disabled="isSelf"
-                label="匿名提问"
-              />
-              <NDivider class="form-divider" />
-            </NSpace>
-          </transition>
-
-          <!-- 操作按钮 -->
-          <div class="action-buttons">
-            <NButton
-              :disabled="isSelf || isUploadingAnonymousImage"
-              type="primary"
-              :loading="isSending || !token"
-              class="send-button"
-              @click="SendQuestion"
-            >
-              发送
-            </NButton>
-            <NButton
-              :disabled="isSelf || !isUserLoggedIn"
-              type="info"
-              class="my-questions-button"
-              @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
-            >
-              我发送的
-            </NButton>
-          </div>
-
-          <!-- 验证组件 -->
-          <div class="turnstile-container">
-            <VueTurnstile
-              ref="turnstile"
-              v-model="token"
-              :site-key="TURNSTILE_KEY"
-              theme="auto"
+                  <!-- 回答内容 -->
+                  <template
+                    v-if="item.answer"
+                    #footer
+                  >
+                    <div class="answer-container">
+                      <NSpace
+                        align="center"
+                        :wrap="false"
+                        class="answer-content"
+                      >
+                        <NAvatar
+                          :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
+                          circle
+                          class="answer-avatar"
+                          :img-props="{ referrerpolicy: 'no-referrer' }"
+                        />
+                        <NDivider
+                          vertical
+                          class="answer-divider"
+                        />
+                        <NText class="answer-text">
+                          {{ item.answer?.message }}
+                        </NText>
+                      </NSpace>
+                    </div>
+                  </template>
+                </NCard>
+              </NListItem>
+            </NList>
+            <NEmpty
+              v-else-if="!isGetting"
+              class="empty-state"
+              description="还没有公开回复"
             />
+            <NSpin
+              v-else
+              style="width: 100%; margin-top: 20px;"
+            />
+          </transition-group>
+        </div>
+      </transition>
+
+      <NDivider />
+
+      <!-- 本地提问历史抽屉 -->
+      <NDrawer
+        v-model:show="showLocalQuestionsDrawer"
+        :width="500"
+        placement="right"
+      >
+        <NDrawerContent closable>
+          <template #header>
+            <NSpace justify="space-between" align="center" style="width: 100%;">
+              <NText strong style="font-size: 16px;">
+                本地提问记录
+              </NText>
+              <NButton
+                v-if="localQuestions.length > 0"
+                text
+                type="error"
+                size="small"
+                @click="clearAllLocalQuestions"
+              >
+                清空全部
+              </NButton>
+            </NSpace>
+          </template>
+
+          <div v-if="localQuestions.length === 0" class="empty-local-questions">
+            <NEmpty description="还没有本地提问记录" />
+            <NText depth="3" style="text-align: center; display: block; margin-top: 12px;">
+              未登录状态下发送的提问会保存到这里
+            </NText>
           </div>
 
-          <!-- 自己提示 -->
-          <transition
-            name="fade-slide-up"
-            appear
-          >
-            <NAlert
-              v-if="isSelf"
-              type="warning"
-              class="self-alert"
-            >
-              不能给自己提问
-            </NAlert>
-          </transition>
-        </NSpace>
-      </NCard>
-    </transition>
-
-    <!-- 公开提问列表 -->
-    <transition
-      name="fade"
-      appear
-    >
-      <div>
-        <NDivider class="public-divider">
-          <div class="divider-content">
-            公开回复
-          </div>
-        </NDivider>
-        <transition-group
-          name="list-fade"
-          tag="div"
-          class="questions-list-container"
-        >
-          <NList
-            v-if="publicQuestions.length > 0"
-            class="questions-list"
-          >
+          <NList v-else>
             <NListItem
-              v-for="item in publicQuestions"
+              v-for="item in localQuestions"
               :key="item.id"
-              class="question-list-item"
+              class="local-question-item"
             >
               <NCard
-                :embedded="!item.isReaded"
-                hoverable
                 size="small"
-                class="question-card"
-                :class="{ unread: !item.isReaded }"
+                class="local-question-card"
+                hoverable
               >
-                <!-- 问题头部 -->
                 <template #header>
-                  <NSpace
-                    :size="5"
-                    align="center"
-                    class="question-header"
-                  >
-                    <NText
-                      depth="3"
-                      class="time-text"
-                      style="margin-left: 8px;"
-                    >
-                      <NTooltip>
-                        <template #trigger>
-                          <NTime
-                            :time="item.sendAt"
-                            :to="Date.now()"
-                            type="relative"
-                          />
-                        </template>
-                        <NTime :time="item.sendAt" />
-                      </NTooltip>
-                    </NText>
-                    <div
-                      v-if="item.tag"
-                      class="question-tag"
-                    >
-                      <NTag
-                        size="small"
-                        type="info"
-                      >
+                  <NSpace :size="8" align="center" justify="space-between">
+                    <NSpace :size="8" align="center">
+                      <NText strong>
+                        提给：{{ item.targetUserName }}
+                      </NText>
+                      <NTag v-if="item.tag" size="small" type="info">
                         {{ item.tag }}
                       </NTag>
-                    </div>
+                    </NSpace>
+                    <NButton
+                      text
+                      type="error"
+                      size="small"
+                      @click="deleteLocalQuestion(item.id)"
+                    >
+                      <template #icon>
+                        <NIcon :component="DismissCircle24Regular" />
+                      </template>
+                    </NButton>
                   </NSpace>
                 </template>
 
-                <!-- 问题内容 -->
-                <NCard
-                  class="question-content"
-                  size="small"
-                >
-                  <div
-                    v-if="item.question.message"
-                    class="question-message"
-                  >
-                    {{ item.question.message }}
+                <NSpace vertical :size="8">
+                  <div class="local-question-message">
+                    {{ item.message }}
                   </div>
-                  <NDivider style="margin: 0;" />
-                  <div
-                    v-if="item.questionImages && item.questionImages.length > 0"
-                    class="question-image-container"
-                  >
-                    <NImage
-                      v-for="(img, index) in item.questionImages"
-                      :key="index"
-                      :src="img.path"
-                      class="question-image"
-                      :img-props="{ height: '100px' }"
-                      lazy
-                      object-fit="contain"
-                    />
-                  </div>
-                </NCard>
 
-                <!-- 回答内容 -->
-                <template
-                  v-if="item.answer"
-                  #footer
-                >
-                  <div class="answer-container">
-                    <NSpace
-                      align="center"
-                      :wrap="false"
-                      class="answer-content"
-                    >
-                      <NAvatar
-                        :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
-                        circle
-                        class="answer-avatar"
-                        :img-props="{ referrerpolicy: 'no-referrer' }"
-                      />
-                      <NDivider
-                        vertical
-                        class="answer-divider"
-                      />
-                      <NText class="answer-text">
-                        {{ item.answer?.message }}
-                      </NText>
-                    </NSpace>
-                  </div>
-                </template>
+                  <NDivider style="margin: 8px 0;" />
+
+                  <NSpace :size="4" vertical>
+                    <NText depth="3" style="font-size: 12px;">
+                      <NTime :time="item.sendAt" format="yyyy-MM-dd HH:mm:ss" />
+                    </NText>
+                    <NText v-if="item.anonymousName" depth="3" style="font-size: 12px;">
+                      昵称：{{ item.anonymousName }}
+                    </NText>
+                    <NText v-if="item.anonymousEmail" depth="3" style="font-size: 12px;">
+                      邮箱：{{ item.anonymousEmail }}
+                    </NText>
+                    <NTag v-if="item.hasImage" size="tiny" type="success">
+                      包含图片
+                    </NTag>
+                  </NSpace>
+                </NSpace>
               </NCard>
             </NListItem>
           </NList>
-          <NEmpty
-            v-else-if="!isGetting"
-            class="empty-state"
-            description="还没有公开回复"
-          />
-          <NSpin
-            v-else
-            style="width: 100%; margin-top: 20px;"
-          />
-        </transition-group>
-      </div>
-    </transition>
 
-    <NDivider />
-
-    <!-- 本地提问历史抽屉 -->
-    <NDrawer
-      v-model:show="showLocalQuestionsDrawer"
-      :width="500"
-      placement="right"
-    >
-      <NDrawerContent closable>
-        <template #header>
-          <NSpace justify="space-between" align="center" style="width: 100%;">
-            <NText strong style="font-size: 16px;">本地提问记录</NText>
-            <NButton
-              v-if="localQuestions.length > 0"
-              text
-              type="error"
-              size="small"
-              @click="clearAllLocalQuestions"
-            >
-              清空全部
-            </NButton>
-          </NSpace>
-        </template>
-
-        <div v-if="localQuestions.length === 0" class="empty-local-questions">
-          <NEmpty description="还没有本地提问记录" />
-          <NText depth="3" style="text-align: center; display: block; margin-top: 12px;">
-            未登录状态下发送的提问会保存到这里
-          </NText>
-        </div>
-
-        <NList v-else>
-          <NListItem
-            v-for="item in localQuestions"
-            :key="item.id"
-            class="local-question-item"
-          >
-            <NCard
-              size="small"
-              class="local-question-card"
-              hoverable
-            >
-              <template #header>
-                <NSpace :size="8" align="center" justify="space-between">
-                  <NSpace :size="8" align="center">
-                    <NText strong>提给：{{ item.targetUserName }}</NText>
-                    <NTag v-if="item.tag" size="small" type="info">
-                      {{ item.tag }}
-                    </NTag>
-                  </NSpace>
-                  <NButton
-                    text
-                    type="error"
-                    size="small"
-                    @click="deleteLocalQuestion(item.id)"
-                  >
-                    <template #icon>
-                      <NIcon :component="DismissCircle24Regular" />
-                    </template>
-                  </NButton>
-                </NSpace>
+          <template #footer>
+            <NAlert type="info" size="small">
+              <template #icon>
+                <NIcon :component="History24Regular" />
               </template>
-
-              <NSpace vertical :size="8">
-                <div class="local-question-message">
-                  {{ item.message }}
-                </div>
-
-                <NDivider style="margin: 8px 0;" />
-
-                <NSpace :size="4" vertical>
-                  <NText depth="3" style="font-size: 12px;">
-                    <NTime :time="item.sendAt" format="yyyy-MM-dd HH:mm:ss" />
-                  </NText>
-                  <NText v-if="item.anonymousName" depth="3" style="font-size: 12px;">
-                    昵称：{{ item.anonymousName }}
-                  </NText>
-                  <NText v-if="item.anonymousEmail" depth="3" style="font-size: 12px;">
-                    邮箱：{{ item.anonymousEmail }}
-                  </NText>
-                  <NTag v-if="item.hasImage" size="tiny" type="success">
-                    包含图片
-                  </NTag>
-                </NSpace>
-              </NSpace>
-            </NCard>
-          </NListItem>
-        </NList>
-
-        <template #footer>
-          <NAlert type="info" size="small">
-            <template #icon>
-              <NIcon :component="History24Regular" />
-            </template>
-            本地记录仅保存在浏览器，清除浏览器数据后将丢失
-          </NAlert>
-        </template>
-      </NDrawerContent>
-    </NDrawer>
+              本地记录仅保存在浏览器，清除浏览器数据后将丢失
+            </NAlert>
+          </template>
+        </NDrawerContent>
+      </NDrawer>
     </div>
   </div>
 </template>

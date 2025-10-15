@@ -52,6 +52,12 @@ const defaultSettingPoint: Setting_Point = {
   allowSelfCheckIn: false,
   requireAuth: false,
   shouldDiscontinueWhenSoldOut: false,
+  enableDailyFirstDanmaku: false,
+  dailyFirstDanmakuPoints: 5,
+  enableDailyFirstGift: false,
+  dailyFirstGiftPoints: 10,
+  useDailyFirstGiftPercent: false,
+  dailyFirstGiftPercent: 0.1,
 }
 
 // 响应式设置对象
@@ -406,6 +412,131 @@ async function SaveComboSetting() {
           </NInputGroup>
         </NFlex>
       </template>
+
+      <!-- 每日首次互动奖励设置 -->
+      <NDivider>每日首次互动奖励</NDivider>
+      <NFlex
+        vertical
+        :gap="12"
+        class="settings-section"
+      >
+        <NAlert
+          type="info"
+          closable
+        >
+          每日首次发送弹幕或礼物时可以给予额外积分，每个用户每天只能获得一次
+        </NAlert>
+
+        <!-- 每日首次弹幕奖励 -->
+        <NFlex
+          align="center"
+          :gap="12"
+        >
+          <NCheckbox
+            v-model:checked="setting.enableDailyFirstDanmaku"
+            :disabled="!canEdit"
+            @update:checked="updateSettings"
+          >
+            启用每日首次弹幕奖励
+          </NCheckbox>
+        </NFlex>
+
+        <NInputGroup
+          v-if="setting.enableDailyFirstDanmaku"
+          class="input-group-wide"
+          :disabled="!canEdit"
+        >
+          <NInputGroupLabel> 每日首次弹幕积分 </NInputGroupLabel>
+          <NInputNumber
+            v-model:value="setting.dailyFirstDanmakuPoints"
+            :disabled="!canEdit"
+            min="0"
+          />
+          <NButton
+            type="info"
+            :disabled="!canEdit"
+            @click="updateSettings"
+          >
+            确定
+          </NButton>
+        </NInputGroup>
+
+        <!-- 每日首次礼物奖励 -->
+        <NFlex
+          align="center"
+          :gap="12"
+        >
+          <NCheckbox
+            v-model:checked="setting.enableDailyFirstGift"
+            :disabled="!canEdit"
+            @update:checked="updateSettings"
+          >
+            启用每日首次礼物奖励
+          </NCheckbox>
+        </NFlex>
+
+        <template v-if="setting.enableDailyFirstGift">
+          <NRadioGroup
+            v-model:value="setting.useDailyFirstGiftPercent"
+            @update:value="updateSettings"
+          >
+            <NRadioButton :value="false">
+              固定积分
+            </NRadioButton>
+            <NRadioButton :value="true">
+              按礼物价值比例
+            </NRadioButton>
+          </NRadioGroup>
+
+          <NInputGroup
+            v-if="!setting.useDailyFirstGiftPercent"
+            class="input-group-wide"
+            :disabled="!canEdit"
+          >
+            <NInputGroupLabel> 固定积分数量 </NInputGroupLabel>
+            <NInputNumber
+              v-model:value="setting.dailyFirstGiftPoints"
+              :disabled="!canEdit"
+              min="0"
+            />
+            <NButton
+              type="info"
+              :disabled="!canEdit"
+              @click="updateSettings"
+            >
+              确定
+            </NButton>
+          </NInputGroup>
+
+          <NInputGroup
+            v-else
+            class="input-group-wide"
+            :disabled="!canEdit"
+          >
+            <NInputGroupLabel> 礼物价值比例 </NInputGroupLabel>
+            <NInputNumber
+              v-model:value="setting.dailyFirstGiftPercent"
+              :disabled="!canEdit"
+              min="0"
+              step="0.01"
+              max="1"
+            />
+            <NButton
+              type="info"
+              :disabled="!canEdit"
+              @click="updateSettings"
+            >
+              确定
+              <NTooltip>
+                <template #trigger>
+                  <NIcon :component="Info24Filled" />
+                </template>
+                例如设置0.1，送10元礼物获得1积分。免费礼物不给予积分
+              </NTooltip>
+            </NButton>
+          </NInputGroup>
+        </template>
+      </NFlex>
 
       <!-- 礼物设置区域 -->
       <template v-if="setting.allowType.includes(EventDataTypes.Gift)">

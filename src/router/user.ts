@@ -1,3 +1,5 @@
+import type { RouteRecordRaw } from 'vue-router'
+
 export default [
   {
     path: '',
@@ -92,4 +94,4 @@ export default [
       keepAlive: true,
     },
   },
-]
+] satisfies RouteRecordRaw[]
