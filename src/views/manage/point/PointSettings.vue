@@ -58,6 +58,8 @@ const defaultSettingPoint: Setting_Point = {
   dailyFirstGiftPoints: 10,
   useDailyFirstGiftPercent: false,
   dailyFirstGiftPercent: 0.1,
+  dailyFirstOnlyOnStreaming: false,
+  checkInOnlyOnStreaming: false,
 }
 
 // 响应式设置对象
@@ -301,7 +303,16 @@ async function SaveComboSetting() {
             礼物
           </NCheckbox>
         </NCheckboxGroup>
+        
       </NFlex>
+      
+          <NCheckbox
+            v-model:checked="setting.checkInOnlyOnStreaming"
+            :disabled="!canEdit"
+            @update:checked="updateSettings"
+          >
+            仅开播时允许签到
+          </NCheckbox>
 
       <!-- 舰长设置区域 -->
       <template v-if="setting.allowType.includes(EventDataTypes.Guard)">
@@ -536,6 +547,19 @@ async function SaveComboSetting() {
             </NButton>
           </NInputGroup>
         </template>
+
+        <NFlex
+          align="center"
+          :gap="12"
+        >
+          <NCheckbox
+            v-model:checked="setting.dailyFirstOnlyOnStreaming"
+            :disabled="!canEdit"
+            @update:checked="updateSettings"
+          >
+            仅开播时生效
+          </NCheckbox>
+        </NFlex>
       </NFlex>
 
       <!-- 礼物设置区域 -->
@@ -779,6 +803,7 @@ async function SaveComboSetting() {
         </NModal>
       </template>
     </NFlex>
+    <NDivider />  
   </NSpin>
 </template>
 

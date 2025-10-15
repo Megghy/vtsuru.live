@@ -252,6 +252,10 @@ export interface Setting_Point {
   dailyFirstGiftPoints: number // 每日首次礼物积分（固定积分）
   useDailyFirstGiftPercent: boolean // 是否使用礼物价值比例计算
   dailyFirstGiftPercent: number // 每日首次礼物价值比例
+
+  // 仅开播时生效设置
+  dailyFirstOnlyOnStreaming: boolean
+  checkInOnlyOnStreaming: boolean
 }
 export interface Setting_QuestionDisplay {
   font?: string // Optional string, with a maximum length of 30 characters
