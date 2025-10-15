@@ -144,7 +144,7 @@ export function useDanmakuUtils(
         const emojiInfo = (availableEmojis.inline?.[emojiFullName]
           ?? availableEmojis.inline?.[emojiName]
           ?? availableEmojis.plain?.[emojiFullName]
-          ?? availableEmojis.plain?.[emojiName]) as string | undefined
+          ?? availableEmojis.plain?.[emojiName])
 
         if (emojiInfo) {
           // 找到了表情

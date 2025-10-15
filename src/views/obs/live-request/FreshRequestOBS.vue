@@ -156,47 +156,51 @@ onUnmounted(() => {
       class="fresh-request-list-container"
     >
       <template v-if="activeSongs.length > 0">
-        <!-- Removed Vue3Marquee -->
-        <!-- Add a wrapper div for animation -->
         <div
           ref="songListInnerRef"
           class="fresh-request-song-list-inner"
           :class="{ animating: isMoreThanContainer }"
         >
-          <div
-            v-for="(song, index) in activeSongs"
-            :key="song.id"
-            class="fresh-request-song-item"
+          <TransitionGroup
+            name="fresh-request-transition"
+            tag="div"
+            class="fresh-request-transition-group"
           >
             <div
-              class="fresh-request-song-rank"
-              :class="[`rank-${index + 1}`, { 'rank-top-3': index < 3 }]"
+              v-for="(song, index) in activeSongs"
+              :key="song.id"
+              class="fresh-request-song-item"
             >
-              {{ index + 1 }}
-            </div>
-            <div class="fresh-request-song-content">
               <div
-                class="fresh-request-song-name"
-                :title="song.songName"
+                class="fresh-request-song-rank"
+                :class="[`rank-${index + 1}`, { 'rank-top-3': index < 3 }]"
               >
-                {{ song.songName }}
+                {{ index + 1 }}
               </div>
-              <div class="fresh-request-song-footer">
-                <span
-                  v-if="settings.showUserName"
-                  class="fresh-request-song-requester"
+              <div class="fresh-request-song-content">
+                <div
+                  class="fresh-request-song-name"
+                  :title="song.songName"
                 >
-                  <span class="requester-label">点歌:</span> {{ song.from === SongRequestFrom.Manual ? '主播' : song.user?.name }}
-                </span>
-                <span
-                  v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
-                  class="fresh-request-song-medal"
-                >
-                  {{ song.user?.fans_medal_name }} {{ song.user?.fans_medal_level }}
-                </span>
+                  {{ song.songName }}
+                </div>
+                <div class="fresh-request-song-footer">
+                  <span
+                    v-if="settings.showUserName"
+                    class="fresh-request-song-requester"
+                  >
+                    <span class="requester-label">点歌:</span> {{ song.from === SongRequestFrom.Manual ? '主播' : song.user?.name }}
+                  </span>
+                  <span
+                    v-if="settings.showFanMadelInfo && (song.user?.fans_medal_level ?? 0) > 0"
+                    class="fresh-request-song-medal"
+                  >
+                    {{ song.user?.fans_medal_name }} {{ song.user?.fans_medal_level }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
         <!-- End animation wrapper -->
       </template>

@@ -77,6 +77,10 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         label: '签到',
         value: PointFrom.CheckIn,
       },
+      {
+        label: '每日首次互动',
+        value: PointFrom.DailyFirstInteraction,
+      },
     ],
     render: (row: ResponsePointHisrotyModel) => {
       const get = () => {
@@ -153,6 +157,23 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                   )
                 : null,
             ])
+          case PointFrom.DailyFirstInteraction:
+            return h(NFlex, { align: 'center' }, () => [
+              h(NTag, { type: 'primary', bordered: false, size: 'small' }, () => '首次互动'),
+              row.extra?.user
+                ? h(
+                    NButton,
+                    {
+                      tag: 'a',
+                      href: `/@${row.extra.user?.name}`,
+                      target: '_blank',
+                      text: true,
+                      type: 'info',
+                    },
+                    () => row.extra.user?.name,
+                  )
+                : null,
+            ])
         }
       }
       return h(NFlex, {}, () => get())
@@ -203,6 +224,17 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
             ),
             h(NTag, { type: 'info', size: 'small', style: { margin: '0' }, bordered: false }, () => '备注'),
             h(NText, {}, () => row.extra.reason ?? h(NText, { italic: true, depth: '3' }, () => '未提供')),
+          ])
+        case PointFrom.DailyFirstInteraction:
+          // 每日首次互动奖励
+          const interactionType = row.extra?.interactionType
+          return h(NFlex, { align: 'center' }, () => [
+            h(NTag, { 
+              type: interactionType === 'danmaku' ? 'info' : 'warning', 
+              size: 'small', 
+              bordered: false 
+            }, () => interactionType === 'danmaku' ? '弹幕' : '礼物'),
+            h('span', {}, interactionType === 'danmaku' ? row.extra?.danmaku?.msg : `${row.extra?.danmaku?.msg} x ${row.extra?.danmaku?.num}`)
           ])
         case PointFrom.Use:
           return h(NFlex, { align: 'center' }, () => [

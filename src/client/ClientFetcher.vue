@@ -325,7 +325,7 @@ const sortedTodayTypes = computed(() => {
     .sort(([, countA], [, countB]) => countB - countA)
 })
 
-type TodayTypeRow = {
+interface TodayTypeRow {
   key: string
   rank: number
   type: string
@@ -1036,9 +1036,9 @@ onUnmounted(() => {
                   :type="biliCookie.cookieCloudState === 'valid' ? 'success' : biliCookie.cookieCloudState === 'syncing' ? 'info' : biliCookie.cookieCloudState === 'invalid' ? 'error' : 'default'"
                 >
                   {{
-                    biliCookie.cookieCloudState === 'valid' ? '已配置' :
-                      biliCookie.cookieCloudState === 'syncing' ? '同步中' :
-                        biliCookie.cookieCloudState === 'invalid' ? '配置无效' : '未配置'
+                    biliCookie.cookieCloudState === 'valid' ? '已配置'
+                    : biliCookie.cookieCloudState === 'syncing' ? '同步中'
+                      : biliCookie.cookieCloudState === 'invalid' ? '配置无效' : '未配置'
                   }}
                 </NTag>
               </template>

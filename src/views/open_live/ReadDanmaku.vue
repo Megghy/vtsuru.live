@@ -18,8 +18,8 @@ import {
   NCollapseItem,
   NDivider,
   NEmpty,
-  NGrid,
   NGi,
+  NGrid,
   NIcon,
   NInput,
   NInputGroup,
@@ -41,13 +41,13 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { templateConstants, useSpeechService } from '@/store/useSpeechService'
 import { copyToClipboard } from '@/Utils'
-import { TTS_API_URL } from '@/data/constants';
+import { TTS_API_URL } from '@/data/constants'
 
 const props = defineProps<{
   roomInfo?: any
@@ -70,11 +70,11 @@ const {
 } = speechService
 
 // Azure 语音列表
-const azureVoices = ref<Array<{ label: string; value: string; locale: string }>>([])
+const azureVoices = ref<Array<{ label: string, value: string, locale: string }>>([])
 const azureVoicesLoading = ref(false)
 
 // 音频输出设备列表
-const audioOutputDevices = ref<Array<{ label: string; value: string }>>([])
+const audioOutputDevices = ref<Array<{ label: string, value: string }>>([])
 const audioOutputDevicesLoading = ref(false)
 
 // 计算属性
@@ -423,7 +423,9 @@ onUnmounted(() => {
             </template>
             例如 Microsoft Xiaoxiao Online (Natural) - Chinese (Mainland)，各种营销号就用的这些配音
           </NTooltip>
-          系列语音，效果<NText strong>好很多</NText>
+          系列语音，效果<NText strong>
+            好很多
+          </NText>
         </NAlert>
 
         <NAlert
@@ -433,7 +435,9 @@ onUnmounted(() => {
           <template #icon>
             <NIcon :component="Info24Filled" />
           </template>
-          <NText strong>重要：</NText> 当在后台运行时请关闭浏览器的页面休眠/内存节省功能
+          <NText strong>
+            重要：
+          </NText> 当在后台运行时请关闭浏览器的页面休眠/内存节省功能
           <NDivider vertical />
           <NButton
             tag="a"
@@ -774,7 +778,9 @@ onUnmounted(() => {
           <!-- 输出设备选择 -->
           <div>
             <NSpace justify="space-between" align="center">
-              <NText strong>输出设备</NText>
+              <NText strong>
+                输出设备
+              </NText>
               <NButton
                 v-if="audioOutputDevices.length === 0"
                 text
@@ -873,7 +879,9 @@ onUnmounted(() => {
               :size="16"
             >
               <div>
-                <NText strong>选择语音</NText>
+                <NText strong>
+                  选择语音
+                </NText>
                 <NSelect
                   v-model:value="settings.speechInfo.voice"
                   :options="voiceOptions"
@@ -962,7 +970,9 @@ onUnmounted(() => {
 
               <div>
                 <NSpace justify="space-between" align="center">
-                  <NText strong>语音选择</NText>
+                  <NText strong>
+                    语音选择
+                  </NText>
                   <NButton
                     v-if="azureVoices.length === 0"
                     text
@@ -1125,7 +1135,9 @@ onUnmounted(() => {
               </NAlert>
 
               <div>
-                <NText strong>API 地址</NText>
+                <NText strong>
+                  API 地址
+                </NText>
                 <NInputGroup style="margin-top: 8px">
                   <NSelect
                     v-model:value="settings.voiceAPISchemeType"

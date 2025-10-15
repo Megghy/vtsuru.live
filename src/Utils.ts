@@ -96,7 +96,7 @@ export function downloadImage(imageSrc: string, filename: string) {
     canvas.width = image.width
     canvas.height = image.height
     const ctx = canvas.getContext('2d')
-    ctx!.drawImage(image, 0, 0)
+    ctx.drawImage(image, 0, 0)
     canvas.toBlob((blob) => {
       if (blob) {
         const link = document.createElement('a')

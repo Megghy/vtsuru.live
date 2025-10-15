@@ -45,7 +45,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         authBody: JSON.parse(auth.data.websocket_info.auth_body),
         address: auth.data.websocket_info.wss_link[0],
       })
-      chatClient.addEventListener('MESSAGE', cmd => {
+      chatClient.addEventListener('MESSAGE', (cmd) => {
         switch (cmd.data.cmd as string) {
           case 'LIVE_OPEN_PLATFORM_DM':
             this.onDanmaku(cmd.data)

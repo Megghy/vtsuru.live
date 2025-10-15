@@ -1,4 +1,4 @@
-import { LiveWS } from "bilibili-live-danmaku";
+import type { LiveWS } from 'bilibili-live-danmaku'
 // BaseDanmakuClient.ts
 import type { EventModel } from '@/api/api-models'
 // 导入事件模型和类型枚举

@@ -1,3 +1,5 @@
+import type { RouteRecordRaw } from 'vue-router'
+
 export default [
   {
     path: '/question-display',
@@ -25,4 +27,4 @@ export default [
       forceReload: true,
     },
   },
-]
+] satisfies RouteRecordRaw[]

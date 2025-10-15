@@ -1,6 +1,6 @@
 import type {
   AutoActionItem,
-  RuntimeState
+  RuntimeState,
 } from './autoAction/types.js'
 import type { EventModel } from '@/api/api-models.js'
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
@@ -141,7 +141,7 @@ export const useAutoAction = defineStore('autoAction', () => {
           runtimeState.value.lastExecutionTime[actionToExecute.id] = Date.now()
           if (actionToExecute.actionConfig.delaySeconds && actionToExecute.actionConfig.delaySeconds > 0) {
             setTimeout(() => {
-              biliFunc.sendLiveDanmaku(roomId.value!, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+              biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
             }, actionToExecute.actionConfig.delaySeconds * 1000)
           } else {
             biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
@@ -251,7 +251,7 @@ export const useAutoAction = defineStore('autoAction', () => {
           runtimeState.value.lastExecutionTime[currentAction.id] = Date.now()
           if (currentAction.actionConfig.delaySeconds && currentAction.actionConfig.delaySeconds > 0) {
             setTimeout(() => {
-              biliFunc.sendLiveDanmaku(roomId.value!, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
+              biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
             }, currentAction.actionConfig.delaySeconds * 1000)
           } else {
             biliFunc.sendLiveDanmaku(roomId.value, formattedContent).catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
@@ -705,7 +705,7 @@ export const useAutoAction = defineStore('autoAction', () => {
             if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
               console.log(`[定时任务测试] 将在 ${action.actionConfig.delaySeconds} 秒后发送弹幕`)
               setTimeout(() => {
-                biliFunc.sendLiveDanmaku(roomId.value!, formattedContent)
+                biliFunc.sendLiveDanmaku(roomId.value, formattedContent)
                   .catch(err => console.error('[AutoAction] 发送弹幕失败:', err))
               }, action.actionConfig.delaySeconds * 1000)
             } else {

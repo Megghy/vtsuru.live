@@ -119,7 +119,7 @@ export const useGamepadStore = defineStore('gamepad', () => {
       if (connectedGamepadInfo.value) {
         connectedHandlers.forEach((handler) => {
           try {
-            handler(connectedGamepadInfo.value!, index)
+            handler(connectedGamepadInfo.value, index)
           } catch (err) {
             console.error('手柄连接事件处理器执行错误:', err)
           }
@@ -169,7 +169,7 @@ export const useGamepadStore = defineStore('gamepad', () => {
         // 如果自动切换到其他手柄，也触发连接事件
         connectedHandlers.forEach((handler) => {
           try {
-            handler(connectedGamepadInfo.value!, nextGamepad.index)
+            handler(connectedGamepadInfo.value, nextGamepad.index)
           } catch (err) {
             console.error('手柄连接事件处理器执行错误:', err)
           }

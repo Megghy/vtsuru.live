@@ -206,7 +206,7 @@ async function selectFolder() {
 
     // @ts-ignore
     const directoryHandle = await window.showDirectoryPicker({
-      mode: 'read'
+      mode: 'read',
     })
 
     message.info('正在扫描文件夹...')
@@ -254,7 +254,7 @@ async function selectFolder() {
 async function scanDirectory(
   directoryHandle: any,
   audioFiles: { name: string, file: File, path: string }[],
-  currentPath: string
+  currentPath: string,
 ) {
   for await (const entry of directoryHandle.values()) {
     const entryPath = currentPath ? `${currentPath}/${entry.name}` : entry.name
@@ -266,8 +266,8 @@ async function scanDirectory(
         const file = await entry.getFile()
         audioFiles.push({
           name: entry.name,
-          file: file,
-          path: entryPath
+          file,
+          path: entryPath,
         })
       }
     } else if (entry.kind === 'directory') {
@@ -363,7 +363,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Son
     // @ts-ignore
     _originalFile: file,
     // @ts-ignore
-    _filePath: filePath
+    _filePath: filePath,
   } as SongsInfo
 }
 
@@ -373,7 +373,7 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Son
 function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
   folderSongsOptions.value = folderSongs.value.map(s => ({
     label: `${s.name} - ${s.author?.join('/') || '未知'}`,
-    value: s.name + '_' + (s as any)._filePath, // 使用组合键避免重名
+    value: `${s.name}_${(s as any)._filePath}`, // 使用组合键避免重名
     disabled:
       songs.value.findIndex(exist => exist.name === s.name) > -1
       || newlyAddedSongs.findIndex(add => add.name === s.name) > -1,
@@ -393,7 +393,7 @@ async function addFolderSongs() {
 
   try {
     const songsToAdd = folderSongs.value.filter(s =>
-      selectedFolderSongs.value.find(select => select === (s.name + '_' + (s as any)._filePath))
+      selectedFolderSongs.value.find(select => select === (`${s.name}_${(s as any)._filePath}`)),
     )
 
     // 注意: 由于歌曲URL是本地Blob URL，需要根据实际需求处理
@@ -403,7 +403,7 @@ async function addFolderSongs() {
 
     const result = await addSongs(songsToAdd.map(s => ({
       ...s,
-      description: (s.description || '') + ' [注意: 链接为本地文件，刷新页面后可能失效]'
+      description: `${s.description || ''} [注意: 链接为本地文件，刷新页面后可能失效]`,
     })), SongFrom.Custom)
 
     if (result.code === 200) {
@@ -428,10 +428,10 @@ async function addFolderSongs() {
  */
 function batchEditFolderSongs(field: 'author' | 'language' | 'tags', value: string[]) {
   const selectedSongs = folderSongs.value.filter(s =>
-    selectedFolderSongs.value.find(select => select === (s.name + '_' + (s as any)._filePath))
+    selectedFolderSongs.value.find(select => select === (`${s.name}_${(s as any)._filePath}`)),
   )
 
-  selectedSongs.forEach(song => {
+  selectedSongs.forEach((song) => {
     if (field === 'author') {
       song.author = value
     } else if (field === 'language') {

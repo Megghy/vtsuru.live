@@ -288,10 +288,37 @@ async function buyGoods() {
           message.success('兑换成功')
           // 更新本地积分显示
           currentPoint.value = Number((currentPoint.value - currentGoods.value!.price * buyCount.value).toFixed(1))
+
+          // 构建对话框内容
+          const isVirtualGoods = data.data.type === GoodsTypes.Virtual
+          const hasContent = data.data.goods.content
+
           // 显示成功对话框
           dialog.success({
             title: '成功',
-            content: `兑换成功，订单号：${data.data.id}`,
+            content: () => {
+              const elements: any[] = [
+                h(NText, null, { default: () => `兑换成功，订单号：${data.data.id}` }),
+              ]
+
+              // 如果是虚拟礼物且有内容，则显示礼物内容
+              if (isVirtualGoods && hasContent) {
+                elements.push(
+                  h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '礼物内容' }),
+                  h(
+                    NAlert,
+                    {
+                      type: 'success',
+                      bordered: false,
+                      style: 'white-space: pre-wrap; word-break: break-word;',
+                    },
+                    { default: () => data.data.goods.content },
+                  ),
+                )
+              }
+
+              return h(NFlex, { vertical: true, size: 'small' }, { default: () => elements })
+            },
             positiveText: '前往查看',
             negativeText: '关闭',
             onPositiveClick: () => {

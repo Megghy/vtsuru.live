@@ -729,7 +729,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
   {
     title: '时间',
     key: 'createAt', // 使用 createAt 作为 key 以便排序
-    sorter: 'default', // 使用 NDataTable 内置排序
+    sorter: true,
     render: (data) => {
       return h(NTime, { time: data.createAt, type: 'datetime' }) // 显示完整时间
     },

@@ -1,6 +1,9 @@
+import { RouterView } from 'vue-router'
+
 export default {
   path: '/obs',
   name: 'obs',
+  component: RouterView,
   children: [
     {
       path: 'live-lottery',

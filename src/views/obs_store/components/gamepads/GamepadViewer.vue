@@ -31,15 +31,16 @@ import {
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'
+
+const props = withDefaults(defineProps<Props>(), {
+  viewBox: '',
+})
+
 const GamepadDisplay = defineAsyncComponent(() => import('./GamepadDisplay.vue'))
 
 interface Props {
   viewBox?: string
 }
-const props = withDefaults(defineProps<Props>(), {
-  viewBox: '',
-})
-
 // 基本设置
 const selectedType = useStorage<GamepadType>('Setting.Gamepad.SelectedType', 'xbox')
 const currentGamepadType = computed(() => selectedType.value)

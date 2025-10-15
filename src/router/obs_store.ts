@@ -1,6 +1,9 @@
+import { RouterView } from 'vue-router'
+
 export default {
   path: '/obs-store',
   name: 'obs-store',
+  component: RouterView,
   children: [
     {
       path: 'gamepad-manage',
