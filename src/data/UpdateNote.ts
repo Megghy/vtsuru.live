@@ -4,6 +4,31 @@ import UpdateNoteContainer from '@/components/UpdateNoteContainer.vue'
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 8,
+    date: '2025.10.16',
+    items: [
+      {
+        type: 'new',
+        title: '点播OBS组件新增简洁样式',
+        content: [
+          [
+            '点播OBS组件新增无背景的简洁样式',
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/7c8eab68-43d1-4a93-b927-57ebcdda0e5e.png', width: 300 }),
+          ],
+        ],
+      },
+      {
+        type: 'new',
+        title: '积分增加每日首次互动(发送弹幕/礼物)给予积分的功能',
+        content: [
+          [
+            '积分增加每日首次互动(发送弹幕/礼物)给予积分的功能',
+          ],
+        ],
+      },
+    ],
+  },
+  {
     ver: 7,
     date: '2025.5.1',
     items: [

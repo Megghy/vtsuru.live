@@ -60,7 +60,7 @@ const client = await useDanmakuClient().initOpenlive()
 
 // OBS相关设置
 const showOBSModal = ref(false)
-const obsStyleType = ref<'classic' | 'fresh'>('classic')
+const obsStyleType = ref<'classic' | 'fresh' | 'minimal'>('classic')
 const obsScrollSpeedMultiplierRef = ref(1)
 const volumn = useStorage('Settings.Volumn', 0.5)
 
@@ -276,6 +276,16 @@ onUnmounted(() => {
     preset="card"
     style="width: 800px"
   >
+    <template #header-extra>
+      <NButton
+        tag="a"
+        type="primary"
+        target="_blank"
+        :href="`${CURRENT_HOST}obs/live-request?id=${accountInfo?.id ?? 0}&style=${obsStyleType}&speed=${obsScrollSpeedMultiplierRef}`"
+      >
+        浏览
+      </NButton>
+    </template>
     <NAlert
       title="这是什么?  "
       type="info"
@@ -295,6 +305,9 @@ onUnmounted(() => {
           </NRadioButton>
           <NRadioButton value="fresh">
             清新明亮风格
+          </NRadioButton>
+          <NRadioButton value="minimal">
+            极简无背景
           </NRadioButton>
         </NSpace>
       </NRadioGroup>
