@@ -1018,4 +1018,5 @@ export interface VoteOBSData {
   optionColor: string
   roundedCorners: boolean
   displayPosition: string
+  endTime?: number
 }

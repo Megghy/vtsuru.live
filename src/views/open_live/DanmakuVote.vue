@@ -30,7 +30,7 @@ import {
   NThing,
   useMessage,
 } from 'naive-ui'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import { useAccount } from '@/api/account'
@@ -80,6 +80,21 @@ const isLoading = ref(false)
 const showSettingsModal = ref(false)
 const voteHistoryTab = ref<ResponseVoteSession[]>([])
 
+const nowMs = ref<number>(Date.now())
+const timeLeftMs = computed(() => {
+  if (!currentVote.value?.endTime) return null
+  const remain = currentVote.value.endTime * 1000 - nowMs.value
+  return Math.max(0, remain)
+})
+
+function formatRemain(ms: number | null | undefined) {
+  if (ms == null) return '--:--'
+  const total = Math.floor(ms / 1000)
+  const mm = Math.floor(total / 60).toString().padStart(2, '0')
+  const ss = (total % 60).toString().padStart(2, '0')
+  return `${mm}:${ss}`
+}
+
 // 创建投票相关
 const newVoteTitle = ref('')
 const newVoteOptions = ref<string[]>(['', ''])
@@ -102,7 +117,7 @@ async function fetchVoteConfig() {
     isLoading.value = true
     const result = await QueryGetAPI<VoteConfig>(`${VOTE_API_URL}get-config`)
 
-    if (result.code === 0 && result.data) {
+    if (result.code === 200 && result.data) {
       voteConfig.value = result.data
     }
   } catch (error) {
@@ -138,7 +153,7 @@ async function fetchActiveVote() {
   try {
     const result = await QueryGetAPI<ResponseVoteSession>(`${VOTE_API_URL}get-active`)
 
-    if (result.code === 0) {
+    if (result.code === 200) {
       currentVote.value = result.data
     }
   } catch (error) {
@@ -151,7 +166,7 @@ async function fetchVoteHistory() {
   try {
     const result = await QueryGetAPI<ResponseVoteSession[]>(`${VOTE_API_URL}history`, { limit: 10, offset: 0 })
 
-    if (result.code === 0) {
+    if (result.code === 200) {
       voteHistoryTab.value = result.data
     }
   } catch (error) {
@@ -273,7 +288,7 @@ async function fetchVoteHash(): Promise<string | null> {
   try {
     const result = await QueryGetAPI<string>(`${VOTE_API_URL}get-hash`)
 
-    if (result.code === 0 && result.data) {
+    if (result.code === 200 && result.data) {
       return result.data
     }
     return null
@@ -300,6 +315,24 @@ function loadTemplate(template: { title: string, options: string[] }) {
   }
 }
 
+// 导入默认选项
+function importDefaultOptions() {
+  const opts = voteConfig.value.defaultOptions || []
+  newVoteOptions.value = [...opts]
+  while (newVoteOptions.value.length < 2) {
+    newVoteOptions.value.push('')
+  }
+}
+
+// 从历史复刻
+function reuseVote(vote: ResponseVoteSession) {
+  newVoteTitle.value = vote.title
+  newVoteOptions.value = vote.options.map(o => o.text)
+  while (newVoteOptions.value.length < 2) {
+    newVoteOptions.value.push('')
+  }
+}
+
 // 初始化和轮询
 onMounted(async () => {
   // 初始化弹幕客户端
@@ -317,8 +350,13 @@ onMounted(async () => {
     await fetchActiveVote()
   }, 5000)
 
+  const tickInterval = setInterval(() => {
+    nowMs.value = Date.now()
+  }, 1000)
+
   onUnmounted(() => {
     clearInterval(pollInterval)
+    clearInterval(tickInterval)
     client.dispose()
   })
 })
@@ -423,12 +461,17 @@ function deleteTemplate(index: number) {
             >
               <NSpace vertical>
                 <NSpace justify="space-between">
-                  <NText
-                    strong
-                    style="font-size: 1.2em"
-                  >
-                    {{ currentVote.title }}
-                  </NText>
+                  <NSpace>
+                    <NText
+                      strong
+                      style="font-size: 1.2em"
+                    >
+                      {{ currentVote.title }}
+                    </NText>
+                    <NTag v-if="timeLeftMs !== null" type="warning">
+                      剩余: {{ formatRemain(timeLeftMs) }}
+                    </NTag>
+                  </NSpace>
                   <NButton
                     type="warning"
                     @click="endVote"
@@ -505,6 +548,9 @@ function deleteTemplate(index: number) {
                     <NIcon><Add24Filled /></NIcon>
                   </template>
                   添加选项
+                </NButton>
+                <NButton secondary @click="importDefaultOptions">
+                  导入默认选项
                 </NButton>
               </NSpace>
 
@@ -630,13 +676,22 @@ function deleteTemplate(index: number) {
               </NSpace>
             </template>
             <template #action>
-              <NButton
-                size="small"
-                type="error"
-                @click="deleteVote(vote.id)"
-              >
-                删除
-              </NButton>
+              <NSpace>
+                <NButton
+                  size="small"
+                  type="primary"
+                  @click="reuseVote(vote)"
+                >
+                  复刻
+                </NButton>
+                <NButton
+                  size="small"
+                  type="error"
+                  @click="deleteVote(vote.id)"
+                >
+                  删除
+                </NButton>
+              </NSpace>
             </template>
           </NThing>
         </NListItem>

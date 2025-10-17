@@ -14,7 +14,7 @@ import {
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { h } from 'vue'
+import { h, ref } from 'vue'
 import { isLoggedIn, useAccount } from '@/api/account'
 import { CN_HOST, isDev } from '@/data/constants'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -29,6 +29,7 @@ import { getBuvid, getRoomKey } from './utils'
 const accountInfo = useAccount()
 
 export const clientInited = ref(false)
+export const clientInitStage = ref('')
 let tray: TrayIcon
 let heartbeatTimer: number | null = null
 let updateCheckTimer: number | null = null
@@ -154,9 +155,23 @@ async function handleUpdateInstall(update: any) {
     // 显示下载进度通知
     let downloaded = 0
     let contentLength = 0
+    const progressPercentage = ref(0)
+    const progressText = ref('准备下载更新...')
     const progressNotification = window.$notification.info({
       title: '正在下载更新',
-      content: '更新下载中，请稍候...',
+      content: () =>
+        h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
+          h('div', {
+            style: 'height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden; backdrop-filter: blur(6px);',
+          }, [
+            h('div', {
+              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, #5c7cfa, #91a7ff); transition: width 0.2s ease;`,
+            }),
+          ]),
+          h('div', {
+            style: 'font-size: 12px; color: var(--n-text-color); text-align: center;',
+          }, progressText.value),
+        ]),
       closable: false,
       duration: 0,
     })
@@ -167,17 +182,27 @@ async function handleUpdateInstall(update: any) {
         case 'Started':
           contentLength = event.data.contentLength || 0
           info(`[更新] 开始下载 ${contentLength} 字节`)
+          progressPercentage.value = 0
+          progressText.value = '正在连接下载源...'
           break
         case 'Progress': {
           downloaded += event.data.chunkLength
           const progress = contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0
-          progressNotification.content = `下载进度: ${progress}% (${Math.round(downloaded / 1024 / 1024)}MB / ${Math.round(contentLength / 1024 / 1024)}MB)`
+          progressPercentage.value = Number.isFinite(progress) ? progress : 0
+          const downloadedMb = Math.max(downloaded / 1024 / 1024, 0)
+          const totalMb = Math.max(contentLength / 1024 / 1024, 0)
+          const formatMb = (value: number) =>
+            value >= 100 ? Math.round(value).toString() : (Math.round(value * 10) / 10).toString()
+          progressText.value = contentLength > 0
+            ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB`
+            : '正在下载更新...'
           info(`[更新] 已下载 ${downloaded} / ${contentLength} 字节`)
           break
         }
         case 'Finished':
           info('[更新] 下载完成')
-          progressNotification.content = '下载完成，正在安装...'
+          progressPercentage.value = 100
+          progressText.value = '下载完成，正在安装...'
           break
       }
     })
@@ -217,6 +242,7 @@ export async function initAll(isOnBoot: boolean) {
   if (clientInited.value) {
     return
   }
+  clientInitStage.value = '初始化中...'
   // 初始检查更新（不阻塞初始化）
   if (!isDev) {
     void checkUpdate()
@@ -246,10 +272,13 @@ export async function initAll(isOnBoot: boolean) {
   await attachConsole()
   const settings = useSettings()
   const biliCookie = useBiliCookie()
+  clientInitStage.value = '加载设置...'
   await settings.init()
   info('[init] 已加载账户信息')
+  clientInitStage.value = '加载 Bilibili Cookie...'
   biliCookie.init()
   info('[init] 已加载bilibili cookie')
+  clientInitStage.value = '初始化基础信息...'
   initInfo()
   info('[init] 开始更新数据')
 
@@ -258,6 +287,7 @@ export async function initAll(isOnBoot: boolean) {
       title: '正在初始化弹幕客户端...',
       closable: false,
     })
+    clientInitStage.value = '初始化弹幕客户端...'
     const result = await initDanmakuClient()
     danmakuInitNoticeRef.destroy()
     if (result.success) {
@@ -265,16 +295,26 @@ export async function initAll(isOnBoot: boolean) {
         title: '弹幕客户端初始化完成',
         duration: 3000,
       })
+      clientInitStage.value = '弹幕客户端初始化完成'
     } else {
       window.$notification.error({
         title: `弹幕客户端初始化失败: ${result.message}`,
       })
+      clientInitStage.value = '弹幕客户端初始化失败'
     }
   }
   info('[init] 已加载弹幕客户端')
   // 初始化系统托盘图标和菜单
+  clientInitStage.value = '创建系统托盘...'
   const menu = await Menu.new({
     items: [
+      {
+        id: 'open-devtools',
+        text: '打开调试控制台',
+        action: () => {
+          void invoke('open_dev_tools')
+        },
+      },
       {
         id: 'quit',
         text: '退出',
@@ -299,6 +339,7 @@ export async function initAll(isOnBoot: boolean) {
     },
   }
   tray = await TrayIcon.new(options)
+  clientInitStage.value = '系统托盘就绪'
 
   appWindow.setMinSize(new PhysicalSize(720, 480))
 
@@ -319,15 +360,14 @@ export async function initAll(isOnBoot: boolean) {
     }
   })
 
-  // 监听f12事件
-  if (!isDev) {
-    window.addEventListener('keydown', (event) => {
-      if (event.key === 'F12') {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-    })
-  }
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'F12') {
+      void invoke('open_dev_tools')
+    }
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'I' || event.key === 'i')) {
+      void invoke('open_dev_tools')
+    }
+  })
 
   useAutoAction().init()
   useBiliFunction().init()
@@ -340,6 +380,7 @@ export async function initAll(isOnBoot: boolean) {
   }
 
   clientInited.value = true
+  clientInitStage.value = '启动完成'
 }
 export function OnClientUnmounted() {
   if (clientInited.value) {

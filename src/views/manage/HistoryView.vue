@@ -19,6 +19,7 @@ import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/data/constants'
+import { GuidUtils } from '@/Utils'
 
 // 初始化ECharts组件
 use([
@@ -132,6 +133,9 @@ const guardColumns: DataTableColumns<GuardMemberModel> = [
     width: 250,
     ellipsis: {
       tooltip: true,
+    },
+    render: (row) => {
+      return h('span', { style: { fontWeight: 'bold' } }, GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId)
     },
   },
   {
