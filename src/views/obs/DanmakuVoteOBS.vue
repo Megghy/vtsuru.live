@@ -20,6 +20,22 @@ const voteData = ref<VoteOBSData | null>(null)
 const fetchIntervalId = ref<number | null>(null)
 const config = ref<VoteConfig | null>(null)
 const isLoading = ref(true)
+const nowMs = ref<number>(Date.now())
+const tickIntervalId = ref<number | null>(null)
+
+const timeLeftMs = computed(() => {
+  if (!voteData.value?.endTime) return null
+  const remain = voteData.value.endTime * 1000 - nowMs.value
+  return Math.max(0, remain)
+})
+
+function formatRemain(ms: number | null | undefined) {
+  if (ms == null) return ''
+  const total = Math.floor(ms / 1000)
+  const mm = Math.floor(total / 60).toString().padStart(2, '0')
+  const ss = (total % 60).toString().padStart(2, '0')
+  return `${mm}:${ss}`
+}
 
 // 可见性检测
 const isVisible = computed(() => props.visible !== false)
@@ -33,12 +49,14 @@ async function fetchVoteData() {
 
     const result = await QueryGetAPI<VoteOBSData>(`${VOTE_API_URL}obs-data`, { user: userId })
 
-    if (result.code === 0 && result.data) {
+    if (result.code === 200 && result.data) {
       voteData.value = result.data
-      // 更新每个选项的百分比
-      if (voteData.value && voteData.value.options && voteData.value.totalVotes > 0) {
+      // 更新每个选项的百分比（若后端未提供）
+      if (voteData.value && voteData.value.options) {
         voteData.value.options.forEach((option) => {
-          option.percentage = calculatePercentage(option.count, voteData.value!.totalVotes)
+          if (option.percentage == null && voteData.value!.totalVotes > 0) {
+            option.percentage = calculatePercentage(option.count, voteData.value!.totalVotes)
+          }
         })
       }
     } else if (voteData.value && !result.data) {
@@ -82,7 +100,7 @@ async function fetchVoteConfig() {
 
     const result = await QueryGetAPI<VoteConfig>(`${VOTE_API_URL}get-config`, { user: userId })
 
-    if (result.code === 0 && result.data) {
+    if (result.code === 200 && result.data) {
       config.value = result.data
     }
   } catch (error) {
@@ -133,11 +151,18 @@ onMounted(async () => {
   // 获取投票配置和投票数据
   await fetchVoteConfig()
   setupPolling()
+  // 本地计时器用于倒计时显示
+  tickIntervalId.value = setInterval(() => {
+    nowMs.value = Date.now()
+  }, 1000)
 
   onUnmounted(() => {
     client.dispose()
     if (fetchIntervalId.value) {
       clearInterval(fetchIntervalId.value)
+    }
+    if (tickIntervalId.value) {
+      clearInterval(tickIntervalId.value)
     }
   })
 })
@@ -163,6 +188,7 @@ onMounted(async () => {
       <div class="vote-header">
         <div class="vote-title">
           {{ voteData.title }}
+          <span v-if="timeLeftMs !== null" class="vote-timer">剩余 {{ formatRemain(timeLeftMs) }}</span>
         </div>
       </div>
 

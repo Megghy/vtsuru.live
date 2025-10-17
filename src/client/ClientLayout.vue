@@ -15,7 +15,7 @@ import { RouterLink, RouterView } from 'vue-router' // 引入 Vue Router 组件
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
 
 import { useWebFetcher } from '@/store/useWebFetcher'
-import { initAll, OnClientUnmounted } from './data/initialize'
+import { initAll, OnClientUnmounted, clientInited, clientInitStage } from './data/initialize'
 import { useDanmakuWindow } from './store/useDanmakuWindow'
 // 引入子组件
 import WindowBar from './WindowBar.vue'
@@ -140,6 +140,18 @@ onMounted(() => {
 
 <template>
   <WindowBar />
+
+  <Transition name="fade">
+    <div
+      v-if="isLoggedIn && !clientInited"
+      class="init-overlay"
+    >
+      <div class="init-overlay-content">
+        <NSpin size="large" />
+        <div class="init-stage">{{ clientInitStage || '初始化中...' }}</div>
+      </div>
+    </div>
+  </Transition>
 
   <div
     v-if="!isLoggedIn"
@@ -273,12 +285,12 @@ onMounted(() => {
     >
       <div style="padding: 12px; padding-right: 15px;">
         <RouterView v-slot="{ Component }">
-          <Transition
-            name="fade-slide"
-            mode="out-in"
-            :appear="true"
-          >
-            <KeepAlive>
+          <KeepAlive>
+            <Transition
+              name="fade-slide"
+              mode="out-in"
+              :appear="true"
+            >
               <Suspense>
                 <component :is="Component" />
                 <template #fallback>
@@ -287,8 +299,8 @@ onMounted(() => {
                   </div>
                 </template>
               </Suspense>
-            </KeepAlive>
-          </Transition>
+            </Transition>
+          </KeepAlive>
         </RouterView>
       </div>
     </NLayoutContent>
@@ -454,5 +466,35 @@ onMounted(() => {
   .fade-slide-leave-to {
     opacity: 0;
     transform: translateX(20px);
+  }
+
+  .init-overlay {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--n-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  .init-overlay-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .init-stage {
+    color: #999;
+  }
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.2s ease;
+  }
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
   }
 </style>
