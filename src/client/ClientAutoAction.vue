@@ -36,6 +36,7 @@ import DataManager from './components/autoaction/DataManager.vue'
 import CheckInSettings from './components/autoaction/settings/CheckInSettings.vue'
 import GlobalScheduledSettings from './components/autoaction/settings/GlobalScheduledSettings.vue'
 import TimerCountdown from './components/autoaction/TimerCountdown.vue'
+import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
 const autoActionStore = useAutoAction()
 const message = useMessage()
@@ -66,7 +67,7 @@ const editingActionId = ref<string | null>(null)
 const showSetNextModal = ref(false)
 const targetNextActionId = ref<string | null>(null)
 const showTestModal = ref(false)
-const testUid = ref<string>('10004')
+const testUid = ref<number | undefined>(10004)
 const currentTestType = ref<TriggerType | null>(null)
 
 const triggerTypeOptions = [
@@ -425,7 +426,7 @@ function handleTestClick(type: TriggerType) {
   if (type === TriggerType.GUARD) {
     // 为舰长相关(私信)测试显示UID输入对话框
     currentTestType.value = type
-    testUid.value = '10004' // 默认值
+    testUid.value = 10004 // 默认值
     showTestModal.value = true
   } else {
     // 其他类型直接测试
@@ -441,8 +442,8 @@ function confirmTest() {
       showTestModal.value = false
       return
     }
-    const uid = Number.parseInt(testUid.value)
-    if (isNaN(uid) || uid <= 0) {
+    const uid = Number(testUid.value)
+    if (!Number.isFinite(uid) || uid <= 0) {
       message.error('请输入有效的UID')
       return
     }
@@ -818,10 +819,9 @@ function confirmTest() {
     >
       <NSpace vertical>
         <div>请输入私信接收者的UID：</div>
-        <NInput
+        <BiliUserSelector
           v-model:value="testUid"
-          placeholder="请输入UID"
-          type="text"
+          placeholder="请输入B站用户UID"
         />
         <NText
           type="info"

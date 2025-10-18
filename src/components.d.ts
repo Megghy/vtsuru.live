@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AddressDisplay: typeof import('./components/manage/AddressDisplay.vue')['default']
+    BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
     DanmakuContainer: typeof import('./components/DanmakuContainer.vue')['default']
     DanmakuItem: typeof import('./components/DanmakuItem.vue')['default']
     DynamicForm: typeof import('./components/DynamicForm.vue')['default']
@@ -21,6 +22,8 @@ declare module 'vue' {
     NAvatar: typeof import('naive-ui')['NAvatar']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
+    NEllipsis: typeof import('naive-ui')['NEllipsis']
+    NEmpty: typeof import('naive-ui')['NEmpty']
     NFlex: typeof import('naive-ui')['NFlex']
     NIcon: typeof import('naive-ui')['NIcon']
     NImage: typeof import('naive-ui')['NImage']

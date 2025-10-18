@@ -12,6 +12,7 @@ import { useAutoAction } from '@/client/store/useAutoAction'
 import { CHECKIN_API_URL } from '@/data/constants'
 import AutoActionEditor from '../AutoActionEditor.vue'
 import TemplateHelper from '../TemplateHelper.vue'
+import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
 interface LiveInfo {
   roomId?: number
@@ -775,11 +776,10 @@ onMounted(() => {
 
             <NForm :label-width="100">
               <NFormItem label="用户UID">
-                <NInputNumber
+                <BiliUserSelector
                   v-model:value="testUid"
-                  :min="1"
-                  style="width: 100%"
-                  placeholder="输入用户数字ID"
+                  placeholder="请输入B站用户UID"
+                  @user-info-loaded="(u) => { if (u?.name && (!testUsername || testUsername === '测试用户')) testUsername = u.name }"
                 />
               </NFormItem>
               <NFormItem label="用户名">
