@@ -1025,15 +1025,13 @@ export const Config = defineTemplateConfig([
 </template>
 
 <style scoped>
-/* Reuse existing styles where possible */
-
-/* --- Styles for Filter Button Groups --- */
+/* Filter Button Groups */
 .filter-button-group {
   display: flex;
   align-items: center;
-  flex-wrap: wrap; /* Allow buttons to wrap */
-  gap: 8px; /* Spacing between buttons */
-  margin-bottom: 10px; /* Spacing below the group */
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .filter-label {
@@ -1041,24 +1039,23 @@ export const Config = defineTemplateConfig([
   margin-right: 5px;
   font-weight: 500;
   color: #555555;
-  white-space: nowrap; /* Prevent label from wrapping */
+  white-space: nowrap;
 }
 
 html.dark .filter-label {
   color: var(--text-color-2);
 }
 
-/* Style for individual language/tag buttons */
 .filter-button {
-  padding: 4px 12px; /* Smaller padding */
-  border: 1px solid transparent; /* Start transparent */
+  padding: 4px 12px;
+  border: 1px solid transparent;
   border-radius: 15px;
-  background-color: rgba(0, 0, 0, 0.04); /* Subtle background */
-  font-size: 0.85em; /* Slightly smaller font */
+  background-color: rgba(0, 0, 0, 0.04);
+  font-size: 0.85em;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   color: #555555;
-  line-height: 1.4; /* Adjust line height */
+  line-height: 1.4;
 }
 
 html.dark .filter-button {
@@ -1069,32 +1066,30 @@ html.dark .filter-button {
 .filter-button.active {
   background-color: var(--primary-color);
   color: white;
-  border-color: var(--primary-color); /* Add border for active */
+  border-color: var(--primary-color);
   font-weight: bold;
 }
 
 .filter-button:hover:not(.active) {
   background-color: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.1); /* Subtle border on hover */
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 html.dark .filter-button:hover:not(.active) {
   background-color: var(--item-color-hover);
 }
 
-/* Divider between filters and search bar */
 .filter-divider {
   height: 1px;
   background-color: rgba(0, 0, 0, 0.1);
-  margin: 10px 0 15px 0; /* Add margin */
-}
-html.dark .filter-divider {
-    background-color: var(--border-color);
+  margin: 10px 0 15px 0;
 }
 
-/* --- Adjustments for Filter/Search Bar --- */
+html.dark .filter-divider {
+  background-color: var(--border-color);
+}
+
 .song-list-filter {
-  /* NFlex handles alignment, wrap defaults */
   margin-bottom: 15px;
 }
 
@@ -1121,9 +1116,8 @@ html.dark .search-icon {
 .filter-input {
   height: 30px;
   box-sizing: border-box;
-  padding: 6px 15px 6px 30px; /* Left padding for icon */
+  padding: 6px 15px 6px 30px;
   border-radius: 15px;
-  /* width: 250px; */ /* Let flexbox handle width or use min-width */
   font-size: 0.9em;
   line-height: normal;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -1152,7 +1146,7 @@ html.dark .filter-input::placeholder {
   box-shadow: 0 0 0 2px var(--primary-color-a3);
 }
 
-/* --- Naive UI Select Styling (Keep existing) --- */
+/* Naive UI Select Styling */
 :deep(.song-list-filter .n-select .n-base-selection) {
   --n-height: 30px !important;
   --n-padding-single: 0 26px 0 10px !important;
@@ -1165,100 +1159,88 @@ html.dark .filter-input::placeholder {
   line-height: 30px !important;
 }
 
-/* --- Clear Button Styling --- */
 .clear-button {
-  height: 30px; /* Match input height */
-  /* padding: 0 10px; */ /* NButton handles padding well */
-  border-radius: 15px; /* Match input style */
-  font-size: 0.85em; /* Slightly smaller */
-  line-height: 28px; /* Adjust if needed */
+  height: 30px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  line-height: 28px;
 }
 
-/* --- Random Button Styling (Keep Existing) --- */
 .refresh-button {
   height: 30px;
-  /* padding: 0 15px; Use NButton padding */
   border-radius: 15px;
   font-size: 0.9em;
   line-height: 28px;
   white-space: nowrap;
 }
 
-/* --- MODIFIED: Structure Styles --- */
-
-/* --- NEW: Outer Background & Blur Wrapper --- */
+/* Structure Styles */
 .song-list-background-wrapper {
-  position: relative; /* Anchor for ::before */
+  position: relative;
   height: calc(100vh - var(--vtsuru-header-height) - var(--vtsuru-content-padding) - var(--vtsuru-content-padding));
-  border-radius: 8px; /* Apply rounding here */
+  border-radius: 8px;
   background-size: cover;
   background-position: center center;
-  background-attachment: fixed; /* Keep background fixed */
-  overflow: hidden; /* Clip the ::before pseudo-element */
+  background-attachment: fixed;
+  overflow: hidden;
 }
 
-/* Blur effect on the wrapper's ::before */
 .song-list-background-wrapper::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
-  background-color: rgba(80, 80, 80, 0.1); /* Optional overlay */
-  border-radius: inherit; /* Inherit rounding */
-  z-index: 1; /* Below content */
+  background-color: rgba(80, 80, 80, 0.1);
+  border-radius: inherit;
+  z-index: 1;
   pointer-events: none;
 }
 
 html.dark .song-list-background-wrapper::before {
-  background-color: rgba(255, 255, 255, 0.05); /* Dark mode overlay */
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* --- MODIFIED: Inner Scrolling Container --- */
 .song-list-template {
-  height: 100%; /* Fill the wrapper */
-  overflow-y: auto; /* Enable vertical scrolling for content */
-  position: relative; /* Needed for z-index */
-  z-index: 2; /* Place above the ::before blur layer */
-  background: transparent !important; /* Ensure no background color obscures the wrapper */
-  border-radius: inherit; /* Inherit rounding for scrollbar area */
+  height: 100%;
+  overflow-y: auto;
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+  border-radius: inherit;
   min-width: 400px;
-  /* Keep scrollbar styles */
+  
   &::-webkit-scrollbar { width: 8px; }
   &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
   &::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
   &::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
 }
 
-/* Dark mode scrollbar styles for the scrolling container */
 html.dark .song-list-template {
   &::-webkit-scrollbar-track { background: var(--scrollbar-color); }
   &::-webkit-scrollbar-thumb { background: var(--scrollbar-color-hover); }
   &::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-color-active); }
 }
 
-/* --- MODIFIED: Main Content Container --- */
 .profile-card-container {
-  position: relative; /* Keep for potential absolute children if any */
-  /* z-index: 2; */ /* Removed: Handled by .song-list-template */
+  position: relative;
   padding: 20px;
   font-family: sans-serif;
   color: #333333;
-  /* height: 100%; */ /* Removed: Let content define height */
-  min-height: 100%; /* Ensure it tries to fill the scroll container */
-  box-sizing: border-box; /* Include padding in height calculation */
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 html.dark .profile-card-container {
   color: var(--text-color-1);
 }
 
-/* --- Profile Hover Area Styles (Unchanged) --- */
+/* Profile Hover Area */
 .profile-hover-area {
   position: relative; display: flex; align-items: flex-start;
   width: fit-content; min-width: 300px; margin: 0 auto 20px auto;
   padding: 15px; border-radius: 15px;
-  transition: transform 0.4s ease-in-out; z-index: 100; /* High z-index for hover effect */
+  transition: transform 0.4s ease-in-out; z-index: 100;
   box-shadow: var(--box-shadow-1);
   background-color: rgba(255, 255, 255, 0.65);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -1314,7 +1296,7 @@ html.dark .profile-extra-info {
 .social-links {
   position: absolute; top: 5px; left: calc(100px + 20px + 10px);
   width: 380px; padding: 15px 20px; border-radius: 10px;
-  box-shadow: var(--box-shadow-2); z-index: 20; /* High z-index within hover area */
+  box-shadow: var(--box-shadow-2); z-index: 20;
   background-color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.1);
   opacity: 0; visibility: hidden; transform: translateX(20px);
@@ -1325,10 +1307,21 @@ html.dark .social-links {
   background-color: rgba(50, 50, 50, 0.85);
   border-color: rgba(255, 255, 255, 0.15);
 }
-.social-links-title{ font-weight: bold; color: #4d4d4d;}
-.social-links-subtitle{ white-space: pre-wrap; color: #4d4d4d;}
 
-html.dark .social-links-title, html.dark .social-links-subtitle { color: var(--text-color-2); }
+.social-links-title {
+  font-weight: bold;
+  color: #4d4d4d;
+}
+
+.social-links-subtitle {
+  white-space: pre-wrap;
+  color: #4d4d4d;
+}
+
+html.dark .social-links-title,
+html.dark .social-links-subtitle {
+  color: var(--text-color-2);
+}
 
 .social-icons-bar {
   position: absolute; top: 15px; right: 20px; display: flex; gap: 8px;
@@ -1339,19 +1332,38 @@ html.dark .social-links-title, html.dark .social-links-subtitle { color: var(--t
   font-size: 1em; cursor: pointer; color: #555555; transition: color 0.2s;
 }
 
-html.dark .social-icons-bar .icon { color: var(--text-color-2); }
-.social-icons-bar .icon:hover { color: var(--primary-color); }
-.social-icons-bar .icon svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+html.dark .social-icons-bar .icon {
+  color: var(--text-color-2);
+}
+
+.social-icons-bar .icon:hover {
+  color: var(--primary-color);
+}
+
+.social-icons-bar .icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
 
 .social-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 8px 15px; margin-top: 45px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 15px;
+  margin-top: 45px;
 }
 
 .social-link {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 5px 8px; border-radius: 5px; font-size: 0.85em; text-decoration: none;
-  color: #0066cc; background-color: rgba(0, 102, 204, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 0.85em;
+  text-decoration: none;
+  color: #0066cc;
+  background-color: rgba(0, 102, 204, 0.1);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -1360,23 +1372,46 @@ html.dark .social-link {
   background-color: rgba(var(--primary-color-rgb), 0.15);
   border: 1px solid rgba(122, 159, 197, 0.2);
 }
-.social-link:hover { background-color: rgba(0, 102, 204, 0.2); }
-html.dark .social-link:hover { background-color: rgba(var(--primary-color-rgb), 0.25); }
-.social-link span:first-child { margin-right: 5px; }
-.social-link .arrow { font-weight: bold; color: #aaaaaa; }
-html.dark .social-link .arrow { color: var(--text-color-3); }
 
-.profile-hover-area.is-hovering .profile-avatar { transform: translateX(-60px); }
+.social-link:hover {
+  background-color: rgba(0, 102, 204, 0.2);
+}
+
+html.dark .social-link:hover {
+  background-color: rgba(var(--primary-color-rgb), 0.25);
+}
+
+.social-link span:first-child {
+  margin-right: 5px;
+}
+
+.social-link .arrow {
+  font-weight: bold;
+  color: #aaaaaa;
+}
+
+html.dark .social-link .arrow {
+  color: var(--text-color-3);
+}
+
+.profile-hover-area.is-hovering .profile-avatar {
+  transform: translateX(-60px);
+}
+
 .profile-hover-area.is-hovering .social-links {
-  opacity: 1; visibility: visible; transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
   left: calc(100px - 60px + 15px);
 }
 
-/* --- Song List Container Styles (Unchanged except background/border) --- */
+/* Song List Container */
 .song-list-container {
-  padding: 15px 25px; border-radius: 15px; font-family: sans-serif;
+  padding: 15px 25px;
+  border-radius: 15px;
+  font-family: sans-serif;
   box-shadow: var(--box-shadow-1);
-  background-color: rgba(255, 255, 255, 0.50); /* Matched profile */
+  background-color: rgba(255, 255, 255, 0.50);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -1385,33 +1420,36 @@ html.dark .song-list-container {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* --- Table Styles (Unchanged) --- */
+/* Table Styles */
 .song-table-wrapper {
-  overflow-y: auto; /* This overflow handles table content, not main scroll */
-  /* min-height: 200px; */ /* Might not be needed if max-height is set */
+  overflow-y: auto;
   border-radius: 8px;
-  /* Scrollbar styling specific to this inner table scroll if needed */
   scroll-behavior: smooth;
-
 }
 
 .song-list-table {
-  width: 100%; border-collapse: collapse; font-size: 0.9em;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
   min-width: 600px;
 }
 
 .song-list-table thead th {
-  position: sticky; top: 0; z-index: 1; /* Sticky within .song-table-wrapper */
-  padding: 10px 12px; text-align: left; font-weight: 600;
-  background-color: rgba(245, 245, 245, 0.8); /* Slightly less transparent */
-  backdrop-filter: blur(2px); /* Blur header slightly */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  background-color: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(2px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   color: #444444;
-  user-select: none; /* Prevent text selection on click */
+  user-select: none;
 }
 
 html.dark .song-list-table thead th {
-  background-color: rgba(55, 55, 55, 0.85); /* Dark mode header bg */
+  background-color: rgba(55, 55, 55, 0.85);
   border-bottom-color: var(--border-color);
   color: var(--text-color-2);
 }
@@ -1423,13 +1461,16 @@ html.dark .song-list-table thead th {
 .song-list-table th:nth-child(5) { width: 15%; }
 .song-list-table th:nth-child(6) { width: 25%; }
 
-.song-list-table tbody tr { transition: background-color 0.15s ease; }
+.song-list-table tbody tr {
+  transition: background-color 0.15s ease;
+}
 
 .song-list-table tbody td {
-  padding: 10px 12px; vertical-align: middle;
+  padding: 10px 12px;
+  vertical-align: middle;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   color: #4d4d4d;
-  word-break: break-word; /* Prevent long text overflow */
+  word-break: break-word;
 }
 
 html.dark .song-list-table tbody td {
@@ -1437,110 +1478,107 @@ html.dark .song-list-table tbody td {
   color: var(--text-color-2);
 }
 
-.song-list-table tbody tr:nth-child(even) { background-color: rgba(0, 0, 0, 0.02); }
-html.dark .song-list-table tbody tr:nth-child(even) { background-color: var(--item-color-striped); }
-.song-list-table tbody tr:hover { background-color: rgba(0, 0, 0, 0.05); }
-html.dark .song-list-table tbody tr:hover { background-color: var(--item-color-hover); }
+.song-list-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+html.dark .song-list-table tbody tr:nth-child(even) {
+  background-color: var(--item-color-striped);
+}
+
+.song-list-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html.dark .song-list-table tbody tr:hover {
+  background-color: var(--item-color-hover);
+}
 
 .song-name {
-  display: flex; align-items: center; gap: 8px; font-weight: 600;
-  text-decoration: none; color: #2c2c2c;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #2c2c2c;
 }
 
-html.dark .song-name { color: var(--text-color-1); }
+html.dark .song-name {
+  color: var(--text-color-1);
+}
 
 .artist-link {
-  padding: 1px 0; cursor: pointer; text-decoration: none;
-  color: var(--text-color-2); /* Use theme primary for links */
+  padding: 1px 0;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-color-2);
   transition: color 0.2s ease, text-decoration 0.2s ease;
 }
-.artist-link:hover { text-decoration: underline; }
+
+.artist-link:hover {
+  text-decoration: underline;
+}
 
 .song-name :deep(.n-button .n-icon),
 .song-name :deep(.n-button .svg-icon) {
-  color: currentColor !important; fill: currentColor !important;
+  color: currentColor !important;
+  fill: currentColor !important;
 }
 
 .svg-icon {
-  display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em;
-  fill: currentColor; overflow: hidden;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
 }
 
 .no-results td {
-  padding: 30px 12px; text-align: center; font-style: italic; color: #999999;
+  padding: 30px 12px;
+  text-align: center;
+  font-style: italic;
+  color: #999999;
 }
 
-html.dark .no-results td { color: var(--text-color-3); }
+html.dark .no-results td {
+  color: var(--text-color-3);
+}
 
-/* Ensure NTag in table wraps properly */
 .song-list-table td .n-tag {
-    margin-bottom: 2px; /* Add slight spacing if tags wrap */
-    margin-right: 4px;
+  margin-bottom: 2px;
+  margin-right: 4px;
 }
-
-/* --- NEW: Selected Artist Highlight --- */
-.artist-link.selected-artist {
-  background-color: var(--primary-color-a4); /* 增加背景不透明度 */
-  border: 1px solid var(--primary-color-a6); /* 添加边框 */
-  font-weight: bold;
-  padding: 1px 3px; /* 调整内边距，使边框更明显 */
-  border-radius: 4px; /* 轻微调整圆角 */
-  color: var(--primary-color-dark); /* 亮色模式下使用较深的主题色文字 */
-  /* text-decoration: underline; */ /* 如果需要可以取消注释 */
-}
-
-html.dark .artist-link.selected-artist {
-    background-color: var(--primary-color-a6); /* 增加背景不透明度 */
-    border: 1px solid var(--primary-color-a8); /* 添加边框 */
-    color: var(--primary-color-light); /* 暗色模式下使用亮色文字 */
-}
-/* --- END: Selected Artist Highlight --- */
 
 /* Base style for clickable language */
 .language-link {
   padding: 1px 0;
   cursor: pointer;
   text-decoration: none;
-  color: var(--text-color-2); /* Use theme primary for links */
+  color: var(--text-color-2);
   transition: color 0.2s ease, text-decoration 0.2s ease;
 }
+
 .language-link:hover {
   text-decoration: underline;
 }
 
-/* --- NEW: Selected Artist/Language Highlight --- */
+/* Selected Artist/Language Highlight */
 .artist-link.selected-artist,
 .language-link.selected-language {
-  background-color: var(--primary-color-a4); /* 增加背景不透明度 */
-  border: 1px solid var(--primary-color-a6); /* 添加边框 */
+  background-color: var(--primary-color-a4);
+  border: 1px solid var(--primary-color-a6);
   font-weight: bold;
-  padding: 1px 3px; /* 调整内边距，使边框更明显 */
-  border-radius: 4px; /* 轻微调整圆角 */
-  color: var(--primary-color-dark); /* 亮色模式下使用较深的主题色文字 */
-  /* text-decoration: underline; */ /* 如果需要可以取消注释 */
+  padding: 1px 3px;
+  border-radius: 4px;
+  color: var(--primary-color-dark);
 }
 
 html.dark .artist-link.selected-artist,
 html.dark .language-link.selected-language {
-    background-color: var(--primary-color-a6); /* 增加背景不透明度 */
-    border: 1px solid var(--primary-color-a8); /* 添加边框 */
-    color: var(--primary-color-light); /* 暗色模式下使用亮色文字 */
-}
-/* --- END: Selected Artist/Language Highlight --- */
-
-.song-name :deep(.n-button .n-icon),
-.song-name :deep(.n-button .svg-icon) {
-  color: currentColor !important; fill: currentColor !important;
+  background-color: var(--primary-color-a6);
+  border: 1px solid var(--primary-color-a8);
+  color: var(--primary-color-light);
 }
 
-/* --- NEW: Style for empty placeholders --- */
-.empty-placeholder {
-  color: #999999; /* Use a standard gray color */
-  font-style: italic; /* Optional: make it italic */
-  font-size: 0.9em; /* Optional: slightly smaller */
-}
-
-html.dark .empty-placeholder {
-  color: var(--text-color-3); /* Use theme variable for dark mode */
-}
 </style>
