@@ -37,6 +37,7 @@ import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
 import { objectsToCSV } from '@/Utils'
 import PointUserDetailCard from './PointUserDetailCard.vue'
+import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
 // 用户积分设置类型定义
 interface PointUserSettings {
@@ -73,6 +74,7 @@ const isLoading = ref(true)
 const addPointCount = ref(0)
 const addPointReason = ref<string>('')
 const addPointTarget = ref<number>()
+const selectedTargetUserName = ref<string>()
 
 // 重置所有积分确认
 const resetConfirmText = ref('')
@@ -125,7 +127,7 @@ const userStats = computed(() => {
     total: users.value.length,
     authed: users.value.filter(u => u.isAuthed).length,
     totalPoints: Number(totalPoints.toFixed(1)),
-    totalOrders: users.value.reduce((sum, u) => sum + (u.orderCount || 0), 0),
+    totalOrders: users.value.reduce((sum, u) => sum + ((u.orderCount || 0) > 0 ? (u.orderCount || 0) : 0), 0),
     avgPoints: Number(avgPoints.toFixed(1)),
     filtered: filteredUsers.value.length,
   }
@@ -282,14 +284,16 @@ async function givePoint() {
 
   isLoading.value = true
   try {
-    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, {
+    const data = await QueryGetAPI<{ totalPoint: number, userName?: string, uId?: number }>(`${POINT_API_URL}give-point`, {
       uId: addPointTarget.value,
       count: addPointCount.value,
       reason: addPointReason.value || '',
     })
 
     if (data.code == 200) {
-      message.success('添加成功')
+      const userName = data.data?.userName || selectedTargetUserName.value || `UID: ${addPointTarget.value}`
+      const action = addPointCount.value > 0 ? '添加' : '扣除'
+      message.success(`成功为 ${userName} ${action}了 ${Math.abs(addPointCount.value)} 积分`)
       showGivePointModal.value = false
 
       // 重新加载用户数据
@@ -301,6 +305,7 @@ async function givePoint() {
       addPointCount.value = 0
       addPointReason.value = ''
       addPointTarget.value = undefined
+      selectedTargetUserName.value = undefined
     } else {
       message.error(`添加失败: ${data.message}`)
     }
@@ -615,21 +620,26 @@ onMounted(async () => {
         align="center"
         :gap="8"
       >
-        <NInputGroup style="max-width: 300px">
-          <NInputGroupLabel> 目标用户 </NInputGroupLabel>
-          <NInputNumber
+        <NFlex
+          vertical
+          :gap="4"
+          style="flex: 1"
+        >
+          <NText depth="3">
+            目标用户
+          </NText>
+          <BiliUserSelector
             v-model:value="addPointTarget"
-            type="number"
-            placeholder="请输入目标用户UID"
-            min="0"
+            placeholder="请输入B站用户UID"
+            @user-info-loaded="(userInfo) => selectedTargetUserName = userInfo?.name"
           />
-        </NInputGroup>
+        </NFlex>
         <NTooltip>
           <template #trigger>
             <NIcon :component="Info24Filled" />
           </template>
           <div class="tooltip-content">
-            <p>如果目标用户没在直播间发言过则无法显示用户名, 不过不影响使用</p>
+            <p>输入UID后会自动从B站获取用户信息</p>
             <p>因为UID和B站提供的OpenID不兼容, 未认证用户可能会出现两个记录, 不过在认证完成后会合并成一个</p>
           </div>
         </NTooltip>
