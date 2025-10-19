@@ -697,10 +697,24 @@ onUnmounted(() => {
                   <Question24Regular />
                 </NIcon>
               </template>
-              前往获取
+              前往幻星页面
             </NButton>
           </template>
-          在幻星页面右侧或者开播页获取推流地址旁边可以复制身份码
+          在幻星页面右侧 或者 <NButton
+            text
+            tag="a"
+            href="https://link.bilibili.com/p/center/index#/my-room/start-live"
+            target="_blank"
+            type="success"
+          >
+            开播页
+          </NButton>直播信息处可以获取
+          <br />
+          刷新身份码后需要在这里更新
+          <img
+            src="https://files.vtsuru.suki.club/updatelog/dbc2b6fe-fc85-42f3-9167-78f15abe74ce.png"
+            style="max-width: 400px; display: block; margin-top: 8px;"
+          />
         </NTooltip>
       </NInputGroup>
     </NSpace>
