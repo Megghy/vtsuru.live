@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { ResponseLiveInfoModel } from '@/api/api-models'
 import { NAlert, NDivider, NList, NListItem, NPagination, NSpace, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useStorage } from '@vueuse/core'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/components/LiveInfoContainer.vue'
 import { LIVE_API_URL } from '@/data/constants'
+
+defineOptions({ name: 'ManageLiveView' })
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -15,9 +18,16 @@ const route = useRoute()
 const router = useRouter()
 
 const lives = ref<ResponseLiveInfoModel[]>(await getAll())
-const page = ref(1)
-const pageSize = ref(10)
+const page = useSessionStorage<number>('ManageLive.page', 1)
+const pageSize = useStorage<number>('ManageLive.pageSize', 10)
 const defaultDanmakusCount = ref(0)
+
+watch([lives, pageSize], () => {
+  const total = lives.value.length
+  const size = pageSize.value || 10
+  const maxPage = Math.max(1, Math.ceil(total / size))
+  if (page.value > maxPage) page.value = maxPage
+})
 
 async function getAll() {
   try {

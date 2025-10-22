@@ -736,15 +736,29 @@ onMounted(() => {
           >
             <NElement>
               <!-- 已验证邮箱的用户显示内容 -->
-              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component }">
-                <KeepAlive>
+              <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
+                <template v-if="route.meta.keepAlive">
                   <Suspense>
-                    <component :is="Component" />
+                    <template #default>
+                      <KeepAlive>
+                        <component :is="Component" />
+                      </KeepAlive>
+                    </template>
                     <template #fallback>
                       <NSpin show />
                     </template>
                   </Suspense>
-                </KeepAlive>
+                </template>
+                <template v-else>
+                  <Suspense>
+                    <template #default>
+                      <component :is="Component" :key="route.fullPath" />
+                    </template>
+                    <template #fallback>
+                      <NSpin show />
+                    </template>
+                  </Suspense>
+                </template>
               </RouterView>
               <!-- 未验证邮箱的提示 -->
               <template v-else>
