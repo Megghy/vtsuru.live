@@ -38,6 +38,8 @@ const defaultSettings = {
   zongduCooldownSecond: 300,
   tiduCooldownSecond: 600,
   jianzhangCooldownSecond: 900,
+  enableWebCooldown: true,
+  webCooldownSecond: 600,
   isReverse: false,
 } as Setting_LiveRequest
 
@@ -323,6 +325,13 @@ async function updateSettings() {
       >
         启用点播冷却
       </NCheckbox>
+      <NCheckbox
+        v-model:checked="accountInfo.settings.songRequest.enableWebCooldown"
+        :disabled="!liveRequest.configCanEdit"
+        @update:checked="updateSettings"
+      >
+        启用网页点播冷却
+      </NCheckbox>
       <NSpace v-if="accountInfo.settings.songRequest.enableCooldown">
         <NInputGroup style="width: 250px">
           <NInputGroupLabel> 普通弹幕 </NInputGroupLabel>
@@ -383,6 +392,23 @@ async function updateSettings() {
           </NButton>
         </NInputGroup>
       </NSpace>
+      <NInputGroup
+        v-if="accountInfo.settings.songRequest.enableWebCooldown"
+        style="width: 250px"
+      >
+        <NInputGroupLabel> 网页点播 </NInputGroupLabel>
+        <NInputNumber
+          v-model:value="accountInfo.settings.songRequest.webCooldownSecond"
+          :disabled="!liveRequest.configCanEdit"
+        />
+        <NButton
+          type="info"
+          :disabled="!liveRequest.configCanEdit"
+          @click="updateSettings"
+        >
+          确定
+        </NButton>
+      </NInputGroup>
       <NDivider> OBS </NDivider>
       <NSpace align="center">
         <NInputGroup style="width: 220px">
