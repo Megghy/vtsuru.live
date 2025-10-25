@@ -4,7 +4,7 @@ import type {
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { cookie, useAccount } from '@/api/account'
+import { cookie, useAccount, GetSelfAccount } from '@/api/account'
 import {
   MasterRTCClient,
   SlaveRTCClient,
@@ -41,6 +41,14 @@ export const useWebRTC = defineStore('WebRTC', () => {
             if (!cookie.value.cookie && !route.query.token) {
               console.log('[RTC] 未登录, 跳过RTC初始化')
               return
+            }
+            // 当无 Cookie 但 url 上带 token 时，主动拉取账号信息，避免一直等待
+            if (!cookie.value.cookie && route.query.token) {
+              try {
+                await GetSelfAccount(route.query.token as string)
+              } catch (e) {
+                console.error('[RTC] 获取账号信息失败:', e)
+              }
             }
             while (!accountInfo.value.id) {
               await new Promise(resolve => setTimeout(resolve, 500))

@@ -171,6 +171,8 @@ export interface Setting_LiveRequest {
   zongduCooldownSecond: number
   tiduCooldownSecond: number
   jianzhangCooldownSecond: number
+  enableWebCooldown: boolean
+  webCooldownSecond: number
 
   allowGift: boolean
   giftNames?: string[]
