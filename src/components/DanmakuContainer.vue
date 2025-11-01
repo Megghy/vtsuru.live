@@ -2,9 +2,8 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
-import { useDebounceFn, useLocalStorage, useWindowSize } from '@vueuse/core'
+import { useDebounceFn, useLocalStorage } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { List } from 'linqts'
 import {
   NAvatar,
   NButton,
@@ -31,7 +30,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import DanmakuItem from '@/components/DanmakuItem.vue'
@@ -44,6 +43,7 @@ enum RankType {
   Danmaku,
   Paid,
 }
+
 interface RankInfo {
   ouId: string
   uName: string
@@ -60,7 +60,6 @@ const {
   itemHeight = 30,
   showLiveInfo = true,
   showLiver = false,
-  // to = ClickNameTo.UserHistory,
   isInModal = false,
   showName = true,
   showBorder = true,
@@ -79,56 +78,13 @@ const emit = defineEmits<{
 }>()
 
 const accountInfo = useAccount()
+const message = useMessage()
 
-const debouncedFn = useDebounceFn(() => {
-  UpdateDanmakus()
-}, 750)
 const isLoading = ref(false)
 const showModal = ref(false)
 const showExportModal = ref(false)
 const userDanmakus = ref<DanmakuModel[] | undefined>()
 const hideAvatar = useLocalStorage('Setting.HideAvatar', false)
-const { width } = useWindowSize()
-
-interface Props {
-  currentLive: ResponseLiveInfoModel
-  currentDanmakus: DanmakuModel[]
-  defaultFilterSelected?: EventDataTypes[]
-  height?: number
-  itemHeight?: number
-  showLiver?: boolean
-  showLiveInfo?: boolean
-  showName?: boolean
-  // to?: ClickNameTo;
-  isInModal?: boolean
-  showRank?: boolean
-  showBorder?: boolean
-  showTools?: boolean
-  showStatistic?: boolean
-  animeNum?: boolean
-  bordered?: boolean
-  toolsVisiable?: boolean
-  itemRange?: number
-  to: 'userDanmakus' | 'space'
-}
-
-defineExpose({
-  InsertDanmakus,
-})
-const danmakus = ref<DanmakuModel[]>([])
-watch(
-  () => showTools,
-  (newV, oldV) => {
-    innerShowTools.value = newV
-  },
-)
-const danmakuRef = computed(() => {
-  // 不知道为啥不能直接watch
-  return currentDanmakus
-})
-watch(danmakuRef, (newValue) => {
-  danmakus.value = GetFilteredDanmakus(newValue)
-})
 
 const keyword = ref('')
 const enableRegex = ref(false)
@@ -141,25 +97,243 @@ const orderDecreasing = ref(false)
 const orderByPrice = ref(false)
 const processing = ref(false)
 const isRanking = ref(false)
-const rankInfo = ref<RankInfo[]>([])
-const currentRankInfo = ref<RankInfo[]>([])
 const rankType = ref(RankType.Danmaku)
 const hideEmoji = ref(false)
-const existEnterMessage = ref(false)
 
 const exportType = ref<'json' | 'xml' | 'csv'>('json')
 const onlyExportFilteredDanmakus = ref(false)
 const isExporting = ref(false)
-const message = useMessage()
+
+let processingTimer: ReturnType<typeof setTimeout> | undefined
+
+const baseDanmakus = shallowRef<DanmakuModel[]>([])
+const dynamicDanmakus = shallowRef<DanmakuModel[]>([])
+
+interface Props {
+  currentLive: ResponseLiveInfoModel
+  currentDanmakus: DanmakuModel[]
+  defaultFilterSelected?: EventDataTypes[]
+  height?: number
+  itemHeight?: number
+  showLiver?: boolean
+  showLiveInfo?: boolean
+  showName?: boolean
+  isInModal?: boolean
+  showRank?: boolean
+  showBorder?: boolean
+  showTools?: boolean
+  showStatistic?: boolean
+  animeNum?: boolean
+  bordered?: boolean
+  toolsVisiable?: boolean
+  itemRange?: number
+  to: 'userDanmakus' | 'space'
+}
+
+function createDanmakuSignature(danmaku: DanmakuModel, index: number) {
+  const segments = []
+  if (danmaku.ouId) segments.push(`ou_${danmaku.ouId}`)
+  if (danmaku.uId) segments.push(`u_${danmaku.uId}`)
+  if (danmaku.time) segments.push(`t_${danmaku.time}`)
+  if (segments.length === 0) segments.push(`idx_${index}`)
+  return segments.join('_')
+}
+
+function normalizeDanmakuList(source: DanmakuModel[] | undefined | null, existingIds?: Set<string>) {
+  if (!source?.length) return []
+  const usedIds = existingIds ?? new Set<string>()
+  const normalized: DanmakuModel[] = []
+  source.forEach((item, index) => {
+    const baseId = item.id ?? createDanmakuSignature(item, index)
+    let candidateId = baseId
+    let suffix = 1
+    while (usedIds.has(candidateId)) {
+      candidateId = `${baseId}_${suffix++}`
+    }
+    normalized.push({
+      ...item,
+      id: candidateId,
+    })
+    usedIds.add(candidateId)
+  })
+  return normalized
+}
+
+function triggerProcessing(delay = 120) {
+  processing.value = true
+  if (processingTimer) {
+    clearTimeout(processingTimer)
+  }
+  processingTimer = setTimeout(() => {
+    processing.value = false
+  }, delay)
+}
+
+function UpdateDanmakus() {
+  triggerProcessing(80)
+}
+
+const debouncedFn = useDebounceFn(UpdateDanmakus, 750)
+
+watch(
+  () => showTools,
+  (value) => {
+    innerShowTools.value = value
+  },
+)
+
+watch(
+  () => rankType.value,
+  () => {
+    triggerProcessing(40)
+  },
+)
+
+watch(
+  () => currentDanmakus,
+  (list) => {
+    const normalized = normalizeDanmakuList(list)
+    const baseIds = new Set(normalized.map(item => item.id))
+    const filteredDynamic = dynamicDanmakus.value.filter(item => !baseIds.has(item.id))
+    baseDanmakus.value = normalized
+    if (filteredDynamic.length !== dynamicDanmakus.value.length) {
+      dynamicDanmakus.value = filteredDynamic
+    }
+    triggerProcessing(normalized.length ? 80 : 0)
+  },
+  { immediate: true, deep: true },
+)
+
+const combinedDanmakus = computed(() => {
+  if (!dynamicDanmakus.value.length) {
+    return baseDanmakus.value
+  }
+  if (!baseDanmakus.value.length) {
+    return dynamicDanmakus.value
+  }
+  return [...baseDanmakus.value, ...dynamicDanmakus.value]
+})
+
+const existEnterMessage = computed(() =>
+  combinedDanmakus.value.some(item => item.type === EventDataTypes.Enter),
+)
+
+const filteredDanmakus = computed(() => {
+  const source = combinedDanmakus.value
+  if (!source.length) return []
+
+  const selectedTypes = new Set(filterSelected.value)
+  let working = source.filter(item => selectedTypes.has(item.type))
+
+  if (hideEmoji.value) {
+    working = working.filter(item => item.type !== EventDataTypes.Message || !item.isEmoji)
+  }
+
+  const keywordValue = keyword.value.trim()
+  if (keywordValue !== '') {
+    let regex: RegExp | null = null
+    if (enableRegex.value) {
+      try {
+        regex = new RegExp(keywordValue)
+      } catch {
+        regex = null
+      }
+    }
+    const keywordLower = keywordValue.toLowerCase()
+    const matcher = (item: DanmakuModel) => {
+      if (item.uId != null && item.uId.toString() === keywordValue) return true
+      if (item.uName && item.uName === keywordValue) return true
+      const message = item.msg ?? ''
+      if (!message) return false
+      if (regex) {
+        return regex.test(message)
+      }
+      return message.toLowerCase().includes(keywordLower)
+    }
+    working = working.filter(item => (deselect.value ? !matcher(item) : matcher(item)))
+  }
+
+  if (price.value && price.value > 0) {
+    const minPrice = price.value
+    working = working.filter(item => (item.price ?? 0) >= (minPrice ?? 0))
+  }
+
+  if (orderByPrice.value) {
+    working = working
+      .filter(item => item.type !== EventDataTypes.Message)
+      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+  } else {
+    working = [...working].sort((a, b) => a.time - b.time)
+  }
+
+  if (orderDecreasing.value) {
+    working.reverse()
+  }
+
+  return working
+})
+
+const filteredDanmakuCount = computed(() => filteredDanmakus.value.length)
+const totalDanmakuCount = computed(() => combinedDanmakus.value.length)
+const totalFilteredPrice = computed(() =>
+  filteredDanmakus.value.reduce((sum, item) => sum + (item.price && item.price > 0 ? item.price : 0), 0),
+)
+
+const rankStats = computed(() => aggregateRankStats(combinedDanmakus.value))
+const currentRankInfo = computed(() => buildRankedList(rankStats.value, rankType.value))
+
+function aggregateRankStats(source: DanmakuModel[]): RankInfo[] {
+  if (!source.length) return []
+  const ranking = new Map<string, RankInfo>()
+  source.forEach((item, index) => {
+    const key = item.ouId || (item.uId != null ? `uid_${item.uId}` : `idx_${index}`)
+    let info = ranking.get(key)
+    if (!info) {
+      info = {
+        ouId: item.ouId || key,
+        uName: item.uName ?? '未命名用户',
+        Paid: 0,
+        Danmakus: 0,
+        Index: 0,
+      }
+      ranking.set(key, info)
+    } else if (item.uName) {
+      info.uName = item.uName
+    }
+    if (item.type === EventDataTypes.Message) {
+      info.Danmakus += 1
+    }
+    if (typeof item.price === 'number') {
+      info.Paid += item.price
+    }
+  })
+  return Array.from(ranking.values())
+}
+
+function buildRankedList(stats: RankInfo[], type: RankType) {
+  if (!stats.length) return []
+  const filtered = stats
+    .filter(info => (type === RankType.Paid ? info.Paid > 0 : true))
+    .map(info => ({ ...info }))
+  filtered.sort((a, b) =>
+    type === RankType.Danmaku ? b.Danmakus - a.Danmakus : b.Paid - a.Paid,
+  )
+  const limited = filtered.slice(0, 100)
+  limited.forEach((info, idx) => {
+    info.Index = idx + 1
+  })
+  return limited
+}
 
 function OnNameClick(uId: number, ouId: string) {
   if (isInModal) {
     emit('onClickName', uId, ouId)
     return
   }
+  const sourceDanmakus = combinedDanmakus.value
   switch (to) {
     case 'userDanmakus': {
-      userDanmakus.value = currentDanmakus.filter(d => (d.uId ? d.uId == uId : d.ouId == ouId))
+      userDanmakus.value = sourceDanmakus.filter(d => (d.uId ? d.uId === uId : d.ouId === ouId))
       showModal.value = true
       break
     }
@@ -176,6 +350,7 @@ function OnNameClick(uId: number, ouId: string) {
     }
   }
 }
+
 function ToUserSpace(uId: number) {
   showModal.value = false
   nextTick(() => {
@@ -187,71 +362,56 @@ function ToUserSpace(uId: number) {
     })
   })
 }
+
 function ChangePrice(p: number) {
-  if (p == price.value) {
+  if (p === price.value) {
     price.value = undefined
   } else {
     price.value = p
   }
   UpdateDanmakus()
 }
-function UpdateDanmakus() {
-  processing.value = true
-  nextTick(() => {
-    setTimeout(() => {
-      canInsert = false
-      danmakus.value = GetFilteredDanmakus()
-      setTimeout(() => {
-        canInsert = true
-      }, 1000) // 立马就能的话会莫名key重复
-      processing.value = false
-    }, 50)
-  })
-}
+
 function OnRank(isRank: boolean) {
-  if (isRank) OnRankDirect(rankType.value, rankInfo.value.length == 0 && danmakus.value.length > 0)
-}
-function OnRankDirect(type: RankType, refresh: boolean, orderByDescending = true) {
-  if (refresh) {
-    const rank = {} as {
-      [ouId: string]: RankInfo
-    }
-    currentDanmakus.forEach((danmaku) => {
-      if (danmaku.ouId in rank) {
-        if (danmaku.type == EventDataTypes.Message) rank[danmaku.ouId].Danmakus++
-        rank[danmaku.ouId].Paid += danmaku.price ?? 0
-      } else {
-        rank[danmaku.ouId] = {
-          // uId: danmaku.uId,
-          ouId: danmaku.ouId,
-          uName: danmaku.uName,
-          Paid: danmaku.price ?? 0,
-          Danmakus: danmaku.type == EventDataTypes.Message ? 1 : 0,
-          Index: 0,
-        }
-      }
-    })
-    rankInfo.value = new List(Object.entries(rank)).Select(([uId, user]) => user).ToArray()
+  if (isRank) {
+    triggerProcessing(60)
   }
-  let ienum = {} as List<RankInfo>
-  switch (rankType.value) {
-    case RankType.Danmaku: {
-      ienum = new List(rankInfo.value).OrderByDescending(user => user.Danmakus)
-      break
-    }
-    case RankType.Paid: {
-      ienum = new List(rankInfo.value).Where(user => (user?.Paid ?? 0) > 0).OrderByDescending(user => user.Paid)
-      break
-    }
-  }
-  if (!orderByDescending) ienum = ienum.Reverse()
-  currentRankInfo.value = ienum.Take(100).ToArray()
-  let index = 1
-  currentRankInfo.value.forEach((info) => {
-    info.Index = index
-    index++
-  })
 }
+
+function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
+  if (!Array.isArray(targetDanmakus) || targetDanmakus.length === 0) return
+  const existingIds = new Set<string>([
+    ...baseDanmakus.value.map(item => item.id),
+    ...dynamicDanmakus.value.map(item => item.id),
+  ])
+  const normalized = normalizeDanmakuList(targetDanmakus, existingIds)
+  if (!normalized.length) return
+  dynamicDanmakus.value = orderDecreasing.value
+    ? [...normalized, ...dynamicDanmakus.value]
+    : [...dynamicDanmakus.value, ...normalized]
+  triggerProcessing(40)
+}
+
+function Export() {
+  isExporting.value = true
+  const source = onlyExportFilteredDanmakus.value ? filteredDanmakus.value : combinedDanmakus.value
+  saveAs(
+    new Blob(
+      [
+        GetString(
+          accountInfo.value,
+          currentLive,
+          source,
+          exportType.value,
+        ),
+      ],
+      { type: 'text/plain;charset=utf-8' },
+    ),
+    `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
+  )
+  isExporting.value = false
+}
+
 function GetRankIndexColor(index: number) {
   switch (index) {
     case 1:
@@ -264,86 +424,22 @@ function GetRankIndexColor(index: number) {
       return 'background:#afafaf;'
   }
 }
-function Export() {
-  isExporting.value = true
-  saveAs(
-    new Blob(
-      [
-        GetString(
-          accountInfo.value,
-          currentLive,
-          onlyExportFilteredDanmakus.value ? danmakus.value : currentDanmakus,
-          exportType.value,
-        ),
-      ],
-      { type: 'text/plain;charset=utf-8' },
-    ),
-    `${Date.now()}_${currentLive.startAt}_${currentLive.title.replace('_', '-')}_${accountInfo.value?.name}.${exportType.value}`,
-  )
-  isExporting.value = false
-}
-let canInsert = false
-function InsertDanmakus(targetDanmakus: DanmakuModel[]) {
-  if (processing.value || !canInsert) {
-    return
-  }
-  const data = GetFilteredDanmakus(targetDanmakus)
-  if (orderDecreasing.value) {
-    danmakus.value.unshift(...data)
-    currentDanmakus.unshift(...data)
-  } else {
-    danmakus.value.push(...data)
-    currentDanmakus.push(...data)
-  }
-}
-function GetFilteredDanmakus(targetDanmakus?: DanmakuModel[]) {
-  if (!targetDanmakus) targetDanmakus = currentDanmakus
-  let tempDanmakus = targetDanmakus.filter(d => filterSelected.value.includes(d.type))
-  if (hideEmoji.value) {
-    tempDanmakus = tempDanmakus.filter(d => d.type != EventDataTypes.Message || !d.isEmoji)
-  }
-  if (orderByPrice.value) {
-    tempDanmakus = tempDanmakus
-      .filter(d => d.type != EventDataTypes.Message)
-      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
-  } else {
-    tempDanmakus = tempDanmakus.sort((a, b) => a.time - b.time)
-  }
 
-  if (keyword.value && keyword.value != '') {
-    tempDanmakus = tempDanmakus.filter(d => (deselect.value ? !CheckKeyword(d) : CheckKeyword(d)))
-  }
-  function CheckKeyword(d: DanmakuModel) {
-    if (d.uId.toString() == keyword.value || d.uName == keyword.value) {
-      return true
-    }
-    return enableRegex.value
-      ? !!d.msg?.match(keyword.value)
-      : d.msg?.toLowerCase().includes(keyword.value.toLowerCase()) == true
-  }
-  if (price.value && price.value > 0) {
-    tempDanmakus = tempDanmakus.filter(d => (d.price ?? 0) >= (price.value ?? 0))
-  }
-  if (orderDecreasing.value) tempDanmakus = tempDanmakus.reverse()
-  let index = 0
-  tempDanmakus.forEach((d) => {
-    d.id = `${d.ouId}_${d.time}_${index}`
-    index++
-  })
-  return tempDanmakus
-}
 function RoundNumber(num: number) {
   if (Number.isInteger(num)) {
     return num
-  } else {
-    return num.toFixed(1)
   }
+  return num.toFixed(1)
 }
 
-onMounted(() => {
-  danmakus.value = GetFilteredDanmakus()
-  existEnterMessage.value = danmakus.value.some(d => d.type == EventDataTypes.Message)
-  // defaultFilterSelected.push(EventDataTypes.Enter)
+onBeforeUnmount(() => {
+  if (processingTimer) {
+    clearTimeout(processingTimer)
+  }
+})
+
+defineExpose({
+  InsertDanmakus,
 })
 </script>
 
@@ -681,8 +777,8 @@ onMounted(() => {
             style="font-size: 12px"
             size="small"
           >
-            {{ danmakus.length }}
-            {{ danmakus.length != currentDanmakus.length ? `/ ${currentDanmakus.length}` : '' }}
+            {{ filteredDanmakuCount }}
+            {{ filteredDanmakuCount !== totalDanmakuCount ? `/ ${totalDanmakuCount}` : '' }}
             条
           </NTag>
           <NDivider vertical />
@@ -693,14 +789,14 @@ onMounted(() => {
             :bordered="false"
           >
             💰
-            {{ RoundNumber(danmakus.reduce((a, b) => a + (b.price && b.price > 0 ? b.price : 0), 0)) }}
+            {{ RoundNumber(totalFilteredPrice) }}
           </NTag>
         </NDivider>
       </NCollapseTransition>
       <div :style="isRanking ? 'display:none' : ''">
         <SimpleVirtualList
-          v-if="danmakus.length > itemRange"
-          :items="danmakus"
+          v-if="filteredDanmakuCount > itemRange"
+          :items="filteredDanmakus"
           :default-size="itemHeight"
           :default-height="height ?? 1000"
         >
@@ -718,7 +814,7 @@ onMounted(() => {
           </template>
         </SimpleVirtualList>
         <p
-          v-for="item in danmakus"
+          v-for="item in filteredDanmakus"
           v-else
           :key="item.id"
           :style="`min-height: ${itemHeight}px;width:97%;display:flex;align-items:center;`"
@@ -737,11 +833,6 @@ onMounted(() => {
         <NRadioGroup
           v-model:value="rankType"
           size="small"
-          @update:value="
-            (type) => {
-              OnRankDirect(type, false)
-            }
-          "
         >
           <NRadioButton :value="RankType.Danmaku">
             弹幕

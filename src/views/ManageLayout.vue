@@ -34,16 +34,18 @@ import {
   NPageHeader,
   NPopconfirm,
   NScrollbar,
+  NSelect,
   NSlider,
   NSpace,
   NSpin,
   NSwitch,
   NTag,
   NText,
+  NTime,
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 import { RouterLink, useRoute } from 'vue-router'
@@ -51,7 +53,7 @@ import { cookie, isLoadingAccount, useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { ACCOUNT_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey } from '@/data/constants'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import { isDarkMode, NavigateToNewTab } from '@/Utils'
@@ -179,6 +181,45 @@ const currentPlayingInfo = computed(() => {
 // 邮箱验证相关
 const canResendEmail = ref(false)
 const isBiliVerified = computed(() => accountInfo.value?.isBiliVerified)
+
+// 加载超时检测
+const loadingTimeout = ref(false)
+const showAPISwitchDialog = ref(false)
+let loadingTimer: number | null = null
+
+// 监听加载状态，设置3秒超时
+watch(isLoadingAccount, (loading) => {
+  if (loading) {
+    loadingTimeout.value = false
+    showAPISwitchDialog.value = false
+    loadingTimer = window.setTimeout(() => {
+      if (isLoadingAccount.value) {
+        loadingTimeout.value = true
+        // 如果当前使用主API，提示切换到备用API
+        if (selectedAPIKey.value === 'main') {
+          showAPISwitchDialog.value = true
+        }
+      }
+    }, 3000)
+  } else {
+    if (loadingTimer) {
+      clearTimeout(loadingTimer)
+      loadingTimer = null
+    }
+    loadingTimeout.value = false
+    showAPISwitchDialog.value = false
+  }
+}, { immediate: true })
+
+// 切换API
+function switchToBackupAPI() {
+  selectedAPIKey.value = 'failover'
+  message.info('已切换到备用API，正在重新加载...')
+  showAPISwitchDialog.value = false
+  setTimeout(() => {
+    location.reload()
+  }, 500)
+}
 
 // 图标渲染函数 - 用于菜单项
 const renderIcon = (icon: any) => () => h(NIcon, null, { default: () => h(icon) })
@@ -613,6 +654,13 @@ onMounted(() => {
     if ((accountInfo.value?.nextSendEmailTime ?? -1) <= 0) {
       canResendEmail.value = true
     }
+  }
+})
+
+onUnmounted(() => {
+  if (loadingTimer) {
+    clearTimeout(loadingTimer)
+    loadingTimer = null
   }
 })
 </script>
@@ -1124,6 +1172,24 @@ onMounted(() => {
             <NSpin :loading="isLoadingAccount" size="large">
               <NText>正在请求账户数据...</NText>
             </NSpin>
+            <NAlert
+              v-if="showAPISwitchDialog"
+              type="warning"
+              style="margin-top: 20px; max-width: 400px;"
+              title="加载时间较长"
+            >
+              <NSpace vertical>
+                <NText>当前API响应较慢，是否切换到备用API？</NText>
+                <NFlex justify="end" :size="8">
+                  <NButton size="small" @click="showAPISwitchDialog = false">
+                    继续等待
+                  </NButton>
+                  <NButton type="primary" size="small" @click="switchToBackupAPI">
+                    切换到备用API
+                  </NButton>
+                </NFlex>
+              </NSpace>
+            </NAlert>
           </NFlex>
         </NCard>
       </template>

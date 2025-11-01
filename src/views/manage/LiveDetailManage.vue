@@ -59,32 +59,12 @@ async function loadInitialData() {
   }
 }
 
-function eventModelToDanmakuModel(event: EventModel): DanmakuModel {
-  return {
-    ouId: event.ouid,
-    uId: event.uid ?? 0,
-    uName: event.uname,
-    msg: event.msg ?? '',
-    time: event.time,
-    type: event.type,
-    price: event.price,
-    num: event.num,
-    guardLevel: event.guard_level,
-    fansMedalLevel: event.fans_medal_level,
-    fansMedalName: event.fans_medal_name,
-    fansMedalWearingStatus: event.fans_medal_wearing_status,
-    isEmoji: !!event.emoji,
-    emoji: event.emoji,
-    id: `${event.ouid}_${event.time}_${Date.now()}`,
-  } as DanmakuModel
-}
-
-function onNewDanmaku(event: EventModel) {
+function onNewDanmaku(event: DanmakuModel) {
   if (!liveInfo.value) return
-  
-  const danmaku = eventModelToDanmakuModel(event)
-  danmakuContainerRef.value?.InsertDanmakus([danmaku])
-  
+  console.log('New Danmaku:', event)
+
+  danmakuContainerRef.value?.InsertDanmakus([event])
+
   // 更新统计信息
   if (event.price && event.price > 0) {
     liveInfo.value.live.totalIncome += event.price
