@@ -16,6 +16,7 @@ import {
   NInputGroup,
   NModal,
   NPopconfirm,
+  NSelect,
   NSpace,
   NTabPane,
   NTabs,
@@ -31,7 +32,7 @@ import { cookie, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
-import { ACCOUNT_API_URL, CN_HOST, TURNSTILE_KEY } from '@/data/constants'
+import { ACCOUNT_API_URL, availableAPIs, CN_HOST, selectedAPIKey, TURNSTILE_KEY } from '@/data/constants'
 import { checkUpdateNote } from '@/data/UpdateNote'
 import SettingPaymentView from './Setting_PaymentView.vue'
 import SettingsManageView from './SettingsManageView.vue'
@@ -62,6 +63,20 @@ const newPassword2 = ref('')
 const biliCode = ref('')
 const biliAuthText = ref('')
 const isLoading = ref(false)
+
+// API选择器选项
+const apiOptions = availableAPIs.map(api => ({
+  label: api.name,
+  value: api.key,
+}))
+
+// 切换API
+function handleAPIChange(value: string) {
+  message.info(`正在切换到${availableAPIs.find(api => api.key === value)?.name}...`)
+  setTimeout(() => {
+    location.reload()
+  }, 500)
+}
 
 function logout() {
   cookie.value = undefined
@@ -545,6 +560,26 @@ onUnmounted(() => {
                 </NInputGroup>
               </NAlert>
             </NSpace>
+            <NDivider />
+            
+          <NAlert
+            type="info"
+            title="API 设置"
+            style="width: 100%; max-width: 800px; margin-bottom: 16px;"
+          >
+            <NFlex align="center" :wrap="false" style="gap: 12px;">
+              <NText>当前使用的API:</NText>
+              <NSelect
+                v-model:value="selectedAPIKey"
+                :options="apiOptions"
+                style="flex: 1; max-width: 200px;"
+                @update:value="handleAPIChange"
+              />
+              <NText depth="3" style="font-size: 12px;">
+                如果访问速度较慢可以尝试切换API
+              </NText>
+            </NFlex>
+          </NAlert>
             <NDivider />
             <NSpace justify="center">
               <NButton

@@ -1,4 +1,5 @@
 import { defineAsyncComponent, markRaw, ref } from 'vue'
+import { useStorage } from '@vueuse/core'
 
 const debugAPI
   = import.meta.env.VITE_API == 'dev'
@@ -17,6 +18,42 @@ export const FILE_BASE_URL = 'https://files.vtsuru.suki.club'
 export const IMGUR_URL = `${FILE_BASE_URL}/imgur/`
 export const THINGS_URL = `${FILE_BASE_URL}/things/`
 export const apiFail = ref(false)
+
+// API 配置
+export interface APIConfig {
+  name: string
+  url: string
+  key: string
+}
+
+export const availableAPIs: APIConfig[] = [
+  { name: '主API (国内)', url: releseAPI, key: 'main' },
+  { name: '备用API (国外)', url: failoverAPI, key: 'failover' },
+]
+
+// 从 localStorage 读取用户选择的 API，默认使用主 API
+export const selectedAPIKey = useStorage<string>('Settings.SelectedAPI', 'main')
+
+// 获取当前选择的 API URL
+export function getCurrentAPIUrl(): string {
+  if (import.meta.env.NODE_ENV === 'development') {
+    return debugAPI
+  }
+  const selected = availableAPIs.find(api => api.key === selectedAPIKey.value)
+  return selected?.url || releseAPI
+}
+
+// 将URL映射到当前选择的API
+export function mapToCurrentAPI(url: string): string {
+  if (import.meta.env.NODE_ENV === 'development') {
+    return url // 开发环境不替换
+  }
+  const currentAPI = getCurrentAPIUrl()
+  // 替换所有已知的API域名为当前选择的API
+  return url
+    .replace(releseAPI, currentAPI)
+    .replace(failoverAPI, currentAPI)
+}
 
 export const BASE_URL
   = import.meta.env.NODE_ENV === 'development'

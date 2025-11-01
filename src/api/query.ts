@@ -1,5 +1,5 @@
 import type { APIRoot, PaginationResponse } from './api-models'
-import { apiFail } from '@/data/constants'
+import { apiFail, mapToCurrentAPI } from '@/data/constants'
 import { cookie } from './account'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -76,7 +76,9 @@ async function QueryPostAPIWithParamsInternal<T>(
 }
 async function QueryAPIInternal<T>(url: URL, init: RequestInit) {
   try {
-    const data = await fetch(url, init)
+    // 使用用户选择的API
+    const mappedUrl = mapToCurrentAPI(url.toString())
+    const data = await fetch(mappedUrl, init)
     const result = (await data.json()) as T
     return result
   } catch (e) {
