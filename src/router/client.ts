@@ -60,6 +60,15 @@ export default {
       },
     },
     {
+      path: 'live-manage',
+      name: 'client-live-manage',
+      component: async () => import('@/client/ClientLiveManage.vue'),
+      meta: {
+        title: '直播管理',
+        forceReload: true,
+      },
+    },
+    {
       path: 'danmaku-window',
       name: 'client-danmaku-window-redirect',
       redirect: {

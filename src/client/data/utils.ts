@@ -5,7 +5,7 @@ import { OPEN_LIVE_API_URL } from '@/data/constants'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 
-export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true) {
+export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: string = '', useCookie: boolean = true, body?: string | URLSearchParams) {
   const u = new URL(url)
   console.log(`调用bilibili api: ${url}`)
   const userAgents = [
@@ -17,13 +17,21 @@ export async function QueryBiliAPI(url: string, method: string = 'GET', cookie: 
   ]
   const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)]
 
+  const headers: Record<string, string> = {
+    'User-Agent': randomUserAgent,
+    'Origin': 'https://www.bilibili.com',
+    'Referer': 'https://live.bilibili.com/',
+    'Cookie': useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : '',
+  }
+
+  if (body) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+  }
+
   return fetch(url, {
     method,
-    headers: {
-      'User-Agent': randomUserAgent,
-      'Origin': 'https://www.bilibili.com',
-      'Cookie': useCookie ? (cookie || (await useBiliCookie().getBiliCookie()) || '') : '',
-    },
+    headers,
+    body: body instanceof URLSearchParams ? body.toString() : body,
   })
 }
 

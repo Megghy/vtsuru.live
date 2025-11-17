@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useElementSize } from '@vueuse/core'
+import { Live24Filled, CloudArchive24Filled, FlashAuto24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
 import { cookie, useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { roomInfo } from './data/info'
@@ -24,22 +25,55 @@ function logout() {
 
 <template>
   <NFlex
+    class="client-index-layout"
     justify="center"
-    align="center"
+    align="flex-start"
     gap="large"
+    wrap
   >
     <NCard
       title="首页"
       embedded
       size="small"
+      class="client-index-card"
     >
-      <div>
-        你好, {{ accountInfo.name }}
-      </div>
+      <NFlex
+        vertical
+        gap="small"
+      >
+        <NText>
+          你好, {{ accountInfo.name }}
+        </NText>
+
+        <NDivider style="margin: 8px 0" />
+
+        <NText depth="3" style="font-size: 13px;">
+          快速入口
+        </NText>
+
+        <NFlex
+          vertical
+          gap="8"
+          style="margin-top: 4px;"
+        >
+          <NButton
+            type="primary"
+            block
+            class="client-index-quick-entry-button"
+            @click="$router.push({ name: 'client-live-manage' })"
+          >
+            <template #icon>
+              <NIcon :component="Live24Filled" />
+            </template>
+            进入直播管理
+          </NButton>
+        </NFlex>
+      </NFlex>
     </NCard>
     <NCard
       title="账号"
       embedded
+      class="client-index-card"
     >
       <div>
         <NFlex
@@ -90,7 +124,7 @@ function logout() {
         </div>
       </template>
     </NCard>
-    <NCard>
+    <NCard class="client-index-card">
       <template #header>
         <NSpace align="center">
           直播状态
@@ -142,3 +176,19 @@ function logout() {
     </NCard>
   </NFlex>
 </template>
+
+<style scoped>
+  .client-index-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .client-index-card {
+    min-width: 260px;
+  }
+
+  .client-index-quick-entry-button + .client-index-quick-entry-button {
+    margin-top: 4px;
+  }
+</style>

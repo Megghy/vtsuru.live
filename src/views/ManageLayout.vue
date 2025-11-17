@@ -655,6 +655,10 @@ onMounted(() => {
       canResendEmail.value = true
     }
   }
+
+  if (selectedAPIKey.value != 'main') {
+    message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
+  }
 })
 
 onUnmounted(() => {

@@ -1,4 +1,4 @@
-import type { Component, DefineComponent } from 'vue'
+import { defineAsyncComponent, type Component, DefineComponent } from 'vue'
 
 /**
  * OBS 组件定义接口

@@ -71,6 +71,7 @@ import {
   NRadioGroup,
   NSpin,
   NStatistic,
+  NSwitch,
   NTabPane,
   NTabs,
   NTag,
@@ -85,7 +86,7 @@ import { useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { getLoginInfoAsync, getLoginUrlDataAsync } from './data/biliLogin'
 import { currentStatistic, getHistoricalStatistics, streamingInfo } from './data/info'
-import { callStartDanmakuClient } from './data/initialize'
+import { callStartDanmakuClient, resetDanmakuClientInitState } from './data/initialize'
 import { COOKIE_CLOUD_KEY, useBiliCookie } from './store/useBiliCookie'
 import { useSettings } from './store/useSettings'
 import { useTauriStore } from './store/useTauriStore'
@@ -607,6 +608,30 @@ async function logout() {
   message.info('已退出登录')
 }
 
+// 处理 EventFetcher 开关切换
+async function handleToggleEventFetcher(enabled: boolean) {
+  await settings.save()
+  
+  if (enabled) {
+    // 启用 EventFetcher
+    message.info('正在启动 EventFetcher...')
+    const result = await callStartDanmakuClient()
+    if (result.success) {
+      message.success('EventFetcher 已启动')
+    } else {
+      message.error(`EventFetcher 启动失败: ${result.message}`)
+    }
+  } else {
+    // 禁用 EventFetcher
+    if (webfetcher.state !== 'disconnected') {
+      webfetcher.Stop()
+      message.info('EventFetcher 已停止')
+    }
+    // 重置弹幕客户端初始化状态，确保重新启用时能正确连接
+    resetDanmakuClientInitState()
+  }
+}
+
 // --- Watchers ---
 watch(() => webfetcher.state, (newState) => {
   if (newState === 'connected') {
@@ -727,33 +752,101 @@ onUnmounted(() => {
       embedded
       style="width: 100%; max-width: 800px;"
     >
-      <NFlex vertical>
-        <NRadioGroup
-          v-model:value="settings.settings.useDanmakuClientType"
-          :disabled="webfetcher.state === 'connecting'"
-          @update-value="v => onSwitchDanmakuClientMode(v)"
-        >
-          <NRadioButton value="openlive">
-            开放平台
-          </NRadioButton>
-          <NRadioButton
-            value="direct"
-            :disabled="!biliCookie.isCookieValid"
+      <NFlex
+        vertical
+        gap="large"
+      >
+        <!-- EventFetcher 功能开关 -->
+        <div>
+          <NFlex
+            align="center"
+            justify="space-between"
+            style="margin-bottom: 0.5rem;"
           >
-            <NTooltip v-if="!biliCookie.isCookieValid">
-              <template #trigger>
-                直接连接
+            <div>
+              <NText strong>
+                EventFetcher 功能
+              </NText>
+              <NTooltip>
+                <template #trigger>
+                  <NIcon
+                    :component="HelpCircle"
+                    style="margin-left: 0.25rem; cursor: help;"
+                  />
+                </template>
+                <div style="max-width: 300px;">
+                  <p style="margin: 0 0 8px;">启用后，系统将会：</p>
+                  <ul style="padding-left: 18px; margin: 0;">
+                    <li>连接到 SignalR 服务器</li>
+                    <li>启动弹幕客户端接收直播间消息</li>
+                    <li>收集并上传直播间事件数据</li>
+                    <li>显示实时统计信息</li>
+                  </ul>
+                  <p style="margin: 8px 0 0;">关闭后，所有 EventFetcher 相关功能将停止工作。</p>
+                </div>
+              </NTooltip>
+            </div>
+            <NSwitch
+              v-model:value="settings.settings.enableEventFetcher"
+              :disabled="webfetcher.state === 'connecting'"
+              @update:value="handleToggleEventFetcher"
+            >
+              <template #checked>
+                已启用
               </template>
-              请先登录 B 站账号以使用直接连接模式
-            </NTooltip>
-            <NText v-else>
-              直接连接
-            </NText>
-          </NRadioButton>
-        </NRadioGroup>
+              <template #unchecked>
+                已禁用
+              </template>
+            </NSwitch>
+          </NFlex>
+          <NAlert
+            v-if="!settings.settings.enableEventFetcher"
+            type="warning"
+            :bordered="false"
+            style="margin-top: 0.5rem;"
+          >
+            EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传
+          </NAlert>
+        </div>
+
+        <NDivider style="margin: 0;" />
+
+        <!-- 弹幕客户端模式选择 -->
+        <div>
+          <NText
+            strong
+            style="display: block; margin-bottom: 0.5rem;"
+          >
+            弹幕客户端模式
+          </NText>
+          <NRadioGroup
+            v-model:value="settings.settings.useDanmakuClientType"
+            :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
+            @update-value="v => onSwitchDanmakuClientMode(v)"
+          >
+            <NRadioButton value="openlive">
+              开放平台
+            </NRadioButton>
+            <NRadioButton
+              value="direct"
+              :disabled="!biliCookie.isCookieValid || !settings.settings.enableEventFetcher"
+            >
+              <NTooltip v-if="!biliCookie.isCookieValid">
+                <template #trigger>
+                  直接连接
+                </template>
+                请先登录 B 站账号以使用直接连接模式
+              </NTooltip>
+              <NText v-else>
+                直接连接
+              </NText>
+            </NRadioButton>
+          </NRadioGroup>
+        </div>
+
         <NPopconfirm
           type="info"
-          :disabled="webfetcher.state === 'connecting'"
+          :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
           @positive-click="async () => {
             await onSwitchDanmakuClientMode(settings.settings.useDanmakuClientType, true);
             message.success('已重启弹幕服务器');
@@ -762,8 +855,8 @@ onUnmounted(() => {
           <template #trigger>
             <NButton
               type="error"
-              style="max-width: 150px;"
-              :disabled="webfetcher.state === 'connecting'"
+              style="max-width: 180px;"
+              :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
             >
               强制重启弹幕客户端
             </NButton>
@@ -777,6 +870,7 @@ onUnmounted(() => {
 
     <!-- Overall Status & Connection Details -->
     <NCard
+      v-if="settings.settings.enableEventFetcher"
       title="运行状态 & 连接"
       embedded
       style="width: 100%; max-width: 800px;"
@@ -1148,7 +1242,7 @@ onUnmounted(() => {
 
     <!-- Live Stream Info -->
     <NCard
-      v-if="settings.settings.useDanmakuClientType === 'openlive'"
+      v-if="settings.settings.enableEventFetcher && settings.settings.useDanmakuClientType === 'openlive'"
       title="直播间信息"
       embedded
       style="width: 100%; max-width: 800px;"
@@ -1207,6 +1301,7 @@ onUnmounted(() => {
 
     <!-- Session Statistics -->
     <NCard
+      v-if="settings.settings.enableEventFetcher"
       title="会话实时统计"
       embedded
       style="width: 100%; max-width: 800px;"
@@ -1286,6 +1381,7 @@ onUnmounted(() => {
 
     <!-- Daily Statistics -->
     <NCard
+      v-if="settings.settings.enableEventFetcher"
       title="今日统计"
       embedded
       style="width: 100%; max-width: 800px;"
@@ -1346,6 +1442,7 @@ onUnmounted(() => {
 
     <!-- Historical Statistics -->
     <NCard
+      v-if="settings.settings.enableEventFetcher"
       title="历史事件量 (近30日)"
       embedded
       style="width: 100%; max-width: 800px;"

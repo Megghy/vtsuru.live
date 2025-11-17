@@ -4,7 +4,7 @@ import type { MenuOption } from 'naive-ui'
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
+import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
 import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NText, NTooltip } from 'naive-ui'
 
@@ -102,6 +102,12 @@ const menuOptions = computed(() => {
         h(RouterLink, { to: { name: 'client-fetcher' } }, () => 'EventFetcher'),
       key: 'fetcher',
       icon: () => h(CloudArchive24Filled),
+    },
+    {
+      label: () =>
+        h(RouterLink, { to: { name: 'client-live-manage' } }, () => '直播管理'),
+      key: 'live-manage',
+      icon: () => h(Live24Filled),
     },
     {
       label: () =>
