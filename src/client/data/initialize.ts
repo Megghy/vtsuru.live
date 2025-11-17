@@ -14,7 +14,7 @@ import {
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { h, ref } from 'vue'
+import { h, ref, watch } from 'vue'
 import { isLoggedIn, useAccount } from '@/api/account'
 import { CN_HOST, isDev } from '@/data/constants'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -23,8 +23,9 @@ import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
 import { useSettings } from '../store/useSettings'
-import { initInfo } from './info'
+import { initInfo, roomInfo } from './info'
 import { getBuvid, getRoomKey } from './utils'
+import { useTauriStore } from '../store/useTauriStore'
 
 const accountInfo = useAccount()
 
@@ -35,6 +36,14 @@ let heartbeatTimer: number | null = null
 let updateCheckTimer: number | null = null
 let updateNotificationRef: any = null
 
+// interface RtmpRelayState {
+//   roomId: number
+//   targetRtmpUrl: string
+// }
+
+// const RTMP_RELAY_STATE_KEY = 'webfetcher.rtmpRelay'
+// let hasTriedAutoResumeRtmp = false
+
 async function sendHeartbeat() {
   try {
     await invoke('heartbeat', undefined, {
@@ -44,6 +53,49 @@ async function sendHeartbeat() {
     console.error('发送心跳失败:', error)
   }
 }
+
+// async function tryAutoResumeRtmpRelay() {
+//   if (hasTriedAutoResumeRtmp) return
+//
+//   const store = useTauriStore()
+//   const saved = await store.get<RtmpRelayState | null>(RTMP_RELAY_STATE_KEY)
+//   if (!saved || !saved.roomId || !saved.targetRtmpUrl) {
+//     hasTriedAutoResumeRtmp = true
+//     return
+//   }
+//
+//   const room = roomInfo.value
+//   if (!room || room.live_status !== 1) {
+//     return
+//   }
+//
+//   if (room.room_id !== saved.roomId) {
+//     hasTriedAutoResumeRtmp = true
+//     return
+//   }
+//
+//   try {
+//     // 如果已经在进行 RTMP 转发，则不再重复启动
+//     try {
+//       const status = await invoke<{ is_relaying: boolean }>('get_rtmp_relay_status')
+//       if (status?.is_relaying) {
+//         info('[RTMP] 已在转发中，跳过自动恢复')
+//         hasTriedAutoResumeRtmp = true
+//         return
+//       }
+//     }
+//     catch (error) {
+//       warn(`[RTMP] 获取 RTMP 转发状态失败: ${error}`)
+//     }
+//
+//     await invoke('start_rtmp_relay', { targetUrl: saved.targetRtmpUrl })
+//     info('[RTMP] 检测到正在开播，已自动恢复 RTMP 转发')
+//   } catch (error) {
+//     warn(`[RTMP] 自动恢复 RTMP 转发失败: ${error}`)
+//   } finally {
+//     hasTriedAutoResumeRtmp = true
+//   }
+// }
 
 export function startHeartbeat() {
   // 立即发送一次，确保后端在加载后快速收到心跳
@@ -379,6 +431,12 @@ export async function initAll(isOnBoot: boolean) {
     startUpdateCheck()
   }
 
+  // void tryAutoResumeRtmpRelay()
+
+  // watch(roomInfo, () => {
+  //   void tryAutoResumeRtmpRelay()
+  // })
+
   clientInited.value = true
   clientInitStage.value = '启动完成'
 }
@@ -400,6 +458,13 @@ export async function checkUpdate() {
 
 export const isInitedDanmakuClient = ref(false)
 export const isInitingDanmakuClient = ref(false)
+
+// 重置弹幕客户端初始化状态
+export function resetDanmakuClientInitState() {
+  isInitedDanmakuClient.value = false
+  isInitingDanmakuClient.value = false
+  info('弹幕客户端初始化状态已重置')
+}
 export async function initDanmakuClient() {
   const biliCookie = useBiliCookie()
   const settings = useSettings()
@@ -407,6 +472,13 @@ export async function initDanmakuClient() {
     info('弹幕客户端已初始化, 跳过初始化')
     return { success: true, message: '' }
   }
+  
+  // 检查是否启用 EventFetcher
+  if (!settings.settings.enableEventFetcher) {
+    info('EventFetcher 功能已禁用, 跳过弹幕客户端初始化')
+    return { success: true, message: 'EventFetcher 已禁用' }
+  }
+  
   isInitingDanmakuClient.value = true
   console.log(settings.settings)
   let result = { success: false, message: '' }

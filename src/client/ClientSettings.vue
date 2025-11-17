@@ -34,6 +34,38 @@ let resetTimeout: number | null = null // 用于重置计数器的超时ID
 const setting = useSettings()
 const currentVersion = await getVersion()
 
+// 更新检查
+const isCheckingUpdate = ref(false)
+const handleCheckUpdate = async () => {
+  isCheckingUpdate.value = true
+  try {
+    const { check } = await import('@tauri-apps/plugin-updater')
+    const update = await check()
+    
+    if (update) {
+      window.$message.info(`发现新版本 ${update.version}，正在下载更新...`)
+      
+      // 下载并安装更新
+      await update.downloadAndInstall()
+      
+      window.$message.success('更新已下载，重启应用以完成更新')
+      
+      // 询问是否立即重启
+      const { relaunch } = await import('@tauri-apps/plugin-process')
+      setTimeout(() => relaunch(), 2000)
+    } else {
+      window.$message.success('当前已是最新版本')
+    }
+  }
+  catch (err: any) {
+    console.error('检查更新失败:', err)
+    window.$message.error(`检查更新失败: ${err}`)
+  }
+  finally {
+    isCheckingUpdate.value = false
+  }
+}
+
 // Navigation
 const navOptions: MenuOption[] = [
   { label: '常规', key: 'general' },
@@ -361,6 +393,16 @@ function handleTitleClick() {
                     <p>
                       反馈: 🐧 873260337
                     </p>
+                    <NDivider />
+                    <NFlex align="center" justify="space-between">
+                      <NText>检查更新</NText>
+                      <NButton
+                        :loading="isCheckingUpdate"
+                        @click="handleCheckUpdate"
+                      >
+                        检查更新
+                      </NButton>
+                    </NFlex>
                   </NCard>
                 </template>
               </div>

@@ -19,6 +19,9 @@ export interface VTsuruClientSettings {
   danmakuInterval: number
   pmInterval: number
 
+  // EventFetcher 功能开关
+  enableEventFetcher: boolean
+
   dev_disableDanmakuClient: boolean
 }
 
@@ -40,6 +43,9 @@ export const useSettings = defineStore('settings', () => {
     danmakuInterval: 2000,
     pmInterval: 2000,
 
+    // 默认启用 EventFetcher
+    enableEventFetcher: true,
+
     dev_disableDanmakuClient: false,
   }
   const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings))
@@ -51,6 +57,8 @@ export const useSettings = defineStore('settings', () => {
     // 初始化消息队列间隔设置
     settings.value.danmakuInterval ??= defaultSettings.danmakuInterval
     settings.value.pmInterval ??= defaultSettings.pmInterval
+    // 初始化 EventFetcher 开关
+    settings.value.enableEventFetcher ??= defaultSettings.enableEventFetcher
   }
   async function save() {
     await store.set(settings.value)

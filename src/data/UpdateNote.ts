@@ -4,6 +4,29 @@ import UpdateNoteContainer from '@/components/UpdateNoteContainer.vue'
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 9,
+    date: '2025.11.17',
+    items: [
+      {
+        type: 'new',
+        title: 'VTsuru Client 新增直播管理功能',
+        content: [
+          [
+            () => h(NButton, {
+              text: true,
+              tag: 'a',
+              href: 'https://www.wolai.com/carN6qvUm3FErze9Xo53ii',
+              target: '_blank',
+              type: 'info',
+            }, () => 'VTsuru Client '),
+            ' 新增直播管理功能, 允许直接开播下播并使用OBS推流, 不再依赖直播姬\r\n',
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/QQ20251117-182002.png', width: 300 }),
+          ],
+        ],
+      },
+    ],
+  },
+  {
     ver: 8,
     date: '2025.10.16',
     items: [
