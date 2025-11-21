@@ -151,19 +151,43 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
-    v-if="accountInfo.id"
-    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? 'success' : 'warning'"
-  >
-    启用弹幕点播功能
-    <NSwitch
-      :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
-      @update:value="onUpdateFunctionEnable"
-    />
-
-    <br>
-    <NText depth="3">
-      如果没有部署
+  <!-- 顶部功能开关与全局操作 -->
+  <NCard v-if="accountInfo.id" size="small">
+    <template #header>
+      <NSpace align="center" justify="space-between">
+        <NSpace align="center">
+          <NText>启用弹幕点播功能</NText>
+          <NSwitch
+            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+            @update:value="onUpdateFunctionEnable"
+          />
+        </NSpace>
+        
+        <!-- OBS 组件按钮 -->
+        <NTooltip>
+          <template #trigger>
+            <NButton
+              type="primary"
+              size="small"
+              :disabled="!accountInfo"
+              @click="showOBSModal = true"
+            >
+              OBS 组件
+            </NButton>
+          </template>
+          {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
+        </NTooltip>
+      </NSpace>
+    </template>
+    
+    <!-- 提示信息 -->
+    <NAlert
+      v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+      type="info"
+      closable
+      style="margin-top: 10px"
+    >
+      如果没有部署 
       <NButton
         text
         type="primary"
@@ -173,13 +197,14 @@ onUnmounted(() => {
       >
         VtsuruEventFetcher
       </NButton>
-      则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 !(部署了则不影响)
-    </NText>
-  </NAlert>
+      则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
+    </NAlert>
+  </NCard>
+
   <NAlert
     v-else
     type="warning"
-    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前段重写一遍逻辑"
+    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前端重写一遍逻辑)"
   >
     <NButton
       tag="a"
@@ -190,27 +215,12 @@ onUnmounted(() => {
       前往登录或注册
     </NButton>
   </NAlert>
-  <br>
-  <NCard size="small">
-    <NSpace align="center">
-      <NTooltip>
-        <template #trigger>
-          <NButton
-            type="primary"
-            :disabled="!accountInfo"
-            @click="showOBSModal = true"
-          >
-            OBS 组件
-          </NButton>
-        </template>
-        {{ liveRequest.configCanEdit ? '' : '登陆后才可以使用此功能' }}
-      </NTooltip>
-    </NSpace>
-  </NCard>
-  <br>
-  <NCard>
+
+  <!-- 主体内容 -->
+  <NCard style="margin-top: 12px">
     <NTabs
       v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+      type="line"
       animated
       display-directive="show:lazy"
     >
@@ -223,12 +233,13 @@ onUnmounted(() => {
           <div
             v-if="liveRequest.selectedSong"
             class="song-list"
+            style="margin-bottom: 15px"
           >
             <SongPlayer
               v-model:is-lrc-loading="liveRequest.isLrcLoading"
               :song="liveRequest.selectedSong"
             />
-            <NDivider style="margin: 15px 0 15px 0" />
+            <NDivider style="margin: 15px 0" />
           </div>
         </Transition>
 

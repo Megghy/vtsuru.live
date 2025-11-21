@@ -206,13 +206,14 @@ const columns: DataTableColumns<SongRequestInfo> = [
 </script>
 
 <template>
-  <NCard size="small">
+  <NSpace vertical :size="12">
     <NSpace>
-      <NInputGroup style="width: 300px">
+      <NInputGroup style="width: 250px">
         <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
         <NInput
           :value="songRequest.filterSongName"
           clearable
+          placeholder="搜索歌曲..."
           @update:value="songRequest.filterSongName = $event"
         >
           <template #suffix>
@@ -225,11 +226,12 @@ const columns: DataTableColumns<SongRequestInfo> = [
           </template>
         </NInput>
       </NInputGroup>
-      <NInputGroup style="width: 300px">
-        <NInputGroupLabel> 筛选用户名 </NInputGroupLabel>
+      <NInputGroup style="width: 250px">
+        <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
         <NInput
           :value="songRequest.filterName"
           clearable
+          placeholder="搜索用户..."
           @update:value="songRequest.filterName = $event"
         >
           <template #suffix>
@@ -243,17 +245,17 @@ const columns: DataTableColumns<SongRequestInfo> = [
         </NInput>
       </NInputGroup>
     </NSpace>
-  </NCard>
-  <br>
-  <NDataTable
-    ref="table"
-    size="small"
-    :columns="columns"
-    :data="songRequest.songs"
-    :bordered="false"
-    :loading="songRequest.isLoading"
-    :row-class-name="(row, index) => (row.status == SongRequestStatus.Singing || row.status == SongRequestStatus.Waiting ? 'song-active' : '')"
-  />
+    <NDataTable
+      ref="table"
+      size="small"
+      :columns="columns"
+      :data="songRequest.songs"
+      :bordered="false"
+      :loading="songRequest.isLoading"
+      :pagination="{ pageSize: 10 }"
+      :row-class-name="(row, index) => (row.status == SongRequestStatus.Singing || row.status == SongRequestStatus.Waiting ? 'song-active' : '')"
+    />
+  </NSpace>
 </template>
 
 <style>

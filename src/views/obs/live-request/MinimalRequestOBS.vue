@@ -172,6 +172,39 @@ onUnmounted(() => {
         description="暂无人点歌"
       />
     </div>
+    <div
+      v-if="settings.showRequireInfo"
+      class="minimal-requirements"
+    >
+      <div class="minimal-requirements-row">
+        <div class="minimal-requirements-tag">
+          <span class="tag-label">前缀</span>
+          <span class="tag-value">{{ settings.orderPrefix || '-' }}</span>
+        </div>
+        <div class="minimal-requirements-tag">
+          <span class="tag-label">允许</span>
+          <span class="tag-value">{{ settings.allowAllDanmaku ? '所有弹幕' : allowGuardTypes.length > 0 ? allowGuardTypes.join('/') : '无' }}</span>
+        </div>
+      </div>
+      <div class="minimal-requirements-row">
+        <div class="minimal-requirements-tag">
+          <span class="tag-label">SC</span>
+          <span class="tag-value">{{ settings.allowSC ? `≥ ¥${settings.scMinPrice}` : '不允许' }}</span>
+        </div>
+        <div class="minimal-requirements-tag">
+          <span class="tag-label">粉丝牌</span>
+          <span class="tag-value">
+            {{
+              settings.needWearFanMedal
+                ? settings.fanMedalMinLevel > 0
+                  ? `≥ ${settings.fanMedalMinLevel}级`
+                  : '需佩戴'
+                : '无需'
+            }}
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -369,5 +402,51 @@ onUnmounted(() => {
 
 .minimal-list-inner.animating:hover {
   animation-play-state: paused;
+}
+
+.minimal-requirements {
+  margin-top: 6px;
+  padding: 4px 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #e2e8f0;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+}
+
+.minimal-requirements-row {
+  display: flex;
+  gap: 8px;
+}
+
+.minimal-requirements-tag {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.tag-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(226, 232, 240, 0.75);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.tag-value {
+  margin-top: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

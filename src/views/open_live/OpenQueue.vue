@@ -1017,24 +1017,39 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
 </script>
 
 <template>
-  <!-- 功能启用开关 -->
-  <NAlert
-    v-if="accountInfo?.id"
-    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue) ? 'success' : 'warning'"
-    title="弹幕队列功能"
-    closable
-  >
+  <!-- 顶部功能开关与全局操作 -->
+  <NCard v-if="accountInfo?.id" size="small">
     <template #header>
-      <NSpace align="center">
-        <NText>启用弹幕队列功能</NText>
-        <NSwitch
-          :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
-          :loading="isLoading"
-          @update:value="onUpdateFunctionEnable"
-        />
+      <NSpace align="center" justify="space-between">
+        <NSpace align="center">
+          <NText>启用弹幕队列功能</NText>
+          <NSwitch
+            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
+            :loading="isLoading"
+            @update:value="onUpdateFunctionEnable"
+          />
+        </NSpace>
+        <NTooltip :disabled="configCanEdit">
+          <template #trigger>
+            <NButton
+              type="primary"
+              size="small"
+              :disabled="!configCanEdit"
+              @click="showOBSModal = true"
+            >
+              OBS 组件
+            </NButton>
+          </template>
+          登录后可使用 OBS 组件功能
+        </NTooltip>
       </NSpace>
     </template>
-    <NText depth="3">
+    <NAlert
+      v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
+      type="info"
+      closable
+      style="margin-top: 10px"
+    >
       如果没有部署
       <NButton
         text
@@ -1046,8 +1061,9 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
         VtsuruEventFetcher
       </NButton>
       则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
-    </NText>
-  </NAlert>
+    </NAlert>
+  </NCard>
+  
   <!-- 未登录提示 -->
   <NAlert
     v-else
@@ -1068,29 +1084,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     </NButton>
   </NAlert>
 
-  <NCard
-    size="small"
-    style="margin-top: 10px;"
-  >
-    <NSpace align="center">
-      <!-- OBS 组件按钮 -->
-      <NTooltip :disabled="configCanEdit">
-        <template #trigger>
-          <NButton
-            type="primary"
-            :disabled="!configCanEdit"
-            @click="showOBSModal = true"
-          >
-            OBS 组件
-          </NButton>
-        </template>
-        登录后可使用 OBS 组件功能
-      </NTooltip>
-      <!-- 其他全局操作按钮可以在这里添加 -->
-    </NSpace>
-  </NCard>
-
-  <NCard style="margin-top: 10px;">
+  <NCard style="margin-top: 12px">
     <!-- 主内容区域 -->
     <NTabs
       v-if="!accountInfo.id || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
@@ -1214,17 +1208,16 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
 
         <!-- 队列列表 -->
         <NSpin :show="isLoading && originQueue.length === 0">
-          <NList
+          <div
             v-if="queue.length > 0"
-            hoverable
-            clickable
-            style="max-height: 60vh; overflow-y: auto;"
+            class="queue-list-container"
           >
-            <NListItem
-              v-for="(queueData, index) in queue"
-              :key="queueData.id"
-              style="padding: 5px 0;"
-            >
+            <TransitionGroup name="list">
+              <div
+                v-for="(queueData, index) in queue"
+                :key="queueData.id"
+                class="queue-item-wrapper"
+              >
               <NCard
                 embedded
                 size="small"
@@ -1444,8 +1437,10 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                   </NSpace>
                 </NSpace>
               </NCard>
-            </NListItem>
-          </NList>
+              <NDivider style="margin: 0" />
+              </div>
+            </TransitionGroup>
+          </div>
           <NEmpty
             v-else
             description="当前队列为空"

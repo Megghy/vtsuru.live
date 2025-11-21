@@ -44,32 +44,30 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   }
 
   function showNotification(payload: ObsNotificationPayload) {
-    const notification = window.$notification
-    if (!notification) {
-      console.warn('[OBS] notification instance missing')
+    const message = window.$message
+    if (!message) {
+      console.warn('[OBS] message instance missing')
       return
     }
     console.log('[OBS] 收到通知', payload)
 
     const method = payload.Type === 'success' ? 'success' : 'error'
     const title = resolveTitle(payload)
-    const description = payload.Message || '未知通知'
     const meta = resolveMeta(payload)
+    const prefix = [title, meta].filter(Boolean).join(' · ')
+    const description = payload.Message || '未知通知'
+    const finalContent = prefix ? `${prefix}\n${description}` : description
 
-    if (typeof notification[method] === 'function') {
-      notification[method]({
-        title: payload.Type === 'success' ? '成功' : `失败`,
-        description,
-        duration: method === 'error' ? 8000 : 5000,
-        keepAliveOnHover: true,
+    if (typeof message[method] === 'function') {
+      message[method](finalContent, {
+        duration: method === 'error' ? 6000 : 4000,
+        closable: true,
       })
     } else {
-      notification.create({
-        title: payload.Type === 'success' ? '成功' : `失败`,
-        content: description,
-        duration: method === 'error' ? 8000 : 5000,
-        keepAliveOnHover: true,
+      message.create(finalContent, {
         type: method,
+        duration: method === 'error' ? 6000 : 4000,
+        closable: true,
       })
     }
   }

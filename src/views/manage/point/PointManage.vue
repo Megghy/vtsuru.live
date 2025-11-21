@@ -68,6 +68,7 @@ import { copyToClipboard } from '@/Utils'
 import PointOrderManage from './PointOrderManage.vue'
 import PointSettings from './PointSettings.vue'
 import PointUserManage from './PointUserManage.vue'
+import PointTestPanel from './PointTestPanel.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -733,6 +734,15 @@ onMounted(() => { })
       display-directive="show:lazy"
     >
       <PointSettings />
+    </NTabPane>
+
+    <!-- 测试标签页 -->
+    <NTabPane
+      name="test"
+      tab="测试"
+      display-directive="show:lazy"
+    >
+      <PointTestPanel />
     </NTabPane>
   </NTabs>
 
