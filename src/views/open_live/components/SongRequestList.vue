@@ -52,105 +52,125 @@ async function updateSettings() {
 </script>
 
 <template>
-  <NCard size="small">
-    <NSpace align="center">
-      <NTag
-        type="success"
-        :bordered="false"
-      >
-        <template #icon>
-          <NIcon :component="PeopleQueue24Filled" />
-        </template>
-        队列 | {{ waitingCount }}
-      </NTag>
-      <NTag
-        type="success"
-        :bordered="false"
-      >
-        <template #icon>
-          <NIcon :component="Checkmark12Regular" />
-        </template>
-        今日已处理 | {{ todayFinishedCount }} 个
-      </NTag>
-      <NInputGroup>
-        <NInput
-          :value="songRequest.newSongName"
-          placeholder="手动添加"
-          @update:value="songRequest.newSongName = $event"
-        />
-        <NButton
-          type="primary"
-          @click="songRequest.addSongManual()"
+  <NSpace vertical :size="12">
+    <NCard size="small" :bordered="false" content-style="padding: 0;">
+      <NSpace justify="space-between" align="center">
+        <!-- 左侧统计 -->
+        <NSpace align="center" :size="16">
+          <NTag type="success" round :bordered="false">
+            <template #icon>
+              <NIcon :component="PeopleQueue24Filled" />
+            </template>
+            队列: {{ waitingCount }}
+          </NTag>
+          <NTag type="info" round :bordered="false">
+            <template #icon>
+              <NIcon :component="Checkmark12Regular" />
+            </template>
+            今日已点: {{ todayFinishedCount }}
+          </NTag>
+          <NText depth="3" style="font-size: 12px">
+            共 {{ songRequest.activeSongs.length }} 首
+          </NText>
+        </NSpace>
+
+        <!-- 右侧操作 -->
+        <NSpace align="center">
+          <NInputGroup size="small">
+            <NInput
+              :value="songRequest.newSongName"
+              placeholder="手动添加歌曲"
+              @update:value="songRequest.newSongName = $event"
+              style="width: 150px"
+            />
+            <NButton type="primary" ghost @click="songRequest.addSongManual()">
+              添加
+            </NButton>
+          </NInputGroup>
+
+          <NRadioGroup
+            v-model:value="accountInfo.settings.songRequest.sortType"
+            :disabled="!songRequest.configCanEdit"
+            size="small"
+            @update:value="updateSettings"
+          >
+            <NRadioButton :value="QueueSortType.TimeFirst">时间</NRadioButton>
+            <NRadioButton :value="QueueSortType.PaymentFist">付费</NRadioButton>
+            <NRadioButton :value="QueueSortType.GuardFirst">舰长</NRadioButton>
+            <NRadioButton :value="QueueSortType.FansMedalFirst">粉丝牌</NRadioButton>
+          </NRadioGroup>
+
+          <NCheckbox
+            :checked="currentIsReverse"
+            size="small"
+            @update:checked="value => {
+              if (songRequest.configCanEdit) {
+                accountInfo.settings.songRequest.isReverse = value
+                updateSettings()
+              } else {
+                songRequest.isReverse = value
+              }
+            }"
+          >
+            倒序
+          </NCheckbox>
+
+          <NPopconfirm @positive-click="songRequest.deactiveAllSongs()">
+            <template #trigger>
+              <NButton type="error" size="small" ghost>
+                全部取消
+              </NButton>
+            </template>
+            确定全部取消吗?
+          </NPopconfirm>
+        </NSpace>
+      </NSpace>
+    </NCard>
+
+    <div v-if="songRequest.activeSongs.length > 0" class="song-list-container">
+      <TransitionGroup name="list">
+        <div
+          v-for="(song, index) in songRequest.activeSongs"
+          :key="song.id"
+          class="song-item-wrapper"
         >
-          添加
-        </NButton>
-      </NInputGroup>
-      <NRadioGroup
-        v-model:value="accountInfo.settings.songRequest.sortType"
-        :disabled="!songRequest.configCanEdit"
-        type="button"
-        @update:value="value => {
-          updateSettings()
-        }"
-      >
-        <NRadioButton :value="QueueSortType.TimeFirst">
-          加入时间优先
-        </NRadioButton>
-        <NRadioButton :value="QueueSortType.PaymentFist">
-          付费价格优先
-        </NRadioButton>
-        <NRadioButton :value="QueueSortType.GuardFirst">
-          舰长优先 (按等级)
-        </NRadioButton>
-        <NRadioButton :value="QueueSortType.FansMedalFirst">
-          粉丝牌等级优先
-        </NRadioButton>
-      </NRadioGroup>
-      <NCheckbox
-        :checked="currentIsReverse"
-        @update:checked="value => {
-          if (songRequest.configCanEdit) {
-            accountInfo.settings.songRequest.isReverse = value
-            updateSettings()
-          }
-          else {
-            songRequest.isReverse = value
-          }
-        }"
-      >
-        倒序
-      </NCheckbox>
-      <NPopconfirm @positive-click="songRequest.deactiveAllSongs()">
-        <template #trigger>
-          <NButton type="error">
-            全部取消
-          </NButton>
-        </template>
-        确定全部取消吗?
-      </NPopconfirm>
-    </NSpace>
-  </NCard>
-  <NDivider> 共 {{ songRequest.activeSongs.length }} 首 </NDivider>
-  <NList
-    v-if="songRequest.activeSongs.length > 0"
-    :show-divider="false"
-    hoverable
-  >
-    <NListItem
-      v-for="song in songRequest.activeSongs"
-      :key="song.id"
-      style="padding: 5px"
-    >
-      <SongRequestItem
-        :song="song"
-        :is-loading="songRequest.isLoading"
-        :is-lrc-loading="songRequest.isLrcLoading"
-        :update-key="songRequest.updateKey"
-      />
-    </NListItem>
-  </NList>
-  <NEmpty
-    v-else
-    description="暂无曲目"
-  />
+          <SongRequestItem
+            :song="song"
+            :index="index + 1"
+            :is-loading="songRequest.isLoading"
+            :is-lrc-loading="songRequest.isLrcLoading"
+            :update-key="songRequest.updateKey"
+          />
+        <NDivider style="margin: 0" />
+        </div>
+      </TransitionGroup>
+    </div>
+    <NEmpty
+      v-else
+      description="暂无点播内容"
+      style="margin-top: 40px"
+    />
+  </NSpace>
 </template>
+
+<style scoped>
+.song-list-container {
+  margin-top: 10px;
+  position: relative;
+}
+
+.song-item-wrapper {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.list-leave-active {
+  position: absolute;
+  width: 100%;
+}
+</style>
