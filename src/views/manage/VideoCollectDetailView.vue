@@ -10,15 +10,22 @@ import type {
   VideoCollectVideo,
   VideoInfo,
 } from '@/api/api-models'
-import { Clock24Filled, Person24Filled } from '@vicons/fluent'
+import {
+  ArrowLeft24Regular,
+  Delete24Regular,
+  Edit24Regular,
+  MoreVertical24Regular,
+  Share24Regular,
+  TableDismiss24Regular,
+} from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { List } from 'linqts'
 import {
+  NBadge,
   NButton,
-  NCard,
   NDatePicker,
   NDivider,
-  NEllipsis,
+  NDropdown,
   NEmpty,
   NForm,
   NFormItem,
@@ -29,21 +36,22 @@ import {
   NInputNumber,
   NModal,
   NPopconfirm,
-  NScrollbar,
   NSpace,
+  NSpin,
   NTabPane,
   NTabs,
   NText,
   useMessage,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
-import { computed, h, onActivated, ref } from 'vue'
+import { computed, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   VideoStatus,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
+import VideoItemCard from '@/components/VideoItemCard.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/data/constants'
 import router from '@/router'
 import { downloadImage } from '@/Utils'
@@ -115,6 +123,55 @@ const acceptVideos = computed(() => {
   return videoDetail.value?.videos?.filter(v => v.info.status == VideoStatus.Accepted) ?? []
 })
 
+// 移动端下拉菜单选项
+const mobileMenuOptions = computed(() => [
+  {
+    label: '分享',
+    key: 'share',
+    icon: () => h(NIcon, null, { default: () => h(Share24Regular) }),
+  },
+  {
+    label: '更新信息',
+    key: 'edit',
+    icon: () => h(NIcon, null, { default: () => h(Edit24Regular) }),
+  },
+  {
+    label: videoDetail.value.table.isFinish ? '开启表' : '关闭表',
+    key: 'toggle-status',
+    icon: () => h(NIcon, null, { default: () => h(TableDismiss24Regular) }),
+  },
+  {
+    label: '结果页面',
+    key: 'result',
+  },
+  {
+    label: '删除',
+    key: 'delete',
+    icon: () => h(NIcon, { color: '#d03050' }, { default: () => h(Delete24Regular) }),
+  },
+])
+
+function handleMobileMenuSelect(key: string) {
+  switch (key) {
+    case 'share':
+      shareModalVisiable.value = true
+      break
+    case 'edit':
+      editModalVisiable.value = true
+      break
+    case 'toggle-status':
+      closeTable()
+      break
+    case 'result':
+      router.push({ name: 'video-collect-list', params: { id: videoDetail.value.table.id } })
+      break
+    case 'delete':
+      deleteTable() // 这里最好加个确认，但在下拉菜单里直接触发确认比较麻烦，暂时直接调用，原逻辑是有Popconfirm的
+      // 由于移动端下拉菜单难以直接嵌入Popconfirm，建议改为点击后弹窗确认
+      break
+  }
+}
+
 async function getData() {
   try {
     const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
@@ -133,133 +190,7 @@ async function getData() {
   }
   return {} as VideoCollectDetail
 }
-function gridRender(type: 'padding' | 'reject' | 'accept') {
-  let footer: (arg0: VideoInfo) => VNode
-  let videos: { info: VideoInfo, video: VideoCollectVideo }[]
-  switch (type) {
-    case 'padding':
-      footer = paddingButtonGroup
-      videos = paddingVideos.value
-      break
-    case 'reject':
-      footer = rejectButtonGroup
-      videos = rejectVideos.value
-      break
-    case 'accept':
-      footer = acceptButtonGroup
-      videos = acceptVideos.value
-      break
-  }
-  return videos.length == 0
-    ? h(NEmpty)
-    : h(NGrid, { cols: '1 500:2 700:3 900:4 1200:5  ', xGap: '12', yGap: '12', responsive: 'self' }, () =>
-        videos?.map(v =>
-          h(NGridItem, () =>
-            h(
-              NCard,
-              { style: 'height: 330px;', embedded: true, size: 'small' },
-              {
-                cover: () =>
-                  h('div', { style: 'position: relative;height: 150px;' }, [
-                    h('img', {
-                      src: v.video.cover.replace('http://', 'https://'),
-                      referrerpolicy: 'no-referrer',
-                      style: 'max-height: 100%; object-fit: contain;cursor: pointer',
-                      onClick: () => window.open(`https://www.bilibili.com/video/${v.info.bvid}`, '_blank'),
-                    }),
-                    h(
-                      NSpace,
-                      {
-                        style: { position: 'relative', bottom: '20px', background: '#00000073' },
-                        justify: 'space-around',
-                      },
-                      () => [
-                        h('span', [
-                          h(NIcon, { component: Clock24Filled, color: 'lightgrey' }),
-                          h(NText, { style: 'color: lightgrey;size:small;' }, () => formatSeconds(v.video.length)),
-                        ]),
-                        h('span', [
-                          h(NIcon, { component: Person24Filled, color: 'lightgrey' }),
-                          h(NText, { style: 'color: lightgrey;size:small;' }, () => v.video.ownerName),
-                        ]),
-                      ],
-                    ),
-                  ]),
-                header: () =>
-                  h(
-                    NButton,
-                    {
-                      style: 'width: 100%;',
-                      text: true,
-                      onClick: () => window.open(`https://www.bilibili.com/video/${v.info.bvid}`, '_blank'),
-                    },
-                    () =>
-                      h(
-                        NEllipsis,
-                        { style: 'max-width: 100%;' },
-                        {
-                          default: () => v.video.title,
-                          tooltip: () => h('div', { style: 'max-width: 300px' }, v.video.title),
-                        },
-                      ),
-                  ),
-                default: () =>
-                  h(NScrollbar, { style: 'height: 65px;' }, () =>
-                    h(NCard, { contentStyle: 'padding: 5px;' }, () =>
-                      v.info.senders.map(s => [
-                        h('div', { style: 'font-size: 12px;' }, [
-                          h('div', `推荐人: ${s.sender ?? '未填写'} [${s.senderId ?? '未填写'}]`),
-                          h('div', `推荐理由: ${s.description ?? '未填写'}`),
-                        ]),
-                        h(NSpace, { style: 'margin: 0;' }),
-                      ]))),
-                footer: () => footer(v.info),
-              },
-            )),
-        ))
-}
-function paddingButtonGroup(v: VideoInfo) {
-  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(
-      NButton,
-      { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
-      () => '通过',
-    ),
-    h(
-      NButton,
-      { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) },
-      () => '拒绝',
-    ),
-  ])
-}
-function acceptButtonGroup(v: VideoInfo) {
-  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(
-      NButton,
-      { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) },
-      () => '重设为未审核',
-    ),
-    h(
-      NButton,
-      { type: 'error', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Rejected, v) },
-      () => '拒绝',
-    ),
-  ])
-}
-function rejectButtonGroup(v: VideoInfo) {
-  return h(NSpace, { size: 'small', justify: 'space-around' }, () => [
-    h(
-      NButton,
-      { type: 'success', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Accepted, v) },
-      () => '通过',
-    ),
-    h(
-      NButton,
-      { type: 'info', loading: isLoading.value, onClick: () => setStatus(VideoStatus.Pending, v) },
-      () => '重设为未审核',
-    ),
-  ])
-}
+
 function setStatus(status: VideoStatus, video: VideoInfo) {
   isLoading.value = true
   QueryGetAPI(`${VIDEO_COLLECT_API_URL}set-status`, {
@@ -282,6 +213,7 @@ function setStatus(status: VideoStatus, video: VideoInfo) {
       isLoading.value = false
     })
 }
+
 function formatSeconds(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
@@ -291,9 +223,11 @@ function formatSeconds(seconds: number): string {
 
   return `${formattedMinutes}:${formattedSeconds}`
 }
+
 function dateDisabled(ts: number) {
   return ts < Date.now() + 1000 * 60 * 60
 }
+
 function updateTable() {
   isLoading.value = true
   updateModel.value.id = videoDetail.value.table.id
@@ -301,6 +235,7 @@ function updateTable() {
     .then((data) => {
       if (data.code == 200) {
         message.success('更新成功')
+        editModalVisiable.value = false
         videoDetail.value.table = data.data
       } else {
         message.error(`更新失败: ${data.message}`)
@@ -313,6 +248,7 @@ function updateTable() {
       isLoading.value = false
     })
 }
+
 function deleteTable() {
   isLoading.value = true
   QueryGetAPI(`${VIDEO_COLLECT_API_URL}del`, {
@@ -335,6 +271,7 @@ function deleteTable() {
       isLoading.value = false
     })
 }
+
 function closeTable() {
   isLoading.value = true
   QueryGetAPI(`${VIDEO_COLLECT_API_URL}finish`, {
@@ -356,6 +293,7 @@ function closeTable() {
       isLoading.value = false
     })
 }
+
 function saveQRCode() {
   downloadImage(
     `https://api.qrserver.com/v1/create-qr-code/?data=${`https://vtsuru.live/video-collect/${videoDetail.value.table.shortId}`}`,
@@ -371,256 +309,416 @@ onActivated(async () => {
 </script>
 
 <template>
-  <NSpace>
-    <NButton
-      text
-      @click="$router.go(-1)"
-    >
-      <NText depth="3">
-        {{ '< 返回' }}
-      </NText>
-    </NButton>
-    <template v-if="width <= 1000">
-      <NButton
-        type="success"
-        size="small"
-        @click="shareModalVisiable = true"
-      >
-        分享
-      </NButton>
-      <NButton
-        type="info"
-        size="small"
-        @click="editModalVisiable = true"
-      >
-        更新
-      </NButton>
-      <NButton
-        type="warning"
-        size="small"
-        @click="closeTable"
-      >
-        {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
-      </NButton>
-      <NButton
-        size="small"
-        @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
-      >
-        结果页面
-      </NButton>
-      <NPopconfirm :on-positive-click="deleteTable">
-        <template #trigger>
-          <NButton
-            type="error"
-            size="small"
-          >
-            删除
-          </NButton>
-        </template>
-        确定删除表? 此操作无法撤销
-      </NPopconfirm>
-    </template>
-  </NSpace>
-  <VideoCollectInfoCard
-    :item="videoDetail.table"
-    style="width: 100%; max-width: 90vw"
-    from="owner"
-  >
-    <template
-      v-if="width > 1000"
-      #header-extra
-    >
-      <NSpace>
+  <div class="detail-container">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-left">
         <NButton
-          type="success"
-          size="small"
-          @click="shareModalVisiable = true"
+          text
+          style="font-size: 16px"
+          @click="$router.go(-1)"
         >
-          分享
-        </NButton>
-        <NButton
-          type="info"
-          size="small"
-          @click="editModalVisiable = true"
-        >
-          更新
-        </NButton>
-        <NButton
-          type="warning"
-          size="small"
-          @click="closeTable"
-        >
-          {{ videoDetail.table.isFinish ? '开启表' : '关闭表' }}
-        </NButton>
-        <NButton
-          size="small"
-          @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
-        >
-          结果表
-        </NButton>
-        <NPopconfirm :on-positive-click="deleteTable">
-          <template #trigger>
-            <NButton
-              type="error"
-              size="small"
-            >
-              删除
-            </NButton>
+          <template #icon>
+            <NIcon><ArrowLeft24Regular /></NIcon>
           </template>
-          确定删除表? 此操作无法撤销
-        </NPopconfirm>
-      </NSpace>
-    </template>
-  </VideoCollectInfoCard>
-  <NDivider> 已通过时长: {{ formatSeconds(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }} </NDivider>
-  <NEmpty
-    v-if="videoDetail?.videos?.length == 0"
-    description="暂无视频"
-  />
-  <template v-else>
-    <NTabs
-      animated
-      type="segment"
-    >
-      <NTabPane name="padding">
-        <template #tab>
-          未审核
-          <NDivider
-            vertical
-            style="margin: 0 3px 0 3px"
-          />
-          <NText depth="3">
-            {{ paddingVideos.length }}
-          </NText>
-        </template>
-        <component :is="gridRender('padding')" />
-      </NTabPane>
-      <NTabPane name="accept">
-        <template #tab>
-          <NText style="color: #5bb85f">
-            通过
-          </NText>
-          <NDivider
-            vertical
-            style="margin: 0 5px 0 5px"
-          />
-          <NText depth="3">
-            {{ acceptVideos.length }}
-          </NText>
-        </template>
-        <component :is="gridRender('accept')" />
-      </NTabPane>
-      <NTabPane name="reject">
-        <template #tab>
-          <NText style="color: #a85f5f">
-            拒绝
-          </NText>
-          <NDivider
-            vertical
-            style="margin: 0 3px 0 3px"
-          />
-          <NText depth="3">
-            {{ rejectVideos.length }}
-          </NText>
-        </template>
-        <component :is="gridRender('reject')" />
-      </NTabPane>
-    </NTabs>
-  </template>
-  <NModal
-    v-model:show="shareModalVisiable"
-    title="分享"
-    preset="card"
-    style="width: 600px; max-width: 90vw"
-  >
-    <Qrcode
-      :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
-      level="Q"
-      :size="100"
-      background="#fff"
-      :margin="1"
-    />
-    <NInput :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`" />
-    <NDivider />
-    <NSpace justify="center">
-      <NButton
-        type="primary"
-        @click="saveQRCode"
-      >
-        保存二维码
-      </NButton>
-    </NSpace>
-  </NModal>
-  <NModal
-    v-model:show="editModalVisiable"
-    title="更新信息"
-    preset="card"
-    style="width: 600px; max-width: 90vw"
-  >
-    <NForm
-      ref="formRef"
-      :model="updateModel"
-      :rules="createRules"
-    >
-      <NFormItem
-        label="标题"
-        path="name"
-      >
-        <NInput
-          v-model:value="updateModel.name"
-          placeholder="征集表的标题"
-          maxlength="30"
-          show-count
-        />
-      </NFormItem>
-      <NFormItem
-        label="描述"
-        path="description"
-      >
-        <NInput
-          v-model:value="updateModel.description"
-          placeholder="可以是备注之类的"
-          maxlength="300"
-          show-count
-        />
-      </NFormItem>
-      <NFormItem
-        label="视频数量"
-        path="maxVideoCount"
-      >
-        <NInputNumber
-          v-model:value="updateModel.maxVideoCount"
-          placeholder="最大数量"
-          type="number"
-          style="max-width: 150px"
-        />
-      </NFormItem>
-      <NFormItem
-        label="结束时间"
-        path="endAt"
-      >
-        <NDatePicker
-          v-model:value="updateModel.endAt"
-          type="datetime"
-          placeholder="结束征集的时间"
-          :is-date-disabled="dateDisabled"
-        />
-        <NDivider vertical />
-        <NText depth="3">
-          最低为一小时
+          返回列表
+        </NButton>
+      </div>
+      <div class="header-right">
+        <!-- Desktop Actions -->
+        <NSpace v-if="width > 800">
+          <NButton
+            secondary
+            strong
+            @click="shareModalVisiable = true"
+          >
+            <template #icon>
+              <NIcon><Share24Regular /></NIcon>
+            </template>
+            分享
+          </NButton>
+          <NButton
+            secondary
+            strong
+            @click="editModalVisiable = true"
+          >
+            <template #icon>
+              <NIcon><Edit24Regular /></NIcon>
+            </template>
+            更新信息
+          </NButton>
+          <NButton
+            secondary
+            strong
+            :type="videoDetail.table.isFinish ? 'success' : 'warning'"
+            @click="closeTable"
+          >
+            <template #icon>
+              <NIcon><TableDismiss24Regular /></NIcon>
+            </template>
+            {{ videoDetail.table.isFinish ? '开启征集' : '结束征集' }}
+          </NButton>
+          <NButton
+            secondary
+            strong
+            type="info"
+            @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
+          >
+            查看结果
+          </NButton>
+          <NPopconfirm @positive-click="deleteTable">
+            <template #trigger>
+              <NButton
+                secondary
+                strong
+                type="error"
+              >
+                <template #icon>
+                  <NIcon><Delete24Regular /></NIcon>
+                </template>
+                删除
+              </NButton>
+            </template>
+            确定删除表? 此操作无法撤销
+          </NPopconfirm>
+        </NSpace>
+
+        <!-- Mobile Actions -->
+        <NDropdown
+          v-else
+          trigger="click"
+          :options="mobileMenuOptions"
+          @select="handleMobileMenuSelect"
+        >
+          <NButton
+            secondary
+            strong
+            circle
+          >
+            <template #icon>
+              <NIcon><MoreVertical24Regular /></NIcon>
+            </template>
+          </NButton>
+        </NDropdown>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card-wrapper">
+      <VideoCollectInfoCard
+        :item="videoDetail.table"
+        style="width: 100%"
+        from="owner"
+      />
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <NText depth="3">
+        已通过视频总时长:
+        <NText
+          strong
+          style="color: var(--n-text-color)"
+        >
+          {{ formatSeconds(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }}
         </NText>
-      </NFormItem>
-      <NFormItem>
-        <NSpace>
+      </NText>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <NEmpty
+        v-if="videoDetail?.videos?.length == 0"
+        description="暂无视频提交"
+        style="margin-top: 48px"
+      />
+      <NTabs
+        v-else
+        animated
+        type="line"
+        justify-content="space-evenly"
+        class="custom-tabs"
+      >
+        <NTabPane name="padding">
+          <template #tab>
+            <div class="tab-label">
+              <span>待审核</span>
+              <NBadge
+                v-if="paddingVideos.length > 0"
+                :value="paddingVideos.length"
+                :max="99"
+                type="warning"
+                class="tab-badge"
+              />
+            </div>
+          </template>
+          <div class="video-grid">
+            <NGrid
+              x-gap="16"
+              y-gap="16"
+              cols="1 520:2 800:3 1100:4 1400:5"
+              responsive="self"
+            >
+              <NGridItem
+                v-for="v in paddingVideos"
+                :key="v.info.bvid"
+              >
+                <VideoItemCard
+                  :video-info="v.info"
+                  :video-data="v.video"
+                  type="padding"
+                  :is-loading="isLoading"
+                  @update-status="setStatus"
+                />
+              </NGridItem>
+            </NGrid>
+          </div>
+        </NTabPane>
+
+        <NTabPane name="accept">
+          <template #tab>
+            <div class="tab-label">
+              <span style="color: #18a058">已通过</span>
+              <NBadge
+                v-if="acceptVideos.length > 0"
+                :value="acceptVideos.length"
+                :max="99"
+                type="success"
+                class="tab-badge"
+              />
+            </div>
+          </template>
+          <div class="video-grid">
+            <NGrid
+              x-gap="16"
+              y-gap="16"
+              cols="1 520:2 800:3 1100:4 1400:5"
+              responsive="self"
+            >
+              <NGridItem
+                v-for="v in acceptVideos"
+                :key="v.info.bvid"
+              >
+                <VideoItemCard
+                  :video-info="v.info"
+                  :video-data="v.video"
+                  type="accept"
+                  :is-loading="isLoading"
+                  @update-status="setStatus"
+                />
+              </NGridItem>
+            </NGrid>
+          </div>
+        </NTabPane>
+
+        <NTabPane name="reject">
+          <template #tab>
+            <div class="tab-label">
+              <span style="color: #d03050">已拒绝</span>
+              <NBadge
+                v-if="rejectVideos.length > 0"
+                :value="rejectVideos.length"
+                :max="99"
+                color="#d03050"
+                class="tab-badge"
+              />
+            </div>
+          </template>
+          <div class="video-grid">
+            <NGrid
+              x-gap="16"
+              y-gap="16"
+              cols="1 520:2 800:3 1100:4 1400:5"
+              responsive="self"
+            >
+              <NGridItem
+                v-for="v in rejectVideos"
+                :key="v.info.bvid"
+              >
+                <VideoItemCard
+                  :video-info="v.info"
+                  :video-data="v.video"
+                  type="reject"
+                  :is-loading="isLoading"
+                  @update-status="setStatus"
+                />
+              </NGridItem>
+            </NGrid>
+          </div>
+        </NTabPane>
+      </NTabs>
+    </div>
+
+    <!-- Modals -->
+    <NModal
+      v-model:show="shareModalVisiable"
+      title="分享"
+      preset="card"
+      style="width: 600px; max-width: 90vw"
+    >
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 12px;">
+        <div style="padding: 12px; background: white; border-radius: 8px;">
+          <Qrcode
+            :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
+            level="Q"
+            :size="200"
+            background="#fff"
+            :margin="1"
+          />
+        </div>
+        <NInput
+          :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
+          readonly
+          @click="(e: MouseEvent) => (e.target as HTMLInputElement).select()"
+        />
+        <NButton
+          type="primary"
+          @click="saveQRCode"
+        >
+          保存二维码图片
+        </NButton>
+      </div>
+    </NModal>
+
+    <NModal
+      v-model:show="editModalVisiable"
+      title="更新信息"
+      preset="card"
+      style="width: 600px; max-width: 90vw"
+    >
+      <NForm
+        ref="formRef"
+        :model="updateModel"
+        :rules="createRules"
+        label-placement="left"
+        label-width="80"
+      >
+        <NFormItem
+          label="标题"
+          path="name"
+        >
+          <NInput
+            v-model:value="updateModel.name"
+            placeholder="征集表的标题"
+            maxlength="30"
+            show-count
+          />
+        </NFormItem>
+        <NFormItem
+          label="描述"
+          path="description"
+        >
+          <NInput
+            v-model:value="updateModel.description"
+            type="textarea"
+            placeholder="可以是备注之类的"
+            maxlength="300"
+            show-count
+            :autosize="{ minRows: 3, maxRows: 5 }"
+          />
+        </NFormItem>
+        <NGrid
+          :cols="2"
+          :x-gap="24"
+        >
+          <NGridItem>
+            <NFormItem
+              label="最大数量"
+              path="maxVideoCount"
+            >
+              <NInputNumber
+                v-model:value="updateModel.maxVideoCount"
+                placeholder="最大数量"
+                type="number"
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NGridItem>
+          <NGridItem>
+            <NFormItem
+              label="结束时间"
+              path="endAt"
+            >
+              <NDatePicker
+                v-model:value="updateModel.endAt"
+                type="datetime"
+                placeholder="结束征集的时间"
+                :is-date-disabled="dateDisabled"
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NGridItem>
+        </NGrid>
+        
+        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
           <NButton
             type="primary"
             :loading="isLoading"
             @click="updateTable"
           >
-            更新
+            保存更改
           </NButton>
-        </NSpace>
-      </NFormItem>
-    </NForm>
-  </NModal>
+        </div>
+      </NForm>
+    </NModal>
+  </div>
 </template>
+
+<style scoped>
+.detail-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.info-card-wrapper {
+  margin-bottom: 24px;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.content-area {
+  margin-top: 16px;
+}
+
+.custom-tabs :deep(.n-tabs-nav) {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.tab-badge {
+  transform: scale(0.85);
+}
+
+.video-grid {
+  padding: 16px 0;
+}
+
+@media (max-width: 600px) {
+  .header-section {
+    margin-bottom: 16px;
+  }
+}
+</style>

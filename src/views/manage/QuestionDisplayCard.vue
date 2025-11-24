@@ -157,12 +157,13 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   border-radius: 16px;
-  border: 2 solid rgb(255, 255, 255);
+  border: 2px solid rgb(255, 255, 255); /* 修正 border 语法 */
   display: flex;
   flex-direction: column;
   border-style: solid;
   box-sizing: border-box;
   transition: all 0.3s ease;
+  overflow: hidden; /* 防止圆角溢出 */
 }
 
 .question-display-content {
@@ -170,62 +171,64 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  justify-content: space-evenly;
+  /* justify-content: space-evenly;  移除这个，让内容自然排列，长内容更友好 */
   padding: 24px;
-  overflow: auto;
+  overflow-y: auto; /* 明确只在Y轴滚动 */
+  overflow-x: hidden;
 }
 
 .question-display-user-name {
   text-align: center;
-  margin: 5px;
-  height: 32px;
+  margin: 8px 5px;
+  min-height: 32px; /* 使用 min-height 避免文字被切 */
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0; /* 防止被压缩 */
 }
 
 .question-display-text {
   min-height: 50px;
   white-space: pre-wrap;
+  line-height: 1.6; /* 增加行高，提高可读性 */
+  word-break: break-word; /* 防止长单词溢出 */
 }
 
 .question-display-images {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 16px;
+  width: 100%;
 }
 
 .question-display-image {
-  max-width: 40%;
-  max-height: 150px;
+  max-width: 100%;
+  max-height: 200px;
   border-radius: 8px;
+  object-fit: contain; /* 确保图片完整显示 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 轻微阴影 */
 }
 
+/* 滚动条美化 */
 ::-webkit-scrollbar {
-  width: 10px;
-
-  height: 10px;
+  width: 6px; /* 变细 */
+  height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(0, 0%, 51%, 0.377);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
 
-  -webkit-box-shadow: none;
-
-  border-radius: 10px;
-
-  -webkit-box-shadow: none;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 ::-webkit-scrollbar-track {
-  border-radius: 10px;
-
-  background: #cccccc4b;
-
-  -webkit-box-shadow: none;
-
-  -webkit-box-shadow: none;
+  background: transparent;
 }
 </style>
 

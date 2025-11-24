@@ -22,6 +22,7 @@ declare module 'vue' {
     FeedbackItem: typeof import('./components/FeedbackItem.vue')['default']
     LabelItem: typeof import('./components/LabelItem.vue')['default']
     LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
+    ManagePageHeader: typeof import('./components/manage/ManagePageHeader.vue')['default']
     MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
@@ -45,6 +46,7 @@ declare module 'vue' {
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSelect: typeof import('naive-ui')['NSelect']
     NSpace: typeof import('naive-ui')['NSpace']
+    NSpin: typeof import('naive-ui')['NSpin']
     NStatistic: typeof import('naive-ui')['NStatistic']
     NSwitch: typeof import('naive-ui')['NSwitch']
     NTag: typeof import('naive-ui')['NTag']
@@ -72,6 +74,7 @@ declare module 'vue' {
     UserBasicInfoCard: typeof import('./components/UserBasicInfoCard.vue')['default']
     VEditor: typeof import('./components/VEditor.vue')['default']
     VideoCollectInfoCard: typeof import('./components/VideoCollectInfoCard.vue')['default']
+    VideoItemCard: typeof import('./components/VideoItemCard.vue')['default']
   }
 }
 
@@ -87,6 +90,7 @@ declare global {
   const FeedbackItem: typeof import('./components/FeedbackItem.vue')['default']
   const LabelItem: typeof import('./components/LabelItem.vue')['default']
   const LiveInfoContainer: typeof import('./components/LiveInfoContainer.vue')['default']
+  const ManagePageHeader: typeof import('./components/manage/ManagePageHeader.vue')['default']
   const MonacoEditorComponent: typeof import('./components/MonacoEditorComponent.vue')['default']
   const NAlert: typeof import('naive-ui')['NAlert']
   const NAvatar: typeof import('naive-ui')['NAvatar']
@@ -110,6 +114,7 @@ declare global {
   const NScrollbar: typeof import('naive-ui')['NScrollbar']
   const NSelect: typeof import('naive-ui')['NSelect']
   const NSpace: typeof import('naive-ui')['NSpace']
+  const NSpin: typeof import('naive-ui')['NSpin']
   const NStatistic: typeof import('naive-ui')['NStatistic']
   const NSwitch: typeof import('naive-ui')['NSwitch']
   const NTag: typeof import('naive-ui')['NTag']
@@ -137,4 +142,5 @@ declare global {
   const UserBasicInfoCard: typeof import('./components/UserBasicInfoCard.vue')['default']
   const VEditor: typeof import('./components/VEditor.vue')['default']
   const VideoCollectInfoCard: typeof import('./components/VideoCollectInfoCard.vue')['default']
+  const VideoItemCard: typeof import('./components/VideoItemCard.vue')['default']
 }

@@ -27,9 +27,10 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import ManagePageHeader from '@/components/manage/ManagePageHeader.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/data/constants'
 import { copyToClipboard } from '@/Utils'
@@ -584,19 +585,6 @@ function renderOption({ node, option }: { node: VNode, option: SelectOption }) {
     node,
   ])
 }
-async function setFunctionEnable(enable: boolean) {
-  let success = false
-  if (enable) {
-    success = await EnableFunction(FunctionTypes.Schedule)
-  } else {
-    success = await DisableFunction(FunctionTypes.Schedule)
-  }
-  if (success) {
-    message.success(`已${enable ? '启用' : '禁用'}`)
-  } else {
-    message.error(`无法${enable ? '启用' : '禁用'}`)
-  }
-}
 
 onMounted(() => {
   get()
@@ -604,77 +592,72 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace align="center">
-    <NAlert
-      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
-      style="max-width: 200px"
-    >
-      启用日程表
-      <NDivider vertical />
-      <NSwitch
-        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Schedule)"
-        @update:value="setFunctionEnable"
-      />
-    </NAlert>
-    <NButton
-      type="primary"
-      @click="showAddModal = true"
-    >
-      添加周程
-    </NButton>
-    <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })">
-      修改模板
-    </NButton>
-  </NSpace>
-  <NDivider
-    style="margin: 16px 0 16px 0"
-    title-placement="left"
+  <ManagePageHeader
+    title="日程表管理"
+    :function-type="FunctionTypes.Schedule"
   >
-    日程表展示页链接
-  </NDivider>
-  <NFlex align="center">
-    <NInputGroup style="max-width: 400px;">
-      <NInput
-        :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`"
-        readonly
-      />
+    <template #action>
       <NButton
-        secondary
-        @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)"
+        type="primary"
+        @click="showAddModal = true"
       >
-        复制
+        添加周程
       </NButton>
-    </NInputGroup>
-  </NFlex>
-  <NDivider
-    style="margin: 16px 0 16px 0"
-    title-placement="left"
-  >
-    订阅链接
-    <NTooltip>
-      <template #trigger>
-        <NIcon>
-          <TagQuestionMark16Filled />
-        </NIcon>
-      </template>
-      通过订阅链接可以订阅日程表到日历软件中
-    </NTooltip>
-  </NDivider>
-  <NFlex align="center">
-    <NInputGroup style="max-width: 400px;">
-      <NInput
-        :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`"
-        readonly
-      />
-      <NButton
-        secondary
-        @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)"
-      >
-        复制
+      <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })">
+        修改模板
       </NButton>
-    </NInputGroup>
-  </NFlex>
-  <NDivider />
+    </template>
+
+    <NDivider
+      style="margin: 16px 0 16px 0"
+      title-placement="left"
+    >
+      日程表展示页链接
+    </NDivider>
+    <NFlex align="center">
+      <NInputGroup style="max-width: 400px;">
+        <NInput
+          :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`"
+          readonly
+        />
+        <NButton
+          secondary
+          @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)"
+        >
+          复制
+        </NButton>
+      </NInputGroup>
+    </NFlex>
+    <NDivider
+      style="margin: 16px 0 16px 0"
+      title-placement="left"
+    >
+      订阅链接
+      <NTooltip>
+        <template #trigger>
+          <NIcon>
+            <TagQuestionMark16Filled />
+          </NIcon>
+        </template>
+        通过订阅链接可以订阅日程表到日历软件中
+      </NTooltip>
+    </NDivider>
+    <NFlex align="center">
+      <NInputGroup style="max-width: 400px;">
+        <NInput
+          :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`"
+          readonly
+        />
+        <NButton
+          secondary
+          @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)"
+        >
+          复制
+        </NButton>
+      </NInputGroup>
+    </NFlex>
+  </ManagePageHeader>
+
   <NModal
     v-model:show="showAddModal"
     style="width: 600px; max-width: 90vw"

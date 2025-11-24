@@ -11,10 +11,11 @@ import {
   NEmpty,
   NForm,
   NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
   NInput,
   NInputNumber,
-  NList,
-  NListItem,
   NModal,
   NSpace,
   NSpin,
@@ -22,10 +23,12 @@ import {
   NText,
   useMessage,
 } from 'naive-ui'
+import { Add20Regular } from '@vicons/fluent'
 import { ref } from 'vue'
-import { UpdateFunctionEnable, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import ManagePageHeader from '@/components/manage/ManagePageHeader.vue'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/data/constants'
 
@@ -130,119 +133,208 @@ function createTable() {
 </script>
 
 <template>
-  <NAlert
-    v-if="accountInfo.id"
-    :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.VideoCollect) ? 'success' : 'warning'"
-    style="max-width: 300px"
-  >
-    在个人主页展示进行中的征集表
-    <NSwitch
-      :value="accountInfo.settings.enableFunctions.includes(FunctionTypes.VideoCollect)"
-      @update:value="UpdateFunctionEnable(FunctionTypes.VideoCollect)"
-    />
-  </NAlert>
-  <NDivider />
-  <NSpace>
-    <NButton
-      type="primary"
-      @click="createModalVisible = true"
+  <div class="manage-container">
+    <ManagePageHeader
+      title="视频征集管理"
+      subtitle="创建并管理您的视频征集活动"
+      :function-type="FunctionTypes.VideoCollect"
     >
-      新建征集表
-    </NButton>
-  </NSpace>
-  <NDivider />
-  <NSpin :show="isLoading">
-    <NSpace justify="center">
-      <NEmpty v-if="videoTables.length == 0" />
-      <NList
-        v-else
-        bordered
-      >
-        <NListItem
-          v-for="item in videoTables"
-          :key="item.id"
-          style="padding: 0"
+      <template #action>
+        <NButton
+          type="primary"
+          size="medium"
+          @click="createModalVisible = true"
         >
-          <VideoCollectInfoCard
-            :item="item"
-            can-click
-            style="width: 500px; max-width: 70vw"
-            from="owner"
-          />
-        </NListItem>
-      </NList>
-    </NSpace>
-  </NSpin>
-  <NModal
-    v-model:show="createModalVisible"
-    preset="card"
-    title="创建视频征集"
-    style="width: 600px; max-width: 90vw"
-  >
-    <NForm
-      ref="formRef"
-      :model="createVideoModel"
-      :rules="createRules"
+          <template #icon>
+            <NIcon><Add20Regular /></NIcon>
+          </template>
+          新建征集表
+        </NButton>
+      </template>
+    </ManagePageHeader>
+
+    <NSpin :show="isLoading">
+      <div
+        v-if="videoTables.length == 0 && !isLoading"
+        class="empty-state"
+      >
+        <NEmpty
+          description="暂无征集表"
+          size="large"
+        >
+          <template #extra>
+            <NButton
+              type="primary"
+              @click="createModalVisible = true"
+            >
+              创建第一个征集表
+            </NButton>
+          </template>
+        </NEmpty>
+      </div>
+      
+      <div
+        v-else
+        class="grid-container"
+      >
+        <NGrid
+          x-gap="24"
+          y-gap="24"
+          cols="1 640:2 1024:3 1440:4"
+          responsive="self"
+        >
+          <NGridItem
+            v-for="item in videoTables"
+            :key="item.id"
+          >
+            <div class="card-wrapper">
+              <VideoCollectInfoCard
+                :item="item"
+                can-click
+                from="owner"
+                style="width: 100%"
+                class="collect-card"
+              />
+            </div>
+          </NGridItem>
+        </NGrid>
+      </div>
+    </NSpin>
+
+    <NModal
+      v-model:show="createModalVisible"
+      preset="card"
+      title="创建视频征集"
+      style="width: 600px; max-width: 90vw"
+      class="custom-modal"
     >
-      <NFormItem
-        label="标题"
-        path="name"
+      <NForm
+        ref="formRef"
+        :model="createVideoModel"
+        :rules="createRules"
+        label-placement="left"
+        label-width="80"
+        require-mark-placement="right-hanging"
       >
-        <NInput
-          v-model:value="createVideoModel.name"
-          placeholder="征集表的标题"
-          maxlength="30"
-          show-count
-        />
-      </NFormItem>
-      <NFormItem
-        label="描述"
-        path="description"
-      >
-        <NInput
-          v-model:value="createVideoModel.description"
-          placeholder="可以是备注之类的"
-          maxlength="300"
-          show-count
-        />
-      </NFormItem>
-      <NFormItem
-        label="视频数量"
-        path="maxVideoCount"
-      >
-        <NInputNumber
-          v-model:value="createVideoModel.maxVideoCount"
-          placeholder="最大数量"
-          type="number"
-          style="max-width: 150px"
-        />
-      </NFormItem>
-      <NFormItem
-        label="结束时间"
-        path="endAt"
-      >
-        <NDatePicker
-          v-model:value="createVideoModel.endAt"
-          type="datetime"
-          placeholder="结束征集的时间"
-          :is-date-disabled="dateDisabled"
-        />
-        <NDivider vertical />
-        <NText depth="3">
-          最低为一小时
-        </NText>
-      </NFormItem>
-      <NFormItem>
-        <NSpace>
+        <NFormItem
+          label="标题"
+          path="name"
+        >
+          <NInput
+            v-model:value="createVideoModel.name"
+            placeholder="给征集活动起个响亮的名字"
+            maxlength="30"
+            show-count
+          />
+        </NFormItem>
+        <NFormItem
+          label="描述"
+          path="description"
+        >
+          <NInput
+            v-model:value="createVideoModel.description"
+            type="textarea"
+            placeholder="简要描述活动规则或备注"
+            maxlength="300"
+            show-count
+            :autosize="{ minRows: 3, maxRows: 5 }"
+          />
+        </NFormItem>
+        <NGrid
+          x-gap="24"
+          :cols="2"
+        >
+          <NGridItem>
+            <NFormItem
+              label="最大数量"
+              path="maxVideoCount"
+            >
+              <NInputNumber
+                v-model:value="createVideoModel.maxVideoCount"
+                placeholder="限制数量"
+                :min="1"
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NGridItem>
+          <NGridItem>
+            <NFormItem
+              label="结束时间"
+              path="endAt"
+            >
+              <NDatePicker
+                v-model:value="createVideoModel.endAt"
+                type="datetime"
+                placeholder="选择截止时间"
+                :is-date-disabled="dateDisabled"
+                style="width: 100%"
+              />
+            </NFormItem>
+          </NGridItem>
+        </NGrid>
+        
+        <div class="modal-footer">
+          <NText
+            depth="3"
+            style="font-size: 12px"
+          >
+            * 结束时间至少需要在当前时间一小时后
+          </NText>
           <NButton
             type="primary"
             :loading="isLoading2"
             @click="createTable"
           >
-            创建
+            立即创建
           </NButton>
-        </NSpace>
-      </NFormItem>
-    </NForm>
-  </NModal>
+        </div>
+      </NForm>
+    </NModal>
+  </div>
 </template>
+
+<style scoped>
+.manage-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.empty-state {
+  margin-top: 100px;
+  display: flex;
+  justify-content: center;
+}
+
+.grid-container {
+  width: 100%;
+}
+
+.card-wrapper {
+  height: 100%;
+}
+
+/* 深度选择器修改卡片样式 */
+:deep(.collect-card) {
+  height: 100%;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+:deep(.collect-card:hover) {
+  transform: translateY(-4px);
+  border-color: var(--n-color-target);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  /* 可以在这里添加针对小屏幕的样式调整 */
+}
+</style>

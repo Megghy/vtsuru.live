@@ -42,7 +42,7 @@ function onClick() {
 <template>
   <NCard
     size="small"
-    style="width: 100%; max-width: 70vw; cursor: pointer"
+    style="width: 100%; cursor: pointer"
     embedded
     hoverable
     :bordered="bordered"

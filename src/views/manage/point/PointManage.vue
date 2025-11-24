@@ -50,7 +50,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import {
   FunctionTypes,
   GoodsStatus,
@@ -60,6 +60,7 @@ import {
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
+import ManagePageHeader from '@/components/manage/ManagePageHeader.vue'
 import PointGoodsItem from '@/components/manage/PointGoodsItem.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/data/constants'
 import { uploadFiles, UploadStage } from '@/data/fileUpload'
@@ -220,17 +221,6 @@ const rules = {
       }
     },
   },
-}
-
-// 方法
-async function setFunctionEnable(enable: boolean) {
-  const success = enable ? await EnableFunction(FunctionTypes.Point) : await DisableFunction(FunctionTypes.Point)
-
-  if (success) {
-    message.success(`已${enable ? '启用' : '禁用'}积分系统`)
-  } else {
-    message.error(`无法${enable ? '启用' : '禁用'}积分系统`)
-  }
 }
 
 async function updateGoods(e: MouseEvent) {
@@ -427,77 +417,73 @@ onMounted(() => { })
 </script>
 
 <template>
-  <!-- 头部状态卡片 -->
-  <NFlex
-    vertical
-    :size="16"
+  <!-- 头部 -->
+  <ManagePageHeader
+    title="积分管理"
+    :function-type="FunctionTypes.Point"
   >
     <NFlex
-      justify="space-between"
-      align="center"
-      :gap="16"
+      vertical
+      :size="16"
     >
-      <NAlert
-        :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-          ? 'success'
-          : 'warning'
-        "
-        style="flex: 1; min-width: 300px"
+      <NFlex
+        justify="space-between"
+        align="center"
+        :gap="16"
       >
-        <NFlex
-          align="center"
-          :gap="8"
+        <NAlert
+          :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+            ? 'success'
+            : 'warning'
+          "
+          style="flex: 1; min-width: 300px"
         >
-          <span>启用</span>
-          <NButton
-            text
-            type="primary"
-            tag="a"
-            href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
-            target="_blank"
+          <NFlex
+            align="center"
+            :gap="8"
           >
-            积分系统
-          </NButton>
-          <NDivider vertical />
-          <NSwitch
-            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Point)"
-            @update:value="setFunctionEnable"
-          />
-        </NFlex>
-        <NText
-          depth="3"
-          style="margin-top: 8px; display: block"
-        >
-          此功能需要部署
-          <NButton
-            text
-            type="primary"
-            tag="a"
-            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-            target="_blank"
-          >
-            VtsuruEventFetcher
-          </NButton>
-          , 否则将无法记录各种事件
-        </NText>
-      </NAlert>
-      <EventFetcherStatusCard />
-    </NFlex>
+            <NText>
+              此功能依赖
+              <NButton
+                text
+                type="primary"
+                tag="a"
+                href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+                target="_blank"
+              >
+                VtsuruEventFetcher
+              </NButton>
+              (事件监听器), 否则将无法自动记录礼物/舰长等事件
+            </NText>
+            <NDivider vertical />
+            <NButton
+              text
+              type="info"
+              tag="a"
+              href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+              target="_blank"
+            >
+              积分系统说明
+            </NButton>
+          </NFlex>
+        </NAlert>
+        <EventFetcherStatusCard />
+      </NFlex>
 
-    <!-- 礼物展示页链接 -->
-    <NDivider
-      style="margin: 0"
-      title-placement="left"
-    >
-      礼物展示页链接
-    </NDivider>
+      <!-- 礼物展示页链接 -->
+      <NDivider
+        style="margin: 0"
+        title-placement="left"
+      >
+        礼物展示页链接
+      </NDivider>
 
-    <NFlex
-      align="center"
-      :gap="12"
-    >
-      <NInputGroup style="max-width: 400px;">
-        <NInput
+      <NFlex
+        align="center"
+        :gap="12"
+      >
+        <NInputGroup style="max-width: 400px;">
+          <NInput
           :value="`${CURRENT_HOST}@${accountInfo.name}/goods`"
           readonly
         />
@@ -510,6 +496,7 @@ onMounted(() => { })
       </NInputGroup>
     </NFlex>
   </NFlex>
+  </ManagePageHeader>
 
   <NDivider style="margin: 16px 0" />
 

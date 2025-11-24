@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
-import { Heart, HeartOutline, TrashBin } from '@vicons/ionicons5'
+import { ArrowSync24Filled, Copy24Filled, Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
+import { Heart, HeartOutline, SettingsOutline, TrashBin } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 // @ts-ignore
 import { saveAs } from 'file-saver'
@@ -22,6 +22,7 @@ import {
   NList,
   NListItem,
   NModal,
+  NPageHeader,
   NPagination,
   NPopconfirm,
   NSelect,
@@ -36,12 +37,19 @@ import {
   NTime,
   NTooltip,
   useMessage,
+  NGrid,
+  NGi,
+  NStatistic,
+  NThing,
+  NCollapse,
+  NCollapseItem,
 } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
+import ManagePageHeader from '@/components/manage/ManagePageHeader.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionItems from '@/components/QuestionItems.vue'
 import { CURRENT_HOST } from '@/data/constants'
@@ -230,40 +238,6 @@ async function saveNotificationSetting() {
   }
 }
 
-// 启用或禁用提问箱功能
-async function setFunctionEnable(enable: boolean) {
-  let success = false
-  try {
-    if (enable) {
-      success = await EnableFunction(FunctionTypes.QuestionBox) // 调用启用API
-    } else {
-      success = await DisableFunction(FunctionTypes.QuestionBox) // 调用禁用API
-    }
-    if (success) {
-      message.success(`提问箱功能已${enable ? '启用' : '禁用'}`)
-      // 成功后可能需要更新 accountInfo 中的 enableFunctions 状态, useAccount 可能需要提供更新方法或自动刷新
-      // 假设 useAccount() 会自动更新或有刷新机制
-      if (accountInfo.value?.settings?.enableFunctions) {
-        if (enable && !accountInfo.value.settings.enableFunctions.includes(FunctionTypes.QuestionBox)) {
-          accountInfo.value.settings.enableFunctions.push(FunctionTypes.QuestionBox)
-        } else if (!enable) {
-          const index = accountInfo.value.settings.enableFunctions.indexOf(FunctionTypes.QuestionBox)
-          if (index > -1) {
-            accountInfo.value.settings.enableFunctions.splice(index, 1)
-          }
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}提问箱功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${err}`)
-    console.error('Enable/Disable Function error:', err)
-    // 操作失败时可能需要恢复 Switch 的状态,防止UI与实际状态不一致
-    // 这需要更复杂的逻辑,暂时不加
-  }
-}
-
 // --- 生命周期钩子 ---
 onMounted(() => {
   // 组件挂载时获取初始数据
@@ -293,118 +267,143 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
 <template>
   <NSpin :show="!accountInfo">
     <template v-if="accountInfo">
-      <!-- 顶部操作区域 -->
-      <NSpace
-        align="center"
-        wrap
-        item-style="margin-bottom: 8px;"
+      <!-- 页面头部 -->
+      <ManagePageHeader
+        title="提问箱管理"
+        :function-type="FunctionTypes.QuestionBox"
+        :loading="useQB.isLoading"
       >
-        <!-- 提问箱启用开关 -->
-        <NAlert
-          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
-          style="padding: 5px 10px;"
-          :show-icon="false"
-        >
-          <NFlex align="center">
-            启用提问箱
-            <NSwitch
-              :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox)"
-              :disabled="useQB.isLoading"
-              @update:value="setFunctionEnable"
-            />
-          </NFlex>
-        </NAlert>
-
-        <!-- 操作按钮 -->
-        <NButton
-          type="primary"
-          :loading="useQB.isLoading"
-          @click="refresh"
-        >
-          刷新
-        </NButton>
-        <NButton
-          type="primary"
-          secondary
-          @click="shareModalVisiable = true"
-        >
-          分享
-        </NButton>
-        <NButton
-          type="primary"
-          secondary
-          @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
-        >
-          前往提问页
-        </NButton>
-        <NButton
-          type="primary"
-          secondary
-          @click="showOBSModal = true"
-        >
-          预览OBS组件
-        </NButton>
-
-        <!-- 功能提示 -->
-        <NAlert
-          type="success"
-          closable
-          style="max-width: 550px;"
-        >
-          2025.3.1 本站已支持内容审查, 可前往提问箱设置页进行开启
-          <NTooltip>
-            <template #trigger>
-              <NIcon :component="Info24Filled" />
-            </template>
-            新功能还不稳定, 如果启用后遇到任何问题请向我反馈
-          </NTooltip>
-        </NAlert>
-      </NSpace>
-
-      <!-- 提问页链接 -->
-      <NDivider
-        title-placement="left"
-        style="margin: 16px 0;"
-      >
-        提问页链接
-      </NDivider>
-      <NFlex align="center">
-        <!-- 主链接区域输入框和复制按钮 -->
-        <NInputGroup style="flex-grow: 1; max-width: 500px;">
-          <NInput
-            :value="directShareUrl"
-            readonly
-          />
+        <template #action>
           <NButton
             secondary
-            @click="copyToClipboard(directShareUrl)"
+            circle
+            type="primary"
+            :loading="useQB.isLoading"
+            @click="refresh"
           >
-            复制
+            <template #icon>
+              <NIcon :component="ArrowSync24Filled" />
+            </template>
           </NButton>
-        </NInputGroup>
-        <!-- 主链接区域标签选择器 -->
-        <NSelect
-          v-model:value="selectedDirectShareTag"
-          placeholder="附加话题 (可选)"
-          filterable
-          clearable
-          :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
-          style="min-width: 150px; max-width: 200px;"
-        />
-      </NFlex>
+          <NTooltip>
+            <template #trigger>
+              <NButton
+                secondary
+                circle
+                @click="shareModalVisiable = true"
+              >
+                <template #icon>
+                  <NIcon :component="Share24Filled" />
+                </template>
+              </NButton>
+            </template>
+            分享提问箱
+          </NTooltip>
+          <NButton
+            secondary
+            @click="showOBSModal = true"
+          >
+            OBS 组件
+          </NButton>
+          <NButton
+            primary
+            @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+          >
+            <template #icon>
+              <NIcon :component="Link24Filled" />
+            </template>
+            前往提问页
+          </NButton>
+        </template>
 
-      <!-- 审核中提示 -->
-      <template v-if="useQB.reviewing > 0">
-        <NDivider style="margin: 10px 0" />
-        <NAlert
-          type="warning"
-          title="有提问正在审核中"
+        <!-- 提示信息 -->
+        <NCollapse
+          v-if="useQB.reviewing > 0 || !accountInfo.settings?.questionBox?.saftyLevel"
+          style="margin-top: 12px;"
         >
-          当前有 {{ useQB.reviewing }} 条提问正在等待审核。
-        </NAlert>
-      </template>
+          <NCollapseItem
+            title="通知与提示"
+            name="1"
+          >
+            <NSpace vertical>
+              <NAlert
+                v-if="useQB.reviewing > 0"
+                type="warning"
+                show-icon
+              >
+                当前有 {{ useQB.reviewing }} 条提问正在等待审核。
+              </NAlert>
+              <NAlert
+                type="info"
+                show-icon
+                closable
+              >
+                2025.3.1 本站已支持内容审查, 可前往提问箱设置页进行开启
+                <NTooltip>
+                  <template #trigger>
+                    <NIcon :component="Info24Filled" />
+                  </template>
+                  新功能还不稳定, 如果启用后遇到任何问题请向我反馈
+                </NTooltip>
+              </NAlert>
+            </NSpace>
+          </NCollapseItem>
+        </NCollapse>
+      </ManagePageHeader>
 
-      <NDivider style="margin: 16px 0;" />
+      <!-- 提问页链接卡片 -->
+      <NCard
+        size="small"
+        style="margin-bottom: 16px; border-radius: 8px;"
+        embedded
+      >
+        <NFlex
+          align="center"
+          justify="space-between"
+          wrap
+        >
+          <NFlex
+            align="center"
+            style="flex-grow: 1;"
+          >
+            <NIcon
+              :component="Link24Filled"
+              size="20"
+              depth="3"
+            />
+            <NText depth="3">
+              我的提问链接:
+            </NText>
+            <NInputGroup style="max-width: 400px;">
+              <NInput
+                :value="directShareUrl"
+                readonly
+                size="small"
+              />
+              <NButton
+                secondary
+                size="small"
+                @click="copyToClipboard(directShareUrl)"
+              >
+                <template #icon>
+                  <NIcon :component="Copy24Filled" />
+                </template>
+                复制
+              </NButton>
+            </NInputGroup>
+          </NFlex>
+
+          <NSelect
+            v-model:value="selectedDirectShareTag"
+            placeholder="附加话题参数 (可选)"
+            filterable
+            clearable
+            size="small"
+            :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
+            style="width: 200px;"
+          />
+        </NFlex>
+      </NCard>
 
       <!-- 主要内容区域: 标签页 -->
       <NSpin :show="useQB.isLoading">
@@ -412,6 +411,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
           v-model:value="selectedTabItem"
           animated
           type="line"
+          size="large"
         >
           <!-- 我收到的 -->
           <NTabPane
@@ -577,21 +577,24 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             <NEmpty
               v-if="useQB.sendQuestions.length === 0"
               description="暂无发送的提问"
+              style="margin-top: 40px;"
             />
             <NList
               v-else
-              hoverable
-              clickable
               style="background-color: transparent;"
+              :show-divider="false"
             >
               <NListItem
                 v-for="item in useQB.sendQuestions"
                 :key="item.id"
+                style="padding: 0 0 12px 0;"
               >
                 <NCard
                   size="small"
-                  :bordered="false"
-                  style="background-color: var(--n-color);"
+                  hoverable
+                  embedded
+                  content-style="padding: 12px 16px;"
+                  style="border-radius: 8px;"
                 >
                   <!-- 发送目标和时间 -->
                   <template #header>
@@ -600,13 +603,19 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       justify="space-between"
                     >
                       <NSpace
-                        :size="4"
+                        :size="8"
                         align="center"
                       >
-                        <NText>发给</NText>
+                        <NTag
+                          size="small"
+                          :bordered="false"
+                          type="info"
+                        >
+                          发给
+                        </NTag>
                         <NButton
                           text
-                          type="info"
+                          type="primary"
                           @click="router.push(`/user/${item.target.id}`)"
                         >
                           {{ item.target.name }}
@@ -614,7 +623,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       </NSpace>
                       <NText
                         depth="3"
-                        style="font-size: small;"
+                        style="font-size: 12px;"
                       >
                         <NTooltip placement="top-end">
                           <template #trigger>
@@ -634,64 +643,65 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                   </template>
                   <!-- 问题内容 -->
                   <template v-if="item.questionImages && item.questionImages.length > 0">
-                    <NSpace
-                      vertical
+                    <NFlex
                       size="small"
+                      wrap
+                      style="margin-bottom: 12px;"
                     >
                       <NImage
                         v-for="(img, index) in item.questionImages"
                         :key="index"
                         :src="img.path"
-                        width="100"
+                        height="80"
                         object-fit="cover"
                         lazy
-                        style="border-radius: 4px; margin-bottom: 5px;"
+                        style="border-radius: 4px;"
                       />
-                    </NSpace>
-                    <br>
+                    </NFlex>
                   </template>
-                  <NText>{{ item.question?.message }}</NText>
+                  <NText style="font-size: 15px; line-height: 1.6; display: block; margin-bottom: 8px;">
+                    {{ item.question?.message }}
+                  </NText>
 
                   <!-- 回复内容 -->
                   <template
                     v-if="item.answer"
                     #footer
                   >
-                    <NDivider style="margin-top: 8px; margin-bottom: 8px;" />
                     <NCard
                       size="small"
                       :bordered="false"
-                      style="background-color: var(--n-action-color);"
+                      style="background-color: rgba(128, 128, 128, 0.08); border-radius: 6px;"
                     >
                       <template #header>
-                        <NText depth="2">
-                          对方的回复
-                        </NText>
+                        <NFlex justify="space-between" align="center">
+                            <NText depth="3" style="font-size: 13px;">
+                                对方的回复
+                            </NText>
+                            <NText
+                                depth="3"
+                                style="font-size: 12px;"
+                            >
+                                <NTooltip
+                                v-if="item.answer.createdAt"
+                                placement="top-end"
+                                >
+                                <template #trigger>
+                                    <NTime
+                                    :time="item.answer.createdAt"
+                                    :to="Date.now()"
+                                    type="relative"
+                                    />
+                                </template>
+                                <NTime
+                                    :time="item.answer.createdAt"
+                                    format="yyyy-MM-dd HH:mm:ss"
+                                />
+                                </NTooltip>
+                            </NText>
+                        </NFlex>
                       </template>
-                      <NText>{{ item.answer.message }}</NText>
-                      <template #header-extra>
-                        <NText
-                          depth="3"
-                          style="font-size: small;"
-                        >
-                          <NTooltip
-                            v-if="item.answer.createdAt"
-                            placement="top-end"
-                          >
-                            <template #trigger>
-                              <NTime
-                                :time="item.answer.createdAt"
-                                :to="Date.now()"
-                                type="relative"
-                              />
-                            </template>
-                            <NTime
-                              :time="item.answer.createdAt"
-                              format="yyyy-MM-dd HH:mm:ss"
-                            />
-                          </NTooltip>
-                        </NText>
-                      </template>
+                      <NText style="line-height: 1.5;">{{ item.answer.message }}</NText>
                     </NCard>
                   </template>
                 </NCard>
@@ -791,174 +801,213 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             name="3"
             display-directive="show:lazy"
           >
-            <NSpace vertical>
-              <!-- 基础设定 -->
-              <NDivider title-placement="left">
-                基础设定
-              </NDivider>
-              <NCheckbox
-                v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-                :disabled="useQB.isLoading"
-                @update:checked="saveQuestionBoxSettings"
-              >
-                允许未注册/匿名用户进行提问
-              </NCheckbox>
-              <NCheckbox
-                v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
-                :disabled="useQB.isLoading"
-                @update:checked="saveQuestionBoxSettings"
-              >
-                允许上传图片
-              </NCheckbox>
-              <!-- 内容审查 -->
-              <NDivider title-placement="left">
-                内容审查等级
-                <NTag
-                  type="success"
-                  :bordered="false"
-                  size="tiny"
-                  style="margin-left: 5px;"
-                >
-                  新
-                </NTag>
-              </NDivider>
-              <NSlider
-                v-model:value="tempSaftyLevel"
-                :marks="remarkLevel"
-                step="mark"
-                :max="3"
-                style="max-width: 90%; margin: 10px auto;"
-                :format-tooltip="(v) => remarkLevelString[v]"
-                :disabled="useQB.isLoading"
-                @dragend="() => { if (accountInfo?.settings?.questionBox) { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveQuestionBoxSettings(); } }"
-              />
-
-              <!-- 标签/话题管理 -->
-              <NDivider title-placement="left">
-                标签/话题管理
-                <NTooltip placement="right">
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      style="margin-left: 5px; cursor: help; vertical-align: middle;"
-                    />
-                  </template>
-                  用于对收到的提问进行分类，或让提问者选择相关话题。
-                </NTooltip>
-              </NDivider>
-              <NFlex align="center">
-                <NInputGroup style="max-width: 400px">
-                  <NInputGroupLabel> 新标签 </NInputGroupLabel>
-                  <NInput
-                    v-model:value="addTagName"
-                    placeholder="输入标签名称"
-                    maxlength="30"
-                    show-count
-                    clearable
-                  />
-                  <NButton
-                    type="primary"
-                    :disabled="!addTagName.trim()"
-                    @click="useQB.addTag(addTagName); addTagName = ''"
+            <NGrid
+              x-gap="12"
+              y-gap="12"
+              cols="1 800:2"
+            >
+              <!-- 左侧设置项 -->
+              <NGi>
+                <NSpace vertical>
+                  <!-- 基础设定 -->
+                  <NCard
+                    title="基础设定"
+                    size="small"
+                    segmented
                   >
-                    添加
-                  </NButton>
-                </NInputGroup>
-              </NFlex>
-              <br>
-              <NEmpty
-                v-if="useQB.tags.length === 0"
-                description="暂无标签"
-              />
-              <NList
-                v-else
-                bordered
-                hoverable
-                style="max-width: 500px; background-color: var(--n-color);"
-              >
-                <NListItem
-                  v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)"
-                  :key="item.name"
-                >
-                  <NFlex
-                    align="center"
-                    justify="space-between"
-                  >
-                    <!-- 标签名和状态 -->
-                    <NTag
-                      :bordered="false"
-                      :type="item.visiable ? 'success' : 'default'"
-                      :style="!item.visiable ? { textDecoration: 'line-through', color: 'grey' } : {}"
-                    >
-                      {{ item.name }}
-                    </NTag>
-                    <!-- 操作按钮 -->
-                    <NSpace>
-                      <!-- 显示/隐藏 -->
-                      <NTooltip placement="top">
-                        <template #trigger>
-                          <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
-                            <template #trigger>
-                              <NButton
-                                :type="item.visiable ? 'success' : 'warning'"
-                                text
-                                style="font-size: 18px;"
-                              >
-                                <template #icon>
-                                  <NIcon :component="item.visiable ? Eye24Filled : EyeOff24Filled" />
-                                </template>
-                              </NButton>
-                            </template>
-                            确定要{{ item.visiable ? '隐藏' : '显示' }}这个标签吗? (隐藏后提问者无法选择)
-                          </NPopconfirm>
-                        </template>
-                        {{ item.visiable ? '隐藏标签' : '显示标签' }}
-                      </NTooltip>
-                      <!-- 删除 -->
-                      <NTooltip placement="top">
-                        <template #trigger>
-                          <NPopconfirm @positive-click="useQB.delTag(item.name)">
-                            <template #trigger>
-                              <NButton
-                                type="error"
-                                text
-                                style="font-size: 18px;"
-                              >
-                                <template #icon>
-                                  <NIcon :component="Delete24Regular" />
-                                </template>
-                              </NButton>
-                            </template>
-                            确定要删除这个标签吗? 删除后不可恢复。
-                          </NPopconfirm>
-                        </template>
-                        删除标签
-                      </NTooltip>
+                    <template #header-extra>
+                      <NIcon
+                        :component="SettingsOutline"
+                        size="18"
+                      />
+                    </template>
+                    <NSpace vertical>
+                      <NCheckbox
+                        v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
+                        :disabled="useQB.isLoading"
+                        @update:checked="saveQuestionBoxSettings"
+                      >
+                        允许未注册/匿名用户进行提问
+                      </NCheckbox>
+                      <NCheckbox
+                        v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
+                        :disabled="useQB.isLoading"
+                        @update:checked="saveQuestionBoxSettings"
+                      >
+                        允许上传图片
+                      </NCheckbox>
                     </NSpace>
-                  </NFlex>
-                </NListItem>
-              </NList>
+                  </NCard>
 
-              <!-- 通知设置 -->
-              <NDivider title-placement="left">
-                通知设置
-              </NDivider>
-              <NCheckbox
-                v-model:checked="accountInfo.settings.sendEmail.recieveQA"
-                :disabled="useQB.isLoading"
-                @update:checked="saveNotificationSetting"
-              >
-                收到新提问时发送邮件通知
-              </NCheckbox>
-              <NCheckbox
-                v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
-                :disabled="useQB.isLoading"
-                @update:checked="saveNotificationSetting"
-              >
-                我发送的提问收到回复时发送邮件通知
-              </NCheckbox>
-            </NSpace>
-            <NDivider />
+                  <!-- 内容审查 -->
+                  <NCard
+                    title="内容审查"
+                    size="small"
+                    segmented
+                  >
+                    <template #header-extra>
+                      <NTag
+                        type="success"
+                        :bordered="false"
+                        size="small"
+                        round
+                      >
+                        新功能
+                      </NTag>
+                    </template>
+                    <div style="padding: 0 10px 10px 10px;">
+                      <div style="margin-bottom: 15px; font-size: 13px; color: gray;">
+                        设置过滤强度，自动拦截恶意提问
+                      </div>
+                      <NSlider
+                        v-model:value="tempSaftyLevel"
+                        :marks="remarkLevel"
+                        step="mark"
+                        :max="3"
+                        :format-tooltip="(v) => remarkLevelString[v]"
+                        :disabled="useQB.isLoading"
+                        @dragend="() => { if (accountInfo?.settings?.questionBox) { accountInfo.settings.questionBox.saftyLevel = tempSaftyLevel; saveQuestionBoxSettings(); } }"
+                      />
+                    </div>
+                  </NCard>
+
+                  <!-- 通知设置 -->
+                  <NCard
+                    title="通知设置"
+                    size="small"
+                    segmented
+                  >
+                    <NSpace vertical>
+                      <NCheckbox
+                        v-model:checked="accountInfo.settings.sendEmail.recieveQA"
+                        :disabled="useQB.isLoading"
+                        @update:checked="saveNotificationSetting"
+                      >
+                        收到新提问时发送邮件通知
+                      </NCheckbox>
+                      <NCheckbox
+                        v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
+                        :disabled="useQB.isLoading"
+                        @update:checked="saveNotificationSetting"
+                      >
+                        我发送的提问收到回复时发送邮件通知
+                      </NCheckbox>
+                    </NSpace>
+                  </NCard>
+                </NSpace>
+              </NGi>
+
+              <!-- 右侧设置项: 标签管理 -->
+              <NGi>
+                <NCard
+                  title="标签/话题管理"
+                  size="small"
+                  style="height: 100%;"
+                  segmented
+                >
+                  <template #header-extra>
+                    <NTooltip placement="left">
+                      <template #trigger>
+                        <NIcon
+                          :component="Info24Filled"
+                          style="cursor: help;"
+                        />
+                      </template>
+                      用于对收到的提问进行分类，或让提问者选择相关话题。
+                    </NTooltip>
+                  </template>
+
+                  <NInputGroup style="margin-bottom: 12px;">
+                    <NInput
+                      v-model:value="addTagName"
+                      placeholder="输入新标签名称"
+                      maxlength="30"
+                      show-count
+                      clearable
+                    />
+                    <NButton
+                      type="primary"
+                      :disabled="!addTagName.trim()"
+                      @click="useQB.addTag(addTagName); addTagName = ''"
+                    >
+                      添加
+                    </NButton>
+                  </NInputGroup>
+
+                  <NEmpty
+                    v-if="useQB.tags.length === 0"
+                    description="暂无标签"
+                  />
+                  <NList
+                    v-else
+                    bordered
+                    hoverable
+                    style="max-height: 500px; overflow-y: auto;"
+                  >
+                    <NListItem
+                      v-for="item in useQB.tags.sort((a, b) => b.createAt - a.createAt)"
+                      :key="item.name"
+                    >
+                      <NFlex
+                        align="center"
+                        justify="space-between"
+                      >
+                        <!-- 标签名 -->
+                        <NTag
+                          :bordered="false"
+                          :type="item.visiable ? 'success' : 'default'"
+                          :style="!item.visiable ? { textDecoration: 'line-through', color: 'grey' } : {}"
+                        >
+                          {{ item.name }}
+                        </NTag>
+                        <!-- 操作按钮 -->
+                        <NSpace size="small">
+                          <NTooltip placement="top">
+                            <template #trigger>
+                              <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
+                                <template #trigger>
+                                  <NButton
+                                    :type="item.visiable ? 'success' : 'warning'"
+                                    text
+                                    size="small"
+                                  >
+                                    <template #icon>
+                                      <NIcon :component="item.visiable ? Eye24Filled : EyeOff24Filled" />
+                                    </template>
+                                  </NButton>
+                                </template>
+                                确定要{{ item.visiable ? '隐藏' : '显示' }}这个标签吗? (隐藏后提问者无法选择)
+                              </NPopconfirm>
+                            </template>
+                            {{ item.visiable ? '隐藏标签' : '显示标签' }}
+                          </NTooltip>
+
+                          <NTooltip placement="top">
+                            <template #trigger>
+                              <NPopconfirm @positive-click="useQB.delTag(item.name)">
+                                <template #trigger>
+                                  <NButton
+                                    type="error"
+                                    text
+                                    size="small"
+                                  >
+                                    <template #icon>
+                                      <NIcon :component="Delete24Regular" />
+                                    </template>
+                                  </NButton>
+                                </template>
+                                确定要删除这个标签吗? 删除后不可恢复。
+                              </NPopconfirm>
+                            </template>
+                            删除标签
+                          </NTooltip>
+                        </NSpace>
+                      </NFlex>
+                    </NListItem>
+                  </NList>
+                </NCard>
+              </NGi>
+            </NGrid>
           </NTabPane>
         </NTabs>
       </NSpin>
@@ -1235,10 +1284,6 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     justify-content: space-between; /* 上下分布 */
     flex-grow: 1; /* 占据剩余空间 */
     padding-right: 20px; /* 与二维码的间距 */
-}
-
-.share-card-text {
-    /* 包含标题和名字 */
 }
 
 .share-card-title {
