@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import type { DanmakuInfo, GiftInfo } from '@/data/DanmakuClients/OpenLiveClient'
-import { Add24Filled, Delete24Filled, Info24Filled, PersonAdd24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
+import { Add24Filled, Delete24Filled, Info24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import {
@@ -17,6 +17,8 @@ import {
   NEmpty,
   NForm,
   NFormItem,
+  NGi,
+  NGrid,
   NIcon,
   NInput,
   NInputGroup,
@@ -26,12 +28,14 @@ import {
   NList,
   NListItem,
   NModal,
+  NNumberAnimation,
   NProgress,
   NRadioButton,
   NRadioGroup,
   NResult,
   NScrollbar,
   NSpace,
+  NStatistic,
   NTag,
   NTime,
   NTooltip,
@@ -784,318 +788,331 @@ onUnmounted(() => {
           </NButton>
         </NSpace>
       </NCard>
-      <NCard
-        size="small"
-        embedded
-        title="抽奖选项"
-      >
-        <template #header-extra>
+      <div class="settings-wrapper">
+        <div class="settings-header">
+          <NSpace align="center">
+            <NIcon :component="Sparkle24Filled" color="#f0a020" />
+            <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
+          </NSpace>
           <NButton
-            size="small"
+            size="tiny"
             secondary
             :disabled="isStartLottery"
             @click="lotteryOption = defaultOption"
           >
             恢复默认
           </NButton>
-        </template>
-        <NSpace
-          justify="center"
-          align="center"
-        >
-          <NTag :bordered="false">
-            抽奖类型
-          </NTag>
-          <NRadioGroup
-            v-model:value="lotteryOption.type"
-            :disabled="isLottering"
-            size="small"
-          >
-            <NRadioButton
-              value="danmaku"
-              :disabled="isStartLottery"
-            >
-              弹幕
-            </NRadioButton>
-            <NRadioButton
-              value="gift"
-              :disabled="isStartLottery"
-            >
-              礼物
-            </NRadioButton>
-          </NRadioGroup>
-        </NSpace>
-        <NDivider style="margin: 10px 0 10px 0" />
-        <NSpace align="center">
-          <NInputGroup style="max-width: 200px">
-            <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="lotteryOption.resultCount"
-              :disabled="isStartLottery"
-              placeholder=""
-              min="1"
-            />
-          </NInputGroup>
-          <NCheckbox
-            v-model:checked="lotteryOption.needGuard"
-            :disabled="isStartLottery"
-          >
-            需要上舰
-          </NCheckbox>
-          <NCheckbox
-            v-model:checked="lotteryOption.needFanMedal"
-            :disabled="isStartLottery"
-          >
-            需要粉丝牌
-          </NCheckbox>
-          <NCollapseTransition>
-            <NInputGroup
-              v-if="lotteryOption.needFanMedal"
-              style="max-width: 200px"
-            >
-              <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="lotteryOption.fanCardLevel"
-                min="1"
-                max="50"
-                :default-value="1"
-                :disabled="isLottering || isStartLottery"
-              />
-            </NInputGroup>
-          </NCollapseTransition>
-          <template v-if="lotteryOption.type == 'danmaku'">
-            <NTooltip>
-              <template #trigger>
-                <NInputGroup style="max-width: 250px">
-                  <NInputGroupLabel> 弹幕内容 </NInputGroupLabel>
-                  <NInput
-                    v-model:value="lotteryOption.danmakuKeyword"
-                    :disabled="isStartLottery"
-                    placeholder="留空则任何弹幕都可以"
-                  />
-                </NInputGroup>
-              </template>
-              符合规则的弹幕才会被添加到抽奖队列中
-            </NTooltip>
-            <NRadioGroup
-              v-model:value="lotteryOption.danmakuFilterType"
-              name="判定类型"
-              :disabled="isLottering"
-              size="small"
-            >
-              <NRadioButton
-                :disabled="isStartLottery"
-                value="all"
+        </div>
+
+        <div class="settings-layout">
+          <!-- 左侧：参与规则 -->
+          <div class="setting-column">
+            <div class="setting-section">
+              <div class="section-header">
+                <NIcon :component="Target24Filled" />
+                参与规则
+              </div>
+              <NForm
+                label-placement="left"
+                label-width="80"
+                size="small"
               >
-                完全一致
-              </NRadioButton>
-              <NRadioButton
-                :disabled="isStartLottery"
-                value="contains"
+                <NFormItem label="参与方式">
+                  <NRadioGroup
+                    v-model:value="lotteryOption.type"
+                    :disabled="isLottering || isStartLottery"
+                  >
+                    <NRadioButton value="danmaku">
+                      弹幕
+                    </NRadioButton>
+                    <NRadioButton value="gift">
+                      礼物
+                    </NRadioButton>
+                  </NRadioGroup>
+                </NFormItem>
+
+                <template v-if="lotteryOption.type == 'danmaku'">
+                  <NFormItem label="弹幕内容">
+                    <NInput
+                      v-model:value="lotteryOption.danmakuKeyword"
+                      :disabled="isStartLottery"
+                      placeholder="留空则任意弹幕"
+                    />
+                  </NFormItem>
+                  <NFormItem
+                    v-if="lotteryOption.danmakuKeyword"
+                    label="匹配规则"
+                  >
+                    <NRadioGroup
+                      v-model:value="lotteryOption.danmakuFilterType"
+                      :disabled="isStartLottery"
+                    >
+                      <NRadioButton value="all">
+                        完全一致
+                      </NRadioButton>
+                      <NRadioButton value="contains">
+                        包含
+                      </NRadioButton>
+                      <NRadioButton value="regex">
+                        正则
+                      </NRadioButton>
+                    </NRadioGroup>
+                  </NFormItem>
+                </template>
+
+                <template v-else-if="lotteryOption.type == 'gift'">
+                  <NFormItem label="礼物限制">
+                    <NInputGroup>
+                      <NInputNumber
+                        v-model:value="lotteryOption.giftMinPrice"
+                        :disabled="isStartLottery"
+                        placeholder="最低价格"
+                        :min="0"
+                        style="width: 50%"
+                      >
+                        <template #suffix>
+                          元
+                        </template>
+                      </NInputNumber>
+                      <NInput
+                        v-model:value="lotteryOption.giftName"
+                        :disabled="isStartLottery"
+                        placeholder="指定礼物名称"
+                        style="width: 50%"
+                      />
+                    </NInputGroup>
+                  </NFormItem>
+                </template>
+
+                <NFormItem label="身份限制">
+                  <NSpace>
+                    <NCheckbox
+                      v-model:checked="lotteryOption.needGuard"
+                      :disabled="isStartLottery"
+                    >
+                      舰长
+                    </NCheckbox>
+                    <NCheckbox
+                      v-model:checked="lotteryOption.needFanMedal"
+                      :disabled="isStartLottery"
+                    >
+                      粉丝牌
+                    </NCheckbox>
+                    <NCheckbox
+                      v-model:checked="lotteryOption.needWearFanMedal"
+                      :disabled="isStartLottery"
+                    >
+                      佩戴
+                    </NCheckbox>
+                  </NSpace>
+                </NFormItem>
+
+                <NCollapseTransition :show="lotteryOption.needFanMedal">
+                  <NFormItem label="粉丝牌等级">
+                    <NInputNumber
+                      v-model:value="lotteryOption.fanCardLevel"
+                      :min="1"
+                      :max="50"
+                      :disabled="isStartLottery"
+                    />
+                  </NFormItem>
+                </NCollapseTransition>
+              </NForm>
+            </div>
+          </div>
+
+          <!-- 右侧：玩法设置 -->
+          <div class="setting-column">
+            <div class="setting-section">
+              <div class="section-header">
+                <NIcon :component="Sparkle24Filled" />
+                玩法设置
+              </div>
+              <NForm
+                label-placement="left"
+                label-width="auto"
+                size="small"
               >
-                包含
-              </NRadioButton>
-              <NRadioButton
-                :disabled="isStartLottery"
-                value="regex"
-              >
-                正则
-              </NRadioButton>
-            </NRadioGroup>
-          </template>
-          <template v-else-if="lotteryOption.type == 'gift'">
-            <NInputGroup style="max-width: 250px">
-              <NInputGroupLabel> 最低价格 </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="lotteryOption.giftMinPrice"
-                :disabled="isStartLottery"
-                placeholder="留空则不限制"
-              />
-            </NInputGroup>
-            <NInputGroup style="max-width: 200px">
-              <NInputGroupLabel> 礼物名称 </NInputGroupLabel>
-              <NInput
-                v-model:value="lotteryOption.giftName"
-                :disabled="isStartLottery"
-                placeholder="留空则不限制"
-              />
-            </NInputGroup>
-          </template>
-        </NSpace>
-        <NDivider style="margin: 10px 0 10px 0" />
-        <NSpace
-          justify="center"
-          align="center"
-        >
-          <NTag :bordered="false">
-            抽取方式
-          </NTag>
-          <NRadioGroup
-            v-model:value="lotteryOption.lotteryType"
-            name="抽取类型"
-            size="small"
-            :disabled="isLottering"
-          >
-            <NRadioButton value="single">
-              单个淘汰
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.single }}
-              </NTooltip>
-            </NRadioButton>
-            <NRadioButton value="half">
-              减半淘汰
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.half }}
-              </NTooltip>
-            </NRadioButton>
-            <NRadioButton value="flip">
-              翻牌抽取
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.flip }}
-              </NTooltip>
-            </NRadioButton>
-            <NRadioButton value="wheel" :disabled="currentUsers.length < 2">
-              转轮抽取
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.wheel }}
-              </NTooltip>
-            </NRadioButton>
-            <NRadioButton value="cards">
-              抽卡模式
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.cards }}
-              </NTooltip>
-            </NRadioButton>
-            <NRadioButton value="elimination">
-              淘汰赛
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                {{ lotteryTypeDescriptions.elimination }}
-              </NTooltip>
-            </NRadioButton>
-          </NRadioGroup>
-        </NSpace>
-        <NDivider style="margin: 10px 0 10px 0" />
-        <NSpace align="center" justify="center">
-          <NTag :bordered="false">
-            动画速度
-          </NTag>
-          <NInputGroup style="max-width: 200px">
-            <NInputGroupLabel> 动画延迟(毫秒) </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="lotteryOption.animationSpeed"
-              :disabled="isLottering"
-              min="100"
-              max="5000"
-              step="100"
-            />
-          </NInputGroup>
-        </NSpace>
-      </NCard>
+                <div class="form-row">
+                  <NFormItem label="抽取人数" style="flex: 1">
+                    <NInputNumber
+                      v-model:value="lotteryOption.resultCount"
+                      :min="1"
+                      :disabled="isStartLottery"
+                      style="width: 100%"
+                    />
+                  </NFormItem>
+                  <NFormItem label="动画速度" style="flex: 1">
+                    <NInputNumber
+                      v-model:value="lotteryOption.animationSpeed"
+                      :step="100"
+                      :min="100"
+                      :max="5000"
+                      :disabled="isLottering"
+                      style="width: 100%"
+                    >
+                      <template #suffix>
+                        ms
+                      </template>
+                    </NInputNumber>
+                  </NFormItem>
+                </div>
+
+                <NFormItem label="玩法模式">
+                  <div class="mode-selector-grid">
+                    <div
+                      v-for="(desc, key) in lotteryTypeDescriptions"
+                      :key="key"
+                      class="mode-card"
+                      :class="{
+                        active: lotteryOption.lotteryType === key,
+                        disabled: isLottering || (key === 'wheel' && currentUsers.length < 2)
+                      }"
+                      @click="!isLottering && (key !== 'wheel' || currentUsers.length >= 2) && (lotteryOption.lotteryType = key as any)"
+                    >
+                      <div class="mode-icon">
+                        <NIcon v-if="key === 'single'" :component="Delete24Filled" />
+                        <NIcon v-else-if="key === 'half'" :component="Pause24Filled" style="transform: rotate(90deg)" />
+                        <NIcon v-else-if="key === 'flip'" :component="Sparkle24Filled" />
+                        <NIcon v-else-if="key === 'wheel'" :component="Target24Filled" />
+                        <NIcon v-else-if="key === 'cards'" :component="Add24Filled" />
+                        <NIcon v-else-if="key === 'elimination'" :component="Play24Filled" />
+                      </div>
+                      <div class="mode-info">
+                        <div class="mode-title">
+                          {{ key === 'single' ? '单个淘汰' :
+                             key === 'half' ? '减半淘汰' :
+                             key === 'flip' ? '翻牌抽取' :
+                             key === 'wheel' ? '转轮抽取' :
+                             key === 'cards' ? '抽卡模式' : '淘汰赛' }}
+                        </div>
+                        <div class="mode-desc">{{ desc }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </NFormItem>
+              </NForm>
+            </div>
+          </div>
+        </div>
+      </div>
       <NCard
         v-if="originUsers"
         size="small"
+        style="margin-top: 16px; min-height: 400px"
       >
-        <NSpace
-          justify="center"
-          align="center"
-        >
-          <NButton
-            type="primary"
-            :loading="isStartLottery"
-            :disabled="isStartLottery || isLotteried || !client"
-            @click="continueLottery"
+        <template #header>
+          <NSpace
+            align="center"
+            justify="space-between"
           >
-            开始监听
-          </NButton>
-          <NButton
-            type="warning"
-            :disabled="!isStartLottery"
-            @click="pause"
-          >
-            停止
-          </NButton>
-          <NButton
-            type="error"
-            :disabled="isLottering || originUsers.length == 0"
-            @click="clear"
-          >
-            清空
-          </NButton>
-        </NSpace>
-        <NDivider style="margin: 20px 0 20px 0">
-          <template v-if="isStartLottery">
-            进行抽取前需要先停止
-          </template>
-          <template v-else-if="lotteryProgress > 0 && lotteryProgress < 100">
-            抽取进行中 ({{ Math.round(lotteryProgress) }}%)
-          </template>
-          <template v-else-if="currentLotteryStep > 0 && lotteryOption.lotteryType === 'elimination'">
-            淘汰赛第 {{ currentLotteryStep }} 轮
-          </template>
-        </NDivider>
+            <div class="user-count-stat">
+              <span class="label">当前参与</span>
+              <NNumberAnimation
+                :from="0"
+                :to="currentUsers.length"
+                active
+              />
+              <span class="unit">人</span>
+            </div>
+            <NSpace>
+              <NButton
+                :type="isStartLottery ? 'warning' : 'success'"
+                :loading="isStartLottery && !isLotteried"
+                @click="isStartLottery ? pause() : continueLottery()"
+              >
+                <template #icon>
+                  <NIcon :component="isStartLottery ? Pause24Filled : Play24Filled" />
+                </template>
+                {{ isStartLottery ? '暂停监听' : '开始监听' }}
+              </NButton>
+              <NButton
+                type="error"
+                secondary
+                :disabled="isLottering || originUsers.length == 0"
+                @click="clear"
+              >
+                清空
+              </NButton>
+            </NSpace>
+          </NSpace>
+        </template>
 
-        <!-- 进度条 -->
-        <div v-if="isLottering || lotteryProgress > 0" style="margin: 10px 0">
-          <NProgress
-            :percentage="lotteryProgress"
-            :show-indicator="true"
-            type="line"
-            :status="isLottering ? 'info' : 'success'"
-          />
+        <div
+          v-if="isLottering || lotteryProgress > 0 || isStartLottery"
+          class="status-bar"
+        >
+          <div
+            v-if="isStartLottery"
+            style="color: var(--n-primary-color)"
+          >
+            <NSpace
+              align="center"
+              justify="center"
+            >
+              <NIcon
+                :component="Sparkle24Filled"
+                class="n-icon-spin"
+              />
+              正在监听弹幕/礼物中...
+            </NSpace>
+          </div>
+          <div v-else-if="lotteryProgress > 0 && lotteryProgress < 100">
+            <NProgress
+              type="line"
+              :percentage="lotteryProgress"
+              :indicator-placement="'inside'"
+              processing
+            />
+            <div style="margin-top: 8px">
+              <template v-if="currentLotteryStep > 0 && lotteryOption.lotteryType === 'elimination'">
+                淘汰赛第 {{ currentLotteryStep }} 轮
+              </template>
+              <template v-else>
+                正在抽取中...
+              </template>
+            </div>
+          </div>
         </div>
-        <NSpace justify="center">
+
+        <div class="action-bar">
           <NButton
             type="success"
+            size="large"
             :loading="isLottering"
-            :disabled="isStartLottery || isLotteried"
+            :disabled="isStartLottery || isLotteried || currentUsers.length === 0"
             data-umami-event="Open-Live Use Lottery"
             :data-umami-event-uid="client?.authInfo?.anchor_info?.uid"
+            style="width: 180px; height: 48px; font-size: 18px"
             @click="startLottery"
           >
-            进行抽取
+            <template #icon>
+              <NIcon :component="Sparkle24Filled" />
+            </template>
+            开始抽取
           </NButton>
           <NButton
-            type="info"
             secondary
-            :disabled="isStartLottery || isLottering || !isLotteried"
+            size="large"
+            :disabled="isLottering || !isLotteried"
+            style="width: 120px; height: 48px"
             @click="reset"
           >
-            重置
+            重置结果
           </NButton>
-        </NSpace>
-        <NDivider style="margin: 10px 0 10px 0">
-          共 {{ currentUsers?.length }} 人
-        </NDivider>
-        <!-- 翻牌模式：洗牌按钮 -->
-        <div v-if="lotteryOption.lotteryType === 'flip'" style="display: flex; justify-content: center; margin-bottom: 10px;">
           <NButton
-            size="small"
+            v-if="lotteryOption.lotteryType === 'flip'"
+            size="large"
             type="info"
             secondary
             :disabled="!flipEnabled || isLottering || isStartLottery || currentUsers.length === 0"
+            style="height: 48px"
             @click="shuffleFlipCards"
           >
             洗牌
           </NButton>
         </div>
+        <NDivider style="margin: 10px 0 20px 0" />
         <!-- 转轮模式特殊显示 -->
         <div v-if="lotteryOption.lotteryType === 'wheel' && currentUsers.length >= 2" class="wheel-container">
           <div class="wheel-area">
@@ -1406,6 +1423,165 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.settings-wrapper {
+  margin-bottom: 16px;
+  margin-top: 16px;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+
+.settings-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.setting-column {
+  flex: 1;
+  min-width: 300px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+.setting-section {
+  background: var(--n-card-color);
+  border-radius: 12px;
+  padding: 20px;
+  height: 100%;
+  border: 1px solid var(--n-border-color);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.setting-section:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--n-text-color);
+  border-bottom: 1px dashed var(--n-border-color);
+  padding-bottom: 12px;
+}
+
+.user-count-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--n-text-color-2);
+}
+.user-count-stat .n-number-animation {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--n-primary-color);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+.user-count-stat .unit {
+  font-size: 14px;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.status-bar {
+  margin: 16px 0;
+  text-align: center;
+  color: var(--n-text-color-2);
+}
+
+.mode-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border: 1px solid var(--n-border-color);
+  border-radius: 8px;
+  background-color: var(--n-card-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  gap: 8px;
+}
+
+.mode-card:hover:not(.disabled) {
+  border-color: var(--n-primary-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.05);
+  transform: translateY(-2px);
+}
+
+.mode-card.active {
+  border-color: var(--n-primary-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.1);
+  color: var(--n-primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--n-primary-color-rgb), 0.2);
+}
+
+.mode-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.mode-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mode-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.mode-desc {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  display: none; /* 默认不显示描述，hover或大屏可以显示，目前保持简洁 */
+}
+
 /* 卡片容器 */
 .lottery-cards-container {
   display: grid;

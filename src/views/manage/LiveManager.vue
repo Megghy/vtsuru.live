@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import type { ResponseLiveInfoModel } from '@/api/api-models'
-import { NAlert, NButton, NDivider, NEmpty, NInput, NInputNumber, NSelect, NSkeleton, NList, NListItem, NPagination, NSpace, NSwitch, useMessage } from 'naive-ui'
+import {
+  ArrowSort24Filled,
+  ArrowSync24Filled,
+  Search24Filled
+} from '@vicons/fluent'
+import { NAlert, NButton, NCard, NDivider, NEmpty, NIcon, NInput, NInputNumber, NList, NListItem, NPagination, NSelect, NSkeleton, NSpace, NSwitch, useMessage } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLocalStorage, useSessionStorage, useStorage } from '@vueuse/core'
@@ -127,7 +132,7 @@ function syncStateToQuery() {
       sort: sortKey.value !== 'startAt' ? sortKey.value : undefined,
       order: sortOrder.value !== 'desc' ? sortOrder.value : undefined,
     },
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 watch([page, pageSize, keyword, statusFilter, sortKey, sortOrder], syncStateToQuery)
@@ -162,124 +167,117 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NSpace
-    vertical
-    justify="center"
-    align="center"
-  >
+  <NSpace vertical justify="center" align="center" :size="24">
     <EventFetcherAlert />
     <EventFetcherStatusCard />
   </NSpace>
-  <NDivider />
-  <NAlert
-    v-if="accountInfo?.isBiliVerified != true"
-    type="info"
-  >
-    尚未进行Bilibili认证
-  </NAlert>
+
+  <div v-if="accountInfo?.isBiliVerified != true" style="margin-top: 24px;">
+    <NAlert type="info" title="未认证">
+      尚未进行Bilibili认证，部分功能可能受限。
+    </NAlert>
+  </div>
+
   <template v-else>
-    <NSpace
-      wrap
-      align="center"
-      justify="space-between"
-      style="width: 100%"
-    >
-      <NSpace align="center" wrap>
-        <NInput
-          v-model:value="keyword"
-          placeholder="搜索标题或ID"
-          clearable
-          style="min-width: 220px"
-        />
-        <NSelect
-          v-model:value="statusFilter"
-          :options="[
-            { label: '全部', value: 'all' },
+    <NCard style="margin-top: 24px; margin-bottom: 24px; max-width: 1200px; left: 50%; transform: translateX(-50%);" size="small">
+      <NSpace justify="space-between" align="center" wrap item-style="flex-grow: 1">
+        <!-- Left: Search and Filter -->
+        <NSpace align="center" wrap>
+          <NInput v-model:value="keyword" placeholder="搜索标题或ID" clearable style="width: 280px">
+            <template #prefix>
+              <NIcon :component="Search24Filled" />
+            </template>
+          </NInput>
+
+          <NSelect v-model:value="statusFilter" :options="[
+            { label: '全部状态', value: 'all' },
             { label: '直播中', value: 'live' },
             { label: '已结束', value: 'finished' },
-          ]"
-          style="width: 120px"
-        />
-        <NSelect
-          v-model:value="sortKey"
-          :options="[
-            { label: '开始时间', value: 'startAt' },
-            { label: '弹幕数', value: 'danmakusCount' },
-            { label: '互动数', value: 'interactionCount' },
-            { label: '收益', value: 'totalIncome' },
-          ]"
-          style="width: 140px"
-        />
-        <NSelect
-          v-model:value="sortOrder"
-          :options="[
-            { label: '降序', value: 'desc' },
-            { label: '升序', value: 'asc' },
-          ]"
-          style="width: 100px"
-        />
+          ]" style="width: 140px">
+          </NSelect>
+        </NSpace>
+
+        <!-- Right: Sort and Actions -->
+        <NSpace align="center" wrap>
+          <NSpace align="center" :size="12">
+            <span style="color: var(--n-text-color-3); font-size: 12px;">排序:</span>
+            <NSelect v-model:value="sortKey" size="small" :options="[
+              { label: '开始时间', value: 'startAt' },
+              { label: '弹幕数', value: 'danmakusCount' },
+              { label: '互动数', value: 'interactionCount' },
+              { label: '收益', value: 'totalIncome' },
+            ]" style="width: 120px" />
+            <NSelect v-model:value="sortOrder" size="small" :options="[
+              { label: '降序', value: 'desc' },
+              { label: '升序', value: 'asc' },
+            ]" style="width: 90px" />
+          </NSpace>
+
+          <NDivider vertical />
+
+          <NSpace align="center">
+            <NSwitch v-model:value="enableAutoRefresh" size="small">
+              <template #checked>自动刷新</template>
+              <template #unchecked>自动刷新</template>
+            </NSwitch>
+            <NInputNumber v-if="enableAutoRefresh" v-model:value="refreshSeconds" size="small" style="width: 80px"
+              :min="10" placeholder="秒">
+              <template #suffix>s</template>
+            </NInputNumber>
+            <NButton size="small" secondary type="primary" :loading="isLoading" @click="getAll()">
+              <template #icon>
+                <NIcon :component="ArrowSync24Filled" />
+              </template>
+              刷新
+            </NButton>
+          </NSpace>
+        </NSpace>
       </NSpace>
-      <NSpace align="center">
-        <NSwitch v-model:value="enableAutoRefresh">
-          <template #checked>自动刷新</template>
-          <template #unchecked>自动刷新</template>
-        </NSwitch>
-        <NInputNumber
-          v-model:value="refreshSeconds"
-          style="width: 100px"
-          :min="10"
-          :disabled="!enableAutoRefresh"
-          placeholder="刷新秒数"
-        />
-        <NButton
-          type="primary"
-          tertiary
-          :loading="isLoading"
-          @click="getAll()"
-        >
-          刷新
-        </NButton>
-      </NSpace>
-    </NSpace>
-    <NSpace
-      vertical
-      justify="center"
-      align="center"
-    >
-      <NPagination
-        v-model:page="page"
-        v-model:page-size="pageSize"
-        show-quick-jumper
-        show-size-picker
-        :page-sizes="[10, 20, 30, 40]"
-        :item-count="filteredAndSortedLives.length"
-      />
-    </NSpace>
-    <NDivider />
-    <NSkeleton v-if="isLoading" text :repeat="5" />
+    </NCard>
+
+    <NSkeleton v-if="isLoading && !lives.length" text :repeat="5" />
     <template v-else>
-      <NEmpty v-if="!filteredAndSortedLives.length" description="无数据">
+      <NEmpty v-if="!filteredAndSortedLives.length" description="没有找到符合条件的直播记录">
         <template #extra>
-          <NButton type="primary" @click="getAll">重试</NButton>
+          <NButton type="primary" @click="getAll">重新加载</NButton>
         </template>
       </NEmpty>
-      <NList
-        v-else
-        bordered
-        hoverable
-        clickable
-      >
-        <NListItem
-          v-for="live in pagedLives"
-          :key="live.liveId"
-          @click="OnClickCover(live)"
-        >
-          <LiveInfoContainer
-            :key="live.liveId"
-            :live="live"
-          />
-        </NListItem>
-      </NList>
+
+      <div v-else class="list-container">
+        <NList hoverable clickable class="live-list">
+          <NListItem v-for="live in pagedLives" :key="live.liveId" @click="OnClickCover(live)" class="live-list-item">
+            <LiveInfoContainer :key="live.liveId" :live="live" />
+          </NListItem>
+        </NList>
+
+        <NSpace justify="center" align="center" style="margin-top: 24px; margin-bottom: 48px;">
+          <NPagination v-model:page="page" v-model:page-size="pageSize" show-quick-jumper show-size-picker
+            :page-sizes="[10, 20, 30, 40]" :item-count="filteredAndSortedLives.length" />
+        </NSpace>
+      </div>
     </template>
   </template>
 </template>
+
+<style scoped>
+.list-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.live-list {
+  background: transparent;
+}
+
+.live-list-item {
+  padding: 16px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.live-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+</style>

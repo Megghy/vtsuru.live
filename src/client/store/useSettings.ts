@@ -30,7 +30,7 @@ export const useSettings = defineStore('settings', () => {
   const defaultSettings: VTsuruClientSettings = {
     useDanmakuClientType: 'openlive',
     fallbackToOpenLive: true,
-    bootAsMinimized: true,
+    bootAsMinimized: false,
 
     danmakuHistorySize: 100,
     loginType: 'qrcode',

@@ -44,6 +44,12 @@ async function getUsers() {
     type: OpenLiveLotteryType.Waiting,
   } as UpdateLiveLotteryUsersModel
 }
+
+function handleImageError(e: Event) {
+  const img = e.target as HTMLImageElement
+  img.src = 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
+}
+
 onMounted(() => {
   window.$mitt.on('onOBSComponentUpdate', () => {
     getUsers()
@@ -93,6 +99,7 @@ onUnmounted(() => {
               class="lottery-avatar"
               :src="`${user.avatar}@30h`"
               referrerpolicy="no-referrer"
+              @error="handleImageError"
             >
             <div>
               <p class="lottery-name">{{ user.name }}</p>
@@ -138,6 +145,7 @@ onUnmounted(() => {
                 style="border-radius: 50%"
                 :src="`${user.avatar}@50h_50w`"
                 referrerpolicy="no-referrer"
+                @error="handleImageError"
               >
               <NText style="font-size: large">
                 {{ user.name }}
@@ -145,7 +153,10 @@ onUnmounted(() => {
             </NSpace>
           </div>
         </Vue3Marquee>
-        <NSpace justify="center">
+        <NSpace
+          v-else
+          justify="center"
+        >
           <div
             v-for="user in result.resultUsers"
             :key="user.uId"
@@ -168,6 +179,7 @@ onUnmounted(() => {
               style="border-radius: 50%"
               :src="`${user.avatar}@50h_50w`"
               referrerpolicy="no-referrer"
+              @error="handleImageError"
             >
             <NText style="font-size: large; margin-top: 10px">
               {{ user.name }}

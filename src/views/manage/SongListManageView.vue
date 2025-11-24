@@ -49,9 +49,10 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import * as XLSX from 'xlsx'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import ManagePageHeader from '@/components/manage/ManagePageHeader.vue'
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST, FETCH_API, SONG_API_URL } from '@/data/constants'
 import { copyToClipboard, objectsToCSV } from '@/Utils'
@@ -946,25 +947,6 @@ function beforeUpload(data: { file: UploadFileInfo, fileList: UploadFileInfo[] }
 }
 
 /**
- * 设置歌单功能启用状态
- */
-async function setFunctionEnable(enable: boolean) {
-  let success = false
-
-  if (enable) {
-    success = await EnableFunction(FunctionTypes.SongList)
-  } else {
-    success = await DisableFunction(FunctionTypes.SongList)
-  }
-
-  if (success) {
-    message.success(`已${enable ? '启用' : '禁用'}`)
-  } else {
-    message.error(`无法${enable ? '启用' : '禁用'}`)
-  }
-}
-
-/**
  * 重置添加歌曲表单
  */
 function resetAddingSong(onlyName = false) {
@@ -1011,85 +993,77 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpace align="center">
-    <!-- 歌单功能启用状态 -->
-    <NAlert
-      :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
-      style="max-width: 200px"
-    >
-      启用歌单
-      <NDivider vertical />
-      <NSwitch
-        :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.SongList)"
-        @update:value="setFunctionEnable"
-      />
-    </NAlert>
-
-    <!-- 功能按钮区 -->
-    <NButton
-      type="primary"
-      @click="showModal = true"
-    >
-      添加歌曲
-    </NButton>
-    <NButton
-      type="primary"
-      @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
-    >
-      修改展示模板
-    </NButton>
-    <NButton
-      type="primary"
-      secondary
-      @click="exportData"
-    >
-      导出为 CSV
-    </NButton>
-    <NButton
-      secondary
-      @click="$router.push({ name: 'manage-liveRequest' })"
-    >
-      前往点播管理页
-    </NButton>
-    <NButton
-      secondary
-      @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })"
-    >
-      前往歌单展示页
-    </NButton>
-    <NButton
-      :loading="isLoading"
-      @click="() => {
-        getSongs()
-        message.success('完成')
-      }"
-    >
-      刷新
-    </NButton>
-  </NSpace>
-
-  <!-- 歌单展示页链接 -->
-  <NDivider
-    style="margin: 16px 0 16px 0"
-    title-placement="left"
+  <ManagePageHeader
+    title="歌单管理"
+    :function-type="FunctionTypes.SongList"
   >
-    歌单展示页链接
-  </NDivider>
-  <NFlex align="center">
-    <NInputGroup style="max-width: 400px;">
-      <NInput
-        :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`"
-        readonly
-      />
+    <template #action>
+      <!-- 功能按钮区 -->
+      <NButton
+        type="primary"
+        @click="showModal = true"
+      >
+        添加歌曲
+      </NButton>
+      <NButton
+        type="primary"
+        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
+      >
+        修改展示模板
+      </NButton>
+      <NButton
+        type="primary"
+        secondary
+        @click="exportData"
+      >
+        导出为 CSV
+      </NButton>
       <NButton
         secondary
-        @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)"
+        @click="$router.push({ name: 'manage-liveRequest' })"
       >
-        复制
+        前往点播管理页
       </NButton>
-    </NInputGroup>
-  </NFlex>
-  <NDivider style="margin: 16px 0 16px 0" />
+      <NButton
+        secondary
+        @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })"
+      >
+        前往歌单展示页
+      </NButton>
+      <NButton
+        :loading="isLoading"
+        @click="() => {
+          getSongs()
+          message.success('完成')
+        }"
+      >
+        刷新
+      </NButton>
+    </template>
+
+    <!-- 歌单展示页链接 -->
+    <NDivider
+      style="margin: 16px 0 16px 0"
+      title-placement="left"
+    >
+      歌单展示页链接
+    </NDivider>
+    <NFlex align="center">
+      <NInputGroup style="max-width: 400px;">
+        <NInput
+          :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`"
+          readonly
+        />
+        <NButton
+          secondary
+          @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)"
+        >
+          复制
+        </NButton>
+      </NInputGroup>
+    </NFlex>
+    <NDivider style="margin: 16px 0 16px 0" />
+  </ManagePageHeader>
 
   <!-- 添加歌曲模态框 -->
   <NModal
