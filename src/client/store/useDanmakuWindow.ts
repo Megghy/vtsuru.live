@@ -24,6 +24,7 @@ export interface DanmakuWindowSettings {
   animationDuration: number // 动画持续时间
   enableAnimation: boolean // 是否启用动画效果
   backgroundColor: string // 背景色
+  windowBackgroundColor: string // 窗口背景色
   textColor: string // 文字颜色
   alwaysOnTop: boolean // 是否总在最前
   interactive: boolean // 是否可交互(穿透鼠标点击)
@@ -173,6 +174,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     filterTypes: ['Message', 'Gift', 'SC', 'Guard'],
     animationDuration: 300,
     backgroundColor: 'rgba(0,0,0,0.6)',
+    windowBackgroundColor: 'rgba(0,0,0,0)',
     textColor: '#ffffff',
     alwaysOnTop: true,
     interactive: false,

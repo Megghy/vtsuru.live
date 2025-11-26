@@ -36,6 +36,50 @@ let heartbeatTimer: number | null = null
 let updateCheckTimer: number | null = null
 let updateNotificationRef: any = null
 
+function setInitStageSafely(stage: string) {
+  if (clientInitStage.value !== '启动完成') {
+    clientInitStage.value = stage
+  }
+}
+
+function startDanmakuClientInitFlow() {
+  const danmakuInitNoticeRef = window.$notification.info({
+    title: '正在初始化弹幕客户端...',
+    closable: false,
+  })
+  setInitStageSafely('初始化弹幕客户端...')
+
+  void initDanmakuClient()
+    .then((result) => {
+      if (result.success) {
+        info('[init] 弹幕客户端初始化完成')
+        window.$notification.success({
+          title: '弹幕客户端初始化完成',
+          duration: 3000,
+        })
+        setInitStageSafely('弹幕客户端初始化完成')
+      } else {
+        warn(`[init] 弹幕客户端初始化失败: ${result.message}`)
+        window.$notification.error({
+          title: '弹幕客户端初始化失败',
+          content: result.message || '请稍后重试',
+        })
+        setInitStageSafely('弹幕客户端初始化失败')
+      }
+    })
+    .catch((error) => {
+      warn(`[init] 弹幕客户端初始化异常: ${error}`)
+      window.$notification.error({
+        title: '弹幕客户端初始化异常',
+        content: `${error}`,
+      })
+      setInitStageSafely('弹幕客户端初始化失败')
+    })
+    .finally(() => {
+      danmakuInitNoticeRef?.destroy()
+    })
+}
+
 // interface RtmpRelayState {
 //   roomId: number
 //   targetRtmpUrl: string
@@ -334,29 +378,6 @@ export async function initAll(isOnBoot: boolean) {
   initInfo()
   info('[init] 开始更新数据')
 
-  if (isLoggedIn.value && accountInfo.value.isBiliVerified && !setting.settings.dev_disableDanmakuClient) {
-    const danmakuInitNoticeRef = window.$notification.info({
-      title: '正在初始化弹幕客户端...',
-      closable: false,
-    })
-    clientInitStage.value = '初始化弹幕客户端...'
-    const result = await initDanmakuClient()
-    danmakuInitNoticeRef.destroy()
-    if (result.success) {
-      window.$notification.success({
-        title: '弹幕客户端初始化完成',
-        duration: 3000,
-      })
-      clientInitStage.value = '弹幕客户端初始化完成'
-    } else {
-      window.$notification.error({
-        title: `弹幕客户端初始化失败: ${result.message}`,
-      })
-      clientInitStage.value = '弹幕客户端初始化失败'
-    }
-  }
-  info('[init] 已加载弹幕客户端')
-  // 初始化系统托盘图标和菜单
   clientInitStage.value = '创建系统托盘...'
   const menu = await Menu.new({
     items: [
@@ -378,7 +399,6 @@ export async function initAll(isOnBoot: boolean) {
   })
   const iconData = await (await fetch('https://oss.suki.club/vtsuru/icon.ico')).arrayBuffer()
   const options: TrayIconOptions = {
-    // here you can add a tray menu, title, tooltip, event handler, etc
     menu,
     title: 'VTsuru.Client',
     tooltip: 'VTsuru 事件收集器',
@@ -392,6 +412,15 @@ export async function initAll(isOnBoot: boolean) {
   }
   tray = await TrayIcon.new(options)
   clientInitStage.value = '系统托盘就绪'
+
+  const shouldInitDanmakuClient = isLoggedIn.value
+    && accountInfo.value.isBiliVerified
+    && !setting.settings.dev_disableDanmakuClient
+  if (shouldInitDanmakuClient) {
+    startDanmakuClientInitFlow()
+  } else {
+    info('[init] 跳过弹幕客户端初始化')
+  }
 
   appWindow.setMinSize(new PhysicalSize(720, 480))
 

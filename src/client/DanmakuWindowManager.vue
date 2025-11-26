@@ -210,8 +210,19 @@ const separatorOptions = [
               :x-gap="12"
             >
               <NGi>
-                <NFormItem label="背景颜色">
-                  <NColorPicker />
+                <NFormItem label="弹幕背景颜色">
+                  <NColorPicker
+                    v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
+                    :show-alpha="true"
+                  />
+                </NFormItem>
+              </NGi>
+              <NGi>
+                <NFormItem label="窗口背景颜色">
+                  <NColorPicker
+                    v-model:value="danmakuWindow.danmakuWindowSetting.windowBackgroundColor"
+                    :show-alpha="true"
+                  />
                 </NFormItem>
               </NGi>
               <NGi>
@@ -226,7 +237,7 @@ const separatorOptions = [
                 <NFormItem label="透明度">
                   <NSlider
                     v-model:value="danmakuWindow.danmakuWindowSetting.opacity"
-                    :min="0.1"
+                    :min="0"
                     :max="1"
                     :step="0.05"
                   />
