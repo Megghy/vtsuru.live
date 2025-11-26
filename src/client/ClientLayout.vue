@@ -6,17 +6,18 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 
 import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
-import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NText, NTooltip } from 'naive-ui'
+import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NTag, NText, NTooltip } from 'naive-ui'
 
 import { computed, h, ref } from 'vue' // 引入 ref, h, computed
 
-import { RouterLink, RouterView } from 'vue-router' // 引入 Vue Router 组件
+import { RouterLink, RouterView, useRouter } from 'vue-router' // 引入 Vue Router 组件
 // 引入自定义 API 和状态管理
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
 
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { initAll, OnClientUnmounted, clientInited, clientInitStage } from './data/initialize'
 import { useDanmakuWindow } from './store/useDanmakuWindow'
+import { useBiliCookie } from './store/useBiliCookie'
 // 引入子组件
 import WindowBar from './WindowBar.vue'
 import { BASE_URL } from '@/data/constants'
@@ -24,10 +25,30 @@ import { BASE_URL } from '@/data/constants'
 // --- 响应式状态 ---
 
 // 获取 webfetcher 状态管理的实例
+const router = useRouter()
 const webfetcher = useWebFetcher()
 const danmakuWindow = useDanmakuWindow()
+const biliCookie = useBiliCookie()
 // 用于存储用户输入的 Token
 const token = ref('')
+
+const cookieStatusType = computed(() => {
+  if (!biliCookie.hasBiliCookie) {
+    return 'warning'
+  }
+  return biliCookie.isCookieValid ? 'success' : 'error'
+})
+
+const cookieStatusText = computed(() => {
+  if (!biliCookie.hasBiliCookie) {
+    return '未同步'
+  }
+  return biliCookie.isCookieValid ? '正常' : '已失效'
+})
+
+function goCookieManagement() {
+  router.push({ name: 'client-fetcher' })
+}
 
 // --- 计算属性 ---
 // (这里没有显式的计算属性，但 isLoggedIn 本身可能是一个来自 account 模块的计算属性)
@@ -279,6 +300,33 @@ onMounted(() => {
           default-value="go-back-home"
           class="sider-menu"
         />
+        <div class="cookie-status-card">
+          <div class="cookie-status-header">
+            <NText
+              strong
+              tag="div"
+            >
+              B站 Cookie
+            </NText>
+            <NTag
+              size="small"
+              :type="cookieStatusType"
+              :bordered="false"
+            >
+              {{ cookieStatusText }}
+            </NTag>
+          </div>
+          <NButton
+            v-if="cookieStatusType !== 'success'"
+            block
+            size="tiny"
+            type="primary"
+            class="cookie-status-button"
+            @click="goCookieManagement"
+          >
+            前往处理
+          </NButton>
+        </div>
       </div>
     </NLayoutSider>
 
@@ -450,6 +498,28 @@ onMounted(() => {
     /* 让菜单占据剩余空间 */
     padding-top: 1rem;
     /* 菜单与顶部的间距 */
+  }
+
+  .cookie-status-card {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--n-border-color);
+    border-radius: 8px;
+    background-color: var(--n-card-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cookie-status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .cookie-status-button {
+    margin-top: 4px;
   }
 
   /* Suspense 后备内容样式 */

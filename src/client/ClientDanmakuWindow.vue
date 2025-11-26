@@ -15,6 +15,70 @@ type TempDanmakuType = EventModel & {
   timestamp?: number // 添加：记录插入时间戳
 }
 
+type ParsedColor = {
+  rgb: string
+  alpha: number
+}
+
+function parseColorToRgba(color?: string): ParsedColor | null {
+  if (!color) return null
+  const value = color.trim()
+
+  const rgbaMatch = value.match(/^rgba?\(([^)]+)\)$/i)
+  if (rgbaMatch) {
+    const parts = rgbaMatch[1].split(',').map(part => part.trim())
+    if (parts.length >= 3) {
+      const r = Number(parts[0])
+      const g = Number(parts[1])
+      const b = Number(parts[2])
+      const a = parts[3] !== undefined ? Number(parts[3]) : 1
+      return {
+        rgb: `${Number.isFinite(r) ? r : 0}, ${Number.isFinite(g) ? g : 0}, ${Number.isFinite(b) ? b : 0}`,
+        alpha: Number.isFinite(a) ? Math.max(0, Math.min(1, a)) : 1,
+      }
+    }
+    return null
+  }
+
+  if (value.startsWith('#')) {
+    const hex = value.slice(1)
+    const normalizeHex = (segment: string) => segment.length === 1 ? segment + segment : segment
+    let r = 0
+    let g = 0
+    let b = 0
+    let a = 255
+
+    if (hex.length === 3 || hex.length === 4) {
+      r = parseInt(normalizeHex(hex[0]), 16)
+      g = parseInt(normalizeHex(hex[1]), 16)
+      b = parseInt(normalizeHex(hex[2]), 16)
+      if (hex.length === 4) {
+        a = parseInt(normalizeHex(hex[3]), 16)
+      }
+    } else if (hex.length === 6 || hex.length === 8) {
+      r = parseInt(hex.slice(0, 2), 16)
+      g = parseInt(hex.slice(2, 4), 16)
+      b = parseInt(hex.slice(4, 6), 16)
+      if (hex.length === 8) {
+        a = parseInt(hex.slice(6, 8), 16)
+      }
+    } else {
+      return null
+    }
+
+    if ([r, g, b, a].some(value => Number.isNaN(value))) {
+      return null
+    }
+
+    return {
+      rgb: `${r}, ${g}, ${b}`,
+      alpha: Math.max(0, Math.min(1, a / 255)),
+    }
+  }
+
+  return null
+}
+
 let bc: BroadcastChannel | undefined
 const setting = ref<DanmakuWindowSettings>()
 const danmakuList = ref<TempDanmakuType[]>([])
@@ -33,7 +97,17 @@ function updateCssVariables() {
   root.style.setProperty('--dw-direction', setting.value.reverseOrder ? 'column-reverse' : 'column')
 
   // 背景和文字颜色
-  root.style.setProperty('--dw-bg-color', setting.value.backgroundColor || 'rgba(0,0,0,0.6)')
+  const bgColor = setting.value.backgroundColor || 'rgba(0,0,0,0.6)'
+  root.style.setProperty('--dw-bg-color', bgColor)
+  const parsedColor = parseColorToRgba(bgColor)
+  if (parsedColor) {
+    root.style.setProperty('--dw-bg-color-rgb', parsedColor.rgb)
+    root.style.setProperty('--dw-bg-alpha', `${parsedColor.alpha}`)
+  } else {
+    root.style.setProperty('--dw-bg-color-rgb', '0, 0, 0')
+    root.style.setProperty('--dw-bg-alpha', '0.6')
+  }
+  root.style.setProperty('--dw-window-bg-color', setting.value.windowBackgroundColor || 'transparent')
   root.style.setProperty('--dw-text-color', setting.value.textColor || '#ffffff')
 
   // 尺寸相关
@@ -224,6 +298,7 @@ watch(() => setting.value, () => {
     class="danmaku-window"
     :class="{ 'has-items': hasItems, 'batch-update': isInBatchUpdate }"
   >
+    <div class="danmaku-window-bg" />
     <div
       ref="scrollContainerRef"
       class="danmaku-list"
@@ -260,6 +335,9 @@ html,
 
   :root {
     --dw-bg-color: rgba(0, 0, 0, 0.6);
+    --dw-bg-color-rgb: 0, 0, 0;
+    --dw-bg-alpha: 0.6;
+    --dw-window-bg-color: transparent;
     --dw-text-color: #ffffff;
     --dw-border-radius: 0px;
     --dw-opacity: 1;
@@ -272,17 +350,26 @@ html,
   }
 
   .danmaku-window {
+    position: relative;
     -webkit-app-region: drag;
     overflow: hidden;
-    background-color: transparent;
-    /* 完全透明背景 */
     width: 100%;
     height: 100%;
+    border-radius: var(--dw-border-radius, 0);
     color: var(--dw-text-color);
     font-size: var(--dw-font-size);
     box-shadow: var(--dw-shadow);
     overflow-x: hidden;
     transition: opacity 0.3s ease;
+  }
+
+  .danmaku-window-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--dw-border-radius, 0);
+    background-color: var(--dw-window-bg-color, transparent);
+    backdrop-filter: blur(0);
+    pointer-events: none;
   }
 
   /* 没有弹幕时完全透明 */
@@ -297,7 +384,6 @@ html,
     display: flex;
     flex-direction: var(--dw-direction);
     box-sizing: border-box;
-    /* 确保padding不会增加元素的实际尺寸 */
   }
 
   .danmaku-list-container {

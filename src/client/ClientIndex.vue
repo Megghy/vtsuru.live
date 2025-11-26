@@ -2,6 +2,7 @@
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useElementSize } from '@vueuse/core'
 import { Live24Filled, CloudArchive24Filled, FlashAuto24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
+import CookieInvalidAlert from './components/CookieInvalidAlert.vue'
 import { cookie, useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { roomInfo } from './data/info'
@@ -31,6 +32,10 @@ function logout() {
     gap="large"
     wrap
   >
+    <CookieInvalidAlert
+      class="client-index-alert"
+      variant="home"
+    />
     <NCard
       title="首页"
       embedded
