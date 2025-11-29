@@ -50,7 +50,7 @@ import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import APlayer from 'vue3-aplayer'
 import { RouterLink, useRoute } from 'vue-router'
 import { cookie, isLoadingAccount, useAccount } from '@/api/account'
-import { ThemeType } from '@/api/api-models'
+import { BiliAuthCodeStatusType, ThemeType } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey } from '@/data/constants'
@@ -315,13 +315,13 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '弹幕机'
         : h(NTooltip, {}, {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-danmuji' } },
-              { default: () => '弹幕机' },
-            ),
-            default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
-          }),
+          trigger: () => h(
+            RouterLink,
+            { to: { name: 'manage-danmuji' } },
+            { default: () => '弹幕机' },
+          ),
+          default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
+        }),
       key: 'manage-danmuji',
       disabled: !isBiliVerified.value,
       icon: renderIcon(Lottery24Filled),
@@ -331,17 +331,17 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '点播'
         : h(
-            NTooltip,
-            {},
-            {
-              trigger: () => h(
-                RouterLink,
-                { to: { name: 'manage-liveRequest' } },
-                { default: () => '点播' },
-              ),
-              default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
-            },
-          ),
+          NTooltip,
+          {},
+          {
+            trigger: () => h(
+              RouterLink,
+              { to: { name: 'manage-liveRequest' } },
+              { default: () => '点播' },
+            ),
+            default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
+          },
+        ),
       key: 'manage-liveRequest',
       icon: renderIcon(MusicalNote),
       disabled: !isBiliVerified.value,
@@ -351,10 +351,10 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '抽奖'
         : h(
-            RouterLink,
-            { to: { name: 'manage-liveLottery' } },
-            { default: () => '抽奖' },
-          ),
+          RouterLink,
+          { to: { name: 'manage-liveLottery' } },
+          { default: () => '抽奖' },
+        ),
       key: 'manage-liveLottery',
       icon: renderIcon(Lottery24Filled),
       disabled: !isBiliVerified.value,
@@ -364,17 +364,17 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '点歌'
         : h(
-            NTooltip,
-            {},
-            {
-              trigger: () => h(
-                RouterLink,
-                { to: { name: 'manage-musicRequest' } },
-                { default: () => '点歌机' },
-              ),
-              default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
-            },
-          ),
+          NTooltip,
+          {},
+          {
+            trigger: () => h(
+              RouterLink,
+              { to: { name: 'manage-musicRequest' } },
+              { default: () => '点歌机' },
+            ),
+            default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
+          },
+        ),
       key: 'manage-musicRequest',
       icon: renderIcon(MusicalNote),
       disabled: !isBiliVerified.value,
@@ -384,10 +384,10 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '排队'
         : h(
-            RouterLink,
-            { to: { name: 'manage-liveQueue' } },
-            { default: () => '排队' },
-          ),
+          RouterLink,
+          { to: { name: 'manage-liveQueue' } },
+          { default: () => '排队' },
+        ),
       key: 'manage-liveQueue',
       icon: renderIcon(PeopleQueue24Filled),
       disabled: !isBiliVerified.value,
@@ -397,10 +397,10 @@ const menuOptions = computed(() => {
       label: () => !isBiliVerified.value
         ? '读弹幕'
         : h(
-            RouterLink,
-            { to: { name: 'manage-speech' } },
-            { default: () => '读弹幕' },
-          ),
+          RouterLink,
+          { to: { name: 'manage-speech' } },
+          { default: () => '读弹幕' },
+        ),
       key: 'manage-speech',
       icon: renderIcon(TabletSpeaker24Filled),
       disabled: !isBiliVerified.value,
@@ -649,16 +649,21 @@ function gotoAuthPage() {
 }
 
 onMounted(() => {
-  // 检查邮箱验证状态
-  if (accountInfo.value?.isEmailVerified === false) {
-    if ((accountInfo.value?.nextSendEmailTime ?? -1) <= 0) {
-      canResendEmail.value = true
-    }
-  }
 
   if (selectedAPIKey.value != 'main') {
     message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
   }
+  setTimeout(() => {
+    // 检查邮箱验证状态
+    if (accountInfo.value?.isEmailVerified === false) {
+      if ((accountInfo.value?.nextSendEmailTime ?? -1) <= 0) {
+        canResendEmail.value = true
+      }
+    }
+    if (accountInfo.value?.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive) {
+      message.error('你的身份码已失效, 请及时更新', { duration: 5000, closable: true })
+    }
+  }, 500);
 })
 
 onUnmounted(() => {
@@ -682,10 +687,8 @@ onUnmounted(() => {
         <template #extra>
           <NSpace align="center" justify="center">
             <!-- 主题切换开关 -->
-            <NSwitch
-              :default-value="!isDarkMode"
-              @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
-            >
+            <NSwitch :default-value="!isDarkMode"
+              @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">
               <template #checked>
                 <NIcon :component="Sunny" />
               </template>
@@ -693,10 +696,8 @@ onUnmounted(() => {
                 <NIcon :component="Moon" />
               </template>
             </NSwitch>
-            <NButton
-              size="small" type="primary"
-              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })"
-            >
+            <NButton size="small" type="primary"
+              @click="$router.push({ name: 'user-index', params: { id: accountInfo?.name } })">
               回到展示页
             </NButton>
           </NSpace>
@@ -707,11 +708,9 @@ onUnmounted(() => {
     <!-- 主布局部分 -->
     <NLayout has-sider style="height: calc(100vh - 50px)">
       <!-- 侧边导航栏 -->
-      <NLayoutSider
-        v-if="accountInfo?.isEmailVerified" ref="sider" bordered show-trigger collapse-mode="width"
+      <NLayoutSider v-if="accountInfo?.isEmailVerified" ref="sider" bordered show-trigger collapse-mode="width"
         :default-collapsed="windowWidth < 750" :collapsed-width="64" :width="180" :native-scrollbar="false"
-        :scrollbar-props="{ trigger: 'none', style: {} }" :class="{ 'sider-collapsed': width < 150 }"
-      >
+        :scrollbar-props="{ trigger: 'none', style: {} }" :class="{ 'sider-collapsed': width < 150 }">
         <!-- 顶部功能按钮区 -->
         <NSpace vertical style="margin-top: 16px" align="center">
           <NSpace justify="center">
@@ -746,14 +745,12 @@ onUnmounted(() => {
         </NSpace>
 
         <!-- 主导航菜单 -->
-        <NMenu
-          v-model:expanded-keys="expandedKeys" class="manage-sider-menu" style="margin-top: 12px"
+        <NMenu v-model:expanded-keys="expandedKeys" class="manage-sider-menu" style="margin-top: 12px"
           :disabled="accountInfo?.isEmailVerified !== true"
           :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
           :default-expanded-keys="['group-common', 'group-data', 'group-tools', 'group-danmaku', 'group-favorites']"
           :collapsed-width="64" :collapsed-icon-size="22" :icon-size="16" :root-indent="10" :indent="12"
-          :options="menuOptions"
-        />
+          :options="menuOptions" />
 
         <!-- 底部信息区 -->
         <NSpace v-if="width > 150" justify="center" align="center" vertical>
@@ -772,8 +769,7 @@ onUnmounted(() => {
         <NDivider style="margin-bottom: 8px;" />
         <NFlex justify="center" align="center">
           <NText
-            :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'};visibility: ${width < 180 ? 'hidden' : 'visible'}`"
-          >
+            :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'};visibility: ${width < 180 ? 'hidden' : 'visible'}`">
             By Megghy
           </NText>
         </NFlex>
@@ -782,10 +778,10 @@ onUnmounted(() => {
       <!-- 内容区域 -->
       <NLayout>
         <!-- 主内容区域 -->
-        <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${aplayerHeight}px)`" :x-scrollable="true">
+        <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${aplayerHeight}px)`"
+          :x-scrollable="true">
           <NLayoutContent
-            content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px); padding-bottom: 32px;min-width: 370px"
-          >
+            content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px); padding-bottom: 32px;min-width: 370px">
             <NElement>
               <!-- 已验证邮箱的用户显示内容 -->
               <RouterView v-if="accountInfo?.isEmailVerified" v-slot="{ Component, route }">
@@ -840,10 +836,8 @@ onUnmounted(() => {
                     </NAlert>
 
                     <NSpace>
-                      <NButton
-                        type="primary" :disabled="!canResendEmail" style="min-width: 140px;"
-                        @click="resendEmail"
-                      >
+                      <NButton type="primary" :disabled="!canResendEmail" style="min-width: 140px;"
+                        @click="resendEmail">
                         <template #icon>
                           <NIcon>
                             <Mail24Filled />
@@ -852,10 +846,8 @@ onUnmounted(() => {
                         重新发送验证邮件
                       </NButton>
                       <NTag v-if="!canResendEmail" type="warning" round>
-                        <NCountdown
-                          :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                          @finish="canResendEmail = true"
-                        />
+                        <NCountdown :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                          @finish="canResendEmail = true" />
                         后可重新发送
                       </NTag>
                     </NSpace>
@@ -884,19 +876,15 @@ onUnmounted(() => {
         </NScrollbar>
 
         <!-- 音乐播放器区域 -->
-        <NLayoutFooter
-          v-if="isPlayerVisible"
+        <NLayoutFooter v-if="isPlayerVisible"
           :style="`height: ${aplayerHeight}px; overflow: hidden; transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);`"
-          class="music-player-footer"
-        >
-          <NCard
-            ref="musicPlayerCardRef" :bordered="false" embedded
+          class="music-player-footer">
+          <NCard ref="musicPlayerCardRef" :bordered="false" embedded
             :content-style="isPlayerMinimized ? 'padding: 0' : undefined" size="small" class="music-player-card" style="
               margin: 8px;
               border-radius: 12px;
               backdrop-filter: blur(10px);
-            "
-          >
+            ">
             <!-- 播放器头部控制栏 -->
             <template #header>
               <NFlex justify="space-between" align="center" style="padding: 0;">
@@ -905,19 +893,15 @@ onUnmounted(() => {
                   <NText :depth="2" style="font-size: 13px; font-weight: 500;">
                     音乐播放器
                   </NText>
-                  <NTag
-                    v-if="currentPlayingInfo && !isPlayerMinimized"
+                  <NTag v-if="currentPlayingInfo && !isPlayerMinimized"
                     :type="currentPlayingInfo.type === 'request' ? 'success' : 'info'" size="small" round
-                    :bordered="false" style="font-size: 11px; padding: 2px 8px;"
-                  >
+                    :bordered="false" style="font-size: 11px; padding: 2px 8px;">
                     {{ currentPlayingInfo.info }}
                   </NTag>
 
                   <template v-if="isPlayerMinimized">
-                    <NText
-                      v-if="musicRquestStore.currentMusic.title"
-                      style="font-size: 13px; max-width: 250px; margin-left: 12px" :ellipsis="{ tooltip: true }"
-                    >
+                    <NText v-if="musicRquestStore.currentMusic.title"
+                      style="font-size: 13px; max-width: 250px; margin-left: 12px" :ellipsis="{ tooltip: true }">
                       {{ musicRquestStore.currentMusic.title }} - {{ musicRquestStore.currentMusic.artist }}
                     </NText>
                     <NText v-else depth="3" style="font-size: 13px; margin-left: 12px">
@@ -928,27 +912,21 @@ onUnmounted(() => {
 
                 <NFlex align="center" size="small">
                   <template v-if="isPlayerMinimized">
-                    <NTag
-                      v-if="musicRquestStore.waitingMusics.length > 0" type="warning" size="small" round
-                      :bordered="false"
-                    >
+                    <NTag v-if="musicRquestStore.waitingMusics.length > 0" type="warning" size="small" round
+                      :bordered="false">
                       {{ musicRquestStore.waitingMusics.length }}
                     </NTag>
 
-                    <NButton
-                      circle size="tiny" tertiary :disabled="musicRquestStore.aplayerMusics.length === 0"
-                      @click.stop="togglePlay"
-                    >
+                    <NButton circle size="tiny" tertiary :disabled="musicRquestStore.aplayerMusics.length === 0"
+                      @click.stop="togglePlay">
                       <template #icon>
                         <NIcon :component="aplayer?.audio?.paused !== false ? Play : Pause" size="14" />
                       </template>
                     </NButton>
 
-                    <NButton
-                      circle size="tiny" tertiary
+                    <NButton circle size="tiny" tertiary
                       :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
-                      @click.stop="onNextMusic"
-                    >
+                      @click.stop="onNextMusic">
                       <template #icon>
                         <NIcon :component="PlayForward" size="14" />
                       </template>
@@ -957,10 +935,8 @@ onUnmounted(() => {
 
                   <NTooltip>
                     <template #trigger>
-                      <NButton
-                        :type="isPlayerMinimized ? 'primary' : 'default'" tertiary size="small" circle
-                        @click="togglePlayerMinimize"
-                      >
+                      <NButton :type="isPlayerMinimized ? 'primary' : 'default'" tertiary size="small" circle
+                        @click="togglePlayerMinimize">
                         <template #icon>
                           <NIcon :component="isPlayerMinimized ? ChevronUp : ChevronDown" />
                         </template>
@@ -977,13 +953,11 @@ onUnmounted(() => {
               <NFlex align="center" :wrap="false" style="gap: 12px;">
                 <!-- APlayer组件 -->
                 <div style="flex: 1; min-width: 280px;">
-                  <APlayer
-                    ref="aplayer" v-model:music="musicRquestStore.currentMusic" v-model:volume="playerVolume"
+                  <APlayer ref="aplayer" v-model:music="musicRquestStore.currentMusic" v-model:volume="playerVolume"
                     v-model:shuffle="musicRquestStore.settings.shuffle"
                     v-model:repeat="musicRquestStore.settings.repeat" :list="musicRquestStore.aplayerMusics"
                     list-max-height="200" mutex list-folded style="border-radius: 8px;"
-                    @ended="musicRquestStore.onMusicEnd" @play="musicRquestStore.onMusicPlay"
-                  />
+                    @ended="musicRquestStore.onMusicEnd" @play="musicRquestStore.onMusicPlay" />
                 </div>
 
                 <!-- 右侧控制面板 -->
@@ -996,10 +970,8 @@ onUnmounted(() => {
                     <NFlex size="small" justify="center">
                       <NTooltip>
                         <template #trigger>
-                          <NButton
-                            circle secondary size="small" :disabled="musicRquestStore.aplayerMusics.length === 0"
-                            @click="onPreviousMusic"
-                          >
+                          <NButton circle secondary size="small" :disabled="musicRquestStore.aplayerMusics.length === 0"
+                            @click="onPreviousMusic">
                             <template #icon>
                               <NIcon :component="PlayBack" />
                             </template>
@@ -1010,10 +982,8 @@ onUnmounted(() => {
 
                       <NTooltip>
                         <template #trigger>
-                          <NButton
-                            circle type="primary" size="small"
-                            :disabled="musicRquestStore.aplayerMusics.length === 0" @click="togglePlay"
-                          >
+                          <NButton circle type="primary" size="small"
+                            :disabled="musicRquestStore.aplayerMusics.length === 0" @click="togglePlay">
                             <template #icon>
                               <NIcon :component="aplayer?.audio?.paused !== false ? Play : Pause" />
                             </template>
@@ -1024,11 +994,9 @@ onUnmounted(() => {
 
                       <NTooltip>
                         <template #trigger>
-                          <NButton
-                            circle secondary size="small"
+                          <NButton circle secondary size="small"
                             :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
-                            @click="onNextMusic"
-                          >
+                            @click="onNextMusic">
                             <template #icon>
                               <NIcon :component="PlayForward" />
                             </template>
@@ -1045,17 +1013,13 @@ onUnmounted(() => {
                       队列管理
                     </NText>
                     <NFlex vertical size="small" align="center">
-                      <NTag
-                        :bordered="false" :type="musicRquestStore.waitingMusics.length > 0 ? 'warning' : 'info'"
-                        size="small" round style="min-width: 80px; text-align: center;"
-                      >
+                      <NTag :bordered="false" :type="musicRquestStore.waitingMusics.length > 0 ? 'warning' : 'info'"
+                        size="small" round style="min-width: 80px; text-align: center;">
                         等待: {{ musicRquestStore.waitingMusics.length }}
                       </NTag>
 
-                      <NTag
-                        :bordered="false" type="success" size="small" round
-                        style="min-width: 80px; text-align: center;"
-                      >
+                      <NTag :bordered="false" type="success" size="small" round
+                        style="min-width: 80px; text-align: center;">
                         歌单: {{ musicRquestStore.originMusics.length }}
                       </NTag>
 
@@ -1081,10 +1045,8 @@ onUnmounted(() => {
                         音量
                       </NText>
                     </NFlex>
-                    <NSlider
-                      v-model:value="playerVolume" :min="0" :max="1" :step="0.01" style="width: 80px;"
-                      :tooltip="false" size="small"
-                    />
+                    <NSlider v-model:value="playerVolume" :min="0" :max="1" :step="0.01" style="width: 80px;"
+                      :tooltip="false" size="small" />
                     <NText depth="3" style="font-size: 11px;">
                       {{ Math.round(playerVolume * 100) }}%
                     </NText>
@@ -1105,8 +1067,7 @@ onUnmounted(() => {
 
   <!-- 未登录时显示的登录/注册界面 -->
   <template v-else>
-    <NLayoutContent
-      style="
+    <NLayoutContent style="
         display: flex;
         justify-content: center;
         align-items: center;
@@ -1120,16 +1081,13 @@ onUnmounted(() => {
         top: 0;
         left: 0;
         overflow: auto;
-      " :class="isDarkMode ? 'login-dark-bg' : ''"
-    >
+      " :class="isDarkMode ? 'login-dark-bg' : ''">
       <template v-if="!isLoadingAccount">
         <NCard class="login-card" :bordered="false">
           <template #header>
             <NFlex justify="center" align="center" style="padding: 12px 0;">
-              <NText
-                strong
-                style="font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); background-image: linear-gradient(to right, #36d1dc, #5b86e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
-              >
+              <NText strong
+                style="font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); background-image: linear-gradient(to right, #36d1dc, #5b86e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                 VTSURU CENTER
               </NText>
             </NFlex>
@@ -1176,12 +1134,8 @@ onUnmounted(() => {
             <NSpin :loading="isLoadingAccount" size="large">
               <NText>正在请求账户数据...</NText>
             </NSpin>
-            <NAlert
-              v-if="showAPISwitchDialog"
-              type="warning"
-              style="margin-top: 20px; max-width: 400px;"
-              title="加载时间较长"
-            >
+            <NAlert v-if="showAPISwitchDialog" type="warning" style="margin-top: 20px; max-width: 400px;"
+              title="加载时间较长">
               <NSpace vertical>
                 <NText>当前API响应较慢，是否切换到备用API？</NText>
                 <NFlex justify="end" :size="8">
@@ -1202,167 +1156,168 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-  .login-dark-bg {
-    background: linear-gradient(135deg, rgba(30, 30, 35, 0.9) 0%, rgba(20, 20, 25, 0.95) 100%) !important;
+.login-dark-bg {
+  background: linear-gradient(135deg, rgba(30, 30, 35, 0.9) 0%, rgba(20, 20, 25, 0.95) 100%) !important;
+}
+
+.login-card {
+  max-width: 520px;
+  width: 90%;
+  min-width: 300px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin: 16px;
+}
+
+.loading-card {
+  min-width: 280px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin: 16px;
+}
+
+/* 音乐播放器样式 */
+.music-player-footer {
+  background: var(--body-color);
+}
+
+.music-player-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.music-player-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.music-control-panel {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  min-width: 300px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .music-control-panel {
+    min-width: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
   }
 
-  .login-card {
-    max-width: 520px;
-    width: 90%;
-    min-width: 300px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    margin: 16px;
+  .music-control-panel>div {
+    min-width: auto !important;
+    flex: 1;
   }
+}
 
+@media (max-width: 480px) {
+
+  .login-card,
   .loading-card {
-    min-width: 280px;
-    width: 90%;
-    max-width: 400px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    margin: 16px;
-  }
-
-  /* 音乐播放器样式 */
-  .music-player-footer {
-    background: var(--body-color);
+    width: 95%;
+    margin: 8px;
   }
 
   .music-player-card {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .music-player-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+    margin: 4px !important;
   }
 
   .music-control-panel {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    min-width: 300px;
-  }
-
-  /* 响应式设计 */
-  @media (max-width: 768px) {
-    .music-control-panel {
-      min-width: auto;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .music-control-panel>div {
-      min-width: auto !important;
-      flex: 1;
-    }
-  }
-
-  @media (max-width: 480px) {
-
-    .login-card,
-    .loading-card {
-      width: 95%;
-      margin: 8px;
-    }
-
-    .music-player-card {
-      margin: 4px !important;
-    }
-
-    .music-control-panel {
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .music-control-panel>div {
-      width: 100% !important;
-      min-width: auto !important;
-    }
-  }
-
-  /* 播放器按钮悬停效果 */
-  .music-player-card .n-button {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .music-player-card .n-button:hover {
-    transform: translateY(-1px);
-  }
-
-  /* 音量滑块样式 */
-  .music-player-card .n-slider {
-    transition: all 0.2s ease;
-  }
-
-  .music-player-card .n-slider:hover {
-    transform: scale(1.02);
-  }
-
-  /* 标签动画 */
-  .music-player-card .n-tag {
-    transition: all 0.2s ease;
-  }
-
-  .music-player-card .n-tag:hover {
-    transform: scale(1.05);
-  }
-
-  /* 侧边栏菜单收藏按钮与紧凑样式 */
-  :deep(.manage-sider-menu .menu-fav) {
-    opacity: 0;
-    width: 0;
-    margin-left: 0;
-    overflow: hidden;
-    transition: opacity 0.15s ease, width 0.15s ease, margin-left 0.15s ease;
-    pointer-events: none;
-    /* 不阻挡文字区域点击 */
-    display: inline-flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-
+    gap: 6px;
+    width: 100%;
   }
 
-  :deep(.n-menu-item) {
-    height: 36px;
+  .music-control-panel>div {
+    width: 100% !important;
+    min-width: auto !important;
   }
+}
 
-  :deep(.manage-sider-menu .n-menu-item:hover .menu-fav),
-  :deep(.manage-sider-menu .menu-fav.active) {
-    opacity: 1;
-    width: 18px;
-    margin-left: 6px;
-    pointer-events: auto;
-  }
+/* 播放器按钮悬停效果 */
+.music-player-card .n-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  :deep(.manage-sider-menu .menu-fav .n-button) {
-    padding: 0;
-    height: 18px;
-    width: 18px;
-  }
+.music-player-card .n-button:hover {
+  transform: translateY(-1px);
+}
 
-  :deep(.sider-collapsed .manage-sider-menu .n-menu-item .n-menu-item-content) {
-    display: flex;
-    justify-content: center;
-  }
-  :deep(.n-menu-item) {
-    margin-top: 3;
-  }
+/* 音量滑块样式 */
+.music-player-card .n-slider {
+  transition: all 0.2s ease;
+}
 
-  /* 侧边栏收起时隐藏group标题 */
-  :deep(.sider-collapsed .n-menu-item-group-title) {
-    display: none;
-  }
+.music-player-card .n-slider:hover {
+  transform: scale(1.02);
+}
 
-  /* 侧边栏收起时禁用收藏按钮样式，避免元素偏移 */
-  .sider-collapsed :deep(.manage-sider-menu .menu-fav) {
-    display: none !important;
-  }
+/* 标签动画 */
+.music-player-card .n-tag {
+  transition: all 0.2s ease;
+}
+
+.music-player-card .n-tag:hover {
+  transform: scale(1.05);
+}
+
+/* 侧边栏菜单收藏按钮与紧凑样式 */
+:deep(.manage-sider-menu .menu-fav) {
+  opacity: 0;
+  width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  transition: opacity 0.15s ease, width 0.15s ease, margin-left 0.15s ease;
+  pointer-events: none;
+  /* 不阻挡文字区域点击 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+:deep(.n-menu-item) {
+  height: 36px;
+}
+
+:deep(.manage-sider-menu .n-menu-item:hover .menu-fav),
+:deep(.manage-sider-menu .menu-fav.active) {
+  opacity: 1;
+  width: 18px;
+  margin-left: 6px;
+  pointer-events: auto;
+}
+
+:deep(.manage-sider-menu .menu-fav .n-button) {
+  padding: 0;
+  height: 18px;
+  width: 18px;
+}
+
+:deep(.sider-collapsed .manage-sider-menu .n-menu-item .n-menu-item-content) {
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.n-menu-item) {
+  margin-top: 3;
+}
+
+/* 侧边栏收起时隐藏group标题 */
+:deep(.sider-collapsed .n-menu-item-group-title) {
+  display: none;
+}
+
+/* 侧边栏收起时禁用收藏按钮样式，避免元素偏移 */
+.sider-collapsed :deep(.manage-sider-menu .menu-fav) {
+  display: none !important;
+}
 </style>

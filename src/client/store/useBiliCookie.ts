@@ -15,7 +15,7 @@ export const USER_INFO_CACHE_KEY = 'cache.bilibili.userInfo'
 
 // 检查周期 (毫秒)
 const REGULAR_CHECK_INTERVAL = 60 * 1000 // 每分钟检查一次 Cookie 有效性
-const CLOUD_SYNC_INTERVAL_CHECKS = 30 // 每 30 次常规检查后 (约 30 分钟) 同步一次 CookieCloud
+const CLOUD_SYNC_INTERVAL_CHECKS = 10 // 每 10 次常规检查后 (约 10 分钟) 同步一次 CookieCloud
 
 // 用户信息缓存有效期 (毫秒)
 const USER_INFO_CACHE_DURATION = 5 * 60 * 1000 // 缓存 5 分钟
@@ -380,6 +380,9 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     }
     _checkIntervalId = setInterval(check, REGULAR_CHECK_INTERVAL)
     info(`[BiliCookie] 定时检查已启动，周期: ${REGULAR_CHECK_INTERVAL / 1000} 秒`)
+
+    // 立即执行一次检查，强制尝试从 CookieCloud 同步
+    await check(true)
 
     info('[BiliCookie] Store 初始化完成')
   }
