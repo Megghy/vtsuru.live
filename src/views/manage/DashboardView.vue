@@ -320,6 +320,19 @@ onUnmounted(() => {
       {{ CN_HOST }}
     </NButton>, 访问更快
   </NAlert>
+  <NAlert
+    v-if="accountInfo?.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive"
+    type="error"
+    title="身份码已失效"
+    style="width: 100%; margin-top: 12px;"
+  >
+    <NFlex justify="space-between" align="center">
+      <NText>你的身份码已失效, 这会导致无法获取直播间数据.</NText>
+      <NButton size="small" type="error" @click="bindBiliCodeModalVisiable = true">
+        更新身份码
+      </NButton>
+    </NFlex>
+  </NAlert>
   <NDivider />
   <NFlex
     justify="center"

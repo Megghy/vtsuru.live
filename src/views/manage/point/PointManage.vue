@@ -431,7 +431,7 @@ onMounted(() => { })
         align="center"
         :gap="16"
       >
-        <NAlert
+        <NAlert v-if="!accountInfo.eventFetcherState.online"
           :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
             ? 'success'
             : 'warning'

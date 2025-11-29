@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {
-  CalendarOutline,
+  BarChartOutline,
   ChatbubblesOutline,
   PeopleOutline,
   RefreshOutline,
@@ -24,24 +24,24 @@ import { CanvasRenderer } from 'echarts/renderers'
 import {
   NButton,
   NCard,
-  NDivider,
+  NCheckbox,
+  NCheckboxGroup,
+  NDescriptions,
+  NDescriptionsItem,
   NEmpty,
   NGrid,
   NGridItem,
   NIcon,
+  NNumberAnimation,
   NProgress,
   NSkeleton,
   NSpace,
-  NStatistic,
-  NTabPane,
-  NTabs,
   NTag,
   NTime,
   NTooltip,
   useMessage,
   useThemeVars,
 } from 'naive-ui'
-
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { ANALYZE_API_URL } from '@/data/constants'
@@ -115,35 +115,30 @@ const refreshing = ref(false)
 const message = useMessage()
 const analyzeData = ref<AnalyzeData>()
 const summaryData = computed(() => analyzeData.value?.summary)
-const activeChart = ref('income')
 const themeVars = useThemeVars()
 const lastUpdateTime = ref<number>(0)
 const hasData = computed(() => analyzeData.value && Object.keys(analyzeData.value.chartData || {}).length > 0)
 
-// 处理标签页变化
-function onTabChange(_value: string) {
-  nextTick(() => {
-    handleResize()
-  })
-}
-
-// 图表引用
-const incomeChartRef = ref<HTMLElement | null>(null)
-const interactionChartRef = ref<HTMLElement | null>(null)
-const usersChartRef = ref<HTMLElement | null>(null)
-
-// 图表实例
-let incomeChart: echarts.ECharts | null = null
-let interactionChart: echarts.ECharts | null = null
-let usersChart: echarts.ECharts | null = null
+// 图表配置状态
+const chartRef = ref<HTMLElement | null>(null)
+let mainChart: echarts.ECharts | null = null
+const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
+const chartMetrics = [
+  { label: '收入', value: 'income', color: '#f5a623', type: 'line', yAxisIndex: 1 },
+  { label: '互动数', value: 'interactionCount', color: '#2080f0', type: 'line', yAxisIndex: 0 },
+  { label: '弹幕数', value: 'danmakuCount', color: '#18a058', type: 'line', yAxisIndex: 0 },
+  { label: '点赞数', value: 'likeCount', color: '#d03050', type: 'line', yAxisIndex: 0 },
+  { label: '互动人数', value: 'interactionUsers', color: '#8a2be2', type: 'bar', yAxisIndex: 0 },
+  { label: '付费人数', value: 'payingUsers', color: '#ff69b4', type: 'bar', yAxisIndex: 0 },
+]
 
 // 格式化工具函数
 function formatCurrency(value: number): string {
   return `¥${value.toFixed(2)}`
 }
 
-function formatTrend(value: number): string {
-  return value >= 0 ? `+${value}%` : `${value}%`
+function formatNumber(value: number): string {
+  return value.toLocaleString()
 }
 
 function getTrendType(value: number): 'success' | 'error' | 'info' {
@@ -177,77 +172,123 @@ function getThemeColors() {
     textColor: themeVars.value.textColor2,
     axisLineColor: themeVars.value.borderColor,
     splitLineColor: themeVars.value.dividerColor,
-    seriesColors: [
-      themeVars.value.primaryColor,
-      themeVars.value.infoColor,
-      themeVars.value.successColor,
-      themeVars.value.warningColor,
-      themeVars.value.errorColor,
-    ],
+    cardColor: themeVars.value.cardColor,
   }
 }
 
 // 初始化图表
-function initCharts() {
+function initChart() {
+  if (!chartRef.value) return
   const chartData = getChartDataArray()
   if (chartData.length === 0) return
 
+  mainChart = echarts.init(chartRef.value)
+  updateChartOption()
+}
+
+// 更新图表配置
+function updateChartOption() {
+  if (!mainChart) return
+  const chartData = getChartDataArray()
   const dates = chartData.map(item => item.date)
   const themeColors = getThemeColors()
 
-  const baseOption = {
+  // 确定哪些 Y 轴需要显示
+  const showRightAxis = selectedMetrics.value.includes('income')
+  const showLeftAxis = selectedMetrics.value.some(m => m !== 'income')
+
+  const series = selectedMetrics.value.map((metricKey) => {
+    const metricConfig = chartMetrics.find(m => m.value === metricKey)
+    if (!metricConfig) return null
+
+    return {
+      name: metricConfig.label,
+      type: metricConfig.type,
+      data: chartData.map(item => (item as any)[metricKey]),
+      smooth: true,
+      yAxisIndex: (metricKey === 'income' && showLeftAxis) ? 1 : 0, // 如果同时显示左轴，收入走右轴；否则走左轴
+      itemStyle: {
+        color: metricConfig.color,
+      },
+      areaStyle: metricConfig.type === 'line' ? {
+        opacity: 0.1,
+        color: metricConfig.color,
+      } : undefined,
+      barMaxWidth: metricConfig.type === 'bar' ? '20%' : undefined,
+    }
+  }).filter(Boolean)
+
+  const yAxis = []
+  
+  // 左轴 (默认)
+  if (showLeftAxis) {
+    yAxis.push({
+      type: 'value',
+      position: 'left',
+      name: '数量',
+      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
+      axisLabel: { color: themeColors.textColor },
+      splitLine: { lineStyle: { color: themeColors.splitLineColor } },
+      nameTextStyle: { color: themeColors.textColor },
+    })
+  } else if (showRightAxis) {
+      // 只有金额，显示在左边
+      yAxis.push({
+      type: 'value',
+      position: 'left',
+      name: '金额',
+      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
+      axisLabel: { color: themeColors.textColor },
+      splitLine: { lineStyle: { color: themeColors.splitLineColor } },
+      nameTextStyle: { color: themeColors.textColor },
+    })
+  }
+
+  // 右轴 (仅当同时显示数量和金额时)
+  if (showLeftAxis && showRightAxis) {
+    yAxis.push({
+      type: 'value',
+      position: 'right',
+      name: '金额',
+      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
+      axisLabel: { color: themeColors.textColor },
+      splitLine: { show: false },
+      nameTextStyle: { color: themeColors.textColor },
+    })
+  }
+
+  const option = {
+    backgroundColor: 'transparent',
     textStyle: {
       color: themeColors.textColor,
-    },
-    legend: {
-      textStyle: {
-        color: themeColors.textColor,
-      },
-    },
-    xAxis: {
-      type: 'category',
-      data: dates,
-      axisLine: {
-        lineStyle: {
-          color: themeColors.axisLineColor,
-        },
-      },
-      axisLabel: {
-        color: themeColors.textColor,
-      },
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: {
-        lineStyle: {
-          color: themeColors.axisLineColor,
-        },
-      },
-      splitLine: {
-        lineStyle: {
-          color: themeColors.splitLineColor,
-        },
-      },
-      axisLabel: {
-        color: themeColors.textColor,
-      },
     },
     tooltip: {
       trigger: 'axis',
       backgroundColor: themeVars.value.cardColor,
       borderColor: themeVars.value.borderColor,
-      textStyle: {
-        color: themeColors.textColor,
-      },
+      textStyle: { color: themeColors.textColor },
+      axisPointer: { type: 'shadow' },
+    },
+    legend: {
+      data: series.map(s => s!.name),
+      textStyle: { color: themeColors.textColor },
+      bottom: 0,
     },
     grid: {
       left: '3%',
-      right: '4%',
-      bottom: '15%',
-      top: '60px',
+      right: '3%',
+      bottom: '10%',
+      top: '10%',
       containLabel: true,
     },
-    color: themeColors.seriesColors,
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLine: { lineStyle: { color: themeColors.axisLineColor } },
+      axisLabel: { color: themeColors.textColor },
+    },
+    yAxis: yAxis,
+    series: series,
     dataZoom: [
       {
         type: 'inside',
@@ -255,198 +296,25 @@ function initCharts() {
         end: 100,
       },
       {
+        show: true,
+        type: 'slider',
+        bottom: 35,
+        height: 20,
         start: 0,
         end: 100,
+        borderColor: themeColors.axisLineColor,
+        textStyle: { color: themeColors.textColor },
       },
     ],
   }
 
-  // 收入图表
-  if (incomeChartRef.value) {
-    incomeChart = echarts.init(incomeChartRef.value)
-    incomeChart.setOption({
-      ...baseOption,
-      title: {
-        text: '收益趋势',
-        textStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      yAxis: {
-        ...baseOption.yAxis,
-        name: '收益(元)',
-        nameTextStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      series: [
-        {
-          name: '收益',
-          type: 'line',
-          data: chartData.map(item => item.income),
-          areaStyle: {
-            opacity: 0.3,
-          },
-          smooth: true,
-          markPoint: {
-            data: [
-              { type: 'max', name: '最高值' },
-              { type: 'min', name: '最低值' },
-            ],
-          },
-          markLine: {
-            data: [
-              { type: 'average', name: '平均值' },
-            ],
-          },
-        },
-      ],
-    })
-  }
-
-  // 互动图表
-  if (interactionChartRef.value) {
-    interactionChart = echarts.init(interactionChartRef.value)
-    interactionChart.setOption({
-      ...baseOption,
-      title: {
-        text: '互动趋势',
-        textStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      legend: {
-        data: ['互动数', '弹幕数', '点赞数'],
-        textStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      yAxis: {
-        ...baseOption.yAxis,
-        name: '数量',
-        nameTextStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      series: [
-        {
-          name: '互动数',
-          type: 'line',
-          data: chartData.map(item => item.interactionCount),
-          smooth: true,
-        },
-        {
-          name: '弹幕数',
-          type: 'line',
-          data: chartData.map(item => item.danmakuCount),
-          smooth: true,
-        },
-        {
-          name: '点赞数',
-          type: 'line',
-          data: chartData.map(item => item.likeCount),
-          smooth: true,
-        },
-      ],
-    })
-  }
-
-  // 用户图表
-  if (usersChartRef.value) {
-    usersChart = echarts.init(usersChartRef.value)
-    usersChart.setOption({
-      ...baseOption,
-      title: {
-        text: '用户趋势',
-        textStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      legend: {
-        data: ['互动用户', '付费用户'],
-        textStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      yAxis: {
-        ...baseOption.yAxis,
-        name: '用户数',
-        nameTextStyle: {
-          color: themeColors.textColor,
-        },
-      },
-      series: [
-        {
-          name: '互动用户',
-          type: 'bar',
-          data: chartData.map(item => item.interactionUsers),
-          barMaxWidth: '40%',
-          itemStyle: {
-            borderRadius: [4, 4, 0, 0],
-          },
-        },
-        {
-          name: '付费用户',
-          type: 'bar',
-          data: chartData.map(item => item.payingUsers),
-          barMaxWidth: '40%',
-          itemStyle: {
-            borderRadius: [4, 4, 0, 0],
-          },
-        },
-      ],
-    })
-  }
+  mainChart.setOption(option, true)
 }
 
-// 更新图表主题
-function updateChartTheme() {
-  const themeColors = getThemeColors();
-
-  [incomeChart, interactionChart, usersChart].forEach((chart) => {
-    if (!chart) return
-
-    const option = chart.getOption()
-
-    // 更新文本颜色
-    option.textStyle = { color: themeColors.textColor }
-
-    // 更新标题颜色
-    if (option.title && Array.isArray(option.title) && option.title[0]) {
-      option.title[0].textStyle = { color: themeColors.textColor }
-    }
-
-    // 更新坐标轴颜色
-    if (option.xAxis && Array.isArray(option.xAxis) && option.xAxis[0]) {
-      option.xAxis[0].axisLine.lineStyle.color = themeColors.axisLineColor
-      option.xAxis[0].axisLabel.color = themeColors.textColor
-    }
-
-    if (option.yAxis && Array.isArray(option.yAxis) && option.yAxis[0]) {
-      option.yAxis[0].axisLine.lineStyle.color = themeColors.axisLineColor
-      option.yAxis[0].splitLine.lineStyle.color = themeColors.splitLineColor
-      option.yAxis[0].axisLabel.color = themeColors.textColor
-      option.yAxis[0].nameTextStyle = { color: themeColors.textColor }
-    }
-
-    // 更新图例颜色
-    if (option.legend && Array.isArray(option.legend) && option.legend[0]) {
-      option.legend[0].textStyle = { color: themeColors.textColor }
-    }
-
-    // 更新提示框颜色
-    if (option.tooltip && Array.isArray(option.tooltip) && option.tooltip[0]) {
-      option.tooltip[0].backgroundColor = themeVars.value.cardColor
-      option.tooltip[0].borderColor = themeVars.value.borderColor
-      option.tooltip[0].textStyle = { color: themeColors.textColor }
-    }
-
-    // 更新系列颜色
-    option.color = themeColors.seriesColors
-
-    chart.setOption(option)
-  })
-}
+// 监听指标选择变化
+watch(selectedMetrics, () => {
+  updateChartOption()
+})
 
 // 获取分析数据
 async function fetchAnalyzeData(isRefresh = false) {
@@ -461,7 +329,7 @@ async function fetchAnalyzeData(isRefresh = false) {
     if (data.code === 200) {
       analyzeData.value = data.data
       lastUpdateTime.value = Date.now()
-      nextTick(() => initCharts())
+      nextTick(() => initChart())
       if (isRefresh) {
         message.success('数据已刷新')
       }
@@ -484,14 +352,12 @@ function handleRefresh() {
 
 // 窗口大小变化时重绘图表
 function handleResize() {
-  incomeChart?.resize()
-  interactionChart?.resize()
-  usersChart?.resize()
+  mainChart?.resize()
 }
 
 // 监听主题变化
 watch(() => themeVars.value, () => {
-  nextTick(() => updateChartTheme())
+  nextTick(() => updateChartOption())
 }, { deep: true })
 
 // 组件挂载时初始化
@@ -503,25 +369,22 @@ onMounted(() => {
 // 组件卸载时清理
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  incomeChart?.dispose()
-  interactionChart?.dispose()
-  usersChart?.dispose()
+  mainChart?.dispose()
 })
 </script>
 
 <template>
   <div class="analyze-container">
     <!-- 顶部操作栏 -->
-    <NSpace
-      align="center"
-      justify="space-between"
-      class="header-actions"
-    >
+    <NSpace align="center" justify="space-between" class="header-actions">
       <NSpace align="center">
-        <EventFetcherAlert />
-        <EventFetcherStatusCard />
+        <h2 style="margin: 0; font-weight: 500; font-size: 20px;">
+          <NIcon :component="BarChartOutline" style="vertical-align: middle; margin-right: 8px;" />
+          数据分析
+        </h2>
       </NSpace>
       <NSpace align="center">
+        <EventFetcherAlert />
         <NTooltip v-if="lastUpdateTime > 0">
           <template #trigger>
             <NTag size="small" :bordered="false">
@@ -531,409 +394,237 @@ onUnmounted(() => {
           </template>
           <NTime :time="lastUpdateTime" />
         </NTooltip>
-        <NButton
-          :loading="refreshing"
-          :disabled="loading"
-          @click="handleRefresh"
-        >
+        <NButton :loading="refreshing" :disabled="loading" size="small" @click="handleRefresh">
           <template #icon>
             <NIcon :component="RefreshOutline" />
           </template>
-          刷新数据
+          刷新
         </NButton>
       </NSpace>
     </NSpace>
-    <NDivider />
 
     <!-- 加载骨架屏 -->
     <div v-if="loading" class="skeleton-container">
-      <div class="summary-cards">
-        <NGrid cols="1 800:2 1200:3" :x-gap="16" :y-gap="16">
-          <NGridItem v-for="i in 3" :key="i">
-            <NCard size="small" class="summary-card">
-              <template #header>
-                <NSkeleton text width="30%" />
-              </template>
-              <div class="stat-grid">
-                <div v-for="j in 8" :key="j" class="skeleton-item">
-                  <NSkeleton text width="60px" style="margin-bottom: 8px" />
-                  <NSkeleton text width="80%" height="24px" />
-                </div>
-              </div>
-            </NCard>
-          </NGridItem>
-        </NGrid>
-      </div>
-      <div class="chart-skeleton">
-        <NSkeleton height="450px" width="100%" border-radius="8px" />
+      <NGrid cols="1 800:2 1200:4" :x-gap="16" :y-gap="16">
+        <NGridItem v-for="i in 4" :key="i">
+          <NCard size="small">
+            <NSkeleton text width="40%" style="margin-bottom: 12px;" />
+            <NSkeleton text height="30px" width="80%" />
+          </NCard>
+        </NGridItem>
+      </NGrid>
+      <div style="margin-top: 20px;">
+        <NSkeleton height="400px" width="100%" border-radius="8px" />
       </div>
     </div>
 
     <!-- 空状态 -->
-    <NEmpty
-      v-else-if="!hasData"
-      description="暂无数据"
-      size="large"
-      style="margin: 60px 0"
-    >
+    <NEmpty v-else-if="!hasData" description="暂无数据" size="large" style="margin: 60px 0">
       <template #extra>
-        <NButton @click="() => fetchAnalyzeData()">
-          重新加载
-        </NButton>
+        <NButton @click="() => fetchAnalyzeData()">重新加载</NButton>
       </template>
     </NEmpty>
 
     <!-- 数据展示 -->
     <template v-else>
-      <!-- 数据概览卡片 -->
-      <div class="summary-cards">
-        <NGrid
-          cols="1 800:2 1200:3"
-          :x-gap="16"
-          :y-gap="16"
-        >
+      <!-- 核心指标卡片 -->
+      <div class="core-metrics">
+        <NGrid cols="1 600:2 1000:4" :x-gap="16" :y-gap="16">
+          <!-- 收入 -->
           <NGridItem>
-            <NCard
-              title="近7天统计"
-              size="small"
-              class="summary-card"
-              hoverable
-            >
-              <template #header-extra>
-                <NTag :bordered="false" size="small" type="info">
-                  最近一周
-                </NTag>
-              </template>
-              <div class="stat-grid">
-                <NStatistic label="总收入" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="WalletOutline" color="#f5a623" />
-                  </template>
-                  <template #default>
-                    <span class="stat-value-primary">
-                      {{ formatCurrency(summaryData?.last7Days?.totalIncome || 0) }}
+            <NCard size="small" class="metric-card income-card">
+              <div class="metric-content">
+                <div class="metric-header">
+                  <span class="metric-label">近30天收入</span>
+                  <NIcon :component="WalletOutline" class="metric-icon" />
+                </div>
+                <div class="metric-value">
+                  <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalIncome || 0" :precision="2" />
+                  <span class="currency-symbol">¥</span>
+                </div>
+                <div class="metric-footer">
+                  <div class="trend-info">
+                    <span :class="getTrendType(summaryData?.last30Days?.incomeTrend || 0)">
+                      <NIcon :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                      {{ Math.abs(summaryData?.last30Days?.incomeTrend || 0) }}%
                     </span>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="总互动数"
-                  :value="summaryData?.last7Days?.totalInteractions || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="ChatbubblesOutline" color="#2080f0" />
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="弹幕数"
-                  :value="summaryData?.last7Days?.totalDanmakuCount || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="ChatbubblesOutline" color="#2080f0" />
-                  </template>
-                </NStatistic>
-                <NStatistic label="直播时长" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="TimeOutline" />
-                  </template>
-                  <template #default>
-                    {{ ((summaryData?.last7Days?.totalLiveMinutes || 0) / 60).toFixed(1) }} 小时
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="互动人数"
-                  :value="summaryData?.last7Days?.interactionUsers || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="PeopleOutline" color="#18a058" />
-                  </template>
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last7Days?.interactionUsersTrend || 0)"
-                      size="small"
-                      :bordered="false"
-                    >
-                      <NIcon v-if="(summaryData?.last7Days?.interactionUsersTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      <NIcon v-else-if="(summaryData?.last7Days?.interactionUsersTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      {{ formatTrend(summaryData?.last7Days?.interactionUsersTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="付费人数"
-                  :value="summaryData?.last7Days?.payingUsers || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="PeopleOutline" color="#f5a623" />
-                  </template>
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last7Days?.payingUsersTrend || 0)"
-                      size="small"
-                      :bordered="false"
-                    >
-                      <NIcon v-if="(summaryData?.last7Days?.payingUsersTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      <NIcon v-else-if="(summaryData?.last7Days?.payingUsersTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      {{ formatTrend(summaryData?.last7Days?.payingUsersTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic label="日均收入" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="WalletOutline" color="#f5a623" />
-                  </template>
-                  <template #default>
-                    {{ formatCurrency(summaryData?.last7Days?.dailyAvgIncome || 0) }}
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="活跃直播天数"
-                  :value="summaryData?.last7Days?.activeLiveDays || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="CalendarOutline" />
-                  </template>
-                </NStatistic>
+                    <span class="trend-label">环比</span>
+                  </div>
+                  <div class="sub-stat">
+                    日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}
+                  </div>
+                </div>
               </div>
             </NCard>
           </NGridItem>
 
+          <!-- 互动 -->
           <NGridItem>
-            <NCard
-              title="近30天统计"
-              size="small"
-              class="summary-card"
-              hoverable
-            >
-              <template #header-extra>
-                <NTag :bordered="false" size="small" type="warning">
-                  最近一月
-                </NTag>
-              </template>
-              <div class="stat-grid">
-                <NStatistic label="总收入" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="WalletOutline" color="#f5a623" />
-                  </template>
-                  <template #default>
-                    <span class="stat-value-primary">
-                      {{ formatCurrency(summaryData?.last30Days?.totalIncome || 0) }}
+            <NCard size="small" class="metric-card interaction-card">
+              <div class="metric-content">
+                <div class="metric-header">
+                  <span class="metric-label">近30天互动</span>
+                  <NIcon :component="ChatbubblesOutline" class="metric-icon" />
+                </div>
+                <div class="metric-value">
+                  <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalInteractions || 0" show-separator />
+                </div>
+                <div class="metric-footer">
+                  <div class="trend-info">
+                    <span :class="getTrendType(summaryData?.last30Days?.interactionTrend || 0)">
+                      <NIcon :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                      {{ Math.abs(summaryData?.last30Days?.interactionTrend || 0) }}%
                     </span>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="总互动数"
-                  :value="summaryData?.last30Days?.totalInteractions || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="ChatbubblesOutline" color="#2080f0" />
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="弹幕数"
-                  :value="summaryData?.last30Days?.totalDanmakuCount || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="ChatbubblesOutline" color="#2080f0" />
-                  </template>
-                </NStatistic>
-                <NStatistic label="直播时长" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="TimeOutline" />
-                  </template>
-                  <template #default>
-                    {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }} 小时
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="互动人数"
-                  :value="summaryData?.last30Days?.interactionUsers || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="PeopleOutline" color="#18a058" />
-                  </template>
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last30Days?.interactionTrend || 0)"
-                      size="small"
-                      :bordered="false"
-                    >
-                      <NIcon v-if="(summaryData?.last30Days?.interactionTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      <NIcon v-else-if="(summaryData?.last30Days?.interactionTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      {{ formatTrend(summaryData?.last30Days?.interactionTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="付费人数"
-                  :value="summaryData?.last30Days?.payingUsers || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="PeopleOutline" color="#f5a623" />
-                  </template>
-                  <template #suffix>
-                    <NTag
-                      :type="getTrendType(summaryData?.last30Days?.incomeTrend || 0)"
-                      size="small"
-                      :bordered="false"
-                    >
-                      <NIcon v-if="(summaryData?.last30Days?.incomeTrend || 0) > 0" :component="TrendingUp" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      <NIcon v-else-if="(summaryData?.last30Days?.incomeTrend || 0) < 0" :component="TrendingDown" style="vertical-align: -0.15em; margin-right: 2px;" />
-                      {{ formatTrend(summaryData?.last30Days?.incomeTrend || 0) }}
-                    </NTag>
-                  </template>
-                </NStatistic>
-                <NStatistic label="日均收入" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="WalletOutline" color="#f5a623" />
-                  </template>
-                  <template #default>
-                    {{ formatCurrency(summaryData?.last30Days?.dailyAvgIncome || 0) }}
-                  </template>
-                </NStatistic>
-                <NStatistic
-                  label="活跃直播天数"
-                  :value="summaryData?.last30Days?.activeLiveDays || 0"
-                  tabular-nums
-                >
-                  <template #prefix>
-                    <NIcon :component="CalendarOutline" />
-                  </template>
-                </NStatistic>
+                    <span class="trend-label">环比</span>
+                  </div>
+                  <div class="sub-stat">
+                    {{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }} 弹幕
+                  </div>
+                </div>
               </div>
             </NCard>
           </NGridItem>
 
+          <!-- 用户 -->
           <NGridItem>
-            <NCard
-              title="关键指标"
-              size="small"
-              class="summary-card summary-card-highlight"
-              hoverable
-            >
-              <template #header-extra>
-                <NTag :bordered="false" size="small" type="success">
-                  核心数据
-                </NTag>
-              </template>
-              <div class="stat-grid">
-                <NStatistic label="月收入增长" tabular-nums>
-                  <template #default>
-                    <span class="trend-value" :class="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? 'trend-up' : 'trend-down'">
-                      {{ formatTrend(summaryData?.last30Days?.incomeTrend || 0) }}
-                    </span>
-                  </template>
-                  <template #prefix>
-                    <NIcon :color="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? '#18A058' : '#D03050'">
-                      <TrendingUp v-if="(summaryData?.last30Days?.incomeTrend || 0) >= 0" />
-                      <TrendingDown v-else />
-                    </NIcon>
-                  </template>
-                </NStatistic>
-                <NStatistic label="月互动增长" tabular-nums>
-                  <template #default>
-                    <span class="trend-value" :class="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? 'trend-up' : 'trend-down'">
-                      {{ formatTrend(summaryData?.last30Days?.interactionTrend || 0) }}
-                    </span>
-                  </template>
-                  <template #prefix>
-                    <NIcon
-                      :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown"
-                      :color="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? '#18A058' : '#D03050'"
-                    />
-                  </template>
-                </NStatistic>
-                <NStatistic label="单次直播平均时长" tabular-nums>
-                  <template #prefix>
-                    <NIcon :component="TimeOutline" />
-                  </template>
-                  <template #default>
-                    {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }} 小时
-                  </template>
-                </NStatistic>
-                
-                <!-- 互动转化率 - 进度条优化 -->
-                <div class="stat-item">
-                  <div class="stat-label">互动转化率</div>
-                  <NSpace align="center" :size="10">
+            <NCard size="small" class="metric-card users-card">
+              <div class="metric-content">
+                <div class="metric-header">
+                  <span class="metric-label">互动/付费人数</span>
+                  <NIcon :component="PeopleOutline" class="metric-icon" />
+                </div>
+                <div class="metric-value">
+                  <span>{{ formatNumber(summaryData?.last30Days?.interactionUsers || 0) }}</span>
+                  <span class="separator">/</span>
+                  <span class="highlight">{{ formatNumber(summaryData?.last30Days?.payingUsers || 0) }}</span>
+                </div>
+                <div class="metric-footer">
+                  <div class="trend-info">
                     <NProgress
                       type="line"
                       :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
-                      :indicator-placement="'inside'"
-                      :height="18"
-                      color="#18a058"
-                      rail-color="rgba(24, 160, 88, 0.2)"
-                      style="width: 120px"
+                      :height="6"
+                      color="#ff69b4"
+                      rail-color="rgba(255, 105, 180, 0.2)"
+                      :show-indicator="false"
+                      style="width: 60px; margin-right: 8px;"
                     />
-                    <span class="stat-value-small">
-                      {{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}%
-                    </span>
-                  </NSpace>
+                    <span class="trend-label">{{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}% 付费率</span>
+                  </div>
                 </div>
+              </div>
+            </NCard>
+          </NGridItem>
 
-                <NStatistic label="每付费用户平均收入" tabular-nums>
-                  <template #prefix>
-                     <NIcon :component="WalletOutline" color="#f5a623" />
-                  </template>
-                  <template #default>
-                    {{ formatCurrency((summaryData?.last30Days?.totalIncome || 0) / (summaryData?.last30Days?.payingUsers || 1)) }}
-                  </template>
-                </NStatistic>
+          <!-- 直播 -->
+          <NGridItem>
+            <NCard size="small" class="metric-card time-card">
+              <div class="metric-content">
+                <div class="metric-header">
+                  <span class="metric-label">近30天直播</span>
+                  <NIcon :component="TimeOutline" class="metric-icon" />
+                </div>
+                <div class="metric-value">
+                  {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}
+                  <span class="unit">小时</span>
+                </div>
+                <div class="metric-footer">
+                  <div class="trend-info">
+                    <span class="trend-label">活跃 {{ summaryData?.last30Days?.activeLiveDays || 0 }} 天</span>
+                  </div>
+                  <div class="sub-stat">
+                    场均 {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }}h
+                  </div>
+                </div>
               </div>
             </NCard>
           </NGridItem>
         </NGrid>
       </div>
 
-      <NDivider />
+      <!-- 图表区域 -->
+      <NCard size="small" title="趋势分析" class="chart-card" style="margin-top: 16px;">
+        <template #header-extra>
+          <NCheckboxGroup v-model:value="selectedMetrics">
+            <NSpace>
+              <NCheckbox v-for="metric in chartMetrics" :key="metric.value" :value="metric.value">
+                <span :style="{ color: metric.color }">{{ metric.label }}</span>
+              </NCheckbox>
+            </NSpace>
+          </NCheckboxGroup>
+        </template>
+        <div ref="chartRef" class="main-chart" />
+      </NCard>
 
-      <!-- 图表选择器 -->
-      <div class="chart-selector">
-        <NTabs
-          v-model:value="activeChart"
-          type="line"
-          animated
-          @update:value="onTabChange"
-        >
-          <NTabPane
-            name="income"
-            tab="收入分析"
-            display-directive="show"
-          >
-            <div
-              ref="incomeChartRef"
-              class="chart"
-            />
-          </NTabPane>
-          <NTabPane
-            name="interaction"
-            tab="互动分析"
-            display-directive="show"
-          >
-            <div
-              ref="interactionChartRef"
-              class="chart"
-            />
-          </NTabPane>
-          <NTabPane
-            name="users"
-            tab="用户分析"
-            display-directive="show"
-          >
-            <div
-              ref="usersChartRef"
-              class="chart"
-            />
-          </NTabPane>
-        </NTabs>
+      <!-- 详细数据对比 -->
+      <div class="details-section" style="margin-top: 16px;">
+        <NGrid cols="1 900:2" :x-gap="16" :y-gap="16">
+          <NGridItem>
+            <NCard size="small" title="近7天详细数据">
+              <template #header-extra>
+                <NTag type="info" size="small" :bordered="false">短期表现</NTag>
+              </template>
+              <NDescriptions label-placement="left" :column="2" bordered>
+                <NDescriptionsItem label="总收入">{{ formatCurrency(summaryData?.last7Days?.totalIncome || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="日均收入">{{ formatCurrency(summaryData?.last7Days?.dailyAvgIncome || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="总互动">{{ formatNumber(summaryData?.last7Days?.totalInteractions || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="弹幕数">{{ formatNumber(summaryData?.last7Days?.totalDanmakuCount || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="直播时长">{{ ((summaryData?.last7Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}h</NDescriptionsItem>
+                <NDescriptionsItem label="活跃天数">{{ summaryData?.last7Days?.activeLiveDays || 0 }}天</NDescriptionsItem>
+                <NDescriptionsItem label="互动人数">{{ formatNumber(summaryData?.last7Days?.interactionUsers || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="付费人数">{{ formatNumber(summaryData?.last7Days?.payingUsers || 0) }}</NDescriptionsItem>
+              </NDescriptions>
+              
+              <div class="mini-funnel" style="margin-top: 16px;">
+                <div class="funnel-row">
+                  <span class="label">互动转化</span>
+                  <NProgress
+                    type="line"
+                    :percentage="Math.min(100, Math.round(((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                    :height="12"
+                    color="#18a058"
+                    rail-color="rgba(24, 160, 88, 0.1)"
+                  >
+                    {{ ((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100).toFixed(1) }}%
+                  </NProgress>
+                </div>
+              </div>
+            </NCard>
+          </NGridItem>
+
+          <NGridItem>
+            <NCard size="small" title="近30天详细数据">
+              <template #header-extra>
+                <NTag type="warning" size="small" :bordered="false">中期表现</NTag>
+              </template>
+              <NDescriptions label-placement="left" :column="2" bordered>
+                <NDescriptionsItem label="总收入">{{ formatCurrency(summaryData?.last30Days?.totalIncome || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="日均收入">{{ formatCurrency(summaryData?.last30Days?.dailyAvgIncome || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="总互动">{{ formatNumber(summaryData?.last30Days?.totalInteractions || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="弹幕数">{{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="直播时长">{{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}h</NDescriptionsItem>
+                <NDescriptionsItem label="活跃天数">{{ summaryData?.last30Days?.activeLiveDays || 0 }}天</NDescriptionsItem>
+                <NDescriptionsItem label="互动人数">{{ formatNumber(summaryData?.last30Days?.interactionUsers || 0) }}</NDescriptionsItem>
+                <NDescriptionsItem label="付费人数">{{ formatNumber(summaryData?.last30Days?.payingUsers || 0) }}</NDescriptionsItem>
+              </NDescriptions>
+
+               <div class="mini-funnel" style="margin-top: 16px;">
+                <div class="funnel-row">
+                  <span class="label">互动转化</span>
+                  <NProgress
+                    type="line"
+                    :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                    :height="12"
+                    color="#f5a623"
+                    rail-color="rgba(245, 166, 35, 0.1)"
+                  >
+                    {{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}%
+                  </NProgress>
+                </div>
+              </div>
+            </NCard>
+          </NGridItem>
+        </NGrid>
       </div>
     </template>
   </div>
@@ -948,183 +639,128 @@ onUnmounted(() => {
 }
 
 .header-actions {
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.metric-card {
+  height: 100%;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.metric-content {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.summary-cards {
-  margin-bottom: 20px;
-}
-
-.summary-card {
-  height: 100%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 8px;
-}
-
-.summary-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transform: translateY(-4px);
-}
-
-.summary-card-highlight {
-  background: linear-gradient(135deg, rgba(24, 160, 88, 0.03) 0%, rgba(24, 160, 88, 0.01) 100%);
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 24px;
-}
-
-.stat-value-primary {
-  font-size: 1.2em;
-  font-weight: 600;
-  color: var(--n-text-color);
-}
-
-.stat-value-small {
-  font-size: 0.9em;
-  color: var(--n-text-color-2);
-}
-
-.stat-item {
+.metric-header {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-label {
-  font-size: 14px;
+  justify-content: space-between;
+  align-items: center;
   color: var(--n-text-color-3);
 }
 
-.trend-value {
+.metric-label {
+  font-size: 13px;
+}
+
+.metric-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.metric-value {
+  font-size: 24px;
   font-weight: 600;
-  font-size: 1.1em;
-  transition: all 0.3s;
-}
-
-.trend-up {
-  color: #18A058;
-}
-
-.trend-down {
-  color: #D03050;
-}
-
-.chart-selector {
-  margin-top: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.chart {
-  height: 500px;
-  width: 100%;
-  margin-top: 10px;
-  transition: height 0.3s ease;
-}
-
-/* Skeleton Styles */
-.skeleton-container {
-  width: 100%;
-}
-
-.skeleton-item {
+  line-height: 1.2;
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+}
+
+.currency-symbol {
+  font-size: 14px;
+  margin-left: 4px;
+  font-weight: normal;
+  color: var(--n-text-color-3);
+}
+
+.unit {
+  font-size: 14px;
+  margin-left: 4px;
+  font-weight: normal;
+  color: var(--n-text-color-3);
+}
+
+.separator {
+  margin: 0 4px;
+  color: var(--n-text-color-3);
+  font-size: 16px;
+}
+
+.highlight {
+  color: #ff69b4;
+}
+
+.metric-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.trend-info {
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 
-.chart-skeleton {
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--n-card-color);
-  border-radius: 8px;
+.success { color: var(--n-success-color); }
+.error { color: var(--n-error-color); }
+.info { color: var(--n-text-color-3); }
+
+.trend-label {
+  color: var(--n-text-color-3);
 }
 
-/* 响应式设计 */
-@media (max-width: 1400px) {
-  .chart {
-    height: 450px;
-  }
+.sub-stat {
+  color: var(--n-text-color-3);
 }
 
-@media (max-width: 1024px) {
-  .chart {
-    height: 400px;
-  }
+/* 特定卡片样式微调 */
+.income-card .metric-icon { color: #f5a623; }
+.interaction-card .metric-icon { color: #2080f0; }
+.users-card .metric-icon { color: #ff69b4; }
+.time-card .metric-icon { color: #18a058; }
+
+.chart-card {
+  min-height: 400px;
 }
 
-@media (max-width: 768px) {
-  .analyze-container {
-    padding: 0;
-  }
-
-  .stat-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .chart {
-    height: 350px;
-  }
-
-  .header-actions {
-    flex-direction: column;
-    align-items: stretch !important;
-  }
-
-  .header-actions :deep(.n-space) {
-    width: 100%;
-    justify-content: space-between;
-  }
+.main-chart {
+  width: 100%;
+  height: 400px;
 }
 
-@media (max-width: 480px) {
-  .chart {
-    height: 300px;
-  }
-
-  .stat-value-primary {
-    font-size: 1.1em;
-  }
-
-  .trend-value {
-    font-size: 1em;
-  }
+.mini-funnel {
+  padding: 0 8px;
 }
 
-/* 标签优化 */
-:deep(.n-statistic-value__prefix) {
-  margin-right: 8px;
-  display: inline-flex;
+.funnel-row {
+  display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-:deep(.n-statistic-value__suffix) {
-  margin-left: 8px;
-}
-
-/* 图表容器优化 */
-:deep(.n-tabs-nav) {
-  padding: 0 12px;
-}
-
-/* 卡片标题优化 */
-:deep(.n-card-header__main) {
-  font-weight: 600;
-  font-size: 1.05em;
-}
-
-/* Hover效果 */
-.summary-card :deep(.n-statistic) {
-  transition: transform 0.2s;
-}
-
-.summary-card:hover :deep(.n-statistic) {
-  transform: translateX(4px);
+.funnel-row .label {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  width: 60px;
 }
 </style>

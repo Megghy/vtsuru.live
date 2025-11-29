@@ -95,6 +95,14 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       }
 
       let danmakuResult = await connectDanmakuClient(type, directAuthInfo)
+      if (!danmakuResult?.success) {
+        window.$notification?.create({
+          title: '弹幕客户端启动失败',
+          content: danmakuResult?.message || '无法连接到弹幕服务器',
+          type: 'error',
+          duration: 5000,
+        })
+      }
       while (!danmakuResult?.success) {
         console.log(`${prefix.value}弹幕客户端启动失败, 5秒后重试`)
         await new Promise(resolve => setTimeout(resolve, 5000))
