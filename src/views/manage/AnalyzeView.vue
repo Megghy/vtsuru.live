@@ -149,8 +149,9 @@ function getTrendType(value: number): 'success' | 'error' | 'info' {
 
 // 格式化时间戳为日期
 function formatDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000)
-  return `${date.getMonth() + 1}/${date.getDate()}`
+  // 如果时间戳超过 100亿，说明是毫秒，否则是秒
+  const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000)
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
 }
 
 // 从ChartData对象转换为数组，并按时间戳排序
