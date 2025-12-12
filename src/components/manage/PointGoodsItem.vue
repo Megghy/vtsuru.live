@@ -51,7 +51,13 @@ const emptyCover = `${IMGUR_URL}None.png`
         <!-- 价格徽章 -->
         <div class="price-badge">
           <NText class="price-text">
-            🪙 {{ goods.price > 0 ? goods.price : '免费' }}
+            <template v-if="goods.canFreeBuy && goods.price > 0">
+              🪙 <span class="price-original">{{ goods.price }}</span>
+              <span class="price-free">免费</span>
+            </template>
+            <template v-else>
+              🪙 {{ goods.price > 0 ? goods.price : '免费' }}
+            </template>
           </NText>
         </div>
 
@@ -94,7 +100,6 @@ const emptyCover = `${IMGUR_URL}None.png`
         </div>
       </div>
     </template>
-
     <!-- 商品信息头部 - 改为水平布局 -->
     <template #header>
       <NFlex vertical>
@@ -601,5 +606,15 @@ const emptyCover = `${IMGUR_URL}None.png`
   font-weight: 600;
   font-size: 0.95em;
   white-space: nowrap;
+}
+
+.price-original {
+  text-decoration: line-through;
+  opacity: 0.7;
+  margin-right: 6px;
+}
+
+.price-free {
+  font-weight: 700;
 }
 </style>
