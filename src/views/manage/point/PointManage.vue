@@ -231,6 +231,13 @@ async function updateGoods(e: MouseEvent) {
   uploadProgress.value = 0
 
   try {
+    if (currentGoodsModel.value.goods.setting?.guardFree) {
+      const { year, month } = currentGoodsModel.value.goods.setting.guardFree
+      if (!year || !month) {
+        throw new Error('请选择舰长免费兑换的年份和月份')
+      }
+    }
+
     await formRef.value.validate()
 
     const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
@@ -955,7 +962,9 @@ onMounted(() => { })
                       currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
                     }
                     // @ts-ignore
-                    currentGoodsModel.goods.setting.guardFree = v ? { year: undefined, month: undefined } : undefined;
+                    currentGoodsModel.goods.setting.guardFree = v
+                      ? { year: new Date().getFullYear(), month: new Date().getMonth() + 1 }
+                      : undefined;
                   }
                 "
               >
