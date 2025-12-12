@@ -87,6 +87,13 @@ watch(searchKeyword, (newVal) => {
 
 // --- 计算属性 ---
 
+const currentGoodsCost = computed(() => {
+  if (!currentGoods.value) return 0
+  const isFree = !!currentGoods.value.canFreeBuy || currentGoods.value.price <= 0
+  const unitPrice = isFree ? 0 : currentGoods.value.price
+  return Number((unitPrice * buyCount.value).toFixed(1))
+})
+
 // 格式化积分显示，保留一位小数
 const formattedCurrentPoint = computed(() => {
   if (currentPoint.value < 0) return currentPoint.value
@@ -117,7 +124,7 @@ const canDoBuy = computed(() => {
   if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) return false
 
   // 检查积分是否足够
-  const pointCheck = currentGoods.value.price * buyCount.value <= currentPoint.value
+  const pointCheck = currentGoods.value.canFreeBuy || currentGoodsCost.value <= currentPoint.value
 
   // 如果是实物礼物且没有外部收集链接，则必须选择地址
   const addressCheck
@@ -270,7 +277,7 @@ async function buyGoods() {
   // 确认对话框
   dialog.warning({
     title: '确认兑换',
-    content: `确定要花费 ${Number((currentGoods.value!.price * buyCount.value).toFixed(1))} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`,
+    content: `确定要花费 ${currentGoodsCost.value} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
@@ -287,7 +294,9 @@ async function buyGoods() {
         if (data.code === 200) {
           message.success('兑换成功')
           // 更新本地积分显示
-          currentPoint.value = Number((currentPoint.value - currentGoods.value!.price * buyCount.value).toFixed(1))
+          if (currentPoint.value >= 0) {
+            currentPoint.value = Number((currentPoint.value - currentGoodsCost.value).toFixed(1))
+          }
 
           // 构建对话框内容
           const isVirtualGoods = data.data.type === GoodsTypes.Virtual
@@ -815,7 +824,7 @@ onMounted(async () => {
         <NTag :type="!canDoBuy ? 'error' : 'success'">
           {{
             !canDoBuy
-              ? (currentGoods.cannotPurchaseReason || (currentGoods.price * buyCount > currentPoint ? '积分不足' : '信息不完整'))
+              ? (currentGoods.cannotPurchaseReason || (currentGoodsCost > currentPoint ? '积分不足' : '信息不完整'))
               : '可兑换'
           }}
         </NTag>
@@ -835,7 +844,7 @@ onMounted(async () => {
           确认兑换
         </NButton>
         <NText depth="2">
-          所需积分: {{ Number((currentGoods.price * buyCount).toFixed(1)) }}
+          所需积分: {{ currentGoodsCost }}
           <NDivider vertical />
           当前积分: {{ currentPoint >= 0 ? formattedCurrentPoint : '加载中' }}
         </NText>
