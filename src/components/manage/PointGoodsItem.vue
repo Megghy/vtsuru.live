@@ -238,7 +238,7 @@ const emptyCover = `${IMGUR_URL}None.png`
 
         <!-- 舰长免费 -->
         <div
-          v-if="goods.setting?.guardFree"
+          v-if="goods.setting?.guardFreeMonths != undefined || goods.setting?.guardFree != undefined"
           class="info-item"
         >
           <NText
@@ -290,7 +290,7 @@ const emptyCover = `${IMGUR_URL}None.png`
 
       <!-- 用户自定义标签展示 -->
       <div
-        v-if="(goods.tags && goods.tags.length > 0) || (!isManage && ((goods.setting?.allowGuardLevel ?? 0) > 0 || goods.setting?.guardFree || !goods.isAllowRebuy))"
+        v-if="(goods.tags && goods.tags.length > 0) || (!isManage && ((goods.setting?.allowGuardLevel ?? 0) > 0 || goods.canFreeBuy || !goods.isAllowRebuy))"
         class="tags-container"
       >
         <div class="tags-wrapper">
@@ -306,7 +306,7 @@ const emptyCover = `${IMGUR_URL}None.png`
               ⚓ {{ goods.setting.allowGuardLevel === 1 ? '总督' : goods.setting.allowGuardLevel === 2 ? '提督' : '舰长' }}+
             </NTag>
             <NTag
-              v-if="goods.setting?.guardFree"
+              v-if="goods.canFreeBuy"
               :bordered="false"
               size="tiny"
               class="user-tag important-tag"

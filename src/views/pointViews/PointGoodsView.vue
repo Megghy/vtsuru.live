@@ -227,12 +227,14 @@ function getTooltip(goods: ResponsePointGoodModel): string {
   if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
   if (!goods.isAllowRebuy && goods.hasPurchased) return '该礼物不允许重复兑换'
   if (goods.purchasedCount >= (goods.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${goods.maxBuyCount})`
-  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return '当前积分不足'
+  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return `积分不足(需要${goods.price}, 当前${currentPoint.value ?? 0})`
 
   // 检查舰长等级要求
   const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
   if (goods.allowGuardLevel > 0 && currentGuardLevel < goods.allowGuardLevel) {
-    return '舰长等级不足'
+    const needText = goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长'
+    const curText = currentGuardLevel === 1 ? '总督' : currentGuardLevel === 2 ? '提督' : currentGuardLevel === 3 ? '舰长' : '无'
+    return `舰长等级不足(需要${needText}+, 当前${curText})`
   }
 
   return '开始兑换'

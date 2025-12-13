@@ -231,10 +231,17 @@ async function updateGoods(e: MouseEvent) {
   uploadProgress.value = 0
 
   try {
-    if (currentGoodsModel.value.goods.setting?.guardFree) {
-      const { year, month } = currentGoodsModel.value.goods.setting.guardFree
-      if (!year || !month) {
-        throw new Error('请选择舰长免费兑换的年份和月份')
+    if (currentGoodsModel.value.goods.setting?.guardFree !== undefined) {
+      currentGoodsModel.value.goods.setting.guardFree = undefined
+    }
+    if (currentGoodsModel.value.goods.setting?.guardFreeMonths) {
+      const months = currentGoodsModel.value.goods.setting.guardFreeMonths
+      if (months.length > 0) {
+        for (const m of months) {
+          if (!m?.year || !m?.month) {
+            throw new Error('请选择舰长免费兑换的年份和月份')
+          }
+        }
       }
     }
 
@@ -320,6 +327,10 @@ function onUpdateClick(item: ResponsePointGoodModel) {
     copiedItem.setting = {
       allowGuardLevel: 0,
     }
+  }
+
+  if (copiedItem.setting?.guardFreeMonths === undefined && copiedItem.setting?.guardFree) {
+    copiedItem.setting.guardFreeMonths = [copiedItem.setting.guardFree]
   }
   currentGoodsModel.value = {
     goods: copiedItem,
@@ -946,7 +957,7 @@ onMounted(() => { })
           </NFormItem>
 
           <NFormItem
-            path="goods.guardFree"
+            path="goods.guardFreeMonths"
             label="特殊权限"
             style="margin-bottom: 16px;"
           >
@@ -955,15 +966,14 @@ onMounted(() => { })
               :gap="8"
             >
               <NCheckbox
-                :checked="currentGoodsModel.goods.setting?.guardFree != undefined"
+                :checked="currentGoodsModel.goods.setting?.guardFreeMonths != undefined"
                 @update:checked="
                   (v) => {
                     if (!currentGoodsModel.goods.setting) {
                       currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
                     }
-                    // @ts-ignore
-                    currentGoodsModel.goods.setting.guardFree = v
-                      ? { year: new Date().getFullYear(), month: new Date().getMonth() + 1 }
+                    currentGoodsModel.goods.setting.guardFreeMonths = v
+                      ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
                       : undefined;
                   }
                 "
@@ -988,29 +998,84 @@ onMounted(() => { })
               </NCheckbox>
 
               <NFlex
-                v-if="currentGoodsModel.goods.setting?.guardFree"
+                v-if="currentGoodsModel.goods.setting?.guardFreeMonths"
+                vertical
                 :gap="8"
               >
-                <NSelect
-                  :value="currentGoodsModel.goods.setting?.guardFree?.year"
-                  :options="allowedYearOptions"
-                  placeholder="请选择年份"
-                  @update:value="(v) => {
-                    if (currentGoodsModel.goods.setting?.guardFree) {
-                      currentGoodsModel.goods.setting.guardFree.year = v;
+                <NCheckbox
+                  :checked="currentGoodsModel.goods.setting?.guardFreeMonths?.length === 0"
+                  @update:checked="(v) => {
+                    if (!currentGoodsModel.goods.setting) {
+                      currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
                     }
-                  }"
-                />
-                <NSelect
-                  :value="currentGoodsModel.goods.setting?.guardFree?.month"
-                  :options="allowedMonthOptions"
-                  placeholder="请选择月份"
-                  @update:value="(v) => {
-                    if (currentGoodsModel.goods.setting?.guardFree) {
-                      currentGoodsModel.goods.setting.guardFree.month = v;
+                    if (!currentGoodsModel.goods.setting.guardFreeMonths) {
+                      currentGoodsModel.goods.setting.guardFreeMonths = [];
                     }
+                    currentGoodsModel.goods.setting.guardFreeMonths = v ? [] : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
                   }"
-                />
+                >
+                  仅当前在舰
+                </NCheckbox>
+
+                <NFlex
+                  v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
+                  vertical
+                  :gap="8"
+                >
+                  <NFlex
+                    v-for="(m, idx) in currentGoodsModel.goods.setting.guardFreeMonths"
+                    :key="`${m.year}-${m.month}-${idx}`"
+                    :gap="8"
+                    align="center"
+                  >
+                    <NSelect
+                      style="flex: 1"
+                      :value="m.year"
+                      :options="allowedYearOptions"
+                      placeholder="请选择年份"
+                      @update:value="(v) => {
+                        if (currentGoodsModel.goods.setting?.guardFreeMonths) {
+                          currentGoodsModel.goods.setting.guardFreeMonths[idx].year = v;
+                        }
+                      }"
+                    />
+                    <NSelect
+                      style="flex: 1"
+                      :value="m.month"
+                      :options="allowedMonthOptions"
+                      placeholder="请选择月份"
+                      @update:value="(v) => {
+                        if (currentGoodsModel.goods.setting?.guardFreeMonths) {
+                          currentGoodsModel.goods.setting.guardFreeMonths[idx].month = v;
+                        }
+                      }"
+                    />
+                    <NButton
+                      type="error"
+                      secondary
+                      @click="() => {
+                        if (!currentGoodsModel.goods.setting?.guardFreeMonths) return;
+                        currentGoodsModel.goods.setting.guardFreeMonths.splice(idx, 1);
+                        if (currentGoodsModel.goods.setting.guardFreeMonths.length === 0) {
+                          currentGoodsModel.goods.setting.guardFreeMonths = [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
+                        }
+                      }"
+                    >
+                      删除
+                    </NButton>
+                  </NFlex>
+                </NFlex>
+
+                <NButton
+                  v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
+                  secondary
+                  @click="() => {
+                    if (!currentGoodsModel.goods.setting?.guardFreeMonths) return;
+                    currentGoodsModel.goods.setting.guardFreeMonths.push({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+                  }"
+                >
+                  添加月份
+                </NButton>
               </NFlex>
 
               <NText>
