@@ -100,6 +100,21 @@ const formattedCurrentPoint = computed(() => {
   return Number(currentPoint.value.toFixed(1))
 })
 
+const currentRoomGuardLevel = computed(() => biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0)
+
+const currentRoomGuardLabel = computed(() => {
+  switch (currentRoomGuardLevel.value) {
+    case 1:
+      return '总督'
+    case 2:
+      return '提督'
+    case 3:
+      return '舰长'
+    default:
+      return ''
+  }
+})
+
 // 地址选项，用于地址选择器
 const addressOptions = computed(() => {
   if (!biliAuth.value.id) return []
@@ -464,6 +479,15 @@ onMounted(async () => {
             <NText class="username">
               你好, {{ biliAuth.name }}
             </NText>
+            <NTag
+              v-if="currentRoomGuardLevel > 0"
+              size="small"
+              type="warning"
+              :bordered="false"
+              style="margin-right: 12px;"
+            >
+              ⚓ {{ currentRoomGuardLabel }}
+            </NTag>
             <NText
               v-if="currentPoint >= 0"
               class="point-info"
