@@ -708,6 +708,8 @@ export enum KeySelectionMode {
 export interface PointGoodsSetting {
   guardFree?: { year: number, month: number }
   guardFreeMonths?: { year: number, month: number }[]
+  allowGuardFreeMinLevel?: GuardLevel
+  guardLevelMonths?: { year: number, month: number }[]
   allowGuardLevel?: GuardLevel
 }
 export interface ResponsePointGoodModel {

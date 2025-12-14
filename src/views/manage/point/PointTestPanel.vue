@@ -17,7 +17,8 @@ import {
   NTag,
   NDivider,
 } from 'naive-ui'
-import { EventDataTypes } from '@/api/api-models'
+import type { SelectOption } from 'naive-ui'
+import { EventDataTypes, type ResponsePointGoodModel, type ResponsePointUserModel } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { QueryPostAPI as Post, QueryGetAPI as Get } from '@/api/query'
 import { POINT_API_URL } from '@/data/constants'
@@ -38,6 +39,74 @@ const testForm = ref({
 const testAccountPoint = ref<number>(0)
 const isLoading = ref(false)
 const isTesting = ref(false)
+
+type EligibilityResult = {
+  eligible: boolean
+  reason?: string
+  userPoint: number
+  purchasedCount: number
+  canFreeBuy: boolean
+  currentGuardLevel: number
+  requestCount: number
+  needPoint: number
+}
+
+type EligibleUserKey = `auth:${number}` | `uid:${number}` | `oid:${string}`
+
+const eligibilityForm = ref<{ count: number }>({
+  count: 1,
+})
+
+const isLoadingEligibilityOptions = ref(false)
+const allUsers = ref<ResponsePointUserModel[]>([])
+const allGoods = ref<ResponsePointGoodModel[]>([])
+
+const selectedUserKey = ref<EligibleUserKey | null>(null)
+const selectedGoodsId = ref<number | null>(null)
+
+const userOptions = computed<SelectOption[]>(() => {
+  return allUsers.value.map((u) => {
+    const authId = u?.info?.id ?? -1
+    const uid = u?.info?.userId ?? -1
+    const openId = u?.info?.openId
+
+    let key: EligibleUserKey
+    if (u.isAuthed && authId > 0) {
+      key = `auth:${authId}`
+    } else if (uid > 0) {
+      key = `uid:${uid}`
+    } else {
+      key = `oid:${openId}`
+    }
+
+    const userName = u?.info?.name || '未知用户'
+    const suffix = u.isAuthed && authId > 0
+      ? `AuthId: ${authId}`
+      : uid > 0
+        ? `UID: ${uid}`
+        : `OID: ${openId}`
+
+    return {
+      label: `${userName} (${suffix})`,
+      value: key,
+    } satisfies SelectOption
+  })
+})
+
+const goodsOptions = computed<SelectOption[]>(() => {
+  return allGoods.value.map(g => ({
+    label: `${g.name} (#${g.id})`,
+    value: g.id,
+  }))
+})
+
+const selectedGoods = computed(() => {
+  if (!selectedGoodsId.value) return null
+  return allGoods.value.find(g => g.id === selectedGoodsId.value) ?? null
+})
+
+const isCheckingEligibility = ref(false)
+const eligibilityResult = ref<EligibilityResult | null>(null)
 
 // 事件类型选项
 const eventTypeOptions = [
@@ -151,6 +220,84 @@ async function resetTestAccount() {
 
 // 初始化时获取积分
 fetchTestAccountPoint()
+
+async function loadEligibilityOptions() {
+  if (!accountInfo.value?.id) return
+
+  isLoadingEligibilityOptions.value = true
+  try {
+    const [usersRes, goodsRes] = await Promise.all([
+      Get<ResponsePointUserModel[]>(POINT_API_URL + 'get-all-users'),
+      Get<ResponsePointGoodModel[]>(POINT_API_URL + 'get-goods', { id: accountInfo.value.id }),
+    ])
+
+    if (usersRes.code === 200) {
+      allUsers.value = usersRes.data ?? []
+    } else {
+      message.error(usersRes.message || '加载用户列表失败')
+    }
+
+    if (goodsRes.code === 200) {
+      allGoods.value = goodsRes.data ?? []
+    } else {
+      message.error(goodsRes.message || '加载礼物列表失败')
+    }
+  } catch (err: any) {
+    message.error(`加载下拉选项失败: ${err.message || err}`)
+    console.error(err)
+  } finally {
+    isLoadingEligibilityOptions.value = false
+  }
+}
+
+loadEligibilityOptions()
+
+async function checkEligibility() {
+  if (!selectedGoodsId.value) {
+    message.error('请选择礼物')
+    return
+  }
+
+  if (!selectedUserKey.value) {
+    message.error('请选择用户')
+    return
+  }
+
+  if (!eligibilityForm.value.count || eligibilityForm.value.count < 1) {
+    message.error('兑换数量不能小于 1')
+    return
+  }
+
+  isCheckingEligibility.value = true
+  eligibilityResult.value = null
+  try {
+    const params: any = {
+      goodsId: selectedGoodsId.value,
+      count: eligibilityForm.value.count,
+    }
+
+    const key = selectedUserKey.value
+    if (key.startsWith('auth:')) {
+      params.authId = Number(key.slice('auth:'.length))
+    } else if (key.startsWith('uid:')) {
+      params.uId = Number(key.slice('uid:'.length))
+    } else if (key.startsWith('oid:')) {
+      params.oId = key.slice('oid:'.length)
+    }
+
+    const res = await Get<EligibilityResult>(POINT_API_URL + 'check-eligibility', params)
+    if (res.code === 200 && res.data) {
+      eligibilityResult.value = res.data
+    } else {
+      message.error(res.message || '查询失败')
+    }
+  } catch (err: any) {
+    message.error(`查询失败: ${err.message || err}`)
+    console.error(err)
+  } finally {
+    isCheckingEligibility.value = false
+  }
+}
 </script>
 
 <template>
@@ -315,6 +462,105 @@ fetchTestAccountPoint()
         >
           请先配置积分设置
         </NAlert>
+
+        <NDivider>兑换资格查询</NDivider>
+
+        <NCard
+          size="small"
+          :bordered="false"
+        >
+          <NSpin :show="isCheckingEligibility || isLoadingEligibilityOptions">
+            <NForm
+              label-placement="left"
+              label-width="120"
+            >
+              <NFormItem label="目标用户" required>
+                <NSelect
+                  v-model:value="selectedUserKey"
+                  :options="userOptions"
+                  placeholder="请选择用户"
+                  filterable
+                  clearable
+                />
+              </NFormItem>
+
+              <NFormItem label="礼物" required>
+                <NSelect
+                  v-model:value="selectedGoodsId"
+                  :options="goodsOptions"
+                  placeholder="请选择礼物"
+                  filterable
+                  clearable
+                />
+              </NFormItem>
+
+              <NFormItem label="兑换数量" required>
+                <NInputNumber
+                  v-model:value="eligibilityForm.count"
+                  placeholder="兑换数量"
+                  :min="1"
+                  style="width: 100%"
+                />
+              </NFormItem>
+
+              <NAlert
+                v-if="selectedGoods"
+                type="info"
+                :bordered="false"
+                style="margin-bottom: 12px"
+              >
+                当前选择: {{ selectedGoods.name }} (ID: {{ selectedGoods.id }})
+              </NAlert>
+
+              <NFormItem>
+                <NFlex
+                  justify="end"
+                  style="width: 100%"
+                >
+                  <NButton
+                    type="primary"
+                    :loading="isCheckingEligibility"
+                    :disabled="!selectedUserKey || !selectedGoodsId"
+                    @click="checkEligibility"
+                  >
+                    查询
+                  </NButton>
+                </NFlex>
+              </NFormItem>
+            </NForm>
+
+            <NAlert
+              v-if="eligibilityResult"
+              :type="eligibilityResult.eligible ? 'success' : 'error'"
+              style="margin-top: 12px"
+            >
+              <template #header>
+                {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
+              </template>
+              <div v-if="!eligibilityResult.eligible">
+                原因: {{ eligibilityResult.reason || '未知原因' }}
+              </div>
+              <NFlex
+                :wrap="true"
+                :gap="12"
+                style="margin-top: 8px"
+              >
+                <NTag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'">
+                  {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}
+                </NTag>
+                <NTag type="info">
+                  当前积分: {{ eligibilityResult.userPoint }}
+                </NTag>
+                <NTag type="info">
+                  已兑换次数: {{ eligibilityResult.purchasedCount }}
+                </NTag>
+                <NTag type="warning">
+                  需要积分: {{ eligibilityResult.needPoint }}
+                </NTag>
+              </NFlex>
+            </NAlert>
+          </NSpin>
+        </NCard>
       </NFlex>
     </NSpin>
   </NCard>
