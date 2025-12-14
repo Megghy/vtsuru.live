@@ -105,6 +105,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel, fileList: UploadFi
       isPinned: false,
       setting: {
         allowGuardLevel: 0,
+        allowGuardFreeMinLevel: 0,
       },
       virtualKeys: [],
       keySelectionMode: KeySelectionMode.None,
@@ -245,6 +246,17 @@ async function updateGoods(e: MouseEvent) {
       }
     }
 
+    if (currentGoodsModel.value.goods.setting?.guardLevelMonths) {
+      const months = currentGoodsModel.value.goods.setting.guardLevelMonths
+      if (months.length > 0) {
+        for (const m of months) {
+          if (!m?.year || !m?.month) {
+            throw new Error('请选择最低兑换等级限制的年份和月份')
+          }
+        }
+      }
+    }
+
     await formRef.value.validate()
 
     const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
@@ -326,7 +338,12 @@ function onUpdateClick(item: ResponsePointGoodModel) {
   if (!copiedItem.setting) {
     copiedItem.setting = {
       allowGuardLevel: 0,
+      allowGuardFreeMinLevel: 0,
     }
+  }
+
+  if (copiedItem.setting?.allowGuardFreeMinLevel === undefined) {
+    copiedItem.setting.allowGuardFreeMinLevel = 0
   }
 
   if (copiedItem.setting?.guardFreeMonths === undefined && copiedItem.setting?.guardFree) {
@@ -1002,6 +1019,32 @@ onMounted(() => { })
                 vertical
                 :gap="8"
               >
+                <NText>
+                  免费兑换最低舰长等级
+                </NText>
+                <NRadioGroup
+                  :value="currentGoodsModel.goods.setting?.allowGuardFreeMinLevel ?? 0"
+                  @update:value="(v) => {
+                    if (!currentGoodsModel.goods.setting) {
+                      currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                    }
+                    currentGoodsModel.goods.setting.allowGuardFreeMinLevel = v;
+                  }"
+                >
+                  <NRadioButton :value="0">
+                    不限
+                  </NRadioButton>
+                  <NRadioButton :value="1">
+                    总督
+                  </NRadioButton>
+                  <NRadioButton :value="2">
+                    提督
+                  </NRadioButton>
+                  <NRadioButton :value="3">
+                    舰长
+                  </NRadioButton>
+                </NRadioGroup>
+
                 <NCheckbox
                   :checked="currentGoodsModel.goods.setting?.guardFreeMonths?.length === 0"
                   @update:checked="(v) => {
@@ -1014,7 +1057,7 @@ onMounted(() => { })
                     currentGoodsModel.goods.setting.guardFreeMonths = v ? [] : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
                   }"
                 >
-                  仅当前在舰
+                  当前在舰即可
                 </NCheckbox>
 
                 <NFlex
@@ -1097,6 +1140,103 @@ onMounted(() => { })
                   中存在对应记录时才能生效
                 </NTooltip>
               </NText>
+
+              <NCheckbox
+                :checked="currentGoodsModel.goods.setting?.guardLevelMonths != undefined"
+                @update:checked="
+                  (v) => {
+                    if (!currentGoodsModel.goods.setting) {
+                      currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                    }
+                    currentGoodsModel.goods.setting.guardLevelMonths = v
+                      ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
+                      : undefined;
+                  }
+                "
+              >
+                限制最低兑换等级的上舰月份
+              </NCheckbox>
+
+              <NFlex
+                v-if="currentGoodsModel.goods.setting?.guardLevelMonths"
+                vertical
+                :gap="8"
+              >
+                <NCheckbox
+                  :checked="currentGoodsModel.goods.setting?.guardLevelMonths?.length === 0"
+                  @update:checked="(v) => {
+                    if (!currentGoodsModel.goods.setting) {
+                      currentGoodsModel.goods.setting = { allowGuardLevel: 0 };
+                    }
+                    if (!currentGoodsModel.goods.setting.guardLevelMonths) {
+                      currentGoodsModel.goods.setting.guardLevelMonths = [];
+                    }
+                    currentGoodsModel.goods.setting.guardLevelMonths = v ? [] : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
+                  }"
+                >
+                  当前在舰即可
+                </NCheckbox>
+
+                <NFlex
+                  v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
+                  vertical
+                  :gap="8"
+                >
+                  <NFlex
+                    v-for="(m, idx) in currentGoodsModel.goods.setting.guardLevelMonths"
+                    :key="`${m.year}-${m.month}-${idx}`"
+                    :gap="8"
+                    align="center"
+                  >
+                    <NSelect
+                      style="flex: 1"
+                      :value="m.year"
+                      :options="allowedYearOptions"
+                      placeholder="请选择年份"
+                      @update:value="(v) => {
+                        if (currentGoodsModel.goods.setting?.guardLevelMonths) {
+                          currentGoodsModel.goods.setting.guardLevelMonths[idx].year = v;
+                        }
+                      }"
+                    />
+                    <NSelect
+                      style="flex: 1"
+                      :value="m.month"
+                      :options="allowedMonthOptions"
+                      placeholder="请选择月份"
+                      @update:value="(v) => {
+                        if (currentGoodsModel.goods.setting?.guardLevelMonths) {
+                          currentGoodsModel.goods.setting.guardLevelMonths[idx].month = v;
+                        }
+                      }"
+                    />
+                    <NButton
+                      type="error"
+                      secondary
+                      @click="() => {
+                        if (!currentGoodsModel.goods.setting?.guardLevelMonths) return;
+                        currentGoodsModel.goods.setting.guardLevelMonths.splice(idx, 1);
+                        if (currentGoodsModel.goods.setting.guardLevelMonths.length === 0) {
+                          currentGoodsModel.goods.setting.guardLevelMonths = [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }];
+                        }
+                      }"
+                    >
+                      删除
+                    </NButton>
+                  </NFlex>
+                </NFlex>
+
+                <NButton
+                  v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
+                  secondary
+                  @click="() => {
+                    if (!currentGoodsModel.goods.setting?.guardLevelMonths) return;
+                    currentGoodsModel.goods.setting.guardLevelMonths.push({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+                  }"
+                >
+                  添加月份
+                </NButton>
+              </NFlex>
 
               <NRadioGroup
                 :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
