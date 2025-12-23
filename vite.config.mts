@@ -31,6 +31,7 @@ const removeSodipodiInkscape = {
 }
 
 export default defineConfig({
+  appType: 'spa',
   plugins: [
     vue({
       script: { propsDestructure: true, defineModel: true },

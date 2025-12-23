@@ -13,15 +13,17 @@ import {
   VehicleShip24Filled,
   VideoAdd20Filled,
 } from '@vicons/fluent'
-import { AnalyticsSharp, Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronDown, ChevronUp, Eye, Moon, MusicalNote, Pause, Play, PlayBack, PlayForward, Sunny, TrashBin, VolumeHigh } from '@vicons/ionicons5'
+import { AnalyticsSharp, Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronDown, ChevronUp, Eye, Moon, MusicalNote, NotificationsOutline, Pause, Play, PlayBack, PlayForward, Sunny, TrashBin, VolumeHigh } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   NAlert,
   NBackTop,
+  NBadge,
   NButton,
   NCard,
   NCountdown,
   NDivider,
+  NEmpty,
   NElement,
   NFlex,
   NIcon,
@@ -30,8 +32,11 @@ import {
   NLayoutFooter,
   NLayoutHeader,
   NLayoutSider,
+  NList,
+  NListItem,
   NMenu,
   NPageHeader,
+  NPopover,
   NPopconfirm,
   NScrollbar,
   NSelect,
@@ -48,22 +53,175 @@ import {
 import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { cookie, isLoadingAccount, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType, ThemeType } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey } from '@/data/constants'
+import { ACCOUNT_API_URL, availableAPIs, ORG_API_URL, selectedAPIKey } from '@/data/constants'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
+import { useNotificationStore } from '@/store/useNotificationStore'
 import { isDarkMode, NavigateToNewTab } from '@/Utils'
 
 // 全局状态和工具
 const accountInfo = useAccount()
 const message = useMessage()
 const route = useRoute()
+const router = useRouter()
 const windowWidth = window.innerWidth
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+
+const notificationStore = useNotificationStore()
+const notifPopoverOpen = ref(false)
+const notifLoading = ref(false)
+
+async function onNotifPopoverUpdate(show: boolean) {
+  notifPopoverOpen.value = show
+  if (!show) return
+
+  notifLoading.value = true
+  try {
+    await notificationStore.refreshUnread()
+    await notificationStore.refreshLatest(0, 20, false)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '加载通知失败')
+  } finally {
+    notifLoading.value = false
+  }
+}
+
+function isOrgInviteNotification(item: any): item is { id: string, isReaded: boolean, extra: Record<string, string> } {
+  const action = item?.extra?.action
+  return action === 'org-invite-member' || action === 'org-invite-streamer'
+}
+
+function getOrgInviteType(item: any): 'member' | 'streamer' {
+  const type = item?.extra?.type
+  if (type === 'member' || type === 'streamer') return type
+  throw new Error('无效的邀请类型')
+}
+
+function getOrgInviteToken(item: any): string {
+  const token = item?.extra?.token
+  if (typeof token === 'string' && token.trim()) return token
+  throw new Error('无效的邀请 token')
+}
+
+async function acceptOrgInvite(item: any) {
+  try {
+    const type = getOrgInviteType(item)
+    const token = getOrgInviteToken(item)
+    const url = type === 'member'
+      ? `${ORG_API_URL}invite/member/accept`
+      : `${ORG_API_URL}invite/streamer/accept`
+
+    const resp = await QueryPostAPIWithParams<{ orgId: number, orgName: string }>(
+      url,
+      { token },
+      undefined,
+    )
+
+    if (resp.code !== 200) {
+      message.error(resp.message)
+      return
+    }
+
+    await notificationStore.markRead([item.id])
+    notifPopoverOpen.value = false
+    message.success(`已处理邀请：${resp.data.orgName}`)
+    router.push({ name: 'org-detail', params: { orgId: resp.data.orgId } })
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '操作失败')
+  }
+}
+
+async function rejectOrgInvite(item: any) {
+  try {
+    const type = getOrgInviteType(item)
+    const token = getOrgInviteToken(item)
+
+    if (type === 'member') {
+      const resp = await QueryPostAPIWithParams<{ orgId: number, orgName: string }>(
+        `${ORG_API_URL}invite/member/reject`,
+        { token },
+        undefined,
+      )
+      if (resp.code !== 200) {
+        message.error(resp.message)
+        return
+      }
+      await notificationStore.markRead([item.id])
+      notifPopoverOpen.value = false
+      message.success(`已拒绝加入：${resp.data.orgName}`)
+      router.push({ name: 'org-detail', params: { orgId: resp.data.orgId } })
+      return
+    }
+
+    const resp = await QueryPostAPIWithParams<{ orgId: number, orgName: string }>(
+      `${ORG_API_URL}invite/streamer/reject`,
+      { token },
+      undefined,
+    )
+    if (resp.code !== 200) {
+      message.error(resp.message)
+      return
+    }
+
+    await notificationStore.markRead([item.id])
+    notifPopoverOpen.value = false
+    message.success(`已拒绝授权：${resp.data.orgName}`)
+    router.push({ name: 'org-detail', params: { orgId: resp.data.orgId } })
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '操作失败')
+  }
+}
+
+async function markAllNotifsRead() {
+  try {
+    const ids = notificationStore.unread.map(n => n.id)
+    if (!ids.length) return
+    await notificationStore.markRead(ids)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '操作失败')
+  }
+}
+
+async function markNotifRead(id: string) {
+  try {
+    await notificationStore.markRead([id])
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '操作失败')
+  }
+}
+
+async function openNotif(item: any) {
+  try {
+    const openUrl = resolveOpenUrl(item)
+    if (!openUrl) return
+
+    if (!item.isReaded) {
+      await notificationStore.markRead([item.id])
+    }
+
+    if (openUrl.startsWith('http://') || openUrl.startsWith('https://')) {
+      NavigateToNewTab(openUrl)
+      notifPopoverOpen.value = false
+      return
+    }
+
+    notifPopoverOpen.value = false
+    await router.push(openUrl)
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : '打开失败')
+  }
+}
+
+function resolveOpenUrl(item: any): string | undefined {
+  const url = item?.extra?.openUrl
+  if (typeof url !== 'string') return undefined
+  return url
+}
 
 // 收藏功能相关
 const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', [])
@@ -261,6 +419,13 @@ const menuOptions = computed(() => {
       key: 'manage-analyze',
       disabled: accountInfo.value?.isEmailVerified === false,
       icon: renderIcon(Eye),
+      group: 'common',
+    },
+    {
+      label: () => h(RouterLink, { to: { name: 'org-index' } }, { default: () => '组织' }),
+      key: 'org-index',
+      disabled: accountInfo.value?.isEmailVerified === false,
+      icon: renderIcon(PeopleQueue24Filled),
       group: 'common',
     },
     {
@@ -653,6 +818,10 @@ onMounted(() => {
   if (selectedAPIKey.value != 'main') {
     message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
   }
+
+  if (accountInfo.value?.id) {
+    void notificationStore.refreshUnread().catch(err => console.warn('[notification] refreshUnread failed', err))
+  }
   setTimeout(() => {
     // 检查邮箱验证状态
     if (accountInfo.value?.isEmailVerified === false) {
@@ -665,6 +834,15 @@ onMounted(() => {
     }
   }, 500);
 })
+
+watch(
+  () => accountInfo.value?.id,
+  async (id) => {
+    if (!id) return
+    await notificationStore.refreshUnread()
+  },
+  { immediate: true },
+)
 
 onUnmounted(() => {
   if (loadingTimer) {
@@ -686,6 +864,86 @@ onUnmounted(() => {
         </template>
         <template #extra>
           <NSpace align="center" justify="center">
+            <NTooltip>
+              <template #trigger>
+                <NPopover
+                  trigger="click"
+                  placement="bottom-end"
+                  v-model:show="notifPopoverOpen"
+                  @update:show="onNotifPopoverUpdate"
+                >
+                  <template #trigger>
+                    <NBadge :value="notificationStore.unreadCount" :max="99" :show="notificationStore.unreadCount > 0">
+                      <NButton circle tertiary>
+                        <template #icon>
+                          <NIcon :component="NotificationsOutline" />
+                        </template>
+                      </NButton>
+                    </NBadge>
+                  </template>
+
+                  <NCard size="small" style="width: 420px" :bordered="false" :segmented="{ content: true }">
+                    <template #header>
+                      通知
+                    </template>
+                    <template #header-extra>
+                      <NButton
+                        size="small"
+                        secondary
+                        :disabled="notificationStore.unreadCount === 0"
+                        @click.stop="markAllNotifsRead"
+                      >
+                        全部已读
+                      </NButton>
+                    </template>
+
+                    <NSpin :show="notifLoading">
+                      <template v-if="notificationStore.latest.length === 0">
+                        <NEmpty description="暂无通知" />
+                      </template>
+
+                      <NScrollbar v-else style="max-height: 420px">
+                        <NList>
+                          <NListItem v-for="item in notificationStore.latest" :key="item.id">
+                            <div style="display:flex; flex-direction: column; gap: 6px; width: 100%;">
+                              <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                <div style="font-weight: 600;">
+                                  <NTag v-if="!item.isReaded" size="small" type="info" :bordered="false">未读</NTag>
+                                  {{ item.title }}
+                                </div>
+                                <NTime :time="item.createTime" format="yyyy-MM-dd HH:mm" />
+                              </div>
+
+                              <div style="white-space: pre-wrap; opacity: .85;">
+                                {{ item.message }}
+                              </div>
+
+                              <NSpace>
+                                <template v-if="isOrgInviteNotification(item)">
+                                  <NButton size="small" type="primary" @click.stop="acceptOrgInvite(item)">
+                                    接受
+                                  </NButton>
+                                  <NButton size="small" tertiary @click.stop="rejectOrgInvite(item)">
+                                    拒绝
+                                  </NButton>
+                                </template>
+                                <NButton v-if="resolveOpenUrl(item)" size="small" tertiary type="primary" @click.stop="openNotif(item)">
+                                  打开
+                                </NButton>
+                                <NButton v-if="!item.isReaded" size="small" tertiary @click.stop="markNotifRead(item.id)">
+                                  标记已读
+                                </NButton>
+                              </NSpace>
+                            </div>
+                          </NListItem>
+                        </NList>
+                      </NScrollbar>
+                    </NSpin>
+                  </NCard>
+                </NPopover>
+              </template>
+              通知
+            </NTooltip>
             <!-- 主题切换开关 -->
             <NSwitch :default-value="!isDarkMode"
               @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)">

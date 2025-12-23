@@ -597,6 +597,7 @@ export enum QueueStatus {
   Cancel,
 }
 export interface EventModel {
+  id?: number
   type: EventDataTypes
   uname: string
   uface: string

@@ -1,10 +1,10 @@
 import { defineAsyncComponent, markRaw, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 
-const debugAPI
+const debugAPI: string
   = import.meta.env.VITE_API == 'dev'
-    ? import.meta.env.VITE_DEBUG_DEV_API
-    : import.meta.env.VITE_DEBUG_RELEASE_API
+    ? (import.meta.env.VITE_DEBUG_DEV_API as string)
+    : (import.meta.env.VITE_DEBUG_RELEASE_API as string)
 const releseAPI = `https://api.vtsuru.suki.club/`
 const failoverAPI = `https://failover-api.vtsuru.suki.club/`
 
@@ -95,6 +95,7 @@ export const MUSIC_REQUEST_API_URL = `${BASE_API_URL}music-request/`
 export const VTSURU_API_URL = `${BASE_API_URL}vtsuru/`
 export const POINT_API_URL = `${BASE_API_URL}point/`
 export const BILI_AUTH_API_URL = `${BASE_API_URL}bili-auth/`
+export const ORG_API_URL = `${BASE_API_URL}org/`
 export const FORUM_API_URL = `${BASE_API_URL}forum/`
 export const USER_INDEX_API_URL = `${BASE_API_URL}user-index/`
 export const ANALYZE_API_URL = `${BASE_API_URL}analyze/`
