@@ -95,7 +95,6 @@
     "stylus": "^0.64.0",
     "typescript": "^5.9.3",
     "vite-plugin-cdn-import": "^1.0.1",
-    "vscode-loc": "git+https://github.com/microsoft/vscode-loc.git",
     "vue-vine": "^1.7.23"
   }
 }
