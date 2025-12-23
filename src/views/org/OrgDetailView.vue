@@ -77,9 +77,11 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import UserAutocompleteSelect from '@/components/common/UserAutocompleteSelect.vue'
 import { ORG_API_URL } from '@/data/constants'
+import OrgPointManage from './OrgPointManage.vue'
+import PointOrderManage from '@/views/manage/point/PointOrderManage.vue'
+import OrgAuditTab from './OrgAuditTab.vue'
 
 // 注册必要的组件
-// @ts-expect-error
 // eslint-disable-next-line
 ;(echarts as any).use([
   TitleComponent,
@@ -1142,7 +1144,7 @@ function handleGoConsole() {
                       </div>
                       <div style="position: absolute; top: 8px; right: 8px;">
                         <NTag v-if="!item.live.isFinish" type="success" size="small">LIVE</NTag>
-                        <NTag v-else color="#00000080" text-color="#fff" :bordered="false" size="small">已结束</NTag>
+                        <NTag v-else type="default" :color="{ color: '#00000080' }" text-color="#fff" :bordered="false" size="small">已结束</NTag>
                       </div>
                       <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 4px 8px; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); color: #fff; font-size: 12px; display: flex; align-items: center;">
                         <NAvatar
@@ -1564,26 +1566,35 @@ function handleGoConsole() {
             </NAlert>
           </template>
           <template v-else>
-            <div style="margin-bottom: 16px;">
-              <NAlert type="info" :bordered="false">
-                组织积分管理功能开发中...
-              </NAlert>
-            </div>
+            <OrgPointManage
+              :org-id="orgId"
+              :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
+            />
           </template>
         </NTabPane>
 
-        <NTabPane name="shipping" tab="礼物发货">
+        <NTabPane name="shipping" tab="订单管理">
           <template v-if="!isOrgAdmin">
             <NAlert type="warning" :bordered="false">
-              需要组织管理员权限才能管理礼物发货
+              需要组织管理员权限才能管理订单
             </NAlert>
           </template>
           <template v-else>
-            <div style="margin-bottom: 16px;">
-              <NAlert type="info" :bordered="false">
-                礼物发货管理功能开发中...
-              </NAlert>
-            </div>
+            <PointOrderManage
+              :org-id="orgId"
+              :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
+            />
+          </template>
+        </NTabPane>
+
+        <NTabPane name="audit" tab="操作审计">
+          <template v-if="!isOrgAdmin">
+            <NAlert type="warning" :bordered="false">
+              需要组织管理员权限才能查看审计
+            </NAlert>
+          </template>
+          <template v-else>
+            <OrgAuditTab :org-id="orgId" />
           </template>
         </NTabPane>
       </NTabs>
