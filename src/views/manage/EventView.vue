@@ -3,7 +3,7 @@ import type { DataTableColumns } from 'naive-ui'
 import type { EventModel } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherAlert from '@/components/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/components/EventFetcherStatusCard.vue'
 import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/data/constants'
@@ -33,15 +33,20 @@ import {
   NH3,
   NIcon,
   NInfiniteScroll,
+  NInput,
+  NInputNumber,
   NLi,
+  NPopconfirm,
   NRadioButton,
   NRadioGroup,
+  NSelect,
   NSpace,
   NSpin,
   NStatistic,
   NTabPane,
   NTabs,
   NTag,
+  NTable,
   NText,
   NTime,
   NUl,
@@ -101,6 +106,47 @@ const offset = ref(0) // 当前偏移量
 const limit = ref(20) // 每次加载数量
 const hasMore = ref(true) // 是否还有更多数据
 
+const userFilterInput = ref('')
+const userFilterApplied = ref<{ uid?: number, ouid?: string, uname?: string }>({})
+
+function isGuidText(text: string) {
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(text)
+}
+
+function parseUserFilter(text: string) {
+  const t = text.trim()
+  if (!t) {
+    return {}
+  }
+  if (/^\d+$/.test(t)) {
+    const uid = Number(t)
+    if (!Number.isFinite(uid) || uid <= 0) {
+      throw new Error('UID 无效')
+    }
+    return { uid }
+  }
+  if (isGuidText(t)) {
+    return { ouid: t }
+  }
+  return { uname: t }
+}
+
+async function applyUserFilter() {
+  try {
+    userFilterApplied.value = parseUserFilter(userFilterInput.value)
+    await fetchData(true)
+  }
+  catch (e) {
+    message.error((e as Error).message)
+  }
+}
+
+async function clearUserFilter() {
+  userFilterInput.value = ''
+  userFilterApplied.value = {}
+  await fetchData(true)
+}
+
 // 根据类型过滤事件
 const selectedEvents = computed(() => {
   return events.value.filter(e => e.type == selectedType.value)
@@ -114,6 +160,9 @@ async function get(currentOffset: number, currentLimit: number) {
       end: selectedDate.value[1],
       offset: currentOffset,
       limit: currentLimit,
+      uid: userFilterApplied.value.uid,
+      ouid: userFilterApplied.value.ouid,
+      uname: userFilterApplied.value.uname,
     })
     if (data.code == 200) {
       if (currentOffset === 0) {
@@ -182,6 +231,108 @@ async function loadMore() {
 
 // 监视日期和类型变化
 watch([selectedDate, selectedType], onFilterChange, { immediate: true })
+
+const manualGuardUname = ref('')
+const manualGuardUserKey = ref('')
+const manualGuardMsg = ref<'舰长' | '提督' | '总督'>('舰长')
+const manualGuardTime = ref<number | null>(null)
+const manualGuardNum = ref<number | null>(1)
+const manualGuardPrice = ref<number | null>(null)
+const manualGuardLoading = ref(false)
+
+const manualGuardMsgOptions = [
+  { label: '舰长', value: '舰长' },
+  { label: '提督', value: '提督' },
+  { label: '总督', value: '总督' },
+]
+
+async function addManualGuard() {
+  if (manualGuardLoading.value)
+    return
+
+  const uname = manualGuardUname.value.trim()
+  if (!uname) {
+    message.error('uname 不能为空')
+    return
+  }
+
+  const userKey = manualGuardUserKey.value.trim()
+  if (!userKey) {
+    message.error('请填写 uid 或 ouid')
+    return
+  }
+
+  let uid: number | undefined
+  let ouid: string | undefined
+  try {
+    const parsed = parseUserFilter(userKey)
+    if ('uid' in parsed)
+      uid = parsed.uid
+    if ('ouid' in parsed)
+      ouid = parsed.ouid
+  }
+  catch (e) {
+    message.error((e as Error).message)
+    return
+  }
+
+  if (!uid && !ouid) {
+    message.error('请填写 uid 或 ouid')
+    return
+  }
+
+  const num = manualGuardNum.value ?? 1
+  if (num <= 0) {
+    message.error('num 必须大于 0')
+    return
+  }
+
+  manualGuardLoading.value = true
+  try {
+    const resp = await QueryPostAPI<EventModel>(`${EVENT_API_URL}guard/manual`, {
+      uid,
+      ouid,
+      uname,
+      msg: manualGuardMsg.value,
+      time: manualGuardTime.value ?? undefined,
+      num,
+      price: manualGuardPrice.value ?? undefined,
+    })
+    if (resp.code !== 200) {
+      message.error(`添加失败: ${resp.message}`)
+      return
+    }
+
+    message.success('已添加')
+    await fetchData(true)
+  }
+  catch (e) {
+    message.error(`添加失败: ${(e as Error).message}`)
+  }
+  finally {
+    manualGuardLoading.value = false
+  }
+}
+
+async function deleteGuardEvent(item: EventModel) {
+  if (!item.id) {
+    message.error('无法删除：缺少 id')
+    return
+  }
+  try {
+    const resp = await QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id })
+    if (resp.code !== 200) {
+      message.error(`删除失败: ${resp.message}`)
+      return
+    }
+
+    events.value = events.value.filter(e => e.id !== item.id)
+    message.success('已删除')
+  }
+  catch (e) {
+    message.error(`删除失败: ${(e as Error).message}`)
+  }
+}
 
 // 获取SC颜色
 function GetSCColor(price: number): string {
@@ -439,6 +590,31 @@ async function onTabChange(value: string) {
                       Superchat
                     </NRadioButton>
                   </NRadioGroup>
+                  <NInput
+                    v-model:value="userFilterInput"
+                    :disabled="isLoading || isLoadingMore"
+                    placeholder="筛选用户(UID/OUID/用户名)"
+                    style="width: 220px"
+                    clearable
+                    @keyup.enter="applyUserFilter"
+                  />
+                  <NButton
+                    size="small"
+                    secondary
+                    type="primary"
+                    :disabled="isLoading || isLoadingMore"
+                    @click="applyUserFilter"
+                  >
+                    应用
+                  </NButton>
+                  <NButton
+                    size="small"
+                    secondary
+                    :disabled="isLoading || isLoadingMore"
+                    @click="clearUserFilter"
+                  >
+                    清空
+                  </NButton>
                 </NSpace>
 
                 <NSpace align="center">
@@ -479,6 +655,61 @@ async function onTabChange(value: string) {
             </div>
 
             <!-- 视图切换和统计信息 -->
+            <NCard
+              v-if="selectedType == EventDataTypes.Guard"
+              size="small"
+              embedded
+            >
+              <NSpace
+                align="center"
+                wrap
+              >
+                <NInput
+                  v-model:value="manualGuardUname"
+                  placeholder="用户名"
+                  style="width: 160px"
+                />
+                <NInput
+                  v-model:value="manualGuardUserKey"
+                  placeholder="UID 或 OUID"
+                  style="width: 220px"
+                />
+                <NSelect
+                  v-model:value="manualGuardMsg"
+                  :options="manualGuardMsgOptions"
+                  style="width: 120px"
+                />
+                <NDatePicker
+                  v-model:value="manualGuardTime"
+                  type="datetime"
+                  clearable
+                  placeholder="时间(可选)"
+                  style="width: 200px"
+                />
+                <NInputNumber
+                  v-model:value="manualGuardNum"
+                  :min="1"
+                  placeholder="数量"
+                  style="width: 120px"
+                />
+                <NInputNumber
+                  v-model:value="manualGuardPrice"
+                  :min="0"
+                  placeholder="价格(可选)"
+                  style="width: 140px"
+                />
+                <NButton
+                  type="primary"
+                  secondary
+                  :loading="manualGuardLoading"
+                  :disabled="isLoading || isLoadingMore"
+                  @click="addManualGuard"
+                >
+                  添加上舰记录
+                </NButton>
+              </NSpace>
+            </NCard>
+
             <NSpace
               justify="space-between"
               align="center"
@@ -521,7 +752,7 @@ async function onTabChange(value: string) {
                     >
                       <NGridItem
                         v-for="item in selectedEvents"
-                        :key="`${item.time}_${item.uid}_${item.price}`"
+                        :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
                       >
                         <NCard
                           size="small"
@@ -585,6 +816,24 @@ async function onTabChange(value: string) {
                             >
                               {{ item.msg }}
                             </NEllipsis>
+                            <NPopconfirm
+                              v-if="selectedType == EventDataTypes.Guard && item.id"
+                              :show-icon="false"
+                              positive-text="删除"
+                              negative-text="取消"
+                              @positive-click="deleteGuardEvent(item)"
+                            >
+                              <template #trigger>
+                                <NButton
+                                  size="tiny"
+                                  secondary
+                                  type="error"
+                                >
+                                  删除
+                                </NButton>
+                              </template>
+                              确定删除这条上舰记录？
+                            </NPopconfirm>
                           </NSpace>
                         </NCard>
                       </NGridItem>
@@ -630,12 +879,15 @@ async function onTabChange(value: string) {
                       <th v-if="selectedType == EventDataTypes.SC">
                         内容
                       </th>
+                      <th v-if="selectedType == EventDataTypes.Guard">
+                        操作
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr
                       v-for="item in selectedEvents"
-                      :key="`${item.time}_${item.uid}_${item.price}`"
+                      :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
                     >
                       <td>{{ item.uname }}</td>
                       <td>{{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}</td>
@@ -664,6 +916,26 @@ async function onTabChange(value: string) {
                         <NEllipsis style="max-width: 300px">
                           {{ item.msg }}
                         </NEllipsis>
+                      </td>
+                      <td v-if="selectedType == EventDataTypes.Guard">
+                        <NPopconfirm
+                          v-if="item.id"
+                          :show-icon="false"
+                          positive-text="删除"
+                          negative-text="取消"
+                          @positive-click="deleteGuardEvent(item)"
+                        >
+                          <template #trigger>
+                            <NButton
+                              size="small"
+                              secondary
+                              type="error"
+                            >
+                              删除
+                            </NButton>
+                          </template>
+                          确定删除这条上舰记录？
+                        </NPopconfirm>
                       </td>
                     </tr>
                   </tbody>

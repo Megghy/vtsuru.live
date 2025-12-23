@@ -43,6 +43,30 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/join',
+    name: 'join',
+    component: async () => import('@/views/JoinView.vue'),
+    meta: {
+      title: '加入',
+    },
+  },
+  {
+    path: '/org',
+    name: 'org-index',
+    component: async () => import('@/views/org/OrgIndexView.vue'),
+    meta: {
+      title: '组织',
+    },
+  },
+  {
+    path: '/org/:orgId',
+    name: 'org-detail',
+    component: async () => import('@/views/org/OrgDetailView.vue'),
+    meta: {
+      title: '组织',
+    },
+  },
+  {
     path: '/video-collect/:id',
     name: 'video-collect',
     component: async () => import('@/views/VideoCollectPublic.vue'),
@@ -112,7 +136,7 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 router.beforeEach((to, from, next) => {
