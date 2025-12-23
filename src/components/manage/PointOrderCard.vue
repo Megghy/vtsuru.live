@@ -39,8 +39,7 @@ import {
   GoodsTypes,
   PointOrderStatus,
 } from '@/api/api-models'
-import { QueryPostAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
+import { updateOrderExpress, updateOrdersStatus } from '@/api/point-orders'
 import AddressDisplay from './AddressDisplay.vue'
 import PointGoodsItem from './PointGoodsItem.vue'
 
@@ -49,6 +48,7 @@ type OrderType = ResponsePointOrder2UserModel | ResponsePointOrder2OwnerModel
 const props = defineProps<{
   order: ResponsePointOrder2UserModel[] | ResponsePointOrder2OwnerModel[]
   type: 'user' | 'owner'
+  orgId?: number
   loading?: boolean
 }>()
 
@@ -386,23 +386,16 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
 
   try {
     isLoading.value = true
-    const data = await QueryPostAPI(`${POINT_API_URL}update-orders-status`, {
-      ids,
-      status,
+    await updateOrdersStatus(props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' }, ids, status)
+    message.success('操作成功')
+    props.order?.forEach((row) => {
+      if (ids.includes(row.id)) {
+        row.status = status
+        row.updateAt = Date.now()
+      }
     })
-
-    if (data.code === 200) {
-      message.success('操作成功')
-      props.order?.forEach((row) => {
-        if (ids.includes(row.id)) {
-          row.status = status
-        }
-      })
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
   } catch (err) {
-    message.error(`操作失败: ${err}`)
+    message.error(err instanceof Error ? err.message : `操作失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false
@@ -410,26 +403,18 @@ async function updateStatus(ids: number[], status: PointOrderStatus) {
 }
 
 async function updateExpress(item: ResponsePointOrder2OwnerModel) {
-  if (!item.trackingNumber || !item.expressCompany) {
-    message.error('请填写快递单号和快递公司')
-    return
-  }
-
   try {
     isLoading.value = true
-    const data = await QueryPostAPI(`${POINT_API_URL}update-order-express`, {
-      id: item.id,
-      trackingNumber: item.trackingNumber,
-      expressCompany: item.expressCompany,
-    })
-
-    if (data.code === 200) {
-      message.success('操作成功')
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
+    await updateOrderExpress(
+      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
+      Number(item.id),
+      item.trackingNumber ?? '',
+      item.expressCompany ?? undefined,
+    )
+    item.updateAt = Date.now()
+    message.success('操作成功')
   } catch (err) {
-    message.error(`操作失败: ${err}`)
+    message.error(err instanceof Error ? err.message : `操作失败: ${err}`)
     console.error(err)
   } finally {
     isLoading.value = false

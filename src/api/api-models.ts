@@ -809,6 +809,7 @@ export interface ResponsePointOrder2OwnerModel {
   instanceOf: 'owner'
   id: number
   point: number
+  vTsuruId: number
   type: GoodsTypes
   customer: BiliAuthModel
   address?: AddressInfo

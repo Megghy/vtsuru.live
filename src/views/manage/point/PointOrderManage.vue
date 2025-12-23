@@ -22,10 +22,11 @@ import {
   NText,
   useMessage,
 } from 'naive-ui'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { fetchOwnerOrders, updateOrdersStatus } from '@/api/point-orders'
+import { QueryPostAPI } from '@/api/query'
 import PointOrderCard from '@/components/manage/PointOrderCard.vue'
 import { POINT_API_URL } from '@/data/constants'
 import { objectsToCSV } from '@/Utils'
@@ -35,11 +36,14 @@ interface OrderFilterSettings {
   type?: GoodsTypes // 订单类型（实体/虚拟）
   status?: PointOrderStatus // 订单状态
   customer?: number // 用户ID
+  streamerId?: number // 主播ID（仅组织订单）
   onlyRequireShippingInfo: boolean // 是否只显示需要物流信息的订单
 }
 
 const props = defineProps<{
-  goods: ResponsePointGoodModel[]
+  goods?: ResponsePointGoodModel[]
+  orgId?: number
+  streamerOptions?: { label: string, value: number }[]
 }>()
 
 // 默认筛选设置
@@ -48,7 +52,26 @@ const defaultSettings = {
 } as OrderFilterSettings
 
 // 使用持久化存储保存筛选设置
-const filterSettings = useStorage<OrderFilterSettings>('Setting.Point.OrderFilter', defaultSettings)
+const filterKey = computed(() => `Setting.Point.OrderFilter.${props.orgId ? `org-${props.orgId}` : 'owner'}`)
+const filterSettings = useStorage<OrderFilterSettings>(filterKey, defaultSettings)
+
+watch(
+  () => filterSettings.value.streamerId,
+  () => {
+    if (props.orgId) {
+      refresh()
+    }
+  },
+)
+
+watch(
+  () => filterSettings.value.customer,
+  () => {
+    if (props.orgId) {
+      refresh()
+    }
+  },
+)
 
 const message = useMessage()
 const accountInfo = useAccount()
@@ -62,6 +85,7 @@ const filteredOrders = computed(() => {
     if (filterSettings.value.status != undefined && o.status !== filterSettings.value.status) return false
     if (filterSettings.value.onlyRequireShippingInfo && o.trackingNumber) return false
     if (filterSettings.value.customer && o.customer.userId != filterSettings.value.customer) return false
+    if (props.orgId && filterSettings.value.streamerId && o.vTsuruId !== filterSettings.value.streamerId) return false
     return true
   })
 })
@@ -89,15 +113,19 @@ const orderStats = computed(() => {
 async function getOrders() {
   try {
     isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-orders`)
-    if (data.code == 200) {
-      return data.data
-    } else {
-      message.error(`获取订单失败: ${data.message}`)
-    }
+    return await fetchOwnerOrders(
+      props.orgId
+        ? {
+            kind: 'org',
+            orgId: props.orgId,
+            streamerId: filterSettings.value.streamerId,
+            customer: filterSettings.value.customer,
+          }
+        : { kind: 'owner' },
+    )
   } catch (err) {
     console.log(err)
-    message.error(`获取订单失败: ${err}`)
+    message.error(err instanceof Error ? err.message : `获取订单失败: ${err}`)
   } finally {
     isLoading.value = false
   }
@@ -106,6 +134,10 @@ async function getOrders() {
 
 // 删除选中的订单
 async function deleteOrder() {
+  if (props.orgId) {
+    message.warning('组织订单暂不支持删除')
+    return
+  }
   if (!selectedItem.value?.length) {
     message.warning('请选择要删除的订单')
     return
@@ -148,28 +180,23 @@ async function batchUpdateOrderStatus() {
   }
 
   try {
-    const requestData = {
-      orderIds: selectedItem.value,
-      status: targetStatus.value,
-    }
-
-    const data = await QueryPostAPI<number[]>(`${POINT_API_URL}batch-update-order-status`, requestData)
-    if (data.code == 200) {
-      message.success('更新成功')
-      // 更新本地订单状态
-      orders.value.forEach((order) => {
-        if (data.data.includes(order.id)) {
-          order.status = targetStatus.value as PointOrderStatus
-          order.updateAt = Date.now()
-        }
-      })
-      targetStatus.value = undefined
-      showStatusModal.value = false
-    } else {
-      message.error(`更新失败: ${data.message}`)
-    }
+    await updateOrdersStatus(
+      props.orgId ? { kind: 'org', orgId: props.orgId } : { kind: 'owner' },
+      (selectedItem.value as number[]) ?? [],
+      targetStatus.value,
+    )
+    message.success('更新成功')
+    const updated = new Set<number>((selectedItem.value as number[]) ?? [])
+    orders.value.forEach((order) => {
+      if (updated.has(Number(order.id))) {
+        order.status = targetStatus.value as PointOrderStatus
+        order.updateAt = Date.now()
+      }
+    })
+    targetStatus.value = undefined
+    showStatusModal.value = false
   } catch (err) {
-    message.error(`更新失败: ${err}`)
+    message.error(err instanceof Error ? err.message : `更新失败: ${err}`)
     console.log(err)
   }
 }
@@ -230,7 +257,16 @@ function exportData() {
 
 // 刷新订单数据
 async function refresh() {
-  orders.value = await getOrders()
+  orders.value = await fetchOwnerOrders(
+    props.orgId
+      ? {
+          kind: 'org',
+          orgId: props.orgId,
+          streamerId: filterSettings.value.streamerId,
+          customer: filterSettings.value.customer,
+        }
+      : { kind: 'owner' },
+  )
 }
 
 onMounted(async () => {
@@ -348,6 +384,14 @@ onMounted(async () => {
           :gap="8"
         >
           <NSelect
+            v-if="orgId && streamerOptions?.length"
+            v-model:value="filterSettings.streamerId"
+            :options="streamerOptions"
+            placeholder="主播"
+            clearable
+            style="min-width: 140px; max-width: 220px"
+          />
+          <NSelect
             v-model:value="filterSettings.type"
             :options="[
               { label: '实体', value: GoodsTypes.Physical },
@@ -390,7 +434,7 @@ onMounted(async () => {
           :gap="8"
           :wrap="false"
         >
-          <NPopconfirm @positive-click="deleteOrder">
+          <NPopconfirm v-if="!orgId" @positive-click="deleteOrder">
             <template #trigger>
               <NButton
                 size="tiny"
@@ -422,6 +466,7 @@ onMounted(async () => {
       <PointOrderCard
         :order="filteredOrders"
         type="owner"
+        :org-id="orgId"
         @selected-item="(items) => (selectedItem = items)"
       />
 

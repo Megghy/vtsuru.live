@@ -25,12 +25,19 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { ORG_API_URL } from '@/data/constants'
 
 const accountInfo = useAccount()
 const message = useMessage()
+
+const props = defineProps<{
+  orgId?: number
+  streamerId?: number | null
+}>()
 
 // 默认积分设置
 const defaultSettingPoint: Setting_Point = {
@@ -62,15 +69,44 @@ const defaultSettingPoint: Setting_Point = {
   checkInOnlyOnStreaming: false,
 }
 
-// 响应式设置对象
+const orgSetting = ref<Setting_Point>(defaultSettingPoint)
+
+function unwrapOk<T>(resp: { code: number, message?: string, data: T }, failMessage: string): T {
+  if (resp.code !== 200) throw new Error(resp.message || failMessage)
+  return resp.data
+}
+
+async function loadOrgSetting() {
+  if (!props.orgId || !props.streamerId) return
+  isLoading.value = true
+  try {
+    orgSetting.value = unwrapOk(
+      await QueryGetAPI<Setting_Point>(`${ORG_API_URL}${props.orgId}/points/settings/detail`, { streamerId: props.streamerId }),
+      '加载积分规则失败',
+    )
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : `加载失败: ${err}`)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 响应式设置对象（owner/org 两种模式）
 const setting = computed({
   get: () => {
+    if (props.orgId) {
+      return orgSetting.value
+    }
     if (accountInfo.value) {
       return accountInfo.value.settings.point || defaultSettingPoint
     }
     return defaultSettingPoint
   },
   set: (value) => {
+    if (props.orgId) {
+      orgSetting.value = value
+      return
+    }
     if (accountInfo.value) {
       accountInfo.value.settings.point = value
     }
@@ -87,6 +123,7 @@ const addGiftModel = ref<{ name: string, point: number, nameError: string, point
 
 // 是否可以编辑设置
 const canEdit = computed(() => {
+  if (props.orgId) return !!props.streamerId
   return accountInfo.value && accountInfo.value.settings
 })
 
@@ -95,6 +132,31 @@ const showAddGiftModal = ref(false)
 
 // 更新积分设置
 async function updateSettings() {
+  if (props.orgId) {
+    if (!props.streamerId) {
+      message.warning('请先选择主播')
+      return false
+    }
+    isLoading.value = true
+    setting.value.giftPercentMap ??= {}
+    try {
+      unwrapOk(
+        await QueryPostAPI<number>(
+          `${ORG_API_URL}${props.orgId}/points/settings/update?streamerId=${props.streamerId}`,
+          setting.value,
+        ),
+        '保存失败',
+      )
+      message.success('已保存')
+      await loadOrgSetting()
+      return true
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : `保存失败: ${err}`)
+    } finally {
+      isLoading.value = false
+    }
+    return false
+  }
   if (!accountInfo.value) {
     message.success('完成')
     return false
@@ -198,6 +260,7 @@ async function updateGift() {
 
 // 更新账户通知设置
 async function SaveComboSetting() {
+  if (props.orgId) return false
   if (!accountInfo.value) return false
 
   isLoading.value = true
@@ -216,12 +279,27 @@ async function SaveComboSetting() {
   }
   return false
 }
+
+onMounted(() => {
+  if (props.orgId) {
+    loadOrgSetting()
+  }
+})
+
+watch(
+  () => [props.orgId, props.streamerId] as const,
+  () => {
+    if (props.orgId) {
+      loadOrgSetting()
+    }
+  },
+)
 </script>
 
 <template>
   <!-- EventFetcher 部署提示 -->
   <NAlert
-    v-if="!accountInfo.eventFetcherState.online"
+    v-if="!orgId && !accountInfo.eventFetcherState.online"
     type="warning"
     class="alert-margin"
   >
@@ -255,6 +333,7 @@ async function SaveComboSetting() {
     >
       <!-- 通知设置 -->
       <NFlex
+        v-if="!orgId"
         align="center"
         :gap="12"
       >
