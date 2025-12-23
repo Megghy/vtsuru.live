@@ -1556,6 +1556,36 @@ function handleGoConsole() {
             </NList>
           </template>
         </NTabPane>
+
+        <NTabPane name="points" tab="积分管理">
+          <template v-if="!isOrgAdmin">
+            <NAlert type="warning" :bordered="false">
+              需要组织管理员权限才能管理积分
+            </NAlert>
+          </template>
+          <template v-else>
+            <div style="margin-bottom: 16px;">
+              <NAlert type="info" :bordered="false">
+                组织积分管理功能开发中...
+              </NAlert>
+            </div>
+          </template>
+        </NTabPane>
+
+        <NTabPane name="shipping" tab="礼物发货">
+          <template v-if="!isOrgAdmin">
+            <NAlert type="warning" :bordered="false">
+              需要组织管理员权限才能管理礼物发货
+            </NAlert>
+          </template>
+          <template v-else>
+            <div style="margin-bottom: 16px;">
+              <NAlert type="info" :bordered="false">
+                礼物发货管理功能开发中...
+              </NAlert>
+            </div>
+          </template>
+        </NTabPane>
       </NTabs>
 
       <NModal
