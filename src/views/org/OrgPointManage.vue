@@ -19,8 +19,7 @@ import {
 } from 'naive-ui'
 import { CashOutline, CubeOutline, GiftOutline, PeopleOutline, RefreshOutline, StorefrontOutline, TimeOutline } from '@vicons/ionicons5'
 import { computed, onMounted, ref } from 'vue'
-import type { APIRoot } from '@/api/api-models'
-import { QueryGetAPI } from '@/api/query'
+import { QueryGetAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/data/constants'
 import PointSettings from '@/views/manage/point/PointSettings.vue'
 
@@ -37,11 +36,6 @@ const pointStats = ref<any>(null)
 const pointGoods = ref<any[]>([])
 const auditLogs = ref<any[]>([])
 const selectedStreamerId = ref<number | null>(null)
-
-function unwrapOk<T>(resp: APIRoot<T>, failMessage: string): T {
-  if (resp.code !== 200) throw new Error(resp.message || failMessage)
-  return resp.data
-}
 
 // 统计数据
 const stats = computed(() => {

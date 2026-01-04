@@ -28,7 +28,7 @@ import {
 import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL } from '@/data/constants'
 
 const accountInfo = useAccount()
@@ -70,11 +70,6 @@ const defaultSettingPoint: Setting_Point = {
 }
 
 const orgSetting = ref<Setting_Point>(defaultSettingPoint)
-
-function unwrapOk<T>(resp: { code: number, message?: string, data: T }, failMessage: string): T {
-  if (resp.code !== 200) throw new Error(resp.message || failMessage)
-  return resp.data
-}
 
 async function loadOrgSetting() {
   if (!props.orgId || !props.streamerId) return

@@ -1,15 +1,10 @@
-import type { APIRoot, PointOrderStatus, ResponsePointOrder2OwnerModel } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import type { PointOrderStatus, ResponsePointOrder2OwnerModel } from '@/api/api-models'
+import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { ORG_API_URL, POINT_API_URL } from '@/data/constants'
 
 export type PointOrderScope =
   | { kind: 'owner' }
   | { kind: 'org', orgId: number, streamerId?: number, customer?: number }
-
-function unwrapOk<T>(resp: APIRoot<T>, failMessage: string): T {
-  if (resp.code !== 200) throw new Error(resp.message || failMessage)
-  return resp.data
-}
 
 export async function fetchOwnerOrders(scope: PointOrderScope): Promise<ResponsePointOrder2OwnerModel[]> {
   if (scope.kind === 'owner') {

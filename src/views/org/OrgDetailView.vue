@@ -2,37 +2,19 @@
 import {
   ArrowBack,
   ChatbubblesOutline,
-  CopyOutline,
   LogOutOutline,
   Pencil,
   PeopleOutline,
   RefreshOutline,
-  SearchOutline,
   TimeOutline,
   TrashOutline,
-  TrendingDown,
-  TrendingUp,
   WalletOutline,
 } from '@vicons/ionicons5'
-import { BarChart, LineChart } from 'echarts/charts'
-import {
-  DataZoomComponent,
-  GridComponent,
-  LegendComponent,
-  MarkLineComponent,
-  MarkPointComponent,
-  TitleComponent,
-  TooltipComponent,
-} from 'echarts/components'
-import * as echarts from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
 import {
   NAlert,
   NAvatar,
   NButton,
   NCard,
-  NCollapse,
-  NCollapseItem,
   NDescriptions,
   NDescriptionsItem,
   NDivider,
@@ -51,22 +33,16 @@ import {
   NList,
   NListItem,
   NModal,
-  NNumberAnimation,
   NPageHeader,
   NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
   NSelect,
-  NSkeleton,
   NSpace,
   NSpin,
   NStatistic,
-  NSwitch,
   NTabPane,
   NTabs,
   NTag,
   NTime,
-  NTooltip,
   useMessage,
   useThemeVars,
 } from 'naive-ui'
@@ -75,26 +51,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import UserAutocompleteSelect from '@/components/common/UserAutocompleteSelect.vue'
 import { ORG_API_URL } from '@/data/constants'
-import OrgPointManage from './OrgPointManage.vue'
-import PointOrderManage from '@/views/manage/point/PointOrderManage.vue'
-import OrgAuditTab from './OrgAuditTab.vue'
-
-// 注册必要的组件
-// eslint-disable-next-line
-;(echarts as any).use([
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-  LineChart,
-  BarChart,
-  CanvasRenderer,
-  MarkPointComponent,
-  MarkLineComponent,
-  DataZoomComponent,
-])
+import { useOrgAnalyzeChart } from './useOrgAnalyzeChart'
+import type { OrgAnalyzeChartMetric } from './useOrgAnalyzeChart'
+import OrgAnalyzeTab from './tabs/OrgAnalyzeTab.vue'
+import OrgAuditTabPane from './tabs/OrgAuditTabPane.vue'
+import OrgLivesTab from './tabs/OrgLivesTab.vue'
+import OrgMembersTab from './tabs/OrgMembersTab.vue'
+import OrgOrdersTab from './tabs/OrgOrdersTab.vue'
+import OrgPointsTab from './tabs/OrgPointsTab.vue'
+import OrgStreamersTab from './tabs/OrgStreamersTab.vue'
 
 interface ChartItem {
   income: number
@@ -404,10 +370,9 @@ const renaming = ref(false)
 const newOrgName = ref('')
 
 const chartRef = ref<HTMLElement | null>(null)
-let mainChart: echarts.ECharts | null = null
 
 const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
-const chartMetrics = [
+const chartMetrics: OrgAnalyzeChartMetric[] = [
   { label: '收入', value: 'income', color: '#f5a623', type: 'line', yAxisIndex: 1 },
   { label: '互动数', value: 'interactionCount', color: '#2080f0', type: 'line', yAxisIndex: 0 },
   { label: '弹幕数', value: 'danmakuCount', color: '#18a058', type: 'line', yAxisIndex: 0 },
@@ -415,6 +380,19 @@ const chartMetrics = [
   { label: '互动人数', value: 'interactionUsers', color: '#8a2be2', type: 'bar', yAxisIndex: 0 },
   { label: '付费人数', value: 'payingUsers', color: '#ff69b4', type: 'bar', yAxisIndex: 0 },
 ]
+
+function setAnalyzeChartRef(el: HTMLElement | null) {
+  chartRef.value = el
+}
+
+const { initChart, updateChartOption, disposeChart } = useOrgAnalyzeChart({
+  chartRef,
+  analyzeData,
+  formatDate,
+  themeVars,
+  selectedMetrics,
+  chartMetrics,
+})
 
 const summaryRange = ref<'last7Days' | 'last30Days'>('last7Days')
 const summaryData = computed(() => {
@@ -502,128 +480,6 @@ async function copyToClipboard(text: string) {
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000)
   return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
-}
-
-function getChartDataArray() {
-  if (!analyzeData.value?.chartData) return []
-  return Object.entries(analyzeData.value.chartData)
-    .map(([timestamp, data]) => ({
-      timestamp: Number.parseInt(timestamp, 10),
-      date: formatDate(Number.parseInt(timestamp, 10)),
-      ...data,
-    }))
-    .sort((a, b) => a.timestamp - b.timestamp)
-}
-
-function getThemeColors() {
-  return {
-    textColor: themeVars.value.textColor2,
-    axisLineColor: themeVars.value.borderColor,
-    splitLineColor: themeVars.value.dividerColor,
-  }
-}
-
-function initChart() {
-  if (!chartRef.value) return
-  const chartData = getChartDataArray()
-  if (chartData.length === 0) return
-
-  mainChart = echarts.init(chartRef.value)
-  updateChartOption()
-}
-
-function updateChartOption() {
-  if (!mainChart) return
-  const chartData = getChartDataArray()
-  const dates = chartData.map(item => item.date)
-  const themeColors = getThemeColors()
-
-  const showRightAxis = selectedMetrics.value.includes('income')
-  const showLeftAxis = selectedMetrics.value.some(m => m !== 'income')
-
-  const series = selectedMetrics.value.map((metricKey) => {
-    const metricConfig = chartMetrics.find(m => m.value === metricKey)
-    if (!metricConfig) return null
-
-    return {
-      name: metricConfig.label,
-      type: metricConfig.type,
-      data: chartData.map(item => (item as any)[metricKey]),
-      smooth: true,
-      yAxisIndex: (metricKey === 'income' && showLeftAxis) ? 1 : 0,
-      itemStyle: { color: metricConfig.color },
-      areaStyle: metricConfig.type === 'line'
-        ? { opacity: 0.1, color: metricConfig.color }
-        : undefined,
-      barMaxWidth: metricConfig.type === 'bar' ? '20%' : undefined,
-    }
-  }).filter(Boolean)
-
-  const yAxis: any[] = []
-  if (showLeftAxis) {
-    yAxis.push({
-      type: 'value',
-      position: 'left',
-      name: '数量',
-      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
-      axisLabel: { color: themeColors.textColor },
-      splitLine: { lineStyle: { color: themeColors.splitLineColor } },
-      nameTextStyle: { color: themeColors.textColor },
-    })
-  } else if (showRightAxis) {
-    yAxis.push({
-      type: 'value',
-      position: 'left',
-      name: '金额',
-      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
-      axisLabel: { color: themeColors.textColor },
-      splitLine: { lineStyle: { color: themeColors.splitLineColor } },
-      nameTextStyle: { color: themeColors.textColor },
-    })
-  }
-
-  if (showLeftAxis && showRightAxis) {
-    yAxis.push({
-      type: 'value',
-      position: 'right',
-      name: '金额',
-      axisLine: { show: true, lineStyle: { color: themeColors.axisLineColor } },
-      axisLabel: { color: themeColors.textColor },
-      splitLine: { show: false },
-      nameTextStyle: { color: themeColors.textColor },
-    })
-  }
-
-  mainChart.setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: selectedMetrics.value.map(m => chartMetrics.find(x => x.value === m)?.label).filter(Boolean), textStyle: { color: themeColors.textColor } },
-    grid: { left: '3%', right: '4%', bottom: '12%', containLabel: true },
-    dataZoom: [
-      { type: 'inside', start: 0, end: 100 },
-      { type: 'slider', start: 0, end: 100, height: 20, bottom: 0 },
-    ],
-    xAxis: {
-      type: 'category',
-      data: dates,
-      axisLabel: { color: themeColors.textColor },
-      axisLine: { lineStyle: { color: themeColors.axisLineColor } },
-    },
-    yAxis,
-    series,
-  })
-}
-
-function disposeChart() {
-  if (mainChart) {
-    mainChart.dispose()
-    mainChart = null
-  }
-}
-
-function getTrendType(value: number): 'success' | 'error' | 'default' {
-  if (value > 0) return 'success'
-  if (value < 0) return 'error'
-  return 'default'
 }
 
 async function loadOrgInfo() {
@@ -799,6 +655,9 @@ async function renameOrg() {
 }
 
 async function leaveOrg() {
+  if (!isLoggedIn.value) return
+  if (!orgId.value) return
+
   try {
     const resp = await QueryPostAPI(`${ORG_API_URL}${orgId.value}/leave`)
     if (resp.code === 200) {
@@ -813,6 +672,11 @@ async function leaveOrg() {
 }
 
 async function removeMember(userId: number) {
+  if (!isLoggedIn.value) return
+  if (!isOrgAdmin.value) return
+  if (!orgId.value) return
+  if (userId <= 0) return
+
   try {
     const resp = await QueryPostAPI(`${ORG_API_URL}${orgId.value}/member/remove`, { targetUserId: userId })
     if (resp.code === 200) {
@@ -1022,580 +886,92 @@ function handleGoConsole() {
 
       <NTabs type="line" animated style="margin-top: 12px;">
         <NTabPane name="analyze" tab="数据分析">
-          <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
-            <NRadioGroup v-model:value="summaryRange" size="small">
-              <NRadioButton value="last7Days">
-                近7日
-              </NRadioButton>
-              <NRadioButton value="last30Days">
-                近30日
-              </NRadioButton>
-            </NRadioGroup>
-          </div>
-          <template v-if="loadingAnalyze">
-            <NSkeleton text :repeat="4" />
-          </template>
-
-          <template v-else-if="!summaryData">
-            <NEmpty description="暂无分析数据" />
-          </template>
-
-          <template v-else>
-            <NGrid :x-gap="12" :y-gap="12" :cols="4" item-responsive responsive="screen">
-              <NGridItem span="4 m:2 l:1">
-                <NCard size="small" :bordered="false" class="stat-card">
-                  <NStatistic :label="summaryRange === 'last7Days' ? '近7日总收入' : '近30日总收入'" :value="summaryData.totalIncome" :precision="2">
-                    <template #prefix>¥</template>
-                    <template #suffix>
-                      <NTag :type="getTrendType(summaryData.incomeTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
-                        <template #icon>
-                          <NIcon :component="summaryData.incomeTrend >= 0 ? TrendingUp : TrendingDown" />
-                        </template>
-                        {{ Math.abs(summaryData.incomeTrend) }}%
-                      </NTag>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-              <NGridItem span="4 m:2 l:1">
-                <NCard size="small" :bordered="false" class="stat-card">
-                  <NStatistic :label="summaryRange === 'last7Days' ? '近7日互动数' : '近30日互动数'" :value="summaryData.totalInteractions">
-                    <template #suffix>
-                      <NTag :type="getTrendType(summaryData.interactionTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
-                        <template #icon>
-                          <NIcon :component="summaryData.interactionTrend >= 0 ? TrendingUp : TrendingDown" />
-                        </template>
-                        {{ Math.abs(summaryData.interactionTrend) }}%
-                      </NTag>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-              <NGridItem span="4 m:2 l:1">
-                <NCard size="small" :bordered="false" class="stat-card">
-                  <NStatistic :label="summaryRange === 'last7Days' ? '近7日弹幕数' : '近30日弹幕数'" :value="summaryData.totalDanmakuCount">
-                    <template #suffix>
-                      <NTag :type="getTrendType(summaryData.danmakuTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
-                        <template #icon>
-                          <NIcon :component="summaryData.danmakuTrend >= 0 ? TrendingUp : TrendingDown" />
-                        </template>
-                        {{ Math.abs(summaryData.danmakuTrend) }}%
-                      </NTag>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-              <NGridItem span="4 m:2 l:1">
-                <NCard size="small" :bordered="false" class="stat-card">
-                  <NStatistic :label="summaryRange === 'last7Days' ? '近7日直播时长' : '近30日直播时长'" :value="summaryData.totalLiveMinutes">
-                    <template #suffix>min</template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-            </NGrid>
-
-            <NCard title="趋势图表" size="small" :segmented="{ content: true }" style="margin-top: 16px;">
-              <template #header-extra>
-                <NSpace>
-                  <NTag
-                    v-for="m in chartMetrics"
-                    :key="m.value"
-                    clickable
-                    :type="selectedMetrics.includes(m.value) ? 'primary' : 'default'"
-                    @click="selectedMetrics.includes(m.value) ? selectedMetrics = selectedMetrics.filter(x => x !== m.value) : selectedMetrics.push(m.value)"
-                  >
-                    {{ m.label }}
-                  </NTag>
-                </NSpace>
-              </template>
-              <div v-if="!hasChartData" style="padding: 12px;">
-                <NEmpty description="暂无图表数据" />
-              </div>
-              <div v-else ref="chartRef" style="height: 420px; width: 100%;" />
-            </NCard>
-          </template>
+          <OrgAnalyzeTab
+            v-model:summaryRange="summaryRange"
+            v-model:selectedMetrics="selectedMetrics"
+            :loading="loadingAnalyze"
+            :summary-data="summaryData"
+            :chart-metrics="chartMetrics"
+            :has-chart-data="hasChartData"
+            :set-chart-ref="setAnalyzeChartRef"
+          />
         </NTabPane>
 
         <NTabPane name="lives" tab="直播记录">
-          <template v-if="loadingLives">
-            <NSkeleton text :repeat="6" />
-          </template>
-
-          <template v-else-if="lives.length === 0">
-            <NEmpty description="暂无直播记录" />
-          </template>
-
-          <template v-else>
-            <NGrid :x-gap="12" :y-gap="12" cols="1 600:2 1100:3" item-responsive>
-              <NGridItem v-for="item in lives" :key="item.live.liveId">
-                <NCard hoverable size="small" class="live-card">
-                  <template #cover>
-                    <div style="height: 140px; overflow: hidden; position: relative; background: #f5f5f5;">
-                      <NImage
-                        v-if="item.live.coverUrl"
-                        :src="item.live.coverUrl.includes('@') ? item.live.coverUrl : `${item.live.coverUrl}@140h`"
-                        object-fit="cover"
-                        :img-props="{ referrerpolicy: 'no-referrer' }"
-                        style="width: 100%; height: 100%;"
-                        preview-disabled
-                      />
-                      <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;">
-                        <NIcon size="48" :component="TimeOutline" />
-                      </div>
-                      <div style="position: absolute; top: 8px; right: 8px;">
-                        <NTag v-if="!item.live.isFinish" type="success" size="small">LIVE</NTag>
-                        <NTag v-else type="default" :color="{ color: '#00000080' }" text-color="#fff" :bordered="false" size="small">已结束</NTag>
-                      </div>
-                      <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 4px 8px; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); color: #fff; font-size: 12px; display: flex; align-items: center;">
-                        <NAvatar
-                          v-if="item.streamer.faceUrl"
-                          round
-                          :size="20"
-                          :src="item.streamer.faceUrl.includes('@') ? item.streamer.faceUrl : `${item.streamer.faceUrl}@20w`"
-                          :img-props="{ referrerpolicy: 'no-referrer' }"
-                          style="margin-right: 6px; border: 1px solid rgba(255,255,255,0.5);"
-                        />
-                        {{ item.streamer.name }}
-                      </div>
-                    </div>
-                  </template>
-
-                  <div class="live-card-title text-ellipsis-2">
-                    <NTooltip trigger="hover">
-                      <template #trigger>
-                        <span>{{ item.live.title }}</span>
-                      </template>
-                      {{ item.live.title }}
-                    </NTooltip>
-                  </div>
-
-                  <div class="live-card-meta">
-                    <div class="meta-row">
-                      <span class="area">{{ item.live.parentArea }} / {{ item.live.area }}</span>
-                    </div>
-                    <div class="meta-row time">
-                      <NTime :time="item.live.startAt" format="MM-dd HH:mm" />
-                      <template v-if="item.live.stopAt">
-                        - <NTime :time="item.live.stopAt" format="HH:mm" />
-                      </template>
-                      <template v-else>
-                         - Now
-                      </template>
-                    </div>
-                  </div>
-
-                  <template #footer>
-                    <NSpace justify="space-between" size="small" style="font-size: 12px; opacity: 0.9;">
-                      <span title="营收">
-                        <NIcon :component="WalletOutline" style="vertical-align: -2px;" />
-                        {{ item.live.totalIncomeWithGuard.toFixed(0) }}
-                      </span>
-                      <span title="互动">
-                        <NIcon :component="PeopleOutline" style="vertical-align: -2px;" />
-                        {{ item.live.interactionCount }}
-                      </span>
-                      <span title="弹幕">
-                        <NIcon :component="ChatbubblesOutline" style="vertical-align: -2px;" />
-                        {{ item.live.danmakusCount }}
-                      </span>
-                    </NSpace>
-                  </template>
-                </NCard>
-              </NGridItem>
-            </NGrid>
-          </template>
+          <OrgLivesTab :loading="loadingLives" :lives="lives" />
         </NTabPane>
 
         <NTabPane name="streamers" tab="主播管理">
-          <template v-if="loadingStreamers">
-            <NSkeleton text :repeat="6" />
-          </template>
-
-          <template v-else>
-            <template v-if="isOrgAdmin">
-              <NCollapse style="margin-bottom: 16px;">
-                <NCollapseItem title="邀请主播" name="1">
-                  <NCard size="small" embedded :bordered="false">
-                    <NSpace vertical>
-                      <UserAutocompleteSelect
-                        v-model:value="streamerInviteTargetUserId"
-                        style="width: 100%;"
-                        placeholder="输入B站UID/用户名搜索主播(可选)"
-                        @error="(m) => message.error(m)"
-                      />
-                      <NSpace align="center">
-                        <NInputNumber v-model:value="streamerInviteExpireDays" placeholder="有效期(天)" :min="1" size="small" />
-                        <NPopconfirm @positive-click="createStreamerInvite">
-                          <template #trigger>
-                            <NButton type="primary" size="small" :loading="creatingStreamerInvite">
-                              生成链接
-                            </NButton>
-                          </template>
-                          确定要发送主播邀请吗？
-                        </NPopconfirm>
-                      </NSpace>
-                      <div v-if="streamerInviteUrl">
-                        <NSpace>
-                          <NInput :value="streamerInviteUrl" readonly size="small" placeholder="邀请链接" />
-                          <NButton size="small" secondary type="success" @click="copyToClipboard(streamerInviteUrl)">
-                            <template #icon><NIcon :component="CopyOutline" /></template>
-                            复制
-                          </NButton>
-                        </NSpace>
-                      </div>
-                    </NSpace>
-                  </NCard>
-                </NCollapseItem>
-              </NCollapse>
-
-              <NCard size="small" style="margin-bottom: 12px;" :bordered="false" :segmented="{ content: true }">
-                <template #header>
-                  已发出邀请
-                </template>
-                <template #header-extra>
-                  <NButton size="small" :loading="loadingStreamerInvites" @click="loadStreamerInvites">
-                    刷新邀请
-                  </NButton>
-                </template>
-
-                <template v-if="loadingStreamerInvites">
-                  <NSkeleton text :repeat="4" />
-                </template>
-                <template v-else-if="streamerInvites.length === 0">
-                  <NEmpty description="暂无邀请" />
-                </template>
-                <NList v-else>
-                  <NListItem v-for="inv in streamerInvites" :key="inv.token">
-                    <div style="display:flex; flex-direction: column; gap: 6px; width: 100%;">
-                      <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <div style="font-weight: 600;">
-                          <NTag size="small" :bordered="false" :type="inviteStatusTagType(inv.status)">
-                            {{ inviteStatusLabel(inv.status) }}
-                          </NTag>
-                          <span style="margin-left: 6px;">
-                            {{ inv.targetStreamerUserName || (inv.targetStreamerUserId ? `ID: ${inv.targetStreamerUserId}` : '公开链接') }}
-                          </span>
-                        </div>
-                        <NTime :time="inv.expiresAt" format="yyyy-MM-dd HH:mm" />
-                      </div>
-
-                      <div style="font-size: 12px; opacity: .75; display:flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                        <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
-                        <span>使用次数: {{ inv.usedCount }}<template v-if="inv.lastUsedAt">, 最近使用: <NTime :time="inv.lastUsedAt" format="yyyy-MM-dd HH:mm" /></template></span>
-                      </div>
-
-                      <NSpace>
-                        <NInput :value="inv.joinUrl" readonly size="small" placeholder="邀请链接" />
-                        <NButton size="small" secondary type="success" @click="copyToClipboard(inv.joinUrl)">
-                          <template #icon><NIcon :component="CopyOutline" /></template>
-                          复制
-                        </NButton>
-                      </NSpace>
-                    </div>
-                  </NListItem>
-                </NList>
-              </NCard>
-
-              <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-                <NSpace align="center" justify="space-between">
-                  <NInput v-model:value="streamerSearch" placeholder="搜索主播名称或ID" size="small" style="width: 200px">
-                    <template #prefix>
-                      <NIcon :component="SearchOutline" />
-                    </template>
-                  </NInput>
-                  <NSpace align="center">
-                    <span style="opacity: .8; font-size: 12px;">包含非 Active 状态</span>
-                    <NSwitch v-model:value="includeAllStreamers" size="small" />
-                  </NSpace>
-                </NSpace>
-              </NCard>
-            </template>
-            <template v-else>
-               <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-                <NSpace align="center" justify="start">
-                  <NInput v-model:value="streamerSearch" placeholder="搜索主播名称或ID" size="small" style="width: 200px">
-                    <template #prefix>
-                      <NIcon :component="SearchOutline" />
-                    </template>
-                  </NInput>
-                </NSpace>
-              </NCard>
-            </template>
-
-            <template v-if="filteredStreamers.length === 0">
-              <NEmpty description="暂无主播" />
-            </template>
-
-            <NList v-else hoverable clickable>
-              <NListItem v-for="s in filteredStreamers" :key="s.streamer.id" @click="openStreamerDetailDrawer(s.streamer.id)">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <NSpace align="center">
-                    <NAvatar
-                      round
-                      :size="48"
-                      :src="s.streamer.faceUrl ? (s.streamer.faceUrl.includes('@') ? s.streamer.faceUrl : `${s.streamer.faceUrl}@48w`) : ''"
-                      :img-props="{ referrerpolicy: 'no-referrer' }"
-                      :fallback-src="'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
-                      style="border: 1px solid var(--n-divider-color);"
-                    />
-                    <NSpace vertical :size="2">
-                      <div style="font-weight: 600; font-size: 15px;">{{ s.streamer.name }}</div>
-                      <div style="font-size: 12px; opacity: 0.6;">ID: {{ s.streamer.id }}</div>
-                    </NSpace>
-                    <NTag :bordered="false" :type="streamerStatusTagType(s.status)" size="small">
-                      {{ streamerStatusLabel(s.status) }}
-                    </NTag>
-                    <NTag v-if="s.streamer.isBiliAuthed" :bordered="false" type="success" size="small">
-                      已绑定B站
-                    </NTag>
-                    <NTag v-else :bordered="false" size="small">
-                      未绑定
-                    </NTag>
-                  </NSpace>
-
-                  <div style="text-align: right; display: flex; align-items: center; gap: 12px;">
-                    <div style="font-size: 12px; opacity: 0.7;">
-                      <div>加入时间: <NTime :time="s.addedAt" format="yyyy-MM-dd" /></div>
-                      <div v-if="s.respondedAt">响应时间: <NTime :time="s.respondedAt" format="yyyy-MM-dd" /></div>
-                    </div>
-                    <NPopconfirm
-                      v-if="isOrgAdmin"
-                      @positive-click="removeStreamer(s.streamer.id)"
-                    >
-                      <template #trigger>
-                        <NButton size="tiny" type="error" ghost circle @click.stop>
-                          <template #icon><NIcon :component="TrashOutline" /></template>
-                        </NButton>
-                      </template>
-                      确定要移除该主播吗？
-                    </NPopconfirm>
-                  </div>
-                </div>
-              </NListItem>
-            </NList>
-          </template>
+          <OrgStreamersTab
+            v-model:streamerInviteTargetUserId="streamerInviteTargetUserId"
+            v-model:streamerInviteExpireDays="streamerInviteExpireDays"
+            v-model:streamerSearch="streamerSearch"
+            v-model:includeAllStreamers="includeAllStreamers"
+            :loading="loadingStreamers"
+            :is-org-admin="isOrgAdmin"
+            :creating-streamer-invite="creatingStreamerInvite"
+            :streamer-invite-url="streamerInviteUrl"
+            :loading-streamer-invites="loadingStreamerInvites"
+            :streamer-invites="streamerInvites"
+            :invite-status-label="inviteStatusLabel"
+            :invite-status-tag-type="inviteStatusTagType"
+            :streamer-status-label="streamerStatusLabel"
+            :streamer-status-tag-type="streamerStatusTagType"
+            :filtered-streamers="filteredStreamers"
+            :create-streamer-invite="createStreamerInvite"
+            :load-streamer-invites="loadStreamerInvites"
+            :open-streamer-detail-drawer="openStreamerDetailDrawer"
+            :remove-streamer="removeStreamer"
+            :copy-to-clipboard="copyToClipboard"
+            :on-user-search-error="(m) => message.error(m)"
+          />
         </NTabPane>
 
         <NTabPane name="members" tab="成员管理">
-          <template v-if="loadingMembers">
-            <NSkeleton text :repeat="6" />
-          </template>
-
-          <template v-else>
-            <template v-if="isOrgAdmin">
-              <NCollapse style="margin-bottom: 16px;">
-                <NCollapseItem title="邀请成员" name="1">
-                  <NCard size="small" embedded :bordered="false">
-                    <NSpace vertical>
-                      <NSpace align="center">
-                        <NSelect
-                          v-model:value="memberInviteRole"
-                          style="width: 120px;"
-                          size="small"
-                          :options="[
-                            { label: 'Owner', value: 0 },
-                            { label: 'Admin', value: 1 },
-                            { label: 'Member', value: 2 },
-                          ]"
-                        />
-                        <UserAutocompleteSelect
-                          v-model:value="memberInviteTargetUserId"
-                          style="min-width: 240px;"
-                          placeholder="输入B站UID/用户名搜索成员(可选)"
-                          @error="(m) => message.error(m)"
-                        />
-                      </NSpace>
-                      <NSpace align="center">
-                        <NInputNumber v-model:value="memberInviteExpireDays" placeholder="有效期(天)" :min="1" size="small" />
-                        <NPopconfirm @positive-click="createMemberInvite">
-                          <template #trigger>
-                            <NButton type="primary" size="small" :loading="creatingMemberInvite">
-                              生成链接
-                            </NButton>
-                          </template>
-                          确定要发送成员邀请吗？
-                        </NPopconfirm>
-                      </NSpace>
-                      <div v-if="memberInviteUrl">
-                        <NSpace>
-                          <NInput :value="memberInviteUrl" readonly size="small" placeholder="邀请链接" />
-                          <NButton size="small" secondary type="success" @click="copyToClipboard(memberInviteUrl)">
-                            <template #icon><NIcon :component="CopyOutline" /></template>
-                            复制
-                          </NButton>
-                        </NSpace>
-                      </div>
-                    </NSpace>
-                  </NCard>
-                </NCollapseItem>
-              </NCollapse>
-
-              <NCard size="small" style="margin-bottom: 12px;" :bordered="false" :segmented="{ content: true }">
-                <template #header>
-                  已发出邀请
-                </template>
-                <template #header-extra>
-                  <NButton size="small" :loading="loadingMemberInvites" @click="loadMemberInvites">
-                    刷新邀请
-                  </NButton>
-                </template>
-
-                <template v-if="loadingMemberInvites">
-                  <NSkeleton text :repeat="4" />
-                </template>
-                <template v-else-if="memberInvites.length === 0">
-                  <NEmpty description="暂无邀请" />
-                </template>
-                <NList v-else>
-                  <NListItem v-for="inv in memberInvites" :key="inv.token">
-                    <div style="display:flex; flex-direction: column; gap: 6px; width: 100%;">
-                      <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
-                        <div style="font-weight: 600;">
-                          <NTag size="small" :bordered="false" :type="inviteStatusTagType(inv.status)">
-                            {{ inviteStatusLabel(inv.status) }}
-                          </NTag>
-                          <span style="margin-left: 6px;">
-                            {{ inv.targetUserName || (inv.targetUserId ? `ID: ${inv.targetUserId}` : '公开链接') }}
-                          </span>
-                          <NTag size="small" :bordered="false" type="info" style="margin-left: 6px;">
-                            {{ roleLabel(inv.role) }}
-                          </NTag>
-                        </div>
-                        <NTime :time="inv.expiresAt" format="yyyy-MM-dd HH:mm" />
-                      </div>
-
-                      <div style="font-size: 12px; opacity: .75; display:flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                        <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
-                        <span>使用次数: {{ inv.usedCount }}<template v-if="inv.lastUsedAt">, 最近使用: <NTime :time="inv.lastUsedAt" format="yyyy-MM-dd HH:mm" /></template></span>
-                      </div>
-
-                      <NSpace>
-                        <NInput :value="inv.joinUrl" readonly size="small" placeholder="邀请链接" />
-                        <NButton size="small" secondary type="success" @click="copyToClipboard(inv.joinUrl)">
-                          <template #icon><NIcon :component="CopyOutline" /></template>
-                          复制
-                        </NButton>
-                      </NSpace>
-                    </div>
-                  </NListItem>
-                </NList>
-              </NCard>
-            </template>
-            
-            <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-              <NSpace align="center" justify="start">
-                <NInput v-model:value="memberSearch" placeholder="搜索成员名称或ID" size="small" style="width: 200px">
-                  <template #prefix>
-                    <NIcon :component="SearchOutline" />
-                  </template>
-                </NInput>
-              </NSpace>
-            </NCard>
-
-            <template v-if="filteredMembers.length === 0">
-              <NEmpty description="暂无成员" />
-            </template>
-
-            <NList v-else hoverable>
-              <NListItem v-for="m in filteredMembers" :key="m.user.id">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <NSpace align="center">
-                    <NAvatar
-                      round
-                      :size="40"
-                      :src="m.user.faceUrl ? (m.user.faceUrl.includes('@') ? m.user.faceUrl : `${m.user.faceUrl}@40w`) : ''"
-                      :img-props="{ referrerpolicy: 'no-referrer' }"
-                      :fallback-src="'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
-                      style="border: 1px solid var(--n-divider-color);"
-                    />
-                    <NSpace vertical :size="2">
-                      <div style="font-weight: 600;">{{ m.user.name }}</div>
-                      <div style="font-size: 12px; opacity: 0.6;">ID: {{ m.user.id }}</div>
-                    </NSpace>
-                    <NTag :bordered="false" size="small" type="info">
-                      {{ roleLabel(m.role) }}
-                    </NTag>
-                  </NSpace>
-
-                  <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 12px; opacity: 0.7;">
-                      加入于 <NTime :time="m.joinedAt" format="yyyy-MM-dd" />
-                    </span>
-
-                    <template v-if="myRole === 0 && m.role !== 0 && m.user.id !== orgInfo?.ownerUserId">
-                      <NPopconfirm @positive-click="updateMemberRole(m.user.id, 1)">
-                        <template #trigger>
-                          <NButton size="tiny" tertiary type="info">
-                            设为 Admin
-                          </NButton>
-                        </template>
-                        确定要将该成员设为 Admin 吗？
-                      </NPopconfirm>
-                      <NPopconfirm @positive-click="updateMemberRole(m.user.id, 2)">
-                        <template #trigger>
-                          <NButton size="tiny" tertiary>
-                            设为 Member
-                          </NButton>
-                        </template>
-                        确定要将该成员设为 Member 吗？
-                      </NPopconfirm>
-                    </template>
-
-                    <NPopconfirm
-                      v-if="isOrgAdmin && m.role > myRole"
-                      @positive-click="removeMember(m.user.id)"
-                    >
-                      <template #trigger>
-                        <NButton size="tiny" type="error" ghost circle>
-                          <template #icon><NIcon :component="TrashOutline" /></template>
-                        </NButton>
-                      </template>
-                      确定要移除该成员吗？
-                    </NPopconfirm>
-                  </div>
-                </div>
-              </NListItem>
-            </NList>
-          </template>
+          <OrgMembersTab
+            v-model:memberInviteRole="memberInviteRole"
+            v-model:memberInviteTargetUserId="memberInviteTargetUserId"
+            v-model:memberInviteExpireDays="memberInviteExpireDays"
+            v-model:memberSearch="memberSearch"
+            :loading="loadingMembers"
+            :is-org-admin="isOrgAdmin"
+            :my-role="myRole"
+            :owner-user-id="orgInfo?.ownerUserId ?? null"
+            :creating-member-invite="creatingMemberInvite"
+            :member-invite-url="memberInviteUrl"
+            :loading-member-invites="loadingMemberInvites"
+            :member-invites="memberInvites"
+            :filtered-members="filteredMembers"
+            :invite-status-label="inviteStatusLabel"
+            :invite-status-tag-type="inviteStatusTagType"
+            :role-label="roleLabel"
+            :create-member-invite="createMemberInvite"
+            :load-member-invites="loadMemberInvites"
+            :update-member-role="updateMemberRole"
+            :remove-member="removeMember"
+            :copy-to-clipboard="copyToClipboard"
+            :on-user-search-error="(m) => message.error(m)"
+          />
         </NTabPane>
 
         <NTabPane name="points" tab="积分管理">
-          <template v-if="!isOrgAdmin">
-            <NAlert type="warning" :bordered="false">
-              需要组织管理员权限才能管理积分
-            </NAlert>
-          </template>
-          <template v-else>
-            <OrgPointManage
-              :org-id="orgId"
-              :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
-            />
-          </template>
+          <OrgPointsTab
+            :is-org-admin="isOrgAdmin"
+            :org-id="orgId"
+            :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
+          />
         </NTabPane>
 
         <NTabPane name="shipping" tab="订单管理">
-          <template v-if="!isOrgAdmin">
-            <NAlert type="warning" :bordered="false">
-              需要组织管理员权限才能管理订单
-            </NAlert>
-          </template>
-          <template v-else>
-            <PointOrderManage
-              :org-id="orgId"
-              :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
-            />
-          </template>
+          <OrgOrdersTab
+            :is-org-admin="isOrgAdmin"
+            :org-id="orgId"
+            :streamer-options="streamers.map(s => ({ label: s.streamer.name, value: s.streamer.id }))"
+          />
         </NTabPane>
 
         <NTabPane name="audit" tab="操作审计">
-          <template v-if="!isOrgAdmin">
-            <NAlert type="warning" :bordered="false">
-              需要组织管理员权限才能查看审计
-            </NAlert>
-          </template>
-          <template v-else>
-            <OrgAuditTab :org-id="orgId" />
-          </template>
+          <OrgAuditTabPane :is-org-admin="isOrgAdmin" :org-id="orgId" />
         </NTabPane>
       </NTabs>
 
@@ -1786,31 +1162,31 @@ function handleGoConsole() {
 </template>
 
 <style scoped>
-.stat-card {
+:deep(.stat-card) {
   background: var(--n-card-color);
   transition: all 0.3s;
 }
-.stat-card:hover {
+:deep(.stat-card):hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.live-card {
+:deep(.live-card) {
   height: 100%;
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.live-card:hover {
+:deep(.live-card):hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.12);
 }
-.live-card-title {
+:deep(.live-card-title) {
   font-weight: 600;
   margin-bottom: 6px;
   height: 44px;
   line-height: 22px;
 }
-.text-ellipsis-2 {
+:deep(.text-ellipsis-2) {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -1818,12 +1194,12 @@ function handleGoConsole() {
   line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-.live-card-meta {
+:deep(.live-card-meta) {
   font-size: 12px;
   opacity: 0.75;
   margin-bottom: 8px;
 }
-.meta-row {
+:deep(.meta-row) {
   display: flex;
   justify-content: space-between;
 }

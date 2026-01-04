@@ -3,6 +3,8 @@ node_modules
 /dist
 .yarn
 bun.lockb
+.serena/
+.*/
 
 # local env files
 .env.local
