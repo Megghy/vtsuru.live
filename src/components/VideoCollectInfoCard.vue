@@ -16,8 +16,8 @@ import {
   NTime,
   NTooltip,
 } from 'naive-ui'
-import { CURRENT_HOST } from '@/data/constants'
-import router from '@/router'
+import { CURRENT_HOST } from '@/shared/config'
+import router from '@/app/router'
 
 const props = defineProps<{
   item: VideoCollectTable

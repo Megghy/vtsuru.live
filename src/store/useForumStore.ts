@@ -13,7 +13,7 @@ import { createDiscreteApi } from 'naive-ui'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
-import { FORUM_API_URL } from '@/data/constants'
+import { FORUM_API_URL } from '@/shared/config'
 
 export const useForumStore = defineStore('forum', () => {
   const { message } = createDiscreteApi(['message'])

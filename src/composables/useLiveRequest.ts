@@ -23,7 +23,7 @@ import {
   QueryPostAPI,
   QueryPostAPIWithParams,
 } from '@/api/query'
-import { SONG_REQUEST_API_URL } from '@/data/constants'
+import { SONG_REQUEST_API_URL } from '@/shared/config'
 
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()

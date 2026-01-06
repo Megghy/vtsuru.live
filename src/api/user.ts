@@ -2,7 +2,7 @@ import type { APIRoot, UserBasicInfo, UserInfo } from './api-models'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
-import { apiFail, USER_API_URL } from '@/data/constants'
+import { USER_API_URL } from '@/shared/config'
 
 export const USERS = ref<{ [id: string]: UserInfo }>({})
 
@@ -11,13 +11,7 @@ export async function useUser(id: string | undefined = undefined) {
   id ??= route.params.id.toString()
   if (id) {
     if (!USERS.value[id]) {
-      let result: APIRoot<UserInfo>
-      try {
-        result = await GetInfo(id)
-      } catch {
-        apiFail.value = true
-        result = await GetInfo(id)
-      }
+      const result: APIRoot<UserInfo> = await GetInfo(id)
       if (result.code == 200) {
         USERS.value[id] = result.data
       }

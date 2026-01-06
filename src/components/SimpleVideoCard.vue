@@ -2,7 +2,7 @@
 import type { VideoCollectVideo } from '@/api/api-models'
 import { NCard, NEllipsis, NImage, NText } from 'naive-ui'
 
-const props = defineProps<{
+defineProps<{
   video: VideoCollectVideo
   width?: number
 }>()

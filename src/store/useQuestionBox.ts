@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { ViolationTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, QUESTION_API_URL } from '@/shared/config'
 
 export interface QATagInfo {
   name: string
@@ -34,6 +34,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   const onlyFavorite = ref(false)
   const onlyPublic = ref(false)
   const onlyUnread = ref(false)
+  const displayTag = ref<string>()
 
   const recieveQuestionsFiltered = computed(() => {
     const result = recieveQuestions.value.filter((q) => {
@@ -54,7 +55,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   })
   const currentQuestion = ref<QAInfo>()
   const displayQuestion = ref<QAInfo>()
-  const displayTag = ref<string>()
 
   let isRevieveGetted = false
   // const isSendGetted = false
@@ -296,34 +296,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       .then((data) => {
         if (data.code == 200) {
           question.isFavorite = fav
-        } else {
-          message.error(`修改失败: ${data.message}`)
-        }
-      })
-      .catch((err) => {
-        message.error(`修改失败: ${err}`)
-      })
-  }
-  async function approve(question: QAInfo, approve: boolean) {
-    if (!approve) {
-      message.error('暂时不支持取消审核')
-      return
-    }
-    await QueryGetAPI(`${QUESTION_API_URL}approve`, {
-      id: question.id,
-      approve: approve ? 'true' : 'false',
-    })
-      .then((data) => {
-        if (data.code == 200) {
-          question.reviewResult = undefined
-          const trashIndex = trashQuestions.value.findIndex(
-            q => q.id == question.id,
-          )
-          if (trashIndex > -1) {
-            trashQuestions.value.splice(trashIndex, 1)
-          }
-          recieveQuestions.value.unshift(question)
-          message.success('已标记为审核通过')
         } else {
           message.error(`修改失败: ${data.message}`)
         }

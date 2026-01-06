@@ -2,8 +2,8 @@ import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvide
 import type { ResponsePointGoodModel } from '@/api/api-models'
 import { defineStore } from 'pinia'
 import { QueryGetAPI } from '@/api/query'
-import { POINT_API_URL } from '@/data/constants'
-import { GuidUtils } from '@/Utils'
+import { POINT_API_URL } from '@/shared/config'
+import { GuidUtils } from '@/shared/utils'
 import { useBiliAuth } from './useBiliAuth'
 
 export const usePointStore = defineStore('point', () => {

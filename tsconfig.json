@@ -36,7 +36,6 @@
     "tests/**/*.tsx",
     "env.d.ts",
     "default.d.ts",
-    "src/data/chat/ChatClientDirectOpenLive.js",
     "src/data/chat/models.js",
     "src/store/useDanmakuClient.ts"
   ],

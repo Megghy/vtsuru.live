@@ -5,6 +5,7 @@ node_modules
 bun.lockb
 .serena/
 .*/
+target/
 
 # local env files
 .env.local

@@ -1,5 +1,5 @@
 import type { ZstdCodec } from '@oneidentity/zstd-js/wasm'
-import type { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient'
+import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import * as signalR from '@microsoft/signalr'
 import * as msgpack from '@microsoft/signalr-protocol-msgpack'
 import { encode } from '@msgpack/msgpack'
@@ -9,19 +9,20 @@ import { platform, version } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue' // shallowRef 用于非深度响应对象
 import { useRoute } from 'vue-router'
-import { cookie, useAccount } from '@/api/account'
-import { getEventType, recordEvent, streamingInfo } from '@/client/data/info'
-import { onReceivedNotification } from '@/client/data/notification'
+import { useAccount } from '@/api/account'
+import { cookie } from '@/api/auth'
+import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
+import { onReceivedNotification } from '@/apps/client/data/notification'
 
-import { QueryBiliAPI } from '@/client/data/utils'
-import { BASE_HUB_URL, isDev, isTauri } from '@/data/constants'
+import { QueryBiliAPI } from '@/apps/client/data/utils'
+import { BASE_HUB_URL, isDev, isTauri } from '@/shared/config'
 import { useDanmakuClient } from './useDanmakuClient'
 import { useWebRTC } from './useRTC'
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
   const route = useRoute()
   const account = useAccount()
-  const rtc = useWebRTC()
+  useWebRTC()
   const webfetcherType = ref<'openlive' | 'direct'>('openlive') // 弹幕客户端类型
   // --- 连接与状态 ---
   const state = ref<'disconnected' | 'connecting' | 'connected'>('disconnected') // SignalR 连接状态
@@ -74,7 +75,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
     try {
       zstd ??= await ZstdInit()
-    } catch (error) {
+    } catch {
       console.error(`${prefix.value}当前浏览器不支持zstd压缩, 回退到原始数据传输`)
     }
     webfetcherType.value = type // 设置弹幕客户端类型
@@ -253,7 +254,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     try {
       await connection.start()
       signalRConnectionId.value = connection.connectionId ?? undefined // 保存连接ID
-      signalRId.value = await sendSelfInfo(connection) // 发送客户端信息
+      await sendSelfInfo(connection) // 发送客户端信息
+      signalRId.value = signalRConnectionId.value
       await connection.send('Finished') // 通知服务器已准备好
       signalRClient.value = connection // 保存实例
 
@@ -268,7 +270,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         console.log(`${prefix.value}与服务器重新连接成功! ConnectionId: ${connectionId}`)
         signalRConnectionId.value = connectionId ?? undefined
         state.value = 'connected' // 更新状态为已连接
-        signalRId.value = connectionId ?? await sendSelfInfo(connection) // 更新连接ID
+        await sendSelfInfo(connection)
+        signalRId.value = signalRConnectionId.value
         connection.send('Reconnected').catch(err => console.error(`${prefix.value}Send Reconnected failed: ${err}`))
       })
 
@@ -312,8 +315,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       isConnectingSignalR = false
     }
   }
-  async function sendSelfInfo(client: signalR.HubConnection) {
-    return client.invoke('SetSelfInfo', isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent, isFromClient ? 'tauri' : 'web', isFromClient ? await getVersion() : '1.0.0', webfetcherType.value === 'direct')
+  async function sendSelfInfo(client: signalR.HubConnection): Promise<void> {
+    return client.invoke<void>('SetSelfInfo', isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent, isFromClient ? 'tauri' : 'web', isFromClient ? await getVersion() : '1.0.0', webfetcherType.value === 'direct')
   }
   interface ResponseFetchRequestData {
     Message: string

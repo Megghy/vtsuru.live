@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { ConsumptionTypes } from '@/api/models/consumption'
 import { QueryPostAPIWithParams } from '@/api/query'
-import { ACCOUNT_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL } from '@/shared/config'
 
 export const useConsumptionSettingStore = defineStore(
   'consumptionSetting',

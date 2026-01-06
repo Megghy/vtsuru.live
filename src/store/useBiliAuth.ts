@@ -4,7 +4,7 @@ import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { BILI_AUTH_API_URL, POINT_API_URL } from '@/data/constants'
+import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
   const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)
