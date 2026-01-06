@@ -1,0 +1,11 @@
+:80 {
+  # Compress responses according to Accept-Encoding headers
+  encode gzip zstd
+
+  root * /etc/caddy/html/
+
+  try_files {path} /index.html
+
+  # Serve everything else from the file system
+  file_server
+}

@@ -3,7 +3,7 @@ import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
 import type { AutoCompleteOption } from 'naive-ui'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, h, ref, watch } from 'vue'
-import { VTSURU_API_URL } from '@/data/constants'
+import { VTSURU_API_URL } from '@/shared/config'
 
 interface BiliUserInfo {
   mid: number
@@ -20,7 +20,7 @@ interface BiliApiResponse {
 
 type BiliUserSelectorOption = AutoCompleteOption & { userInfo?: BiliUserInfo }
 
-const props = defineProps<{
+defineProps<{
   placeholder?: string
   size?: 'small' | 'medium' | 'large'
   disabled?: boolean

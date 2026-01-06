@@ -1,6 +1,6 @@
 import type { PointOrderStatus, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { ORG_API_URL, POINT_API_URL } from '@/data/constants'
+import { ORG_API_URL, POINT_API_URL } from '@/shared/config'
 
 export type PointOrderScope =
   | { kind: 'owner' }

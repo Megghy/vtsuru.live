@@ -22,9 +22,9 @@ import {
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
-import { cookie } from '@/api/account'
+import { cookie } from '@/api/auth'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/data/constants'
+import { ACCOUNT_API_URL, TURNSTILE_KEY } from '@/shared/config'
 
 interface RegisterModel {
   username: string

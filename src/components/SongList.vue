@@ -46,8 +46,8 @@ import { computed, h, onMounted, ref, watch } from 'vue' // Vue 核心 API
 import type { SongRequestOption, SongsInfo } from '@/api/api-models';
 import { SongFrom } from '@/api/api-models' // API 数据模型
 import { QueryGetAPI, QueryPostAPI } from '@/api/query' // API 请求方法
-import { SONG_API_URL } from '@/data/constants' // API 地址常量
-import { GetPlayButton } from '@/Utils' // 公用方法：获取播放/信息按钮
+import { SONG_API_URL } from '@/shared/config' // API 地址常量
+import { GetPlayButton } from '@/shared/utils' // 公用方法：获取播放/信息按钮
 import SongPlayer from './SongPlayer.vue' // 子组件：歌曲播放器
 
 // --- Props 定义 ---
@@ -98,32 +98,11 @@ function handlePageChange(page: number) {
   currentPage.value = page
 }
 
-// 暴露分页方法
-function nextPage() {
-  const pagination = songsComputed.value.length > 0 ? Math.ceil(songsComputed.value.length / pageSize.value) : 1
-  if (currentPage.value < pagination) {
-    currentPage.value++
-  }
-}
-
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-// 暴露给父组件
-defineExpose({
-  nextPage,
-  prevPage,
-  currentPage,
-})
-
 // --- 计算属性 ---
 
 // 新增：计算是否需要显示试听开关
 const canShowListenSwitch = computed(() => {
-  const audioRegex = /\.(mp3|flac|ogg|wav|m4a)$/i
+  const audioRegex = /\.(?:mp3|flac|ogg|wav|m4a)$/i
   return songsInternal.value.some(song => song.url && audioRegex.test(song.url))
 })
 
@@ -190,6 +169,27 @@ const songsComputed = computed(() => {
   // 如果需要整合到这里，需要额外逻辑
 
   return filteredSongs
+})
+
+// 暴露分页方法
+function nextPage() {
+  const pagination = songsComputed.value.length > 0 ? Math.ceil(songsComputed.value.length / pageSize.value) : 1
+  if (currentPage.value < pagination) {
+    currentPage.value++
+  }
+}
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+// 暴露给父组件
+defineExpose({
+  nextPage,
+  prevPage,
+  currentPage,
 })
 
 // 语言下拉选项 (包含预设和歌曲数据中存在的)
@@ -398,7 +398,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
         }
 
         // 2. 试听按钮 (仅对音频文件显示)
-        const isAudio = /\.(mp3|flac|ogg|wav|m4a)$/i.test(data.url ?? '') // 正则判断音频后缀
+        const isAudio = /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(data.url ?? '') // 正则判断音频后缀
         if (showListenButton.value && isAudio) { // 添加条件
           buttons.push(
             h(NTooltip, null, {

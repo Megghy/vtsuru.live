@@ -3,7 +3,7 @@ import type { QAInfo } from '@/api/api-models'
 import { NList, NListItem } from 'naive-ui'
 import QuestionItem from './QuestionItem.vue'
 
-const props = defineProps<{
+defineProps<{
   questions: QAInfo[]
 }>()
 </script>

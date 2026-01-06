@@ -1,14 +1,15 @@
 import type {
   BaseRTCClient,
-} from '@/data/RTCClient'
+} from '@/shared/services/RTCClient'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { cookie, useAccount, GetSelfAccount } from '@/api/account'
+import { GetSelfAccount, useAccount } from '@/api/account'
+import { cookie } from '@/api/auth'
 import {
   MasterRTCClient,
   SlaveRTCClient,
-} from '@/data/RTCClient'
+} from '@/shared/services/RTCClient'
 
 export const useWebRTC = defineStore('WebRTC', () => {
   const client = ref<BaseRTCClient>()
@@ -38,12 +39,12 @@ export const useWebRTC = defineStore('WebRTC', () => {
         { ifAvailable: true },
         async (lock) => {
           if (lock) {
-            if (!cookie.value.cookie && !route.query.token) {
+            if (!cookie.value?.cookie && !route.query.token) {
               console.log('[RTC] 未登录, 跳过RTC初始化')
               return
             }
             // 当无 Cookie 但 url 上带 token 时，主动拉取账号信息，避免一直等待
-            if (!cookie.value.cookie && route.query.token) {
+            if (!cookie.value?.cookie && route.query.token) {
               try {
                 await GetSelfAccount(route.query.token as string)
               } catch (e) {

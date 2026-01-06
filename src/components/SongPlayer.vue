@@ -6,7 +6,7 @@ import { computed, ref, watch } from 'vue'
 import APlayer from 'vue3-aplayer'
 import { SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
-import { SONG_API_URL } from '@/data/constants'
+import { SONG_API_URL } from '@/shared/config'
 
 const props = defineProps<{
   song: SongsInfo | undefined

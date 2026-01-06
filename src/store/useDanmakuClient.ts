@@ -1,18 +1,17 @@
-import type { EventModel, OpenLiveInfo } from '@/api/api-models'
-import type BaseDanmakuClient from '@/data/DanmakuClients/BaseDanmakuClient'
-import type { DirectClientAuthInfo } from '@/data/DanmakuClients/DirectClient'
-import type { AuthInfo } from '@/data/DanmakuClients/OpenLiveClient'
+import type { OpenLiveInfo } from '@/api/api-models'
+import type BaseDanmakuClient from '@/shared/services/DanmakuClients/BaseDanmakuClient'
+import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
+import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue' // 引入 shallowRef
-import DirectClient from '@/data/DanmakuClients/DirectClient'
-import OpenLiveClient from '@/data/DanmakuClients/OpenLiveClient'
+import DirectClient from '@/shared/services/DanmakuClients/DirectClient'
+import OpenLiveClient from '@/shared/services/DanmakuClients/OpenLiveClient'
 
 // 定义支持的事件名称类型
 type EventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow'
 type EventNameWithAll = EventName | 'all'
 // 定义监听器函数类型
 type Listener = (arg1: any, arg2: any) => void
-type EventListener = (arg1: EventModel, arg2: any) => void
 // --- 修正点: 确保 AllEventListener 定义符合要求 ---
 // AllEventListener 明确只接受一个参数
 type AllEventListener = (arg1: any) => void
@@ -33,6 +32,8 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
 
   // 初始化锁, 防止并发初始化
   let isInitializing = false
+  let initFinished: Promise<void> | undefined
+  let resolveInitFinished: (() => void) | undefined
 
   /**
    * @description 注册事件监听器 (特定于 OpenLiveClient 的原始事件 或 调用 onEvent)
@@ -134,7 +135,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   /**
    * @description 初始化 OpenLive 客户端
    * @param auth 认证信息
-   * @returns
+   * @returns 初始化完成后的 store 实例
    */
   async function initOpenlive(auth?: AuthInfo) {
     return initClient(new OpenLiveClient(auth))
@@ -143,30 +144,10 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   /**
    * @description 初始化 Direct 客户端
    * @param auth 认证信息
-   * @returns
+   * @returns 初始化完成后的 store 实例
    */
   async function initDirect(auth: DirectClientAuthInfo) {
     return initClient(new DirectClient(auth))
-  }
-
-  // 辅助函数: 从客户端的 eventsAsModel 移除单个监听器
-  // --- 修正点: 修正 detachListenerFromClient 的签名和实现以处理联合类型 ---
-  function detachListenerFromClient(client: BaseDanmakuClient, eventName: EventNameWithAll, listener: GenericListener): void {
-    if (client.eventsAsModel[eventName]) {
-      if (eventName === 'all') {
-        const modelListeners = client.eventsAsModel[eventName] as AllEventListener[]
-        const index = modelListeners.indexOf(listener as AllEventListener)
-        if (index > -1) {
-          modelListeners.splice(index, 1)
-        }
-      } else {
-        const modelListeners = client.eventsAsModel[eventName] as Listener[]
-        const index = modelListeners.indexOf(listener as Listener)
-        if (index > -1) {
-          modelListeners.splice(index, 1)
-        }
-      }
-    }
   }
 
   /**
@@ -177,9 +158,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   async function initClient(client: BaseDanmakuClient) { // 返回 Promise<boolean> 表示最终是否成功
     // 防止重复初始化或在非等待状态下初始化
     if (isInitializing) {
-      while (isInitializing) {
-        await new Promise(resolve => setTimeout(resolve, 100)) // 等待初始化完成
-      }
+      if (initFinished) await initFinished
       return useDanmakuClient() // 如果已连接，则视为“成功”
     }
     if (state.value === 'connected') {
@@ -187,9 +166,13 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     }
 
     isInitializing = true
+    initFinished = new Promise((resolve) => {
+      resolveInitFinished = resolve
+    })
     state.value = 'connecting'
     console.log('[DanmakuClient] 开始初始化...')
 
+    try {
     let oldEventsAsModel = danmakuClient.value?.eventsAsModel
     let oldEventsRaw = danmakuClient.value?.eventsRaw
     if (!oldEventsAsModel || Object.keys(oldEventsAsModel).length === 0) {
@@ -214,14 +197,12 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     danmakuClient.value.eventsRaw = oldEventsRaw
     // 通常在 client 实例化或 Start 时处理，或者在 attachListenersToClient 中确保存在
 
-    let connectSuccess = false
     const maxRetries = 5 // Example: Limit retries
-    let retryCount = 0
 
-    const attemptConnect = async () => {
+    const attemptConnect = async (attempt: number) => {
       if (!danmakuClient.value) return false // Guard against client being disposed during wait
       try {
-        console.log(`[DanmakuClient] 尝试连接 (第 ${retryCount + 1} 次)...`)
+        console.log(`[DanmakuClient] 尝试连接 (第 ${attempt} 次)...`)
         const result = await danmakuClient.value.Start() // 启动连接
         if (result.success) {
           // 连接成功
@@ -229,7 +210,6 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
           state.value = 'connected'
           // 将 Store 中存储的监听器 (来自 onEvent) 附加到新连接的客户端的 eventsAsModel
           console.log('[DanmakuClient] 初始化成功')
-          connectSuccess = true
           return true // 连接成功, 退出重试循环
         } else {
           // 连接失败
@@ -244,41 +224,40 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
     }
 
     // 循环尝试连接, 直到成功或达到重试次数
-    while (!connectSuccess && retryCount < maxRetries) {
+    for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
       if (state.value !== 'connecting') { // 检查状态是否在循环开始时改变
         console.log('[DanmakuClient] 初始化被外部中止。')
-        isInitializing = false
-        // return false; // 初始化被中止
         break
       }
 
-      if (!(await attemptConnect())) {
-        retryCount++
-        if (retryCount < maxRetries && state.value === 'connecting') {
+      if (await attemptConnect(retryCount + 1)) {
+        break
+      }
+      const isLast = retryCount === maxRetries - 1
+      if (!isLast && state.value === 'connecting') {
           console.log(`[DanmakuClient] 5 秒后重试连接... (${retryCount}/${maxRetries})`)
           await new Promise(resolve => setTimeout(resolve, 5000))
           // 再次检查在等待期间状态是否改变
           if (state.value !== 'connecting') {
             console.log('[DanmakuClient] 在重试等待期间初始化被中止。')
-            isInitializing = false
-            // return false; // 初始化被中止
             break
           }
-        } else if (state.value === 'connecting') {
-          console.error(`[DanmakuClient] 已达到最大连接重试次数 (${maxRetries})。初始化失败。`)
-          // 连接失败，重置状态
-          await dispose() // 清理资源
-          // state.value = 'waiting'; // dispose 会设置状态
-          // isInitializing = false; // dispose 会设置
-          // return false; // 返回失败状态
-          break
-        }
+      } else if (state.value === 'connecting') {
+        console.error(`[DanmakuClient] 已达到最大连接重试次数 (${maxRetries})。初始化失败。`)
+        // 连接失败，重置状态
+        await dispose() // 清理资源
+        break
       }
     }
 
-    isInitializing = false // 无论成功失败，初始化过程结束
     // 返回最终的连接状态
     return useDanmakuClient()
+    } finally {
+      isInitializing = false
+      resolveInitFinished?.()
+      resolveInitFinished = undefined
+      initFinished = undefined
+    }
   }
 
   // 封装停止和清理客户端实例的逻辑

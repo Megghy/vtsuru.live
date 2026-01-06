@@ -7,7 +7,7 @@ import { clearInterval, setInterval } from 'worker-timers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
-import { FETCH_API, TTS_API_URL } from '@/data/constants'
+import { FETCH_API, TTS_API_URL } from '@/shared/config'
 
 export interface SpeechSettings {
   speechInfo: SpeechInfo
@@ -238,14 +238,6 @@ function createSpeechService() {
   /**
    * 全角转半角
    */
-  function fullWidthToHalfWidth(str: string) {
-    let result = str.replace(/[\uFF01-\uFF5E]/g, (ch) => {
-      return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
-    })
-    result = result.replace(/\u3000/g, ' ')
-    return result
-  }
-
   /**
    * 从事件数据生成要朗读的文本
    */

@@ -4,7 +4,7 @@ import { NSelect } from 'naive-ui'
 import { useDebounceFn } from '@vueuse/core'
 import { ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
-import { USER_API_URL } from '@/data/constants'
+import { USER_API_URL } from '@/shared/config'
 
 interface UserAutocompleteInfo {
   id: number

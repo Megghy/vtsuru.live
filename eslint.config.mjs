@@ -15,12 +15,8 @@ export default antfu(
     // 启用 Vue 支持 (自动检测)
     vue: true,
 
-    // 启用格式化规则
-    stylistic: {
-      indent: 2,
-      quotes: 'single',
-      semi: false,
-    },
+    // 格式化规则过于“强约束”，会导致大量无意义报错；保留代码质量规则即可
+    stylistic: false,
 
     // 禁用某些文件类型的支持
     jsonc: true,
@@ -29,6 +25,8 @@ export default antfu(
 
     // 忽略的文件
     ignores: [
+      '.oxlintrc.json',
+      'docs/**',
       '**/node_modules',
       '**/dist',
       '**/output',
@@ -65,6 +63,8 @@ export default antfu(
       'ts/no-misused-promises': 'off', // 允许在条件表达式中使用 Promise
       '@typescript-eslint/no-floating-promises': 'off',
       '@typescript-eslint/no-misused-promises': 'off',
+      'ts/no-use-before-define': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
 
       // 通用规则
       'no-console': 'off',
@@ -72,19 +72,20 @@ export default antfu(
       'eqeqeq': 'off', // 允许使用 == 和 !=
       'no-eq-null': 'off', // 允许使用 == null
       '@typescript-eslint/strict-boolean-expressions': 'off', // 允许宽松的布尔表达式
+      'prefer-template': 'off',
 
       // 关闭一些过于严格的规则
       'antfu/if-newline': 'off',
-      'style/brace-style': ['error', '1tbs'],
       'prefer-promise-reject-errors': 'off', // 允许 reject 任何值
       'no-throw-literal': 'off', // 允许 throw 任何值
       'ts/no-unsafe-assignment': 'off', // 允许不安全的赋值
       'ts/no-unsafe-member-access': 'off', // 允许不安全的成员访问
       'ts/no-unsafe-call': 'off', // 允许不安全的调用
-      'ts/switch-exhaustiveness-check': 'warn', // 允许 switch 不覆盖所有情况
+      'ts/switch-exhaustiveness-check': 'off',
       'ts/restrict-template-expressions': 'off', // 允许模板字符串表达式不受限制
 
       'perfectionist/sort-imports': 'off',
+      'perfectionist/sort-named-imports': 'off',
       'ts/no-unsafe-argument': 'off', // 允许不安全的参数传递
 
       // JSON 相关规则

@@ -8,7 +8,7 @@ import { MessagePackHubProtocol } from '@microsoft/signalr-protocol-msgpack'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAccount } from '@/api/account'
-import { BASE_HUB_URL } from '@/data/constants'
+import { BASE_HUB_URL } from '@/shared/config'
 
 export const useVTsuruHub = defineStore('VTsuruHub', () => {
   const signalRClient = ref<HubConnection>()

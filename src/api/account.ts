@@ -1,10 +1,10 @@
 import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
-import { StorageSerializers } from '@vueuse/core'
 import { isSameDay } from 'date-fns'
 import { createDiscreteApi } from 'naive-ui'
 import { ref } from 'vue'
+import { cookie } from './auth'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
-import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/data/constants'
+import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
@@ -13,10 +13,9 @@ export const isLoggedIn = computed<boolean>(() => {
 })
 
 const { message } = createDiscreteApi(['message'])
-export const cookie = useLocalStorage<{ cookie: string, refreshDate: number }>('Cookie', { cookie: '', refreshDate: 0 }, { serializer: StorageSerializers.object })
 
 export async function GetSelfAccount(token?: string) {
-  if (cookie.value.cookie || token) {
+  if (cookie.value?.cookie || token) {
     const result = await Self(token)
     if (result.code == 200) {
       if (!ACCOUNT.value.id) {
@@ -27,7 +26,7 @@ export async function GetSelfAccount(token?: string) {
       }
       isLoadingAccount.value = false
       // console.log('[vtsuru] 已获取账户信息')
-      if (!cookie.value.cookie || !isSameDay(new Date(), cookie.value.refreshDate)) {
+      if (!cookie.value?.cookie || !isSameDay(new Date(), cookie.value?.refreshDate ?? 0)) {
         refreshCookie(token)
       }
       return result.data

@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import type { LevelTypes, PaginationResponse } from '@/api/api-models'
 import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryGetPaginationAPI } from '@/api/query'
-import { NOTIFACTION_API_URL } from '@/data/constants'
+import { NOTIFICATION_API_URL } from '@/shared/config'
 
 export interface NotificationItem {
   id: string
@@ -43,7 +43,7 @@ export const useNotificationStore = defineStore('notification', () => {
   const isInited = ref(false)
 
   async function refreshUnread() {
-    const result = await QueryGetAPI<any[]>(`${NOTIFACTION_API_URL}get-unread`)
+    const result = await QueryGetAPI<any[]>(`${NOTIFICATION_API_URL}get-unread`)
     if (result.code === 200) {
       unread.value = (result.data ?? []).map(normalizeNotification)
       return
@@ -52,7 +52,7 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   async function refreshLatest(pn: number = 0, ps: number = 20, onlyUnread: boolean = false) {
-    const result = await QueryGetPaginationAPI<any[]>(`${NOTIFACTION_API_URL}get`, {
+    const result = await QueryGetPaginationAPI<any[]>(`${NOTIFICATION_API_URL}get`, {
       pn,
       ps,
       unread: onlyUnread ? true : undefined,
@@ -72,7 +72,7 @@ export const useNotificationStore = defineStore('notification', () => {
     for (const id of ids) {
       params.append('id', id)
     }
-    const result = await QueryGetAPI<number>(`${NOTIFACTION_API_URL}read`, params)
+    const result = await QueryGetAPI<number>(`${NOTIFICATION_API_URL}read`, params)
     if (result.code !== 200) {
       throw new Error(result.message)
     }
