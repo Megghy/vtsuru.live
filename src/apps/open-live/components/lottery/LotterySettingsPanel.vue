@@ -41,7 +41,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   <div class="settings-wrapper">
     <div class="settings-header">
       <NSpace align="center">
-        <NIcon :component="Sparkle24Filled" color="#f0a020" />
+        <NIcon :component="Sparkle24Filled" color="var(--n-warning-color)" />
         <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
       </NSpace>
       <NButton
@@ -273,16 +273,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 
 .setting-section {
   background: var(--n-card-color);
-  border-radius: 12px;
+  border-radius: var(--n-border-radius);
   padding: 20px;
   height: 100%;
   border: 1px solid var(--n-border-color);
-  transition: all 0.3s ease;
   box-sizing: border-box;
-}
-
-.setting-section:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .section-header {
@@ -311,10 +306,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
   justify-content: center;
   padding: 12px;
   border: 1px solid var(--n-border-color);
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   background-color: var(--n-card-color);
   cursor: pointer;
-  transition: all 0.2s ease;
   text-align: center;
   gap: 8px;
 }
@@ -322,13 +316,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 .mode-card:hover:not(.disabled) {
   border-color: var(--n-primary-color);
   background-color: rgba(var(--n-primary-color-rgb), 0.05);
-  transform: translateY(-2px);
 }
 
 .mode-card.active {
   border-color: var(--n-primary-color);
   background-color: rgba(var(--n-primary-color-rgb), 0.1);
   color: var(--n-primary-color);
-  box-shadow: 0 0 0 2px rgba(var(--n-primary-color-rgb), 0.2);
 }
 </style>

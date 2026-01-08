@@ -172,7 +172,7 @@ watch(() => props.config, (newConfig) => {
   pre {
     background-color: var(--n-code-block-color);
     padding: 8px;
-    border-radius: 4px;
+    border-radius: var(--n-border-radius);
     font-size: 0.85em;
     white-space: pre-wrap;
     /* 确保长内容能换行 */

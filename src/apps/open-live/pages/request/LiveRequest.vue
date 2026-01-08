@@ -363,37 +363,3 @@ onUnmounted(() => {
     </NCollapse>
   </NModal>
 </template>
-
-<style>
-@keyframes loading {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes animated-border {
-  0% {
-    box-shadow: 0 0 0px #589580;
-  }
-
-  100% {
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0);
-  }
-}
-
-@keyframes animated-border-round {
-  0% {
-    box-shadow: 0 0 0px #589580;
-    border-radius: 50%;
-  }
-
-  100% {
-    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
-    border-radius: 50%;
-  }
-}
-</style>

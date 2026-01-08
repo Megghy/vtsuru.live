@@ -232,48 +232,48 @@ const customJsModified = computed(() => {
 
 .setting-item {
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
 }
 
 .setting-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: var(--n-hover-color);
 }
 
 .setting-modified {
   font-weight: bold;
-  background-color: rgba(255, 230, 186, 0.2);
+  background-color: var(--n-warning-color-suppl);
 }
 
 .setting-modified:hover {
-  background-color: rgba(255, 230, 186, 0.3);
+  background-color: var(--n-warning-color-suppl);
 }
 
 .input-modified {
-  border-color: #faad14;
-  background-color: rgba(255, 230, 186, 0.1);
+  border-color: var(--n-warning-color);
+  background-color: var(--n-warning-color-suppl);
 }
 
 .section-modified :deep(.n-collapse-item__header-main) {
   font-weight: bold;
-  color: #fa8c16;
+  color: var(--n-warning-color);
 }
 
 .section-modified :deep(.n-collapse-item__header-extra) {
   font-size: 12px;
-  color: #fa8c16;
+  color: var(--n-warning-color);
   font-weight: normal;
 }
 
 .description {
   margin-top: 8px;
   font-size: 13px;
-  color: #999;
+  color: var(--n-text-color-3);
 }
 
 code {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: var(--n-code-color);
   padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   font-family: monospace;
 }
 

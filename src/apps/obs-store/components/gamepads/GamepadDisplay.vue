@@ -676,7 +676,7 @@ onMounted(() => {
     transform: translateX(-50%);
     color: white;
     padding: 5px 10px;
-    border-radius: 4px;
+    border-radius: var(--n-border-radius);
     z-index: 10;
   }
 

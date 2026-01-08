@@ -65,9 +65,9 @@ function copyToClipboard(text: string) {
 }
 
 code {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: var(--n-code-color);
   padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   font-family: monospace;
 }
 </style>

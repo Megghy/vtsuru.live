@@ -255,12 +255,12 @@ async function handleUpdateInstall(update: any) {
     const progressNotification = window.$notification.info({
       title: '正在下载更新',
       content: () =>
-        h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
+          h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
           h('div', {
-            style: 'height: 6px; border-radius: 999px; background: rgba(0,0,0,0.12); overflow: hidden; backdrop-filter: blur(6px);',
+            style: 'height: 6px; border-radius: 999px; background: var(--n-color-embedded); overflow: hidden;',
           }, [
             h('div', {
-              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, #5c7cfa, #91a7ff); transition: width 0.2s ease;`,
+              style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--n-primary-color), var(--n-primary-color-hover)); transition: width 0.2s ease;`,
             }),
           ]),
           h('div', {

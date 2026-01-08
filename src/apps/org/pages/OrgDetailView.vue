@@ -1111,14 +1111,14 @@ function handleGoConsole() {
               <NList v-else>
                 <NListItem v-for="live in streamerDetailLives" :key="live.liveId">
                   <div style="display:flex; gap: 10px; width: 100%;">
-                    <NImage
+                      <NImage
                       width="96"
                       height="54"
                       object-fit="cover"
                       :src="live.coverUrl"
                       :img-props="{ referrerpolicy: 'no-referrer' }"
                       fallback-src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png"
-                      style="border-radius: 6px; overflow: hidden; flex: 0 0 auto;"
+                      style="border-radius: var(--n-border-radius); overflow: hidden; flex: 0 0 auto;"
                     />
                     <div style="min-width: 0; flex: 1;">
                       <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -1167,22 +1167,19 @@ function handleGoConsole() {
 
 <style scoped>
 :deep(.stat-card) {
-  background: var(--n-card-color);
-  transition: all 0.3s;
-}
-:deep(.stat-card):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
 }
 :deep(.live-card) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
 }
+:deep(.stat-card):hover,
 :deep(.live-card):hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.12);
+  border-color: var(--n-primary-color);
 }
 :deep(.live-card-title) {
   font-weight: 600;

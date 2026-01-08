@@ -313,14 +313,6 @@ function createTable() {
 /* 深度选择器修改卡片样式 */
 :deep(.collect-card) {
   height: 100%;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-}
-
-:deep(.collect-card:hover) {
-  transform: translateY(-4px);
-  border-color: var(--n-color-target);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .modal-footer {

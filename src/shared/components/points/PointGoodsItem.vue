@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ResponsePointGoodModel } from '@/api/api-models'
 import { Pin16Filled } from '@vicons/fluent'
-import { NCard, NEllipsis, NEmpty, NFlex, NIcon, NImage, NTag, NText } from 'naive-ui'
+import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui'
 import { GoodsTypes } from '@/api/api-models'
 import { IMGUR_URL } from '@/shared/config'
 
@@ -20,327 +20,159 @@ const emptyCover = `${IMGUR_URL}None.png`
   <NEmpty
     v-if="!goods"
     description="已失效"
+    class="empty-state"
   />
   <NCard
     v-else
-    embedded
-    :style="props.contentStyle"
+    hoverable
+    :bordered="true"
     size="small"
     class="goods-card"
-    :class="{ 'pinned-card': goods.isPinned }"
+    :class="{ 'is-pinned': goods.isPinned }"
+    :style="props.contentStyle"
+    content-style="padding: 12px;"
+    footer-style="padding: 0 12px 12px 12px;"
   >
     <!-- 商品封面 -->
     <template #cover>
-      <div class="cover-container">
-        <NImage
-          :src="goods.cover ? goods.cover.path : emptyCover"
-          :fallback-src="emptyCover"
-          height="150"
-          object-fit="cover"
-          :preview-disabled="!goods.cover"
-          style="width: 100%"
-        />
+      <div class="cover-wrapper">
+        <div class="cover-image-container">
+          <NImage
+            :src="goods.cover ? goods.cover.path : emptyCover"
+            :fallback-src="emptyCover"
+            object-fit="cover"
+            :preview-disabled="!goods.cover"
+            class="cover-image"
+            lazy
+            :img-props="{ style: { width: '100%', height: '100%', objectFit: 'cover' } }"
+          />
+        </div>
+
+        <!-- 售罄遮罩 -->
+        <div v-if="goods.count === 0" class="sold-out-mask">
+          <span class="sold-out-text">已售完</span>
+        </div>
+
         <!-- 置顶标记 -->
-        <div
-          v-if="goods.isPinned"
-          class="pin-badge"
-        >
+        <div v-if="goods.isPinned" class="pin-badge">
           <NIcon :component="Pin16Filled" />
         </div>
 
-        <!-- 价格徽章 -->
-        <div class="price-badge">
-          <NText class="price-text">
+        <!-- 底部浮层信息 -->
+        <div class="cover-overlay">
+          <!-- 左侧标签组 -->
+          <div class="overlay-tags">
+            <NTag
+              size="tiny"
+              :bordered="false"
+              class="glass-tag"
+              :class="goods.type === GoodsTypes.Physical ? 'tag-success' : 'tag-info'"
+            >
+              {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
+            </NTag>
+
+            <NTag
+              v-if="goods.allowGuardLevel > 0"
+              size="tiny"
+              :bordered="false"
+              class="glass-tag tag-warning"
+            >
+              {{ goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长' }}专属
+            </NTag>
+          </div>
+
+          <!-- 右侧价格 -->
+          <div class="price-pill">
+            <span class="coin-icon">🪙</span>
             <template v-if="goods.canFreeBuy && goods.price > 0">
-              🪙 <span class="price-original">{{ goods.price }}</span>
-              <span class="price-free">免费</span>
+              <span class="price-original">{{ goods.price }}</span>
+              <span class="price-highlight">免费</span>
             </template>
             <template v-else>
-              🪙 {{ goods.price > 0 ? goods.price : '免费' }}
+              <span class="price-current">{{ goods.price > 0 ? goods.price : '免费' }}</span>
             </template>
-          </NText>
-        </div>
-
-        <!-- 标签容器 -->
-        <div class="tags-badge">
-          <!-- 商品类型标签 -->
-          <NTag
-            size="small"
-            :bordered="true"
-            style="background-color: transparent;"
-            :style="{
-              color: goods.type === GoodsTypes.Physical ? '#006633' : '#0066cc',
-              borderColor: goods.type === GoodsTypes.Physical ? '#009966' : '#3399ff',
-              backgroundColor: goods.type === GoodsTypes.Physical ? '#c2e6d290' : '#c2d6eb90',
-            }"
-          >
-            {{ goods.type === GoodsTypes.Physical ? '实物' : '虚拟' }}
-          </NTag>
-          <!-- 状态标签 -->
-          <NTag
-            v-if="goods.count === 0"
-            size="small"
-            type="error"
-            :bordered="false"
-            style="color: #ffffff; background-color: rgba(255, 85, 85, 0.7);"
-          >
-            已售完
-          </NTag>
-
-          <!-- 舰长限制标签 -->
-          <NTag
-            v-if="goods.allowGuardLevel > 0"
-            size="small"
-            type="warning"
-            :bordered="false"
-            style="color: #333333; background-color: rgba(255, 204, 0, 0.7);"
-          >
-            {{ goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长' }}专属
-          </NTag>
+          </div>
         </div>
       </div>
     </template>
-    <!-- 商品信息头部 - 改为水平布局 -->
-    <template #header>
-      <NFlex vertical>
-        <!-- 标题行：左侧标题，右侧库存 -->
-        <NFlex
-          justify="space-between"
-          align="center"
-          class="title-row"
-        >
-          <NFlex
-            align="center"
-            class="title-container"
-          >
-            <NEllipsis
-              strong
-              class="goods-title"
-              :line-clamp="1"
+
+    <!-- 商品信息主体 -->
+    <div class="card-content">
+      <!-- 标题行 -->
+      <div class="header-row-container">
+        <div class="title-main">
+          <NEllipsis class="goods-title" :line-clamp="1" :tooltip="{ arrowPointToCenter: true }">
+            <span
+              class="goods-title-text"
+              style="font-weight: 800; font-size: 1.05rem; line-height: 1.25; letter-spacing: -0.015em;"
             >
               {{ goods.name }}
-            </NEllipsis>
-          </NFlex>
-
-          <NFlex
-            align="center"
-            class="stock-info"
-          >
-            <NText
-              depth="3"
-              size="small"
-            >
-              库存:
-            </NText>
-            <NText
-              v-if="goods.count && goods.count > 0"
-              size="small"
-            >
-              {{ goods.count }}
-            </NText>
-            <NText
-              v-else-if="goods.count === 0"
-              size="small"
-              type="error"
-            >
-              无
-            </NText>
-            <NText
-              v-else
-              size="small"
-            >
-              ∞
-            </NText>
-          </NFlex>
-        </NFlex>
-      </NFlex>
-    </template>
-
-    <!-- 商品描述和标签 -->
-    <NFlex
-      vertical
-      :gap="8"
-      class="content-section"
-    >
-      <!-- 描述文本 -->
-      <NEllipsis
-        :line-clamp="2"
-        class="description-text"
-      >
-        <template #tooltip>
-          <div style="white-space: pre-wrap;">
-            {{ goods.description ? goods.description : '暂无描述' }}
-          </div>
-        </template>
-        <NText
-          :depth="goods.description ? 1 : 3"
-          :italic="!goods.description"
-        >
-          {{ goods.description ? goods.description : '暂无描述' }}
-        </NText>
-      </NEllipsis>
-
-      <!-- 礼物信息卡片 - 仅在后台管理页面显示 -->
-      <div
-        v-if="isManage"
-        class="info-cards"
-      >
-        <!-- 兑换数量限制 -->
-        <div
-          v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount"
-          class="info-item"
-        >
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            📦 限购
-          </NText>
-          <NText class="info-value">
-            {{ goods.maxBuyCount }}件
-          </NText>
+            </span>
+          </NEllipsis>
         </div>
 
-        <!-- 是否允许重复兑换 -->
-        <div class="info-item">
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            🔄 重购
-          </NText>
-          <NText
-            class="info-value"
-            :type="goods.isAllowRebuy ? 'success' : 'error'"
-          >
-            {{ goods.isAllowRebuy ? '允许' : '禁止' }}
-          </NText>
-        </div>
-
-        <!-- 舰长等级限制 -->
-        <div
-          v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0"
-          class="info-item"
-        >
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            ⚓ 等级
-          </NText>
-          <NText
-            class="info-value"
-            type="warning"
-          >
-            {{ goods.setting.allowGuardLevel === 1 ? '总督' : goods.setting.allowGuardLevel === 2 ? '提督' : '舰长' }}+
-          </NText>
-        </div>
-
-        <!-- 舰长免费 -->
-        <div
-          v-if="goods.setting?.guardFreeMonths !== undefined || goods.setting?.guardFree !== undefined"
-          class="info-item"
-        >
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            ⭐ 舰长
-          </NText>
-          <NText
-            class="info-value"
-            type="success"
-          >
-            免费
-          </NText>
-        </div>
-
-        <!-- 虚拟礼物密钥数量 -->
-        <div
-          v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys && goods.virtualKeys.length > 0"
-          class="info-item"
-        >
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            🔑 密钥
-          </NText>
-          <NText class="info-value">
-            {{ goods.virtualKeys.length }}个
-          </NText>
-        </div>
-
-        <!-- 收集地址方式 -->
-        <div
-          v-if="goods.type === GoodsTypes.Physical"
-          class="info-item"
-        >
-          <NText
-            depth="3"
-            class="info-label"
-          >
-            📮 地址
-          </NText>
-          <NText class="info-value">
-            {{ goods.collectUrl ? '站外' : '本站' }}
-          </NText>
-        </div>
-      </div>
-
-      <!-- 用户自定义标签展示 -->
-      <div
-        v-if="(goods.tags && goods.tags.length > 0) || (!isManage && ((goods.setting?.allowGuardLevel ?? 0) > 0 || goods.canFreeBuy || !goods.isAllowRebuy))"
-        class="tags-container"
-      >
-        <div class="tags-wrapper">
-          <!-- 用户页面：显示重要信息标签 -->
-          <template v-if="!isManage">
-            <NTag
-              v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0"
-              :bordered="false"
-              size="tiny"
-              class="user-tag important-tag"
-              style="color: #fff; background-color: rgba(255, 170, 0, 0.85);"
-            >
-              ⚓ {{ goods.setting.allowGuardLevel === 1 ? '总督' : goods.setting.allowGuardLevel === 2 ? '提督' : '舰长' }}+
-            </NTag>
-            <NTag
-              v-if="goods.canFreeBuy"
-              :bordered="false"
-              size="tiny"
-              class="user-tag important-tag"
-              style="color: #fff; background-color: rgba(24, 160, 88, 0.85);"
-            >
-              ⭐ 舰长免费
-            </NTag>
-            <NTag
-              v-if="!goods.isAllowRebuy"
-              :bordered="false"
-              size="tiny"
-              class="user-tag important-tag"
-              style="color: #fff; background-color: rgba(208, 48, 80, 0.85);"
-            >
-              🔒 限购一次
-            </NTag>
+        <!-- 库存显示 -->
+        <div class="stock-badge" :class="{ 'stock-none': goods.count === 0, 'stock-inf': !goods.count && goods.count !== 0 }">
+          <template v-if="goods.count === 0">
+            缺货
           </template>
-
-          <!-- 用户自定义标签 -->
-          <NTag
-            v-for="tag in goods.tags"
-            :key="tag"
-            :bordered="false"
-            size="tiny"
-            class="user-tag"
-            style="color: #f0f0f0; background-color: rgba(100, 100, 110, 0.7);"
-          >
-            {{ tag }}
-          </NTag>
+          <template v-else-if="goods.count && goods.count > 0">
+            余 {{ goods.count }}
+          </template>
+          <template v-else>
+            无限
+          </template>
         </div>
       </div>
-    </NFlex>
 
-    <!-- 自定义页脚 -->
+      <!-- 描述文本 -->
+      <div class="description-container">
+        <NEllipsis :line-clamp="2" class="description-text" :tooltip="false">
+          {{ goods.description || '暂无描述' }}
+        </NEllipsis>
+      </div>
+
+      <!-- 标签区域 (用户侧) -->
+      <div v-if="!isManage" class="tags-row">
+        <template v-if="goods.setting?.allowGuardLevel && goods.setting.allowGuardLevel > 0">
+          <!-- 已经在封面显示，此处可省略或重复强调，选择保留其他重要Tag -->
+        </template>
+
+        <NTag v-if="goods.canFreeBuy" :bordered="false" size="tiny" type="success" round class="mini-tag">
+          ⭐ 舰长免费
+        </NTag>
+        <NTag v-if="!goods.isAllowRebuy" :bordered="false" size="tiny" type="error" round class="mini-tag">
+          🔒 限购一次
+        </NTag>
+        <NTag v-for="tag in goods.tags" :key="tag" :bordered="false" size="tiny" round class="mini-tag custom-tag">
+          {{ tag }}
+        </NTag>
+      </div>
+
+      <!-- 管理侧信息卡片 -->
+      <div v-if="isManage" class="manage-info-grid">
+        <div v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount" class="info-cell">
+          <span class="label">📦 限购</span>
+          <span class="value">{{ goods.maxBuyCount }}</span>
+        </div>
+        <div class="info-cell">
+          <span class="label">🔄 重购</span>
+          <span class="value" :class="goods.isAllowRebuy ? 'text-success' : 'text-error'">
+            {{ goods.isAllowRebuy ? '是' : '否' }}
+          </span>
+        </div>
+        <div v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys?.length" class="info-cell">
+          <span class="label">🔑 密钥</span>
+          <span class="value">{{ goods.virtualKeys.length }}</span>
+        </div>
+        <div v-if="goods.type === GoodsTypes.Physical" class="info-cell">
+          <span class="label">📮 地址</span>
+          <span class="value">{{ goods.collectUrl ? '站外' : '本站' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页脚插槽 -->
     <template #footer>
       <slot name="footer" />
     </template>
@@ -349,272 +181,274 @@ const emptyCover = `${IMGUR_URL}None.png`
 
 <style scoped>
 .goods-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  border-radius: 12px;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.goods-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.goods-card:hover::before {
-  left: 100%;
+/* 深色模式适配 */
+:global(.dark) .goods-card {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .goods-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.goods-card:active {
   transform: translateY(-4px);
-  transition: all 0.1s ease;
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
+  border-color: var(--n-primary-color);
 }
 
-.pinned-card {
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 4px 16px rgba(24, 160, 88, 0.25), 0 0 0 1px rgba(24, 160, 88, 0.1);
-  background: linear-gradient(135deg, var(--card-color) 0%, rgba(24, 160, 88, 0.02) 100%);
+.is-pinned {
+  border-color: var(--n-primary-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.02);
 }
 
-.pinned-card:hover {
-  box-shadow: 0 8px 28px rgba(24, 160, 88, 0.35), 0 2px 12px rgba(24, 160, 88, 0.15);
-}
-
-.cover-container {
+/* 封面区域 */
+.cover-wrapper {
   position: relative;
-  max-height: 100%;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 比例 */
+  height: 0;
   overflow: hidden;
+  background-color: var(--n-color-modal);
 }
 
-.cover-container::after {
-  content: '';
+.cover-image-container {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 
-/* 售罄遮罩效果 */
-.goods-card:has(.tags-badge .n-tag[type="error"]) .cover-container::before {
-  content: '已售完';
+.cover-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.cover-image :deep(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 遮罩 */
+.sold-out-mask {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #ff5555;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 3;
-  backdrop-filter: blur(2px);
+  z-index: 11;
+  pointer-events: none; /* 允许点击穿透到图片，从而触发预览 */
+  user-select: none;
 }
 
+.sold-out-text {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* 虽然父级禁用了 pointer-events，但文字本身建议也显式禁用，确保万无一失 */
+  pointer-events: none;
+}
+
+/* 置顶徽章 */
 .pin-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-hover) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(255, 255, 255, 0.3);
-  color: white;
-  transform: rotate(45deg);
-  z-index: 2;
-  animation: pin-pulse 2s ease-in-out infinite;
+  color: var(--n-primary-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 6;
 }
 
-@keyframes pin-pulse {
-  0%, 100% {
-    transform: rotate(45deg) scale(1);
-  }
-  50% {
-    transform: rotate(45deg) scale(1.05);
-  }
-}
-
-.price-badge {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(135deg, rgba(24, 160, 88, 0.95) 0%, rgba(18, 130, 70, 0.95) 100%);
-  color: white;
-  padding: 6px 12px;
-  border-top-left-radius: 8px;
-  z-index: 2;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-}
-
-.tags-badge {
+/* 底部浮层 */
+.cover-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.6) 100%);
-  padding: 6px 8px;
-  border-top-right-radius: 8px;
-  z-index: 2;
+  right: 0;
+  padding: 40px 12px 12px; /* 增加内边距避免溢出 */
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 5;
+  pointer-events: none; /* 允许点击穿透到图片预览 */
+}
+
+.overlay-tags, .price-pill {
+  pointer-events: auto; /* 标签和价格恢复点击 */
+}
+
+.overlay-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.glass-tag {
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 500;
+  height: 20px;
+  line-height: 20px;
+}
+
+.tag-success { background: rgba(var(--n-success-color-rgb), 0.85); }
+.tag-info { background: rgba(var(--n-info-color-rgb), 0.85); }
+.tag-warning { background: rgba(var(--n-warning-color-rgb), 0.85); color: #000; }
+
+/* 价格胶囊 */
+.price-pill {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  padding: 2px 10px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
   gap: 4px;
-  max-width: 65%;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.price-text {
-  font-weight: 600;
-  font-size: 1em;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.5px;
+:global(.dark) .price-pill {
+  background: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.title-row {
-  margin-bottom: 8px;
-  gap: 8px;
+.coin-icon { font-size: 14px; }
+
+.price-original {
+  font-size: 11px;
+  text-decoration: line-through;
+  color: #666;
+  opacity: 0.7;
 }
 
-.title-container {
+.price-current, .price-highlight {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  color: #1a1a1a;
+}
+
+:global(.dark) .price-current {
+  color: #efefef;
+}
+
+.price-highlight { color: var(--n-primary-color); }
+
+/* 内容区域 */
+.header-row-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.title-main {
   flex: 1;
   min-width: 0;
 }
 
-.goods-title {
-  font-size: 1.05em;
-  line-height: 1.4;
-  word-break: break-word;
-  font-weight: 600;
-  color: var(--text-color-1);
+.goods-title-text {
+  color: var(--n-text-color);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.content-section {
-  margin-top: 6px;
+.goods-card:hover .goods-title-text {
+  color: var(--n-primary-color) !important;
+  transform: translateY(-1px);
+  transform-origin: left center;
 }
+
+.is-pinned .goods-title-text {
+  color: var(--n-primary-color);
+}
+
+.stock-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: var(--n-color-embedded);
+  color: var(--n-text-color-3);
+  white-space: nowrap;
+  font-weight: 700;
+  border: 1px solid var(--n-border-color);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.stock-none { color: var(--n-error-color); background-color: rgba(var(--n-error-color-rgb), 0.1); }
+.stock-inf { color: var(--n-success-color); background-color: rgba(var(--n-success-color-rgb), 0.1); }
 
 .description-text {
-  margin-bottom: 4px;
-  white-space: pre-wrap;
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  min-height: 36px; /* 保证两行高度一致 */
 }
 
-.tags-container {
-  position: relative;
-  max-height: 44px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.tags-wrapper {
+/* 标签行 */
+.tags-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  align-items: center;
+  min-height: 22px; /* 占位防止跳动 */
 }
 
-.user-tag {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.85em;
+.mini-tag {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 
-.user-tag:hover {
-  transform: translateY(-2px) scale(1.05);
-  z-index: 1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+.custom-tag {
+  background-color: var(--n-color-embedded);
+  color: var(--n-text-color-2);
 }
 
-/* 重要信息标签样式 */
-.important-tag {
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.important-tag:hover {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-  transform: translateY(-2px) scale(1.08);
-}
-
-.stock-info {
-  font-size: 0.85em;
-  color: var(--text-color-3);
-  white-space: nowrap;
-  padding: 2px 8px;
-  background-color: var(--action-color);
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-/* 信息卡片样式 */
-.info-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0;
+/* 管理侧信息网格 */
+.manage-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  background-color: var(--n-color-embedded);
   padding: 8px;
-  background-color: var(--action-color);
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-top: 4px;
 }
 
-.info-item {
+.info-cell {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  background-color: var(--card-color);
-  border-radius: 4px;
-  border: 1px solid var(--divider-color);
-  transition: all 0.2s ease;
-  font-size: 0.85em;
+  font-size: 11px;
 }
 
-.info-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary-color-hover);
-}
-
-.info-label {
-  font-size: 0.9em;
-  white-space: nowrap;
-}
-
-.info-value {
-  font-weight: 600;
-  font-size: 0.95em;
-  white-space: nowrap;
-}
-
-.price-original {
-  text-decoration: line-through;
-  opacity: 0.7;
-  margin-right: 6px;
-}
-
-.price-free {
-  font-weight: 700;
-}
+.info-cell .label { color: var(--n-text-color-3); }
+.info-cell .value { font-weight: 600; color: var(--n-text-color-2); }
+.text-success { color: var(--n-success-color) !important; }
+.text-error { color: var(--n-error-color) !important; }
 </style>

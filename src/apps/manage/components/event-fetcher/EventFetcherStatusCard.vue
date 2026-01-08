@@ -68,7 +68,6 @@ const status = computed(() => {
         <template #trigger>
           <NTag
             size="small"
-            :color="{ borderColor: 'white', textColor: 'white', color: '#4b6159' }"
           >
             <NIcon :component="FlashCheckmark16Filled" />
             {{ eventFetcherVersionName }}
@@ -101,7 +100,6 @@ const status = computed(() => {
           </NText>
           | 今日已接收
           <NText
-            color="white"
             strong
           >
             {{ state.todayReceive }}

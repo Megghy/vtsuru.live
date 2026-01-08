@@ -21,7 +21,7 @@ function onToggleTheme(isLight: boolean) {
   <NLayoutHeader bordered style="height: var(--vtsuru-header-height); padding: 10px 15px 5px 15px">
     <NPageHeader>
       <template #title>
-        <NText strong style="font-size: 1.4rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)">
+        <NText strong style="font-size: 1.4rem;">
           VTSURU CENTER
         </NText>
       </template>
@@ -47,4 +47,3 @@ function onToggleTheme(isLight: boolean) {
     </NPageHeader>
   </NLayoutHeader>
 </template>
-

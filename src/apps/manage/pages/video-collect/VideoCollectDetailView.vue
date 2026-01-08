@@ -38,9 +38,10 @@ import {
   NTabs,
   NText,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import Qrcode from 'qrcode.vue'
-import { computed, onActivated, ref } from 'vue'
+import { computed, h, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   VideoStatus,
@@ -54,6 +55,7 @@ import { downloadImage } from '@/shared/utils'
 
 const route = useRoute()
 const message = useMessage()
+const themeVars = useThemeVars()
 const { width } = useWindowSize()
 
 const shareModalVisiable = ref(false)
@@ -143,7 +145,7 @@ const mobileMenuOptions = computed(() => [
   {
     label: '删除',
     key: 'delete',
-    icon: () => h(NIcon, { color: '#d03050' }, { default: () => h(Delete24Regular) }),
+    icon: () => h(NIcon, { color: themeVars.value.errorColor }, { default: () => h(Delete24Regular) }),
   },
 ])
 
@@ -479,7 +481,7 @@ onActivated(async () => {
         <NTabPane name="accept">
           <template #tab>
             <div class="tab-label">
-              <span style="color: #18a058">已通过</span>
+              <NText type="success">已通过</NText>
               <NBadge
                 v-if="acceptVideos.length > 0"
                 :value="acceptVideos.length"
@@ -515,12 +517,12 @@ onActivated(async () => {
         <NTabPane name="reject">
           <template #tab>
             <div class="tab-label">
-              <span style="color: #d03050">已拒绝</span>
+              <NText type="error">已拒绝</NText>
               <NBadge
                 v-if="rejectVideos.length > 0"
                 :value="rejectVideos.length"
                 :max="99"
-                color="#d03050"
+                :color="themeVars.errorColor"
                 class="tab-badge"
               />
             </div>
@@ -558,7 +560,7 @@ onActivated(async () => {
       style="width: 600px; max-width: 90vw"
     >
       <div style="display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 12px;">
-        <div style="padding: 12px; background: white; border-radius: 8px;">
+        <div :style="{ padding: '12px', background: themeVars.cardColor, borderRadius: themeVars.borderRadius }">
           <Qrcode
             :value="`${CURRENT_HOST}video-collect/${videoDetail.table.shortId}`"
             level="Q"
@@ -678,7 +680,6 @@ onActivated(async () => {
   align-items: center;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .info-card-wrapper {
@@ -689,7 +690,6 @@ onActivated(async () => {
   display: flex;
   justify-content: flex-end;
   padding: 0 4px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .content-area {
@@ -697,9 +697,7 @@ onActivated(async () => {
 }
 
 .custom-tabs :deep(.n-tabs-nav) {
-  background: rgba(255, 255, 255, 0.02);
   padding: 4px;
-  border-radius: 8px;
 }
 
 .tab-label {

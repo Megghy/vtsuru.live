@@ -35,17 +35,19 @@ import {
   NText,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, h } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { NavigateToNewTab, isDarkMode } from '@/shared/utils'
+import { NavigateToNewTab } from '@/shared/utils'
 
 const props = defineProps<{
   accountInfo: AccountInfo
 }>()
 
 const message = useMessage()
+const themeVars = useThemeVars()
 
 const defaultCollapsed = window.innerWidth < 750
 const collapsed = useStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
@@ -93,7 +95,7 @@ function renderFavoriteExtra(key: string) {
                     h(NIcon, {
                       component: isFavorite(key) ? Bookmark : BookmarkOutline,
                       size: 16,
-                      color: isFavorite(key) ? '#f5c451' : undefined,
+                      color: isFavorite(key) ? themeVars.value.warningColor : undefined,
                     }),
                 },
               ),
@@ -536,7 +538,7 @@ const menuOptions = computed(() => {
     <NFlex justify="center" align="center">
       <NText
         v-if="!collapsed"
-        :style="`font-size: 12px; text-align: center;color: ${isDarkMode ? '#555' : '#c0c0c0'}`"
+        :style="{ fontSize: '12px', textAlign: 'center', color: themeVars.textColor3 }"
       >
         By Megghy
       </NText>

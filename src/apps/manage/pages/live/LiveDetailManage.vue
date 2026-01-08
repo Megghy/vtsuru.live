@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { NButton, NEmpty, NSpin, NSpace, useMessage } from 'naive-ui'
-import { onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
+import { NButton, NEmpty, NSpin, NSpace, useMessage, useThemeVars } from 'naive-ui'
+import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
@@ -15,6 +15,7 @@ interface ResponseLiveDetail {
 }
 
 const message = useMessage()
+const themeVars = useThemeVars()
 const route = useRoute()
 const router = useRouter()
 const hub = useVTsuruHub()
@@ -23,6 +24,27 @@ const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 const liveInfo = ref<ResponseLiveDetail | undefined>()
 const danmakuContainerRef = ref<InstanceType<typeof DanmakuContainer> | null>(null)
+
+const receivingPillStyle = computed(() => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '4px 12px',
+  background: themeVars.value.successColorSuppl,
+  border: `1px solid ${themeVars.value.successColor}`,
+  borderRadius: '9999px',
+  color: themeVars.value.successColor,
+  fontSize: '13px',
+  fontWeight: 500,
+}))
+
+const receivingDotStyle = computed(() => ({
+  display: 'inline-block',
+  width: '6px',
+  height: '6px',
+  background: themeVars.value.successColor,
+  borderRadius: '50%',
+  marginRight: '6px',
+}))
 
 async function get() {
   isLoading.value = true
@@ -100,29 +122,9 @@ onBeforeUnmount(async () => {
           ← 返回
         </NButton>
         <NSpace align="center" :size="8">
-          <span
-            style="
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            background: rgba(24, 160, 88, 0.1);
-            border: 1px solid rgba(24, 160, 88, 0.3);
-            border-radius: 16px;
-            color: #18a058;
-            font-size: 13px;
-            font-weight: 500;
-          "
-          >
+          <span :style="receivingPillStyle">
             <span
-              style="
-              display: inline-block;
-              width: 6px;
-              height: 6px;
-              background: #18a058;
-              border-radius: 50%;
-              margin-right: 6px;
-              animation: pulse 2s ease-in-out infinite;
-            "
+              :style="receivingDotStyle"
             />
             实时接收中
           </span>
@@ -157,15 +159,3 @@ onBeforeUnmount(async () => {
   </NSpin>
 </template>
 
-<style scoped>
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.2);
-  }
-}
-</style>

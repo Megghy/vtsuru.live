@@ -469,24 +469,17 @@ watch(
         <div
           v-else-if="userInfo && !notFound"
           class="viewer-page-content"
-          :style="`box-shadow:${isDarkMode ? 'rgb(28 28 28 / 9%) 5px 5px 6px inset, rgba(139, 139, 139, 0.09) -5px -5px 6px inset' : 'inset 5px 5px 6px #8b8b8b17, inset -5px -5px 6px #8b8b8b17;'}`"
         >
           <!-- 路由视图和动画 -->
           <RouterView v-slot="{ Component }">
-            <Transition
-              name="fade-slide"
-              mode="out-in"
-              :appear="true"
-            >
-              <KeepAlive>
-                <component
-                  :is="Component"
-                  :key="route.fullPath"
-                  :bili-info="biliUserInfo"
-                  :user-info="userInfo"
-                />
-              </KeepAlive>
-            </Transition>
+            <KeepAlive>
+              <component
+                :is="Component"
+                :key="route.fullPath"
+                :bili-info="biliUserInfo"
+                :user-info="userInfo"
+              />
+            </KeepAlive>
           </RouterView>
           <NBackTop
             :right="40"
@@ -510,7 +503,6 @@ watch(
   >
     <NAlert
       type="info"
-      style="border-radius: 8px;"
     >
       <NFlex
         vertical
@@ -548,7 +540,6 @@ watch(
 :root {
   --vtsuru-header-height: 50px; // 顶部导航栏高度
   --vtsuru-content-padding: 20px; // 内容区域内边距
-  --streaming-glow-color: #00ff00; // 直播状态光晕颜色
 }
 
 // --- 布局样式 ---
@@ -570,7 +561,6 @@ watch(
 
 .site-title {
   font-size: 1.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .main-layout-body {
@@ -578,31 +568,10 @@ watch(
 }
 
 .sider-avatar {
-  box-shadow: var(--n-avatar-box-shadow, 0 2px 3px rgba(0, 0, 0, 0.1)); // 使用 Naive UI 变量或默认值
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.3s ease; // 添加悬浮效果和阴影过渡
-  &:hover {
-    transform: scale(1.1);
-  }
   &.streaming-avatar {
-    border: 2px solid var(--streaming-glow-color);
-    box-shadow: 0 0 10px var(--streaming-glow-color), 0 0 15px var(--streaming-glow-color) inset;
-    animation: pulse 1.5s infinite ease-in-out;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 5px var(--streaming-glow-color), 0 0 8px var(--streaming-glow-color) inset;
-    border-color: rgba(0, 255, 0, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 12px var(--streaming-glow-color), 0 0 18px var(--streaming-glow-color) inset;
-    border-color: var(--streaming-glow-color);
-  }
-  100% {
-    box-shadow: 0 0 5px var(--streaming-glow-color), 0 0 8px var(--streaming-glow-color) inset;
-     border-color: rgba(0, 255, 0, 0.7);
+    outline: 2px solid var(--n-success-color);
+    outline-offset: 2px;
   }
 }
 
@@ -663,30 +632,14 @@ watch(
 .viewer-page-content {
     height: 100%;
     min-height: 100%; // 同样保证最小高度
-    border-radius: 8px;
+    border-radius: var(--n-border-radius);
     padding: var(--vtsuru-content-padding);
     box-sizing: border-box;
     overflow-y: auto; // 允许内容 Y 轴滚动
     overflow-x: hidden; // 禁止内容 X 轴滚动 (可选，但通常推荐)
     position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
     background-color: var(--n-card-color);
-    box-shadow: var(--content-shadow);
-}
-
-// --- 路由过渡动画 ---
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(15px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-15px);
+    border: 1px solid var(--n-border-color);
 }
 
 // --- 返回顶部按钮 ---
@@ -699,25 +652,8 @@ watch(
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #66bb6a; // 改为柔和绿色
+  background-color: var(--n-success-color);
   margin-left: 4px; // 与用户名稍微隔开
   vertical-align: middle; // 垂直居中对齐
-  box-shadow: 0 0 4px #66bb6a; // 同色阴影
-  animation: dot-pulse 1.5s infinite ease-in-out; // 添加脉冲动画
-}
-
-@keyframes dot-pulse { // 定义绿点脉冲动画
-  0% {
-    box-shadow: 0 0 3px #66bb6a;
-    opacity: 0.7;
-  }
-  50% {
-    box-shadow: 0 0 6px #66bb6a;
-    opacity: 1;
-  }
-  100% {
-    box-shadow: 0 0 3px #66bb6a;
-    opacity: 0.7;
-  }
 }
 </style>

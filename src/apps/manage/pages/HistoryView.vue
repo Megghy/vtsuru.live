@@ -12,7 +12,7 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
@@ -64,6 +64,7 @@ interface HistoryUpstatRecordModel {
 
 const accountInfo = useAccount()
 const message = useMessage()
+const themeVars = useThemeVars()
 
 // 历史数据引用
 const fansHistory = ref<HistoryRecordModel[]>()
@@ -144,9 +145,12 @@ function getBaseChartOptions() {
       axisPointer: {
         type: 'cross',
         crossStyle: {
-          color: '#999',
+          color: themeVars.value.textColor3,
         },
       },
+    },
+    textStyle: {
+      color: themeVars.value.textColor2,
     },
     toolbox: {
       feature: {
@@ -268,7 +272,7 @@ function processFansChartOptions() {
         for (let i = 0; i < param.length; i++) {
           const status
             = param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
-          const statusHtml = status === '' ? '' : `&nbsp;<span style="color:gray">${status}</span>`
+          const statusHtml = status === '' ? '' : `&nbsp;<span style="color:${themeVars.value.textColor3}">${status}</span>`
           str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
@@ -290,7 +294,7 @@ function processFansChartOptions() {
         itemStyle: {
           color: (data: any) => {
             const item = completeTimeSeries[data.dataIndex]
-            return !item.exist ? '#cccccc' : item.change ? '#18a058' : '#5470C6'
+            return !item.exist ? themeVars.value.textColor3 : item.change ? themeVars.value.successColor : themeVars.value.primaryColor
           },
         },
       },
@@ -300,7 +304,7 @@ function processFansChartOptions() {
         yAxisIndex: 1,
         xAxisIndex: 1,
         data: chartData.incrementData,
-        itemStyle: { color: (params: any) => (params.value < 0 ? '#FF4D4F' : '#3398DB') },
+        itemStyle: { color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor) },
       },
     ],
   }
@@ -355,7 +359,7 @@ function processGuardsChartOptions() {
         step: 'middle',
         data: completeTimeSeries.map(item => item.count),
         itemStyle: {
-          color: (data: any) => completeTimeSeries[data.dataIndex].exist ? '#5470C6' : '#cccccc',
+          color: (data: any) => completeTimeSeries[data.dataIndex].exist ? themeVars.value.primaryColor : themeVars.value.textColor3,
         },
       },
       {
@@ -364,7 +368,7 @@ function processGuardsChartOptions() {
         yAxisIndex: 1,
         xAxisIndex: 1,
         data: guardIncrements,
-        itemStyle: { color: (params: any) => (params.value < 0 ? '#FF4D4F' : '#3398DB') },
+        itemStyle: { color: (params: any) => (params.value < 0 ? themeVars.value.errorColor : themeVars.value.infoColor) },
       },
     ],
   }
@@ -426,7 +430,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
       {
         type: 'category',
         axisTick: { alignWithLabel: true },
-        axisLine: { onZero: false, lineStyle: { color: '#EE6666' } },
+        axisLine: { onZero: false, lineStyle: { color: themeVars.value.errorColor } },
         data: filtered.map(f => format(f.time, 'yyyy-MM-dd')),
       },
     ],
@@ -438,7 +442,7 @@ function processUpstatChartOptions(dataType: 'views' | 'likes', title: string) {
         data: filtered.map(f => f.stats[dataType]),
         itemStyle: {
           color(data: any) {
-            return increments[data.dataIndex].value !== 0 ? '#5470C6' : '#cccccc'
+            return increments[data.dataIndex].value !== 0 ? themeVars.value.primaryColor : themeVars.value.textColor3
           },
         },
       },

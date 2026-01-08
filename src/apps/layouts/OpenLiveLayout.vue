@@ -279,36 +279,31 @@ onMounted(async () => {
         :native-scrollbar="false"
         style="height: 100%"
       >
-        <Transition>
-          <div
-            v-if="danmakuClient.authInfo"
-            style="margin-top: 8px"
+        <div
+          v-if="danmakuClient.authInfo"
+          style="margin-top: 8px"
+        >
+          <NSpace
+            vertical
+            justify="center"
+            align="center"
           >
-            <NSpace
-              vertical
-              justify="center"
-              align="center"
+            <NAvatar
+              :src="danmakuClient.authInfo?.anchor_info?.uface"
+              :img-props="{ referrerpolicy: 'no-referrer' }"
+              round
+              bordered
+            />
+            <NEllipsis
+              v-if="siderWidth > 100"
+              style="max-width: 100%"
             >
-              <NAvatar
-                :src="danmakuClient.authInfo?.anchor_info?.uface"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                round
-                bordered
-                :style="{
-                  boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 0px 8px' : '0 2px 3px rgba(0, 0, 0, 0.1)',
-                }"
-              />
-              <NEllipsis
-                v-if="siderWidth > 100"
-                style="max-width: 100%"
-              >
-                <NText strong>
-                  {{ danmakuClient.authInfo?.anchor_info?.uname }}
-                </NText>
-              </NEllipsis>
-            </NSpace>
-          </div>
-        </Transition>
+              <NText strong>
+                {{ danmakuClient.authInfo?.anchor_info?.uname }}
+              </NText>
+            </NEllipsis>
+          </NSpace>
+        </div>
         <NMenu
           :default-value="$route.name?.toString()"
           :collapsed-width="64"
@@ -416,17 +411,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* 添加过渡动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
 .n-pageheader-wrapper {
   width: 100% !important;
 }

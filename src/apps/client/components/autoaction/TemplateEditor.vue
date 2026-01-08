@@ -498,21 +498,6 @@ function insertExample(template: string) {
 </template>
 
 <style scoped>
-.template-editor-card {
-  animation: card-appear 0.4s ease-out;
-}
-
-@keyframes card-appear {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .template-description {
   margin-bottom: 12px;
   color: var(--n-text-color-disabled);
@@ -551,13 +536,12 @@ function insertExample(template: string) {
 }
 
 .live-preview {
-  background-color: var(--n-color-target);
+  background-color: var(--n-color-embedded);
   border-radius: var(--n-border-radius);
   padding: 4px 8px;
   font-size: 13px;
-  border-left: 3px solid var(--n-color-target);
+  border-left: 3px solid var(--n-primary-color);
   word-break: break-all;
-  transition: all 0.3s ease;
   margin-left: 8px;
   display: flex;
   align-items: center;
@@ -577,32 +561,9 @@ function insertExample(template: string) {
   color: var(--n-text-color-2);
 }
 
-.example-button {
-  transition: all 0.2s ease;
-}
+.example-button {}
 
-.example-button:hover {
-  transform: translateY(-1px);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.btn-with-transition {
-  transition: all 0.2s ease;
-}
-
-.btn-with-transition:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
+.btn-with-transition {}
 
 .function-list {
   list-style: none;

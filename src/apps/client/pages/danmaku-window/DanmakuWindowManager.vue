@@ -547,9 +547,9 @@ const separatorOptions = [
 .position-indicator {
   position: fixed;
   pointer-events: none;
-  border: 2px dashed #f56c6c;
+  border: 2px dashed var(--n-error-color);
   z-index: 9999;
-  background-color: rgba(245, 108, 108, 0.1);
+  background-color: var(--n-color-embedded);
 }
 
 /* 添加一些美化样式 */

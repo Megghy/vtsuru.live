@@ -2,7 +2,7 @@
 import type { ForumModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { ArrowReply24Filled, Chat24Regular, Delete24Filled, MoreVertical24Filled, Star24Filled } from '@vicons/fluent'
 import { SyncCircleSharp } from '@vicons/ionicons5'
-import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDialog } from 'naive-ui'
+import { NButton, NDropdown, NFlex, NIcon, NTag, NText, NTime, NTooltip, useDialog, useThemeVars } from 'naive-ui'
 import { h } from 'vue'
 import { useAccount } from '@/api/account'
 import { useForumStore } from '@/store/useForumStore'
@@ -15,6 +15,7 @@ const props = defineProps<{
 const useForum = useForumStore()
 const dialog = useDialog()
 const accountInfo = useAccount()
+const themeVars = useThemeVars()
 
 function onDropdownSelect(key: string) {
   switch (key) {
@@ -92,12 +93,11 @@ function onDropdownSelect(key: string) {
       >
         <NIcon
           :component="Star24Filled"
-          color="#dba913"
+          :color="themeVars.warningColor"
         />
       </NTag>
       <NTag
         size="small"
-        style="color: gray"
       >
         <template #icon>
           <NIcon :component="Chat24Regular" />
@@ -105,14 +105,14 @@ function onDropdownSelect(key: string) {
         {{ item.commentCount }}
       </NTag>
       <NText
-        :style="{ fontSize: 'large', color: item.user?.id === accountInfo?.id ? '#5f877d' : '' }"
+        :style="{ fontSize: 'large', color: item.user?.id === accountInfo?.id ? themeVars.successColor : undefined }"
         :depth="item.isDeleted ? 3 : 1"
       >
         {{ item.title }}
       </NText>
     </NFlex>
     <NFlex
-      style="flex: 1; color: gray; font-size: small"
+      :style="{ flex: 1, color: themeVars.textColor3, fontSize: 'small' }"
       justify="end"
       align="center"
     >

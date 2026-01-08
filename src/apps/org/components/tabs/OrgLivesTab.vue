@@ -35,7 +35,7 @@ const props = defineProps<{
       <NGridItem v-for="item in props.lives" :key="item.live.liveId">
         <NCard hoverable size="small" class="live-card">
           <template #cover>
-            <div style="height: 140px; overflow: hidden; position: relative; background: #f5f5f5;">
+            <div style="height: 140px; overflow: hidden; position: relative; background: var(--n-color-embedded);">
               <NImage
                 v-if="item.live.coverUrl"
                 :src="item.live.coverUrl.includes('@') ? item.live.coverUrl : `${item.live.coverUrl}@140h`"
@@ -44,7 +44,7 @@ const props = defineProps<{
                 style="width: 100%; height: 100%;"
                 preview-disabled
               />
-              <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;">
+              <div v-else style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--n-text-color-3);">
                 <NIcon size="48" :component="TimeOutline" />
               </div>
               <div style="position: absolute; top: 8px; right: 8px;">

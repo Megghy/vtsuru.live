@@ -378,14 +378,11 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, var(--n-color-target) 0%, var(--n-modal-color) 100%);
 }
 
 .auth-card {
   width: 100%;
   max-width: 1000px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
 }
 
 .auth-header {

@@ -12,7 +12,7 @@ import {
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
-import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip } from 'naive-ui'
+import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
@@ -22,6 +22,7 @@ import vtb from '@/svgs/ic_vtuber.svg'
 
 const { width } = useWindowSize()
 const $router = useRouter()
+const themeVars = useThemeVars()
 
 const functions = [
   {
@@ -128,47 +129,29 @@ interface IndexDataType {
 
 const indexData = ref<IndexDataType>()
 
-// 动态计算卡片背景色
-const cardBgLight = computed(() => isDarkMode.value
-  ? 'rgba(255, 255, 255, 0.08)'
-  : 'rgba(255, 255, 255, 0.15)')
+const glassBg = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.45)' : 'rgba(255, 255, 255, 0.52)'))
+const glassBgSoft = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.34)' : 'rgba(255, 255, 255, 0.38)'))
+const indexGlassVars = computed(() => ({
+  '--index-glass-bg': glassBg.value,
+  '--index-glass-bg-soft': glassBgSoft.value,
+  '--index-glass-border': isDarkMode.value ? 'rgba(255, 255, 255, 0.12)' : 'rgba(9, 9, 11, 0.08)',
+}))
 
-const cardBgMedium = computed(() => isDarkMode.value
-  ? 'rgba(255, 255, 255, 0.12)'
-  : 'rgba(255, 255, 255, 0.2)')
+const textColor = computed(() => themeVars.value.textColor1)
+const textColorSecondary = computed(() => themeVars.value.textColor2)
 
-const textColor = computed(() => isDarkMode.value
-  ? 'rgba(255, 255, 255, 0.95)'
-  : 'white')
-
-const textColorSecondary = computed(() => isDarkMode.value
-  ? 'rgba(255, 255, 255, 0.75)'
-  : 'rgba(255, 255, 255, 0.9)')
-
-const gradientColors = computed(() => isDarkMode.value
-  ? { from: '#f0f0f0', to: '#b8e6e6' }
-  : { from: '#e5e5e5', to: '#c2ebeb' })
+const gradientColors = computed(() => ({
+  from: themeVars.value.primaryColor,
+  to: themeVars.value.infoColor,
+}))
 
 // 统一的圆角设计系统
-const borderRadius = {
-  small: '8px',
-  medium: '12px',
-  large: '16px',
-  xlarge: '20px',
-  round: '50%',
-}
-
-// 统一的边框系统
-const borderSystem = computed(() => ({
-  light: isDarkMode.value
-    ? '1px solid rgba(255, 255, 255, 0.08)'
-    : '1px solid rgba(255, 255, 255, 0.15)',
-  medium: isDarkMode.value
-    ? '1px solid rgba(255, 255, 255, 0.12)'
-    : '1px solid rgba(255, 255, 255, 0.25)',
-  accent: isDarkMode.value
-    ? '2px solid rgba(255, 255, 255, 0.15)'
-    : '2px solid rgba(255, 255, 255, 0.3)',
+const borderRadius = computed(() => ({
+  small: themeVars.value.borderRadiusSmall,
+  medium: themeVars.value.borderRadius,
+  large: themeVars.value.borderRadius,
+  xlarge: themeVars.value.borderRadius,
+  round: '9999px',
 }))
 
 // 功能图标颜色映射 - 优化为统一的色系，与背景渐变协调
@@ -229,6 +212,38 @@ function handleFunctionClick(item: typeof functions[0]) {
   }
 }
 
+const particlesOptions = computed(() => {
+  const isDark = isDarkMode.value
+  const dot = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(9, 9, 11, 0.14)'
+  const link = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(9, 9, 11, 0.08)'
+  const accents = isDark
+    ? ['rgba(96, 165, 250, 0.22)', 'rgba(192, 132, 252, 0.18)', 'rgba(45, 212, 191, 0.18)']
+    : ['rgba(59, 130, 246, 0.18)', 'rgba(168, 85, 247, 0.14)', 'rgba(20, 184, 166, 0.14)']
+
+  return {
+    background: { color: { value: 'transparent' } },
+    fullScreen: { enable: false },
+    fpsLimit: 60,
+    detectRetina: true,
+    particles: {
+      number: { value: 42, density: { enable: true } },
+      color: { value: [dot, ...accents] },
+      shape: { type: 'circle' },
+      opacity: { value: { min: 0.08, max: 0.22 } },
+      size: { value: { min: 1, max: 2 } },
+      links: { enable: true, distance: 140, color: link, opacity: 0.18, width: 1 },
+      move: { enable: true, speed: 0.6, direction: 'none', outModes: { default: 'out' } },
+    },
+    interactivity: {
+      events: {
+        onHover: { enable: false, mode: [] },
+        onClick: { enable: false, mode: [] },
+        resize: true,
+      },
+    },
+  }
+})
+
 onMounted(async () => {
   const data = await QueryGetAPI<IndexDataType>(`${VTSURU_API_URL}get-index-data`)
   if (data.code == 200) {
@@ -238,18 +253,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="index-background">
+  <div class="index-background" :style="indexGlassVars">
+    <vue-particles id="tsparticles" :key="isDarkMode ? 'dark' : 'light'" :options="particlesOptions" />
     <NSpace vertical justify="center" align="center" class="main-container">
       <!-- 顶部标题部分 -->
       <NCard
         :style="{
-          background: cardBgLight,
-          backdropFilter: 'blur(10px)',
-          border: 'none',
           width: '90vw',
           maxWidth: '1400px',
           borderRadius: borderRadius.xlarge,
-        }" class="hero-card"
+        }" class="hero-card glass-card"
       >
         <NSpace justify="center" align="center" :size="width > 700 ? 50 : 0" :vertical="width <= 700">
           <vtb class="hero-icon" />
@@ -284,12 +297,9 @@ onMounted(async () => {
                     hoverable :style="{
                       width: width > 700 ? '240px' : '100%',
                       minWidth: '200px',
-                      background: cardBgMedium,
                       cursor: 'pointer',
-                      border: 'none',
                       borderRadius: borderRadius.large,
-                      transition: 'all 0.3s ease',
-                    }" class="entry-card" @click="$router.push({ name: 'manage-index' })"
+                    }" class="entry-card glass-card-soft" @click="$router.push({ name: 'manage-index' })"
                   >
                     <NFlex vertical align="center" justify="center" :size="8">
                       <NIcon :component="PersonFeedback24Filled" size="36" :color="textColor" />
@@ -312,12 +322,9 @@ onMounted(async () => {
                     hoverable :style="{
                       width: width > 700 ? '240px' : '100%',
                       minWidth: '200px',
-                      background: cardBgMedium,
                       cursor: 'pointer',
-                      border: 'none',
                       borderRadius: borderRadius.large,
-                      transition: 'all 0.3s ease',
-                    }" class="entry-card" @click="$router.push({ name: 'bili-user' })"
+                    }" class="entry-card glass-card-soft" @click="$router.push({ name: 'bili-user' })"
                   >
                     <NFlex vertical align="center" justify="center" :size="8">
                       <NIcon :component="Chat24Filled" size="36" :color="textColor" />
@@ -362,13 +369,10 @@ onMounted(async () => {
       <!-- 用户统计部分 -->
       <NCard
         :style="{
-          background: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(10px)',
-          border: 'none',
           width: '90vw',
           maxWidth: '1400px',
           borderRadius: borderRadius.medium,
-        }" size="small"
+        }" size="small" class="glass-card-soft"
       >
         <NFlex justify="center" align="center">
           <div class="stats-item">
@@ -387,14 +391,11 @@ onMounted(async () => {
       <!-- 功能列表部分 -->
       <NCard
         :style="{
-          background: cardBgLight,
-          backdropFilter: 'blur(10px)',
-          border: 'none',
           width: '90vw',
           maxWidth: '1400px',
           marginBottom: '20px',
           borderRadius: borderRadius.xlarge,
-        }"
+        }" class="glass-card"
       >
         <NFlex vertical>
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
@@ -415,12 +416,10 @@ onMounted(async () => {
               v-for="item in functions" :key="item.name" :style="{
                 width: '300px',
                 maxWidth: '100%',
-                background: cardBgMedium,
-                border: borderSystem.medium,
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
                 cursor: item.route ? 'pointer' : 'default',
-              }" hoverable class="feature-card" @click="handleFunctionClick(item)"
+              }" hoverable class="feature-card glass-card-soft" @click="handleFunctionClick(item)"
             >
               <NFlex vertical>
                 <NFlex align="center" style="margin-bottom: 10px;">
@@ -446,14 +445,11 @@ onMounted(async () => {
       <!-- 客户端专属功能部分 -->
       <NCard
         :style="{
-          background: cardBgLight,
-          backdropFilter: 'blur(10px)',
-          border: 'none',
           width: '90vw',
           maxWidth: '1400px',
           marginBottom: '20px',
           borderRadius: borderRadius.xlarge,
-        }"
+        }" class="glass-card"
       >
         <NFlex vertical>
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
@@ -474,11 +470,9 @@ onMounted(async () => {
               :style="{
                 width: '380px',
                 maxWidth: '100%',
-                background: cardBgMedium,
-                border: borderSystem.light,
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
-              }" hoverable class="feature-card"
+              }" hoverable class="feature-card glass-card-soft"
             >
               <NFlex vertical>
                 <NFlex align="center" style="margin-bottom: 10px;">
@@ -499,11 +493,9 @@ onMounted(async () => {
               :style="{
                 width: '380px',
                 maxWidth: '100%',
-                background: cardBgMedium,
-                border: borderSystem.light,
                 borderRadius: borderRadius.large,
                 boxShadow: 'none',
-              }" hoverable class="feature-card"
+              }" hoverable class="feature-card glass-card-soft"
             >
               <NFlex vertical>
                 <NFlex align="center" style="margin-bottom: 10px;">
@@ -552,14 +544,11 @@ onMounted(async () => {
       <!-- 使用本站的主播部分 -->
       <NCard
         :style="{
-          background: cardBgLight,
-          backdropFilter: 'blur(10px)',
-          border: borderSystem.light,
           width: '90vw',
           maxWidth: '1400px',
           borderRadius: borderRadius.xlarge,
           boxShadow: 'none',
-        }"
+        }" class="glass-card"
       >
         <NFlex vertical>
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
@@ -618,12 +607,10 @@ onMounted(async () => {
 
                 <NCard
                   :style="{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: borderSystem.light,
                     borderRadius: borderRadius.medium,
                     padding: '12px 20px',
                     maxWidth: '400px',
-                  }" size="small"
+                  }" size="small" class="glass-card-soft"
                 >
                   <NFlex align="center" justify="center" :size="8">
                     <NIcon :component="Info24Filled" size="14" :color="textColorSecondary" />
@@ -669,89 +656,50 @@ onMounted(async () => {
 .index-background
     position: relative;
     min-height: 100vh;
-    background: #8360c3;
-    background: -webkit-linear-gradient(135deg, #2ebf91 0%, #8360c3 100%);
-    background: linear-gradient(135deg, #2ebf91 0%, #8360c3 100%);
-    background-attachment: fixed;
+    background-color: var(--n-body-color);
     overflow-x: hidden;
     overflow-y: auto;
     padding-bottom: 60px;
+    isolation: isolate;
 
-    &::before
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
-                    radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.1) 0%, transparent 50%);
-        pointer-events: none;
+:deep(#tsparticles)
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+
+:deep(#tsparticles canvas)
+    width: 100% !important;
+    height: 100% !important;
+
+:deep(.glass-card.n-card)
+    background-color: var(--index-glass-bg) !important;
+    border: 1px solid var(--index-glass-border) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+:deep(.glass-card-soft.n-card)
+    background-color: var(--index-glass-bg-soft) !important;
+    border: 1px solid var(--index-glass-border) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 
 .main-container
+    position: relative;
+    z-index: 1;
     padding-top: 30px;
     padding-bottom: 30px;
 
 .hero-card
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 
-    &::before
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.6s;
-
-    &:hover
-        transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-
-        &::before
-            left: 100%;
-
 .hero-icon
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    &:hover
-        transform: scale(1.05);
 
 .section-title
     font-size: 1.2rem;
     font-weight: 500;
-    background-image: linear-gradient(to right, #e5e5e5, #c2ebeb);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-.feature-card
-    transition: all 0.2s ease;
-
-    &:hover
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-.entry-card
-    transition: all 0.2s ease;
-
-    &:hover
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-.streamer-avatar
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    &:hover
-        transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-
-.streamer-button
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    &:hover
-        transform: translateY(-1px);
+    color: var(--n-text-color);
 
 .footer
     position: absolute;
@@ -762,23 +710,6 @@ onMounted(async () => {
     width: 100%;
     padding: 16px 0;
 
-/* 统一的圆角设计系统 */
-:deep(.n-card)
-    border-radius: 16px;
-
-:deep(.n-button)
-    border-radius: 12px;
-    transition: all 0.2s ease;
-
-    &:hover
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-
-:deep(.n-button--small)
-    border-radius: 8px;
-
-:deep(.n-button--large)
-    border-radius: 16px;
-
 /* 响应式设计 */
 @media (max-width: 700px)
     .main-container
@@ -787,42 +718,6 @@ onMounted(async () => {
 
     .section-title
         font-size: 1.1rem;
-
-    .feature-card:hover
-        transform: translateY(-1px);
-
-    .entry-card:hover
-        transform: translateY(-1px);
-
-/* 增强的动画效果 */
-@keyframes float
-    0%, 100%
-        transform: translateY(0px);
-    50%
-        transform: translateY(-10px);
-
-@keyframes pulse
-    0%, 100%
-        opacity: 1;
-    50%
-        opacity: 0.8;
-
-@keyframes shimmer
-    0%
-        background-position: -200px 0;
-    100%
-        background-position: calc(200px + 100%) 0;
-
-.hero-icon
-    animation: float 6s ease-in-out infinite;
-
-.pulse-animation
-    animation: pulse 2s ease-in-out infinite;
-
-.shimmer-effect
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    background-size: 200px 100%;
-    animation: shimmer 2s infinite;
 
 /* 新增样式 */
 .section-header
@@ -837,8 +732,14 @@ onMounted(async () => {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--n-border-radius);
+    background: rgba(255, 255, 255, 0.34);
+    border: 1px solid var(--n-border-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+:global(.dark) .icon-wrapper
+    background: rgba(9, 9, 11, 0.24);
 
 .stats-item
     padding: 8px 16px;
@@ -863,23 +764,17 @@ onMounted(async () => {
     align-items: center;
     gap: 8px;
     padding: 10px 8px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    border: 1px solid rgba(66, 66, 61, 0.5);
+    border-radius: var(--n-border-radius);
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 85px;
     max-width: 95px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
 
-    &:hover
-        transform: translateY(-3px);
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-        border-color: rgba(255, 255, 255, 0.25);
-        background: rgba(255, 255, 255, 0.15);
-
-        .streamer-avatar-wrapper img
-            transform: scale(1.08);
+:global(.dark) .streamer-card-modern
+    background: rgba(9, 9, 11, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
 .streamer-avatar-wrapper
     position: relative;
@@ -891,15 +786,14 @@ onMounted(async () => {
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid var(--n-border-color);
         object-fit: cover;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         display: block;
 
 .streamer-name
     font-size: 0.85rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--n-text-color);
     text-align: center;
     line-height: 1.3;
     width: 100%;
@@ -926,22 +820,7 @@ onMounted(async () => {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    animation: pulse-dot 1.8s ease-in-out infinite;
-
-    &:nth-child(2)
-        animation-delay: 0.3s;
-
-    &:nth-child(3)
-        animation-delay: 0.6s;
-
-@keyframes pulse-dot
-    0%, 100%
-        opacity: 0.5;
-        transform: scale(1);
-    50%
-        opacity: 1;
-        transform: scale(1.3);
+    background: var(--n-text-color-3);
 
 /* 响应式优化 */
 @media (max-width: 768px)
@@ -953,9 +832,6 @@ onMounted(async () => {
         min-width: 80px;
         max-width: 90px;
         padding: 8px 6px;
-
-        &:hover
-            transform: translateY(-2px);
 
 @media (max-width: 480px)
     .streamers-grid-modern
@@ -974,13 +850,4 @@ onMounted(async () => {
     .streamer-name
         font-size: 0.8rem;
 
-/* 优化的阴影系统 */
-.card-shadow-light
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-
-.card-shadow-medium
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.15);
-
-.card-shadow-heavy
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.2);
 </style>

@@ -17,6 +17,7 @@ import {
   NTag,
   NText,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { ref, watchEffect } from 'vue'
 import { RouterView } from 'vue-router'
@@ -29,6 +30,7 @@ const props = defineProps<{
 }>()
 
 const message = useMessage()
+const themeVars = useThemeVars()
 const canResendEmail = ref(false)
 
 watchEffect(() => {
@@ -93,15 +95,15 @@ function logout() {
     </RouterView>
 
     <template v-else>
-      <NCard>
-        <NSpace vertical size="large" align="center">
-          <NFlex justify="center" align="center" vertical>
-            <NIcon size="48" color="#2080f0">
-              <Mail24Filled />
-            </NIcon>
-            <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
-              请验证您的邮箱
-            </NText>
+          <NCard>
+            <NSpace vertical size="large" align="center">
+              <NFlex justify="center" align="center" vertical>
+                <NIcon size="48" :color="themeVars.primaryColor">
+                  <Mail24Filled />
+                </NIcon>
+                <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
+                  请验证您的邮箱
+                </NText>
             <NText depth="3" style="text-align: center; margin-top: 8px;">
               我们已向您的邮箱 <NText type="primary" strong>
                 {{ accountInfo?.bindEmail }}

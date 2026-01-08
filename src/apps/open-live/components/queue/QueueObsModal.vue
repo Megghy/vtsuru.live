@@ -74,7 +74,7 @@ const baseUrl = computed(() => {
     </NInputGroup>
     <NDivider> 预览 (尺寸可能与实际不同) </NDivider>
     <div
-      style="height: 450px; width: 280px; position: relative; margin: 0 auto; border: 1px dashed #ccc; overflow: hidden;"
+      style="height: 450px; width: 280px; position: relative; margin: 0 auto; border: 1px dashed var(--n-border-color); overflow: hidden;"
     >
       <QueueOBS
         v-if="userId"
@@ -100,4 +100,3 @@ const baseUrl = computed(() => {
     </NCollapse>
   </NModal>
 </template>
-

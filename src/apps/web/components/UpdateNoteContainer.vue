@@ -61,7 +61,7 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
                 </NTag>
                 <NTag
                   v-else-if="note.type === 'optimize'"
-                  :color="{ textColor: '#000', color: '#f0ad4e', borderColor: '#f0ad4e' }"
+                  type="warning"
                   round
                   :bordered="false"
                 >

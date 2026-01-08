@@ -31,6 +31,7 @@ import {
   NTime,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -63,6 +64,10 @@ const { userInfo } = defineProps<{
 const route = useRoute()
 const message = useMessage()
 const accountInfo = useAccount()
+const themeVars = useThemeVars()
+
+const accentColor = computed(() => themeVars.value.errorColor)
+const mutedIconColor = computed(() => themeVars.value.textColor3)
 
 const topicId = ref(-1)
 const useForum = useForumStore()
@@ -292,7 +297,7 @@ onMounted(async () => {
                   <template #icon>
                     <NIcon
                       :component="topic.isLiked ? Heart : HeartOutline"
-                      :color="topic.isLiked ? '#dd484f' : ''"
+                      :color="topic.isLiked ? accentColor : undefined"
                     />
                   </template>
                   {{ topic.likeCount }}
@@ -332,7 +337,7 @@ onMounted(async () => {
                         <template #icon>
                           <NIcon
                             :component="Delete24Filled"
-                            :color="topic.isDeleted || topic.isAdmin ? '#dd484f' : '#7f7f7f'"
+                            :color="topic.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
                           />
                         </template>
                       </NButton>
@@ -354,7 +359,7 @@ onMounted(async () => {
                         <template #icon>
                           <NIcon
                             :component="SyncCircleSharp"
-                            color="#7f7f7f"
+                            :color="mutedIconColor"
                           />
                         </template>
                       </NButton>

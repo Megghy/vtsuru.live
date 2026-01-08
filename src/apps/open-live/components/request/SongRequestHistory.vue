@@ -127,7 +127,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
         {
           type: statusType,
           size: 'small',
-          style: row.status == SongRequestStatus.Singing ? 'animation: animated-border 2.5s infinite;' : '',
+          bordered: false,
         },
         () => songRequest.STATUS_MAP[row.status],
       )
@@ -260,11 +260,11 @@ const columns: DataTableColumns<SongRequestInfo> = [
 
 <style>
 .song-active {
-  color: white;
-  background-color: #24292e;
+  color: var(--n-text-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.08);
 }
 
 .song-active:hover {
-  background-color: #586069 !important;
+  background-color: rgba(var(--n-primary-color-rgb), 0.12) !important;
 }
 </style>

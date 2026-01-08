@@ -239,14 +239,7 @@ function openVideo() {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.video-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .cover-container {
@@ -254,7 +247,7 @@ function openVideo() {
   height: 140px;
   overflow: hidden;
   cursor: pointer;
-  background: #f0f0f0;
+  background: var(--n-color);
 }
 
 .cover-img {
@@ -299,8 +292,6 @@ function openVideo() {
 }
 
 .sender-info {
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 4px;
   padding: 8px;
   font-size: 12px;
   min-height: 60px;

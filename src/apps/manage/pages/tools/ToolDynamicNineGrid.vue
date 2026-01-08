@@ -657,7 +657,7 @@ function getFileName(index: number) {
   gap: 12px;
   padding: 48px 24px;
   border: 2px dashed var(--n-border-color);
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
 }
 
 .settings-grid {
@@ -694,7 +694,7 @@ function getFileName(index: number) {
 }
 
 .cropper-wrapper {
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
   border: 1px solid var(--n-border-color);
   max-height: 520px;
@@ -719,7 +719,7 @@ function getFileName(index: number) {
   margin: 0 auto 16px;
   width: min(100%, 420px);
   border: 1px solid var(--n-border-color);
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
 }
 
@@ -765,7 +765,7 @@ function getFileName(index: number) {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   border: 1px solid var(--n-border-color);
   margin-top: 8px;
 }
@@ -773,7 +773,7 @@ function getFileName(index: number) {
 .grid-item-container {
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
   border: 1px solid var(--n-border-color);
 }
@@ -794,7 +794,7 @@ function getFileName(index: number) {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 6px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   z-index: 2;
 }
 
@@ -849,7 +849,7 @@ function getFileName(index: number) {
 .final-image-item {
   position: relative;
   border: 1px solid var(--n-border-color);
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
 }
 

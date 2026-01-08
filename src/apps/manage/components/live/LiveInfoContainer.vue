@@ -14,15 +14,22 @@ import {
   NTag,
   NTime,
   NTooltip,
-  NText
+  NText,
+  useThemeVars,
 } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   live: ResponseLiveInfoModel
 }>()
 const router = useRouter()
+const themeVars = useThemeVars()
+
+const liveInfoStyleVars = computed(() => ({
+  '--live-cover-bg': themeVars.value.inputColor,
+  '--live-error-color': themeVars.value.errorColor,
+}))
 
 const defaultDanmakusCount = ref(0)
 function OnClickCover() {
@@ -43,7 +50,7 @@ watch(
 </script>
 
 <template>
-  <div class="live-info-container">
+  <div class="live-info-container" :style="liveInfoStyleVars">
     <!-- Cover Image -->
     <div class="cover-wrapper" @click.stop="OnClickCover">
       <img
@@ -173,35 +180,29 @@ watch(
   width: 140px;
   /* 16:9 approx height 78px */
   aspect-ratio: 16 / 9;
-  border-radius: 6px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
   cursor: pointer;
-  background-color: #f0f0f0;
+  background-color: var(--live-cover-bg);
 }
 
 .live-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.cover-wrapper:hover .live-cover {
-  transform: scale(1.05);
 }
 
 .live-badge {
   position: absolute;
   top: 4px;
   left: 4px;
-  background-color: #d03050;
+  background-color: var(--live-error-color);
   color: white;
   font-size: 10px;
   font-weight: bold;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--n-border-radius);
   z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .content-wrapper {
@@ -255,10 +256,6 @@ watch(
   margin: 0 2px;
 }
 
-.status-tag {
-  box-shadow: 0 0 3px rgba(88, 149, 128, 0.4);
-}
-
 .stats-section {
   display: flex;
   gap: 24px;
@@ -291,7 +288,7 @@ watch(
 }
 
 .stat-value.income-value {
-  color: #d03050;
+  color: var(--live-error-color);
 }
 
 /* Mobile / Tablet Responsive */

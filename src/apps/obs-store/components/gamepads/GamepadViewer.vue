@@ -431,7 +431,7 @@ const gamepadDisplayUrl = computed(() => {
             {{ showPreview ? '隐藏预览' : '显示预览' }}
           </NButton>
         </NSpace>
-        <div v-if="showPreview" style="position: relative; width: 100%; height: 300px; background-color: #333; border-radius: 8px; overflow: hidden;">
+        <div v-if="showPreview" style="position: relative; width: 100%; height: 300px; background-color: var(--n-color-embedded); border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius); overflow: hidden;">
           <GamepadDisplay
             :key="selectedType"
             :type="selectedType"

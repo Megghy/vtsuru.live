@@ -147,7 +147,7 @@ function formatSecondsToTime(seconds: number): string {
           {{ formatSecondsToTime(totalTime) }}
         </NText>]
         <NDivider vertical />
-        已观看 [<NText style="color: #4ea555">
+        已观看 [<NText type="success">
           {{ formatSecondsToTime(watchedTime) }}
         </NText>]
       </NSpace>
@@ -194,7 +194,7 @@ function formatSecondsToTime(seconds: number): string {
                   <NText
                     :title="item.video.title"
                     :delete="item.video.watched"
-                    :style="`color: ${item.video.watched ? '#a54e4e' : ''};width: ${width - 20}px;`"
+                    :style="`width: ${width - 20}px;`"
                   >
                     {{ item.video.title }}
                   </NText>

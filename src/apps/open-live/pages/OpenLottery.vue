@@ -1097,25 +1097,21 @@ onUnmounted(() => {
   perspective: 1000px;
   height: 220px;
   position: relative;
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .lottery-card-wrapper.flip-mode {
   cursor: pointer;
 }
 
-.lottery-card-wrapper.flip-mode:hover {
-  transform: scale(1.02);
-}
-
 .lottery-card-wrapper.eliminated {
   opacity: 0.4;
-  transform: scale(0.9);
   filter: grayscale(0.8);
 }
 
 .lottery-card-wrapper.winner {
-  animation: winnerGlow 1s ease-in-out infinite alternate;
+  outline: 2px solid var(--n-success-color);
+  outline-offset: 2px;
+  border-radius: var(--n-border-radius);
 }
 
 /* 主卡片 */
@@ -1141,8 +1137,8 @@ onUnmounted(() => {
 }
 
 .card-back {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--n-card-color);
+  color: var(--n-text-color);
 }
 
 .card-front {
@@ -1150,7 +1146,7 @@ onUnmounted(() => {
 }
 
 .winner-card {
-  --n-border-color: #18a058 !important;
+  --n-border-color: var(--n-success-color) !important;
 }
 
 /* 神秘卡片样式 */
@@ -1167,7 +1163,6 @@ onUnmounted(() => {
 
 .mystery-icon {
   margin-bottom: 12px;
-  animation: float 2s ease-in-out infinite;
 }
 
 .mystery-text {
@@ -1181,12 +1176,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 2px, transparent 2px),
-    radial-gradient(circle at 40% 60%, rgba(255,255,255,0.1) 2px, transparent 2px);
-  background-size: 30px 30px;
-  opacity: 0.3;
+  display: none;
 }
 
 /* 用户卡片内容 */
@@ -1212,13 +1202,12 @@ onUnmounted(() => {
   right: -5px;
   width: 24px;
   height: 24px;
-  background: linear-gradient(45deg, #ffd700, #ffed4a);
+  background: var(--n-warning-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d97706;
-  animation: bounce 1s ease-in-out infinite;
+  color: #fff;
 }
 
 .user-info {
@@ -1243,10 +1232,10 @@ onUnmounted(() => {
 }
 
 .medal-level {
-  background: rgba(0, 0, 0, 0.2);
-  color: white;
+  background: var(--n-color-embedded);
+  color: var(--n-text-color);
   padding: 1px 4px;
-  border-radius: 6px;
+  border-radius: var(--n-border-radius);
   font-weight: bold;
   margin-right: 4px;
 }
@@ -1261,13 +1250,12 @@ onUnmounted(() => {
 }
 
 .winner-text {
-  background: linear-gradient(45deg, #18a058, #36ad6a);
+  background: var(--n-success-color);
   color: white;
   padding: 4px 12px;
-  border-radius: 16px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: bold;
-  animation: celebrate 0.5s ease-in-out;
 }
 
 .remove-btn {
@@ -1298,8 +1286,7 @@ onUnmounted(() => {
   height: 300px;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid #18a058;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  border: 4px solid var(--n-primary-color);
 }
 
 .wheel-pointer {
@@ -1311,9 +1298,8 @@ onUnmounted(() => {
   height: 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-bottom: 20px solid #d03050;
+  border-bottom: 20px solid var(--n-error-color);
   z-index: 10;
-  filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
 }
 
 .wheel-slice {
@@ -1335,35 +1321,8 @@ onUnmounted(() => {
     transform: translate(-50%, -50%) rotate(calc(var(--slice-angle) / 2));
     font-size: 12px;
     font-weight: bold;
-    color: #333;
+    color: var(--n-text-color);
     white-space: nowrap;
-    text-shadow: 0 0 2px white;
-}
-
-/* 动画效果 */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-@keyframes celebrate {
-  0% { transform: scale(0) rotate(0deg); }
-  50% { transform: scale(1.2) rotate(180deg); }
-  100% { transform: scale(1) rotate(360deg); }
-}
-
-@keyframes winnerGlow {
-  0% {
-    box-shadow: 0 0 5px rgba(24, 160, 88, 0.3);
-  }
-  100% {
-    box-shadow: 0 0 20px rgba(24, 160, 88, 0.6), 0 0 30px rgba(24, 160, 88, 0.3);
-  }
 }
 
 /* 响应式优化 */

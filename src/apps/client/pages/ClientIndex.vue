@@ -6,8 +6,10 @@ import CookieInvalidAlert from '@/apps/client/components/CookieInvalidAlert.vue'
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { roomInfo } from '@/apps/client/data/info'
+import { useThemeVars } from 'naive-ui'
 
 const accountInfo = useAccount()
+const themeVars = useThemeVars()
 
 const coverRef = ref()
 const isHover = ref(false)
@@ -146,11 +148,11 @@ function logout() {
         v-if="roomCover"
         style="position: relative"
       >
-        <div style="position: relative; width: 100%; max-width: 500px;">
+        <div :style="{ position: 'relative', width: '100%', maxWidth: '500px', borderRadius: themeVars.borderRadius, overflow: 'hidden' }">
           <NImage
             ref="coverRef"
             :src="roomCover"
-            style="width: 100%; opacity: 0.5; border-radius: 8px;"
+            style="width: 100%; opacity: 0.5;"
             referrerpolicy="no-referrer"
             :img-props="{ referrerpolicy: 'no-referrer', style: { width: '100%' } }"
           />

@@ -2,7 +2,7 @@
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { VTSURU_API_URL } from '@/shared/config'
@@ -19,6 +19,10 @@ const emits = defineEmits<{
 }>()
 const useForum = useForumStore()
 const accountInfo = useAccount()
+const themeVars = useThemeVars()
+
+const accentColor = computed(() => themeVars.value.errorColor)
+const mutedIconColor = computed(() => themeVars.value.textColor3)
 
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
@@ -125,7 +129,7 @@ function delReply(id: number) {
               <template #icon>
                 <NIcon
                   :component="item.isLiked ? Heart : HeartOutline"
-                  :color="item.isLiked ? '#dd484f' : ''"
+                  :color="item.isLiked ? accentColor : undefined"
                 />
               </template>
               {{ item.likeCount }}
@@ -165,7 +169,7 @@ function delReply(id: number) {
                     <template #icon>
                       <NIcon
                         :component="Delete24Filled"
-                        :color="item.isDeleted || topic.isAdmin ? '#dd484f' : '#7f7f7f'"
+                        :color="item.isDeleted || topic.isAdmin ? accentColor : mutedIconColor"
                       />
                     </template>
                   </NButton>
@@ -187,7 +191,7 @@ function delReply(id: number) {
                     <template #icon>
                       <NIcon
                         :component="SyncCircleSharp"
-                        color="#7f7f7f"
+                        :color="mutedIconColor"
                       />
                     </template>
                   </NButton>

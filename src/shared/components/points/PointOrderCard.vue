@@ -932,7 +932,7 @@ onMounted(() => {
 .collect-iframe {
   height: 600px;
   width: 100%;
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
   border: 1px solid var(--n-border-color);
 }
@@ -945,12 +945,6 @@ onMounted(() => {
 
 .status-action-buttons .n-button {
   min-width: 120px;
-  transition: all 0.3s;
-}
-
-.status-action-buttons .n-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px var(--n-box-shadow-color);
 }
 
 .address-info-card {
