@@ -772,6 +772,15 @@ onMounted(async () => {
             保存
           </NButton>
 
+          <NDivider> 自定义页面 </NDivider>
+          <NButton
+            type="primary"
+            secondary
+            @click="$router.push({ name: 'manage-userPageBuilder' })"
+          >
+            打开区块页编辑器（/@name 及子页面）
+          </NButton>
+
           <NDivider> 展示视频 </NDivider>
           <NButton
             type="primary"

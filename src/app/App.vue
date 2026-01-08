@@ -15,6 +15,7 @@ import {
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import TempComponent from '@/app/components/TempComponent.vue'
+import { getThemeOverrides } from '@/shared/config'
 import { isDarkMode, theme } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -55,53 +56,7 @@ watchEffect(() => {
   }
 })
 
-const themeOverrides = computed(() => {
-  return {
-    common: {
-      // 主色调 (中蓝色基调，提升可读性并增强对比)
-      primaryColor: '#4D6E9C',
-      primaryColorHover: '#6483A9', // 略微提亮悬浮色
-      primaryColorPressed: '#365A7D', // 调整按下色，避免在暗色模式下过暗
-      primaryColorSuppl: '#809BC1', // 调整补充色，使其与背景有区分
-
-      // 信息色 (浅蓝色基调，提升对比度)
-      infoColorHover: '#79AFDE', // 提亮悬浮色
-      infoColorPressed: '#4B8AC3', // 调整按下色
-
-      // 成功色 (柔和青绿, 增强对比)
-      successColor: '#3AA89C',
-      successColorHover: '#5AB9AE', // 调整悬浮色
-      successColorPressed: '#2C8C82', // 调整按下色
-      successColorSuppl: '#B4E4DF', // 调整补充色
-
-      // 警告色 (柔和橙色, 微调对比)
-      warningColor: '#FFA64D',
-      warningColorHover: '#FFBA70', // 调整悬浮色
-      warningColorPressed: '#E89530', // 调整按下色
-      warningColorSuppl: '#FFE2C2', // 调整补充色
-
-      // 错误色 (柔和红色, 微调对比)
-      errorColor: '#E16565',
-      errorColorHover: '#EA8282', // 调整悬浮色
-      errorColorPressed: '#D44848', // 调整按下色
-      errorColorSuppl: '#F3C0C0', // 调整补充色
-
-      // 保持字体设置
-      fontFamily:
-        'Inter ,"Noto Sans SC",-apple-system,blinkmacsystemfont,"Segoe UI",roboto,"Helvetica Neue",arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important',
-
-      // 文本颜色 (提升可读性, 但不过度突兀)
-      textColorBase: isDarkMode.value ? '#ECECEC' : '#333333',
-      textColor1: isDarkMode.value ? '#E6E6E6' : '#333333',
-      textColor2: isDarkMode.value ? '#CCCCCC' : '#4F4F4F',
-      textColor3: isDarkMode.value ? '#AAAAAA' : '#656565',
-    },
-    Tooltip: {
-      color: isDarkMode.value ? '#48484e' : '#FFFFFF',
-      textColor: isDarkMode.value ? '#FFFFFF' : '#333333',
-    },
-  }
-}) 
+const themeOverrides = computed(() => getThemeOverrides(isDarkMode.value))
 
 onMounted(() => {
   if (isDarkMode.value) {

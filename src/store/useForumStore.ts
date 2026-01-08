@@ -9,14 +9,14 @@ import type {
   ForumTopicModel,
   ForumTopicSortTypes,
 } from '@/api/models/forum'
-import { createDiscreteApi } from 'naive-ui'
+import { createNaiveUIApi } from '@/shared/utils'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { QueryGetAPI, QueryGetPaginationAPI, QueryPostAPI } from '@/api/query'
 import { FORUM_API_URL } from '@/shared/config'
 
 export const useForumStore = defineStore('forum', () => {
-  const { message } = createDiscreteApi(['message'])
+  const { message } = createNaiveUIApi(['message'])
 
   const isLoading = ref(false)
   const isLikeLoading = ref(false)
