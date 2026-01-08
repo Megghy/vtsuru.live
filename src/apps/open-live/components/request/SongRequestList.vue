@@ -136,7 +136,7 @@ async function updateSettings() {
     </NCard>
 
     <div v-if="songRequest.activeSongs.length > 0" class="song-list-container">
-      <TransitionGroup name="list">
+      <div>
         <div
           v-for="(song, index) in songRequest.activeSongs"
           :key="song.id"
@@ -151,7 +151,7 @@ async function updateSettings() {
           />
           <NDivider style="margin: 0" />
         </div>
-      </TransitionGroup>
+      </div>
     </div>
     <NEmpty
       v-else
@@ -168,17 +168,5 @@ async function updateSettings() {
 }
 
 .song-item-wrapper {
-  transition: all 0.3s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.list-leave-active {
-  position: absolute;
-  width: 100%;
 }
 </style>

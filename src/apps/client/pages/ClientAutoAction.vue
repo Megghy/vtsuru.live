@@ -22,6 +22,7 @@ import {
   NText,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, h, reactive, ref } from 'vue'
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -38,6 +39,7 @@ import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
 const autoActionStore = useAutoAction()
 const message = useMessage()
+const themeVars = useThemeVars()
 const biliCookieStore = useBiliCookie()
 const webFetcherStore = useWebFetcher()
 const biliFunc = useBiliFunction()
@@ -501,7 +503,7 @@ function confirmTest() {
                 <template #tab>
                   <span
                     :style="{
-                      color: enabledTriggerTypes && enabledTriggerTypes[type] ? '#18a058' : '#d03050',
+                      color: enabledTriggerTypes && enabledTriggerTypes[type] ? themeVars.successColor : themeVars.errorColor,
                       fontWeight: 'medium',
                     }"
                     :title="enabledTriggerTypes && enabledTriggerTypes[type] ? '已启用' : '已禁用'"
@@ -843,100 +845,17 @@ function confirmTest() {
 .config-description {
   margin-top: 8px;
   font-size: 13px;
-  color: #999;
+  color: var(--n-text-color-3);
 }
 
 code {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: var(--n-code-color);
   padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   font-family: monospace;
 }
 
-/* 淡入淡出过渡 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* 列表动画 */
-.list-item {
-  transition: all 0.3s ease;
-}
-
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.list-move {
-  transition: transform 0.3s ease;
-}
-
-/* 淡入滑动过渡 */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-/* 按钮过渡 */
-.btn-with-transition {
-  transition: all 0.2s ease;
-}
-
-.btn-with-transition:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* 返回按钮特殊动画 */
-.back-btn {
-  position: relative;
-  overflow: hidden;
-}
-
-.back-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.back-btn:hover::after {
-  left: 100%;
-}
-
-/* 容器过渡 */
-.overview-container,
-.edit-container {
-  transition: all 0.4s ease;
-  transform-origin: center top;
-}
+.btn-with-transition {}
 
 .next-action-display {
   margin-top: 12px;

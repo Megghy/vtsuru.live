@@ -39,6 +39,7 @@ import {
   NGi,
   NCollapse,
   NCollapseItem,
+  useThemeVars,
 } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -59,6 +60,12 @@ const accountInfo = useAccount() // 获取账户信息
 const route = useRoute() // 获取路由信息
 const message = useMessage() // NaiveUI 消息提示
 const useQB = useQuestionBox() // 问题箱状态管理
+const themeVars = useThemeVars()
+const shareCardStyleVars = computed(() => ({
+  '--share-radius': themeVars.value.borderRadius,
+  '--share-gradient-from': themeVars.value.primaryColor,
+  '--share-gradient-to': themeVars.value.infoColor,
+}))
 
 // --- 组件内部状态 ---
 const selectedTabItem = ref(route.query.send ? '1' : '0') // 当前选中的标签页, 默认为'我收到的', 如果路由带send参数则为'我发送的'
@@ -112,19 +119,19 @@ const pagedQuestions = computed(() =>
 const remarkLevel = {
   0: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
     '无', // 等级0: 无审查
-    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#c2e77f' }), default: () => '完全关闭内容审查机制，用户可自由提问，系统不会进行任何内容过滤' }),
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.successColor }), default: () => '完全关闭内容审查机制，用户可自由提问，系统不会进行任何内容过滤' }),
   ]),
   1: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
     '宽松', // 等级1: 宽松审查
-    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#e1d776' }), default: () => '基础内容审查，仅过滤极端攻击性、暴力或违法内容，保留大部分用户提问 (得分 > 30)' }),
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.infoColor }), default: () => '基础内容审查，仅过滤极端攻击性、暴力或违法内容，保留大部分用户提问 (得分 > 30)' }),
   ]),
   2: () => h(NFlex, { align: 'center', justify: 'center', size: 3 }, () => [
     '一般', // 等级2: 一般审查
-    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#ef956d' }), default: () => '适度内容审查，过滤更广泛的潜在冒犯性内容 (得分 > 60)' }),
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.warningColor }), default: () => '适度内容审查，过滤更广泛的潜在冒犯性内容 (得分 > 60)' }),
   ]),
   3: () => h(NFlex, { align: 'center', justify: 'center', size: 3, wrap: false }, () => [
     '严格', // 等级3: 严格审查
-    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: '#ea6262' }), default: () => '最高级别内容审查，过滤所有可能令人不适或冒犯的内容 (得分 > 90)' }),
+    h(NTooltip, null, { trigger: () => h(NIcon, { component: Info24Filled, color: themeVars.value.errorColor }), default: () => '最高级别内容审查，过滤所有可能令人不适或冒犯的内容 (得分 > 90)' }),
   ]),
 }
 // 安全等级文本映射
@@ -350,7 +357,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
       <!-- 提问页链接卡片 -->
       <NCard
         size="small"
-        style="margin-bottom: 16px; border-radius: 8px;"
+        style="margin-bottom: 16px;"
         embedded
       >
         <NFlex
@@ -501,7 +508,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       <template #icon>
                         <NIcon
                           :component="item.isFavorite ? Heart : HeartOutline"
-                          :color="item.isFavorite ? '#dd484f' : undefined"
+                          :color="item.isFavorite ? themeVars.errorColor : undefined"
                         />
                       </template>
                       {{ item.isFavorite ? '取消收藏' : '收藏' }}
@@ -577,7 +584,6 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             />
             <NList
               v-else
-              style="background-color: transparent;"
               :show-divider="false"
             >
               <NListItem
@@ -590,7 +596,6 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                   hoverable
                   embedded
                   content-style="padding: 12px 16px;"
-                  style="border-radius: 8px;"
                 >
                   <!-- 发送目标和时间 -->
                   <template #header>
@@ -651,7 +656,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                         height="80"
                         object-fit="cover"
                         lazy
-                        style="border-radius: 4px;"
+                        style="border-radius: var(--n-border-radius);"
                       />
                     </NFlex>
                   </template>
@@ -667,7 +672,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                     <NCard
                       size="small"
                       :bordered="false"
-                      style="background-color: rgba(128, 128, 128, 0.08); border-radius: 6px;"
+                      embedded
                     >
                       <template #header>
                         <NFlex justify="space-between" align="center">
@@ -1082,6 +1087,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     <div
       ref="shareCardRef"
       class="share-card-container"
+      :style="shareCardStyleVars"
     >
       <!-- 背景 -->
       <div class="share-card-background" />
@@ -1198,7 +1204,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
       :style="{
         width: `${savedCardSize.width}px`,
         height: `${savedCardSize.height}px`,
-        border: '1px dashed #ccc',
+        border: `1px dashed ${themeVars.borderColor}`,
         overflow: 'hidden', // 确保内容不溢出预览框
         position: 'relative', // 用于定位内部组件
       }"
@@ -1238,28 +1244,21 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
   </NModal>
 </template>
 
-<style>
-/* 全局列表背景透明 (如果需要主题背景色) */
-.n-list {
-  background-color: transparent;
-}
-
+<style scoped>
 /* --- 新版分享卡片样式 --- */
 .share-card-container {
     position: relative;
     height: 200px; /* 固定高度 */
     width: 100%;   /* 宽度自适应父容器 */
-    border-radius: 12px; /* 更圆润的边角 */
+    border-radius: var(--share-radius); /* 更圆润的边角 */
     overflow: hidden; /* 隐藏溢出内容 */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 添加阴影 */
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* 使用更现代的字体 */
 }
 
 /* 背景渐变层 */
 .share-card-background {
     position: absolute;
     inset: 0; /* 覆盖整个容器 */
-    background: linear-gradient(135deg, #66bea3 0%, #9179be 100%); /* 平滑渐变 */
+    background: linear-gradient(135deg, var(--share-gradient-from) 0%, var(--share-gradient-to) 100%); /* 平滑渐变 */
     z-index: 1;
 }
 
@@ -1272,7 +1271,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     align-items: stretch; /* 让子项高度一致 */
     height: 100%;
     padding: 20px;
-    color: #ffffff; /* 默认文字颜色 */
+    color: white; /* 默认文字颜色 */
 }
 
 /* 主要内容区域 (左侧) */
@@ -1336,7 +1335,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     flex-shrink: 0; /* 防止二维码被压缩 */
     background-color: rgba(255, 255, 255, 0.9); /* 二维码背景色，轻微透明 */
     padding: 8px; /* 内边距 */
-    border-radius: 8px; /* 圆角 */
+    border-radius: var(--share-radius); /* 圆角 */
     height: 108px; /* 容器高度 */
     width: 108px; /* 容器宽度 */
     align-self: center; /* 垂直居中 */
@@ -1376,13 +1375,5 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
      .share-card-meta {
         width: 100%; /* 占满宽度方便对齐 */
      }
-}
-
-/* --- 其他样式微调 --- */
-.n-list-item {
-    margin-bottom: 10px; /* 列表项间距 */
-}
-.n-card {
-    border-radius: 6px; /* 统一卡片圆角 */
 }
 </style>

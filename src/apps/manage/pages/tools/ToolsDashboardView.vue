@@ -71,15 +71,7 @@ function navigateToTool(routeName: string) {
 .tools-dashboard {
   min-height: calc(100vh - 64px); /* Adjust based on your header/footer height */
 }
-.header {
-  background-color: var(--card-color); /* Or your preferred header background */
-}
 .n-card {
   cursor: pointer;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-.n-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--card-box-shadow-hover);
 }
 </style>

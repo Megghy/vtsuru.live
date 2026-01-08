@@ -12,14 +12,15 @@ import {
   NSpace,
   NText,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { ref, watch } from 'vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { isLoadingAccount } from '@/api/account'
 import { selectedAPIKey } from '@/shared/config'
-import { isDarkMode } from '@/shared/utils'
 
 const message = useMessage()
+const themeVars = useThemeVars()
 const showAPISwitchDialog = ref(false)
 let loadingTimer: number | null = null
 
@@ -51,21 +52,21 @@ function switchToBackupAPI() {
 
 <template>
   <NLayoutContent
-    style="
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      width: 100vw;
-      background: linear-gradient(135deg, rgba(250,250,250,0.8) 0%, rgba(240,240,245,0.9) 100%);
-      padding: 0;
-      margin: 0;
-      box-sizing: border-box;
-      position: fixed;
-      top: 0;
-      left: 0;
-      overflow: auto;
-    " :class="isDarkMode ? 'login-dark-bg' : ''"
+    :style="{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: themeVars.bodyColor,
+      padding: 0,
+      margin: 0,
+      boxSizing: 'border-box',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      overflow: 'auto',
+    }"
   >
     <template v-if="!isLoadingAccount">
       <NCard class="login-card" :bordered="false">
@@ -73,7 +74,7 @@ function switchToBackupAPI() {
           <NFlex justify="center" align="center" style="padding: 12px 0;">
             <NText
               strong
-              style="font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); background-image: linear-gradient(to right, #36d1dc, #5b86e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"
+              style="font-size: 1.8rem;"
             >
               VTSURU CENTER
             </NText>
@@ -87,7 +88,7 @@ function switchToBackupAPI() {
             </NText>
           </NFlex>
 
-          <NAlert type="info" style="border-radius: 8px;">
+          <NAlert type="info">
             <NFlex vertical align="center" size="small">
               <div style="text-align: center;">
                 如果你不是主播且不发送棉花糖(提问)的话则不需要注册登录, 直接访问认证完成后给出的链接即可
@@ -147,16 +148,10 @@ function switchToBackupAPI() {
 </template>
 
 <style scoped>
-.login-dark-bg {
-  background: linear-gradient(135deg, rgba(30, 30, 35, 0.9) 0%, rgba(20, 20, 25, 0.95) 100%) !important;
-}
-
 .login-card {
   max-width: 520px;
   width: 90%;
   min-width: 300px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   margin: 16px;
 }
 
@@ -164,8 +159,6 @@ function switchToBackupAPI() {
   min-width: 280px;
   width: 90%;
   max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   margin: 16px;
 }
 
@@ -177,4 +170,3 @@ function switchToBackupAPI() {
   }
 }
 </style>
-

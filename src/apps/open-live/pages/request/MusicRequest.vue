@@ -394,7 +394,6 @@ onUnmounted(() => {
         <NSpace align="center">
           <NButton
             :type="listening ? 'error' : 'primary'"
-            :style="{ animation: listening ? 'animated-border 2.5s infinite' : '' }"
             data-umami-event="Use Music Request"
             :data-umami-event-uid="accountInfo?.biliId"
             size="small"
@@ -755,15 +754,5 @@ onUnmounted(() => {
 .aplayer-list {
   max-height: 300px;
   overflow-y: auto;
-}
-
-@keyframes animated-border {
-  0% {
-    box-shadow: 0 0 0px #589580;
-  }
-
-  100% {
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
-  }
 }
 </style>

@@ -317,7 +317,7 @@ onMounted(async () => {
       v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
       type="info"
       size="small"
-      style="position: absolute; right: 32px; top: 20px; z-index: 1000; border: solid 3px #dfdfdf;"
+      style="position: absolute; right: 32px; top: 20px; z-index: 1000;"
       @click="showSettingModal = true"
     >
       自定义

@@ -499,14 +499,13 @@ onUnmounted(() => {
                   :size="64"
                   :src="`${item.avatar}@64w_64h`"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
-                  style="box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2)"
                 />
                 <NSpace>
                   <NTag
                     v-if="item.isVIP"
                     size="tiny"
                     round
-                    :color="{ color: '#fb7299', textColor: 'white', borderColor: 'white' }"
+                    type="warning"
                   >
                     大会员
                   </NTag>
@@ -535,9 +534,9 @@ onUnmounted(() => {
                     >
                       {{ item.card.level }}
                     </NTag>
-                    <span style="color: #577fb8">
+                    <NText type="info" style="margin-left: 6px">
                       {{ item.card.name }}
-                    </span>
+                    </NText>
                   </NTag>
                 </NSpace>
                 {{ item.name }}

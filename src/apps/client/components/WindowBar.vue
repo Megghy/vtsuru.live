@@ -134,7 +134,7 @@ const closeWindow = () => appWindow.hide()
 .titlebar {
   flex: 1;
   height: 30px;
-  border-bottom: 1px solid var(--border-color); /* 使用 Naive UI 边框颜色变量或默认值 */
+  border-bottom: 1px solid var(--n-border-color);
   user-select: none; /* 防止拖动时选中文本 */
   padding: 0 4px; /* 给按钮一些边距 */
   box-sizing: border-box;

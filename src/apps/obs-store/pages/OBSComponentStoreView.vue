@@ -388,12 +388,12 @@ onMounted(() => {
 
   .component-card {
     cursor: pointer;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid var(--n-border-color);
+    border-radius: var(--n-border-radius);
   }
 
   .component-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--n-box-shadow-active);
+    border-color: var(--n-primary-color);
   }
 
   .component-card p {

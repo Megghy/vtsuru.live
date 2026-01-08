@@ -282,18 +282,10 @@ onBeforeUnmount(() => {
 }
 
 .live-list {
-  background: transparent;
 }
 
 .live-list-item {
   padding: 16px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
   margin-bottom: 8px;
-  background-color: rgba(255, 255, 255, 0.02);
-}
-
-.live-list-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
 }
 </style>

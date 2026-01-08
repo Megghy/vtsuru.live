@@ -3,7 +3,7 @@ import type { SelectOption, UploadFileInfo } from 'naive-ui'
 import type { UploadFileResponse } from '@/api/api-models'
 import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent'
-import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NSpace, NText, NTooltip, NUpload, useMessage } from 'naive-ui'
+import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NSpace, NText, NTooltip, NUpload, useMessage, useThemeVars } from 'naive-ui'
 import { computed, h, onMounted, ref } from 'vue'
 import { UploadConfig } from '@/api/account'
 import { UserFileLocation } from '@/api/api-models'
@@ -17,6 +17,7 @@ const props = defineProps<{
 }>()
 
 const message = useMessage()
+const themeVars = useThemeVars()
 
 const fileList = ref<{ [key: string]: UploadFileInfo[] }>({})
 // 新增实际文件列表，用于存储待上传的文件
@@ -380,19 +381,19 @@ function renderDecorativeImages(key: string) {
     // 图片列表
     h(NScrollbar, { style: { maxHeight: '300px', marginTop: '10px' } }, () => {
       const images = props.configData[key] as DecorativeImageProperties[] || []
-      return images.length > 0
+          return images.length > 0
         ? images.map((img: DecorativeImageProperties) => {
             const isSelected = selectedImageId.value === img.id
             return h(NCard, {
               key: img.id,
               size: 'small',
               hoverable: true,
-              style: { marginBottom: '10px', cursor: 'pointer', border: isSelected ? '2px solid var(--primary-color)' : '1px solid #eee' },
+              style: { marginBottom: '10px', cursor: 'pointer', border: isSelected ? `2px solid ${themeVars.value.primaryColor}` : `1px solid ${themeVars.value.borderColor}` },
               onClick: () => selectedImageId.value = img.id,
             }, {
               default: () => h(NFlex, { justify: 'space-between', align: 'center' }, () => [
                 h(NFlex, { align: 'center', size: 'small' }, () => [
-                  h('img', { src: img.path, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: '#f0f0f0' } }),
+                  h('img', { src: img.path, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: themeVars.value.inputColor } }),
                   h('span', `ID: ${img.id}`),
                 ]),
                 h(NSpace, null, () => [

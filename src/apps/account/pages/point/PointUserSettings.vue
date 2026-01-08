@@ -684,25 +684,25 @@ defineExpose({
 
 <style scoped>
 .address-item {
-  transition: all 0.3s ease;
+  transition: background-color 0.15s ease;
 }
 
 .address-item:hover {
-  background-color: var(--hover-color);
+  background-color: var(--n-hover-color);
 }
 
 .account-item {
-  transition: all 0.3s ease;
+  transition: background-color 0.15s ease;
   cursor: pointer;
 }
 
 .account-item:hover {
-  background-color: var(--hover-color);
+  background-color: var(--n-hover-color);
 }
 
 .current-account {
-  background-color: rgba(24, 160, 88, 0.1);
-  border-left: 3px solid var(--success-color);
+  background-color: var(--n-primary-color-suppl);
+  border-left: 3px solid var(--n-primary-color);
 }
 
 /* 移动端优化 */

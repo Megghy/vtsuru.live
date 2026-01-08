@@ -3,7 +3,7 @@ import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 import type { APIRoot } from '@/api/api-models'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef } from 'vue'
 import { GetHeaders } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
@@ -28,6 +28,7 @@ const props = defineProps({
   },
 })
 const message = useMessage()
+const themeVars = useThemeVars()
 
 const editorRef = shallowRef()
 const toolbarConfig: Partial<IToolbarConfig> = {
@@ -101,10 +102,10 @@ defineExpose({
 <template>
   <div
     :class="{ 'dark-theme': isDarkMode }"
-    style="border: 1px solid #ccc"
+    :style="{ border: `1px solid ${themeVars.borderColor}`, borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
   >
     <Toolbar
-      style="border-bottom: 1px solid #ccc"
+      :style="{ borderBottom: `1px solid ${themeVars.borderColor}` }"
       :editor="editorRef"
       :default-config="toolbarConfig"
       :mode="mode"

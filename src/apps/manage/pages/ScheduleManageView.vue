@@ -865,34 +865,4 @@ onMounted(() => {
   />
 </template>
 
-<style scoped>
-/* 自定义滚动条样式 - Webkit浏览器 */
-div::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-div::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 4px;
-}
-
-div::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-div::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* 深色模式下的滚动条 */
-html.dark div::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-html.dark div::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-</style>
+<style scoped></style>

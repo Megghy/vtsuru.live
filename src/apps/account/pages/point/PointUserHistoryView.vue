@@ -300,24 +300,24 @@ function exportHistoryData() {
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-color-1);
+  color: var(--n-text-color-1);
   margin-bottom: 4px;
 }
 
 .stat-value.primary {
-  color: var(--primary-color);
+  color: var(--n-primary-color);
 }
 
 .stat-value.success {
-  color: var(--success-color);
+  color: var(--n-success-color);
 }
 
 .stat-value.error {
-  color: var(--error-color);
+  color: var(--n-error-color);
 }
 
 .stat-label {
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
 }
 </style>

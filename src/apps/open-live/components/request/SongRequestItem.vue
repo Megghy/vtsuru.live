@@ -53,19 +53,7 @@ function onBlockUser() {
 }
 
 function getIndexStyle(status: SongRequestStatus): CSSProperties {
-  let backgroundColor
-  switch (status) {
-    case SongRequestStatus.Singing:
-      backgroundColor = '#18a058'
-      break
-    case SongRequestStatus.Waiting:
-      backgroundColor = '#2080f0'
-      break
-    default:
-      backgroundColor = '#86909c'
-  }
-
-  return {
+  const style: CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -74,11 +62,28 @@ function getIndexStyle(status: SongRequestStatus): CSSProperties {
     minWidth: '24px', // 防止压缩
     height: '24px',
     borderRadius: '50%',
-    color: 'white',
+    color: '#fff',
     fontSize: '13px',
-    backgroundColor,
     marginRight: '8px',
     flexShrink: 0, // 防止压缩
+  }
+
+  switch (status) {
+    case SongRequestStatus.Singing:
+      return { ...style, backgroundColor: 'var(--n-success-color)' }
+    case SongRequestStatus.Waiting:
+      return { ...style, backgroundColor: 'var(--n-info-color)' }
+    case SongRequestStatus.Finish:
+      return {
+        ...style,
+        backgroundColor: 'var(--n-color-embedded)',
+        color: 'var(--n-text-color)',
+        border: '1px solid var(--n-border-color)',
+      }
+    case SongRequestStatus.Cancel:
+      return { ...style, backgroundColor: 'var(--n-error-color)' }
+    default:
+      return { ...style, backgroundColor: 'var(--n-info-color)' }
   }
 }
 
@@ -97,7 +102,7 @@ const hasOtherSingSong = computed(() => {
     size="small"
     content-style="padding: 8px 12px;"
     :bordered="isSingingStatus"
-    :style="isSingingStatus ? 'border-left: 4px solid #18a058;' : 'border-left: 4px solid transparent;'"
+    :style="isSingingStatus ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
   >
     <NSpace justify="space-between" align="center" :wrap="false">
       <!-- 左侧信息 -->
@@ -140,7 +145,7 @@ const hasOtherSingSong = computed(() => {
           <NTag size="tiny" round :bordered="false" type="info" style="margin-right: 4px;">
             {{ song.user?.fans_medal_level }}
           </NTag>
-          <span style="color: #577fb8">{{ song.user?.fans_medal_name }}</span>
+          <span style="color: var(--n-info-color)">{{ song.user?.fans_medal_name }}</span>
         </NTag>
 
         <!-- 舰长 -->

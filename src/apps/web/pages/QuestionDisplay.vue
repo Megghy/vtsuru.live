@@ -32,6 +32,7 @@ import {
   NSelect,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
@@ -44,6 +45,7 @@ import { useWebRTC } from '@/store/useRTC'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 
 const message = useMessage()
+const themeVars = useThemeVars()
 const accountInfo = useAccount()
 const defaultSettings = {} as Setting_QuestionDisplay
 const useQB = useQuestionBox()
@@ -276,7 +278,7 @@ onMounted(() => {
                 <template #icon>
                   <NIcon
                     :component="item.isFavorite ? Heart : HeartOutline"
-                    :color="item.isFavorite ? '#dd484f' : ''"
+                    :color="item.isFavorite ? themeVars.errorColor : undefined"
                   />
                 </template>
                 收藏
@@ -379,6 +381,7 @@ onMounted(() => {
     title="设置"
     :width="400"
     placement="left"
+    show-mask="transparent"
   >
     <NDrawerContent
       title="设置"
@@ -669,9 +672,5 @@ onMounted(() => {
   overflow: auto;
   overflow-y: hidden;
   padding: 10px;
-}
-
-.n-drawer-mask {
-  background-color: rgba(0, 0, 0, 0);
 }
 </style>

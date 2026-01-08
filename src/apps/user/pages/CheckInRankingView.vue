@@ -12,6 +12,7 @@ import {
   NSelect,
   NSpace,
   NSpin,
+  NTag,
   NTooltip,
 } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
@@ -248,12 +249,15 @@ onMounted(() => {
                     <div class="user-name">
                       {{ item.name }}
                     </div>
-                    <div
+                    <NTag
                       v-if="item.isAuthed"
-                      class="user-authed"
+                      size="small"
+                      type="success"
+                      :bordered="false"
+                      style="margin-left: 8px;"
                     >
                       已认证
-                    </div>
+                    </NTag>
                   </div>
 
                   <!-- 连续签到列 -->
@@ -350,30 +354,27 @@ onMounted(() => {
 
 /* 自定义表格样式 */
 .custom-ranking-table {
-  border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--box-shadow-1);
   margin-bottom: 16px;
   overflow-x: auto;
 }
 
 .ranking-header {
-  background-color: var(--table-header-color);
-  font-weight: var(--font-weight-strong);
-  color: var(--text-color-2);
-  border-radius: 8px;
+  background-color: var(--n-color-embedded);
+  font-weight: 600;
+  color: var(--n-text-color-2);
 }
 
 .ranking-row {
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--divider-color);
-  transition: background-color 0.3s var(--cubic-bezier-ease-in-out);
+  border-bottom: 1px solid var(--n-divider-color);
+  transition: background-color 0.2s ease;
 }
 
 .ranking-body .ranking-row:hover {
-  background-color: var(--hover-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.04);
 }
 
 .ranking-body .ranking-row:last-child {
@@ -381,7 +382,7 @@ onMounted(() => {
 }
 
 .top-three {
-  background-color: var(--table-color-striped);
+  background-color: rgba(var(--n-primary-color-rgb), 0.02);
 }
 
 .col-rank {
@@ -418,9 +419,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-strong);
-  color: var(--text-color-2);
-  background-color: var(--action-color);
+  font-weight: 600;
+  color: var(--n-text-color-2);
+  background-color: var(--n-color-embedded);
 }
 
 .rank-1 {
@@ -439,42 +440,33 @@ onMounted(() => {
 }
 
 .user-name {
-  font-weight: var(--font-weight-strong);
+  font-weight: 600;
   margin-right: 8px;
-}
-
-.user-authed {
-  background-color: var(--success-color);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: var(--font-size-tiny);
 }
 
 .days-count,
 .count-value {
-  font-weight: var(--font-weight-strong);
-  font-size: var(--font-size-large);
-  color: var(--info-color);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--n-info-color);
   margin-right: 4px;
 }
 
 .days-text,
 .count-text {
-  color: var(--text-color-3);
-  font-size: var(--font-size-tiny);
+  color: var(--n-text-color-3);
+  font-size: 12px;
 }
 
 .ranking-footer {
   padding: 16px;
   display: flex;
   justify-content: center;
-  background-color: var(--table-header-color);
 }
 
 /* 增强响应式样式 */
 .ranking-card :deep(.n-card-header__main) {
-  font-size: var(--font-size-large);
+  font-size: 16px;
   white-space: nowrap;
 }
 

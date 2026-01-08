@@ -583,7 +583,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--primary-color); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--n-primary-color); font-weight: 500;">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -663,7 +663,7 @@ onMounted(() => { })
                 :gap="8"
                 style="width: 100%"
               >
-                <NText style="font-size: 14px; color: var(--primary-color); font-weight: 500;">
+                <NText style="font-size: 14px; color: var(--n-primary-color); font-weight: 500;">
                   <NIcon
                     :component="ShoppingBag24Filled"
                     style="vertical-align: -0.15em; margin-right: 4px"
@@ -1411,8 +1411,6 @@ onMounted(() => { })
         <!-- 添加一个底部间距，让滚动更自然 -->
         <div style="height: 16px;" />
       </NScrollbar>
-      <div class="scroll-shadow-top" />
-      <div class="scroll-shadow-bottom" />
     </div>
     <template #footer>
       <NFlex justify="center">
@@ -1436,18 +1434,10 @@ onMounted(() => { })
     height: 100%;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
-  }
-
-  .point-goods-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   }
 
   .point-goods-card :deep(.n-card-header) {
     padding: 16px;
-    border-bottom: 1px solid var(--border-color);
   }
 
   .point-goods-card :deep(.n-card-content) {
@@ -1457,8 +1447,6 @@ onMounted(() => { })
 
   .point-goods-card :deep(.n-card-footer) {
     padding: 12px 16px;
-    background-color: var(--card-color);
-    border-top: 1px solid var(--border-color);
   }
 
   .goods-modal :deep(.n-card-header) {
@@ -1471,22 +1459,22 @@ onMounted(() => { })
 
   .goods-modal :deep(.n-card-footer) {
     padding: 12px 20px 16px;
-    border-top: 1px solid var(--border-color);
-    background-color: var(--action-color);
+    border-top: 1px solid var(--n-border-color);
+    background-color: var(--n-color-embedded);
   }
 
   .scrollable-container {
     position: relative;
-    background-color: var(--body-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background-color: var(--n-body-color);
+    border: 1px solid var(--n-border-color);
+    border-radius: var(--n-border-radius);
     margin: 0 4px;
   }
 
   .goods-scrollbar {
     padding: 12px 16px;
-    border-radius: 6px;
-    background-color: var(--card-color);
+    border-radius: var(--n-border-radius);
+    background-color: var(--n-card-color);
   }
 
   .goods-scrollbar :deep(.n-scrollbar-rail) {
@@ -1497,32 +1485,6 @@ onMounted(() => { })
     padding-bottom: 8px;
   }
 
-  .scroll-shadow-top {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 12px;
-    pointer-events: none;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.06), transparent);
-    z-index: 1;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-  }
-
-  .scroll-shadow-bottom {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 12px;
-    pointer-events: none;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.06), transparent);
-    z-index: 1;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-  }
-
   .goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card) {
     width: 104px;
     height: 104px;
@@ -1531,17 +1493,4 @@ onMounted(() => { })
     justify-content: center;
   }
 
-  /* 按钮样式增强 */
-  .point-goods-card :deep(.n-button) {
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-
-  .point-goods-card :deep(.n-button:hover) {
-    transform: translateY(-1px);
-  }
-
-  .point-goods-card :deep(.n-button:active) {
-    transform: translateY(0);
-  }
 </style>

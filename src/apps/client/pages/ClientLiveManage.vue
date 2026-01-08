@@ -1001,10 +1001,10 @@ watch(liveAreas, () => {
                   style="
                     width: 160px;
                     height: 90px;
-                    border-radius: 6px;
+                    border-radius: var(--n-border-radius);
                     overflow: hidden;
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
+                    background: var(--n-color-embedded);
+                    border: 1px solid var(--n-border-color);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -1078,7 +1078,7 @@ watch(liveAreas, () => {
                     style="
                       width: 160px;
                       height: 90px;
-                      border-radius: 6px;
+                      border-radius: var(--n-border-radius);
                       overflow: hidden;
                       border: 2px solid var(--n-border-color);
                     "
@@ -1546,7 +1546,7 @@ watch(liveAreas, () => {
         
         <div
           v-if="faceAuthQrCode"
-          style="padding: 1rem; background: white; border-radius: 8px;"
+          style="padding: 1rem; background: var(--n-card-color); border-radius: var(--n-border-radius);"
         >
           <img
             :src="faceAuthQrCode"

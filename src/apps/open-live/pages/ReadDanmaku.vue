@@ -572,9 +572,8 @@ onUnmounted(() => {
                 <NIcon
                   v-else
                   :component="Mic24Filled"
-                  :color="speechState.isSpeaking ? '#18a058' : '#d0d0d0'"
+                  :color="speechState.isSpeaking ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
                   :size="20"
-                  :style="`animation: ${speechState.isSpeaking ? 'pulse 2s infinite' : 'none'}`"
                 />
               </template>
               <NText :type="speechState.isSpeaking ? 'success' : 'default'">
@@ -652,7 +651,6 @@ onUnmounted(() => {
                       :bordered="false"
                       type="warning"
                       size="small"
-                      style="animation: pulse 2s infinite"
                     >
                       等待 {{ queueStats.waiting }}
                     </NTag>
@@ -729,7 +727,6 @@ onUnmounted(() => {
                       type="info"
                       size="small"
                       :bordered="false"
-                      style="animation: pulse 2s infinite"
                     >
                       连续赠送中
                     </NTag>
@@ -1434,47 +1431,28 @@ onUnmounted(() => {
 .read-danmaku-container {
   width: 100%;
   padding: 16px;
-  background: var(--n-color);
-  border-radius: 8px;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(0.95);
-  }
+  background: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from {
   opacity: 0;
-  transform: translateY(-10px);
 }
 
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(10px);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .read-danmaku-container {
     padding: 12px;
-  }
-}
-
-/* 暗色模式优化 */
-@media (prefers-color-scheme: dark) {
-  .read-danmaku-container {
-    background: var(--n-color);
   }
 }
 </style>

@@ -486,12 +486,12 @@ onMounted(() => {
 
   /* 连接成功图标颜色 */
   .fetcher-status-icon.connected {
-    color: rgb(132, 204, 22);
+    color: var(--n-success-color);
   }
 
   /* 连接失败/断开图标颜色 */
   .fetcher-status-icon.disconnected {
-    color: rgb(190, 18, 60);
+    color: var(--n-error-color);
   }
 
   /* 侧边栏菜单样式 */
@@ -506,7 +506,7 @@ onMounted(() => {
     margin-top: 12px;
     padding: 12px;
     border: 1px solid var(--n-border-color);
-    border-radius: 8px;
+    border-radius: var(--n-border-radius);
     background-color: var(--n-card-color);
     display: flex;
     flex-direction: column;
@@ -531,19 +531,7 @@ onMounted(() => {
     align-items: center;
     height: calc(100vh - 30px - 2rem);
     /* 大致计算高度 */
-    color: #999;
-  }
-
-  /* 路由切换动画 */
-  .fade-slide-enter-active,
-  .fade-slide-leave-active {
-    transition: all 0.3s ease;
-  }
-
-  .fade-slide-enter-from,
-  .fade-slide-leave-to {
-    opacity: 0;
-    transform: translateX(20px);
+    color: var(--n-text-color-3);
   }
 
   .init-overlay {
@@ -565,14 +553,6 @@ onMounted(() => {
     gap: 12px;
   }
   .init-stage {
-    color: #999;
-  }
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.2s ease;
-  }
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
+    color: var(--n-text-color-3);
   }
 </style>

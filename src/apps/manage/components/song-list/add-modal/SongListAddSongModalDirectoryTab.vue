@@ -13,6 +13,7 @@ import {
   NIcon,
   NSelect,
   NSpace,
+  NText,
   NTransfer,
   useMessage,
 } from 'naive-ui'
@@ -249,9 +250,9 @@ async function selectFolder() {
         <li>[歌手] 歌名.mp3</li>
         <li>歌手 《歌名》.mp3</li>
       </ul>
-      <div style="color: #ff6b6b">
+      <NText type="error">
         <strong>注意：</strong>导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
-      </div>
+      </NText>
     </NSpace>
   </NAlert>
 

@@ -919,16 +919,14 @@ watch(
 
 .gift-item {
   padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--card-color);
-  transition: all 0.3s ease;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  background-color: var(--n-card-color);
 }
 
 .gift-item:hover {
-  background-color: var(--hover-color);
-  border-color: var(--primary-color-hover);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: var(--n-color-embedded);
+  border-color: var(--n-primary-color);
 }
 
 .gift-name-tag {
@@ -942,7 +940,7 @@ watch(
 }
 
 .error-text {
-  color: var(--error-color, #d03050);
+  color: var(--n-error-color);
   font-size: 12px;
   margin-top: -6px;
   margin-bottom: 8px;

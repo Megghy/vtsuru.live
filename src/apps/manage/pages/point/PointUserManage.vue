@@ -744,25 +744,25 @@ onMounted(async () => {
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-color-1);
+  color: var(--n-text-color);
   margin-bottom: 4px;
 }
 
 .stat-value.primary {
-  color: var(--primary-color);
+  color: var(--n-primary-color);
 }
 
 .stat-value.success {
-  color: var(--success-color);
+  color: var(--n-success-color);
 }
 
 .stat-value.info {
-  color: var(--info-color);
+  color: var(--n-info-color);
 }
 
 .stat-label {
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
 }
 
 @media (max-width: 768px) {

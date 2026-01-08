@@ -467,9 +467,12 @@ onMounted(async () => {
     </NAlert>
 
     <!-- 优化后的用户信息与筛选区域 -->
-    <div
+    <NCard
       v-else
       class="header-section"
+      embedded
+      :bordered="true"
+      size="small"
     >
       <!-- 用户信息区域 -->
       <div class="user-info-section">
@@ -478,7 +481,7 @@ onMounted(async () => {
           align="center"
         >
           <NFlex align="center">
-            <NText class="username">
+            <NText class="username" strong>
               你好, {{ biliAuth.name }}
             </NText>
             <NTag
@@ -486,15 +489,15 @@ onMounted(async () => {
               size="small"
               type="warning"
               :bordered="false"
-              style="margin-right: 12px;"
             >
               ⚓ {{ currentRoomGuardLabel }}
             </NTag>
+            <NDivider vertical />
             <NText
               v-if="currentPoint >= 0"
               class="point-info"
             >
-              你在本直播间的积分: <strong>{{ formattedCurrentPoint }}</strong>
+              你在本直播间的积分: <strong class="point-value">{{ formattedCurrentPoint }}</strong>
             </NText>
             <NText
               v-else
@@ -505,14 +508,14 @@ onMounted(async () => {
           </NFlex>
           <NFlex :size="8">
             <NButton
-              quaternary
+              secondary
               size="small"
               @click="gotoAuthPage"
             >
               账号中心
             </NButton>
             <NButton
-              quaternary
+              secondary
               size="small"
               @click="NavigateToNewTab('/bili-user#settings')"
             >
@@ -521,6 +524,8 @@ onMounted(async () => {
           </NFlex>
         </NFlex>
       </div>
+
+      <NDivider style="margin: 4px 0;" />
 
       <!-- 礼物筛选区域 -->
       <div
@@ -541,21 +546,13 @@ onMounted(async () => {
               v-for="tag in tags"
               :key="tag"
               :type="tag === selectedTag ? 'primary' : 'default'"
-              :ghost="tag !== selectedTag"
+              :secondary="tag !== selectedTag"
               class="tag-button"
               size="tiny"
+              round
               @click="selectedTag = selectedTag === tag ? undefined : tag"
             >
               {{ tag }}
-            </NButton>
-            <NButton
-              v-if="selectedTag"
-              text
-              type="error"
-              size="tiny"
-              @click="selectedTag = undefined"
-            >
-              ✕
             </NButton>
           </div>
         </NFlex>
@@ -604,7 +601,7 @@ onMounted(async () => {
             <NSelect
               v-model:value="sortOrder"
               :options="[
-                { label: '默认排序', value: 'null' },
+                { label: '默认排序', value: null },
                 { label: '价格 ↑', value: 'price_asc' },
                 { label: '价格 ↓', value: 'price_desc' },
                 { label: '名称 ↑', value: 'name_asc' },
@@ -619,9 +616,9 @@ onMounted(async () => {
           </NFlex>
         </NFlex>
       </div>
-    </div>
+    </NCard>
 
-    <NDivider v-if="goods.length > 0" />
+    <div v-if="goods.length > 0" style="margin-top: 16px;"></div>
     <!-- 礼物列表区域 -->
     <NSpin
       :show="isLoading"
@@ -888,35 +885,36 @@ onMounted(async () => {
 
 .header-section {
   margin-bottom: 16px;
-  background-color: var(--card-color);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  overflow: hidden;
+  border: 1px solid var(--n-border-color);
+  box-shadow: var(--n-box-shadow-1);
 }
 
 .user-info-section {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 6px 10px;
 }
 
 .username {
-  font-weight: var(--font-weight-strong);
-  margin-right: 16px;
+  font-size: 1.1em;
 }
 
 .point-info {
-  color: var(--text-color-2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.point-value {
+  color: var(--n-primary-color);
+  font-size: 1.1em;
 }
 
 .point-info.loading {
   font-style: italic;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
 }
 
 .filter-section {
-  padding: 10px;
-  background-color: var(--action-color);
+  padding: 12px;
 }
 
 .tags-container {
@@ -925,8 +923,6 @@ onMounted(async () => {
 }
 
 .filter-label {
-  font-size: var(--font-size-small);
-  color: var(--text-color-2);
   margin-right: 8px;
   white-space: nowrap;
 }
@@ -941,7 +937,6 @@ onMounted(async () => {
 .tag-button {
   margin: 0;
   padding: 0 8px;
-  border-radius: var(--border-radius-small);
 }
 
 .search-filter-row {
@@ -978,83 +973,12 @@ onMounted(async () => {
 
 .goods-item {
   break-inside: avoid;
-  background-color: var(--card-color);
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-  position: relative;
-  overflow: hidden;
   margin: 0 auto;
 }
 
-.goods-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  transition: left 0.6s ease;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.goods-item:hover::before {
-  left: 100%;
-}
-
-.goods-item:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
-  z-index: 2;
-  border-color: var(--primary-color-hover);
-}
-
-.goods-item:active {
-  transform: translateY(-6px) scale(1.01);
-  transition: all 0.1s ease;
-}
-
 .pinned-item {
-  border: 2px solid var(--primary-color);
-  box-shadow: 0 4px 20px rgba(24, 160, 88, 0.25), 0 0 0 1px rgba(24, 160, 88, 0.1);
-  position: relative;
-  background: linear-gradient(135deg, var(--card-color) 0%, rgba(24, 160, 88, 0.04) 100%);
-  animation: subtle-glow 3s ease-in-out infinite;
-}
-
-.pinned-item:hover {
-  box-shadow: 0 12px 32px rgba(24, 160, 88, 0.35), 0 4px 16px rgba(24, 160, 88, 0.2);
-  border-color: var(--primary-color-hover);
-}
-
-@keyframes subtle-glow {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(24, 160, 88, 0.25), 0 0 0 1px rgba(24, 160, 88, 0.1);
-  }
-  50% {
-    box-shadow: 0 6px 24px rgba(24, 160, 88, 0.35), 0 0 0 2px rgba(24, 160, 88, 0.15);
-  }
-}
-
-.pinned-item::before {
-  content: none;
-}
-
-.purchased-item {
-  opacity: 0.92;
-}
-
-.cannot-purchase-item {
-  opacity: 0.7;
-  filter: grayscale(0.3);
-}
-
-.cannot-purchase-item:hover {
-  opacity: 0.85;
-  filter: grayscale(0.15);
+  outline: 1px solid var(--n-primary-color);
+  outline-offset: -1px;
 }
 
 .pin-icon {
@@ -1079,109 +1003,11 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.price-text {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: var(--primary-color);
-}
-
-.free-tag {
-  animation: pulse 2s infinite;
-}
-
-.description-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  position: relative;
-  padding: 8px 0;
-  max-height: 120px;
-  margin-bottom: 8px;
-}
-
-.goods-description {
-  line-height: 1.5;
-  font-size: 0.95em;
-  white-space: pre-line;
-}
-
-.tags-section {
-  margin-top: auto;
-  margin-bottom: 8px;
-}
-
-.goods-tag {
-  transition: all 0.2s ease;
-}
-
-.goods-tag:hover {
-  transform: translateY(-2px);
-}
-
-.stock-info {
-  margin-top: 4px;
-}
-
 .goods-footer {
   padding: 10px 12px;
-  border-top: 1px solid var(--border-color);
-  background: linear-gradient(to bottom, rgba(var(--card-color-rgb), 0.5), var(--card-color));
-  backdrop-filter: blur(2px);
 }
 
 .exchange-btn {
   min-width: 90px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(24, 160, 88, 0.2);
-}
-
-.exchange-btn:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(24, 160, 88, 0.35);
-}
-
-.exchange-btn:not(:disabled):active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(24, 160, 88, 0.2);
-}
-
-.exchange-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  transition: all 0.6s ease;
-}
-
-.exchange-btn:not(:disabled):hover::after {
-  left: 100%;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .price-text {
-    font-size: 1.1em;
-  }
 }
 </style>

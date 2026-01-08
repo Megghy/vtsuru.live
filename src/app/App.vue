@@ -72,7 +72,6 @@ onMounted(() => {
     style="height: 100vh"
     :locale="zhCN"
     :date-locale="dateZhCN"
-    inline-theme-disabled
   >
     <NMessageProvider>
       <NNotificationProvider>
@@ -117,6 +116,27 @@ onMounted(() => {
   font-feature-settings: 'liga' 1, 'calt' 1;
   --vtsuru-header-height: 50px;
   --vtsuru-content-padding: 12px;
+}
+
+/* Workaround: tooltip is popover-based, force readable contrast */
+:root:not(.dark) .n-popover.n-tooltip:not(.n-popover--raw) {
+  background-color: rgba(9, 9, 11, 0.92) !important;
+  color: #fafafa !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:root.dark .n-popover.n-tooltip:not(.n-popover--raw) {
+  background-color: rgba(24, 24, 27, 0.92) !important;
+  color: #fafafa !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+:root:not(.dark) .n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
+  background-color: rgba(9, 9, 11, 0.92) !important;
+}
+
+:root.dark .n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
+  background-color: rgba(24, 24, 27, 0.92) !important;
 }
 
 @supports (font-variation-settings: normal) {

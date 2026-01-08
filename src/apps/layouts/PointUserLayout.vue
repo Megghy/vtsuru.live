@@ -451,24 +451,12 @@ onMounted(async () => {
 
 <style scoped>
 .info-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.info-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
 }
 
 :deep(.n-tabs-nav) {
   padding: 0 12px;
-}
-
-:deep(.n-tabs-tab) {
-  transition: all 0.3s ease;
-}
-
-:deep(.n-tabs-tab:hover) {
-  color: var(--primary-color);
 }
 
 :deep(.n-tab-pane) {

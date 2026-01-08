@@ -51,6 +51,7 @@ import {
   NTime,
   NUl,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, h, ref, watch } from 'vue'
 
@@ -76,6 +77,7 @@ interface GuardStatsModel {
 
 const accountInfo = useAccount()
 const message = useMessage()
+const themeVars = useThemeVars()
 
 // #region Event History Logic
 // 日期选择快捷方式
@@ -477,7 +479,7 @@ const guardColumns: DataTableColumns<GuardMemberModel> = [
       }
       return h(
         'span',
-        { style: { color: colorMap[row.guardLevel] || '#333', fontWeight: 'bold' } },
+        { style: { color: colorMap[row.guardLevel] || themeVars.value.textColor1, fontWeight: 'bold' } },
         row.guardLevel,
       )
     },
@@ -785,10 +787,10 @@ async function onTabChange(value: string) {
                               <NTag
                                 size="tiny"
                                 round
+                                :bordered="false"
                                 :color="{
                                   color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                                   textColor: 'white',
-                                  borderColor: isDarkMode ? 'white' : '#00000000',
                                 }"
                               >
                                 {{ item.price }}
@@ -902,10 +904,10 @@ async function onTabChange(value: string) {
                       <td>
                         <NTag
                           size="small"
+                          :bordered="false"
                           :color="{
                             color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                             textColor: 'white',
-                            borderColor: isDarkMode ? 'white' : '#00000000',
                           }"
                         >
                           {{ item.price }}
@@ -1135,7 +1137,4 @@ async function onTabChange(value: string) {
 }
 
 /* 网格卡片样式微调 */
-.n-card {
-  transition: box-shadow 0.3s ease; /* 平滑阴影过渡 */
-}
 </style>

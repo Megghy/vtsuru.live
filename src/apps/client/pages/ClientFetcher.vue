@@ -78,6 +78,7 @@ import {
   NText,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import { computed, h, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
@@ -113,6 +114,7 @@ const webfetcher = useWebFetcher()
 const biliCookie = useBiliCookie()
 const settings = useSettings()
 const message = useMessage()
+const themeVars = useThemeVars()
 const accountInfo = useAccount()
 // currentStatistic and streamingInfo are directly imported refs
 
@@ -407,8 +409,8 @@ function updateGaugeChart() {
       progress: { show: true, width: 12 },
       axisLine: { lineStyle: { width: 12 } },
       axisTick: { show: false },
-      splitLine: { length: 8, lineStyle: { width: 2, color: '#999' } },
-      axisLabel: { distance: 15, color: '#999', fontSize: 12 },
+      splitLine: { length: 8, lineStyle: { width: 2, color: themeVars.value.textColor3 } },
+      axisLabel: { distance: 15, color: themeVars.value.textColor3, fontSize: 12 },
       anchor: { show: true, showAbove: true, size: 15, itemStyle: { borderWidth: 8 } },
       title: { show: false },
       detail: { valueAnimation: true, fontSize: 24, offsetCenter: [0, '60%'], formatter: '{value}/s' },
@@ -458,7 +460,7 @@ function updateTypeDistributionChart() {
       radius: ['40%', '70%'],
       center: ['40%', '50%'], // Adjust center for legend
       avoidLabelOverlap: true,
-      itemStyle: { borderRadius: 5, borderColor: '#fff', borderWidth: 1 },
+      itemStyle: { borderRadius: 5, borderColor: themeVars.value.cardColor, borderWidth: 1 },
       label: { show: false, position: 'center' },
       emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
       labelLine: { show: false },

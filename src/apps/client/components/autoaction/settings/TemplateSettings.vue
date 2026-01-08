@@ -55,45 +55,21 @@ function handleTemplateUpdate(payload: { index: number, value: string }) {
 
 <template>
   <div class="template-settings">
-    <transition
-      name="fade-scale"
-      appear
-    >
-      <TemplateEditor
-        :template="props.action"
-        :template-index="0"
-        :title="templateTitle"
-        :description="templateDescription"
-        :check-length="action.actionType === ActionType.SEND_DANMAKU"
-        :custom-test-context="customTestContext"
-        class="template-editor"
-        @update:template="handleTemplateUpdate"
-      />
-    </transition>
+    <TemplateEditor
+      :template="props.action"
+      :template-index="0"
+      :title="templateTitle"
+      :description="templateDescription"
+      :check-length="action.actionType === ActionType.SEND_DANMAKU"
+      :custom-test-context="customTestContext"
+      class="template-editor"
+      @update:template="handleTemplateUpdate"
+    />
   </div>
 </template>
 
 <style scoped>
 .template-settings {
   position: relative;
-}
-
-.settings-divider {
-  transition: all 0.3s ease;
-}
-
-.template-editor {
-  transition: all 0.3s ease;
-}
-
-/* 淡入缩放效果 */
-.fade-scale-enter-active,
-.fade-scale-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.fade-scale-enter-from,
-.fade-scale-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
 }
 </style>

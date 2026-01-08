@@ -1,4 +1,6 @@
 import { createPinia } from 'pinia'
+import Particles from '@tsparticles/vue3'
+import { loadSlim } from '@tsparticles/slim'
 import { createApp } from 'vue'
 import App from './App.vue'
 import emitter from './mitt'
@@ -10,7 +12,15 @@ const pinia = createPinia()
 export const getPinia = () => pinia
 
 const app = createApp(App)
-app.use(router).use(pinia).mount('#app')
+app
+  .use(router)
+  .use(pinia)
+  .use(Particles, {
+    init: async (engine) => {
+      await loadSlim(engine)
+    },
+  })
+  .mount('#app')
 
 // 将初始化逻辑改为异步按需加载，避免把其依赖打入入口
 void import('@/app/bootstrap').then(m => m.InitVTsuru())

@@ -47,7 +47,7 @@ function GetGuardColor(price: number | null | undefined): string {
   <NCard
     v-if="danmaku.type === EventDataTypes.SC"
     :style="`margin-top: 5px;margin-bottom: 5px;max-width:500px;background-color: ${GetSCColor(danmaku.price ?? 0)};`"
-    content-style="border-radius: 3px;padding:5px;min-height:45px;display:flex;align-items:center;"
+    content-style="border-radius: var(--n-border-radius);padding:5px;min-height:45px;display:flex;align-items:center;"
     header-style="padding:5px;background: rgba(255, 255, 255, 15%);font-size: 14px;"
     size="small"
     hoverable
@@ -94,14 +94,14 @@ function GetGuardColor(price: number | null | undefined): string {
               {{ danmaku.uName }}
             </NTag>
             <template v-else>
-              <span style="color: white; font-weight: bold; text-shadow: rgb(124 59 59) 2px 2px 1px">
+              <span style="color: white; font-weight: bold;">
                 {{ danmaku.uName }}
               </span>
             </template>
           </NButton>
           <NTag
             size="small"
-            :style="`display:flex;margin-left: auto;background-color: ${GetSCColor(danmaku.price ?? 0)};color: #e1e1e1;min-width: 35px;justify-content:center;text-shadow: rgb(124 59 59) 2px 2px 1px;`"
+            :style="`display:flex;margin-left: auto;background-color: ${GetSCColor(danmaku.price ?? 0)};color: #fff;min-width: 35px;justify-content:center;`"
             :bordered="false"
           >
             {{ danmaku.price }}
@@ -116,7 +116,7 @@ function GetGuardColor(price: number | null | undefined): string {
   <template v-else>
     <span
       class="danmaku-item"
-      style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: gray"
+      style="display: flex; align-items: center; white-space: nowrap; margin-left: 5px; color: var(--n-text-color-3)"
     >
       <NTooltip v-if="danmaku.uId > 0 && showAvatar">
         <template #trigger>
@@ -163,7 +163,7 @@ function GetGuardColor(price: number | null | undefined): string {
           <template v-else>
             <span :style="danmaku.uName !== '' && !showAvatar ? 'min-width: 60px' : ''">
               {{ danmaku.uName }}
-              <span style="color: gray">
+              <span style="color: var(--n-text-color-3)">
                 {{ ': ' }}
               </span>
             </span>
@@ -192,7 +192,7 @@ function GetGuardColor(price: number | null | undefined): string {
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Gift"
-        :style="`color:${(danmaku.price ?? 0) > 0 ? '#DD2F2F' : '#E9A8A8'}`"
+        :style="`color:${(danmaku.price ?? 0) > 0 ? 'var(--n-error-color)' : 'var(--n-text-color-3)'}`"
       >
         <NTag
           v-if="(danmaku.price ?? 0) > 0"
@@ -208,12 +208,12 @@ function GetGuardColor(price: number | null | undefined): string {
           size="tiny"
           :bordered="false"
         >
-          <span style="color: gray"> {{ danmaku.num }} 个 </span>
+          <span style="color: var(--n-text-color-3)"> {{ danmaku.num }} 个 </span>
         </NTag>
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Guard"
-        style="color: #9d78c1"
+        style="color: var(--n-info-color)"
       >
         上舰
         <NTag
@@ -225,7 +225,7 @@ function GetGuardColor(price: number | null | undefined): string {
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Enter"
-        style="color: forestgreen"
+        style="color: var(--n-success-color)"
       >
         进入直播间
       </span>

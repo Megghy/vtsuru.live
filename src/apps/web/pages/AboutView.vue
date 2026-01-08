@@ -2,7 +2,7 @@
 import { CodeOutline, HeartOutline, LogoGithub, ServerOutline } from '@vicons/ionicons5'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { NButton, NCard, NDivider, NIcon, NLayoutContent, NSpace, NTag, NText, NTimeline, NTimelineItem } from 'naive-ui'
+import { NButton, NCard, NDivider, NIcon, NLayoutContent, NSpace, NTag, NText, NTimeline, NTimelineItem, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 
@@ -21,6 +21,7 @@ const buildTime = computed(() => {
     }
   }
 })
+const themeVars = useThemeVars()
 </script>
 
 <template>
@@ -32,16 +33,16 @@ const buildTime = computed(() => {
       vertical
     >
       <NCard
-        style="max-width: 80vw; width: 700px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);"
+        style="max-width: 80vw; width: 700px;"
         embedded
       >
         <template #header>
           <div style="font-size: 22px; font-weight: bold; padding: 8px 0;">
             关于
           </div>
-          <div style="font-size: 13px; color: #666; margin-top: 4px; padding-bottom: 8px;">
+          <NText depth="3" style="font-size: 13px; margin-top: 4px; padding-bottom: 8px;">
             构建时间: {{ buildTime.date }} ({{ buildTime.relative }})
-          </div>
+          </NText>
         </template>
         <NText>
           一个兴趣使然的网站
@@ -80,10 +81,10 @@ const buildTime = computed(() => {
             align="center"
             style="margin-bottom: 16px;"
           >
-            <span style="color: #666; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <NText depth="3" style="font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
               MADE WITH <NIcon
                 size="18"
-                color="#f56c6c"
+                :color="themeVars.errorColor"
               ><HeartOutline /></NIcon> BY
               <NButton
                 type="primary"
@@ -95,14 +96,14 @@ const buildTime = computed(() => {
               >
                 Megghy
               </NButton>
-            </span>
+            </NText>
             <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
               <NButton
                 tag="a"
                 href="https://github.com/Megghy/vtsuru.live"
                 target="_blank"
                 text
-                style="display: flex; align-items: center; gap: 4px; color: #666;"
+                style="display: flex; align-items: center; gap: 4px;"
               >
                 <NIcon size="16">
                   <LogoGithub />
@@ -114,7 +115,7 @@ const buildTime = computed(() => {
                 href="https://stats.uptimerobot.com/vGKZv8uhVC"
                 target="_blank"
                 text
-                style="display: flex; align-items: center; gap: 4px; color: #666;"
+                style="display: flex; align-items: center; gap: 4px;"
               >
                 <NIcon size="16">
                   <ServerOutline />
@@ -138,7 +139,7 @@ const buildTime = computed(() => {
             <div style="display: flex; align-items: center; gap: 8px;">
               <NIcon
                 size="20"
-                color="#709e7e"
+                :color="themeVars.successColor"
               >
                 <CodeOutline />
               </NIcon>
@@ -197,7 +198,7 @@ const buildTime = computed(() => {
             <div style="display: flex; align-items: center; gap: 8px;">
               <NIcon
                 size="20"
-                color="#7c7ca0"
+                :color="themeVars.infoColor"
               >
                 <ServerOutline />
               </NIcon>
@@ -266,7 +267,7 @@ const buildTime = computed(() => {
             scrolling="no"
             height="200"
             frameborder="0"
-            style="border-radius: 8px;"
+            :style="{ borderRadius: themeVars.borderRadius }"
           />
           <NDivider title-placement="left">
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -437,7 +438,8 @@ const buildTime = computed(() => {
       </NCard>
       <NButton
         type="primary"
-        style="margin-top: 20px; padding: 8px 24px; font-size: 15px; border-radius: 8px;"
+        size="large"
+        style="margin-top: 20px;"
         @click="$router.push({ name: 'manage-index' })"
       >
         回到控制台
@@ -455,14 +457,10 @@ const buildTime = computed(() => {
   margin-bottom: 12px;
 }
 
-:deep(.n-card-header) {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 :deep(.n-divider.n-divider--title-position-left .n-divider__title) {
   font-weight: 600;
   font-size: 16px;
-  color: #444;
+  color: var(--n-text-color);
 }
 
 :deep(.n-timeline-item-content__title) {
@@ -470,11 +468,11 @@ const buildTime = computed(() => {
 }
 
 :deep(.n-timeline-item-content__content) {
-  color: #555;
+  color: var(--n-text-color-2);
 }
 
 :deep(.n-timeline-item-content__time) {
-  color: #888;
+  color: var(--n-text-color-3);
   font-size: 13px;
 }
 </style>

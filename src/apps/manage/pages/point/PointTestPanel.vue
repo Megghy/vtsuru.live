@@ -322,7 +322,6 @@ async function checkEligibility() {
         <NCard
           size="small"
           :bordered="false"
-          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
         >
           <NFlex
             justify="space-between"
@@ -332,10 +331,9 @@ async function checkEligibility() {
               <NStatistic
                 label="测试账户当前积分"
                 :value="testAccountPoint"
-                style="color: white"
               >
                 <template #suffix>
-                  <span style="color: white; font-size: 16px">分</span>
+                  <span style="font-size: 16px">分</span>
                 </template>
               </NStatistic>
             </div>
@@ -565,11 +563,4 @@ async function checkEligibility() {
 </template>
 
 <style scoped>
-:deep(.n-statistic .n-statistic-value__content) {
-  color: white !important;
-}
-
-:deep(.n-statistic .n-statistic__label) {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
 </style>

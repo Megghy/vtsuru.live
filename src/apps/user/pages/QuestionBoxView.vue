@@ -447,15 +447,18 @@ onUnmounted(() => {
     <NDivider />
     <div class="question-box-container">
       <!-- 提问表单 -->
-      <NCard
-        :bordered="true"
-        class="shadcn-card"
-      >
-        <div class="shadcn-card-header">
+      <NCard :bordered="true">
+        <template #header>
           <div class="header-main">
-            <h2 class="title">向 {{ userInfo?.name || '主播' }} 提问</h2>
-            <p class="subtitle">分享你的想法、建议或是简单打个招呼</p>
+            <h2 class="title">
+              向 {{ userInfo?.name || '主播' }} 提问
+            </h2>
+            <p class="subtitle">
+              分享你的想法、建议或是简单打个招呼
+            </p>
           </div>
+        </template>
+        <template #header-extra>
           <NBadge
             v-if="!isUserLoggedIn"
             :value="localQuestions.length"
@@ -473,9 +476,9 @@ onUnmounted(() => {
               本地记录
             </NButton>
           </NBadge>
-        </div>
+        </template>
 
-        <NSpace vertical :size="16" class="shadcn-card-content">
+        <NSpace vertical :size="16">
           <!-- 话题选择区域 -->
           <div v-if="tags.length > 0" class="section">
             <label class="section-label">投稿话题</label>
@@ -483,7 +486,6 @@ onUnmounted(() => {
               <NTag
                 v-for="tag in tags"
                 :key="tag"
-                class="shadcn-tag"
                 :bordered="true"
                 :type="selectedTag === tag ? 'primary' : 'default'"
                 @click="onSelectTag(tag)"
@@ -503,7 +505,6 @@ onUnmounted(() => {
               maxlength="10000"
               type="textarea"
               :count-graphemes="countGraphemes"
-              class="shadcn-input"
               placeholder="在这里输入你想说的话..."
               :autosize="{ minRows: 4, maxRows: 12 }"
             />
@@ -528,14 +529,12 @@ onUnmounted(() => {
                   placeholder="昵称 (可选)"
                   maxlength="20"
                   size="medium"
-                  class="shadcn-input-small"
                 />
                 <NInput
                   v-model:value="anonymousEmail"
                   placeholder="邮箱 (接收回复通知)"
                   maxlength="100"
                   size="medium"
-                  class="shadcn-input-small"
                   :status="anonymousEmail && !isValidEmail(anonymousEmail) ? 'error' : undefined"
                 />
               </div>
@@ -562,7 +561,9 @@ onUnmounted(() => {
                       class="remove-btn"
                       @click="removeLoggedInImage(index)"
                     >
-                      <template #icon><NIcon :component="DismissCircle24Regular" /></template>
+                      <template #icon>
+                        <NIcon :component="DismissCircle24Regular" />
+                      </template>
                     </NButton>
                   </div>
                   <div
@@ -588,7 +589,9 @@ onUnmounted(() => {
                       class="remove-btn"
                       @click="removeAnonymousImage"
                     >
-                      <template #icon><NIcon :component="DismissCircle24Regular" /></template>
+                      <template #icon>
+                        <NIcon :component="DismissCircle24Regular" />
+                      </template>
                     </NButton>
                   </div>
                   <div
@@ -606,6 +609,7 @@ onUnmounted(() => {
           </div>
 
           <!-- 底部操作 -->
+          <NDivider style="margin: 0;" />
           <div class="shadcn-footer">
             <div class="turnstile-wrapper">
               <VueTurnstile
@@ -622,7 +626,6 @@ onUnmounted(() => {
                 type="primary"
                 size="large"
                 :loading="isSending || !token"
-                class="shadcn-button-primary"
                 @click="SendQuestion"
               >
                 提交问题
@@ -631,14 +634,13 @@ onUnmounted(() => {
                 v-if="isUserLoggedIn"
                 :disabled="isSelf"
                 size="large"
-                class="shadcn-button-secondary"
                 @click="$router.push({ name: 'manage-questionBox', query: { send: '1' } })"
               >
                 已发送记录
               </NButton>
             </div>
 
-            <NAlert v-if="isSelf" type="warning" :bordered="false" class="shadcn-alert">
+            <NAlert v-if="isSelf" type="warning" :bordered="false">
               您不能向自己发起提问
             </NAlert>
           </div>
@@ -657,15 +659,20 @@ onUnmounted(() => {
             v-for="item in publicQuestions"
             :key="item.id"
             :bordered="true"
-            class="question-stack-card"
+            size="small"
+            content-style="padding: 0"
           >
             <div class="question-stack-header">
               <NTime :time="item.sendAt" type="relative" class="time" />
-              <NTag v-if="item.tag" size="small" :bordered="false" class="tag">{{ item.tag }}</NTag>
+              <NTag v-if="item.tag" size="small" :bordered="false" class="tag">
+                {{ item.tag }}
+              </NTag>
             </div>
 
             <div class="question-stack-body">
-              <div class="message">{{ item.question.message }}</div>
+              <div class="message">
+                {{ item.question.message }}
+              </div>
               <div v-if="item.questionImages?.length" class="images">
                 <NImage
                   v-for="(img, idx) in item.questionImages"
@@ -677,16 +684,22 @@ onUnmounted(() => {
             </div>
 
             <div v-if="item.answer" class="answer-stack-body">
+              <NDivider style="margin: 0 0 15px 0;" />
               <div class="answer-header">
                 <NAvatar
                   :src="`${AVATAR_URL + userInfo?.biliId}?size=64`"
                   circle
+                  :img-props="{
+                    referrerpolicy: 'no-referrer',
+                  }"
                   size="small"
                   class="avatar"
                 />
                 <span class="name">{{ userInfo?.name }} 的回复</span>
               </div>
-              <div class="answer-message">{{ item.answer.message }}</div>
+              <div class="answer-message">
+                {{ item.answer.message }}
+              </div>
             </div>
           </NCard>
         </div>
@@ -813,43 +826,18 @@ onUnmounted(() => {
   padding: 0 16px;
 }
 
-/* Shadcn-like Card */
-.shadcn-card {
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background-color: var(--card-color);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.2s;
-}
-
-.shadcn-card.self-user {
-  /* 移除左侧彩色边框 */
-  opacity: 0.8;
-}
-
-.shadcn-card-header {
-  padding: 16px 16px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
 .header-main .title {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.02em;
   margin: 0 0 2px;
-  color: var(--text-color);
+  color: var(--n-text-color);
 }
 
 .header-main .subtitle {
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
   margin: 0;
-}
-
-.shadcn-card-content {
-  padding: 16px;
 }
 
 /* Sections */
@@ -863,38 +851,15 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 500;
   line-height: 1;
-  color: var(--text-color);
+  color: var(--n-text-color);
   opacity: 0.8;
   margin-bottom: 2px;
 }
 
-/* Tag Styles */
 .tag-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-}
-
-.shadcn-tag {
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.shadcn-tag:hover {
-  opacity: 0.8;
-}
-
-/* Input Styles */
-.shadcn-input :deep(.n-input-wrapper) {
-  padding: 6px 10px;
-  border-radius: 4px;
-}
-
-.shadcn-input-small :deep(.n-input-wrapper) {
-  border-radius: 4px;
 }
 
 .options-grid {
@@ -928,38 +893,36 @@ onUnmounted(() => {
   position: relative;
   width: 64px;
   height: 64px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--n-border-color);
 }
-
 .upload-item .remove-btn {
   position: absolute;
   top: 2px;
   right: 2px;
   z-index: 10;
-  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .add-btn {
   width: 64px;
   height: 64px;
-  border-radius: 4px;
-  border: 1px dashed var(--border-color);
+  border-radius: var(--n-border-radius);
+  border: 1px dashed var(--n-border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text-color-3);
-  transition: all 0.2s;
+  color: var(--n-text-color-3);
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
   gap: 2px;
 }
 
 .add-btn:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  background-color: rgba(var(--primary-color-rgb), 0.04);
+  border-color: var(--n-primary-color);
+  color: var(--n-primary-color);
+  background-color: rgba(var(--n-primary-color-rgb), 0.04);
 }
 
 .add-btn .btn-text {
@@ -968,8 +931,6 @@ onUnmounted(() => {
 
 /* Footer & Buttons */
 .shadcn-footer {
-  border-top: 1px solid var(--border-color);
-  padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -978,8 +939,16 @@ onUnmounted(() => {
 .turnstile-wrapper {
   display: flex;
   justify-content: center;
-  transform: scale(0.85);
-  margin-bottom: -4px;
+  padding: 4px 0;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  .turnstile-wrapper {
+    transform: scale(0.92);
+    transform-origin: center;
+  }
 }
 
 .actions {
@@ -988,28 +957,9 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-.shadcn-button-primary {
-  min-width: 100px;
-  height: 36px;
-  font-weight: 500;
-  border-radius: 4px;
-}
-
-.shadcn-button-secondary {
-  min-width: 100px;
-  height: 36px;
-  font-weight: 500;
-  border-radius: 4px;
-}
-
-.shadcn-alert {
-  border-radius: 4px;
-  padding: 8px 12px;
-}
-
 /* Public List Section */
 .public-section {
-  margin-top: 32px;
+  margin-top: 24px;
 }
 
 .shadcn-divider {
@@ -1024,30 +974,20 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
   white-space: nowrap;
 }
 
 .divider-line {
   height: 1px;
   flex-grow: 1;
-  background-color: var(--border-color);
+  background-color: var(--n-border-color);
 }
 
 .questions-stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.question-stack-card {
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  transition: background-color 0.2s;
-}
-
-.question-stack-card:hover {
-  background-color: rgba(0, 0, 0, 0.01);
+  gap: 10px;
 }
 
 .question-stack-header {
@@ -1059,40 +999,55 @@ onUnmounted(() => {
 
 .question-stack-header .time {
   font-size: 11px;
-  color: var(--text-color-3);
+  color: var(--n-text-color-3);
 }
 
 .question-stack-body {
-  padding: 10px 12px;
+  padding: 8px 12px 10px;
 }
 
 .question-stack-body .message {
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
-  color: var(--text-color);
+  color: var(--n-text-color);
 }
 
 .question-stack-body .images {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .question-stack-body .images .img {
-  width: 64px;
-  height: 64px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  max-width: 180px;
+  max-height: 96px;
+  border-radius: var(--n-border-radius);
+  border: 1px solid var(--n-border-color);
+  overflow: hidden;
+  background-color: var(--n-color-embedded);
+}
+
+.question-stack-body .images .img :deep(img) {
+  max-width: 180px;
+  max-height: 96px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .answer-stack-body {
-  margin: 0 12px 12px;
-  padding: 10px;
-  background-color: rgba(var(--primary-color-rgb), 0.02);
-  border-radius: 4px;
-  border: 1px solid rgba(var(--primary-color-rgb), 0.08);
+  margin: 0 12px 10px;
+  padding: 8px 10px;
+  background-color: rgba(var(--n-primary-color-rgb), 0.02);
+  border-radius: var(--n-border-radius);
+  border: 1px solid rgba(var(--n-primary-color-rgb), 0.08);
 }
 
 .answer-header {
@@ -1105,14 +1060,14 @@ onUnmounted(() => {
 .answer-header .name {
   font-size: 12px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--n-primary-color);
 }
 
 .answer-message {
   font-size: 14px;
   line-height: 1.5;
   white-space: pre-wrap;
-  color: var(--text-color);
+  color: var(--n-text-color);
 }
 
 .empty, .loading {
@@ -1129,12 +1084,11 @@ onUnmounted(() => {
 }
 
 .local-question-card {
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  border-radius: var(--n-border-radius);
 }
 
 .local-question-card:hover {
-  border-color: var(--primary-color);
+  border-color: var(--n-primary-color);
 }
 
 .local-question-message {

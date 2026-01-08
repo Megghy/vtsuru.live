@@ -276,12 +276,12 @@ watch(
 <style scoped>
 .org-card {
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   height: 100%;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
 }
 .org-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.12);
+  border-color: var(--n-primary-color);
 }
 .text-ellipsis {
   white-space: nowrap;

@@ -12,18 +12,19 @@ import {
   NText,
   NTooltip,
   useMessage,
+  useThemeVars,
 } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
-import { isDarkMode } from '@/shared/utils'
 
 const emit = defineEmits<{
   (e: 'heightChange', height: number): void
 }>()
 
 const message = useMessage()
+const themeVars = useThemeVars()
 const musicRquestStore = useMusicRequestProvider()
 
 const musicPlayerCardRef = ref<HTMLElement | null>(null)
@@ -122,14 +123,12 @@ function togglePlayerMinimize() {
       class="music-player-card"
       style="
         margin: 8px;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
       "
     >
       <template #header>
         <NFlex justify="space-between" align="center" style="padding: 0;">
           <NFlex align="center" size="small">
-            <NIcon :component="MusicalNote" size="16" :style="`color: ${isDarkMode ? '#a8dadc' : '#457b9d'}`" />
+            <NIcon :component="MusicalNote" size="16" :style="{ color: themeVars.primaryColor }" />
             <NText :depth="2" style="font-size: 13px; font-weight: 500;">
               音乐播放器
             </NText>
@@ -228,7 +227,7 @@ function togglePlayerMinimize() {
               list-max-height="200"
               mutex
               list-folded
-              style="border-radius: 8px;"
+              :style="{ borderRadius: themeVars.borderRadius }"
               @ended="musicRquestStore.onMusicEnd"
               @play="musicRquestStore.onMusicPlay"
             />
@@ -360,19 +359,6 @@ function togglePlayerMinimize() {
 </template>
 
 <style scoped>
-.music-player-footer {
-  background: var(--body-color);
-}
-
-.music-player-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.music-player-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
-}
-
 .music-control-panel {
   display: flex;
   gap: 12px;
@@ -413,29 +399,5 @@ function togglePlayerMinimize() {
     width: 100% !important;
     min-width: auto !important;
   }
-}
-
-.music-player-card .n-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.music-player-card .n-button:hover {
-  transform: translateY(-1px);
-}
-
-.music-player-card .n-slider {
-  transition: all 0.2s ease;
-}
-
-.music-player-card .n-slider:hover {
-  transform: scale(1.02);
-}
-
-.music-player-card .n-tag {
-  transition: all 0.2s ease;
-}
-
-.music-player-card .n-tag:hover {
-  transform: scale(1.05);
 }
 </style>

@@ -6,6 +6,7 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+import { useThemeVars } from 'naive-ui'
 
 const { language, height = 400, theme = 'vs-dark', options, path } = defineProps<{
   language: string
@@ -16,6 +17,7 @@ const { language, height = 400, theme = 'vs-dark', options, path } = defineProps
 }>()
 
 const value = defineModel<string>('value')
+const themeVars = useThemeVars()
 
 // 在创建编辑器前确保容器存在
 const ready = ref(false)
@@ -109,10 +111,22 @@ onBeforeUnmount(() => {
 
 <template>
   <div :style="`height: ${height}px; width: 100%; position: relative;`">
-    <div v-if="!ready" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color: var(--text-color, #888); text-align:center; padding:8px;">
+    <div
+      v-if="!ready"
+      :style="{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: themeVars.textColor3,
+        textAlign: 'center',
+        padding: '8px',
+      }"
+    >
       <div>
         <div>正在加载编辑器…</div>
-        <div v-if="initError" style="margin-top:6px; color:#d9534f; font-size:12px;">
+        <div v-if="initError" :style="{ marginTop: '6px', color: themeVars.errorColor, fontSize: '12px' }">
           {{ initError }}
         </div>
       </div>

@@ -710,8 +710,6 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
           type: statusType,
           size: 'small',
           bordered: false,
-          // 处理中状态添加动画效果
-          style: data.status == QueueStatus.Progressing ? 'animation: animated-border 2.5s infinite;' : '',
         },
         () => STATUS_MAP[data.status] ?? '未知状态',
       )
@@ -817,7 +815,7 @@ function GetGuardColor(level: number | null | undefined): string {
       case 3: return 'rgb(104, 136, 241)' // 舰长
     }
   }
-  return '#999' // 默认颜色或无舰长
+  return 'var(--n-text-color-3)' // 默认颜色或无舰长
 }
 
 // 定时更新活动队列信息 (增量更新)
@@ -965,27 +963,6 @@ onUnmounted(() => {
 
 // --- 辅助函数 ---
 function getIndexStyle(status: QueueStatus): CSSProperties {
-  // 基础颜色定义 - 扁平化风格
-  let backgroundColor
-
-  // 根据状态设置不同的颜色
-  switch (status) {
-    case QueueStatus.Progressing:
-      backgroundColor = '#18a058' // 处理中 - 绿色
-      break
-    case QueueStatus.Waiting:
-      backgroundColor = '#2080f0' // 等待中 - 蓝色
-      break
-    case QueueStatus.Finish:
-      backgroundColor = '#86909c' // 已完成 - 灰色
-      break
-    case QueueStatus.Cancel:
-      backgroundColor = '#d03050' // 已取消 - 红色
-      break
-    default:
-      backgroundColor = '#2080f0' // 默认 - 蓝色
-  }
-
   const style: CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -994,13 +971,28 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     width: '24px', // 确保宽高一致以形成完美圆形
     height: '24px', // 保持一致的宽高
     borderRadius: '50%', // 圆形
-    color: 'white',
+    color: '#fff',
     fontSize: '13px', // 适当调整字体大小
-    backgroundColor, // 扁平化的纯色背景
     transition: 'opacity 0.2s', // 仅保留简单的过渡效果
   }
 
-  return style
+  switch (status) {
+    case QueueStatus.Progressing:
+      return { ...style, backgroundColor: 'var(--n-success-color)' }
+    case QueueStatus.Waiting:
+      return { ...style, backgroundColor: 'var(--n-info-color)' }
+    case QueueStatus.Finish:
+      return {
+        ...style,
+        backgroundColor: 'var(--n-color-embedded)',
+        color: 'var(--n-text-color)',
+        border: '1px solid var(--n-border-color)',
+      }
+    case QueueStatus.Cancel:
+      return { ...style, backgroundColor: 'var(--n-error-color)' }
+    default:
+      return { ...style, backgroundColor: 'var(--n-info-color)' }
+  }
 }
 </script>
 
@@ -1211,7 +1203,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                   size="small"
                   content-style="padding: 8px 12px;"
                   :bordered="queueData.status === QueueStatus.Progressing"
-                  :style="queueData.status === QueueStatus.Progressing ? 'border-left: 4px solid #63e2b7;' : 'border-left: 4px solid transparent;'"
+                  :style="queueData.status === QueueStatus.Progressing ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
                 >
                   <NSpace
                     justify="space-between"
@@ -1288,7 +1280,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                           <NIcon
                             :component="Info24Filled"
                             size="16"
-                            style="cursor: help; color: #aaa;"
+                            style="cursor: help; color: var(--n-text-color-3);"
                           />
                         </template>
                         <NCard
@@ -1519,27 +1511,6 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
 </template>
 
 <style>
-/* 处理中状态的边框动画 */
-@keyframes animated-border {
-  0% {
-    box-shadow: 0 0 0 0px rgba(103, 194, 58, 0.7);
-  }
-
-  70% {
-    box-shadow: 0 0 0 5px rgba(103, 194, 58, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0px rgba(103, 194, 58, 0);
-  }
-}
-
-/* 处理中状态的卡片左边框或标签动画 */
-.n-card[style*="border-left: 4px solid #63e2b7;"],
-.n-tag--success[style*="animation: animated-border"] {
-  animation: animated-border 1.5s infinite;
-}
-
 /* 优化 NDataTable 内容过长时的显示 */
 .n-data-table-td {
   white-space: nowrap;
@@ -1565,25 +1536,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
   right: -2px;
   bottom: -2px;
   border-radius: 50%;
-  border: 2px solid #18a058;
-  opacity: 0;
-  animation: flat-pulse 2s infinite;
-}
-
-@keyframes flat-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-
-  70% {
-    transform: scale(1.1);
-    opacity: 0;
-  }
-
-  100% {
-    transform: scale(1.1);
-    opacity: 0;
-  }
+  border: 2px solid var(--n-success-color);
+  opacity: 0.35;
 }
 </style>

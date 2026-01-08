@@ -124,14 +124,22 @@ const hasData = computed(() => analyzeData.value && Object.keys(analyzeData.valu
 const chartRef = ref<HTMLElement | null>(null)
 let mainChart: echarts.ECharts | null = null
 const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
-const chartMetrics = [
-  { label: '收入', value: 'income', color: '#f5a623', type: 'line', yAxisIndex: 1 },
-  { label: '互动数', value: 'interactionCount', color: '#2080f0', type: 'line', yAxisIndex: 0 },
-  { label: '弹幕数', value: 'danmakuCount', color: '#18a058', type: 'line', yAxisIndex: 0 },
-  { label: '点赞数', value: 'likeCount', color: '#d03050', type: 'line', yAxisIndex: 0 },
-  { label: '互动人数', value: 'interactionUsers', color: '#8a2be2', type: 'bar', yAxisIndex: 0 },
-  { label: '付费人数', value: 'payingUsers', color: '#ff69b4', type: 'bar', yAxisIndex: 0 },
-]
+const chartMetrics = computed(() => ([
+  { label: '收入', value: 'income', color: themeVars.value.warningColor, type: 'line', yAxisIndex: 1 },
+  { label: '互动数', value: 'interactionCount', color: themeVars.value.infoColor, type: 'line', yAxisIndex: 0 },
+  { label: '弹幕数', value: 'danmakuCount', color: themeVars.value.successColor, type: 'line', yAxisIndex: 0 },
+  { label: '点赞数', value: 'likeCount', color: themeVars.value.errorColor, type: 'line', yAxisIndex: 0 },
+  { label: '互动人数', value: 'interactionUsers', color: themeVars.value.primaryColor, type: 'bar', yAxisIndex: 0 },
+  { label: '付费人数', value: 'payingUsers', color: themeVars.value.primaryColorHover, type: 'bar', yAxisIndex: 0 },
+]))
+
+const metricColorVars = computed(() => ({
+  '--metric-income': themeVars.value.warningColor,
+  '--metric-interaction': themeVars.value.infoColor,
+  '--metric-users': themeVars.value.primaryColor,
+  '--metric-time': themeVars.value.successColor,
+  '--metric-highlight': themeVars.value.primaryColor,
+}))
 
 // 格式化工具函数
 function formatCurrency(value: number): string {
@@ -200,10 +208,10 @@ function updateChartOption() {
   const showLeftAxis = selectedMetrics.value.some(m => m !== 'income')
 
   const series = selectedMetrics.value.map((metricKey) => {
-    const metricConfig = chartMetrics.find(m => m.value === metricKey)
+    const metricConfig = chartMetrics.value.find(m => m.value === metricKey)
     if (!metricConfig) return null
 
-    return {
+      return {
       name: metricConfig.label,
       type: metricConfig.type,
       data: chartData.map(item => (item as any)[metricKey]),
@@ -433,6 +441,7 @@ onUnmounted(() => {
     <template v-else>
       <!-- 核心指标卡片 -->
       <div class="core-metrics">
+        <div :style="metricColorVars">
         <NGrid cols="1 600:2 1000:4" :x-gap="16" :y-gap="16">
           <!-- 收入 -->
           <NGridItem>
@@ -508,8 +517,8 @@ onUnmounted(() => {
                       type="line"
                       :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
                       :height="6"
-                      color="#ff69b4"
-                      rail-color="rgba(255, 105, 180, 0.2)"
+                      :color="themeVars.primaryColor"
+                      :rail-color="themeVars.primaryColorSuppl"
                       :show-indicator="false"
                       style="width: 60px; margin-right: 8px;"
                     />
@@ -544,6 +553,7 @@ onUnmounted(() => {
             </NCard>
           </NGridItem>
         </NGrid>
+        </div>
       </div>
 
       <!-- 图表区域 -->
@@ -604,8 +614,8 @@ onUnmounted(() => {
                     type="line"
                     :percentage="Math.min(100, Math.round(((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100) * 10) / 10)"
                     :height="12"
-                    color="#18a058"
-                    rail-color="rgba(24, 160, 88, 0.1)"
+                    :color="themeVars.successColor"
+                    :rail-color="themeVars.successColorSuppl"
                   >
                     {{ ((summaryData?.last7Days?.payingUsers || 0) / (summaryData?.last7Days?.interactionUsers || 1) * 100).toFixed(1) }}%
                   </NProgress>
@@ -655,8 +665,8 @@ onUnmounted(() => {
                     type="line"
                     :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
                     :height="12"
-                    color="#f5a623"
-                    rail-color="rgba(245, 166, 35, 0.1)"
+                    :color="themeVars.warningColor"
+                    :rail-color="themeVars.warningColorSuppl"
                   >
                     {{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}%
                   </NProgress>
@@ -684,13 +694,6 @@ onUnmounted(() => {
 
 .metric-card {
   height: 100%;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-}
-
-.metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .metric-content {
@@ -744,7 +747,7 @@ onUnmounted(() => {
 }
 
 .highlight {
-  color: #ff69b4;
+  color: var(--metric-highlight);
 }
 
 .metric-footer {
@@ -774,10 +777,10 @@ onUnmounted(() => {
 }
 
 /* 特定卡片样式微调 */
-.income-card .metric-icon { color: #f5a623; }
-.interaction-card .metric-icon { color: #2080f0; }
-.users-card .metric-icon { color: #ff69b4; }
-.time-card .metric-icon { color: #18a058; }
+.income-card .metric-icon { color: var(--metric-income); }
+.interaction-card .metric-icon { color: var(--metric-interaction); }
+.users-card .metric-icon { color: var(--metric-users); }
+.time-card .metric-icon { color: var(--metric-time); }
 
 .chart-card {
   min-height: 400px;
