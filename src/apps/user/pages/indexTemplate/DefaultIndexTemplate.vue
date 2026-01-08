@@ -57,7 +57,7 @@ async function getIndexInfo() {
 }
 
 function navigate(url: string) {
-  window.open(url, '_blank')
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 </script>
 

@@ -1,15 +1,16 @@
-import { createDiscreteApi, NButton, NFlex, NText } from 'naive-ui'
+import { NButton, NFlex, NText } from 'naive-ui'
 import { h } from 'vue'
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
 import { apiFail, BASE_API_URL, isTauri } from '@/shared/config'
+import { createNaiveUIApi } from '@/shared/utils'
 
 let currentVersion: string
 let isHaveNewVersion = false
 
-const { notification } = createDiscreteApi(['notification'])
+const { notification } = createNaiveUIApi(['notification'])
 
 export function InitVTsuru() {
   QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)

@@ -20,9 +20,7 @@ import { computed } from 'vue'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 import { SongFrom, ThemeType } from '@/api/api-models'
-import { VTSURU_API_URL } from '@/shared/config'
-
-const { message } = createDiscreteApi(['message'])
+import { getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
 
 const osThemeRef = useOsTheme() // 获取当前系统主题
 const themeType = useStorage('Settings.Theme', ThemeType.Auto)
@@ -34,12 +32,23 @@ export const theme = computed(() => {
     return themeType.value == ThemeType.Dark ? darkTheme : null
   }
 })
+
+export const isDarkMode = computed(() => {
+  if (themeType.value == ThemeType.Auto) return osThemeRef.value === 'dark'
+  else return themeType.value == ThemeType.Dark
+})
+
 export const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
   theme: theme.value,
+  themeOverrides: getThemeOverrides(isDarkMode.value),
   locale: zhCN,
   dateLocale: dateZhCN,
-
 }))
+
+const { message } = createDiscreteApi(['message'], {
+  configProviderProps: configProviderPropsRef,
+})
+
 export function createNaiveUIApi(types: DiscreteApiType[]) {
   return createDiscreteApi(types, {
     configProviderProps: configProviderPropsRef,
@@ -48,10 +57,6 @@ export function createNaiveUIApi(types: DiscreteApiType[]) {
 export function NavigateToNewTab(url: string) {
   window.open(url, '_blank')
 }
-export const isDarkMode = computed(() => {
-  if (themeType.value == ThemeType.Auto) return osThemeRef.value === 'dark'
-  else return themeType.value == ThemeType.Dark
-})
 export function copyToClipboard(text: string) {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text)

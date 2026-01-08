@@ -1,6 +1,6 @@
 import type { AccountInfo, APIRoot, FunctionTypes } from './api-models'
 import { isSameDay } from 'date-fns'
-import { createDiscreteApi } from 'naive-ui'
+import { createNaiveUIApi } from '@/shared/utils'
 import { ref } from 'vue'
 import { cookie } from './auth'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
@@ -12,7 +12,7 @@ export const isLoggedIn = computed<boolean>(() => {
   return ACCOUNT.value.id > 0
 })
 
-const { message } = createDiscreteApi(['message'])
+const { message } = createNaiveUIApi(['message'])
 
 export async function GetSelfAccount(token?: string) {
   if (cookie.value?.cookie || token) {

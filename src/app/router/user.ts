@@ -4,7 +4,7 @@ export default [
   {
     path: '',
     name: 'user-index',
-    component: async () => import('@/apps/user/pages/UserIndexView.vue'),
+    component: async () => import('@/apps/user/pages/UserPageEntryView.vue'),
     meta: {
       title: '主页',
       keepAlive: true,
@@ -91,6 +91,15 @@ export default [
     component: async () => import('@/apps/user/pages/forumViews/ForumView.vue'),
     meta: {
       title: '讨论区',
+      keepAlive: true,
+    },
+  },
+  {
+    path: ':pageSlug',
+    name: 'user-page',
+    component: async () => import('@/apps/user/pages/UserPageEntryView.vue'),
+    meta: {
+      title: '页面',
       keepAlive: true,
     },
   },

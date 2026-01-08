@@ -234,5 +234,13 @@ export default // 管理页面
         parent: 'manage-tools-dashboard', // 指向工具箱仪表盘
       },
     },
+    {
+      path: 'user-page-builder',
+      name: 'manage-userPageBuilder',
+      component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),
+      meta: {
+        title: '自定义页面',
+      },
+    },
   ],
 }
