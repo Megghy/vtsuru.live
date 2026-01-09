@@ -232,11 +232,8 @@ async function onSubmit() {
     if (success) {
       message.success('已保存设置')
       props.config?.forEach((item) => {
-        if (item.type === 'render') {
-          item.onUploaded?.(props.configData[item.key], props.configData)
-        } else {
-          item.onUploaded?.(props.configData[item.key], props.configData)
-        }
+        const onUploaded = item.onUploaded as undefined | ((data: any, config: any) => void)
+        onUploaded?.(props.configData[item.key], props.configData)
       })
     } else {
       message.error('保存失败')
