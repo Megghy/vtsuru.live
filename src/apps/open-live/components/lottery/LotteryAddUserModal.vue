@@ -48,35 +48,35 @@ function submit() {
     v-model:show="showModel"
     preset="card"
     title="手动添加用户"
-    style="max-width: 90%; width: 500px"
+    style="width: 520px; max-width: 90vw"
     closable
   >
-    <NForm>
+    <NForm size="small" label-placement="left" label-width="80">
       <NFormItem label="用户名" required>
-        <NInput v-model:value="form.name" :disabled="disabled" placeholder="请输入用户名" />
+        <NInput v-model:value="form.name" size="small" :disabled="disabled" placeholder="请输入用户名" />
       </NFormItem>
       <NFormItem label="头像链接">
-        <NInput v-model:value="form.avatar" :disabled="disabled" placeholder="请输入头像链接" />
+        <NInput v-model:value="form.avatar" size="small" :disabled="disabled" placeholder="请输入头像链接" />
       </NFormItem>
-      <NSpace>
+      <NSpace :wrap="true" :size="12">
         <NFormItem label="粉丝牌等级">
-          <NInputNumber v-model:value="form.fans_medal_level" :disabled="disabled" :min="0" :max="50" style="width: 120px" />
+          <NInputNumber v-model:value="form.fans_medal_level" size="small" :disabled="disabled" :min="0" :max="50" class="lottery-add-user__narrow" />
         </NFormItem>
         <NFormItem label="粉丝牌名称">
-          <NInput v-model:value="form.fans_medal_name" :disabled="disabled" placeholder="粉丝牌名称" style="width: 150px" />
+          <NInput v-model:value="form.fans_medal_name" size="small" :disabled="disabled" placeholder="粉丝牌名称" class="lottery-add-user__medium" />
         </NFormItem>
       </NSpace>
       <NFormItem label="舰长等级">
-        <NInputNumber v-model:value="form.guard_level" :disabled="disabled" :min="0" :max="3" style="width: 120px" />
+        <NInputNumber v-model:value="form.guard_level" size="small" :disabled="disabled" :min="0" :max="3" class="lottery-add-user__narrow" />
       </NFormItem>
     </NForm>
 
     <template #footer>
       <NSpace justify="end">
-        <NButton :disabled="disabled" @click="showModel = false">
+        <NButton size="small" :disabled="disabled" @click="showModel = false">
           取消
         </NButton>
-        <NButton type="primary" :disabled="disabled" @click="submit">
+        <NButton type="primary" size="small" :disabled="disabled" @click="submit">
           添加用户
         </NButton>
       </NSpace>
@@ -84,3 +84,13 @@ function submit() {
   </NModal>
 </template>
 
+<style scoped>
+.lottery-add-user__narrow {
+  width: 140px;
+}
+
+.lottery-add-user__medium {
+  width: 220px;
+  max-width: 100%;
+}
+</style>

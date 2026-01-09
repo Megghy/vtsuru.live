@@ -11,6 +11,7 @@ export default {
       component: async () => import('@/apps/open-live/pages/OpenLiveIndex.vue'),
       meta: {
         title: '开放平台',
+        pageWidth: 'md',
       },
     },
     {
@@ -19,6 +20,7 @@ export default {
       component: async () => import('@/apps/open-live/pages/OpenLottery.vue'),
       meta: {
         title: '直播抽奖',
+        pageWidth: 'xl',
       },
     },
     {
@@ -27,6 +29,7 @@ export default {
       component: async () => import('@/apps/open-live/pages/request/LiveRequest.vue'),
       meta: {
         title: '点歌',
+        pageWidth: 'xl',
       },
     },
     {
@@ -35,6 +38,7 @@ export default {
       component: async () => import('@/apps/open-live/pages/OpenQueue.vue'),
       meta: {
         title: '排队',
+        pageWidth: 'xl',
       },
     },
     {
@@ -43,6 +47,7 @@ export default {
       component: async () => import('@/apps/open-live/pages/ReadDanmaku.vue'),
       meta: {
         title: '读弹幕',
+        pageWidth: 'md',
       },
     },
   ],

@@ -74,7 +74,12 @@ function logout() {
         <Suspense>
           <template #default>
             <KeepAlive>
-              <component :is="Component" />
+              <div
+                class="manage-page"
+                :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
+              >
+                <component :is="Component" />
+              </div>
             </KeepAlive>
           </template>
           <template #fallback>
@@ -85,7 +90,12 @@ function logout() {
       <template v-else>
         <Suspense>
           <template #default>
-            <component :is="Component" :key="viewRoute.fullPath" />
+            <div
+              class="manage-page"
+              :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
+            >
+              <component :is="Component" :key="viewRoute.fullPath" />
+            </div>
           </template>
           <template #fallback>
             <NSpin show />
@@ -95,69 +105,73 @@ function logout() {
     </RouterView>
 
     <template v-else>
-          <NCard>
-            <NSpace vertical size="large" align="center">
-              <NFlex justify="center" align="center" vertical>
-                <NIcon size="48" :color="themeVars.primaryColor">
-                  <Mail24Filled />
-                </NIcon>
-                <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
-                  请验证您的邮箱
-                </NText>
-            <NText depth="3" style="text-align: center; margin-top: 8px;">
-              我们已向您的邮箱 <NText type="primary" strong>
-                {{ accountInfo?.bindEmail }}
-              </NText> 发送了验证链接，请查收并点击链接完成验证
-            </NText>
-          </NFlex>
-
-          <NAlert type="warning" style="max-width: 450px;">
-            <template #icon>
-              <NIcon>
-                <Info24Filled />
+      <div class="manage-page manage-page--md">
+        <NCard size="small" :bordered="true">
+          <NSpace vertical size="large" align="center">
+            <NFlex justify="center" align="center" vertical>
+              <NIcon size="48" :color="themeVars.primaryColor">
+                <Mail24Filled />
               </NIcon>
-            </template>
-            如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
-          </NAlert>
+              <NText style="font-size: 20px; margin-top: 16px; font-weight: 500;">
+                请验证您的邮箱
+              </NText>
+              <NText depth="3" style="text-align: center; margin-top: 8px;">
+                我们已向您的邮箱 <NText type="primary" strong>
+                  {{ accountInfo?.bindEmail }}
+                </NText> 发送了验证链接，请查收并点击链接完成验证
+              </NText>
+            </NFlex>
 
-          <NSpace>
-            <NButton
-              type="primary" :disabled="!canResendEmail" style="min-width: 140px;"
-              @click="resendEmail"
-            >
+            <NAlert type="warning" style="max-width: 450px;">
               <template #icon>
                 <NIcon>
-                  <Mail24Filled />
+                  <Info24Filled />
                 </NIcon>
               </template>
-              重新发送验证邮件
-            </NButton>
-            <NTag v-if="!canResendEmail" type="warning" round>
-              <NCountdown
-                :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                @finish="canResendEmail = true"
-              />
-              后可重新发送
-            </NTag>
-          </NSpace>
+              如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
+            </NAlert>
 
-          <NDivider style="width: 80%; min-width: 250px;" />
-
-          <NPopconfirm @positive-click="logout">
-            <template #trigger>
-              <NButton secondary>
+            <NSpace>
+              <NButton
+                type="primary"
+                :disabled="!canResendEmail"
+                style="min-width: 140px;"
+                @click="resendEmail"
+              >
                 <template #icon>
                   <NIcon>
-                    <PersonFeedback24Filled />
+                    <Mail24Filled />
                   </NIcon>
                 </template>
-                切换账号
+                重新发送验证邮件
               </NButton>
-            </template>
-            确定要登出当前账号吗？
-          </NPopconfirm>
-        </NSpace>
-      </NCard>
+              <NTag v-if="!canResendEmail" type="warning" round>
+                <NCountdown
+                  :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
+                  @finish="canResendEmail = true"
+                />
+                后可重新发送
+              </NTag>
+            </NSpace>
+
+            <NDivider style="width: 80%; min-width: 250px;" />
+
+            <NPopconfirm @positive-click="logout">
+              <template #trigger>
+                <NButton secondary>
+                  <template #icon>
+                    <NIcon>
+                      <PersonFeedback24Filled />
+                    </NIcon>
+                  </template>
+                  切换账号
+                </NButton>
+              </template>
+              确定要登出当前账号吗？
+            </NPopconfirm>
+          </NSpace>
+        </NCard>
+      </div>
     </template>
 
     <NBackTop />

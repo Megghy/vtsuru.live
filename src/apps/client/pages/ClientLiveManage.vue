@@ -8,6 +8,7 @@ import { useAccount } from '@/api/account'
 import { roomInfo } from '@/apps/client/data/info'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
+import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 
 const accountInfo = useAccount()
 const obsStore = useOBSStore()
@@ -777,31 +778,26 @@ watch(liveAreas, () => {
   <div class="live-manage-page">
     <NFlex
       vertical
-      gap="large"
+      :size="12"
     >
       <!-- 页面标题 -->
       <NCard
-        embedded
         size="small"
         class="live-manage-card"
-        :bordered="false"
+        bordered
       >
-        <NFlex vertical gap="small">
-          <NText strong style="font-size: 20px;">
-            直播管理
-          </NText>
-          <NText depth="3">
-            使用 OBS 直接推流到 B 站官方服务器，管理直播间信息和封面
-          </NText>
-        </NFlex>
+        <ClientPageHeader
+          title="直播管理"
+          description="使用 OBS 直接推流到 B 站官方服务器，管理直播间信息和封面"
+        />
       </NCard>
 
       <!-- 直播控制 -->
       <NCard
         title="直播控制"
-        embedded
         size="small"
         class="live-manage-card"
+        bordered
       >
         <NFlex
           vertical
@@ -1572,12 +1568,6 @@ watch(liveAreas, () => {
 
 <style scoped>
   .live-manage-page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 16px 12px 24px;
-  }
-
-  .live-manage-card + .live-manage-card {
-    margin-top: 8px;
+    width: 100%;
   }
 </style>

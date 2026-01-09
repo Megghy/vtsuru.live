@@ -322,7 +322,6 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         <!-- 提示信息 -->
         <NCollapse
           v-if="useQB.reviewing > 0 || !accountInfo.settings?.questionBox?.saftyLevel"
-          style="margin-top: 12px;"
         >
           <NCollapseItem
             title="通知与提示"
@@ -357,8 +356,8 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
       <!-- 提问页链接卡片 -->
       <NCard
         size="small"
-        style="margin-bottom: 16px;"
-        embedded
+        :bordered="true"
+        content-style="padding: 12px;"
       >
         <NFlex
           align="center"

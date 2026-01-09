@@ -7,6 +7,7 @@ import { ACCOUNT } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/shared/config'
 import router from '@/app/router'
+import '@/apps/web/styles/web-page.css'
 
 const message = useMessage()
 const route = useRoute()
@@ -34,12 +35,9 @@ async function VerifyAccount() {
 </script>
 
 <template>
-  <NLayoutContent style="height: 100vh">
-    <div style="display: flex; align-items: center; justify-content: center; height: 100%">
-      <NCard
-        embedded
-        style="max-width: 500px"
-      >
+  <NLayoutContent class="web-center">
+    <div class="web-page web-page--md">
+      <NCard size="small" bordered>
         <template #header>
           激活账户
         </template>
@@ -50,7 +48,7 @@ async function VerifyAccount() {
         >
           <NButton
             type="primary"
-            size="large"
+            size="medium"
             :loading="isLoading"
             @click="VerifyAccount"
           >

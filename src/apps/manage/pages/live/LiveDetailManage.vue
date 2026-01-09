@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { NButton, NEmpty, NSpin, NSpace, useMessage, useThemeVars } from 'naive-ui'
+import { NButton, NEmpty, NSpin, useMessage, useThemeVars } from 'naive-ui'
 import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
 import { LIVE_API_URL } from '@/shared/config'
 
@@ -24,6 +25,12 @@ const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 const liveInfo = ref<ResponseLiveDetail | undefined>()
 const danmakuContainerRef = ref<InstanceType<typeof DanmakuContainer> | null>(null)
+
+const pageTitle = computed(() => liveInfo.value?.live?.title || '直播详情')
+const pageSubtitle = computed(() => {
+  const id = String(route.params.id ?? '')
+  return id ? `LiveID: ${id}` : undefined
+})
 
 const receivingPillStyle = computed(() => ({
   display: 'inline-flex',
@@ -114,22 +121,17 @@ onBeforeUnmount(async () => {
 <template>
   <NSpin :show="isLoading">
     <template v-if="!isLoading">
-      <NSpace align="center" justify="space-between" wrap style="margin-bottom: 16px">
-        <NButton
-          secondary
-          @click="router.push({ name: 'manage-live' })"
-        >
-          ← 返回
-        </NButton>
-        <NSpace align="center" :size="8">
+      <ManagePageHeader :title="pageTitle" :subtitle="pageSubtitle">
+        <template #action>
+          <NButton secondary size="small" @click="router.push({ name: 'manage-live' })">
+            返回
+          </NButton>
           <span :style="receivingPillStyle">
-            <span
-              :style="receivingDotStyle"
-            />
+            <span :style="receivingDotStyle" />
             实时接收中
           </span>
-        </NSpace>
-      </NSpace>
+        </template>
+      </ManagePageHeader>
       <DanmakuContainer
         v-if="liveInfo"
         ref="danmakuContainerRef"

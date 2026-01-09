@@ -454,6 +454,7 @@ onMounted(async () => {
       v-if="!useAuth.isAuthed"
       type="warning"
       title="需要认证"
+      size="small"
     >
       你尚未进行 Bilibili 账号认证, 无法查看积分或兑换礼物。
       <NButton
@@ -470,12 +471,9 @@ onMounted(async () => {
     <NCard
       v-else
       class="header-section"
-      embedded
-      :bordered="true"
+      bordered
       size="small"
-      :content-style="{
-        padding: '4px',
-      }"
+      content-style="padding: 0;"
     >
       <!-- 用户信息区域 -->
       <div class="user-info-section">
@@ -881,15 +879,11 @@ onMounted(async () => {
 
 <style scoped>
 .point-goods-container {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 0 8px;
+  width: 100%;
 }
 
 .header-section {
-  margin-bottom: 16px;
-  border: 1px solid var(--n-border-color);
-  box-shadow: var(--n-box-shadow-1);
+  margin-bottom: 12px;
 }
 
 .user-info-section {

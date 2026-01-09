@@ -444,10 +444,9 @@ onUnmounted(() => {
 
 <template>
   <div class="question-box-wrapper">
-    <NDivider />
     <div class="question-box-container">
       <!-- 提问表单 -->
-      <NCard :bordered="true">
+      <NCard size="small" bordered>
         <template #header>
           <div class="header-main">
             <h2 class="title">
@@ -823,7 +822,7 @@ onUnmounted(() => {
 .question-box-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 16px;
+  width: 100%;
 }
 
 .header-main .title {

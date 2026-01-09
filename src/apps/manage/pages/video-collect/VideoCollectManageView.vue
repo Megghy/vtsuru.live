@@ -5,6 +5,7 @@ import type {
 import type { VideoCollectTable } from '@/api/api-models'
 import {
   NButton,
+  NCard,
   NDatePicker,
   NEmpty,
   NForm,
@@ -129,7 +130,7 @@ function createTable() {
 </script>
 
 <template>
-  <div class="manage-container">
+  <div class="video-collect-manage">
     <ManagePageHeader
       title="视频征集管理"
       subtitle="创建并管理您的视频征集活动"
@@ -150,32 +151,23 @@ function createTable() {
     </ManagePageHeader>
 
     <NSpin :show="isLoading">
-      <div
-        v-if="videoTables.length === 0 && !isLoading"
-        class="empty-state"
-      >
-        <NEmpty
-          description="暂无征集表"
-          size="large"
-        >
+      <NCard v-if="videoTables.length === 0 && !isLoading" size="small" :bordered="true" class="empty-card">
+        <NEmpty description="暂无征集表">
           <template #extra>
-            <NButton
-              type="primary"
-              @click="createModalVisible = true"
-            >
+            <NButton type="primary" @click="createModalVisible = true">
               创建第一个征集表
             </NButton>
           </template>
         </NEmpty>
-      </div>
+      </NCard>
       
       <div
         v-else
         class="grid-container"
       >
         <NGrid
-          x-gap="24"
-          y-gap="24"
+          x-gap="12"
+          y-gap="12"
           cols="1 640:2 1024:3 1440:4"
           responsive="self"
         >
@@ -183,15 +175,13 @@ function createTable() {
             v-for="item in videoTables"
             :key="item.id"
           >
-            <div class="card-wrapper">
-              <VideoCollectInfoCard
-                :item="item"
-                can-click
-                from="owner"
-                style="width: 100%"
-                class="collect-card"
-              />
-            </div>
+            <VideoCollectInfoCard
+              :item="item"
+              can-click
+              from="owner"
+              style="width: 100%"
+              class="collect-card"
+            />
           </NGridItem>
         </NGrid>
       </div>
@@ -290,24 +280,18 @@ function createTable() {
 </template>
 
 <style scoped>
-.manage-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 16px;
+.video-collect-manage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.empty-state {
-  margin-top: 100px;
-  display: flex;
-  justify-content: center;
+.empty-card {
+  margin-top: 4px;
 }
 
 .grid-container {
   width: 100%;
-}
-
-.card-wrapper {
-  height: 100%;
 }
 
 /* 深度选择器修改卡片样式 */

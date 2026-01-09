@@ -8,6 +8,7 @@ export default [
     meta: {
       title: '主页',
       keepAlive: true,
+      pageContainer: 'none',
     },
   },
   {
@@ -17,6 +18,7 @@ export default [
     meta: {
       title: '歌单',
       keepAlive: true,
+      pageContainer: 'none',
     },
   },
   {
@@ -26,6 +28,7 @@ export default [
     meta: {
       title: '提问箱',
       keepAlive: true,
+      pageWidth: 'xl',
     },
   },
   {
@@ -35,6 +38,7 @@ export default [
     meta: {
       title: '日程',
       keepAlive: true,
+      pageContainer: 'none',
     },
     children: [
       {
@@ -56,6 +60,7 @@ export default [
     meta: {
       title: '积分兑换',
       keepAlive: true,
+      pageWidth: 'xl',
     },
   },
   {
@@ -65,6 +70,7 @@ export default [
     meta: {
       title: '签到排行',
       keepAlive: true,
+      pageWidth: 'md',
     },
   },
   {
@@ -74,6 +80,7 @@ export default [
     meta: {
       title: '视频征集',
       keepAlive: true,
+      pageWidth: 'md',
     },
   },
   {
@@ -83,6 +90,7 @@ export default [
     meta: {
       title: '帖子详情',
       keepAlive: true,
+      pageWidth: 'xl',
     },
   },
   {
@@ -92,6 +100,7 @@ export default [
     meta: {
       title: '讨论区',
       keepAlive: true,
+      pageWidth: 'xl',
     },
   },
   {
@@ -101,6 +110,7 @@ export default [
     meta: {
       title: '页面',
       keepAlive: true,
+      pageContainer: 'none',
     },
   },
 ] satisfies RouteRecordRaw[]

@@ -36,6 +36,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { VOTE_API_URL } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { copyToClipboard } from '@/shared/utils'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -394,23 +395,49 @@ function deleteTemplate(index: number) {
 </script>
 
 <template>
-  <NSpace vertical>
-    <NAlert type="info">
-      <template #icon>
-        <NIcon>
-          <Info24Filled />
-        </NIcon>
-      </template>
-      弹幕投票功能让观众可以通过发送特定格式的弹幕参与投票。您可以自定义投票的标题、选项和外观。
-    </NAlert>
+  <NSpace vertical :size="12">
+    <NCard size="small" bordered :segmented="{ content: true }">
+      <OpenLivePageHeader
+        title="弹幕投票"
+        description="观众通过发送指定格式的弹幕参与投票，可自定义标题、选项与显示样式。"
+      >
+        <template #actions>
+          <NSpace align="center" :wrap="true" :size="10">
+            <NButton
+              secondary
+              size="small"
+              class="open-live-action-btn"
+              @click="showSettingsModal = true"
+            >
+              <template #icon>
+                <NIcon><Settings24Regular /></NIcon>
+              </template>
+              设置
+            </NButton>
+            <NButton
+              type="info"
+              size="small"
+              class="open-live-action-btn"
+              @click="copyObsLink"
+            >
+              <template #icon>
+                <NIcon><ShareAndroid24Regular /></NIcon>
+              </template>
+              复制 OBS 链接
+            </NButton>
+          </NSpace>
+        </template>
+      </OpenLivePageHeader>
 
-    <NCard
-      title="投票控制"
-      size="small"
-    >
+      <NAlert type="info" size="small" :bordered="false">
+        提示：默认触发格式为 “{{ voteConfig.voteCommand }} 选项编号/内容”，也可在设置中自定义。
+      </NAlert>
+    </NCard>
+
+    <NCard title="投票控制" size="small" bordered>
       <NSpin :show="isLoading">
-        <NSpace vertical>
-          <NSpace>
+        <NSpace vertical :size="12">
+          <NSpace align="center" justify="space-between" :wrap="true" :size="12">
             <NSwitch
               v-model:value="voteConfig.isEnabled"
               @update:value="saveVoteConfig"
@@ -422,97 +449,89 @@ function deleteTemplate(index: number) {
                 已禁用
               </template>
             </NSwitch>
-            <NButton
-              secondary
-              @click="showSettingsModal = true"
+
+            <NTag
+              v-if="currentVote?.isActive"
+              type="success"
+              size="small"
+              :bordered="false"
             >
-              <template #icon>
-                <NIcon><Settings24Regular /></NIcon>
-              </template>
-              设置
-            </NButton>
-            <NButton
-              type="info"
-              @click="copyObsLink"
-            >
-              <template #icon>
-                <NIcon><ShareAndroid24Regular /></NIcon>
-              </template>
-              复制OBS链接
-            </NButton>
+              进行中
+            </NTag>
           </NSpace>
 
-          <NDivider />
+          <NDivider style="margin: 0" />
 
-          <div v-if="!voteConfig.isEnabled">
-            <NAlert type="warning">
-              投票功能已禁用，请先在设置中启用功能。
-            </NAlert>
-          </div>
-          <div v-else-if="currentVote && currentVote.isActive">
-            <NCard
-              title="进行中的投票"
-              size="small"
-            >
-              <NSpace vertical>
-                <NSpace justify="space-between">
-                  <NSpace>
-                    <NText
-                      strong
-                      style="font-size: 1.2em"
-                    >
-                      {{ currentVote.title }}
-                    </NText>
-                    <NTag v-if="timeLeftMs !== null" type="warning">
-                      剩余: {{ formatRemain(timeLeftMs) }}
-                    </NTag>
-                  </NSpace>
-                  <NButton
+          <NAlert
+            v-if="!voteConfig.isEnabled"
+            type="warning"
+            size="small"
+            :bordered="false"
+          >
+            投票功能已禁用，请先在设置中启用功能。
+          </NAlert>
+
+          <template v-else-if="currentVote && currentVote.isActive">
+            <NSpace vertical :size="12">
+              <NSpace align="center" justify="space-between" :wrap="true" :size="12">
+                <NSpace align="center" :wrap="true" :size="8">
+                  <NText strong class="vote-title">
+                    {{ currentVote.title }}
+                  </NText>
+                  <NTag
+                    v-if="timeLeftMs !== null"
                     type="warning"
-                    @click="endVote"
-                  >
-                    <template #icon>
-                      <NIcon><Pause24Regular /></NIcon>
-                    </template>
-                    结束投票
-                  </NButton>
-                </NSpace>
-
-                <NText>总票数: {{ currentVote.totalVotes }}</NText>
-
-                <div
-                  v-for="(option, index) in currentVote.options"
-                  :key="index"
-                >
-                  <NSpace
-                    vertical
                     size="small"
+                    :bordered="false"
                   >
-                    <NSpace justify="space-between">
-                      <NText>{{ index + 1 }}. {{ option.text }}</NText>
-                      <NSpace>
-                        <NTag type="success">
-                          {{ option.count }}票
-                        </NTag>
-                        <NTag>{{ calculatePercentage(option.count, currentVote.totalVotes) }}%</NTag>
-                      </NSpace>
-                    </NSpace>
-                    <NProgress
-                      type="line"
-                      :percentage="calculatePercentage(option.count, currentVote.totalVotes)"
-                      :height="12"
-                    />
-                  </NSpace>
-                  <NDivider v-if="index < currentVote.options.length - 1" />
-                </div>
+                    剩余: {{ formatRemain(timeLeftMs) }}
+                  </NTag>
+                </NSpace>
+                <NButton type="warning" size="small" @click="endVote">
+                  <template #icon>
+                    <NIcon><Pause24Regular /></NIcon>
+                  </template>
+                  结束投票
+                </NButton>
               </NSpace>
-            </NCard>
-          </div>
-          <div v-else>
-            <NSpace vertical>
+
+              <NText depth="3">
+                总票数: {{ currentVote.totalVotes }}
+              </NText>
+
+              <div
+                v-for="(option, index) in currentVote.options"
+                :key="index"
+              >
+                <NSpace vertical size="small">
+                  <NSpace align="center" justify="space-between" :wrap="true" :size="8">
+                    <NText>{{ index + 1 }}. {{ option.text }}</NText>
+                    <NSpace align="center" :wrap="true" :size="6">
+                      <NTag type="success" size="small" :bordered="false">
+                        {{ option.count }}票
+                      </NTag>
+                      <NTag size="small" :bordered="false">
+                        {{ calculatePercentage(option.count, currentVote.totalVotes) }}%
+                      </NTag>
+                    </NSpace>
+                  </NSpace>
+                  <NProgress
+                    type="line"
+                    :percentage="calculatePercentage(option.count, currentVote.totalVotes)"
+                    :height="10"
+                  />
+                </NSpace>
+                <NDivider v-if="index < currentVote.options.length - 1" style="margin: 10px 0" />
+              </div>
+            </NSpace>
+          </template>
+
+          <template v-else>
+            <NSpace vertical :size="12">
               <NInput
                 v-model:value="newVoteTitle"
                 placeholder="投票标题"
+                size="small"
               />
 
               <div
@@ -524,9 +543,11 @@ function deleteTemplate(index: number) {
                   <NInput
                     v-model:value="newVoteOptions[index]"
                     placeholder="选项内容"
+                    size="small"
                   />
                   <NButton
                     quaternary
+                    size="small"
                     :disabled="newVoteOptions.length <= 2"
                     @click="removeOption(index)"
                   >
@@ -537,25 +558,26 @@ function deleteTemplate(index: number) {
                 </NInputGroup>
               </div>
 
-              <NSpace>
-                <NButton @click="addOption">
+              <NSpace align="center" :wrap="true" :size="10">
+                <NButton size="small" @click="addOption">
                   <template #icon>
                     <NIcon><Add24Filled /></NIcon>
                   </template>
                   添加选项
                 </NButton>
-                <NButton secondary @click="importDefaultOptions">
+                <NButton secondary size="small" @click="importDefaultOptions">
                   导入默认选项
                 </NButton>
               </NSpace>
 
-              <NSpace>
+              <NSpace align="center" :wrap="true" :size="12">
                 <NInputGroup>
                   <NInputGroupLabel>持续时间</NInputGroupLabel>
                   <NInputNumber
                     v-model:value="newVoteDuration"
                     :min="10"
-                    style="width: 100px"
+                    class="vote-duration"
+                    size="small"
                   >
                     <template #suffix>
                       秒
@@ -569,10 +591,7 @@ function deleteTemplate(index: number) {
               </NSpace>
 
               <NSpace justify="end">
-                <NButton
-                  type="primary"
-                  @click="createVote"
-                >
+                <NButton type="primary" size="small" @click="createVote">
                   <template #icon>
                     <NIcon><Play24Regular /></NIcon>
                   </template>
@@ -580,7 +599,7 @@ function deleteTemplate(index: number) {
                 </NButton>
               </NSpace>
             </NSpace>
-          </div>
+          </template>
         </NSpace>
       </NSpin>
     </NCard>
@@ -589,46 +608,45 @@ function deleteTemplate(index: number) {
       v-if="!currentVote?.isActive && voteConfig.isEnabled"
       title="保存/加载模板"
       size="small"
+      bordered
     >
-      <NSpace vertical>
-        <NSpace>
+      <NSpace vertical :size="12">
+        <NSpace align="center" :wrap="true" :size="10">
           <NInput
             v-model:value="templateName"
             placeholder="模板名称"
+            size="small"
           />
-          <NButton @click="saveTemplate">
+          <NButton size="small" @click="saveTemplate">
             保存当前投票为模板
           </NButton>
         </NSpace>
 
-        <NDivider v-if="savedTemplates.length > 0" />
+        <NDivider v-if="savedTemplates.length > 0" style="margin: 0" />
 
         <NEmpty
           v-if="savedTemplates.length === 0"
           description="暂无保存的模板"
+          size="small"
         />
 
-        <NList v-else>
+        <NList v-else size="small" bordered>
           <NListItem
             v-for="(template, index) in savedTemplates"
             :key="index"
           >
             <NThing :title="template.title">
               <template #description>
-                <NText>选项数: {{ template.options.length }}</NText>
+                <NText depth="3">
+                  选项数: {{ template.options.length }}
+                </NText>
               </template>
               <template #action>
-                <NSpace>
-                  <NButton
-                    size="small"
-                    @click="loadTemplate(template)"
-                  >
+                <NSpace :size="8">
+                  <NButton size="small" @click="loadTemplate(template)">
                     加载
                   </NButton>
-                  <NButton
-                    size="small"
-                    @click="deleteTemplate(index)"
-                  >
+                  <NButton size="small" secondary type="error" @click="deleteTemplate(index)">
                     删除
                   </NButton>
                 </NSpace>
@@ -643,18 +661,16 @@ function deleteTemplate(index: number) {
       v-if="voteHistoryTab.length > 0 && voteConfig.isEnabled"
       title="投票历史"
       size="small"
+      bordered
     >
-      <NList>
+      <NList size="small" bordered>
         <NListItem
           v-for="vote in voteHistoryTab"
           :key="vote.id"
         >
           <NThing :title="vote.title">
             <template #description>
-              <NSpace
-                vertical
-                size="small"
-              >
+              <NSpace vertical size="small">
                 <NText depth="3">
                   开始于: {{ new Date(vote.startTime * 1000).toLocaleString() }}
                   <span v-if="vote.endTime">
@@ -665,25 +681,21 @@ function deleteTemplate(index: number) {
                 <NSpace
                   v-for="(option, index) in vote.options"
                   :key="index"
+                  :wrap="true"
+                  :size="8"
                 >
-                  <NTag>{{ option.text }}: {{ option.count }}票 ({{ calculatePercentage(option.count, vote.totalVotes) }}%)</NTag>
+                  <NTag size="small" :bordered="false">
+                    {{ option.text }}: {{ option.count }}票 ({{ calculatePercentage(option.count, vote.totalVotes) }}%)
+                  </NTag>
                 </NSpace>
               </NSpace>
             </template>
             <template #action>
-              <NSpace>
-                <NButton
-                  size="small"
-                  type="primary"
-                  @click="reuseVote(vote)"
-                >
+              <NSpace :size="8">
+                <NButton size="small" type="primary" @click="reuseVote(vote)">
                   复刻
                 </NButton>
-                <NButton
-                  size="small"
-                  type="error"
-                  @click="deleteVote(vote.id)"
-                >
+                <NButton size="small" secondary type="error" @click="deleteVote(vote.id)">
                   删除
                 </NButton>
               </NSpace>
@@ -694,33 +706,32 @@ function deleteTemplate(index: number) {
     </NCard>
   </NSpace>
 
-  <!-- 设置弹窗 -->
   <NModal
     v-model:show="showSettingsModal"
     preset="card"
     title="投票设置"
-    style="width: 600px"
+    style="width: 900px; max-width: 90vw"
   >
     <NSpin :show="isLoading">
-      <NSpace vertical>
-        <NSpace vertical>
+      <NSpace vertical :size="12">
+        <NSpace vertical :size="10">
           <NText strong>
             基本设置
           </NText>
 
           <NInputGroup>
             <NInputGroupLabel>触发命令</NInputGroupLabel>
-            <NInput v-model:value="voteConfig.voteCommand" />
+            <NInput v-model:value="voteConfig.voteCommand" size="small" />
           </NInputGroup>
 
           <NInputGroup>
             <NInputGroupLabel>结束命令</NInputGroupLabel>
-            <NInput v-model:value="voteConfig.voteEndCommand" />
+            <NInput v-model:value="voteConfig.voteEndCommand" size="small" />
           </NInputGroup>
 
           <NInputGroup>
             <NInputGroupLabel>默认标题</NInputGroupLabel>
-            <NInput v-model:value="voteConfig.voteTitle" />
+            <NInput v-model:value="voteConfig.voteTitle" size="small" />
           </NInputGroup>
 
           <NInputGroup>
@@ -728,6 +739,7 @@ function deleteTemplate(index: number) {
             <NInputNumber
               v-model:value="voteConfig.voteDurationSeconds"
               :min="10"
+              size="small"
             >
               <template #suffix>
                 秒
@@ -748,9 +760,9 @@ function deleteTemplate(index: number) {
           </NCheckbox>
         </NSpace>
 
-        <NDivider />
+        <NDivider style="margin: 0" />
 
-        <NSpace vertical>
+        <NSpace vertical :size="10">
           <NText strong>
             礼物投票
           </NText>
@@ -765,6 +777,7 @@ function deleteTemplate(index: number) {
               v-model:value="voteConfig.minGiftPrice"
               :min="0.1"
               :precision="1"
+              size="small"
             >
               <template #suffix>
                 元
@@ -773,7 +786,7 @@ function deleteTemplate(index: number) {
           </NInputGroup>
 
           <NRadioGroup v-model:value="voteConfig.voteResultMode">
-            <NSpace>
+            <NSpace :size="12">
               <NRadio :value="0">
                 按人数计票
               </NRadio>
@@ -784,14 +797,14 @@ function deleteTemplate(index: number) {
           </NRadioGroup>
         </NSpace>
 
-        <NDivider />
+        <NDivider style="margin: 0" />
 
-        <NSpace vertical>
+        <NSpace vertical :size="10">
           <NText strong>
             显示设置
           </NText>
 
-          <NSpace>
+          <NSpace :wrap="true" :size="12">
             <NInputGroup>
               <NInputGroupLabel>背景颜色</NInputGroupLabel>
               <NColorPicker v-model:value="voteConfig.backgroundColor" />
@@ -808,7 +821,7 @@ function deleteTemplate(index: number) {
             </NInputGroup>
           </NSpace>
 
-          <NSpace>
+          <NSpace align="center" :wrap="true" :size="12">
             <NCheckbox v-model:checked="voteConfig.roundedCorners">
               圆角显示
             </NCheckbox>
@@ -823,20 +836,18 @@ function deleteTemplate(index: number) {
                   { label: '顶部', value: 'top' },
                   { label: '底部', value: 'bottom' },
                 ]"
-                style="width: 120px"
+                size="small"
+                style="width: 140px"
               />
             </NInputGroup>
           </NSpace>
         </NSpace>
 
-        <NSpace justify="end">
-          <NButton @click="showSettingsModal = false">
+        <NSpace justify="end" :size="8">
+          <NButton size="small" @click="showSettingsModal = false">
             取消
           </NButton>
-          <NButton
-            type="primary"
-            @click="saveVoteConfig"
-          >
+          <NButton type="primary" size="small" @click="saveVoteConfig">
             保存
           </NButton>
         </NSpace>
@@ -844,3 +855,13 @@ function deleteTemplate(index: number) {
     </NSpin>
   </NModal>
 </template>
+
+<style scoped>
+.vote-title {
+  font-size: 1.1em;
+}
+
+.vote-duration {
+  width: 120px;
+}
+</style>

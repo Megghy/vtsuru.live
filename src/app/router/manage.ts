@@ -12,6 +12,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/DashboardView.vue'),
       meta: {
         title: '面板',
+        pageWidth: 'md',
       },
     },
     {
@@ -21,6 +22,7 @@ export default // 管理页面
       meta: {
         title: '歌单',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -30,6 +32,7 @@ export default // 管理页面
       meta: {
         title: '提问箱',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -39,6 +42,7 @@ export default // 管理页面
       meta: {
         title: '动态抽奖',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -48,6 +52,7 @@ export default // 管理页面
       meta: {
         title: '数据跟踪',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -57,6 +62,7 @@ export default // 管理页面
       meta: {
         title: '日程',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -66,6 +72,7 @@ export default // 管理页面
       meta: {
         title: '事件记录',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -75,6 +82,7 @@ export default // 管理页面
       meta: {
         title: '视频征集',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -84,6 +92,7 @@ export default // 管理页面
       meta: {
         title: '详情 · 视频征集',
         parent: 'manage-videoCollect',
+        pageWidth: 'xl',
       },
     },
     {
@@ -94,6 +103,7 @@ export default // 管理页面
         title: '直播抽奖',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -104,6 +114,7 @@ export default // 管理页面
         title: 'OBS组件库',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -114,6 +125,7 @@ export default // 管理页面
         title: '排队',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -124,6 +136,7 @@ export default // 管理页面
         title: '读弹幕',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -134,6 +147,7 @@ export default // 管理页面
         title: '点播',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -144,6 +158,7 @@ export default // 管理页面
         title: '点歌',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -155,6 +170,7 @@ export default // 管理页面
         keepAlive: true,
         danmaku: true,
         isNew: true,
+        pageWidth: 'full',
       },
     },
     {
@@ -165,6 +181,7 @@ export default // 管理页面
         title: '弹幕投票',
         keepAlive: true,
         danmaku: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -174,6 +191,7 @@ export default // 管理页面
       meta: {
         title: '直播记录',
         keepAlive: true,
+        pageWidth: 'md',
       },
     },
     {
@@ -182,6 +200,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/live/LiveDetailManage.vue'),
       meta: {
         title: '直播详情',
+        pageWidth: 'md',
       },
     },
     {
@@ -190,6 +209,7 @@ export default // 管理页面
       component: async () => import('@/shared/components/FeedbackManage.vue'),
       meta: {
         title: '反馈',
+        pageWidth: 'xl',
       },
     },
     {
@@ -198,6 +218,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/point/PointManage.vue'),
       meta: {
         title: '积分',
+        pageWidth: 'xl',
       },
     },
     {
@@ -206,6 +227,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/ForumManage.vue'),
       meta: {
         title: '粉丝讨论区',
+        pageWidth: 'xl',
       },
     },
     {
@@ -214,6 +236,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/AnalyzeView.vue'),
       meta: {
         title: '数据分析',
+        pageWidth: 'xl',
       },
     },
     {
@@ -223,6 +246,7 @@ export default // 管理页面
       meta: {
         title: '直播工具箱',
         keepAlive: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -232,6 +256,7 @@ export default // 管理页面
       meta: {
         title: '动态九图生成器',
         parent: 'manage-tools-dashboard', // 指向工具箱仪表盘
+        pageWidth: 'xl',
       },
     },
     {
@@ -240,6 +265,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),
       meta: {
         title: '自定义页面',
+        pageWidth: 'xl',
       },
     },
   ],

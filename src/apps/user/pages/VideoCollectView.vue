@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
-import { NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
+import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
@@ -40,27 +40,37 @@ async function get() {
 </script>
 
 <template>
-  <div>
-    <NSpin :show="isLoading">
-      <NFlex justify="center">
-        <NEmpty
-          v-if="videoTables.length === 0"
-          description="没有正在进行的征集表"
-        />
-        <NList v-else>
-          <NListItem
-            v-for="item in videoTables"
-            :key="item.id"
-          >
-            <VideoCollectInfoCard
-              :item="item"
-              can-click
-              style="width: 500px; max-width: 70vw"
-              from="user"
-            />
-          </NListItem>
-        </NList>
-      </NFlex>
-    </NSpin>
+  <div class="video-collect-view">
+    <NCard size="small" :bordered="true" title="视频征集">
+      <NSpin :show="isLoading">
+        <NFlex justify="center">
+          <NEmpty
+            v-if="videoTables.length === 0"
+            description="没有正在进行的征集表"
+          />
+          <NList v-else>
+            <NListItem
+              v-for="item in videoTables"
+              :key="item.id"
+            >
+              <VideoCollectInfoCard
+                :item="item"
+                can-click
+                style="width: 100%"
+                from="user"
+              />
+            </NListItem>
+          </NList>
+        </NFlex>
+      </NSpin>
+    </NCard>
   </div>
 </template>
+
+<style scoped>
+.video-collect-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+</style>

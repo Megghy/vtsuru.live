@@ -228,7 +228,7 @@ onMounted(async () => {
     />
     <NLayoutContent
       v-else-if="(!useAuth.currentToken && useAuth.biliTokens.length > 0) || useAuth.isInvalid"
-      style="height: 100vh; padding: 50px"
+      class="point-user-center"
     >
       <NAlert
         v-if="useAuth.isInvalid"
@@ -321,24 +321,20 @@ onMounted(async () => {
           </NButton>
         </NFlex>
       </NLayoutHeader>
-      <NLayoutContent content-style="padding: 24px;">
-        <NFlex
-          align="center"
-          justify="center"
-        >
-          <div style="max-width: 95vw; width: 1200px">
-            <NCard
-              title="我的信息"
-              :bordered="false"
+      <NLayoutContent content-style="padding: 0;">
+        <div class="point-user-page">
+          <NCard
+            title="我的信息"
+            bordered
+            size="small"
+            class="info-card"
+          >
+            <NDescriptions
+              label-placement="left"
+              bordered
               size="small"
-              class="info-card"
+              :column="2"
             >
-              <NDescriptions
-                label-placement="left"
-                bordered
-                size="small"
-                :column="2"
-              >
                 <NDescriptionsItem
                   label="用户名"
                   style="min-width: 100px;"
@@ -368,23 +364,21 @@ onMounted(async () => {
                   </NTag>
                 </NDescriptionsItem>
               </NDescriptions>
-            </NCard>
-            <NDivider style="margin: 16px 0" />
-            <NTabs
-              v-if="hash"
-              v-model:value="hash"
-              default-value="points"
-              animated
-              type="line"
-              @update:value="onTabChange"
-            >
+          </NCard>
+          <NTabs
+            v-if="hash"
+            v-model:value="hash"
+            default-value="points"
+            animated
+            type="line"
+            @update:value="onTabChange"
+          >
               <NTabPane
                 name="points"
                 tab="我的积分"
                 display-directive="show:lazy"
                 @vue:mounted="onAllPointPaneMounted"
               >
-                <NDivider style="margin-top: 10px" />
                 <NFlex
                   justify="end"
                   style="margin-bottom: 10px"
@@ -416,7 +410,6 @@ onMounted(async () => {
                 tab="我的订单"
                 display-directive="show:lazy"
               >
-                <NDivider style="margin-top: 10px" />
                 <PointOrderView
                   ref="orderViewRef"
                   @data-loaded="tabDataLoaded.orders = true"
@@ -427,7 +420,6 @@ onMounted(async () => {
                 tab="积分记录"
                 display-directive="show:lazy"
               >
-                <NDivider style="margin-top: 10px" />
                 <PointUserHistoryView
                   ref="historyViewRef"
                   @data-loaded="tabDataLoaded.histories = true"
@@ -438,20 +430,32 @@ onMounted(async () => {
                 tab="设置"
                 display-directive="show:lazy"
               >
-                <NDivider style="margin-top: 10px" />
                 <PointUserSettings ref="settingsViewRef" />
               </NTabPane>
             </NTabs>
-          </div>
-        </NFlex>
+        </div>
       </NLayoutContent>
     </template>
   </NLayout>
 </template>
 
 <style scoped>
+.point-user-center {
+  height: 100vh;
+  padding: 16px;
+}
+
+.point-user-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .info-card {
-  border: 1px solid var(--n-border-color);
   border-radius: var(--n-border-radius);
 }
 
@@ -460,7 +464,7 @@ onMounted(async () => {
 }
 
 :deep(.n-tab-pane) {
-  padding-top: 16px;
+  padding-top: 12px;
 }
 
 /* 移动端优化 */
@@ -469,16 +473,16 @@ onMounted(async () => {
     padding: 8px !important;
   }
 
-  :deep(.n-layout-content) {
-    padding: 16px 8px !important;
-  }
-
   :deep(.n-descriptions) {
     font-size: 13px;
   }
 
   :deep(.n-tabs-nav) {
     padding: 0 4px;
+  }
+
+  .point-user-page {
+    padding: 12px 8px;
   }
 }
 

@@ -25,28 +25,28 @@ const showModel = computed({
     v-model:show="showModel"
     preset="card"
     title="抽奖结果"
-    style="max-width: 90%; width: 800px"
+    style="width: 900px; max-width: 90vw"
     closable
   >
     <template #header-extra>
-      <NButton type="error" size="small" @click="emit('clear')">
+      <NButton type="error" secondary size="small" @click="emit('clear')">
         清空
       </NButton>
     </template>
     <NScrollbar v-if="history.length > 0" style="max-height: 80vh">
-      <NList>
+      <NList size="small" bordered>
         <NListItem v-for="item in history" :key="item.time">
-          <NCard size="small">
+          <NCard size="small" bordered>
             <template #header>
               <NTime :time="item.time" />
             </template>
             <template #header-extra>
-              <NButton type="error" size="small" @click="emit('remove', item.time)">
+              <NButton type="error" secondary size="small" @click="emit('remove', item.time)">
                 删除
               </NButton>
             </template>
-            <NSpace vertical>
-              <NSpace v-for="user in item.users" :key="user.openId">
+            <NSpace vertical :size="10">
+              <NSpace v-for="user in item.users" :key="user.openId" align="center" :size="10">
                 <NAvatar
                   round
                   lazy
@@ -60,7 +60,6 @@ const showModel = computed({
         </NListItem>
       </NList>
     </NScrollbar>
-    <NEmpty v-else description="暂无记录" />
+    <NEmpty v-else description="暂无记录" size="small" />
   </NModal>
 </template>
-

@@ -148,213 +148,204 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="checkin-ranking-view">
-    <NSpace vertical>
-      <NCard
-        class="ranking-card"
-        title="签到排行榜"
+  <NCard
+    class="ranking-card"
+    title="签到排行榜"
+    size="small"
+    bordered
+  >
+    <template #header-extra>
+      <NSpace :wrap="true" :size="8">
+        <NSelect
+          v-model:value="timeRange"
+          size="small"
+          style="min-width: 120px; width: auto"
+          :options="timeRangeOptions"
+          @update:value="loadCheckInRanking"
+        />
+        <NInput
+          v-model:value="userFilter"
+          size="small"
+          placeholder="搜索用户"
+          clearable
+          style="min-width: 140px; width: auto"
+        />
+        <NButton
+          type="primary"
+          size="small"
+          :loading="isLoading"
+          @click="loadCheckInRanking"
+        >
+          刷新
+        </NButton>
+      </NSpace>
+    </template>
+
+    <NSpin :show="isLoading">
+      <div
+        v-if="rankingData.length === 0 && !isLoading"
+        class="empty-data"
       >
-        <template #header-extra>
-          <NSpace
-            :wrap="true"
-            :size="8"
-          >
-            <NSelect
-              v-model:value="timeRange"
-              style="min-width: 120px; width: auto"
-              :options="timeRangeOptions"
-              @update:value="loadCheckInRanking"
-            />
-            <NInput
-              v-model:value="userFilter"
-              placeholder="搜索用户"
-              clearable
-              style="min-width: 120px; width: auto"
-            />
-            <NButton
-              type="primary"
-              size="small"
-              :loading="isLoading"
-              @click="loadCheckInRanking"
-            >
-              刷新
-            </NButton>
-          </NSpace>
-        </template>
+        <NEmpty description="暂无签到数据" />
+      </div>
 
-        <NSpin :show="isLoading">
-          <div
-            v-if="rankingData.length === 0 && !isLoading"
-            class="empty-data"
-          >
-            <NEmpty description="暂无签到数据" />
-          </div>
-
-          <!-- 自定义排行榜表格 -->
-          <div
-            v-else
-            class="ranking-table-wrapper"
-          >
-            <div
-              class="custom-ranking-table"
-            >
-              <!-- 排行榜头部 -->
-              <div class="ranking-header">
-                <div class="ranking-row">
-                  <div class="col-rank">
-                    排名
-                  </div>
-                  <div class="col-user">
-                    用户
-                  </div>
-                  <div class="col-days">
-                    连续签到
-                  </div>
-                  <div class="col-monthly">
-                    本月签到
-                  </div>
-                  <div class="col-total">
-                    总签到
-                  </div>
-                  <div class="col-time">
-                    最近签到时间
-                  </div>
-                </div>
+      <!-- 自定义排行榜表格 -->
+      <div
+        v-else
+        class="ranking-table-wrapper"
+      >
+        <div class="custom-ranking-table">
+          <!-- 排行榜头部 -->
+          <div class="ranking-header">
+            <div class="ranking-row">
+              <div class="col-rank">
+                排名
               </div>
-
-              <!-- 排行榜内容 -->
-              <div class="ranking-body">
-                <div
-                  v-for="(item, index) in pagedData"
-                  :key="index"
-                  class="ranking-row"
-                  :class="{ 'top-three': index < 3 }"
-                >
-                  <!-- 排名列 -->
-                  <div class="col-rank">
-                    <div
-                      class="rank-number"
-                      :class="{
-                        'rank-1': index === 0,
-                        'rank-2': index === 1,
-                        'rank-3': index === 2,
-                      }"
-                    >
-                      {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
-                    </div>
-                  </div>
-
-                  <!-- 用户列 -->
-                  <div class="col-user">
-                    <div class="user-name">
-                      {{ item.name }}
-                    </div>
-                    <NTag
-                      v-if="item.isAuthed"
-                      size="small"
-                      type="success"
-                      :bordered="false"
-                      style="margin-left: 8px;"
-                    >
-                      已认证
-                    </NTag>
-                  </div>
-
-                  <!-- 连续签到列 -->
-                  <div class="col-days">
-                    <div class="days-count">
-                      {{ item.consecutiveDays }}
-                    </div>
-                    <div class="days-text">
-                      天
-                    </div>
-                  </div>
-
-                  <!-- 本月签到列 -->
-                  <div class="col-monthly">
-                    <div class="count-value">
-                      {{ item.monthlyCheckInCount || 0 }}
-                    </div>
-                    <div class="count-text">
-                      次
-                    </div>
-                  </div>
-
-                  <!-- 总签到列 -->
-                  <div class="col-total">
-                    <div class="count-value">
-                      {{ item.totalCheckInCount || 0 }}
-                    </div>
-                    <div class="count-text">
-                      次
-                    </div>
-                  </div>
-
-                  <!-- 签到时间列 -->
-                  <div class="col-time">
-                    <NTooltip>
-                      <template #trigger>
-                        <NTime
-                          :time="item.lastCheckInTime"
-                          type="relative"
-                        />
-                      </template>
-                      <template #default>
-                        <NTime
-                          :time="item.lastCheckInTime"
-                        />
-                      </template>
-                    </NTooltip>
-                  </div>
-                </div>
+              <div class="col-user">
+                用户
               </div>
-
-              <!-- 分页控制 -->
-              <div class="ranking-footer">
-                <NPagination
-                  v-model:page="pagination.page"
-                  v-model:page-size="pagination.pageSize"
-                  :item-count="filteredRankingData.length"
-                  :page-sizes="[10, 20, 50]"
-                  show-size-picker
-                />
+              <div class="col-days">
+                连续签到
+              </div>
+              <div class="col-monthly">
+                本月签到
+              </div>
+              <div class="col-total">
+                总签到
+              </div>
+              <div class="col-time">
+                最近签到时间
               </div>
             </div>
           </div>
-        </NSpin>
 
-        <div class="ranking-info">
-          <NAlert type="info">
-            <template #icon>
-              <NIcon>
-                <Info24Filled />
-              </NIcon>
-            </template>
-            签到可获得积分，连续签到有额外奖励。排行榜每日更新，发送"{{ checkInKeyword }}"即可参与签到。
-          </NAlert>
+          <!-- 排行榜内容 -->
+          <div class="ranking-body">
+            <div
+              v-for="(item, index) in pagedData"
+              :key="index"
+              class="ranking-row"
+              :class="{ 'top-three': index < 3 }"
+            >
+              <!-- 排名列 -->
+              <div class="col-rank">
+                <div
+                  class="rank-number"
+                  :class="{
+                    'rank-1': index === 0,
+                    'rank-2': index === 1,
+                    'rank-3': index === 2,
+                  }"
+                >
+                  {{ index + 1 + (pagination.page - 1) * pagination.pageSize }}
+                </div>
+              </div>
+
+              <!-- 用户列 -->
+              <div class="col-user">
+                <div class="user-name">
+                  {{ item.name }}
+                </div>
+                <NTag
+                  v-if="item.isAuthed"
+                  size="small"
+                  type="success"
+                  :bordered="false"
+                  style="margin-left: 8px;"
+                >
+                  已认证
+                </NTag>
+              </div>
+
+              <!-- 连续签到列 -->
+              <div class="col-days">
+                <div class="days-count">
+                  {{ item.consecutiveDays }}
+                </div>
+                <div class="days-text">
+                  天
+                </div>
+              </div>
+
+              <!-- 本月签到列 -->
+              <div class="col-monthly">
+                <div class="count-value">
+                  {{ item.monthlyCheckInCount || 0 }}
+                </div>
+                <div class="count-text">
+                  次
+                </div>
+              </div>
+
+              <!-- 总签到列 -->
+              <div class="col-total">
+                <div class="count-value">
+                  {{ item.totalCheckInCount || 0 }}
+                </div>
+                <div class="count-text">
+                  次
+                </div>
+              </div>
+
+              <!-- 签到时间列 -->
+              <div class="col-time">
+                <NTooltip>
+                  <template #trigger>
+                    <NTime
+                      :time="item.lastCheckInTime"
+                      type="relative"
+                    />
+                  </template>
+                  <template #default>
+                    <NTime :time="item.lastCheckInTime" />
+                  </template>
+                </NTooltip>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分页控制 -->
+          <div class="ranking-footer">
+            <NPagination
+              v-model:page="pagination.page"
+              v-model:page-size="pagination.pageSize"
+              :item-count="filteredRankingData.length"
+              :page-sizes="[10, 20, 50]"
+              show-size-picker
+            />
+          </div>
         </div>
-      </NCard>
-    </NSpace>
-  </div>
+      </div>
+    </NSpin>
+
+    <div class="ranking-info">
+      <NAlert type="info" size="small">
+        <template #icon>
+          <NIcon>
+            <Info24Filled />
+          </NIcon>
+        </template>
+        签到可获得积分，连续签到有额外奖励。排行榜每日更新，发送"{{ checkInKeyword }}"即可参与签到。
+      </NAlert>
+    </div>
+  </NCard>
 </template>
 
 <style scoped>
-.checkin-ranking-view {
-  padding: 12px;
-}
-
 .empty-data {
   padding: 40px 0;
   text-align: center;
 }
 
 .ranking-info {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 /* 自定义表格样式 */
 .custom-ranking-table {
   overflow: hidden;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
   margin-bottom: 16px;
   overflow-x: auto;
 }
@@ -368,7 +359,7 @@ onMounted(() => {
 .ranking-row {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--n-divider-color);
   transition: background-color 0.2s ease;
 }
@@ -425,18 +416,18 @@ onMounted(() => {
 }
 
 .rank-1 {
-  background: linear-gradient(135deg, #ffe259, #ffa751);
-  color: white !important;
+  background-color: rgba(var(--n-warning-color-rgb), 0.16);
+  color: var(--n-warning-color) !important;
 }
 
 .rank-2 {
-  background: linear-gradient(135deg, #d3d3d3, #a9a9a9);
-  color: white !important;
+  background-color: rgba(var(--n-info-color-rgb), 0.14);
+  color: var(--n-info-color) !important;
 }
 
 .rank-3 {
-  background: linear-gradient(135deg, #c79364, #a77347);
-  color: white !important;
+  background-color: rgba(var(--n-success-color-rgb), 0.14);
+  color: var(--n-success-color) !important;
 }
 
 .user-name {

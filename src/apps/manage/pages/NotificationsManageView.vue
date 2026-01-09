@@ -6,8 +6,6 @@ import {
   NCheckbox,
   NEmpty,
   NFlex,
-  NList,
-  NListItem,
   NPagination,
   NSpace,
   NSpin,
@@ -191,46 +189,44 @@ onMounted(async () => {
     </template>
 
     <template v-else>
-      <NList>
-        <NListItem v-for="item in list" :key="item.id">
-          <NCard size="small" :bordered="false" style="width: 100%;">
-            <NFlex vertical :size="8">
-              <NFlex justify="space-between" align="center" :gap="12">
-                <div style="font-weight: 600;">
-                  <NTag v-if="!item.isReaded" size="small" type="info" :bordered="false">
-                    未读
-                  </NTag>
-                  {{ item.title }}
-                </div>
-                <NTime :time="item.createTime" format="yyyy-MM-dd HH:mm" />
-              </NFlex>
-
-              <div style="white-space: pre-wrap; opacity: .85;">
-                {{ item.message }}
+      <div class="notif-stack">
+        <NCard v-for="item in list" :key="item.id" size="small" :bordered="true" class="notif-card">
+          <NFlex vertical :size="10">
+            <NFlex justify="space-between" align="center" :gap="12" wrap>
+              <div class="notif-title">
+                <NTag v-if="!item.isReaded" size="small" type="info" :bordered="false">
+                  未读
+                </NTag>
+                {{ item.title }}
               </div>
-
-              <NSpace>
-                <template v-if="isOrgInviteNotification(item)">
-                  <NButton size="small" type="primary" @click.stop="acceptOrgInvite(item)">
-                    接受
-                  </NButton>
-                  <NButton size="small" tertiary @click.stop="rejectOrgInvite(item)">
-                    拒绝
-                  </NButton>
-                </template>
-
-                <NButton v-if="resolveOpenUrl(item)" size="small" tertiary type="primary" @click.stop="openNotif(item)">
-                  打开
-                </NButton>
-
-                <NButton v-if="!item.isReaded" size="small" tertiary @click.stop="markNotifRead(item.id)">
-                  标记已读
-                </NButton>
-              </NSpace>
+              <NTime :time="item.createTime" format="yyyy-MM-dd HH:mm" />
             </NFlex>
-          </NCard>
-        </NListItem>
-      </NList>
+
+            <div class="notif-message">
+              {{ item.message }}
+            </div>
+
+            <NSpace>
+              <template v-if="isOrgInviteNotification(item)">
+                <NButton size="small" type="primary" @click.stop="acceptOrgInvite(item)">
+                  接受
+                </NButton>
+                <NButton size="small" tertiary @click.stop="rejectOrgInvite(item)">
+                  拒绝
+                </NButton>
+              </template>
+
+              <NButton v-if="resolveOpenUrl(item)" size="small" tertiary type="primary" @click.stop="openNotif(item)">
+                打开
+              </NButton>
+
+              <NButton v-if="!item.isReaded" size="small" tertiary @click.stop="markNotifRead(item.id)">
+                标记已读
+              </NButton>
+            </NSpace>
+          </NFlex>
+        </NCard>
+      </div>
 
       <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
         <NPagination
@@ -248,3 +244,25 @@ onMounted(async () => {
     </template>
   </NSpin>
 </template>
+
+<style scoped>
+.notif-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notif-title {
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-message {
+  white-space: pre-wrap;
+  color: var(--n-text-color-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+</style>

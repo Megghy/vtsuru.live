@@ -1,0 +1,37 @@
+.web-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.web-page--md {
+  max-width: 900px;
+}
+
+.web-page--xl {
+  max-width: 1400px;
+}
+
+.web-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* shadcn-like card rhythm */
+.web-page .n-card {
+  border-radius: var(--n-border-radius);
+}
+
+.web-page .n-card .n-card-header {
+  padding: 12px 14px;
+}
+
+.web-page .n-card .n-card__content {
+  padding: 14px;
+}

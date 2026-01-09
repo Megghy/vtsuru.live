@@ -47,6 +47,7 @@ import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/conf
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 interface Music {
   id: number
@@ -388,10 +389,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard size="small">
-    <template #header>
-      <NSpace align="center" justify="space-between">
-        <NSpace align="center">
+  <NCard size="small" bordered :segmented="{ content: true }">
+    <OpenLivePageHeader
+      title="点歌"
+      description="监听弹幕点歌、管理闲置歌单与黑名单。"
+    >
+      <template #actions>
+        <NSpace align="center" :wrap="true" :size="10">
           <NButton
             :type="listening ? 'error' : 'primary'"
             data-umami-event="Use Music Request"
@@ -404,21 +408,20 @@ onUnmounted(() => {
           <NButton
             type="info"
             size="small"
+            class="open-live-action-btn"
             @click="showOBSModal = true"
           >
             OBS组件
           </NButton>
-        </NSpace>
-
-        <NSpace align="center">
           <NButton
             type="primary"
             secondary
             :disabled="!accountInfo"
             size="small"
+            class="open-live-action-btn"
             @click="uploadConfig"
           >
-            保存配置到服务器
+            保存配置
           </NButton>
           <NPopconfirm @positive-click="downloadConfig">
             <template #trigger>
@@ -427,22 +430,24 @@ onUnmounted(() => {
                 secondary
                 :disabled="!accountInfo"
                 size="small"
+                class="open-live-action-btn"
               >
-                从服务器获取配置
+                获取配置
               </NButton>
             </template>
-            这将覆盖当前设置, 确定?
+            这将覆盖当前设置，确定？
           </NPopconfirm>
         </NSpace>
-      </NSpace>
-    </template>
-    <NAlert type="info" closable style="margin-top: 10px">
-      搜索时会优先选择非VIP歌曲, 所以点到付费曲目时可能会是猴版或者各种奇怪的歌
+      </template>
+    </OpenLivePageHeader>
+
+    <NAlert type="info" size="small" :bordered="false">
+      搜索时会优先选择非VIP歌曲，所以点到付费曲目时可能会是猴版或者各种奇怪的歌。
     </NAlert>
   </NCard>
 
-  <NCard style="margin-top: 12px">
-    <NTabs type="line" animated>
+  <NCard size="small" bordered>
+    <NTabs type="line" animated size="small">
       <NTabPane
         name="queue"
         tab="当前点歌"
@@ -457,7 +462,7 @@ onUnmounted(() => {
             v-for="item in musicRquestStore.waitingMusics"
             :key="item.music.name"
           >
-            <NSpace align="center">
+            <NSpace align="center" :wrap="true" :size="8">
               <NButton
                 type="primary"
                 secondary
@@ -509,16 +514,16 @@ onUnmounted(() => {
         name="list"
         tab="闲置歌单"
       >
-        <NSpace style="margin-bottom: 10px">
+        <NSpace align="center" :wrap="true" :size="10" class="music-request__tab-actions">
           <NPopconfirm @positive-click="clearMusic">
             <template #trigger>
-              <NButton type="error" size="small">
+              <NButton type="error" secondary size="small" class="open-live-action-btn">
                 清空
               </NButton>
             </template>
             确定清空吗?
           </NPopconfirm>
-          <NButton size="small" @click="showNeteaseModal = true">
+          <NButton size="small" class="open-live-action-btn" @click="showNeteaseModal = true">
             从网易云歌单导入
           </NButton>
         </NSpace>
@@ -528,17 +533,14 @@ onUnmounted(() => {
         </NEmpty>
         <NVirtualList
           v-else
-          style="max-height: 600px"
+          class="music-request__list"
           :item-size="36"
           :items="originMusics"
           item-resizable
         >
           <template #default="{ item }">
-            <div :style="`height: ${36}px; display:flex; align-items:center; padding: 0 5px;`">
-              <NSpace
-                align="center"
-                style="width: 100%"
-              >
+            <div class="music-request__list-row">
+              <NSpace align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
                 <NPopconfirm @positive-click="delMusic(item)">
                   <template #trigger>
                     <NButton
@@ -571,7 +573,7 @@ onUnmounted(() => {
         name="blacklist"
         tab="黑名单"
       >
-        <NList bordered>
+        <NList size="small" bordered>
           <NListItem
             v-for="item in settings.blacklist"
             :key="item"
@@ -598,9 +600,9 @@ onUnmounted(() => {
         name="settings"
         tab="设置"
       >
-        <NSpace vertical>
-          <NSpace align="center">
-            <NRadioGroup v-model:value="settings.platform">
+        <NSpace vertical :size="12">
+          <NSpace align="center" :wrap="true" :size="12">
+            <NRadioGroup v-model:value="settings.platform" size="small">
               <NRadioButton value="netease">
                 网易云
               </NRadioButton>
@@ -608,34 +610,33 @@ onUnmounted(() => {
                 酷狗
               </NRadioButton>
             </NRadioGroup>
-            <NInputGroup style="width: 250px">
+            <NInputGroup class="music-request__field--prefix">
               <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
-              <NInput v-model:value="settings.orderPrefix" />
+              <NInput v-model:value="settings.orderPrefix" size="small" />
             </NInputGroup>
             <NCheckbox
               :checked="settings.orderCooldown !== undefined"
               @update:checked="(checked: boolean) => {
                 settings.orderCooldown = checked ? 300 : undefined
-              }
-              "
+              }"
             >
               是否启用点歌冷却
             </NCheckbox>
             <NInputGroup
               v-if="settings.orderCooldown"
-              style="width: 200px"
+              class="music-request__field--cooldown"
             >
               <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
               <NInputNumber
                 v-model:value="settings.orderCooldown"
                 @update:value="(value) => {
                   if (!value || value <= 0) settings.orderCooldown = undefined
-                }
-                "
+                }"
+                size="small"
               />
             </NInputGroup>
           </NSpace>
-          <NSpace>
+          <NSpace :wrap="true" :size="12">
             <NCheckbox v-model:checked="settings.playMusicWhenFree">
               空闲时播放空闲歌单
             </NCheckbox>
@@ -643,11 +644,13 @@ onUnmounted(() => {
               优先播放点歌
             </NCheckbox>
           </NSpace>
-          <NSpace>
+          <NSpace align="center" :wrap="true" :size="12">
             <NTooltip>
               <template #trigger>
                 <NButton
                   type="info"
+                  secondary
+                  size="small"
                   @click="getOutputDevice"
                 >
                   获取输出设备
@@ -659,7 +662,8 @@ onUnmounted(() => {
               v-model:value="settings.deviceId"
               :options="deviceList"
               :fallback-option="() => ({ label: '未选择', value: '' })"
-              style="min-width: 200px"
+              class="music-request__field--device"
+              size="small"
               @update:value="musicRquestStore.setSinkId"
             />
           </NSpace>
@@ -671,7 +675,7 @@ onUnmounted(() => {
     v-model:show="showNeteaseModal"
     preset="card"
     title="获取歌单"
-    style="max-width: 600px"
+    style="width: 720px; max-width: 90vw"
   >
     <NInput
       v-model:value="neteaseIdInput"
@@ -680,6 +684,7 @@ onUnmounted(() => {
       autosize
       :status="neteaseSongListId ? 'success' : 'error'"
       placeholder="直接输入歌单Id或者网页链接"
+      size="small"
     >
       <template #suffix>
         <NTag
@@ -691,28 +696,30 @@ onUnmounted(() => {
         </NTag>
       </template>
     </NInput>
-    <NDivider style="margin: 10px" />
+    <NDivider style="margin: 10px 0" />
     <NButton
       type="primary"
       :disabled="!neteaseSongListId"
       :loading="isLoading"
       @click="getNeteaseSongList"
+      size="small"
     >
       获取
     </NButton>
     <template v-if="neteaseSongsOptions.length > 0">
-      <NDivider style="margin: 10px" />
+      <NDivider style="margin: 10px 0" />
       <NTransfer
         v-model:value="selectedNeteaseSongs"
-        style="height: 500px"
+        style="height: 420px"
         :options="neteaseSongsOptions"
         source-filterable
       />
-      <NDivider style="margin: 10px" />
+      <NDivider style="margin: 10px 0" />
       <NButton
         type="primary"
         :loading="isLoading"
         @click="addNeteaseSongs"
+        size="small"
       >
         添加到歌单 | {{ selectedNeteaseSongs.length }} 首
       </NButton>
@@ -722,35 +729,75 @@ onUnmounted(() => {
     v-model:show="showOBSModal"
     title="OBS组件"
     preset="card"
-    style="width: 800px"
+    style="width: 900px; max-width: 90vw"
   >
-    <NAlert
-      title="这是什么?  "
-      type="info"
-    >
-      将等待队列以及结果显示在OBS中
-    </NAlert>
-    <NDivider> 浏览 </NDivider>
-    <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
-      <MusicRequestOBS :id="accountInfo?.id" />
-    </div>
-    <br>
-    <NInput :value="`${CURRENT_HOST}obs/music-request?id=${accountInfo?.id}`" />
-    <NDivider />
-    <NCollapse>
-      <NCollapseItem title="使用说明">
-        <NUl>
-          <NLi>在 OBS 来源中添加源, 选择 浏览器</NLi>
-          <NLi>在 URL 栏填入上方链接</NLi>
-          <NLi>根据自己的需要调整宽度和高度 (这里是宽 280px 高 500px)</NLi>
-          <NLi>完事</NLi>
-        </NUl>
-      </NCollapseItem>
-    </NCollapse>
+    <NSpace vertical :size="12">
+      <NAlert title="这是什么？" type="info" size="small" :bordered="false">
+        将等待队列以及结果显示在OBS中。
+      </NAlert>
+      <NDivider style="margin: 0">
+        浏览
+      </NDivider>
+      <div class="music-request__obs-preview">
+        <MusicRequestOBS :id="accountInfo?.id" />
+      </div>
+      <NInput
+        :value="`${CURRENT_HOST}obs/music-request?id=${accountInfo?.id}`"
+        size="small"
+        readonly
+      />
+      <NCollapse>
+        <NCollapseItem title="使用说明">
+          <NUl>
+            <NLi>在 OBS 来源中添加源，选择「浏览器」。</NLi>
+            <NLi>在 URL 栏填入上方链接。</NLi>
+            <NLi>根据自己的需要调整宽度和高度（这里是宽 280px 高 500px）。</NLi>
+            <NLi>完成。</NLi>
+          </NUl>
+        </NCollapseItem>
+      </NCollapse>
+    </NSpace>
   </NModal>
 </template>
 
 <style>
+.music-request__tab-actions {
+  margin-bottom: 8px;
+}
+
+.music-request__list {
+  max-height: 560px;
+}
+
+.music-request__list-row {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.music-request__field--prefix {
+  width: 260px;
+  max-width: 100%;
+}
+
+.music-request__field--cooldown {
+  width: 240px;
+  max-width: 100%;
+}
+
+.music-request__field--device {
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.music-request__obs-preview {
+  height: 500px;
+  width: 280px;
+  position: relative;
+  margin: 0 auto;
+}
+
 .aplayer-list {
   max-height: 300px;
   overflow-y: auto;

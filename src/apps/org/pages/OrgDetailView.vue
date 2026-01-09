@@ -48,6 +48,7 @@ import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ORG_API_URL } from '@/shared/config'
+import '@/apps/org/styles/org-page.css'
 import { useOrgAnalyzeChart } from '@/apps/org/components/useOrgAnalyzeChart'
 import type { OrgAnalyzeChartMetric } from '@/apps/org/components/useOrgAnalyzeChart'
 import OrgAnalyzeTab from '@/apps/org/components/tabs/OrgAnalyzeTab.vue'
@@ -812,7 +813,7 @@ function handleGoConsole() {
 </script>
 
 <template>
-  <div style="max-width: 1400px; margin: 0 auto; padding: 16px;">
+  <div class="org-page">
     <template v-if="!isLoggedIn">
       <NCard>
         <NAlert type="warning" :bordered="false" style="margin-bottom: 12px;">

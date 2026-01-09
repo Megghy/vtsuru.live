@@ -18,6 +18,7 @@ import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { HISTORY_API_URL } from '@/shared/config'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 // 初始化ECharts组件
 use([
@@ -499,9 +500,12 @@ watch(
 </script>
 
 <template>
+  <div class="history-view">
+    <ManagePageHeader title="数据跟踪" subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）" />
   <NAlert
     v-if="accountInfo?.isBiliVerified !== true"
     type="info"
+    :bordered="false"
   >
     尚未进行Bilibili认证
   </NAlert>
@@ -512,9 +516,10 @@ watch(
   <NCard
     v-else
     size="small"
+    :bordered="true"
     class="history-card"
   >
-    <NAlert type="warning">
+    <NAlert type="warning" :bordered="false">
       由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
       <NButton
         text
@@ -673,9 +678,16 @@ watch(
       /> -->
     </NSpace>
   </NCard>
+  </div>
 </template>
 
 <style scoped>
+.history-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .history-card {
   width: 100%;
 }

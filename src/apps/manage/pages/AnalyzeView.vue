@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import {
-  BarChartOutline,
   ChatbubblesOutline,
   PeopleOutline,
   RefreshOutline,
@@ -46,6 +45,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { ANALYZE_API_URL } from '@/shared/config'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 // 注册必要的组件
 echarts.use([
@@ -384,16 +384,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="analyze-container">
-    <!-- 顶部操作栏 -->
-    <NSpace align="center" justify="space-between" class="header-actions">
-      <NSpace align="center">
-        <h2 style="margin: 0; font-weight: 500; font-size: 20px;">
-          <NIcon :component="BarChartOutline" style="vertical-align: middle; margin-right: 8px;" />
-          数据分析
-        </h2>
-      </NSpace>
-      <NSpace align="center">
+  <div class="analyze-view">
+    <ManagePageHeader title="数据分析" subtitle="近7/30天汇总与趋势">
+      <template #action>
         <EventFetcherAlert />
         <NTooltip v-if="lastUpdateTime > 0">
           <template #trigger>
@@ -410,8 +403,8 @@ onUnmounted(() => {
           </template>
           刷新
         </NButton>
-      </NSpace>
-    </NSpace>
+      </template>
+    </ManagePageHeader>
 
     <!-- 加载骨架屏 -->
     <div v-if="loading" class="skeleton-container">
@@ -681,15 +674,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.analyze-container {
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 4px;
-}
-
-.header-actions {
-  margin-bottom: 16px;
+.analyze-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .metric-card {

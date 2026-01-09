@@ -48,6 +48,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { templateConstants, useSpeechService } from '@/store/useSpeechService'
 import { copyToClipboard } from '@/shared/utils'
 import { TTS_API_URL } from '@/shared/config'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 defineProps<{
   roomInfo?: any
@@ -387,24 +388,104 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="read-danmaku-container">
-    <NAlert
-      v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis"
-      type="error"
-      title="不支持语音功能"
-    >
-      你的浏览器不支持语音功能，请使用现代浏览器如 Chrome、Edge 等
-    </NAlert>
+  <NAlert
+    v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis"
+    type="error"
+    title="不支持语音功能"
+    size="small"
+    :bordered="false"
+  >
+    你的浏览器不支持语音功能，请使用现代浏览器如 Chrome、Edge 等
+  </NAlert>
 
-    <template v-else>
-      <!-- 顶部提示区域 -->
-      <NSpace
-        vertical
-        :size="12"
+  <template v-else>
+    <NCard size="small" bordered :segmented="{ content: true }">
+      <OpenLivePageHeader
+        title="弹幕朗读"
+        description="将弹幕/事件转为语音，支持本地与 API TTS。"
       >
+        <template #actions>
+          <NSpace align="center" :wrap="true" :size="10">
+            <NButton
+              :type="speechState.canSpeech ? 'error' : 'primary'"
+              size="medium"
+              :loading="speechState.isApiAudioLoading"
+              data-umami-event="Use TTS"
+              :data-umami-event-uid="accountInfo?.id"
+              @click="speechState.canSpeech ? stopSpeech() : startSpeech()"
+            >
+              <template #icon>
+                <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
+              </template>
+              {{ speechState.canSpeech ? '停止监听' : '开始监听' }}
+            </NButton>
+
+            <NButton
+              :type="speechState.isSpeaking ? 'error' : 'default'"
+              :disabled="!speechState.isSpeaking"
+              size="small"
+              @click="cancelSpeech"
+            >
+              <template #icon>
+                <NIcon :component="Dismiss20Filled" />
+              </template>
+              取消当前
+            </NButton>
+
+            <NButton
+              type="warning"
+              secondary
+              :disabled="speakQueue.length === 0"
+              size="small"
+              @click="clearQueue"
+            >
+              <template #icon>
+                <NIcon :component="Dismiss20Filled" />
+              </template>
+              清空队列
+            </NButton>
+
+            <NPopconfirm @positive-click="downloadConfig">
+              <template #trigger>
+                <NButton
+                  type="primary"
+                  secondary
+                  size="small"
+                  class="open-live-action-btn"
+                  :disabled="!accountInfo"
+                >
+                  <template #icon>
+                    <NIcon :component="Settings20Filled" />
+                  </template>
+                  获取配置
+                </NButton>
+              </template>
+              这将覆盖当前设置，确定？
+            </NPopconfirm>
+
+            <NButton
+              type="primary"
+              secondary
+              size="small"
+              class="open-live-action-btn"
+              :disabled="!accountInfo"
+              @click="uploadConfig"
+            >
+              <template #icon>
+                <NIcon :component="CheckmarkCircle20Filled" />
+              </template>
+              保存配置
+            </NButton>
+          </NSpace>
+        </template>
+      </OpenLivePageHeader>
+
+      <NSpace vertical :size="12">
         <NAlert
           v-if="settings.voiceType === 'local'"
           type="info"
+          size="small"
+          :bordered="false"
           closable
         >
           <template #icon>
@@ -430,6 +511,8 @@ onUnmounted(() => {
 
         <NAlert
           type="warning"
+          size="small"
+          :bordered="false"
           closable
         >
           <template #icon>
@@ -461,98 +544,14 @@ onUnmounted(() => {
           </NButton>
         </NAlert>
       </NSpace>
-
-      <!-- 主控制区域 -->
-      <NCard
-        :bordered="false"
-        style="margin-top: 16px"
-      >
-        <NSpace
-          align="center"
-          justify="space-between"
-          :wrap="false"
-        >
-          <NSpace align="center">
-            <NButton
-              :type="speechState.canSpeech ? 'error' : 'primary'"
-              size="large"
-              :loading="speechState.isApiAudioLoading"
-              data-umami-event="Use TTS"
-              :data-umami-event-uid="accountInfo?.id"
-              @click="speechState.canSpeech ? stopSpeech() : startSpeech()"
-            >
-              <template #icon>
-                <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
-              </template>
-              {{ speechState.canSpeech ? '停止监听' : '开始监听' }}
-            </NButton>
-
-            <NDivider vertical />
-
-            <NButton
-              :type="speechState.isSpeaking ? 'error' : 'default'"
-              :disabled="!speechState.isSpeaking"
-              @click="cancelSpeech"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss20Filled" />
-              </template>
-              取消当前
-            </NButton>
-
-            <NButton
-              type="warning"
-              secondary
-              :disabled="speakQueue.length === 0"
-              @click="clearQueue"
-            >
-              <template #icon>
-                <NIcon :component="Dismiss20Filled" />
-              </template>
-              清空队列
-            </NButton>
-          </NSpace>
-
-          <NSpace align="center">
-            <NPopconfirm @positive-click="downloadConfig">
-              <template #trigger>
-                <NButton
-                  type="primary"
-                  secondary
-                  size="small"
-                  :disabled="!accountInfo"
-                >
-                  <template #icon>
-                    <NIcon :component="Settings20Filled" />
-                  </template>
-                  获取配置
-                </NButton>
-              </template>
-              这将覆盖当前设置，确定？
-            </NPopconfirm>
-
-            <NButton
-              type="primary"
-              secondary
-              size="small"
-              :disabled="!accountInfo"
-              @click="uploadConfig"
-            >
-              <template #icon>
-                <NIcon :component="CheckmarkCircle20Filled" />
-              </template>
-              保存配置
-            </NButton>
-          </NSpace>
-        </NSpace>
-      </NCard>
+    </NCard>
 
       <!-- 状态统计区域 -->
       <NCard
         v-if="speechState.canSpeech"
         title="实时状态"
-        :bordered="false"
-        style="margin-top: 16px"
+        size="small"
+        bordered
       >
         <NGrid
           :cols="4"
@@ -765,12 +764,12 @@ onUnmounted(() => {
       <!-- 语音设置区域 -->
       <NCard
         title="语音设置"
-        :bordered="false"
-        style="margin-top: 16px"
+        size="small"
+        bordered
       >
         <NSpace
           vertical
-          :size="16"
+          :size="12"
         >
           <!-- 输出设备选择 -->
           <div>
@@ -1218,12 +1217,12 @@ onUnmounted(() => {
       <!-- 模板设置区域 -->
       <NCard
         title="消息模板"
-        :bordered="false"
-        style="margin-top: 16px"
+        size="small"
+        bordered
       >
         <NSpace
           vertical
-          :size="16"
+          :size="12"
         >
           <NAlert
             type="info"
@@ -1348,12 +1347,12 @@ onUnmounted(() => {
       <!-- 高级设置区域 -->
       <NCard
         title="高级设置"
-        :bordered="false"
-        style="margin-top: 16px"
+        size="small"
+        bordered
       >
         <NSpace
           vertical
-          :size="16"
+          :size="12"
         >
           <NSpace align="center">
             <NCheckbox
@@ -1424,18 +1423,9 @@ onUnmounted(() => {
         </NSpace>
       </NCard>
     </template>
-  </div>
 </template>
 
 <style scoped>
-.read-danmaku-container {
-  width: 100%;
-  padding: 16px;
-  background: var(--n-card-color);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -1447,12 +1437,5 @@ onUnmounted(() => {
 
 .fade-leave-to {
   opacity: 0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .read-danmaku-container {
-    padding: 12px;
-  }
 }
 </style>

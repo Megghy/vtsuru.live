@@ -585,32 +585,27 @@ onMounted(() => {
         修改模板
       </NButton>
     </template>
+  </ManagePageHeader>
 
-    <NDivider
-      style="margin: 16px 0 16px 0"
-      title-placement="left"
-    >
+  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+    <NText class="manage-kicker">
       日程表展示页链接
-    </NDivider>
-    <NFlex align="center">
-      <NInputGroup style="max-width: 400px;">
-        <NInput
-          :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`"
-          readonly
-        />
-        <NButton
-          secondary
-          @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)"
-        >
+    </NText>
+    <NFlex align="center" style="margin-top: 10px;">
+      <NInputGroup style="max-width: 420px;">
+        <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
+        <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)">
           复制
         </NButton>
       </NInputGroup>
     </NFlex>
-    <NDivider
-      style="margin: 16px 0 16px 0"
-      title-placement="left"
-    >
-      订阅链接
+  </NCard>
+
+  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+    <NFlex justify="space-between" align="center" wrap :size="12">
+      <NText class="manage-kicker">
+        订阅链接
+      </NText>
       <NTooltip>
         <template #trigger>
           <NIcon>
@@ -619,22 +614,16 @@ onMounted(() => {
         </template>
         通过订阅链接可以订阅日程表到日历软件中
       </NTooltip>
-    </NDivider>
-    <NFlex align="center">
-      <NInputGroup style="max-width: 400px;">
-        <NInput
-          :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`"
-          readonly
-        />
-        <NButton
-          secondary
-          @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)"
-        >
+    </NFlex>
+    <NFlex align="center" style="margin-top: 10px;">
+      <NInputGroup style="max-width: 420px;">
+        <NInput :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`" readonly />
+        <NButton secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)">
           复制
         </NButton>
       </NInputGroup>
     </NFlex>
-  </ManagePageHeader>
+  </NCard>
 
   <NModal
     v-model:show="showAddModal"

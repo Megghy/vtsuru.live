@@ -451,6 +451,8 @@ onMounted(() => {
     v-if="config"
     title="弹幕签到设置"
     size="small"
+    bordered
+    :segmented="{ content: true }"
   >
     <NTabs
       type="line"
@@ -464,6 +466,8 @@ onMounted(() => {
           <NAlert
             v-if="!canEdit"
             type="warning"
+            size="small"
+            :bordered="false"
           >
             加载中或无法编辑设置，请稍后再试
           </NAlert>
@@ -471,6 +475,7 @@ onMounted(() => {
           <NForm
             label-placement="left"
             :label-width="120"
+            size="small"
             :style="{
               maxWidth: '650px',
             }"
@@ -803,6 +808,8 @@ onMounted(() => {
               v-if="testResult"
               size="small"
               :title="testResult.success ? '签到成功' : '签到失败'"
+              bordered
+              :segmented="{ content: true }"
             >
               <NText>{{ testResult.message }}</NText>
             </NCard>
@@ -822,6 +829,8 @@ onMounted(() => {
     v-else
     title="加载中..."
     size="small"
+    bordered
+    :segmented="{ content: true }"
   >
     <NText>正在加载签到设置...</NText>
   </NCard>

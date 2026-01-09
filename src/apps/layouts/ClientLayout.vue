@@ -21,6 +21,7 @@ import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 // 引入子组件
 import WindowBar from '@/apps/client/components/WindowBar.vue'
 import { BASE_URL } from '@/shared/config'
+import '@/apps/client/styles/client-page.css'
 
 // --- 响应式状态 ---
 
@@ -339,8 +340,8 @@ onMounted(() => {
         trigger: 'none',
       }"
     >
-      <div style="padding: 12px; padding-right: 15px;">
-        <RouterView v-slot="{ Component }">
+      <div class="client-page">
+        <RouterView v-slot="{ Component, route: viewRoute }">
           <KeepAlive>
             <Transition
               name="fade-slide"
@@ -348,7 +349,20 @@ onMounted(() => {
               :appear="true"
             >
               <Suspense>
-                <component :is="Component" />
+                <template v-if="viewRoute.meta.pageContainer === 'none'">
+                  <component :is="Component" />
+                </template>
+                <div
+                  v-else
+                  class="client-page-inner"
+                  :class="{
+                    'client-page-inner--md': viewRoute.meta.pageWidth === 'md',
+                    'client-page-inner--xl': viewRoute.meta.pageWidth === 'xl',
+                    'client-page-inner--full': viewRoute.meta.pageWidth === 'full',
+                  }"
+                >
+                  <component :is="Component" />
+                </div>
                 <template #fallback>
                   <div class="suspense-fallback">
                     加载中...

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { OpenLiveInfo } from '@/api/api-models'
-import { NAlert, NButton, NCard, NDivider, NSpace } from 'naive-ui'
+import { NAlert, NButton, NCard, NFlex, NGi, NGrid, NText } from 'naive-ui'
 import { useAccount } from '@/api/account'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -12,94 +13,93 @@ const accountInfo = useAccount()
 </script>
 
 <template>
-  <NDivider> 功能 </NDivider>
-  <NSpace
-    justify="center"
-    :size="[20, 20]"
-    item-style="display: flex;"
-  >
-    <NCard
-      hoverable
-      bordered
-      size="small"
-      title="弹幕抽奖"
-      style="width: 300px; flex-grow: 1;"
-    >
-      通过弹幕或者礼物收集用户, 并进行抽取, 允许设置多种条件
-      <template #footer>
-        <NButton
-          type="primary"
-          @click="$router.push({ name: 'open-live-lottery', query: $route.query })"
-        >
-          前往使用
-        </NButton>
-      </template>
-    </NCard>
-    <NCard
-      hoverable
-      bordered
-      size="small"
-      title="弹幕点播"
-      style="width: 300px; flex-grow: 1;"
-    >
-      通过弹幕或者SC进行点歌或者其他的点播(比如跳舞或者点播视频之类的), 注册后可以保存和导出
-      <template #footer>
-        <NButton
-          type="primary"
-          @click="$router.push({ name: 'open-live-live-request', query: $route.query })"
-        >
-          前往使用
-        </NButton>
-      </template>
-    </NCard>
-    <NCard
-      hoverable
-      bordered
-      size="small"
-      title="弹幕排队"
-      style="width: 300px; flex-grow: 1;"
-    >
-      通过发送弹幕或者礼物进行排队, 允许设置多种条件
-      <template #footer>
-        <NButton
-          type="primary"
-          @click="$router.push({ name: 'open-live-queue', query: $route.query })"
-        >
-          前往使用
-        </NButton>
-      </template>
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <OpenLivePageHeader
+        title="开放平台"
+        description="弹幕抽奖、点歌、排队与读弹幕（基于开放平台连接）"
+      />
     </NCard>
 
-    <NCard
-      hoverable
-      bordered
-      size="small"
-      title="读弹幕"
-      style="width: 300px; flex-grow: 1;"
-    >
-      通过浏览器自带的tts服务读弹幕 (此功能需要 Chrome, Edge 等现代浏览器!)
-      <template #footer>
-        <NButton
-          type="primary"
-          @click="$router.push({ name: 'open-live-speech', query: $route.query })"
-        >
-          前往使用
-        </NButton>
-      </template>
-    </NCard>
-  </NSpace>
-  <br>
-  <br>
-  <NSpace
-    v-if="accountInfo?.eventFetcherState?.online !== true"
-    justify="center"
-  >
+    <NGrid cols="1 s:2 l:4" responsive="screen" :x-gap="12" :y-gap="12">
+      <NGi>
+        <NCard hoverable bordered size="small" title="弹幕抽奖">
+          <NText depth="3">
+            通过弹幕或礼物收集用户并抽取，支持多种条件与动画效果。
+          </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-lottery', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+      <NGi>
+        <NCard hoverable bordered size="small" title="弹幕点播">
+          <NText depth="3">
+            通过弹幕或 SC 点歌/点播，登录后可保存配置并支持 OBS 展示。
+          </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-live-request', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+      <NGi>
+        <NCard hoverable bordered size="small" title="弹幕排队">
+          <NText depth="3">
+            通过弹幕或礼物加入队列，支持过滤条件、排序策略与冷却控制。
+          </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-queue', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+      <NGi>
+        <NCard hoverable bordered size="small" title="读弹幕">
+          <NText depth="3">
+            使用浏览器 TTS 朗读弹幕（推荐 Chrome/Edge 等现代浏览器）。
+          </NText>
+          <template #footer>
+            <NButton
+              type="primary"
+              size="small"
+              block
+              @click="$router.push({ name: 'open-live-speech', query: $route.query })"
+            >
+              前往使用
+            </NButton>
+          </template>
+        </NCard>
+      </NGi>
+    </NGrid>
+
     <NAlert
+      v-if="accountInfo?.eventFetcherState?.online !== true"
       type="warning"
-      title="可用性警告"
-      style="max-width: 600px; margin: 0 auto"
+      title="可用性提醒"
+      size="small"
+      :bordered="false"
     >
-      当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见
+      当浏览器在后台运行时，计时器和 WebSocket 连接会受到严格限制，可能导致弹幕接收不稳定（详见
       <NButton
         text
         tag="a"
@@ -108,9 +108,8 @@ const accountInfo = useAccount()
         type="info"
       >
         此文章
-      </NButton>), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件
-      <br>
-      为避免这种情况, 建议注册本站账后使用
+      </NButton>）。
+      建议注册并部署
       <NButton
         type="primary"
         text
@@ -120,41 +119,25 @@ const accountInfo = useAccount()
         target="_blank"
       >
         VtsuruEventFetcher
-      </NButton>, 否则请在使用功能时尽量保持网页在前台运行
+      </NButton>。
     </NAlert>
-  </NSpace>
-  <br v-if="accountInfo?.eventFetcherState?.online !== true">
-  <NDivider> 还有更多 </NDivider>
-  <NSpace
-    justify="center"
-    align="center"
-    vertical
-  >
-    <p style="font-size: 1.1em; color: var(--n-text-color-2)">
-      舰长积分、动态抽奖、视频征集、歌单、棉花糖、日程表...
-    </p>
-    <p>
-      详见
-      <NButton
-        text
-        tag="a"
-        href="/"
-        target="_blank"
-        type="primary"
-      >
-        VTsuru.live
-      </NButton>
 
-      <NDivider vertical />
-      <NButton
-        text
-        tag="a"
-        href="/about"
-        target="_blank"
-        type="info"
-      >
-        关于本站
-      </NButton>
-    </p>
-  </NSpace>
+    <NCard size="small" bordered>
+      <OpenLivePageHeader title="还有更多">
+        <template #description>
+          <NText depth="3">
+            舰长积分、动态抽奖、视频征集、歌单、棉花糖、日程表...
+          </NText>
+        </template>
+        <template #actions>
+          <NButton text tag="a" href="/" target="_blank" type="primary" size="small">
+            VTsuru.live
+          </NButton>
+          <NButton text tag="a" href="/about" target="_blank" type="info" size="small">
+            关于本站
+          </NButton>
+        </template>
+      </OpenLivePageHeader>
+    </NCard>
+  </NFlex>
 </template>

@@ -12,6 +12,7 @@ export default {
       meta: {
         title: '首页',
         forceReload: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -21,6 +22,7 @@ export default {
       meta: {
         title: 'EventFetcher',
         forceReload: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -30,6 +32,7 @@ export default {
       meta: {
         title: '设置',
         forceReload: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -39,6 +42,7 @@ export default {
       meta: {
         title: '弹幕窗口管理',
         forceReload: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -48,6 +52,7 @@ export default {
       meta: {
         title: '自动操作管理',
         forceReload: true,
+        pageWidth: 'full',
       },
     },
     {
@@ -57,6 +62,8 @@ export default {
       meta: {
         title: '读弹幕',
         forceReload: true,
+        pageWidth: 'full',
+        pageContainer: 'none',
       },
     },
     {
@@ -66,6 +73,7 @@ export default {
       meta: {
         title: '直播管理',
         forceReload: true,
+        pageWidth: 'xl',
       },
     },
     {
@@ -82,6 +90,7 @@ export default {
       meta: {
         title: '测试',
         forceReload: true,
+        pageWidth: 'full',
       },
     },
   ],

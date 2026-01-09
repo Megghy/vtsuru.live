@@ -12,7 +12,6 @@ import {
   NAvatar,
   NAvatarGroup,
   NBackTop,
-  NBadge,
   NButton,
   NCard,
   NDivider,
@@ -173,23 +172,22 @@ onMounted(async () => {
 <template>
   <template v-if="!topic.id" />
   <template v-else>
-    <div
-      size="small"
-      embedded
-      style="max-width: 1500px; margin: 0 auto"
-    >
+    <div class="forum-topic-detail">
       <NBackTop />
-      <NBadge
-        class="back-forum-badge"
-        style="width: 100%; left: 0"
-        type="info"
-        :offset="[3, 3]"
-      >
-        <NCard size="small">
-          <NFlex
-            align="center"
-            :wrap="false"
-          >
+      <NCard size="small" bordered>
+        <template #header>
+          <NFlex align="center" :wrap="false" :size="8">
+            <NButton
+              text
+              size="small"
+              @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
+            >
+              <template #icon>
+                <NIcon :component="ArrowCircleLeft12Regular" />
+              </template>
+              返回讨论区
+            </NButton>
+            <NDivider vertical />
             <NTag
               v-if="topic.isDeleted"
               type="warning"
@@ -197,35 +195,17 @@ onMounted(async () => {
             >
               已删除
             </NTag>
-            <NText style="font-size: large; font-weight: bold; text-align: center; width: 100%">
-              <NEllipsis style="width: 100%">
+            <NText class="topic-title">
+              <NEllipsis style="max-width: 100%">
                 {{ topic.title }}
               </NEllipsis>
             </NText>
           </NFlex>
-        </NCard>
-        <template #value>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                text
-                @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
-              >
-                <template #icon>
-                  <NIcon
-                    :component="ArrowCircleLeft12Regular"
-                    color="white"
-                  />
-                </template>
-              </NButton>
-            </template>
-            返回
-          </NTooltip>
         </template>
-      </NBadge>
+      </NCard>
       <NCard
-        content-style="padding: 0 12px 0 12px;"
-        embedded
+        size="small"
+        bordered
       >
         <template #header>
           <NFlex
@@ -377,66 +357,71 @@ onMounted(async () => {
           v-html="topic.content"
         />
       </NCard>
-      <NDivider>
-        <NButton
-          type="primary"
-          :disabled="!canOprate"
-          @click="showCommentModal = true"
+      <NCard size="small" bordered>
+        <template #header>
+          评论
+        </template>
+        <template #header-extra>
+          <NButton
+            type="primary"
+            size="small"
+            :disabled="!canOprate"
+            @click="showCommentModal = true"
+          >
+            发送评论
+          </NButton>
+        </template>
+        <NFlex
+          align="center"
+          justify="center"
+          style="padding-top: 6px;"
         >
-          发送评论
-        </NButton>
-      </NDivider>
-      <NFlex
-        align="center"
-        justify="center"
-      >
-        <NPagination
-          v-if="comments && (comments?.data?.length ?? 0) > 0"
-          v-model:page="pn"
-          :item-count="comments?.data.length ?? 0"
-          :page-size="ps"
-          show-quick-jumper
-          @update:page="refreshComments"
-        />
-      </NFlex>
-      <br>
-      <NEmpty
-        v-if="!comments || !comments.data || comments.data.length === 0"
-        description="暂无评论"
-      />
-      <NList
-        v-else
-        hoverable
-        bordered
-        size="small"
-      >
-        <NListItem
-          v-for="item in comments.data"
-          :key="item.id"
-        >
-          <ForumCommentItem
-            :item="item"
-            :topic="topic"
-            @delete="onDeleteComment"
+          <NPagination
+            v-if="comments && (comments?.data?.length ?? 0) > 0"
+            v-model:page="pn"
+            :item-count="comments?.data.length ?? 0"
+            :page-size="ps"
+            show-quick-jumper
+            @update:page="refreshComments"
           />
-        </NListItem>
-      </NList>
-      <br>
-      <NFlex
-        v-if="(comments?.data?.length ?? 0) > 5"
-        align="center"
-        justify="center"
-      >
-        <NPagination
-          v-if="comments && (comments?.data.length ?? 0) > 0"
-          v-model:page="pn"
-          :item-count="comments?.data.length ?? 0"
-          :page-size="ps"
-          show-quick-jumper
-          @update:page="refreshComments"
+        </NFlex>
+        <div style="height: 12px;" />
+        <NEmpty
+          v-if="!comments || !comments.data || comments.data.length === 0"
+          description="暂无评论"
         />
-      </NFlex>
-      <NDivider />
+        <NList
+          v-else
+          hoverable
+          size="small"
+        >
+          <NListItem
+            v-for="item in comments.data"
+            :key="item.id"
+          >
+            <ForumCommentItem
+              :item="item"
+              :topic="topic"
+              @delete="onDeleteComment"
+            />
+          </NListItem>
+        </NList>
+        <div style="height: 12px;" />
+        <NFlex
+          v-if="(comments?.data?.length ?? 0) > 5"
+          align="center"
+          justify="center"
+        >
+          <NPagination
+            v-if="comments && (comments?.data.length ?? 0) > 0"
+            v-model:page="pn"
+            :item-count="comments?.data.length ?? 0"
+            :page-size="ps"
+            show-quick-jumper
+            @update:page="refreshComments"
+          />
+        </NFlex>
+      </NCard>
     </div>
   </template>
   <NModal
@@ -506,8 +491,16 @@ onMounted(async () => {
   />
 </template>
 
-<style>
-.n-badge-sup {
-  left: 0 !important;
+<style scoped>
+.forum-topic-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topic-title {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 700;
 }
 </style>

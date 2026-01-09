@@ -30,6 +30,7 @@ import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ORG_API_URL } from '@/shared/config'
+import '@/apps/org/styles/org-page.css'
 
 interface OrgInfoModel {
   id: number
@@ -140,7 +141,7 @@ watch(
 </script>
 
 <template>
-  <div style="max-width: 1200px; margin: 0 auto; padding: 16px;">
+  <div class="org-page org-page--index">
     <template v-if="!isLoggedIn">
       <NCard title="组织管理">
         <NAlert type="warning" :bordered="false" style="margin-bottom: 12px;">

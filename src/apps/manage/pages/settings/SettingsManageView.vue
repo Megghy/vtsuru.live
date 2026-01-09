@@ -670,12 +670,17 @@ onMounted(async () => {
 <template>
   <NCard
     title="设置"
-    :style="`${selectedTab === 'general' ? '' : 'min-height: 800px;'}`"
+    size="small"
+    bordered
+    :segmented="{ content: true }"
   >
     <NSpin :show="isSaving">
       <NTabs
         v-model:value="selectedTab"
         :default-value="$route.query.setting?.toString() ?? 'general'"
+        type="line"
+        animated
+        size="small"
       >
         <!-- 常规设置标签页 -->
         <NTabPane
@@ -749,95 +754,115 @@ onMounted(async () => {
           name="index"
           display-directive="show:lazy"
         >
-          <NDivider> 常规 </NDivider>
-          <NCheckbox
-            v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
-            type="textarea"
-            @update:checked="updateUserIndexSettings"
-          >
-            允许显示在网站主页
-          </NCheckbox>
-          <br><br>
-
-          <NDivider> 通知 </NDivider>
-          <NInput
-            v-model:value="accountInfo.settings.index.notification"
-            type="textarea"
-          />
-          <br><br>
-          <NButton
-            type="primary"
-            @click="updateIndexSettings"
-          >
-            保存
-          </NButton>
-
-          <NDivider> 自定义页面 </NDivider>
-          <NButton
-            type="primary"
-            secondary
-            @click="$router.push({ name: 'manage-userPageBuilder' })"
-          >
-            打开区块页编辑器（/@name 及子页面）
-          </NButton>
-
-          <NDivider> 展示视频 </NDivider>
-          <NButton
-            type="primary"
-            @click="showAddVideoModal = true"
-          >
-            添加视频
-          </NButton>
-          <br><br>
-          <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-          <NFlex v-else>
-            <NCard
-              v-for="item in indexDisplayInfo?.videos ?? []"
-              :key="item.id"
-              style="width: 300px"
+          <NFlex vertical :size="12">
+            <NDivider style="margin: 0;">
+              常规
+            </NDivider>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
+              @update:checked="updateUserIndexSettings"
             >
-              <SimpleVideoCard :video="item" />
-              <template #footer>
-                <NSpace>
-                  <NButton
-                    size="small"
-                    secondary
-                    @click="moveVideo(item.id, 'up')"
-                  >
-                    上移
-                  </NButton>
-                  <NButton
-                    size="small"
-                    secondary
-                    @click="moveVideo(item.id, 'down')"
-                  >
-                    下移
-                  </NButton>
-                  <NButton
-                    type="warning"
-                    size="small"
-                    @click="removeVideo(item.id)"
-                  >
-                    删除
-                  </NButton>
-                </NSpace>
-              </template>
-            </NCard>
-          </NFlex>
+              允许显示在网站主页
+            </NCheckbox>
 
-          <NDivider> 其他链接 </NDivider>
-          <NButton
-            type="primary"
-            @click="showAddLinkModal = true"
-          >
-            添加链接
-          </NButton>
-          <br><br>
-          <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-          <NFlex
-            v-else
-            :key="linkKey"
-          >
+            <NDivider style="margin: 0;">
+              通知
+            </NDivider>
+            <NInput
+              v-model:value="accountInfo.settings.index.notification"
+              type="textarea"
+              class="settings-textarea"
+            />
+            <NFlex justify="end">
+              <NButton
+                type="primary"
+                size="small"
+                class="settings-action-btn"
+                @click="updateIndexSettings"
+              >
+                保存
+              </NButton>
+            </NFlex>
+
+            <NDivider style="margin: 0;">
+              自定义页面
+            </NDivider>
+            <NButton
+              secondary
+              size="small"
+              class="settings-action-btn"
+              @click="$router.push({ name: 'manage-userPageBuilder' })"
+            >
+              打开区块页编辑器（/@name 及子页面）
+            </NButton>
+
+            <NDivider style="margin: 0;">
+              展示视频
+            </NDivider>
+            <NButton
+              type="primary"
+              size="small"
+              class="settings-action-btn"
+              @click="showAddVideoModal = true"
+            >
+              添加视频
+            </NButton>
+            <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
+            <NFlex v-else wrap :size="12">
+              <NCard
+                v-for="item in indexDisplayInfo?.videos ?? []"
+                :key="item.id"
+                size="small"
+                bordered
+                style="width: 300px"
+              >
+                <SimpleVideoCard :video="item" />
+                <template #footer>
+                  <NSpace>
+                    <NButton
+                      size="small"
+                      secondary
+                      @click="moveVideo(item.id, 'up')"
+                    >
+                      上移
+                    </NButton>
+                    <NButton
+                      size="small"
+                      secondary
+                      @click="moveVideo(item.id, 'down')"
+                    >
+                      下移
+                    </NButton>
+                    <NButton
+                      type="warning"
+                      size="small"
+                      @click="removeVideo(item.id)"
+                    >
+                      删除
+                    </NButton>
+                  </NSpace>
+                </template>
+              </NCard>
+            </NFlex>
+
+            <NDivider style="margin: 0;">
+              其他链接
+            </NDivider>
+            <NButton
+              type="primary"
+              size="small"
+              class="settings-action-btn"
+              @click="showAddLinkModal = true"
+            >
+              添加链接
+            </NButton>
+            <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
+            <NFlex
+              v-else
+              :key="linkKey"
+              wrap
+              :size="8"
+            >
             <NFlex
               v-for="name in (accountInfo.settings.index.linkOrder?.filter(n => indexDisplayInfo?.links[n]) || Object.keys(indexDisplayInfo?.links || {}))"
               :key="name"
@@ -919,6 +944,7 @@ onMounted(async () => {
                 </NSpace>
               </template>
             </NFlex>
+            </NFlex>
           </NFlex>
         </NTabPane>
 
@@ -928,54 +954,67 @@ onMounted(async () => {
           name="blacklist"
           display-directive="show:lazy"
         >
-          <!-- B站黑名单列表 -->
-          <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
-            <NListItem
-              v-for="item in Object.entries(accountInfo.biliBlackList)"
-              :key="item[0]"
+          <NFlex vertical :size="12">
+            <NCard
+              title="B 站黑名单"
+              size="small"
+              bordered
+              :segmented="{ content: true }"
             >
-              <NSpace align="center">
-                <NText>
-                  {{ item[1] }}
-                </NText>
-                <NText depth="3">
-                  {{ item[0] }}
-                </NText>
-                <NButton
-                  type="error"
-                  size="small"
-                  @click="unblockBiliUser(Number(item[0]))"
+              <NList v-if="accountInfo.biliBlackList && Object.keys(accountInfo.biliBlackList).length > 0">
+                <NListItem
+                  v-for="item in Object.entries(accountInfo.biliBlackList)"
+                  :key="item[0]"
                 >
-                  移除
-                </NButton>
-              </NSpace>
-            </NListItem>
-          </NList>
+                  <NFlex align="center" justify="space-between" :wrap="true" :size="12">
+                    <NFlex align="center" :wrap="true" :size="8">
+                      <NText>{{ item[1] }}</NText>
+                      <NText depth="3" code>{{ item[0] }}</NText>
+                    </NFlex>
+                    <NButton
+                      type="error"
+                      size="small"
+                      secondary
+                      @click="unblockBiliUser(Number(item[0]))"
+                    >
+                      移除
+                    </NButton>
+                  </NFlex>
+                </NListItem>
+              </NList>
+              <NEmpty v-else size="small" description="暂无 B 站黑名单" />
+            </NCard>
 
-          <!-- 普通用户黑名单列表 -->
-          <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
-            <NListItem
-              v-for="item in accountInfo.blackList"
-              :key="item.id"
+            <NCard
+              title="站内黑名单"
+              size="small"
+              bordered
+              :segmented="{ content: true }"
             >
-              <NSpace align="center">
-                <NText>
-                  {{ item.name }}
-                </NText>
-                <NText depth="3">
-                  {{ item.id }}
-                </NText>
-                <NButton
-                  type="error"
-                  size="small"
-                  @click="unblockUser(Number(item.id))"
+              <NList v-if="accountInfo.blackList && accountInfo.blackList.length > 0">
+                <NListItem
+                  v-for="item in accountInfo.blackList"
+                  :key="item.id"
                 >
-                  移除
-                </NButton>
-              </NSpace>
-            </NListItem>
-          </NList>
-          <NEmpty v-else />
+                  <NFlex align="center" justify="space-between" :wrap="true" :size="12">
+                    <NFlex align="center" :wrap="true" :size="8">
+                      <NText>{{ item.name }}</NText>
+                      <NText depth="3" code>{{ item.id }}</NText>
+                    </NFlex>
+                    <NButton
+                      type="error"
+                      size="small"
+                      secondary
+                      @click="unblockUser(Number(item.id))"
+                    >
+                      移除
+                    </NButton>
+                  </NFlex>
+                </NListItem>
+              </NList>
+              <NEmpty v-else size="small" description="暂无站内黑名单" />
+            </NCard>
+          </NFlex>
         </NTabPane>
 
         <!-- 模板设置标签页 -->
@@ -984,56 +1023,58 @@ onMounted(async () => {
           name="template"
           display-directive="show:lazy"
         >
-          <NAlert type="success">
+          <NAlert type="success" size="small" :bordered="false">
             如果有合适的设计稿或者想法可以给我说然后做成模板捏
           </NAlert>
-          <br>
-          <NSpace vertical>
-            <NSpace align="center">
-              页面
+          <NFlex vertical :size="12">
+            <NFlex align="center" :wrap="true" :size="12">
+              <NText depth="2">
+                页面
+              </NText>
               <NSelect
                 v-model:value="selectedOption"
+                size="small"
                 :options="templateOptions"
-                style="width: 150px"
+                style="width: 160px"
               />
-            </NSpace>
-            <NDivider
-              style="margin: 5px 0 5px 0"
-              title-placement="left"
-            >
+            </NFlex>
+
+            <NDivider style="margin: 0;" title-placement="left">
               模板
             </NDivider>
-            <div>
-              <NSpace>
-                <NSelect
-                  v-model:value="selectedTemplateData.Selected"
-                  style="width: 150px"
-                  :options="selectedTemplateData.Options"
-                />
-                <component :is="buttonGroup" />
-              </NSpace>
-              <NDivider />
-              <Transition
-                name="fade"
-                mode="out-in"
+
+            <NFlex align="center" :wrap="true" :size="12">
+              <NSelect
+                v-model:value="selectedTemplateData.Selected"
+                size="small"
+                style="width: 180px"
+                :options="selectedTemplateData.Options"
+              />
+              <component :is="buttonGroup" />
+            </NFlex>
+
+            <NDivider style="margin: 0;" />
+
+            <Transition
+              name="fade"
+              mode="out-in"
+            >
+              <div
+                v-if="selectedComponent"
+                :key="selectedTemplateData.Selected"
               >
-                <div
-                  v-if="selectedComponent"
-                  :key="selectedTemplateData.Selected"
-                >
-                  <component
-                    :is="selectedComponent"
-                    ref="dynamicConfigRef"
-                    :user-info="accountInfo"
-                    :bili-info="biliUserInfo"
-                    :data="selectedTemplateData.Data"
-                    :config="selectedTemplateData.Config"
-                    @vue:mounted="getTemplateConfig"
-                  />
-                </div>
-              </Transition>
-            </div>
-          </NSpace>
+                <component
+                  :is="selectedComponent"
+                  ref="dynamicConfigRef"
+                  :user-info="accountInfo"
+                  :bili-info="biliUserInfo"
+                  :data="selectedTemplateData.Data"
+                  :config="selectedTemplateData.Config"
+                  @vue:mounted="getTemplateConfig"
+                />
+              </div>
+            </Transition>
+          </NFlex>
         </NTabPane>
       </NTabs>
       <!-- 模板设置模态框 -->
@@ -1104,6 +1145,16 @@ onMounted(async () => {
           </NButton>
         </NFlex>
       </NModal>
-    </nspin>
-  </ncard>
+    </NSpin>
+  </NCard>
 </template>
+
+<style scoped>
+.settings-action-btn {
+  max-width: 320px;
+}
+
+.settings-textarea {
+  max-width: 720px;
+}
+</style>
