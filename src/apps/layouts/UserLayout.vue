@@ -43,7 +43,7 @@ import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import { NavigateToNewTab } from '@/shared/utils'
 
 // --- 响应式状态和常量 ---
 const route = useRoute()
@@ -344,6 +344,7 @@ watch(
       <NLayoutSider
         ref="sider"
         show-trigger
+        bordered
         collapse-mode="width"
         :collapsed-width="64"
         :width="180"

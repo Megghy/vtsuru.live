@@ -12,6 +12,7 @@ import {
 } from '@vicons/fluent'
 import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
+import type { IOptions, RecursivePartial } from '@tsparticles/engine'
 import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -212,7 +213,7 @@ function handleFunctionClick(item: typeof functions[0]) {
   }
 }
 
-const particlesOptions = computed(() => {
+const particlesOptions = computed<RecursivePartial<IOptions>>(() => {
   const isDark = isDarkMode.value
   const dot = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(9, 9, 11, 0.14)'
   const link = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(9, 9, 11, 0.08)'
@@ -238,7 +239,7 @@ const particlesOptions = computed(() => {
       events: {
         onHover: { enable: false, mode: [] },
         onClick: { enable: false, mode: [] },
-        resize: true,
+        resize: { enable: true },
       },
     },
   }

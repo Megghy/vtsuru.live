@@ -15,21 +15,14 @@ import {
   NTime,
   NTooltip,
   NText,
-  useThemeVars,
 } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   live: ResponseLiveInfoModel
 }>()
 const router = useRouter()
-const themeVars = useThemeVars()
-
-const liveInfoStyleVars = computed(() => ({
-  '--live-cover-bg': themeVars.value.inputColor,
-  '--live-error-color': themeVars.value.errorColor,
-}))
 
 const defaultDanmakusCount = ref(0)
 function OnClickCover() {
@@ -50,7 +43,7 @@ watch(
 </script>
 
 <template>
-  <div class="live-info-container" :style="liveInfoStyleVars">
+  <div class="live-info-container">
     <!-- Cover Image -->
     <div class="cover-wrapper" @click.stop="OnClickCover">
       <img
@@ -183,25 +176,27 @@ watch(
   border-radius: var(--n-border-radius);
   overflow: hidden;
   cursor: pointer;
-  background-color: var(--live-cover-bg);
+  background-color: var(--n-color-embedded);
+  border: 1px solid var(--n-border-color);
 }
 
 .live-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .live-badge {
   position: absolute;
   top: 4px;
   left: 4px;
-  background-color: var(--live-error-color);
+  background-color: var(--n-error-color);
   color: white;
   font-size: 10px;
   font-weight: bold;
   padding: 1px 5px;
-  border-radius: var(--n-border-radius);
+  border-radius: 999px;
   z-index: 2;
 }
 
@@ -209,6 +204,7 @@ watch(
   flex: 1;
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   min-width: 0;
   /* prevent flex item overflow */
 }
@@ -219,7 +215,6 @@ watch(
   flex-direction: column;
   justify-content: space-between;
   min-width: 0;
-  padding-right: 24px;
   padding-top: 2px;
   padding-bottom: 2px;
 }
@@ -230,7 +225,7 @@ watch(
 }
 
 .live-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.3;
   display: -webkit-box;
@@ -245,23 +240,30 @@ watch(
   color: var(--n-primary-color);
 }
 
+.meta-row {
+  margin-top: 2px;
+}
+
 .meta-text {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--n-text-color-3);
 }
 
 .meta-divider {
-  color: var(--n-divider-color);
-  font-size: 12px;
+  color: var(--n-text-color-3);
+  opacity: 0.7;
+  font-size: 11px;
   margin: 0 2px;
 }
 
 .stats-section {
   display: flex;
-  gap: 24px;
+  gap: 14px;
   align-items: center;
-  padding-left: 24px;
-  border-left: 1px solid var(--n-divider-color);
+  padding: 8px 10px;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  background-color: var(--n-color-embedded);
   flex-shrink: 0;
 }
 
@@ -273,7 +275,7 @@ watch(
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--n-text-color-3);
   margin-bottom: 2px;
   display: flex;
@@ -281,14 +283,14 @@ watch(
 }
 
 .stat-value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.5px;
 }
 
 .stat-value.income-value {
-  color: var(--live-error-color);
+  color: var(--n-success-color);
 }
 
 /* Mobile / Tablet Responsive */
@@ -312,17 +314,12 @@ watch(
   }
 
   .info-section {
-    padding-right: 0;
     gap: 8px;
   }
 
   .stats-section {
-    border-left: none;
-    padding-left: 0;
-    border-top: 1px solid var(--n-divider-color);
-    padding-top: 8px;
-    justify-content: space-around;
     width: 100%;
+    justify-content: space-around;
     gap: 12px;
   }
 

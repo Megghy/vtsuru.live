@@ -473,6 +473,9 @@ onMounted(async () => {
       embedded
       :bordered="true"
       size="small"
+      :content-style="{
+        padding: '4px',
+      }"
     >
       <!-- 用户信息区域 -->
       <div class="user-info-section">
@@ -618,7 +621,7 @@ onMounted(async () => {
       </div>
     </NCard>
 
-    <div v-if="goods.length > 0" style="margin-top: 16px;"></div>
+    <div v-if="goods.length > 0" style="margin-top: 16px;" />
     <!-- 礼物列表区域 -->
     <NSpin
       :show="isLoading"
