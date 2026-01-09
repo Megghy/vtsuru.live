@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import {
-  NDivider,
   NTabPane,
   NTabs,
+  NAlert,
+  NCard,
+  NDivider,
+  NText,
 } from 'naive-ui'
 import { defineComponent, h, onMounted, shallowRef } from 'vue'
 import { useAccount } from '@/api/account'
@@ -35,13 +38,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="true && !isDev">
-    WIP...
-  </div>
-  <NTabs>
-    <NTabPane name="overview" tab="概览">
-      {{ accountInfo.point }}
-    </NTabPane>
-  </NTabs>
-  <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
+  <NCard
+    title="增值"
+    size="small"
+    bordered
+    :segmented="{ content: true }"
+  >
+    <NAlert
+      v-if="!isDev"
+      type="info"
+      size="small"
+      :bordered="false"
+    >
+      增值服务面板正在开发中（WIP）
+    </NAlert>
+
+    <template v-else>
+      <NTabs type="line" animated size="small">
+        <NTabPane name="overview" tab="概览">
+          <NText depth="3">
+            当前积分：{{ accountInfo.point }}
+          </NText>
+        </NTabPane>
+      </NTabs>
+      <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
+    </template>
+  </NCard>
 </template>

@@ -37,6 +37,7 @@ import { ACCOUNT_API_URL, availableAPIs, CN_HOST, selectedAPIKey, TURNSTILE_KEY 
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 const token = ref('')
 const turnstile = ref()
@@ -317,45 +318,39 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
-    type="success"
-    style="width: 100%; "
-  >
-    本站新增国内镜像: <NButton
-      text
-      tag="a"
-      :href="CN_HOST"
-      target="_blank"
-    >
-      {{ CN_HOST }}
-    </NButton>, 访问更快
-  </NAlert>
-  <NAlert
-    v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
-    type="error"
-    title="身份码已失效"
-    style="width: 100%; margin-top: 12px;"
-  >
-    <NFlex justify="space-between" align="center">
-      <NText>你的身份码已失效, 这会导致无法获取直播间数据.</NText>
-      <NButton size="small" type="error" @click="bindBiliCodeModalVisiable = true">
-        更新身份码
-      </NButton>
-    </NFlex>
-  </NAlert>
-  <NDivider />
-  <NFlex
-    justify="center"
-    align="center"
-    vertical
-    style="margin: 0 auto; max-width: 1500px;"
-  >
+  <div class="dashboard-view">
+    <ManagePageHeader title="面板" subtitle="账户与功能配置" />
+
+    <div class="dashboard-alerts">
+      <NAlert type="success" :bordered="false">
+        本站新增国内镜像:
+        <NButton text tag="a" :href="CN_HOST" target="_blank">
+          {{ CN_HOST }}
+        </NButton>, 访问更快
+      </NAlert>
+
+      <NAlert
+        v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
+        type="error"
+        title="身份码已失效"
+        :bordered="false"
+      >
+        <NFlex justify="space-between" align="center" wrap :size="12">
+          <NText>你的身份码已失效, 这会导致无法获取直播间数据.</NText>
+          <NButton size="small" type="error" @click="bindBiliCodeModalVisiable = true">
+            更新身份码
+          </NButton>
+        </NFlex>
+      </NAlert>
+    </div>
+
     <NTabs
       v-if="accountInfo"
       v-model:value="selectedTab"
       type="segment"
       animated
-      style="width: 100%;"
+      size="small"
+      class="dashboard-tabs"
     >
       <NTabPane
         name="info"
@@ -363,38 +358,52 @@ onUnmounted(() => {
         style="width: 100%;"
         display-directive="show:lazy"
       >
-        <NFlex
-          justify="center"
-          align="center"
-        >
-          <NCard
-            embedded
-            style="width: 100%;max-width: 800px;"
-          >
-            <NSpace
-              align="center"
-              justify="center"
-              vertical
-            >
-              <NText style="font-size: 3rem">
-                {{ accountInfo?.name }}
-              </NText>
-              <NText style="color: gray">
-                于
-                <NTime :time="accountInfo?.createAt" />
-                注册
-              </NText>
-            </NSpace>
-            <NDivider>
-              <NText
-                depth="3"
-                style="font-size: 18px"
-              >
-                {{ accountInfo?.id }}
-              </NText>
-            </NDivider>
+        <NCard size="small" bordered :segmented="{ content: true }">
+          <NFlex vertical :size="12">
+            <NFlex justify="space-between" align="baseline" wrap :size="12">
+              <div class="dashboard-profile">
+                <NText strong class="dashboard-profile__name">
+                  {{ accountInfo?.name }}
+                </NText>
+                <NText depth="3" class="dashboard-profile__meta">
+                  注册于 <NTime :time="accountInfo?.createAt" />
+                </NText>
+              </div>
+              <NFlex align="center" justify="end" wrap :size="8">
+                <NText depth="3" code>
+                  {{ accountInfo?.id }}
+                </NText>
+                <NButton
+                  size="small"
+                  secondary
+                  @click="resetNameModalVisiable = true"
+                >
+                  修改用户名
+                </NButton>
+                <NButton
+                  size="small"
+                  secondary
+                  @click="resetPasswordModalVisiable = true"
+                >
+                  修改密码
+                </NButton>
+                <NPopconfirm @positive-click="logout">
+                  <template #trigger>
+                    <NButton
+                      size="small"
+                      type="error"
+                      secondary
+                    >
+                      登出
+                    </NButton>
+                  </template>
+                  确定登出?
+                </NPopconfirm>
+              </NFlex>
+            </NFlex>
+
             <NSpace vertical>
-              <NCard size="small">
+              <NCard size="small" bordered>
                 <NSpace :size="5">
                   邮箱:
                   <NEllipsis
@@ -423,7 +432,7 @@ onUnmounted(() => {
                   </NButton>
                 </NSpace>
               </NCard>
-              <NCard size="small">
+              <NCard size="small" bordered>
                 主播 Bilibili 账户:
                 <NEllipsis
                   v-if="accountInfo?.isBiliVerified"
@@ -509,7 +518,7 @@ onUnmounted(() => {
                   </NButton>
                 </template>
               </NCard>
-              <NCard size="small">
+              <NCard size="small" bordered>
                 用户 Bilibili 账户:
                 <NEllipsis
                   v-if="accountInfo?.biliUserAuthInfo"
@@ -563,9 +572,11 @@ onUnmounted(() => {
               <NAlert
                 title="Token"
                 type="info"
+                size="small"
+                :bordered="false"
               >
                 请注意保管, 这个东西可以完全操作你的账号
-                <NInputGroup>
+                <NInputGroup class="dashboard-token-group">
                   <NInput
                     type="password"
                     :value="accountInfo?.token"
@@ -574,7 +585,7 @@ onUnmounted(() => {
                   />
                   <NPopconfirm @positive-click="resetToken">
                     <template #trigger>
-                      <NButton type="error">
+                      <NButton type="error" size="small">
                         重置
                       </NButton>
                     </template>
@@ -584,18 +595,19 @@ onUnmounted(() => {
               </NAlert>
             </NSpace>
             <NDivider />
-            
+
             <NAlert
               type="info"
               title="API 设置"
-              style="width: 100%; max-width: 800px; margin-bottom: 16px;"
+              size="small"
+              :bordered="false"
             >
-              <NFlex align="center" :wrap="false" style="gap: 12px;">
+              <NFlex align="center" :wrap="true" :size="12">
                 <NText>当前使用的API:</NText>
                 <NSelect
                   v-model:value="selectedAPIKey"
                   :options="apiOptions"
-                  style="flex: 1; max-width: 200px;"
+                  style="max-width: 220px;"
                   @update:value="handleAPIChange"
                 />
                 <NText depth="3" style="font-size: 12px;">
@@ -604,30 +616,8 @@ onUnmounted(() => {
               </NFlex>
             </NAlert>
             <NDivider />
-            <NSpace justify="center">
-              <NButton
-                type="info"
-                @click="resetNameModalVisiable = true"
-              >
-                修改用户名
-              </NButton>
-              <NButton
-                type="warning"
-                @click="resetPasswordModalVisiable = true"
-              >
-                修改密码
-              </NButton>
-              <NPopconfirm @positive-click="logout">
-                <template #trigger>
-                  <NButton type="error">
-                    登出
-                  </NButton>
-                </template>
-                确定登出?
-              </NPopconfirm>
-            </NSpace>
-          </NCard>
-        </NFlex>
+          </NFlex>
+        </NCard>
       </NTabPane>
       <NTabPane
         name="setting"
@@ -644,7 +634,7 @@ onUnmounted(() => {
         <SettingPaymentView />
       </NTabPane>
     </NTabs>
-  </NFlex>
+  </div>
   <NModal
     v-model:show="resetEmailModalVisiable"
     preset="card"
@@ -847,3 +837,46 @@ onUnmounted(() => {
     </template>
   </NModal>
 </template>
+
+<style scoped>
+.dashboard-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 920px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dashboard-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-tabs :deep(.n-tabs-nav) {
+  margin-bottom: 12px;
+}
+
+.dashboard-token-group {
+  max-width: 560px;
+  width: 100%;
+}
+
+.dashboard-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.dashboard-profile__name {
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-profile__meta {
+  font-size: 12px;
+}
+</style>

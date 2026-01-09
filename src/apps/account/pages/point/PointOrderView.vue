@@ -94,8 +94,8 @@ onMounted(async () => {
     <!-- 统计卡片 -->
     <NCard
       size="small"
-      :bordered="false"
-      style="margin-bottom: 16px"
+      bordered
+      class="stats-card"
     >
       <NFlex
         justify="space-around"
@@ -192,6 +192,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.stats-card {
+  margin-bottom: 12px;
+}
+
 .stat-item {
   text-align: center;
   min-width: 80px;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Moon, Sunny } from '@vicons/ionicons5'
-import { NButton, NIcon, NLayoutHeader, NPageHeader, NSpace, NSwitch, NText } from 'naive-ui'
+import { NButton, NFlex, NIcon, NLayoutHeader, NSwitch, NText } from 'naive-ui'
 import { useStorage } from '@vueuse/core'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
 import { ThemeType } from '@/api/api-models'
@@ -18,17 +18,30 @@ function onToggleTheme(isLight: boolean) {
 </script>
 
 <template>
-  <NLayoutHeader bordered style="height: var(--vtsuru-header-height); padding: 10px 15px 5px 15px">
-    <NPageHeader>
-      <template #title>
-        <NText strong style="font-size: 1.4rem;">
-          VTSURU CENTER
-        </NText>
-      </template>
-      <template #extra>
-        <NSpace align="center" justify="center">
+  <NLayoutHeader bordered class="manage-topbar">
+    <div class="manage-topbar__inner">
+      <NFlex
+        align="center"
+        justify="space-between"
+        :wrap="true"
+        :size="12"
+      >
+        <NFlex align="baseline" :wrap="false" :size="10">
+          <NText strong class="manage-topbar__brand">
+            VTSURU CENTER
+          </NText>
+          <NText v-if="accountName" depth="3" class="manage-topbar__account">
+            / {{ accountName }}
+          </NText>
+        </NFlex>
+
+        <NFlex align="center" justify="end" :wrap="false" :size="10">
           <NotificationsPopover />
-          <NSwitch :value="!isDarkMode" @update:value="onToggleTheme">
+          <NSwitch
+            size="small"
+            :value="!isDarkMode"
+            @update:value="onToggleTheme"
+          >
             <template #checked>
               <NIcon :component="Sunny" />
             </template>
@@ -37,13 +50,37 @@ function onToggleTheme(isLight: boolean) {
             </template>
           </NSwitch>
           <NButton
-            size="small" type="primary"
+            size="small"
+            secondary
             @click="$router.push({ name: 'user-index', params: { id: accountName } })"
           >
             回到展示页
           </NButton>
-        </NSpace>
-      </template>
-    </NPageHeader>
+        </NFlex>
+      </NFlex>
+    </div>
   </NLayoutHeader>
 </template>
+
+<style scoped>
+.manage-topbar {
+  height: var(--vtsuru-header-height);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+}
+
+.manage-topbar__inner {
+  width: 100%;
+}
+
+.manage-topbar__brand {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.manage-topbar__account {
+  font-size: 12px;
+  line-height: 1.2;
+}
+</style>

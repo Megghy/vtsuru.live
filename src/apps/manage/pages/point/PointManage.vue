@@ -20,6 +20,7 @@ import { useRouteHash } from '@vueuse/router'
 import {
   NAlert,
   NButton,
+  NCard,
   NCheckbox,
   NDivider,
   NDynamicTags,
@@ -438,92 +439,69 @@ onMounted(() => { })
   <!-- 头部 -->
   <ManagePageHeader
     title="积分管理"
+    subtitle="礼物、订单、用户与配置"
     :function-type="FunctionTypes.Point"
-  >
-    <NFlex
-      vertical
-      :size="16"
-    >
-      <NFlex
-        justify="space-between"
-        align="center"
-        :gap="16"
+  />
+
+  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+    <NFlex justify="space-between" align="center" wrap :gap="12">
+      <NAlert
+        v-if="!accountInfo.eventFetcherState.online"
+        :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
+          ? 'success'
+          : 'warning'
+        "
+        :bordered="false"
+        style="flex: 1; min-width: 300px"
       >
-        <NAlert
-          v-if="!accountInfo.eventFetcherState.online"
-          :type="accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-            ? 'success'
-            : 'warning'
-          "
-          style="flex: 1; min-width: 300px"
-        >
-          <NFlex
-            align="center"
-            :gap="8"
-          >
-            <NText>
-              此功能依赖
-              <NButton
-                text
-                type="primary"
-                tag="a"
-                href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                target="_blank"
-              >
-                VtsuruEventFetcher
-              </NButton>
-              (事件监听器), 否则将无法自动记录礼物/舰长等事件
-            </NText>
-            <NDivider vertical />
+        <NFlex align="center" :gap="8" wrap>
+          <NText>
+            此功能依赖
             <NButton
               text
-              type="info"
+              type="primary"
               tag="a"
-              href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+              href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
               target="_blank"
             >
-              积分系统说明
+              VtsuruEventFetcher
             </NButton>
-          </NFlex>
-        </NAlert>
-        <EventFetcherStatusCard />
-      </NFlex>
-
-      <!-- 礼物展示页链接 -->
-      <NDivider
-        style="margin: 0"
-        title-placement="left"
-      >
-        礼物展示页链接
-      </NDivider>
-
-      <NFlex
-        align="center"
-        :gap="12"
-      >
-        <NInputGroup style="max-width: 400px;">
-          <NInput
-            :value="`${CURRENT_HOST}@${accountInfo.name}/goods`"
-            readonly
-          />
+            (事件监听器), 否则将无法自动记录礼物/舰长等事件
+          </NText>
+          <NDivider vertical />
           <NButton
-            secondary
-            @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)"
+            text
+            type="info"
+            tag="a"
+            href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+            target="_blank"
           >
-            复制
+            积分系统说明
           </NButton>
-        </NInputGroup>
-      </NFlex>
+        </NFlex>
+      </NAlert>
+      <EventFetcherStatusCard />
     </NFlex>
-  </ManagePageHeader>
+  </NCard>
 
-  <NDivider style="margin: 16px 0" />
+  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+    <NText class="manage-kicker">
+      礼物展示页链接
+    </NText>
+    <NFlex align="center" :gap="12" style="margin-top: 10px;">
+      <NInputGroup style="max-width: 420px;">
+        <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
+        <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)">
+          复制
+        </NButton>
+      </NInputGroup>
+    </NFlex>
+  </NCard>
 
   <!-- 主要内容标签页 -->
   <NTabs
     v-model:value="hash"
     animated
-    style="margin-top: 8px"
   >
     <!-- 礼物管理标签页 -->
     <NTabPane

@@ -36,6 +36,7 @@ import VueTurnstile from 'vue-turnstile'
 import { QueryGetAPI } from '@/api/query'
 import { LOTTERY_API_URL, TURNSTILE_KEY } from '@/shared/config'
 import { NavigateToNewTab } from '@/shared/utils'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 interface TempLotteryResponseModel {
   users: LotteryUserInfo[]
@@ -332,16 +333,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
-    size="medium"
-    embedded
-    title="动态抽奖"
-  >
-    <template #header-extra>
-      <NButton @click="showModal = true">
-        历史记录
-      </NButton>
-    </template>
+  <div class="lottery-view">
+    <ManagePageHeader title="动态抽奖" subtitle="从动态评论/转发中抽取用户">
+      <template #action>
+        <NButton secondary size="small" @click="showModal = true">
+          历史记录
+        </NButton>
+      </template>
+    </ManagePageHeader>
+
+    <NCard size="small" :bordered="true">
     <NInput
       v-model:value="inputDynamic"
       placeholder="动态链接或直接输入动态Id"
@@ -428,7 +429,6 @@ onUnmounted(() => {
         </NRadioGroup>
       </NSpace>
     </NCard>
-    <br>
     <NSpace
       justify="center"
       align="center"
@@ -546,7 +546,7 @@ onUnmounted(() => {
         </NGridItem>
       </NGrid>
     </NCard>
-  </NCard>
+    </NCard>
   <NModal
     v-model:show="showModal"
     preset="card"
@@ -622,4 +622,13 @@ onUnmounted(() => {
     theme="auto"
     style="text-align: center"
   />
+  </div>
 </template>
+
+<style scoped>
+.lottery-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+</style>

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {
   NCard,
-  NDivider,
   NInputNumber,
   NRadio,
   NRadioGroup,
-  NSpace,
   NText,
+  NDivider,
+  NFlex,
 } from 'naive-ui'
 import { watch } from 'vue'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
@@ -29,42 +29,32 @@ watch(() => autoActionStore.globalIntervalSeconds, () => {
   <NCard
     title="全局定时设置"
     size="small"
-    style="margin-bottom: 16px;"
+    bordered
+    :segmented="{ content: true }"
   >
-    <NSpace
-      vertical
-      :size="16"
-    >
+    <NFlex vertical :size="12">
       <NText
         type="info"
         :depth="3"
-        style="font-size: 12px;"
       >
         这里的设置将应用于所有启用了 "使用全局定时器" 选项的定时触发操作。
       </NText>
-      <NDivider style="margin: 4px 0;" />
-      <NSpace
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-      >
-        <NText>全局发送间隔 (秒):</NText>
+      <NDivider style="margin: 0;" />
+      <NFlex align="center" justify="space-between" :wrap="true" :size="12">
+        <NText depth="2">全局发送间隔 (秒)</NText>
         <NInputNumber
           v-model:value="autoActionStore.globalIntervalSeconds"
           :min="10"
           :max="7200"
-          style="width: 120px"
+          size="small"
+          style="width: 140px"
         />
-      </NSpace>
+      </NFlex>
 
-      <NSpace
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-      >
-        <NText>全局发送模式:</NText>
-        <NRadioGroup v-model:value="autoActionStore.globalSchedulingMode">
-          <NSpace>
+      <NFlex align="center" justify="space-between" :wrap="true" :size="12">
+        <NText depth="2">全局发送模式</NText>
+        <NRadioGroup v-model:value="autoActionStore.globalSchedulingMode" size="small">
+          <NFlex :size="12">
             <NRadio
               v-for="option in schedulingModeOptions"
               :key="option.value"
@@ -72,10 +62,10 @@ watch(() => autoActionStore.globalIntervalSeconds, () => {
             >
               {{ option.label }}
             </NRadio>
-          </NSpace>
+          </NFlex>
         </NRadioGroup>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCard>
 </template>
 

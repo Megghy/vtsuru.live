@@ -94,6 +94,10 @@ function updateCssVariables() {
 
   const root = document.documentElement
   root.style.setProperty('--dw-direction', setting.value.reverseOrder ? 'column-reverse' : 'column')
+  root.style.setProperty('--dw-enter-offset-y', setting.value.reverseOrder ? '8px' : '-8px')
+  root.style.setProperty('--dw-leave-offset-y', setting.value.reverseOrder ? '-8px' : '8px')
+  root.style.setProperty('--dw-enter-offset-x', '18px')
+  root.style.setProperty('--dw-leave-offset-x', '14px')
 
   // 背景和文字颜色
   const bgColor = setting.value.backgroundColor || 'rgba(0,0,0,0.6)'
@@ -300,7 +304,7 @@ watch(() => setting.value, () => {
           :item="item"
           :setting="setting"
           :data-type="item.type"
-          class="danmaku-item"
+          :class="['danmaku-item', { 'batch-item': isInBatchUpdate }]"
         />
       </TransitionGroup>
     </div>
@@ -331,6 +335,10 @@ html,
     --dw-emoji-size: 24px;
     --dw-item-spacing: 5px;
     --dw-animation-duration: 300ms;
+    --dw-enter-offset-x: 18px;
+    --dw-enter-offset-y: -8px;
+    --dw-leave-offset-x: 14px;
+    --dw-leave-offset-y: 8px;
     --dw-shadow: none;
   }
 
@@ -399,20 +407,30 @@ html,
 
   /* 批量更新模式下的优化 */
   .batch-update .danmaku-list-move {
-    transition-duration: 100ms !important;
+    transition-duration: 160ms !important;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
   .batch-item {
-    transition-duration: 100ms !important;
+    transition-duration: 160ms !important;
   }
 
   /* 动画相关样式 - 根据 enableAnimation 设置应用 */
-  /* 1. declare transition */
-  .danmaku-list-move,
-  .danmaku-list-enter-active,
+  .danmaku-list-move {
+    transition: transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .danmaku-list-enter-active {
+    transition:
+      transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
+      opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
+    transition-delay: var(--transition-delay, 0s);
+  }
+
   .danmaku-list-leave-active {
-    transition: all var(--dw-animation-duration) cubic-bezier(0.55, 0, 0.1, 1);
+    transition:
+      transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1),
+      opacity calc(var(--dw-animation-duration) * 0.8) cubic-bezier(0.2, 0, 0, 1);
   }
 
   /* 当禁用动画时应用的样式 */
@@ -426,37 +444,46 @@ html,
   .danmaku-list-enter-from,
   .danmaku-list-leave-to {
     opacity: 0;
-    transform: scaleY(0.01) translate(3000px, 0);
+    transform: translate3d(var(--dw-enter-offset-x), var(--dw-enter-offset-y), 0) scale(0.98);
+  }
+
+  .danmaku-list-leave-to {
+    transform: translate3d(var(--dw-leave-offset-x), var(--dw-leave-offset-y), 0) scale(0.98);
   }
 
   /* 3. ensure leaving items are taken out of layout flow so that moving
       animations can be calculated correctly. */
   .danmaku-list-leave-active {
     position: absolute;
+    width: 100%;
   }
 
   /* 根据弹幕类型提供不同的动画特性 */
   [data-type="3"] {
     /* 普通弹幕 */
-    --transition-delay: 0.02s;
+    --transition-delay: 0ms;
   }
 
   [data-type="2"] {
     /* 礼物 */
-    --transition-delay: 0.04s;
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* 小弹跳效果 */
+    --transition-delay: 15ms;
   }
 
   [data-type="1"] {
     /* SC */
-    --transition-delay: 0.05s;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-    /* 特殊强调效果 */
+    --transition-delay: 25ms;
   }
 
   .danmaku-item {
     /* 添加 will-change 提示浏览器进行优化 */
     will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .danmaku-list-move,
+    .danmaku-list-enter-active,
+    .danmaku-list-leave-active {
+      transition: none !important;
+    }
   }
 </style>

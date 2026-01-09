@@ -645,9 +645,9 @@ function getFileName(index: number) {
 
 <style scoped>
 .dynamic-nine-grid-tool {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .upload-section {

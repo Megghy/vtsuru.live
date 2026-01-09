@@ -201,7 +201,7 @@ onBeforeUnmount(() => {
         </NButton>
       </template>
 
-      <div class="header-stack">
+      <div class="live-manager-alerts">
         <EventFetcherAlert />
         <EventFetcherStatusCard />
 
@@ -242,7 +242,7 @@ onBeforeUnmount(() => {
           </NFlex>
 
           <NFlex align="center" wrap :size="10">
-            <span class="toolbar-label">排序</span>
+            <span class="manage-kicker">排序</span>
             <NSelect
               v-model:value="sortKey"
               size="small"
@@ -343,19 +343,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .live-manager-view {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px 16px 48px;
-}
-
-.header-stack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.toolbar-card {
-  margin-top: 12px;
+.live-manager-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .search-input {
@@ -378,28 +374,11 @@ onBeforeUnmount(() => {
   width: 86px;
 }
 
-.toolbar-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--n-text-color-3);
-}
-
 .result-meta {
   font-size: 12px;
 }
 
-.skeleton {
-  margin-top: 12px;
-}
-
-.empty-card {
-  margin-top: 12px;
-}
-
 .live-stack {
-  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;

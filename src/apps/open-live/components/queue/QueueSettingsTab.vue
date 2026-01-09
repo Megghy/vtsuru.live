@@ -40,9 +40,12 @@ function onChange() {
 
 <template>
   <NSpin :show="isLoading">
-    <NAlert type="info" closable title="Tip" />
-    <NSpace vertical :size="20" style="padding-top: 10px;">
-      <NCard size="small" title="加入规则" :bordered="false">
+    <NSpace vertical :size="12">
+      <NAlert type="info" size="small" :bordered="false" closable title="提示">
+        修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。
+      </NAlert>
+
+      <NCard size="small" title="加入规则" bordered>
         <NSpace vertical :size="12">
           <NSpace align="center">
             <NInputGroup style="width: 350px">
@@ -103,9 +106,7 @@ function onChange() {
         </NSpace>
       </NCard>
 
-      <NDivider />
-
-      <NCard size="small" title="礼物规则" :bordered="false">
+      <NCard size="small" title="礼物规则" bordered>
         <NSpace vertical :size="12">
           <NCheckbox v-model:checked="settings.allowGift" @update:checked="onChange">
             允许通过发送指定礼物直接加入队列
@@ -167,9 +168,7 @@ function onChange() {
         </NSpace>
       </NCard>
 
-      <NDivider />
-
-      <NCard size="small" title="冷却时间 (CD)" :bordered="false">
+      <NCard size="small" title="冷却时间 (CD)" bordered>
         <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="onChange">
           启用排队冷却 (用户完成后需等待一段时间才能再次加入)
         </NCheckbox>
@@ -193,9 +192,7 @@ function onChange() {
         </NSpace>
       </NCard>
 
-      <NDivider />
-
-      <NCard size="small" title="显示与界面" :bordered="false">
+      <NCard size="small" title="显示与界面" bordered>
         <NSpace vertical :size="12">
           <NDivider title-placement="left" style="margin: 5px 0;">
             OBS 组件显示

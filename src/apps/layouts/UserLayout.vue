@@ -44,6 +44,7 @@ import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { NavigateToNewTab } from '@/shared/utils'
+import '@/apps/user/styles/user-page.css'
 
 // --- 响应式状态和常量 ---
 const route = useRoute()
@@ -472,14 +473,28 @@ watch(
           class="viewer-page-content"
         >
           <!-- 路由视图和动画 -->
-          <RouterView v-slot="{ Component }">
+          <RouterView v-slot="{ Component, route: viewRoute }">
             <KeepAlive>
-              <component
-                :is="Component"
-                :key="route.fullPath"
-                :bili-info="biliUserInfo"
-                :user-info="userInfo"
-              />
+              <template v-if="viewRoute.meta.pageContainer === 'none'">
+                <component
+                  :is="Component"
+                  :key="route.fullPath"
+                  :bili-info="biliUserInfo"
+                  :user-info="userInfo"
+                />
+              </template>
+              <div
+                v-else
+                class="user-page"
+                :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+              >
+                <component
+                  :is="Component"
+                  :key="route.fullPath"
+                  :bili-info="biliUserInfo"
+                  :user-info="userInfo"
+                />
+              </div>
             </KeepAlive>
           </RouterView>
           <NBackTop
@@ -540,7 +555,7 @@ watch(
 // --- CSS 变量定义 ---
 :root {
   --vtsuru-header-height: 50px; // 顶部导航栏高度
-  --vtsuru-content-padding: 20px; // 内容区域内边距
+  --vtsuru-content-padding: 16px; // 内容区域内边距
 }
 
 // --- 布局样式 ---
@@ -633,14 +648,12 @@ watch(
 .viewer-page-content {
     height: 100%;
     min-height: 100%; // 同样保证最小高度
-    border-radius: var(--n-border-radius);
     padding: var(--vtsuru-content-padding);
     box-sizing: border-box;
     overflow-y: auto; // 允许内容 Y 轴滚动
     overflow-x: hidden; // 禁止内容 X 轴滚动 (可选，但通常推荐)
     position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
-    background-color: var(--n-card-color);
-    border: 1px solid var(--n-border-color);
+    background-color: var(--n-body-color);
 }
 
 // --- 返回顶部按钮 ---

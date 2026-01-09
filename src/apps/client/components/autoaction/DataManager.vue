@@ -203,7 +203,7 @@ function clearRuntimeData() {
 const commonColumns: DataTableColumns<DataItem> = [
   { title: '键 (Key)', key: 'key', resizable: true, render: row => h(NText, { code: true }, { default: () => row.key }) },
   { title: '类型 (Type)', key: 'type', width: 120, render: row => h(NTag, { size: 'small', type: (row.type === 'error' || row.type === 'parse-error') ? 'error' : 'default', bordered: false }, { default: () => row.type }) },
-  { title: '值 (Value)', key: 'valueDisplay', resizable: true, ellipsis: { tooltip: true }, render: row => h('pre', { style: 'white-space: pre-wrap; word-break: break-all; margin: 0; font-family: inherit; font-size: inherit;' }, row.valueDisplay) },
+  { title: '值 (Value)', key: 'valueDisplay', resizable: true, ellipsis: { tooltip: true }, render: row => h('pre', row.valueDisplay) },
 ]
 
 const persistentColumns: DataTableColumns<DataItem> = [
@@ -232,6 +232,8 @@ onMounted(() => {
     <NCard
       title="运行时数据"
       size="small"
+      bordered
+      :segmented="{ content: true }"
     >
       <NAlert
         type="warning"
@@ -292,6 +294,8 @@ onMounted(() => {
     <NCard
       title="持久化数据"
       size="small"
+      bordered
+      :segmented="{ content: true }"
     >
       <NAlert
         type="info"

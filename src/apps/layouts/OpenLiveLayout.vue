@@ -30,6 +30,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Route
 import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
 import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
 import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
+import '@/apps/open-live/styles/open-live-page.css'
 
 // -- 基本状态和工具 --
 const route = useRoute() // 获取当前路由信息
@@ -330,23 +331,23 @@ onMounted(async () => {
       <!-- 右侧主内容区域 -->
       <NLayoutContent
         style="height: 100%;"
-        content-style="padding: 15px; height: 100%;"
+        content-style="padding: 0; height: 100%;"
         :native-scrollbar="false"
       >
+        <div class="open-live-page">
         <!-- 弹幕客户端错误提示 -->
         <NAlert
           v-if="danmakuClientError"
           type="error"
           title="弹幕客户端错误"
           closable
-          style="margin-bottom: 15px;"
           @close="danmakuClientError = undefined"
         >
           {{ danmakuClientError }}
         </NAlert>
 
         <!-- 路由视图: 根据认证状态显示不同内容 -->
-        <RouterView v-slot="{ Component }">
+        <RouterView v-slot="{ Component, route: viewRoute }">
           <!-- 情况一: 认证信息加载中或连接中 -->
           <div
             v-if="!danmakuClient.authInfo && !danmakuClientError"
@@ -360,12 +361,30 @@ onMounted(async () => {
           </div>
           <!-- 情况二: 加载/连接成功, 渲染对应页面 -->
           <KeepAlive v-else-if="Component && danmakuClient.authInfo">
-            <component
-              :is="Component"
-              :key="route.fullPath"
-              :room-info="danmakuClient.authInfo"
-              :code="authInfo.Code"
-            />
+            <template v-if="viewRoute.meta.pageContainer === 'none'">
+              <component
+                :is="Component"
+                :key="viewRoute.fullPath"
+                :room-info="danmakuClient.authInfo"
+                :code="authInfo.Code"
+              />
+            </template>
+            <div
+              v-else
+              class="open-live-page-inner"
+              :class="{
+                'open-live-page-inner--md': viewRoute.meta.pageWidth === 'md',
+                'open-live-page-inner--xl': viewRoute.meta.pageWidth === 'xl',
+                'open-live-page-inner--full': viewRoute.meta.pageWidth === 'full',
+              }"
+            >
+              <component
+                :is="Component"
+                :key="viewRoute.fullPath"
+                :room-info="danmakuClient.authInfo"
+                :code="authInfo.Code"
+              />
+            </div>
           </KeepAlive>
           <!-- 情况三: 组件无法渲染或其他错误 (理论上不应发生, 但作为后备) -->
           <NResult
@@ -381,6 +400,7 @@ onMounted(async () => {
           :right="40"
           :bottom="60"
         />
+        </div>
       </NLayoutContent>
     </NLayout>
 
@@ -413,6 +433,11 @@ onMounted(async () => {
 <style scoped>
 .n-pageheader-wrapper {
   width: 100% !important;
+}
+
+.open-live-page {
+  height: 100%;
+  overflow: auto;
 }
 /* 优化 NPageHeader 在窄屏幕下的表现 (可选) */
 @media (max-width: 768px) {

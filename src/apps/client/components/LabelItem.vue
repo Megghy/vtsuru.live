@@ -6,10 +6,12 @@ defineProps<{
 
 <template>
   <span class="label-item">
-    <p>
+    <span class="label-item__label">
       {{ label }}
-    </p>
-    <slot />
+    </span>
+    <span class="label-item__value">
+      <slot />
+    </span>
   </span>
 </template>
 
@@ -17,8 +19,22 @@ defineProps<{
 .label-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  min-width: 0;
+}
+
+.label-item__label {
+  font-size: 12px;
+  color: var(--n-text-color-2);
+  white-space: nowrap;
+}
+
+.label-item__value {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: 0;
 }
 </style>

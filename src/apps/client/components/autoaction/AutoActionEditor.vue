@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapse, NDivider, NSpace } from 'naive-ui'
+import { NCollapse, NCollapseItem, NDivider, NFlex } from 'naive-ui'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
 import AdvancedSettings from './settings/AdvancedSettings.vue'
@@ -60,53 +60,42 @@ const TriggerSettings = getTriggerSettings()
 </script>
 
 <template>
-  <div class="auto-action-editor">
-    <NSpace vertical>
-      <!-- 模板设置 - 移到最上面 -->
-      <TemplateSettings :action="action" :custom-test-context="customTestContext" />
+  <NFlex class="auto-action-editor" vertical :size="12">
+    <TemplateSettings :action="action" :custom-test-context="customTestContext" />
 
-      <!-- 基本设置 -->
-      <BasicSettings
-        :action="action"
-        :hide-name="hideName"
-        :hide-enabled="hideEnabled"
-      />
-      <!-- 高级选项 - 所有高级设置放在一个折叠面板中 -->
-      <NCollapse class="settings-collapse">
-        <template #default>
-          <br>
-          <!-- 触发类型特定设置 -->
+    <BasicSettings
+      :action="action"
+      :hide-name="hideName"
+      :hide-enabled="hideEnabled"
+    />
+
+    <NCollapse>
+      <NCollapseItem title="高级选项" name="advanced">
+        <NFlex vertical :size="12">
           <component
             :is="TriggerSettings"
             v-if="TriggerSettings"
             :action="action"
             class="trigger-settings"
           />
-
-          <NDivider style="margin: 10px 0;">
-            高级选项
+          <NDivider style="margin: 0;">
+            通用高级设置
           </NDivider>
-          <!-- 通用高级设置 -->
           <AdvancedSettings
             :action="action"
             class="advanced-settings"
           />
-        </template>
-        <template #header>
-          高级选项
-        </template>
-      </NCollapse>
-    </NSpace>
-  </div>
+        </NFlex>
+      </NCollapseItem>
+    </NCollapse>
+  </NFlex>
 </template>
 
 <style scoped>
 .auto-action-editor {
-  margin-bottom
-  : 20px;
+  width: 100%;
 }
 .trigger-settings {
-  color: var(--n-color-info);
-  font-size: bold;
+  width: 100%;
 }
 </style>

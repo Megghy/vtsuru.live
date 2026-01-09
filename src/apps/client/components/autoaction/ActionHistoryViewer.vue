@@ -4,6 +4,7 @@ import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled } from '@vicons/fluent'
 import {
   NButton,
+  NCard,
   NDataTable,
   NEmpty,
   NIcon,
@@ -190,13 +191,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="history-viewer">
-    <NSpace vertical>
-      <NSpace justify="space-between">
-        <div class="history-title">
-          操作执行历史
-        </div>
-        <NSpace>
+  <NCard
+    title="执行历史"
+    size="small"
+    bordered
+    :segmented="{ content: true }"
+  >
+    <template #header-extra>
+      <NSpace>
           <NButton
             size="small"
             :loading="loading"
@@ -225,74 +227,65 @@ onUnmounted(() => {
             </template>
             确定要清空所有类型的历史记录吗？此操作不可恢复。
           </NPopconfirm>
-        </NSpace>
       </NSpace>
+    </template>
 
-      <NTabs
-        v-model:value="activeTab"
-        type="line"
-        animated
+    <NTabs
+      v-model:value="activeTab"
+      type="line"
+      animated
+    >
+      <NTabPane
+        v-for="(label, type) in typeNameMap"
+        :key="type"
+        :name="type"
+        :tab="label"
       >
-        <NTabPane
-          v-for="(label, type) in typeNameMap"
-          :key="type"
-          :name="type"
-          :tab="label"
-        >
-          <NSpin :show="loading">
-            <NSpace vertical>
-              <NSpace justify="end">
-                <NPopconfirm
-                  placement="bottom"
-                  @positive-click="() => handleClearHistory(type as HistoryType)"
-                >
-                  <template #trigger>
-                    <NButton
-                      size="small"
-                      type="warning"
-                      ghost
-                    >
-                      <template #icon>
-                        <NIcon :component="Delete16Filled" />
-                      </template>
-                      清空{{ label }}历史
-                    </NButton>
-                  </template>
-                  确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
-                </NPopconfirm>
-              </NSpace>
-
-              <NDataTable
-                :columns="columns"
-                :data="historyData[type as HistoryType]"
-                :bordered="false"
-                :pagination="{
-                  pageSize: 10,
-                  showSizePicker: true,
-                  pageSizes: [10, 20, 50],
-                }"
-                :row-key="row => row.id"
-                default-sort-order="descend"
+        <NSpin :show="loading">
+          <NSpace vertical>
+            <NSpace justify="end">
+              <NPopconfirm
+                placement="bottom"
+                @positive-click="() => handleClearHistory(type as HistoryType)"
               >
-                <template #empty>
-                  <NEmpty description="暂无历史记录" />
+                <template #trigger>
+                  <NButton
+                    size="small"
+                    type="warning"
+                    ghost
+                  >
+                    <template #icon>
+                      <NIcon :component="Delete16Filled" />
+                    </template>
+                    清空{{ label }}历史
+                  </NButton>
                 </template>
-              </NDataTable>
+                确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
+              </NPopconfirm>
             </NSpace>
-          </NSpin>
-        </NTabPane>
-      </NTabs>
-    </NSpace>
-  </div>
+
+            <NDataTable
+              :columns="columns"
+              :data="historyData[type as HistoryType]"
+              :bordered="false"
+              :pagination="{
+                pageSize: 10,
+                showSizePicker: true,
+                pageSizes: [10, 20, 50],
+              }"
+              :row-key="row => row.id"
+              default-sort-order="descend"
+            >
+              <template #empty>
+                <NEmpty description="暂无历史记录" />
+              </template>
+            </NDataTable>
+          </NSpace>
+        </NSpin>
+      </NTabPane>
+    </NTabs>
+  </NCard>
 </template>
 
 <style scoped>
-.history-viewer {
-  width: 100%;
-}
-
-.history-title {
-  font-size: 16px;
-  font-weight: 500;
-}
 </style>

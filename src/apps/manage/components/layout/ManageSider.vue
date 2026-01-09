@@ -474,9 +474,9 @@ const menuOptions = computed(() => {
     :scrollbar-props="{ trigger: 'none', style: {} }"
     :class="{ 'sider-collapsed': collapsed }"
   >
-    <NSpace vertical style="margin-top: 16px" align="center">
-      <NSpace justify="center">
-        <NButton type="info" style="width: 100%" @click="$router.push({ name: 'manage-index' })">
+    <div class="manage-sider__top" :class="{ 'is-collapsed': collapsed }">
+      <NFlex align="center" justify="space-between" :wrap="false" :size="8">
+        <NButton type="info" class="manage-sider__home" @click="$router.push({ name: 'manage-index' })">
           <template #icon>
             <NIcon :component="BrowsersOutline" />
           </template>
@@ -484,9 +484,10 @@ const menuOptions = computed(() => {
             面板
           </template>
         </NButton>
-        <NTooltip v-if="!collapsed">
+
+        <NTooltip>
           <template #trigger>
-            <NButton @click="$router.push({ name: 'manage-feedback' })">
+            <NButton class="manage-sider__feedback" @click="$router.push({ name: 'manage-feedback' })">
               <template #icon>
                 <NIcon :component="PersonFeedback24Filled" />
               </template>
@@ -494,8 +495,9 @@ const menuOptions = computed(() => {
           </template>
           反馈
         </NTooltip>
-      </NSpace>
-      <NButton v-if="accountInfo.biliUserAuthInfo" type="info" secondary @click="gotoAuthPage()">
+      </NFlex>
+
+      <NButton v-if="accountInfo.biliUserAuthInfo" type="info" secondary class="manage-sider__auth" @click="gotoAuthPage()">
         <template #icon>
           <NIcon :component="Person48Filled" />
         </template>
@@ -503,12 +505,12 @@ const menuOptions = computed(() => {
           认证用户主页
         </template>
       </NButton>
-    </NSpace>
+    </div>
 
     <NMenu
       v-model:expanded-keys="expandedKeys"
       class="manage-sider-menu"
-      style="margin-top: 12px"
+      style="margin-top: 6px"
       :disabled="accountInfo?.isEmailVerified !== true"
       :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
       :default-expanded-keys="['group-common', 'group-data', 'group-tools', 'group-danmaku', 'group-favorites']"
@@ -547,6 +549,30 @@ const menuOptions = computed(() => {
 </template>
 
 <style scoped>
+.manage-sider__top {
+  padding: 12px 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.manage-sider__home {
+  flex: 1;
+}
+
+.manage-sider__feedback {
+  flex: none;
+}
+
+.manage-sider__auth {
+  width: 100%;
+}
+
+.manage-sider__top.is-collapsed .manage-sider__home,
+.manage-sider__top.is-collapsed .manage-sider__auth {
+  width: 100%;
+}
+
 :deep(.manage-sider-menu .menu-fav) {
   opacity: 0;
   width: 0;
@@ -581,11 +607,6 @@ const menuOptions = computed(() => {
   display: flex;
   justify-content: center;
 }
-
-:deep(.n-menu-item) {
-  margin-top: 3px;
-}
-
 
 .sider-collapsed :deep(.manage-sider-menu .menu-fav) {
   display: none !important;

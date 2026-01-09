@@ -1,0 +1,49 @@
+.open-live-page {
+  min-height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.open-live-page-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.open-live-page-inner--md {
+  max-width: 900px;
+}
+
+.open-live-page-inner--xl {
+  max-width: 1400px;
+}
+
+.open-live-page-inner--full {
+  max-width: none;
+  margin: 0;
+}
+
+/* shadcn-like card rhythm */
+.open-live-page-inner .n-card {
+  border-radius: var(--n-border-radius);
+}
+
+.open-live-page-inner .n-card .n-card-header {
+  padding: 12px 14px;
+}
+
+.open-live-page-inner .n-card .n-card__content {
+  padding: 14px;
+}
+
+.open-live-action-btn {
+  max-width: 220px;
+}

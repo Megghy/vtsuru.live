@@ -96,47 +96,58 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NAlert
-    v-if="!forumInfo"
-    type="error"
-  >
-    用户未创建粉丝讨论区
-  </NAlert>
+  <NCard v-if="!forumInfo" size="small" bordered>
+    <NAlert type="error" size="small" :bordered="false">
+      用户未创建粉丝讨论区
+    </NAlert>
+  </NCard>
   <NCard
     v-else-if="
       (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply)
         || forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
+    size="small"
+    bordered
   >
-    <NAlert type="warning">
+    <NAlert type="warning" size="small" :bordered="false">
       你需要成为成员才能访问 {{ forumInfo.name }}
     </NAlert>
-    <br>
+    <div style="height: 12px;" />
     <NAlert
       v-if="forumInfo.isApplied"
       type="success"
+      size="small"
+      :bordered="false"
     >
       已申请, 正在等待管理员审核
     </NAlert>
     <NCard
       v-else
       title="加入该讨论区"
+      size="small"
+      bordered
     >
       <NAlert
         v-if="!accountInfo.id"
         type="error"
+        size="small"
+        :bordered="false"
       >
         需要登录后才能够加入
       </NAlert>
       <NAlert
         v-else-if="forumInfo.settings.requireApply"
         type="warning"
+        size="small"
+        :bordered="false"
       >
         申请需要审核
       </NAlert>
       <NAlert
         v-else
         type="success"
+        size="small"
+        :bordered="false"
       >
         该讨论区可直接加入
       </NAlert>
@@ -152,52 +163,49 @@ onUnmounted(() => {
     </NCard>
   </NCard>
   <template v-else>
-    <NFlex vertical>
-      <NCard size="small">
-        <template #header>
-          <NFlex justify="center">
-            <NText style="font-size: large">
-              {{ forumInfo.name }}
-            </NText>
-          </NFlex>
-        </template>
-      </NCard>
-      <NFlex>
-        <NCard style="max-width: 300px">
-          <NFlex vertical>
-            <NButton @click="showPostTopicModal = true">
+    <NFlex vertical :size="12">
+      <NCard size="small" bordered :title="forumInfo.name" />
+      <div class="forum-grid">
+        <NCard class="forum-sidebar" size="small" bordered>
+          <NFlex vertical :size="8">
+            <NButton type="primary" secondary @click="showPostTopicModal = true">
               发布话题
             </NButton>
-            <NCard
+            <NAlert
               v-if="forumInfo.isAdmin"
+              type="info"
               size="small"
-              title="管理员"
-            />
+              :bordered="false"
+            >
+              你是管理员
+            </NAlert>
           </NFlex>
         </NCard>
-        <NList
-          bordered
-          style="flex: 1"
-          size="small"
-          hoverable
-          clickable
-        >
-          <NListItem
-            v-for="item in topics?.data ?? []"
-            :key="item.id"
+        <NCard class="forum-topics" size="small" bordered content-style="padding: 0;">
+          <NList
+            style="width: 100%;"
+            size="small"
+            hoverable
+            clickable
           >
-            <a
-              :href="`${$route.path}/topic/${item.id}`"
-              target="_blank"
+            <NListItem
+              v-for="item in topics?.data ?? []"
+              :key="item.id"
             >
-              <ForumPreviewItem
-                :item="item"
-                :forum="forumInfo"
-              />
-            </a>
-          </NListItem>
-        </NList>
-      </NFlex>
+              <a
+                class="topic-link"
+                :href="`${$route.path}/topic/${item.id}`"
+                target="_blank"
+              >
+                <ForumPreviewItem
+                  :item="item"
+                  :forum="forumInfo"
+                />
+              </a>
+            </NListItem>
+          </NList>
+        </NCard>
+      </div>
     </NFlex>
     <NModal
       v-model:show="showPostTopicModal"
@@ -244,7 +252,22 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-a {
+.forum-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.topic-link {
+  display: block;
+  color: inherit;
   text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .forum-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

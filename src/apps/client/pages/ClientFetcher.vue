@@ -91,6 +91,7 @@ import { callStartDanmakuClient, resetDanmakuClientInitState } from '@/apps/clie
 import { COOKIE_CLOUD_KEY, useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
+import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 
 // --- ECharts Setup ---
 use([
@@ -166,7 +167,7 @@ const isSyncingFromCloud = ref(false)
 const isCheckingCookie = ref(false)
 const lastSyncTime = ref<number>(0)
 const lastCheckTime = ref<number>(0)
-const COOLDOWN_DURATION = 5 * 1000 // 30秒冷却时间
+const COOLDOWN_DURATION = 5 * 1000 // 5秒冷却时间
 
 // 计算剩余冷却时间
 const syncCooldownRemaining = ref(0)
@@ -726,33 +727,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NFlex
-    vertical
-    align="center"
-    gap="large"
-    style="padding: 1rem;"
-  >
-    <!-- Header -->
-    <NFlex
-      align="center"
-      justify="center"
-    >
-      <p style="font-size: 2.25rem; font-weight: bold;">
-        VTsuruEventFetcher
-      </p>
-      <NTag
-        style="margin-left: 0.75rem; height: 1.5rem; color: rgb(148 163 184);"
-        :bordered="false"
-      >
-        Client
-      </NTag>
-    </NFlex>
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <ClientPageHeader
+        title="EventFetcher"
+        description="事件采集、登录状态与运行监控"
+      />
+    </NCard>
 
     <!-- Settings -->
     <NCard
       title="设置"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <NFlex
         vertical
@@ -878,8 +866,9 @@ onUnmounted(() => {
     <NCard
       v-if="settings.settings.enableEventFetcher"
       title="运行状态 & 连接"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <template #header-extra>
         <NTag
@@ -961,8 +950,9 @@ onUnmounted(() => {
     <!-- Credentials & Account -->
     <NCard
       title="凭据 & 账户"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <template #header-extra>
         <NTag
@@ -1128,8 +1118,9 @@ onUnmounted(() => {
           >
             <NCard
               title="Cookie Cloud 配置"
-              embedded
-              style="width: 100%; max-width: 800px; margin-bottom: 1rem;"
+              size="small"
+              bordered
+              style="width: 100%; margin-bottom: 12px;"
             >
               <template #header-extra>
                 <NTag
@@ -1146,7 +1137,6 @@ onUnmounted(() => {
                 <NAlert type="info">
                   设置 CookieCloud 后扫码登陆的登陆信息将被覆盖
                 </NAlert>
-                <br>
                 <NInputGroup>
                   <NInputGroupLabel>
                     Key
@@ -1188,14 +1178,14 @@ onUnmounted(() => {
                     保存配置
                   </NButton>
                   <NPopconfirm
-                    v-else
-                    type="error"
-                    @positive-click="async () => {
+                  v-else
+                  type="error"
+                  @positive-click="async () => {
                       await biliCookie.clearCookieCloudConfig();
-                      cookieCloudData = { key: '', password: '', host: 'https://cookie.vtsuru.live' };
+                      cookieCloudData.value = { key: '', password: '', host: 'https://cookie.vtsuru.live' };
                       message.success('配置已清除');
                     }"
-                  >
+                >
                     <template #trigger>
                       <NButton type="error">
                         清除配置
@@ -1250,8 +1240,9 @@ onUnmounted(() => {
     <NCard
       v-if="settings.settings.enableEventFetcher && settings.settings.useDanmakuClientType === 'openlive'"
       title="直播间信息"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <template #header-extra>
         <NTag
@@ -1309,8 +1300,9 @@ onUnmounted(() => {
     <NCard
       v-if="settings.settings.enableEventFetcher"
       title="会话实时统计"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <div v-if="isConnected && showCharts">
         <NGrid
@@ -1323,7 +1315,7 @@ onUnmounted(() => {
             <NCard
               title="实时速率"
               size="small"
-              embedded
+              bordered
               :segmented="{ content: true }"
             >
               <div style="height: 180px;">
@@ -1340,7 +1332,7 @@ onUnmounted(() => {
             <NCard
               title="事件类型分布"
               size="small"
-              embedded
+              bordered
               :segmented="{ content: true }"
             >
               <div style="height: 180px;">
@@ -1358,7 +1350,7 @@ onUnmounted(() => {
             <NCard
               title="会话摘要"
               size="small"
-              embedded
+              bordered
               :segmented="{ content: true }"
               style="height: 100%;"
             >
@@ -1389,8 +1381,9 @@ onUnmounted(() => {
     <NCard
       v-if="settings.settings.enableEventFetcher"
       title="今日统计"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <template #header-extra>
         <NText depth="3">
@@ -1450,8 +1443,9 @@ onUnmounted(() => {
     <NCard
       v-if="settings.settings.enableEventFetcher"
       title="历史事件量 (近30日)"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <NSpin :show="isLoadingHistory">
         <div style="height: 280px;">
@@ -1474,8 +1468,9 @@ onUnmounted(() => {
     <!-- System Info (Optional) -->
     <NCard
       title="系统信息"
-      embedded
-      style="width: 100%; max-width: 800px;"
+      size="small"
+      bordered
+      style="width: 100%;"
     >
       <template #header-extra>
         <NIcon :component="HardwareChipOutline" />

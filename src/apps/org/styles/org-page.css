@@ -1,0 +1,30 @@
+.org-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.org-page--index {
+  max-width: 1200px;
+}
+
+/* shadcn-like card rhythm */
+.org-page .n-card {
+  border-radius: var(--n-border-radius);
+}
+
+.org-page .n-card .n-card-header {
+  padding: 12px 14px;
+}
+
+.org-page .n-card .n-card__content {
+  padding: 14px;
+}
+
+.org-muted {
+  color: var(--n-text-color-3);
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NInput, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch } from 'naive-ui'
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 
 defineProps({
@@ -47,107 +47,80 @@ const priorityOptions = [
 </script>
 
 <template>
-  <div class="basic-settings-container">
-    <NSpace
-      vertical
-      class="basic-settings"
+  <NCard
+    title="基础设置"
+    size="small"
+    bordered
+    :segmented="{ content: true }"
+  >
+    <NForm
+      label-placement="left"
+      label-width="120"
+      size="small"
     >
-      <NSpace
-        v-if="!hideName"
-        key="name"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
+      <NGrid
+        cols="1 m:2"
+        responsive="screen"
+        :x-gap="12"
+        :y-gap="8"
       >
-        <span>名称:</span>
-        <NInput
-          v-model:value="action.name"
-          style="width: 300px"
-        />
-      </NSpace>
+        <NGi v-if="!hideName" span="1 m:2">
+          <NFormItem label="名称">
+            <NInput
+              v-model:value="action.name"
+              placeholder="未命名自动操作"
+            />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        v-if="!hideEnabled"
-        key="enabled"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>启用:</span>
-        <NSwitch v-model:value="action.enabled" />
-      </NSpace>
+        <NGi v-if="!hideEnabled">
+          <NFormItem label="启用">
+            <NSwitch v-model:value="action.enabled" size="small" />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        key="only-during-live"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>仅直播中启用:</span>
-        <NSwitch v-model:value="action.triggerConfig.onlyDuringLive" />
-      </NSpace>
+        <NGi>
+          <NFormItem label="仅直播中启用">
+            <NSwitch v-model:value="action.triggerConfig.onlyDuringLive" size="small" />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        key="ignore-tianxuan"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>天选时刻忽略:</span>
-        <NSwitch v-model:value="action.triggerConfig.ignoreTianXuan" />
-      </NSpace>
+        <NGi>
+          <NFormItem label="天选时刻忽略">
+            <NSwitch v-model:value="action.triggerConfig.ignoreTianXuan" size="small" />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        key="triggerType"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>触发类型:</span>
-        <NSelect
-          v-model:value="action.triggerType"
-          style="width: 300px"
-          :options="triggerTypeOptions"
-          disabled
-        />
-      </NSpace>
+        <NGi>
+          <NFormItem label="触发类型">
+            <NSelect
+              v-model:value="action.triggerType"
+              :options="triggerTypeOptions"
+              disabled
+            />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        key="actionType"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>操作类型:</span>
-        <NSelect
-          v-model:value="action.actionType"
-          style="width: 300px"
-          :options="actionTypeOptions"
-        />
-      </NSpace>
+        <NGi>
+          <NFormItem label="操作类型">
+            <NSelect
+              v-model:value="action.actionType"
+              :options="actionTypeOptions"
+            />
+          </NFormItem>
+        </NGi>
 
-      <NSpace
-        key="priority"
-        align="center"
-        justify="space-between"
-        style="width: 100%"
-        class="setting-item"
-      >
-        <span>优先级:</span>
-        <NSelect
-          v-model:value="action.priority"
-          style="width: 300px"
-          :options="priorityOptions"
-        />
-      </NSpace>
-    </NSpace>
-  </div>
+        <NGi>
+          <NFormItem label="优先级">
+            <NSelect
+              v-model:value="action.priority"
+              :options="priorityOptions"
+            />
+          </NFormItem>
+        </NGi>
+      </NGrid>
+    </NForm>
+  </NCard>
 </template>
 
 <style scoped>

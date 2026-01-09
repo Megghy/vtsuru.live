@@ -5,6 +5,7 @@ import {
 import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NDivider, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSpace, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
 
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 
 const danmakuWindow = useDanmakuWindow()
 const message = useMessage()
@@ -59,7 +60,6 @@ function applyPreset(preset: 'dark' | 'light' | 'transparent') {
 
 // 重置位置到屏幕中央
 async function resetPosition() {
-  console.log(danmakuWindow.danmakuWindowSetting.height)
   danmakuWindow.setDanmakuWindowPosition(0, 0)
   message.success('窗口位置已重置')
 }
@@ -82,52 +82,61 @@ const separatorOptions = [
 </script>
 
 <template>
-  <NCard
-    title="弹幕窗口管理"
-    bordered
-  >
-    <template #header-extra>
-      <NButton
-        :type="danmakuWindow.isDanmakuWindowOpen ? 'warning' : 'primary'"
-        @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.openWindow()"
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <ClientPageHeader
+        title="弹幕窗口管理"
+        description="管理弹幕窗口的布局、外观、过滤与高级设置"
       >
-        {{ danmakuWindow.isDanmakuWindowOpen ? '关闭弹幕窗口' : '打开弹幕窗口' }}
-      </NButton>
-    </template>
+        <template #actions>
+          <NButton
+            size="small"
+            :type="danmakuWindow.isDanmakuWindowOpen ? 'warning' : 'primary'"
+            @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.openWindow()"
+          >
+            {{ danmakuWindow.isDanmakuWindowOpen ? '关闭弹幕窗口' : '打开弹幕窗口' }}
+          </NButton>
+        </template>
+      </ClientPageHeader>
+    </NCard>
 
-    <NFlex
-      vertical
-      :size="20"
-    >
-      <NAlert
-        v-if="!danmakuWindow.isDanmakuWindowOpen"
-        title="弹幕窗口未打开"
-        type="info"
+    <NCard size="small" bordered>
+      <NFlex
+        vertical
+        :size="16"
       >
-        请先打开弹幕窗口后再进行设置
-      </NAlert>
-
-      <NTabs
-        type="line"
-        animated
-      >
-        <NTabPane
-          name="position"
-          tab="布局与位置"
+        <NAlert
+          v-if="!danmakuWindow.isDanmakuWindowOpen"
+          title="弹幕窗口未打开"
+          type="info"
+          size="small"
+          :bordered="false"
         >
-          <NFlex vertical>
-            <NForm
-              label-placement="left"
-              label-width="100"
-            >
-              <NGrid
-                :cols="2"
-                :x-gap="12"
+          请先打开弹幕窗口后再进行设置
+        </NAlert>
+
+        <NTabs
+          type="line"
+          animated
+        >
+          <NTabPane
+            name="position"
+            tab="布局与位置"
+          >
+            <NFlex vertical>
+              <NForm
+                label-placement="left"
+                label-width="100"
               >
-                <NGi>
-                  <NFormItem label="窗口宽度">
-                    <NInputNumber
-                      v-model:value="danmakuWindow.danmakuWindowSetting.width"
+                <NGrid
+                  cols="1 m:2"
+                  responsive="screen"
+                  :x-gap="12"
+                >
+                  <NGi>
+                    <NFormItem label="窗口宽度">
+                      <NInputNumber
+                        v-model:value="danmakuWindow.danmakuWindowSetting.width"
                       :min="200"
                       :max="2000"
                       @update:value="(value) => danmakuWindow.setDanmakuWindowSize(value as number, danmakuWindow.danmakuWindowSetting.height)"
@@ -200,7 +209,8 @@ const separatorOptions = [
         >
           <NFlex vertical>
             <NGrid
-              :cols="2"
+              cols="1 m:2"
+              responsive="screen"
               :x-gap="12"
             >
               <NGi>
@@ -535,8 +545,9 @@ const separatorOptions = [
           </NGrid>
         </NTabPane>
       </NTabs>
-    </NFlex>
-  </NCard>
+      </NFlex>
+    </NCard>
+  </NFlex>
 </template>
 
 <style scoped>

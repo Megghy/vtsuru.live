@@ -6,6 +6,7 @@ import { isLoggedIn } from '@/api/account'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ORG_API_URL } from '@/shared/config'
+import '@/apps/web/styles/web-page.css'
 
 type JoinType = 'member' | 'streamer'
 
@@ -163,8 +164,8 @@ async function rejectStreamer() {
 </script>
 
 <template>
-  <div style="max-width: 720px; margin: 0 auto; padding: 16px;">
-    <NCard title="加入 / 授权" :segmented="{ content: true }">
+  <div class="web-page web-page--md">
+    <NCard title="加入 / 授权" :segmented="{ content: true }" size="small" bordered>
       <template v-if="!isValid">
         <NResult status="error" title="无效链接" description="缺少必要参数：type / token" />
         <NDivider />

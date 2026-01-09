@@ -3,7 +3,7 @@ import type { SongsInfo } from '@/api/api-models'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NDivider, NFlex, NInput, NInputGroup, NSpin, useMessage } from 'naive-ui'
+import { NButton, NCard, NFlex, NInput, NInputGroup, NSpin, NText, useMessage } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
@@ -75,10 +75,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ManagePageHeader
-    title="歌单管理"
-    :function-type="FunctionTypes.SongList"
-  >
+  <ManagePageHeader title="歌单管理" :function-type="FunctionTypes.SongList">
     <template #action>
       <NButton type="primary" @click="showModal = true">
         添加歌曲
@@ -108,25 +105,24 @@ onMounted(async () => {
         刷新
       </NButton>
     </template>
+  </ManagePageHeader>
 
-    <NDivider style="margin: 16px 0 16px 0" title-placement="left">
+  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+    <NText class="manage-kicker">
       歌单展示页链接
-    </NDivider>
-    <NFlex align="center">
-      <NInputGroup style="max-width: 400px;">
+    </NText>
+    <NFlex align="center" style="margin-top: 10px;">
+      <NInputGroup style="max-width: 420px;">
         <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
         <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
           复制
         </NButton>
       </NInputGroup>
     </NFlex>
-    <NDivider style="margin: 16px 0 16px 0" />
-  </ManagePageHeader>
+  </NCard>
 
   <SongListAddSongModal v-model:show="showModal" :songs="songs" @added="onSongsAdded" />
 
   <NSpin v-if="isLoading" show />
   <SongList v-else :songs="songs" is-self />
-  <NDivider />
 </template>
-

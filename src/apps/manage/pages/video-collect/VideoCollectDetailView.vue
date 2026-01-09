@@ -49,6 +49,7 @@ import {
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
 import router from '@/app/router'
 import { downloadImage } from '@/shared/utils'
@@ -312,39 +313,24 @@ onActivated(async () => {
 </script>
 
 <template>
-  <div class="detail-container">
-    <!-- Header Section -->
-    <div class="header-section">
-      <div class="header-left">
-        <NButton
-          text
-          style="font-size: 16px"
-          @click="$router.go(-1)"
-        >
+  <div class="video-collect-detail">
+    <ManagePageHeader :title="videoDetail?.table?.name || '视频征集'" subtitle="审核与管理视频提交">
+      <template #action>
+        <NButton secondary size="small" @click="$router.go(-1)">
           <template #icon>
             <NIcon><ArrowLeft24Regular /></NIcon>
           </template>
-          返回列表
+          返回
         </NButton>
-      </div>
-      <div class="header-right">
-        <!-- Desktop Actions -->
+
         <NSpace v-if="width > 800">
-          <NButton
-            secondary
-            strong
-            @click="shareModalVisiable = true"
-          >
+          <NButton secondary strong size="small" @click="shareModalVisiable = true">
             <template #icon>
               <NIcon><Share24Regular /></NIcon>
             </template>
             分享
           </NButton>
-          <NButton
-            secondary
-            strong
-            @click="editModalVisiable = true"
-          >
+          <NButton secondary strong size="small" @click="editModalVisiable = true">
             <template #icon>
               <NIcon><Edit24Regular /></NIcon>
             </template>
@@ -353,6 +339,7 @@ onActivated(async () => {
           <NButton
             secondary
             strong
+            size="small"
             :type="videoDetail.table.isFinish ? 'success' : 'warning'"
             @click="closeTable"
           >
@@ -364,6 +351,7 @@ onActivated(async () => {
           <NButton
             secondary
             strong
+            size="small"
             type="info"
             @click="$router.push({ name: 'video-collect-list', params: { id: videoDetail.table.id } })"
           >
@@ -371,11 +359,7 @@ onActivated(async () => {
           </NButton>
           <NPopconfirm @positive-click="deleteTable">
             <template #trigger>
-              <NButton
-                secondary
-                strong
-                type="error"
-              >
+              <NButton secondary strong size="small" type="error">
                 <template #icon>
                   <NIcon><Delete24Regular /></NIcon>
                 </template>
@@ -386,25 +370,20 @@ onActivated(async () => {
           </NPopconfirm>
         </NSpace>
 
-        <!-- Mobile Actions -->
         <NDropdown
           v-else
           trigger="click"
           :options="mobileMenuOptions"
           @select="handleMobileMenuSelect"
         >
-          <NButton
-            secondary
-            strong
-            circle
-          >
+          <NButton secondary strong size="small" circle>
             <template #icon>
               <NIcon><MoreVertical24Regular /></NIcon>
             </template>
           </NButton>
         </NDropdown>
-      </div>
-    </div>
+      </template>
+    </ManagePageHeader>
 
     <!-- Info Card -->
     <div class="info-card-wrapper">
@@ -433,7 +412,6 @@ onActivated(async () => {
       <NEmpty
         v-if="videoDetail?.videos?.length === 0"
         description="暂无视频提交"
-        style="margin-top: 48px"
       />
       <NTabs
         v-else
@@ -457,8 +435,8 @@ onActivated(async () => {
           </template>
           <div class="video-grid">
             <NGrid
-              x-gap="16"
-              y-gap="16"
+              x-gap="12"
+              y-gap="12"
               cols="1 520:2 800:3 1100:4 1400:5"
               responsive="self"
             >
@@ -493,8 +471,8 @@ onActivated(async () => {
           </template>
           <div class="video-grid">
             <NGrid
-              x-gap="16"
-              y-gap="16"
+              x-gap="12"
+              y-gap="12"
               cols="1 520:2 800:3 1100:4 1400:5"
               responsive="self"
             >
@@ -529,8 +507,8 @@ onActivated(async () => {
           </template>
           <div class="video-grid">
             <NGrid
-              x-gap="16"
-              y-gap="16"
+              x-gap="12"
+              y-gap="12"
               cols="1 520:2 800:3 1100:4 1400:5"
               responsive="self"
             >
@@ -622,7 +600,7 @@ onActivated(async () => {
         </NFormItem>
         <NGrid
           :cols="2"
-          :x-gap="24"
+          :x-gap="12"
         >
           <NGridItem>
             <NFormItem
@@ -668,22 +646,13 @@ onActivated(async () => {
 </template>
 
 <style scoped>
-.detail-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.header-section {
+.video-collect-detail {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .info-card-wrapper {
-  margin-bottom: 24px;
 }
 
 .stats-bar {
@@ -693,7 +662,6 @@ onActivated(async () => {
 }
 
 .content-area {
-  margin-top: 16px;
 }
 
 .custom-tabs :deep(.n-tabs-nav) {
@@ -712,12 +680,6 @@ onActivated(async () => {
 }
 
 .video-grid {
-  padding: 16px 0;
-}
-
-@media (max-width: 600px) {
-  .header-section {
-    margin-bottom: 16px;
-  }
+  padding: 12px 0;
 }
 </style>

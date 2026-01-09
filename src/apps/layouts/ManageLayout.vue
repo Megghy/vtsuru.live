@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { selectedAPIKey } from '@/shared/config'
+import '@/apps/manage/styles/manage-page.css'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
 import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
@@ -38,7 +39,7 @@ onMounted(() => {
       <NLayout>
         <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${playerHeight}px)`" :x-scrollable="true">
           <NLayoutContent
-            content-style="margin: var(--vtsuru-content-padding); margin-right: calc(var(--vtsuru-content-padding) + 4px); padding-bottom: 32px;min-width: 370px"
+            content-style="padding: 0; min-width: 370px;"
           >
             <ManageContentGate :account-info="accountInfo" />
           </NLayoutContent>

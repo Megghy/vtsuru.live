@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
 import { ACCOUNT_API_URL } from '@/shared/config'
 import router from '@/app/router'
+import '@/apps/web/styles/web-page.css'
 
 const password = ref('')
 const password2 = ref('')
@@ -44,12 +45,9 @@ function changePassword() {
 </script>
 
 <template>
-  <NLayoutContent style="height: 100vh; position: relative">
-    <NCard
-      style="max-width: 90%; width: 400px; top: 40%; margin: 0 auto"
-      title="修改密码"
-      embedded
-    >
+  <NLayoutContent class="web-center">
+    <div class="web-page web-page--md">
+      <NCard title="修改密码" size="small" bordered>
       <NSpace vertical>
         <NInput
           v-model:value="password"
@@ -69,6 +67,7 @@ function changePassword() {
           修改密码
         </NButton>
       </NSpace>
-    </NCard>
+      </NCard>
+    </div>
   </NLayoutContent>
 </template>

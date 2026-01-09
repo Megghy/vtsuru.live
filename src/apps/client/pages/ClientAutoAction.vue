@@ -9,6 +9,7 @@ import {
   NDivider,
   NDropdown,
   NEmpty,
+  NFlex,
   NIcon,
   NInputNumber,
   NModal,
@@ -29,6 +30,7 @@ import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import { useWebFetcher } from '@/store/useWebFetcher'
+import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import ActionHistoryViewer from '@/apps/client/components/autoaction/ActionHistoryViewer.vue'
 import AutoActionEditor from '@/apps/client/components/autoaction/AutoActionEditor.vue'
 import DataManager from '@/apps/client/components/autoaction/DataManager.vue'
@@ -448,36 +450,41 @@ function confirmTest() {
 </script>
 
 <template>
-  <div>
-    <NCard
-      title="自动操作设置"
-      size="small"
-    >
-      <template #header-extra>
-        <NButton
-          type="primary"
-          @click="showAddModal = true"
-        >
-          添加自动操作
-        </NButton>
-      </template>
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <ClientPageHeader
+        title="自动操作"
+        description="管理自动回复、礼物感谢、入场欢迎、定时发送等规则"
+      >
+        <template #actions>
+          <NButton
+            type="primary"
+            size="small"
+            @click="showAddModal = true"
+          >
+            添加自动操作
+          </NButton>
+        </template>
+      </ClientPageHeader>
+    </NCard>
 
+    <NCard
+      size="small"
+      bordered
+    >
       <!-- 添加全局登录提示 -->
       <NAlert
         v-if="!biliCookieStore.isCookieValid"
         type="warning"
         title="未登录B站账号"
-        style="margin-bottom: 16px;"
+        size="small"
         :bordered="false"
         closable
       >
         部分需要发送弹幕或私信的自动操作（如自动回复、上舰感谢）将无法执行。请前往【设置】- 【账号设置】页面登录。
       </NAlert>
 
-      <NSpace
-        vertical
-        size="large"
-      >
+      <NFlex vertical :size="12">
         <NTabs
           v-model:value="activeMainTab"
           type="line"
@@ -714,11 +721,9 @@ function confirmTest() {
             <NCard
               title="全局消息队列设置"
               size="small"
+              bordered
             >
-              <NSpace
-                vertical
-                size="large"
-              >
+              <NFlex vertical :size="12">
                 <NSpace align="center">
                   <span>弹幕队列间隔(毫秒):</span>
                   <NInputNumber
@@ -747,11 +752,11 @@ function confirmTest() {
                     每{{ biliFunc.pmInterval }}ms 发送一条私信
                   </NText>
                 </NSpace>
-              </NSpace>
+              </NFlex>
             </NCard>
           </NTabPane>
         </NTabs>
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <NModal
@@ -826,7 +831,7 @@ function confirmTest() {
         </NText>
       </NSpace>
     </NModal>
-  </div>
+  </NFlex>
 </template>
 
 <style scoped>

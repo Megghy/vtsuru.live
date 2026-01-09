@@ -8,6 +8,7 @@ import { validateBlockPageProject } from '@/features/user-page/block/schema'
 import { parseEmbedUrl } from '@/features/user-page/block/embed'
 import { fetchMyUserPagesSettings, saveMyUserPagesSettings } from '@/features/user-page/api'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/features/user-page/types'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 const message = useMessage()
 const account = useAccount()
@@ -266,7 +267,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpin :show="isLoading">
+  <div class="user-page-builder">
+    <ManagePageHeader title="自定义页面" subtitle="配置主页与子页面（block / contrib）">
+      <template #action>
+        <NButton type="primary" size="small" :loading="isSaving" @click="save">
+          保存并发布
+        </NButton>
+      </template>
+    </ManagePageHeader>
+
+    <NSpin :show="isLoading">
     <NAlert
       v-if="error"
       type="error"
@@ -637,13 +647,6 @@ onMounted(async () => {
             >
               打开预览
             </NButton>
-            <NButton
-              type="primary"
-              :loading="isSaving"
-              @click="save"
-            >
-              保存
-            </NButton>
           </NSpace>
         </NSpace>
       </NCard>
@@ -673,5 +676,14 @@ onMounted(async () => {
         </NSpace>
       </template>
     </NModal>
-  </NSpin>
+    </NSpin>
+  </div>
 </template>
+
+<style scoped>
+.user-page-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+</style>

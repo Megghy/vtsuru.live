@@ -31,6 +31,7 @@ import {
   NDataTable,
   NDivider,
   NEmpty,
+  NFlex,
   NIcon,
   NInput,
   NInputGroup,
@@ -67,6 +68,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 // import { useRoute } from 'vue-router' // 未使用
 import QueueObsModal from '@/apps/open-live/components/queue/QueueObsModal.vue'
 import QueueSettingsTab from '@/apps/open-live/components/queue/QueueSettingsTab.vue'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 // Props 定义 (虽然未在逻辑中直接使用，但可能由父组件传入或用于类型检查)
 defineProps<{
@@ -997,36 +999,49 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
 </script>
 
 <template>
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <OpenLivePageHeader
+        title="弹幕排队"
+        description="通过弹幕或礼物加入队列，支持过滤条件、排序策略与 OBS 展示"
+      >
+        <template v-if="accountInfo?.id" #actions>
+          <NTooltip :disabled="configCanEdit">
+            <template #trigger>
+              <NButton
+                type="primary"
+                size="small"
+                class="open-live-action-btn"
+                :disabled="!configCanEdit"
+                @click="showOBSModal = true"
+              >
+                OBS 组件
+              </NButton>
+            </template>
+            登录后可使用 OBS 组件功能
+          </NTooltip>
+        </template>
+      </OpenLivePageHeader>
+    </NCard>
+
   <!-- 顶部功能开关与全局操作 -->
-  <NCard v-if="accountInfo?.id" size="small">
+  <NCard v-if="accountInfo?.id" size="small" bordered>
     <template #header>
-      <NSpace align="center" justify="space-between">
-        <NSpace align="center">
-          <NText>启用弹幕队列功能</NText>
-          <NSwitch
-            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
-            :loading="isLoading"
-            @update:value="onUpdateFunctionEnable"
-          />
-        </NSpace>
-        <NTooltip :disabled="configCanEdit">
-          <template #trigger>
-            <NButton
-              type="primary"
-              size="small"
-              :disabled="!configCanEdit"
-              @click="showOBSModal = true"
-            >
-              OBS 组件
-            </NButton>
-          </template>
-          登录后可使用 OBS 组件功能
-        </NTooltip>
+      <NSpace align="center">
+        <NText>启用弹幕队列功能</NText>
+        <NSwitch
+          size="small"
+          :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
+          :loading="isLoading"
+          @update:value="onUpdateFunctionEnable"
+        />
       </NSpace>
     </template>
     <NAlert
       v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
       type="info"
+      size="small"
+      :bordered="false"
       closable
       style="margin-top: 10px"
     >
@@ -1049,6 +1064,8 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     v-else
     type="warning"
     title="未登录"
+    size="small"
+    :bordered="false"
     closable
   >
     你尚未注册并登录 VTsuru.live，部分功能和设置将不可用。队列将在本地临时存储。
@@ -1064,12 +1081,13 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     </NButton>
   </NAlert>
 
-  <NCard style="margin-top: 12px">
+  <NCard size="small" bordered>
     <!-- 主内容区域 -->
     <NTabs
       v-if="!accountInfo.id || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
       type="line"
       animated
+      size="small"
       display-directive="show:lazy"
       pane-style="padding-top: 10px;"
     >
@@ -1498,10 +1516,13 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
       v-else
       title="功能未启用"
       type="info"
+      size="small"
+      :bordered="false"
     >
       请在页面顶部的开关处启用弹幕队列功能。
     </NAlert>
   </NCard>
+  </NFlex>
 
   <QueueObsModal
     v-model:show="showOBSModal"

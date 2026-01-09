@@ -35,6 +35,7 @@ import { FORUM_API_URL } from '@/shared/config'
 // @ts-ignore
 import Agreement from '@/content/agreements/EnableForumAgreement.md'
 import { useForumStore } from '@/store/useForumStore'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 const useForum = useForumStore()
 const accountInfo = useAccount()
@@ -315,11 +316,19 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="forum-manage-view">
+    <ManagePageHeader title="粉丝讨论区" subtitle="创建与管理讨论区">
+      <template #action>
+        <NButton secondary size="small" :loading="useForum.isLoading" @click="refreshForumInfo">
+          刷新
+        </NButton>
+      </template>
+    </ManagePageHeader>
+
   <template v-if="!currentForum.name && managedForums.length > 0">
-    <NAlert type="info">
+    <NAlert type="info" :bordered="false">
       你是某些讨论区的管理员, 可以在下方选择需要管理的讨论区
     </NAlert>
-    <br>
   </template>
   <NSelect
     v-model:value="selectedForum"
@@ -586,9 +595,16 @@ onMounted(() => {
       封禁
     </NButton>
   </NModal>
+  </div>
 </template>
 
 <style>
+.forum-manage-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .setting .n-descriptions-table-content {
   display: flex !important;
   align-items: center !important;

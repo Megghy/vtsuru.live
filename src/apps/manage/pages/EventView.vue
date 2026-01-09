@@ -7,7 +7,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
-import { GuidUtils, isDarkMode } from '@/shared/utils'
+import { GuidUtils } from '@/shared/utils'
 import {
   ArrowDownload24Regular,
   ArrowSync24Filled,
@@ -54,6 +54,7 @@ import {
   useThemeVars,
 } from 'naive-ui'
 import { computed, h, ref, watch } from 'vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
 // 定义数据模型类型 (从 HistoryView 迁移)
 interface GuardMemberModel {
@@ -535,14 +536,17 @@ async function onTabChange(value: string) {
 </script>
 
 <template>
-  <NSpace vertical>
-    <EventFetcherAlert />
-    <EventFetcherStatusCard />
-  </NSpace>
-  <NDivider />
+  <div class="event-view">
+    <ManagePageHeader title="舰长和SC" subtitle="事件记录与导出" />
+
+    <div class="event-alerts">
+      <EventFetcherAlert />
+      <EventFetcherStatusCard />
+    </div>
+
   <NCard
     size="small"
-    style="width: 100%"
+    :bordered="true"
   >
     <template v-if="accountInfo?.isBiliVerified">
       <NTabs
@@ -1113,10 +1117,23 @@ async function onTabChange(value: string) {
       </NSpace>
     </template>
   </NCard>
+  </div>
 </template>
 
 
 <style scoped>
+.event-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* 响应式样式调整 */
 @media (max-width: 600px) {
   .control-panel {

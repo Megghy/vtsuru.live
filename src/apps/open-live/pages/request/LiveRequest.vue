@@ -12,6 +12,7 @@ import {
   NCollapse,
   NCollapseItem,
   NDivider,
+  NFlex,
   NIcon,
   NInput,
   NInputGroup,
@@ -40,6 +41,7 @@ import { useLiveRequest } from '@/composables/useLiveRequest'
 import { CURRENT_HOST } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
 import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
@@ -146,79 +148,93 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 顶部功能开关与全局操作 -->
-  <NCard v-if="accountInfo.id" size="small">
-    <template #header>
-      <NSpace align="center" justify="space-between">
-        <NSpace align="center">
+  <NFlex vertical :size="12">
+    <NCard size="small" bordered>
+      <OpenLivePageHeader
+        title="弹幕点播"
+        description="通过弹幕或 SC 触发点歌/点播，支持 OBS 展示与规则配置"
+      >
+        <template v-if="accountInfo.id" #actions>
+          <NTooltip>
+            <template #trigger>
+              <NButton
+                type="primary"
+                size="small"
+                class="open-live-action-btn"
+                :disabled="!accountInfo"
+                @click="showOBSModal = true"
+              >
+                OBS 组件
+              </NButton>
+            </template>
+            {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
+          </NTooltip>
+        </template>
+      </OpenLivePageHeader>
+    </NCard>
+
+    <!-- 顶部功能开关与提示 -->
+    <NCard v-if="accountInfo.id" size="small" bordered>
+      <NFlex align="center" justify="space-between" wrap :size="12">
+        <NFlex align="center" wrap :size="10">
           <NText>启用弹幕点播功能</NText>
           <NSwitch
+            size="small"
             :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
             @update:value="onUpdateFunctionEnable"
           />
-        </NSpace>
-        
-        <!-- OBS 组件按钮 -->
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              type="primary"
-              size="small"
-              :disabled="!accountInfo"
-              @click="showOBSModal = true"
-            >
-              OBS 组件
-            </NButton>
-          </template>
-          {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
-        </NTooltip>
-      </NSpace>
-    </template>
-    
-    <!-- 提示信息 -->
-    <NAlert
-      v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
-      type="info"
-      closable
-      style="margin-top: 10px"
-    >
-      如果没有部署 
-      <NButton
-        text
-        type="primary"
-        tag="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-        target="_blank"
+        </NFlex>
+      </NFlex>
+
+      <NAlert
+        v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+        type="info"
+        size="small"
+        :bordered="false"
+        style="margin-top: 10px"
       >
-        VtsuruEventFetcher
+        如果没有部署
+        <NButton
+          text
+          type="primary"
+          tag="a"
+          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+        >
+          VtsuruEventFetcher
+        </NButton>
+        ，则需要保持此页面开启才能点播；也不要同时开多个页面（可能导致点播重复）。
+      </NAlert>
+    </NCard>
+
+    <NAlert
+      v-else
+      type="warning"
+      size="small"
+      title="你尚未注册并登录 VTsuru.live，大部分规则设置将不可用"
+      :bordered="false"
+    >
+      <NButton
+        tag="a"
+        href="/manage"
+        target="_blank"
+        type="primary"
+        size="small"
+        class="open-live-action-btn"
+      >
+        前往登录或注册
       </NButton>
-      则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
     </NAlert>
-  </NCard>
 
-  <NAlert
-    v-else
-    type="warning"
-    title="你尚未注册并登录 VTsuru.live, 大部分规则设置将不可用 (因为我懒得在前端重写一遍逻辑)"
-  >
-    <NButton
-      tag="a"
-      href="/manage"
-      target="_blank"
-      type="primary"
-    >
-      前往登录或注册
-    </NButton>
-  </NAlert>
-
-  <!-- 主体内容 -->
-  <NCard style="margin-top: 12px">
-    <NTabs
-      v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
-      type="line"
-      animated
-      display-directive="show:lazy"
-    >
+    <!-- 主体内容 -->
+    <NCard size="small" bordered>
+      <NTabs
+        v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+        type="line"
+        animated
+        size="small"
+        display-directive="show:lazy"
+      >
       <NTabPane
         name="list"
         tab="列表"
@@ -271,21 +287,26 @@ onUnmounted(() => {
       <NAlert
         title="未启用"
         type="error"
+        size="small"
+        :bordered="false"
       >
         请先启用弹幕点播功能
       </NAlert>
     </template>
-  </NCard>
+    </NCard>
+  </NFlex>
+
   <NModal
     v-model:show="showOBSModal"
     title="OBS组件"
     preset="card"
-    style="width: 800px"
+    style="width: 900px; max-width: 90vw"
   >
     <template #header-extra>
       <NButton
         tag="a"
         type="primary"
+        size="small"
         target="_blank"
         :href="`${CURRENT_HOST}obs/live-request?id=${accountInfo?.id ?? 0}&style=${obsStyleType}&speed=${obsScrollSpeedMultiplierRef}`"
       >
@@ -295,6 +316,8 @@ onUnmounted(() => {
     <NAlert
       title="这是什么?  "
       type="info"
+      size="small"
+      :bordered="false"
     >
       将等待队列以及结果显示在OBS中
     </NAlert>
@@ -317,7 +340,7 @@ onUnmounted(() => {
           </NRadioButton>
         </NSpace>
       </NRadioGroup>
-      <NInputGroup style="width: 200px">
+      <NInputGroup style="width: 220px">
         <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
         <NInputNumber
           v-model:value="obsScrollSpeedMultiplierRef"
@@ -363,3 +386,9 @@ onUnmounted(() => {
     </NCollapse>
   </NModal>
 </template>
+
+<style scoped>
+.open-live-action-btn {
+  max-width: 220px;
+}
+</style>

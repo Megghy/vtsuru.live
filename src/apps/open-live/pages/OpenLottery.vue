@@ -31,6 +31,7 @@ import LotterySettingsPanel from '@/apps/open-live/components/lottery/LotterySet
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
 import LotteryObsModal from '@/apps/open-live/components/lottery/LotteryObsModal.vue'
 import LotteryAddUserModal from '@/apps/open-live/components/lottery/LotteryAddUserModal.vue'
+import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 
 interface CardState {
   flipped: boolean
@@ -670,61 +671,69 @@ onUnmounted(() => {
     description="该页面只能从幻星平台访问或者注册用户使用"
   />
   <template v-else>
-    <NCard>
+    <NCard size="small" bordered>
       <template #header>
-        直播抽奖
-        <NDivider vertical />
-        <NButton
-          text
-          type="primary"
-          tag="a"
-          href="https://vtsuru.live"
-          target="_blank"
+        <OpenLivePageHeader
+          title="直播抽奖"
+          description="收集用户并抽取结果，支持条件过滤、动画效果与 OBS 展示"
         >
-          前往 VTsuru.live 主站
-        </NButton>
+          <template #actions>
+            <NButton
+              text
+              type="primary"
+              size="small"
+              tag="a"
+              href="https://vtsuru.live"
+              target="_blank"
+            >
+              主站
+            </NButton>
+            <NButton
+              type="info"
+              size="small"
+              secondary
+              @click="showModal = true"
+            >
+              抽奖历史
+            </NButton>
+            <NButton
+              type="success"
+              size="small"
+              secondary
+              @click="showOBSModal = true"
+            >
+              OBS 组件
+            </NButton>
+            <NButton
+              type="primary"
+              size="small"
+              :disabled="isLottering"
+              @click="showAddUserModal = true"
+            >
+              <template #icon>
+                <NIcon :component="PersonAdd24Filled" />
+              </template>
+              手动添加
+            </NButton>
+          </template>
+        </OpenLivePageHeader>
       </template>
       <NAlert
         v-if="!code && accountInfo && !accountInfo.isBiliVerified"
         type="error"
+        size="small"
+        :bordered="false"
       >
         请先绑定B站账号
       </NAlert>
       <NAlert
         v-else-if="!code && accountInfo && accountInfo.biliAuthCodeStatus !== 1"
         type="error"
+        size="small"
+        :bordered="false"
       >
         身份码状态异常, 请重新绑定
       </NAlert>
-      <NCard>
-        <NSpace align="center">
-          <NButton
-            type="info"
-            size="small"
-            @click="showModal = true"
-          >
-            抽奖历史
-          </NButton>
-          <NButton
-            type="success"
-            size="small"
-            @click="showOBSModal = true"
-          >
-            OBS组件
-          </NButton>
-          <NButton
-            type="primary"
-            size="small"
-            :disabled="isLottering"
-            @click="showAddUserModal = true"
-          >
-            <template #icon>
-              <NIcon :component="PersonAdd24Filled" />
-            </template>
-            手动添加用户
-          </NButton>
-        </NSpace>
-      </NCard>
       <LotterySettingsPanel
         :option="lotteryOption"
         :is-start-lottery="isStartLottery"
