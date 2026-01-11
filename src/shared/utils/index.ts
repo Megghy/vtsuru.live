@@ -65,6 +65,27 @@ export function copyToClipboard(text: string) {
     message.warning('当前环境不支持自动复制, 请手动选择并复制')
   }
 }
+
+export function hexToRgba(hex: string, alpha: number): string | null {
+  const h = hex.trim()
+  if (!h.startsWith('#')) return null
+  const raw = h.slice(1)
+  if (raw.length === 3) {
+    const r = parseInt(raw[0] + raw[0], 16)
+    const g = parseInt(raw[1] + raw[1], 16)
+    const b = parseInt(raw[2] + raw[2], 16)
+    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+  if (raw.length === 6) {
+    const r = parseInt(raw.slice(0, 2), 16)
+    const g = parseInt(raw.slice(2, 4), 16)
+    const b = parseInt(raw.slice(4, 6), 16)
+    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+  return null
+}
 export function objectsToCSV(arr: any[]) {
   const array = [Object.keys(arr[0])].concat(arr)
   return array

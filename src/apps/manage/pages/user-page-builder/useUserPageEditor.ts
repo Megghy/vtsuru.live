@@ -224,9 +224,12 @@ export function useUserPageEditor() {
   const contribPageIdOptions = computed(() => {
     const c = currentContrib.value
     if (!c) return []
-    return listContribPageRefs()
+    const pageRefs = listContribPageRefs()
+    if (!Array.isArray(pageRefs)) return []
+    return pageRefs
       .filter((it) => {
         if (c.scope === 'global') return it.scope === 'global'
+        if (c.scope !== 'streamer') return false
         if (it.scope !== 'streamer') return false
         return it.streamerId === c.streamerId
       })
@@ -514,7 +517,6 @@ export function useUserPageEditor() {
     openPublishModal: persistence.openPublishModal,
     confirmPublish: persistence.confirmPublish,
     saveDraft: persistence.saveDraft,
-    overwriteDraftWithPublished: persistence.overwriteDraftWithPublished,
     clearDraft: persistence.clearDraft,
     rollback: persistence.rollback,
 

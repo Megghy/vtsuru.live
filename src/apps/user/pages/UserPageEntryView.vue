@@ -9,6 +9,7 @@ import type { UserPageConfig, UserPagesSettingsV1 } from '@/features/user-page/t
 import { validateBlockPageProject } from '@/features/user-page/block/schema'
 import BlockPageRenderer from '@/features/user-page/block/BlockPageRenderer.vue'
 import ContribPageRenderer from '@/features/user-page/contrib/ContribPageRenderer.vue'
+import { hexToRgba, isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: any | undefined
@@ -106,11 +107,22 @@ const pageBgVars = computed(() => {
   if (!bg || !bg.enabled) return {}
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
   const safeUrl = img ? img.replaceAll('"', '\\"') : ''
+  const mode = (blockValidation.value && blockValidation.value.ok)
+    ? (blockValidation.value.project.theme as any)?.pageThemeMode
+    : undefined
+  const effectiveIsDark = mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+  const scrimAlpha = bg.blurMode === 'glass' ? 0.12 : (bg.blurMode === 'background' ? 0.26 : 0.34)
+  const scrim = effectiveIsDark ? `rgba(0, 0, 0, ${scrimAlpha})` : `rgba(255, 255, 255, ${scrimAlpha})`
+  const glassColor = bg.type === 'color' && bg.color 
+    ? hexToRgba(bg.color, 0.55) 
+    : (bg.type === 'image' ? 'transparent' : null)
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
     '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
     '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
     '--user-page-bg-blur': `${bg.blurPx}px`,
+    '--user-page-bg-scrim': scrim,
+    '--glass-surface-bg': glassColor || 'rgba(255, 255, 255, 0.55)',
   } as Record<string, string>
 })
 </script>
@@ -286,6 +298,14 @@ const pageBgVars = computed(() => {
   pointer-events: none;
   z-index: 0;
 }
+.bg-host::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--user-page-bg-scrim, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
 .bg-host.bg-blur::before {
   filter: blur(var(--user-page-bg-blur, 0px));
 }
@@ -295,13 +315,8 @@ const pageBgVars = computed(() => {
 }
 .glass-surface {
   padding: 12px 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
-}
-@supports (background: color-mix(in srgb, white 50%, transparent)) {
-  .glass-surface {
-    background: color-mix(in srgb, var(--n-color) 55%, transparent);
-  }
 }
 </style>

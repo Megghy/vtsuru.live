@@ -13,6 +13,7 @@ import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
 import PageManager from './user-page-builder/components/PageManager.vue'
 import BlockPropertyEditor from './user-page-builder/components/BlockPropertyEditor.vue'
 import PhonePreview from './user-page-builder/components/PhonePreview.vue'
+import { hexToRgba, isDarkMode } from '@/shared/utils'
 
 const editor = useUserPageEditor()
 provide(UserPageEditorKey, editor)
@@ -63,11 +64,20 @@ const previewBgVars = computed(() => {
   if (!bg.enabled) return {}
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
   const safeUrl = img ? img.replaceAll('"', '\\"') : ''
+  const mode = (editor.currentProject.value?.theme as any)?.pageThemeMode
+  const effectiveIsDark = mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+  const scrimAlpha = bg.blurMode === 'glass' ? 0.12 : (bg.blurMode === 'background' ? 0.26 : 0.34)
+  const scrim = effectiveIsDark ? `rgba(0, 0, 0, ${scrimAlpha})` : `rgba(255, 255, 255, ${scrimAlpha})`
+  const glassColor = bg.type === 'color' && bg.color
+    ? hexToRgba(bg.color, 0.55)
+    : (bg.type === 'image' ? 'transparent' : null)
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
     '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
     '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
     '--user-page-bg-blur': `${bg.blurPx}px`,
+    '--user-page-bg-scrim': scrim,
+    '--glass-surface-bg': glassColor || 'rgba(255, 255, 255, 0.55)',
   } as Record<string, string>
 })
 
@@ -113,7 +123,7 @@ onBeforeRouteLeave(() => {
   <div class="user-page-builder">
     <ManagePageHeader title="自定义页面" subtitle="配置个人主页与子页面">
       <template #action>
-        <NSpace>
+        <NFlex justify="end" align="center" :wrap="false">
           <NButton
             quaternary
             circle
@@ -157,21 +167,13 @@ onBeforeRouteLeave(() => {
           <NButton size="small" secondary @click="editor.resourcesModal.value = true">
             资源
           </NButton>
-          <NPopconfirm :disabled="!editor.loadedPublished.value" @positive-click="editor.overwriteDraftWithPublished">
-            <template #trigger>
-              <NButton size="small" secondary :disabled="!editor.loadedPublished.value" :loading="editor.isSaving.value">
-                覆盖草稿
-              </NButton>
-            </template>
-            确定要用“已发布版本”覆盖当前草稿吗？
-          </NPopconfirm>
           <NPopconfirm :disabled="editor.isSaving.value" @positive-click="editor.clearDraft">
             <template #trigger>
               <NButton size="small" secondary :disabled="editor.isSaving.value" :loading="editor.isSaving.value">
                 清空草稿
               </NButton>
             </template>
-            确定要清空草稿吗？此操作会丢弃当前未保存更改，并恢复为已发布版本（如存在）。
+            确定要清空草稿吗？此操作会丢弃当前未保存更改，并切换为已发布版本（如存在）。
           </NPopconfirm>
           <NText depth="3">
             {{ editor.saveStatusText.value }}
@@ -182,7 +184,7 @@ onBeforeRouteLeave(() => {
             </NText>
             <NSwitch v-model:value="editor.autoSaveEnabled.value" size="small" />
           </NSpace>
-        </NSpace>
+        </NFlex>
       </template>
     </ManagePageHeader>
 
@@ -502,6 +504,14 @@ onBeforeRouteLeave(() => {
   pointer-events: none;
   z-index: 0;
 }
+.preview-bg-host.enabled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--user-page-bg-scrim, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
 .preview-bg-host.enabled.bg-blur::before {
   filter: blur(var(--user-page-bg-blur, 0px));
 }
@@ -512,13 +522,8 @@ onBeforeRouteLeave(() => {
 .preview-glass-surface {
   min-height: 100%;
   padding: 12px 0;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
-}
-@supports (background: color-mix(in srgb, white 50%, transparent)) {
-  .preview-glass-surface {
-    background: color-mix(in srgb, var(--n-color) 55%, transparent);
-  }
 }
 </style>
