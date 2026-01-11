@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NConfigProvider } from 'naive-ui'
+import { darkTheme, NConfigProvider } from 'naive-ui'
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
 import { BLOCK_COMPONENTS } from './registry'
+import { hexToRgba } from '@/shared/utils'
 
 const props = defineProps<{
   project: BlockPageProject
@@ -26,26 +27,12 @@ const containerStyle = computed(() => ({
   '--vtsuru-page-text': props.project.theme?.textColor ?? 'inherit',
 }))
 
-function hexToRgba(hex: string, alpha: number) {
-  const h = hex.trim()
-  if (!h.startsWith('#')) return null
-  const raw = h.slice(1)
-  if (raw.length === 3) {
-    const r = parseInt(raw[0] + raw[0], 16)
-    const g = parseInt(raw[1] + raw[1], 16)
-    const b = parseInt(raw[2] + raw[2], 16)
-    if ([r, g, b].some(x => Number.isNaN(x))) return null
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-  }
-  if (raw.length === 6) {
-    const r = parseInt(raw.slice(0, 2), 16)
-    const g = parseInt(raw.slice(2, 4), 16)
-    const b = parseInt(raw.slice(4, 6), 16)
-    if ([r, g, b].some(x => Number.isNaN(x))) return null
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`
-  }
-  return null
-}
+const naiveTheme = computed(() => {
+  const mode = (props.project.theme as any)?.pageThemeMode
+  if (mode === 'dark') return darkTheme
+  if (mode === 'light') return null
+  return undefined
+})
 
 const themeOverrides = computed(() => {
   const t: any = props.project.theme ?? {}
@@ -84,7 +71,7 @@ const blockComponents = BLOCK_COMPONENTS
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides">
+  <NConfigProvider :theme="naiveTheme" :theme-overrides="themeOverrides">
     <div
       class="page"
       :style="containerStyle"

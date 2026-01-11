@@ -130,6 +130,20 @@ const pageBackgroundBlur = computed({
   },
 })
 
+const pageThemeMode = computed({
+  get() {
+    const theme = editor.currentTheme.value as any
+    const v = theme?.pageThemeMode
+    return (v === 'light' || v === 'dark') ? v : 'auto'
+  },
+  set(v: 'auto' | 'light' | 'dark') {
+    const theme = editor.currentTheme.value as any
+    if (!theme) return
+    if (v === 'auto') delete theme.pageThemeMode
+    else theme.pageThemeMode = v
+  },
+})
+
 const pageBackgroundImagePath = computed(() => {
   const theme = editor.currentTheme.value as any
   const f = theme?.pageBackgroundImageFile
@@ -149,7 +163,7 @@ const pageBackgroundImagePath = computed(() => {
       <div style="background: var(--n-color-embedded); padding: 10px 12px; border-radius: 8px">
         <NFlex justify="space-between" align="center">
           <NText depth="3" style="font-size: 12px">
-            配置容量：{{ editor.configBytes.value }} / {{ editor.MAX_CONFIG_BYTES }} bytes
+            使用容量：{{ editor.configBytesPercent.value}} %
           </NText>
           <NText depth="3" style="font-size: 12px">
             保存时会自动剔除“隐藏且空内容”的冗余区块
@@ -295,6 +309,16 @@ const pageBackgroundImagePath = computed(() => {
               <PropsGrid :min-item-width="240">
                 <NFormItem label="主题主色（按钮等）">
                   <NColorPicker v-model:value="editor.currentTheme.value!.primaryColor" />
+                </NFormItem>
+                <NFormItem label="页面主题模式（可选）">
+                  <NSelect
+                    v-model:value="pageThemeMode"
+                    :options="[
+                      { label: '跟随站点（Auto）', value: 'auto' },
+                      { label: '强制亮色（Light）', value: 'light' },
+                      { label: '强制暗色（Dark）', value: 'dark' },
+                    ]"
+                  />
                 </NFormItem>
                 <NFormItem label="文字颜色">
                   <NColorPicker v-model:value="editor.currentTheme.value!.textColor" />

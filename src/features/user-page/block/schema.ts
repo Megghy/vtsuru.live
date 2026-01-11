@@ -22,6 +22,7 @@ export const MAX_PAGE_IMAGES = 50
 export type PageBackgroundType = 'none' | 'color' | 'image'
 export type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
 export type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
+export type PageThemeMode = 'auto' | 'light' | 'dark'
 
 export interface BlockPageTheme {
   primaryColor?: string
@@ -29,6 +30,8 @@ export interface BlockPageTheme {
   textColor?: string
   radius?: number
   spacing?: 'compact' | 'normal' | 'relaxed'
+
+  pageThemeMode?: PageThemeMode
 
   pageBackgroundType?: PageBackgroundType
   pageBackgroundColor?: string
@@ -405,6 +408,10 @@ function validateTheme(theme: unknown, errors: string[]) {
   }
   if (obj.spacing !== undefined && !['compact', 'normal', 'relaxed'].includes(String(obj.spacing))) {
     errors.push('theme.spacing 不支持')
+  }
+
+  if (obj.pageThemeMode !== undefined && !['auto', 'light', 'dark'].includes(String(obj.pageThemeMode))) {
+    errors.push('theme.pageThemeMode 不支持')
   }
 
   if (obj.pageBackgroundType !== undefined && !['none', 'color', 'image'].includes(String(obj.pageBackgroundType))) {

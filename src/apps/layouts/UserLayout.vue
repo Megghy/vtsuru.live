@@ -14,9 +14,11 @@ import {
 import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
+  darkTheme,
   NAvatar,
   NBackTop,
   NButton,
+  NConfigProvider,
   NDivider,
   NEllipsis,
   NIcon,
@@ -46,7 +48,7 @@ import { validateBlockPageProject } from '@/features/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/features/user-page/types'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { NavigateToNewTab } from '@/shared/utils'
+import { hexToRgba, isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import '@/apps/user/styles/user-page.css'
 
 // --- 响应式状态和常量 ---
@@ -125,6 +127,24 @@ const currentBlockValidation = computed(() => {
   return validateBlockPageProject((currentUserPageConfig.value as any)?.block)
 })
 
+const pageThemeMode = computed(() => {
+  const v = currentBlockValidation.value
+  if (!v || !v.ok) return 'auto'
+  const mode = (v.project.theme as any)?.pageThemeMode
+  return (mode === 'light' || mode === 'dark') ? mode : 'auto'
+})
+
+const pageNaiveTheme = computed(() => {
+  if (pageThemeMode.value === 'dark') return darkTheme
+  if (pageThemeMode.value === 'light') return null
+  return undefined
+})
+
+const themeSwitchTitle = computed(() => {
+  if (pageThemeMode.value === 'auto') return '切换亮/暗色主题'
+  return pageThemeMode.value === 'dark' ? '该页面强制使用暗色主题' : '该页面强制使用亮色主题'
+})
+
 const layoutPageBg = computed(() => {
   if (currentUserPageMode.value !== 'block') return null
   const v = currentBlockValidation.value
@@ -163,11 +183,22 @@ const layoutPageBgVars = computed(() => {
   if (!bg || !bg.enabled) return {}
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
   const safeUrl = img ? img.replaceAll('"', '\\"') : ''
+  const glassColor = bg.type === 'color' && bg.color 
+    ? hexToRgba(bg.color, 0.55) 
+    : (bg.type === 'image' ? 'transparent' : null)
+  const mode = (currentBlockValidation.value && currentBlockValidation.value.ok)
+    ? (currentBlockValidation.value.project.theme as any)?.pageThemeMode
+    : undefined
+  const effectiveIsDark = mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+  const scrimAlpha = bg.blurMode === 'glass' ? 0.12 : (bg.blurMode === 'background' ? 0.26 : 0.34)
+  const scrim = effectiveIsDark ? `rgba(0, 0, 0, ${scrimAlpha})` : `rgba(255, 255, 255, ${scrimAlpha})`
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
     '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
     '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
     '--user-page-bg-blur': `${bg.blurPx}px`,
+    '--glass-surface-bg': glassColor || 'rgba(255, 255, 255, 0.55)',
+    '--user-page-bg-scrim': scrim,
   } as Record<string, string>
 })
 
@@ -404,33 +435,39 @@ watch(
   </NLayoutContent>
 
   <!-- 情况 3: 存在 ID 且 (正在加载 或 加载成功且找到用户) -->
-  <NLayout
+  <NConfigProvider
     v-else
-    style="height: 100vh"
+    :theme="pageNaiveTheme"
   >
-    <!-- 顶部导航栏 -->
-    <NLayoutHeader class="layout-header">
-      <NPageHeader
-        :subtitle="isLoading ? '加载中...' : ($route.meta.title as string) ?? ''"
-        style="width: 100%"
-      >
-        <!-- 右侧额外操作区域 -->
-        <template #extra>
-          <NSpace align="center">
-            <!-- 主题切换开关 -->
-            <NSwitch
-              :value="themeType === ThemeType.Light"
-              :disabled="isLoading"
-              title="切换亮/暗色主题"
-              @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
-            >
-              <template #checked>
-                <NIcon :component="Sunny" />
-              </template>
-              <template #unchecked>
-                <NIcon :component="Moon" />
-              </template>
-            </NSwitch>
+    <NLayout
+      class="page-root"
+      :class="layoutPageBgClass"
+      :style="layoutPageBgVars"
+      style="height: 100vh"
+    >
+      <!-- 顶部导航栏 -->
+      <NLayoutHeader class="layout-header">
+        <NPageHeader
+          :subtitle="isLoading ? '加载中...' : ($route.meta.title as string) ?? ''"
+          style="width: 100%"
+        >
+          <!-- 右侧额外操作区域 -->
+          <template #extra>
+            <NSpace align="center">
+              <!-- 主题切换开关 -->
+              <NSwitch
+                :value="themeType === ThemeType.Light"
+                :disabled="isLoading || pageThemeMode !== 'auto'"
+                :title="themeSwitchTitle"
+                @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
+              >
+                <template #checked>
+                  <NIcon :component="Sunny" />
+                </template>
+                <template #unchecked>
+                  <NIcon :component="Moon" />
+                </template>
+              </NSwitch>
             <!-- 已登录用户操作 -->
             <template v-if="accountInfo?.id">
               <NSpace>
@@ -471,28 +508,26 @@ watch(
                 注册 / 登陆
               </NButton>
             </template>
-          </NSpace>
-        </template>
-        <!-- 页面标题 (网站 Logo) -->
-        <template #title>
-          <span>
-            <NText
-              strong
-              class="site-title"
-            >
-              VTSURU
-            </NText>
-          </span>
-        </template>
-      </NPageHeader>
-    </NLayoutHeader>
+            </NSpace>
+          </template>
+          <!-- 页面标题 (网站 Logo) -->
+          <template #title>
+            <span>
+              <NText
+                strong
+                class="site-title"
+              >
+                VTSURU
+              </NText>
+            </span>
+          </template>
+        </NPageHeader>
+      </NLayoutHeader>
 
     <!-- 主体布局 (包含侧边栏和内容区) -->
     <NLayout
       has-sider
       class="main-layout-body"
-      :class="layoutPageBgClass"
-      :style="layoutPageBgVars"
     >
       <!-- 左侧边栏 -->
       <NLayoutSider
@@ -659,7 +694,8 @@ watch(
         <!-- 如果 !isLoading && notFound, 会显示顶部的 NResult，这里不需要 else -->
       </NLayout>
     </NLayout>
-  </NLayout>
+    </NLayout>
+  </NConfigProvider>
 
   <!-- 注册/登录弹窗 -->
   <NModal
@@ -736,11 +772,12 @@ watch(
   height: calc(100vh - var(--vtsuru-header-height)); // 填充剩余高度
 }
 
-.main-layout-body.bg-host {
+.page-root.bg-host {
   position: relative;
   overflow: hidden;
+  background-color: transparent;
 }
-.main-layout-body.bg-host::before {
+.page-root.bg-host::before {
   content: "";
   position: absolute;
   inset: -24px;
@@ -753,24 +790,48 @@ watch(
   pointer-events: none;
   z-index: 0;
 }
-.main-layout-body.bg-host.bg-blur::before {
+.page-root.bg-host::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--user-page-bg-scrim, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-root.bg-host.bg-blur::before {
   filter: blur(var(--user-page-bg-blur, 0px));
 }
-.main-layout-body.bg-host > * {
+.page-root.bg-host > * {
   position: relative;
   z-index: 1;
 }
 
-.main-layout-body.bg-host :deep(.n-layout-sider),
-.main-layout-body.bg-host :deep(.content-layout-container) {
+.page-root.bg-host .layout-header,
+.page-root.bg-host .main-layout-body {
   background-color: transparent;
 }
 
-.main-layout-body.bg-host.glass :deep(.n-layout-sider),
-.main-layout-body.bg-host.glass :deep(.content-layout-container) {
-  background: rgba(255, 255, 255, 0.55);
+.page-root.bg-host :deep(.n-layout-scroll-container) {
+  background-color: transparent;
+}
+
+.page-root.bg-host :deep(.n-layout-sider),
+.page-root.bg-host :deep(.n-layout-sider .n-layout-sider-scroll-container),
+.page-root.bg-host :deep(.content-layout-container),
+.page-root.bg-host :deep(.content-layout-container .n-layout-scroll-container) {
+  background-color: transparent;
+}
+
+.page-root.bg-host.glass .layout-header,
+.page-root.bg-host.glass .main-layout-body {
+  background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+}
+
+
+.page-root.bg-host .viewer-page-content {
+  background-color: transparent;
 }
 
 .sider-avatar {

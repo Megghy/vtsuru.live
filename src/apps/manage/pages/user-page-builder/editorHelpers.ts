@@ -184,14 +184,18 @@ export function isEmptyBlock(block: BlockNode): boolean {
   return false
 }
 
-export function pruneHiddenEmptyBlocks(settingsToPrune: UserPagesSettingsV1) {
+export function pruneHiddenEmptyBlocks(settingsToPrune: UserPagesSettingsV1): number {
+  let removed = 0
   const pruneProject = (p: BlockPageProject | undefined) => {
     if (!p) return
+    const before = p.blocks.length
     p.blocks = p.blocks.filter(b => !(b.hidden && isEmptyBlock(b)))
+    removed += before - p.blocks.length
   }
 
   if (settingsToPrune.home?.mode === 'block') pruneProject(settingsToPrune.home.block)
   Object.values(settingsToPrune.pages ?? {}).forEach((cfg) => {
     if (cfg.mode === 'block') pruneProject(cfg.block)
   })
+  return removed
 }

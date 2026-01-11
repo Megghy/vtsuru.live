@@ -91,7 +91,15 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       publishCheckErrors.value.push((e as Error).message || String(e))
     }
 
-    const json = JSON.stringify(opts.settings.value)
+    const publishSnapshot = deepCloneJson(opts.settings.value)
+    const prunedCount = pruneHiddenEmptyBlocks(publishSnapshot)
+    if (prunedCount > 0) {
+      publishCheckWarnings.value.push(`发布前会自动清理隐藏空区块：${prunedCount} 个（草稿保存不会自动清理）`)
+    } else {
+      publishCheckWarnings.value.push('提示：发布前会自动清理“隐藏且内容为空”的区块（草稿保存不会自动清理）')
+    }
+
+    const json = JSON.stringify(publishSnapshot)
     publishCheckBytes.value = estimateUtf8Bytes(json)
     if (publishCheckBytes.value > opts.maxConfigBytes) publishCheckErrors.value.push(`配置过大：${publishCheckBytes.value} bytes（后端上限 ${opts.maxConfigBytes} bytes）`)
 
@@ -106,7 +114,15 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   async function saveDraftInternal(silent: boolean) {
     opts.isSaving.value = true
     try {
-      opts.history.batch(() => pruneHiddenEmptyBlocks(opts.settings.value))
+      const bytes = estimateUtf8Bytes(JSON.stringify(opts.settings.value))
+      if (bytes > opts.maxConfigBytes) {
+        let prunedCount = 0
+        opts.history.batch(() => {
+          prunedCount = pruneHiddenEmptyBlocks(opts.settings.value)
+        })
+        if (!silent) opts.notify.success(`配置超过上限，已自动清理隐藏空区块：${prunedCount} 个`)
+        else console.warn(`[user-page-builder] Auto save pruned hidden empty blocks due to size limit (${bytes}/${opts.maxConfigBytes})`)
+      }
       await saveMyUserPagesDraft(opts.settings.value)
       localDraftStorage.value = deepCloneJson(opts.settings.value)
       if (silent) {
@@ -163,23 +179,6 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     }
   }
 
-  async function overwriteDraftWithPublished() {
-    if (!opts.loadedPublished.value) {
-      opts.notify.error('当前没有已发布版本')
-      return
-    }
-    opts.isSaving.value = true
-    try {
-      await saveMyUserPagesDraft(opts.loadedPublished.value)
-      await opts.loadState()
-      opts.notify.success('已用已发布版本覆盖草稿')
-    } catch (e) {
-      opts.notify.error((e as Error).message || String(e))
-    } finally {
-      opts.isSaving.value = false
-    }
-  }
-
   async function rollback() {
     opts.isSaving.value = true
     try {
@@ -203,7 +202,6 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     saveDraftInternal,
     confirmPublish,
     clearDraft,
-    overwriteDraftWithPublished,
     rollback,
   }
 }
