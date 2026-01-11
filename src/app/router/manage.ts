@@ -265,7 +265,7 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),
       meta: {
         title: '自定义页面',
-        pageWidth: 'xl',
+        pageWidth: 'full',
       },
     },
   ],

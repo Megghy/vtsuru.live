@@ -3,16 +3,13 @@ import type {
   SelectOption,
 } from 'naive-ui'
 import type {
-  ResponseUserIndexModel,
   ScheduleWeekInfo,
   SongRequestOption,
   SongsInfo,
-  VideoCollectVideo,
 } from '@/api/api-models'
 import type {
   TemplateMapType,
 } from '@/shared/config/templates'
-import { Delete24Regular } from '@vicons/fluent'
 import { useRouteQuery } from '@vueuse/router'
 import {
   NAlert,
@@ -23,44 +20,35 @@ import {
   NDivider,
   NEmpty,
   NFlex,
-  NIcon,
-  NInput,
   NList,
   NListItem,
   NModal,
-  NPopconfirm,
   NSelect,
   NSpace,
   NSpin,
   NTabPane,
   NTabs,
-  NTag,
   NText,
-  NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef } from 'vue'
+import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef, watch } from 'vue'
 import {
   DelBiliBlackList,
   DelBlackList,
   downloadConfigDirect,
   SaveAccountSettings,
   SaveEnableFunctions,
-  SaveSetting,
   useAccount,
 } from '@/api/account'
 import {
   FunctionTypes,
   SongFrom,
 } from '@/api/api-models'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
-import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import {
   FETCH_API,
-  USER_INDEX_API_URL,
 } from '@/shared/config'
-import { IndexTemplateMap, ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
+import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
 
 // 模板定义类型接口
 interface TemplateDefineTypes {
@@ -75,19 +63,9 @@ const accountInfo = useAccount()
 const message = useMessage()
 
 const isSaving = ref(false)
-const isLoading = ref(false)
 
 // 模板相关数据
 const templates = ref({
-  index: {
-    TemplateMap: IndexTemplateMap,
-    Options: Object.entries(IndexTemplateMap).map(v => ({
-      label: v[1].name,
-      value: v[0],
-    })),
-    Data: null,
-    Selected: accountInfo.value?.settings.indexTemplate ?? '',
-  },
   schedule: {
     TemplateMap: ScheduleTemplateMap,
     Options: Object.entries(ScheduleTemplateMap).map(v => ({
@@ -234,20 +212,42 @@ const templates = ref({
 
 // 模板选项配置
 const templateOptions = [
-  { label: '主页', value: 'index' },
-  { label: '歌单', value: 'songlist' },
   { label: '日程表', value: 'schedule' },
+  { label: '歌单', value: 'songlist' },
 ] as SelectOption[]
 
 // 使用 useRouteQuery 自动同步 URL 查询参数
-const selectedOption = useRouteQuery('template', 'index', { transform: String })
+const selectedOption = useRouteQuery('template', 'songlist', { transform: String })
 const selectedTab = useRouteQuery('setting', 'general', { transform: String })
 
 // 动态表单相关
 const dynamicConfigRef = shallowRef()
 
+const templateKey = computed(() => {
+  if (selectedOption.value === 'schedule' || selectedOption.value === 'songlist') return selectedOption.value
+  return 'songlist'
+})
+
+watch(
+  () => selectedOption.value,
+  (v) => {
+    if (v === 'schedule' || v === 'songlist') return
+    selectedOption.value = 'songlist'
+  },
+  { immediate: true },
+)
+
+watch(
+  () => selectedTab.value,
+  (v) => {
+    if (v !== 'index') return
+    selectedTab.value = 'general'
+  },
+  { immediate: true },
+)
+
 // 计算属性
-const selectedTemplateData = computed(() => templates.value[selectedOption.value])
+const selectedTemplateData = computed(() => templates.value[templateKey.value])
 const selectedTemplate = computed(() => selectedTemplateData.value.TemplateMap[selectedTemplateData.value.Selected])
 const selectedComponent = computed(() => selectedTemplate.value.component)
 const selectedTemplateConfig = computed(() => dynamicConfigRef.value?.Config ? dynamicConfigRef.value.Config : undefined)
@@ -257,26 +257,6 @@ const biliUserInfo = ref()
 
 // 模态框控制
 const settingModalVisiable = ref(false)
-const showAddVideoModal = ref(false)
-const showAddLinkModal = ref(false)
-const editingLinkName = ref<string | null>(null)
-const newLinkName = ref('')
-
-// 主页数据
-const indexDisplayInfo = ref<ResponseUserIndexModel>()
-const addVideoUrl = ref('')
-const addLinkName = ref('')
-const addLinkUrl = ref('')
-const linkKey = ref(0)
-// 初始化 linkOrder (兼容旧数据)
-onMounted(() => {
-  if (accountInfo.value?.settings?.index) {
-    const idx = accountInfo.value.settings.index
-    if (!idx.linkOrder || idx.linkOrder.length === 0) {
-      idx.linkOrder = Object.keys(idx.links || {})
-    }
-  }
-})
 
 /**
  * 获取B站用户数据
@@ -352,9 +332,6 @@ async function SaveTemplateSetting() {
 
   // 根据选择的模板类型保存对应设置
   switch (selectedOption.value) {
-    case 'index':
-      accountInfo.value.settings.indexTemplate = selectedTemplateData.value.Selected ?? ''
-      break
     case 'songlist':
       accountInfo.value.settings.songListTemplate = selectedTemplateData.value.Selected ?? ''
       break
@@ -364,175 +341,6 @@ async function SaveTemplateSetting() {
   }
 
   await SaveComboSetting()
-}
-
-/**
- * 更新主页设置
- */
-async function updateIndexSettings() {
-  try {
-    const response = await QueryPostAPI(`${USER_INDEX_API_URL}update-setting`, accountInfo.value.settings.index)
-    if (response.code === 200) {
-      message.success('已保存')
-    } else {
-      message.error(`保存失败: ${response.message}`)
-    }
-  } catch (err) {
-    message.error(`保存失败: ${err}`)
-  }
-}
-
-/**
- * 添加视频到主页
- */
-async function addVideo() {
-  if (!addVideoUrl.value) {
-    message.error('请输入视频链接')
-    return
-  }
-
-  isLoading.value = true
-  try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}add-video`, {
-      video: addVideoUrl.value,
-    })
-
-    if (response.code === 200) {
-      message.success('已添加')
-      indexDisplayInfo.value?.videos.push(response.data)
-      accountInfo.value?.settings.index.videos.push(response.data.id)
-      addVideoUrl.value = ''
-    } else {
-      message.error(`保存失败: ${response.message}`)
-    }
-  } catch (err) {
-    message.error(`保存失败: ${err}`)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-/**
- * 从主页移除视频
- */
-async function removeVideo(id: string) {
-  isLoading.value = true
-  try {
-    const response = await QueryGetAPI<VideoCollectVideo>(`${USER_INDEX_API_URL}del-video`, {
-      video: id,
-    })
-
-    if (response.code === 200) {
-      message.success('已删除')
-      // 更新视频列表
-      if (indexDisplayInfo.value) {
-        indexDisplayInfo.value.videos = indexDisplayInfo.value.videos.filter(v => v.id !== id)
-      }
-      // 更新设置
-      accountInfo.value.settings.index.videos = accountInfo.value.settings.index.videos.filter(v => v !== id)
-    } else {
-      message.error(`删除失败: ${response.message}`)
-    }
-  } catch (err) {
-    message.error(`删除失败: ${err}`)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-/**
- * 添加外部链接
- */
-async function addLink() {
-  // 验证输入
-  if (!addLinkName.value || !addLinkUrl.value) {
-    message.error('请输入名称和链接')
-    return
-  }
-
-  // 验证URL格式
-  try {
-    const validatedUrl = new URL(addLinkUrl.value)
-    addLinkUrl.value = validatedUrl.toString()
-  } catch (e) {
-    console.error(e)
-    message.error('请输入正确的链接')
-    return
-  }
-
-  // 检查链接名是否已存在
-  if (Object.keys(accountInfo.value.settings.index.links).includes(addLinkName.value)) {
-    message.error(`${addLinkName.value}已存在`)
-    return
-  }
-
-  // 保存链接
-  accountInfo.value.settings.index.links[addLinkName.value] = addLinkUrl.value
-  await updateIndexSettings()
-
-  // 重置表单
-  addLinkName.value = ''
-  addLinkUrl.value = ''
-  location.reload()
-}
-
-/**
- * 删除外部链接
- */
-async function removeLink(name: string) {
-  delete accountInfo.value.settings.index.links[name]
-  if (accountInfo.value.settings.index.linkOrder) {
-    accountInfo.value.settings.index.linkOrder = accountInfo.value.settings.index.linkOrder.filter(k => k !== name)
-  }
-  await updateIndexSettings()
-  location.reload()
-}
-
-/** 上移/下移视频 */
-function moveVideo(id: string, dir: 'up' | 'down') {
-  const list = accountInfo.value.settings.index.videos
-  const i = list.indexOf(id)
-  if (i === -1) return
-  const ni = dir === 'up' ? i - 1 : i + 1
-  if (ni < 0 || ni >= list.length) return;
-  [list[i], list[ni]] = [list[ni], list[i]]
-  updateIndexSettings()
-}
-/** 上移/下移链接 */
-function moveLink(name: string, dir: 'up' | 'down') {
-  const order = accountInfo.value.settings.index.linkOrder
-  if (!order) return
-  const i = order.indexOf(name)
-  const ni = dir === 'up' ? i - 1 : i + 1
-  if (i === -1 || ni < 0 || ni >= order.length) return;
-  [order[i], order[ni]] = [order[ni], order[i]]
-  updateIndexSettings()
-  linkKey.value++
-}
-/** 编辑链接名称 */
-function startEditLink(name: string) {
-  editingLinkName.value = name
-  newLinkName.value = name
-}
-async function confirmEditLink(oldName: string) {
-  const idxSetting = accountInfo.value.settings.index
-  if (!newLinkName.value || newLinkName.value === oldName) {
-    editingLinkName.value = null; return
-  }
-  if (idxSetting.links[newLinkName.value]) {
-    message.error('名称已存在'); return
-  }
-  idxSetting.links[newLinkName.value] = idxSetting.links[oldName]
-  delete idxSetting.links[oldName]
-  if (idxSetting.linkOrder) {
-    idxSetting.linkOrder = idxSetting.linkOrder.map(k => k === oldName ? newLinkName.value : k)
-  }
-  await updateIndexSettings()
-  editingLinkName.value = null
-  linkKey.value++
-}
-function cancelEditLink() {
-  editingLinkName.value = null
 }
 
 /**
@@ -624,35 +432,6 @@ function unblockUser(id: number) {
     })
 }
 
-/**
- * 获取用户主页信息
- */
-async function getIndexInfo() {
-  isLoading.value = true
-  try {
-    const data = await QueryGetAPI<ResponseUserIndexModel>(`${USER_INDEX_API_URL}get`, { id: accountInfo.value.id })
-    if (data.code === 200) {
-      return data.data
-    } else if (data.code !== 404) {
-      message?.error(`无法获取数据: ${data.message}`)
-    }
-    return undefined
-  } catch (err) {
-    message?.error(`无法获取数据: ${err}`)
-    return undefined
-  } finally {
-    isLoading.value = false
-  }
-}
-
-/**
- * 更新用户主页设置
- */
-async function updateUserIndexSettings() {
-  await SaveSetting('Index', accountInfo.value.settings.index)
-  message.success('已保存')
-}
-
 // 路由激活时的处理（useRouteQuery 已自动处理参数同步）
 onActivated(() => {
   // useRouteQuery 会自动同步，这里可以添加其他激活时的逻辑
@@ -661,9 +440,6 @@ onActivated(() => {
 // 组件挂载时初始化数据
 onMounted(async () => {
   await RequestBiliUserData()
-  indexDisplayInfo.value = await getIndexInfo()
-  // 设置默认值
-  accountInfo.value.settings.index.allowDisplayInIndex = accountInfo.value.settings.index.allowDisplayInIndex ?? true
 })
 </script>
 
@@ -746,206 +522,6 @@ onMounted(async () => {
               允许未注册用户提问
             </NCheckbox>
           </NSpace>
-        </NTabPane>
-
-        <!-- 主页设置标签页 -->
-        <NTabPane
-          tab="主页"
-          name="index"
-          display-directive="show:lazy"
-        >
-          <NFlex vertical :size="12">
-            <NDivider style="margin: 0;">
-              常规
-            </NDivider>
-            <NCheckbox
-              v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
-              @update:checked="updateUserIndexSettings"
-            >
-              允许显示在网站主页
-            </NCheckbox>
-
-            <NDivider style="margin: 0;">
-              通知
-            </NDivider>
-            <NInput
-              v-model:value="accountInfo.settings.index.notification"
-              type="textarea"
-              class="settings-textarea"
-            />
-            <NFlex justify="end">
-              <NButton
-                type="primary"
-                size="small"
-                class="settings-action-btn"
-                @click="updateIndexSettings"
-              >
-                保存
-              </NButton>
-            </NFlex>
-
-            <NDivider style="margin: 0;">
-              自定义页面
-            </NDivider>
-            <NButton
-              secondary
-              size="small"
-              class="settings-action-btn"
-              @click="$router.push({ name: 'manage-userPageBuilder' })"
-            >
-              打开区块页编辑器（/@name 及子页面）
-            </NButton>
-
-            <NDivider style="margin: 0;">
-              展示视频
-            </NDivider>
-            <NButton
-              type="primary"
-              size="small"
-              class="settings-action-btn"
-              @click="showAddVideoModal = true"
-            >
-              添加视频
-            </NButton>
-            <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-            <NFlex v-else wrap :size="12">
-              <NCard
-                v-for="item in indexDisplayInfo?.videos ?? []"
-                :key="item.id"
-                size="small"
-                bordered
-                style="width: 300px"
-              >
-                <SimpleVideoCard :video="item" />
-                <template #footer>
-                  <NSpace>
-                    <NButton
-                      size="small"
-                      secondary
-                      @click="moveVideo(item.id, 'up')"
-                    >
-                      上移
-                    </NButton>
-                    <NButton
-                      size="small"
-                      secondary
-                      @click="moveVideo(item.id, 'down')"
-                    >
-                      下移
-                    </NButton>
-                    <NButton
-                      type="warning"
-                      size="small"
-                      @click="removeVideo(item.id)"
-                    >
-                      删除
-                    </NButton>
-                  </NSpace>
-                </template>
-              </NCard>
-            </NFlex>
-
-            <NDivider style="margin: 0;">
-              其他链接
-            </NDivider>
-            <NButton
-              type="primary"
-              size="small"
-              class="settings-action-btn"
-              @click="showAddLinkModal = true"
-            >
-              添加链接
-            </NButton>
-            <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-            <NFlex
-              v-else
-              :key="linkKey"
-              wrap
-              :size="8"
-            >
-            <NFlex
-              v-for="name in (accountInfo.settings.index.linkOrder?.filter(n => indexDisplayInfo?.links[n]) || Object.keys(indexDisplayInfo?.links || {}))"
-              :key="name"
-              align="center"
-            >
-              <template v-if="editingLinkName === name">
-                <NInput
-                  v-model:value="newLinkName"
-                  size="small"
-                  style="width: 100px"
-                />
-                <NButton
-                  size="tiny"
-                  type="primary"
-                  text
-                  @click="confirmEditLink(name)"
-                >
-                  保存
-                </NButton>
-                <NButton
-                  size="tiny"
-                  text
-                  @click="cancelEditLink"
-                >
-                  取消
-                </NButton>
-              </template>
-              <template v-else>
-                <NTooltip>
-                  <template #trigger>
-                    <NTag
-                      :bordered="false"
-                      size="small"
-                      type="info"
-                    >
-                      {{ name }}
-                    </NTag>
-                  </template>
-                  {{ indexDisplayInfo?.links[name] }}
-                </NTooltip>
-                <NSpace>
-                  <NButton
-                    size="tiny"
-                    secondary
-                    text
-                    @click="moveLink(name, 'up')"
-                  >
-                    ↑
-                  </NButton>
-                  <NButton
-                    size="tiny"
-                    secondary
-                    text
-                    @click="moveLink(name, 'down')"
-                  >
-                    ↓
-                  </NButton>
-                  <NButton
-                    size="tiny"
-                    text
-                    @click="startEditLink(name)"
-                  >
-                    改名
-                  </NButton>
-                  <NPopconfirm @positive-click="removeLink(name)">
-                    <template #trigger>
-                      <NButton
-                        type="error"
-                        text
-                        size="tiny"
-                      >
-                        <template #icon>
-                          <NIcon :component="Delete24Regular" />
-                        </template>
-                      </NButton>
-                    </template>
-                    确定要删除这个链接吗?
-                  </NPopconfirm>
-                </NSpace>
-              </template>
-            </NFlex>
-            </NFlex>
-          </NFlex>
         </NTabPane>
 
         <!-- 黑名单标签页 -->
@@ -1096,54 +672,6 @@ onMounted(async () => {
           :config-data="selectedTemplateData.Config"
           :config="selectedTemplateConfig"
         />
-      </NModal>
-
-      <!-- 添加视频模态框 -->
-      <NModal
-        v-model:show="showAddVideoModal"
-        preset="card"
-        closable
-        style="width: 600px; max-width: 90vw"
-        title="添加视频"
-      >
-        <NInput
-          v-model:value="addVideoUrl"
-          placeholder="请输入视频链接"
-        />
-        <NDivider />
-        <NButton
-          type="primary"
-          :loading="isLoading"
-          @click="addVideo"
-        >
-          添加视频
-        </NButton>
-      </NModal>
-
-      <!-- 添加链接模态框 -->
-      <NModal
-        v-model:show="showAddLinkModal"
-        preset="card"
-        closable
-        style="width: 600px; max-width: 90vw"
-        title="添加链接"
-      >
-        <NFlex vertical>
-          <NInput
-            v-model:value="addLinkName"
-            placeholder="链接名称"
-          />
-          <NInput
-            v-model:value="addLinkUrl"
-            placeholder="链接地址"
-          />
-          <NButton
-            type="primary"
-            @click="addLink"
-          >
-            添加
-          </NButton>
-        </NFlex>
       </NModal>
     </NSpin>
   </NCard>

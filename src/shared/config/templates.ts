@@ -58,12 +58,3 @@ export const SongListTemplateMap: TemplateMapType = {
     )),
   },
 }
-
-export const IndexTemplateMap: TemplateMapType = {
-  '': {
-    name: '默认',
-    component: markRaw(defineAsyncComponent(
-      async () => import('@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'),
-    )),
-  },
-}

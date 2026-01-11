@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
+import { NConfigProvider } from 'naive-ui'
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
-import ProfileBlock from './blocks/ProfileBlock.vue'
-import HeadingBlock from './blocks/HeadingBlock.vue'
-import TextBlock from './blocks/TextBlock.vue'
-import LinksBlock from './blocks/LinksBlock.vue'
-import ButtonsBlock from './blocks/ButtonsBlock.vue'
-import ImageBlock from './blocks/ImageBlock.vue'
-import EmbedBlock from './blocks/EmbedBlock.vue'
-import DividerBlock from './blocks/DividerBlock.vue'
-import SpacerBlock from './blocks/SpacerBlock.vue'
-import FooterBlock from './blocks/FooterBlock.vue'
+import { BLOCK_COMPONENTS } from './registry'
 
 const props = defineProps<{
   project: BlockPageProject
@@ -34,39 +26,85 @@ const containerStyle = computed(() => ({
   '--vtsuru-page-text': props.project.theme?.textColor ?? 'inherit',
 }))
 
-const blockComponents = {
-  profile: ProfileBlock,
-  heading: HeadingBlock,
-  text: TextBlock,
-  links: LinksBlock,
-  buttons: ButtonsBlock,
-  image: ImageBlock,
-  embed: EmbedBlock,
-  divider: DividerBlock,
-  spacer: SpacerBlock,
-  footer: FooterBlock,
-} as const
+function hexToRgba(hex: string, alpha: number) {
+  const h = hex.trim()
+  if (!h.startsWith('#')) return null
+  const raw = h.slice(1)
+  if (raw.length === 3) {
+    const r = parseInt(raw[0] + raw[0], 16)
+    const g = parseInt(raw[1] + raw[1], 16)
+    const b = parseInt(raw[2] + raw[2], 16)
+    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+  if (raw.length === 6) {
+    const r = parseInt(raw.slice(0, 2), 16)
+    const g = parseInt(raw.slice(2, 4), 16)
+    const b = parseInt(raw.slice(4, 6), 16)
+    if ([r, g, b].some(x => Number.isNaN(x))) return null
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+  return null
+}
+
+const themeOverrides = computed(() => {
+  const t: any = props.project.theme ?? {}
+  const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
+  const textColor = typeof t.textColor === 'string' ? t.textColor : undefined
+  const bodyColor = typeof t.backgroundColor === 'string' ? t.backgroundColor : undefined
+  const radiusPx = `${radius.value}px`
+  const borderColor = textColor ? hexToRgba(textColor, 0.16) : null
+  return {
+    common: {
+      ...(primaryColor ? { primaryColor } : {}),
+      ...(textColor ? { textColorBase: textColor, textColor1: textColor, textColor2: textColor, textColor3: textColor } : {}),
+      ...(bodyColor ? { bodyColor } : {}),
+      ...(borderColor ? { borderColor, dividerColor: borderColor } : {}),
+      borderRadius: radiusPx,
+      borderRadiusSmall: radiusPx,
+    },
+    Button: {
+      borderRadiusTiny: radiusPx,
+      borderRadiusSmall: radiusPx,
+      borderRadiusMedium: radiusPx,
+      borderRadiusLarge: radiusPx,
+    },
+    Alert: {
+      borderRadius: radiusPx,
+      closeBorderRadius: radiusPx,
+    },
+    Card: {
+      borderRadius: radiusPx,
+      closeBorderRadius: radiusPx,
+    },
+  } as any
+})
+
+const blockComponents = BLOCK_COMPONENTS
 </script>
 
 <template>
-  <div
-    class="page"
-    :style="containerStyle"
-  >
+  <NConfigProvider :theme-overrides="themeOverrides">
     <div
-      v-for="block in project.blocks"
-      :key="block.id"
-      class="block"
+      class="page"
+      :style="containerStyle"
     >
-      <component
-        :is="blockComponents[block.type]"
-        v-if="!block.hidden"
-        :block-props="block.props"
-        :user-info="userInfo"
-        :bili-info="biliInfo"
-      />
+      <div
+        v-for="block in project.blocks"
+        :key="block.id"
+        class="block"
+        :class="{ layout: block.type === 'layout' }"
+      >
+        <component
+          :is="blockComponents[block.type]"
+          v-if="!block.hidden"
+          :block-props="block.props"
+          :user-info="userInfo"
+          :bili-info="biliInfo"
+        />
+      </div>
     </div>
-  </div>
+  </NConfigProvider>
 </template>
 
 <style scoped>
@@ -81,5 +119,7 @@ const blockComponents = {
   padding: var(--vtsuru-page-spacing);
   border-radius: var(--vtsuru-page-radius);
 }
+.block.layout {
+  padding: 0;
+}
 </style>
-

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FormInst, FormRules } from 'naive-ui'
+import type { FormInst, FormRules, SelectOption } from 'naive-ui'
 import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
@@ -21,11 +21,6 @@ import {
 } from 'naive-ui'
 import { ref } from 'vue'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
-
-interface SelectOption {
-  label: string
-  value: string
-}
 
 const props = defineProps<{
   existingSongs: SongsInfo[]

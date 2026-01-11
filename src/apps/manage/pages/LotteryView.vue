@@ -143,11 +143,16 @@ async function onGet() {
   currentUsers.value?.users.forEach(u => (u.visiable = true))
 }
 async function getCommentsUsers() {
+  const dynamicId = inputDynamicId.value
+  if (!dynamicId) {
+    message.error('请输入正确的动态 ID 或链接')
+    return
+  }
   isLoading.value = true
   await QueryGetAPI<TempLotteryResponseModel>(
     `${LOTTERY_API_URL}comments`,
     {
-      id: inputDynamicId.value,
+      id: dynamicId.toString(),
     },
     [['Turnstile', token.value]],
   )
@@ -173,11 +178,16 @@ async function getCommentsUsers() {
     })
 }
 async function getForwardUsers() {
+  const dynamicId = inputDynamicId.value
+  if (!dynamicId) {
+    message.error('请输入正确的动态 ID 或链接')
+    return
+  }
   isLoading.value = true
   await QueryGetAPI<TempLotteryResponseModel>(
     `${LOTTERY_API_URL}forward`,
     {
-      id: inputDynamicId.value,
+      id: dynamicId.toString(),
     },
     [['Turnstile', token.value]],
   )

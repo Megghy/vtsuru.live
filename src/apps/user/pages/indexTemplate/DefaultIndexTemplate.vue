@@ -85,7 +85,7 @@ export const Config = defineTemplateConfig([
     <template v-if="userInfo?.id === accountInfo?.id">
       <NButton
         type="primary"
-        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+        @click="$router.push({ name: 'manage-userPageBuilder' })"
       >
         自定义个人主页
       </NButton>

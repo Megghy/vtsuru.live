@@ -11,6 +11,7 @@ import { GuidUtils } from '@/shared/utils'
 import {
   ArrowDownload24Regular,
   ArrowSync24Filled,
+  Delete24Regular,
   Grid28Filled,
   List16Filled,
 } from '@vicons/fluent'
@@ -766,6 +767,30 @@ async function onTabChange(value: string) {
                           hoverable
                           class="event-card"
                         >
+                          <NPopconfirm
+                            v-if="selectedType === EventDataTypes.Guard && item.id"
+                            :show-icon="false"
+                            positive-text="删除"
+                            negative-text="取消"
+                            @positive-click="deleteGuardEvent(item)"
+                          >
+                            <template #trigger>
+                              <NButton
+                                class="event-card-delete"
+                                size="tiny"
+                                circle
+                                quaternary
+                                type="error"
+                                title="删除"
+                                @click.stop
+                              >
+                                <template #icon>
+                                  <NIcon><Delete24Regular /></NIcon>
+                                </template>
+                              </NButton>
+                            </template>
+                            确定删除这条上舰记录？
+                          </NPopconfirm>
                           <NSpace
                             align="center"
                             vertical
@@ -821,24 +846,6 @@ async function onTabChange(value: string) {
                             >
                               {{ item.msg }}
                             </NEllipsis>
-                            <NPopconfirm
-                              v-if="selectedType === EventDataTypes.Guard && item.id"
-                              :show-icon="false"
-                              positive-text="删除"
-                              negative-text="取消"
-                              @positive-click="deleteGuardEvent(item)"
-                            >
-                              <template #trigger>
-                                <NButton
-                                  size="tiny"
-                                  secondary
-                                  type="error"
-                                >
-                                  删除
-                                </NButton>
-                              </template>
-                              确定删除这条上舰记录？
-                            </NPopconfirm>
                           </NSpace>
                         </NCard>
                       </NGridItem>
@@ -1154,4 +1161,14 @@ async function onTabChange(value: string) {
 }
 
 /* 网格卡片样式微调 */
+.event-card {
+  position: relative;
+}
+
+.event-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+}
 </style>

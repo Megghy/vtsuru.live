@@ -173,7 +173,9 @@ function handleMobileMenuSelect(key: string) {
 
 async function getData() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
+    const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+    if (!id) throw new Error('缺少征集表 id')
+    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id })
     if (data.code == 200) {
       updateModel.value = {
         id: data.data.table.id,

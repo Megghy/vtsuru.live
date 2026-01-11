@@ -623,7 +623,7 @@ onMounted(async () => {
                           fontSize: '0.8rem',
                           padding: '0 4px',
                           textDecoration: 'underline',
-                        }" @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'index' } })"
+                        }" @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                       >
                         设置页面
                       </NButton>

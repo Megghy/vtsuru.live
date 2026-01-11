@@ -139,6 +139,19 @@ onMounted(() => {
   background-color: rgba(24, 24, 27, 0.92) !important;
 }
 
+:root .n-notification {
+  border: 1px solid var(--n-border-color);
+}
+
+:root.dark .n-tabs.n-tabs--segment-type .n-tabs-capsule {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:root.dark .n-tabs.n-tabs--card-type .n-tabs-tab.n-tabs-tab--active {
+  background-color: var(--n-color-segment);
+}
+
 @supports (font-variation-settings: normal) {
   :root {
     font-family: InterVariable, sans-serif;

@@ -14,8 +14,9 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const currentCode = computed(() => {
-  return props.code ?? route.query.code
+const currentCode = computed<string>(() => {
+  const v = props.code ?? (Array.isArray(route.query.code) ? route.query.code[0] : route.query.code)
+  return typeof v === 'string' ? v : ''
 })
 const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)

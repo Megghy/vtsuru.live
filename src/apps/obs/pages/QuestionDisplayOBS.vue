@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { useRouteQuery } from '@vueuse/router'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
@@ -15,6 +15,10 @@ defineProps<{
 
 const hash = ref('')
 const token = useRouteQuery('token')
+const tokenStr = computed(() => {
+  const v = token.value
+  return Array.isArray(v) ? (v[0] ?? '') : (v ?? '')
+})
 const rtc = await useWebRTC().Init('slave')
 
 const question = ref<QAInfo>()
@@ -25,7 +29,7 @@ const cardRef = ref()
 async function checkIfChanged() {
   try {
     const data = await QueryGetAPI<string>(`${QUESTION_API_URL}get-hash`, {
-      token: token.value,
+      token: tokenStr.value,
     })
     if (data.code == 200) {
       if (data.data != hash.value) {
@@ -43,7 +47,7 @@ async function getQuestionAndSetting() {
       question: QAInfo
       setting: Setting_QuestionDisplay
     }>(`${QUESTION_API_URL}get-current-and-settings`, {
-      token: token.value,
+      token: tokenStr.value,
     })
     if (data.code == 200) {
       question.value = data.data.question

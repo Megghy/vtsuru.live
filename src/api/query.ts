@@ -140,18 +140,16 @@ function getParams(params?: QueryParams) {
     return new URLSearchParams(cleanedParams)
   })()
 
-  // 仅在特定页面透传 query 参数，避免在普通页面（如 /org）意外把敏感 token/as 带到所有请求中
-  const pathname = window.location.pathname
-  const allowPassthrough = pathname.startsWith('/obs') || pathname === '/join'
+  // 全站透传 `as`（管理员模拟登录用），不覆盖调用方显式传入的参数
+  if (urlParams.has('as') && !resultParams.has('as')) {
+    resultParams.set('as', urlParams.get('as') || '')
+  }
 
-  if (allowPassthrough) {
-    // 不覆盖调用方显式传入的参数
-    if (urlParams.has('as') && !resultParams.has('as')) {
-      resultParams.set('as', urlParams.get('as') || '')
-    }
-    if (urlParams.has('token') && !resultParams.has('token')) {
-      resultParams.set('token', urlParams.get('token') || '')
-    }
+  // `token` 更敏感：仅在特定页面透传，避免普通页面意外把 token 带到所有请求中
+  const pathname = window.location.pathname
+  const allowTokenPassthrough = pathname.startsWith('/obs') || pathname === '/join'
+  if (allowTokenPassthrough && urlParams.has('token') && !resultParams.has('token')) {
+    resultParams.set('token', urlParams.get('token') || '')
   }
 
   return resultParams.toString()

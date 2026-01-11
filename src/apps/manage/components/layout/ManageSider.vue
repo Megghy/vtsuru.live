@@ -139,6 +139,13 @@ const menuOptions = computed(() => {
 
   const baseMenuItems = [
     {
+      label: () => h(RouterLink, { to: { name: 'manage-userPageBuilder' } }, { default: () => '自定义页面' }),
+      key: 'manage-userPageBuilder',
+      disabled: props.accountInfo?.isEmailVerified === false,
+      icon: renderIcon(BrowsersOutline),
+      group: 'common',
+    },
+    {
       label: () => h(RouterLink, { to: { name: 'manage-history' } }, { default: () => '历史' }),
       key: 'manage-history',
       disabled: props.accountInfo?.isEmailVerified === false,
@@ -497,6 +504,15 @@ const menuOptions = computed(() => {
         </NTooltip>
       </NFlex>
 
+      <NButton type="primary" secondary class="manage-sider__builder" @click="$router.push({ name: 'manage-userPageBuilder' })">
+        <template #icon>
+          <NIcon :component="BrowsersOutline" />
+        </template>
+        <template v-if="!collapsed">
+          自定义页面
+        </template>
+      </NButton>
+
       <NButton v-if="accountInfo.biliUserAuthInfo" type="info" secondary class="manage-sider__auth" @click="gotoAuthPage()">
         <template #icon>
           <NIcon :component="Person48Filled" />
@@ -568,8 +584,13 @@ const menuOptions = computed(() => {
   width: 100%;
 }
 
+.manage-sider__builder {
+  width: 100%;
+}
+
 .manage-sider__top.is-collapsed .manage-sider__home,
-.manage-sider__top.is-collapsed .manage-sider__auth {
+.manage-sider__top.is-collapsed .manage-sider__auth,
+.manage-sider__top.is-collapsed .manage-sider__builder {
   width: 100%;
 }
 
