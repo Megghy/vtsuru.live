@@ -41,6 +41,9 @@ import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { fetchUserPagesSettingsByUserId } from '@/features/user-page/api'
+import { validateBlockPageProject } from '@/features/user-page/block/schema'
+import type { UserPagesSettingsV1 } from '@/features/user-page/types'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { NavigateToNewTab } from '@/shared/utils'
@@ -72,6 +75,16 @@ const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
 
 // 侧边栏菜单项
 const menuOptions = ref<MenuOption[]>([]) // 初始化为空数组
+const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
+
+const activeMenuKey = computed(() => {
+  const name = route.name?.toString()
+  if (name === 'user-page') {
+    const slug = route.params.pageSlug
+    if (typeof slug === 'string' && slug.length) return `user-page:${slug}`
+  }
+  return name
+})
 
 // --- 方法 ---
 
@@ -79,6 +92,90 @@ const menuOptions = ref<MenuOption[]>([]) // 初始化为空数组
 function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
 }
+
+function getUploadedFilePath(v: unknown): string {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return ''
+  const path = (v as any).path
+  return typeof path === 'string' ? path : ''
+}
+
+const userPageSlug = computed(() => {
+  const v = route.params.pageSlug
+  return typeof v === 'string' && v.length ? v : undefined
+})
+
+const currentUserPageConfig = computed(() => {
+  const name = route.name?.toString()
+  if (name !== 'user-index' && name !== 'user-page') return null
+  const s = userPagesSettings.value
+  if (!s) return null
+  if (!userPageSlug.value) return s.home ?? null
+  return s.pages?.[userPageSlug.value] ?? null
+})
+
+const currentUserPageMode = computed(() => {
+  const name = route.name?.toString()
+  if (name !== 'user-index' && name !== 'user-page') return null
+  if (!userPageSlug.value) return (currentUserPageConfig.value as any)?.mode ?? 'legacy'
+  return (currentUserPageConfig.value as any)?.mode ?? null
+})
+
+const currentBlockValidation = computed(() => {
+  if (currentUserPageMode.value !== 'block') return null
+  return validateBlockPageProject((currentUserPageConfig.value as any)?.block)
+})
+
+const layoutPageBg = computed(() => {
+  if (currentUserPageMode.value !== 'block') return null
+  const v = currentBlockValidation.value
+  if (!v || !v.ok) return null
+
+  const theme = v.project.theme as any
+  if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return null
+
+  const type = (theme.pageBackgroundType === 'color' || theme.pageBackgroundType === 'image') ? theme.pageBackgroundType : 'none'
+  const coverSidebar = theme.pageBackgroundCoverSidebar !== false
+  if (!coverSidebar) return null
+  const blurMode = (theme.pageBackgroundBlurMode === 'background' || theme.pageBackgroundBlurMode === 'glass') ? theme.pageBackgroundBlurMode : 'none'
+  const fit = (theme.pageBackgroundImageFit === 'contain' || theme.pageBackgroundImageFit === 'fill' || theme.pageBackgroundImageFit === 'none')
+    ? theme.pageBackgroundImageFit
+    : 'cover'
+  const blur = Number(theme.pageBackgroundBlur)
+  const blurPx = Number.isFinite(blur) ? Math.min(40, Math.max(0, Math.round(blur))) : 14
+  const color = typeof theme.pageBackgroundColor === 'string' ? theme.pageBackgroundColor : 'transparent'
+  const imagePath = getUploadedFilePath(theme.pageBackgroundImageFile)
+  const enabled = type !== 'none' && (type !== 'image' || !!imagePath)
+
+  return {
+    enabled,
+    type,
+    coverSidebar,
+    blurMode,
+    fit,
+    blurPx,
+    color,
+    imagePath,
+  }
+})
+
+const layoutPageBgVars = computed(() => {
+  const bg = layoutPageBg.value
+  if (!bg || !bg.enabled) return {}
+  const img = bg.type === 'image' ? bg.imagePath.trim() : ''
+  const safeUrl = img ? img.replaceAll('"', '\\"') : ''
+  return {
+    '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
+    '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
+    '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
+    '--user-page-bg-blur': `${bg.blurPx}px`,
+  } as Record<string, string>
+})
+
+const layoutPageBgClass = computed(() => ({
+  'bg-host': !!layoutPageBg.value?.enabled,
+  'bg-blur': layoutPageBg.value?.blurMode === 'background',
+  glass: layoutPageBg.value?.blurMode === 'glass',
+}))
 
 /** 根据 userInfo 更新侧边栏菜单 */
 function updateMenuOptions() {
@@ -88,7 +185,7 @@ function updateMenuOptions() {
     return
   }
   // 基于 userInfo.extra.enableFunctions 构建菜单项
-  menuOptions.value = [
+  const baseItems = [
     {
       label: () => h(RouterLink, { to: { name: 'user-index' } }, { default: () => '主页' }),
       key: 'user-index',
@@ -133,7 +230,38 @@ function updateMenuOptions() {
       icon: renderIcon(CheckmarkCircle24Filled),
       show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking),
     },
-  ].filter(option => option.show !== false) as MenuOption[] // 过滤掉 show 为 false 的菜单项
+  ].filter((option: any) => option.show !== false) as MenuOption[] // 过滤掉 show 为 false 的菜单项
+
+  const pages = userPagesSettings.value?.pages ?? {}
+  const pageItems = Object.entries(pages)
+    .filter(([, cfg]) => (cfg as any)?.navVisible !== false)
+    .map(([slug, cfg]) => ({
+      slug,
+      title: ((cfg as any)?.title && String((cfg as any).title).trim().length) ? String((cfg as any).title).trim() : `/${slug}`,
+      order: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
+    }))
+    .sort((a, b) => (a.order - b.order) || a.slug.localeCompare(b.slug))
+    .map(it => ({
+      label: () =>
+        h(
+          RouterLink,
+          { to: { name: 'user-page', params: { id: route.params.id, pageSlug: it.slug } } },
+          { default: () => it.title },
+        ),
+      key: `user-page:${it.slug}`,
+      icon: renderIcon(BrowsersOutline),
+    })) as MenuOption[]
+
+  if (pageItems.length) {
+    baseItems.push({
+      type: 'group',
+      label: '页面',
+      key: 'user-pages',
+      children: pageItems,
+    } as any)
+  }
+
+  menuOptions.value = baseItems
 }
 
 /** 获取 Bilibili 用户信息 */
@@ -205,6 +333,15 @@ async function fetchUserData(userId: string | string[] | undefined) {
   }
 }
 
+async function loadUserPagesSettings(streamerId: number) {
+  try {
+    userPagesSettings.value = await fetchUserPagesSettingsByUserId(streamerId)
+  } catch (e) {
+    console.error('Failed to fetch user pages settings:', e)
+    userPagesSettings.value = null
+  }
+}
+
 // --- Watcher ---
 
 // 监听路由参数 id 的变化
@@ -223,6 +360,20 @@ watch(
     }
   },
   { immediate: true }, // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
+)
+
+watch(
+  () => userInfo.value?.id,
+  async (streamerId) => {
+    if (!streamerId) {
+      userPagesSettings.value = null
+      updateMenuOptions()
+      return
+    }
+    await loadUserPagesSettings(streamerId)
+    updateMenuOptions()
+  },
+  { immediate: true },
 )
 // --- 组件模板 ---
 </script>
@@ -302,7 +453,7 @@ watch(
                 <NButton
                   type="primary"
                   size="small"
-                  @click="$router.push({ name: 'manage-index' })"
+                  @click="$router.push({ name: 'manage-userPageBuilder' })"
                 >
                   <template #icon>
                     <NIcon :component="WindowWrench20Filled" />
@@ -340,6 +491,8 @@ watch(
     <NLayout
       has-sider
       class="main-layout-body"
+      :class="layoutPageBgClass"
+      :style="layoutPageBgVars"
     >
       <!-- 左侧边栏 -->
       <NLayoutSider
@@ -404,7 +557,7 @@ watch(
         <NDivider style="margin: 0; margin-top: 5px;" />
         <!-- 导航菜单 -->
         <NMenu
-          :value="route.name?.toString()"
+          :value="activeMenuKey"
           :collapsed-width="64"
           :collapsed-icon-size="22"
           :options="menuOptions"
@@ -478,7 +631,7 @@ watch(
               <template v-if="viewRoute.meta.pageContainer === 'none'">
                 <component
                   :is="Component"
-                  :key="route.fullPath"
+                  :key="route.fullPath.split('#')[0]"
                   :bili-info="biliUserInfo"
                   :user-info="userInfo"
                 />
@@ -490,7 +643,7 @@ watch(
               >
                 <component
                   :is="Component"
-                  :key="route.fullPath"
+                  :key="route.fullPath.split('#')[0]"
                   :bili-info="biliUserInfo"
                   :user-info="userInfo"
                 />
@@ -581,6 +734,43 @@ watch(
 
 .main-layout-body {
   height: calc(100vh - var(--vtsuru-header-height)); // 填充剩余高度
+}
+
+.main-layout-body.bg-host {
+  position: relative;
+  overflow: hidden;
+}
+.main-layout-body.bg-host::before {
+  content: "";
+  position: absolute;
+  inset: -24px;
+  background-color: var(--user-page-bg-color, transparent);
+  background-image: var(--user-page-bg-image, none);
+  background-repeat: no-repeat;
+  background-size: var(--user-page-bg-size, cover);
+  background-position: center;
+  transform: none;
+  pointer-events: none;
+  z-index: 0;
+}
+.main-layout-body.bg-host.bg-blur::before {
+  filter: blur(var(--user-page-bg-blur, 0px));
+}
+.main-layout-body.bg-host > * {
+  position: relative;
+  z-index: 1;
+}
+
+.main-layout-body.bg-host :deep(.n-layout-sider),
+.main-layout-body.bg-host :deep(.content-layout-container) {
+  background-color: transparent;
+}
+
+.main-layout-body.bg-host.glass :deep(.n-layout-sider),
+.main-layout-body.bg-host.glass :deep(.content-layout-container) {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }
 
 .sider-avatar {

@@ -40,7 +40,9 @@ const isLoading = ref(false)
 
 async function get() {
   try {
-    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id: route.params.id })
+    const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+    if (!id) throw new Error('缺少征集表 id')
+    const data = await QueryGetAPI<VideoCollectDetail>(`${VIDEO_COLLECT_API_URL}get`, { id })
     if (data.code == 200) {
       return data.data.table
     }
@@ -56,7 +58,8 @@ async function add() {
     return
   }
   isLoading.value = true
-  addModel.value.id = table.value?.id ?? route.params.id.toString()
+  const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  addModel.value.id = String(table.value?.id ?? id ?? '')
   await QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, [['Turnstile', token.value]])
     .then((data) => {
       if (data.code == 200) {

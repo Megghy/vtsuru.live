@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { AccountInfo } from '@/api/api-models'
 import { NButton, NCard, NLayoutContent, NSpace, useMessage } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ACCOUNT } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
@@ -11,13 +11,21 @@ import '@/apps/web/styles/web-page.css'
 
 const message = useMessage()
 const route = useRoute()
+const target = computed(() => {
+  const v = Array.isArray(route.query.target) ? route.query.target[0] : route.query.target
+  return typeof v === 'string' ? v : ''
+})
 
 const isLoading = ref(false)
 
 async function VerifyAccount() {
+  if (!target.value) {
+    message.error('链接无效：缺少 target')
+    return
+  }
   isLoading.value = true
   await QueryGetAPI<AccountInfo>(`${ACCOUNT_API_URL}verify`, {
-    target: route.query.target,
+    target: target.value,
   })
     .then((data) => {
       if (data.code == 200) {

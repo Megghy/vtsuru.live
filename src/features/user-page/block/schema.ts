@@ -1,14 +1,27 @@
-export type BlockType =
-  | 'profile'
-  | 'heading'
-  | 'text'
-  | 'links'
-  | 'buttons'
-  | 'image'
-  | 'embed'
-  | 'divider'
-  | 'spacer'
-  | 'footer'
+export const BLOCK_TYPES = [
+  'profile',
+  'layout',
+  'heading',
+  'text',
+  'richText',
+  'alert',
+  'links',
+  'buttons',
+  'image',
+  'imageGallery',
+  'embed',
+  'divider',
+  'spacer',
+  'footer',
+] as const
+
+export type BlockType = typeof BLOCK_TYPES[number]
+
+export const MAX_PAGE_IMAGES = 50
+
+export type PageBackgroundType = 'none' | 'color' | 'image'
+export type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
+export type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
 
 export interface BlockPageTheme {
   primaryColor?: string
@@ -16,6 +29,14 @@ export interface BlockPageTheme {
   textColor?: string
   radius?: number
   spacing?: 'compact' | 'normal' | 'relaxed'
+
+  pageBackgroundType?: PageBackgroundType
+  pageBackgroundColor?: string
+  pageBackgroundImageFile?: unknown
+  pageBackgroundImageFit?: PageBackgroundImageFit
+  pageBackgroundCoverSidebar?: boolean
+  pageBackgroundBlurMode?: PageBackgroundBlurMode
+  pageBackgroundBlur?: number
 }
 
 export interface BlockNode {
@@ -51,7 +72,7 @@ function asObject(v: unknown): Record<string, unknown> | null {
   return v as Record<string, unknown>
 }
 
-function validateBlockProps(block: BlockNode, userFacingName: string, errors: string[]) {
+function validateBlockProps(block: BlockNode, userFacingName: string, errors: string[], depth = 0) {
   const propsObj = block.props === undefined ? null : asObject(block.props)
   if (block.props !== undefined && !propsObj) {
     errors.push(`${userFacingName}: props 必须是 object`)
@@ -59,8 +80,83 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
   }
 
   switch (block.type) {
+    case 'layout': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (depth >= 8) {
+        errors.push(`${userFacingName}: layout 嵌套过深（最多 8 层）`)
+        break
+      }
+      const layout = propsObj.layout
+      if (layout !== 'row' && layout !== 'column' && layout !== 'grid') errors.push(`${userFacingName}: layout 仅支持 row/column/grid`)
+      if (propsObj.gap !== undefined) {
+        const gap = Number(propsObj.gap)
+        if (!Number.isFinite(gap) || gap < 0 || gap > 80) errors.push(`${userFacingName}: gap 必须是 0~80 的数字`)
+      }
+      if (propsObj.columns !== undefined) {
+        const cols = Number(propsObj.columns)
+        if (!Number.isInteger(cols) || cols < 1 || cols > 12) errors.push(`${userFacingName}: columns 必须是 1~12 的整数`)
+      } else if (layout === 'grid') {
+        errors.push(`${userFacingName}: grid 模式必须提供 columns`)
+      }
+      if (propsObj.wrap !== undefined && typeof propsObj.wrap !== 'boolean') errors.push(`${userFacingName}: wrap 必须是 boolean`)
+      if (propsObj.maxWidth !== undefined) {
+        const v = propsObj.maxWidth
+        if (typeof v !== 'string') errors.push(`${userFacingName}: maxWidth 必须是 string`)
+        else if (v.trim().length > 0 && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v.trim())) errors.push(`${userFacingName}: maxWidth 仅支持 100% 或 480px 这类格式`)
+      }
+      if (propsObj.justify !== undefined && !['start', 'center', 'end', 'between', 'around', 'evenly'].includes(String(propsObj.justify))) {
+        errors.push(`${userFacingName}: justify 不支持`)
+      }
+      if (propsObj.align !== undefined && !['start', 'center', 'end', 'stretch'].includes(String(propsObj.align))) {
+        errors.push(`${userFacingName}: align 不支持`)
+      }
+      const children = propsObj.children
+      if (!Array.isArray(children)) {
+        errors.push(`${userFacingName}: children 必须是 array`)
+        break
+      }
+      children.forEach((it, idx) => {
+        const childObj = asObject(it)
+        const childName = `${userFacingName}.children[${idx}]`
+        if (!childObj) {
+          errors.push(`${childName} 必须是 object`)
+          return
+        }
+        const type = childObj.type
+        const id = childObj.id
+        if (!isNonEmptyString(id)) errors.push(`${childName}: id 不能为空`)
+        if (!isNonEmptyString(type)) {
+          errors.push(`${childName}: type 不能为空`)
+          return
+        }
+        if (!BLOCK_TYPES.includes(String(type) as any)) {
+          errors.push(`${childName}: 不支持的 block type: ${String(type)}`)
+          return
+        }
+        if (childObj.hidden) return
+        validateBlockProps(
+          {
+            id: String(id),
+            type: type as any,
+            hidden: Boolean(childObj.hidden),
+            props: childObj.props,
+          },
+          childName,
+          errors,
+          depth + 1,
+        )
+      })
+      break
+    }
     case 'profile':
       if (!propsObj) break
+      if (propsObj.avatarFile !== undefined) {
+        const f = asObject(propsObj.avatarFile)
+        if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push(`${userFacingName}: avatarFile.id 必须是正整数`)
+      }
       if (propsObj.avatarUrl !== undefined && !isHttpsUrlString(propsObj.avatarUrl)) errors.push(`${userFacingName}: avatarUrl 必须是 https URL`)
       if (propsObj.displayName !== undefined && typeof propsObj.displayName !== 'string') errors.push(`${userFacingName}: displayName 必须是 string`)
       if (propsObj.bio !== undefined && typeof propsObj.bio !== 'string') errors.push(`${userFacingName}: bio 必须是 string`)
@@ -80,8 +176,41 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       }
       if (typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
       break
-    case 'links':
-    case 'buttons': {
+    case 'richText': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (typeof propsObj.html !== 'string') errors.push(`${userFacingName}: html 必须是 string`)
+      if (typeof propsObj.html === 'string' && propsObj.html.length > 10000) errors.push(`${userFacingName}: html 过长（最多 10000 字符）`)
+      if (propsObj.imagesFile !== undefined) {
+        if (!Array.isArray(propsObj.imagesFile)) {
+          errors.push(`${userFacingName}: imagesFile 必须是 array`)
+        } else {
+          ;(propsObj.imagesFile as unknown[]).forEach((it, idx) => {
+            const f = asObject(it)
+            if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push(`${userFacingName}: imagesFile[${idx}].id 必须是正整数`)
+          })
+        }
+      }
+      break
+    }
+    case 'alert': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (propsObj.type !== undefined && !['default', 'info', 'success', 'warning', 'error'].includes(String(propsObj.type))) {
+        errors.push(`${userFacingName}: type 不支持`)
+      }
+      if (propsObj.title !== undefined && typeof propsObj.title !== 'string') errors.push(`${userFacingName}: title 必须是 string`)
+      if (typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
+      if (typeof propsObj.text === 'string' && propsObj.text.length > 800) errors.push(`${userFacingName}: text 过长（最多 800 字符）`)
+      if (propsObj.showIcon !== undefined && typeof propsObj.showIcon !== 'boolean') errors.push(`${userFacingName}: showIcon 必须是 boolean`)
+      if (propsObj.bordered !== undefined && typeof propsObj.bordered !== 'boolean') errors.push(`${userFacingName}: bordered 必须是 boolean`)
+      break
+    }
+    case 'links': {
       if (!propsObj) {
         errors.push(`${userFacingName}: 缺少 props`)
         break
@@ -102,14 +231,131 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       })
       break
     }
-    case 'image':
+    case 'buttons': {
       if (!propsObj) {
         errors.push(`${userFacingName}: 缺少 props`)
         break
       }
-      if (!isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
-      if (propsObj.alt !== undefined && typeof propsObj.alt !== 'string') errors.push(`${userFacingName}: alt 必须是 string`)
+      const items = propsObj.items
+      if (!Array.isArray(items)) {
+        errors.push(`${userFacingName}: items 必须是 array`)
+        break
+      }
+      items.forEach((it, idx) => {
+        const obj = asObject(it)
+        if (!obj) {
+          errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+          return
+        }
+        if (!isNonEmptyString(obj.label)) errors.push(`${userFacingName}: items[${idx}].label 不能为空`)
+        if (!isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+      })
+      if (propsObj.direction !== undefined && !['vertical', 'horizontal'].includes(String(propsObj.direction))) errors.push(`${userFacingName}: direction 仅支持 vertical/horizontal`)
+      if (propsObj.type !== undefined && !['default', 'primary', 'info', 'success', 'warning', 'error'].includes(String(propsObj.type))) errors.push(`${userFacingName}: type 不支持`)
+      if (propsObj.variant !== undefined && !['solid', 'secondary', 'tertiary', 'quaternary', 'ghost'].includes(String(propsObj.variant))) errors.push(`${userFacingName}: variant 不支持`)
+      if (propsObj.fullWidth !== undefined && typeof propsObj.fullWidth !== 'boolean') errors.push(`${userFacingName}: fullWidth 必须是 boolean`)
+      if (propsObj.align !== undefined && !['start', 'center', 'end'].includes(String(propsObj.align))) errors.push(`${userFacingName}: align 不支持`)
+      if (propsObj.gap !== undefined) {
+        const v = Number(propsObj.gap)
+        if (!Number.isFinite(v) || v < 0 || v > 32) errors.push(`${userFacingName}: gap 必须是 0~32 的数字`)
+      }
       break
+    }
+    case 'image': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (propsObj.imageFile !== undefined) {
+        const f = asObject(propsObj.imageFile)
+        if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push(`${userFacingName}: imageFile.id 必须是正整数`)
+      }
+      const hasUrl = typeof propsObj.url === 'string' && propsObj.url.length > 0
+      const hasFile = propsObj.imageFile !== undefined
+      if (!hasUrl && !hasFile) errors.push(`${userFacingName}: url 或 imageFile 必须提供一个`)
+      if (hasUrl && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (propsObj.alt !== undefined && typeof propsObj.alt !== 'string') errors.push(`${userFacingName}: alt 必须是 string`)
+      if (propsObj.maxWidth !== undefined) {
+        const v = propsObj.maxWidth
+        if (typeof v !== 'string') errors.push(`${userFacingName}: maxWidth 必须是 string`)
+        else if (v.trim().length > 0 && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v.trim())) errors.push(`${userFacingName}: maxWidth 仅支持 100% 或 480px 这类格式`)
+      }
+      if (propsObj.maxHeight !== undefined) {
+        const v = propsObj.maxHeight
+        if (typeof v !== 'string') errors.push(`${userFacingName}: maxHeight 必须是 string`)
+        else if (v.trim().length > 0 && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v.trim())) errors.push(`${userFacingName}: maxHeight 仅支持 100% 或 320px 这类格式`)
+      }
+      break
+    }
+    case 'imageGallery': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (propsObj.layout !== undefined && !['grid', 'masonry', 'carousel'].includes(String(propsObj.layout))) {
+        errors.push(`${userFacingName}: layout 仅支持 grid/masonry/carousel`)
+      }
+      const layout = propsObj.layout === undefined ? 'grid' : String(propsObj.layout)
+      if (propsObj.columns !== undefined) {
+        const cols = Number(propsObj.columns)
+        if (!Number.isInteger(cols) || cols < 1 || cols > 12) errors.push(`${userFacingName}: columns 必须是 1~12 的整数`)
+      } else if (layout !== 'carousel') {
+        errors.push(`${userFacingName}: 非 carousel 模式必须提供 columns`)
+      }
+      if (propsObj.gap !== undefined) {
+        const gap = Number(propsObj.gap)
+        if (!Number.isFinite(gap) || gap < 0 || gap > 80) errors.push(`${userFacingName}: gap 必须是 0~80 的数字`)
+      }
+      if (propsObj.maxWidth !== undefined) {
+        const v = propsObj.maxWidth
+        if (typeof v !== 'string') errors.push(`${userFacingName}: maxWidth 必须是 string`)
+        else if (v.trim().length > 0 && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v.trim())) errors.push(`${userFacingName}: maxWidth 仅支持 100% 或 480px 这类格式`)
+      }
+      if (propsObj.maxHeight !== undefined) {
+        const v = propsObj.maxHeight
+        if (typeof v !== 'string') errors.push(`${userFacingName}: maxHeight 必须是 string`)
+        else if (v.trim().length > 0 && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v.trim())) errors.push(`${userFacingName}: maxHeight 仅支持 100% 或 320px 这类格式`)
+      }
+      if (propsObj.fit !== undefined && !['cover', 'contain'].includes(String(propsObj.fit))) errors.push(`${userFacingName}: fit 仅支持 cover/contain`)
+      if (propsObj.autoplay !== undefined && typeof propsObj.autoplay !== 'boolean') errors.push(`${userFacingName}: autoplay 必须是 boolean`)
+      if (propsObj.interval !== undefined) {
+        const v = Number(propsObj.interval)
+        if (!Number.isFinite(v) || v < 1000 || v > 20000) errors.push(`${userFacingName}: interval 必须是 1000~20000 的数字`)
+      }
+      if (propsObj.effect !== undefined && !['slide', 'fade', 'card', 'custom'].includes(String(propsObj.effect))) errors.push(`${userFacingName}: effect 不支持`)
+      if (propsObj.dotType !== undefined && !['dot', 'line'].includes(String(propsObj.dotType))) errors.push(`${userFacingName}: dotType 不支持`)
+      if (propsObj.dotPlacement !== undefined && !['top', 'bottom', 'left', 'right'].includes(String(propsObj.dotPlacement))) errors.push(`${userFacingName}: dotPlacement 不支持`)
+      if (propsObj.showArrow !== undefined && typeof propsObj.showArrow !== 'boolean') errors.push(`${userFacingName}: showArrow 必须是 boolean`)
+      if (propsObj.showDots !== undefined && typeof propsObj.showDots !== 'boolean') errors.push(`${userFacingName}: showDots 必须是 boolean`)
+      if (propsObj.loop !== undefined && typeof propsObj.loop !== 'boolean') errors.push(`${userFacingName}: loop 必须是 boolean`)
+      if (propsObj.draggable !== undefined && typeof propsObj.draggable !== 'boolean') errors.push(`${userFacingName}: draggable 必须是 boolean`)
+      if (propsObj.touchable !== undefined && typeof propsObj.touchable !== 'boolean') errors.push(`${userFacingName}: touchable 必须是 boolean`)
+      if (propsObj.trigger !== undefined && !['click', 'hover'].includes(String(propsObj.trigger))) errors.push(`${userFacingName}: trigger 不支持`)
+
+      const items = propsObj.items
+      if (!Array.isArray(items)) {
+        errors.push(`${userFacingName}: items 必须是 array`)
+        break
+      }
+      items.forEach((it, idx) => {
+        const obj = asObject(it)
+        if (!obj) {
+          errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+          return
+        }
+        if (obj.imageFile !== undefined) {
+          const f = asObject(obj.imageFile)
+          if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push(`${userFacingName}: items[${idx}].imageFile.id 必须是正整数`)
+        }
+        const hasUrl = typeof obj.url === 'string' && obj.url.length > 0
+        const hasFile = obj.imageFile !== undefined
+        if (!hasUrl && !hasFile) errors.push(`${userFacingName}: items[${idx}].url 或 items[${idx}].imageFile 必须提供一个`)
+        if (hasUrl && !isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+        if (obj.desc !== undefined && typeof obj.desc !== 'string') errors.push(`${userFacingName}: items[${idx}].desc 必须是 string`)
+        if (obj.alt !== undefined && typeof obj.alt !== 'string') errors.push(`${userFacingName}: items[${idx}].alt 必须是 string`)
+      })
+      break
+    }
     case 'embed':
       if (!propsObj) {
         errors.push(`${userFacingName}: 缺少 props`)
@@ -121,6 +367,15 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
     case 'divider':
       if (!propsObj) break
       if (propsObj.text !== undefined && typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
+      if (propsObj.titlePlacement !== undefined && !['left', 'center', 'right'].includes(String(propsObj.titlePlacement))) errors.push(`${userFacingName}: titlePlacement 不支持`)
+      if (propsObj.marginTop !== undefined) {
+        const v = Number(propsObj.marginTop)
+        if (!Number.isFinite(v) || v < 0 || v > 80) errors.push(`${userFacingName}: marginTop 必须是 0~80 的数字`)
+      }
+      if (propsObj.marginBottom !== undefined) {
+        const v = Number(propsObj.marginBottom)
+        if (!Number.isFinite(v) || v < 0 || v > 80) errors.push(`${userFacingName}: marginBottom 必须是 0~80 的数字`)
+      }
       break
     case 'spacer':
       if (!propsObj) break
@@ -133,12 +388,67 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
   }
 }
 
+function validateTheme(theme: unknown, errors: string[]) {
+  if (theme === undefined || theme === null) return
+  const obj = asObject(theme)
+  if (!obj) {
+    errors.push('theme 必须是 object')
+    return
+  }
+
+  if (obj.primaryColor !== undefined && typeof obj.primaryColor !== 'string') errors.push('theme.primaryColor 必须是 string')
+  if (obj.backgroundColor !== undefined && typeof obj.backgroundColor !== 'string') errors.push('theme.backgroundColor 必须是 string')
+  if (obj.textColor !== undefined && typeof obj.textColor !== 'string') errors.push('theme.textColor 必须是 string')
+  if (obj.radius !== undefined) {
+    const v = Number(obj.radius)
+    if (!Number.isFinite(v) || v < 0 || v > 32) errors.push('theme.radius 必须是 0~32 的数字')
+  }
+  if (obj.spacing !== undefined && !['compact', 'normal', 'relaxed'].includes(String(obj.spacing))) {
+    errors.push('theme.spacing 不支持')
+  }
+
+  if (obj.pageBackgroundType !== undefined && !['none', 'color', 'image'].includes(String(obj.pageBackgroundType))) {
+    errors.push('theme.pageBackgroundType 不支持')
+  }
+  if (obj.pageBackgroundColor !== undefined && typeof obj.pageBackgroundColor !== 'string') {
+    errors.push('theme.pageBackgroundColor 必须是 string')
+  }
+  if (obj.pageBackgroundImageFit !== undefined && !['cover', 'contain', 'fill', 'none'].includes(String(obj.pageBackgroundImageFit))) {
+    errors.push('theme.pageBackgroundImageFit 不支持')
+  }
+  if (obj.pageBackgroundCoverSidebar !== undefined && typeof obj.pageBackgroundCoverSidebar !== 'boolean') {
+    errors.push('theme.pageBackgroundCoverSidebar 必须是 boolean')
+  }
+  if (obj.pageBackgroundBlurMode !== undefined && !['none', 'background', 'glass'].includes(String(obj.pageBackgroundBlurMode))) {
+    errors.push('theme.pageBackgroundBlurMode 不支持')
+  }
+  if (obj.pageBackgroundBlur !== undefined) {
+    const v = Number(obj.pageBackgroundBlur)
+    if (!Number.isFinite(v) || v < 0 || v > 40) errors.push('theme.pageBackgroundBlur 必须是 0~40 的数字')
+  }
+
+  if (obj.pageBackgroundImageFile !== undefined) {
+    const f = asObject(obj.pageBackgroundImageFile)
+    if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push('theme.pageBackgroundImageFile.id 必须是正整数')
+  }
+
+  const bgType = obj.pageBackgroundType === undefined ? 'none' : String(obj.pageBackgroundType)
+  if (bgType === 'image' && obj.pageBackgroundImageFile === undefined) {
+    errors.push('theme.pageBackgroundType=image 时必须提供 pageBackgroundImageFile')
+  }
+  if (bgType === 'color' && obj.pageBackgroundColor !== undefined && typeof obj.pageBackgroundColor !== 'string') {
+    errors.push('theme.pageBackgroundType=color 时 pageBackgroundColor 必须是 string')
+  }
+}
+
 export function validateBlockPageProject(project: unknown) {
   const errors: string[] = []
   const obj = asObject(project)
   if (!obj) return { ok: false as const, errors: ['BlockPageProject 必须是 object'] }
   if (obj.version !== 1) errors.push(`BlockPageProject.version 不支持: ${String(obj.version)}`)
   if (!Array.isArray(obj.blocks)) errors.push('BlockPageProject.blocks 必须是 array')
+
+  validateTheme(obj.theme, errors)
 
   const blocks = Array.isArray(obj.blocks) ? (obj.blocks as unknown[]) : []
   blocks.forEach((b, idx) => {
@@ -155,7 +465,7 @@ export function validateBlockPageProject(project: unknown) {
       errors.push(`${userFacingName}: type 不能为空`)
       return
     }
-    if (!['profile', 'heading', 'text', 'links', 'buttons', 'image', 'embed', 'divider', 'spacer', 'footer'].includes(String(type))) {
+    if (!BLOCK_TYPES.includes(String(type) as any)) {
       errors.push(`${userFacingName}: 不支持的 block type: ${String(type)}`)
       return
     }
@@ -169,9 +479,49 @@ export function validateBlockPageProject(project: unknown) {
       },
       userFacingName,
       errors,
+      0,
     )
   })
 
+  if (!errors.length) {
+    const imageCount = countImagesInBlocks(obj.blocks as any as BlockNode[], false)
+    if (imageCount > MAX_PAGE_IMAGES) errors.push(`图片数量超出上限：${imageCount}/${MAX_PAGE_IMAGES}`)
+  }
+
   if (errors.length) return { ok: false as const, errors }
   return { ok: true as const, project: obj as unknown as BlockPageProject }
+}
+
+export function countImagesInBlocks(blocks: BlockNode[], includeHidden = false): number {
+  const walk = (nodes: BlockNode[]): number => {
+    let count = 0
+    for (const b of nodes) {
+      if (!includeHidden && b.hidden) continue
+      const propsObj = (b.props && typeof b.props === 'object' && !Array.isArray(b.props)) ? (b.props as any) : {}
+
+      if (b.type === 'layout') {
+        const children = Array.isArray(propsObj.children) ? (propsObj.children as BlockNode[]) : []
+        count += walk(children)
+        continue
+      }
+      if (b.type === 'image') {
+        const hasFile = !!propsObj.imageFile
+        const hasUrl = typeof propsObj.url === 'string' && propsObj.url.trim().length > 0
+        if (hasFile || hasUrl) count += 1
+        continue
+      }
+      if (b.type === 'imageGallery') {
+        const items = Array.isArray(propsObj.items) ? propsObj.items : []
+        items.forEach((it: any) => {
+          if (!it || typeof it !== 'object' || Array.isArray(it)) return
+          const hasFile = !!it.imageFile
+          const hasUrl = typeof it.url === 'string' && it.url.trim().length > 0
+          if (hasFile || hasUrl) count += 1
+        })
+        continue
+      }
+    }
+    return count
+  }
+  return walk(blocks)
 }

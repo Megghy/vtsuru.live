@@ -12,13 +12,18 @@ const password2 = ref('')
 const message = useMessage()
 const route = useRoute()
 const key = computed(() => {
-  return route.query.key
+  const v = Array.isArray(route.query.key) ? route.query.key[0] : route.query.key
+  return typeof v === 'string' ? v : ''
 })
 const isLoading = ref(false)
 
 function changePassword() {
   if (password.value != password2.value) {
     message.error('两次密码不一致')
+    return
+  }
+  if (!key.value) {
+    message.error('链接无效：缺少 key')
     return
   }
   isLoading.value = true

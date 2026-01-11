@@ -364,7 +364,7 @@ onMounted(async () => {
             <template v-if="viewRoute.meta.pageContainer === 'none'">
               <component
                 :is="Component"
-                :key="viewRoute.fullPath"
+                :key="viewRoute.fullPath.split('#')[0]"
                 :room-info="danmakuClient.authInfo"
                 :code="authInfo.Code"
               />
@@ -380,7 +380,7 @@ onMounted(async () => {
             >
               <component
                 :is="Component"
-                :key="viewRoute.fullPath"
+                :key="viewRoute.fullPath.split('#')[0]"
                 :room-info="danmakuClient.authInfo"
                 :code="authInfo.Code"
               />

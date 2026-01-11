@@ -397,7 +397,7 @@ onUnmounted(() => {
       <template #actions>
         <NSpace align="center" :wrap="true" :size="10">
           <NButton
-            :type="listening ? 'error' : 'primary'"
+            :type="listening ? 'error' : 'success'"
             data-umami-event="Use Music Request"
             :data-umami-event-uid="accountInfo?.biliId"
             size="small"
@@ -527,7 +527,7 @@ onUnmounted(() => {
             从网易云歌单导入
           </NButton>
         </NSpace>
-        
+
         <NEmpty v-if="musicRquestStore.originMusics.length === 0">
           暂无
         </NEmpty>

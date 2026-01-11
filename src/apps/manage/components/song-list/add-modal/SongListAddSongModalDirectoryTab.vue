@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SongsInfo } from '@/api/api-models'
+import type { SelectOption } from 'naive-ui'
 import type { Option } from 'naive-ui/es/transfer/src/interface'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
@@ -18,11 +19,6 @@ import {
   useMessage,
 } from 'naive-ui'
 import { ref } from 'vue'
-
-interface SelectOption {
-  label: string
-  value: string
-}
 
 const props = defineProps<{
   existingSongs: SongsInfo[]

@@ -917,9 +917,9 @@ export interface CheckInResult {
  * 文件类型枚举
  */
 export enum UserFileTypes {
-  Image = 0,
-  Audio = 1,
-  Video = 2,
+  Video = 0,
+  Image = 1,
+  Audio = 2,
   Document = 3,
   Other = 4,
 }

@@ -1182,7 +1182,9 @@ onUnmounted(() => {
                   type="error"
                   @positive-click="async () => {
                       await biliCookie.clearCookieCloudConfig();
-                      cookieCloudData.value = { key: '', password: '', host: 'https://cookie.vtsuru.live' };
+                      cookieCloudData.key = '';
+                      cookieCloudData.password = '';
+                      cookieCloudData.host = 'https://cookie.vtsuru.live';
                       message.success('配置已清除');
                     }"
                 >

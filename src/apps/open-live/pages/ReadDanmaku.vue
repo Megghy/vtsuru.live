@@ -407,7 +407,7 @@ onUnmounted(() => {
         <template #actions>
           <NSpace align="center" :wrap="true" :size="10">
             <NButton
-              :type="speechState.canSpeech ? 'error' : 'primary'"
+              :type="speechState.canSpeech ? 'error' : 'success'"
               size="medium"
               :loading="speechState.isApiAudioLoading"
               data-umami-event="Use TTS"

@@ -89,9 +89,17 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
   const tooltipColor = isDark ? colors.neutral[800] : colors.neutral[900]
   const tooltipTextColor = colors.neutral[50]
 
-  const shadowPopover = isDark
+  // Shadows: keep them consistent across all floating surfaces.
+  // Add a very subtle outer glow in dark mode to separate from the page background.
+  const shadowGlow = isDark ? `0 0 0 1px ${rgba(colors.neutral[50], 0.06)}` : ''
+  const shadow2Base = isDark
+    ? `0 4px 12px ${rgba(colors.neutral[950], 0.7)}`
+    : `0 4px 12px ${rgba(colors.neutral[950], 0.12)}`
+  const shadow3Base = isDark
     ? `0 8px 30px ${rgba(colors.neutral[950], 0.7)}`
     : `0 8px 30px ${rgba(colors.neutral[950], 0.12)}`
+  const shadow2 = isDark ? `${shadowGlow}, ${shadow2Base}` : shadow2Base
+  const shadowPopover = isDark ? `${shadowGlow}, ${shadow3Base}` : shadow3Base
 
   // Embedded background for subtle distinction
   const embeddedColor = isDark ? colors.neutral[900] : colors.neutral[50]
@@ -159,12 +167,13 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       heightLarge: '36px',
 
       boxShadow1: isDark ? `0 1px 2px ${rgba(colors.neutral[950], 0.6)}` : `0 1px 2px ${rgba(colors.neutral[950], 0.06)}`,
-      boxShadow2: isDark ? `0 4px 12px ${rgba(colors.neutral[950], 0.7)}` : `0 4px 12px ${rgba(colors.neutral[950], 0.12)}`,
+      boxShadow2: shadow2,
       boxShadow3: shadowPopover,
     },
     Button: {
       heightMedium: '30px',
-      heightSmall: '24px',
+      // Keep buttons aligned with inputs in input-group even when using size="small"
+      heightSmall: '30px',
       heightLarge: '36px',
       fontSizeMedium: '13px',
       borderRadiusMedium: radiusControl,
@@ -341,19 +350,18 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Message: {
       borderRadius: radiusControl,
-      color: background,
+      color: embeddedColor,
       textColor: foreground,
-      boxShadow: shadowPopover,
+      border: `1px solid ${borderColor}`,
       padding: '8px 12px',
       iconMargin: '0 8px 0 0',
       closeMargin: '0 0 0 8px',
     },
     Notification: {
       borderRadius: radiusSurface,
-      color: background,
+      color: embeddedColor,
       headerTextColor: foreground,
       descriptionTextColor: mutedForeground,
-      boxShadow: shadowPopover,
       padding: '12px 16px',
     },
     Tag: {
@@ -409,6 +417,11 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       tabPaddingSmallLine: '8px 12px',
       tabPaddingSmallCard: '6px 12px',
       tabPaddingSmallBar: '6px 12px',
+      // Dark mode needs stronger selected-state contrast
+      colorSegment: embeddedColor,
+      tabColorSegment: isDark ? colors.neutral[800] : '#ffffff',
+      tabTextColorActiveSegment: foreground,
+      tabTextColorHoverSegment: foreground,
     },
     Collapse: {
       titlePadding: '8px 0',

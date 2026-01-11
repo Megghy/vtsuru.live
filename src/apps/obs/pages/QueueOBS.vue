@@ -25,8 +25,9 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const currentId = computed(() => {
-  return props.id ?? route.query.id
+const currentId = computed<string>(() => {
+  const v = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
+  return v === undefined || v === null ? '' : String(v)
 })
 
 const speedMultiplier = computed(() => {

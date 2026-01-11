@@ -38,7 +38,7 @@ const {
 
 const listContainerRef = ref()
 const listInnerRef = ref<HTMLElement | null>(null)
-const { height } = useElementSize(listContainerRef)
+const { height, width } = useElementSize(listContainerRef)
 const { height: innerListHeight } = useElementSize(listInnerRef)
 const itemMarginBottom = 6
 

@@ -28,6 +28,7 @@ import {
 } from 'naive-ui'
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
+import { useRoute, useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
@@ -44,9 +45,21 @@ const turnstile = ref()
 
 const accountInfo = useAccount()
 const message = useMessage()
+const route = useRoute()
+const router = useRouter()
 
 // 使用 useRouteQuery 自动同步 URL 查询参数
 const selectedTab = useRouteQuery('tab', 'info', { transform: String })
+
+watch(
+  () => [selectedTab.value, route.query.setting] as const,
+  ([tab, setting]) => {
+    if (tab !== 'setting') return
+    if (setting !== 'index') return
+    router.replace({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })
+  },
+  { immediate: true },
+)
 
 const resetEmailModalVisiable = ref(false)
 const resetPasswordModalVisiable = ref(false)

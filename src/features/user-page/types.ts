@@ -11,6 +11,10 @@ export interface ContribPageRef {
 
 export interface UserPageConfig {
   mode: UserPageRenderMode
+  title?: string
+  description?: string
+  navVisible?: boolean
+  navOrder?: number
   contrib?: ContribPageRef
   block?: BlockPageProject
 }
@@ -21,3 +25,8 @@ export interface UserPagesSettingsV1 {
   pages?: Record<string, UserPageConfig>
 }
 
+export interface UserPagesMyStateResponse {
+  draftJson: string | null
+  publishedJson: string | null
+  rollbackJson: string | null
+}

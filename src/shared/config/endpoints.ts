@@ -26,7 +26,7 @@ export const USER_INDEX_API_URL = `${BASE_API_URL}user-index/`
 export const ANALYZE_API_URL = `${BASE_API_URL}analyze/`
 export const CHECKIN_API_URL = `${BASE_API_URL}checkin/`
 export const USER_CONFIG_API_URL = `${BASE_API_URL}user-config/`
+export const USER_PAGES_API_URL = `${BASE_API_URL}user-pages/`
 export const FILE_API_URL = `${BASE_API_URL}files/`
 export const VOTE_API_URL = `${BASE_API_URL}vote/`
 export const TTS_API_URL = `${BASE_API_URL}tts/`
-

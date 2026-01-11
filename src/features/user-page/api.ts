@@ -1,7 +1,6 @@
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { USER_CONFIG_API_URL } from '@/shared/config'
-import { USER_PAGES_CONFIG_NAME } from './constants'
-import type { UserPagesSettingsV1 } from './types'
+import { USER_PAGES_API_URL } from '@/shared/config'
+import type { UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
 
 function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
   let parsed: unknown
@@ -18,29 +17,46 @@ function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
 }
 
 export async function fetchUserPagesSettingsByUserId(userId: number): Promise<UserPagesSettingsV1 | null> {
-  const resp = await QueryGetAPI<string>(`${USER_CONFIG_API_URL}get-user`, {
-    name: USER_PAGES_CONFIG_NAME,
-    id: userId,
-  })
+  const resp = await QueryGetAPI<string>(`${USER_PAGES_API_URL}get-user`, { id: userId, _ts: Date.now() })
   if (resp.code === 404) return null
   const raw = unwrapOk(resp, '无法获取用户页面配置')
   return parseUserPagesSettings(raw)
 }
 
-export async function fetchMyUserPagesSettings(): Promise<UserPagesSettingsV1 | null> {
-  const resp = await QueryGetAPI<string>(`${USER_CONFIG_API_URL}get`, {
-    name: USER_PAGES_CONFIG_NAME,
-  })
-  if (resp.code === 404) return null
-  const raw = unwrapOk(resp, '无法获取用户页面配置')
-  return parseUserPagesSettings(raw)
+export async function fetchMyUserPagesState(): Promise<{
+  draft: UserPagesSettingsV1 | null
+  published: UserPagesSettingsV1 | null
+  rollback: UserPagesSettingsV1 | null
+}> {
+  const resp = await QueryGetAPI<UserPagesMyStateResponse>(`${USER_PAGES_API_URL}get-my`, { _ts: Date.now() })
+  const data = unwrapOk(resp, '无法获取用户页面配置')
+  return {
+    draft: data.draftJson ? parseUserPagesSettings(data.draftJson) : null,
+    published: data.publishedJson ? parseUserPagesSettings(data.publishedJson) : null,
+    rollback: data.rollbackJson ? parseUserPagesSettings(data.rollbackJson) : null,
+  }
 }
 
-export async function saveMyUserPagesSettings(settings: UserPagesSettingsV1, isPublic: boolean = true) {
-  const resp = await QueryPostAPI<unknown>(`${USER_CONFIG_API_URL}set`, {
-    name: USER_PAGES_CONFIG_NAME,
+export async function saveMyUserPagesDraft(settings: UserPagesSettingsV1) {
+  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}save-draft`, {
     json: JSON.stringify(settings),
-    public: isPublic,
   })
-  unwrapOk(resp, '保存用户页面配置失败')
+  unwrapOk(resp, '保存草稿失败')
+}
+
+export async function clearMyUserPagesDraft() {
+  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}clear-draft`, undefined)
+  unwrapOk(resp, '清空草稿失败')
+}
+
+export async function publishMyUserPagesSettings(settings: UserPagesSettingsV1) {
+  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}publish`, {
+    json: JSON.stringify(settings),
+  })
+  unwrapOk(resp, '发布失败')
+}
+
+export async function rollbackMyUserPagesPublished() {
+  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}rollback`, {})
+  unwrapOk(resp, '回滚失败')
 }

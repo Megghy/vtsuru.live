@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SelectMixedOption, SelectOption } from 'naive-ui/es/select/src/interface'
+import type { SelectOption } from 'naive-ui'
 import type { VNode } from 'vue'
 import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { TagQuestionMark16Filled } from '@vicons/fluent'
@@ -41,12 +41,12 @@ const yearOptions = [
     value: new Date().getFullYear(),
   },
   {
-    label: new Date().getFullYear() + 1,
+    label: (new Date().getFullYear() + 1).toString(),
     value: new Date().getFullYear() + 1,
   },
-] as SelectMixedOption[]
+] as SelectOption[]
 const weekOptions = computed(() => {
-  const weeks = [] as SelectMixedOption[]
+  const weeks = [] as SelectOption[]
   const all = getAllWeeks(selectedScheduleYear.value)
   all.forEach((week) => {
     const isExist
@@ -60,7 +60,7 @@ const weekOptions = computed(() => {
   return weeks
 })
 const dayOptions = computed(() => {
-  const days: SelectMixedOption[] = []
+  const days: SelectOption[] = []
   for (let i = 0; i < 7; i++) {
     const entries = updateScheduleModel.value?.days?.[i] ?? []
     const count = entries.length
@@ -72,7 +72,7 @@ const dayOptions = computed(() => {
   return days
 })
 const existTagOptions = computed(() => {
-  const colors: SelectMixedOption[] = []
+  const colors: SelectOption[] = []
   const exists = new Set<string>()
   schedules.value?.forEach((s) => {
     s.days.forEach((dayList) => {
@@ -520,7 +520,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
     }
   })
 }
-function onSelectChange(value: string | null, option: SelectMixedOption, itemIndex: number) {
+function onSelectChange(value: string | null, option: SelectOption, itemIndex: number) {
   if (value) {
     ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
     const entry = updateScheduleModel.value.days[selectedDay.value][itemIndex]

@@ -210,12 +210,12 @@ onBeforeUnmount(() => {
         </NAlert>
 
         <NAlert v-else-if="loadError" type="error" title="加载失败" :bordered="false">
-          {{ loadError }}
-          <template #action>
+          <div>{{ loadError }}</div>
+          <div style="margin-top: 8px">
             <NButton size="small" secondary :loading="isLoading" @click="getAll">
               重试
             </NButton>
-          </template>
+          </div>
         </NAlert>
       </div>
     </ManagePageHeader>

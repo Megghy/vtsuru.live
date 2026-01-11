@@ -94,7 +94,7 @@ function logout() {
               class="manage-page"
               :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
             >
-              <component :is="Component" :key="viewRoute.fullPath" />
+              <component :is="Component" :key="viewRoute.fullPath.split('#')[0]" />
             </div>
           </template>
           <template #fallback>

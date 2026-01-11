@@ -32,7 +32,7 @@ async function loadLogs() {
   if (!props.orgId) return
   isLoading.value = true
   try {
-    const resp = await QueryGetAPI<APIModels.ResponseOrgAuditLogItem[]>(
+    const resp = await QueryGetAPI<OrgAuditItem[]>(
       `${ORG_API_URL}${props.orgId}/points/audit`,
       {
         take: take.value,
