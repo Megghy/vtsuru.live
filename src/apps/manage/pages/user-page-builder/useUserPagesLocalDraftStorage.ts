@@ -1,4 +1,4 @@
-import type { UserPagesSettingsV1 } from '@/features/user-page/types'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { useStorage } from '@vueuse/core'
 import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 
@@ -28,4 +28,3 @@ export function useUserPagesLocalDraftStorage() {
     },
   )
 }
-

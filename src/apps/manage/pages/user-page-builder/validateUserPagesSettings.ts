@@ -1,5 +1,5 @@
-import { validateBlockPageProject } from '@/features/user-page/block/schema'
-import type { UserPageBackgroundConfigV1, UserPageConfig, UserPagesSettingsV1 } from '@/features/user-page/types'
+import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import type { UserPageBackgroundConfigV1, UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV1) {
   const problems: string[] = []

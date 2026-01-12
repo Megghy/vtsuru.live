@@ -2,6 +2,16 @@
 
 > 目标：让“低技术力主播”像 lit.link 一样快速搭建静态落地页；同时允许“技术主播”通过 PR 贡献整页模板/区块组件，并由社区与维护者审核后上线。
 
+## 0. UI/UX 设计规范（统一：shadcn）
+
+本项目的用户页/编辑器相关 UI 统一采用 `shadcn` 风格：优雅克制、紧凑高效、人体工程学优先。
+
+- 层级：以边框/轻阴影/间距体现层级，避免“堆叠大阴影 + 大圆角 + 高饱和背景”。
+- 密度：紧凑但不拥挤；表单/按钮/列表行的点击热区建议 ≥ 32px。
+- 状态：hover/active/focus 必须清晰；focus ring 对键盘操作友好。
+- 可读性：对比度充足，文本层级清晰（标题/说明/禁用态）。
+- 实现：可继续使用 Naive UI 作为组件基础，但视觉与交互需对齐 shadcn（token/变量优先，避免散落硬编码样式）。
+
 ## 1. 背景与现状
 
 - 当前前端路由已存在个人页入口：`/@:id`（见 `src/app/router/index.ts`），其主页对应 `user-index`（`src/app/router/user.ts` -> `@/apps/user/pages/UserIndexView.vue`）。
@@ -63,7 +73,7 @@
 
 （命名仅示意，按项目现有风格微调即可）
 
-- `src/features/user-page/`（建议后续可更名为 `user-pages`，当前仅做概念）
+- `src/apps/user-page/`（建议后续可更名为 `user-pages`，当前仅做概念）
   - `types.ts`：Block Page schema、RenderMode、审核状态类型
   - `block-registry.ts`：区块注册表（白名单）
   - `theme.ts`：主题与受控样式 token
@@ -281,7 +291,7 @@ interface ReviewMeta {
 
 - 安全：无敏感接口调用、无危险 DOM 注入、外链/iframe 受控
 - 性能：首屏体积、渲染复杂度、资源加载策略
-- 可维护性：命名清晰、逻辑简洁、与现有 UI 风格一致（Naive UI）
+- 可维护性：命名清晰、逻辑简洁、UI/UX 对齐 shadcn 风格（紧凑、层级清晰、状态明显）
 
 ### 9.2 贡献“区块组件”（Block）
 
@@ -291,7 +301,7 @@ interface ReviewMeta {
 
 - `blocks/<type>/view.vue`：展示组件
 - `blocks/<type>/schema.ts`：props 类型与校验（或 JSON schema）
-- `blocks/<type>/editor.vue`：编辑面板组件（Naive UI 表单）
+- `blocks/<type>/editor.vue`：编辑面板组件（表单/交互需对齐 shadcn 风格）
 - `block-registry.ts` 注册项（名称、分类、默认值、图标）
 
 审核重点：

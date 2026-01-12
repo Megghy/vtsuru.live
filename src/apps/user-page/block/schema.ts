@@ -13,6 +13,20 @@ export const BLOCK_TYPES = [
   'divider',
   'spacer',
   'footer',
+  'liveStatus',
+  'streamSchedule',
+  'biliInfo',
+  'videoList',
+  'socialLinks',
+  'musicPlayer',
+  'tags',
+  'milestone',
+  'faq',
+  'quote',
+  'marquee',
+  'countdown',
+  'feedback',
+  'supporter',
 ] as const
 
 export type BlockType = typeof BLOCK_TYPES[number]
@@ -45,6 +59,11 @@ export interface BlockPageTheme {
 export interface BlockNode {
   id: string
   type: BlockType
+  /**
+   * Optional user-defined name (editor-only). Should never affect rendering logic.
+   * Backend will strip it for non-owner published responses.
+   */
+  name?: string
   hidden?: boolean
   props?: unknown
 }
@@ -80,6 +99,12 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
   if (block.props !== undefined && !propsObj) {
     errors.push(`${userFacingName}: props 必须是 object`)
     return
+  }
+
+  if (block.name !== undefined) {
+    if (typeof block.name !== 'string') errors.push(`${userFacingName}: name 必须是 string`)
+    else if (block.name.trim().length === 0) errors.push(`${userFacingName}: name 不能为空`)
+    else if (block.name.length > 50) errors.push(`${userFacingName}: name 不能超过 50 字符`)
   }
 
   switch (block.type) {
@@ -130,6 +155,7 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
         }
         const type = childObj.type
         const id = childObj.id
+        const name = childObj.name
         if (!isNonEmptyString(id)) errors.push(`${childName}: id 不能为空`)
         if (!isNonEmptyString(type)) {
           errors.push(`${childName}: type 不能为空`)
@@ -139,11 +165,17 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
           errors.push(`${childName}: 不支持的 block type: ${String(type)}`)
           return
         }
+        if (name !== undefined) {
+          if (typeof name !== 'string') errors.push(`${childName}: name 必须是 string`)
+          else if (name.trim().length === 0) errors.push(`${childName}: name 不能为空`)
+          else if (name.length > 50) errors.push(`${childName}: name 不能超过 50 字符`)
+        }
         if (childObj.hidden) return
         validateBlockProps(
           {
             id: String(id),
             type: type as any,
+            name: typeof name === 'string' ? name : undefined,
             hidden: Boolean(childObj.hidden),
             props: childObj.props,
           },
@@ -388,6 +420,239 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       if (!propsObj) break
       if (propsObj.text !== undefined && typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
       break
+    case 'liveStatus': {
+      if (!propsObj) break
+      if (propsObj.variant !== undefined && !['card', 'compact'].includes(String(propsObj.variant))) {
+        errors.push(`${userFacingName}: variant 仅支持 card/compact`)
+      }
+      ;['showTitle', 'showArea', 'showCover', 'showButtons'].forEach((k) => {
+        if (propsObj[k] !== undefined && typeof propsObj[k] !== 'boolean') errors.push(`${userFacingName}: ${k} 必须是 boolean`)
+      })
+      break
+    }
+    case 'streamSchedule': {
+      if (!propsObj) break
+      if (propsObj.layout !== undefined && !['list', 'table'].includes(String(propsObj.layout))) errors.push(`${userFacingName}: layout 仅支持 list/table`)
+      if (propsObj.weeksCount !== undefined) {
+        const v = Number(propsObj.weeksCount)
+        if (!Number.isInteger(v) || v < 1 || v > 8) errors.push(`${userFacingName}: weeksCount 必须是 1~8 的整数`)
+      }
+      ;['showIcs', 'highlightToday', 'showTag'].forEach((k) => {
+        if (propsObj[k] !== undefined && typeof propsObj[k] !== 'boolean') errors.push(`${userFacingName}: ${k} 必须是 boolean`)
+      })
+      break
+    }
+    case 'biliInfo': {
+      if (!propsObj) break
+      if (propsObj.variant !== undefined && !['card', 'compact'].includes(String(propsObj.variant))) {
+        errors.push(`${userFacingName}: variant 仅支持 card/compact`)
+      }
+      ;['showAvatar', 'showName', 'showSign', 'showStats', 'showButtons', 'showLiveRoom'].forEach((k) => {
+        if (propsObj[k] !== undefined && typeof propsObj[k] !== 'boolean') errors.push(`${userFacingName}: ${k} 必须是 boolean`)
+      })
+      if (propsObj.spaceUrl !== undefined && !isHttpsUrlString(propsObj.spaceUrl)) errors.push(`${userFacingName}: spaceUrl 必须是 https URL`)
+      break
+    }
+    case 'videoList': {
+      if (!propsObj) break
+      if (propsObj.source !== undefined && !['manual', 'userIndex'].includes(String(propsObj.source))) errors.push(`${userFacingName}: source 不支持`)
+      if (propsObj.layout !== undefined && !['grid', 'row'].includes(String(propsObj.layout))) errors.push(`${userFacingName}: layout 不支持`)
+      if (propsObj.columns !== undefined) {
+        const v = Number(propsObj.columns)
+        if (!Number.isInteger(v) || v < 1 || v > 6) errors.push(`${userFacingName}: columns 必须是 1~6 的整数`)
+      }
+      if (propsObj.maxItems !== undefined) {
+        const v = Number(propsObj.maxItems)
+        if (!Number.isInteger(v) || v < 1 || v > 50) errors.push(`${userFacingName}: maxItems 必须是 1~50 的整数`)
+      }
+      if (propsObj.showTitle !== undefined && typeof propsObj.showTitle !== 'boolean') errors.push(`${userFacingName}: showTitle 必须是 boolean`)
+      if (propsObj.items !== undefined) {
+        if (!Array.isArray(propsObj.items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        propsObj.items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (obj.url !== undefined && !isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+          if (obj.title !== undefined && typeof obj.title !== 'string') errors.push(`${userFacingName}: items[${idx}].title 必须是 string`)
+        })
+      }
+      break
+    }
+    case 'socialLinks': {
+      if (!propsObj) break
+      if (propsObj.size !== undefined && !['sm', 'md', 'lg'].includes(String(propsObj.size))) errors.push(`${userFacingName}: size 仅支持 sm/md/lg`)
+      if (propsObj.variant !== undefined && !['round', 'square'].includes(String(propsObj.variant))) errors.push(`${userFacingName}: variant 仅支持 round/square`)
+      if (propsObj.showLabel !== undefined && typeof propsObj.showLabel !== 'boolean') errors.push(`${userFacingName}: showLabel 必须是 boolean`)
+      const items = propsObj.items
+      if (items !== undefined) {
+        if (!Array.isArray(items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (!isNonEmptyString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 不能为空`)
+          else if (!isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+          if (obj.platform !== undefined && !['bilibili', 'youtube', 'x', 'discord', 'twitch', 'qqgroup', 'github', 'website', 'netease', 'spotify', 'other'].includes(String(obj.platform))) {
+            errors.push(`${userFacingName}: items[${idx}].platform 不支持`)
+          }
+          if (obj.label !== undefined && typeof obj.label !== 'string') errors.push(`${userFacingName}: items[${idx}].label 必须是 string`)
+        })
+      }
+      break
+    }
+    case 'musicPlayer': {
+      if (!propsObj) break
+      if (propsObj.provider !== undefined && !['netease', 'spotify', 'custom'].includes(String(propsObj.provider))) errors.push(`${userFacingName}: provider 不支持`)
+      if (propsObj.url !== undefined && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (propsObj.height !== undefined) {
+        const v = Number(propsObj.height)
+        if (!Number.isFinite(v) || v < 60 || v > 900) errors.push(`${userFacingName}: height 必须是 60~900 的数字`)
+      }
+      if (propsObj.compact !== undefined && typeof propsObj.compact !== 'boolean') errors.push(`${userFacingName}: compact 必须是 boolean`)
+      break
+    }
+    case 'tags': {
+      if (!propsObj) break
+      if (propsObj.size !== undefined && !['small', 'medium'].includes(String(propsObj.size))) errors.push(`${userFacingName}: size 仅支持 small/medium`)
+      if (propsObj.rounded !== undefined && typeof propsObj.rounded !== 'boolean') errors.push(`${userFacingName}: rounded 必须是 boolean`)
+      const items = propsObj.items
+      if (items !== undefined) {
+        if (!Array.isArray(items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (obj.text !== undefined && typeof obj.text !== 'string') errors.push(`${userFacingName}: items[${idx}].text 必须是 string`)
+          if (obj.color !== undefined && typeof obj.color !== 'string') errors.push(`${userFacingName}: items[${idx}].color 必须是 string`)
+          if (obj.type !== undefined && !['default', 'info', 'success', 'warning', 'error'].includes(String(obj.type))) errors.push(`${userFacingName}: items[${idx}].type 不支持`)
+        })
+      }
+      break
+    }
+    case 'milestone': {
+      if (!propsObj) break
+      if (propsObj.mode !== undefined && !['timeline', 'list'].includes(String(propsObj.mode))) errors.push(`${userFacingName}: mode 不支持`)
+      const items = propsObj.items
+      if (items !== undefined) {
+        if (!Array.isArray(items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (obj.date !== undefined && typeof obj.date !== 'string') errors.push(`${userFacingName}: items[${idx}].date 必须是 string`)
+          if (obj.title !== undefined && typeof obj.title !== 'string') errors.push(`${userFacingName}: items[${idx}].title 必须是 string`)
+          if (obj.description !== undefined && typeof obj.description !== 'string') errors.push(`${userFacingName}: items[${idx}].description 必须是 string`)
+        })
+      }
+      break
+    }
+    case 'faq': {
+      if (!propsObj) break
+      if (propsObj.accordion !== undefined && typeof propsObj.accordion !== 'boolean') errors.push(`${userFacingName}: accordion 必须是 boolean`)
+      const items = propsObj.items
+      if (items !== undefined) {
+        if (!Array.isArray(items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (obj.q !== undefined && typeof obj.q !== 'string') errors.push(`${userFacingName}: items[${idx}].q 必须是 string`)
+          if (obj.a !== undefined && typeof obj.a !== 'string') errors.push(`${userFacingName}: items[${idx}].a 必须是 string`)
+        })
+      }
+      break
+    }
+    case 'quote': {
+      if (!propsObj) break
+      if (propsObj.text !== undefined && typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
+      if (propsObj.author !== undefined && typeof propsObj.author !== 'string') errors.push(`${userFacingName}: author 必须是 string`)
+      if (propsObj.align !== undefined && !['left', 'center', 'right'].includes(String(propsObj.align))) errors.push(`${userFacingName}: align 不支持`)
+      break
+    }
+    case 'marquee': {
+      if (!propsObj) break
+      if (propsObj.text !== undefined && typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
+      if (propsObj.direction !== undefined && !['left', 'right'].includes(String(propsObj.direction))) errors.push(`${userFacingName}: direction 不支持`)
+      if (propsObj.pauseOnHover !== undefined && typeof propsObj.pauseOnHover !== 'boolean') errors.push(`${userFacingName}: pauseOnHover 必须是 boolean`)
+      if (propsObj.durationSec !== undefined) {
+        const v = Number(propsObj.durationSec)
+        if (!Number.isFinite(v) || v < 4 || v > 120) errors.push(`${userFacingName}: durationSec 必须是 4~120 的数字`)
+      }
+      break
+    }
+    case 'countdown': {
+      if (!propsObj) break
+      if (propsObj.title !== undefined && typeof propsObj.title !== 'string') errors.push(`${userFacingName}: title 必须是 string`)
+      if (propsObj.target !== undefined && typeof propsObj.target !== 'string') errors.push(`${userFacingName}: target 必须是 string`)
+      if (propsObj.showSeconds !== undefined && typeof propsObj.showSeconds !== 'boolean') errors.push(`${userFacingName}: showSeconds 必须是 boolean`)
+      if (propsObj.doneText !== undefined && typeof propsObj.doneText !== 'string') errors.push(`${userFacingName}: doneText 必须是 string`)
+      if (propsObj.style !== undefined && !['cards', 'inline'].includes(String(propsObj.style))) errors.push(`${userFacingName}: style 不支持`)
+      break
+    }
+    case 'feedback': {
+      if (!propsObj) break
+      if (propsObj.title !== undefined && typeof propsObj.title !== 'string') errors.push(`${userFacingName}: title 必须是 string`)
+      if (propsObj.description !== undefined && typeof propsObj.description !== 'string') errors.push(`${userFacingName}: description 必须是 string`)
+      if (propsObj.url !== undefined && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (propsObj.buttonText !== undefined && typeof propsObj.buttonText !== 'string') errors.push(`${userFacingName}: buttonText 必须是 string`)
+      if (propsObj.embed !== undefined && typeof propsObj.embed !== 'boolean') errors.push(`${userFacingName}: embed 必须是 boolean`)
+      if (propsObj.height !== undefined) {
+        const v = Number(propsObj.height)
+        if (!Number.isFinite(v) || v < 200 || v > 1200) errors.push(`${userFacingName}: height 必须是 200~1200 的数字`)
+      }
+      break
+    }
+    case 'supporter': {
+      if (!propsObj) break
+      if (propsObj.title !== undefined && typeof propsObj.title !== 'string') errors.push(`${userFacingName}: title 必须是 string`)
+      if (propsObj.description !== undefined && typeof propsObj.description !== 'string') errors.push(`${userFacingName}: description 必须是 string`)
+      const items = propsObj.items
+      if (items !== undefined) {
+        if (!Array.isArray(items)) {
+          errors.push(`${userFacingName}: items 必须是 array`)
+          break
+        }
+        items.forEach((it, idx) => {
+          const obj = asObject(it)
+          if (!obj) {
+            errors.push(`${userFacingName}: items[${idx}] 必须是 object`)
+            return
+          }
+          if (obj.platform !== undefined && !['afdian', 'kofi', 'patreon', 'paypal', 'other'].includes(String(obj.platform))) {
+            errors.push(`${userFacingName}: items[${idx}].platform 不支持`)
+          }
+          if (!isNonEmptyString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 不能为空`)
+          else if (!isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+          if (obj.label !== undefined && typeof obj.label !== 'string') errors.push(`${userFacingName}: items[${idx}].label 必须是 string`)
+        })
+      }
+      break
+    }
   }
 }
 
@@ -466,6 +731,7 @@ export function validateBlockPageProject(project: unknown) {
     }
     const type = bObj.type
     const id = bObj.id
+    const name = bObj.name
     const userFacingName = `blocks[${idx}]`
     if (!isNonEmptyString(id)) errors.push(`${userFacingName}: id 不能为空`)
     if (!isNonEmptyString(type)) {
@@ -476,11 +742,17 @@ export function validateBlockPageProject(project: unknown) {
       errors.push(`${userFacingName}: 不支持的 block type: ${String(type)}`)
       return
     }
+    if (name !== undefined) {
+      if (typeof name !== 'string') errors.push(`${userFacingName}: name 必须是 string`)
+      else if (name.trim().length === 0) errors.push(`${userFacingName}: name 不能为空`)
+      else if (name.length > 50) errors.push(`${userFacingName}: name 不能超过 50 字符`)
+    }
     if (bObj.hidden) return
     validateBlockProps(
       {
         id: String(id),
         type: type as any,
+        name: typeof name === 'string' ? name : undefined,
         hidden: Boolean(bObj.hidden),
         props: bObj.props,
       },

@@ -71,16 +71,16 @@ export function hexToRgba(hex: string, alpha: number): string | null {
   if (!h.startsWith('#')) return null
   const raw = h.slice(1)
   if (raw.length === 3) {
-    const r = parseInt(raw[0] + raw[0], 16)
-    const g = parseInt(raw[1] + raw[1], 16)
-    const b = parseInt(raw[2] + raw[2], 16)
+    const r = Number.parseInt(raw[0] + raw[0], 16)
+    const g = Number.parseInt(raw[1] + raw[1], 16)
+    const b = Number.parseInt(raw[2] + raw[2], 16)
     if ([r, g, b].some(x => Number.isNaN(x))) return null
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }
   if (raw.length === 6) {
-    const r = parseInt(raw.slice(0, 2), 16)
-    const g = parseInt(raw.slice(2, 4), 16)
-    const b = parseInt(raw.slice(4, 6), 16)
+    const r = Number.parseInt(raw.slice(0, 2), 16)
+    const g = Number.parseInt(raw.slice(2, 4), 16)
+    const b = Number.parseInt(raw.slice(4, 6), 16)
     if ([r, g, b].some(x => Number.isNaN(x))) return null
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   }

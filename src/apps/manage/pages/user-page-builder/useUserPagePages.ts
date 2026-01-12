@@ -1,5 +1,5 @@
-import type { BlockPageProject } from '@/features/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/features/user-page/types'
+import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { cloneBlockNode, deepCloneJson } from './editorHelpers'
 import type { Ref } from 'vue'
 

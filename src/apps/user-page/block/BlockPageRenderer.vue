@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
+import type { GlobalThemeOverrides } from 'naive-ui'
 import { darkTheme, NConfigProvider } from 'naive-ui'
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
@@ -10,6 +11,7 @@ const props = defineProps<{
   project: BlockPageProject
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  extraThemeOverrides?: GlobalThemeOverrides
 }>()
 
 const radius = computed(() => props.project.theme?.radius ?? 12)
@@ -34,7 +36,7 @@ const naiveTheme = computed(() => {
   return undefined
 })
 
-const themeOverrides = computed(() => {
+const themeOverrides = computed<GlobalThemeOverrides>(() => {
   const t: any = props.project.theme ?? {}
   const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
   const textColor = typeof t.textColor === 'string' ? t.textColor : undefined
@@ -64,14 +66,31 @@ const themeOverrides = computed(() => {
       borderRadius: radiusPx,
       closeBorderRadius: radiusPx,
     },
-  } as any
+  }
+})
+
+const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  const base = themeOverrides.value
+  const extra = props.extraThemeOverrides ?? {}
+  const merged: Record<string, any> = { ...base, ...extra }
+
+  const keys = new Set<string>([...Object.keys(base as any), ...Object.keys(extra as any)])
+  keys.forEach((k) => {
+    const a = (base as any)[k]
+    const b = (extra as any)[k]
+    if (!a || typeof a !== 'object' || Array.isArray(a)) return
+    if (!b || typeof b !== 'object' || Array.isArray(b)) return
+    merged[k] = { ...a, ...b }
+  })
+
+  return merged as GlobalThemeOverrides
 })
 
 const blockComponents = BLOCK_COMPONENTS
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="themeOverrides">
+  <NConfigProvider :theme="naiveTheme" :theme-overrides="mergedThemeOverrides">
     <div
       class="page"
       :style="containerStyle"

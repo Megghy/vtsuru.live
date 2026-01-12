@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NIcon, NModal, NPopconfirm, NScrollbar, NSpace, NSplit, NSpin, NSwitch, NText } from 'naive-ui'
+import type { GlobalThemeOverrides } from 'naive-ui'
+import { NAlert, NButton, NCard, NConfigProvider, NFlex, NIcon, NModal, NPopconfirm, NScrollbar, NSpace, NSplit, NSpin, NSwitch, NText } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, provide, ref, watchEffect } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ArrowRedoOutline, ArrowUndoOutline, ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import { useEventListener, useStorage } from '@vueuse/core'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import BlockPageRenderer from '@/features/user-page/block/BlockPageRenderer.vue'
+import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
-import { getPageBackgroundCssVars, resolvePageBackground } from '@/features/user-page/background'
+import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { UserPageEditorKey } from './user-page-builder/context'
 import { USER_PAGE_BUILDER_SPLIT_CENTER_SIZE_KEY, USER_PAGE_BUILDER_SPLIT_LEFT_SIZE_KEY } from './user-page-builder/storageKeys'
 import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
@@ -63,6 +64,37 @@ const previewBgVars = computed(() => {
   const bg = previewBg.value
   if (!bg) return {}
   return getPageBackgroundCssVars(bg, previewEffectiveIsDark.value)
+})
+
+const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  const bg = previewBg.value
+  if (!bg || bg.blurMode === 'none') return {}
+  const vars = previewBgVars.value as any
+  const surfaceBg = vars['--user-page-ui-surface-bg']
+  const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
+  const surfaceBgPressed = vars['--user-page-ui-surface-bg-pressed']
+  const borderColor = vars['--user-page-border-color']
+  return {
+    common: {
+      borderColor,
+      dividerColor: borderColor,
+    },
+    Card: {
+      color: surfaceBg,
+      colorEmbedded: surfaceBgHover,
+      borderColor,
+    },
+    List: {
+      color: 'transparent',
+      listItemColor: 'transparent',
+      borderColor,
+    },
+    Button: {
+      color: surfaceBg,
+      colorHover: surfaceBgHover,
+      colorPressed: surfaceBgPressed,
+    },
+  }
 })
 
 const previewBgClass = computed(() => ({
@@ -258,6 +290,7 @@ onBeforeRouteLeave(() => {
                                 :project="editor.currentProject.value"
                                 :user-info="editor.account.value"
                                 :bili-info="undefined"
+                                :extra-theme-overrides="previewSurfaceThemeOverrides"
                               />
                             </div>
                             <BlockPageRenderer
@@ -265,10 +298,13 @@ onBeforeRouteLeave(() => {
                               :project="editor.currentProject.value"
                               :user-info="editor.account.value"
                               :bili-info="undefined"
+                              :extra-theme-overrides="previewSurfaceThemeOverrides"
                             />
                           </template>
                           <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                            <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
+                            <NConfigProvider :theme-overrides="previewSurfaceThemeOverrides">
+                              <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
+                            </NConfigProvider>
                           </template>
                           <NAlert
                             v-else

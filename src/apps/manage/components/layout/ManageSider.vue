@@ -492,7 +492,7 @@ const menuOptions = computed(() => {
           </template>
         </NButton>
 
-        <NTooltip>
+        <NTooltip v-if="!collapsed">
           <template #trigger>
             <NButton class="manage-sider__feedback" @click="$router.push({ name: 'manage-feedback' })">
               <template #icon>
@@ -526,7 +526,6 @@ const menuOptions = computed(() => {
     <NMenu
       v-model:expanded-keys="expandedKeys"
       class="manage-sider-menu"
-      style="margin-top: 6px"
       :disabled="accountInfo?.isEmailVerified !== true"
       :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
       :default-expanded-keys="['group-common', 'group-data', 'group-tools', 'group-danmaku', 'group-favorites']"
@@ -566,10 +565,11 @@ const menuOptions = computed(() => {
 
 <style scoped>
 .manage-sider__top {
-  padding: 12px 10px 6px;
+  padding: 12px 15px 6px 6px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-width: 95%;
 }
 
 .manage-sider__home {
