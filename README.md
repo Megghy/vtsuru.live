@@ -1,24 +1,31 @@
 # vtsuru.live
 
 ## Project setup
-```
+
+```bash
 bun install
 ```
 
-### Compiles and hot-reloads for development
-```
+## Development
+
+```bash
 bun dev
 ```
 
-### Compiles and minifies for production
-```
+## Build
+
+```bash
 bun run build
 ```
 
-### Lints and fixes files
-```
-bun run lint
+## Typecheck
+
+```bash
+bun run typecheck
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Lint
+
+```bash
+bun run lint
+```

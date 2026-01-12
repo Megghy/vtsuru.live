@@ -1,5 +1,5 @@
-import type { BlockNode, BlockPageProject } from '@/features/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/features/user-page/types'
+import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export interface FileRefEntry { id: number, path?: string, name?: string, locations: string[] }
 

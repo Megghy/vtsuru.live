@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { BlockNode } from '@/features/user-page/block/schema'
+import type { BlockNode } from '@/apps/user-page/block/schema'
 import BlockPropsForm from './BlockPropsForm.vue'
-import LayoutChildrenEditor from './LayoutChildrenEditor.vue'
 
 const props = defineProps<{
   block: BlockNode
@@ -9,7 +8,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <LayoutChildrenEditor v-if="props.block.type === 'layout'" :block="props.block" />
-  <BlockPropsForm v-else :block="props.block" />
+  <BlockPropsForm :block="props.block" />
 </template>
-

@@ -44,10 +44,10 @@ import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { fetchUserPagesSettingsByUserId } from '@/features/user-page/api'
-import { getPageBackgroundCssVars, resolvePageBackground } from '@/features/user-page/background'
-import { validateBlockPageProject } from '@/features/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/features/user-page/types'
+import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
+import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
@@ -480,46 +480,46 @@ watch(
                   <NIcon :component="Moon" />
                 </template>
               </NSwitch>
-            <!-- 已登录用户操作 -->
-            <template v-if="accountInfo?.id">
-              <NSpace>
-                <!-- B站认证中心按钮 (如果已认证) -->
+              <!-- 已登录用户操作 -->
+              <template v-if="accountInfo?.id">
+                <NSpace>
+                  <!-- B站认证中心按钮 (如果已认证) -->
+                  <NButton
+                    v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
+                    type="primary"
+                    tag="a"
+                    href="/bili-user"
+                    target="_blank"
+                    size="small"
+                    secondary
+                  >
+                    <template #icon>
+                      <NIcon :component="Person48Filled" />
+                    </template>
+                    <span v-if="windowWidth >= 768"> 认证用户中心 </span>
+                  </NButton>
+                  <!-- 主播后台按钮 -->
+                  <NButton
+                    type="primary"
+                    size="small"
+                    @click="$router.push({ name: 'manage-index' })"
+                  >
+                    <template #icon>
+                      <NIcon :component="WindowWrench20Filled" />
+                    </template>
+                    <span v-if="windowWidth >= 768"> 主播后台 </span>
+                  </NButton>
+                </NSpace>
+              </template>
+              <!-- 未登录用户操作 -->
+              <template v-else>
                 <NButton
-                  v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
                   type="primary"
-                  tag="a"
-                  href="/bili-user"
-                  target="_blank"
-                  size="small"
-                  secondary
+                  @click="registerAndLoginModalVisiable = true"
                 >
-                  <template #icon>
-                    <NIcon :component="Person48Filled" />
-                  </template>
-                  <span v-if="windowWidth >= 768"> 认证用户中心 </span>
+                  注册 / 登陆
                 </NButton>
-                <!-- 主播后台按钮 -->
-                <NButton
-                  type="primary"
-                  size="small"
-                  @click="$router.push({ name: 'manage-index' })"
-                >
-                  <template #icon>
-                    <NIcon :component="WindowWrench20Filled" />
-                  </template>
-                  <span v-if="windowWidth >= 768"> 主播后台 </span>
-                </NButton>
-              </NSpace>
-            </template>
-            <!-- 未登录用户操作 -->
-            <template v-else>
-              <NButton
-                type="primary"
-                @click="registerAndLoginModalVisiable = true"
-              >
-                注册 / 登陆
-              </NButton>
-            </template>
+              </template>
             </NSpace>
           </template>
           <!-- 页面标题 (网站 Logo) -->
@@ -536,176 +536,176 @@ watch(
         </NPageHeader>
       </NLayoutHeader>
 
-    <!-- 主体布局 (包含侧边栏和内容区) -->
-    <NLayout
-      has-sider
-      class="main-layout-body"
-    >
-      <!-- 左侧边栏 -->
-      <NLayoutSider
-        ref="sider"
-        show-trigger
-        bordered
-        collapse-mode="width"
-        :collapsed-width="64"
-        :width="180"
-        :native-scrollbar="false"
-        :default-collapsed="windowWidth < 768"
-        style="height: 100%"
+      <!-- 主体布局 (包含侧边栏和内容区) -->
+      <NLayout
+        has-sider
+        class="main-layout-body"
       >
-        <!-- 用户头像和昵称 (加载完成后显示) -->
-        <div
-          v-if="userInfo?.streamerInfo"
-          style="margin-top: 8px"
-        >
-          <NSpace
-            vertical
-            justify="center"
-            align="center"
-          >
-            <NAvatar
-              class="sider-avatar"
-              :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
-              :src="userInfo.streamerInfo.faceUrl"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-              round
-              bordered
-              title="前往用户B站主页"
-              @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
-            />
-            <NEllipsis
-              v-if="siderWidth > 100"
-              style="max-width: 100%"
-            >
-              <NSpace
-                align="center"
-                :size="4"
-                :wrap="false"
-              >
-                <NText strong>
-                  {{ userInfo?.streamerInfo.name }}
-                </NText>
-                <span
-                  v-if="userInfo?.streamerInfo?.isStreaming"
-                  class="live-indicator-dot"
-                  title="直播中"
-                />
-              </NSpace>
-            </NEllipsis>
-          </NSpace>
-        </div>
-        <!-- 侧边栏加载状态 -->
-        <div
-          v-else-if="isLoading"
-          class="sider-loading"
-        >
-          <NSpin size="small" />
-        </div>
-        <NDivider style="margin: 0; margin-top: 5px;" />
-        <!-- 导航菜单 -->
-        <NMenu
-          :value="activeMenuKey"
+        <!-- 左侧边栏 -->
+        <NLayoutSider
+          ref="sider"
+          show-trigger
+          bordered
+          collapse-mode="width"
           :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="menuOptions"
-          :disabled="isLoading"
-          class="sider-menu"
-        />
-
-        <!-- 侧边栏底部链接 -->
-        <div class="sider-footer">
-          <!-- 仅在侧边栏展开时显示 -->
-          <NSpace
-            v-if="siderWidth > 150"
-            justify="center"
-            align="center"
-            vertical
-            size="small"
-            style="width: 100%;"
+          :width="180"
+          :native-scrollbar="false"
+          :default-collapsed="windowWidth < 768"
+          style="height: 100%"
+        >
+          <!-- 用户头像和昵称 (加载完成后显示) -->
+          <div
+            v-if="userInfo?.streamerInfo"
+            style="margin-top: 8px"
           >
-            <NText
-              depth="3"
-              class="footer-text"
+            <NSpace
+              vertical
+              justify="center"
+              align="center"
             >
-              有有更多功能建议请 <NButton
-                text
-                type="info"
-                tag="a"
-                href="/feedback"
-                target="_blank"
-                size="tiny"
+              <NAvatar
+                class="sider-avatar"
+                :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
+                :src="userInfo.streamerInfo.faceUrl"
+                :img-props="{ referrerpolicy: 'no-referrer' }"
+                round
+                bordered
+                title="前往用户B站主页"
+                @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
+              />
+              <NEllipsis
+                v-if="siderWidth > 100"
+                style="max-width: 100%"
               >
-                反馈
-              </NButton>
-            </NText>
-            <NDivider style="margin: 0; width: 100%" />
-            <NText
-              depth="3"
-              class="footer-text"
-            >
-              <NButton
-                text
-                type="info"
-                tag="a"
-                href="/about"
-                target="_blank"
-                size="tiny"
-              >
-                关于本站
-              </NButton>
-            </NText>
-          </NSpace>
-        </div>
-      </NLayoutSider>
-
-      <!-- 右侧内容区域布局容器 -->
-      <NLayout class="content-layout-container">
-        <!-- 全局加载动画 (覆盖内容区) -->
-        <div
-          v-if="isLoading"
-          class="loading-container"
-        >
-          <NSpin size="large" />
-        </div>
-        <!-- 实际内容区域 (加载完成且找到用户时显示) -->
-        <div
-          v-else-if="userInfo && !notFound"
-          class="viewer-page-content"
-        >
-          <!-- 路由视图和动画 -->
-          <RouterView v-slot="{ Component, route: viewRoute }">
-            <KeepAlive>
-              <template v-if="viewRoute.meta.pageContainer === 'none'">
-                <component
-                  :is="Component"
-                  :key="route.fullPath.split('#')[0]"
-                  :bili-info="biliUserInfo"
-                  :user-info="userInfo"
-                />
-              </template>
-              <div
-                v-else
-                class="user-page"
-                :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
-              >
-                <component
-                  :is="Component"
-                  :key="route.fullPath.split('#')[0]"
-                  :bili-info="biliUserInfo"
-                  :user-info="userInfo"
-                />
-              </div>
-            </KeepAlive>
-          </RouterView>
-          <NBackTop
-            :right="40"
-            :bottom="40"
-            listen-to=".viewer-page-content"
+                <NSpace
+                  align="center"
+                  :size="4"
+                  :wrap="false"
+                >
+                  <NText strong>
+                    {{ userInfo?.streamerInfo.name }}
+                  </NText>
+                  <span
+                    v-if="userInfo?.streamerInfo?.isStreaming"
+                    class="live-indicator-dot"
+                    title="直播中"
+                  />
+                </NSpace>
+              </NEllipsis>
+            </NSpace>
+          </div>
+          <!-- 侧边栏加载状态 -->
+          <div
+            v-else-if="isLoading"
+            class="sider-loading"
+          >
+            <NSpin size="small" />
+          </div>
+          <NDivider style="margin: 0; margin-top: 5px;" />
+          <!-- 导航菜单 -->
+          <NMenu
+            :value="activeMenuKey"
+            :collapsed-width="64"
+            :collapsed-icon-size="22"
+            :options="menuOptions"
+            :disabled="isLoading"
+            class="sider-menu"
           />
-        </div>
+
+          <!-- 侧边栏底部链接 -->
+          <div class="sider-footer">
+            <!-- 仅在侧边栏展开时显示 -->
+            <NSpace
+              v-if="siderWidth > 150"
+              justify="center"
+              align="center"
+              vertical
+              size="small"
+              style="width: 100%;"
+            >
+              <NText
+                depth="3"
+                class="footer-text"
+              >
+                有有更多功能建议请 <NButton
+                  text
+                  type="info"
+                  tag="a"
+                  href="/feedback"
+                  target="_blank"
+                  size="tiny"
+                >
+                  反馈
+                </NButton>
+              </NText>
+              <NDivider style="margin: 0; width: 100%" />
+              <NText
+                depth="3"
+                class="footer-text"
+              >
+                <NButton
+                  text
+                  type="info"
+                  tag="a"
+                  href="/about"
+                  target="_blank"
+                  size="tiny"
+                >
+                  关于本站
+                </NButton>
+              </NText>
+            </NSpace>
+          </div>
+        </NLayoutSider>
+
+        <!-- 右侧内容区域布局容器 -->
+        <NLayout class="content-layout-container">
+          <!-- 全局加载动画 (覆盖内容区) -->
+          <div
+            v-if="isLoading"
+            class="loading-container"
+          >
+            <NSpin size="large" />
+          </div>
+          <!-- 实际内容区域 (加载完成且找到用户时显示) -->
+          <div
+            v-else-if="userInfo && !notFound"
+            class="viewer-page-content"
+          >
+            <!-- 路由视图和动画 -->
+            <RouterView v-slot="{ Component, route: viewRoute }">
+              <KeepAlive>
+                <template v-if="viewRoute.meta.pageContainer === 'none'">
+                  <component
+                    :is="Component"
+                    :key="route.fullPath.split('#')[0]"
+                    :bili-info="biliUserInfo"
+                    :user-info="userInfo"
+                  />
+                </template>
+                <div
+                  v-else
+                  class="user-page"
+                  :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+                >
+                  <component
+                    :is="Component"
+                    :key="route.fullPath.split('#')[0]"
+                    :bili-info="biliUserInfo"
+                    :user-info="userInfo"
+                  />
+                </div>
+              </KeepAlive>
+            </RouterView>
+            <NBackTop
+              :right="40"
+              :bottom="40"
+              listen-to=".viewer-page-content"
+            />
+          </div>
         <!-- 如果 !isLoading && notFound, 会显示顶部的 NResult，这里不需要 else -->
+        </NLayout>
       </NLayout>
-    </NLayout>
     </NLayout>
   </NConfigProvider>
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NAlert, NBreadcrumb, NBreadcrumbItem, NButton, NDropdown, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NScrollbar, NSpace, NSwitch, NText } from 'naive-ui'
-import type { BlockNode, BlockType } from '@/features/user-page/block/schema'
-import { BLOCK_LIBRARY, createBlockNode, getBlockLabel } from '@/features/user-page/block/registry'
+import type { MenuOption } from 'naive-ui'
+import { NAlert, NBreadcrumb, NBreadcrumbItem, NButton, NCollapse, NCollapseItem, NDropdown, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NMenu, NPopover, NSelect, NScrollbar, NSpace, NSwitch, NText } from 'naive-ui'
+import type { BlockNode, BlockType } from '@/apps/user-page/block/schema'
+import { BLOCK_LIBRARY, createBlockNode, getBlockLabel } from '@/apps/user-page/block/registry'
 import { computed, h, inject, ref, watch } from 'vue'
 import Draggable from 'vuedraggable-es'
 import { useStorage } from '@vueuse/core'
@@ -62,6 +63,7 @@ function ensureLayoutProps(node: BlockNode) {
 
 const containerPath = ref<string[]>([])
 const selectedLeafId = ref<string | null>(null)
+const layoutExpanded = ref<string[]>([])
 
 const root = computed(() => props.block)
 
@@ -195,11 +197,72 @@ const selectedLeaf = computed(() => {
   return childrenModel.value.find(b => b.id === selectedLeafId.value) ?? null
 })
 
-const addChildOptions = computed(() => BLOCK_LIBRARY.map(it => ({
-  label: it.label,
-  key: it.type,
-  icon: it.icon ? () => h(NIcon, null, { default: () => h(it.icon!) }) : undefined,
-})))
+const showAddChildMenu = ref(false)
+const blockTypeSet = new Set(BLOCK_LIBRARY.map(it => it.type as unknown as string))
+
+function makeBlockOption(type: string, libMap: Map<string, (typeof BLOCK_LIBRARY)[number]>): MenuOption {
+  const it = libMap.get(type)
+  if (!it) throw new Error(`未知区块类型：${type}`)
+  return {
+    label: it.label,
+    key: it.type,
+    icon: it.icon ? () => h(NIcon, null, { default: () => h(it.icon!) }) : undefined,
+  }
+}
+
+function makeMenuDividerLabel(label: string, key: string): MenuOption {
+  return {
+    key: `divider:${key}`,
+    label: () => h(
+      'div',
+      { style: 'display:flex; align-items:center; gap: 10px; width: 100%;' },
+      [
+        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--n-text-color-3);' }, label),
+        h('div', { style: 'height: 1px; flex: 1; background: var(--n-divider-color, var(--n-border-color)); opacity: 0.9;' }),
+      ],
+    ),
+    disabled: true,
+  }
+}
+
+const addChildOptions = computed(() => {
+  const libMap = new Map<string, (typeof BLOCK_LIBRARY)[number]>()
+  BLOCK_LIBRARY.forEach((it) => libMap.set(it.type as unknown as string, it))
+
+  const out: MenuOption[] = []
+  const used = new Set<string>()
+
+  const groups: Array<{ key: string, label: string, types: readonly string[] }> = [
+    { key: 'live', label: '直播与日程', types: ['liveStatus', 'streamSchedule'] },
+    { key: 'profile', label: '资料与品牌', types: ['profile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'] },
+    { key: 'content', label: '内容与媒体', types: ['videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'] },
+    { key: 'social', label: '社交与运营', types: ['socialLinks', 'links', 'buttons', 'supporter', 'feedback'] },
+    { key: 'base', label: '布局与基础', types: ['layout', 'heading', 'text', 'richText', 'alert', 'marquee', 'countdown', 'divider', 'spacer', 'footer'] },
+  ]
+
+  groups.forEach((g) => {
+    const groupOptions: MenuOption[] = []
+    g.types.forEach((type) => {
+      if (!libMap.has(type)) return
+      groupOptions.push(makeBlockOption(type, libMap))
+      used.add(type)
+    })
+    if (!groupOptions.length) return
+    out.push(makeMenuDividerLabel(g.label, g.key))
+    out.push(...groupOptions)
+  })
+
+  const rest = BLOCK_LIBRARY
+    .map(it => it.type as unknown as string)
+    .filter(type => !used.has(type))
+    .sort((a, b) => (libMap.get(a)?.label ?? a).localeCompare(libMap.get(b)?.label ?? b))
+  if (rest.length) {
+    out.push(makeMenuDividerLabel('其他', 'rest'))
+    rest.forEach((type) => out.push(makeBlockOption(type, libMap)))
+  }
+
+  return out
+})
 
 function addChild(type: BlockType) {
   const node = createBlockNode(type, createId())
@@ -209,6 +272,12 @@ function addChild(type: BlockType) {
   } else {
     selectedLeafId.value = node.id
   }
+}
+
+function handleAddChildMenuSelect(key: string) {
+  if (!blockTypeSet.has(key)) return
+  addChild(key as any)
+  showAddChildMenu.value = false
 }
 
 function enterLayout(id: string) {
@@ -277,76 +346,84 @@ function pasteFromClipboard(afterId?: string) {
         </NBreadcrumb>
       </NSpace>
 
-      <NDropdown
-        trigger="click"
-        :options="addChildOptions"
-        @select="(key) => addChild(key as any)"
-      >
-        <NButton size="tiny" type="primary" secondary>
-          <template #icon>
-            <NIcon><AddCircleOutline /></NIcon>
-          </template>
-          添加子区块
-        </NButton>
-      </NDropdown>
+      <NPopover v-model:show="showAddChildMenu" trigger="click" placement="bottom-end">
+        <template #trigger>
+          <NButton size="tiny" type="primary" secondary>
+            <template #icon>
+              <NIcon><AddCircleOutline /></NIcon>
+            </template>
+            添加子区块
+          </NButton>
+        </template>
+        <NScrollbar style="max-height: 360px; width: 290px">
+          <NMenu
+            :options="addChildOptions"
+            :indent="18"
+            :root-indent="18"
+            :node-props="(opt: any) => String(opt?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
+            @update:value="(key) => handleAddChildMenuSelect(String(key))"
+          />
+        </NScrollbar>
+      </NPopover>
     </NFlex>
 
-    <NFlex :wrap="false" style="gap: 12px">
+    <NFlex :wrap="false" style="gap: 8px">
       <div style="flex: 1; min-width: 0">
-        <NText strong style="display:block; margin-bottom: 8px">
-          布局设置
-        </NText>
-        <NForm label-placement="top" size="small">
-          <PropsGrid :min-item-width="200">
-            <NFormItem label="类型">
-              <NSelect
-                v-model:value="containerProps.layout"
-                size="small"
-                style="width: 100%"
-                :options="[
-                  { label: '横向(Row)', value: 'row' },
-                  { label: '竖向(Column)', value: 'column' },
-                  { label: '网格(Grid)', value: 'grid' },
-                ]"
-              />
-            </NFormItem>
-            <NFormItem label="最大宽度">
-              <NInput
-                v-model:value="containerProps.maxWidth"
-                size="small"
-                style="width: 100%"
-                placeholder="例如 100% / 480px"
-              />
-            </NFormItem>
-            <NFormItem v-if="containerProps.layout === 'row'" label="自动换行">
-              <NFlex justify="end">
-                <NSwitch v-model:value="containerProps.wrap" size="small" />
-              </NFlex>
-            </NFormItem>
-            <NFormItem v-else-if="containerProps.layout === 'grid'" label="列数（1~12）">
-              <NInputNumber v-model:value="containerProps.columns" size="small" :min="1" :max="12" style="width: 100%" />
-            </NFormItem>
-            <NFormItem label="横向对齐">
-              <NSelect
-                v-model:value="horizontalAlignModel"
-                size="small"
-                style="width: 100%"
-                :options="horizontalAlignOptions"
-              />
-            </NFormItem>
-            <NFormItem label="纵向对齐">
-              <NSelect
-                v-model:value="verticalAlignModel"
-                size="small"
-                style="width: 100%"
-                :options="verticalAlignOptions"
-              />
-            </NFormItem>
-            <NFormItem label="间距 gap（px）">
-              <NInputNumber v-model:value="containerProps.gap" size="small" :min="0" :max="80" style="width: 100%" />
-            </NFormItem>
-          </PropsGrid>
-        </NForm>
+        <NCollapse v-model:expanded-names="layoutExpanded" style="margin-bottom: 12px">
+          <NCollapseItem name="layout" title="布局设置">
+            <NForm label-placement="top" size="small">
+              <PropsGrid :min-item-width="120">
+                <NFormItem label="类型">
+                  <NSelect
+                    v-model:value="containerProps.layout"
+                    size="small"
+                    style="width: 100%"
+                    :options="[
+                      { label: '横向(Row)', value: 'row' },
+                      { label: '竖向(Column)', value: 'column' },
+                      { label: '网格(Grid)', value: 'grid' },
+                    ]"
+                  />
+                </NFormItem>
+                <NFormItem label="最大宽度">
+                  <NInput
+                    v-model:value="containerProps.maxWidth"
+                    size="small"
+                    style="width: 100%"
+                    placeholder="例如 100% / 480px"
+                  />
+                </NFormItem>
+                <NFormItem v-if="containerProps.layout === 'row'" label="自动换行">
+                  <NFlex justify="end">
+                    <NSwitch v-model:value="containerProps.wrap" size="small" />
+                  </NFlex>
+                </NFormItem>
+                <NFormItem v-else-if="containerProps.layout === 'grid'" label="列数（1~12）">
+                  <NInputNumber v-model:value="containerProps.columns" size="small" :min="1" :max="12" style="width: 100%" />
+                </NFormItem>
+                <NFormItem label="横向对齐">
+                  <NSelect
+                    v-model:value="horizontalAlignModel"
+                    size="small"
+                    style="width: 100%"
+                    :options="horizontalAlignOptions"
+                  />
+                </NFormItem>
+                <NFormItem label="纵向对齐">
+                  <NSelect
+                    v-model:value="verticalAlignModel"
+                    size="small"
+                    style="width: 100%"
+                    :options="verticalAlignOptions"
+                  />
+                </NFormItem>
+                <NFormItem label="间距 gap（px）">
+                  <NInputNumber v-model:value="containerProps.gap" size="small" :min="0" :max="80" style="width: 100%" />
+                </NFormItem>
+              </PropsGrid>
+            </NForm>
+          </NCollapseItem>
+        </NCollapse>
 
         <NText strong style="display:block; margin: 12px 0 8px">
           子区块（{{ childrenModel.length }}）
@@ -373,7 +450,6 @@ function pasteFromClipboard(afterId?: string) {
                 <div class="label">
                   <span class="truncate">
                     {{ getBlockLabel(b.type) }}
-                    <span v-if="b.type === 'layout'" style="opacity:0.7">（进入）</span>
                   </span>
                 </div>
 
@@ -429,7 +505,7 @@ function pasteFromClipboard(afterId?: string) {
           子区块属性
         </NText>
         <NAlert v-if="!selectedLeaf" type="info" :show-icon="true">
-          选择一个非布局的子区块进行编辑；布局容器会直接进入下一层。
+          选择一个子区块进行编辑
         </NAlert>
         <BlockPropsForm v-else :block="selectedLeaf" />
       </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlockNode } from '@/features/user-page/block/schema'
+import type { BlockNode } from '@/apps/user-page/block/schema'
 import draggable from 'vuedraggable-es'
 import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
 import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText } from 'naive-ui'

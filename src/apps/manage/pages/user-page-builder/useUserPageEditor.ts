@@ -1,8 +1,8 @@
 import { useAccount } from '@/api/account'
-import { fetchMyUserPagesState } from '@/features/user-page/api'
-import type { BlockPageProject } from '@/features/user-page/block/schema'
-import { listContribPageRefs, getContribPageImporter } from '@/features/user-page/contrib/registry'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/features/user-page/types'
+import { fetchMyUserPagesState } from '@/apps/user-page/api'
+import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import { listContribPageRefs, getContribPageImporter } from '@/apps/user-page/contrib/registry'
+import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { debounceFilter, useRefHistory } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
@@ -35,8 +35,12 @@ export function useUserPageEditor() {
   const lastSavedAt = ref<number | null>(null)
   const lastSavedSnapshot = ref<string>('')
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
+  let validationTimer: ReturnType<typeof setTimeout> | null = null
   let isSanitizingJson = false
   let hasNotifiedJsonSanitized = false
+
+  const validationTick = ref(0)
+  const liveValidationErrors = ref<string[] | null>(null)
 
   const settings = ref<UserPagesSettingsV1>({
     version: 1,
@@ -385,6 +389,21 @@ export function useUserPageEditor() {
       }
       isDirty.value = snapshot !== lastSavedSnapshot.value
 
+      if (!(isLoading.value || isSaving.value || isAutoSaving.value)) {
+        if (validationTimer) clearTimeout(validationTimer)
+        validationTimer = setTimeout(() => {
+          validationTimer = null
+          validationTick.value += 1
+          try {
+            validateAll(settings.value)
+            liveValidationErrors.value = null
+          } catch (e) {
+            const msg = (e as Error).message || String(e)
+            liveValidationErrors.value = msg.split('\n').filter(Boolean)
+          }
+        }, 1600)
+      }
+
       if (!autoSaveEnabled.value) return
       if (!isDirty.value) return
       if (isLoading.value || isSaving.value || isAutoSaving.value) return
@@ -457,6 +476,8 @@ export function useUserPageEditor() {
   function destroy() {
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
     autoSaveTimer = null
+    if (validationTimer) clearTimeout(validationTimer)
+    validationTimer = null
   }
 
   return {
@@ -482,6 +503,8 @@ export function useUserPageEditor() {
     saveStatusText,
 
     settings,
+    validationTick,
+    liveValidationErrors,
 
     currentKey,
     currentLabel,

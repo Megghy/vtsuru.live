@@ -1,5 +1,5 @@
-import type { BlockNode, BlockPageProject } from '@/features/user-page/block/schema'
-import type { UserPagesSettingsV1 } from '@/features/user-page/types'
+import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { toRaw } from 'vue'
 
 export function createId() {
@@ -38,6 +38,7 @@ export function cloneBlockNode(block: BlockNode): BlockNode {
   const cloned: BlockNode = {
     id: createId(),
     type: block.type,
+    name: block.name,
     hidden: block.hidden,
     props: block.props === undefined ? undefined : deepCloneJson(block.props),
   }
@@ -179,6 +180,58 @@ export function isEmptyBlock(block: BlockNode): boolean {
       || !!propsObj.avatarFile
       || !isEmptyText(propsObj.displayName)
       || !isEmptyText(propsObj.bio)
+    return !hasAny
+  }
+  if (block.type === 'tags') {
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.text === 'string' && it.text.trim().length)
+    return !hasAny
+  }
+  if (block.type === 'socialLinks') {
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    return !hasAny
+  }
+  if (block.type === 'videoList') {
+    const source = String(propsObj.source || 'manual')
+    if (source === 'userIndex') return false
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    return !hasAny
+  }
+  if (block.type === 'musicPlayer') {
+    const url = typeof propsObj.url === 'string' ? propsObj.url.trim() : ''
+    return url.length === 0
+  }
+  if (block.type === 'faq') {
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.q === 'string' && it.q.trim().length)
+      || items.some((it: any) => typeof it?.a === 'string' && it.a.trim().length)
+    return !hasAny
+  }
+  if (block.type === 'milestone') {
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.date === 'string' && it.date.trim().length)
+      || items.some((it: any) => typeof it?.title === 'string' && it.title.trim().length)
+      || items.some((it: any) => typeof it?.description === 'string' && it.description.trim().length)
+    return !hasAny
+  }
+  if (block.type === 'quote') {
+    return isEmptyText(propsObj.text)
+  }
+  if (block.type === 'marquee') {
+    return isEmptyText(propsObj.text)
+  }
+  if (block.type === 'countdown') {
+    return isEmptyText(propsObj.target)
+  }
+  if (block.type === 'feedback') {
+    const url = typeof propsObj.url === 'string' ? propsObj.url.trim() : ''
+    return url.length === 0
+  }
+  if (block.type === 'supporter') {
+    const items = Array.isArray(propsObj.items) ? propsObj.items : []
+    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
     return !hasAny
   }
   return false
