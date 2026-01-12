@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type {
+  GlobalThemeOverrides,
   MenuOption,
 } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
@@ -44,11 +45,12 @@ import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchUserPagesSettingsByUserId } from '@/features/user-page/api'
+import { getPageBackgroundCssVars, resolvePageBackground } from '@/features/user-page/background'
 import { validateBlockPageProject } from '@/features/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/features/user-page/types'
 import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { hexToRgba, isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import '@/apps/user/styles/user-page.css'
 
 // --- 响应式状态和常量 ---
@@ -95,12 +97,6 @@ function renderIcon(icon: unknown) {
   return () => h(NIcon, null, { default: () => h(icon as any) })
 }
 
-function getUploadedFilePath(v: unknown): string {
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return ''
-  const path = (v as any).path
-  return typeof path === 'string' ? path : ''
-}
-
 const userPageSlug = computed(() => {
   const v = route.params.pageSlug
   return typeof v === 'string' && v.length ? v : undefined
@@ -140,70 +136,85 @@ const pageNaiveTheme = computed(() => {
   return undefined
 })
 
+const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  // 只有在启用了背景图/毛玻璃模式时才应用特殊的主题覆盖
+  const hasBg = !!layoutPageBg.value
+  if (!hasBg) return {}
+
+  const vars = layoutPageBgVars.value
+  const surfaceBg = vars['--user-page-ui-surface-bg']
+  const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
+  const borderColor = vars['--user-page-border-color']
+
+  return {
+    common: {
+      borderColor,
+      dividerColor: borderColor,
+    },
+    Card: {
+      color: surfaceBg,
+      colorEmbedded: surfaceBgHover,
+      borderColor,
+    },
+    List: {
+      color: 'transparent',
+      listItemColor: 'transparent',
+      borderColor,
+    },
+    Button: {
+      color: surfaceBg,
+      colorHover: surfaceBgHover,
+    },
+    // 可以根据需要继续添加其他组件的透明化适配
+  }
+})
+
 const themeSwitchTitle = computed(() => {
   if (pageThemeMode.value === 'auto') return '切换亮/暗色主题'
   return pageThemeMode.value === 'dark' ? '该页面强制使用暗色主题' : '该页面强制使用亮色主题'
 })
 
-const layoutPageBg = computed(() => {
+const effectiveIsDark = computed(() => {
+  if (pageThemeMode.value === 'dark') return true
+  if (pageThemeMode.value === 'light') return false
+  return isDarkMode.value
+})
+
+const pageBgOverride = computed(() => {
+  const name = route.name?.toString()
+  if (name !== 'user-index' && name !== 'user-page') return null
+  return resolvePageBackground((currentUserPageConfig.value as any)?.background)
+})
+
+const globalBg = computed(() => resolvePageBackground(userPagesSettings.value?.background))
+
+const blockThemeBg = computed(() => {
   if (currentUserPageMode.value !== 'block') return null
   const v = currentBlockValidation.value
   if (!v || !v.ok) return null
+  return resolvePageBackground(v.project.theme)
+})
 
-  const theme = v.project.theme as any
-  if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return null
-
-  const type = (theme.pageBackgroundType === 'color' || theme.pageBackgroundType === 'image') ? theme.pageBackgroundType : 'none'
-  const coverSidebar = theme.pageBackgroundCoverSidebar !== false
-  if (!coverSidebar) return null
-  const blurMode = (theme.pageBackgroundBlurMode === 'background' || theme.pageBackgroundBlurMode === 'glass') ? theme.pageBackgroundBlurMode : 'none'
-  const fit = (theme.pageBackgroundImageFit === 'contain' || theme.pageBackgroundImageFit === 'fill' || theme.pageBackgroundImageFit === 'none')
-    ? theme.pageBackgroundImageFit
-    : 'cover'
-  const blur = Number(theme.pageBackgroundBlur)
-  const blurPx = Number.isFinite(blur) ? Math.min(40, Math.max(0, Math.round(blur))) : 14
-  const color = typeof theme.pageBackgroundColor === 'string' ? theme.pageBackgroundColor : 'transparent'
-  const imagePath = getUploadedFilePath(theme.pageBackgroundImageFile)
-  const enabled = type !== 'none' && (type !== 'image' || !!imagePath)
-
-  return {
-    enabled,
-    type,
-    coverSidebar,
-    blurMode,
-    fit,
-    blurPx,
-    color,
-    imagePath,
+const layoutPageBg = computed(() => {
+  const name = route.name?.toString()
+  if (name === 'user-index' || name === 'user-page') {
+    if (pageBgOverride.value) return pageBgOverride.value.coverSidebar ? pageBgOverride.value : null
+    if (globalBg.value) return globalBg.value.coverSidebar ? globalBg.value : null
+    if (blockThemeBg.value) return blockThemeBg.value.coverSidebar ? blockThemeBg.value : null
+    return null
   }
+  if (globalBg.value) return globalBg.value.coverSidebar ? globalBg.value : null
+  return null
 })
 
 const layoutPageBgVars = computed(() => {
   const bg = layoutPageBg.value
-  if (!bg || !bg.enabled) return {}
-  const img = bg.type === 'image' ? bg.imagePath.trim() : ''
-  const safeUrl = img ? img.replaceAll('"', '\\"') : ''
-  const glassColor = bg.type === 'color' && bg.color 
-    ? hexToRgba(bg.color, 0.55) 
-    : (bg.type === 'image' ? 'transparent' : null)
-  const mode = (currentBlockValidation.value && currentBlockValidation.value.ok)
-    ? (currentBlockValidation.value.project.theme as any)?.pageThemeMode
-    : undefined
-  const effectiveIsDark = mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
-  const scrimAlpha = bg.blurMode === 'glass' ? 0.12 : (bg.blurMode === 'background' ? 0.26 : 0.34)
-  const scrim = effectiveIsDark ? `rgba(0, 0, 0, ${scrimAlpha})` : `rgba(255, 255, 255, ${scrimAlpha})`
-  return {
-    '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
-    '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
-    '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
-    '--user-page-bg-blur': `${bg.blurPx}px`,
-    '--glass-surface-bg': glassColor || 'rgba(255, 255, 255, 0.55)',
-    '--user-page-bg-scrim': scrim,
-  } as Record<string, string>
+  if (!bg) return {}
+  return getPageBackgroundCssVars(bg, effectiveIsDark.value)
 })
 
 const layoutPageBgClass = computed(() => ({
-  'bg-host': !!layoutPageBg.value?.enabled,
+  'bg-host': !!layoutPageBg.value,
   'bg-blur': layoutPageBg.value?.blurMode === 'background',
   glass: layoutPageBg.value?.blurMode === 'glass',
 }))
@@ -438,6 +449,7 @@ watch(
   <NConfigProvider
     v-else
     :theme="pageNaiveTheme"
+    :theme-overrides="pageThemeOverrides"
   >
     <NLayout
       class="page-root"
@@ -780,7 +792,7 @@ watch(
 .page-root.bg-host::before {
   content: "";
   position: absolute;
-  inset: -24px;
+  inset: calc(-24px - var(--user-page-bg-blur, 0px));
   background-color: var(--user-page-bg-color, transparent);
   background-image: var(--user-page-bg-image, none);
   background-repeat: no-repeat;

@@ -163,6 +163,8 @@ export function useUserPageEditor() {
 
   const uploads = useUserPageUploads({
     currentProject,
+    settings,
+    currentPage,
     ensurePropsObject: blocks.ensurePropsObject,
     notify: {
       success: message.success,

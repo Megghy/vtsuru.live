@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bunx --bun vite",
     "build": "vite build",
+    "typecheck": "vue-tsc --noEmit",
     "lint": "oxlint && eslint .",
     "lint:fix": "oxlint --fix && eslint . --fix",
     "knip": "knip"
@@ -91,6 +92,7 @@
     "@types/uuid": "^11.0.0",
     "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-vue-jsx": "^5.1.1",
+    "@volar/typescript": "^2.4.27",
     "@vue-vine/eslint-config": "^1.1.11",
     "eslint": "^9.39.1",
     "eslint-plugin-oxlint": "^1.28.0",
@@ -99,6 +101,7 @@
     "stylus": "^0.64.0",
     "typescript": "^5.9.3",
     "vite-plugin-cdn-import": "^1.0.1",
+    "vue-tsc": "^3.2.2",
     "vue-vine": "^1.7.23"
   }
 }

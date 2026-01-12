@@ -1,8 +1,9 @@
 import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import type { BlockNode, BlockPageProject } from '@/features/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/features/user-page/block/schema'
+import type { UserPageConfig, UserPagesSettingsV1 } from '@/features/user-page/types'
 import { uploadFiles } from '@/shared/services/fileUpload'
-import type { ComputedRef } from 'vue'
+import type { Ref } from 'vue'
 import { ref } from 'vue'
 
 type UploadKey = 'imageFile' | 'avatarFile'
@@ -12,9 +13,13 @@ type PendingUploadContext =
   | { kind: 'galleryItem', blockId: string, itemIndex: number }
   | { kind: 'galleryBulk', blockId: string }
   | { kind: 'pageBackground' }
+  | { kind: 'globalBackground' }
+  | { kind: 'pageBackgroundOverride' }
 
 export interface UseUserPageUploadsOptions {
-  currentProject: ComputedRef<BlockPageProject | null>
+  currentProject: Ref<BlockPageProject | null>
+  settings: Ref<UserPagesSettingsV1>
+  currentPage: Ref<UserPageConfig>
   ensurePropsObject: (block: BlockNode) => Record<string, any>
   notify: {
     success: (content: string) => void
@@ -108,6 +113,24 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     uploadInput.value?.click()
   }
 
+  function triggerUploadGlobalBackground() {
+    if (!uploadInput.value) {
+      opts.notify.error('上传控件未就绪，请稍后重试')
+      return
+    }
+    pendingUpload.value = { kind: 'globalBackground' }
+    uploadInput.value?.click()
+  }
+
+  function triggerUploadPageBackgroundOverride() {
+    if (!uploadInput.value) {
+      opts.notify.error('上传控件未就绪，请稍后重试')
+      return
+    }
+    pendingUpload.value = { kind: 'pageBackgroundOverride' }
+    uploadInput.value?.click()
+  }
+
   async function onUploadChange(ev: Event) {
     const input = ev.target as HTMLInputElement
     const files = input.files ? Array.from(input.files) : []
@@ -117,15 +140,16 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('未找到上传上下文，请重新点击上传按钮')
       return
     }
-    const project = opts.currentProject.value
-    if (!project) {
-      opts.notify.error('当前页不是区块模式，无法上传')
-      return
-    }
 
     const ctx = pendingUpload.value
     pendingUpload.value = null
     const isBulk = ctx.kind === 'galleryBulk'
+    const requiresProject = ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'galleryItem' || ctx.kind === 'galleryBulk'
+    const project = requiresProject ? opts.currentProject.value : null
+    if (requiresProject && !project) {
+      opts.notify.error('当前页不是区块模式，无法上传')
+      return
+    }
     if (!isBulk && files.length > 1) {
       opts.notify.error('请选择单个图片文件')
       return
@@ -139,14 +163,14 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       return
     }
 
-    if (ctx.kind !== 'pageBackground') {
-      const block = findBlockById(project.blocks, ctx.blockId)
+    if (ctx.kind !== 'pageBackground' && ctx.kind !== 'globalBackground' && ctx.kind !== 'pageBackgroundOverride') {
+      const block = findBlockById(project!.blocks, ctx.blockId)
       if (!block) {
         opts.notify.error('找不到要上传到的区块（可能已被删除）')
         return
       }
 
-      const currentImages = countImagesInBlocks(project.blocks, false)
+      const currentImages = countImagesInBlocks(project!.blocks, false)
       const willAddNewImage = (() => {
         const propsObj = opts.ensurePropsObject(block)
         if (ctx.kind === 'block') {
@@ -185,11 +209,19 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       const uploadedList = await uploadFiles(isBulk ? files : files[0], UserFileTypes.Image, UserFileLocation.Local)
       if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
       if (ctx.kind === 'pageBackground') {
-        project.theme ??= {}
-        ;(project.theme as any).pageBackgroundImageFile = uploadedList[0]
-        if ((project.theme as any).pageBackgroundType !== 'image') (project.theme as any).pageBackgroundType = 'image'
+        project!.theme ??= {}
+        ;(project!.theme as any).pageBackgroundImageFile = uploadedList[0]
+        if ((project!.theme as any).pageBackgroundType !== 'image') (project!.theme as any).pageBackgroundType = 'image'
+      } else if (ctx.kind === 'globalBackground') {
+        opts.settings.value.background ??= {}
+        ;(opts.settings.value.background as any).pageBackgroundImageFile = uploadedList[0]
+        if ((opts.settings.value.background as any).pageBackgroundType !== 'image') (opts.settings.value.background as any).pageBackgroundType = 'image'
+      } else if (ctx.kind === 'pageBackgroundOverride') {
+        opts.currentPage.value.background ??= {}
+        ;(opts.currentPage.value.background as any).pageBackgroundImageFile = uploadedList[0]
+        if ((opts.currentPage.value.background as any).pageBackgroundType !== 'image') (opts.currentPage.value.background as any).pageBackgroundType = 'image'
       } else {
-        const block = findBlockById(project.blocks, ctx.blockId)
+        const block = findBlockById(project!.blocks, ctx.blockId)
         if (!block) throw new Error('找不到要上传到的区块（可能已被删除）')
 
         if (ctx.kind === 'block') {
@@ -243,6 +275,18 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     delete (project.theme as any).pageBackgroundImageFile
   }
 
+  function clearGlobalBackgroundImageFile() {
+    const bg = opts.settings.value.background as any
+    if (!bg) return
+    delete bg.pageBackgroundImageFile
+  }
+
+  function clearPageBackgroundOverrideImageFile() {
+    const bg = opts.currentPage.value.background as any
+    if (!bg) return
+    delete bg.pageBackgroundImageFile
+  }
+
   return {
     isUploading,
     uploadInput,
@@ -251,9 +295,13 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     triggerUploadGalleryItem,
     triggerUploadGalleryBulk,
     triggerUploadPageBackground,
+    triggerUploadGlobalBackground,
+    triggerUploadPageBackgroundOverride,
     onUploadChange,
     clearUploadedFile,
     clearUploadedGalleryItemFile,
     clearPageBackgroundImageFile,
+    clearGlobalBackgroundImageFile,
+    clearPageBackgroundOverrideImageFile,
   }
 }

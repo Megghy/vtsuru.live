@@ -43,25 +43,23 @@ async function get() {
   <div class="video-collect-view">
     <NCard size="small" :bordered="true" title="视频征集">
       <NSpin :show="isLoading">
-        <NFlex justify="center">
-          <NEmpty
-            v-if="videoTables.length === 0"
-            description="没有正在进行的征集表"
-          />
-          <NList v-else>
-            <NListItem
-              v-for="item in videoTables"
-              :key="item.id"
-            >
-              <VideoCollectInfoCard
-                :item="item"
-                can-click
-                style="width: 100%"
-                from="user"
-              />
-            </NListItem>
-          </NList>
-        </NFlex>
+        <template v-if="videoTables.length === 0">
+          <NFlex justify="center" style="padding: 20px 0">
+            <NEmpty description="没有正在进行的征集表" />
+          </NFlex>
+        </template>
+        <NList v-else>
+          <NListItem
+            v-for="item in videoTables"
+            :key="item.id"
+          >
+            <VideoCollectInfoCard
+              :item="item"
+              can-click
+              from="user"
+            />
+          </NListItem>
+        </NList>
       </NSpin>
     </NCard>
   </div>

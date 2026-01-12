@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { NAlert, NButton, NCard, NFlex, NIcon, NModal, NPopconfirm, NScrollbar, NSpace, NSplit, NSpin, NSwitch, NText } from 'naive-ui'
-import { computed, onBeforeUnmount, onMounted, provide, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, watchEffect } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ArrowRedoOutline, ArrowUndoOutline, ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import { useEventListener, useStorage } from '@vueuse/core'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import BlockPageRenderer from '@/features/user-page/block/BlockPageRenderer.vue'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
+import { getPageBackgroundCssVars, resolvePageBackground } from '@/features/user-page/background'
 import { UserPageEditorKey } from './user-page-builder/context'
 import { USER_PAGE_BUILDER_SPLIT_CENTER_SIZE_KEY, USER_PAGE_BUILDER_SPLIT_LEFT_SIZE_KEY } from './user-page-builder/storageKeys'
 import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
 import PageManager from './user-page-builder/components/PageManager.vue'
+import BackgroundSettingsEditor from './user-page-builder/components/BackgroundSettingsEditor.vue'
+import type {BackgroundSettingsTarget} from './user-page-builder/components/BackgroundSettingsEditor.vue';
 import BlockPropertyEditor from './user-page-builder/components/BlockPropertyEditor.vue'
 import PhonePreview from './user-page-builder/components/PhonePreview.vue'
-import { hexToRgba, isDarkMode } from '@/shared/utils'
+import { isDarkMode } from '@/shared/utils'
 
 const editor = useUserPageEditor()
 provide(UserPageEditorKey, editor)
@@ -22,6 +25,7 @@ const route = useRoute()
 const router = useRouter()
 const leftSize = useStorage<string | number>(USER_PAGE_BUILDER_SPLIT_LEFT_SIZE_KEY, '220px')
 const centerSize = useStorage<string | number>(USER_PAGE_BUILDER_SPLIT_CENTER_SIZE_KEY, '640px')
+const globalBgModal = ref(false)
 
 const isSidebarCollapsed = computed(() => leftSize.value === '52px')
 let lastExpandedSidebarSize = '220px'
@@ -29,63 +33,43 @@ watchEffect(() => {
   if (!isSidebarCollapsed.value && typeof leftSize.value === 'string' && leftSize.value !== '52px') lastExpandedSidebarSize = leftSize.value
 })
 
+const globalBgTarget: BackgroundSettingsTarget = {
+  get: () => (editor.settings.value as any).background,
+  ensure: () => ((editor.settings.value as any).background ??= {}),
+  uploadImage: editor.triggerUploadGlobalBackground,
+  clearImage: editor.clearGlobalBackgroundImageFile,
+}
+
 function isImagePath(path?: string) {
   if (!path) return false
   const p = path.toLowerCase().split('?')[0]?.split('#')[0] ?? ''
   return /\.(?:png|jpe?g|gif|webp|svg)$/.test(p)
 }
 
-function getUploadedFilePath(v: unknown): string {
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return ''
-  const path = (v as any).path
-  return typeof path === 'string' ? path : ''
-}
+const previewEffectiveIsDark = computed(() => {
+  const mode = (editor.currentProject.value?.theme as any)?.pageThemeMode
+  return mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+})
 
 const previewBg = computed(() => {
-  const p = editor.currentProject.value
-  if (!p) return { enabled: false, type: 'none' as const, coverSidebar: true, blurMode: 'none' as const, blurPx: 0, color: 'transparent', imagePath: '' }
-  const theme: any = p.theme ?? {}
-  const type = (theme.pageBackgroundType === 'color' || theme.pageBackgroundType === 'image') ? theme.pageBackgroundType : 'none'
-  const coverSidebar = theme.pageBackgroundCoverSidebar !== false
-  const blurMode = (theme.pageBackgroundBlurMode === 'background' || theme.pageBackgroundBlurMode === 'glass') ? theme.pageBackgroundBlurMode : 'none'
-  const fit = (theme.pageBackgroundImageFit === 'contain' || theme.pageBackgroundImageFit === 'fill' || theme.pageBackgroundImageFit === 'none')
-    ? theme.pageBackgroundImageFit
-    : 'cover'
-  const blur = Number(theme.pageBackgroundBlur)
-  const blurPx = Number.isFinite(blur) ? Math.min(40, Math.max(0, Math.round(blur))) : 14
-  const color = typeof theme.pageBackgroundColor === 'string' ? theme.pageBackgroundColor : 'transparent'
-  const imagePath = getUploadedFilePath(theme.pageBackgroundImageFile)
-  const enabled = type !== 'none' && (type !== 'image' || !!imagePath)
-  return { enabled, type, coverSidebar, blurMode, blurPx, color, imagePath, fit }
+  const pageOverride = resolvePageBackground((editor.currentPage.value as any)?.background)
+  if (pageOverride) return pageOverride
+  const globalBg = resolvePageBackground((editor.settings.value as any)?.background)
+  if (globalBg) return globalBg
+  return resolvePageBackground(editor.currentProject.value?.theme)
 })
 
 const previewBgVars = computed(() => {
   const bg = previewBg.value
-  if (!bg.enabled) return {}
-  const img = bg.type === 'image' ? bg.imagePath.trim() : ''
-  const safeUrl = img ? img.replaceAll('"', '\\"') : ''
-  const mode = (editor.currentProject.value?.theme as any)?.pageThemeMode
-  const effectiveIsDark = mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
-  const scrimAlpha = bg.blurMode === 'glass' ? 0.12 : (bg.blurMode === 'background' ? 0.26 : 0.34)
-  const scrim = effectiveIsDark ? `rgba(0, 0, 0, ${scrimAlpha})` : `rgba(255, 255, 255, ${scrimAlpha})`
-  const glassColor = bg.type === 'color' && bg.color
-    ? hexToRgba(bg.color, 0.55)
-    : (bg.type === 'image' ? 'transparent' : null)
-  return {
-    '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
-    '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
-    '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
-    '--user-page-bg-blur': `${bg.blurPx}px`,
-    '--user-page-bg-scrim': scrim,
-    '--glass-surface-bg': glassColor || 'rgba(255, 255, 255, 0.55)',
-  } as Record<string, string>
+  if (!bg) return {}
+  return getPageBackgroundCssVars(bg, previewEffectiveIsDark.value)
 })
 
 const previewBgClass = computed(() => ({
   'preview-bg-host': true,
-  enabled: previewBg.value.enabled,
-  glass: previewBg.value.blurMode === 'glass',
-  'bg-blur': previewBg.value.blurMode === 'background',
+  enabled: !!previewBg.value,
+  glass: previewBg.value?.blurMode === 'glass',
+  'bg-blur': previewBg.value?.blurMode === 'background',
 }))
 
 function beforeUnloadHandler(e: BeforeUnloadEvent) {
@@ -166,6 +150,9 @@ onBeforeRouteLeave(() => {
           </NButton>
           <NButton size="small" secondary @click="editor.resourcesModal.value = true">
             资源
+          </NButton>
+          <NButton size="small" secondary @click="globalBgModal = true">
+            全局背景
           </NButton>
           <NPopconfirm :disabled="editor.isSaving.value" @positive-click="editor.clearDraft">
             <template #trigger>
@@ -263,10 +250,10 @@ onBeforeRouteLeave(() => {
 
                   <NScrollbar class="pane-scroll">
                     <div style="height: 100%; min-height: 0; display: flex; flex-direction: column">
-                      <PhonePreview style="flex: 1; min-height: 0" :transparent="previewBg.enabled">
+                      <PhonePreview style="flex: 1; min-height: 0" :transparent="!!previewBg">
                         <div :class="previewBgClass" :style="previewBgVars">
                           <template v-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-                            <div v-if="previewBg.enabled && previewBg.blurMode === 'glass'" class="preview-glass-surface">
+                            <div v-if="previewBg?.blurMode === 'glass'" class="preview-glass-surface">
                               <BlockPageRenderer
                                 :project="editor.currentProject.value"
                                 :user-info="editor.account.value"
@@ -383,6 +370,22 @@ onBeforeRouteLeave(() => {
       </NModal>
 
       <NModal
+        v-model:show="globalBgModal"
+        preset="card"
+        title="全局背景（所有页面）"
+        style="width: 720px; max-width: 95vw"
+        :auto-focus="false"
+      >
+        <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+          这里设置的背景会对所有页面生效（包括歌单/日程/提问箱等内置页面）。子页面可单独设置背景覆盖此设置。
+        </NAlert>
+        <BackgroundSettingsEditor
+          :target="globalBgTarget"
+          none-hint="未设置全局背景时，页面会使用默认背景（或由站点主题决定）。"
+        />
+      </NModal>
+
+      <NModal
         v-model:show="editor.publishModal.value"
         preset="card"
         title="发布前检查"
@@ -494,7 +497,7 @@ onBeforeRouteLeave(() => {
 .preview-bg-host.enabled::before {
   content: "";
   position: absolute;
-  inset: -24px;
+  inset: calc(-24px - var(--user-page-bg-blur, 0px));
   background-color: var(--user-page-bg-color, transparent);
   background-image: var(--user-page-bg-image, none);
   background-repeat: no-repeat;
