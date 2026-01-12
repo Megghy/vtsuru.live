@@ -33,6 +33,15 @@
   padding: 14px;
 }
 
+/* 在用户页中，列表项通常不需要额外的内边距，因为内部会有卡片或其他带边距的元素 */
+.user-page .n-list .n-list-item {
+  padding: 0;
+}
+
+.user-page .n-list {
+  background-color: transparent;
+}
+
 .user-muted {
   color: var(--n-text-color-3);
 }
@@ -44,4 +53,3 @@
   letter-spacing: 0.06em;
   color: var(--n-text-color-3);
 }
-

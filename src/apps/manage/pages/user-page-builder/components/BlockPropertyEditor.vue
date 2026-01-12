@@ -5,6 +5,8 @@ import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vu
 import { UserPageEditorKey } from '../context'
 import BlockManager from './BlockManager.vue'
 import BlockTypeEditor from './BlockTypeEditor.vue'
+import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
+import type {BackgroundSettingsTarget} from './BackgroundSettingsEditor.vue';
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
 import PropsGrid from './PropsGrid.vue'
@@ -50,86 +52,6 @@ const capacityStatus = computed(() => {
   return 'success'
 })
 
-const pageBackgroundType = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = theme?.pageBackgroundType
-    return (v === 'color' || v === 'image') ? v : 'none'
-  },
-  set(v: 'none' | 'color' | 'image') {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundType = v
-    if (v === 'color' && typeof theme.pageBackgroundColor !== 'string') theme.pageBackgroundColor = 'rgba(255, 255, 255, 1)'
-    if (v !== 'image') delete theme.pageBackgroundImageFile
-  },
-})
-
-const pageBackgroundColor = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    return typeof theme?.pageBackgroundColor === 'string' ? theme.pageBackgroundColor : 'rgba(255, 255, 255, 1)'
-  },
-  set(v: string) {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundColor = v
-  },
-})
-
-const pageBackgroundCoverSidebar = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    return theme?.pageBackgroundCoverSidebar !== false
-  },
-  set(v: boolean) {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundCoverSidebar = v
-  },
-})
-
-const pageBackgroundImageFit = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = theme?.pageBackgroundImageFit
-    return (v === 'contain' || v === 'fill' || v === 'none') ? v : 'cover'
-  },
-  set(v: 'cover' | 'contain' | 'fill' | 'none') {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundImageFit = v
-  },
-})
-
-const pageBackgroundBlurMode = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = theme?.pageBackgroundBlurMode
-    return (v === 'background' || v === 'glass') ? v : 'none'
-  },
-  set(v: 'none' | 'background' | 'glass') {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundBlurMode = v
-    if (v !== 'none' && (typeof theme.pageBackgroundBlur !== 'number' || !Number.isFinite(theme.pageBackgroundBlur))) theme.pageBackgroundBlur = 14
-  },
-})
-
-const pageBackgroundBlur = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = Number(theme?.pageBackgroundBlur)
-    if (!Number.isFinite(v)) return 14
-    return Math.min(40, Math.max(0, Math.round(v)))
-  },
-  set(v: number) {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    theme.pageBackgroundBlur = v
-  },
-})
-
 const pageThemeMode = computed({
   get() {
     const theme = editor.currentTheme.value as any
@@ -144,13 +66,23 @@ const pageThemeMode = computed({
   },
 })
 
-const pageBackgroundImagePath = computed(() => {
-  const theme = editor.currentTheme.value as any
-  const f = theme?.pageBackgroundImageFile
-  if (!f || typeof f !== 'object' || Array.isArray(f)) return ''
-  const path = (f as any).path
-  return typeof path === 'string' ? path : ''
-})
+const pageOverrideBgTarget: BackgroundSettingsTarget = {
+  get: () => (editor.currentPage.value as any).background,
+  ensure: () => ((editor.currentPage.value as any).background ??= {}),
+  uploadImage: editor.triggerUploadPageBackgroundOverride,
+  clearImage: editor.clearPageBackgroundOverrideImageFile,
+}
+
+const blockThemeBgTarget: BackgroundSettingsTarget = {
+  get: () => editor.currentTheme.value as any,
+  ensure: () => {
+    const theme = editor.currentTheme.value as any
+    if (!theme) return null
+    return theme
+  },
+  uploadImage: editor.triggerUploadPageBackground,
+  clearImage: editor.clearPageBackgroundImageFile,
+}
 </script>
 
 <template>
@@ -207,6 +139,26 @@ const pageBackgroundImagePath = computed(() => {
               </NFormItem>
             </PropsGrid>
           </NForm>
+        </NCollapseItem>
+
+        <NCollapseItem title="页面背景（可选）" name="page-bg">
+          <NSpace justify="space-between" align="center" style="margin-bottom: 10px">
+            <NText depth="3">
+              不设置时将使用全局背景（或默认背景）。
+            </NText>
+            <NButton
+              size="small"
+              secondary
+              :disabled="!(editor.currentPage.value as any).background"
+              @click="(editor.currentPage.value as any).background = undefined"
+            >
+              使用全局背景
+            </NButton>
+          </NSpace>
+          <BackgroundSettingsEditor
+            :target="pageOverrideBgTarget"
+            none-hint="当前未启用页面背景覆盖。选择“纯色/图片”即可启用。"
+          />
         </NCollapseItem>
       </NCollapse>
 
@@ -342,86 +294,15 @@ const pageBackgroundImagePath = computed(() => {
               </PropsGrid>
 
               <NDivider style="margin: 10px 0">
-                页面全局背景
+                区块页背景（仅区块模式）
               </NDivider>
-
-              <NFormItem label="背景类型">
-                <NRadioGroup v-model:value="pageBackgroundType" size="small" style="width: 100%">
-                  <NRadioButton value="none" style="width: 33.3%; text-align: center">无</NRadioButton>
-                  <NRadioButton value="color" style="width: 33.3%; text-align: center">纯色</NRadioButton>
-                  <NRadioButton value="image" style="width: 33.4%; text-align: center">图片</NRadioButton>
-                </NRadioGroup>
-              </NFormItem>
-
-              <NAlert v-if="pageBackgroundType === 'none'" type="info" :show-icon="true" style="margin-bottom: 12px">
-                不设置全局背景时，页面会使用默认背景（或由站点主题决定）。
+              <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+                仅对“区块模式”页面生效；当页面/全局背景已设置时，会优先使用页面/全局背景。
               </NAlert>
-
-              <template v-else-if="pageBackgroundType === 'color'">
-                <NFormItem label="背景颜色">
-                  <NColorPicker v-model:value="pageBackgroundColor" :modes="['rgb', 'hex']" :show-alpha="true" />
-                </NFormItem>
-              </template>
-
-              <template v-else-if="pageBackgroundType === 'image'">
-                <NFormItem label="背景图片（上传）">
-                  <NSpace align="center">
-                    <NButton size="small" :loading="editor.isUploading.value" @click="editor.triggerUploadPageBackground">
-                      上传背景图
-                    </NButton>
-                    <NButton size="small" secondary :disabled="!pageBackgroundImagePath" @click="editor.clearPageBackgroundImageFile">
-                      清除
-                    </NButton>
-                    <img
-                      v-if="pageBackgroundImagePath"
-                      :src="pageBackgroundImagePath"
-                      alt=""
-                      referrerpolicy="no-referrer"
-                      style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
-                    >
-                  </NSpace>
-                </NFormItem>
-                <NFormItem label="图片填充方式">
-                  <NSelect
-                    v-model:value="pageBackgroundImageFit"
-                    :options="[
-                      { label: '铺满（推荐）', value: 'cover' },
-                      { label: '完整显示', value: 'contain' },
-                      { label: '拉伸填满', value: 'fill' },
-                      { label: '原始大小', value: 'none' },
-                    ]"
-                  />
-                </NFormItem>
-                <NAlert v-if="!pageBackgroundImagePath" type="warning" :show-icon="true" style="margin-bottom: 12px">
-                  请选择并上传一张图片作为背景。
-                </NAlert>
-              </template>
-
-              <template v-if="pageBackgroundType !== 'none'">
-                <PropsGrid :min-item-width="220">
-                  <NFormItem label="覆盖导航区域">
-                    <NFlex justify="end">
-                      <NSwitch v-model:value="pageBackgroundCoverSidebar" size="small" />
-                    </NFlex>
-                  </NFormItem>
-                  <NFormItem label="强度（px）" :show-feedback="false">
-                    <NInputNumber
-                      v-model:value="pageBackgroundBlur"
-                      :min="0"
-                      :max="40"
-                      style="width: 100%"
-                      :disabled="pageBackgroundBlurMode === 'none'"
-                    />
-                  </NFormItem>
-                  <NFormItem class="span-full" label="背景效果">
-                    <NRadioGroup v-model:value="pageBackgroundBlurMode" size="small" style="width: 100%">
-                      <NRadioButton value="none" style="width: 33.3%; text-align: center">无</NRadioButton>
-                      <NRadioButton value="background" style="width: 33.3%; text-align: center">模糊背景</NRadioButton>
-                      <NRadioButton value="glass" style="width: 33.4%; text-align: center">磨砂玻璃</NRadioButton>
-                    </NRadioGroup>
-                  </NFormItem>
-                </PropsGrid>
-              </template>
+              <BackgroundSettingsEditor
+                :target="blockThemeBgTarget"
+                none-hint="未设置区块页背景时，将使用页面/全局背景（如有）或默认背景。"
+              />
             </NForm>
           </NCollapseItem>
         </NCollapse>
