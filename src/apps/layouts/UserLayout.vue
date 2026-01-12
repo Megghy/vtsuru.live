@@ -502,7 +502,7 @@ watch(
                 <NButton
                   type="primary"
                   size="small"
-                  @click="$router.push({ name: 'manage-userPageBuilder' })"
+                  @click="$router.push({ name: 'manage-index' })"
                 >
                   <template #icon>
                     <NIcon :component="WindowWrench20Filled" />
