@@ -38,7 +38,7 @@ function parseNeteaseOutchain(rawUrl: string, height: number) {
   }
 
   const hash = u.hash.replace(/^#/, '')
-  const hashPath = hash.startsWith('/') ? hash : (hash.startsWith('\/') ? hash : hash)
+  const hashPath = hash.startsWith('/') ? hash : (hash.startsWith('/') ? hash : hash)
   const parseFromHash = () => {
     if (!hash) return null
     if (!hash.includes('id=')) return null

@@ -461,7 +461,9 @@ onActivated(async () => {
         <NTabPane name="accept">
           <template #tab>
             <div class="tab-label">
-              <NText type="success">已通过</NText>
+              <NText type="success">
+                已通过
+              </NText>
               <NBadge
                 v-if="acceptVideos.length > 0"
                 :value="acceptVideos.length"
@@ -497,7 +499,9 @@ onActivated(async () => {
         <NTabPane name="reject">
           <template #tab>
             <div class="tab-label">
-              <NText type="error">已拒绝</NText>
+              <NText type="error">
+                已拒绝
+              </NText>
               <NBadge
                 v-if="rejectVideos.length > 0"
                 :value="rejectVideos.length"

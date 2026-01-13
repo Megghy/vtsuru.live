@@ -8,7 +8,6 @@ import {
   NDataTable,
   NDescriptions,
   NDescriptionsItem,
-  NDivider,
   NFlex,
   NLayout,
   NLayoutContent,
@@ -335,35 +334,35 @@ onMounted(async () => {
               size="small"
               :column="2"
             >
-                <NDescriptionsItem
-                  label="用户名"
-                  style="min-width: 100px;"
+              <NDescriptionsItem
+                label="用户名"
+                style="min-width: 100px;"
+              >
+                {{ biliAuth.name ?? '未知' }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="UserId">
+                {{ biliAuth.userId }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="OpenId">
+                {{ biliAuth.openId }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="状态">
+                <NTag
+                  v-if="biliAuth.id > 0"
+                  type="success"
+                  size="small"
                 >
-                  {{ biliAuth.name ?? '未知' }}
-                </NDescriptionsItem>
-                <NDescriptionsItem label="UserId">
-                  {{ biliAuth.userId }}
-                </NDescriptionsItem>
-                <NDescriptionsItem label="OpenId">
-                  {{ biliAuth.openId }}
-                </NDescriptionsItem>
-                <NDescriptionsItem label="状态">
-                  <NTag
-                    v-if="biliAuth.id > 0"
-                    type="success"
-                    size="small"
-                  >
-                    已认证
-                  </NTag>
-                  <NTag
-                    v-else
-                    type="error"
-                    size="small"
-                  >
-                    未认证
-                  </NTag>
-                </NDescriptionsItem>
-              </NDescriptions>
+                  已认证
+                </NTag>
+                <NTag
+                  v-else
+                  type="error"
+                  size="small"
+                >
+                  未认证
+                </NTag>
+              </NDescriptionsItem>
+            </NDescriptions>
           </NCard>
           <NTabs
             v-if="hash"
@@ -373,66 +372,66 @@ onMounted(async () => {
             type="line"
             @update:value="onTabChange"
           >
-              <NTabPane
-                name="points"
-                tab="我的积分"
-                display-directive="show:lazy"
-                @vue:mounted="onAllPointPaneMounted"
+            <NTabPane
+              name="points"
+              tab="我的积分"
+              display-directive="show:lazy"
+              @vue:mounted="onAllPointPaneMounted"
+            >
+              <NFlex
+                justify="end"
+                style="margin-bottom: 10px"
               >
-                <NFlex
-                  justify="end"
-                  style="margin-bottom: 10px"
+                <NButton
+                  size="small"
+                  type="primary"
+                  @click="() => {
+                    tabDataLoaded.points = false;
+                    getAllPoints();
+                  }"
                 >
-                  <NButton
-                    size="small"
-                    type="primary"
-                    @click="() => {
-                      tabDataLoaded.points = false;
-                      getAllPoints();
-                    }"
-                  >
-                    刷新积分
-                  </NButton>
-                </NFlex>
-                <NFlex justify="center">
-                  <NDataTable
-                    :loading="isLoading"
-                    :columns="pointColumn"
-                    :data="points"
-                    :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
-                    size="small"
-                    style="max-width: 600px"
-                  />
-                </NFlex>
-              </NTabPane>
-              <NTabPane
-                name="orders"
-                tab="我的订单"
-                display-directive="show:lazy"
-              >
-                <PointOrderView
-                  ref="orderViewRef"
-                  @data-loaded="tabDataLoaded.orders = true"
+                  刷新积分
+                </NButton>
+              </NFlex>
+              <NFlex justify="center">
+                <NDataTable
+                  :loading="isLoading"
+                  :columns="pointColumn"
+                  :data="points"
+                  :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50, 100] }"
+                  size="small"
+                  style="max-width: 600px"
                 />
-              </NTabPane>
-              <NTabPane
-                name="histories"
-                tab="积分记录"
-                display-directive="show:lazy"
-              >
-                <PointUserHistoryView
-                  ref="historyViewRef"
-                  @data-loaded="tabDataLoaded.histories = true"
-                />
-              </NTabPane>
-              <NTabPane
-                name="settings"
-                tab="设置"
-                display-directive="show:lazy"
-              >
-                <PointUserSettings ref="settingsViewRef" />
-              </NTabPane>
-            </NTabs>
+              </NFlex>
+            </NTabPane>
+            <NTabPane
+              name="orders"
+              tab="我的订单"
+              display-directive="show:lazy"
+            >
+              <PointOrderView
+                ref="orderViewRef"
+                @data-loaded="tabDataLoaded.orders = true"
+              />
+            </NTabPane>
+            <NTabPane
+              name="histories"
+              tab="积分记录"
+              display-directive="show:lazy"
+            >
+              <PointUserHistoryView
+                ref="historyViewRef"
+                @data-loaded="tabDataLoaded.histories = true"
+              />
+            </NTabPane>
+            <NTabPane
+              name="settings"
+              tab="设置"
+              display-directive="show:lazy"
+            >
+              <PointUserSettings ref="settingsViewRef" />
+            </NTabPane>
+          </NTabs>
         </div>
       </NLayoutContent>
     </template>

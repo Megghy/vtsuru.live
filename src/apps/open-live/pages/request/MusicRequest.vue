@@ -629,10 +629,10 @@ onUnmounted(() => {
               <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
               <NInputNumber
                 v-model:value="settings.orderCooldown"
+                size="small"
                 @update:value="(value) => {
                   if (!value || value <= 0) settings.orderCooldown = undefined
                 }"
-                size="small"
               />
             </NInputGroup>
           </NSpace>
@@ -701,8 +701,8 @@ onUnmounted(() => {
       type="primary"
       :disabled="!neteaseSongListId"
       :loading="isLoading"
-      @click="getNeteaseSongList"
       size="small"
+      @click="getNeteaseSongList"
     >
       获取
     </NButton>
@@ -718,8 +718,8 @@ onUnmounted(() => {
       <NButton
         type="primary"
         :loading="isLoading"
-        @click="addNeteaseSongs"
         size="small"
+        @click="addNeteaseSongs"
       >
         添加到歌单 | {{ selectedNeteaseSongs.length }} 首
       </NButton>

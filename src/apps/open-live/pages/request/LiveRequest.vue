@@ -235,64 +235,64 @@ onUnmounted(() => {
         size="small"
         display-directive="show:lazy"
       >
-      <NTabPane
-        name="list"
-        tab="列表"
-      >
-        <!-- 歌曲播放器 -->
-        <Transition>
-          <div
-            v-if="liveRequest.selectedSong"
-            class="song-list"
-            style="margin-bottom: 15px"
-          >
-            <SongPlayer
-              v-model:is-lrc-loading="liveRequest.isLrcLoading"
-              :song="liveRequest.selectedSong"
-            />
-            <NDivider style="margin: 15px 0" />
-          </div>
-        </Transition>
+        <NTabPane
+          name="list"
+          tab="列表"
+        >
+          <!-- 歌曲播放器 -->
+          <Transition>
+            <div
+              v-if="liveRequest.selectedSong"
+              class="song-list"
+              style="margin-bottom: 15px"
+            >
+              <SongPlayer
+                v-model:is-lrc-loading="liveRequest.isLrcLoading"
+                :song="liveRequest.selectedSong"
+              />
+              <NDivider style="margin: 15px 0" />
+            </div>
+          </Transition>
 
-        <!-- 活跃歌曲列表 -->
-        <SongRequestList
-          @update:sort-type="(value: any) => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
-          @update:is-reverse="(value: any) => {
-            if (liveRequest.configCanEdit) {
-              accountInfo.settings.songRequest.isReverse = value
-              updateSettings()
-            }
-            else {
-              liveRequest.isReverse = value
-            }
-          }"
-        />
-      </NTabPane>
-      <NTabPane
-        name="history"
-        tab="历史"
-      >
-        <!-- 历史歌曲记录 -->
-        <SongRequestHistory />
-      </NTabPane>
-      <NTabPane
-        name="setting"
-        tab="设置"
-      >
-        <!-- 歌曲请求设置 -->
-        <SongRequestSettings />
-      </NTabPane>
-    </NTabs>
-    <template v-else>
-      <NAlert
-        title="未启用"
-        type="error"
-        size="small"
-        :bordered="false"
-      >
-        请先启用弹幕点播功能
-      </NAlert>
-    </template>
+          <!-- 活跃歌曲列表 -->
+          <SongRequestList
+            @update:sort-type="(value: any) => { accountInfo.settings.songRequest.sortType = value; updateSettings() }"
+            @update:is-reverse="(value: any) => {
+              if (liveRequest.configCanEdit) {
+                accountInfo.settings.songRequest.isReverse = value
+                updateSettings()
+              }
+              else {
+                liveRequest.isReverse = value
+              }
+            }"
+          />
+        </NTabPane>
+        <NTabPane
+          name="history"
+          tab="历史"
+        >
+          <!-- 历史歌曲记录 -->
+          <SongRequestHistory />
+        </NTabPane>
+        <NTabPane
+          name="setting"
+          tab="设置"
+        >
+          <!-- 歌曲请求设置 -->
+          <SongRequestSettings />
+        </NTabPane>
+      </NTabs>
+      <template v-else>
+        <NAlert
+          title="未启用"
+          type="error"
+          size="small"
+          :bordered="false"
+        >
+          请先启用弹幕点播功能
+        </NAlert>
+      </template>
     </NCard>
   </NFlex>
 

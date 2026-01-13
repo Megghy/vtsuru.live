@@ -76,7 +76,7 @@ function getMetaText(song: SongsInfo) {
   <div class="song-list-card-template">
     <div class="search-row">
       <div class="search-input">
-        <span class="search-icon"></span>
+        <span class="search-icon" />
         <NInput
           v-model:value="inputKeyword"
           class="search-field"

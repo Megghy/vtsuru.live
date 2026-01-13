@@ -6,7 +6,7 @@ const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: 
 
 type GalleryLayout = 'grid' | 'masonry' | 'carousel'
 type GalleryFit = 'cover' | 'contain'
-type GalleryItem = { src: string, desc: string }
+interface GalleryItem { src: string, desc: string }
 
 type CarouselEffect = 'slide' | 'fade' | 'card' | 'custom'
 type CarouselDotType = 'dot' | 'line'
@@ -135,7 +135,9 @@ const imgStyle = computed(() => ({
             :style="imgStyle"
           >
         </div>
-        <div v-if="it.desc" class="caption">{{ it.desc }}</div>
+        <div v-if="it.desc" class="caption">
+          {{ it.desc }}
+        </div>
       </div>
     </NCarousel>
 
@@ -152,7 +154,9 @@ const imgStyle = computed(() => ({
           class="img"
           :style="imgStyle"
         >
-        <figcaption v-if="it.desc" class="caption">{{ it.desc }}</figcaption>
+        <figcaption v-if="it.desc" class="caption">
+          {{ it.desc }}
+        </figcaption>
       </figure>
     </div>
   </div>

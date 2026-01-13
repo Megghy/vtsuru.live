@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
-import { Add24Filled, Delete24Regular, Info24Filled, Pause24Regular, Play24Regular, Settings24Regular, ShareAndroid24Regular } from '@vicons/fluent'
+import { Add24Filled, Delete24Regular, Pause24Regular, Play24Regular, Settings24Regular, ShareAndroid24Regular } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import {
   NAlert,

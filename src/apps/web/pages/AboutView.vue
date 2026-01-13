@@ -85,7 +85,9 @@ const themeVars = useThemeVars()
               MADE WITH <NIcon
                 size="18"
                 :color="themeVars.errorColor"
-              ><HeartOutline /></NIcon> BY
+              >
+                <HeartOutline />
+              </NIcon> BY
               <NButton
                 type="primary"
                 tag="a"

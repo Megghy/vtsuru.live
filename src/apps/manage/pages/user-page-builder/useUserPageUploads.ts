@@ -35,7 +35,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   function asObject(v: unknown): Record<string, any> | null {
     if (!v || typeof v !== 'object') return null
     if (Array.isArray(v)) return null
-    return v as any
+    return v as Record<string, any>
   }
 
   function findBlockById(blocks: BlockNode[], id: string): BlockNode | null {
@@ -43,7 +43,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       if (b.id === id) return b
       if (b.type !== 'layout') continue
       const propsObj = asObject(b.props)
-      const children = Array.isArray(propsObj?.children) ? (propsObj!.children as BlockNode[]) : null
+      const children = Array.isArray(propsObj?.children) ? (propsObj.children as BlockNode[]) : null
       if (!children?.length) continue
       const found = findBlockById(children, id)
       if (found) return found
@@ -164,13 +164,13 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     }
 
     if (ctx.kind !== 'pageBackground' && ctx.kind !== 'globalBackground' && ctx.kind !== 'pageBackgroundOverride') {
-      const block = findBlockById(project!.blocks, ctx.blockId)
+      const block = findBlockById(project.blocks, ctx.blockId)
       if (!block) {
         opts.notify.error('找不到要上传到的区块（可能已被删除）')
         return
       }
 
-      const currentImages = countImagesInBlocks(project!.blocks, false)
+      const currentImages = countImagesInBlocks(project.blocks, false)
       const willAddNewImage = (() => {
         const propsObj = opts.ensurePropsObject(block)
         if (ctx.kind === 'block') {
@@ -209,9 +209,9 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       const uploadedList = await uploadFiles(isBulk ? files : files[0], UserFileTypes.Image, UserFileLocation.Local)
       if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
       if (ctx.kind === 'pageBackground') {
-        project!.theme ??= {}
-        ;(project!.theme as any).pageBackgroundImageFile = uploadedList[0]
-        if ((project!.theme as any).pageBackgroundType !== 'image') (project!.theme as any).pageBackgroundType = 'image'
+        project.theme ??= {}
+        ;(project.theme as any).pageBackgroundImageFile = uploadedList[0]
+        if ((project.theme as any).pageBackgroundType !== 'image') (project.theme as any).pageBackgroundType = 'image'
       } else if (ctx.kind === 'globalBackground') {
         opts.settings.value.background ??= {}
         ;(opts.settings.value.background as any).pageBackgroundImageFile = uploadedList[0]
@@ -221,7 +221,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
         ;(opts.currentPage.value.background as any).pageBackgroundImageFile = uploadedList[0]
         if ((opts.currentPage.value.background as any).pageBackgroundType !== 'image') (opts.currentPage.value.background as any).pageBackgroundType = 'image'
       } else {
-        const block = findBlockById(project!.blocks, ctx.blockId)
+        const block = findBlockById(project.blocks, ctx.blockId)
         if (!block) throw new Error('找不到要上传到的区块（可能已被删除）')
 
         if (ctx.kind === 'block') {

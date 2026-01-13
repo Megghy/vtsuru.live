@@ -145,7 +145,9 @@ function getItemKey(it: any) {
     <NFormItem label="图片列表">
       <NSpace vertical style="width: 100%">
         <NFlex justify="space-between" align="center" :wrap="false">
-          <NText depth="3">可拖拽排序</NText>
+          <NText depth="3">
+            可拖拽排序
+          </NText>
           <NButton size="tiny" type="info" secondary :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryBulk(props.block)">
             <template #icon>
               <NIcon><ImageOutline /></NIcon>
@@ -161,41 +163,47 @@ function getItemKey(it: any) {
         >
           <template #item="{ element, index }">
             <div style="border: 1px solid var(--n-border-color); border-radius: 10px; padding: 10px">
-                <NFlex align="center" justify="space-between">
-                  <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
-                    <NText depth="3" class="drag-handle" style="cursor: grab; user-select: none">≡</NText>
-                    <img
-                      v-if="getItemPreviewSrc(element)"
-                      :src="getItemPreviewSrc(element)"
-                      alt=""
-                      referrerpolicy="no-referrer"
-                      style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--n-border-color); flex: 0 0 auto"
-                    >
-                    <NText depth="3" style="white-space: nowrap">#{{ index + 1 }}</NText>
-                  </NFlex>
-                  <NFlex align="center" :wrap="false" style="gap: 8px">
-                    <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryItem(props.block, index)">
-                      <template #icon>
-                        <NIcon><ImageOutline /></NIcon>
-                      </template>
-                      上传
-                    </NButton>
-                    <NButton size="tiny" secondary @click="props.editor.clearUploadedGalleryItemFile(props.block, index)">清除</NButton>
-                    <NButton size="tiny" type="error" secondary @click="removeItem(index)">
-                      <template #icon>
-                        <NIcon><TrashOutline /></NIcon>
-                      </template>
-                      删除
-                    </NButton>
-                  </NFlex>
+              <NFlex align="center" justify="space-between">
+                <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
+                  <NText depth="3" class="drag-handle" style="cursor: grab; user-select: none">
+                    ≡
+                  </NText>
+                  <img
+                    v-if="getItemPreviewSrc(element)"
+                    :src="getItemPreviewSrc(element)"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--n-border-color); flex: 0 0 auto"
+                  >
+                  <NText depth="3" style="white-space: nowrap">
+                    #{{ index + 1 }}
+                  </NText>
                 </NFlex>
+                <NFlex align="center" :wrap="false" style="gap: 8px">
+                  <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryItem(props.block, index)">
+                    <template #icon>
+                      <NIcon><ImageOutline /></NIcon>
+                    </template>
+                    上传
+                  </NButton>
+                  <NButton size="tiny" secondary @click="props.editor.clearUploadedGalleryItemFile(props.block, index)">
+                    清除
+                  </NButton>
+                  <NButton size="tiny" type="error" secondary @click="removeItem(index)">
+                    <template #icon>
+                      <NIcon><TrashOutline /></NIcon>
+                    </template>
+                    删除
+                  </NButton>
+                </NFlex>
+              </NFlex>
 
-                <div style="margin-top: 10px">
-                  <NFormItem label="图片描述（显示在图片下方）" :show-feedback="false">
-                    <NInput v-model:value="ensureItem(index).desc" placeholder="可选" />
-                  </NFormItem>
-                </div>
+              <div style="margin-top: 10px">
+                <NFormItem label="图片描述（显示在图片下方）" :show-feedback="false">
+                  <NInput v-model:value="ensureItem(index).desc" placeholder="可选" />
+                </NFormItem>
               </div>
+            </div>
           </template>
         </draggable>
 

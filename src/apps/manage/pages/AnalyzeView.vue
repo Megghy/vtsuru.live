@@ -435,117 +435,117 @@ onUnmounted(() => {
       <!-- 核心指标卡片 -->
       <div class="core-metrics">
         <div :style="metricColorVars">
-        <NGrid cols="1 600:2 1000:4" :x-gap="16" :y-gap="16">
-          <!-- 收入 -->
-          <NGridItem>
-            <NCard size="small" class="metric-card income-card">
-              <div class="metric-content">
-                <div class="metric-header">
-                  <span class="metric-label">近30天收入</span>
-                  <NIcon :component="WalletOutline" class="metric-icon" />
-                </div>
-                <div class="metric-value">
-                  <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalIncome || 0" :precision="2" />
-                  <span class="currency-symbol">¥</span>
-                </div>
-                <div class="metric-footer">
-                  <div class="trend-info">
-                    <span :class="getTrendType(summaryData?.last30Days?.incomeTrend || 0)">
-                      <NIcon :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
-                      {{ Math.abs(summaryData?.last30Days?.incomeTrend || 0) }}%
-                    </span>
-                    <span class="trend-label">环比</span>
+          <NGrid cols="1 600:2 1000:4" :x-gap="16" :y-gap="16">
+            <!-- 收入 -->
+            <NGridItem>
+              <NCard size="small" class="metric-card income-card">
+                <div class="metric-content">
+                  <div class="metric-header">
+                    <span class="metric-label">近30天收入</span>
+                    <NIcon :component="WalletOutline" class="metric-icon" />
                   </div>
-                  <div class="sub-stat">
-                    日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}
+                  <div class="metric-value">
+                    <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalIncome || 0" :precision="2" />
+                    <span class="currency-symbol">¥</span>
+                  </div>
+                  <div class="metric-footer">
+                    <div class="trend-info">
+                      <span :class="getTrendType(summaryData?.last30Days?.incomeTrend || 0)">
+                        <NIcon :component="(summaryData?.last30Days?.incomeTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                        {{ Math.abs(summaryData?.last30Days?.incomeTrend || 0) }}%
+                      </span>
+                      <span class="trend-label">环比</span>
+                    </div>
+                    <div class="sub-stat">
+                      日均 ¥{{ (summaryData?.last30Days?.dailyAvgIncome || 0).toFixed(0) }}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </NCard>
-          </NGridItem>
+              </NCard>
+            </NGridItem>
 
-          <!-- 互动 -->
-          <NGridItem>
-            <NCard size="small" class="metric-card interaction-card">
-              <div class="metric-content">
-                <div class="metric-header">
-                  <span class="metric-label">近30天互动</span>
-                  <NIcon :component="ChatbubblesOutline" class="metric-icon" />
-                </div>
-                <div class="metric-value">
-                  <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalInteractions || 0" show-separator />
-                </div>
-                <div class="metric-footer">
-                  <div class="trend-info">
-                    <span :class="getTrendType(summaryData?.last30Days?.interactionTrend || 0)">
-                      <NIcon :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
-                      {{ Math.abs(summaryData?.last30Days?.interactionTrend || 0) }}%
-                    </span>
-                    <span class="trend-label">环比</span>
+            <!-- 互动 -->
+            <NGridItem>
+              <NCard size="small" class="metric-card interaction-card">
+                <div class="metric-content">
+                  <div class="metric-header">
+                    <span class="metric-label">近30天互动</span>
+                    <NIcon :component="ChatbubblesOutline" class="metric-icon" />
                   </div>
-                  <div class="sub-stat">
-                    {{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }} 弹幕
+                  <div class="metric-value">
+                    <NNumberAnimation :from="0" :to="summaryData?.last30Days?.totalInteractions || 0" show-separator />
+                  </div>
+                  <div class="metric-footer">
+                    <div class="trend-info">
+                      <span :class="getTrendType(summaryData?.last30Days?.interactionTrend || 0)">
+                        <NIcon :component="(summaryData?.last30Days?.interactionTrend || 0) >= 0 ? TrendingUp : TrendingDown" />
+                        {{ Math.abs(summaryData?.last30Days?.interactionTrend || 0) }}%
+                      </span>
+                      <span class="trend-label">环比</span>
+                    </div>
+                    <div class="sub-stat">
+                      {{ formatNumber(summaryData?.last30Days?.totalDanmakuCount || 0) }} 弹幕
+                    </div>
                   </div>
                 </div>
-              </div>
-            </NCard>
-          </NGridItem>
+              </NCard>
+            </NGridItem>
 
-          <!-- 用户 -->
-          <NGridItem>
-            <NCard size="small" class="metric-card users-card">
-              <div class="metric-content">
-                <div class="metric-header">
-                  <span class="metric-label">互动/付费人数</span>
-                  <NIcon :component="PeopleOutline" class="metric-icon" />
-                </div>
-                <div class="metric-value">
-                  <span>{{ formatNumber(summaryData?.last30Days?.interactionUsers || 0) }}</span>
-                  <span class="separator">/</span>
-                  <span class="highlight">{{ formatNumber(summaryData?.last30Days?.payingUsers || 0) }}</span>
-                </div>
-                <div class="metric-footer">
-                  <div class="trend-info">
-                    <NProgress
-                      type="line"
-                      :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
-                      :height="6"
-                      :color="themeVars.primaryColor"
-                      :rail-color="themeVars.primaryColorSuppl"
-                      :show-indicator="false"
-                      style="width: 60px; margin-right: 8px;"
-                    />
-                    <span class="trend-label">{{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}% 付费率</span>
+            <!-- 用户 -->
+            <NGridItem>
+              <NCard size="small" class="metric-card users-card">
+                <div class="metric-content">
+                  <div class="metric-header">
+                    <span class="metric-label">互动/付费人数</span>
+                    <NIcon :component="PeopleOutline" class="metric-icon" />
+                  </div>
+                  <div class="metric-value">
+                    <span>{{ formatNumber(summaryData?.last30Days?.interactionUsers || 0) }}</span>
+                    <span class="separator">/</span>
+                    <span class="highlight">{{ formatNumber(summaryData?.last30Days?.payingUsers || 0) }}</span>
+                  </div>
+                  <div class="metric-footer">
+                    <div class="trend-info">
+                      <NProgress
+                        type="line"
+                        :percentage="Math.min(100, Math.round(((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100) * 10) / 10)"
+                        :height="6"
+                        :color="themeVars.primaryColor"
+                        :rail-color="themeVars.primaryColorSuppl"
+                        :show-indicator="false"
+                        style="width: 60px; margin-right: 8px;"
+                      />
+                      <span class="trend-label">{{ ((summaryData?.last30Days?.payingUsers || 0) / (summaryData?.last30Days?.interactionUsers || 1) * 100).toFixed(1) }}% 付费率</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </NCard>
-          </NGridItem>
+              </NCard>
+            </NGridItem>
 
-          <!-- 直播 -->
-          <NGridItem>
-            <NCard size="small" class="metric-card time-card">
-              <div class="metric-content">
-                <div class="metric-header">
-                  <span class="metric-label">近30天直播</span>
-                  <NIcon :component="TimeOutline" class="metric-icon" />
-                </div>
-                <div class="metric-value">
-                  {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}
-                  <span class="unit">小时</span>
-                </div>
-                <div class="metric-footer">
-                  <div class="trend-info">
-                    <span class="trend-label">活跃 {{ summaryData?.last30Days?.activeLiveDays || 0 }} 天</span>
+            <!-- 直播 -->
+            <NGridItem>
+              <NCard size="small" class="metric-card time-card">
+                <div class="metric-content">
+                  <div class="metric-header">
+                    <span class="metric-label">近30天直播</span>
+                    <NIcon :component="TimeOutline" class="metric-icon" />
                   </div>
-                  <div class="sub-stat">
-                    场均 {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }}h
+                  <div class="metric-value">
+                    {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / 60).toFixed(1) }}
+                    <span class="unit">小时</span>
+                  </div>
+                  <div class="metric-footer">
+                    <div class="trend-info">
+                      <span class="trend-label">活跃 {{ summaryData?.last30Days?.activeLiveDays || 0 }} 天</span>
+                    </div>
+                    <div class="sub-stat">
+                      场均 {{ ((summaryData?.last30Days?.totalLiveMinutes || 0) / (summaryData?.last30Days?.activeLiveDays || 1) / 60).toFixed(1) }}h
+                    </div>
                   </div>
                 </div>
-              </div>
-            </NCard>
-          </NGridItem>
-        </NGrid>
+              </NCard>
+            </NGridItem>
+          </NGrid>
         </div>
       </div>
 

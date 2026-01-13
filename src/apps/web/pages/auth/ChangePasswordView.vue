@@ -53,25 +53,25 @@ function changePassword() {
   <NLayoutContent class="web-center">
     <div class="web-page web-page--md">
       <NCard title="修改密码" size="small" bordered>
-      <NSpace vertical>
-        <NInput
-          v-model:value="password"
-          type="password"
-          placeholder="新密码"
-        />
-        <NInput
-          v-model:value="password2"
-          type="password"
-          placeholder="确认密码"
-        />
-        <NButton
-          type="primary"
-          :loading="isLoading"
-          @click="changePassword"
-        >
-          修改密码
-        </NButton>
-      </NSpace>
+        <NSpace vertical>
+          <NInput
+            v-model:value="password"
+            type="password"
+            placeholder="新密码"
+          />
+          <NInput
+            v-model:value="password2"
+            type="password"
+            placeholder="确认密码"
+          />
+          <NButton
+            type="primary"
+            :loading="isLoading"
+            @click="changePassword"
+          >
+            修改密码
+          </NButton>
+        </NSpace>
       </NCard>
     </div>
   </NLayoutContent>

@@ -41,7 +41,9 @@ watch(() => autoActionStore.globalIntervalSeconds, () => {
       </NText>
       <NDivider style="margin: 0;" />
       <NFlex align="center" justify="space-between" :wrap="true" :size="12">
-        <NText depth="2">全局发送间隔 (秒)</NText>
+        <NText depth="2">
+          全局发送间隔 (秒)
+        </NText>
         <NInputNumber
           v-model:value="autoActionStore.globalIntervalSeconds"
           :min="10"
@@ -52,7 +54,9 @@ watch(() => autoActionStore.globalIntervalSeconds, () => {
       </NFlex>
 
       <NFlex align="center" justify="space-between" :wrap="true" :size="12">
-        <NText depth="2">全局发送模式</NText>
+        <NText depth="2">
+          全局发送模式
+        </NText>
         <NRadioGroup v-model:value="autoActionStore.globalSchedulingMode" size="small">
           <NFlex :size="12">
             <NRadio

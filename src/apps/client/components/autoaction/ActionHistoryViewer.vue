@@ -199,34 +199,34 @@ onUnmounted(() => {
   >
     <template #header-extra>
       <NSpace>
-          <NButton
-            size="small"
-            :loading="loading"
-            @click="loadHistory"
-          >
-            <template #icon>
-              <NIcon :component="ArrowClockwise16Filled" />
-            </template>
-            刷新
-          </NButton>
-          <NPopconfirm
-            placement="bottom"
-            @positive-click="handleClearAllHistory"
-          >
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-                ghost
-              >
-                <template #icon>
-                  <NIcon :component="Delete16Filled" />
-                </template>
-                清空所有历史
-              </NButton>
-            </template>
-            确定要清空所有类型的历史记录吗？此操作不可恢复。
-          </NPopconfirm>
+        <NButton
+          size="small"
+          :loading="loading"
+          @click="loadHistory"
+        >
+          <template #icon>
+            <NIcon :component="ArrowClockwise16Filled" />
+          </template>
+          刷新
+        </NButton>
+        <NPopconfirm
+          placement="bottom"
+          @positive-click="handleClearAllHistory"
+        >
+          <template #trigger>
+            <NButton
+              size="small"
+              type="error"
+              ghost
+            >
+              <template #icon>
+                <NIcon :component="Delete16Filled" />
+              </template>
+              清空所有历史
+            </NButton>
+          </template>
+          确定要清空所有类型的历史记录吗？此操作不可恢复。
+        </NPopconfirm>
       </NSpace>
     </template>
 
