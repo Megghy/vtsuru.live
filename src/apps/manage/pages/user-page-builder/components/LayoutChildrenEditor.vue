@@ -98,35 +98,35 @@ const containerNode = computed(() => {
 const containerProps = computed(() => ensureLayoutProps(containerNode.value))
 
 const justifyOptionsHorizontal = [
-  { label: '靠左', value: 'start' },
-  { label: '居中', value: 'center' },
-  { label: '靠右', value: 'end' },
-  { label: '两端对齐', value: 'between' },
-  { label: '环绕分布', value: 'around' },
-  { label: '均匀分布', value: 'evenly' },
+  { label: 'start（靠左）', value: 'start' },
+  { label: 'center（居中）', value: 'center' },
+  { label: 'end（靠右）', value: 'end' },
+  { label: 'between（两端对齐）', value: 'between' },
+  { label: 'around（环绕分布）', value: 'around' },
+  { label: 'evenly（均匀分布）', value: 'evenly' },
 ]
 
 const justifyOptionsVertical = [
-  { label: '靠上', value: 'start' },
-  { label: '居中', value: 'center' },
-  { label: '靠下', value: 'end' },
-  { label: '上下两端对齐', value: 'between' },
-  { label: '上下环绕分布', value: 'around' },
-  { label: '上下均匀分布', value: 'evenly' },
+  { label: 'start（靠上）', value: 'start' },
+  { label: 'center（居中）', value: 'center' },
+  { label: 'end（靠下）', value: 'end' },
+  { label: 'between（上下两端对齐）', value: 'between' },
+  { label: 'around（上下环绕分布）', value: 'around' },
+  { label: 'evenly（上下均匀分布）', value: 'evenly' },
 ]
 
 const alignOptionsHorizontal = [
-  { label: '靠左', value: 'start' },
-  { label: '居中', value: 'center' },
-  { label: '靠右', value: 'end' },
-  { label: '拉伸（铺满）', value: 'stretch' },
+  { label: 'start（靠左）', value: 'start' },
+  { label: 'center（居中）', value: 'center' },
+  { label: 'end（靠右）', value: 'end' },
+  { label: 'stretch（拉伸/等高）', value: 'stretch' },
 ]
 
 const alignOptionsVertical = [
-  { label: '靠上', value: 'start' },
-  { label: '居中', value: 'center' },
-  { label: '靠下', value: 'end' },
-  { label: '拉伸（铺满）', value: 'stretch' },
+  { label: 'start（靠上）', value: 'start' },
+  { label: 'center（居中）', value: 'center' },
+  { label: 'end（靠下）', value: 'end' },
+  { label: 'stretch（拉伸/等高）', value: 'stretch' },
 ]
 
 const horizontalAlignModel = computed({

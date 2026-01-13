@@ -80,12 +80,17 @@ function mapAlign(v: unknown) {
     case 'stretch':
       return { flex: 'stretch', grid: 'stretch' }
     default:
-      return { flex: 'flex-start', grid: 'start' }
+      return { flex: 'stretch', grid: 'stretch' }
   }
 }
 
 const justify = computed(() => mapJustify(propsObj.value.justify))
 const align = computed(() => mapAlign(propsObj.value.align))
+const alignKey = computed<'start' | 'center' | 'end' | 'stretch'>(() => {
+  const v = String(propsObj.value.align)
+  if (v === 'start' || v === 'center' || v === 'end' || v === 'stretch') return v
+  return 'stretch'
+})
 
 const gridJustifyItems = computed<'start' | 'center' | 'end' | 'stretch'>(() => {
   switch (String(propsObj.value.justify)) {
@@ -122,7 +127,13 @@ const blockComponents = BLOCK_COMPONENTS
 <template>
   <div
     class="layout"
-    :class="{ grid: layout === 'grid', row: layout === 'row', column: layout === 'column', wrap: wrap && layout === 'row' }"
+    :class="{
+      grid: layout === 'grid',
+      row: layout === 'row',
+      column: layout === 'column',
+      wrap: wrap && layout === 'row',
+      'align-stretch': layout === 'row' && alignKey === 'stretch',
+    }"
     :style="containerStyle"
   >
     <div
@@ -157,6 +168,17 @@ const blockComponents = BLOCK_COMPONENTS
 .layout.row .item {
   flex: 0 1 240px;
   min-width: 0;
+}
+
+.layout.row.align-stretch .item {
+  align-self: stretch;
+  display: flex;
+}
+
+.layout.row.align-stretch .item > :deep(*) {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
 }
 
 .layout.column .item {

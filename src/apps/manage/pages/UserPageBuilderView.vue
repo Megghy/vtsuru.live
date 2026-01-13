@@ -234,9 +234,11 @@ onBeforeRouteLeave(() => {
             >
               <template #header>
                 <NFlex justify="space-between" align="center" :wrap="false" style="gap: 6px">
-                  <NText v-if="!isSidebarCollapsed" strong>
-                    页面
-                  </NText>
+                  <Transition name="fade">
+                    <NText v-if="!isSidebarCollapsed" strong>
+                      页面
+                    </NText>
+                  </Transition>
                   <NButton
                     quaternary
                     circle
@@ -252,11 +254,13 @@ onBeforeRouteLeave(() => {
                   </NButton>
                 </NFlex>
               </template>
-              <NScrollbar v-if="!isSidebarCollapsed" class="pane-scroll">
-                <div style="padding: 12px">
-                  <PageManager />
-                </div>
-              </NScrollbar>
+              <Transition name="fade-slide">
+                <NScrollbar v-if="!isSidebarCollapsed" class="pane-scroll">
+                  <div style="padding: 12px">
+                    <PageManager />
+                  </div>
+                </NScrollbar>
+              </Transition>
             </NCard>
           </template>
 
@@ -284,35 +288,42 @@ onBeforeRouteLeave(() => {
                     <div style="height: 100%; min-height: 0; display: flex; flex-direction: column">
                       <PhonePreview style="flex: 1; min-height: 0" :transparent="!!previewBg">
                         <div :class="previewBgClass" :style="previewBgVars">
-                          <template v-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-                            <div v-if="previewBg?.blurMode === 'glass'" class="preview-glass-surface">
-                              <BlockPageRenderer
-                                :project="editor.currentProject.value"
-                                :user-info="editor.account.value"
-                                :bili-info="undefined"
-                                :extra-theme-overrides="previewSurfaceThemeOverrides"
-                              />
+                          <Transition name="fade-slide" mode="out-in">
+                            <div
+                              :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
+                              class="preview-content"
+                            >
+                              <template v-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
+                                <div v-if="previewBg?.blurMode === 'glass'" class="preview-glass-surface">
+                                  <BlockPageRenderer
+                                    :project="editor.currentProject.value"
+                                    :user-info="editor.account.value"
+                                    :bili-info="undefined"
+                                    :extra-theme-overrides="previewSurfaceThemeOverrides"
+                                  />
+                                </div>
+                                <BlockPageRenderer
+                                  v-else
+                                  :project="editor.currentProject.value"
+                                  :user-info="editor.account.value"
+                                  :bili-info="undefined"
+                                  :extra-theme-overrides="previewSurfaceThemeOverrides"
+                                />
+                              </template>
+                              <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+                                <NConfigProvider :theme-overrides="previewSurfaceThemeOverrides">
+                                  <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
+                                </NConfigProvider>
+                              </template>
+                              <NAlert
+                                v-else
+                                type="warning"
+                                :show-icon="true"
+                              >
+                                当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（非区块页），此处不展示预览。
+                              </NAlert>
                             </div>
-                            <BlockPageRenderer
-                              v-else
-                              :project="editor.currentProject.value"
-                              :user-info="editor.account.value"
-                              :bili-info="undefined"
-                              :extra-theme-overrides="previewSurfaceThemeOverrides"
-                            />
-                          </template>
-                          <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                            <NConfigProvider :theme-overrides="previewSurfaceThemeOverrides">
-                              <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
-                            </NConfigProvider>
-                          </template>
-                          <NAlert
-                            v-else
-                            type="warning"
-                            :show-icon="true"
-                          >
-                            当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（非区块页），此处不展示预览。
-                          </NAlert>
+                          </Transition>
                         </div>
                       </PhonePreview>
                     </div>
@@ -468,6 +479,8 @@ onBeforeRouteLeave(() => {
   </div>
 </template>
 
+<style scoped src="./user-page-builder/components/ui-transitions.css"></style>
+
 <style scoped>
 .user-page-builder :deep(.n-button .n-button__content) {
   gap: 6px;
@@ -542,6 +555,7 @@ onBeforeRouteLeave(() => {
   transform: none;
   pointer-events: none;
   z-index: 0;
+  transition: background-color 180ms ease, filter 180ms ease;
 }
 .preview-bg-host.enabled::after {
   content: "";
@@ -550,6 +564,7 @@ onBeforeRouteLeave(() => {
   background: var(--user-page-bg-scrim, transparent);
   pointer-events: none;
   z-index: 0;
+  transition: background-color 180ms ease, opacity 180ms ease;
 }
 .preview-bg-host.enabled.bg-blur::before {
   filter: blur(var(--user-page-bg-blur, 0px));
@@ -564,5 +579,10 @@ onBeforeRouteLeave(() => {
   background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+  transition: background-color 180ms ease, backdrop-filter 180ms ease;
+}
+
+.preview-content {
+  min-height: 100%;
 }
 </style>
