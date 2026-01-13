@@ -140,59 +140,67 @@ function clearAll() {
       </NFlex>
     </NFormItem>
 
-    <NAlert v-if="type === 'none'" type="info" :show-icon="true" style="margin-bottom: 12px">
-      {{ props.noneHint || '不设置背景时，页面会使用默认背景（或由站点主题决定）。' }}
-    </NAlert>
+    <Transition name="fade-slide" mode="out-in">
+      <div :key="type">
+        <NAlert v-if="type === 'none'" type="info" :show-icon="true" style="margin-bottom: 12px">
+          {{ props.noneHint || '不设置背景时，页面会使用默认背景（或由站点主题决定）。' }}
+        </NAlert>
 
-    <template v-else-if="type === 'color'">
-      <NFormItem label="背景颜色">
-        <NColorPicker v-model:value="color" :modes="['rgb', 'hex']" :show-alpha="true" />
-      </NFormItem>
-    </template>
+        <template v-else-if="type === 'color'">
+          <NFormItem label="背景颜色">
+            <NColorPicker v-model:value="color" :modes="['rgb', 'hex']" :show-alpha="true" />
+          </NFormItem>
+        </template>
 
-    <template v-else-if="type === 'image'">
-      <NFormItem label="背景图片（上传）">
-        <NSpace align="center">
-          <NButton
-            v-if="props.target.uploadImage"
-            size="small"
-            @click="props.target.uploadImage"
-          >
-            上传背景图
-          </NButton>
-          <NButton
-            v-if="props.target.clearImage"
-            size="small"
-            secondary
-            :disabled="!imagePath"
-            @click="props.target.clearImage"
-          >
-            清除
-          </NButton>
-          <img
-            v-if="imagePath"
-            :src="imagePath"
-            alt=""
-            referrerpolicy="no-referrer"
-            style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
-          >
-        </NSpace>
-      </NFormItem>
-      <NFormItem label="图片填充方式">
-        <NSelect
-          v-model:value="fit"
-          :options="[
-            { label: '铺满（推荐）', value: 'cover' },
-            { label: '完整显示', value: 'contain' },
-            { label: '拉伸填满', value: 'fill' },
-            { label: '原始大小', value: 'none' },
-          ]"
-        />
-      </NFormItem>
-      <NAlert v-if="!imagePath" type="warning" :show-icon="true" style="margin-bottom: 12px">
-        请选择并上传一张图片作为背景。
-      </NAlert>
-    </template>
+        <template v-else-if="type === 'image'">
+          <NFormItem label="背景图片（上传）">
+            <NSpace align="center">
+              <NButton
+                v-if="props.target.uploadImage"
+                size="small"
+                @click="props.target.uploadImage"
+              >
+                上传背景图
+              </NButton>
+              <NButton
+                v-if="props.target.clearImage"
+                size="small"
+                secondary
+                :disabled="!imagePath"
+                @click="props.target.clearImage"
+              >
+                清除
+              </NButton>
+              <Transition name="fade-scale">
+                <img
+                  v-if="imagePath"
+                  :src="imagePath"
+                  alt=""
+                  referrerpolicy="no-referrer"
+                  style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
+                >
+              </Transition>
+            </NSpace>
+          </NFormItem>
+          <NFormItem label="图片填充方式">
+            <NSelect
+              v-model:value="fit"
+              :options="[
+                { label: '铺满（推荐）', value: 'cover' },
+                { label: '完整显示', value: 'contain' },
+                { label: '拉伸填满', value: 'fill' },
+                { label: '原始大小', value: 'none' },
+              ]"
+            />
+          </NFormItem>
+          <Transition name="fade">
+            <NAlert v-if="!imagePath" type="warning" :show-icon="true" style="margin-bottom: 12px">
+              请选择并上传一张图片作为背景。
+            </NAlert>
+          </Transition>
+        </template>
+      </div>
+    </Transition>
 
     <template v-if="type !== 'none'">
       <NFlex justify="space-between" align="center" :wrap="false" style="margin-bottom: 10px">
@@ -223,3 +231,4 @@ function clearAll() {
   </NForm>
 </template>
 
+<style scoped src="./ui-transitions.css"></style>

@@ -179,162 +179,169 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
         </NRadioGroup>
       </div>
 
-      <template v-if="editor.currentPage.value.mode === 'legacy'">
-        <NDivider style="margin: 0" title-placement="left">
-          主页设置
-        </NDivider>
-        <LegacyIndexSettings />
-      </template>
+      <Transition name="fade-slide" mode="out-in">
+        <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}`">
+          <template v-if="editor.currentPage.value.mode === 'legacy'">
+            <NDivider style="margin: 0" title-placement="left">
+              主页设置
+            </NDivider>
+            <LegacyIndexSettings />
+          </template>
 
-      <template v-if="editor.currentPage.value.mode === 'contrib'">
-        <NForm label-placement="top" size="small">
-          <PropsGrid>
-            <NFormItem label="作用域">
-              <NSelect
-                v-model:value="editor.currentContrib.value!.scope"
-                :options="[{ label: '全局 (Global)', value: 'global' }, { label: '主播专属 (Streamer)', value: 'streamer' }]"
-              />
-            </NFormItem>
-            <NFormItem label="页面 ID">
-              <NAutoComplete
-                v-model:value="editor.currentContrib.value!.pageId"
-                :options="editor.contribPageIdOptions.value"
-                placeholder="选择或输入 pageId"
-                clearable
-              />
-            </NFormItem>
-            <NFormItem
-              v-if="editor.currentContrib.value!.scope === 'streamer'"
-              label="关联主播"
-            >
-              <NInputNumber :value="editor.account.value.id" :disabled="true" style="width: 100%" />
-            </NFormItem>
-          </PropsGrid>
-        </NForm>
-
-        <NAlert v-if="editor.contribConfigError.value" type="error" :show-icon="true" style="margin-top: 12px">
-          {{ editor.contribConfigError.value }}
-        </NAlert>
-        <NAlert v-else-if="editor.contribConfigLoading.value" type="info" :show-icon="true" style="margin-top: 12px">
-          投稿页配置加载中...
-        </NAlert>
-        <template v-else-if="editor.contribConfigItems.value">
-          <NSpace justify="space-between" align="center" style="margin-top: 12px">
-            <NText strong>
-              页面配置
-            </NText>
-            <NButton size="small" secondary @click="editor.resetContribConfigToDefault">
-              重置为默认
-            </NButton>
-          </NSpace>
-          <ErrorBoundary title="配置面板渲染失败">
-            <ContribConfigEditor
-              :config="editor.contribConfigItems.value"
-              :config-data="(editor.currentContrib.value!.config as any)"
-            />
-          </ErrorBoundary>
-        </template>
-        <NAlert v-else type="warning" :show-icon="true" style="margin-top: 12px">
-          该投稿页未导出 Config/DefaultConfig（可直接提交 PR 按约定补齐）。
-        </NAlert>
-      </template>
-
-      <template v-else-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-        <NCollapse :default-expanded-names="[]">
-          <NCollapseItem title="主题风格设置" name="theme">
+          <template v-else-if="editor.currentPage.value.mode === 'contrib'">
             <NForm label-placement="top" size="small">
-              <NFormItem label="主题预设（可选）">
-                <NSelect
-                  v-model:value="themePresetKey"
-                  :options="themePresetOptions"
-                  clearable
-                  placeholder="选择后会覆盖主题颜色/圆角/密度"
-                  @update:value="applyThemePreset"
-                />
-              </NFormItem>
-              <NDivider style="margin: 10px 0">
-                主题颜色
-              </NDivider>
-              <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
-                主题主色会影响按钮等组件的主色；文字颜色会影响页面内组件的文字与边框（部分组件）。区块渲染会按此主题覆盖 NaiveUI 主题色。
-              </NAlert>
-              <PropsGrid :min-item-width="240">
-                <NFormItem label="主题主色（按钮等）">
-                  <NColorPicker v-model:value="editor.currentTheme.value!.primaryColor" />
-                </NFormItem>
-                <NFormItem label="页面主题模式（可选）">
+              <PropsGrid>
+                <NFormItem label="作用域">
                   <NSelect
-                    v-model:value="pageThemeMode"
-                    :options="[
-                      { label: '跟随站点（Auto）', value: 'auto' },
-                      { label: '强制亮色（Light）', value: 'light' },
-                      { label: '强制暗色（Dark）', value: 'dark' },
-                    ]"
+                    v-model:value="editor.currentContrib.value!.scope"
+                    :options="[{ label: '全局 (Global)', value: 'global' }, { label: '主播专属 (Streamer)', value: 'streamer' }]"
                   />
                 </NFormItem>
-                <NFormItem label="文字颜色">
-                  <NColorPicker v-model:value="editor.currentTheme.value!.textColor" />
-                </NFormItem>
-                <NFormItem label="内容区域底色（可选）">
-                  <NColorPicker v-model:value="editor.currentTheme.value!.backgroundColor" />
-                </NFormItem>
-                <NFormItem label="圆角大小">
-                  <NInputNumber v-model:value="editor.currentTheme.value!.radius" :min="0" :max="32" style="width: 100%" />
-                </NFormItem>
-                <NFormItem class="span-full" label="布局密度">
-                  <NSelect
-                    v-model:value="editor.currentTheme.value!.spacing"
-                    :options="[
-                      { label: '紧凑', value: 'compact' },
-                      { label: '标准', value: 'normal' },
-                      { label: '宽松', value: 'relaxed' },
-                    ]"
+                <NFormItem label="页面 ID">
+                  <NAutoComplete
+                    v-model:value="editor.currentContrib.value!.pageId"
+                    :options="editor.contribPageIdOptions.value"
+                    placeholder="选择或输入 pageId"
+                    clearable
                   />
+                </NFormItem>
+                <NFormItem
+                  v-if="editor.currentContrib.value!.scope === 'streamer'"
+                  label="关联主播"
+                >
+                  <NInputNumber :value="editor.account.value.id" :disabled="true" style="width: 100%" />
                 </NFormItem>
               </PropsGrid>
-
-              <NDivider style="margin: 10px 0">
-                区块页背景（仅区块模式）
-              </NDivider>
-              <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
-                仅对“区块模式”页面生效；当页面/全局背景已设置时，会优先使用页面/全局背景。
-              </NAlert>
-              <BackgroundSettingsEditor
-                :target="blockThemeBgTarget"
-                none-hint="未设置区块页背景时，将使用页面/全局背景（如有）或默认背景。"
-              />
             </NForm>
-          </NCollapseItem>
-        </NCollapse>
 
-        <BlockManager />
+            <NAlert v-if="editor.contribConfigError.value" type="error" :show-icon="true" style="margin-top: 12px">
+              {{ editor.contribConfigError.value }}
+            </NAlert>
+            <NAlert v-else-if="editor.contribConfigLoading.value" type="info" :show-icon="true" style="margin-top: 12px">
+              投稿页配置加载中...
+            </NAlert>
+            <template v-else-if="editor.contribConfigItems.value">
+              <NSpace justify="space-between" align="center" style="margin-top: 12px">
+                <NText strong>
+                  页面配置
+                </NText>
+                <NButton size="small" secondary @click="editor.resetContribConfigToDefault">
+                  重置为默认
+                </NButton>
+              </NSpace>
+              <ErrorBoundary title="配置面板渲染失败">
+                <ContribConfigEditor
+                  :config="editor.contribConfigItems.value"
+                  :config-data="(editor.currentContrib.value!.config as any)"
+                />
+              </ErrorBoundary>
+            </template>
+            <NAlert v-else type="warning" :show-icon="true" style="margin-top: 12px">
+              该投稿页未导出 Config/DefaultConfig（可直接提交 PR 按约定补齐）。
+            </NAlert>
+          </template>
 
-        <div v-if="editor.selectedBlock.value" style="margin-top: 12px">
-          <NText strong style="display:block; margin-bottom: 8px">
-            属性编辑 - {{ editor.selectedBlock.value.type }}
-          </NText>
-          <ErrorBoundary title="区块属性面板渲染失败">
-            <BlockTypeEditor :block="editor.selectedBlock.value" />
-          </ErrorBoundary>
+          <template v-else-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
+            <NCollapse :default-expanded-names="[]">
+              <NCollapseItem title="主题风格设置" name="theme">
+                <NForm label-placement="top" size="small">
+                  <NFormItem label="主题预设（可选）">
+                    <NSelect
+                      v-model:value="themePresetKey"
+                      :options="themePresetOptions"
+                      clearable
+                      placeholder="选择后会覆盖主题颜色/圆角/密度"
+                      @update:value="applyThemePreset"
+                    />
+                  </NFormItem>
+                  <NDivider style="margin: 10px 0">
+                    主题颜色
+                  </NDivider>
+                  <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+                    主题主色会影响按钮等组件的主色；文字颜色会影响页面内组件的文字与边框（部分组件）。区块渲染会按此主题覆盖 NaiveUI 主题色。
+                  </NAlert>
+                  <PropsGrid :min-item-width="240">
+                    <NFormItem label="主题主色（按钮等）">
+                      <NColorPicker v-model:value="editor.currentTheme.value!.primaryColor" />
+                    </NFormItem>
+                    <NFormItem label="页面主题模式（可选）">
+                      <NSelect
+                        v-model:value="pageThemeMode"
+                        :options="[
+                          { label: '跟随站点（Auto）', value: 'auto' },
+                          { label: '强制亮色（Light）', value: 'light' },
+                          { label: '强制暗色（Dark）', value: 'dark' },
+                        ]"
+                      />
+                    </NFormItem>
+                    <NFormItem label="文字颜色">
+                      <NColorPicker v-model:value="editor.currentTheme.value!.textColor" />
+                    </NFormItem>
+                    <NFormItem label="内容区域底色（可选）">
+                      <NColorPicker v-model:value="editor.currentTheme.value!.backgroundColor" />
+                    </NFormItem>
+                    <NFormItem label="圆角大小">
+                      <NInputNumber v-model:value="editor.currentTheme.value!.radius" :min="0" :max="32" style="width: 100%" />
+                    </NFormItem>
+                    <NFormItem class="span-full" label="布局密度">
+                      <NSelect
+                        v-model:value="editor.currentTheme.value!.spacing"
+                        :options="[
+                          { label: '紧凑', value: 'compact' },
+                          { label: '标准', value: 'normal' },
+                          { label: '宽松', value: 'relaxed' },
+                        ]"
+                      />
+                    </NFormItem>
+                  </PropsGrid>
+
+                  <NDivider style="margin: 10px 0">
+                    区块页背景（仅区块模式）
+                  </NDivider>
+                  <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+                    仅对“区块模式”页面生效；当页面/全局背景已设置时，会优先使用页面/全局背景。
+                  </NAlert>
+                  <BackgroundSettingsEditor
+                    :target="blockThemeBgTarget"
+                    none-hint="未设置区块页背景时，将使用页面/全局背景（如有）或默认背景。"
+                  />
+                </NForm>
+              </NCollapseItem>
+            </NCollapse>
+
+            <BlockManager />
+
+            <Transition name="fade-slide" mode="out-in">
+              <div v-if="editor.selectedBlock.value" :key="`selected:${editor.selectedBlock.value.id}`" style="margin-top: 12px">
+                <NText strong style="display:block; margin-bottom: 8px">
+                  属性编辑 - {{ editor.selectedBlock.value.type }}
+                </NText>
+                <ErrorBoundary title="区块属性面板渲染失败">
+                  <BlockTypeEditor :block="editor.selectedBlock.value" />
+                </ErrorBoundary>
+              </div>
+
+              <div v-else-if="editor.selectedBlockIds.value.length === 0" key="none" style="margin-top: 12px">
+                <NAlert type="info" :show-icon="true">
+                  请选择一个区块进行编辑（支持 Ctrl/Shift 多选做批量操作）。
+                </NAlert>
+              </div>
+
+              <div v-else key="multi" style="margin-top: 12px">
+                <NAlert type="info" :show-icon="true">
+                  已多选 {{ editor.selectedBlockIds.value.length }} 个区块：可在上方做批量隐藏/删除/复制/粘贴。
+                </NAlert>
+              </div>
+            </Transition>
+          </template>
+
+          <template v-else>
+            <NAlert type="warning" :show-icon="true">
+              当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（此处无可编辑项）
+            </NAlert>
+          </template>
         </div>
-
-        <div v-else-if="editor.selectedBlockIds.value.length === 0" style="margin-top: 12px">
-          <NAlert type="info" :show-icon="true">
-            请选择一个区块进行编辑（支持 Ctrl/Shift 多选做批量操作）。
-          </NAlert>
-        </div>
-        <div v-else style="margin-top: 12px">
-          <NAlert type="info" :show-icon="true">
-            已多选 {{ editor.selectedBlockIds.value.length }} 个区块：可在上方做批量隐藏/删除/复制/粘贴。
-          </NAlert>
-        </div>
-      </template>
-
-      <template v-else>
-        <NAlert type="warning" :show-icon="true">
-          当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（此处无可编辑项）
-        </NAlert>
-      </template>
+      </Transition>
 
       <NButton block secondary @click="editor.openPreview">
         打开对外预览页
@@ -351,3 +358,5 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
     >
   </NCard>
 </template>
+
+<style scoped src="./ui-transitions.css"></style>

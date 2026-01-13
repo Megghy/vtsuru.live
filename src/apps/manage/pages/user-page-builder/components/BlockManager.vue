@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { MenuOption } from 'naive-ui'
 import { NButton, NFlex, NIcon, NMenu, NPopover, NScrollbar, NSpace, NText } from 'naive-ui'
-import { computed, h, inject, ref, toRaw } from 'vue'
+import { computed, h, inject, onBeforeUnmount, ref, toRaw } from 'vue'
 import {
   AddCircleOutline,
   ArrowDownOutline,
@@ -89,6 +89,111 @@ const draggingBlockId = ref<string | null>(null)
 const expandTargetBlockId = ref<string | null>(null)
 const expandTargetTimer = ref<any>(null)
 const DRAG_EXPAND_DELAY_MS = 650
+const INVERTED_SWAP_THRESHOLD = 0.35
+
+type DragGroupMode = 'into-layout' | 'wrap'
+type DragDropIntent =
+  | { kind: 'group'; targetId: string; mode: DragGroupMode }
+  | null
+
+const dragDropIntent = ref<DragDropIntent>(null)
+const dragGroupTargetId = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.targetId : null)
+const dragGroupTargetMode = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.mode : null)
+
+function ensureExpanded(layoutId: string) {
+  if (expandedLayoutIdSet.value.has(layoutId)) return
+  expandedLayoutIds.value = Array.from(new Set([...expandedLayoutIds.value, layoutId]))
+}
+
+function getPointerClientPoint(ev: any): { x: number; y: number } | null {
+  if (!ev) return null
+  const e = ev.originalEvent ?? ev
+  if (typeof e.clientX === 'number' && typeof e.clientY === 'number') return { x: e.clientX, y: e.clientY }
+  const t = e.touches?.[0] ?? e.changedTouches?.[0]
+  if (t && typeof t.clientX === 'number' && typeof t.clientY === 'number') return { x: t.clientX, y: t.clientY }
+  return null
+}
+
+function clearExpandTarget() {
+  expandTargetBlockId.value = null
+  if (expandTargetTimer.value) {
+    clearTimeout(expandTargetTimer.value)
+    expandTargetTimer.value = null
+  }
+}
+
+function scheduleExpand(layoutId: string) {
+  if (expandedLayoutIdSet.value.has(layoutId)) return
+  if (expandTargetBlockId.value === layoutId) return
+
+  expandTargetBlockId.value = layoutId
+  if (expandTargetTimer.value) clearTimeout(expandTargetTimer.value)
+  expandTargetTimer.value = setTimeout(() => {
+    if (expandTargetBlockId.value === layoutId) toggleExpanded(layoutId)
+  }, DRAG_EXPAND_DELAY_MS)
+}
+
+function updateDragIntentByPointerEvent(ev: any) {
+  const draggingId = draggingBlockId.value
+  if (!draggingId) return
+
+  const point = getPointerClientPoint(ev)
+  const target = (ev?.target as HTMLElement | null) ?? null
+  const rowEl = (target?.closest?.('.block-item-row') as HTMLElement | null) ?? null
+  const wrapper = (rowEl?.closest?.('[data-block-id]') as HTMLElement | null) ?? null
+  const targetId = wrapper?.dataset?.blockId ?? null
+
+  if (!point || !rowEl || !targetId || targetId === draggingId) {
+    if (dragDropIntent.value) dragDropIntent.value = null
+    clearExpandTarget()
+    return
+  }
+
+  const rect = rowEl.getBoundingClientRect()
+  const edge = rect.height * (INVERTED_SWAP_THRESHOLD / 2)
+  const inCenter = point.y > rect.top + edge && point.y < rect.bottom - edge
+
+  if (!inCenter) {
+    if (dragDropIntent.value) dragDropIntent.value = null
+    clearExpandTarget()
+    return
+  }
+
+  const targetBlock = editor.getBlockById(targetId)
+  if (!targetBlock) {
+    if (dragDropIntent.value) dragDropIntent.value = null
+    clearExpandTarget()
+    return
+  }
+
+  const mode: DragGroupMode = targetBlock.type === 'layout' ? 'into-layout' : 'wrap'
+  const prev = dragDropIntent.value
+  if (!prev || prev.kind !== 'group' || prev.targetId !== targetId || prev.mode !== mode) {
+    dragDropIntent.value = { kind: 'group', targetId, mode }
+  }
+
+  if (mode === 'into-layout') scheduleExpand(targetId)
+  else clearExpandTarget()
+}
+
+let isDragPointerTracking = false
+function startDragPointerTracking() {
+  if (isDragPointerTracking) return
+  isDragPointerTracking = true
+  document.addEventListener('dragover', updateDragIntentByPointerEvent, true)
+  document.addEventListener('pointermove', updateDragIntentByPointerEvent, true)
+  document.addEventListener('mousemove', updateDragIntentByPointerEvent, true)
+  document.addEventListener('touchmove', updateDragIntentByPointerEvent, true)
+}
+
+function stopDragPointerTracking() {
+  if (!isDragPointerTracking) return
+  isDragPointerTracking = false
+  document.removeEventListener('dragover', updateDragIntentByPointerEvent, true)
+  document.removeEventListener('pointermove', updateDragIntentByPointerEvent, true)
+  document.removeEventListener('mousemove', updateDragIntentByPointerEvent, true)
+  document.removeEventListener('touchmove', updateDragIntentByPointerEvent, true)
+}
 
 function selectOnly(id: string) {
   editor.selectedBlockIds.value = [id]
@@ -273,49 +378,49 @@ function toggleExpanded(layoutId: string) {
 }
 
 function onDragStart(evt: any) {
+  stopDragPointerTracking()
   const id = String(evt?.item?.dataset?.blockId || '')
   draggingBlockId.value = id || null
-  expandTargetBlockId.value = null
-  if (expandTargetTimer.value) {
-    clearTimeout(expandTargetTimer.value)
-    expandTargetTimer.value = null
-  }
+  dragDropIntent.value = null
+
+  if (id && !selectionSet.value.has(id)) selectOnly(id)
+
+  clearExpandTarget()
+  startDragPointerTracking()
 }
 
 function onDragEnd(_evt: any) {
+  stopDragPointerTracking()
+  const dragId = draggingBlockId.value
+  const intent = dragDropIntent.value
+
   draggingBlockId.value = null
-  expandTargetBlockId.value = null
-  if (expandTargetTimer.value) {
-    clearTimeout(expandTargetTimer.value)
-    expandTargetTimer.value = null
-  }
+  dragDropIntent.value = null
+  clearExpandTarget()
+
+  if (!dragId || !intent || intent.kind !== 'group') return
+
+  const targetId = intent.targetId
+  const mode = intent.mode
+
+  // 让 Sortable/vuedraggable 先完成自身的收尾，再变更 block tree（避免相互打架）
+  setTimeout(() => {
+    editor.groupBlocksIntoLayout(dragId, targetId)
+
+    if (mode === 'into-layout') {
+      ensureExpanded(targetId)
+      return
+    }
+
+    const newGroupId = editor.selectedBlockIds.value[0] ?? null
+    if (!newGroupId) return
+    if (editor.getBlockById(newGroupId)?.type !== 'layout') return
+    ensureExpanded(newGroupId)
+  }, 0)
 }
 
-function onMove(evt: any, _originalEvent: any) {
-  if (!draggingBlockId.value) return true
-
-  const related = (evt?.related as HTMLElement | null) ?? null
-  const relatedWrapper = related?.closest?.('[data-block-id]') as HTMLElement | null
-  const relatedId = String(relatedWrapper?.dataset?.blockId || '')
-  const relatedBlock = evt?.relatedContext?.element as any
-
-  // 自动展开逻辑（用于将区块拖入折叠的组）
-  if (relatedId && relatedBlock?.type === 'layout' && !expandedLayoutIdSet.value.has(relatedId)) {
-    if (expandTargetBlockId.value !== relatedId) {
-      expandTargetBlockId.value = relatedId
-      if (expandTargetTimer.value) clearTimeout(expandTargetTimer.value)
-      expandTargetTimer.value = setTimeout(() => {
-        if (expandTargetBlockId.value === relatedId) toggleExpanded(relatedId)
-      }, DRAG_EXPAND_DELAY_MS)
-    }
-  } else if (expandTargetBlockId.value) {
-    expandTargetBlockId.value = null
-    if (expandTargetTimer.value) {
-      clearTimeout(expandTargetTimer.value)
-      expandTargetTimer.value = null
-    }
-  }
-
+function onMove(_evt: any, _originalEvent: any) {
+  if (dragDropIntent.value?.kind === 'group') return false
   return true
 }
 
@@ -348,6 +453,11 @@ function bulkGroup() {
   // 使用第一个选中的区块作为目标，其他区块加入成组
   editor.groupBlocksIntoLayout(ids[1], ids[0])
 }
+
+onBeforeUnmount(() => {
+  stopDragPointerTracking()
+  clearExpandTarget()
+})
 </script>
 
 <template>
@@ -377,31 +487,33 @@ function bulkGroup() {
       </NPopover>
     </NFlex>
 
-    <div v-if="selectionCount > 1" style="margin-bottom: 8px">
-      <NSpace size="small" align="center">
-        <NText depth="3">
-          已选择 {{ selectionCount }} 个区块
-        </NText>
-        <NButton size="tiny" type="primary" secondary @click="bulkGroup">
-          成组
-        </NButton>
-        <NButton size="tiny" secondary @click="bulkHide">
-          批量隐藏
-        </NButton>
-        <NButton size="tiny" secondary @click="bulkShow">
-          批量显示
-        </NButton>
-        <NButton size="tiny" secondary @click="bulkCopy">
-          批量复制
-        </NButton>
-        <NButton size="tiny" secondary :disabled="!hasClipboard" @click="bulkPaste">
-          粘贴
-        </NButton>
-        <NButton size="tiny" type="error" secondary @click="bulkDelete">
-          批量删除
-        </NButton>
-      </NSpace>
-    </div>
+    <Transition name="fade-slide">
+      <div v-if="selectionCount > 1" style="margin-bottom: 8px">
+        <NSpace size="small" align="center">
+          <NText depth="3">
+            已选择 {{ selectionCount }} 个区块
+          </NText>
+          <NButton size="tiny" type="primary" secondary @click="bulkGroup">
+            成组
+          </NButton>
+          <NButton size="tiny" secondary @click="bulkHide">
+            批量隐藏
+          </NButton>
+          <NButton size="tiny" secondary @click="bulkShow">
+            批量显示
+          </NButton>
+          <NButton size="tiny" secondary @click="bulkCopy">
+            批量复制
+          </NButton>
+          <NButton size="tiny" secondary :disabled="!hasClipboard" @click="bulkPaste">
+            粘贴
+          </NButton>
+          <NButton size="tiny" type="error" secondary @click="bulkDelete">
+            批量删除
+          </NButton>
+        </NSpace>
+      </div>
+    </Transition>
 
     <div style="padding-right: 4px">
       <BlockTreeList
@@ -411,6 +523,8 @@ function bulkGroup() {
         :selection-set="selectionSet"
         :invalid-set="invalidBlockIdSet"
         :expanded-layout-id-set="expandedLayoutIdSet"
+        :drag-group-target-id="dragGroupTargetId"
+        :drag-group-target-mode="dragGroupTargetMode"
         :on-row-click="onRowClick"
         :on-block-action="handleBlockAction"
         :on-toggle-expanded="toggleExpanded"
@@ -422,3 +536,5 @@ function bulkGroup() {
     </div>
   </div>
 </template>
+
+<style scoped src="./ui-transitions.css"></style>
