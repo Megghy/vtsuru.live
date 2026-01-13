@@ -80,7 +80,9 @@ const model = computed(() => {
                 </NText>
                 <NText depth="3" class="bili-sub">
                   Bilibili
-                  <template v-if="model.biliId"> · @{{ model.biliId }}</template>
+                  <template v-if="model.biliId">
+                    · @{{ model.biliId }}
+                  </template>
                 </NText>
               </div>
             </NFlex>
@@ -125,24 +127,42 @@ const model = computed(() => {
 
           <div v-if="cfg.showStats" class="bili-stats compact">
             <div class="stat compact">
-              <NIcon size="14" class="stat-icon"><PeopleOutline /></NIcon>
+              <NIcon size="14" class="stat-icon">
+                <PeopleOutline />
+              </NIcon>
               <div class="stat-meta">
-                <div class="stat-k">粉丝</div>
-                <div class="stat-v">{{ model.fans ?? '--' }}</div>
+                <div class="stat-k">
+                  粉丝
+                </div>
+                <div class="stat-v">
+                  {{ model.fans ?? '--' }}
+                </div>
               </div>
             </div>
             <div class="stat compact">
-              <NIcon size="14" class="stat-icon"><HomeOutline /></NIcon>
+              <NIcon size="14" class="stat-icon">
+                <HomeOutline />
+              </NIcon>
               <div class="stat-meta">
-                <div class="stat-k">关注</div>
-                <div class="stat-v">{{ model.following ?? '--' }}</div>
+                <div class="stat-k">
+                  关注
+                </div>
+                <div class="stat-v">
+                  {{ model.following ?? '--' }}
+                </div>
               </div>
             </div>
             <div class="stat compact">
-              <NIcon size="14" class="stat-icon"><VideocamOutline /></NIcon>
+              <NIcon size="14" class="stat-icon">
+                <VideocamOutline />
+              </NIcon>
               <div class="stat-meta">
-                <div class="stat-k">视频</div>
-                <div class="stat-v">{{ model.videoCount ?? '--' }}</div>
+                <div class="stat-k">
+                  视频
+                </div>
+                <div class="stat-v">
+                  {{ model.videoCount ?? '--' }}
+                </div>
               </div>
             </div>
           </div>
@@ -150,85 +170,105 @@ const model = computed(() => {
       </template>
 
       <template v-else>
-      <div class="bili-header">
-        <NFlex align="center" style="gap: 10px; min-width: 0">
-          <NAvatar
-            v-if="cfg.showAvatar && model.face"
-            :src="model.face"
-            round
-            :size="40"
-            :img-props="{ referrerpolicy: 'no-referrer' }"
-          />
-          <div class="bili-header-text">
-            <NText v-if="cfg.showName && model.name" strong class="bili-name">
-              {{ model.name }}
-            </NText>
-            <NText depth="3" class="bili-sub">
-              Bilibili
-              <template v-if="model.biliId"> · @{{ model.biliId }}</template>
-            </NText>
+        <div class="bili-header">
+          <NFlex align="center" style="gap: 10px; min-width: 0">
+            <NAvatar
+              v-if="cfg.showAvatar && model.face"
+              :src="model.face"
+              round
+              :size="40"
+              :img-props="{ referrerpolicy: 'no-referrer' }"
+            />
+            <div class="bili-header-text">
+              <NText v-if="cfg.showName && model.name" strong class="bili-name">
+                {{ model.name }}
+              </NText>
+              <NText depth="3" class="bili-sub">
+                Bilibili
+                <template v-if="model.biliId">
+                  · @{{ model.biliId }}
+                </template>
+              </NText>
+            </div>
+          </NFlex>
+        </div>
+
+        <div v-if="cfg.showSign && model.sign" class="bili-sign">
+          {{ model.sign }}
+        </div>
+
+        <div v-if="cfg.showStats" class="bili-stats">
+          <div class="stat">
+            <NIcon size="16" class="stat-icon">
+              <PeopleOutline />
+            </NIcon>
+            <div class="stat-meta">
+              <div class="stat-k">
+                粉丝
+              </div>
+              <div class="stat-v">
+                {{ model.fans ?? '--' }}
+              </div>
+            </div>
           </div>
-        </NFlex>
-      </div>
-
-      <div v-if="cfg.showSign && model.sign" class="bili-sign">
-        {{ model.sign }}
-      </div>
-
-      <div v-if="cfg.showStats" class="bili-stats">
-        <div class="stat">
-          <NIcon size="16" class="stat-icon"><PeopleOutline /></NIcon>
-          <div class="stat-meta">
-            <div class="stat-k">粉丝</div>
-            <div class="stat-v">{{ model.fans ?? '--' }}</div>
+          <div class="stat">
+            <NIcon size="16" class="stat-icon">
+              <HomeOutline />
+            </NIcon>
+            <div class="stat-meta">
+              <div class="stat-k">
+                关注
+              </div>
+              <div class="stat-v">
+                {{ model.following ?? '--' }}
+              </div>
+            </div>
+          </div>
+          <div class="stat">
+            <NIcon size="16" class="stat-icon">
+              <VideocamOutline />
+            </NIcon>
+            <div class="stat-meta">
+              <div class="stat-k">
+                视频
+              </div>
+              <div class="stat-v">
+                {{ model.videoCount ?? '--' }}
+              </div>
+            </div>
           </div>
         </div>
-        <div class="stat">
-          <NIcon size="16" class="stat-icon"><HomeOutline /></NIcon>
-          <div class="stat-meta">
-            <div class="stat-k">关注</div>
-            <div class="stat-v">{{ model.following ?? '--' }}</div>
-          </div>
-        </div>
-        <div class="stat">
-          <NIcon size="16" class="stat-icon"><VideocamOutline /></NIcon>
-          <div class="stat-meta">
-            <div class="stat-k">视频</div>
-            <div class="stat-v">{{ model.videoCount ?? '--' }}</div>
-          </div>
-        </div>
-      </div>
 
-      <div v-if="cfg.showButtons" class="bili-actions">
-        <NButton
-          v-if="model.spaceUrl"
-          class="action"
-          secondary
-          tag="a"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="model.spaceUrl"
-        >
-          <template #icon>
-            <NIcon><HomeOutline /></NIcon>
-          </template>
-          主页
-        </NButton>
-        <NButton
-          v-if="cfg.showLiveRoom && model.liveRoomUrl"
-          class="action"
-          secondary
-          tag="a"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="model.liveRoomUrl"
-        >
-          <template #icon>
-            <NIcon><PlayCircleOutline /></NIcon>
-          </template>
-          直播间
-        </NButton>
-      </div>
+        <div v-if="cfg.showButtons" class="bili-actions">
+          <NButton
+            v-if="model.spaceUrl"
+            class="action"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.spaceUrl"
+          >
+            <template #icon>
+              <NIcon><HomeOutline /></NIcon>
+            </template>
+            主页
+          </NButton>
+          <NButton
+            v-if="cfg.showLiveRoom && model.liveRoomUrl"
+            class="action"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.liveRoomUrl"
+          >
+            <template #icon>
+              <NIcon><PlayCircleOutline /></NIcon>
+            </template>
+            直播间
+          </NButton>
+        </div>
       </template>
     </div>
   </NCard>

@@ -545,7 +545,9 @@ onMounted(async () => {
                   <NFlex align="center" justify="space-between" :wrap="true" :size="12">
                     <NFlex align="center" :wrap="true" :size="8">
                       <NText>{{ item[1] }}</NText>
-                      <NText depth="3" code>{{ item[0] }}</NText>
+                      <NText depth="3" code>
+                        {{ item[0] }}
+                      </NText>
                     </NFlex>
                     <NButton
                       type="error"
@@ -575,7 +577,9 @@ onMounted(async () => {
                   <NFlex align="center" justify="space-between" :wrap="true" :size="12">
                     <NFlex align="center" :wrap="true" :size="8">
                       <NText>{{ item.name }}</NText>
-                      <NText depth="3" code>{{ item.id }}</NText>
+                      <NText depth="3" code>
+                        {{ item.id }}
+                      </NText>
                     </NFlex>
                     <NButton
                       type="error"

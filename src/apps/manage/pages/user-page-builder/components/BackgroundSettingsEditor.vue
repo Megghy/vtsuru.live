@@ -6,7 +6,7 @@ type PageBackgroundType = 'none' | 'color' | 'image'
 type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
 type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
 
-export type BackgroundSettingsTarget = {
+export interface BackgroundSettingsTarget {
   get: () => Record<string, any> | null | undefined
   ensure: () => Record<string, any> | null
   uploadImage?: () => void

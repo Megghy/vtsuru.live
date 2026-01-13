@@ -1112,7 +1112,7 @@ function handleGoConsole() {
               <NList v-else>
                 <NListItem v-for="live in streamerDetailLives" :key="live.liveId">
                   <div style="display:flex; gap: 10px; width: 100%;">
-                      <NImage
+                    <NImage
                       width="96"
                       height="54"
                       object-fit="cover"

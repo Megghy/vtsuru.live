@@ -91,7 +91,9 @@ const breakdown = computed(() => {
 
       <NText v-else>
         {{ breakdown?.days ?? 0 }} 天 {{ breakdown?.hours ?? 0 }} 小时 {{ breakdown?.minutes ?? 0 }} 分
-        <template v-if="cfg.showSeconds"> {{ breakdown?.seconds ?? 0 }} 秒</template>
+        <template v-if="cfg.showSeconds">
+          {{ breakdown?.seconds ?? 0 }} 秒
+        </template>
       </NText>
     </template>
   </NCard>

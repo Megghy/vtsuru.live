@@ -162,38 +162,52 @@ function copyToClipboard(text: string) {
           <template v-else>
             <div v-if="cfg.layout === 'table'" class="schedule-table">
               <table style="width: 100%; border-collapse: collapse">
-            <thead>
-              <tr>
-                <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">周</th>
-                <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">星期</th>
-                <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">时间</th>
-                <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">内容</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(r, idx) in flatRows"
-                :key="idx"
-                :style="(cfg.highlightToday && r.isToday) ? 'background: rgba(24, 160, 88, 0.06);' : ''"
-              >
-                <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">{{ r.week.year }}W{{ r.week.week }}</td>
-                <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                  {{ dayLabel(r.dayIdx) }}
-                  <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false" style="margin-left: 6px">今天</NTag>
-                </td>
-                <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">{{ r.time }}</td>
-                <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                  <NText>{{ r.title }}</NText>
-                  <NTag
-                    v-if="cfg.showTag && r.tag"
-                    size="small"
-                    :style="r.tagColor ? `margin-left: 6px; background:${r.tagColor}; color:#fff; border-color:${r.tagColor};` : 'margin-left: 6px'"
+                <thead>
+                  <tr>
+                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      周
+                    </th>
+                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      星期
+                    </th>
+                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      时间
+                    </th>
+                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      内容
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(r, idx) in flatRows"
+                    :key="idx"
+                    :style="(cfg.highlightToday && r.isToday) ? 'background: rgba(24, 160, 88, 0.06);' : ''"
                   >
-                    {{ r.tag }}
-                  </NTag>
-                </td>
-              </tr>
-            </tbody>
+                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      {{ r.week.year }}W{{ r.week.week }}
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      {{ dayLabel(r.dayIdx) }}
+                      <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false" style="margin-left: 6px">
+                        今天
+                      </NTag>
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      {{ r.time }}
+                    </td>
+                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                      <NText>{{ r.title }}</NText>
+                      <NTag
+                        v-if="cfg.showTag && r.tag"
+                        size="small"
+                        :style="r.tagColor ? `margin-left: 6px; background:${r.tagColor}; color:#fff; border-color:${r.tagColor};` : 'margin-left: 6px'"
+                      >
+                        {{ r.tag }}
+                      </NTag>
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -209,7 +223,9 @@ function copyToClipboard(text: string) {
                     {{ r.title }}
                   </NText>
                   <NFlex align="center" style="gap: 6px; flex-shrink: 0">
-                    <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false">今天</NTag>
+                    <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false">
+                      今天
+                    </NTag>
                     <NTag
                       v-if="cfg.showTag && r.tag"
                       size="small"

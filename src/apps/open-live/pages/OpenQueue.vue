@@ -1024,504 +1024,504 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
       </OpenLivePageHeader>
     </NCard>
 
-  <!-- 顶部功能开关与全局操作 -->
-  <NCard v-if="accountInfo?.id" size="small" bordered>
-    <template #header>
-      <NSpace align="center">
-        <NText>启用弹幕队列功能</NText>
-        <NSwitch
-          size="small"
-          :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
-          :loading="isLoading"
-          @update:value="onUpdateFunctionEnable"
-        />
-      </NSpace>
-    </template>
+    <!-- 顶部功能开关与全局操作 -->
+    <NCard v-if="accountInfo?.id" size="small" bordered>
+      <template #header>
+        <NSpace align="center">
+          <NText>启用弹幕队列功能</NText>
+          <NSwitch
+            size="small"
+            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.Queue)"
+            :loading="isLoading"
+            @update:value="onUpdateFunctionEnable"
+          />
+        </NSpace>
+      </template>
+      <NAlert
+        v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
+        type="info"
+        size="small"
+        :bordered="false"
+        closable
+        style="margin-top: 10px"
+      >
+        如果没有部署
+        <NButton
+          text
+          type="primary"
+          tag="a"
+          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+        >
+          VtsuruEventFetcher
+        </NButton>
+        则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
+      </NAlert>
+    </NCard>
+  
+    <!-- 未登录提示 -->
     <NAlert
-      v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
-      type="info"
+      v-else
+      type="warning"
+      title="未登录"
       size="small"
       :bordered="false"
       closable
-      style="margin-top: 10px"
     >
-      如果没有部署
+      你尚未注册并登录 VTsuru.live，部分功能和设置将不可用。队列将在本地临时存储。
       <NButton
-        text
-        type="primary"
         tag="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+        href="/manage"
         target="_blank"
+        type="primary"
+        size="small"
+        style="margin-left: 10px;"
       >
-        VtsuruEventFetcher
+        前往登录或注册
       </NButton>
-      则其需要保持此页面开启才能点播, 也不要同时开多个页面, 会导致点播重复 (部署了则不影响)
     </NAlert>
-  </NCard>
-  
-  <!-- 未登录提示 -->
-  <NAlert
-    v-else
-    type="warning"
-    title="未登录"
-    size="small"
-    :bordered="false"
-    closable
-  >
-    你尚未注册并登录 VTsuru.live，部分功能和设置将不可用。队列将在本地临时存储。
-    <NButton
-      tag="a"
-      href="/manage"
-      target="_blank"
-      type="primary"
-      size="small"
-      style="margin-left: 10px;"
-    >
-      前往登录或注册
-    </NButton>
-  </NAlert>
 
-  <NCard size="small" bordered>
-    <!-- 主内容区域 -->
-    <NTabs
-      v-if="!accountInfo.id || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
-      type="line"
-      animated
-      size="small"
-      display-directive="show:lazy"
-      pane-style="padding-top: 10px;"
-    >
-      <!-- 队列列表 Tab -->
-      <NTabPane
-        name="list"
-        tab="当前队列"
+    <NCard size="small" bordered>
+      <!-- 主内容区域 -->
+      <NTabs
+        v-if="!accountInfo.id || accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
+        type="line"
+        animated
+        size="small"
+        display-directive="show:lazy"
+        pane-style="padding-top: 10px;"
       >
-        <NCard
-          size="small"
-          :bordered="false"
+        <!-- 队列列表 Tab -->
+        <NTabPane
+          name="list"
+          tab="当前队列"
         >
-          <NSpace
-            align="center"
-            justify="space-between"
-            wrap
-            :item-style="{ marginBottom: '8px' }"
+          <NCard
+            size="small"
+            :bordered="false"
           >
-            <!-- 队列统计信息 -->
-            <NSpace align="center">
-              <NTag
-                type="info"
-                :bordered="false"
-                round
-              >
-                <template #icon>
-                  <NIcon :component="PeopleQueue24Filled" />
-                </template>
-                等待中: {{ queue.filter((s) => s.status === QueueStatus.Waiting).length }} 人
-              </NTag>
-              <NTag
-                type="success"
-                :bordered="false"
-                round
-              >
-                <template #icon>
-                  <NIcon :component="Checkmark12Regular" />
-                </template>
-                今日已处理:
-                {{ historySongs.filter((s) => s.status === QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }}
-                人
-              </NTag>
-            </NSpace>
-
-            <!-- 手动添加 -->
-            <NInputGroup style="max-width: 250px;">
-              <NInput
-                v-model:value="newQueueName"
-                placeholder="手动添加用户"
-                clearable
-                @keyup.enter="addManual"
-              />
-              <NButton
-                type="primary"
-                ghost
-                :disabled="!newQueueName"
-                @click="addManual"
-              >
-                添加
-              </NButton>
-            </NInputGroup>
-
-            <!-- 排序和操作 -->
-            <NSpace align="center">
-              <NPopconfirm @positive-click="deactiveAllSongs">
-                <template #trigger>
-                  <NButton
-                    type="error"
-                    size="small"
-                    ghost
-                  >
-                    全部取消
-                  </NButton>
-                </template>
-                确定要取消所有等待中和处理中的队列项吗?
-              </NPopconfirm>
-              <NRadioGroup
-                v-model:value="settings.sortType"
-                :disabled="!configCanEdit"
-                size="small"
-                @update:value="updateSettings"
-              >
-                <NRadioButton :value="QueueSortType.TimeFirst">
-                  时间
-                </NRadioButton>
-                <NRadioButton :value="QueueSortType.PaymentFist">
-                  付费
-                </NRadioButton>
-                <NRadioButton :value="QueueSortType.GuardFirst">
-                  舰长
-                </NRadioButton>
-                <NRadioButton :value="QueueSortType.FansMedalFirst">
-                  粉丝牌
-                </NRadioButton>
-              </NRadioGroup>
-              <NCheckbox
-                v-if="configCanEdit"
-                v-model:checked="settings.isReverse"
-                size="small"
-                @update:checked="updateSettings"
-              >
-                倒序
-              </NCheckbox>
-              <NCheckbox
-                v-else
-                v-model:checked="isReverse"
-                size="small"
-              >
-                倒序
-              </NCheckbox>
-            </NSpace>
-          </NSpace>
-        </NCard>
-
-        <NDivider style="margin: 10px 0;" />
-
-        <!-- 队列列表 -->
-        <NSpin :show="isLoading && originQueue.length === 0">
-          <div
-            v-if="queue.length > 0"
-            class="queue-list-container"
-          >
-            <TransitionGroup name="list">
-              <div
-                v-for="(queueData, index) in queue"
-                :key="queueData.id"
-                class="queue-item-wrapper"
-              >
-                <NCard
-                  embedded
-                  size="small"
-                  content-style="padding: 8px 12px;"
-                  :bordered="queueData.status === QueueStatus.Progressing"
-                  :style="queueData.status === QueueStatus.Progressing ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
+            <NSpace
+              align="center"
+              justify="space-between"
+              wrap
+              :item-style="{ marginBottom: '8px' }"
+            >
+              <!-- 队列统计信息 -->
+              <NSpace align="center">
+                <NTag
+                  type="info"
+                  :bordered="false"
+                  round
                 >
-                  <NSpace
-                    justify="space-between"
-                    align="center"
-                    :wrap="false"
+                  <template #icon>
+                    <NIcon :component="PeopleQueue24Filled" />
+                  </template>
+                  等待中: {{ queue.filter((s) => s.status === QueueStatus.Waiting).length }} 人
+                </NTag>
+                <NTag
+                  type="success"
+                  :bordered="false"
+                  round
+                >
+                  <template #icon>
+                    <NIcon :component="Checkmark12Regular" />
+                  </template>
+                  今日已处理:
+                  {{ historySongs.filter((s) => s.status === QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }}
+                  人
+                </NTag>
+              </NSpace>
+
+              <!-- 手动添加 -->
+              <NInputGroup style="max-width: 250px;">
+                <NInput
+                  v-model:value="newQueueName"
+                  placeholder="手动添加用户"
+                  clearable
+                  @keyup.enter="addManual"
+                />
+                <NButton
+                  type="primary"
+                  ghost
+                  :disabled="!newQueueName"
+                  @click="addManual"
+                >
+                  添加
+                </NButton>
+              </NInputGroup>
+
+              <!-- 排序和操作 -->
+              <NSpace align="center">
+                <NPopconfirm @positive-click="deactiveAllSongs">
+                  <template #trigger>
+                    <NButton
+                      type="error"
+                      size="small"
+                      ghost
+                    >
+                      全部取消
+                    </NButton>
+                  </template>
+                  确定要取消所有等待中和处理中的队列项吗?
+                </NPopconfirm>
+                <NRadioGroup
+                  v-model:value="settings.sortType"
+                  :disabled="!configCanEdit"
+                  size="small"
+                  @update:value="updateSettings"
+                >
+                  <NRadioButton :value="QueueSortType.TimeFirst">
+                    时间
+                  </NRadioButton>
+                  <NRadioButton :value="QueueSortType.PaymentFist">
+                    付费
+                  </NRadioButton>
+                  <NRadioButton :value="QueueSortType.GuardFirst">
+                    舰长
+                  </NRadioButton>
+                  <NRadioButton :value="QueueSortType.FansMedalFirst">
+                    粉丝牌
+                  </NRadioButton>
+                </NRadioGroup>
+                <NCheckbox
+                  v-if="configCanEdit"
+                  v-model:checked="settings.isReverse"
+                  size="small"
+                  @update:checked="updateSettings"
+                >
+                  倒序
+                </NCheckbox>
+                <NCheckbox
+                  v-else
+                  v-model:checked="isReverse"
+                  size="small"
+                >
+                  倒序
+                </NCheckbox>
+              </NSpace>
+            </NSpace>
+          </NCard>
+
+          <NDivider style="margin: 10px 0;" />
+
+          <!-- 队列列表 -->
+          <NSpin :show="isLoading && originQueue.length === 0">
+            <div
+              v-if="queue.length > 0"
+              class="queue-list-container"
+            >
+              <TransitionGroup name="list">
+                <div
+                  v-for="(queueData, index) in queue"
+                  :key="queueData.id"
+                  class="queue-item-wrapper"
+                >
+                  <NCard
+                    embedded
+                    size="small"
+                    content-style="padding: 8px 12px;"
+                    :bordered="queueData.status === QueueStatus.Progressing"
+                    :style="queueData.status === QueueStatus.Progressing ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
                   >
-                    <!-- 左侧信息 -->
                     <NSpace
+                      justify="space-between"
                       align="center"
-                      :size="8"
                       :wrap="false"
                     >
-                      <span
-                        :style="getIndexStyle(queueData.status)"
-                        class="queue-index"
-                        :class="{ 'queue-index-processing': queueData.status === QueueStatus.Progressing }"
+                      <!-- 左侧信息 -->
+                      <NSpace
+                        align="center"
+                        :size="8"
+                        :wrap="false"
                       >
-                        {{ index + 1 }}
-                      </span>
-                      <NText
-                        strong
-                        style="font-size: 16px;"
-                      >
-                        <NTooltip>
-                          <template #trigger>
-                            {{ queueData.user?.name }}
-                          </template>
-                          {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
-                        </NTooltip>
-                      </NText>
-                      <!-- 粉丝牌 -->
-                      <NTag
-                        v-if="settings.showFanMadelInfo && queueData.user?.fans_medal_wearing_status"
-                        size="tiny"
-                        round
-                        :bordered="false"
-                        style="padding: 0 5px 0 0;"
-                      >
+                        <span
+                          :style="getIndexStyle(queueData.status)"
+                          class="queue-index"
+                          :class="{ 'queue-index-processing': queueData.status === QueueStatus.Progressing }"
+                        >
+                          {{ index + 1 }}
+                        </span>
+                        <NText
+                          strong
+                          style="font-size: 16px;"
+                        >
+                          <NTooltip>
+                            <template #trigger>
+                              {{ queueData.user?.name }}
+                            </template>
+                            {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
+                          </NTooltip>
+                        </NText>
+                        <!-- 粉丝牌 -->
                         <NTag
+                          v-if="settings.showFanMadelInfo && queueData.user?.fans_medal_wearing_status"
                           size="tiny"
                           round
                           :bordered="false"
-                          type="info"
-                          style="margin-right: 3px;"
+                          style="padding: 0 5px 0 0;"
                         >
-                          {{ queueData.user?.fans_medal_level }}
+                          <NTag
+                            size="tiny"
+                            round
+                            :bordered="false"
+                            type="info"
+                            style="margin-right: 3px;"
+                          >
+                            {{ queueData.user?.fans_medal_level }}
+                          </NTag>
+                          {{ queueData.user?.fans_medal_name }}
                         </NTag>
-                        {{ queueData.user?.fans_medal_name }}
-                      </NTag>
-                      <!-- 舰长 -->
-                      <NTag
-                        v-if="(queueData.user?.guard_level ?? 0) > 0"
-                        size="small"
-                        :bordered="false"
-                        :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }"
-                      >
-                        {{ queueData.user?.guard_level === 1 ? '总督' : queueData.user?.guard_level === 2 ? '提督' : '舰长' }}
-                      </NTag>
-                      <!-- 付费信息 -->
-                      <NTag
-                        v-if="settings.showPayment && (queueData.giftPrice ?? 0) > 0"
-                        size="small"
-                        :bordered="false"
-                        type="error"
-                      >
-                        ¥ {{ queueData.giftPrice?.toFixed(1) }}
-                      </NTag>
-                      <!-- 附加内容提示 -->
-                      <NTooltip
-                        v-if="queueData.content"
-                        placement="right"
-                      >
-                        <template #trigger>
-                          <NIcon
-                            :component="Info24Filled"
-                            size="16"
-                            style="cursor: help; color: var(--n-text-color-3);"
-                          />
-                        </template>
-                        <NCard
+                        <!-- 舰长 -->
+                        <NTag
+                          v-if="(queueData.user?.guard_level ?? 0) > 0"
                           size="small"
                           :bordered="false"
-                          style="max-width: 300px;"
+                          :color="{ textColor: 'white', color: GetGuardColor(queueData.user?.guard_level) }"
                         >
-                          <template #header>
-                            <span style="font-size: small; color: gray;">
-                              {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
-                            </span>
-                          </template>
-                          {{ queueData?.content }}
-                        </NCard>
-                      </NTooltip>
-                      <!-- 时间 -->
-                      <NTooltip placement="bottom">
-                        <template #trigger>
-                          <NText
-                            depth="3"
-                            style="font-size: 12px;"
-                          >
-                            <NTime
-                              :key="updateKey"
-                              :time="queueData.createAt"
-                              type="relative"
+                          {{ queueData.user?.guard_level === 1 ? '总督' : queueData.user?.guard_level === 2 ? '提督' : '舰长' }}
+                        </NTag>
+                        <!-- 付费信息 -->
+                        <NTag
+                          v-if="settings.showPayment && (queueData.giftPrice ?? 0) > 0"
+                          size="small"
+                          :bordered="false"
+                          type="error"
+                        >
+                          ¥ {{ queueData.giftPrice?.toFixed(1) }}
+                        </NTag>
+                        <!-- 附加内容提示 -->
+                        <NTooltip
+                          v-if="queueData.content"
+                          placement="right"
+                        >
+                          <template #trigger>
+                            <NIcon
+                              :component="Info24Filled"
+                              size="16"
+                              style="cursor: help; color: var(--n-text-color-3);"
                             />
-                          </NText>
-                        </template>
-                        <NTime
-                          :time="queueData.createAt"
-                          format="yyyy-MM-dd HH:mm:ss"
-                        />
-                      </NTooltip>
-                    </NSpace>
+                          </template>
+                          <NCard
+                            size="small"
+                            :bordered="false"
+                            style="max-width: 300px;"
+                          >
+                            <template #header>
+                              <span style="font-size: small; color: gray;">
+                                {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
+                              </span>
+                            </template>
+                            {{ queueData?.content }}
+                          </NCard>
+                        </NTooltip>
+                        <!-- 时间 -->
+                        <NTooltip placement="bottom">
+                          <template #trigger>
+                            <NText
+                              depth="3"
+                              style="font-size: 12px;"
+                            >
+                              <NTime
+                                :key="updateKey"
+                                :time="queueData.createAt"
+                                type="relative"
+                              />
+                            </NText>
+                          </template>
+                          <NTime
+                            :time="queueData.createAt"
+                            format="yyyy-MM-dd HH:mm:ss"
+                          />
+                        </NTooltip>
+                      </NSpace>
 
-                    <!-- 右侧操作按钮 -->
-                    <NSpace
-                      justify="end"
-                      align="center"
-                      :size="6"
-                      :wrap="false"
-                      style="flex-shrink: 0;"
-                    >
-                      <!-- 开始/暂停处理 -->
-                      <NTooltip>
-                        <template #trigger>
-                          <NButton
-                            circle
-                            size="small"
-                            :type="queueData.status === QueueStatus.Progressing ? 'warning' : 'primary'"
-                            :ghost="queueData.status === QueueStatus.Progressing"
-                            :disabled="queue.some((s) => s.id !== queueData.id && s.status === QueueStatus.Progressing)"
-                            :loading="isLoading && queueDataBeingManaged === queueData.id"
-                            @click="
-                              queueDataBeingManaged = queueData.id;
-                              updateStatus(
-                                queueData,
-                                queueData.status === QueueStatus.Progressing ? QueueStatus.Waiting : QueueStatus.Progressing,
-                              )
-                            "
-                          >
-                            <template #icon>
-                              <NIcon :component="ClipboardTextLtr24Filled" />
-                            </template>
-                          </NButton>
-                        </template>
-                        {{
-                          queue.some((s) => s.id !== queueData.id && s.status === QueueStatus.Progressing)
-                            ? '已有其他用户正在处理中'
-                            : queueData.status === QueueStatus.Waiting
-                              ? '开始处理'
-                              : '暂停处理 (返回等待)'
-                        }}
-                      </NTooltip>
-                      <!-- 完成 -->
-                      <NTooltip>
-                        <template #trigger>
-                          <NButton
-                            circle
-                            size="small"
-                            type="success"
-                            :loading="isLoading && queueDataBeingManaged === queueData.id"
-                            @click="queueDataBeingManaged = queueData.id; updateStatus(queueData, QueueStatus.Finish)"
-                          >
-                            <template #icon>
-                              <NIcon :component="Checkmark12Regular" />
-                            </template>
-                          </NButton>
-                        </template>
-                        标记为已完成
-                      </NTooltip>
-                      <!-- 拉黑 -->
-                      <NTooltip
-                        v-if="configCanEdit && (queueData.from === QueueFrom.Danmaku || queueData.from === QueueFrom.Gift) && queueData.user?.uid"
+                      <!-- 右侧操作按钮 -->
+                      <NSpace
+                        justify="end"
+                        align="center"
+                        :size="6"
+                        :wrap="false"
+                        style="flex-shrink: 0;"
                       >
-                        <template #trigger>
-                          <NPopconfirm @positive-click="blockUser(queueData)">
-                            <template #trigger>
-                              <NButton
-                                circle
-                                size="small"
-                                type="warning"
-                                :loading="isLoading && queueDataBeingManaged === queueData.id"
-                                @click="queueDataBeingManaged = queueData.id"
-                              >
-                                <template #icon>
-                                  <NIcon :component="PresenceBlocked16Regular" />
-                                </template>
-                              </NButton>
-                            </template>
-                            确定要将 {{ queueData.user?.name }} 加入 黑名单并取消排队吗？
-                          </NPopconfirm>
-                        </template>
-                        拉黑用户 (B站)
-                      </NTooltip>
-                      <!-- 移出/取消 -->
-                      <NTooltip>
-                        <template #trigger>
-                          <NButton
-                            circle
-                            size="small"
-                            type="error"
-                            :loading="isLoading && queueDataBeingManaged === queueData.id"
-                            @click="queueDataBeingManaged = queueData.id; updateStatus(queueData, QueueStatus.Cancel)"
-                          >
-                            <template #icon>
-                              <NIcon :component="Dismiss16Filled" />
-                            </template>
-                          </NButton>
-                        </template>
-                        取消排队
-                      </NTooltip>
+                        <!-- 开始/暂停处理 -->
+                        <NTooltip>
+                          <template #trigger>
+                            <NButton
+                              circle
+                              size="small"
+                              :type="queueData.status === QueueStatus.Progressing ? 'warning' : 'primary'"
+                              :ghost="queueData.status === QueueStatus.Progressing"
+                              :disabled="queue.some((s) => s.id !== queueData.id && s.status === QueueStatus.Progressing)"
+                              :loading="isLoading && queueDataBeingManaged === queueData.id"
+                              @click="
+                                queueDataBeingManaged = queueData.id;
+                                updateStatus(
+                                  queueData,
+                                  queueData.status === QueueStatus.Progressing ? QueueStatus.Waiting : QueueStatus.Progressing,
+                                )
+                              "
+                            >
+                              <template #icon>
+                                <NIcon :component="ClipboardTextLtr24Filled" />
+                              </template>
+                            </NButton>
+                          </template>
+                          {{
+                            queue.some((s) => s.id !== queueData.id && s.status === QueueStatus.Progressing)
+                              ? '已有其他用户正在处理中'
+                              : queueData.status === QueueStatus.Waiting
+                                ? '开始处理'
+                                : '暂停处理 (返回等待)'
+                          }}
+                        </NTooltip>
+                        <!-- 完成 -->
+                        <NTooltip>
+                          <template #trigger>
+                            <NButton
+                              circle
+                              size="small"
+                              type="success"
+                              :loading="isLoading && queueDataBeingManaged === queueData.id"
+                              @click="queueDataBeingManaged = queueData.id; updateStatus(queueData, QueueStatus.Finish)"
+                            >
+                              <template #icon>
+                                <NIcon :component="Checkmark12Regular" />
+                              </template>
+                            </NButton>
+                          </template>
+                          标记为已完成
+                        </NTooltip>
+                        <!-- 拉黑 -->
+                        <NTooltip
+                          v-if="configCanEdit && (queueData.from === QueueFrom.Danmaku || queueData.from === QueueFrom.Gift) && queueData.user?.uid"
+                        >
+                          <template #trigger>
+                            <NPopconfirm @positive-click="blockUser(queueData)">
+                              <template #trigger>
+                                <NButton
+                                  circle
+                                  size="small"
+                                  type="warning"
+                                  :loading="isLoading && queueDataBeingManaged === queueData.id"
+                                  @click="queueDataBeingManaged = queueData.id"
+                                >
+                                  <template #icon>
+                                    <NIcon :component="PresenceBlocked16Regular" />
+                                  </template>
+                                </NButton>
+                              </template>
+                              确定要将 {{ queueData.user?.name }} 加入 黑名单并取消排队吗？
+                            </NPopconfirm>
+                          </template>
+                          拉黑用户 (B站)
+                        </NTooltip>
+                        <!-- 移出/取消 -->
+                        <NTooltip>
+                          <template #trigger>
+                            <NButton
+                              circle
+                              size="small"
+                              type="error"
+                              :loading="isLoading && queueDataBeingManaged === queueData.id"
+                              @click="queueDataBeingManaged = queueData.id; updateStatus(queueData, QueueStatus.Cancel)"
+                            >
+                              <template #icon>
+                                <NIcon :component="Dismiss16Filled" />
+                              </template>
+                            </NButton>
+                          </template>
+                          取消排队
+                        </NTooltip>
+                      </NSpace>
                     </NSpace>
-                  </NSpace>
-                </NCard>
-                <NDivider style="margin: 0" />
-              </div>
-            </TransitionGroup>
-          </div>
-          <NEmpty
-            v-else
-            description="当前队列为空"
-            style="margin-top: 50px;"
-          />
-        </NSpin>
-      </NTabPane>
+                  </NCard>
+                  <NDivider style="margin: 0" />
+                </div>
+              </TransitionGroup>
+            </div>
+            <NEmpty
+              v-else
+              description="当前队列为空"
+              style="margin-top: 50px;"
+            />
+          </NSpin>
+        </NTabPane>
 
-      <!-- 历史记录 Tab -->
-      <NTabPane
-        name="history"
-        tab="历史记录"
-      >
-        <NCard
-          size="small"
-          :bordered="false"
-          style="margin-bottom: 10px;"
+        <!-- 历史记录 Tab -->
+        <NTabPane
+          name="history"
+          tab="历史记录"
         >
-          <NSpace
-            align="center"
-            justify="space-between"
+          <NCard
+            size="small"
+            :bordered="false"
+            style="margin-bottom: 10px;"
           >
-            <NSpace align="center">
-              <NInputGroup style="width: 300px">
-                <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
-                <NInput
-                  v-model:value="filterName"
-                  clearable
-                  placeholder="输入用户名"
-                />
-              </NInputGroup>
-              <NCheckbox v-model:checked="filterNameContains">
-                模糊匹配
-              </NCheckbox>
-            </NSpace>
-            <NButton
-              size="small"
-              type="error"
-              ghost
-              :disabled="historySongs.length === 0"
-              @click="deleteQueue(historySongs)"
+            <NSpace
+              align="center"
+              justify="space-between"
             >
-              清空所有历史记录
-            </NButton>
-          </NSpace>
-        </NCard>
-        <NDataTable
-          ref="table"
-          size="small"
-          :columns="columns"
-          :data="historySongs"
-          :pagination="{ pageSize: 20, showSizePicker: true, pageSizes: [20, 50, 100] }"
-          :loading="isLoading"
-          remote
-          :row-key="(row) => row.id"
-          striped
-        />
-      </NTabPane>
+              <NSpace align="center">
+                <NInputGroup style="width: 300px">
+                  <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
+                  <NInput
+                    v-model:value="filterName"
+                    clearable
+                    placeholder="输入用户名"
+                  />
+                </NInputGroup>
+                <NCheckbox v-model:checked="filterNameContains">
+                  模糊匹配
+                </NCheckbox>
+              </NSpace>
+              <NButton
+                size="small"
+                type="error"
+                ghost
+                :disabled="historySongs.length === 0"
+                @click="deleteQueue(historySongs)"
+              >
+                清空所有历史记录
+              </NButton>
+            </NSpace>
+          </NCard>
+          <NDataTable
+            ref="table"
+            size="small"
+            :columns="columns"
+            :data="historySongs"
+            :pagination="{ pageSize: 20, showSizePicker: true, pageSizes: [20, 50, 100] }"
+            :loading="isLoading"
+            remote
+            :row-key="(row) => row.id"
+            striped
+          />
+        </NTabPane>
 
-      <!-- 设置 Tab -->
-      <NTabPane
-        name="setting"
-        tab="设置"
-        :disabled="!configCanEdit"
+        <!-- 设置 Tab -->
+        <NTabPane
+          name="setting"
+          tab="设置"
+          :disabled="!configCanEdit"
+        >
+          <QueueSettingsTab
+            :is-loading="isLoading"
+            :settings="settings"
+            @change="updateSettings"
+          />
+        </NTabPane>
+      </NTabs>
+      <!-- 未启用功能时的提示 -->
+      <NAlert
+        v-else
+        title="功能未启用"
+        type="info"
+        size="small"
+        :bordered="false"
       >
-        <QueueSettingsTab
-          :is-loading="isLoading"
-          :settings="settings"
-          @change="updateSettings"
-        />
-      </NTabPane>
-    </NTabs>
-    <!-- 未启用功能时的提示 -->
-    <NAlert
-      v-else
-      title="功能未启用"
-      type="info"
-      size="small"
-      :bordered="false"
-    >
-      请在页面顶部的开关处启用弹幕队列功能。
-    </NAlert>
-  </NCard>
+        请在页面顶部的开关处启用弹幕队列功能。
+      </NAlert>
+    </NCard>
   </NFlex>
 
   <QueueObsModal

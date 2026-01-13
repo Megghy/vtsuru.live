@@ -1178,16 +1178,16 @@ onUnmounted(() => {
                     保存配置
                   </NButton>
                   <NPopconfirm
-                  v-else
-                  type="error"
-                  @positive-click="async () => {
+                    v-else
+                    type="error"
+                    @positive-click="async () => {
                       await biliCookie.clearCookieCloudConfig();
                       cookieCloudData.key = '';
                       cookieCloudData.password = '';
                       cookieCloudData.host = 'https://cookie.vtsuru.live';
                       message.success('配置已清除');
                     }"
-                >
+                  >
                     <template #trigger>
                       <NButton type="error">
                         清除配置

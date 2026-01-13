@@ -6,7 +6,6 @@ import { computed, inject } from 'vue'
 import Draggable from 'vuedraggable-es'
 import {
   AlertCircleOutline,
-  ChevronDownOutline,
   ChevronForwardOutline,
   EllipsisHorizontalOutline,
   EyeOffOutline,

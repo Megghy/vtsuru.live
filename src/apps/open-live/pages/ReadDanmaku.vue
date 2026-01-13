@@ -546,865 +546,281 @@ onUnmounted(() => {
       </NSpace>
     </NCard>
 
-      <!-- 状态统计区域 -->
-      <NCard
-        v-if="speechState.canSpeech"
-        title="实时状态"
-        size="small"
-        bordered
+    <!-- 状态统计区域 -->
+    <NCard
+      v-if="speechState.canSpeech"
+      title="实时状态"
+      size="small"
+      bordered
+    >
+      <NGrid
+        :cols="4"
+        :x-gap="12"
+        :y-gap="12"
+        responsive="screen"
       >
-        <NGrid
-          :cols="4"
-          :x-gap="12"
-          :y-gap="12"
-          responsive="screen"
-        >
-          <NGi>
-            <NStatistic label="当前状态">
-              <template #prefix>
-                <NTooltip v-if="speechState.isApiAudioLoading">
-                  <template #trigger>
-                    <NSpin :size="20" />
-                  </template>
-                  加载中
-                </NTooltip>
-                <NIcon
-                  v-else
-                  :component="Mic24Filled"
-                  :color="speechState.isSpeaking ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
-                  :size="20"
-                />
-              </template>
-              <NText :type="speechState.isSpeaking ? 'success' : 'default'">
-                {{ speechState.isSpeaking ? '朗读中' : '待机' }}
-              </NText>
-            </NStatistic>
-            <NText
-              v-if="speechState.isSpeaking"
-              depth="3"
-              style="font-size: 12px; display: block; margin-top: 4px"
-            >
-              {{ speechState.speakingText }}
-            </NText>
-          </NGi>
-
-          <NGi>
-            <NStatistic
-              label="队列长度"
-              :value="queueStats.total"
-            >
-              <template #suffix>
-                <NText depth="3">
-                  条
-                </NText>
-              </template>
-            </NStatistic>
-          </NGi>
-
-          <NGi>
-            <NStatistic
-              label="已读取"
-              :value="readedDanmaku"
-            >
-              <template #suffix>
-                <NText depth="3">
-                  条
-                </NText>
-              </template>
-            </NStatistic>
-          </NGi>
-
-          <NGi>
-            <NStatistic label="队列分布">
-              <NSpace
-                :size="8"
-                style="margin-top: 4px"
-              >
-                <NTooltip v-if="queueStats.messages > 0">
-                  <template #trigger>
-                    <NTag
-                      :bordered="false"
-                      type="info"
-                      size="small"
-                    >
-                      弹幕 {{ queueStats.messages }}
-                    </NTag>
-                  </template>
-                  弹幕消息数量
-                </NTooltip>
-                <NTooltip v-if="queueStats.gifts > 0">
-                  <template #trigger>
-                    <NTag
-                      :bordered="false"
-                      type="success"
-                      size="small"
-                    >
-                      礼物 {{ queueStats.gifts }}
-                    </NTag>
-                  </template>
-                  礼物消息数量
-                </NTooltip>
-                <NTooltip v-if="queueStats.waiting > 0">
-                  <template #trigger>
-                    <NTag
-                      :bordered="false"
-                      type="warning"
-                      size="small"
-                    >
-                      等待 {{ queueStats.waiting }}
-                    </NTag>
-                  </template>
-                  等待合并的礼物
-                </NTooltip>
-              </NSpace>
-            </NStatistic>
-          </NGi>
-        </NGrid>
-
-        <!-- 队列详情 -->
-        <NDivider style="margin: 16px 0" />
-        <NCollapse>
-          <NCollapseItem
-            title="队列详情"
-            name="queue"
-          >
-            <template #header-extra>
-              <NTag
-                :bordered="false"
-                size="small"
-              >
-                {{ speakQueue.length }} 项
-              </NTag>
+        <NGi>
+          <NStatistic label="当前状态">
+            <template #prefix>
+              <NTooltip v-if="speechState.isApiAudioLoading">
+                <template #trigger>
+                  <NSpin :size="20" />
+                </template>
+                加载中
+              </NTooltip>
+              <NIcon
+                v-else
+                :component="Mic24Filled"
+                :color="speechState.isSpeaking ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
+                :size="20"
+              />
             </template>
+            <NText :type="speechState.isSpeaking ? 'success' : 'default'">
+              {{ speechState.isSpeaking ? '朗读中' : '待机' }}
+            </NText>
+          </NStatistic>
+          <NText
+            v-if="speechState.isSpeaking"
+            depth="3"
+            style="font-size: 12px; display: block; margin-top: 4px"
+          >
+            {{ speechState.speakingText }}
+          </NText>
+        </NGi>
 
-            <NEmpty
-              v-if="speakQueue.length === 0"
-              description="队列为空"
-              size="small"
-            />
-
-            <NScrollbar
-              v-else
-              style="max-height: 300px"
-            >
-              <NList
-                size="small"
-                bordered
-              >
-                <NListItem
-                  v-for="(item, index) in speakQueue"
-                  :key="`${item.data.time}-${index}`"
-                >
-                  <NSpace
-                    align="center"
-                    :size="8"
-                  >
-                    <NButton
-                      type="primary"
-                      size="tiny"
-                      circle
-                      @click="forceSpeak(item.data)"
-                    >
-                      <template #icon>
-                        <NIcon :component="Play20Filled" />
-                      </template>
-                    </NButton>
-
-                    <NButton
-                      type="error"
-                      size="tiny"
-                      circle
-                      @click="removeFromQueue(item)"
-                    >
-                      <template #icon>
-                        <NIcon :component="Dismiss20Filled" />
-                      </template>
-                    </NButton>
-
-                    <NTag
-                      v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
-                      type="info"
-                      size="small"
-                      :bordered="false"
-                    >
-                      连续赠送中
-                    </NTag>
-                    <NTag
-                      v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
-                      type="success"
-                      size="small"
-                      :bordered="false"
-                    >
-                      等待合并
-                    </NTag>
-
-                    <NTag
-                      :type="getEventTypeTag(item.data.type).type"
-                      size="small"
-                      :bordered="false"
-                    >
-                      {{ getEventTypeTag(item.data.type).text }}
-                    </NTag>
-
-                    <NText strong>
-                      {{ item.data.uname }}
-                    </NText>
-
-                    <NText depth="3">
-                      {{ speechService.getTextFromDanmaku(item.data) }}
-                    </NText>
-                  </NSpace>
-                </NListItem>
-              </NList>
-            </NScrollbar>
-          </NCollapseItem>
-        </NCollapse>
-      </NCard>
-
-      <!-- 语音设置区域 -->
-      <NCard
-        title="语音设置"
-        size="small"
-        bordered
-      >
-        <NSpace
-          vertical
-          :size="12"
-        >
-          <!-- 输出设备选择 -->
-          <div>
-            <NSpace justify="space-between" align="center">
-              <NText strong>
-                输出设备
+        <NGi>
+          <NStatistic
+            label="队列长度"
+            :value="queueStats.total"
+          >
+            <template #suffix>
+              <NText depth="3">
+                条
               </NText>
-              <NButton
-                v-if="audioOutputDevices.length === 0"
-                text
-                type="primary"
-                size="small"
-                :loading="audioOutputDevicesLoading"
-                @click="fetchAudioOutputDevices"
-              >
-                加载设备列表
-              </NButton>
-            </NSpace>
-            <NSelect
-              v-model:value="settings.outputDeviceId"
-              :options="audioOutputDevices"
-              :loading="audioOutputDevicesLoading"
-              :fallback-option="() => ({
-                label: settings.outputDeviceId === 'default' ? '默认设备' : `已选择: ${settings.outputDeviceId.substring(0, 16)}...`,
-                value: settings.outputDeviceId || 'default',
-              })"
-              style="margin-top: 8px"
-              @update:value="setAudioOutputDevice"
-            />
-            <NAlert
-              v-if="audioOutputDevices.length === 1"
-              type="info"
-              :bordered="false"
-              style="margin-top: 8px; font-size: 12px"
-            >
-              <template #icon>
-                <NIcon :component="Info24Filled" :size="16" />
-              </template>
-              未检测到其他音频设备。某些浏览器需要授予麦克风权限才能列出所有设备。
-            </NAlert>
-          </div>
+            </template>
+          </NStatistic>
+        </NGi>
 
-          <NDivider style="margin: 8px 0" />
-
-          <NRadioGroup
-            v-model:value="settings.voiceType"
-            size="large"
+        <NGi>
+          <NStatistic
+            label="已读取"
+            :value="readedDanmaku"
           >
-            <NRadioButton value="local">
-              <NSpace :size="4">
-                <span>本地语音</span>
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      :size="16"
-                    />
-                  </template>
-                  使用浏览器内置的语音合成功能
-                </NTooltip>
-              </NSpace>
-            </NRadioButton>
+            <template #suffix>
+              <NText depth="3">
+                条
+              </NText>
+            </template>
+          </NStatistic>
+        </NGi>
 
-            <NRadioButton value="azure">
-              <NSpace :size="4">
-                <span>Azure TTS</span>
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      :size="16"
-                    />
-                  </template>
-                  使用 Microsoft Azure 语音合成服务, 混合语言输出效果和音质好, 略有延迟
-                </NTooltip>
-              </NSpace>
-            </NRadioButton>
-
-            <NRadioButton value="api">
-              <NSpace :size="4">
-                <span>API 语音</span>
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      :size="16"
-                    />
-                  </template>
-                  自定义语音API，可以播放自己训练的模型或其他TTS
-                </NTooltip>
-              </NSpace>
-            </NRadioButton>
-          </NRadioGroup>
-
-          <Transition
-            name="fade"
-            mode="out-in"
-          >
-            <!-- 本地语音设置 -->
+        <NGi>
+          <NStatistic label="队列分布">
             <NSpace
-              v-if="settings.voiceType === 'local'"
-              vertical
-              :size="16"
+              :size="8"
+              style="margin-top: 4px"
             >
-              <div>
-                <NText strong>
-                  选择语音
-                </NText>
-                <NSelect
-                  v-model:value="settings.speechInfo.voice"
-                  :options="voiceOptions"
-                  :fallback-option="() => ({
-                    label: settings.speechInfo.voice ? `已选择: ${settings.speechInfo.voice}` : '未选择, 将使用默认语音',
-                    value: settings.speechInfo.voice || '',
-                  })"
-                  style="margin-top: 8px"
-                  filterable
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>音量</NText>
-                  <NText depth="3">
-                    {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.volume"
-                  :min="0"
-                  :max="1"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>音调</NText>
-                  <NText depth="3">
-                    {{ settings.speechInfo.pitch.toFixed(2) }}
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.pitch"
-                  :min="0"
-                  :max="2"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>语速</NText>
-                  <NText depth="3">
-                    {{ settings.speechInfo.rate.toFixed(2) }}
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.rate"
-                  :min="0"
-                  :max="2"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-            </NSpace>
-
-            <!-- Azure TTS 设置 -->
-            <NSpace
-              v-else-if="settings.voiceType === 'azure'"
-              vertical
-              :size="16"
-            >
-              <NAlert
-                type="success"
-                :bordered="false"
-              >
-                <template #icon>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                使用本站提供的 Microsoft Azure 语音合成服务，效果最好
-              </NAlert>
-
-              <div>
-                <NSpace justify="space-between" align="center">
-                  <NText strong>
-                    语音选择
-                  </NText>
-                  <NButton
-                    v-if="azureVoices.length === 0"
-                    text
-                    type="primary"
-                    size="small"
-                    :loading="azureVoicesLoading"
-                    @click="fetchAzureVoices"
-                  >
-                    加载语音列表
-                  </NButton>
-                  <NText v-else depth="3" style="font-size: 12px">
-                    共 {{ azureVoices.length }} 个语音
-                  </NText>
-                </NSpace>
-                <NSelect
-                  v-model:value="settings.azureVoice"
-                  :options="azureVoices.length > 0 ? azureVoices : [
-                    { label: '中文(普通话)女 - 晓晓', value: 'zh-CN-XiaoxiaoNeural' },
-                    { label: '中文(普通话)女 - 晓伊', value: 'zh-CN-XiaoyiNeural' },
-                    { label: '中文(普通话)女 - 晓梦', value: 'zh-CN-XiaomengNeural' },
-                    { label: '中文(普通话)女 - 晓莫', value: 'zh-CN-XiaomoNeural' },
-                    { label: '中文(普通话)女 - 晓秋', value: 'zh-CN-XiaoqiuNeural' },
-                    { label: '中文(普通话)女 - 晓双', value: 'zh-CN-XiaoshuangNeural' },
-                    { label: '中文(普通话)女 - 晓纯', value: 'zh-CN-XiaochenNeural' },
-                    { label: '中文(普通话)女 - 晓翔', value: 'zh-CN-XiaoxiangNeural' },
-                    { label: '中文(普通话)女 - 晓蕾', value: 'zh-CN-XiaorouNeural' },
-                    { label: '中文(普通话)女 - 晓瑶', value: 'zh-CN-XiaoyouNeural' },
-                    { label: '中文(普通话)男 - 云希', value: 'zh-CN-YunxiNeural' },
-                    { label: '中文(普通话)男 - 云扬', value: 'zh-CN-YunyangNeural' },
-                    { label: '中文(普通话)男 - 云健', value: 'zh-CN-YunjianNeural' },
-                    { label: '中文(普通话)儿童 - 晓晋', value: 'zh-CN-XiaozhenNeural' },
-                    { label: '中文(普通话)儿童 - 云夏', value: 'zh-CN-YunxiaNeural' },
-                  ]"
-                  :loading="azureVoicesLoading"
-                  :fallback-option="() => ({
-                    label: settings.azureVoice ? `已选择: ${settings.azureVoice}` : '未选择',
-                    value: settings.azureVoice || '',
-                  })"
-                  style="margin-top: 8px"
-                  filterable
-                  @focus="fetchAzureVoices"
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>音量</NText>
-                  <NText depth="3">
-                    {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.volume"
-                  :min="0"
-                  :max="1"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>音调</NText>
-                  <NText depth="3">
-                    {{ settings.speechInfo.pitch.toFixed(2) }}
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.pitch"
-                  :min="0.5"
-                  :max="2"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>语速</NText>
-                  <NText depth="3">
-                    {{ settings.speechInfo.rate.toFixed(2) }}
-                  </NText>
-                </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.rate"
-                  :min="0.5"
-                  :max="2"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-            </NSpace>
-
-            <!-- API 语音设置 -->
-            <NSpace
-              v-else
-              vertical
-              :size="16"
-            >
-              <NCollapse>
-                <NCollapseItem
-                  title="📖 使用说明"
-                  name="requirements"
-                >
-                  <NSpace
-                    vertical
-                    :size="8"
-                  >
-                    <NText>API 要求：</NText>
-                    <ul style="margin: 0; padding-left: 24px">
-                      <li>直接返回音频数据（wav, mp3, m4a 等）</li>
-                      <li>建议使用 HTTPS（HTTP 将通过 Cloudflare Workers 代理，会较慢）</li>
-                      <li>确保 API 可以被外部访问</li>
-                    </ul>
-                    <NDivider style="margin: 8px 0" />
-                    <NText>推荐项目（可本地部署）：</NText>
-                    <NButton
-                      text
-                      type="info"
-                      tag="a"
-                      href="https://github.com/Artrajz/vits-simple-api"
-                      target="_blank"
-                    >
-                      vits-simple-api
-                    </NButton>
-                  </NSpace>
-                </NCollapseItem>
-              </NCollapse>
-
-              <NAlert
-                v-if="isVtsuruVoiceAPI"
-                type="success"
-                closable
-              >
-                <template #icon>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                你正在使用本站提供的测试 API (voice.vtsuru.live)，仅用于测试，不保证可用性
-              </NAlert>
-
-              <NAlert type="info">
-                地址中的
-                <NButton
-                  size="tiny"
-                  type="primary"
-                  text
-                  @click="copyToClipboard('{{text}}')"
-                >
-                  <span v-text="'{{ text }}'" />
-                </NButton>
-                将被替换为要念的文本
-              </NAlert>
-
-              <div>
-                <NText strong>
-                  API 地址
-                </NText>
-                <NInputGroup style="margin-top: 8px">
-                  <NSelect
-                    v-model:value="settings.voiceAPISchemeType"
-                    :options="[
-                      { label: 'https://', value: 'https' },
-                      { label: 'http://', value: 'http' },
-                    ]"
-                    style="width: 110px"
-                  />
-                  <NInput
-                    v-model:value="settings.voiceAPI"
-                    placeholder="例如: xxx.com/voice/bert-vits2?text={{text}}&id=0"
-                    :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : undefined"
-                  />
-                  <NButton
+              <NTooltip v-if="queueStats.messages > 0">
+                <template #trigger>
+                  <NTag
+                    :bordered="false"
                     type="info"
-                    :loading="speechState.isApiAudioLoading"
-                    @click="testAPI"
+                    size="small"
                   >
-                    测试
-                  </NButton>
-                </NInputGroup>
-              </div>
-
-              <NAlert
-                v-if="settings.voiceAPISchemeType === 'http'"
-                type="warning"
-              >
-                <template #icon>
-                  <NIcon :component="Info24Filled" />
+                    弹幕 {{ queueStats.messages }}
+                  </NTag>
                 </template>
+                弹幕消息数量
+              </NTooltip>
+              <NTooltip v-if="queueStats.gifts > 0">
+                <template #trigger>
+                  <NTag
+                    :bordered="false"
+                    type="success"
+                    size="small"
+                  >
+                    礼物 {{ queueStats.gifts }}
+                  </NTag>
+                </template>
+                礼物消息数量
+              </NTooltip>
+              <NTooltip v-if="queueStats.waiting > 0">
+                <template #trigger>
+                  <NTag
+                    :bordered="false"
+                    type="warning"
+                    size="small"
+                  >
+                    等待 {{ queueStats.waiting }}
+                  </NTag>
+                </template>
+                等待合并的礼物
+              </NTooltip>
+            </NSpace>
+          </NStatistic>
+        </NGi>
+      </NGrid>
+
+      <!-- 队列详情 -->
+      <NDivider style="margin: 16px 0" />
+      <NCollapse>
+        <NCollapseItem
+          title="队列详情"
+          name="queue"
+        >
+          <template #header-extra>
+            <NTag
+              :bordered="false"
+              size="small"
+            >
+              {{ speakQueue.length }} 项
+            </NTag>
+          </template>
+
+          <NEmpty
+            v-if="speakQueue.length === 0"
+            description="队列为空"
+            size="small"
+          />
+
+          <NScrollbar
+            v-else
+            style="max-height: 300px"
+          >
+            <NList
+              size="small"
+              bordered
+            >
+              <NListItem
+                v-for="(item, index) in speakQueue"
+                :key="`${item.data.time}-${index}`"
+              >
                 <NSpace
-                  vertical
+                  align="center"
                   :size="8"
                 >
-                  <NText>不使用 HTTPS 将通过 Cloudflare Workers 代理，速度会慢很多</NText>
-                  <NCheckbox v-model:checked="settings.useAPIDirectly">
-                    不使用代理（需要了解可能产生的影响）
-                  </NCheckbox>
-                </NSpace>
-              </NAlert>
+                  <NButton
+                    type="primary"
+                    size="tiny"
+                    circle
+                    @click="forceSpeak(item.data)"
+                  >
+                    <template #icon>
+                      <NIcon :component="Play20Filled" />
+                    </template>
+                  </NButton>
 
-              <div>
-                <NSpace
-                  justify="space-between"
-                  align="center"
-                >
-                  <NText>音量</NText>
+                  <NButton
+                    type="error"
+                    size="tiny"
+                    circle
+                    @click="removeFromQueue(item)"
+                  >
+                    <template #icon>
+                      <NIcon :component="Dismiss20Filled" />
+                    </template>
+                  </NButton>
+
+                  <NTag
+                    v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
+                    type="info"
+                    size="small"
+                    :bordered="false"
+                  >
+                    连续赠送中
+                  </NTag>
+                  <NTag
+                    v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
+                    type="success"
+                    size="small"
+                    :bordered="false"
+                  >
+                    等待合并
+                  </NTag>
+
+                  <NTag
+                    :type="getEventTypeTag(item.data.type).type"
+                    size="small"
+                    :bordered="false"
+                  >
+                    {{ getEventTypeTag(item.data.type).text }}
+                  </NTag>
+
+                  <NText strong>
+                    {{ item.data.uname }}
+                  </NText>
+
                   <NText depth="3">
-                    {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
+                    {{ speechService.getTextFromDanmaku(item.data) }}
                   </NText>
                 </NSpace>
-                <NSlider
-                  v-model:value="settings.speechInfo.volume"
-                  :min="0"
-                  :max="1"
-                  :step="0.01"
-                  style="margin-top: 8px"
-                />
-              </div>
-            </NSpace>
-          </Transition>
+              </NListItem>
+            </NList>
+          </NScrollbar>
+        </NCollapseItem>
+      </NCollapse>
+    </NCard>
 
-          <!-- 隐藏的音频元素 - 用于 API 和 Azure TTS -->
-          <audio
-            v-if="settings.voiceType !== 'local'"
-            ref="apiAudio"
-            :src="speechState.apiAudioSrc"
-            :volume="settings.speechInfo.volume"
-            style="display: none"
-            autoplay
-            @ended="cancelSpeech"
-            @canplay="onAudioCanPlay"
-            @error="onAudioError"
-            @loadedmetadata="setAudioOutputDevice"
-          />
-        </NSpace>
-      </NCard>
-
-      <!-- 模板设置区域 -->
-      <NCard
-        title="消息模板"
-        size="small"
-        bordered
+    <!-- 语音设置区域 -->
+    <NCard
+      title="语音设置"
+      size="small"
+      bordered
+    >
+      <NSpace
+        vertical
+        :size="12"
       >
-        <NSpace
-          vertical
-          :size="12"
-        >
+        <!-- 输出设备选择 -->
+        <div>
+          <NSpace justify="space-between" align="center">
+            <NText strong>
+              输出设备
+            </NText>
+            <NButton
+              v-if="audioOutputDevices.length === 0"
+              text
+              type="primary"
+              size="small"
+              :loading="audioOutputDevicesLoading"
+              @click="fetchAudioOutputDevices"
+            >
+              加载设备列表
+            </NButton>
+          </NSpace>
+          <NSelect
+            v-model:value="settings.outputDeviceId"
+            :options="audioOutputDevices"
+            :loading="audioOutputDevicesLoading"
+            :fallback-option="() => ({
+              label: settings.outputDeviceId === 'default' ? '默认设备' : `已选择: ${settings.outputDeviceId.substring(0, 16)}...`,
+              value: settings.outputDeviceId || 'default',
+            })"
+            style="margin-top: 8px"
+            @update:value="setAudioOutputDevice"
+          />
           <NAlert
+            v-if="audioOutputDevices.length === 1"
             type="info"
             :bordered="false"
+            style="margin-top: 8px; font-size: 12px"
           >
             <template #icon>
-              <NIcon :component="Info24Filled" />
+              <NIcon :component="Info24Filled" :size="16" />
             </template>
-            <NText>支持的变量（点击复制）：</NText>
-            <NDivider style="margin: 8px 0" />
-            <NSpace :size="8">
-              <NButton
-                v-for="item in Object.values(templateConstants)"
-                :key="item.name"
-                size="tiny"
-                secondary
-                @click="copyToClipboard(item.words)"
-              >
-                {{ item.words }}
-                <NDivider vertical />
-                {{ item.name }}
-              </NButton>
-            </NSpace>
+            未检测到其他音频设备。某些浏览器需要授予麦克风权限才能列出所有设备。
           </NAlert>
+        </div>
 
-          <NText depth="3" style="font-size: 12px; margin-bottom: 8px;">
-            提示：模板留空则不播报对应类型的事件
-          </NText>
+        <NDivider style="margin: 8px 0" />
 
-          <div>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 120px">
-                弹幕模板
-              </NInputGroupLabel>
-              <NInput
-                v-model:value="settings.danmakuTemplate"
-              />
-              <NButton
-                type="info"
-                :loading="speechState.isApiAudioLoading"
-                @click="test(EventDataTypes.Message)"
-              >
-                测试
-              </NButton>
-            </NInputGroup>
-          </div>
-
-          <div>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 120px">
-                礼物模板
-              </NInputGroupLabel>
-              <NInput
-                v-model:value="settings.giftTemplate"
-              />
-              <NButton
-                type="info"
-                :loading="speechState.isApiAudioLoading"
-                @click="test(EventDataTypes.Gift)"
-              >
-                测试
-              </NButton>
-            </NInputGroup>
-          </div>
-
-          <div>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 120px">
-                SC 模板
-              </NInputGroupLabel>
-              <NInput
-                v-model:value="settings.scTemplate"
-              />
-              <NButton
-                type="info"
-                :loading="speechState.isApiAudioLoading"
-                @click="test(EventDataTypes.SC)"
-              >
-                测试
-              </NButton>
-            </NInputGroup>
-          </div>
-
-          <div>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 120px">
-                上舰模板
-              </NInputGroupLabel>
-              <NInput
-                v-model:value="settings.guardTemplate"
-              />
-              <NButton
-                type="info"
-                :loading="speechState.isApiAudioLoading"
-                @click="test(EventDataTypes.Guard)"
-              >
-                测试
-              </NButton>
-            </NInputGroup>
-          </div>
-
-          <div>
-            <NInputGroup>
-              <NInputGroupLabel style="min-width: 120px">
-                进入直播间模板
-              </NInputGroupLabel>
-              <NInput
-                v-model:value="settings.enterTemplate"
-              />
-              <NButton
-                type="info"
-                :loading="speechState.isApiAudioLoading"
-                @click="test(EventDataTypes.Enter)"
-              >
-                测试
-              </NButton>
-            </NInputGroup>
-          </div>
-        </NSpace>
-      </NCard>
-
-      <!-- 高级设置区域 -->
-      <NCard
-        title="高级设置"
-        size="small"
-        bordered
-      >
-        <NSpace
-          vertical
-          :size="12"
+        <NRadioGroup
+          v-model:value="settings.voiceType"
+          size="large"
         >
-          <NSpace align="center">
-            <NCheckbox
-              :checked="settings.combineGiftDelay !== undefined"
-              @update:checked="(checked: boolean) => {
-                settings.combineGiftDelay = checked ? 2 : undefined
-              }"
-            >
-              <NSpace
-                :size="4"
-                align="center"
-              >
-                <span>礼物合并</span>
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon
-                      :component="Info24Filled"
-                      :size="16"
-                    />
-                  </template>
-                  在指定时间内连续送相同礼物会等停止送礼物之后才会念。
-                  <br>
-                  这也会导致送的礼物会等待指定时间之后才会念，即使没有连续赠送。
-                </NTooltip>
-              </NSpace>
-            </NCheckbox>
-
-            <NInputGroup
-              v-if="settings.combineGiftDelay !== undefined"
-              style="width: 200px"
-            >
-              <NInputGroupLabel>延迟（秒）</NInputGroupLabel>
-              <NInputNumber
-                v-model:value="settings.combineGiftDelay"
-                :min="1"
-                :max="10"
-                @update:value="(value) => {
-                  if (!value || value <= 0) settings.combineGiftDelay = undefined
-                }"
-              />
-            </NInputGroup>
-          </NSpace>
-
-          <NCheckbox
-            v-if="settings.voiceType === 'api'"
-            v-model:checked="settings.splitText"
-          >
-            <NSpace
-              :size="4"
-              align="center"
-            >
-              <span>启用句子拆分</span>
+          <NRadioButton value="local">
+            <NSpace :size="4">
+              <span>本地语音</span>
               <NTooltip>
                 <template #trigger>
                   <NIcon
@@ -1412,17 +828,601 @@ onUnmounted(() => {
                     :size="16"
                   />
                 </template>
-                仅 API 方式可用，为英文用户名用引号包裹起来，并将所有大写单词拆分成单个单词，以防止部分单词念不出来。
+                使用浏览器内置的语音合成功能
+              </NTooltip>
+            </NSpace>
+          </NRadioButton>
+
+          <NRadioButton value="azure">
+            <NSpace :size="4">
+              <span>Azure TTS</span>
+              <NTooltip>
+                <template #trigger>
+                  <NIcon
+                    :component="Info24Filled"
+                    :size="16"
+                  />
+                </template>
+                使用 Microsoft Azure 语音合成服务, 混合语言输出效果和音质好, 略有延迟
+              </NTooltip>
+            </NSpace>
+          </NRadioButton>
+
+          <NRadioButton value="api">
+            <NSpace :size="4">
+              <span>API 语音</span>
+              <NTooltip>
+                <template #trigger>
+                  <NIcon
+                    :component="Info24Filled"
+                    :size="16"
+                  />
+                </template>
+                自定义语音API，可以播放自己训练的模型或其他TTS
+              </NTooltip>
+            </NSpace>
+          </NRadioButton>
+        </NRadioGroup>
+
+        <Transition
+          name="fade"
+          mode="out-in"
+        >
+          <!-- 本地语音设置 -->
+          <NSpace
+            v-if="settings.voiceType === 'local'"
+            vertical
+            :size="16"
+          >
+            <div>
+              <NText strong>
+                选择语音
+              </NText>
+              <NSelect
+                v-model:value="settings.speechInfo.voice"
+                :options="voiceOptions"
+                :fallback-option="() => ({
+                  label: settings.speechInfo.voice ? `已选择: ${settings.speechInfo.voice}` : '未选择, 将使用默认语音',
+                  value: settings.speechInfo.voice || '',
+                })"
+                style="margin-top: 8px"
+                filterable
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>音量</NText>
+                <NText depth="3">
+                  {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.volume"
+                :min="0"
+                :max="1"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>音调</NText>
+                <NText depth="3">
+                  {{ settings.speechInfo.pitch.toFixed(2) }}
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.pitch"
+                :min="0"
+                :max="2"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>语速</NText>
+                <NText depth="3">
+                  {{ settings.speechInfo.rate.toFixed(2) }}
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.rate"
+                :min="0"
+                :max="2"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+          </NSpace>
+
+          <!-- Azure TTS 设置 -->
+          <NSpace
+            v-else-if="settings.voiceType === 'azure'"
+            vertical
+            :size="16"
+          >
+            <NAlert
+              type="success"
+              :bordered="false"
+            >
+              <template #icon>
+                <NIcon :component="Info24Filled" />
+              </template>
+              使用本站提供的 Microsoft Azure 语音合成服务，效果最好
+            </NAlert>
+
+            <div>
+              <NSpace justify="space-between" align="center">
+                <NText strong>
+                  语音选择
+                </NText>
+                <NButton
+                  v-if="azureVoices.length === 0"
+                  text
+                  type="primary"
+                  size="small"
+                  :loading="azureVoicesLoading"
+                  @click="fetchAzureVoices"
+                >
+                  加载语音列表
+                </NButton>
+                <NText v-else depth="3" style="font-size: 12px">
+                  共 {{ azureVoices.length }} 个语音
+                </NText>
+              </NSpace>
+              <NSelect
+                v-model:value="settings.azureVoice"
+                :options="azureVoices.length > 0 ? azureVoices : [
+                  { label: '中文(普通话)女 - 晓晓', value: 'zh-CN-XiaoxiaoNeural' },
+                  { label: '中文(普通话)女 - 晓伊', value: 'zh-CN-XiaoyiNeural' },
+                  { label: '中文(普通话)女 - 晓梦', value: 'zh-CN-XiaomengNeural' },
+                  { label: '中文(普通话)女 - 晓莫', value: 'zh-CN-XiaomoNeural' },
+                  { label: '中文(普通话)女 - 晓秋', value: 'zh-CN-XiaoqiuNeural' },
+                  { label: '中文(普通话)女 - 晓双', value: 'zh-CN-XiaoshuangNeural' },
+                  { label: '中文(普通话)女 - 晓纯', value: 'zh-CN-XiaochenNeural' },
+                  { label: '中文(普通话)女 - 晓翔', value: 'zh-CN-XiaoxiangNeural' },
+                  { label: '中文(普通话)女 - 晓蕾', value: 'zh-CN-XiaorouNeural' },
+                  { label: '中文(普通话)女 - 晓瑶', value: 'zh-CN-XiaoyouNeural' },
+                  { label: '中文(普通话)男 - 云希', value: 'zh-CN-YunxiNeural' },
+                  { label: '中文(普通话)男 - 云扬', value: 'zh-CN-YunyangNeural' },
+                  { label: '中文(普通话)男 - 云健', value: 'zh-CN-YunjianNeural' },
+                  { label: '中文(普通话)儿童 - 晓晋', value: 'zh-CN-XiaozhenNeural' },
+                  { label: '中文(普通话)儿童 - 云夏', value: 'zh-CN-YunxiaNeural' },
+                ]"
+                :loading="azureVoicesLoading"
+                :fallback-option="() => ({
+                  label: settings.azureVoice ? `已选择: ${settings.azureVoice}` : '未选择',
+                  value: settings.azureVoice || '',
+                })"
+                style="margin-top: 8px"
+                filterable
+                @focus="fetchAzureVoices"
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>音量</NText>
+                <NText depth="3">
+                  {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.volume"
+                :min="0"
+                :max="1"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>音调</NText>
+                <NText depth="3">
+                  {{ settings.speechInfo.pitch.toFixed(2) }}
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.pitch"
+                :min="0.5"
+                :max="2"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>语速</NText>
+                <NText depth="3">
+                  {{ settings.speechInfo.rate.toFixed(2) }}
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.rate"
+                :min="0.5"
+                :max="2"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+          </NSpace>
+
+          <!-- API 语音设置 -->
+          <NSpace
+            v-else
+            vertical
+            :size="16"
+          >
+            <NCollapse>
+              <NCollapseItem
+                title="📖 使用说明"
+                name="requirements"
+              >
+                <NSpace
+                  vertical
+                  :size="8"
+                >
+                  <NText>API 要求：</NText>
+                  <ul style="margin: 0; padding-left: 24px">
+                    <li>直接返回音频数据（wav, mp3, m4a 等）</li>
+                    <li>建议使用 HTTPS（HTTP 将通过 Cloudflare Workers 代理，会较慢）</li>
+                    <li>确保 API 可以被外部访问</li>
+                  </ul>
+                  <NDivider style="margin: 8px 0" />
+                  <NText>推荐项目（可本地部署）：</NText>
+                  <NButton
+                    text
+                    type="info"
+                    tag="a"
+                    href="https://github.com/Artrajz/vits-simple-api"
+                    target="_blank"
+                  >
+                    vits-simple-api
+                  </NButton>
+                </NSpace>
+              </NCollapseItem>
+            </NCollapse>
+
+            <NAlert
+              v-if="isVtsuruVoiceAPI"
+              type="success"
+              closable
+            >
+              <template #icon>
+                <NIcon :component="Info24Filled" />
+              </template>
+              你正在使用本站提供的测试 API (voice.vtsuru.live)，仅用于测试，不保证可用性
+            </NAlert>
+
+            <NAlert type="info">
+              地址中的
+              <NButton
+                size="tiny"
+                type="primary"
+                text
+                @click="copyToClipboard('{{text}}')"
+              >
+                <span v-text="'{{ text }}'" />
+              </NButton>
+              将被替换为要念的文本
+            </NAlert>
+
+            <div>
+              <NText strong>
+                API 地址
+              </NText>
+              <NInputGroup style="margin-top: 8px">
+                <NSelect
+                  v-model:value="settings.voiceAPISchemeType"
+                  :options="[
+                    { label: 'https://', value: 'https' },
+                    { label: 'http://', value: 'http' },
+                  ]"
+                  style="width: 110px"
+                />
+                <NInput
+                  v-model:value="settings.voiceAPI"
+                  placeholder="例如: xxx.com/voice/bert-vits2?text={{text}}&id=0"
+                  :status="/^(?:https?:\/\/)/.test(settings.voiceAPI?.toLowerCase() ?? '') ? 'error' : undefined"
+                />
+                <NButton
+                  type="info"
+                  :loading="speechState.isApiAudioLoading"
+                  @click="testAPI"
+                >
+                  测试
+                </NButton>
+              </NInputGroup>
+            </div>
+
+            <NAlert
+              v-if="settings.voiceAPISchemeType === 'http'"
+              type="warning"
+            >
+              <template #icon>
+                <NIcon :component="Info24Filled" />
+              </template>
+              <NSpace
+                vertical
+                :size="8"
+              >
+                <NText>不使用 HTTPS 将通过 Cloudflare Workers 代理，速度会慢很多</NText>
+                <NCheckbox v-model:checked="settings.useAPIDirectly">
+                  不使用代理（需要了解可能产生的影响）
+                </NCheckbox>
+              </NSpace>
+            </NAlert>
+
+            <div>
+              <NSpace
+                justify="space-between"
+                align="center"
+              >
+                <NText>音量</NText>
+                <NText depth="3">
+                  {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
+                </NText>
+              </NSpace>
+              <NSlider
+                v-model:value="settings.speechInfo.volume"
+                :min="0"
+                :max="1"
+                :step="0.01"
+                style="margin-top: 8px"
+              />
+            </div>
+          </NSpace>
+        </Transition>
+
+        <!-- 隐藏的音频元素 - 用于 API 和 Azure TTS -->
+        <audio
+          v-if="settings.voiceType !== 'local'"
+          ref="apiAudio"
+          :src="speechState.apiAudioSrc"
+          :volume="settings.speechInfo.volume"
+          style="display: none"
+          autoplay
+          @ended="cancelSpeech"
+          @canplay="onAudioCanPlay"
+          @error="onAudioError"
+          @loadedmetadata="setAudioOutputDevice"
+        />
+      </NSpace>
+    </NCard>
+
+    <!-- 模板设置区域 -->
+    <NCard
+      title="消息模板"
+      size="small"
+      bordered
+    >
+      <NSpace
+        vertical
+        :size="12"
+      >
+        <NAlert
+          type="info"
+          :bordered="false"
+        >
+          <template #icon>
+            <NIcon :component="Info24Filled" />
+          </template>
+          <NText>支持的变量（点击复制）：</NText>
+          <NDivider style="margin: 8px 0" />
+          <NSpace :size="8">
+            <NButton
+              v-for="item in Object.values(templateConstants)"
+              :key="item.name"
+              size="tiny"
+              secondary
+              @click="copyToClipboard(item.words)"
+            >
+              {{ item.words }}
+              <NDivider vertical />
+              {{ item.name }}
+            </NButton>
+          </NSpace>
+        </NAlert>
+
+        <NText depth="3" style="font-size: 12px; margin-bottom: 8px;">
+          提示：模板留空则不播报对应类型的事件
+        </NText>
+
+        <div>
+          <NInputGroup>
+            <NInputGroupLabel style="min-width: 120px">
+              弹幕模板
+            </NInputGroupLabel>
+            <NInput
+              v-model:value="settings.danmakuTemplate"
+            />
+            <NButton
+              type="info"
+              :loading="speechState.isApiAudioLoading"
+              @click="test(EventDataTypes.Message)"
+            >
+              测试
+            </NButton>
+          </NInputGroup>
+        </div>
+
+        <div>
+          <NInputGroup>
+            <NInputGroupLabel style="min-width: 120px">
+              礼物模板
+            </NInputGroupLabel>
+            <NInput
+              v-model:value="settings.giftTemplate"
+            />
+            <NButton
+              type="info"
+              :loading="speechState.isApiAudioLoading"
+              @click="test(EventDataTypes.Gift)"
+            >
+              测试
+            </NButton>
+          </NInputGroup>
+        </div>
+
+        <div>
+          <NInputGroup>
+            <NInputGroupLabel style="min-width: 120px">
+              SC 模板
+            </NInputGroupLabel>
+            <NInput
+              v-model:value="settings.scTemplate"
+            />
+            <NButton
+              type="info"
+              :loading="speechState.isApiAudioLoading"
+              @click="test(EventDataTypes.SC)"
+            >
+              测试
+            </NButton>
+          </NInputGroup>
+        </div>
+
+        <div>
+          <NInputGroup>
+            <NInputGroupLabel style="min-width: 120px">
+              上舰模板
+            </NInputGroupLabel>
+            <NInput
+              v-model:value="settings.guardTemplate"
+            />
+            <NButton
+              type="info"
+              :loading="speechState.isApiAudioLoading"
+              @click="test(EventDataTypes.Guard)"
+            >
+              测试
+            </NButton>
+          </NInputGroup>
+        </div>
+
+        <div>
+          <NInputGroup>
+            <NInputGroupLabel style="min-width: 120px">
+              进入直播间模板
+            </NInputGroupLabel>
+            <NInput
+              v-model:value="settings.enterTemplate"
+            />
+            <NButton
+              type="info"
+              :loading="speechState.isApiAudioLoading"
+              @click="test(EventDataTypes.Enter)"
+            >
+              测试
+            </NButton>
+          </NInputGroup>
+        </div>
+      </NSpace>
+    </NCard>
+
+    <!-- 高级设置区域 -->
+    <NCard
+      title="高级设置"
+      size="small"
+      bordered
+    >
+      <NSpace
+        vertical
+        :size="12"
+      >
+        <NSpace align="center">
+          <NCheckbox
+            :checked="settings.combineGiftDelay !== undefined"
+            @update:checked="(checked: boolean) => {
+              settings.combineGiftDelay = checked ? 2 : undefined
+            }"
+          >
+            <NSpace
+              :size="4"
+              align="center"
+            >
+              <span>礼物合并</span>
+              <NTooltip>
+                <template #trigger>
+                  <NIcon
+                    :component="Info24Filled"
+                    :size="16"
+                  />
+                </template>
+                在指定时间内连续送相同礼物会等停止送礼物之后才会念。
                 <br>
-                例：原文: Megghy 说: UPPERCASE单词
-                <br>
-                结果: 'Megghy' 说: U P P E R C A S E 单词
+                这也会导致送的礼物会等待指定时间之后才会念，即使没有连续赠送。
               </NTooltip>
             </NSpace>
           </NCheckbox>
+
+          <NInputGroup
+            v-if="settings.combineGiftDelay !== undefined"
+            style="width: 200px"
+          >
+            <NInputGroupLabel>延迟（秒）</NInputGroupLabel>
+            <NInputNumber
+              v-model:value="settings.combineGiftDelay"
+              :min="1"
+              :max="10"
+              @update:value="(value) => {
+                if (!value || value <= 0) settings.combineGiftDelay = undefined
+              }"
+            />
+          </NInputGroup>
         </NSpace>
-      </NCard>
-    </template>
+
+        <NCheckbox
+          v-if="settings.voiceType === 'api'"
+          v-model:checked="settings.splitText"
+        >
+          <NSpace
+            :size="4"
+            align="center"
+          >
+            <span>启用句子拆分</span>
+            <NTooltip>
+              <template #trigger>
+                <NIcon
+                  :component="Info24Filled"
+                  :size="16"
+                />
+              </template>
+              仅 API 方式可用，为英文用户名用引号包裹起来，并将所有大写单词拆分成单个单词，以防止部分单词念不出来。
+              <br>
+              例：原文: Megghy 说: UPPERCASE单词
+              <br>
+              结果: 'Megghy' 说: U P P E R C A S E 单词
+            </NTooltip>
+          </NSpace>
+        </NCheckbox>
+      </NSpace>
+    </NCard>
+  </template>
 </template>
 
 <style scoped>

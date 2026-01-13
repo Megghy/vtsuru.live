@@ -92,7 +92,9 @@ const liveDurationText = computed(() => {
                 :img-props="{ referrerpolicy: 'no-referrer' }"
               />
               <div class="live-header-text">
-                <NText strong class="live-name">{{ model.displayName || '主播' }}</NText>
+                <NText strong class="live-name">
+                  {{ model.displayName || '主播' }}
+                </NText>
                 <NText v-if="cfg.showTitle && model.title" depth="3" class="live-sub">
                   {{ model.title }}
                 </NText>
@@ -141,118 +143,122 @@ const liveDurationText = computed(() => {
       </template>
 
       <template v-else>
-      <div class="live-header">
-        <NFlex align="center" style="gap: 10px; min-width: 0">
-          <NAvatar
-            v-if="model.avatarUrl"
-            :src="model.avatarUrl"
-            round
-            :size="34"
-            :img-props="{ referrerpolicy: 'no-referrer' }"
-          />
-          <div class="live-header-text">
-            <NText strong class="live-name">{{ model.displayName || '主播' }}</NText>
-            <NText depth="3" class="live-sub">
-              Bilibili
-              <template v-if="props.userInfo?.biliRoomId"> · 房间 {{ props.userInfo.biliRoomId }}</template>
+        <div class="live-header">
+          <NFlex align="center" style="gap: 10px; min-width: 0">
+            <NAvatar
+              v-if="model.avatarUrl"
+              :src="model.avatarUrl"
+              round
+              :size="34"
+              :img-props="{ referrerpolicy: 'no-referrer' }"
+            />
+            <div class="live-header-text">
+              <NText strong class="live-name">
+                {{ model.displayName || '主播' }}
+              </NText>
+              <NText depth="3" class="live-sub">
+                Bilibili
+                <template v-if="props.userInfo?.biliRoomId">
+                  · 房间 {{ props.userInfo.biliRoomId }}
+                </template>
+              </NText>
+            </div>
+          </NFlex>
+
+          <div class="live-status">
+            <span class="dot" :class="{ on: model.isStreaming }" />
+            <NText depth="2" style="font-weight: 700">
+              {{ model.isStreaming ? '直播中' : '离线' }}
             </NText>
           </div>
-        </NFlex>
-
-        <div class="live-status">
-          <span class="dot" :class="{ on: model.isStreaming }" />
-          <NText depth="2" style="font-weight: 700">
-            {{ model.isStreaming ? '直播中' : '离线' }}
-          </NText>
         </div>
-      </div>
 
-      <div v-if="cfg.showCover && model.coverUrl" class="live-cover">
-        <img
-          :src="model.coverUrl"
-          alt=""
-          referrerpolicy="no-referrer"
-          loading="lazy"
-          decoding="async"
-        >
-        <div class="live-cover-overlay" />
-        <div class="live-cover-content">
-          <div class="live-cover-top">
-            <NTag
-              :type="model.isStreaming ? 'success' : 'default'"
-              size="small"
-              :bordered="false"
-              class="pill"
-            >
-              {{ model.isStreaming ? 'LIVE' : 'OFFLINE' }}
-            </NTag>
-            <NText v-if="cfg.showArea && (model.parentArea || model.area)" class="pill-muted">
-              {{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
+        <div v-if="cfg.showCover && model.coverUrl" class="live-cover">
+          <img
+            :src="model.coverUrl"
+            alt=""
+            referrerpolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
+          >
+          <div class="live-cover-overlay" />
+          <div class="live-cover-content">
+            <div class="live-cover-top">
+              <NTag
+                :type="model.isStreaming ? 'success' : 'default'"
+                size="small"
+                :bordered="false"
+                class="pill"
+              >
+                {{ model.isStreaming ? 'LIVE' : 'OFFLINE' }}
+              </NTag>
+              <NText v-if="cfg.showArea && (model.parentArea || model.area)" class="pill-muted">
+                {{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
+              </NText>
+            </div>
+
+            <NText v-if="cfg.showTitle && model.title" class="live-title">
+              {{ model.title }}
+            </NText>
+            <NText v-else class="live-title muted">
+              {{ model.isStreaming ? '正在直播' : '暂未开播' }}
+            </NText>
+
+            <NText v-if="model.isStreaming && liveDurationText" class="live-kicker">
+              {{ liveDurationText }}
+            </NText>
+            <NText v-else-if="!model.isStreaming && model.lastStreamAt" class="live-kicker">
+              上次直播：{{ formatTime(model.lastStreamAt) }}
             </NText>
           </div>
+        </div>
 
-          <NText v-if="cfg.showTitle && model.title" class="live-title">
+        <div v-else class="live-body">
+          <NText v-if="cfg.showTitle && model.title" strong style="display:block; white-space: pre-wrap">
             {{ model.title }}
           </NText>
-          <NText v-else class="live-title muted">
-            {{ model.isStreaming ? '正在直播' : '暂未开播' }}
+          <NText v-if="cfg.showArea && (model.parentArea || model.area)" depth="3" style="display:block; margin-top: 6px">
+            分区：{{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
           </NText>
-
-          <NText v-if="model.isStreaming && liveDurationText" class="live-kicker">
+          <NText v-if="model.isStreaming && liveDurationText" depth="3" style="display:block; margin-top: 6px">
             {{ liveDurationText }}
           </NText>
-          <NText v-else-if="!model.isStreaming && model.lastStreamAt" class="live-kicker">
+          <NText v-else-if="!model.isStreaming && model.lastStreamAt" depth="3" style="display:block; margin-top: 6px">
             上次直播：{{ formatTime(model.lastStreamAt) }}
           </NText>
         </div>
-      </div>
 
-      <div v-else class="live-body">
-        <NText v-if="cfg.showTitle && model.title" strong style="display:block; white-space: pre-wrap">
-          {{ model.title }}
-        </NText>
-        <NText v-if="cfg.showArea && (model.parentArea || model.area)" depth="3" style="display:block; margin-top: 6px">
-          分区：{{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
-        </NText>
-        <NText v-if="model.isStreaming && liveDurationText" depth="3" style="display:block; margin-top: 6px">
-          {{ liveDurationText }}
-        </NText>
-        <NText v-else-if="!model.isStreaming && model.lastStreamAt" depth="3" style="display:block; margin-top: 6px">
-          上次直播：{{ formatTime(model.lastStreamAt) }}
-        </NText>
-      </div>
-
-      <div v-if="cfg.showButtons" class="live-actions">
-        <NButton
-          v-if="model.spaceUrl"
-          class="action"
-          secondary
-          tag="a"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="model.spaceUrl"
-        >
-          <template #icon>
-            <NIcon><HomeOutline /></NIcon>
-          </template>
-          主页
-        </NButton>
-        <NButton
-          v-if="model.liveRoomUrl"
-          class="action"
-          :type="model.isStreaming ? 'primary' : 'default'"
-          secondary
-          tag="a"
-          target="_blank"
-          rel="noopener noreferrer"
-          :href="model.liveRoomUrl"
-        >
-          <template #icon>
-            <NIcon><PlayCircleOutline /></NIcon>
-          </template>
-          直播间
-        </NButton>
-      </div>
+        <div v-if="cfg.showButtons" class="live-actions">
+          <NButton
+            v-if="model.spaceUrl"
+            class="action"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.spaceUrl"
+          >
+            <template #icon>
+              <NIcon><HomeOutline /></NIcon>
+            </template>
+            主页
+          </NButton>
+          <NButton
+            v-if="model.liveRoomUrl"
+            class="action"
+            :type="model.isStreaming ? 'primary' : 'default'"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.liveRoomUrl"
+          >
+            <template #icon>
+              <NIcon><PlayCircleOutline /></NIcon>
+            </template>
+            直播间
+          </NButton>
+        </div>
       </template>
     </div>
   </NCard>

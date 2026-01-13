@@ -111,11 +111,13 @@
 
         <PropsGrid :col-gap="8" :row-gap="0">
           <NFormItem label="布局类型">
-            <NSelect v-model:value="editor.ensureLayoutProps(props.block).layout" :options="[
-              { label: 'Row（横向）', value: 'row' },
-              { label: 'Column（纵向）', value: 'column' },
-              { label: 'Grid（网格）', value: 'grid' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensureLayoutProps(props.block).layout" :options="[
+                { label: 'Row（横向）', value: 'row' },
+                { label: 'Column（纵向）', value: 'column' },
+                { label: 'Grid（网格）', value: 'grid' },
+              ]"
+            />
           </NFormItem>
 
           <NFormItem v-if="editor.ensureLayoutProps(props.block).layout === 'row'" label="允许换行">
@@ -125,14 +127,17 @@
           </NFormItem>
 
           <NFormItem v-if="editor.ensureLayoutProps(props.block).layout === 'grid'" label="列数">
-            <NInputNumber v-model:value="editor.ensureLayoutProps(props.block).columns" :min="1" :max="12"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensureLayoutProps(props.block).columns" :min="1" :max="12"
+              style="width: 100%"
+            />
           </NFormItem>
 
           <NFormItem label="间距">
             <NInputNumber
               v-model:value="editor.ensureLayoutProps(props.block).gap" :min="0" :max="80"
-              style="width: 100%" />
+              style="width: 100%"
+            />
           </NFormItem>
 
           <NFormItem label="最大宽度">
@@ -148,8 +153,10 @@
           </NFormItem>
         </PropsGrid>
 
-        <NText depth="3"
-          style="display: block; margin-top: 12px; padding: 6px 8px; background: var(--n-color-embedded); border-radius: 4px; font-size: 12px; line-height: 1.5">
+        <NText
+          depth="3"
+          style="display: block; margin-top: 12px; padding: 6px 8px; background: var(--n-color-embedded); border-radius: 4px; font-size: 12px; line-height: 1.5"
+        >
           子区块请在「区块管理」中管理：选中多个区块点击「成组」按钮，或拖入已展开的组。
         </NText>
       </NForm>
@@ -166,8 +173,10 @@
           </NFormItem>
           <NFormItem class="span-full" label="头像图片">
             <NSpace align="center">
-              <NButton size="small" :loading="editor.isUploading.value"
-                @click="editor.triggerUpload(props.block, 'avatarFile')">
+              <NButton
+                size="small" :loading="editor.isUploading.value"
+                @click="editor.triggerUpload(props.block, 'avatarFile')"
+              >
                 <template #icon>
                   <NIcon>
                     <PersonCircleOutline />
@@ -175,8 +184,10 @@
                 </template>
                 上传头像
               </NButton>
-              <NButton size="small" secondary :disabled="!editor.ensurePropsObject(props.block).avatarFile"
-                @click="editor.clearUploadedFile(props.block, 'avatarFile')">
+              <NButton
+                size="small" secondary :disabled="!editor.ensurePropsObject(props.block).avatarFile"
+                @click="editor.clearUploadedFile(props.block, 'avatarFile')"
+              >
                 清除
               </NButton>
               <NText depth="3">
@@ -185,8 +196,10 @@
             </NSpace>
           </NFormItem>
           <NFormItem class="span-full" label="个人简介">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).bio" type="textarea"
-              :autosize="{ minRows: 2, maxRows: 6 }" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).bio" type="textarea"
+              :autosize="{ minRows: 2, maxRows: 6 }"
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -199,8 +212,10 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).text" placeholder="请输入标题" />
           </NFormItem>
           <NFormItem label="标题级别（1/2/3）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).level" :min="1" :max="3"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).level" :min="1" :max="3"
+              style="width: 100%"
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -209,8 +224,10 @@
     <template v-else-if="props.block.type === 'text'">
       <NForm label-placement="top" size="small">
         <NFormItem label="文本内容">
-          <NInput v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
-            :autosize="{ minRows: 6, maxRows: 14 }" />
+          <NInput
+            v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
+            :autosize="{ minRows: 6, maxRows: 14 }"
+          />
         </NFormItem>
       </NForm>
     </template>
@@ -218,8 +235,10 @@
     <template v-else-if="props.block.type === 'richText'">
       <NForm label-placement="top" size="small">
         <NFormItem label="富文本内容">
-          <RichTextEditor v-model:html="editor.ensureRichTextProps(props.block).html"
-            v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile" />
+          <RichTextEditor
+            v-model:html="editor.ensureRichTextProps(props.block).html"
+            v-model:images-file="editor.ensureRichTextProps(props.block).imagesFile"
+          />
         </NFormItem>
       </NForm>
     </template>
@@ -228,20 +247,24 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="提示类型">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).type" :options="[
-              { label: '信息', value: 'info' },
-              { label: '成功', value: 'success' },
-              { label: '警告', value: 'warning' },
-              { label: '错误', value: 'error' },
-              { label: '默认', value: 'default' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).type" :options="[
+                { label: '信息', value: 'info' },
+                { label: '成功', value: 'success' },
+                { label: '警告', value: 'warning' },
+                { label: '错误', value: 'error' },
+                { label: '默认', value: 'default' },
+              ]"
+            />
           </NFormItem>
           <NFormItem label="标题（可选）">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="可选" />
           </NFormItem>
           <NFormItem class="span-full" label="内容">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
-              :autosize="{ minRows: 3, maxRows: 8 }" placeholder="请输入提示内容" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
+              :autosize="{ minRows: 3, maxRows: 8 }" placeholder="请输入提示内容"
+            />
           </NFormItem>
           <NFormItem label="显示图标">
             <NSpace justify="end">
@@ -261,8 +284,10 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="样式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).variant"
-              :options="[{ label: '大卡片', value: 'card' }, { label: '紧凑', value: 'compact' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).variant"
+              :options="[{ label: '大卡片', value: 'card' }, { label: '紧凑', value: 'compact' }]"
+            />
           </NFormItem>
           <NFormItem label="显示标题">
             <NSpace justify="end">
@@ -292,12 +317,16 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="布局">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).layout"
-              :options="[{ label: '列表', value: 'list' }, { label: '表格', value: 'table' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).layout"
+              :options="[{ label: '列表', value: 'list' }, { label: '表格', value: 'table' }]"
+            />
           </NFormItem>
           <NFormItem label="展示周数（1~8）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).weeksCount" :min="1" :max="8"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).weeksCount" :min="1" :max="8"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="显示订阅(ICS)">
             <NSpace justify="end">
@@ -322,8 +351,10 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="样式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).variant"
-              :options="[{ label: '大卡片', value: 'card' }, { label: '紧凑', value: 'compact' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).variant"
+              :options="[{ label: '大卡片', value: 'card' }, { label: '紧凑', value: 'compact' }]"
+            />
           </NFormItem>
           <NFormItem label="显示头像">
             <NSpace justify="end">
@@ -356,8 +387,10 @@
             </NSpace>
           </NFormItem>
           <NFormItem class="span-full" label="个人主页链接（可选）">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).spaceUrl"
-              placeholder="https://space.bilibili.com/..." />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).spaceUrl"
+              placeholder="https://space.bilibili.com/..."
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -375,8 +408,10 @@
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })">
+              <NButton
+                type="info" secondary
+                @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -389,15 +424,19 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="排列方向">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).direction"
-              :options="[{ label: '竖向', value: 'vertical' }, { label: '横向（自动换行）', value: 'horizontal' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).direction"
+              :options="[{ label: '竖向', value: 'vertical' }, { label: '横向（自动换行）', value: 'horizontal' }]"
+            />
           </NFormItem>
           <NFormItem label="对齐方式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).align" :options="[
-              { label: '左对齐', value: 'start' },
-              { label: '居中', value: 'center' },
-              { label: '右对齐', value: 'end' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).align" :options="[
+                { label: '左对齐', value: 'start' },
+                { label: '居中', value: 'center' },
+                { label: '右对齐', value: 'end' },
+              ]"
+            />
           </NFormItem>
           <NFormItem label="按钮铺满宽度">
             <NSpace justify="end">
@@ -405,27 +444,33 @@
             </NSpace>
           </NFormItem>
           <NFormItem label="按钮类型">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).type" :options="[
-              { label: 'primary', value: 'primary' },
-              { label: 'default', value: 'default' },
-              { label: 'info', value: 'info' },
-              { label: 'success', value: 'success' },
-              { label: 'warning', value: 'warning' },
-              { label: 'error', value: 'error' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).type" :options="[
+                { label: 'primary', value: 'primary' },
+                { label: 'default', value: 'default' },
+                { label: 'info', value: 'info' },
+                { label: 'success', value: 'success' },
+                { label: 'warning', value: 'warning' },
+                { label: 'error', value: 'error' },
+              ]"
+            />
           </NFormItem>
           <NFormItem label="样式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).variant" :options="[
-              { label: 'solid', value: 'solid' },
-              { label: 'secondary', value: 'secondary' },
-              { label: 'tertiary', value: 'tertiary' },
-              { label: 'quaternary', value: 'quaternary' },
-              { label: 'ghost', value: 'ghost' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).variant" :options="[
+                { label: 'solid', value: 'solid' },
+                { label: 'secondary', value: 'secondary' },
+                { label: 'tertiary', value: 'tertiary' },
+                { label: 'quaternary', value: 'quaternary' },
+                { label: 'ghost', value: 'ghost' },
+              ]"
+            />
           </NFormItem>
           <NFormItem label="间距 gap（px）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).gap" :min="0" :max="32"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).gap" :min="0" :max="32"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem class="span-full" label="按钮项">
             <NSpace vertical style="width: 100%">
@@ -436,8 +481,10 @@
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })">
+              <NButton
+                type="info" secondary
+                @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -450,12 +497,16 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="大小">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).size"
-              :options="[{ label: 'sm', value: 'sm' }, { label: 'md', value: 'md' }, { label: 'lg', value: 'lg' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).size"
+              :options="[{ label: 'sm', value: 'sm' }, { label: 'md', value: 'md' }, { label: 'lg', value: 'lg' }]"
+            />
           </NFormItem>
           <NFormItem label="形状">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).variant"
-              :options="[{ label: 'round', value: 'round' }, { label: 'square', value: 'square' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).variant"
+              :options="[{ label: 'round', value: 'round' }, { label: 'square', value: 'square' }]"
+            />
           </NFormItem>
           <NFormItem label="显示文字">
             <NSpace justify="end">
@@ -465,29 +516,35 @@
 
           <NFormItem class="span-full" label="链接项">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:flex; gap: 8px">
-                <NSelect v-model:value="it.platform" style="width: 140px" :options="[
-                  { label: 'bilibili', value: 'bilibili' },
-                  { label: 'youtube', value: 'youtube' },
-                  { label: 'x', value: 'x' },
-                  { label: 'discord', value: 'discord' },
-                  { label: 'twitch', value: 'twitch' },
-                  { label: 'qqgroup', value: 'qqgroup' },
-                  { label: 'github', value: 'github' },
-                  { label: 'website', value: 'website' },
-                  { label: 'netease', value: 'netease' },
-                  { label: 'spotify', value: 'spotify' },
-                  { label: 'other', value: 'other' },
-                ]" />
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:flex; gap: 8px"
+              >
+                <NSelect
+                  v-model:value="it.platform" style="width: 140px" :options="[
+                    { label: 'bilibili', value: 'bilibili' },
+                    { label: 'youtube', value: 'youtube' },
+                    { label: 'x', value: 'x' },
+                    { label: 'discord', value: 'discord' },
+                    { label: 'twitch', value: 'twitch' },
+                    { label: 'qqgroup', value: 'qqgroup' },
+                    { label: 'github', value: 'github' },
+                    { label: 'website', value: 'website' },
+                    { label: 'netease', value: 'netease' },
+                    { label: 'spotify', value: 'spotify' },
+                    { label: 'other', value: 'other' },
+                  ]"
+                />
                 <NInput v-model:value="it.url" placeholder="https://..." />
                 <NInput v-model:value="it.label" placeholder="可选显示名" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="ensureArrayProp<any>(props.block, 'items').push({ platform: 'bilibili', url: 'https://', label: '' })">
+              <NButton
+                type="info" secondary
+                @click="ensureArrayProp<any>(props.block, 'items').push({ platform: 'bilibili', url: 'https://', label: '' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -500,20 +557,28 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="数据源">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).source"
-              :options="[{ label: '手动列表', value: 'manual' }, { label: '用户主页数据（近期视频）', value: 'userIndex' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).source"
+              :options="[{ label: '手动列表', value: 'manual' }, { label: '用户主页数据（近期视频）', value: 'userIndex' }]"
+            />
           </NFormItem>
           <NFormItem label="布局">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).layout"
-              :options="[{ label: '网格', value: 'grid' }, { label: '横向滚动', value: 'row' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).layout"
+              :options="[{ label: '网格', value: 'grid' }, { label: '横向滚动', value: 'row' }]"
+            />
           </NFormItem>
           <NFormItem label="列数（网格）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).columns" :min="1" :max="6"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).columns" :min="1" :max="6"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="最多数量">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).maxItems" :min="1" :max="50"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).maxItems" :min="1" :max="50"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="显示标题栏">
             <NSpace justify="end">
@@ -526,16 +591,20 @@
 
           <NFormItem v-if="editor.ensurePropsObject(props.block).source === 'manual'" class="span-full" label="手动视频列表">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:flex; gap: 8px">
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:flex; gap: 8px"
+              >
                 <NInput v-model:value="it.title" placeholder="标题（可选）" />
                 <NInput v-model:value="it.url" placeholder="视频链接（https://...）" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="ensureArrayProp<any>(props.block, 'items').push({ title: '', url: 'https://' })">
+              <NButton
+                type="info" secondary
+                @click="ensureArrayProp<any>(props.block, 'items').push({ title: '', url: 'https://' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -548,12 +617,16 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="平台">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).provider"
-              :options="[{ label: 'netease', value: 'netease' }, { label: 'spotify', value: 'spotify' }, { label: 'custom', value: 'custom' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).provider"
+              :options="[{ label: 'netease', value: 'netease' }, { label: 'spotify', value: 'spotify' }, { label: 'custom', value: 'custom' }]"
+            />
           </NFormItem>
           <NFormItem label="高度（px）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).height" :min="60" :max="900"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).height" :min="60" :max="900"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="紧凑模式">
             <NSpace justify="end">
@@ -571,8 +644,10 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="大小">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).size"
-              :options="[{ label: 'small', value: 'small' }, { label: 'medium', value: 'medium' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).size"
+              :options="[{ label: 'small', value: 'small' }, { label: 'medium', value: 'medium' }]"
+            />
           </NFormItem>
           <NFormItem label="圆角">
             <NSpace justify="end">
@@ -582,23 +657,29 @@
 
           <NFormItem class="span-full" label="标签项">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:flex; gap: 8px">
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:flex; gap: 8px"
+              >
                 <NInput v-model:value="it.text" placeholder="#标签" />
-                <NSelect v-model:value="it.type" style="width: 140px" :options="[
-                  { label: 'default', value: 'default' },
-                  { label: 'info', value: 'info' },
-                  { label: 'success', value: 'success' },
-                  { label: 'warning', value: 'warning' },
-                  { label: 'error', value: 'error' },
-                ]" />
+                <NSelect
+                  v-model:value="it.type" style="width: 140px" :options="[
+                    { label: 'default', value: 'default' },
+                    { label: 'info', value: 'info' },
+                    { label: 'success', value: 'success' },
+                    { label: 'warning', value: 'warning' },
+                    { label: 'error', value: 'error' },
+                  ]"
+                />
                 <NInput v-model:value="it.color" placeholder="自定义色（可选，如 #fb7299）" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="ensureArrayProp<any>(props.block, 'items').push({ text: '#唱见', type: 'default', color: '' })">
+              <NButton
+                type="info" secondary
+                @click="ensureArrayProp<any>(props.block, 'items').push({ text: '#唱见', type: 'default', color: '' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -611,23 +692,31 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="展示方式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).mode"
-              :options="[{ label: 'timeline', value: 'timeline' }, { label: 'list', value: 'list' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).mode"
+              :options="[{ label: 'timeline', value: 'timeline' }, { label: 'list', value: 'list' }]"
+            />
           </NFormItem>
           <NFormItem class="span-full" label="条目">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:grid; grid-template-columns: 160px 1fr 1.2fr auto; gap: 8px; align-items: start">
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:grid; grid-template-columns: 160px 1fr 1.2fr auto; gap: 8px; align-items: start"
+              >
                 <NInput v-model:value="it.date" placeholder="日期（如 2024-01-01）" />
                 <NInput v-model:value="it.title" placeholder="标题" />
-                <NInput v-model:value="it.description" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                  placeholder="描述（可选）" />
+                <NInput
+                  v-model:value="it.description" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
+                  placeholder="描述（可选）"
+                />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="ensureArrayProp<any>(props.block, 'items').push({ date: '', title: '', description: '' })">
+              <NButton
+                type="info" secondary
+                @click="ensureArrayProp<any>(props.block, 'items').push({ date: '', title: '', description: '' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -646,8 +735,10 @@
           </NFormItem>
           <NFormItem class="span-full" label="问答">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; align-items: start">
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; align-items: start"
+              >
                 <NInput v-model:value="it.q" placeholder="问题" />
                 <NInput v-model:value="it.a" type="textarea" :autosize="{ minRows: 1, maxRows: 6 }" placeholder="回答" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
@@ -667,15 +758,19 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem class="span-full" label="内容">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
-              :autosize="{ minRows: 3, maxRows: 8 }" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
+              :autosize="{ minRows: 3, maxRows: 8 }"
+            />
           </NFormItem>
           <NFormItem label="作者（可选）">
             <NInput v-model:value="editor.ensurePropsObject(props.block).author" />
           </NFormItem>
           <NFormItem label="对齐">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).align"
-              :options="[{ label: 'left', value: 'left' }, { label: 'center', value: 'center' }, { label: 'right', value: 'right' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).align"
+              :options="[{ label: 'left', value: 'left' }, { label: 'center', value: 'center' }, { label: 'right', value: 'right' }]"
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -685,16 +780,22 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem class="span-full" label="文本">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
-              :autosize="{ minRows: 2, maxRows: 6 }" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).text" type="textarea"
+              :autosize="{ minRows: 2, maxRows: 6 }"
+            />
           </NFormItem>
           <NFormItem label="方向">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).direction"
-              :options="[{ label: 'left', value: 'left' }, { label: 'right', value: 'right' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).direction"
+              :options="[{ label: 'left', value: 'left' }, { label: 'right', value: 'right' }]"
+            />
           </NFormItem>
           <NFormItem label="滚动时长（秒）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).durationSec" :min="4" :max="120"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).durationSec" :min="4" :max="120"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="悬停暂停">
             <NSpace justify="end">
@@ -712,12 +813,16 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="例如：生日倒计时" />
           </NFormItem>
           <NFormItem class="span-full" label="目标时间">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).target"
-              placeholder="例如 2026-01-01T00:00:00+08:00" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).target"
+              placeholder="例如 2026-01-01T00:00:00+08:00"
+            />
           </NFormItem>
           <NFormItem label="展示样式">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).style"
-              :options="[{ label: 'cards', value: 'cards' }, { label: 'inline', value: 'inline' }]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).style"
+              :options="[{ label: 'cards', value: 'cards' }, { label: 'inline', value: 'inline' }]"
+            />
           </NFormItem>
           <NFormItem label="显示秒">
             <NSpace justify="end">
@@ -741,8 +846,10 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).buttonText" />
           </NFormItem>
           <NFormItem class="span-full" label="描述（可选）">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
-              :autosize="{ minRows: 2, maxRows: 6 }" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
+              :autosize="{ minRows: 2, maxRows: 6 }"
+            />
           </NFormItem>
           <NFormItem class="span-full" label="链接">
             <NInput v-model:value="editor.ensurePropsObject(props.block).url" placeholder="https://..." />
@@ -753,8 +860,10 @@
             </NSpace>
           </NFormItem>
           <NFormItem label="内嵌高度">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).height" :min="200" :max="1200"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).height" :min="200" :max="1200"
+              style="width: 100%"
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -767,28 +876,36 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" />
           </NFormItem>
           <NFormItem class="span-full" label="描述（可选）">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
-              :autosize="{ minRows: 2, maxRows: 6 }" />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
+              :autosize="{ minRows: 2, maxRows: 6 }"
+            />
           </NFormItem>
           <NFormItem class="span-full" label="赞助平台">
             <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
-                style="display:flex; gap: 8px">
-                <NSelect v-model:value="it.platform" style="width: 140px" :options="[
-                  { label: 'afdian', value: 'afdian' },
-                  { label: 'kofi', value: 'kofi' },
-                  { label: 'patreon', value: 'patreon' },
-                  { label: 'paypal', value: 'paypal' },
-                  { label: 'other', value: 'other' },
-                ]" />
+              <div
+                v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
+                style="display:flex; gap: 8px"
+              >
+                <NSelect
+                  v-model:value="it.platform" style="width: 140px" :options="[
+                    { label: 'afdian', value: 'afdian' },
+                    { label: 'kofi', value: 'kofi' },
+                    { label: 'patreon', value: 'patreon' },
+                    { label: 'paypal', value: 'paypal' },
+                    { label: 'other', value: 'other' },
+                  ]"
+                />
                 <NInput v-model:value="it.url" placeholder="https://..." />
                 <NInput v-model:value="it.label" placeholder="显示名（可选）" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
               </div>
-              <NButton type="info" secondary
-                @click="ensureArrayProp<any>(props.block, 'items').push({ platform: 'afdian', url: 'https://', label: '' })">
+              <NButton
+                type="info" secondary
+                @click="ensureArrayProp<any>(props.block, 'items').push({ platform: 'afdian', url: 'https://', label: '' })"
+              >
                 添加
               </NButton>
             </NSpace>
@@ -814,8 +931,10 @@
           </NFormItem>
           <NFormItem class="span-full" label="本地图片">
             <NSpace align="center">
-              <NButton size="small" :loading="editor.isUploading.value"
-                @click="editor.triggerUpload(props.block, 'imageFile')">
+              <NButton
+                size="small" :loading="editor.isUploading.value"
+                @click="editor.triggerUpload(props.block, 'imageFile')"
+              >
                 <template #icon>
                   <NIcon>
                     <ImageOutline />
@@ -823,13 +942,17 @@
                 </template>
                 上传图片
               </NButton>
-              <NButton size="small" secondary :disabled="!editor.ensurePropsObject(props.block).imageFile"
-                @click="editor.clearUploadedFile(props.block, 'imageFile')">
+              <NButton
+                size="small" secondary :disabled="!editor.ensurePropsObject(props.block).imageFile"
+                @click="editor.clearUploadedFile(props.block, 'imageFile')"
+              >
                 清除
               </NButton>
-              <img v-if="editor.ensurePropsObject(props.block).imageFile?.path"
+              <img
+                v-if="editor.ensurePropsObject(props.block).imageFile?.path"
                 :src="editor.ensurePropsObject(props.block).imageFile.path" alt="" referrerpolicy="no-referrer"
-                style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);">
+                style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
+              >
               <NText depth="3">
                 {{ editor.ensurePropsObject(props.block).imageFile?.name || editor.ensurePropsObject(props.block).imageFile?.path || '' }}
               </NText>
@@ -847,8 +970,10 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem class="span-full" label="嵌入链接 (支持 Bilibili / YouTube)">
-            <NInput v-model:value="editor.ensurePropsObject(props.block).url"
-              placeholder="https://www.youtube.com/watch?v=..." />
+            <NInput
+              v-model:value="editor.ensurePropsObject(props.block).url"
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
           </NFormItem>
           <NFormItem label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="可选，用于无障碍访问" />
@@ -864,19 +989,25 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).text" />
           </NFormItem>
           <NFormItem label="文字位置">
-            <NSelect v-model:value="editor.ensurePropsObject(props.block).titlePlacement" :options="[
-              { label: '居左', value: 'left' },
-              { label: '居中', value: 'center' },
-              { label: '居右', value: 'right' },
-            ]" />
+            <NSelect
+              v-model:value="editor.ensurePropsObject(props.block).titlePlacement" :options="[
+                { label: '居左', value: 'left' },
+                { label: '居中', value: 'center' },
+                { label: '居右', value: 'right' },
+              ]"
+            />
           </NFormItem>
           <NFormItem label="上边距（px）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).marginTop" :min="0" :max="80"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).marginTop" :min="0" :max="80"
+              style="width: 100%"
+            />
           </NFormItem>
           <NFormItem label="下边距（px）">
-            <NInputNumber v-model:value="editor.ensurePropsObject(props.block).marginBottom" :min="0" :max="80"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="editor.ensurePropsObject(props.block).marginBottom" :min="0" :max="80"
+              style="width: 100%"
+            />
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -885,8 +1016,10 @@
     <template v-else-if="props.block.type === 'spacer'">
       <NForm label-placement="top" size="small">
         <NFormItem label="大小">
-          <NSelect v-model:value="editor.ensurePropsObject(props.block).size"
-            :options="[{ label: 'sm', value: 'sm' }, { label: 'md', value: 'md' }, { label: 'lg', value: 'lg' }]" />
+          <NSelect
+            v-model:value="editor.ensurePropsObject(props.block).size"
+            :options="[{ label: 'sm', value: 'sm' }, { label: 'md', value: 'md' }, { label: 'lg', value: 'lg' }]"
+          />
         </NFormItem>
       </NForm>
     </template>

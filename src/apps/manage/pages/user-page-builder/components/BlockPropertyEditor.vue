@@ -95,7 +95,7 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
       <div style="background: var(--n-color-embedded); padding: 10px 12px; border-radius: 8px">
         <NFlex justify="space-between" align="center">
           <NText depth="3" style="font-size: 12px">
-            使用容量：{{ editor.configBytesPercent.value}} %
+            使用容量：{{ editor.configBytesPercent.value }} %
           </NText>
           <NText depth="3" style="font-size: 12px">
             保存时会自动剔除“隐藏且空内容”的冗余区块

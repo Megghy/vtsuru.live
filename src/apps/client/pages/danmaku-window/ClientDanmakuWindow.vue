@@ -304,7 +304,7 @@ watch(() => setting.value, () => {
           :item="item"
           :setting="setting"
           :data-type="item.type"
-          :class="['danmaku-item', { 'batch-item': isInBatchUpdate }]"
+          class="danmaku-item" :class="[{ 'batch-item': isInBatchUpdate }]"
         />
       </TransitionGroup>
     </div>

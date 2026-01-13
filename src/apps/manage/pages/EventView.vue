@@ -545,230 +545,393 @@ async function onTabChange(value: string) {
       <EventFetcherStatusCard />
     </div>
 
-  <NCard
-    size="small"
-    :bordered="true"
-  >
-    <template v-if="accountInfo?.isBiliVerified">
-      <NTabs
-        type="line"
-        animated
-        default-value="history"
-        @update:value="onTabChange"
-      >
-        <NTabPane
-          name="history"
-          tab="历史记录"
+    <NCard
+      size="small"
+      :bordered="true"
+    >
+      <template v-if="accountInfo?.isBiliVerified">
+        <NTabs
+          type="line"
+          animated
+          default-value="history"
+          @update:value="onTabChange"
         >
-          <!-- 历史记录面板 -->
-          <NSpace
-            vertical
-            size="large"
+          <NTabPane
+            name="history"
+            tab="历史记录"
           >
-            <!-- 筛选工具栏 -->
-            <div class="filter-bar">
-              <NSpace
-                align="center"
-                wrap
-                justify="space-between"
+            <!-- 历史记录面板 -->
+            <NSpace
+              vertical
+              size="large"
+            >
+              <!-- 筛选工具栏 -->
+              <div class="filter-bar">
+                <NSpace
+                  align="center"
+                  wrap
+                  justify="space-between"
+                >
+                  <NSpace
+                    align="center"
+                    wrap
+                  >
+                    <NDatePicker
+                      v-model:value="selectedDate"
+                      type="datetimerange"
+                      :shortcuts="rangeShortcuts"
+                      start-placeholder="开始时间"
+                      end-placeholder="结束时间"
+                      :disabled="isLoading || isLoadingMore"
+                      class="date-picker"
+                    />
+                    <NRadioGroup
+                      v-model:value="selectedType"
+                      :disabled="isLoading || isLoadingMore"
+                    >
+                      <NRadioButton :value="EventDataTypes.Guard">
+                        舰长
+                      </NRadioButton>
+                      <NRadioButton :value="EventDataTypes.SC">
+                        Superchat
+                      </NRadioButton>
+                    </NRadioGroup>
+                    <NInput
+                      v-model:value="userFilterInput"
+                      :disabled="isLoading || isLoadingMore"
+                      placeholder="筛选用户(UID/OUID/用户名)"
+                      style="width: 220px"
+                      clearable
+                      @keyup.enter="applyUserFilter"
+                    />
+                    <NButton
+                      size="small"
+                      secondary
+                      type="primary"
+                      :disabled="isLoading || isLoadingMore"
+                      @click="applyUserFilter"
+                    >
+                      应用
+                    </NButton>
+                    <NButton
+                      size="small"
+                      secondary
+                      :disabled="isLoading || isLoadingMore"
+                      @click="clearUserFilter"
+                    >
+                      清空
+                    </NButton>
+                  </NSpace>
+
+                  <NSpace align="center">
+                    <!-- 导出功能 -->
+                    <NCard
+                      size="small"
+                      embedded
+                      content-style="padding: 4px 12px;"
+                    >
+                      <NSpace align="center">
+                        <NRadioGroup
+                          v-model:value="exportType"
+                          size="small"
+                        >
+                          <NRadioButton value="csv">
+                            CSV
+                          </NRadioButton>
+                          <NRadioButton value="json">
+                            Json
+                          </NRadioButton>
+                        </NRadioGroup>
+                        <NButton
+                          size="small"
+                          secondary
+                          type="primary"
+                          :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore"
+                          @click="exportData"
+                        >
+                          <template #icon>
+                            <NIcon :component="ArrowDownload24Regular" />
+                          </template>
+                          导出
+                        </NButton>
+                      </NSpace>
+                    </NCard>
+                  </NSpace>
+                </NSpace>
+              </div>
+
+              <!-- 视图切换和统计信息 -->
+              <NCard
+                v-if="selectedType === EventDataTypes.Guard"
+                size="small"
+                embedded
               >
                 <NSpace
                   align="center"
                   wrap
                 >
-                  <NDatePicker
-                    v-model:value="selectedDate"
-                    type="datetimerange"
-                    :shortcuts="rangeShortcuts"
-                    start-placeholder="开始时间"
-                    end-placeholder="结束时间"
-                    :disabled="isLoading || isLoadingMore"
-                    class="date-picker"
-                  />
-                  <NRadioGroup
-                    v-model:value="selectedType"
-                    :disabled="isLoading || isLoadingMore"
-                  >
-                    <NRadioButton :value="EventDataTypes.Guard">
-                      舰长
-                    </NRadioButton>
-                    <NRadioButton :value="EventDataTypes.SC">
-                      Superchat
-                    </NRadioButton>
-                  </NRadioGroup>
                   <NInput
-                    v-model:value="userFilterInput"
-                    :disabled="isLoading || isLoadingMore"
-                    placeholder="筛选用户(UID/OUID/用户名)"
+                    v-model:value="manualGuardUname"
+                    placeholder="用户名"
+                    style="width: 160px"
+                  />
+                  <NInput
+                    v-model:value="manualGuardUserKey"
+                    placeholder="UID 或 OUID"
                     style="width: 220px"
+                  />
+                  <NSelect
+                    v-model:value="manualGuardMsg"
+                    :options="manualGuardMsgOptions"
+                    style="width: 120px"
+                  />
+                  <NDatePicker
+                    v-model:value="manualGuardTime"
+                    type="datetime"
                     clearable
-                    @keyup.enter="applyUserFilter"
+                    placeholder="时间(可选)"
+                    style="width: 200px"
+                  />
+                  <NInputNumber
+                    v-model:value="manualGuardNum"
+                    :min="1"
+                    placeholder="数量"
+                    style="width: 120px"
+                  />
+                  <NInputNumber
+                    v-model:value="manualGuardPrice"
+                    :min="0"
+                    placeholder="价格(可选)"
+                    style="width: 140px"
                   />
                   <NButton
-                    size="small"
-                    secondary
                     type="primary"
-                    :disabled="isLoading || isLoadingMore"
-                    @click="applyUserFilter"
-                  >
-                    应用
-                  </NButton>
-                  <NButton
-                    size="small"
                     secondary
+                    :loading="manualGuardLoading"
                     :disabled="isLoading || isLoadingMore"
-                    @click="clearUserFilter"
+                    @click="addManualGuard"
                   >
-                    清空
+                    添加上舰记录
                   </NButton>
                 </NSpace>
+              </NCard>
 
-                <NSpace align="center">
-                  <!-- 导出功能 -->
-                  <NCard
-                    size="small"
-                    embedded
-                    content-style="padding: 4px 12px;"
-                  >
-                    <NSpace align="center">
-                      <NRadioGroup
-                        v-model:value="exportType"
-                        size="small"
-                      >
-                        <NRadioButton value="csv">
-                          CSV
-                        </NRadioButton>
-                        <NRadioButton value="json">
-                          Json
-                        </NRadioButton>
-                      </NRadioGroup>
-                      <NButton
-                        size="small"
-                        secondary
-                        type="primary"
-                        :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore"
-                        @click="exportData"
-                      >
-                        <template #icon>
-                          <NIcon :component="ArrowDownload24Regular" />
-                        </template>
-                        导出
-                      </NButton>
-                    </NSpace>
-                  </NCard>
-                </NSpace>
-              </NSpace>
-            </div>
-
-            <!-- 视图切换和统计信息 -->
-            <NCard
-              v-if="selectedType === EventDataTypes.Guard"
-              size="small"
-              embedded
-            >
               <NSpace
+                justify="space-between"
                 align="center"
-                wrap
               >
-                <NInput
-                  v-model:value="manualGuardUname"
-                  placeholder="用户名"
-                  style="width: 160px"
-                />
-                <NInput
-                  v-model:value="manualGuardUserKey"
-                  placeholder="UID 或 OUID"
-                  style="width: 220px"
-                />
-                <NSelect
-                  v-model:value="manualGuardMsg"
-                  :options="manualGuardMsgOptions"
-                  style="width: 120px"
-                />
-                <NDatePicker
-                  v-model:value="manualGuardTime"
-                  type="datetime"
-                  clearable
-                  placeholder="时间(可选)"
-                  style="width: 200px"
-                />
-                <NInputNumber
-                  v-model:value="manualGuardNum"
-                  :min="1"
-                  placeholder="数量"
-                  style="width: 120px"
-                />
-                <NInputNumber
-                  v-model:value="manualGuardPrice"
-                  :min="0"
-                  placeholder="价格(可选)"
-                  style="width: 140px"
-                />
-                <NButton
-                  type="primary"
-                  secondary
-                  :loading="manualGuardLoading"
-                  :disabled="isLoading || isLoadingMore"
-                  @click="addManualGuard"
+                <NText depth="3">
+                  共加载 {{ selectedEvents.length }} 条 {{ hasMore ? '(滚动加载更多...)' : '' }}
+                </NText>
+                <NRadioGroup
+                  v-model:value="displayMode"
+                  size="small"
                 >
-                  添加上舰记录
-                </NButton>
+                  <NRadioButton value="grid">
+                    <NIcon :component="Grid28Filled" />
+                  </NRadioButton>
+                  <NRadioButton value="column">
+                    <NIcon :component="List16Filled" />
+                  </NRadioButton>
+                </NRadioGroup>
               </NSpace>
-            </NCard>
 
-            <NSpace
-              justify="space-between"
-              align="center"
-            >
-              <NText depth="3">
-                共加载 {{ selectedEvents.length }} 条 {{ hasMore ? '(滚动加载更多...)' : '' }}
-              </NText>
-              <NRadioGroup
-                v-model:value="displayMode"
-                size="small"
-              >
-                <NRadioButton value="grid">
-                  <NIcon :component="Grid28Filled" />
-                </NRadioButton>
-                <NRadioButton value="column">
-                  <NIcon :component="List16Filled" />
-                </NRadioButton>
-              </NRadioGroup>
-            </NSpace>
-
-            <!-- 数据展示区域 -->
-            <NSpin :show="isLoading">
-              <Transition
-                mode="out-in"
-                name="fade"
-                appear
-              >
-                <!-- 网格视图 -->
-                <div v-if="displayMode === 'grid'">
-                  <NInfiniteScroll
-                    :distance="100"
-                    :disabled="isLoadingMore || !hasMore || isLoading"
-                    style="height: 600px; padding-right: 10px;"
-                    @load="loadMore"
-                  >
-                    <NGrid
-                      cols="1 500:2 800:3 1000:4 1200:5"
-                      :x-gap="12"
-                      :y-gap="8"
+              <!-- 数据展示区域 -->
+              <NSpin :show="isLoading">
+                <Transition
+                  mode="out-in"
+                  name="fade"
+                  appear
+                >
+                  <!-- 网格视图 -->
+                  <div v-if="displayMode === 'grid'">
+                    <NInfiniteScroll
+                      :distance="100"
+                      :disabled="isLoadingMore || !hasMore || isLoading"
+                      style="height: 600px; padding-right: 10px;"
+                      @load="loadMore"
                     >
-                      <NGridItem
+                      <NGrid
+                        cols="1 500:2 800:3 1000:4 1200:5"
+                        :x-gap="12"
+                        :y-gap="8"
+                      >
+                        <NGridItem
+                          v-for="item in selectedEvents"
+                          :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
+                        >
+                          <NCard
+                            size="small"
+                            :style="`height: ${selectedType === EventDataTypes.Guard ? '160px' : '200px'}`"
+                            embedded
+                            hoverable
+                            class="event-card"
+                          >
+                            <NPopconfirm
+                              v-if="selectedType === EventDataTypes.Guard && item.id"
+                              :show-icon="false"
+                              positive-text="删除"
+                              negative-text="取消"
+                              @positive-click="deleteGuardEvent(item)"
+                            >
+                              <template #trigger>
+                                <NButton
+                                  class="event-card-delete"
+                                  size="tiny"
+                                  circle
+                                  quaternary
+                                  type="error"
+                                  title="删除"
+                                  @click.stop
+                                >
+                                  <template #icon>
+                                    <NIcon><Delete24Regular /></NIcon>
+                                  </template>
+                                </NButton>
+                              </template>
+                              确定删除这条上舰记录？
+                            </NPopconfirm>
+                            <NSpace
+                              align="center"
+                              vertical
+                              :size="5"
+                            >
+                              <NAvatar
+                                round
+                                lazy
+                                borderd
+                                :size="54"
+                                :src="item.uid ? AVATAR_URL + item.uid : item.uface"
+                                :img-props="{ referrerpolicy: 'no-referrer' }"
+                                class="event-avatar"
+                              />
+                              <NSpace size="small">
+                                <NTag
+                                  v-if="selectedType === EventDataTypes.Guard"
+                                  size="tiny"
+                                  :bordered="false"
+                                >
+                                  {{ item.msg }}
+                                </NTag>
+                                <NTag
+                                  size="tiny"
+                                  round
+                                  :bordered="false"
+                                  :color="{
+                                    color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                                    textColor: 'white',
+                                  }"
+                                >
+                                  {{ item.price }}
+                                </NTag>
+                              </NSpace>
+                              <NText
+                                strong
+                                class="event-username"
+                              >
+                                <NEllipsis style="max-width: 150px">
+                                  {{ item.uname }}
+                                </NEllipsis>
+                              </NText>
+                              <NText
+                                depth="3"
+                                style="font-size: 12px"
+                              >
+                                <NTime :time="item.time" />
+                              </NText>
+                              <NEllipsis
+                                v-if="selectedType === EventDataTypes.SC"
+                                :line-clamp="2"
+                                style="font-size: 12px; text-align: center;"
+                              >
+                                {{ item.msg }}
+                              </NEllipsis>
+                            </NSpace>
+                          </NCard>
+                        </NGridItem>
+                      </NGrid>
+                      <!-- 加载更多指示器 -->
+                      <div
+                        v-if="isLoadingMore"
+                        class="loading-more"
+                      >
+                        <NSpin size="small" />
+                        <NText
+                          depth="3"
+                          style="margin-left: 5px;"
+                        >
+                          加载中...
+                        </NText>
+                      </div>
+                      <div
+                        v-if="!hasMore && !isLoading && selectedEvents.length > 0"
+                        class="no-more"
+                      >
+                        <NText depth="3">
+                          没有更多数据了
+                        </NText>
+                      </div>
+                    </NInfiniteScroll>
+                  </div>
+
+                  <!-- 表格视图 -->
+                  <NTable
+                    v-else-if="!isLoading && selectedEvents.length > 0"
+                    striped
+                  >
+                    <thead>
+                      <tr>
+                        <th>用户名</th>
+                        <th>OUID</th>
+                        <th>时间</th>
+                        <th v-if="selectedType === EventDataTypes.Guard">
+                          类型
+                        </th>
+                        <th>价格</th>
+                        <th v-if="selectedType === EventDataTypes.SC">
+                          内容
+                        </th>
+                        <th v-if="selectedType === EventDataTypes.Guard">
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
                         v-for="item in selectedEvents"
                         :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
                       >
-                        <NCard
-                          size="small"
-                          :style="`height: ${selectedType === EventDataTypes.Guard ? '160px' : '200px'}`"
-                          embedded
-                          hoverable
-                          class="event-card"
-                        >
+                        <td>{{ item.uname }}</td>
+                        <td>{{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}</td>
+                        <td>
+                          <NTime
+                            :time="item.time"
+                            format="yyyy-MM-dd HH:mm:ss"
+                          />
+                        </td>
+                        <td v-if="selectedType === EventDataTypes.Guard">
+                          {{ item.msg }}
+                        </td>
+                        <td>
+                          <NTag
+                            size="small"
+                            :bordered="false"
+                            :color="{
+                              color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
+                              textColor: 'white',
+                            }"
+                          >
+                            {{ item.price }}
+                          </NTag>
+                        </td>
+                        <td v-if="selectedType === EventDataTypes.SC">
+                          <NEllipsis style="max-width: 300px">
+                            {{ item.msg }}
+                          </NEllipsis>
+                        </td>
+                        <td v-if="selectedType === EventDataTypes.Guard">
                           <NPopconfirm
-                            v-if="selectedType === EventDataTypes.Guard && item.id"
+                            v-if="item.id"
                             :show-icon="false"
                             positive-text="删除"
                             negative-text="取消"
@@ -776,354 +939,191 @@ async function onTabChange(value: string) {
                           >
                             <template #trigger>
                               <NButton
-                                class="event-card-delete"
-                                size="tiny"
-                                circle
-                                quaternary
+                                size="small"
+                                secondary
                                 type="error"
-                                title="删除"
-                                @click.stop
                               >
-                                <template #icon>
-                                  <NIcon><Delete24Regular /></NIcon>
-                                </template>
+                                删除
                               </NButton>
                             </template>
                             确定删除这条上舰记录？
                           </NPopconfirm>
-                          <NSpace
-                            align="center"
-                            vertical
-                            :size="5"
-                          >
-                            <NAvatar
-                              round
-                              lazy
-                              borderd
-                              :size="54"
-                              :src="item.uid ? AVATAR_URL + item.uid : item.uface"
-                              :img-props="{ referrerpolicy: 'no-referrer' }"
-                              class="event-avatar"
-                            />
-                            <NSpace size="small">
-                              <NTag
-                                v-if="selectedType === EventDataTypes.Guard"
-                                size="tiny"
-                                :bordered="false"
-                              >
-                                {{ item.msg }}
-                              </NTag>
-                              <NTag
-                                size="tiny"
-                                round
-                                :bordered="false"
-                                :color="{
-                                  color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
-                                  textColor: 'white',
-                                }"
-                              >
-                                {{ item.price }}
-                              </NTag>
-                            </NSpace>
-                            <NText
-                              strong
-                              class="event-username"
-                            >
-                              <NEllipsis style="max-width: 150px">
-                                {{ item.uname }}
-                              </NEllipsis>
-                            </NText>
-                            <NText
-                              depth="3"
-                              style="font-size: 12px"
-                            >
-                              <NTime :time="item.time" />
-                            </NText>
-                            <NEllipsis
-                              v-if="selectedType === EventDataTypes.SC"
-                              :line-clamp="2"
-                              style="font-size: 12px; text-align: center;"
-                            >
-                              {{ item.msg }}
-                            </NEllipsis>
-                          </NSpace>
-                        </NCard>
-                      </NGridItem>
-                    </NGrid>
-                    <!-- 加载更多指示器 -->
-                    <div
-                      v-if="isLoadingMore"
-                      class="loading-more"
-                    >
-                      <NSpin size="small" />
-                      <NText
-                        depth="3"
-                        style="margin-left: 5px;"
-                      >
-                        加载中...
-                      </NText>
-                    </div>
-                    <div
-                      v-if="!hasMore && !isLoading && selectedEvents.length > 0"
-                      class="no-more"
-                    >
-                      <NText depth="3">
-                        没有更多数据了
-                      </NText>
-                    </div>
-                  </NInfiniteScroll>
-                </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </NTable>
 
-                <!-- 表格视图 -->
-                <NTable
-                  v-else-if="!isLoading && selectedEvents.length > 0"
-                  striped
-                >
-                  <thead>
-                    <tr>
-                      <th>用户名</th>
-                      <th>OUID</th>
-                      <th>时间</th>
-                      <th v-if="selectedType === EventDataTypes.Guard">
-                        类型
-                      </th>
-                      <th>价格</th>
-                      <th v-if="selectedType === EventDataTypes.SC">
-                        内容
-                      </th>
-                      <th v-if="selectedType === EventDataTypes.Guard">
-                        操作
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="item in selectedEvents"
-                      :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
-                    >
-                      <td>{{ item.uname }}</td>
-                      <td>{{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid }}</td>
-                      <td>
-                        <NTime
-                          :time="item.time"
-                          format="yyyy-MM-dd HH:mm:ss"
-                        />
-                      </td>
-                      <td v-if="selectedType === EventDataTypes.Guard">
-                        {{ item.msg }}
-                      </td>
-                      <td>
-                        <NTag
-                          size="small"
-                          :bordered="false"
-                          :color="{
-                            color: selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
-                            textColor: 'white',
-                          }"
-                        >
-                          {{ item.price }}
-                        </NTag>
-                      </td>
-                      <td v-if="selectedType === EventDataTypes.SC">
-                        <NEllipsis style="max-width: 300px">
-                          {{ item.msg }}
-                        </NEllipsis>
-                      </td>
-                      <td v-if="selectedType === EventDataTypes.Guard">
-                        <NPopconfirm
-                          v-if="item.id"
-                          :show-icon="false"
-                          positive-text="删除"
-                          negative-text="取消"
-                          @positive-click="deleteGuardEvent(item)"
-                        >
-                          <template #trigger>
-                            <NButton
-                              size="small"
-                              secondary
-                              type="error"
-                            >
-                              删除
-                            </NButton>
-                          </template>
-                          确定删除这条上舰记录？
-                        </NPopconfirm>
-                      </td>
-                    </tr>
-                  </tbody>
-                </NTable>
-
-                <!-- 无数据提示 -->
-                <NAlert
-                  v-else-if="!isLoading && selectedEvents.length === 0"
-                  title="无数据"
-                  type="info"
-                  style="margin-top: 20px;"
-                >
-                  在选定的时间范围和类型内没有找到数据。
-                </NAlert>
-              </Transition>
-            </NSpin>
-          </NSpace>
-        </NTabPane>
-
-        <NTabPane
-          name="current-captains"
-          tab="当前在舰用户"
-        >
-          <!-- 当前在舰用户面板 -->
-          <NSpace
-            vertical
-            size="large"
-          >
-            <!-- 统计卡片 -->
-            <NGrid
-              v-if="guardStats"
-              cols="2 600:4"
-              item-responsive
-              responsive="screen"
-              x-gap="12"
-              y-gap="12"
-            >
-              <NGridItem>
-                <NCard
-                  embedded
-                  size="small"
-                >
-                  <NStatistic
-                    label="舰长总数"
-                    :value="guardStats.totalCount"
-                  />
-                </NCard>
-              </NGridItem>
-              <NGridItem>
-                <NCard
-                  embedded
-                  size="small"
-                >
-                  <NStatistic
-                    label="总督"
-                    :value="guardStats.governorCount"
+                  <!-- 无数据提示 -->
+                  <NAlert
+                    v-else-if="!isLoading && selectedEvents.length === 0"
+                    title="无数据"
+                    type="info"
+                    style="margin-top: 20px;"
                   >
-                    <template #prefix>
-                      <span style="color: #FF6B9D">●</span>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-              <NGridItem>
-                <NCard
-                  embedded
-                  size="small"
-                >
-                  <NStatistic
-                    label="提督"
-                    :value="guardStats.admiralCount"
-                  >
-                    <template #prefix>
-                      <span style="color: #C59AFF">●</span>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-              <NGridItem>
-                <NCard
-                  embedded
-                  size="small"
-                >
-                  <NStatistic
-                    label="舰长"
-                    :value="guardStats.captainCount"
-                  >
-                    <template #prefix>
-                      <span style="color: #00D1FF">●</span>
-                    </template>
-                  </NStatistic>
-                </NCard>
-              </NGridItem>
-            </NGrid>
-
-            <!-- 工具栏 -->
-            <NSpace justify="end">
-              <NButton
-                secondary
-                type="primary"
-                :loading="guardListLoading"
-                @click="loadGuardList"
-              >
-                <template #icon>
-                  <NIcon :component="ArrowSync24Filled" />
-                </template>
-                刷新列表
-              </NButton>
+                    在选定的时间范围和类型内没有找到数据。
+                  </NAlert>
+                </Transition>
+              </NSpin>
             </NSpace>
+          </NTabPane>
 
-            <!-- 列表 -->
-            <NDataTable
-              v-if="guardList?.length > 0"
-              :columns="guardColumns"
-              :data="guardList"
-              :pagination="guardPagination"
-              :loading="guardListLoading"
-              :bordered="false"
-              striped
-              size="small"
-            />
-            <NAlert
-              v-else-if="!guardListLoading"
-              type="info"
+          <NTabPane
+            name="current-captains"
+            tab="当前在舰用户"
+          >
+            <!-- 当前在舰用户面板 -->
+            <NSpace
+              vertical
+              size="large"
             >
-              暂无在舰用户
-            </NAlert>
-          </NSpace>
-        </NTabPane>
-      </NTabs>
-    </template>
+              <!-- 统计卡片 -->
+              <NGrid
+                v-if="guardStats"
+                cols="2 600:4"
+                item-responsive
+                responsive="screen"
+                x-gap="12"
+                y-gap="12"
+              >
+                <NGridItem>
+                  <NCard
+                    embedded
+                    size="small"
+                  >
+                    <NStatistic
+                      label="舰长总数"
+                      :value="guardStats.totalCount"
+                    />
+                  </NCard>
+                </NGridItem>
+                <NGridItem>
+                  <NCard
+                    embedded
+                    size="small"
+                  >
+                    <NStatistic
+                      label="总督"
+                      :value="guardStats.governorCount"
+                    >
+                      <template #prefix>
+                        <span style="color: #FF6B9D">●</span>
+                      </template>
+                    </NStatistic>
+                  </NCard>
+                </NGridItem>
+                <NGridItem>
+                  <NCard
+                    embedded
+                    size="small"
+                  >
+                    <NStatistic
+                      label="提督"
+                      :value="guardStats.admiralCount"
+                    >
+                      <template #prefix>
+                        <span style="color: #C59AFF">●</span>
+                      </template>
+                    </NStatistic>
+                  </NCard>
+                </NGridItem>
+                <NGridItem>
+                  <NCard
+                    embedded
+                    size="small"
+                  >
+                    <NStatistic
+                      label="舰长"
+                      :value="guardStats.captainCount"
+                    >
+                      <template #prefix>
+                        <span style="color: #00D1FF">●</span>
+                      </template>
+                    </NStatistic>
+                  </NCard>
+                </NGridItem>
+              </NGrid>
 
-    <!-- 未认证用户提示区域 -->
-    <template v-else>
-      <NCollapse :default-expanded-names="['1']">
-        <NCollapseItem
-          title="这是什么?"
-          name="1"
-        >
-          可以查看曾经收到的Superchat以及上舰记录, 并导出为 CSV 之类的表格
-        </NCollapseItem>
-        <NCollapseItem title="可以直接用吗">
-          遗憾的是并不能, 使用这个功能需要你拥有一个可以7*24小时运行 Docker 容器或者 Node.js 脚本的环境,
-          并且可以访问互联网
-        </NCollapseItem>
-        <NCollapseItem title="有没有什么要求?">
-          关于环境的话理论上能够运行 Docker 或者 Node.js 的环境都能可以
-          <br><br>
-          此外, 你至少需要以下技能之一:
-          <NUl>
-            <NLi>了解并能够使用 Docker 容器</NLi>
-            <NLi>了解并能够运行 Node.js</NLi>
-            <NLi>熟悉互联网冲浪, 能够跟着教程点击鼠标</NLi>
-            <NLi>拥有掌握以上技能的 stf 或者朋友</NLi>
-          </NUl>
-          <NH3>
-            <NText strong>
-              即使你对相关知识一窍不通也不用担心, 跟着后面的傻瓜教程中的 Koyeb 也可以完成部署.
-              理论上这玩意里头的免费套餐就够用了, 当然如果你想要更稳一点上个付费套餐也不影响
-            </NText>
-          </NH3>
-        </NCollapseItem>
-      </NCollapse>
-      <NDivider style="margin-bottom: 10px" />
-      <NSpace justify="center">
-        <NButton
-          tag="a"
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
-          type="primary"
-        >
-          部署指南
-        </NButton>
-      </NSpace>
-    </template>
-  </NCard>
+              <!-- 工具栏 -->
+              <NSpace justify="end">
+                <NButton
+                  secondary
+                  type="primary"
+                  :loading="guardListLoading"
+                  @click="loadGuardList"
+                >
+                  <template #icon>
+                    <NIcon :component="ArrowSync24Filled" />
+                  </template>
+                  刷新列表
+                </NButton>
+              </NSpace>
+
+              <!-- 列表 -->
+              <NDataTable
+                v-if="guardList?.length > 0"
+                :columns="guardColumns"
+                :data="guardList"
+                :pagination="guardPagination"
+                :loading="guardListLoading"
+                :bordered="false"
+                striped
+                size="small"
+              />
+              <NAlert
+                v-else-if="!guardListLoading"
+                type="info"
+              >
+                暂无在舰用户
+              </NAlert>
+            </NSpace>
+          </NTabPane>
+        </NTabs>
+      </template>
+
+      <!-- 未认证用户提示区域 -->
+      <template v-else>
+        <NCollapse :default-expanded-names="['1']">
+          <NCollapseItem
+            title="这是什么?"
+            name="1"
+          >
+            可以查看曾经收到的Superchat以及上舰记录, 并导出为 CSV 之类的表格
+          </NCollapseItem>
+          <NCollapseItem title="可以直接用吗">
+            遗憾的是并不能, 使用这个功能需要你拥有一个可以7*24小时运行 Docker 容器或者 Node.js 脚本的环境,
+            并且可以访问互联网
+          </NCollapseItem>
+          <NCollapseItem title="有没有什么要求?">
+            关于环境的话理论上能够运行 Docker 或者 Node.js 的环境都能可以
+            <br><br>
+            此外, 你至少需要以下技能之一:
+            <NUl>
+              <NLi>了解并能够使用 Docker 容器</NLi>
+              <NLi>了解并能够运行 Node.js</NLi>
+              <NLi>熟悉互联网冲浪, 能够跟着教程点击鼠标</NLi>
+              <NLi>拥有掌握以上技能的 stf 或者朋友</NLi>
+            </NUl>
+            <NH3>
+              <NText strong>
+                即使你对相关知识一窍不通也不用担心, 跟着后面的傻瓜教程中的 Koyeb 也可以完成部署.
+                理论上这玩意里头的免费套餐就够用了, 当然如果你想要更稳一点上个付费套餐也不影响
+              </NText>
+            </NH3>
+          </NCollapseItem>
+        </NCollapse>
+        <NDivider style="margin-bottom: 10px" />
+        <NSpace justify="center">
+          <NButton
+            tag="a"
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+            target="_blank"
+            type="primary"
+          >
+            部署指南
+          </NButton>
+        </NSpace>
+      </template>
+    </NCard>
   </div>
 </template>
 

@@ -502,137 +502,137 @@ watch(
 <template>
   <div class="history-view">
     <ManagePageHeader title="数据跟踪" subtitle="粉丝/舰长趋势（需 EventFetcher 提供数据）" />
-  <NAlert
-    v-if="accountInfo?.isBiliVerified !== true"
-    type="info"
-    :bordered="false"
-  >
-    尚未进行Bilibili认证
-  </NAlert>
-  <NSpin
-    v-else-if="isLoading"
-    show
-  />
-  <NCard
-    v-else
-    size="small"
-    :bordered="true"
-    class="history-card"
-  >
-    <NAlert type="warning" :bordered="false">
-      由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
-      <NButton
-        text
-        type="info"
-        tag="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-        target="_blank"
-      >
-        VTsuruEventFetcher
-      </NButton>
-      来帮助本站获取你的数据记录
+    <NAlert
+      v-if="accountInfo?.isBiliVerified !== true"
+      type="info"
+      :bordered="false"
+    >
+      尚未进行Bilibili认证
     </NAlert>
-    <br>
-    <NTooltip
-      trigger="click"
-      placement="bottom"
+    <NSpin
+      v-else-if="isLoading"
+      show
+    />
+    <NCard
+      v-else
+      size="small"
+      :bordered="true"
+      class="history-card"
     >
-      <template #trigger>
-        <NButton type="info">
-          <template #icon>
-            <NIcon :component="Info24Filled" />
-          </template>
-          关于数据更新
+      <NAlert type="warning" :bordered="false">
+        由于B站继续收紧风控策略, 本站已无法再爬取相关数据, 请需要使用此功能的用户下载并安装1.0.6.4及以上版本的
+        <NButton
+          text
+          type="info"
+          tag="a"
+          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+          target="_blank"
+        >
+          VTsuruEventFetcher
         </NButton>
-      </template>
-      <NSpace vertical>
-        <NText strong>
-          所有数据改为每天更新一次
+        来帮助本站获取你的数据记录
+      </NAlert>
+      <br>
+      <NTooltip
+        trigger="click"
+        placement="bottom"
+      >
+        <template #trigger>
+          <NButton type="info">
+            <template #icon>
+              <NIcon :component="Info24Filled" />
+            </template>
+            关于数据更新
+          </NButton>
+        </template>
+        <NSpace vertical>
+          <NText strong>
+            所有数据改为每天更新一次
+          </NText>
+          <NDivider style="margin: 0" />
+          <NText
+            delete
+            :depth="3"
+          >
+            粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
+          </NText>
+          <NText
+            delete
+            :depth="3"
+          >
+            舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次
+          </NText>
+          <NText
+            delete
+            :depth="3"
+          >
+            投稿数据: 500粉以上: 每天一次
+          </NText>
+        </NSpace>
+      </NTooltip>
+      <br>
+      <br>
+      <NSpace align="center">
+        <NText depth="3">
+          日期范围：
         </NText>
-        <NDivider style="margin: 0" />
-        <NText
-          delete
-          :depth="3"
-        >
-          粉丝数: 200粉以下: 每3天一次, 200-1000粉: 每24小时一次, 1000-10000粉: 每6小时一次, 10000粉以上: 每小时一次
-        </NText>
-        <NText
-          delete
-          :depth="3"
-        >
-          舰长数: 10舰以下: 每24小时一次, 10-50舰: 每12小时一次, 50舰以上: 每6小时一次
-        </NText>
-        <NText
-          delete
-          :depth="3"
-        >
-          投稿数据: 500粉以上: 每天一次
-        </NText>
+        <NDatePicker
+          v-model:value="dateRange"
+          type="daterange"
+          clearable
+          separator="至"
+          :shortcuts="dateShortcuts"
+        />
       </NSpace>
-    </NTooltip>
-    <br>
-    <br>
-    <NSpace align="center">
-      <NText depth="3">
-        日期范围：
-      </NText>
-      <NDatePicker
-        v-model:value="dateRange"
-        type="daterange"
-        clearable
-        separator="至"
-        :shortcuts="dateShortcuts"
-      />
-    </NSpace>
-    <br>
-    <NSpace
-      vertical
-      class="charts-container"
-    >
-      <NDivider>
-        粉丝
-        <NDivider vertical />
-        <NTooltip>
-          <template #trigger>
-            <span>
-              <NTime
-                :time="fansUpdateAt"
-                type="relative"
-              />
-              更新
-            </span>
-          </template>
-          <NTime :time="fansUpdateAt" />
-        </NTooltip>
-      </NDivider>
-      <VChart
-        :option="fansOption"
-        :style="{ height: chartHeight }"
-        class="chart"
-      />
-      <NDivider>
-        舰长
-        <NDivider vertical />
-        <NTooltip>
-          <template #trigger>
-            <span>
-              <NTime
-                :time="guardUpdateAt"
-                type="relative"
-              />
-              更新
-            </span>
-          </template>
-          <NTime :time="guardUpdateAt" />
-        </NTooltip>
-      </NDivider>
-      <VChart
-        :option="guardsOption"
-        :style="{ height: chartHeight }"
-        class="chart"
-      />
+      <br>
+      <NSpace
+        vertical
+        class="charts-container"
+      >
+        <NDivider>
+          粉丝
+          <NDivider vertical />
+          <NTooltip>
+            <template #trigger>
+              <span>
+                <NTime
+                  :time="fansUpdateAt"
+                  type="relative"
+                />
+                更新
+              </span>
+            </template>
+            <NTime :time="fansUpdateAt" />
+          </NTooltip>
+        </NDivider>
+        <VChart
+          :option="fansOption"
+          :style="{ height: chartHeight }"
+          class="chart"
+        />
+        <NDivider>
+          舰长
+          <NDivider vertical />
+          <NTooltip>
+            <template #trigger>
+              <span>
+                <NTime
+                  :time="guardUpdateAt"
+                  type="relative"
+                />
+                更新
+              </span>
+            </template>
+            <NTime :time="guardUpdateAt" />
+          </NTooltip>
+        </NDivider>
+        <VChart
+          :option="guardsOption"
+          :style="{ height: chartHeight }"
+          class="chart"
+        />
 
-      <NDivider />
+        <NDivider />
       <!-- <NDivider>
         投稿播放量
         <NDivider vertical />
@@ -676,8 +676,8 @@ watch(
         :style="{ height: chartHeight }"
         class="chart"
       /> -->
-    </NSpace>
-  </NCard>
+      </NSpace>
+    </NCard>
   </div>
 </template>
 

@@ -36,7 +36,7 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     if (Object.keys(opts.settings.value.pages).length >= opts.maxPagesCount) throw new Error(`子页面最多只能创建 ${opts.maxPagesCount} 个`)
     if (opts.settings.value.pages[slug]) throw new Error('该 slug 已存在')
     opts.history.batch(() => {
-      opts.settings.value.pages![slug] = { mode: 'block', block: opts.createDefaultProject() }
+      opts.settings.value.pages[slug] = { mode: 'block', block: opts.createDefaultProject() }
       opts.currentKey.value = slug
       opts.clearSelection()
     })
@@ -45,7 +45,7 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
   function removePage(slug: string) {
     if (!opts.settings.value.pages?.[slug]) return
     opts.history.batch(() => {
-      delete opts.settings.value.pages![slug]
+      delete opts.settings.value.pages[slug]
       if (opts.currentKey.value === slug) opts.currentKey.value = 'home'
       opts.clearSelection()
     })
@@ -61,8 +61,8 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     if (!src) return
     if (opts.settings.value.pages[to]) throw new Error('该 slug 已存在')
     opts.history.batch(() => {
-      opts.settings.value.pages![to] = src
-      delete opts.settings.value.pages![from]
+      opts.settings.value.pages[to] = src
+      delete opts.settings.value.pages[from]
       if (opts.currentKey.value === from) opts.currentKey.value = to
       opts.clearSelection()
     })
@@ -83,7 +83,7 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
     if (copied.mode === 'block' && copied.block) copied.block = cloneProjectWithNewIds(copied.block)
 
     opts.history.batch(() => {
-      opts.settings.value.pages![to] = copied
+      opts.settings.value.pages[to] = copied
       opts.currentKey.value = to
       opts.clearSelection()
     })

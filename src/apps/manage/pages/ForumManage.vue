@@ -325,276 +325,276 @@ onMounted(() => {
       </template>
     </ManagePageHeader>
 
-  <template v-if="!currentForum.name && managedForums.length > 0">
-    <NAlert type="info" :bordered="false">
-      你是某些讨论区的管理员, 可以在下方选择需要管理的讨论区
-    </NAlert>
-  </template>
-  <NSelect
-    v-model:value="selectedForum"
-    :options="
-      managedForums.map((f) => ({
-        label: `${(f.owner.id === accountInfo.id ? '[我的] ' : '') + f.name} (${f.owner.name})`,
-        value: f.owner.id,
-      }))
-    "
-    placeholder="选择要管理的粉丝讨论区"
-    :fallback-option="(v) => ({ label: '尚未创建', value: v })"
-    @update:value="(v) => SwitchForum(v)"
-  >
-    <template #header>
-      <NButton
-        size="small"
-        type="primary"
-        @click="SwitchForum(accountInfo.id)"
-      >
-        我的粉丝讨论区
-      </NButton>
+    <template v-if="!currentForum.name && managedForums.length > 0">
+      <NAlert type="info" :bordered="false">
+        你是某些讨论区的管理员, 可以在下方选择需要管理的讨论区
+      </NAlert>
     </template>
-  </NSelect>
-  <NDivider />
-  <NCard
-    v-if="!currentForum.name"
-    size="small"
-    title="啊哦"
-  >
-    <NAlert type="error">
-      你尚未创建粉丝讨论区
-    </NAlert>
-    <NDivider />
-    <NFlex justify="center">
-      <NFlex vertical>
+    <NSelect
+      v-model:value="selectedForum"
+      :options="
+        managedForums.map((f) => ({
+          label: `${(f.owner.id === accountInfo.id ? '[我的] ' : '') + f.name} (${f.owner.name})`,
+          value: f.owner.id,
+        }))
+      "
+      placeholder="选择要管理的粉丝讨论区"
+      :fallback-option="(v) => ({ label: '尚未创建', value: v })"
+      @update:value="(v) => SwitchForum(v)"
+    >
+      <template #header>
         <NButton
-          size="large"
+          size="small"
           type="primary"
-          @click="createForum"
+          @click="SwitchForum(accountInfo.id)"
         >
-          创建粉丝讨论区
+          我的粉丝讨论区
         </NButton>
-        <NInputGroup>
-          <NInputGroupLabel> 名称 </NInputGroupLabel>
-          <NInput
-            v-model:value="create_Name"
-            placeholder="就是名称"
-            maxlength="20"
-            minlength="1"
-            show-count
-          />
-        </NInputGroup>
-
-        <NInput
-          v-model:value="create_Description"
-          placeholder="(可选) 公告/描述"
-          maxlength="200"
-          show-count
-          type="textarea"
-        />
-        <NCheckbox v-model:checked="readedAgreement">
-          已阅读并同意 <NButton
-            text
-            type="info"
-            @click="showAgreement = true"
+      </template>
+    </NSelect>
+    <NDivider />
+    <NCard
+      v-if="!currentForum.name"
+      size="small"
+      title="啊哦"
+    >
+      <NAlert type="error">
+        你尚未创建粉丝讨论区
+      </NAlert>
+      <NDivider />
+      <NFlex justify="center">
+        <NFlex vertical>
+          <NButton
+            size="large"
+            type="primary"
+            @click="createForum"
           >
-            服务协议
+            创建粉丝讨论区
           </NButton>
-        </NCheckbox>
-      </NFlex>
-    </NFlex>
-  </NCard>
-  <template v-else-if="currentForum">
-    <NSpin :show="useForum.isLoading">
-      <NTabs
-        :key="selectedForum"
-        animated
-        type="segment"
-      >
-        <NTabPane
-          tab="信息"
-          name="info"
-        >
-          <NDescriptions
-            bordered
-            size="small"
-          >
-            <NDescriptionsItem label="名称">
-              {{ currentForum.name }}
-            </NDescriptionsItem>
-            <NDescriptionsItem label="公告">
-              {{ currentForum.description ?? '无' }}
-            </NDescriptionsItem>
-            <NDescriptionsItem label="创建者">
-              {{ currentForum.owner.name }}
-            </NDescriptionsItem>
-            <NDescriptionsItem label="创建时间">
-              <NTime :time="currentForum.createAt" />
-            </NDescriptionsItem>
-            <NDescriptionsItem label="帖子数量">
-              {{ currentForum.topicCount }}
-            </NDescriptionsItem>
-            <NDescriptionsItem
-              v-if="currentForum.settings.requireApply"
-              label="成员数量"
-            >
-              {{ currentForum.members?.length ?? 0 }}
-            </NDescriptionsItem>
-            <NDescriptionsItem label="管理员数量">
-              {{ currentForum.admins?.length ?? 0 }}
-            </NDescriptionsItem>
-          </NDescriptions>
-          <NDivider> 设置 </NDivider>
-          <NDescriptions
-            class="setting"
-            label-placement="left"
-          >
-            <NDescriptionsItem label="加入需要进行管理员同意">
-              <NCheckbox
-                v-model:checked="currentForum.settings.requireApply"
-                @update:checked="updateForumSettings"
-              />
-            </NDescriptionsItem>
-            <NDescriptionsItem
-              v-if="currentForum.settings.requireApply"
-              label="仅允许已绑定账号的用户申请"
-            >
-              <NCheckbox
-                v-model:checked="currentForum.settings.requireAuthedToJoin"
-                @update:checked="updateForumSettings"
-              />
-            </NDescriptionsItem>
-            <NDescriptionsItem label="允许发布帖子">
-              <NCheckbox
-                v-model:checked="currentForum.settings.allowPost"
-                @update:checked="updateForumSettings"
-              />
-            </NDescriptionsItem>
-            <NDescriptionsItem label="允许谁查看讨论区">
-              <NSelect
-                v-model:value="currentForum.settings.allowedViewerLevel"
-                :options="levels"
-                style="min-width: 200px"
-                @update:value="updateForumSettings"
-              />
-            </NDescriptionsItem>
-            <NDescriptionsItem label="允许谁发布帖子">
-              <NSelect
-                v-model:value="currentForum.settings.allowedPostLevel"
-                :options="levels"
-                style="min-width: 200px"
-                @update:value="updateForumSettings"
-              />
-            </NDescriptionsItem>
-          </NDescriptions>
-        </NTabPane>
-        <NTabPane
-          tab="成员"
-          name="member"
-        >
-          <NDivider> 申请加入 </NDivider>
-          <NDataTable
-            :columns="applyingColumns"
-            :data="currentForum.applying"
-            :pagination="paginationSetting"
-          />
-          <NDivider> 成员 </NDivider>
-          <NDataTable
-            :columns="memberColumns"
-            :data="currentForum.members.sort((a, b) => (a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0))"
-            :pagination="paginationSetting"
-          />
-          <NDivider> 管理员 </NDivider>
-          <NFlex>
-            <NButton
-              size="small"
-              type="primary"
-              :disabled="currentForum.owner.id !== accountInfo.id"
-              @click="showAddAdminModal = true"
-            >
-              添加管理员
-            </NButton>
-          </NFlex>
-          <br>
-          <NDataTable
-            :columns="adminColumns"
-            :data="currentForum.admins"
-            :pagination="paginationSetting"
-          />
-          <NDivider> 封禁用户 </NDivider>
-          <NFlex>
-            <NButton
-              size="small"
-              type="primary"
-              @click="showBanModal = true"
-            >
-              封禁用户
-            </NButton>
-          </NFlex>
-          <br>
-          <NDataTable
-            :columns="banColumns"
-            :data="currentForum.blackList"
-            :pagination="paginationSetting"
-          />
-        </NTabPane>
-      </NTabs>
-    </NSpin>
-  </template>
-  <NModal
-    v-model:show="showAgreement"
-    preset="card"
-    title="开通粉丝讨论区用户协议"
-    style="width: 600px; max-width: 90vw"
-  >
-    <Agreement />
-  </NModal>
-  <NModal
-    v-model:show="showAddAdminModal"
-    preset="card"
-    title="添加管理员"
-    style="width: 600px; max-width: 90vw"
-  >
-    <UserBasicInfoCard
-      :user="addAdminName"
-      @update:user-info="(v) => (currentAdminInfo = v)"
-    />
-    <br>
-    <NInput
-      v-model:value="addAdminName"
-      placeholder="请输入用户名或VTsuruId"
-    />
-    <NDivider />
-    <NButton
-      type="primary"
-      :disabled="!currentAdminInfo?.id"
-      @click="addAdmin(currentAdminInfo!.id)"
-    >
-      添加
-    </NButton>
-  </NModal>
+          <NInputGroup>
+            <NInputGroupLabel> 名称 </NInputGroupLabel>
+            <NInput
+              v-model:value="create_Name"
+              placeholder="就是名称"
+              maxlength="20"
+              minlength="1"
+              show-count
+            />
+          </NInputGroup>
 
-  <NModal
-    v-model:show="showBanModal"
-    preset="card"
-    title="封禁用户"
-    style="width: 600px; max-width: 90vw"
-  >
-    <UserBasicInfoCard
-      :user="addBanName"
-      @update:user-info="(v) => (currentBanUserInfo = v)"
-    />
-    <br>
-    <NInput
-      v-model:value="addBanName"
-      placeholder="请输入用户名或VTsuruId"
-    />
-    <NDivider />
-    <NButton
-      type="warning"
-      :disabled="!currentBanUserInfo?.id"
-      @click="banUser(currentBanUserInfo!.id)"
+          <NInput
+            v-model:value="create_Description"
+            placeholder="(可选) 公告/描述"
+            maxlength="200"
+            show-count
+            type="textarea"
+          />
+          <NCheckbox v-model:checked="readedAgreement">
+            已阅读并同意 <NButton
+              text
+              type="info"
+              @click="showAgreement = true"
+            >
+              服务协议
+            </NButton>
+          </NCheckbox>
+        </NFlex>
+      </NFlex>
+    </NCard>
+    <template v-else-if="currentForum">
+      <NSpin :show="useForum.isLoading">
+        <NTabs
+          :key="selectedForum"
+          animated
+          type="segment"
+        >
+          <NTabPane
+            tab="信息"
+            name="info"
+          >
+            <NDescriptions
+              bordered
+              size="small"
+            >
+              <NDescriptionsItem label="名称">
+                {{ currentForum.name }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="公告">
+                {{ currentForum.description ?? '无' }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="创建者">
+                {{ currentForum.owner.name }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="创建时间">
+                <NTime :time="currentForum.createAt" />
+              </NDescriptionsItem>
+              <NDescriptionsItem label="帖子数量">
+                {{ currentForum.topicCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem
+                v-if="currentForum.settings.requireApply"
+                label="成员数量"
+              >
+                {{ currentForum.members?.length ?? 0 }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="管理员数量">
+                {{ currentForum.admins?.length ?? 0 }}
+              </NDescriptionsItem>
+            </NDescriptions>
+            <NDivider> 设置 </NDivider>
+            <NDescriptions
+              class="setting"
+              label-placement="left"
+            >
+              <NDescriptionsItem label="加入需要进行管理员同意">
+                <NCheckbox
+                  v-model:checked="currentForum.settings.requireApply"
+                  @update:checked="updateForumSettings"
+                />
+              </NDescriptionsItem>
+              <NDescriptionsItem
+                v-if="currentForum.settings.requireApply"
+                label="仅允许已绑定账号的用户申请"
+              >
+                <NCheckbox
+                  v-model:checked="currentForum.settings.requireAuthedToJoin"
+                  @update:checked="updateForumSettings"
+                />
+              </NDescriptionsItem>
+              <NDescriptionsItem label="允许发布帖子">
+                <NCheckbox
+                  v-model:checked="currentForum.settings.allowPost"
+                  @update:checked="updateForumSettings"
+                />
+              </NDescriptionsItem>
+              <NDescriptionsItem label="允许谁查看讨论区">
+                <NSelect
+                  v-model:value="currentForum.settings.allowedViewerLevel"
+                  :options="levels"
+                  style="min-width: 200px"
+                  @update:value="updateForumSettings"
+                />
+              </NDescriptionsItem>
+              <NDescriptionsItem label="允许谁发布帖子">
+                <NSelect
+                  v-model:value="currentForum.settings.allowedPostLevel"
+                  :options="levels"
+                  style="min-width: 200px"
+                  @update:value="updateForumSettings"
+                />
+              </NDescriptionsItem>
+            </NDescriptions>
+          </NTabPane>
+          <NTabPane
+            tab="成员"
+            name="member"
+          >
+            <NDivider> 申请加入 </NDivider>
+            <NDataTable
+              :columns="applyingColumns"
+              :data="currentForum.applying"
+              :pagination="paginationSetting"
+            />
+            <NDivider> 成员 </NDivider>
+            <NDataTable
+              :columns="memberColumns"
+              :data="currentForum.members.sort((a, b) => (a.isAdmin ? 1 : 0) - (b.isAdmin ? 1 : 0))"
+              :pagination="paginationSetting"
+            />
+            <NDivider> 管理员 </NDivider>
+            <NFlex>
+              <NButton
+                size="small"
+                type="primary"
+                :disabled="currentForum.owner.id !== accountInfo.id"
+                @click="showAddAdminModal = true"
+              >
+                添加管理员
+              </NButton>
+            </NFlex>
+            <br>
+            <NDataTable
+              :columns="adminColumns"
+              :data="currentForum.admins"
+              :pagination="paginationSetting"
+            />
+            <NDivider> 封禁用户 </NDivider>
+            <NFlex>
+              <NButton
+                size="small"
+                type="primary"
+                @click="showBanModal = true"
+              >
+                封禁用户
+              </NButton>
+            </NFlex>
+            <br>
+            <NDataTable
+              :columns="banColumns"
+              :data="currentForum.blackList"
+              :pagination="paginationSetting"
+            />
+          </NTabPane>
+        </NTabs>
+      </NSpin>
+    </template>
+    <NModal
+      v-model:show="showAgreement"
+      preset="card"
+      title="开通粉丝讨论区用户协议"
+      style="width: 600px; max-width: 90vw"
     >
-      封禁
-    </NButton>
-  </NModal>
+      <Agreement />
+    </NModal>
+    <NModal
+      v-model:show="showAddAdminModal"
+      preset="card"
+      title="添加管理员"
+      style="width: 600px; max-width: 90vw"
+    >
+      <UserBasicInfoCard
+        :user="addAdminName"
+        @update:user-info="(v) => (currentAdminInfo = v)"
+      />
+      <br>
+      <NInput
+        v-model:value="addAdminName"
+        placeholder="请输入用户名或VTsuruId"
+      />
+      <NDivider />
+      <NButton
+        type="primary"
+        :disabled="!currentAdminInfo?.id"
+        @click="addAdmin(currentAdminInfo!.id)"
+      >
+        添加
+      </NButton>
+    </NModal>
+
+    <NModal
+      v-model:show="showBanModal"
+      preset="card"
+      title="封禁用户"
+      style="width: 600px; max-width: 90vw"
+    >
+      <UserBasicInfoCard
+        :user="addBanName"
+        @update:user-info="(v) => (currentBanUserInfo = v)"
+      />
+      <br>
+      <NInput
+        v-model:value="addBanName"
+        placeholder="请输入用户名或VTsuruId"
+      />
+      <NDivider />
+      <NButton
+        type="warning"
+        :disabled="!currentBanUserInfo?.id"
+        @click="banUser(currentBanUserInfo!.id)"
+      >
+        封禁
+      </NButton>
+    </NModal>
   </div>
 </template>
 

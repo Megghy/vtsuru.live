@@ -2,16 +2,23 @@ import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { toRaw } from 'vue'
 
-export function createId() {
+export function createId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 export function deepCloneJson<T>(v: T): T {
-  const raw = toRaw(v as any)
-  const g = globalThis as any
+  const raw = toRaw(v as any) as unknown
+  const g = globalThis as typeof globalThis & {
+    window?: unknown
+    document?: unknown
+    Window?: unknown
+    Document?: unknown
+    Node?: unknown
+    Event?: unknown
+  }
   const seen = new WeakSet<object>()
-  const json = JSON.stringify(raw, (_key, value) => {
+  const json = JSON.stringify(raw, (_key: string, value: unknown): unknown => {
     if (typeof value === 'bigint') throw new Error('不支持 BigInt（无法序列化）')
     if (!value || typeof value !== 'object') return value
 
@@ -31,7 +38,7 @@ export function deepCloneJson<T>(v: T): T {
     seen.add(value)
     return value
   })
-  return JSON.parse(json) as T
+  return JSON.parse(json) as unknown as T
 }
 
 export function cloneBlockNode(block: BlockNode): BlockNode {
@@ -43,13 +50,15 @@ export function cloneBlockNode(block: BlockNode): BlockNode {
     props: block.props === undefined ? undefined : deepCloneJson(block.props),
   }
   if (cloned.type === 'layout' && cloned.props && typeof cloned.props === 'object' && !Array.isArray(cloned.props)) {
-    const propsObj: any = cloned.props
-    if (Array.isArray(propsObj.children)) {
-      propsObj.children = propsObj.children.map((it: any) => {
+    const propsObj = cloned.props as Record<string, unknown>
+    const children = propsObj.children
+    if (Array.isArray(children)) {
+      propsObj.children = children.map((it: unknown) => {
         if (!it || typeof it !== 'object' || Array.isArray(it)) return it
-        if (typeof it.id !== 'string' || typeof it.type !== 'string') return it
+        const maybeNode = it as Record<string, unknown>
+        if (typeof maybeNode.id !== 'string' || typeof maybeNode.type !== 'string') return it
         return cloneBlockNode(it as BlockNode)
-      })
+      }) satisfies unknown[]
     }
   }
   return cloned
@@ -57,16 +66,16 @@ export function cloneBlockNode(block: BlockNode): BlockNode {
 
 export interface DiffOp { kind: 'same' | 'add' | 'del', text: string }
 
-export function stableStringify(v: unknown, indent = 2) {
+export function stableStringify(v: unknown, indent = 2): string {
   const seen = new WeakSet<object>()
-  const normalize = (x: any): any => {
+  const normalize = (x: unknown): unknown => {
     if (!x || typeof x !== 'object') return x
     if (Array.isArray(x)) return x.map(normalize)
     if (seen.has(x)) throw new Error('无法序列化循环引用对象')
     seen.add(x)
-    const out: Record<string, any> = {}
+    const out: Record<string, unknown> = {}
     Object.keys(x).sort().forEach((k) => {
-      out[k] = normalize(x[k])
+      out[k] = normalize((x as Record<string, unknown>)[k])
     })
     return out
   }
@@ -123,29 +132,38 @@ function isEmptyText(v: unknown) {
   return typeof v !== 'string' || v.trim().length === 0
 }
 
+function asRecord(v: unknown): Record<string, unknown> | null {
+  if (!v || typeof v !== 'object') return null
+  if (Array.isArray(v)) return null
+  return v as Record<string, unknown>
+}
+
 function isEmptyRichText(html: unknown) {
   if (typeof html !== 'string') return true
-  const text = html
-    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
+  const bodyText = new DOMParser()
+    .parseFromString(html, 'text/html')
+    .body
+    .textContent
+  const text = (bodyText ?? '')
+    .replace(/\u00A0/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
   return text.length === 0
 }
 
 export function isEmptyBlock(block: BlockNode): boolean {
-  const propsObj = (block.props && typeof block.props === 'object' && !Array.isArray(block.props)) ? (block.props as any) : {}
+  const propsObj: Record<string, unknown> = (block.props && typeof block.props === 'object' && !Array.isArray(block.props))
+    ? (block.props as Record<string, unknown>)
+    : {}
 
   if (block.type === 'layout') {
-    const children = Array.isArray(propsObj.children) ? (propsObj.children as unknown[]) : []
+    const children = Array.isArray(propsObj.children) ? propsObj.children : []
     if (children.length === 0) return true
     return children.every((it) => {
-      if (!it || typeof it !== 'object' || Array.isArray(it)) return true
-      const child: any = it
+      const child = asRecord(it)
+      if (!child) return true
       if (typeof child.id !== 'string' || typeof child.type !== 'string') return true
-      return isEmptyBlock(child as BlockNode)
+      return isEmptyBlock(it as BlockNode)
     })
   }
   if (block.type === 'spacer') return true
@@ -158,17 +176,25 @@ export function isEmptyBlock(block: BlockNode): boolean {
   if (block.type === 'imageGallery') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
     if (items.length === 0) return true
-    return items.every((it: any) => {
-      if (!it || typeof it !== 'object' || Array.isArray(it)) return true
-      const hasFile = !!it.imageFile
-      const hasUrl = typeof it.url === 'string' && it.url.trim().length > 0
-      return !hasFile && !hasUrl
+    return items.every((it) => {
+      const item = asRecord(it)
+      if (!item) return true
+      const hasFile = Boolean(item.imageFile)
+      const url = typeof item.url === 'string' ? item.url.trim() : ''
+      return !hasFile && url.length === 0
     })
   }
   if (block.type === 'links' || block.type === 'buttons') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.label === 'string' && it.label.trim().length)
-      || items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const label = item?.label
+      return typeof label === 'string' && label.trim().length > 0
+    }) || items.some((it) => {
+      const item = asRecord(it)
+      const url = typeof item?.url === 'string' ? item.url.trim() : ''
+      return url.length > 0 && url !== 'https://'
+    })
     return !hasAny
   }
   if (block.type === 'richText') {
@@ -184,19 +210,31 @@ export function isEmptyBlock(block: BlockNode): boolean {
   }
   if (block.type === 'tags') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.text === 'string' && it.text.trim().length)
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const text = item?.text
+      return typeof text === 'string' && text.trim().length > 0
+    })
     return !hasAny
   }
   if (block.type === 'socialLinks') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const url = typeof item?.url === 'string' ? item.url.trim() : ''
+      return url.length > 0 && url !== 'https://'
+    })
     return !hasAny
   }
   if (block.type === 'videoList') {
     const source = String(propsObj.source || 'manual')
     if (source === 'userIndex') return false
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const url = typeof item?.url === 'string' ? item.url.trim() : ''
+      return url.length > 0 && url !== 'https://'
+    })
     return !hasAny
   }
   if (block.type === 'musicPlayer') {
@@ -205,15 +243,32 @@ export function isEmptyBlock(block: BlockNode): boolean {
   }
   if (block.type === 'faq') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.q === 'string' && it.q.trim().length)
-      || items.some((it: any) => typeof it?.a === 'string' && it.a.trim().length)
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const q = item?.q
+      return typeof q === 'string' && q.trim().length > 0
+    }) || items.some((it) => {
+      const item = asRecord(it)
+      const a = item?.a
+      return typeof a === 'string' && a.trim().length > 0
+    })
     return !hasAny
   }
   if (block.type === 'milestone') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.date === 'string' && it.date.trim().length)
-      || items.some((it: any) => typeof it?.title === 'string' && it.title.trim().length)
-      || items.some((it: any) => typeof it?.description === 'string' && it.description.trim().length)
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const date = item?.date
+      return typeof date === 'string' && date.trim().length > 0
+    }) || items.some((it) => {
+      const item = asRecord(it)
+      const title = item?.title
+      return typeof title === 'string' && title.trim().length > 0
+    }) || items.some((it) => {
+      const item = asRecord(it)
+      const description = item?.description
+      return typeof description === 'string' && description.trim().length > 0
+    })
     return !hasAny
   }
   if (block.type === 'quote') {
@@ -231,7 +286,11 @@ export function isEmptyBlock(block: BlockNode): boolean {
   }
   if (block.type === 'supporter') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
-    const hasAny = items.some((it: any) => typeof it?.url === 'string' && it.url.trim().length && it.url.trim() !== 'https://')
+    const hasAny = items.some((it) => {
+      const item = asRecord(it)
+      const url = typeof item?.url === 'string' ? item.url.trim() : ''
+      return url.length > 0 && url !== 'https://'
+    })
     return !hasAny
   }
   return false

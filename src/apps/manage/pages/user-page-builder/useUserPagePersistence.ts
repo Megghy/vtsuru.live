@@ -45,7 +45,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
         blocks.forEach((b: any) => {
           if (!b || typeof b !== 'object') return
           if (b.hidden) return
-          const propsObj = (b.props && typeof b.props === 'object' && !Array.isArray(b.props)) ? (b.props as any) : {}
+          const propsObj = (b.props && typeof b.props === 'object' && !Array.isArray(b.props)) ? (b.props) : {}
 
           if (b.type === 'layout' && Array.isArray(propsObj.children)) {
             walk(propsObj.children)
@@ -62,7 +62,10 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
           }
 
           if ((b.type === 'links' || b.type === 'buttons') && Array.isArray(propsObj.items)) {
-            externalLinkCount += propsObj.items.filter((it: any) => typeof it?.url === 'string' && it.url.startsWith('https://')).length
+            externalLinkCount += propsObj.items.filter((it: any) => {
+              const url = typeof it?.url === 'string' ? (it.url as string) : ''
+              return url.startsWith('https://')
+            }).length
           }
 
           if (b.type === 'image' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://')) externalLinkCount++
