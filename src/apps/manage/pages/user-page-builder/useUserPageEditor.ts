@@ -1,6 +1,7 @@
 import { useAccount } from '@/api/account'
 import { fetchMyUserPagesState } from '@/apps/user-page/api'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
+import { validateBlockPageProject } from '@/apps/user-page/block/schema'
 import { listContribPageRefs, getContribPageImporter } from '@/apps/user-page/contrib/registry'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
@@ -460,6 +461,72 @@ export function useUserPageEditor() {
     window.open(path, '_blank', 'noopener,noreferrer')
   }
 
+  function exportCurrentBlockPageJson() {
+    if (currentPage.value.mode !== 'block') throw new Error('当前页面不是区块模式')
+    if (!currentProject.value) throw new Error('当前页面缺少区块配置')
+    const payload = {
+      type: 'vtsuru-block-page' as const,
+      version: 1 as const,
+      exportedAt: new Date().toISOString(),
+      pageKey: currentKey.value,
+      project: deepCloneJson(currentProject.value) as BlockPageProject,
+    }
+    return JSON.stringify(payload, null, 2)
+  }
+
+  function importCurrentBlockPageJson(raw: string) {
+    if (currentPage.value.mode !== 'block') throw new Error('当前页面不是区块模式')
+    if (typeof raw !== 'string' || raw.trim().length === 0) throw new Error('导入内容为空')
+
+    let parsed: any
+    try {
+      parsed = JSON.parse(raw)
+    } catch (e) {
+      throw new Error(`JSON 解析失败: ${(e as Error).message || String(e)}`)
+    }
+
+    const candidate = (parsed && typeof parsed === 'object')
+      ? (parsed.type === 'vtsuru-block-page' && parsed.version === 1 ? parsed.project : parsed)
+      : null
+    if (!candidate) throw new Error('导入内容不是有效的 block page JSON')
+
+    const v = validateBlockPageProject(candidate)
+    if (!v.ok) throw new Error(v.errors.join('；'))
+
+    const nextSettings = deepCloneJson(settings.value) as any
+    if (currentKey.value === 'home') {
+      nextSettings.home ??= { mode: 'block' }
+      nextSettings.home.mode = 'block'
+      nextSettings.home.block = v.project
+    } else {
+      nextSettings.pages ??= {}
+      nextSettings.pages[currentKey.value] ??= { mode: 'block' }
+      nextSettings.pages[currentKey.value].mode = 'block'
+      nextSettings.pages[currentKey.value].block = v.project
+    }
+
+    const bytes = estimateUtf8Bytes(JSON.stringify(nextSettings))
+    if (bytes > MAX_CONFIG_BYTES) {
+      throw new Error(`导入失败：配置体积超限（${bytes} / ${MAX_CONFIG_BYTES} bytes）`)
+    }
+
+    batchHistory(() => {
+      if (currentKey.value === 'home') {
+        settings.value.home ??= { mode: 'block', block: v.project }
+        settings.value.home.mode = 'block'
+        settings.value.home.block = v.project
+      } else {
+        settings.value.pages ??= {}
+        settings.value.pages[currentKey.value] ??= { mode: 'block', block: v.project }
+        settings.value.pages[currentKey.value].mode = 'block'
+        settings.value.pages[currentKey.value].block = v.project
+      }
+      blocks.clearSelection()
+    })
+
+    message.success('已导入区块页面配置')
+  }
+
   async function init() {
     isLoading.value = true
     error.value = null
@@ -557,6 +624,9 @@ export function useUserPageEditor() {
 
     openPreview,
     validateAll,
+
+    exportCurrentBlockPageJson,
+    importCurrentBlockPageJson,
 
     init,
     destroy,

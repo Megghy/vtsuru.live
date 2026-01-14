@@ -366,9 +366,12 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     },
     Tag: {
       borderRadius: radiusControl,
-      colorPrimary: isDark ? colors.neutral[50] : primary,
-      borderPrimary: `1px solid ${isDark ? colors.neutral[50] : primary}`,
-      textColorPrimary: isDark ? colors.neutral[950] : primaryForeground,
+      // Keep primary tag readable in bordered mode:
+      // - text should be primaryColor (not inverted)
+      // - background should be a subtle tint (not solid)
+      colorPrimary: rgba(primary, 0.12),
+      borderPrimary: `1px solid ${rgba(primary, 0.8)}`,
+      textColorPrimary: primary,
       heightMedium: '28px',
       heightSmall: '24px',
       padding: '0 12px',

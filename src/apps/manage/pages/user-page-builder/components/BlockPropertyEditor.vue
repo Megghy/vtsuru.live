@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NProgress, NRadioButton, NRadioGroup, NSelect, NSpace, NSwitch, NText } from 'naive-ui'
+import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NModal, NProgress, NRadioButton, NRadioGroup, NSelect, NSpace, NSwitch, NText } from 'naive-ui'
 import { computed, inject, ref } from 'vue'
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { UserPageEditorKey } from '../context'
@@ -65,6 +65,72 @@ const pageThemeMode = computed({
     else theme.pageThemeMode = v
   },
 })
+
+const pageMaxWidthSetting = computed({
+  get() {
+    const theme = editor.currentTheme.value as any
+    const v = theme?.pageMaxWidth
+    return typeof v === 'string' ? v : ''
+  },
+  set(v: string) {
+    const theme = editor.currentTheme.value as any
+    if (!theme) return
+    const s = v.trim()
+    if (!s) delete theme.pageMaxWidth
+    else theme.pageMaxWidth = s
+  },
+})
+
+const exportModal = ref(false)
+const exportJson = ref('')
+const importModal = ref(false)
+const importJson = ref('')
+
+function openExportModal() {
+  try {
+    exportJson.value = editor.exportCurrentBlockPageJson()
+    exportModal.value = true
+  } catch (e) {
+    editor.message.error((e as Error).message || String(e))
+  }
+}
+
+async function copyExportJson() {
+  try {
+    await navigator.clipboard.writeText(exportJson.value)
+    editor.message.success('已复制到剪贴板')
+  } catch (e) {
+    editor.message.error((e as Error).message || String(e))
+  }
+}
+
+function downloadExportJson() {
+  try {
+    const json = editor.exportCurrentBlockPageJson()
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `vtsuru-block-page_${editor.currentKey.value}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    editor.message.success('已开始下载')
+  } catch (e) {
+    editor.message.error((e as Error).message || String(e))
+  }
+}
+
+function confirmImportJson() {
+  try {
+    editor.importCurrentBlockPageJson(importJson.value)
+    importModal.value = false
+    importJson.value = ''
+  } catch (e) {
+    editor.message.error((e as Error).message || String(e))
+  }
+}
 
 const pageOverrideBgTarget: BackgroundSettingsTarget = {
   get: () => (editor.currentPage.value as any).background,
@@ -283,6 +349,9 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
                     <NFormItem label="圆角大小">
                       <NInputNumber v-model:value="editor.currentTheme.value!.radius" :min="0" :max="32" style="width: 100%" />
                     </NFormItem>
+                    <NFormItem label="内容最大宽度（可选）">
+                      <NInput v-model:value="pageMaxWidthSetting" placeholder="默认 820px；例如 100% / 1200px / none" />
+                    </NFormItem>
                     <NFormItem class="span-full" label="布局密度">
                       <NSelect
                         v-model:value="editor.currentTheme.value!.spacing"
@@ -294,6 +363,18 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
                       />
                     </NFormItem>
                   </PropsGrid>
+
+                  <NDivider style="margin: 10px 0">
+                    导入 / 导出（单页）
+                  </NDivider>
+                  <NSpace>
+                    <NButton size="small" secondary @click="openExportModal">
+                      导出 JSON
+                    </NButton>
+                    <NButton size="small" secondary @click="importModal = true">
+                      导入 JSON
+                    </NButton>
+                  </NSpace>
 
                   <NDivider style="margin: 10px 0">
                     区块页背景（仅区块模式）
@@ -357,6 +438,40 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
       @change="editor.onUploadChange"
     >
   </NCard>
+
+  <NModal v-model:show="exportModal" preset="card" title="导出区块页 JSON" style="width: min(720px, 92vw)">
+    <NSpace vertical>
+      <NAlert type="info" :show-icon="true">
+        这是当前页面（单页）的区块配置 JSON。导入到其他账号/页面时，图片等资源引用可能需要重新上传替换。
+      </NAlert>
+      <NInput v-model:value="exportJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" readonly />
+      <NSpace justify="end">
+        <NButton size="small" secondary @click="copyExportJson">
+          复制
+        </NButton>
+        <NButton size="small" secondary @click="downloadExportJson">
+          下载
+        </NButton>
+      </NSpace>
+    </NSpace>
+  </NModal>
+
+  <NModal v-model:show="importModal" preset="card" title="导入区块页 JSON" style="width: min(720px, 92vw)">
+    <NSpace vertical>
+      <NAlert type="warning" :show-icon="true">
+        导入会覆盖当前页面的区块配置（不可自动回退，建议先导出备份）。
+      </NAlert>
+      <NInput v-model:value="importJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" placeholder="粘贴导出的 JSON（支持 vtsuru-block-page 包装或直接 BlockPageProject）" />
+      <NSpace justify="end">
+        <NButton secondary @click="importModal = false">
+          取消
+        </NButton>
+        <NButton type="primary" :disabled="!importJson.trim().length" @click="confirmImportJson">
+          导入并覆盖
+        </NButton>
+      </NSpace>
+    </NSpace>
+  </NModal>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>

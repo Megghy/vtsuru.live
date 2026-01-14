@@ -7,7 +7,7 @@ const props = withDefaults(defineProps<{
   rowGap?: number
   colGap?: number
 }>(), {
-  minItemWidth: 180,
+  minItemWidth: 150,
   gap: 12,
   rowGap: 1,
   colGap: 12,

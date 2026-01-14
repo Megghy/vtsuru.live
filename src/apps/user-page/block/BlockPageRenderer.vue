@@ -21,12 +21,19 @@ const spacing = computed(() => {
   if (v === 'relaxed') return 18
   return 14
 })
+const pageMaxWidth = computed(() => {
+  const v = (props.project.theme as any)?.pageMaxWidth
+  if (typeof v !== 'string') return null
+  const s = v.trim()
+  return s.length ? s : null
+})
 const containerStyle = computed(() => ({
   '--vtsuru-page-radius': `${radius.value}px`,
   '--vtsuru-page-spacing': `${spacing.value}px`,
   '--vtsuru-page-primary': props.project.theme?.primaryColor ?? 'var(--n-color)',
   '--vtsuru-page-bg': props.project.theme?.backgroundColor ?? 'transparent',
   '--vtsuru-page-text': props.project.theme?.textColor ?? 'inherit',
+  ...(pageMaxWidth.value ? { '--vtsuru-page-max-width': pageMaxWidth.value } : {}),
 }))
 
 const naiveTheme = computed(() => {
@@ -115,7 +122,8 @@ const blockComponents = BLOCK_COMPONENTS
 
 <style scoped>
 .page {
-  max-width: 820px;
+  width: 100%;
+  max-width: var(--vtsuru-page-max-width, 820px);
   margin: 0 auto;
   padding: 8px 0;
   color: var(--vtsuru-page-text);
