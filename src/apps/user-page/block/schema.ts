@@ -45,6 +45,12 @@ export interface BlockPageTheme {
   radius?: number
   spacing?: 'compact' | 'normal' | 'relaxed'
 
+  /**
+   * 内容区域最大宽度（默认 820px）。
+   * 支持 `none` / `100%` / `1200px` 这类格式。
+   */
+  pageMaxWidth?: string
+
   pageThemeMode?: PageThemeMode
 
   pageBackgroundType?: PageBackgroundType
@@ -667,6 +673,13 @@ function validateTheme(theme: unknown, errors: string[]) {
   if (obj.primaryColor !== undefined && typeof obj.primaryColor !== 'string') errors.push('theme.primaryColor 必须是 string')
   if (obj.backgroundColor !== undefined && typeof obj.backgroundColor !== 'string') errors.push('theme.backgroundColor 必须是 string')
   if (obj.textColor !== undefined && typeof obj.textColor !== 'string') errors.push('theme.textColor 必须是 string')
+  if (obj.pageMaxWidth !== undefined) {
+    if (typeof obj.pageMaxWidth !== 'string') errors.push('theme.pageMaxWidth 必须是 string')
+    else {
+      const v = obj.pageMaxWidth.trim()
+      if (v.length > 0 && v !== 'none' && !/^\d+(?:\.\d+)?(?:px|%)$/.test(v)) errors.push('theme.pageMaxWidth 仅支持 none / 100% / 1200px 这类格式')
+    }
+  }
   if (obj.radius !== undefined) {
     const v = Number(obj.radius)
     if (!Number.isFinite(v) || v < 0 || v > 32) errors.push('theme.radius 必须是 0~32 的数字')

@@ -66,6 +66,22 @@ const blockValidation = computed(() => {
   return validateBlockPageProject(pageConfig.value?.block)
 })
 
+const contentMaxWidth = computed(() => {
+  if (renderMode.value !== 'block') return '820px'
+  const v = blockValidation.value
+  if (!v || !v.ok) return '820px'
+  const raw = (v.project.theme as any)?.pageMaxWidth
+  if (typeof raw !== 'string') return '820px'
+  const s = raw.trim()
+  return s.length ? s : '820px'
+})
+
+const titleContainerStyle = computed(() => ({
+  maxWidth: contentMaxWidth.value,
+  margin: '0 auto 12px',
+  padding: '0 12px',
+}))
+
 const pageBgOverride = computed(() => resolvePageBackground(pageConfig.value?.background))
 const globalBg = computed(() => resolvePageBackground(settings.value?.background))
 const blockThemeBg = computed(() => {
@@ -118,7 +134,7 @@ const contentBgClass = computed(() => ({
 
           <div
             v-if="pageSlug && pageConfig && (pageConfig.title || pageConfig.description)"
-            style="max-width: 820px; margin: 0 auto 12px; padding: 0 12px"
+            :style="titleContainerStyle"
           >
             <NText v-if="pageConfig.title" style="font-size: 18px; font-weight: 600; display:block">
               {{ pageConfig.title }}
@@ -181,7 +197,7 @@ const contentBgClass = computed(() => ({
 
           <div
             v-if="pageSlug && pageConfig && (pageConfig.title || pageConfig.description)"
-            style="max-width: 820px; margin: 0 auto 12px; padding: 0 12px"
+            :style="titleContainerStyle"
           >
             <NText v-if="pageConfig.title" style="font-size: 18px; font-weight: 600; display:block">
               {{ pageConfig.title }}
