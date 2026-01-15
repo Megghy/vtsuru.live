@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -123,35 +124,86 @@ const safeHtml = computed(() => sanitizeRichText(rawHtml.value))
 </script>
 
 <template>
-  <div class="rich-text" v-html="safeHtml" />
+  <BlockCard>
+    <div class="rich-text" v-html="safeHtml" />
+  </BlockCard>
 </template>
 
 <style scoped>
 .rich-text {
-  line-height: 1.7;
+  line-height: 1.75;
   word-break: break-word;
+  font-size: 14px;
+  color: var(--n-text-color);
 }
+
 .rich-text :deep(p) {
-  margin: 0.6em 0;
+  margin: 1em 0;
 }
+
+.rich-text :deep(p:first-child) { margin-top: 0; }
+.rich-text :deep(p:last-child) { margin-bottom: 0; }
+
+.rich-text :deep(strong), .rich-text :deep(b) {
+  font-weight: 700;
+  color: var(--n-text-color);
+}
+
 .rich-text :deep(ul),
 .rich-text :deep(ol) {
-  margin: 0.6em 0;
-  padding-left: 1.25em;
+  margin: 1em 0;
+  padding-left: 1.5em;
 }
+
+.rich-text :deep(li) {
+  margin-bottom: 0.25em;
+}
+
 .rich-text :deep(a) {
-  color: var(--vtsuru-page-primary);
-  text-decoration: underline;
+  color: var(--n-primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
+
+.rich-text :deep(a:hover) {
+  border-bottom-color: var(--n-primary-color);
+  opacity: 0.8;
+}
+
 .rich-text :deep(img) {
   max-width: 100%;
+  height: auto;
   display: block;
+  margin: 1.5em auto;
   border-radius: var(--vtsuru-page-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
+
+.rich-text :deep(blockquote) {
+  margin: 1.5em 0;
+  padding: 0.5em 1.25em;
+  border-left: 4px solid var(--n-divider-color);
+  background: var(--n-action-color);
+  border-radius: 4px;
+  color: var(--n-text-color-2);
+}
+
 .rich-text :deep(pre) {
-  padding: 10px 12px;
+  margin: 1.5em 0;
+  padding: 12px 16px;
   border-radius: var(--vtsuru-page-radius);
-  background: rgba(127, 127, 127, 0.12);
+  background: var(--n-code-color);
+  border: 1px solid var(--n-divider-color);
   overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+}
+
+.rich-text :deep(hr) {
+  margin: 2em 0;
+  border: none;
+  border-top: 1px solid var(--n-divider-color);
 }
 </style>

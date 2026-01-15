@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { parseEmbedUrl } from '../embed'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -28,27 +29,29 @@ const model = computed(() => {
 </script>
 
 <template>
-  <div class="embed-wrapper">
-    <iframe
-      v-if="model.ok"
-      class="embed-frame"
-      :src="model.src"
-      :title="model.title"
-      loading="lazy"
-      allowfullscreen
-      :allow="model.allow"
-      :sandbox="model.sandbox"
-      referrerpolicy="no-referrer"
-    />
-    <div v-else class="embed-placeholder">
-      <div class="embed-placeholder__title">
-        嵌入链接无效
-      </div>
-      <div class="embed-placeholder__desc">
-        {{ model.errorMessage }}
+  <BlockCard :content-style="{ padding: 0 }">
+    <div class="embed-wrapper">
+      <iframe
+        v-if="model.ok"
+        class="embed-frame"
+        :src="model.src"
+        :title="model.title"
+        loading="lazy"
+        allowfullscreen
+        :allow="model.allow"
+        :sandbox="model.sandbox"
+        referrerpolicy="no-referrer"
+      />
+      <div v-else class="embed-placeholder">
+        <div class="embed-placeholder__title">
+          嵌入链接无效
+        </div>
+        <div class="embed-placeholder__desc">
+          {{ model.errorMessage }}
+        </div>
       </div>
     </div>
-  </div>
+  </BlockCard>
 </template>
 
 <style scoped>
@@ -56,9 +59,7 @@ const model = computed(() => {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--n-fill-color);
 }
 .embed-frame {
   position: absolute;
@@ -76,8 +77,8 @@ const model = computed(() => {
   justify-content: center;
   gap: 6px;
   padding: 12px 14px;
-  color: rgba(0, 0, 0, 0.72);
-  background: rgba(0, 0, 0, 0.02);
+  color: var(--n-text-color);
+  background: var(--n-action-color);
 }
 
 .embed-placeholder__title {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NFlex, NIcon, NText } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 import {
   GlobeOutline,
   LogoDiscord,
@@ -124,33 +125,35 @@ const iconSize = computed(() => {
 </script>
 
 <template>
-  <NFlex
-    justify="center"
-    wrap
-    style="gap: 10px"
-  >
-    <a
-      v-for="(it, idx) in items"
-      :key="idx"
-      class="social"
-      :href="it.url"
-      target="_blank"
-      rel="noopener noreferrer"
-      :style="{
-        '--social-bg': getStyle(it.platform).bg,
-        '--social-fg': getStyle(it.platform).fg,
-        '--social-size': `${sizePx}px`,
-        '--social-radius': cfg.variant === 'round' ? '999px' : '12px',
-      }"
+  <BlockCard>
+    <NFlex
+      justify="center"
+      wrap
+      style="gap: 10px"
     >
-      <NIcon :size="iconSize">
-        <component :is="getIcon(it.platform)" />
-      </NIcon>
-      <NText v-if="cfg.showLabel" class="social-label">
-        {{ it.label || it.platform }}
-      </NText>
-    </a>
-  </NFlex>
+      <a
+        v-for="(it, idx) in items"
+        :key="idx"
+        class="social"
+        :href="it.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        :style="{
+          '--social-bg': getStyle(it.platform).bg,
+          '--social-fg': getStyle(it.platform).fg,
+          '--social-size': `${sizePx}px`,
+          '--social-radius': cfg.variant === 'round' ? '999px' : '12px',
+        }"
+      >
+        <NIcon :size="iconSize">
+          <component :is="getIcon(it.platform)" />
+        </NIcon>
+        <NText v-if="cfg.showLabel" class="social-label">
+          {{ it.label || it.platform }}
+        </NText>
+      </a>
+    </NFlex>
+  </BlockCard>
 </template>
 
 <style scoped>
@@ -160,19 +163,24 @@ const iconSize = computed(() => {
   justify-content: center;
   gap: 8px;
   height: var(--social-size);
-  padding: 0 14px;
+  padding: 0 16px;
   min-width: var(--social-size);
   border-radius: var(--social-radius);
   background: var(--social-bg);
   color: var(--social-fg);
   text-decoration: none;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 .social:hover {
-  filter: brightness(1.02);
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .social:active {
-  filter: brightness(0.98);
+  filter: brightness(0.95);
+  transform: translateY(0);
 }
 .social :deep(svg) {
   display: block;
@@ -182,4 +190,3 @@ const iconSize = computed(() => {
   font-weight: 600;
 }
 </style>
-

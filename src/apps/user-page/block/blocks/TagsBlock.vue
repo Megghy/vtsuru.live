@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NFlex, NTag } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 interface TagItem {
   text: string
@@ -12,6 +13,7 @@ interface BlockConfig {
   size?: 'small' | 'medium'
   rounded?: boolean
   items?: TagItem[]
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -24,6 +26,7 @@ const cfg = computed<BlockConfig>(() => {
     size: (o.size === 'small' || o.size === 'medium') ? o.size : 'medium',
     rounded: typeof o.rounded === 'boolean' ? o.rounded : true,
     items: Array.isArray(o.items) ? o.items : [],
+    framed: typeof o.framed === 'boolean' ? o.framed : false,
   }
 })
 
@@ -43,17 +46,44 @@ const items = computed(() => {
 </script>
 
 <template>
-  <NFlex justify="center" wrap style="gap: 10px">
-    <NTag
-      v-for="(it, idx) in items"
-      :key="idx"
-      :type="it.type"
-      :round="cfg.rounded"
-      :size="cfg.size"
-      :color="it.color ? { color: it.color, textColor: '#fff', borderColor: it.color } : undefined"
-    >
-      {{ it.text }}
-    </NTag>
-  </NFlex>
+  <BlockCard :framed="cfg.framed">
+    <NFlex justify="center" wrap style="gap: 8px">
+      <NTag
+        v-for="(it, idx) in items"
+        :key="idx"
+        :type="it.type"
+        :round="cfg.rounded"
+        :size="cfg.size"
+        :bordered="false"
+        class="vtsuru-tag"
+        :color="it.color ? { color: it.color, textColor: '#fff', borderColor: 'transparent' } : undefined"
+      >
+        {{ it.text }}
+      </NTag>
+    </NFlex>
+  </BlockCard>
 </template>
 
+<style scoped>
+.vtsuru-tag {
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+/* Semi-transparent background for typed tags */
+:deep(.n-tag--default-type) { background: var(--n-action-color) !important; color: var(--n-text-color-2) !important; }
+:deep(.n-tag--info-type) { background: rgba(32, 128, 240, 0.1) !important; color: #2080f0 !important; }
+:deep(.n-tag--success-type) { background: rgba(24, 160, 88, 0.1) !important; color: #18a058 !important; }
+:deep(.n-tag--warning-type) { background: rgba(240, 160, 32, 0.1) !important; color: #f0a020 !important; }
+:deep(.n-tag--error-type) { background: rgba(208, 48, 80, 0.1) !important; color: #d03050 !important; }
+
+.vtsuru-tag:not(.n-tag--round) {
+  border-radius: var(--vtsuru-page-radius);
+}
+
+.vtsuru-tag:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+</style>

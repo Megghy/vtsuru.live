@@ -2,9 +2,11 @@
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { USER_INDEX_API_URL } from '@/shared/config'
-import { NAlert, NCard, NFlex, NSpin, NText } from 'naive-ui'
+import { NAlert, NFlex, NSpin, NText, NIcon } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+import { PlayCircleOutline } from '@vicons/ionicons5'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
+import BlockCard from '../BlockCard.vue'
 
 interface ManualVideoItem {
   url: string
@@ -106,7 +108,7 @@ const containerStyle = computed(() => {
 </script>
 
 <template>
-  <NCard size="small">
+  <BlockCard>
     <template v-if="cfg.showTitle && (cfg.title || '视频')" #header>
       {{ cfg.title || '视频' }}
     </template>
@@ -134,24 +136,78 @@ const containerStyle = computed(() => {
         <NAlert v-if="manualItems.length === 0" type="info" :show-icon="false">
           未配置视频链接
         </NAlert>
-        <NFlex v-else vertical style="gap: 10px">
-          <div
+        <NFlex v-else vertical style="gap: 8px">
+          <a
             v-for="(it, idx) in manualItems"
             :key="idx"
-            style="padding: 10px 12px; border: 1px solid var(--n-border-color); border-radius: var(--vtsuru-page-radius);"
+            :href="it.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="manual-item"
           >
-            <NText strong style="display:block">
-              <a :href="it.url" target="_blank" rel="noopener noreferrer">
+            <div class="manual-icon">
+              <NIcon><PlayCircleOutline /></NIcon>
+            </div>
+            <div class="manual-content">
+              <NText strong class="manual-title">
                 {{ it.title || it.url }}
-              </a>
-            </NText>
-            <NText depth="3" style="display:block; margin-top: 4px">
-              {{ it.url }}
-            </NText>
-          </div>
+              </NText>
+              <NText depth="3" class="manual-url">
+                {{ it.url }}
+              </NText>
+            </div>
+          </a>
         </NFlex>
       </template>
     </NSpin>
-  </NCard>
+  </BlockCard>
 </template>
 
+  <style scoped>
+  .manual-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid var(--n-divider-color);
+    border-radius: var(--vtsuru-page-radius);
+    text-decoration: none;
+    transition: all 0.2s;
+    background: transparent;
+  }
+  .manual-item:hover {
+    background: var(--n-fill-color);
+    border-color: var(--n-border-color);
+    transform: translateX(4px);
+  }
+  .manual-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.05);
+    color: var(--n-text-color-3);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .manual-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .manual-title {
+    display: block;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--n-text-color);
+  }
+  .manual-url {
+    display: block;
+    font-size: 12px;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  </style>

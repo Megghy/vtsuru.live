@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -25,7 +26,32 @@ const bordered = computed(() => (typeof propsObj.value.bordered === 'boolean' ? 
 </script>
 
 <template>
-  <NAlert :type="type" :title="title || undefined" :show-icon="showIcon" :bordered="bordered">
-    {{ text }}
-  </NAlert>
+  <BlockCard :content-style="{ padding: 0 }">
+    <NAlert
+      :type="type"
+      :title="title || undefined"
+      :show-icon="showIcon"
+      :bordered="bordered"
+      class="vtsuru-alert"
+    >
+      <div class="alert-content">
+        {{ text }}
+      </div>
+    </NAlert>
+  </BlockCard>
 </template>
+
+<style scoped>
+.vtsuru-alert {
+  border-radius: 0;
+}
+
+.alert-content {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+:deep(.n-alert-body__title) {
+  font-weight: 700 !important;
+}
+</style>

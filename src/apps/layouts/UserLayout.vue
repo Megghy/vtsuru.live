@@ -125,9 +125,10 @@ const currentBlockValidation = computed(() => {
 
 const pageThemeMode = computed(() => {
   const v = currentBlockValidation.value
+  // 用户页（block 模式）忽略系统亮暗：除非显式设置为 light，否则默认按 dark 渲染
   if (!v || !v.ok) return 'auto'
   const mode = (v.project.theme as any)?.pageThemeMode
-  return (mode === 'light' || mode === 'dark') ? mode : 'auto'
+  return mode === 'light' ? 'light' : 'dark'
 })
 
 const pageNaiveTheme = computed(() => {
@@ -144,7 +145,7 @@ const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const vars = layoutPageBgVars.value
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
-  const borderColor = vars['--user-page-border-color']
+  const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
 
   return {
     common: {

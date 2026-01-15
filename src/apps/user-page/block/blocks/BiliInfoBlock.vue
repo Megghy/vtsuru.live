@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NText } from 'naive-ui'
+import { NAvatar, NButton, NFlex, NIcon, NText } from 'naive-ui'
 import { computed } from 'vue'
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
+import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
   variant?: 'card' | 'compact'
@@ -61,7 +62,7 @@ const model = computed(() => {
 </script>
 
 <template>
-  <NCard size="small" content-style="padding: 0">
+  <BlockCard :content-style="{ padding: 0 }">
     <div class="bili-card">
       <template v-if="cfg.variant === 'compact'">
         <div class="bili-compact">
@@ -271,7 +272,7 @@ const model = computed(() => {
         </div>
       </template>
     </div>
-  </NCard>
+  </BlockCard>
 </template>
 
 <style scoped>
@@ -290,8 +291,8 @@ const model = computed(() => {
 
 .bili-name {
   display: block;
-  font-size: 15px;
-  line-height: 1.2;
+  font-size: 16px;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -299,8 +300,8 @@ const model = computed(() => {
 
 .bili-sub {
   display: block;
-  font-size: 12px;
-  line-height: 1.2;
+  font-size: 13px;
+  line-height: 1.25;
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -308,87 +309,106 @@ const model = computed(() => {
 }
 
 .bili-sign {
-  padding: 0 14px 12px;
+  padding: 0 16px 16px;
   font-size: 13px;
-  line-height: 1.45;
-  color: var(--n-text-color-2);
+  line-height: 1.6;
+  color: var(--n-text-color-3);
   white-space: pre-wrap;
 }
 
 .bili-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px 14px;
-  border-top: 1px solid var(--n-border-color);
-  border-bottom: 1px solid var(--n-border-color);
+  padding: 4px 0;
+  border-top: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--n-divider-color);
 }
 
 .stat {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--n-border-color);
-  background: rgba(0, 0, 0, 0.02);
+  gap: 4px;
+  padding: 12px 4px;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+.stat:hover {
+  background-color: var(--n-action-color);
 }
 
 .stat-icon {
   color: var(--n-text-color-3);
-  flex: 0 0 auto;
+  margin-bottom: 2px;
 }
 
 .stat-meta {
-  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
 }
 
 .stat-k {
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 12px;
   color: var(--n-text-color-3);
 }
 
 .stat-v {
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--n-text-color);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .bili-actions {
-  padding: 12px 14px 14px;
+  padding: 16px;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   grid-template-columns: 1fr 1fr;
 }
 
 .action {
-  border-radius: 999px;
-  font-weight: 750;
+  border-radius: var(--vtsuru-page-radius);
+  font-weight: 600;
 }
 
 .action.compact {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .bili-compact {
-  padding: 12px 14px 14px;
+  padding: 16px;
 }
 
 .bili-stats.compact {
-  padding: 10px 0 0;
+  padding: 12px 0 0;
   border: 0;
-  gap: 8px;
+  gap: 0;
 }
 
 .stat.compact {
-  padding: 8px 10px;
+  padding: 0;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+.stat.compact:hover {
+  background: transparent;
+}
+.stat.compact .stat-meta {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.stat.compact .stat-icon {
+  margin-bottom: 0;
+}
+.stat.compact .stat-v {
+  font-size: 14px;
+}
+.stat.compact .stat-k {
+  font-size: 11px;
 }
 </style>

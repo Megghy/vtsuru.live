@@ -58,6 +58,7 @@ export function useUserPageEditor() {
   const currentPage = ref<UserPageConfig>({ mode: 'legacy' })
 
   const selectedBlockIds = ref<string[]>([])
+  const hoveredBlockId = ref<string | null>(null)
 
   const diffModal = ref(false)
   const resourcesModal = ref(false)
@@ -182,6 +183,7 @@ export function useUserPageEditor() {
     (key) => {
       currentPage.value = ensurePageConfig(key)
       blocks.clearSelection()
+      hoveredBlockId.value = null
     },
     { immediate: true },
   )
@@ -581,6 +583,7 @@ export function useUserPageEditor() {
     getPageModeLabel,
 
     selectedBlockIds,
+    hoveredBlockId,
     selectedBlocks: blocks.selectedBlocks,
     selectedBlock: blocks.selectedBlock,
 

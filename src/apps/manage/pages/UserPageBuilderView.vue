@@ -49,7 +49,7 @@ function isImagePath(path?: string) {
 
 const previewEffectiveIsDark = computed(() => {
   const mode = (editor.currentProject.value?.theme as any)?.pageThemeMode
-  return mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+  return mode === 'light' ? false : true
 })
 
 const previewBg = computed(() => {
@@ -73,7 +73,7 @@ const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const surfaceBgPressed = vars['--user-page-ui-surface-bg-pressed']
-  const borderColor = vars['--user-page-border-color']
+  const borderColor = vars['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
   return {
     common: {
       borderColor,
@@ -255,11 +255,13 @@ onBeforeRouteLeave(() => {
                 </NFlex>
               </template>
               <Transition name="fade-slide">
-                <NScrollbar v-if="!isSidebarCollapsed" class="pane-scroll">
-                  <div style="padding: 12px">
-                    <PageManager />
-                  </div>
-                </NScrollbar>
+                <div v-if="!isSidebarCollapsed" class="pane-scroll">
+                  <NScrollbar style="height: 100%">
+                    <div style="padding: 12px">
+                      <PageManager />
+                    </div>
+                  </NScrollbar>
+                </div>
               </Transition>
             </NCard>
           </template>
@@ -286,45 +288,53 @@ onBeforeRouteLeave(() => {
 
                   <NScrollbar class="pane-scroll">
                     <div style="height: 100%; min-height: 0; display: flex; flex-direction: column">
-                      <PhonePreview style="flex: 1; min-height: 0" :transparent="!!previewBg">
-                        <div :class="previewBgClass" :style="previewBgVars">
-                          <Transition name="fade-slide" mode="out-in">
-                            <div
-                              :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
-                              class="preview-content"
-                            >
-                              <template v-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-                                <div v-if="previewBg?.blurMode === 'glass'" class="preview-glass-surface">
-                                  <BlockPageRenderer
-                                    :project="editor.currentProject.value"
-                                    :user-info="editor.account.value"
-                                    :bili-info="undefined"
-                                    :extra-theme-overrides="previewSurfaceThemeOverrides"
-                                  />
-                                </div>
+                      <PhonePreview
+                        style="flex: 1; min-height: 0"
+                        :style="previewBgVars"
+                        :transparent="!!previewBg"
+                      >
+                        <template #background>
+                          <div :class="previewBgClass" />
+                        </template>
+
+                        <Transition name="fade-slide" mode="out-in">
+                          <div
+                            :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
+                            class="preview-content"
+                          >
+                            <template v-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
+                              <div v-if="previewBg?.blurMode === 'glass'" class="preview-glass-surface">
                                 <BlockPageRenderer
-                                  v-else
                                   :project="editor.currentProject.value"
                                   :user-info="editor.account.value"
                                   :bili-info="undefined"
                                   :extra-theme-overrides="previewSurfaceThemeOverrides"
+                                  :highlight-block-id="editor.hoveredBlockId.value"
                                 />
-                              </template>
-                              <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                                <NConfigProvider :theme-overrides="previewSurfaceThemeOverrides">
-                                  <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
-                                </NConfigProvider>
-                              </template>
-                              <NAlert
+                              </div>
+                              <BlockPageRenderer
                                 v-else
-                                type="warning"
-                                :show-icon="true"
-                              >
-                                当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（非区块页），此处不展示预览。
-                              </NAlert>
-                            </div>
-                          </Transition>
-                        </div>
+                                :project="editor.currentProject.value"
+                                :user-info="editor.account.value"
+                                :bili-info="undefined"
+                                :extra-theme-overrides="previewSurfaceThemeOverrides"
+                                :highlight-block-id="editor.hoveredBlockId.value"
+                              />
+                            </template>
+                            <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+                              <NConfigProvider :theme-overrides="previewSurfaceThemeOverrides">
+                                <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
+                              </NConfigProvider>
+                            </template>
+                            <NAlert
+                              v-else
+                              type="warning"
+                              :show-icon="true"
+                            >
+                              当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（非区块页），此处不展示预览。
+                            </NAlert>
+                          </div>
+                        </Transition>
                       </PhonePreview>
                     </div>
                   </NScrollbar>
@@ -537,10 +547,10 @@ onBeforeRouteLeave(() => {
 }
 
 .preview-bg-host {
-  min-height: 100%;
+  position: absolute;
+  inset: 0;
 }
 .preview-bg-host.enabled {
-  position: relative;
   overflow: hidden;
 }
 .preview-bg-host.enabled::before {

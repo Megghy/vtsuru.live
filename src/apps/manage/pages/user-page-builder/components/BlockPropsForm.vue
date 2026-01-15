@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { NButton, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText } from 'naive-ui';
+  import { NButton, NDatePicker, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText } from 'naive-ui';
   import type { BlockNode } from '@/apps/user-page/block/schema';
   import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue';
   import ImageGalleryPropsEditor from './ImageGalleryPropsEditor.vue';
@@ -32,6 +32,49 @@
     if (!Array.isArray(obj[key])) obj[key] = [];
     return obj[key] as T[];
   }
+
+  function parseDateOnlyLocalMs(raw: unknown): number | null {
+    if (typeof raw !== 'string') return null;
+    const v = raw.trim();
+    if (!v) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    if (!m) return null;
+    const year = Number(m[1]);
+    const monthIndex = Number(m[2]) - 1;
+    const day = Number(m[3]);
+    return new Date(year, monthIndex, day, 0, 0, 0, 0).getTime();
+  }
+
+  function formatDateOnlyLocal(ms: number): string {
+    const d = new Date(ms);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function parseDateTimeMs(raw: unknown): number | null {
+    if (typeof raw !== 'string') return null;
+    const v = raw.trim();
+    if (!v) return null;
+    const ms = Date.parse(v);
+    if (Number.isFinite(ms)) return ms;
+    const ms2 = Date.parse(v.replace(' ', 'T'));
+    if (Number.isFinite(ms2)) return ms2;
+    return null;
+  }
+
+  const countdownTargetMsModel = computed<number | null>({
+    get() {
+      const propsObj = editor.ensurePropsObject(props.block) as any;
+      return parseDateTimeMs(propsObj.target);
+    },
+    set(ms) {
+      const propsObj = editor.ensurePropsObject(props.block) as any;
+      if (ms == null) propsObj.target = '';
+      else propsObj.target = new Date(ms).toISOString();
+    },
+  });
 
   const layoutProps = computed(() => editor.ensureLayoutProps(props.block) as any);
 
@@ -423,6 +466,11 @@
     <template v-else-if="props.block.type === 'buttons'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
+          <NFormItem label="卡片边框">
+            <NSpace justify="end">
+              <NSwitch v-model:value="editor.ensurePropsObject(props.block).framed" size="small" />
+            </NSpace>
+          </NFormItem>
           <NFormItem label="排列方向">
             <NSelect
               v-model:value="editor.ensurePropsObject(props.block).direction"
@@ -643,6 +691,11 @@
     <template v-else-if="props.block.type === 'tags'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
+          <NFormItem label="卡片边框">
+            <NSpace justify="end">
+              <NSwitch v-model:value="editor.ensurePropsObject(props.block).framed" size="small" />
+            </NSpace>
+          </NFormItem>
           <NFormItem label="大小">
             <NSelect
               v-model:value="editor.ensurePropsObject(props.block).size"
@@ -703,7 +756,14 @@
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:grid; grid-template-columns: 160px 1fr 1.2fr auto; gap: 8px; align-items: start"
               >
-                <NInput v-model:value="it.date" placeholder="日期（如 2024-01-01）" />
+                <NDatePicker
+                  :value="parseDateOnlyLocalMs(it.date)"
+                  type="date"
+                  clearable
+                  placeholder="选择日期"
+                  style="width: 100%"
+                  @update:value="(v) => { it.date = v == null ? '' : formatDateOnlyLocal(v) }"
+                />
                 <NInput v-model:value="it.title" placeholder="标题" />
                 <NInput
                   v-model:value="it.description" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
@@ -813,9 +873,12 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="例如：生日倒计时" />
           </NFormItem>
           <NFormItem class="span-full" label="目标时间">
-            <NInput
-              v-model:value="editor.ensurePropsObject(props.block).target"
-              placeholder="例如 2026-01-01T00:00:00+08:00"
+            <NDatePicker
+              v-model:value="countdownTargetMsModel"
+              type="datetime"
+              clearable
+              placeholder="选择目标时间"
+              style="width: 100%"
             />
           </NFormItem>
           <NFormItem label="展示样式">
@@ -895,6 +958,9 @@
                     { label: 'paypal', value: 'paypal' },
                     { label: 'other', value: 'other' },
                   ]"
+                  to="body"
+                  :consistent-menu-width="false"
+                  :menu-props="{ style: { minWidth: '180px' } }"
                 />
                 <NInput v-model:value="it.url" placeholder="https://..." />
                 <NInput v-model:value="it.label" placeholder="显示名（可选）" />
@@ -1026,6 +1092,11 @@
 
     <template v-else-if="props.block.type === 'footer'">
       <NForm label-placement="top" size="small">
+        <NFormItem label="卡片边框">
+          <NSpace justify="end">
+            <NSwitch v-model:value="editor.ensurePropsObject(props.block).framed" size="small" />
+          </NSpace>
+        </NFormItem>
         <NFormItem label="文字（可选）">
           <NInput v-model:value="editor.ensurePropsObject(props.block).text" />
         </NFormItem>

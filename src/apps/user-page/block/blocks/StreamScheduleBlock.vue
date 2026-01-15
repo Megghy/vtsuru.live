@@ -2,8 +2,10 @@
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL } from '@/shared/config'
-import { NAlert, NButton, NCard, NFlex, NSpin, NTag, NText } from 'naive-ui'
+import { NAlert, NButton, NSpin, NTag, NIcon } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
+import { CalendarNumberOutline } from '@vicons/ionicons5'
+import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
   layout?: 'list' | 'table'
@@ -125,83 +127,81 @@ function copyToClipboard(text: string) {
 </script>
 
 <template>
-  <NCard size="small" content-style="padding: 0">
-    <div class="schedule-card">
+  <BlockCard class="schedule-card" :content-style="{ padding: 0 }">
+    <div class="schedule-block">
       <div class="schedule-header">
-        <NText strong>
-          直播日程
-        </NText>
-        <NText depth="3">
-          展示 {{ cfg.weeksCount ?? 1 }} 周
-        </NText>
+        <div class="header-left">
+          <div class="header-icon">
+            <NIcon :component="CalendarNumberOutline" />
+          </div>
+          <span class="header-title">SCHEDULE</span>
+        </div>
+        <div class="header-desc">
+          {{ cfg.weeksCount ?? 1 }} WEEK{{ (cfg.weeksCount ?? 1) > 1 ? 'S' : '' }}
+        </div>
       </div>
 
-      <NFlex v-if="cfg.showIcs && userInfo?.id" align="center" justify="space-between" style="gap: 10px; padding: 0 14px 12px">
-        <NText depth="3" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-          订阅：{{ `${SCHEDULE_API_URL}${userInfo.id}.ics` }}
-        </NText>
-        <NButton size="tiny" secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo.id}.ics`)">
-          复制
-        </NButton>
-      </NFlex>
+      <!-- Actions Toolbar -->
+      <div v-if="cfg.showIcs && userInfo?.id" class="ics-toolbar">
+        <div class="ics-link" @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo.id}.ics`)">
+          <span class="ics-url">{{ `${SCHEDULE_API_URL}${userInfo.id}.ics` }}</span>
+          <NButton size="tiny" secondary class="copy-btn">
+            Copy
+          </NButton>
+        </div>
+      </div>
 
       <div class="schedule-body">
         <NSpin :show="isLoading" size="small">
-          <NAlert v-if="error" type="error" :show-icon="true" style="margin-bottom: 10px">
+          <NAlert v-if="error" type="error" :show-icon="true" class="mb-4">
             {{ error }}
           </NAlert>
 
-          <NAlert v-else-if="!userInfo?.id" type="info" :show-icon="false">
-            未登录或用户信息缺失
-          </NAlert>
+          <div v-else-if="!userInfo?.id" class="empty-state">
+            User info missing
+          </div>
 
-          <NAlert v-else-if="flatRows.length === 0" type="info" :show-icon="false">
-            暂无日程
-          </NAlert>
+          <div v-else-if="flatRows.length === 0" class="empty-state">
+            No schedule available
+          </div>
 
           <template v-else>
-            <div v-if="cfg.layout === 'table'" class="schedule-table">
-              <table style="width: 100%; border-collapse: collapse">
+            <!-- Table Layout -->
+            <div v-if="cfg.layout === 'table'" class="schedule-table-wrapper">
+              <table class="schedule-table">
                 <thead>
                   <tr>
-                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                      周
-                    </th>
-                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                      星期
-                    </th>
-                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                      时间
-                    </th>
-                    <th style="text-align:left; padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                      内容
-                    </th>
+                    <th>WEEK</th>
+                    <th>DAY</th>
+                    <th>TIME</th>
+                    <th>CONTENT</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr
                     v-for="(r, idx) in flatRows"
                     :key="idx"
-                    :style="(cfg.highlightToday && r.isToday) ? 'background: rgba(24, 160, 88, 0.06);' : ''"
+                    :class="{ 'row-today': cfg.highlightToday && r.isToday }"
                   >
-                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                    <td class="font-mono opacity-70">
                       {{ r.week.year }}W{{ r.week.week }}
                     </td>
-                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                    <td class="font-bold">
                       {{ dayLabel(r.dayIdx) }}
-                      <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false" style="margin-left: 6px">
-                        今天
+                      <NTag v-if="cfg.highlightToday && r.isToday" type="primary" size="small" :bordered="false" class="ml-2">
+                        TODAY
                       </NTag>
                     </td>
-                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
+                    <td class="font-mono">
                       {{ r.time }}
                     </td>
-                    <td style="padding: 8px; border-bottom: 1px solid var(--n-border-color)">
-                      <NText>{{ r.title }}</NText>
+                    <td>
+                      <span>{{ r.title }}</span>
                       <NTag
                         v-if="cfg.showTag && r.tag"
                         size="small"
                         :style="r.tagColor ? `margin-left: 6px; background:${r.tagColor}; color:#fff; border-color:${r.tagColor};` : 'margin-left: 6px'"
+                        :bordered="false"
                       >
                         {{ r.tag }}
                       </NTag>
@@ -211,75 +211,283 @@ function copyToClipboard(text: string) {
               </table>
             </div>
 
-            <NFlex v-else vertical style="gap: 10px">
+            <!-- Timeline Layout (Default) -->
+            <div v-else class="timeline-list">
               <div
                 v-for="(r, idx) in flatRows"
                 :key="idx"
-                class="schedule-item"
-                :class="{ today: cfg.highlightToday && r.isToday }"
+                class="timeline-item"
+                :class="{ 'is-today': cfg.highlightToday && r.isToday }"
               >
-                <NFlex justify="space-between" align="center" style="gap: 10px">
-                  <NText strong style="min-width: 0">
-                    {{ r.title }}
-                  </NText>
-                  <NFlex align="center" style="gap: 6px; flex-shrink: 0">
-                    <NTag v-if="cfg.highlightToday && r.isToday" type="success" size="small" :bordered="false">
-                      今天
+                <div class="timeline-time">
+                  <div class="day-label">
+                    {{ dayLabel(r.dayIdx) }}
+                  </div>
+                  <div class="time-val">
+                    {{ r.time }}
+                  </div>
+                </div>
+
+                <div class="timeline-connector">
+                  <div class="connector-dot" :class="{ 'active': cfg.highlightToday && r.isToday }" />
+                  <div class="connector-line" />
+                </div>
+
+                <div class="timeline-content">
+                  <div class="content-header">
+                    <span class="content-title">{{ r.title }}</span>
+                    <NTag v-if="cfg.highlightToday && r.isToday" type="primary" size="small" :bordered="false" round>
+                      TODAY
                     </NTag>
-                    <NTag
-                      v-if="cfg.showTag && r.tag"
-                      size="small"
-                      :bordered="false"
-                      :style="r.tagColor ? `background:${r.tagColor}; color:#fff;` : ''"
-                    >
-                      {{ r.tag }}
-                    </NTag>
-                  </NFlex>
-                </NFlex>
-                <NText depth="3" style="display:block; margin-top: 6px">
-                  {{ r.week.year }}W{{ r.week.week }} · {{ dayLabel(r.dayIdx) }} · {{ r.time }}
-                </NText>
+                  </div>
+                  <div class="content-meta">
+                    <span v-if="r.tag" class="meta-tag" :style="{ color: r.tagColor || 'var(--n-primary-color)' }">
+                      #{{ r.tag }}
+                    </span>
+                    <span class="meta-week">{{ r.week.year }}W{{ r.week.week }}</span>
+                  </div>
+                </div>
               </div>
-            </NFlex>
+            </div>
           </template>
         </NSpin>
       </div>
     </div>
-  </NCard>
+  </BlockCard>
 </template>
 
 <style scoped>
-.schedule-card {
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
+.schedule-block {
+  width: 100%;
 }
 
 .schedule-header {
-  padding: 12px 14px;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--n-divider-color);
+  background: var(--n-action-color);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
+.header-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(var(--n-primary-color-rgb), 0.12);
+  color: var(--n-primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.header-title {
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.header-desc {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.5;
+  letter-spacing: 0.05em;
+}
+
+.ics-toolbar {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--n-divider-color);
+  background: transparent;
+}
+
+.ics-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--n-fill-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ics-link:hover {
+  background: var(--n-action-color);
+}
+
+.ics-url {
+  font-family: monospace;
+  font-size: 12px;
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 12px;
+}
+
 .schedule-body {
-  padding: 0 14px 14px;
+  padding: 24px;
+}
+
+.schedule-table-wrapper {
+  overflow-x: auto;
 }
 
 .schedule-table {
-  overflow: auto;
-  border-radius: 12px;
-  border: 1px solid var(--n-border-color);
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
-.schedule-item {
-  padding: 10px 12px;
-  border: 1px solid var(--n-border-color);
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.02);
+.schedule-table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--n-divider-color);
+  font-size: 12px;
+  opacity: 0.5;
+  font-weight: 700;
 }
 
-.schedule-item.today {
-  background: rgba(24, 160, 88, 0.06);
+.schedule-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--n-divider-color);
+}
+
+.row-today {
+  background: rgba(var(--n-primary-color-rgb), 0.1);
+}
+
+/* Timeline Styles */
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  position: relative;
+  padding-bottom: 32px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-item:last-child .connector-line {
+  display: none;
+}
+
+.timeline-time {
+  width: 60px;
+  text-align: right;
+  padding-right: 16px;
+  padding-top: 2px;
+}
+
+.day-label {
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.time-val {
+  font-family: monospace;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.timeline-connector {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+}
+
+.connector-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--n-card-color);
+  border: 2px solid rgba(255,255,255,0.2);
+  z-index: 2;
+  transition: all 0.3s;
+}
+
+.connector-dot.active {
+  background: var(--n-primary-color);
+  border-color: var(--n-primary-color);
+  box-shadow: 0 0 0 4px rgba(var(--n-primary-color-rgb), 0.2);
+}
+
+.connector-line {
+  position: absolute;
+  top: 12px;
+  bottom: -40px; /* Connect to next */
+  width: 2px;
+  background: rgba(255,255,255,0.1);
+  z-index: 1;
+}
+
+.timeline-content {
+  flex: 1;
+  padding-left: 20px;
+  padding-top: 0;
+}
+
+.content-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.content-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.content-meta {
+  font-size: 13px;
+  display: flex;
+  gap: 12px;
+  opacity: 0.6;
+}
+
+.meta-tag {
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+.ml-2 {
+  margin-left: 8px;
+}
+.font-mono {
+  font-family: monospace;
+}
+.font-bold {
+  font-weight: 700;
+}
+.opacity-70 {
+  opacity: 0.7;
 }
 </style>

@@ -72,6 +72,7 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
   const uiSurfaceBgPressed = effectiveIsDark ? 'rgba(39, 39, 42, 0.85)' : 'rgba(244, 244, 245, 0.92)'
 
   const borderColor = effectiveIsDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'
+  const cardBorderColor = effectiveIsDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.10)'
 
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
@@ -84,5 +85,6 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
     '--user-page-ui-surface-bg-hover': uiSurfaceBgHover,
     '--user-page-ui-surface-bg-pressed': uiSurfaceBgPressed,
     '--user-page-border-color': borderColor,
+    '--vtsuru-card-border-color': cardBorderColor,
   } as Record<string, string>
 }

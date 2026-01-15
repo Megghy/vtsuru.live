@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { NCard, NText } from 'naive-ui'
-import { computed } from 'vue'
+import { NIcon } from 'naive-ui'
+import { computed, nextTick, ref, watch } from 'vue'
+import { MegaphoneOutline } from '@vicons/ionicons5'
+import { Vue3Marquee } from 'vue3-marquee'
+import { useResizeObserver } from '@vueuse/core'
+import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
   text?: string
@@ -23,59 +27,93 @@ const cfg = computed<BlockConfig>(() => {
     pauseOnHover: typeof o.pauseOnHover === 'boolean' ? o.pauseOnHover : true,
   }
 })
+
+const displayText = computed(() => cfg.value.text || '公告内容未设置')
+const direction = computed(() => (cfg.value.direction === 'left' ? 'normal' : 'reverse'))
+
+const hostRef = ref<HTMLElement | null>(null)
+const measureRef = ref<HTMLElement | null>(null)
+const shouldAnimate = ref(false)
+
+function recomputeOverflow() {
+  const host = hostRef.value
+  const measure = measureRef.value
+  if (!host || !measure) {
+    shouldAnimate.value = false
+    return
+  }
+  const hostWidth = host.clientWidth
+  const contentWidth = measure.scrollWidth
+  shouldAnimate.value = hostWidth > 0 && contentWidth > hostWidth + 1
+}
+
+useResizeObserver(hostRef, () => recomputeOverflow())
+useResizeObserver(measureRef, () => recomputeOverflow())
+watch(displayText, async () => {
+  await nextTick()
+  recomputeOverflow()
+}, { immediate: true })
 </script>
 
 <template>
-  <NCard size="small">
-    <div
-      class="marquee"
-      :class="{ hoverPause: cfg.pauseOnHover }"
-      :style="{
-        '--duration': `${cfg.durationSec}s`,
-        '--dir': cfg.direction === 'left' ? '-1' : '1',
-      }"
-    >
-      <div class="track">
-        <NText class="text">
-          {{ cfg.text || '公告内容未设置' }}
-        </NText>
-        <span class="gap" />
-        <NText class="text">
-          {{ cfg.text || '公告内容未设置' }}
-        </NText>
+  <BlockCard>
+    <div class="row">
+      <NIcon size="18" depth="2" class="icon">
+        <MegaphoneOutline />
+      </NIcon>
+      <div ref="hostRef" class="marquee-host">
+        <span ref="measureRef" class="text measure" aria-hidden="true">
+          {{ displayText }}
+        </span>
+        <Vue3Marquee
+          v-if="shouldAnimate"
+          class="marquee"
+          :direction="direction"
+          :duration="cfg.durationSec"
+          :pause-on-hover="cfg.pauseOnHover"
+          clone
+        >
+          <span class="text">{{ displayText }}</span>
+        </Vue3Marquee>
+        <span v-else class="text">{{ displayText }}</span>
       </div>
     </div>
-  </NCard>
+  </BlockCard>
 </template>
 
 <style scoped>
-.marquee {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--vtsuru-page-radius);
-  border: 1px solid var(--n-border-color);
-  padding: 10px 0;
-  background: rgba(255, 255, 255, 0.04);
-}
-.track {
-  display: inline-flex;
+.row {
+  display: flex;
   align-items: center;
-  white-space: nowrap;
-  will-change: transform;
-  animation: marquee var(--duration) linear infinite;
+  gap: 10px;
 }
+
+.icon {
+  flex-shrink: 0;
+}
+
+.marquee-host {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.marquee {
+  width: 100%;
+}
+
 .text {
-  font-weight: 700;
-  padding: 0 14px;
+  font-size: 15px;
+  white-space: nowrap;
 }
-.gap {
-  width: 40px;
-}
-.hoverPause:hover .track {
-  animation-play-state: paused;
-}
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(var(--dir) * 50%)); }
+
+.measure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
 }
 </style>

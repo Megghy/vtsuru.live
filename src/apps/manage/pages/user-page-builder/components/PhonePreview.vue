@@ -7,7 +7,12 @@ const props = defineProps<{ transparent?: boolean }>()
     <div class="device">
       <div class="notch" />
       <div class="screen" :class="{ transparent: !!props.transparent }">
-        <slot />
+        <div class="screen-bg">
+          <slot name="background" />
+        </div>
+        <div class="screen-scroll">
+          <slot />
+        </div>
       </div>
     </div>
   </div>
@@ -41,16 +46,32 @@ const props = defineProps<{ transparent?: boolean }>()
 }
 
 .screen {
+  position: relative;
   background: var(--n-color);
   border-radius: 20px;
   overflow: hidden;
   padding: 0;
   flex: 1;
   min-height: 0;
-  overflow: auto;
 }
 
 .screen.transparent {
   background: transparent;
+}
+
+.screen-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen-scroll {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow: auto;
 }
 </style>

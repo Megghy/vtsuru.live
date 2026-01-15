@@ -8,6 +8,7 @@ const props = defineProps<{
   blockProps: unknown
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  highlightBlockId?: string | null
 }>()
 
 function asObject(v: unknown): Record<string, any> | null {
@@ -140,12 +141,16 @@ const blockComponents = BLOCK_COMPONENTS
       v-for="child in visibleChildren"
       :key="child.id"
       class="item"
+      :class="{ highlight: !!props.highlightBlockId && props.highlightBlockId === child.id }"
+      :data-block-id="child.id"
+      :data-block-type="child.type"
     >
       <component
         :is="blockComponents[child.type]"
         :block-props="child.props"
         :user-info="userInfo"
         :bili-info="biliInfo"
+        v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
       />
     </div>
   </div>
@@ -178,7 +183,6 @@ const blockComponents = BLOCK_COMPONENTS
 .layout.row.align-stretch .item > :deep(*) {
   flex: 1;
   min-width: 0;
-  height: 100%;
 }
 
 .layout.column .item {
@@ -198,8 +202,37 @@ const blockComponents = BLOCK_COMPONENTS
 }
 
 .item {
-  padding: var(--vtsuru-page-spacing);
-  border-radius: var(--vtsuru-page-radius);
   min-width: 0;
+  position: relative;
+}
+
+.item.highlight {
+  outline: 1px solid rgba(0, 0, 0, 0);
+}
+
+.item.highlight::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--vtsuru-page-radius) + 2px);
+  border: 1px solid var(--vtsuru-page-primary);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.item.highlight::after {
+  content: attr(data-block-type);
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 16px;
+  border-radius: 999px;
+  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.45));
+  border: 1px solid var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-text, var(--n-text-color, #fff));
+  pointer-events: none;
+  user-select: none;
 }
 </style>

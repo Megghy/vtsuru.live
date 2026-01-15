@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NCarousel } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -107,26 +108,47 @@ const imgStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="root" :style="containerStyle">
-    <NCarousel
-      v-if="model.layout === 'carousel'"
-      class="carousel"
-      :class="{ fixed: fixedCarousel }"
-      :style="carouselStyle"
-      :autoplay="model.autoplay"
-      :interval="model.interval"
-      :effect="model.effect"
-      :show-arrow="model.showArrow"
-      :show-dots="model.showDots"
-      :dot-type="model.dotType"
-      :dot-placement="model.dotPlacement"
-      :loop="model.loop"
-      :draggable="model.draggable"
-      :touchable="model.touchable"
-      :trigger="model.trigger"
-    >
-      <div v-for="(it, idx) in model.items" :key="idx" class="slide" :class="{ fixed: fixedCarousel }">
-        <div class="media">
+  <BlockCard>
+    <div class="root" :style="containerStyle">
+      <NCarousel
+        v-if="model.layout === 'carousel'"
+        class="carousel"
+        :class="{ fixed: fixedCarousel }"
+        :style="carouselStyle"
+        :autoplay="model.autoplay"
+        :interval="model.interval"
+        :effect="model.effect"
+        :show-arrow="model.showArrow"
+        :show-dots="model.showDots"
+        :dot-type="model.dotType"
+        :dot-placement="model.dotPlacement"
+        :loop="model.loop"
+        :draggable="model.draggable"
+        :touchable="model.touchable"
+        :trigger="model.trigger"
+      >
+        <div v-for="(it, idx) in model.items" :key="idx" class="slide" :class="{ fixed: fixedCarousel }">
+          <div class="media">
+            <img
+              :src="it.src"
+              :alt="it.desc"
+              referrerpolicy="no-referrer"
+              class="img"
+              :style="imgStyle"
+            >
+          </div>
+          <div v-if="it.desc" class="caption">
+            {{ it.desc }}
+          </div>
+        </div>
+      </NCarousel>
+
+      <div
+        v-else
+        class="list"
+        :class="{ masonry: model.layout === 'masonry', grid: model.layout === 'grid' }"
+      >
+        <figure v-for="(it, idx) in model.items" :key="idx" class="item">
           <img
             :src="it.src"
             :alt="it.desc"
@@ -134,38 +156,18 @@ const imgStyle = computed(() => ({
             class="img"
             :style="imgStyle"
           >
-        </div>
-        <div v-if="it.desc" class="caption">
-          {{ it.desc }}
-        </div>
+          <figcaption v-if="it.desc" class="caption">
+            {{ it.desc }}
+          </figcaption>
+        </figure>
       </div>
-    </NCarousel>
-
-    <div
-      v-else
-      class="list"
-      :class="{ masonry: model.layout === 'masonry', grid: model.layout === 'grid' }"
-    >
-      <figure v-for="(it, idx) in model.items" :key="idx" class="item">
-        <img
-          :src="it.src"
-          :alt="it.desc"
-          referrerpolicy="no-referrer"
-          class="img"
-          :style="imgStyle"
-        >
-        <figcaption v-if="it.desc" class="caption">
-          {{ it.desc }}
-        </figcaption>
-      </figure>
     </div>
-  </div>
+  </BlockCard>
 </template>
 
 <style scoped>
 .root {
   display: block;
-  overflow: hidden;
 }
 .carousel.fixed :deep(.n-carousel__slides) {
   height: 100%;
@@ -192,18 +194,48 @@ const imgStyle = computed(() => ({
 .img {
   width: 100%;
   border-radius: var(--vtsuru-page-radius);
+  border: 1px solid var(--n-divider-color);
   display: block;
+  transition: opacity 0.3s ease;
 }
 .caption {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: 0.8;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--n-text-color-3);
+  text-align: center;
+  font-weight: 500;
+}
+.carousel :deep(.n-carousel__dots) {
+  bottom: 12px;
+}
+.carousel :deep(.n-carousel__arrow) {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+  color: white;
+}
+.carousel :deep(.n-carousel__arrow:hover) {
+  background-color: rgba(255, 255, 255, 0.4);
 }
 .slide {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+}
+.carousel .caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 16px 12px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.6));
+  color: white;
+  margin: 0;
+  text-align: left;
+  border-bottom-left-radius: var(--vtsuru-page-radius);
+  border-bottom-right-radius: var(--vtsuru-page-radius);
 }
 .slide.fixed {
   height: 100%;
