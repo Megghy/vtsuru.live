@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { NCard, NText } from 'naive-ui'
+import { NText, NIcon } from 'naive-ui'
 import { computed } from 'vue'
+import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
+import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
   text?: string
@@ -24,35 +26,76 @@ const cfg = computed<BlockConfig>(() => {
 </script>
 
 <template>
-  <NCard size="small">
+  <BlockCard class="quote-card" :content-style="{ padding: 0 }">
+    <div class="quote-bg-icon">
+      <NIcon><ChatbubbleEllipsesOutline /></NIcon>
+    </div>
     <div class="quote" :style="{ textAlign: cfg.align }">
       <NText v-if="cfg.text" class="quote-text">
         “{{ cfg.text }}”
       </NText>
-      <NText v-else depth="3">
+      <NText v-else depth="3" class="quote-text placeholder">
         未设置内容
       </NText>
       <NText v-if="cfg.author" depth="3" class="quote-author">
         —— {{ cfg.author }}
       </NText>
     </div>
-  </NCard>
+  </BlockCard>
 </template>
 
 <style scoped>
-.quote {
-  padding: 6px 4px;
+.quote-card {
+  position: relative;
 }
+
+.quote-card :deep(.n-card__content) {
+  height: 100%;
+}
+
+.quote-bg-icon {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 80px;
+  opacity: 0.05;
+  color: var(--n-text-color);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.quote {
+  padding: 16px 8px;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .quote-text {
   display: block;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.3;
+  font-size: 20px;
+  font-family: serif; /* Elegant for quotes */
+  font-weight: 700;
+  line-height: 1.5;
   white-space: pre-wrap;
+  font-style: italic;
 }
+
+.quote-text.placeholder {
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+}
+
 .quote-author {
   display: block;
-  margin-top: 10px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.8;
 }
 </style>
-

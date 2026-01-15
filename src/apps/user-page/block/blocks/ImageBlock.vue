@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -18,17 +19,18 @@ const model = computed(() => {
 </script>
 
 <template>
-  <img
-    :src="model.url"
-    :alt="model.alt"
-    referrerpolicy="no-referrer"
-    :style="{
-      width: '100%',
-      height: 'auto',
-      maxWidth: model.maxWidth?.trim() ? model.maxWidth.trim() : undefined,
-      maxHeight: model.maxHeight?.trim() ? model.maxHeight.trim() : undefined,
-      borderRadius: 'var(--vtsuru-page-radius)',
-      display: 'block',
-    }"
-  >
+  <BlockCard :content-style="{ padding: 0 }">
+    <img
+      :src="model.url"
+      :alt="model.alt"
+      referrerpolicy="no-referrer"
+      :style="{
+        width: '100%',
+        height: 'auto',
+        maxWidth: model.maxWidth?.trim() ? model.maxWidth.trim() : undefined,
+        maxHeight: model.maxHeight?.trim() ? model.maxHeight.trim() : undefined,
+        display: 'block',
+      }"
+    >
+  </BlockCard>
 </template>

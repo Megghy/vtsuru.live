@@ -1,4 +1,5 @@
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import { normalizeUserPagesSettingsV1InPlace } from '@/apps/user-page/normalize'
 import { useStorage } from '@vueuse/core'
 import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 
@@ -11,7 +12,9 @@ export function parseUserPagesLocalDraft(raw: string): UserPagesSettingsV1 | nul
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
   if ((parsed as any).version !== 1) return null
-  return parsed as UserPagesSettingsV1
+  const settings = parsed as UserPagesSettingsV1
+  normalizeUserPagesSettingsV1InPlace(settings)
+  return settings
 }
 
 export function useUserPagesLocalDraftStorage() {

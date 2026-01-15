@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NText } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 const text = computed(() => {
@@ -12,7 +13,19 @@ const text = computed(() => {
 </script>
 
 <template>
-  <NText style="white-space: pre-wrap; display:block; line-height: 1.7">
-    {{ text }}
-  </NText>
+  <BlockCard>
+    <NText class="text-content">
+      {{ text }}
+    </NText>
+  </BlockCard>
 </template>
+
+<style scoped>
+.text-content {
+  white-space: pre-wrap;
+  display: block;
+  line-height: 1.8;
+  font-size: 14px;
+  color: var(--n-text-color);
+}
+</style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -13,22 +14,42 @@ const items = computed(() => {
 </script>
 
 <template>
-  <NFlex
-    justify="center"
-    wrap
-    style="gap: 8px"
-  >
-    <NButton
-      v-for="(it, idx) in items"
-      :key="idx"
-      tag="a"
-      type="info"
-      secondary
-      target="_blank"
-      rel="noopener noreferrer"
-      :href="it.url"
+  <BlockCard>
+    <NFlex
+      justify="center"
+      wrap
+      style="gap: 10px"
     >
-      {{ it.label }}
-    </NButton>
-  </NFlex>
+      <NButton
+        v-for="(it, idx) in items"
+        :key="idx"
+        tag="a"
+        type="info"
+        secondary
+        target="_blank"
+        rel="noopener noreferrer"
+        :href="it.url"
+        class="vtsuru-link-tag"
+      >
+        {{ it.label }}
+      </NButton>
+    </NFlex>
+  </BlockCard>
 </template>
+
+<style scoped>
+.vtsuru-link-tag {
+  border-radius: var(--vtsuru-page-radius);
+  padding: 0 16px;
+  font-weight: 500;
+  border: 1px solid var(--n-divider-color);
+  background: var(--n-card-color);
+  transition: all 0.2s ease;
+}
+
+.vtsuru-link-tag:hover {
+  background: var(--n-action-color);
+  border-color: var(--n-primary-color-hover);
+  transform: translateY(-1px);
+}
+</style>

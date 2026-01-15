@@ -296,6 +296,7 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       if (propsObj.variant !== undefined && !['solid', 'secondary', 'tertiary', 'quaternary', 'ghost'].includes(String(propsObj.variant))) errors.push(`${userFacingName}: variant 不支持`)
       if (propsObj.fullWidth !== undefined && typeof propsObj.fullWidth !== 'boolean') errors.push(`${userFacingName}: fullWidth 必须是 boolean`)
       if (propsObj.align !== undefined && !['start', 'center', 'end'].includes(String(propsObj.align))) errors.push(`${userFacingName}: align 不支持`)
+      if (propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') errors.push(`${userFacingName}: framed 必须是 boolean`)
       if (propsObj.gap !== undefined) {
         const v = Number(propsObj.gap)
         if (!Number.isFinite(v) || v < 0 || v > 32) errors.push(`${userFacingName}: gap 必须是 0~32 的数字`)
@@ -425,6 +426,7 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
     case 'footer':
       if (!propsObj) break
       if (propsObj.text !== undefined && typeof propsObj.text !== 'string') errors.push(`${userFacingName}: text 必须是 string`)
+      if (propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') errors.push(`${userFacingName}: framed 必须是 boolean`)
       break
     case 'liveStatus': {
       if (!propsObj) break
@@ -531,6 +533,7 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       if (!propsObj) break
       if (propsObj.size !== undefined && !['small', 'medium'].includes(String(propsObj.size))) errors.push(`${userFacingName}: size 仅支持 small/medium`)
       if (propsObj.rounded !== undefined && typeof propsObj.rounded !== 'boolean') errors.push(`${userFacingName}: rounded 必须是 boolean`)
+      if (propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') errors.push(`${userFacingName}: framed 必须是 boolean`)
       const items = propsObj.items
       if (items !== undefined) {
         if (!Array.isArray(items)) {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NAlert, NCard } from 'naive-ui'
+import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 type Provider = 'netease' | 'spotify' | 'custom'
 
@@ -103,11 +104,7 @@ const allow = computed(() => {
 </script>
 
 <template>
-  <NCard size="small">
-    <template #header>
-      音乐播放器
-    </template>
-
+  <BlockCard class="music-player-block" :content-style="{ padding: 0 }">
     <NAlert v-if="!iframeSrc" type="info" :show-icon="false">
       未配置可用的链接
     </NAlert>
@@ -116,11 +113,22 @@ const allow = computed(() => {
       v-else
       :src="iframeSrc"
       :height="cfg.height"
-      style="width: 100%; border: 0; border-radius: var(--vtsuru-page-radius);"
+      class="player-frame"
       :allow="allow"
       loading="lazy"
       referrerpolicy="no-referrer"
     />
-  </NCard>
+  </BlockCard>
 </template>
 
+<style scoped>
+.music-player-block {
+  width: 100%;
+}
+
+.player-frame {
+  width: 100%;
+  border: 0;
+  display: block;
+}
+</style>

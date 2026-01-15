@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { NCard, NFlex, NText, NTimeline, NTimelineItem } from 'naive-ui'
 import { computed } from 'vue'
+import { FlagOutline } from '@vicons/ionicons5'
+import { NIcon, NText, NTimeline, NTimelineItem } from 'naive-ui'
+import BlockCard from '../BlockCard.vue'
 
 interface MilestoneItem {
   date?: string
@@ -38,45 +40,96 @@ const items = computed(() => {
 </script>
 
 <template>
-  <NCard size="small">
+  <BlockCard class="milestone-card">
     <template #header>
-      里程碑
+      <div class="header">
+        <NIcon size="18" depth="2">
+          <FlagOutline />
+        </NIcon>
+        <span>里程碑</span>
+      </div>
     </template>
 
     <NText v-if="items.length === 0" depth="3">
       暂无里程碑
     </NText>
 
-    <NTimeline v-else-if="cfg.mode === 'timeline'">
-      <NTimelineItem
-        v-for="(it, idx) in items"
-        :key="idx"
-        :title="it.title || it.date || `#${idx + 1}`"
-        :time="it.date || undefined"
-      >
-        <NText v-if="it.description" depth="2" style="white-space: pre-wrap">
-          {{ it.description }}
-        </NText>
-      </NTimelineItem>
-    </NTimeline>
+    <template v-else>
+      <NTimeline v-if="cfg.mode !== 'list'" class="timeline">
+        <NTimelineItem
+          v-for="(it, idx) in items"
+          :key="idx"
+          :time="it.date || undefined"
+          :title="it.title || undefined"
+        >
+          <div v-if="it.description" class="desc">
+            {{ it.description }}
+          </div>
+        </NTimelineItem>
+      </NTimeline>
 
-    <NFlex v-else vertical style="gap: 10px">
-      <div
-        v-for="(it, idx) in items"
-        :key="idx"
-        style="padding: 10px 12px; border: 1px solid var(--n-border-color); border-radius: var(--vtsuru-page-radius);"
-      >
-        <NText strong style="display:block">
-          {{ it.title || it.date || `#${idx + 1}` }}
-        </NText>
-        <NText v-if="it.date" depth="3" style="display:block; margin-top: 4px">
-          {{ it.date }}
-        </NText>
-        <NText v-if="it.description" depth="2" style="display:block; margin-top: 6px; white-space: pre-wrap">
-          {{ it.description }}
-        </NText>
+      <div v-else class="list">
+        <div v-for="(it, idx) in items" :key="idx" class="list-item">
+          <div class="meta">
+            <span class="date">{{ it.date || '—' }}</span>
+            <span v-if="it.title" class="title">{{ it.title }}</span>
+          </div>
+          <div v-if="it.description" class="desc">
+            {{ it.description }}
+          </div>
+        </div>
       </div>
-    </NFlex>
-  </NCard>
+    </template>
+  </BlockCard>
 </template>
 
+<style scoped>
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.timeline :deep(.n-timeline-item__content) {
+  color: var(--n-text-color-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list-item {
+  padding: 12px 14px;
+  border: 1px solid var(--n-divider-color);
+  border-radius: calc(var(--vtsuru-page-radius) - 2px);
+  background: var(--n-action-color);
+}
+
+.meta {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.date {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+}
+
+.title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.desc {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--n-text-color-2);
+  white-space: pre-wrap;
+}
+</style>

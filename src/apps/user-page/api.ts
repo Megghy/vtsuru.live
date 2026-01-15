@@ -1,5 +1,6 @@
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { USER_PAGES_API_URL } from '@/shared/config'
+import { normalizeUserPagesSettingsV1InPlace } from './normalize'
 import type { UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
 
 function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
@@ -13,7 +14,9 @@ function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
   if (!parsed || typeof parsed !== 'object') throw new Error('用户页面配置格式错误')
   const v = (parsed as any).version
   if (v !== 1) throw new Error(`用户页面配置 version 不支持: ${String(v)}`)
-  return parsed as UserPagesSettingsV1
+  const settings = parsed as UserPagesSettingsV1
+  normalizeUserPagesSettingsV1InPlace(settings)
+  return settings
 }
 
 export async function fetchUserPagesSettingsByUserId(userId: number): Promise<UserPagesSettingsV1 | null> {

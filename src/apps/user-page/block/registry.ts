@@ -131,21 +131,21 @@ export function createBlockNode(type: BlockType, id: string): BlockNode {
   if (type === 'text') block.props = { text: '' }
   if (type === 'richText') block.props = { html: '', imagesFile: [] }
   if (type === 'links') block.props = { items: [] }
-  if (type === 'buttons') block.props = { items: [], direction: 'vertical', type: 'primary', variant: 'solid', gap: 10, fullWidth: true, align: 'start' }
+  if (type === 'buttons') block.props = { items: [], direction: 'vertical', type: 'primary', variant: 'solid', gap: 10, fullWidth: true, align: 'start', framed: false }
   if (type === 'alert') block.props = { type: 'info', title: '提示', text: '这里是一段提示内容', showIcon: true, bordered: false }
   if (type === 'image') block.props = { url: '', alt: '', maxWidth: '', maxHeight: '' }
   if (type === 'imageGallery') block.props = { layout: 'grid', columns: 3, gap: 12, maxWidth: '', maxHeight: '', fit: 'cover', autoplay: false, interval: 5000, effect: 'slide', showArrow: true, showDots: true, dotType: 'line', dotPlacement: 'bottom', loop: true, draggable: true, touchable: true, trigger: 'click', items: [] }
   if (type === 'embed') block.props = { url: '', title: '' }
   if (type === 'divider') block.props = { text: '', titlePlacement: 'center', marginTop: 12, marginBottom: 12 }
   if (type === 'spacer') block.props = { size: 'md' }
-  if (type === 'footer') block.props = { text: '' }
+  if (type === 'footer') block.props = { text: '', framed: false }
   if (type === 'liveStatus') block.props = { variant: 'card', showTitle: true, showArea: true, showCover: true, showButtons: true }
   if (type === 'streamSchedule') block.props = { layout: 'list', weeksCount: 1, showIcs: true, highlightToday: true, showTag: true }
   if (type === 'biliInfo') block.props = { variant: 'card', showAvatar: true, showName: true, showSign: true, showStats: true, showButtons: true, showLiveRoom: true, spaceUrl: '' }
   if (type === 'videoList') block.props = { source: 'manual', layout: 'grid', columns: 2, maxItems: 6, showTitle: true, items: [] }
   if (type === 'socialLinks') block.props = { size: 'md', variant: 'round', showLabel: false, items: [] }
   if (type === 'musicPlayer') block.props = { provider: 'netease', url: '', height: 300, compact: false }
-  if (type === 'tags') block.props = { size: 'medium', rounded: true, items: [] }
+  if (type === 'tags') block.props = { size: 'medium', rounded: true, items: [], framed: false }
   if (type === 'milestone') block.props = { mode: 'timeline', items: [] }
   if (type === 'faq') block.props = { accordion: false, items: [] }
   if (type === 'quote') block.props = { text: '', author: '', align: 'center' }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -44,33 +45,59 @@ const fullWidth = computed(() => {
   return direction.value === 'vertical'
 })
 
+const framed = computed(() => {
+  const v = propsObj.value.framed
+  if (typeof v === 'boolean') return v
+  return false
+})
+
 const flexJustify = computed<'start' | 'center' | 'end'>(() => (direction.value === 'horizontal' ? align.value : 'start'))
 const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value === 'vertical' ? align.value : 'start'))
 </script>
 
 <template>
-  <NFlex
-    :vertical="direction === 'vertical'"
-    :wrap="direction === 'horizontal'"
-    :justify="flexJustify"
-    :align="flexAlign"
-    :style="{ gap: `${gap}px` }"
-  >
-    <NButton
-      v-for="(it, idx) in items"
-      :key="idx"
-      tag="a"
-      :type="buttonType as any"
-      :secondary="variant === 'secondary'"
-      :tertiary="variant === 'tertiary'"
-      :quaternary="variant === 'quaternary'"
-      :ghost="variant === 'ghost'"
-      target="_blank"
-      rel="noopener noreferrer"
-      :href="it.url"
-      :style="fullWidth ? 'width: 100%' : undefined"
+  <BlockCard :framed="framed">
+    <NFlex
+      :vertical="direction === 'vertical'"
+      :wrap="direction === 'horizontal'"
+      :justify="flexJustify"
+      :align="flexAlign"
+      class="buttons-container"
+      :style="{ gap: `${gap}px` }"
     >
-      {{ it.label }}
-    </NButton>
-  </NFlex>
+      <NButton
+        v-for="(it, idx) in items"
+        :key="idx"
+        tag="a"
+        :type="buttonType as any"
+        :secondary="variant === 'secondary'"
+        :tertiary="variant === 'tertiary'"
+        :quaternary="variant === 'quaternary'"
+        :ghost="variant === 'ghost'"
+        target="_blank"
+        rel="noopener noreferrer"
+        :href="it.url"
+        class="vtsuru-btn"
+        :style="fullWidth ? 'width: 100%' : undefined"
+      >
+        {{ it.label }}
+      </NButton>
+    </NFlex>
+  </BlockCard>
 </template>
+
+<style scoped>
+.buttons-container {
+  width: 100%;
+}
+
+.vtsuru-btn {
+  border-radius: var(--vtsuru-page-radius);
+  font-weight: 600;
+  transition: transform 0.1s ease;
+}
+
+.vtsuru-btn:active {
+  transform: scale(0.98);
+}
+</style>

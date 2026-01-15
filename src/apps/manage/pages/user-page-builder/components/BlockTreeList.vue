@@ -160,6 +160,8 @@ function onExpandAfterLeave(el: Element) {
             'drag-group-target-wrap': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
           }"
           @click="props.onRowClick(b.id, $event)"
+          @mouseenter="editor.hoveredBlockId.value = b.id"
+          @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
         >
           <div class="indent" :style="{ width: indentWidth }" />
 
