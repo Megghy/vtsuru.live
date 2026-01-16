@@ -23,10 +23,11 @@ const title = computed(() => (typeof propsObj.value.title === 'string' ? propsOb
 const text = computed(() => (typeof propsObj.value.text === 'string' ? propsObj.value.text : ''))
 const showIcon = computed(() => (typeof propsObj.value.showIcon === 'boolean' ? propsObj.value.showIcon : true))
 const bordered = computed(() => (typeof propsObj.value.bordered === 'boolean' ? propsObj.value.bordered : false))
+const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
 </script>
 
 <template>
-  <BlockCard :content-style="{ padding: 0 }">
+  <BlockCard :framed="framed" :content-style="{ padding: 0 }">
     <NAlert
       :type="type"
       :title="title || undefined"

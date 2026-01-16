@@ -14,6 +14,8 @@ interface BlockConfig {
   rounded?: boolean
   items?: TagItem[]
   framed?: boolean
+  borderTitle?: string
+  borderTitleAlign?: 'left' | 'center' | 'right'
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -27,6 +29,8 @@ const cfg = computed<BlockConfig>(() => {
     rounded: typeof o.rounded === 'boolean' ? o.rounded : true,
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : false,
+    borderTitle: typeof o.borderTitle === 'string' ? o.borderTitle : '',
+    borderTitleAlign: (o.borderTitleAlign === 'left' || o.borderTitleAlign === 'center' || o.borderTitleAlign === 'right') ? o.borderTitleAlign : 'left',
   }
 })
 
@@ -46,7 +50,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed">
+  <BlockCard :framed="cfg.framed" :border-title="cfg.framed ? cfg.borderTitle : ''" :border-title-align="cfg.borderTitleAlign">
     <NFlex justify="center" wrap style="gap: 8px">
       <NTag
         v-for="(it, idx) in items"

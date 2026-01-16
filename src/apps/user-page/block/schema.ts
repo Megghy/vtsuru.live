@@ -6,6 +6,7 @@ export const BLOCK_TYPES = [
   'richText',
   'alert',
   'links',
+  'button',
   'buttons',
   'image',
   'imageGallery',
@@ -94,6 +95,12 @@ function isHttpsUrlString(v: unknown): v is string {
   }
 }
 
+function isPageSlug(v: unknown): v is string {
+  if (!isNonEmptyString(v)) return false
+  if (v === 'home') return true
+  return /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(v)
+}
+
 function asObject(v: unknown): Record<string, unknown> | null {
   if (!v || typeof v !== 'object') return null
   if (Array.isArray(v)) return null
@@ -105,6 +112,9 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
   if (block.props !== undefined && !propsObj) {
     errors.push(`${userFacingName}: props 必须是 object`)
     return
+  }
+  if (propsObj && propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') {
+    errors.push(`${userFacingName}: framed 必须是 boolean`)
   }
 
   if (block.name !== undefined) {
@@ -289,7 +299,18 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
           return
         }
         if (!isNonEmptyString(obj.label)) errors.push(`${userFacingName}: items[${idx}].label 不能为空`)
-        if (!isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+        const hasUrl = obj.url !== undefined
+        const hasPage = obj.page !== undefined
+        if (hasUrl && hasPage) {
+          errors.push(`${userFacingName}: items[${idx}] 只能设置 url 或 page 其中一个`)
+          return
+        }
+        if (!hasUrl && !hasPage) {
+          errors.push(`${userFacingName}: items[${idx}] 必须提供 url 或 page`)
+          return
+        }
+        if (hasUrl && !isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
+        if (hasPage && !isPageSlug(obj.page)) errors.push(`${userFacingName}: items[${idx}].page 必须是 home 或合法 slug`)
       })
       if (propsObj.direction !== undefined && !['vertical', 'horizontal'].includes(String(propsObj.direction))) errors.push(`${userFacingName}: direction 仅支持 vertical/horizontal`)
       if (propsObj.type !== undefined && !['default', 'primary', 'info', 'success', 'warning', 'error'].includes(String(propsObj.type))) errors.push(`${userFacingName}: type 不支持`)
@@ -301,6 +322,35 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
         const v = Number(propsObj.gap)
         if (!Number.isFinite(v) || v < 0 || v > 32) errors.push(`${userFacingName}: gap 必须是 0~32 的数字`)
       }
+      if (propsObj.borderTitle !== undefined && typeof propsObj.borderTitle !== 'string') errors.push(`${userFacingName}: borderTitle 必须是 string`)
+      if (propsObj.borderTitleAlign !== undefined && !['left', 'center', 'right'].includes(String(propsObj.borderTitleAlign))) errors.push(`${userFacingName}: borderTitleAlign 不支持`)
+      break
+    }
+    case 'button': {
+      if (!propsObj) {
+        errors.push(`${userFacingName}: 缺少 props`)
+        break
+      }
+      if (!isNonEmptyString(propsObj.label)) errors.push(`${userFacingName}: label 不能为空`)
+
+      const hasUrl = propsObj.url !== undefined
+      const hasPage = propsObj.page !== undefined
+      if (hasUrl && hasPage) {
+        errors.push(`${userFacingName}: 只能设置 url 或 page 其中一个`)
+        break
+      }
+      if (!hasUrl && !hasPage) {
+        errors.push(`${userFacingName}: 必须提供 url 或 page`)
+        break
+      }
+      if (hasUrl && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (hasPage && !isPageSlug(propsObj.page)) errors.push(`${userFacingName}: page 必须是 home 或合法 slug`)
+
+      if (propsObj.type !== undefined && !['default', 'primary', 'info', 'success', 'warning', 'error'].includes(String(propsObj.type))) errors.push(`${userFacingName}: type 不支持`)
+      if (propsObj.variant !== undefined && !['solid', 'secondary', 'tertiary', 'quaternary', 'ghost'].includes(String(propsObj.variant))) errors.push(`${userFacingName}: variant 不支持`)
+      if (propsObj.fullWidth !== undefined && typeof propsObj.fullWidth !== 'boolean') errors.push(`${userFacingName}: fullWidth 必须是 boolean`)
+      if (propsObj.align !== undefined && !['start', 'center', 'end'].includes(String(propsObj.align))) errors.push(`${userFacingName}: align 不支持`)
+      if (propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') errors.push(`${userFacingName}: framed 必须是 boolean`)
       break
     }
     case 'image': {
@@ -312,11 +362,12 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
         const f = asObject(propsObj.imageFile)
         if (!f || typeof f.id !== 'number' || !Number.isInteger(f.id) || f.id <= 0) errors.push(`${userFacingName}: imageFile.id 必须是正整数`)
       }
-      const hasUrl = typeof propsObj.url === 'string' && propsObj.url.length > 0
       const hasFile = propsObj.imageFile !== undefined
-      if (!hasUrl && !hasFile) errors.push(`${userFacingName}: url 或 imageFile 必须提供一个`)
-      if (hasUrl && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (!hasFile) errors.push(`${userFacingName}: imageFile 必须提供`)
       if (propsObj.alt !== undefined && typeof propsObj.alt !== 'string') errors.push(`${userFacingName}: alt 必须是 string`)
+      if (propsObj.shape !== undefined && !['rounded', 'square', 'circle'].includes(String(propsObj.shape))) {
+        errors.push(`${userFacingName}: shape 不支持`)
+      }
       if (propsObj.maxWidth !== undefined) {
         const v = propsObj.maxWidth
         if (typeof v !== 'string') errors.push(`${userFacingName}: maxWidth 必须是 string`)
@@ -534,6 +585,8 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       if (propsObj.size !== undefined && !['small', 'medium'].includes(String(propsObj.size))) errors.push(`${userFacingName}: size 仅支持 small/medium`)
       if (propsObj.rounded !== undefined && typeof propsObj.rounded !== 'boolean') errors.push(`${userFacingName}: rounded 必须是 boolean`)
       if (propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') errors.push(`${userFacingName}: framed 必须是 boolean`)
+      if (propsObj.borderTitle !== undefined && typeof propsObj.borderTitle !== 'string') errors.push(`${userFacingName}: borderTitle 必须是 string`)
+      if (propsObj.borderTitleAlign !== undefined && !['left', 'center', 'right'].includes(String(propsObj.borderTitleAlign))) errors.push(`${userFacingName}: borderTitleAlign 不支持`)
       const items = propsObj.items
       if (items !== undefined) {
         if (!Array.isArray(items)) {
@@ -801,8 +854,7 @@ export function countImagesInBlocks(blocks: BlockNode[], includeHidden = false):
       }
       if (b.type === 'image') {
         const hasFile = !!propsObj.imageFile
-        const hasUrl = typeof propsObj.url === 'string' && propsObj.url.trim().length > 0
-        if (hasFile || hasUrl) count += 1
+        if (hasFile) count += 1
         continue
       }
       if (b.type === 'imageGallery') {

@@ -114,7 +114,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
   function ensureItems(block: BlockNode) {
     const propsObj = ensurePropsObject(block)
     if (!Array.isArray(propsObj.items)) propsObj.items = []
-    return propsObj.items as Array<{ label: string, url: string }>
+    return propsObj.items as Array<{ label: string, url?: string, page?: string }>
   }
 
   function ensureRichTextProps(block: BlockNode) {

@@ -8,7 +8,7 @@ import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { debounceFilter, useRefHistory } from '@vueuse/core'
 import { useMessage } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
-import { createId, deepCloneJson, diffByLines, estimateUtf8Bytes, stableStringify } from './editorHelpers'
+import { createId, deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
 import { useUserPageBlocks } from './useUserPageBlocks'
 import { useUserPagePages } from './useUserPagePages'
@@ -60,7 +60,6 @@ export function useUserPageEditor() {
   const selectedBlockIds = ref<string[]>([])
   const hoveredBlockId = ref<string | null>(null)
 
-  const diffModal = ref(false)
   const resourcesModal = ref(false)
 
   function isEmptyDraftPlaceholder(s: UserPagesSettingsV1 | null): boolean {
@@ -437,18 +436,6 @@ export function useUserPageEditor() {
   })
   const configBytesPercent = computed(() => Math.min(100, Math.round((configBytes.value / MAX_CONFIG_BYTES) * 100)))
 
-  const diffOps = computed(() => {
-    const published = loadedPublished.value
-    if (!published) return null
-    try {
-      const a = stableStringify(published)
-      const b = stableStringify(settings.value)
-      return diffByLines(a, b)
-    } catch (e) {
-      return [{ kind: 'del', text: `diff 失败: ${(e as Error).message || String(e)}` }]
-    }
-  })
-
   const fileRefs = computed(() => collectFileRefsFromSettings(settings.value))
 
   function normalizeRichTextImagesFileAndNotify() {
@@ -599,8 +586,6 @@ export function useUserPageEditor() {
     contribDefaultConfig,
     resetContribConfigToDefault,
 
-    diffModal,
-    diffOps,
     resourcesModal,
     fileRefs,
     normalizeRichTextImagesFile: normalizeRichTextImagesFileAndNotify,

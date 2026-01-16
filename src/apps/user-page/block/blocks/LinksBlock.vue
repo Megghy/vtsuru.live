@@ -5,16 +5,18 @@ import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
-const items = computed(() => {
+const propsObj = computed<Record<string, any>>(() => {
   const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
     ? (props.blockProps as any)
     : {}
-  return Array.isArray(o.items) ? o.items : []
+  return o
 })
+const items = computed(() => (Array.isArray(propsObj.value.items) ? propsObj.value.items : []))
+const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
 </script>
 
 <template>
-  <BlockCard>
+  <BlockCard :framed="framed">
     <NFlex
       justify="center"
       wrap

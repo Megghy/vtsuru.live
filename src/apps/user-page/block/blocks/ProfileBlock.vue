@@ -22,12 +22,13 @@ const model = computed(() => {
   const displayName = (typeof o.displayName === 'string' && o.displayName) ? o.displayName : props.userInfo?.name
   const bio = (typeof o.bio === 'string' && o.bio) ? o.bio : props.biliInfo?.sign
 
-  return { avatarUrl, displayName, bio }
+  const framed = typeof o.framed === 'boolean' ? o.framed : true
+  return { avatarUrl, displayName, bio, framed }
 })
 </script>
 
 <template>
-  <BlockCard :content-style="{ padding: 0 }">
+  <BlockCard :framed="model.framed" :content-style="{ padding: 0 }">
     <div class="profile-hero">
       <div class="avatar-container">
         <NAvatar

@@ -17,6 +17,7 @@ interface BlockConfig {
   title?: string
   description?: string
   items?: SupportItem[]
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -29,6 +30,7 @@ const cfg = computed<BlockConfig>(() => {
     title: typeof o.title === 'string' ? o.title : 'SUPPORT',
     description: typeof o.description === 'string' ? o.description : '',
     items: Array.isArray(o.items) ? o.items : [],
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -83,7 +85,7 @@ function getStyle(p: Platform) {
 </script>
 
 <template>
-  <BlockCard class="supporter-card" :content-style="{ padding: 0 }">
+  <BlockCard class="supporter-card" :framed="cfg.framed" :content-style="{ padding: 0 }">
     <div class="supporter-block">
       <div class="block-header">
         <div class="header-icon">

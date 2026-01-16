@@ -10,6 +10,7 @@ import {
   EllipsisHorizontalOutline,
   EyeOffOutline,
   EyeOutline,
+  LocateOutline,
   ReorderThreeOutline,
 } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
@@ -131,6 +132,32 @@ function onExpandAfterLeave(el: Element) {
   e.style.overflow = ''
   e.style.transition = ''
 }
+
+function scrollToPreviewBlock(blockId: string) {
+  const previewRoot = document.querySelector('.user-page-builder .preview-content') as HTMLElement | null
+  if (!previewRoot) {
+    editor.message.warning('预览未就绪（当前页可能不是区块模式）')
+    return
+  }
+
+  const el = previewRoot.querySelector(`[data-block-id="${blockId}"]`) as HTMLElement | null
+  if (!el) {
+    editor.message.warning('预览中未找到对应区块（可能未渲染或已被隐藏）')
+    return
+  }
+
+  const scrollbar = previewRoot.closest('.n-scrollbar') as HTMLElement | null
+  const container = (scrollbar?.querySelector?.('.n-scrollbar-container') as HTMLElement | null) ?? null
+  if (!container) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+    return
+  }
+
+  const containerRect = container.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  const targetTop = (elRect.top - containerRect.top) + container.scrollTop - (container.clientHeight / 2) + (elRect.height / 2)
+  container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -230,6 +257,18 @@ function onExpandAfterLeave(el: Element) {
                 <EyeOutline v-if="!b.hidden" />
                 <EyeOffOutline v-else />
               </NIcon>
+            </template>
+          </NButton>
+
+          <NButton
+            quaternary
+            circle
+            size="tiny"
+            title="在预览中定位"
+            @click.stop="scrollToPreviewBlock(b.id)"
+          >
+            <template #icon>
+              <NIcon><LocateOutline /></NIcon>
             </template>
           </NButton>
 

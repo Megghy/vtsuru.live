@@ -1,5 +1,5 @@
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPageBackgroundConfigV1, UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageBackgroundConfigV1, UserPageConfig, UserPagesSettingsV1, UserPageThemeConfigV1 } from '@/apps/user-page/types'
 
 export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV1) {
   const problems: string[] = []
@@ -51,8 +51,25 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
     }
   }
 
+  const validateTheme = (label: string, theme: UserPageThemeConfigV1 | undefined) => {
+    if (theme === undefined) return
+    const obj = asObject(theme)
+    if (!obj) {
+      problems.push(`${label}: theme 必须是 object`)
+      return
+    }
+    if (obj.primaryColor !== undefined && typeof obj.primaryColor !== 'string') problems.push(`${label}: theme.primaryColor 必须是 string`)
+    if (obj.textColor !== undefined && typeof obj.textColor !== 'string') problems.push(`${label}: theme.textColor 必须是 string`)
+    if (obj.backgroundColor !== undefined && typeof obj.backgroundColor !== 'string') problems.push(`${label}: theme.backgroundColor 必须是 string`)
+    if (obj.pageThemeMode !== undefined) {
+      const m = String(obj.pageThemeMode)
+      if (!(m === 'auto' || m === 'light' || m === 'dark')) problems.push(`${label}: theme.pageThemeMode 不合法（${m}）`)
+    }
+  }
+
   const validatePage = (label: string, cfg: UserPageConfig | undefined) => {
     if (!cfg) return
+    validateTheme(label, (cfg as any).theme)
     validateBackground(label, cfg.background)
     if (cfg.mode === 'block') {
       const v = validateBlockPageProject(cfg.block)
@@ -70,6 +87,7 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
     }
   }
 
+  validateTheme('settings', (settingsToValidate as any).theme)
   validateBackground('settings', settingsToValidate.background)
   validatePage('home', settingsToValidate.home)
   Object.entries(settingsToValidate.pages ?? {}).forEach(([slug, cfg]) => validatePage(`pages.${slug}`, cfg))

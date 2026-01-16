@@ -8,6 +8,7 @@ interface BlockConfig {
   text?: string
   author?: string
   align?: 'left' | 'center' | 'right'
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -21,12 +22,13 @@ const cfg = computed<BlockConfig>(() => {
     text: typeof o.text === 'string' ? o.text : '',
     author: typeof o.author === 'string' ? o.author : '',
     align,
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 </script>
 
 <template>
-  <BlockCard class="quote-card" :content-style="{ padding: 0 }">
+  <BlockCard class="quote-card" :framed="cfg.framed" :content-style="{ padding: 0 }">
     <div class="quote-bg-icon">
       <NIcon><ChatbubbleEllipsesOutline /></NIcon>
     </div>

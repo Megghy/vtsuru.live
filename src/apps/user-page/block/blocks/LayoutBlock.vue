@@ -3,6 +3,7 @@ import type { UserInfo } from '@/api/api-models'
 import type { BlockNode } from '../schema'
 import { BLOCK_COMPONENTS } from '../registry'
 import { computed } from 'vue'
+import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
   blockProps: unknown
@@ -74,6 +75,8 @@ function mapJustify(v: unknown) {
 
 function mapAlign(v: unknown) {
   switch (String(v)) {
+    case 'start':
+      return { flex: 'flex-start', grid: 'start' }
     case 'center':
       return { flex: 'center', grid: 'center' }
     case 'end':
@@ -108,6 +111,7 @@ const gridJustifyItems = computed<'start' | 'center' | 'end' | 'stretch'>(() => 
 
 const children = computed(() => asBlocks(propsObj.value.children))
 const visibleChildren = computed(() => children.value.filter(it => !it.hidden))
+const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
 const containerStyle = computed(() => ({
   '--vtsuru-layout-gap': gap.value === null ? 'var(--vtsuru-page-spacing)' : `${gap.value}px`,
   '--vtsuru-layout-columns': String(columns.value),
@@ -126,7 +130,38 @@ const blockComponents = BLOCK_COMPONENTS
 </script>
 
 <template>
+  <BlockCard v-if="framed" :framed="true" :content-style="{ padding: 0 }">
+    <div
+      class="layout"
+      :class="{
+        grid: layout === 'grid',
+        row: layout === 'row',
+        column: layout === 'column',
+        wrap: wrap && layout === 'row',
+        'align-stretch': layout === 'row' && alignKey === 'stretch',
+      }"
+      :style="containerStyle"
+    >
+      <div
+        v-for="child in visibleChildren"
+        :key="child.id"
+        class="item"
+        :class="{ highlight: !!props.highlightBlockId && props.highlightBlockId === child.id }"
+        :data-block-id="child.id"
+        :data-block-type="child.type"
+      >
+        <component
+          :is="blockComponents[child.type]"
+          :block-props="child.props"
+          :user-info="userInfo"
+          :bili-info="biliInfo"
+          v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
+        />
+      </div>
+    </div>
+  </BlockCard>
   <div
+    v-else
     class="layout"
     :class="{
       grid: layout === 'grid',

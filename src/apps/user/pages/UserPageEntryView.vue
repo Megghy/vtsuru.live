@@ -10,7 +10,6 @@ import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
-import { isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: any | undefined
@@ -88,14 +87,22 @@ const blockThemeBg = computed(() => {
   if (renderMode.value !== 'block') return null
   const v = blockValidation.value
   if (!v || !v.ok) return null
-  return resolvePageBackground(v.project.theme)
+  return resolvePageBackground(mergedBlockProject.value?.theme ?? v.project.theme)
+})
+
+const mergedBlockProject = computed(() => {
+  if (renderMode.value !== 'block') return null
+  const v = blockValidation.value
+  if (!v || !v.ok) return null
+  const globalTheme = (settings.value as any)?.theme ?? {}
+  const pageTheme = (pageConfig.value as any)?.theme ?? {}
+  const projectTheme = (v.project.theme as any) ?? {}
+  return { ...v.project, theme: { ...globalTheme, ...pageTheme, ...projectTheme } }
 })
 
 const effectiveIsDark = computed(() => {
-  const mode = (blockValidation.value && blockValidation.value.ok)
-    ? (blockValidation.value.project.theme as any)?.pageThemeMode
-    : undefined
-  return mode === 'dark' ? true : (mode === 'light' ? false : isDarkMode.value)
+  const mode = (mergedBlockProject.value?.theme as any)?.pageThemeMode
+  return mode === 'light' ? false : true
 })
 
 const contentBg = computed(() => {
@@ -155,7 +162,7 @@ const contentBgClass = computed(() => ({
             />
             <BlockPageRenderer
               v-else-if="blockValidation && blockValidation.ok"
-              :project="blockValidation.project"
+              :project="mergedBlockProject || blockValidation.project"
               :user-info="userInfo"
               :bili-info="biliInfo"
             />
@@ -219,7 +226,7 @@ const contentBgClass = computed(() => ({
 
             <BlockPageRenderer
               v-else-if="blockValidation && blockValidation.ok"
-              :project="blockValidation.project"
+              :project="mergedBlockProject || blockValidation.project"
               :user-info="userInfo"
               :bili-info="biliInfo"
             />

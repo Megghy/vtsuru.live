@@ -172,7 +172,7 @@ export function isEmptyBlock(block: BlockNode): boolean {
   if (block.type === 'divider') return isEmptyText(propsObj.text)
   if (block.type === 'footer') return isEmptyText(propsObj.text)
   if (block.type === 'embed') return isEmptyText(propsObj.url)
-  if (block.type === 'image') return isEmptyText(propsObj.url) && !propsObj.imageFile
+  if (block.type === 'image') return !propsObj.imageFile
   if (block.type === 'imageGallery') {
     const items = Array.isArray(propsObj.items) ? propsObj.items : []
     if (items.length === 0) return true
@@ -192,10 +192,18 @@ export function isEmptyBlock(block: BlockNode): boolean {
       return typeof label === 'string' && label.trim().length > 0
     }) || items.some((it) => {
       const item = asRecord(it)
+      const page = typeof item?.page === 'string' ? item.page.trim() : ''
+      if (page.length > 0) return true
       const url = typeof item?.url === 'string' ? item.url.trim() : ''
       return url.length > 0 && url !== 'https://'
     })
     return !hasAny
+  }
+  if (block.type === 'button') {
+    const label = typeof propsObj.label === 'string' ? propsObj.label.trim() : ''
+    const page = typeof propsObj.page === 'string' ? propsObj.page.trim() : ''
+    const url = typeof propsObj.url === 'string' ? propsObj.url.trim() : ''
+    return label.length === 0 && page.length === 0 && (url.length === 0 || url === 'https://')
   }
   if (block.type === 'richText') {
     const imagesFile = Array.isArray(propsObj.imagesFile) ? propsObj.imagesFile : []

@@ -36,6 +36,7 @@ interface BlockConfig {
   variant?: 'round' | 'square'
   showLabel?: boolean
   items?: SocialItem[]
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -49,6 +50,7 @@ const cfg = computed<BlockConfig>(() => {
     variant: (o.variant === 'round' || o.variant === 'square') ? o.variant : 'round',
     showLabel: typeof o.showLabel === 'boolean' ? o.showLabel : false,
     items: Array.isArray(o.items) ? o.items : [],
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -125,7 +127,7 @@ const iconSize = computed(() => {
 </script>
 
 <template>
-  <BlockCard>
+  <BlockCard :framed="cfg.framed">
     <NFlex
       justify="center"
       wrap

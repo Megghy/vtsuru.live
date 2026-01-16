@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex } from 'naive-ui'
 import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -11,6 +12,57 @@ const propsObj = computed<Record<string, any>>(() => {
 })
 
 const items = computed(() => (Array.isArray(propsObj.value.items) ? propsObj.value.items : []))
+const route = useRoute()
+const router = useRouter()
+
+function slugOk(slug: string) {
+  return /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/.test(slug)
+}
+
+function getUserName() {
+  const name = (props.userInfo as any)?.name
+  return typeof name === 'string' ? name : ''
+}
+
+function getInternalPath(slug: string) {
+  const userName = getUserName()
+  if (!userName) return null
+  if (slug === 'home') return `/@${userName}`
+  if (!slugOk(slug)) return null
+  return `/@${userName}/${slug}`
+}
+
+function isHttpsUrlString(v: unknown): v is string {
+  if (typeof v !== 'string') return false
+  try {
+    const u = new URL(v)
+    return u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+type NormalizedButtonItem = {
+  label: string
+  kind: 'external' | 'page'
+  href?: string
+  to?: string
+}
+
+const normalizedItems = computed<NormalizedButtonItem[]>(() => {
+  const list = items.value
+  return list.map((raw) => {
+    const it = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw as any : {}
+    const label = typeof it.label === 'string' ? it.label : ''
+    const page = typeof it.page === 'string' ? it.page.trim() : ''
+    if (page) {
+      const to = getInternalPath(page)
+      return { label, kind: 'page', to: to ?? route.fullPath }
+    }
+    const url = it.url
+    return { label, kind: 'external', href: isHttpsUrlString(url) ? url : 'https://' }
+  })
+})
 
 const direction = computed<'vertical' | 'horizontal'>(() => (propsObj.value.direction === 'horizontal' ? 'horizontal' : 'vertical'))
 const gap = computed(() => {
@@ -51,12 +103,22 @@ const framed = computed(() => {
   return false
 })
 
+const borderTitle = computed(() => {
+  const v = propsObj.value.borderTitle
+  return typeof v === 'string' ? v : ''
+})
+const borderTitleAlign = computed<'left' | 'center' | 'right'>(() => {
+  const v = propsObj.value.borderTitleAlign
+  if (v === 'center' || v === 'right' || v === 'left') return v
+  return 'left'
+})
+
 const flexJustify = computed<'start' | 'center' | 'end'>(() => (direction.value === 'horizontal' ? align.value : 'start'))
 const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value === 'vertical' ? align.value : 'start'))
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :border-title="framed ? borderTitle : ''" :border-title-align="borderTitleAlign">
     <NFlex
       :vertical="direction === 'vertical'"
       :wrap="direction === 'horizontal'"
@@ -65,23 +127,37 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
       class="buttons-container"
       :style="{ gap: `${gap}px` }"
     >
-      <NButton
-        v-for="(it, idx) in items"
-        :key="idx"
-        tag="a"
-        :type="buttonType as any"
-        :secondary="variant === 'secondary'"
-        :tertiary="variant === 'tertiary'"
-        :quaternary="variant === 'quaternary'"
-        :ghost="variant === 'ghost'"
-        target="_blank"
-        rel="noopener noreferrer"
-        :href="it.url"
-        class="vtsuru-btn"
-        :style="fullWidth ? 'width: 100%' : undefined"
-      >
-        {{ it.label }}
-      </NButton>
+      <template v-for="(it, idx) in normalizedItems" :key="idx">
+        <NButton
+          v-if="it.kind === 'external'"
+          tag="a"
+          :type="buttonType as any"
+          :secondary="variant === 'secondary'"
+          :tertiary="variant === 'tertiary'"
+          :quaternary="variant === 'quaternary'"
+          :ghost="variant === 'ghost'"
+          target="_blank"
+          rel="noopener noreferrer"
+          :href="it.href"
+          class="vtsuru-btn"
+          :style="fullWidth ? 'width: 100%' : undefined"
+        >
+          {{ it.label }}
+        </NButton>
+        <NButton
+          v-else
+          :type="buttonType as any"
+          :secondary="variant === 'secondary'"
+          :tertiary="variant === 'tertiary'"
+          :quaternary="variant === 'quaternary'"
+          :ghost="variant === 'ghost'"
+          class="vtsuru-btn"
+          :style="fullWidth ? 'width: 100%' : undefined"
+          @click="router.push(it.to || route.fullPath)"
+        >
+          {{ it.label }}
+        </NButton>
+      </template>
     </NFlex>
   </BlockCard>
 </template>
