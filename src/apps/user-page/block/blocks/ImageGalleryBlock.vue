@@ -19,6 +19,8 @@ const model = computed(() => {
     ? (props.blockProps as any)
     : {}
 
+  const framed = typeof o.framed === 'boolean' ? o.framed : true
+
   const layout: GalleryLayout = (o.layout === 'masonry' || o.layout === 'carousel') ? o.layout : 'grid'
   const columns = (Number.isFinite(Number(o.columns)) && Number(o.columns) >= 1) ? Math.min(12, Math.max(1, Number(o.columns))) : 3
   const gap = (Number.isFinite(Number(o.gap)) && Number(o.gap) >= 0) ? Math.min(80, Math.max(0, Number(o.gap))) : 12
@@ -59,6 +61,7 @@ const model = computed(() => {
     .filter(it => !!it.src)
 
   return {
+    framed,
     layout,
     columns,
     gap,
@@ -108,7 +111,7 @@ const imgStyle = computed(() => ({
 </script>
 
 <template>
-  <BlockCard>
+  <BlockCard :framed="model.framed">
     <div class="root" :style="containerStyle">
       <NCarousel
         v-if="model.layout === 'carousel'"

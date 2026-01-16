@@ -11,6 +11,7 @@ interface BlockConfig {
   buttonText?: string
   embed?: boolean
   height?: number
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -27,6 +28,7 @@ const cfg = computed<BlockConfig>(() => {
     buttonText: typeof o.buttonText === 'string' ? o.buttonText : '前去留言',
     embed: typeof o.embed === 'boolean' ? o.embed : false,
     height: Number.isFinite(height) ? Math.min(1200, Math.max(200, height)) : 520,
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -35,7 +37,7 @@ const canEmbed = computed(() => cfg.value.embed && url.value.startsWith('https:/
 </script>
 
 <template>
-  <BlockCard class="feedback-card">
+  <BlockCard class="feedback-card" :framed="cfg.framed">
     <template #header>
       <NFlex align="center" style="gap: 8px">
         <NIcon size="18" depth="2">

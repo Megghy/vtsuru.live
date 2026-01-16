@@ -17,6 +17,7 @@ interface BlockConfig {
   showArea?: boolean
   showCover?: boolean
   showButtons?: boolean
+  framed?: boolean
 }
 
 const props = defineProps<{
@@ -36,6 +37,7 @@ const cfg = computed<BlockConfig>(() => {
     showArea: typeof o.showArea === 'boolean' ? o.showArea : true,
     showCover: typeof o.showCover === 'boolean' ? o.showCover : false,
     showButtons: typeof o.showButtons === 'boolean' ? o.showButtons : true,
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -85,7 +87,7 @@ const liveDurationText = computed(() => {
 </script>
 
 <template>
-  <BlockCard :content-style="{ padding: 0 }">
+  <BlockCard :framed="cfg.framed" :content-style="{ padding: 0 }">
     <div class="live-card">
       <template v-if="cfg.variant === 'compact'">
         <div class="live-compact">

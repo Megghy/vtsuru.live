@@ -11,6 +11,7 @@ interface BlockConfig {
   direction?: 'left' | 'right'
   durationSec?: number
   pauseOnHover?: boolean
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -25,6 +26,7 @@ const cfg = computed<BlockConfig>(() => {
     direction: (o.direction === 'left' || o.direction === 'right') ? o.direction : 'left',
     durationSec: Number.isFinite(durationSec) ? Math.min(120, Math.max(4, durationSec)) : 18,
     pauseOnHover: typeof o.pauseOnHover === 'boolean' ? o.pauseOnHover : true,
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -56,7 +58,7 @@ watch(displayText, async () => {
 </script>
 
 <template>
-  <BlockCard>
+  <BlockCard :framed="cfg.framed">
     <div class="row">
       <NIcon size="18" depth="2" class="icon">
         <MegaphoneOutline />

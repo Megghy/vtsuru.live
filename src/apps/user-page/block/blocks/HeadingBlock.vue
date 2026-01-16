@@ -12,12 +12,13 @@ const model = computed(() => {
   const level = Number(o.level ?? 2)
   const text = String(o.text ?? '')
   const fontSize = level === 1 ? '28px' : level === 2 ? '22px' : '18px'
-  return { level, text, fontSize }
+  const framed = typeof o.framed === 'boolean' ? o.framed : true
+  return { level, text, fontSize, framed }
 })
 </script>
 
 <template>
-  <BlockCard>
+  <BlockCard :framed="model.framed">
     <div class="heading-wrapper" :class="`level-${model.level}`">
       <NText
         strong

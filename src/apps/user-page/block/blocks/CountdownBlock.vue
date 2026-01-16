@@ -10,6 +10,7 @@ interface BlockConfig {
   style?: 'cards' | 'inline'
   showSeconds?: boolean
   doneText?: string
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -24,6 +25,7 @@ const cfg = computed<BlockConfig>(() => {
     style: (o.style === 'cards' || o.style === 'inline') ? o.style : 'cards',
     showSeconds: typeof o.showSeconds === 'boolean' ? o.showSeconds : true,
     doneText: typeof o.doneText === 'string' ? o.doneText : '已到达',
+    framed: typeof o.framed === 'boolean' ? o.framed : false,
   }
 })
 
@@ -70,7 +72,7 @@ const breakdown = computed(() => {
 </script>
 
 <template>
-  <BlockCard class="countdown-card bold-mode" :content-style="{ padding: 0 }">
+  <BlockCard class="countdown-card bold-mode" :framed="cfg.framed" :content-style="{ padding: 0 }">
     <div class="countdown-inner">
       <!-- 集成式标题区 -->
       <div class="cd-header-integrated">
@@ -165,7 +167,6 @@ const breakdown = computed(() => {
 .countdown-card.bold-mode {
   border-radius: var(--vtsuru-page-radius);
   background: linear-gradient(180deg, var(--n-card-color) 0%, rgba(127,127,127,0.02) 100%);
-  border: 1px solid var(--n-divider-color);
   overflow: hidden;
   position: relative;
 }

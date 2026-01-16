@@ -13,6 +13,7 @@ interface BlockConfig {
   accordion?: boolean
   items?: FAQItem[]
   title?: string
+  framed?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -25,6 +26,7 @@ const cfg = computed<BlockConfig>(() => {
     accordion: typeof o.accordion === 'boolean' ? o.accordion : false,
     items: Array.isArray(o.items) ? o.items : [],
     title: typeof o.title === 'string' ? o.title : '常见问题',
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -40,7 +42,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <BlockCard class="faq-card">
+  <BlockCard class="faq-card" :framed="cfg.framed">
     <template #header>
       <NFlex align="center" style="gap: 8px">
         <NIcon size="18" depth="2">

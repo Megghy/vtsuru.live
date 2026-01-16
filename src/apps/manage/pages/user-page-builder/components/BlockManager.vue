@@ -294,7 +294,7 @@ const addBlockOptions = computed(() => {
     { key: 'live', label: '直播与日程', types: ['liveStatus', 'streamSchedule'] },
     { key: 'profile', label: '资料与品牌', types: ['profile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'] },
     { key: 'content', label: '内容与媒体', types: ['videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'] },
-    { key: 'social', label: '社交与运营', types: ['socialLinks', 'links', 'buttons', 'supporter', 'feedback'] },
+    { key: 'social', label: '社交与运营', types: ['socialLinks', 'links', 'button', 'buttons', 'supporter', 'feedback'] },
     { key: 'base', label: '布局与基础', types: ['layout', 'heading', 'text', 'richText', 'alert', 'marquee', 'countdown', 'divider', 'spacer', 'footer'] },
   ]
 

@@ -68,7 +68,8 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
             }).length
           }
 
-          if (b.type === 'image' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://')) externalLinkCount++
+          if (b.type === 'button' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://')) externalLinkCount++
+
           if (b.type === 'profile' && typeof propsObj.avatarUrl === 'string' && propsObj.avatarUrl.startsWith('https://')) externalLinkCount++
         })
       }

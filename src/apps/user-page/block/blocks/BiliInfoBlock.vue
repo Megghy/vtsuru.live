@@ -14,6 +14,7 @@ interface BlockConfig {
   showButtons?: boolean
   showLiveRoom?: boolean
   spaceUrl?: string
+  framed?: boolean
 }
 
 const props = defineProps<{
@@ -36,6 +37,7 @@ const cfg = computed<BlockConfig>(() => {
     showButtons: typeof o.showButtons === 'boolean' ? o.showButtons : true,
     showLiveRoom: typeof o.showLiveRoom === 'boolean' ? o.showLiveRoom : true,
     spaceUrl: typeof o.spaceUrl === 'string' ? o.spaceUrl : '',
+    framed: typeof o.framed === 'boolean' ? o.framed : true,
   }
 })
 
@@ -62,7 +64,7 @@ const model = computed(() => {
 </script>
 
 <template>
-  <BlockCard :content-style="{ padding: 0 }">
+  <BlockCard :framed="cfg.framed" :content-style="{ padding: 0 }">
     <div class="bili-card">
       <template v-if="cfg.variant === 'compact'">
         <div class="bili-compact">
