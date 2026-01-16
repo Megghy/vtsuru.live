@@ -206,7 +206,7 @@ const templates = ref({
         updateTime: Date.now(),
       },
     ] as SongsInfo[],
-    Selected: accountInfo.value?.settings.songListTemplate ?? '',
+    Selected: accountInfo.value?.settings.songListTemplate ?? 'traditional',
   },
 } as { [type: string]: TemplateDefineTypes })
 

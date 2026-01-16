@@ -10,7 +10,7 @@ import {
   VehicleShip24Filled,
   VideoAdd20Filled,
 } from '@vicons/fluent'
-import { AnalyticsSharp, Calendar, Chatbox, ListCircle, MusicalNote } from '@vicons/ionicons5'
+import { AnalyticsSharp, BrowsersOutline, Calendar, Chatbox, ListCircle, MusicalNote, OpenOutline } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
 import type { IOptions, RecursivePartial } from '@tsparticles/engine'
 import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip, useThemeVars } from 'naive-ui'
@@ -49,6 +49,13 @@ const functions = [
     desc: '提供多种样式的日程表',
     icon: Calendar,
     route: 'manage-schedule',
+  },
+  {
+    name: '自定义页面',
+    desc: '用区块编辑器搭建个人主页/投稿页/赞助页等，自定义布局与样式',
+    icon: BrowsersOutline,
+    route: 'manage-userPageBuilder',
+    badge: 'NEW',
   },
   {
     name: '歌单',
@@ -125,13 +132,54 @@ const functions = [
 ]
 interface IndexDataType {
   userCount: number
-  streamers: { name: string, uname: string, avatar: string, uid: number, roomId: number }[]
+  streamers: {
+    name: string
+    uname: string
+    avatar: string
+    uid: number
+    roomId: number
+    title: string
+    cover: string
+    isStreaming: boolean
+    parentArea: string
+    area: string
+    liveStartedAt: number
+  }[]
 }
 
 const indexData = ref<IndexDataType>()
 
-const glassBg = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.45)' : 'rgba(255, 255, 255, 0.52)'))
-const glassBgSoft = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.34)' : 'rgba(255, 255, 255, 0.38)'))
+function formatDurationSeconds(totalSeconds: number) {
+  const s = Math.max(0, Math.floor(totalSeconds))
+  const hh = Math.floor(s / 3600)
+  const mm = Math.floor((s % 3600) / 60)
+  const ss = s % 60
+  if (hh > 0) return `${hh}:${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`
+  return `${mm}:${ss.toString().padStart(2, '0')}`
+}
+
+function getRoomSubline(room: IndexDataType['streamers'][number]) {
+  const area = [room.parentArea, room.area].filter(Boolean).join(' · ')
+  if (!room.isStreaming || !room.liveStartedAt) return area
+  const duration = formatDurationSeconds(Date.now() / 1000 - room.liveStartedAt)
+  return area ? `${area} · ${duration}` : duration
+}
+
+function getRoomCoverSrc(room: IndexDataType['streamers'][number]) {
+  return room.cover || room.avatar || ''
+}
+
+const roomsRowCapacity = computed(() => {
+  const containerWidth = Math.min(width.value * 0.9, 1400)
+  const gap = 12
+  const cardWidth = width.value <= 480 ? 180 : (width.value <= 768 ? 200 : 220)
+  return Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)))
+})
+
+const visibleRooms = computed(() => indexData.value?.streamers?.slice(0, roomsRowCapacity.value) ?? [])
+
+const glassBg = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.22)' : 'rgba(255, 255, 255, 0.42)'))
+const glassBgSoft = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.14)' : 'rgba(255, 255, 255, 0.30)'))
 const indexGlassVars = computed(() => ({
   '--index-glass-bg': glassBg.value,
   '--index-glass-bg-soft': glassBgSoft.value,
@@ -140,6 +188,10 @@ const indexGlassVars = computed(() => ({
 
 const textColor = computed(() => themeVars.value.textColor1)
 const textColorSecondary = computed(() => themeVars.value.textColor2)
+
+const featureIconColor = computed(() => (isDarkMode.value
+  ? 'rgba(226, 232, 240, 0.9)'
+  : 'rgba(15, 23, 42, 0.82)'))
 
 const gradientColors = computed(() => ({
   from: themeVars.value.primaryColor,
@@ -215,8 +267,8 @@ function handleFunctionClick(item: typeof functions[0]) {
 
 const particlesOptions = computed<RecursivePartial<IOptions>>(() => {
   const isDark = isDarkMode.value
-  const dot = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(9, 9, 11, 0.14)'
-  const link = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(9, 9, 11, 0.08)'
+  const dot = isDark ? 'rgba(255, 255, 255, 0.36)' : 'rgba(9, 9, 11, 0.22)'
+  const link = isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(9, 9, 11, 0.12)'
   const accents = isDark
     ? ['rgba(96, 165, 250, 0.22)', 'rgba(192, 132, 252, 0.18)', 'rgba(45, 212, 191, 0.18)']
     : ['rgba(59, 130, 246, 0.18)', 'rgba(168, 85, 247, 0.14)', 'rgba(20, 184, 166, 0.14)']
@@ -230,9 +282,9 @@ const particlesOptions = computed<RecursivePartial<IOptions>>(() => {
       number: { value: 42, density: { enable: true } },
       color: { value: [dot, ...accents] },
       shape: { type: 'circle' },
-      opacity: { value: { min: 0.08, max: 0.22 } },
+      opacity: { value: { min: 0.16, max: 0.36 } },
       size: { value: { min: 1, max: 2 } },
-      links: { enable: true, distance: 140, color: link, opacity: 0.18, width: 1 },
+      links: { enable: true, distance: 140, color: link, opacity: 0.26, width: 1 },
       move: { enable: true, speed: 0.6, direction: 'none', outModes: { default: 'out' } },
     },
     interactivity: {
@@ -427,12 +479,17 @@ onMounted(async () => {
                   <div class="icon-wrapper">
                     <NIcon
                       :component="item.icon" size="24"
-                      :color="iconColors[item.icon.name as keyof typeof iconColors] || textColor"
+                      :color="featureIconColor"
                     />
                   </div>
-                  <NText :style="{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '12px', color: textColor }">
-                    {{ item.name }}
-                  </NText>
+                  <NFlex align="center" :size="8" style="margin-left: 12px;">
+                    <NText :style="{ fontSize: '1.1rem', fontWeight: 500, color: textColor }">
+                      {{ item.name }}
+                    </NText>
+                    <span v-if="(item as any).badge" class="feature-badge-new">
+                      {{ (item as any).badge }}
+                    </span>
+                  </NFlex>
                 </NFlex>
                 <NText :style="{ lineHeight: 1.6, color: textColorSecondary }">
                   {{ item.desc }}
@@ -440,6 +497,71 @@ onMounted(async () => {
               </NFlex>
             </NCard>
           </NFlex>
+        </NFlex>
+      </NCard>
+
+      <!-- 自定义页面功能介绍 -->
+      <NCard
+        :style="{
+          width: '90vw',
+          maxWidth: '1400px',
+          marginBottom: '20px',
+          borderRadius: borderRadius.xlarge,
+        }" class="glass-card"
+      >
+        <NFlex vertical>
+          <NFlex justify="center" align="center" style="margin-bottom: 30px;">
+            <div class="section-header">
+              <NText class="section-title">
+                自定义页面（区块编辑器）
+              </NText>
+              <div class="section-subtitle">
+                <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
+                  用区块搭建个人主页/投稿页/赞助页等，自定义布局与样式
+                </NText>
+              </div>
+            </div>
+          </NFlex>
+
+          <div class="userpage-intro-layout">
+            <div class="userpage-intro-copy">
+              <NText :style="{ color: textColor, fontSize: '1rem', fontWeight: 500 }">
+                像搭积木一样拼页面
+              </NText>
+              <div style="height: 8px;" />
+              <NText :style="{ color: textColorSecondary, lineHeight: 1.7 }">
+                支持分组与布局（横向/纵向/拉伸），并提供边框、背景、间距等常用样式开关；编辑区与预览区实时同步，方便调试。
+              </NText>
+              <div style="height: 12px;" />
+              <div class="userpage-intro-list">
+                <div class="userpage-intro-li">
+                  - 包括但不仅限于: 个人主页 / 投稿页 / 赞助页 / 图集展示 / 视频展示...
+                </div>
+                <div class="userpage-intro-li">
+                  - 支持：区块组合、拖拽排序、组件级样式与预览
+                </div>
+              </div>
+              <div style="height: 14px;" />
+              <NFlex :wrap="true" justify="start" style="gap: 10px;">
+                <NButton type="primary" :style="{ borderRadius: borderRadius.medium }" @click="$router.push({ name: 'manage-userPageBuilder' })">
+                  打开编辑器
+                </NButton>
+                <NButton secondary :style="{ borderRadius: borderRadius.medium }" @click="$router.push('/@Megghy')">
+                  查看示例
+                </NButton>
+              </NFlex>
+            </div>
+
+            <div class="userpage-intro-media">
+              <div class="userpage-intro-image">
+                <img
+                  src="https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png"
+                  referrerpolicy="no-referrer"
+                  alt="自定义页面"
+                >
+              </div>
+            </div>
+          </div>
         </NFlex>
       </NCard>
 
@@ -456,7 +578,7 @@ onMounted(async () => {
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
             <div class="section-header">
               <NText class="section-title">
-                💻 客户端功能
+                客户端功能
               </NText>
               <div class="section-subtitle">
                 <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
@@ -542,7 +664,7 @@ onMounted(async () => {
         </NFlex>
       </NCard>
 
-      <!-- 使用本站的主播部分 -->
+      <!-- 直播间列表 -->
       <NCard
         :style="{
           width: '90vw',
@@ -555,40 +677,84 @@ onMounted(async () => {
           <NFlex justify="center" align="center" style="margin-bottom: 30px;">
             <div class="section-header">
               <NText class="section-title">
-                👥 正在使用本站的主播们
+                正在使用本站的主播们
                 <NTooltip>
                   <template #trigger>
                     <NIcon :component="Info24Filled" :color="textColor" size="16" style="margin-left: 8px;" />
                   </template>
-                  随机展示不分先后, 仅粉丝数大于500的主播
+                  随机展示不分先后, 仅粉丝数大于500的主播；展示其直播间信息与开播状态
                 </NTooltip>
               </NText>
               <div class="section-subtitle">
                 <NText :style="{ color: textColorSecondary, fontSize: '0.9rem' }">
-                  感谢信任与支持
+                  感谢支持 🙂
                 </NText>
               </div>
             </div>
           </NFlex>
 
           <div v-if="indexData" class="streamers-section">
-            <!-- 主播卡片网格 -->
-            <div class="streamers-grid-modern">
+            <!-- 直播间 mini 卡片 -->
+            <div class="rooms-grid-mini">
               <div
-                v-for="streamer in indexData?.streamers" :key="streamer.name" class="streamer-card-modern"
-                @click="$router.push(`/@${streamer.name}`)"
+                v-for="room in visibleRooms" :key="room.roomId" class="room-mini-card"
+                :class="{ live: room.isStreaming }"
+                @click="$router.push(`/@${room.name}`)"
               >
-                <div class="streamer-avatar-wrapper">
-                  <img :src="`${streamer.avatar}@96w`" referrerpolicy="no-referrer" alt="主播头像">
-                </div>
-                <NTooltip :disabled="(streamer.uname || streamer.name).length <= 7">
-                  <template #trigger>
-                    <div class="streamer-name">
-                      {{ streamer.uname || streamer.name }}
+                <div class="room-mini-cover">
+                  <img
+                    v-if="getRoomCoverSrc(room)"
+                    class="room-mini-cover-img"
+                    :src="getRoomCoverSrc(room)"
+                    referrerpolicy="no-referrer"
+                    alt=""
+                  >
+                  <div class="room-mini-cover__mask" />
+                  <div class="room-mini-content">
+                    <div class="room-mini-top">
+                      <div class="room-mini-header">
+                        <img
+                          class="room-mini-avatar"
+                          :src="`${room.avatar}@96w`"
+                          referrerpolicy="no-referrer"
+                          alt="主播头像"
+                        >
+                        <div class="room-mini-meta">
+                          <div class="room-mini-name" :title="room.uname || room.name">
+                            {{ room.uname || room.name }}
+                          </div>
+                          <div class="room-mini-status" :class="{ live: room.isStreaming }">
+                            {{ room.isStreaming ? 'LIVE' : 'OFFLINE' }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="room-mini-actions">
+                        <a
+                          class="room-mini-btn"
+                          :href="`https://live.bilibili.com/${room.roomId}`"
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label="打开直播间"
+                          title="打开直播间"
+                          @click.stop
+                        >
+                          <NIcon :component="OpenOutline" size="16" />
+                        </a>
+                      </div>
                     </div>
-                  </template>
-                  {{ streamer.uname || streamer.name }}
-                </NTooltip>
+                    <div class="room-mini-spacer" />
+                    <div class="room-mini-bottom">
+                      <div class="room-mini-bottom__left">
+                        <div class="room-mini-title" :title="room.title">
+                          {{ room.title || '（暂无标题）' }}
+                        </div>
+                        <div class="room-mini-sub" :title="getRoomSubline(room)">
+                          {{ getRoomSubline(room) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -602,35 +768,27 @@ onMounted(async () => {
                     <div class="dot" />
                   </div>
                   <NText :style="{ color: textColor, fontSize: '0.9rem', fontWeight: 500 }">
-                    还有更多主播正在使用
+                    还有更多...
                   </NText>
                 </div>
 
-                <NCard
-                  :style="{
-                    borderRadius: borderRadius.medium,
-                    padding: '12px 20px',
-                    maxWidth: '400px',
-                  }" size="small" class="glass-card-soft"
-                >
-                  <NFlex align="center" justify="center" :size="8">
-                    <NIcon :component="Info24Filled" size="14" :color="textColorSecondary" />
-                    <NText :style="{ color: textColorSecondary, fontSize: '0.8rem', textAlign: 'center' }">
-                      不想被展示？前往
-                      <NButton
-                        text size="tiny" :style="{
-                          color: textColor,
-                          fontSize: '0.8rem',
-                          padding: '0 4px',
-                          textDecoration: 'underline',
-                        }" @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
-                      >
-                        设置页面
-                      </NButton>
-                      关闭展示
-                    </NText>
-                  </NFlex>
-                </NCard>
+                <NFlex align="center" justify="center" :size="8">
+                  <NIcon :component="Info24Filled" size="14" :color="textColorSecondary" />
+                  <NText :style="{ color: textColorSecondary, fontSize: '0.8rem', textAlign: 'center' }">
+                    不想被展示？前往
+                    <NButton
+                      text size="tiny" :style="{
+                        color: textColor,
+                        fontSize: '0.8rem',
+                        padding: '0 4px',
+                        textDecoration: 'underline',
+                      }" @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
+                    >
+                      设置页面 (渲染模式-传统-允许展示在主页)
+                    </NButton>
+                    关闭展示
+                  </NText>
+                </NFlex>
               </NFlex>
             </div>
           </div>
@@ -666,28 +824,34 @@ onMounted(async () => {
 :deep(#tsparticles)
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: 1;
     pointer-events: none;
 
 :deep(#tsparticles canvas)
     width: 100% !important;
     height: 100% !important;
 
+:deep(.main-container .n-card)
+    background-color: var(--index-glass-bg-soft) !important;
+    border: 1px solid var(--index-glass-border) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
 :deep(.glass-card.n-card)
     background-color: var(--index-glass-bg) !important;
     border: 1px solid var(--index-glass-border) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
 :deep(.glass-card-soft.n-card)
     background-color: var(--index-glass-bg-soft) !important;
     border: 1px solid var(--index-glass-border) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
 .main-container
     position: relative;
-    z-index: 1;
+    z-index: 2;
     padding-top: 30px;
     padding-bottom: 30px;
 
@@ -696,6 +860,18 @@ onMounted(async () => {
     overflow: hidden;
 
 .hero-icon
+    animation: logo-float 6s ease-in-out infinite;
+    will-change: transform;
+
+@media (prefers-reduced-motion: reduce)
+    .hero-icon
+        animation: none;
+
+@keyframes logo-float
+    0%, 100%
+        transform: translateY(0);
+    50%
+        transform: translateY(-8px);
 
 .section-title
     font-size: 1.2rem;
@@ -727,6 +903,57 @@ onMounted(async () => {
 .section-subtitle
     margin-top: 8px;
 
+.userpage-intro-layout
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 18px;
+    width: 100%;
+
+.userpage-intro-copy
+    flex: 1 1 360px;
+    max-width: 640px;
+
+.userpage-intro-list
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+.userpage-intro-li
+    color: var(--n-text-color-2);
+    font-size: 0.92rem;
+    line-height: 1.5;
+
+.userpage-intro-media
+    flex: 0 1 520px;
+    width: 100%;
+    max-width: 460px;
+
+.userpage-intro-image
+    width: 100%;
+    height: 220px;
+    border-radius: 14px;
+    border: 1px solid rgba(127, 127, 127, 0.45);
+    background: rgba(127, 127, 127, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(127, 127, 127, 0.85);
+    user-select: none;
+    overflow: hidden;
+
+.userpage-intro-image img
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+
+:global(.dark) .userpage-intro-image
+    border: 1px dashed rgba(200, 200, 200, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(220, 220, 220, 0.75);
+
 .icon-wrapper
     display: flex;
     align-items: center;
@@ -742,66 +969,260 @@ onMounted(async () => {
 :global(.dark) .icon-wrapper
     background: rgba(9, 9, 11, 0.24);
 
+.feature-badge-new
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding: 0 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--index-glass-border);
+    background: rgba(255, 255, 255, 0.26);
+    color: rgba(9, 9, 11, 0.78);
+
+:global(.dark) .feature-badge-new
+    background: rgba(9, 9, 11, 0.35);
+    color: rgba(255, 255, 255, 0.86);
+
 .stats-item
     padding: 8px 16px;
 
-/* 现代化主播展示区域 */
+/* 直播间展示区域 */
 .streamers-section
     width: 100%;
     margin: 0 auto;
 
-.streamers-grid-modern
+.rooms-grid-mini
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
     margin: 0 auto;
-    padding: 0 4px;
+    padding: 0 6px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
 
-.streamer-card-modern
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 8px;
-    border: 1px solid rgba(66, 66, 61, 0.5);
-    border-radius: var(--n-border-radius);
+.room-mini-card
+    width: 220px;
+    flex: 0 0 auto;
+    border-radius: 14px;
+    border: 1px solid var(--index-glass-border);
+    overflow: hidden;
     cursor: pointer;
-    min-width: 85px;
-    max-width: 95px;
+    background: rgba(255, 255, 255, 0.28);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 1px 2px rgba(9, 9, 11, 0.08);
+    transition: transform 140ms var(--n-bezier), box-shadow 140ms var(--n-bezier), border-color 140ms var(--n-bezier);
 
-:global(.dark) .streamer-card-modern
+:global(.dark) .room-mini-card
     background: rgba(9, 9, 11, 0.26);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 
-.streamer-avatar-wrapper
+.room-mini-card.live
+    border-color: rgba(16, 185, 129, 0.32);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.10), 0 1px 2px rgba(9, 9, 11, 0.08);
+    animation: live-card-breathe 3.2s ease-in-out infinite;
+
+:global(.dark) .room-mini-card.live
+    border-color: rgba(16, 185, 129, 0.28);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.10), 0 1px 2px rgba(0, 0, 0, 0.35);
+
+.room-mini-card:hover
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(9, 9, 11, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+
+:global(.dark) .room-mini-card:hover
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.46);
+
+.room-mini-cover
     position: relative;
-    width: 50px;
-    height: 50px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: rgba(127, 127, 127, 0.10);
+
+.room-mini-cover-img
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    filter: blur(2px) saturate(1.05);
+    transform: scale(1.02);
+
+.room-mini-cover__mask
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, rgba(9, 9, 11, 0.28) 0%, rgba(9, 9, 11, 0.56) 62%, rgba(9, 9, 11, 0.76) 100%);
+
+.room-mini-content
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+
+.room-mini-top
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+
+.room-mini-header
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+
+.room-mini-avatar
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.12);
     flex-shrink: 0;
 
-    img
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 1px solid var(--n-border-color);
-        object-fit: cover;
-        display: block;
+.room-mini-meta
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 
-.streamer-name
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--n-text-color);
-    text-align: center;
-    line-height: 1.3;
-    width: 100%;
+.room-mini-name
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 0 4px;
+
+.room-mini-status
+    position: relative;
+    margin-top: 4px;
+    width: fit-content;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.12);
+
+.room-mini-status.live
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.22);
+    padding-left: 16px;
+
+.room-mini-status.live::before
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    transform: translateY(-50%);
+    background: rgba(16, 185, 129, 0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+    animation: live-dot-pulse 1.6s ease-out infinite;
+
+@media (prefers-reduced-motion: reduce)
+    .room-mini-card.live
+        animation: none;
+    .room-mini-status.live::before
+        animation: none;
+
+@keyframes live-dot-pulse
+    0%
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+        opacity: 0.95;
+    45%
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.20);
+        opacity: 0.95;
+    100%
+        box-shadow: 0 0 0 12px rgba(16, 185, 129, 0.0);
+        opacity: 0.75;
+
+@keyframes live-card-breathe
+    0%, 100%
+        box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.10), 0 1px 2px rgba(9, 9, 11, 0.08);
+    50%
+        box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.16), 0 10px 24px rgba(16, 185, 129, 0.08);
+
+.room-mini-spacer
+    flex: 1 1 auto;
+    min-height: 8px;
+
+.room-mini-bottom
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+
+.room-mini-bottom__left
+    min-width: 0;
+    flex: 1 1 auto;
+
+.room-mini-title
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.86rem;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+.room-mini-sub
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.78);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+.room-mini-actions
+    display: flex;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+
+.room-mini-btn
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(9, 9, 11, 0.22);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 140ms var(--n-bezier), border-color 140ms var(--n-bezier), transform 140ms var(--n-bezier);
+
+.room-mini-btn:hover
+    background: rgba(9, 9, 11, 0.32);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
 
 .streamers-footer
     margin-top: 24px;
@@ -825,30 +1246,19 @@ onMounted(async () => {
 
 /* 响应式优化 */
 @media (max-width: 768px)
-    .streamers-grid-modern
-        gap: 8px;
-        padding: 0 4px;
-
-    .streamer-card-modern
-        min-width: 80px;
-        max-width: 90px;
-        padding: 8px 6px;
+    .rooms-grid-mini
+        gap: 10px;
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+        mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+    .room-mini-card
+        width: 200px;
 
 @media (max-width: 480px)
-    .streamers-grid-modern
-        gap: 6px;
-        padding: 0 4px;
-
-    .streamer-card-modern
-        min-width: 75px;
-        max-width: 85px;
-        padding: 8px 6px;
-
-    .streamer-avatar-wrapper
-        width: 45px;
-        height: 45px;
-
-    .streamer-name
-        font-size: 0.8rem;
+    .rooms-grid-mini
+        gap: 10px;
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+        mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+    .room-mini-card
+        width: 180px;
 
 </style>
