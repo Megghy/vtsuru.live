@@ -66,6 +66,9 @@ export default antfu(
       'ts/no-use-before-define': 'off',
       '@typescript-eslint/no-use-before-define': 'off',
 
+      // import 规则
+      'import/consistent-type-specifier-style': 'off',
+
       // 通用规则
       'no-console': 'off',
       'unused-imports/no-unused-vars': 'warn',

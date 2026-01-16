@@ -57,7 +57,8 @@ const selectedTemplateConfig = computed(() => {
 
 const selectedTemplate = computed(() => {
   const type = componentType.value
-  return type ? SongListTemplateMap[type] : SongListTemplateMap['']
+  if (type && SongListTemplateMap[type]) return SongListTemplateMap[type]
+  return SongListTemplateMap['traditional']
 })
 
 const currentConfig = ref({}) // 当前配置

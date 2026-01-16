@@ -1,8 +1,49 @@
-import type { VNode } from 'vue'
+import { h, type VNode } from 'vue'
+import { useStorage } from '@vueuse/core'
 import { NButton, NImage } from 'naive-ui'
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 
 export const updateNotes: updateNoteType[] = [
+  {
+    ver: 10,
+    date: '2026.1.16',
+    items: [
+      {
+        type: 'new',
+        title: '自定义页面（区块编辑器）上线',
+        content: [
+          [
+            '现在可以通过「自定义页面」用区块搭建你的页面内容：支持布局、分组、样式开关与实时预览',
+          ],
+          [
+            '现代化, 高自由度, 简单易用的页面搭建工具\r\n',
+            '可以用来完全自定义地搭建页面内容, 包括但不仅限于: 个人介绍, 图集展示, 投稿页, 赞助页等等\r\n\r\n',
+            '左侧可以添加新的页面, 右侧可以添加区块, 可以拖拽调整顺序, 拖到一起可以合并成组(布局), 点击区块可以调整参数\r\n',
+            '如果有更多的区块建议可以提出, 后续会持续更新\r\n',
+            () => h(NImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png', width: 300 }),
+          ],
+          [
+            '入口：',
+            () => h(NButton, {
+              text: true,
+              tag: 'a',
+              href: '/manage/user-page-builder',
+              target: '_blank',
+              type: 'info',
+            }, () => '自定义页面'),
+            '  效果:',
+            () => h(NButton, {
+              text: true,
+              tag: 'a',
+              href: '/@Megghy',
+              target: '_blank',
+              type: 'info',
+            }, () => '查看效果'),
+          ],
+        ],
+      },
+    ],
+  },
   {
     ver: 9,
     date: '2025.11.17',

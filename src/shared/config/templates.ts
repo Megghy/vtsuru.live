@@ -31,12 +31,6 @@ export const ScheduleTemplateMap: TemplateMapType = {
 }
 
 export const SongListTemplateMap: TemplateMapType = {
-  '': {
-    name: '默认',
-    component: markRaw(defineAsyncComponent(
-      async () => import('@/apps/user/pages/songListTemplate/DefaultSongListTemplate.vue'),
-    )),
-  },
   'card': {
     name: '卡片列表',
     component: markRaw(defineAsyncComponent(
