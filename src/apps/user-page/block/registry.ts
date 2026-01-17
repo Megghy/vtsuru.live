@@ -133,29 +133,29 @@ export function createBlockNode(type: BlockType, id: string): BlockNode {
   if (type === 'layout') block.props = { layout: 'row', wrap: true, gap: 12, maxWidth: '', columns: 2, justify: 'start', align: 'stretch', children: [] }
   if (type === 'heading') block.props = { text: '标题', level: 2 }
   if (type === 'text') block.props = { text: '' }
-  if (type === 'richText') block.props = { html: '', imagesFile: [] }
+  if (type === 'richText') block.props = { html: '', imagesFile: [], framed: false, backgrounded: false }
   if (type === 'links') block.props = { items: [] }
-  if (type === 'button') block.props = { label: '按钮', page: 'home', type: 'primary', variant: 'solid', fullWidth: true, align: 'start', framed: false }
-  if (type === 'buttons') block.props = { items: [], direction: 'vertical', type: 'primary', variant: 'solid', gap: 10, fullWidth: true, align: 'start', framed: false, borderTitle: '', borderTitleAlign: 'left' }
+  if (type === 'button') block.props = { label: '按钮', page: 'home', type: 'primary', variant: 'solid', fullWidth: true, align: 'start', framed: false, backgrounded: false }
+  if (type === 'buttons') block.props = { items: [], direction: 'vertical', type: 'primary', variant: 'solid', gap: 10, fullWidth: true, align: 'start', framed: false, backgrounded: false, borderTitle: '', borderTitleAlign: 'left' }
   if (type === 'alert') block.props = { type: 'info', title: '提示', text: '这里是一段提示内容', showIcon: true, bordered: false }
   if (type === 'image') block.props = { alt: '', maxWidth: '', maxHeight: '', shape: 'rounded' }
-  if (type === 'imageGallery') block.props = { layout: 'grid', columns: 3, gap: 12, maxWidth: '', maxHeight: '', fit: 'cover', autoplay: false, interval: 5000, effect: 'slide', showArrow: true, showDots: true, dotType: 'line', dotPlacement: 'bottom', loop: true, draggable: true, touchable: true, trigger: 'click', items: [] }
+  if (type === 'imageGallery') block.props = { layout: 'grid', columns: 3, gap: 12, maxWidth: '', maxHeight: '', fit: 'cover', autoplay: false, interval: 5000, effect: 'slide', showArrow: true, showDots: true, dotType: 'line', dotPlacement: 'bottom', loop: true, draggable: true, touchable: true, trigger: 'click', items: [], framed: false, backgrounded: false }
   if (type === 'embed') block.props = { url: '', title: '' }
   if (type === 'divider') block.props = { text: '', titlePlacement: 'center', marginTop: 12, marginBottom: 12 }
   if (type === 'spacer') block.props = { size: 'md' }
-  if (type === 'footer') block.props = { text: '', framed: false }
+  if (type === 'footer') block.props = { text: '', framed: false, backgrounded: false }
   if (type === 'liveStatus') block.props = { variant: 'card', showTitle: true, showArea: true, showCover: true, showButtons: true }
   if (type === 'streamSchedule') block.props = { layout: 'list', weeksCount: 1, showIcs: true, highlightToday: true, showTag: true }
   if (type === 'biliInfo') block.props = { variant: 'card', showAvatar: true, showName: true, showSign: true, showStats: true, showButtons: true, showLiveRoom: true, spaceUrl: '' }
   if (type === 'videoList') block.props = { source: 'manual', layout: 'grid', columns: 2, maxItems: 6, showTitle: true, items: [] }
   if (type === 'socialLinks') block.props = { size: 'md', variant: 'round', showLabel: false, items: [] }
   if (type === 'musicPlayer') block.props = { provider: 'netease', url: '', height: 300, compact: false }
-  if (type === 'tags') block.props = { size: 'medium', rounded: true, items: [], framed: false, borderTitle: '', borderTitleAlign: 'left' }
+  if (type === 'tags') block.props = { size: 'medium', rounded: true, items: [], framed: false, backgrounded: false, borderTitle: '', borderTitleAlign: 'left' }
   if (type === 'milestone') block.props = { mode: 'timeline', items: [] }
   if (type === 'faq') block.props = { accordion: false, items: [] }
   if (type === 'quote') block.props = { text: '', author: '', align: 'center' }
-  if (type === 'marquee') block.props = { text: '', direction: 'left', durationSec: 18, pauseOnHover: true }
-  if (type === 'countdown') block.props = { title: '', target: '', style: 'cards', showSeconds: true, doneText: '已到达', framed: false }
+  if (type === 'marquee') block.props = { text: '', direction: 'left', durationSec: 18, pauseOnHover: true, framed: false, backgrounded: false }
+  if (type === 'countdown') block.props = { title: '', target: '', style: 'cards', showSeconds: true, doneText: '已到达', framed: false, backgrounded: false }
   if (type === 'feedback') block.props = { title: '留言 / 提问', description: '', url: '', buttonText: '打开', embed: false, height: 520 }
   if (type === 'supporter') block.props = { title: '支持我', description: '', items: [] }
   return block

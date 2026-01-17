@@ -111,7 +111,7 @@ const imgStyle = computed(() => ({
 </script>
 
 <template>
-  <BlockCard :framed="model.framed">
+  <BlockCard :framed="false" :backgrounded="false">
     <div class="root" :style="containerStyle">
       <NCarousel
         v-if="model.layout === 'carousel'"
@@ -212,13 +212,13 @@ const imgStyle = computed(() => ({
   bottom: 12px;
 }
 .carousel :deep(.n-carousel__arrow) {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.2));
   backdrop-filter: blur(4px);
   border-radius: 50%;
-  color: white;
+  color: var(--n-text-color, white);
 }
 .carousel :deep(.n-carousel__arrow:hover) {
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--user-page-ui-surface-bg-hover, rgba(255, 255, 255, 0.4));
 }
 .slide {
   width: 100%;

@@ -173,11 +173,7 @@ const effectiveIsDark = computed(() => {
 const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
 
 const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  // 只有在启用了背景图/毛玻璃模式时才应用特殊的主题覆盖
-  const hasBg = !!layoutPageBg.value
-  if (!hasBg) return {}
-
-  const vars = layoutPageBgVars.value
+  const vars = mergedLayoutVars.value as Record<string, string>
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
@@ -244,6 +240,16 @@ const layoutPageBgVars = computed(() => {
   if (!bg) return {}
   return getPageBackgroundCssVars(bg, effectiveIsDark.value)
 })
+
+const layoutUiVars = computed(() => ({
+  '--user-page-ui-surface-bg': effectiveIsDark.value ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.80)',
+  '--user-page-ui-surface-bg-hover': effectiveIsDark.value ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.86)',
+  '--user-page-ui-surface-bg-pressed': effectiveIsDark.value ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.92)',
+  '--user-page-border-color': effectiveIsDark.value ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
+  '--vtsuru-card-border-color': effectiveIsDark.value ? 'rgba(148, 163, 184, 0.20)' : 'rgba(148, 163, 184, 0.26)',
+}))
+
+const mergedLayoutVars = computed(() => ({ ...layoutUiVars.value, ...layoutPageBgVars.value }))
 
 const layoutPageBgClass = computed(() => ({
   'bg-host': !!layoutPageBg.value,
@@ -464,7 +470,7 @@ watch(
     <div
       class="page-root"
       :class="layoutPageBgClass"
-      :style="layoutPageBgVars"
+      :style="[layoutUiVars, layoutPageBgVars]"
     >
       <!-- 顶部导航栏 -->
       <header class="layout-header">
@@ -565,7 +571,7 @@ watch(
             <!-- 用户头像和昵称 (加载完成后显示) -->
             <div
               v-if="userInfo?.streamerInfo"
-              style="margin-top: 8px"
+              class="sider-profile"
             >
               <NSpace
                 vertical
@@ -970,6 +976,11 @@ watch(
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }
 
+.page-root.bg-host :deep(.n-card) {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
 
 .page-root.bg-host .viewer-page-content {
   background-color: transparent;
@@ -1015,11 +1026,20 @@ watch(
   overflow: hidden;
 }
 
+.sider-profile {
+  margin-top: 12px;
+}
+
+.sider-shell.collapsed .sider-profile {
+  margin-top: 48px;
+}
+
 .sider-top {
-  padding: 8px 8px 0;
-  display: flex;
-  justify-content: flex-end;
-  flex: 0 0 auto;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  padding: 0;
 }
 
 .sider-collapse-btn {

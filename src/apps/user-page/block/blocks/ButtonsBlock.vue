@@ -103,6 +103,12 @@ const framed = computed(() => {
   return false
 })
 
+const backgrounded = computed(() => {
+  const v = propsObj.value.backgrounded
+  if (typeof v === 'boolean') return v
+  return false
+})
+
 const borderTitle = computed(() => {
   const v = propsObj.value.borderTitle
   return typeof v === 'string' ? v : ''
@@ -118,7 +124,7 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
 </script>
 
 <template>
-  <BlockCard :framed="framed" :border-title="framed ? borderTitle : ''" :border-title-align="borderTitleAlign">
+  <BlockCard :framed="framed" :backgrounded="backgrounded" :border-title="framed ? borderTitle : ''" :border-title-align="borderTitleAlign">
     <NFlex
       :vertical="direction === 'vertical'"
       :wrap="direction === 'horizontal'"

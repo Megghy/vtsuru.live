@@ -112,6 +112,7 @@ const gridJustifyItems = computed<'start' | 'center' | 'end' | 'stretch'>(() => 
 const children = computed(() => asBlocks(propsObj.value.children))
 const visibleChildren = computed(() => children.value.filter(it => !it.hidden))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
+const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false))
 const containerStyle = computed(() => ({
   '--vtsuru-layout-gap': gap.value === null ? 'var(--vtsuru-page-spacing)' : `${gap.value}px`,
   '--vtsuru-layout-columns': String(columns.value),
@@ -130,7 +131,7 @@ const blockComponents = BLOCK_COMPONENTS
 </script>
 
 <template>
-  <BlockCard v-if="framed" :framed="true" :content-style="{ padding: 0 }">
+  <BlockCard v-if="framed" :framed="true" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
     <div
       class="layout"
       :class="{

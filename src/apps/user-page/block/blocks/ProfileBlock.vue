@@ -23,12 +23,13 @@ const model = computed(() => {
   const bio = (typeof o.bio === 'string' && o.bio) ? o.bio : props.biliInfo?.sign
 
   const framed = typeof o.framed === 'boolean' ? o.framed : true
-  return { avatarUrl, displayName, bio, framed }
+  const backgrounded = typeof o.backgrounded === 'boolean' ? o.backgrounded : true
+  return { avatarUrl, displayName, bio, framed, backgrounded }
 })
 </script>
 
 <template>
-  <BlockCard :framed="model.framed" :content-style="{ padding: 0 }">
+  <BlockCard :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }">
     <div class="profile-hero">
       <div class="avatar-container">
         <NAvatar
@@ -71,7 +72,7 @@ const model = computed(() => {
 }
 
 .profile-avatar {
-  border: 4px solid var(--n-card-color);
+  border: 4px solid var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
   position: relative;
   z-index: 2;
   box-shadow: 0 12px 24px rgba(0,0,0,0.15);

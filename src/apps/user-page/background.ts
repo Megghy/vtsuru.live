@@ -89,9 +89,10 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
     ? hexToRgba(bg.color, 0.55)
     : (bg.type === 'image' ? 'transparent' : null)
 
-  const uiSurfaceBg = effectiveIsDark ? 'rgba(24, 24, 27, 0.78)' : 'rgba(255, 255, 255, 0.86)'
-  const uiSurfaceBgHover = effectiveIsDark ? 'rgba(39, 39, 42, 0.75)' : 'rgba(244, 244, 245, 0.82)'
-  const uiSurfaceBgPressed = effectiveIsDark ? 'rgba(39, 39, 42, 0.85)' : 'rgba(244, 244, 245, 0.92)'
+  // UI 表面：微透明（约 70%）+ 由卡片自身应用轻微 blur
+  const uiSurfaceBg = effectiveIsDark ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.80)'
+  const uiSurfaceBgHover = effectiveIsDark ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.86)'
+  const uiSurfaceBgPressed = effectiveIsDark ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.92)'
 
   // 使用更中性的“灰蓝”边框，避免浅色主题下出现纯黑边框的观感
   const borderColor = effectiveIsDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)'

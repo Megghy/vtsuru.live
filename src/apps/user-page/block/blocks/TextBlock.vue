@@ -9,13 +9,14 @@ const propsObj = computed<Record<string, any>>(() => {
     ? (props.blockProps as any)
     : {}
   return o
-})
+}) 
 const text = computed(() => (typeof propsObj.value.text === 'string' ? propsObj.value.text : ''))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
+const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true))
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :backgrounded="backgrounded">
     <NText class="text-content">
       {{ text }}
     </NText>

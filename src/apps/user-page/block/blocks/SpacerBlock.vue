@@ -20,10 +20,11 @@ const height = computed(() => {
 })
 
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
+const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false))
 </script>
 
 <template>
-  <BlockCard v-if="framed" :framed="true" :content-style="{ padding: 0 }">
+  <BlockCard v-if="framed" :framed="true" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
     <div :style="{ height: `${height}px` }" />
   </BlockCard>
   <div v-else :style="{ height: `${height}px` }" />

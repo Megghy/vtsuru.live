@@ -14,6 +14,7 @@ interface BlockConfig {
   items?: FAQItem[]
   title?: string
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -27,6 +28,7 @@ const cfg = computed<BlockConfig>(() => {
     items: Array.isArray(o.items) ? o.items : [],
     title: typeof o.title === 'string' ? o.title : '常见问题',
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -42,7 +44,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <BlockCard class="faq-card" :framed="cfg.framed">
+  <BlockCard class="faq-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded">
     <template #header>
       <NFlex align="center" style="gap: 8px">
         <NIcon size="18" depth="2">

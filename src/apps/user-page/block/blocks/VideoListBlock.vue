@@ -22,6 +22,7 @@ interface BlockConfig {
   title?: string
   items?: ManualVideoItem[]
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{
@@ -47,6 +48,7 @@ const cfg = computed<BlockConfig>(() => {
     title: typeof o.title === 'string' ? o.title : '',
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -110,7 +112,7 @@ const containerStyle = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed">
+  <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded">
     <template v-if="cfg.showTitle && (cfg.title || '视频')" #header>
       {{ cfg.title || '视频' }}
     </template>
