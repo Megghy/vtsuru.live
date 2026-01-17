@@ -28,6 +28,7 @@ const model = computed(() => {
     maxHeight: asCssSize(o.maxHeight),
     shape: (o.shape === 'square' || o.shape === 'rounded' || o.shape === 'circle') ? o.shape : 'rounded',
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -59,7 +60,7 @@ const imgStyle = computed(() => {
 </script>
 
 <template>
-  <BlockCard v-if="model.url" :framed="model.framed" :content-style="{ padding: 0 }" :wrap-style="wrapStyle">
+  <BlockCard v-if="model.url" :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }" :wrap-style="wrapStyle">
     <img
       :src="model.url"
       :alt="model.alt"

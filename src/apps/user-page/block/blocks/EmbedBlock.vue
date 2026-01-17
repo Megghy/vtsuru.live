@@ -12,12 +12,14 @@ const model = computed(() => {
   const url = String(o.url ?? '')
   const title = typeof o.title === 'string' ? o.title : undefined
   const framed = typeof o.framed === 'boolean' ? o.framed : true
+  const backgrounded = typeof o.backgrounded === 'boolean' ? o.backgrounded : true
   try {
-    return { ok: true as const, framed, ...parseEmbedUrl(url, title), rawUrl: url, errorMessage: '' }
+    return { ok: true as const, framed, backgrounded, ...parseEmbedUrl(url, title), rawUrl: url, errorMessage: '' }
   } catch (e) {
     return {
       ok: false as const,
       framed,
+      backgrounded,
       provider: 'youtube' as const,
       src: 'about:blank',
       allow: '',
@@ -31,7 +33,7 @@ const model = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="model.framed" :content-style="{ padding: 0 }">
+  <BlockCard :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }">
     <div class="embed-wrapper">
       <iframe
         v-if="model.ok"

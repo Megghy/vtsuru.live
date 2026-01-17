@@ -13,10 +13,11 @@ const propsObj = computed<Record<string, any>>(() => {
 })
 const items = computed(() => (Array.isArray(propsObj.value.items) ? propsObj.value.items : []))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : true))
+const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : true))
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :backgrounded="backgrounded">
     <NFlex
       justify="center"
       wrap
@@ -45,7 +46,7 @@ const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? prop
   padding: 0 16px;
   font-weight: 500;
   border: 1px solid var(--n-divider-color);
-  background: var(--n-card-color);
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
   transition: all 0.2s ease;
 }
 

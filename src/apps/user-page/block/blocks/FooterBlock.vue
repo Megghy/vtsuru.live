@@ -13,10 +13,11 @@ const propsObj = computed<Record<string, any>>(() => {
 
 const text = computed(() => (typeof propsObj.value.text === 'string' ? propsObj.value.text : ''))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
+const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false))
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :backgrounded="backgrounded">
     <div class="footer">
       <NText depth="3">
         {{ text || 'Powered by vtsuru.live' }}

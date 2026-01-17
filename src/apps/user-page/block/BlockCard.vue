@@ -9,10 +9,12 @@ const props = withDefaults(defineProps<{
   footerStyle?: string | CSSProperties
   wrapStyle?: string | CSSProperties
   framed?: boolean
+  backgrounded?: boolean
   borderTitle?: string
   borderTitleAlign?: 'left' | 'center' | 'right'
 }>(), {
   framed: true,
+  backgrounded: true,
   borderTitleAlign: 'left',
 })
 
@@ -20,6 +22,7 @@ const resolvedContentStyle = computed<string | CSSProperties>(() => {
   return props.contentStyle ?? { padding: 'var(--vtsuru-page-spacing)' }
 })
 const isUnframed = computed(() => props.framed === false)
+const isUnbackgrounded = computed(() => props.backgrounded === false)
 
 const cardStyle = computed<CSSProperties>(() => ({
   '--n-border-color': isUnframed.value
@@ -40,7 +43,7 @@ const borderTitleAlignClass = computed(() => {
 <template>
   <div
     class="vtsuru-block-card-wrap"
-    :class="{ unframed: isUnframed, 'has-border-title': showBorderTitle }"
+    :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
     :style="[cardStyle, props.wrapStyle]"
   >
     <div v-if="showBorderTitle" class="border-title" :class="borderTitleAlignClass">
@@ -52,7 +55,7 @@ const borderTitleAlignClass = computed(() => {
       size="small"
       :bordered="!isUnframed"
       class="vtsuru-block-card"
-      :class="{ unframed: isUnframed }"
+      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
       :content-style="resolvedContentStyle"
       :header-style="props.headerStyle"
       :footer-style="props.footerStyle"
@@ -83,41 +86,46 @@ const borderTitleAlignClass = computed(() => {
 .border-title {
   position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 3;
   pointer-events: none;
+  display: flex;
+  transform: translateY(-50%);
 }
 
 .border-title.align-left {
-  left: 14px;
-  transform: translateY(-50%);
+  justify-content: flex-start;
+  padding-left: 12px;
 }
 .border-title.align-center {
-  left: 50%;
-  transform: translate(-50%, -50%);
+  justify-content: center;
 }
 .border-title.align-right {
-  right: 14px;
-  transform: translateY(-50%);
+  justify-content: flex-end;
+  padding-right: 12px;
 }
 
 .border-title__text {
   position: relative;
   display: inline-block;
-  padding: 2px 10px;
+  padding: 0 6px;
   font-size: 12px;
-  line-height: 16px;
-  border-radius: 9999px;
-  background: var(--user-page-ui-surface-bg, var(--n-card-color));
+  line-height: 1;
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
   color: var(--n-text-color, var(--vtsuru-page-text, currentColor));
   font-weight: 600;
   letter-spacing: 0.2px;
+  opacity: 0.85;
 }
 
 .vtsuru-block-card {
   flex: 1;
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
-  background: var(--n-card-color);
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   box-shadow:
     0 1px 0 rgba(0, 0, 0, 0.02),
     0 10px 30px rgba(0, 0, 0, 0.06);
@@ -125,6 +133,13 @@ const borderTitleAlignClass = computed(() => {
 }
 
 .vtsuru-block-card.unframed {
+  box-shadow: none;
+}
+
+.vtsuru-block-card.unbackgrounded {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: none;
 }
 

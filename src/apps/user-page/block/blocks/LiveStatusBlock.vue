@@ -18,6 +18,7 @@ interface BlockConfig {
   showCover?: boolean
   showButtons?: boolean
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{
@@ -38,6 +39,7 @@ const cfg = computed<BlockConfig>(() => {
     showCover: typeof o.showCover === 'boolean' ? o.showCover : false,
     showButtons: typeof o.showButtons === 'boolean' ? o.showButtons : true,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -87,7 +89,7 @@ const liveDurationText = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed" :content-style="{ padding: 0 }">
+  <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
     <div class="live-card">
       <template v-if="cfg.variant === 'compact'">
         <div class="live-compact">
@@ -182,7 +184,7 @@ const liveDurationText = computed(() => {
                   :src="model.avatarUrl"
                   round
                   :size="40"
-                  style="border: 2px solid rgba(255,255,255,0.2)"
+                  style="border: 2px solid var(--vtsuru-card-border-color)"
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                 />
                 <div class="live-header-text">
@@ -419,7 +421,7 @@ const liveDurationText = computed(() => {
   padding: 4px 10px;
   border-radius: 999px;
   border: 1px solid var(--n-divider-color);
-  background: var(--n-card-color);
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
 }
 .live-status.compact {
   padding: 4px 8px;
@@ -444,7 +446,7 @@ const liveDurationText = computed(() => {
   height: auto;
   border-top: 1px solid var(--n-divider-color);
   border-bottom: 1px solid var(--n-divider-color);
-  background: #000;
+  background: var(--user-page-ui-surface-bg, #000);
 }
 
 .live-cover img {
@@ -484,7 +486,7 @@ const liveDurationText = computed(() => {
 .pill-muted {
   font-size: 12px;
   color: #fff;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.6));
   backdrop-filter: blur(4px);
   padding: 2px 8px;
   border-radius: 6px;
@@ -592,11 +594,11 @@ const liveDurationText = computed(() => {
 }
 
 .live-status.immersive {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.4));
   backdrop-filter: blur(4px);
   padding: 4px 10px;
   border-radius: 99px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--user-page-border-color, rgba(255, 255, 255, 0.1));
 }
 
 .live-status.immersive .status-text {
@@ -618,7 +620,7 @@ const liveDurationText = computed(() => {
   display: inline-flex;
   align-items: center;
   font-size: 12px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.15));
   backdrop-filter: blur(4px);
   padding: 2px 8px;
   border-radius: 4px;
@@ -639,13 +641,13 @@ const liveDurationText = computed(() => {
 }
 
 .immersive-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
+  background: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.1)) !important;
+  border: 1px solid var(--vtsuru-card-border-color, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--n-text-color, white) !important;
   backdrop-filter: blur(4px);
 }
 .immersive-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: var(--user-page-ui-surface-bg-hover, rgba(255, 255, 255, 0.2)) !important;
 }
 
 </style>

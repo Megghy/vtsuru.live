@@ -41,6 +41,12 @@ const framed = computed(() => {
   return false
 })
 
+const backgrounded = computed(() => {
+  const v = propsObj.value.backgrounded
+  if (typeof v === 'boolean') return v
+  return false
+})
+
 const buttonType = computed(() => {
   const v = propsObj.value.type
   if (v === 'primary' || v === 'info' || v === 'success' || v === 'warning' || v === 'error' || v === 'default') return v
@@ -86,7 +92,7 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :backgrounded="backgrounded">
     <NFlex :justify="justify" :align="'center'" style="width: 100%">
       <NButton
         v-if="internalTarget"

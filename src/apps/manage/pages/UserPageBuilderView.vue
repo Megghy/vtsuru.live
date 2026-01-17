@@ -668,48 +668,52 @@ onBeforeRouteLeave(() => {
         style="width: 720px; max-width: 95vw"
         :auto-focus="false"
       >
-        <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
-          这里设置的背景/主题会对所有页面生效（包括歌单/日程/提问箱等内置页面）。子页面可单独设置覆盖此设置（例如做“二级页面”隐藏跳转）。
-        </NAlert>
-        <NDivider style="margin: 10px 0">
-          全局主题
-        </NDivider>
-        <NForm label-placement="top" size="small">
-          <NFlex :wrap="true" style="gap: 12px">
-            <NFormItem label="主题色（primary）" style="flex: 1; min-width: 220px">
-              <NColorPicker v-model:value="globalThemePrimaryColor" />
-            </NFormItem>
-            <NFormItem label="字体颜色（text）" style="flex: 1; min-width: 220px">
-              <NColorPicker v-model:value="globalThemeTextColor" />
-            </NFormItem>
-            <NFormItem label="内容区域底色（可选）" style="flex: 1; min-width: 220px">
-              <NColorPicker v-model:value="globalThemeBackgroundColor" />
-            </NFormItem>
-            <NFormItem label="页面主题模式（可选）" style="flex: 1; min-width: 220px">
-              <NSelect
-                v-model:value="globalThemeMode"
-                :options="[
-                  { label: '跟随站点（Auto）', value: 'auto' },
-                  { label: '强制亮色（Light）', value: 'light' },
-                  { label: '强制暗色（Dark）', value: 'dark' },
-                ]"
-              />
-            </NFormItem>
-          </NFlex>
-          <NSpace justify="end">
-            <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearGlobalTheme">
-              清除全局主题
-            </NButton>
-          </NSpace>
-        </NForm>
+        <NScrollbar style="max-height: min(78vh, 720px)">
+          <div style="padding-right: 16px; padding-bottom: 16px">
+            <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
+              这里设置的背景/主题会对所有页面生效（包括歌单/日程/提问箱等内置页面）。子页面可单独设置覆盖此设置（例如做“二级页面”隐藏跳转）。
+            </NAlert>
+            <NDivider style="margin: 10px 0">
+              全局主题
+            </NDivider>
+            <NForm label-placement="top" size="small">
+              <NFlex :wrap="true" style="gap: 12px">
+                <NFormItem label="主题色（primary）" style="flex: 1; min-width: 220px">
+                  <NColorPicker v-model:value="globalThemePrimaryColor" />
+                </NFormItem>
+                <NFormItem label="字体颜色（text）" style="flex: 1; min-width: 220px">
+                  <NColorPicker v-model:value="globalThemeTextColor" />
+                </NFormItem>
+                <NFormItem label="内容区域底色（可选）" style="flex: 1; min-width: 220px">
+                  <NColorPicker v-model:value="globalThemeBackgroundColor" />
+                </NFormItem>
+                <NFormItem label="页面主题模式（可选）" style="flex: 1; min-width: 220px">
+                  <NSelect
+                    v-model:value="globalThemeMode"
+                    :options="[
+                      { label: '跟随站点（Auto）', value: 'auto' },
+                      { label: '强制亮色（Light）', value: 'light' },
+                      { label: '强制暗色（Dark）', value: 'dark' },
+                    ]"
+                  />
+                </NFormItem>
+              </NFlex>
+              <NSpace justify="end">
+                <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearGlobalTheme">
+                  清除全局主题
+                </NButton>
+              </NSpace>
+            </NForm>
 
-        <NDivider style="margin: 12px 0">
-          全局背景
-        </NDivider>
-        <BackgroundSettingsEditor
-          :target="globalBgTarget"
-          none-hint="未设置全局背景时，页面会使用默认背景（或由站点主题决定）。"
-        />
+            <NDivider style="margin: 12px 0">
+              全局背景
+            </NDivider>
+            <BackgroundSettingsEditor
+              :target="globalBgTarget"
+              none-hint="未设置全局背景时，页面会使用默认背景（或由站点主题决定）。"
+            />
+          </div>
+        </NScrollbar>
       </NModal>
 
       <NModal

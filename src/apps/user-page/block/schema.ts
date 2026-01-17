@@ -119,6 +119,9 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
   if (propsObj && propsObj.framed !== undefined && typeof propsObj.framed !== 'boolean') {
     errors.push(`${userFacingName}: framed 必须是 boolean`)
   }
+  if (propsObj && propsObj.backgrounded !== undefined && typeof propsObj.backgrounded !== 'boolean') {
+    errors.push(`${userFacingName}: backgrounded 必须是 boolean`)
+  }
 
   if (block.name !== undefined) {
     if (typeof block.name !== 'string') errors.push(`${userFacingName}: name 必须是 string`)

@@ -14,6 +14,7 @@ interface BlockConfig {
   highlightToday?: boolean
   showTag?: boolean
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{
@@ -34,6 +35,7 @@ const cfg = computed<BlockConfig>(() => {
     highlightToday: typeof o.highlightToday === 'boolean' ? o.highlightToday : true,
     showTag: typeof o.showTag === 'boolean' ? o.showTag : true,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -129,7 +131,7 @@ function copyToClipboard(text: string) {
 </script>
 
 <template>
-  <BlockCard class="schedule-card" :framed="cfg.framed" :content-style="{ padding: 0 }">
+  <BlockCard class="schedule-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
     <div class="schedule-block">
       <div class="schedule-header">
         <div class="header-left">
@@ -419,7 +421,7 @@ function copyToClipboard(text: string) {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--n-card-color);
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
   border: 2px solid rgba(255,255,255,0.2);
   z-index: 2;
   transition: all 0.3s;

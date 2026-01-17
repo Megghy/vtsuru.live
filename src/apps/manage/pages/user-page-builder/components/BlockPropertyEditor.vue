@@ -307,7 +307,6 @@ const pageOverrideThemeMode = computed({
           </NSpace>
           <BackgroundSettingsEditor
             :target="pageOverrideBgTarget"
-            none-hint="当前未启用页面背景覆盖。选择“纯色/图片”即可启用。"
           />
         </NCollapseItem>
 
@@ -564,7 +563,6 @@ const pageOverrideThemeMode = computed({
                 </NSpace>
                 <BackgroundSettingsEditor
                   :target="pageOverrideBgTarget"
-                  none-hint="当前未启用页面背景覆盖。选择“纯色/图片”即可启用。"
                 />
               </NCollapseItem>
 

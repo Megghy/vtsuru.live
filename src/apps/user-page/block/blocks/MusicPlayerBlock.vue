@@ -11,6 +11,7 @@ interface BlockConfig {
   height?: number
   compact?: boolean
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -27,6 +28,7 @@ const cfg = computed<BlockConfig>(() => {
     height: Number.isFinite(height) ? Math.min(900, Math.max(60, height)) : 300,
     compact: typeof o.compact === 'boolean' ? o.compact : false,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -106,7 +108,7 @@ const allow = computed(() => {
 </script>
 
 <template>
-  <BlockCard class="music-player-block" :framed="cfg.framed" :content-style="{ padding: 0 }">
+  <BlockCard class="music-player-block" :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
     <NAlert v-if="!iframeSrc" type="info" :show-icon="false">
       未配置可用的链接
     </NAlert>

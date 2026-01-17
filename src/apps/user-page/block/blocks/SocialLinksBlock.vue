@@ -37,6 +37,7 @@ interface BlockConfig {
   showLabel?: boolean
   items?: SocialItem[]
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -51,6 +52,7 @@ const cfg = computed<BlockConfig>(() => {
     showLabel: typeof o.showLabel === 'boolean' ? o.showLabel : false,
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -127,7 +129,7 @@ const iconSize = computed(() => {
 </script>
 
 <template>
-  <BlockCard :framed="cfg.framed">
+  <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded">
     <NFlex
       justify="center"
       wrap

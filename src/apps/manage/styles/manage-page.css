@@ -55,3 +55,8 @@
   color: var(--n-text-color-3);
 }
 
+/* Manage modals: subtle shadcn-like border */
+.n-modal > .n-card {
+  box-sizing: border-box;
+  border: 1px solid var(--n-border-color, rgba(148, 163, 184, 0.22));
+}

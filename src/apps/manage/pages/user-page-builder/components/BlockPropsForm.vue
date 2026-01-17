@@ -55,7 +55,29 @@
     if (type === 'button') return false;
     if (type === 'tags') return false;
     if (type === 'countdown') return false;
+    if (type === 'imageGallery') return false;
+    if (type === 'richText') return false;
+    if (type === 'marquee') return false;
     return true;
+  }
+
+  function defaultBackgroundedForType(type: BlockNode['type']) {
+    // 背景默认策略：大部分区块保留背景，部分区块默认无背景
+    if (type === 'layout') return false;
+    if (type === 'spacer') return false;
+    if (type === 'footer') return false;
+    if (type === 'buttons') return false;
+    if (type === 'button') return false;
+    if (type === 'tags') return false;
+    if (type === 'countdown') return false;
+    if (type === 'imageGallery') return false;
+    if (type === 'richText') return false;
+    if (type === 'marquee') return false;
+    return true;
+  }
+
+  function hideCardChromeOptionsForType(type: BlockNode['type']) {
+    return type === 'imageGallery';
   }
 
   const blockFramedModel = computed({
@@ -71,6 +93,22 @@
       const defaultValue = defaultFramedForType(props.block.type);
       if (next === defaultValue) delete propsObj.framed;
       else propsObj.framed = next;
+    },
+  });
+
+  const blockBackgroundedModel = computed({
+    get() {
+      const propsObj = editor.ensurePropsObject(props.block) as any;
+      const v = propsObj.backgrounded;
+      if (typeof v === 'boolean') return v;
+      return defaultBackgroundedForType(props.block.type);
+    },
+    set(v: boolean) {
+      const propsObj = editor.ensurePropsObject(props.block) as any;
+      const next = Boolean(v);
+      const defaultValue = defaultBackgroundedForType(props.block.type);
+      if (next === defaultValue) delete propsObj.backgrounded;
+      else propsObj.backgrounded = next;
     },
   });
 
@@ -194,9 +232,14 @@
       <NFormItem label="区块名称（仅编辑用）" style="justify-self: start; width: min(260px, 100%)">
         <NInput v-model:value="blockNameModel" maxlength="50" show-count placeholder="例如：直播信息（紧凑）" />
       </NFormItem>
-      <NFormItem label="显示边框" style="justify-self: start; width: min(180px, 100%)">
+      <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示边框" style="justify-self: start; width: min(180px, 100%)">
         <NSpace justify="end">
           <NSwitch v-model:value="blockFramedModel" size="small" />
+        </NSpace>
+      </NFormItem>
+      <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示背景" style="justify-self: start; width: min(180px, 100%)">
+        <NSpace justify="end">
+          <NSwitch v-model:value="blockBackgroundedModel" size="small" />
         </NSpace>
       </NFormItem>
     </PropsGrid>

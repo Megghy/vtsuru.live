@@ -34,7 +34,7 @@ onMounted(() => {
 
       <div class="manage-shell__main">
         <ManageTopBar :account-name="accountInfo?.name" />
-        <NScrollbar class="manage-shell__scroll" x-scrollable>
+        <NScrollbar class="manage-shell__scroll">
           <div class="manage-shell__content">
             <ManageContentGate :account-info="accountInfo" />
           </div>
@@ -74,12 +74,18 @@ onMounted(() => {
 }
 
 .manage-shell__scroll {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
+  height: 0;
+}
+
+.manage-shell__scroll :deep(.n-scrollbar-container) {
+  min-height: 100%;
 }
 
 .manage-shell__content {
   padding: 0;
   min-width: 370px;
+  box-sizing: border-box;
 }
 </style>

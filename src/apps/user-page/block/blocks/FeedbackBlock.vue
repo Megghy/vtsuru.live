@@ -12,6 +12,7 @@ interface BlockConfig {
   embed?: boolean
   height?: number
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -29,6 +30,7 @@ const cfg = computed<BlockConfig>(() => {
     embed: typeof o.embed === 'boolean' ? o.embed : false,
     height: Number.isFinite(height) ? Math.min(1200, Math.max(200, height)) : 520,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -37,7 +39,7 @@ const canEmbed = computed(() => cfg.value.embed && url.value.startsWith('https:/
 </script>
 
 <template>
-  <BlockCard class="feedback-card" :framed="cfg.framed">
+  <BlockCard class="feedback-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded">
     <template #header>
       <NFlex align="center" style="gap: 8px">
         <NIcon size="18" depth="2">

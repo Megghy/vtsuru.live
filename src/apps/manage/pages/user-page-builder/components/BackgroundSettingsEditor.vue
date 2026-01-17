@@ -177,11 +177,7 @@ function clearAll() {
 
     <Transition name="fade-slide" mode="out-in">
       <div :key="type">
-        <NAlert v-if="type === 'none'" type="info" :show-icon="true" style="margin-bottom: 12px">
-          {{ props.noneHint || '不设置背景时，页面会使用默认背景（或由站点主题决定）。' }}
-        </NAlert>
-
-        <template v-else-if="type === 'color'">
+        <template v-if="type === 'color'">
           <NFormItem label="背景颜色">
             <NColorPicker v-model:value="color" :modes="['rgb', 'hex']" :show-alpha="true" />
           </NFormItem>

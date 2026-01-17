@@ -123,12 +123,16 @@ const rawHtml = computed(() => {
 const safeHtml = computed(() => sanitizeRichText(rawHtml.value))
 const framed = computed(() => {
   const o = asObject(props.blockProps) ?? {}
-  return typeof (o as any).framed === 'boolean' ? (o as any).framed : true
+  return typeof (o as any).framed === 'boolean' ? (o as any).framed : false
+})
+const backgrounded = computed(() => {
+  const o = asObject(props.blockProps) ?? {}
+  return typeof (o as any).backgrounded === 'boolean' ? (o as any).backgrounded : false
 })
 </script>
 
 <template>
-  <BlockCard :framed="framed">
+  <BlockCard :framed="framed" :backgrounded="backgrounded">
     <div class="rich-text" v-html="safeHtml" />
   </BlockCard>
 </template>

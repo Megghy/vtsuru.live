@@ -9,6 +9,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "incremental": true,
     "resolveJsonModule": true,
     "types": ["node", "vue-vine/macros", "jszip"],
     "allowJs": false,

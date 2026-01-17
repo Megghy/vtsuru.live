@@ -14,6 +14,7 @@ interface BlockConfig {
   mode?: 'timeline' | 'list'
   items?: MilestoneItem[]
   framed?: boolean
+  backgrounded?: boolean
 }
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -26,6 +27,7 @@ const cfg = computed<BlockConfig>(() => {
     mode: (o.mode === 'timeline' || o.mode === 'list') ? o.mode : 'timeline',
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }
 })
 
@@ -42,7 +44,7 @@ const items = computed(() => {
 </script>
 
 <template>
-  <BlockCard class="milestone-card" :framed="cfg.framed">
+  <BlockCard class="milestone-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded">
     <template #header>
       <div class="header">
         <NIcon size="18" depth="2">
