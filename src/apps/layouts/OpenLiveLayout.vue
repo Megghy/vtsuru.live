@@ -18,6 +18,7 @@ import {
   NMenu,
   NPageHeader,
   NResult,
+  NScrollbar,
   NSpace,
   NSpin,
   NSwitch,
@@ -31,6 +32,7 @@ import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
 import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
 import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
 import '@/apps/open-live/styles/open-live-page.css'
+import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // -- 基本状态和工具 --
 const route = useRoute() // 获取当前路由信息
@@ -216,7 +218,7 @@ onMounted(async () => {
             >
               <!-- 网站/应用 Logo 或名称 -->
               <img
-                src="/favicon.ico"
+                :src="logoUrl"
                 alt="VTsuru Logo"
                 style="height: 24px; vertical-align: middle; margin-right: 8px;"
               > <!-- 可选: 添加 Logo -->
@@ -334,7 +336,7 @@ onMounted(async () => {
         content-style="padding: 0; height: 100%;"
         :native-scrollbar="false"
       >
-        <div class="open-live-page">
+        <NScrollbar class="open-live-page">
           <!-- 弹幕客户端错误提示 -->
           <NAlert
             v-if="danmakuClientError"
@@ -399,8 +401,9 @@ onMounted(async () => {
           <NBackTop
             :right="40"
             :bottom="60"
+            listen-to=".open-live-page .n-scrollbar-container"
           />
-        </div>
+        </NScrollbar>
       </NLayoutContent>
     </NLayout>
 
@@ -437,7 +440,6 @@ onMounted(async () => {
 
 .open-live-page {
   height: 100%;
-  overflow: auto;
 }
 /* 优化 NPageHeader 在窄屏幕下的表现 (可选) */
 @media (max-width: 768px) {

@@ -127,7 +127,7 @@ const emptyCover = `${IMGUR_URL}None.png`
 
       <!-- 描述文本 -->
       <div class="description-container">
-        <NEllipsis :line-clamp="2" class="description-text" :tooltip="false">
+        <NEllipsis :line-clamp="2" class="description-text" :tooltip="{ arrowPointToCenter: true }">
           {{ goods.description || '暂无描述' }}
         </NEllipsis>
       </div>

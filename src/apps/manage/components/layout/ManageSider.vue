@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { AccountInfo } from '@/api/api-models'
+import type { AccountInfo } from '@/api/api-models';
+import { NavigateToNewTab } from '@/shared/utils';
+import { useBiliAuth } from '@/store/useBiliAuth';
 import {
   BookCoins20Filled,
   CalendarClock24Filled,
@@ -12,52 +14,61 @@ import {
   TabletSpeaker24Filled,
   VehicleShip24Filled,
   VideoAdd20Filled,
-} from '@vicons/fluent'
+} from '@vicons/fluent';
 import {
   AnalyticsSharp,
   Bookmark,
   BookmarkOutline,
-  BrowsersOutline,
   Chatbox,
+  ChatbubbleEllipsesOutline,
+  DocumentTextOutline,
   Eye,
+  GridOutline,
   MusicalNote,
-} from '@vicons/ionicons5'
-import { useStorage } from '@vueuse/core'
-import {
-  NAlert,
-  NButton,
-  NDivider,
-  NFlex,
-  NIcon,
-  NLayoutSider,
-  NMenu,
-  NSpace,
-  NText,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
-import { computed, h } from 'vue'
-import { RouterLink } from 'vue-router'
-import { useBiliAuth } from '@/store/useBiliAuth'
-import { NavigateToNewTab } from '@/shared/utils'
+  MusicalNotesOutline,
+  PlayCircleOutline
+} from '@vicons/ionicons5';
+import { useStorage } from '@vueuse/core';
+import { NButton, NScrollbar, NTooltip, useMessage } from 'naive-ui';
+import { computed, watchEffect } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 
 const props = defineProps<{
   accountInfo: AccountInfo
 }>()
 
+type ManageNavGroupId = 'favorites' | 'common' | 'data' | 'tools' | 'danmaku'
+type ManageNavGroupKey = `group-${ManageNavGroupId}`
+
+type ManageNavItem = {
+  key: string
+  label: string
+  icon: any
+  to?: { name: string }
+  disabled?: boolean
+  disabledReason?: string
+  group: Exclude<ManageNavGroupId, 'favorites'>
+}
+
 const message = useMessage()
-const themeVars = useThemeVars()
+const route = useRoute()
+const router = useRouter()
 
 const defaultCollapsed = window.innerWidth < 750
 const collapsed = useStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
 const siderWidth = 180
-const siderCollapsedWidth = 64
+const siderCollapsedWidth = 56
 
-const expandedKeys = useStorage<string[]>('Settings.MenuExpandedKeys', ['manage-danmaku'])
+const expandedGroups = useStorage<string[]>('Settings.ManageSiderExpandedGroups', [
+  'group-favorites',
+  'group-common',
+  'group-data',
+  'group-tools',
+  'group-danmaku',
+])
 
 const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', [])
-const isFavorite = (key: string) => favoriteMenuItems.value?.includes(key)
+const isFavorite = (key: string) => (favoriteMenuItems.value ?? []).includes(key)
 function toggleFavorite(key: string) {
   const list = favoriteMenuItems.value ?? []
   const idx = list.indexOf(key)
@@ -66,48 +77,8 @@ function toggleFavorite(key: string) {
   favoriteMenuItems.value = [...list]
 }
 
-function renderFavoriteExtra(key: string) {
-  return () => {
-    if (collapsed.value) return null
-    return h(
-      'span',
-      { class: ['menu-fav', isFavorite(key) ? 'active' : ''] },
-      [
-        h(
-          NTooltip,
-          { placement: 'right' },
-          {
-            trigger: () =>
-              h(
-                NButton,
-                {
-                  text: true,
-                  size: 'tiny',
-                  circle: true,
-                  onClick: (e: MouseEvent) => {
-                    e.stopPropagation()
-                    toggleFavorite(key)
-                  },
-                  style: 'padding: 0; height: 18px; width: 18px;',
-                },
-                {
-                  icon: () =>
-                    h(NIcon, {
-                      component: isFavorite(key) ? Bookmark : BookmarkOutline,
-                      size: 16,
-                      color: isFavorite(key) ? themeVars.value.warningColor : undefined,
-                    }),
-                },
-              ),
-            default: () => (isFavorite(key) ? '取消收藏' : '收藏'),
-          },
-        ),
-      ],
-    )
-  }
-}
-
-const isBiliVerified = computed(() => props.accountInfo?.isBiliVerified)
+const isBiliVerified = computed(() => !!props.accountInfo?.isBiliVerified)
+const needsEmailVerified = computed(() => props.accountInfo?.isEmailVerified === false)
 
 function gotoAuthPage() {
   if (!props.accountInfo?.biliUserAuthInfo) {
@@ -121,516 +92,610 @@ function gotoAuthPage() {
     })
 }
 
-const renderIcon = (icon: unknown) => () => h(NIcon, null, { default: () => h(icon as any) })
+const activeKey = computed(() => ((route.meta.parent as string) ?? route.name?.toString()) ?? '')
 
-const menuOptions = computed(() => {
-  const withFavoriteExtra = (item: any): any => {
-    if (item?.children?.length) {
-      return {
-        ...item,
-        children: item.children.map(withFavoriteExtra),
-      }
-    }
-    return {
-      ...item,
-      extra: collapsed.value ? undefined : renderFavoriteExtra(item.key),
-    }
-  }
+const baseItems = computed<ManageNavItem[]>(() => {
+  const emailDisabled = needsEmailVerified.value
+  const biliDisabled = !isBiliVerified.value
+  const biliReason = biliDisabled ? '需要完成 Bilibili 认证后才能使用' : undefined
 
-  const baseMenuItems = [
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-userPageBuilder' } }, { default: () => '自定义页面' }),
-      key: 'manage-userPageBuilder',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(BrowsersOutline),
-      group: 'common',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-history' } }, { default: () => '历史' }),
-      key: 'manage-history',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(AnalyticsSharp),
-      group: 'common',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-live' } }, { default: () => '直播记录' }),
-      key: 'manage-live',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(Live24Filled),
-      group: 'common',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-analyze' } }, { default: () => '直播数据' }),
-      key: 'manage-analyze',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(Eye),
-      group: 'common',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'org-index' } }, { default: () => '组织' }),
-      key: 'org-index',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(PeopleQueue24Filled),
-      group: 'common',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-event' } }, { default: () => '舰长和SC' }),
-      key: 'manage-event',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(VehicleShip24Filled),
-      group: 'data',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-point' } }, { default: () => '积分和礼物' }),
-      key: 'manage-point',
-      disabled: props.accountInfo?.isEmailVerified === false,
-      icon: renderIcon(BookCoins20Filled),
-      group: 'data',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-schedule' } }, { default: () => '日程' }),
-      key: 'manage-schedule',
-      icon: renderIcon(CalendarClock24Filled),
-      disabled: props.accountInfo?.isEmailVerified === false,
-      group: 'tools',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-songList' } }, { default: () => '歌单' }),
-      key: 'manage-songList',
-      icon: renderIcon(MusicalNote),
-      disabled: props.accountInfo?.isEmailVerified === false,
-      group: 'tools',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-questionBox' } }, { default: () => '棉花糖 (提问箱' }),
-      key: 'manage-questionBox',
-      icon: renderIcon(Chatbox),
-      disabled: props.accountInfo?.isEmailVerified === false,
-      group: 'tools',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-videoCollect' } }, { default: () => '视频征集' }),
-      key: 'manage-videoCollect',
-      icon: renderIcon(VideoAdd20Filled),
-      disabled: props.accountInfo?.isEmailVerified === false,
-      group: 'tools',
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'manage-lottery' } }, { default: () => '动态抽奖' }),
-      key: 'manage-lottery',
-      icon: renderIcon(Lottery24Filled),
-      group: 'tools',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '弹幕机'
-        : h(NTooltip, {}, {
-          trigger: () => h(
-            RouterLink,
-            { to: { name: 'manage-danmuji' } },
-            { default: () => '弹幕机' },
-          ),
-          default: () => '兼容 blivechat 样式 (其实就是直接用的 blivechat 组件',
-        }),
-      key: 'manage-danmuji',
-      disabled: !isBiliVerified.value,
-      icon: renderIcon(Lottery24Filled),
-      group: 'danmaku',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '点播'
-        : h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-liveRequest' } },
-              { default: () => '点播' },
-            ),
-            default: () => '歌势之类用的, 可以用来点歌或者跳舞什么的',
-          },
-        ),
-      key: 'manage-liveRequest',
-      icon: renderIcon(MusicalNote),
-      disabled: !isBiliVerified.value,
-      group: 'danmaku',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '抽奖'
-        : h(
-          RouterLink,
-          { to: { name: 'manage-liveLottery' } },
-          { default: () => '抽奖' },
-        ),
-      key: 'manage-liveLottery',
-      icon: renderIcon(Lottery24Filled),
-      disabled: !isBiliVerified.value,
-      group: 'danmaku',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '点歌'
-        : h(
-          NTooltip,
-          {},
-          {
-            trigger: () => h(
-              RouterLink,
-              { to: { name: 'manage-musicRequest' } },
-              { default: () => '点歌机' },
-            ),
-            default: () => '就是传统的点歌机, 发弹幕后播放指定的歌曲',
-          },
-        ),
-      key: 'manage-musicRequest',
-      icon: renderIcon(MusicalNote),
-      disabled: !isBiliVerified.value,
-      group: 'danmaku',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '排队'
-        : h(
-          RouterLink,
-          { to: { name: 'manage-liveQueue' } },
-          { default: () => '排队' },
-        ),
-      key: 'manage-liveQueue',
-      icon: renderIcon(PeopleQueue24Filled),
-      disabled: !isBiliVerified.value,
-      group: 'danmaku',
-    },
-    {
-      label: () => !isBiliVerified.value
-        ? '读弹幕'
-        : h(
-          RouterLink,
-          { to: { name: 'manage-speech' } },
-          { default: () => '读弹幕' },
-        ),
-      key: 'manage-speech',
-      icon: renderIcon(TabletSpeaker24Filled),
-      disabled: !isBiliVerified.value,
-      group: 'danmaku',
-    },
+  return [
+    { key: 'manage-history', label: '历史', icon: AnalyticsSharp, to: { name: 'manage-history' }, disabled: emailDisabled, group: 'common' },
+    { key: 'manage-live', label: '直播记录', icon: Live24Filled, to: { name: 'manage-live' }, disabled: emailDisabled, group: 'common' },
+    { key: 'manage-analyze', label: '直播数据', icon: Eye, to: { name: 'manage-analyze' }, disabled: emailDisabled, group: 'common' },
+    { key: 'org-index', label: '组织', icon: PeopleQueue24Filled, to: { name: 'org-index' }, disabled: emailDisabled, group: 'common' },
+
+    { key: 'manage-event', label: '舰长和SC', icon: VehicleShip24Filled, to: { name: 'manage-event' }, disabled: emailDisabled, group: 'data' },
+    { key: 'manage-point', label: '积分和礼物', icon: BookCoins20Filled, to: { name: 'manage-point' }, disabled: emailDisabled, group: 'data' },
+
+    { key: 'manage-schedule', label: '日程', icon: CalendarClock24Filled, to: { name: 'manage-schedule' }, disabled: emailDisabled, group: 'tools' },
+    { key: 'manage-songList', label: '歌单', icon: MusicalNote, to: { name: 'manage-songList' }, disabled: emailDisabled, group: 'tools' },
+    { key: 'manage-questionBox', label: '棉花糖 (提问箱)', icon: Chatbox, to: { name: 'manage-questionBox' }, disabled: emailDisabled, group: 'tools' },
+    { key: 'manage-videoCollect', label: '视频征集', icon: VideoAdd20Filled, to: { name: 'manage-videoCollect' }, disabled: emailDisabled, group: 'tools' },
+    { key: 'manage-lottery', label: '动态抽奖', icon: Lottery24Filled, to: { name: 'manage-lottery' }, disabled: emailDisabled, group: 'tools' },
+
+    { key: 'manage-danmuji', label: '弹幕机', icon: ChatbubbleEllipsesOutline, to: { name: 'manage-danmuji' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
+    { key: 'manage-liveRequest', label: '点播', icon: PlayCircleOutline, to: { name: 'manage-liveRequest' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
+    { key: 'manage-liveLottery', label: '抽奖', icon: Lottery24Filled, to: { name: 'manage-liveLottery' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
+    { key: 'manage-musicRequest', label: '点歌机', icon: MusicalNotesOutline, to: { name: 'manage-musicRequest' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
+    { key: 'manage-liveQueue', label: '排队', icon: PeopleQueue24Filled, to: { name: 'manage-liveQueue' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
+    { key: 'manage-speech', label: '读弹幕', icon: TabletSpeaker24Filled, to: { name: 'manage-speech' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
   ]
+})
 
-  const allMenuItems = baseMenuItems.map(withFavoriteExtra)
-  const itemMap = new Map(allMenuItems.map(i => [i.key, i]))
+type ManageNavGroup = {
+  key: ManageNavGroupKey
+  label: string
+  items: ManageNavItem[]
+  hint?: string
+}
+
+const groups = computed<ManageNavGroup[]>(() => {
+  const items = baseItems.value
+  const map = new Map(items.map(i => [i.key, i]))
 
   const favorites = (favoriteMenuItems.value ?? [])
-    .map(k => itemMap.get(k))
-    .filter(Boolean) as any[]
+    .map(k => map.get(k))
+    .filter(Boolean) as ManageNavItem[]
 
-  const notFav = (i: any) => !isFavorite(i.key)
-  const groups: any[] = []
+  const notFav = (i: ManageNavItem) => !isFavorite(i.key)
+  const next: ManageNavGroup[] = []
 
-  if (favorites.length > 0) {
-    groups.push({
-      type: 'group',
-      key: 'group-favorites',
-      label: '我的收藏',
-      children: favorites,
-    })
-  }
+  if (favorites.length) next.push({ key: 'group-favorites', label: '我的收藏', items: favorites })
 
-  const commonItems = allMenuItems.filter(i => i.group === 'common' && notFav(i))
-  if (commonItems.length > 0) {
-    groups.push({
-      type: 'group',
-      key: 'group-common',
-      label: '常用',
-      children: commonItems,
-    })
-  }
+  const commonItems = items.filter(i => i.group === 'common' && notFav(i))
+  if (commonItems.length) next.push({ key: 'group-common', label: '常用', items: commonItems })
 
-  const dataItems = allMenuItems.filter(i => i.group === 'data' && notFav(i))
-  if (dataItems.length > 0) {
-    groups.push({
-      type: 'group',
-      key: 'group-data',
-      label: '数据',
-      children: dataItems,
-    })
-  }
+  const dataItems = items.filter(i => i.group === 'data' && notFav(i))
+  if (dataItems.length) next.push({ key: 'group-data', label: '数据', items: dataItems })
 
-  const toolsItems = allMenuItems.filter(i => i.group === 'tools' && notFav(i))
-  if (toolsItems.length > 0) {
-    groups.push({
-      type: 'group',
-      key: 'group-tools',
-      label: '互动与工具',
-      children: toolsItems,
-    })
-  }
+  const toolsItems = items.filter(i => i.group === 'tools' && notFav(i))
+  if (toolsItems.length) next.push({ key: 'group-tools', label: '互动与工具', items: toolsItems })
 
-  const danmakuItems = allMenuItems.filter(i => i.group === 'danmaku' && notFav(i))
-  if (danmakuItems.length > 0) {
-    groups.push({
-      type: 'group',
+  const danmakuItems = items.filter(i => i.group === 'danmaku' && notFav(i))
+  if (danmakuItems.length) {
+    next.push({
       key: 'group-danmaku',
-      label: () => h(
-        NTooltip,
-        {},
-        {
-          trigger: () => h(
-            NText,
-            () => [
-              '弹幕相关',
-              h(
-                NTooltip,
-                { style: 'padding: 0; margin-left: 4px;' },
-                {
-                  trigger: () => h(NIcon, { component: Info24Filled, size: 14 }),
-                  default: () => h(
-                    NAlert,
-                    {
-                      type: 'warning',
-                      size: 'small',
-                      title: '可用性警告',
-                      style: 'max-width: 600px;',
-                    },
-                    () => h('div', {}, [
-                      '    当浏览器在后台运行时, 定时器和 Websocket 连接将受到严格限制, 这会导致弹幕接收功能无法正常工作 (详见',
-                      h(
-                        NButton,
-                        {
-                          text: true,
-                          tag: 'a',
-                          href: 'https://developer.chrome.com/blog/background_tabs/',
-                          target: '_blank',
-                          type: 'info',
-                        },
-                        () => '此文章',
-                      ),
-                      '), 虽然本站已经针对此问题做出了处理, 一般情况下即使掉线了也会重连, 不过还是有可能会遗漏事件',
-                      h('br'),
-                      '为避免这种情况, 建议注册本站账后使用',
-                      h(
-                        NButton,
-                        {
-                          type: 'primary',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs',
-                          target: '_blank',
-                        },
-                        () => 'VtsuruEventFetcher',
-                      ),
-                      ', 否则请在使用功能时尽量保持网页在前台运行, 同时关闭浏览器的 页面休眠/内存节省 功能',
-                      h('br'),
-                      'Chrome: ',
-                      h(
-                        NButton,
-                        {
-                          type: 'info',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81',
-                          target: '_blank',
-                        },
-                        () => '让特定网站保持活动状态',
-                      ),
-                      ', Edge: ',
-                      h(
-                        NButton,
-                        {
-                          type: 'info',
-                          text: true,
-                          size: 'small',
-                          tag: 'a',
-                          href: 'https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25',
-                          target: '_blank',
-                        },
-                        () => '永远不想进入睡眠状态的网站',
-                      ),
-                    ]),
-                  ),
-                },
-              ),
-            ],
-          ),
-          default: () => (isBiliVerified.value
-            ? '需要使用直播弹幕的功能'
-            : '你尚未进行 Bilibili 认证, 请前往面板进行绑定'),
-        },
-      ),
-      children: danmakuItems,
+      label: '弹幕相关',
+      items: danmakuItems,
+      hint: isBiliVerified.value ? '需要使用直播弹幕的功能' : '你尚未进行 Bilibili 认证, 请前往面板进行绑定',
     })
   }
 
-  return groups
+  return next
 })
+
+function isGroupExpanded(key: ManageNavGroupKey) {
+  return (expandedGroups.value ?? []).includes(key)
+}
+
+function toggleGroup(key: ManageNavGroupKey) {
+  const list = expandedGroups.value ?? []
+  const idx = list.indexOf(key)
+  if (idx === -1) expandedGroups.value = [...list, key]
+  else {
+    list.splice(idx, 1)
+    expandedGroups.value = [...list]
+  }
+}
+
+watchEffect(() => {
+  const allowed: ManageNavGroupKey[] = ['group-favorites', 'group-common', 'group-data', 'group-tools', 'group-danmaku']
+  const list = Array.isArray(expandedGroups.value) ? expandedGroups.value : []
+  const next = list.filter((k): k is ManageNavGroupKey => allowed.includes(k as any))
+  if (next.length === 0) next.push(...allowed)
+  if (next.join('|') !== list.join('|')) expandedGroups.value = next
+})
+
+function onClickNavItem(ev: MouseEvent, item: ManageNavItem) {
+  if (item.disabled) {
+    ev.preventDefault()
+    ev.stopPropagation()
+  }
+}
+
+async function go(name: string) {
+  await router.push({ name })
+}
 </script>
 
 <template>
-  <NLayoutSider
+  <aside
     v-if="accountInfo?.isEmailVerified"
-    v-model:collapsed="collapsed"
-    bordered
-    show-trigger
-    collapse-mode="width"
-    :collapsed-width="siderCollapsedWidth"
-    :width="siderWidth"
-    :native-scrollbar="false"
-    :scrollbar-props="{ trigger: 'none', style: {} }"
-    :class="{ 'sider-collapsed': collapsed }"
+    class="manage-sider"
+    :class="{ collapsed }"
+    :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
   >
-    <div class="manage-sider__top" :class="{ 'is-collapsed': collapsed }">
-      <NFlex align="center" justify="space-between" :wrap="false" :size="8">
-        <NButton type="info" class="manage-sider__home" @click="$router.push({ name: 'manage-index' })">
+    <div class="manage-sider__top">
+      <div class="manage-sider__top-row">
+        <NButton
+          class="sider-top-btn sider-top-btn--panel"
+          size="small"
+          secondary
+          :circle="collapsed"
+          :title="collapsed ? '面板' : undefined"
+          @click="go('manage-index')"
+        >
           <template #icon>
-            <NIcon :component="BrowsersOutline" />
+            <component :is="GridOutline" class="sider-icon" />
           </template>
-          <template v-if="!collapsed">
-            面板
-          </template>
+          <span v-if="!collapsed" class="sider-top-label">面板</span>
         </NButton>
 
-        <NTooltip v-if="!collapsed">
-          <template #trigger>
-            <NButton class="manage-sider__feedback" @click="$router.push({ name: 'manage-feedback' })">
-              <template #icon>
-                <NIcon :component="PersonFeedback24Filled" />
-              </template>
-            </NButton>
+        <NButton
+          class="sider-top-icon-btn"
+          size="small"
+          quaternary
+          circle
+          :title="collapsed ? '反馈' : '反馈'"
+          @click="go('manage-feedback')"
+          v-if="!collapsed"
+        >
+          <template #icon>
+            <component :is="PersonFeedback24Filled" class="sider-icon" />
           </template>
-          反馈
-        </NTooltip>
-      </NFlex>
+        </NButton>
+      </div>
 
-      <NButton type="primary" secondary class="manage-sider__builder" @click="$router.push({ name: 'manage-userPageBuilder' })">
+      <NButton
+        class="sider-top-btn"
+        size="small"
+        type="primary"
+        secondary
+        strong
+        :circle="collapsed"
+        :block="!collapsed"
+        :title="collapsed ? '自定义页面' : undefined"
+        @click="go('manage-userPageBuilder')"
+      >
         <template #icon>
-          <NIcon :component="BrowsersOutline" />
+          <component :is="DocumentTextOutline" class="sider-icon" />
         </template>
-        <template v-if="!collapsed">
-          自定义页面
-        </template>
+        <span v-if="!collapsed" class="sider-btn-label">自定义页面</span>
       </NButton>
 
-      <NButton v-if="accountInfo.biliUserAuthInfo" type="info" secondary class="manage-sider__auth" @click="gotoAuthPage()">
+      <NButton
+        v-if="accountInfo.biliUserAuthInfo"
+        class="sider-top-btn"
+        size="small"
+        type="info"
+        secondary
+        strong
+        :circle="collapsed"
+        :block="!collapsed"
+        :title="collapsed ? '认证用户主页' : undefined"
+        @click="gotoAuthPage()"
+      >
         <template #icon>
-          <NIcon :component="Person48Filled" />
+          <component :is="Person48Filled" class="sider-icon" />
         </template>
-        <template v-if="!collapsed">
-          认证用户主页
-        </template>
+        <span v-if="!collapsed" class="sider-btn-label">认证用户主页</span>
       </NButton>
     </div>
 
-    <NMenu
-      v-model:expanded-keys="expandedKeys"
-      class="manage-sider-menu"
-      :disabled="accountInfo?.isEmailVerified !== true"
-      :default-value="($route.meta.parent as string) ?? $route.name?.toString()"
-      :default-expanded-keys="['group-common', 'group-data', 'group-tools', 'group-danmaku', 'group-favorites']"
-      :collapsed="collapsed"
-      :collapsed-width="siderCollapsedWidth"
-      :collapsed-icon-size="22"
-      :icon-size="16"
-      :root-indent="10"
-      :indent="12"
-      :options="menuOptions"
-    />
+    <NScrollbar class="manage-sider__nav">
+      <nav class="manage-sider__nav-inner" :class="{ collapsed }">
+        <template v-for="g in groups" :key="g.key">
+          <div class="nav-group">
+            <div v-if="!collapsed" class="nav-group__header">
+              <button class="nav-group__toggle" type="button" @click="toggleGroup(g.key)">
+                <span class="nav-group__label">{{ g.label }}</span>
+                <span class="nav-group__chev" :class="{ open: isGroupExpanded(g.key) }">›</span>
+              </button>
 
-    <NSpace v-if="!collapsed" justify="center" align="center" vertical>
-      <NText depth="3">
+              <NTooltip v-if="g.key === 'group-danmaku'" placement="right" :show-arrow="false" trigger="hover">
+                <template #trigger>
+                  <button
+                    class="nav-group__info"
+                    type="button"
+                    :title="g.hint || '提示'"
+                  >
+                    <component :is="Info24Filled" class="nav-group__info-icon" />
+                  </button>
+                </template>
+                  <div class="danmaku-tooltip">
+                    <div class="danmaku-tooltip__title">
+                      可用性警告
+                    </div>
+                    <div class="danmaku-tooltip__body">
+                      当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作（详见
+                      <a href="https://developer.chrome.com/blog/background_tabs/" target="_blank" rel="noreferrer">此文章</a>）。
+                      为避免遗漏事件，建议使用
+                      <a href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" rel="noreferrer">VtsuruEventFetcher</a>
+                      或尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。
+                      <div style="margin-top: 6px">
+                        <a
+                          href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
+                          target="_blank"
+                          rel="noreferrer"
+                        >Chrome: 让特定网站保持活动状态</a>
+                        ，
+                        <a
+                          href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
+                          target="_blank"
+                          rel="noreferrer"
+                        >Edge: 永远不想进入睡眠状态的网站</a>
+                      </div>
+                    </div>
+                  </div>
+              </NTooltip>
+            </div>
+
+            <div v-show="collapsed || isGroupExpanded(g.key)" class="nav-group__items">
+              <div v-for="item in g.items" :key="item.key" class="nav-item-row">
+                <RouterLink
+                  v-if="!item.disabled && item.to"
+                  :to="item.to"
+                  class="nav-item"
+                  :class="{ active: activeKey === item.key }"
+                  :title="collapsed ? item.label : undefined"
+                  @click="(ev: any) => onClickNavItem(ev, item)"
+                >
+                  <component :is="item.icon" class="nav-item__icon" />
+                  <span v-if="!collapsed" class="nav-item__label">{{ item.label }}</span>
+
+                  <button
+                    v-if="!collapsed"
+                    class="nav-item__fav"
+                    type="button"
+                    :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                    @click.stop.prevent="toggleFavorite(item.key)"
+                  >
+                    <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }" />
+                  </button>
+                </RouterLink>
+
+                <div
+                  v-else
+                  class="nav-item nav-item--disabled"
+                  :title="item.disabledReason || item.label"
+                >
+                  <component :is="item.icon" class="nav-item__icon" />
+                  <span v-if="!collapsed" class="nav-item__label">{{ item.label }}</span>
+                  <button
+                    v-if="!collapsed"
+                    class="nav-item__fav"
+                    type="button"
+                    :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                    @click.stop.prevent="toggleFavorite(item.key)"
+                  >
+                    <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </nav>
+    </NScrollbar>
+
+    <div v-if="!collapsed" class="manage-sider__footer">
+      <div class="footer-line">
         有更多功能建议请
-        <NButton text type="info" @click="$router.push({ name: 'manage-feedback' })">
+        <NButton text type="primary" size="tiny" @click="go('manage-feedback')">
           反馈
         </NButton>
-      </NText>
-      <NText depth="3">
-        <NButton text type="info" @click="$router.push({ name: 'about' })">
+      </div>
+      <div class="footer-line">
+        <NButton text type="primary" size="tiny" @click="go('about')">
           关于本站
         </NButton>
-      </NText>
-    </NSpace>
-    <NDivider style="margin-bottom: 8px;" />
-    <NFlex justify="center" align="center">
-      <NText
-        v-if="!collapsed"
-        :style="{ fontSize: '12px', textAlign: 'center', color: themeVars.textColor3 }"
-      >
+      </div>
+      <div class="footer-by">
         By Megghy
-      </NText>
-    </NFlex>
-  </NLayoutSider>
+      </div>
+    </div>
+  </aside>
 </template>
 
 <style scoped>
-.manage-sider__top {
-  padding: 12px 15px 6px 6px;
+.manage-sider {
+  height: 100%;
+  border-right: 1px solid var(--n-border-color);
+  background: var(--n-body-color);
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 95%;
-}
-
-.manage-sider__home {
-  flex: 1;
-}
-
-.manage-sider__feedback {
-  flex: none;
-}
-
-.manage-sider__auth {
-  width: 100%;
-}
-
-.manage-sider__builder {
-  width: 100%;
-}
-
-.manage-sider__top.is-collapsed .manage-sider__home,
-.manage-sider__top.is-collapsed .manage-sider__auth,
-.manage-sider__top.is-collapsed .manage-sider__builder {
-  width: 100%;
-}
-
-:deep(.manage-sider-menu .menu-fav) {
-  opacity: 0;
-  width: 0;
-  margin-left: 0;
   overflow: hidden;
-  transition: opacity 0.15s ease, width 0.15s ease, margin-left 0.15s ease;
-  pointer-events: none;
+  transition: width 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
+.manage-sider__top {
+  padding: 9px 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manage-sider__top-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manage-sider.collapsed .manage-sider__top-row {
+  justify-content: center;
+}
+
+.sider-top-btn {
+  height: 34px;
+  justify-content: flex-start;
+}
+
+.sider-top-btn--panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.manage-sider.collapsed .sider-top-btn--panel {
+  flex: 0 0 auto;
+}
+
+.sider-top-icon-btn {
+  height: 34px;
+  width: 34px;
+  flex: 0 0 auto;
+}
+
+.manage-sider.collapsed .sider-top-icon-btn {
+  height: 32px;
+  width: 32px;
+}
+
+.manage-sider.collapsed .sider-top-btn {
+  height: 32px;
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.sider-top-btn :deep(.n-button__content) {
+  gap: 10px;
+}
+
+.manage-sider.collapsed .sider-top-btn :deep(.n-button__content) {
+  gap: 0;
+}
+
+.sider-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.sider-top-label,
+.sider-btn-label {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.manage-sider__nav {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.manage-sider__nav-inner {
+  padding: 4px 8px 10px;
+  transition: padding 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
+.manage-sider__nav-inner.collapsed {
+  padding: 4px 6px 10px;
+}
+
+.nav-group {
+  padding: 6px 0;
+}
+
+.manage-sider.collapsed .nav-group + .nav-group::before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(127, 127, 127, 0.18), transparent);
+  margin: 5px 20px 3px;
+  border-radius: 1px;
+}
+
+.nav-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 4px 6px;
+}
+
+.nav-group__toggle {
+  border: none;
+  background: transparent;
+  color: var(--n-text-color-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.nav-group__chev {
+  display: inline-block;
+  transform: rotate(90deg);
+  transition: transform 120ms ease;
+  opacity: 0.8;
+}
+.nav-group__chev.open {
+  transform: rotate(270deg);
+}
+
+.nav-group__info {
+  height: 22px;
+  width: 22px;
+  border-radius: 7px;
+  border: 1px solid var(--n-border-color);
+  background: transparent;
+  color: var(--n-text-color-3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-:deep(.n-menu-item) {
-  height: 36px;
+.nav-group__info:hover {
+  background: rgba(127, 127, 127, 0.08);
 }
 
-:deep(.manage-sider-menu .n-menu-item:hover .menu-fav),
-:deep(.manage-sider-menu .menu-fav.active) {
-  opacity: 1;
-  width: 18px;
-  margin-left: 6px;
-  pointer-events: auto;
+.nav-group__info-icon {
+  width: 14px;
+  height: 14px;
 }
 
-:deep(.manage-sider-menu .menu-fav .n-button) {
-  padding: 0;
-  height: 18px;
-  width: 18px;
+.danmaku-tooltip {
+  width: 320px;
+  max-width: min(360px, 70vw);
+  padding: 10px 10px;
+  border-radius: 12px;
 }
 
-:deep(.sider-collapsed .manage-sider-menu .n-menu-item .n-menu-item-content) {
+.danmaku-tooltip__title {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.danmaku-tooltip__body {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--n-text-color-2);
+}
+
+.danmaku-tooltip__body a {
+  color: var(--n-primary-color);
+  text-decoration: none;
+}
+
+.danmaku-tooltip__body a:hover {
+  text-decoration: underline;
+}
+
+.nav-group__items {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  height: 34px;
+  border-radius: 10px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--n-text-color);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  box-sizing: border-box;
+}
+
+.manage-sider.collapsed .nav-item {
+  padding: 0;
   justify-content: center;
 }
 
-.sider-collapsed :deep(.manage-sider-menu .menu-fav) {
-  display: none !important;
+.nav-item:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+.nav-item:focus-visible {
+  outline: 2px solid rgba(127, 127, 127, 0.28);
+  outline-offset: 2px;
+}
+
+.nav-item.active {
+  background: rgba(127, 127, 127, 0.12);
+  border-color: rgba(127, 127, 127, 0.18);
+}
+
+.nav-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-item__icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.nav-item__label {
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item__fav {
+  height: 22px;
+  width: 22px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+
+.nav-item-row:hover .nav-item__fav,
+.nav-item__fav-icon.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nav-item__fav:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.nav-item__fav-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--n-text-color-3);
+}
+
+.nav-item__fav-icon.active {
+  color: var(--n-warning-color);
+}
+
+.manage-sider__footer {
+  border-top: 1px solid var(--n-border-color);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.footer-line {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  text-align: center;
+}
+
+.footer-by {
+  margin-top: 4px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--n-text-color-3);
 }
 </style>
-

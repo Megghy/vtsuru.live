@@ -183,7 +183,8 @@ const glassBgSoft = computed(() => (isDarkMode.value ? 'rgba(9, 9, 11, 0.14)' : 
 const indexGlassVars = computed(() => ({
   '--index-glass-bg': glassBg.value,
   '--index-glass-bg-soft': glassBgSoft.value,
-  '--index-glass-border': isDarkMode.value ? 'rgba(255, 255, 255, 0.12)' : 'rgba(9, 9, 11, 0.08)',
+  // 避免浅色/深色下出现“发黑”的边框观感，统一使用更中性的灰蓝色系
+  '--index-glass-border': isDarkMode.value ? 'rgba(148, 163, 184, 0.18)' : 'rgba(148, 163, 184, 0.22)',
 }))
 
 const textColor = computed(() => themeVars.value.textColor1)

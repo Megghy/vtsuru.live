@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import type {
-  GlobalThemeOverrides,
-  MenuOption,
-} from 'naive-ui'
+import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
 import {
   BookCoins20Filled,
@@ -12,7 +9,7 @@ import {
   VideoAdd20Filled,
   WindowWrench20Filled,
 } from '@vicons/fluent'
-import { BrowsersOutline, Chatbox, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   darkTheme,
@@ -23,23 +20,18 @@ import {
   NDivider,
   NEllipsis,
   NIcon,
-  NLayout,
-  NLayoutContent,
-  NLayoutHeader,
-  NLayoutSider,
-  NMenu,
   NModal,
-  NPageHeader,
   NResult,
+  NScrollbar,
   NSpace,
   NSpin,
   NSwitch,
   NText,
+  NTooltip,
   useMessage,
-  // NSpin 已默认导入，如果单独使用需确保导入
 } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue' // 引入 watch
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { useUser } from '@/api/user'
@@ -52,6 +44,7 @@ import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import '@/apps/user/styles/user-page.css'
+import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // --- 响应式状态和常量 ---
 const route = useRoute()
@@ -76,9 +69,35 @@ const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
 const sider = ref() // 侧边栏 DOM 引用
 const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
 const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
+const siderCollapsed = useStorage<boolean>('Settings.UserSiderCollapsed', windowWidth < 768)
+const siderAvatarSize = computed(() => (siderCollapsed.value ? 34 : 42))
+
+type UserNavItem = {
+  key: string
+  label: string
+  icon: any
+  to?: any
+  disabled?: boolean
+  disabledReason?: string
+}
+
+type UserNavGroup = {
+  key: string
+  label: string
+  items: UserNavItem[]
+}
 
 // 侧边栏菜单项
-const menuOptions = ref<MenuOption[]>([]) // 初始化为空数组
+const navGroups = ref<UserNavGroup[]>([])
+const favoriteNavItems = useStorage<string[]>('Settings.UserFavoriteNavItems', [])
+const isFavorite = (key: string) => (favoriteNavItems.value ?? []).includes(key)
+function toggleFavorite(key: string) {
+  const list = favoriteNavItems.value ?? []
+  const idx = list.indexOf(key)
+  if (idx === -1) list.unshift(key)
+  else list.splice(idx, 1)
+  favoriteNavItems.value = [...list]
+}
 const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
 
 const activeMenuKey = computed(() => {
@@ -90,12 +109,9 @@ const activeMenuKey = computed(() => {
   return name
 })
 
-// --- 方法 ---
+const headerSubtitle = computed(() => (isLoading.value ? '加载中...' : ((route.meta.title as string) ?? '')))
 
-/** 渲染图标的辅助函数 */
-function renderIcon(icon: unknown) {
-  return () => h(NIcon, null, { default: () => h(icon as any) })
-}
+// --- 方法 ---
 
 const userPageSlug = computed(() => {
   const v = route.params.pageSlug
@@ -123,19 +139,38 @@ const currentBlockValidation = computed(() => {
   return validateBlockPageProject((currentUserPageConfig.value as any)?.block)
 })
 
-const pageThemeMode = computed(() => {
-  const v = currentBlockValidation.value
-  // 用户页（block 模式）忽略系统亮暗：除非显式设置为 light，否则默认按 dark 渲染
-  if (!v || !v.ok) return 'auto'
-  const mode = (v.project.theme as any)?.pageThemeMode
-  return mode === 'light' ? 'light' : 'dark'
+type PageThemeMode = 'auto' | 'light' | 'dark'
+
+const globalThemeMode = computed<PageThemeMode>(() => {
+  const m = (userPagesSettings.value as any)?.theme?.pageThemeMode
+  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
 })
 
-const pageNaiveTheme = computed(() => {
-  if (pageThemeMode.value === 'dark') return darkTheme
-  if (pageThemeMode.value === 'light') return null
-  return undefined
+const pageOverrideThemeMode = computed<PageThemeMode>(() => {
+  const m = (currentUserPageConfig.value as any)?.theme?.pageThemeMode
+  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
 })
+
+const blockThemeMode = computed<PageThemeMode>(() => {
+  const v = currentBlockValidation.value
+  const m = v && v.ok ? (v.project.theme as any)?.pageThemeMode : undefined
+  return (m === 'auto' || m === 'light' || m === 'dark') ? m : 'auto'
+})
+
+const pageThemeMode = computed<PageThemeMode>(() => {
+  // block theme > page override > global
+  if (blockThemeMode.value !== 'auto') return blockThemeMode.value
+  if (pageOverrideThemeMode.value !== 'auto') return pageOverrideThemeMode.value
+  return globalThemeMode.value
+})
+
+const effectiveIsDark = computed(() => {
+  if (pageThemeMode.value === 'dark') return true
+  if (pageThemeMode.value === 'light') return false
+  return isDarkMode.value
+})
+
+const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
 
 const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
   // 只有在启用了背景图/毛玻璃模式时才应用特殊的主题覆盖
@@ -171,14 +206,10 @@ const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
 })
 
 const themeSwitchTitle = computed(() => {
-  if (pageThemeMode.value === 'auto') return '切换亮/暗色主题'
-  return pageThemeMode.value === 'dark' ? '该页面强制使用暗色主题' : '该页面强制使用亮色主题'
-})
-
-const effectiveIsDark = computed(() => {
-  if (pageThemeMode.value === 'dark') return true
-  if (pageThemeMode.value === 'light') return false
-  return isDarkMode.value
+  if (pageThemeMode.value === 'auto') return '切换站点亮/暗色主题'
+  if (blockThemeMode.value !== 'auto') return pageThemeMode.value === 'dark' ? '该区块页已强制使用暗色主题' : '该区块页已强制使用亮色主题'
+  if (pageOverrideThemeMode.value !== 'auto') return pageThemeMode.value === 'dark' ? '该页面已强制使用暗色主题' : '该页面已强制使用亮色主题'
+  return pageThemeMode.value === 'dark' ? '全局样式已强制使用暗色主题' : '全局样式已强制使用亮色主题'
 })
 
 const pageBgOverride = computed(() => {
@@ -224,56 +255,36 @@ const layoutPageBgClass = computed(() => ({
 function updateMenuOptions() {
   // 如果没有用户信息，清空菜单
   if (!userInfo.value) {
-    menuOptions.value = []
+    navGroups.value = []
     return
   }
-  // 基于 userInfo.extra.enableFunctions 构建菜单项
-  const baseItems = [
-    {
-      label: () => h(RouterLink, { to: { name: 'user-index' } }, { default: () => '主页' }),
-      key: 'user-index',
-      icon: renderIcon(Home),
-      // 主页通常都显示
-      show: true,
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-songList' } }, { default: () => '歌单' }),
-      key: 'user-songList',
-      icon: renderIcon(MusicalNote),
-      // 根据用户配置判断是否显示
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.SongList),
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-schedule' } }, { default: () => '日程' }),
-      key: 'user-schedule',
-      icon: renderIcon(CalendarClock24Filled),
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Schedule),
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-questionBox' } }, { default: () => '棉花糖 (提问箱)' }),
-      key: 'user-questionBox',
-      icon: renderIcon(Chatbox),
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.QuestionBox),
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-video-collect' } }, { default: () => '视频征集' }),
-      key: 'user-video-collect',
-      icon: renderIcon(VideoAdd20Filled),
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.VideoCollect),
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-goods' } }, { default: () => '积分' }),
-      key: 'user-goods',
-      icon: renderIcon(BookCoins20Filled),
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point),
-    },
-    {
-      label: () => h(RouterLink, { to: { name: 'user-checkin' } }, { default: () => '签到排行' }),
-      key: 'user-checkin',
-      icon: renderIcon(CheckmarkCircle24Filled),
-      show: userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking),
-    },
-  ].filter((option: any) => option.show !== false) as MenuOption[] // 过滤掉 show 为 false 的菜单项
+  const baseItems: UserNavItem[] = [
+    { label: '主页', key: 'user-index', icon: Home, to: { name: 'user-index' } },
+  ]
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.SongList)) {
+    baseItems.push({ label: '歌单', key: 'user-songList', icon: MusicalNote, to: { name: 'user-songList' } })
+  }
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Schedule)) {
+    baseItems.push({ label: '日程', key: 'user-schedule', icon: CalendarClock24Filled, to: { name: 'user-schedule' } })
+  }
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.QuestionBox)) {
+    baseItems.push({ label: '棉花糖 (提问箱)', key: 'user-questionBox', icon: Chatbox, to: { name: 'user-questionBox' } })
+  }
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.VideoCollect)) {
+    baseItems.push({ label: '视频征集', key: 'user-video-collect', icon: VideoAdd20Filled, to: { name: 'user-video-collect' } })
+  }
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point)) {
+    baseItems.push({ label: '积分', key: 'user-goods', icon: BookCoins20Filled, to: { name: 'user-goods' } })
+  }
+
+  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking)) {
+    baseItems.push({ label: '签到排行', key: 'user-checkin', icon: CheckmarkCircle24Filled, to: { name: 'user-checkin' } })
+  }
 
   const pages = userPagesSettings.value?.pages ?? {}
   const pageItems = Object.entries(pages)
@@ -285,26 +296,24 @@ function updateMenuOptions() {
     }))
     .sort((a, b) => (a.order - b.order) || a.slug.localeCompare(b.slug))
     .map(it => ({
-      label: () =>
-        h(
-          RouterLink,
-          { to: { name: 'user-page', params: { id: route.params.id, pageSlug: it.slug } } },
-          { default: () => it.title },
-        ),
+      label: it.title,
       key: `user-page:${it.slug}`,
-      icon: renderIcon(BrowsersOutline),
-    })) as MenuOption[]
+      icon: BrowsersOutline,
+      to: { name: 'user-page', params: { id: route.params.id, pageSlug: it.slug } },
+    })) as UserNavItem[]
 
-  if (pageItems.length) {
-    baseItems.push({
-      type: 'group',
-      label: '页面',
-      key: 'user-pages',
-      children: pageItems,
-    } as any)
-  }
+  const allItems = [...baseItems, ...pageItems]
+  const allMap = new Map(allItems.map(i => [i.key, i]))
+  const favorites = (favoriteNavItems.value ?? [])
+    .map(k => allMap.get(k))
+    .filter(Boolean) as UserNavItem[]
 
-  menuOptions.value = baseItems
+  const groups: UserNavGroup[] = []
+  if (favorites.length) groups.push({ key: 'user-favorites', label: '收藏', items: favorites })
+  if (baseItems.length) groups.push({ key: 'user-core', label: '导航', items: baseItems })
+  if (pageItems.length) groups.push({ key: 'user-pages', label: '页面', items: pageItems })
+
+  navGroups.value = groups
 }
 
 /** 获取 Bilibili 用户信息 */
@@ -337,7 +346,7 @@ async function fetchUserData(userId: string | string[] | undefined) {
     notFound.value = true // 标记为未找到
     isLoading.value = false // 加载结束
     userInfo.value = null // 清空用户信息
-    menuOptions.value = [] // 清空菜单
+    navGroups.value = [] // 清空菜单
     console.error('无效的用户 ID:', userId)
     return
   }
@@ -346,7 +355,7 @@ async function fetchUserData(userId: string | string[] | undefined) {
   isLoading.value = true
   notFound.value = false
   userInfo.value = null
-  menuOptions.value = []
+  navGroups.value = []
   biliUserInfo.value = null
 
   try {
@@ -399,7 +408,7 @@ watch(
       notFound.value = true
       isLoading.value = false
       userInfo.value = null
-      menuOptions.value = []
+      navGroups.value = []
     }
   },
   { immediate: true }, // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
@@ -423,7 +432,7 @@ watch(
 
 <template>
   <!-- 情况 1: 加载完毕，但 URL 中没有提供用户 ID -->
-  <NLayoutContent
+  <div
     v-if="!id && !isLoading"
     class="center-container"
   >
@@ -432,10 +441,10 @@ watch(
       title="未提供用户ID"
       description="请检查访问的URL地址"
     />
-  </NLayoutContent>
+  </div>
 
   <!-- 情况 2: 加载完毕，但未找到指定 ID 的用户 -->
-  <NLayoutContent
+  <div
     v-else-if="notFound && !isLoading"
     class="center-container"
   >
@@ -444,7 +453,7 @@ watch(
       title="用户不存在"
       description="无法找到指定ID的用户，或者该用户未完成认证"
     />
-  </NLayoutContent>
+  </div>
 
   <!-- 情况 3: 存在 ID 且 (正在加载 或 加载成功且找到用户) -->
   <NConfigProvider
@@ -452,215 +461,292 @@ watch(
     :theme="pageNaiveTheme"
     :theme-overrides="pageThemeOverrides"
   >
-    <NLayout
+    <div
       class="page-root"
       :class="layoutPageBgClass"
       :style="layoutPageBgVars"
-      style="height: 100vh"
     >
       <!-- 顶部导航栏 -->
-      <NLayoutHeader class="layout-header">
-        <NPageHeader
-          :subtitle="isLoading ? '加载中...' : ($route.meta.title as string) ?? ''"
-          style="width: 100%"
-        >
-          <!-- 右侧额外操作区域 -->
-          <template #extra>
-            <NSpace align="center">
-              <!-- 主题切换开关 -->
-              <NSwitch
-                :value="themeType === ThemeType.Light"
-                :disabled="isLoading || pageThemeMode !== 'auto'"
-                :title="themeSwitchTitle"
-                @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
-              >
-                <template #checked>
-                  <NIcon :component="Sunny" />
-                </template>
-                <template #unchecked>
-                  <NIcon :component="Moon" />
-                </template>
-              </NSwitch>
-              <!-- 已登录用户操作 -->
-              <template v-if="accountInfo?.id">
-                <NSpace>
-                  <!-- B站认证中心按钮 (如果已认证) -->
-                  <NButton
-                    v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
-                    type="primary"
-                    tag="a"
-                    href="/bili-user"
-                    target="_blank"
-                    size="small"
-                    secondary
-                  >
-                    <template #icon>
-                      <NIcon :component="Person48Filled" />
-                    </template>
-                    <span v-if="windowWidth >= 768"> 认证用户中心 </span>
-                  </NButton>
-                  <!-- 主播后台按钮 -->
-                  <NButton
-                    type="primary"
-                    size="small"
-                    @click="$router.push({ name: 'manage-index' })"
-                  >
-                    <template #icon>
-                      <NIcon :component="WindowWrench20Filled" />
-                    </template>
-                    <span v-if="windowWidth >= 768"> 主播后台 </span>
-                  </NButton>
-                </NSpace>
+      <header class="layout-header">
+        <div class="layout-header__inner">
+          <div class="layout-header__left">
+            <img class="layout-header__logo" :src="logoUrl" alt="VTSURU" decoding="async">
+            <NText strong class="site-title">
+              VTSURU
+            </NText>
+            <NText v-if="headerSubtitle" depth="3" class="page-title">
+              {{ headerSubtitle }}
+            </NText>
+          </div>
+
+          <div class="layout-header__right">
+            <!-- 主题切换开关 -->
+            <NSwitch
+              :value="!effectiveIsDark"
+              :disabled="isLoading || pageThemeMode !== 'auto'"
+              :title="themeSwitchTitle"
+              @update:value="(value) => (themeType = value ? ThemeType.Light : ThemeType.Dark)"
+            >
+              <template #checked>
+                <NIcon :component="Sunny" />
               </template>
-              <!-- 未登录用户操作 -->
-              <template v-else>
-                <NButton
-                  type="primary"
-                  @click="registerAndLoginModalVisiable = true"
-                >
-                  注册 / 登陆
-                </NButton>
+              <template #unchecked>
+                <NIcon :component="Moon" />
               </template>
-            </NSpace>
-          </template>
-          <!-- 页面标题 (网站 Logo) -->
-          <template #title>
-            <span>
-              <NText
-                strong
-                class="site-title"
+            </NSwitch>
+
+            <!-- 已登录用户操作 -->
+            <template v-if="accountInfo?.id">
+              <!-- B站认证中心按钮 (如果已认证) -->
+              <NButton
+                v-if="useAuth.isAuthed || accountInfo.biliUserAuthInfo"
+                type="primary"
+                tag="a"
+                href="/bili-user"
+                target="_blank"
+                size="small"
+                secondary
               >
-                VTSURU
-              </NText>
-            </span>
-          </template>
-        </NPageHeader>
-      </NLayoutHeader>
+                <template #icon>
+                  <NIcon :component="Person48Filled" />
+                </template>
+                <span v-if="windowWidth >= 768"> 认证用户中心 </span>
+              </NButton>
+              <!-- 主播后台按钮 -->
+              <NButton
+                type="primary"
+                size="small"
+                @click="$router.push({ name: 'manage-index' })"
+              >
+                <template #icon>
+                  <NIcon :component="WindowWrench20Filled" />
+                </template>
+                <span v-if="windowWidth >= 768"> 主播后台 </span>
+              </NButton>
+            </template>
+
+            <!-- 未登录用户操作 -->
+            <NButton
+              v-else
+              type="primary"
+              @click="registerAndLoginModalVisiable = true"
+            >
+              注册 / 登陆
+            </NButton>
+          </div>
+        </div>
+      </header>
 
       <!-- 主体布局 (包含侧边栏和内容区) -->
-      <NLayout
-        has-sider
-        class="main-layout-body"
-      >
+      <div class="main-layout-body">
         <!-- 左侧边栏 -->
-        <NLayoutSider
+        <aside
           ref="sider"
-          show-trigger
-          bordered
-          collapse-mode="width"
-          :collapsed-width="64"
-          :width="180"
-          :native-scrollbar="false"
-          :default-collapsed="windowWidth < 768"
-          style="height: 100%"
+          class="user-sider"
+          :class="{ collapsed: siderCollapsed }"
+          :style="{ width: siderCollapsed ? '56px' : '180px' }"
         >
-          <!-- 用户头像和昵称 (加载完成后显示) -->
-          <div
-            v-if="userInfo?.streamerInfo"
-            style="margin-top: 8px"
-          >
-            <NSpace
-              vertical
-              justify="center"
-              align="center"
-            >
-              <NAvatar
-                class="sider-avatar"
-                :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
-                :src="userInfo.streamerInfo.faceUrl"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                round
-                bordered
-                title="前往用户B站主页"
-                @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
-              />
-              <NEllipsis
-                v-if="siderWidth > 100"
-                style="max-width: 100%"
-              >
-                <NSpace
-                  align="center"
-                  :size="4"
-                  :wrap="false"
-                >
-                  <NText strong>
-                    {{ userInfo?.streamerInfo.name }}
-                  </NText>
-                  <span
-                    v-if="userInfo?.streamerInfo?.isStreaming"
-                    class="live-indicator-dot"
-                    title="直播中"
-                  />
-                </NSpace>
-              </NEllipsis>
-            </NSpace>
-          </div>
-          <!-- 侧边栏加载状态 -->
-          <div
-            v-else-if="isLoading"
-            class="sider-loading"
-          >
-            <NSpin size="small" />
-          </div>
-          <NDivider style="margin: 0; margin-top: 5px;" />
-          <!-- 导航菜单 -->
-          <NMenu
-            :value="activeMenuKey"
-            :collapsed-width="64"
-            :collapsed-icon-size="22"
-            :options="menuOptions"
-            :disabled="isLoading"
-            class="sider-menu"
-          />
+          <div class="sider-shell" :class="{ collapsed: siderCollapsed }">
+            <div class="sider-top">
+              <NTooltip placement="right" :show-arrow="false">
+                <template #trigger>
+                  <button
+                    class="sider-collapse-btn"
+                    type="button"
+                    @click="siderCollapsed = !siderCollapsed"
+                  >
+                    <component :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline" class="sider-collapse-icon" />
+                  </button>
+                </template>
+                {{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}
+              </NTooltip>
+            </div>
 
-          <!-- 侧边栏底部链接 -->
-          <div class="sider-footer">
-            <!-- 仅在侧边栏展开时显示 -->
-            <NSpace
-              v-if="siderWidth > 150"
-              justify="center"
-              align="center"
-              vertical
-              size="small"
-              style="width: 100%;"
+            <!-- 用户头像和昵称 (加载完成后显示) -->
+            <div
+              v-if="userInfo?.streamerInfo"
+              style="margin-top: 8px"
             >
-              <NText
-                depth="3"
-                class="footer-text"
+              <NSpace
+                vertical
+                justify="center"
+                align="center"
               >
-                有有更多功能建议请 <NButton
-                  text
-                  type="info"
-                  tag="a"
-                  href="/feedback"
-                  target="_blank"
-                  size="tiny"
+                <NAvatar
+                  class="sider-avatar"
+                  :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
+                  :src="userInfo.streamerInfo.faceUrl"
+                  :img-props="{ referrerpolicy: 'no-referrer' }"
+                  :size="siderAvatarSize"
+                  round
+                  bordered
+                  title="前往用户B站主页"
+                  @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
+                />
+                <NEllipsis
+                  v-if="siderWidth > 100"
+                  style="max-width: 100%"
                 >
-                  反馈
-                </NButton>
-              </NText>
-              <NDivider style="margin: 0; width: 100%" />
-              <NText
-                depth="3"
-                class="footer-text"
+                  <NSpace
+                    align="center"
+                    :size="4"
+                    :wrap="false"
+                  >
+                    <NText strong>
+                      {{ userInfo?.streamerInfo.name }}
+                    </NText>
+                    <span
+                      v-if="userInfo?.streamerInfo?.isStreaming"
+                      class="live-indicator-dot"
+                      title="直播中"
+                    />
+                  </NSpace>
+                </NEllipsis>
+              </NSpace>
+            </div>
+
+            <!-- 侧边栏加载状态 -->
+            <div
+              v-else-if="isLoading"
+              class="sider-loading"
+            >
+              <NSpin size="small" />
+            </div>
+
+            <NDivider style="margin: 0; margin-top: 5px;" />
+
+            <!-- 导航菜单 -->
+            <NScrollbar class="sider-scroll" :class="{ disabled: isLoading }">
+              <nav class="sider-nav" :class="{ collapsed: siderCollapsed }">
+              <template v-for="g in navGroups" :key="g.key">
+                <div class="nav-group">
+                  <div v-if="!siderCollapsed" class="nav-group__header">
+                    <span class="nav-group__label">{{ g.label }}</span>
+                  </div>
+                  <div class="nav-group__items">
+                  <div v-for="item in g.items" :key="item.key" class="nav-item-row">
+                    <template v-if="!item.disabled && item.to">
+                      <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                        <template #trigger>
+                          <RouterLink
+                            :to="item.to"
+                            class="nav-item"
+                            :class="{ active: activeMenuKey === item.key }"
+                          >
+                            <component :is="item.icon" class="nav-item__icon" />
+                          </RouterLink>
+                        </template>
+                        {{ item.label }}
+                      </NTooltip>
+
+                      <RouterLink
+                        v-else
+                        :to="item.to"
+                        class="nav-item"
+                        :class="{ active: activeMenuKey === item.key }"
+                      >
+                        <component :is="item.icon" class="nav-item__icon" />
+                        <span class="nav-item__label">{{ item.label }}</span>
+                        <button
+                          class="nav-item__fav"
+                          type="button"
+                          :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                          @click.stop.prevent="toggleFavorite(item.key)"
+                        >
+                          <component
+                            :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                            class="nav-item__fav-icon"
+                            :class="{ active: isFavorite(item.key) }"
+                          />
+                        </button>
+                      </RouterLink>
+                    </template>
+
+                    <template v-else>
+                      <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                        <template #trigger>
+                          <div class="nav-item nav-item--disabled">
+                            <component :is="item.icon" class="nav-item__icon" />
+                          </div>
+                        </template>
+                        {{ item.disabledReason || item.label }}
+                      </NTooltip>
+
+                      <div
+                        v-else
+                        class="nav-item nav-item--disabled"
+                        :title="item.disabledReason || item.label"
+                      >
+                        <component :is="item.icon" class="nav-item__icon" />
+                        <span class="nav-item__label">{{ item.label }}</span>
+                        <button
+                          class="nav-item__fav"
+                          type="button"
+                          :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                          @click.stop.prevent="toggleFavorite(item.key)"
+                        >
+                          <component
+                            :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                            class="nav-item__fav-icon"
+                            :class="{ active: isFavorite(item.key) }"
+                          />
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+              </nav>
+            </NScrollbar>
+
+            <!-- 侧边栏底部链接 -->
+            <div v-if="siderWidth > 150" class="sider-footer">
+              <NSpace
+                justify="center"
+                align="center"
+                vertical
+                size="small"
+                style="width: 100%;"
               >
-                <NButton
-                  text
-                  type="info"
-                  tag="a"
-                  href="/about"
-                  target="_blank"
-                  size="tiny"
+                <NText
+                  depth="3"
+                  class="footer-text"
                 >
-                  关于本站
-                </NButton>
-              </NText>
-            </NSpace>
+                  有有更多功能建议请 <NButton
+                    text
+                    type="info"
+                    tag="a"
+                    href="/feedback"
+                    target="_blank"
+                    size="tiny"
+                  >
+                    反馈
+                  </NButton>
+                </NText>
+                <NDivider style="margin: 0; width: 100%" />
+                <NText
+                  depth="3"
+                  class="footer-text"
+                >
+                  <NButton
+                    text
+                    type="info"
+                    tag="a"
+                    href="/about"
+                    target="_blank"
+                    size="tiny"
+                  >
+                    关于本站
+                  </NButton>
+                </NText>
+              </NSpace>
+            </div>
           </div>
-        </NLayoutSider>
+        </aside>
 
         <!-- 右侧内容区域布局容器 -->
-        <NLayout class="content-layout-container">
+        <div class="content-layout-container">
           <!-- 全局加载动画 (覆盖内容区) -->
           <div
             v-if="isLoading"
@@ -669,45 +755,48 @@ watch(
             <NSpin size="large" />
           </div>
           <!-- 实际内容区域 (加载完成且找到用户时显示) -->
-          <div
+          <NScrollbar
             v-else-if="userInfo && !notFound"
-            class="viewer-page-content"
+            class="viewer-scroll"
+            x-scrollable
           >
-            <!-- 路由视图和动画 -->
-            <RouterView v-slot="{ Component, route: viewRoute }">
-              <KeepAlive>
-                <template v-if="viewRoute.meta.pageContainer === 'none'">
-                  <component
-                    :is="Component"
-                    :key="route.fullPath.split('#')[0]"
-                    :bili-info="biliUserInfo"
-                    :user-info="userInfo"
-                  />
-                </template>
-                <div
-                  v-else
-                  class="user-page"
-                  :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
-                >
-                  <component
-                    :is="Component"
-                    :key="route.fullPath.split('#')[0]"
-                    :bili-info="biliUserInfo"
-                    :user-info="userInfo"
-                  />
-                </div>
-              </KeepAlive>
-            </RouterView>
-            <NBackTop
-              :right="40"
-              :bottom="40"
-              listen-to=".viewer-page-content"
-            />
-          </div>
+            <div class="viewer-page-content">
+              <!-- 路由视图和动画 -->
+              <RouterView v-slot="{ Component, route: viewRoute }">
+                <KeepAlive>
+                  <template v-if="viewRoute.meta.pageContainer === 'none'">
+                    <component
+                      :is="Component"
+                      :key="route.fullPath.split('#')[0]"
+                      :bili-info="biliUserInfo"
+                      :user-info="userInfo"
+                    />
+                  </template>
+                  <div
+                    v-else
+                    class="user-page"
+                    :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+                  >
+                    <component
+                      :is="Component"
+                      :key="route.fullPath.split('#')[0]"
+                      :bili-info="biliUserInfo"
+                      :user-info="userInfo"
+                    />
+                  </div>
+                </KeepAlive>
+              </RouterView>
+              <NBackTop
+                :right="40"
+                :bottom="40"
+                listen-to=".viewer-scroll .n-scrollbar-container"
+              />
+            </div>
+          </NScrollbar>
         <!-- 如果 !isLoading && notFound, 会显示顶部的 NResult，这里不需要 else -->
-        </NLayout>
-      </NLayout>
-    </NLayout>
+        </div>
+      </div>
+    </div>
   </NConfigProvider>
 
   <!-- 注册/登录弹窗 -->
@@ -770,19 +859,69 @@ watch(
 
 .layout-header {
   height: var(--vtsuru-header-height);
-  padding: 0 15px; // 左右内边距
+  padding: 0 12px; // 左右内边距
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--n-border-color); // 底部边框
   flex-shrink: 0; // 防止头部被压缩
 }
 
+.layout-header__inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.layout-header__left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.layout-header__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.layout-header__logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
 .site-title {
-  font-size: 1.5rem;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.page-title {
+  font-size: 12px;
+  line-height: 1.2;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--n-body-color);
 }
 
 .main-layout-body {
-  height: calc(100vh - var(--vtsuru-header-height)); // 填充剩余高度
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
 }
 
 .page-root.bg-host {
@@ -820,18 +959,9 @@ watch(
 }
 
 .page-root.bg-host .layout-header,
-.page-root.bg-host .main-layout-body {
-  background-color: transparent;
-}
-
-.page-root.bg-host :deep(.n-layout-scroll-container) {
-  background-color: transparent;
-}
-
-.page-root.bg-host :deep(.n-layout-sider),
-.page-root.bg-host :deep(.n-layout-sider .n-layout-sider-scroll-container),
-.page-root.bg-host :deep(.content-layout-container),
-.page-root.bg-host :deep(.content-layout-container .n-layout-scroll-container) {
+.page-root.bg-host .main-layout-body,
+.page-root.bg-host .user-sider,
+.page-root.bg-host .content-layout-container {
   background-color: transparent;
 }
 
@@ -869,18 +999,202 @@ watch(
   height: 98px; // 大致等于头像+昵称的高度，防止跳动
 }
 
-.sider-menu {
-  margin-top: 10px;
-  width: 100%; // 确保菜单宽度正确
+.user-sider {
+  height: 100%;
+  border-right: 1px solid var(--n-border-color);
+  background: var(--n-body-color);
+  box-sizing: border-box;
+  overflow: hidden;
+  flex: 0 0 auto;
+  transition: width 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
+.sider-shell {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sider-top {
+  padding: 8px 8px 0;
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.sider-collapse-btn {
+  z-index: 10;
+  height: 32px;
+  width: 32px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(127, 127, 127, 0.18);
+  background: rgba(127, 127, 127, 0.06);
+  color: var(--n-text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.sider-collapse-btn:hover {
+  background: rgba(127, 127, 127, 0.1);
+  border-color: rgba(127, 127, 127, 0.22);
+}
+
+.sider-collapse-btn:active {
+  transform: translateY(0.5px);
+}
+.sider-collapse-btn:focus-visible {
+  outline: 2px solid rgba(127, 127, 127, 0.28);
+  outline-offset: 2px;
+}
+
+.sider-collapse-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.sider-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.sider-scroll.disabled {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.sider-nav {
+  padding: 6px 8px 10px;
+  transition: padding 180ms var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
+.sider-nav.collapsed {
+  padding: 6px 6px 10px;
+}
+
+.nav-group {
+  padding: 6px 0;
+}
+
+.nav-group__header {
+  padding: 2px 6px 6px;
+}
+
+.nav-group__label {
+  color: var(--n-text-color-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-item {
+  height: 34px;
+  border-radius: 10px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--n-text-color);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  box-sizing: border-box;
+}
+
+.sider-nav.collapsed .nav-item {
+  padding: 0;
+  justify-content: center;
+}
+
+.nav-item:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+.nav-item:focus-visible {
+  outline: 2px solid rgba(127, 127, 127, 0.28);
+  outline-offset: 2px;
+}
+
+.nav-item.active {
+  background: rgba(127, 127, 127, 0.12);
+  border-color: rgba(127, 127, 127, 0.18);
+}
+
+.nav-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-item__icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.nav-item__label {
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item__fav {
+  height: 22px;
+  width: 22px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+
+.nav-item-row:hover .nav-item__fav,
+.nav-item__fav-icon.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nav-item__fav:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.nav-item__fav-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--n-text-color-3);
+}
+
+.nav-item__fav-icon.active {
+  color: var(--n-warning-color);
 }
 
 .sider-footer {
-  position: absolute;
-  bottom: 20px;
   width: 100%;
   text-align: center;
-  padding: 0 5px; // 左右留白，防止文字贴边
+  padding: 10px 10px; // 左右留白，防止文字贴边
+  border-top: 1px solid var(--n-border-color);
   box-sizing: border-box;
+  flex: 0 0 auto;
 }
 
 .footer-text {
@@ -889,8 +1203,11 @@ watch(
 
 // --- 内容区域样式 ---
 .content-layout-container {
-  height: 100%;
-  min-height: 100%; // 保证最小高度，防止塌陷
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden; // 关键: 隐藏此容器自身的滚动条，剪切内部溢出内容
   position: relative; // 关键: 作为内部绝对定位元素(过渡中的组件)的定位基准
 }
@@ -909,15 +1226,16 @@ watch(
   z-index: 5;
 }
 
+.viewer-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
 .viewer-page-content {
-    height: 100%;
-    min-height: 100%; // 同样保证最小高度
-    padding: var(--vtsuru-content-padding);
-    box-sizing: border-box;
-    overflow-y: auto; // 允许内容 Y 轴滚动
-    overflow-x: hidden; // 禁止内容 X 轴滚动 (可选，但通常推荐)
-    position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
-    background-color: var(--n-body-color);
+  padding: var(--vtsuru-content-padding);
+  box-sizing: border-box;
+  position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
+  background-color: var(--n-body-color);
 }
 
 // --- 返回顶部按钮 ---

@@ -37,6 +37,7 @@ export const MAX_PAGE_IMAGES = 50
 export type PageBackgroundType = 'none' | 'color' | 'image'
 export type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
 export type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
+export type PageBackgroundScrimMode = 'auto' | 'black' | 'white'
 export type PageThemeMode = 'auto' | 'light' | 'dark'
 
 export interface BlockPageTheme {
@@ -61,6 +62,8 @@ export interface BlockPageTheme {
   pageBackgroundCoverSidebar?: boolean
   pageBackgroundBlurMode?: PageBackgroundBlurMode
   pageBackgroundBlur?: number
+  pageBackgroundScrimMode?: PageBackgroundScrimMode
+  pageBackgroundScrimStrength?: number
 }
 
 export interface BlockNode {
@@ -766,6 +769,13 @@ function validateTheme(theme: unknown, errors: string[]) {
   if (obj.pageBackgroundBlur !== undefined) {
     const v = Number(obj.pageBackgroundBlur)
     if (!Number.isFinite(v) || v < 0 || v > 40) errors.push('theme.pageBackgroundBlur 必须是 0~40 的数字')
+  }
+  if (obj.pageBackgroundScrimMode !== undefined && !['auto', 'black', 'white'].includes(String(obj.pageBackgroundScrimMode))) {
+    errors.push('theme.pageBackgroundScrimMode 不支持')
+  }
+  if (obj.pageBackgroundScrimStrength !== undefined) {
+    const v = Number(obj.pageBackgroundScrimStrength)
+    if (!Number.isFinite(v) || v < 0 || v > 100) errors.push('theme.pageBackgroundScrimStrength 必须是 0~100 的数字')
   }
 
   if (obj.pageBackgroundImageFile !== undefined) {

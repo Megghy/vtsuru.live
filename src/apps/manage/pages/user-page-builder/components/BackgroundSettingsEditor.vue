@@ -5,6 +5,7 @@ import { computed } from 'vue'
 type PageBackgroundType = 'none' | 'color' | 'image'
 type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
 type PageBackgroundImageFit = 'cover' | 'contain' | 'fill' | 'none'
+type PageBackgroundScrimMode = 'auto' | 'black' | 'white'
 
 export interface BackgroundSettingsTarget {
   get: () => Record<string, any> | null | undefined
@@ -98,6 +99,38 @@ const blur = computed<number>({
   },
 })
 
+const scrimMode = computed<PageBackgroundScrimMode>({
+  get() {
+    const t = props.target.get()
+    const v = t?.pageBackgroundScrimMode
+    return (v === 'black' || v === 'white') ? v : 'auto'
+  },
+  set(v) {
+    const t = props.target.ensure()
+    if (!t) return
+    if (v === 'auto') delete t.pageBackgroundScrimMode
+    else t.pageBackgroundScrimMode = v
+  },
+})
+
+const scrimStrength = computed<number>({
+  get() {
+    const t = props.target.get()
+    if (!t || !Object.prototype.hasOwnProperty.call(t, 'pageBackgroundScrimStrength')) return blurMode.value === 'none' ? 0 : 100
+    const v = Number(t?.pageBackgroundScrimStrength)
+    if (!Number.isFinite(v)) return blurMode.value === 'none' ? 0 : 100
+    return Math.min(100, Math.max(0, Math.round(v)))
+  },
+  set(v) {
+    const t = props.target.ensure()
+    if (!t) return
+    const next = Math.min(100, Math.max(0, Math.round(Number(v))))
+    const defaultValue = blurMode.value === 'none' ? 0 : 100
+    if (next === defaultValue) delete t.pageBackgroundScrimStrength
+    else t.pageBackgroundScrimStrength = next
+  },
+})
+
 const imagePath = computed(() => {
   const t = props.target.get()
   const f = t?.pageBackgroundImageFile
@@ -116,6 +149,8 @@ function clearAll() {
   delete t.pageBackgroundBlur
   delete t.pageBackgroundCoverSidebar
   delete t.pageBackgroundColor
+  delete t.pageBackgroundScrimMode
+  delete t.pageBackgroundScrimStrength
 }
 </script>
 
@@ -209,6 +244,24 @@ function clearAll() {
         </div>
         <NSwitch v-model:value="coverSidebar" size="small" />
       </NFlex>
+
+      <NFormItem label="遮罩颜色（scrim）">
+        <NRadioGroup v-model:value="scrimMode" size="small" style="width: 100%">
+          <NRadioButton value="auto" style="width: 33.3%; text-align: center">
+            自动
+          </NRadioButton>
+          <NRadioButton value="black" style="width: 33.3%; text-align: center">
+            黑
+          </NRadioButton>
+          <NRadioButton value="white" style="width: 33.4%; text-align: center">
+            白
+          </NRadioButton>
+        </NRadioGroup>
+      </NFormItem>
+
+      <NFormItem label="遮罩强度（%）" :show-feedback="false">
+        <NInputNumber v-model:value="scrimStrength" :min="0" :max="100" style="width: 100%" />
+      </NFormItem>
 
       <NFormItem label="背景效果">
         <NRadioGroup v-model:value="blurMode" size="small" style="width: 100%">
