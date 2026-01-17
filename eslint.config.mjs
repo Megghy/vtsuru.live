@@ -55,6 +55,8 @@ export default antfu(
       'vue/no-mutating-props': 'off',
       'vue/no-v-html': 'off',
       'vue/require-default-prop': 'off',
+      'vue/custom-event-name-casing': 'off',
+      'ts/consistent-type-definitions': 'off',
 
       // TypeScript 相关规则
       'ts/no-explicit-any': 'off',

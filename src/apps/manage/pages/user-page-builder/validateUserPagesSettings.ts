@@ -36,6 +36,17 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
     if (obj.pageBackgroundBlur !== undefined && typeof obj.pageBackgroundBlur !== 'number') {
       problems.push(`${label}: background.pageBackgroundBlur 必须是 number`)
     }
+    if (obj.pageBackgroundScrimMode !== undefined) {
+      const m = String(obj.pageBackgroundScrimMode)
+      if (!(m === 'auto' || m === 'black' || m === 'white')) problems.push(`${label}: background.pageBackgroundScrimMode 不合法（${m}）`)
+    }
+    if (obj.pageBackgroundScrimStrength !== undefined) {
+      if (typeof obj.pageBackgroundScrimStrength !== 'number') {
+        problems.push(`${label}: background.pageBackgroundScrimStrength 必须是 number`)
+      } else if (!Number.isFinite(obj.pageBackgroundScrimStrength) || obj.pageBackgroundScrimStrength < 0 || obj.pageBackgroundScrimStrength > 100) {
+        problems.push(`${label}: background.pageBackgroundScrimStrength 必须是 0~100 的数字`)
+      }
+    }
 
     if (t === 'color' && obj.pageBackgroundColor !== undefined && typeof obj.pageBackgroundColor !== 'string') {
       problems.push(`${label}: background.pageBackgroundColor 必须是 string`)

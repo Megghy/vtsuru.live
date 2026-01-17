@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NLayout, NLayoutContent, NScrollbar, useMessage } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { NScrollbar, useMessage } from 'naive-ui'
+import { onMounted } from 'vue'
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { selectedAPIKey } from '@/shared/config'
@@ -13,8 +13,6 @@ import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
 
 const accountInfo = useAccount()
 const message = useMessage()
-
-const playerHeight = ref(0)
 
 onMounted(() => {
   if (selectedAPIKey.value !== 'main') {
@@ -30,25 +28,58 @@ onMounted(() => {
 </script>
 
 <template>
-  <NLayout v-if="accountInfo.id" style="height: 100vh">
-    <ManageTopBar :account-name="accountInfo?.name" />
-
-    <NLayout has-sider style="height: calc(100vh - var(--vtsuru-header-height))">
+  <div v-if="accountInfo.id" class="manage-shell">
+    <div class="manage-shell__body">
       <ManageSider :account-info="accountInfo" />
 
-      <NLayout>
-        <NScrollbar :style="`height: calc(100vh - var(--vtsuru-header-height) - ${playerHeight}px)`" :x-scrollable="true">
-          <NLayoutContent
-            content-style="padding: 0; min-width: 370px;"
-          >
+      <div class="manage-shell__main">
+        <ManageTopBar :account-name="accountInfo?.name" />
+        <NScrollbar class="manage-shell__scroll" x-scrollable>
+          <div class="manage-shell__content">
             <ManageContentGate :account-info="accountInfo" />
-          </NLayoutContent>
+          </div>
         </NScrollbar>
 
-        <ManageMusicPlayer @height-change="playerHeight = $event" />
-      </NLayout>
-    </NLayout>
-  </NLayout>
+        <ManageMusicPlayer />
+      </div>
+    </div>
+  </div>
 
   <ManageAuthGate v-else />
 </template>
+
+<style scoped>
+.manage-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--n-body-color);
+}
+
+.manage-shell__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.manage-shell__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manage-shell__scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.manage-shell__content {
+  padding: 0;
+  min-width: 370px;
+}
+</style>

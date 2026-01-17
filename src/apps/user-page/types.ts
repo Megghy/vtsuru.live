@@ -1,4 +1,4 @@
-import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundType, PageThemeMode } from './block/schema'
+import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType, PageThemeMode } from './block/schema'
 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
 
@@ -44,6 +44,8 @@ export interface UserPageBackgroundConfigV1 {
   pageBackgroundCoverSidebar?: boolean
   pageBackgroundBlurMode?: PageBackgroundBlurMode
   pageBackgroundBlur?: number
+  pageBackgroundScrimMode?: PageBackgroundScrimMode
+  pageBackgroundScrimStrength?: number
 }
 
 export interface UserPagesSettingsV1 {

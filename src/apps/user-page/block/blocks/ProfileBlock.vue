@@ -99,6 +99,7 @@ const model = computed(() => {
   margin: 0 0 12px;
   background: linear-gradient(135deg, var(--n-text-color) 30%, var(--n-text-color-3, var(--n-text-color)) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
