@@ -618,85 +618,83 @@ watch(
             <!-- 导航菜单 -->
             <NScrollbar class="sider-scroll" :class="{ disabled: isLoading }">
               <nav class="sider-nav" :class="{ collapsed: siderCollapsed }">
-              <template v-for="g in navGroups" :key="g.key">
-                <div class="nav-group">
-                  <div v-if="!siderCollapsed" class="nav-group__header">
-                    <span class="nav-group__label">{{ g.label }}</span>
-                  </div>
-                  <div class="nav-group__items">
-                  <div v-for="item in g.items" :key="item.key" class="nav-item-row">
-                    <template v-if="!item.disabled && item.to">
-                      <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
-                        <template #trigger>
+                <template v-for="g in navGroups" :key="g.key">
+                  <div class="nav-group">
+                    <div v-if="!siderCollapsed" class="nav-group__header">
+                      <span class="nav-group__label">{{ g.label }}</span>
+                    </div>
+                    <div class="nav-group__items">
+                      <div v-for="item in g.items" :key="item.key" class="nav-item-row">
+                        <template v-if="!item.disabled && item.to">
+                          <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                            <template #trigger>
+                              <RouterLink
+                                :to="item.to"
+                                class="nav-item"
+                                :class="{ active: activeMenuKey === item.key }"
+                              >
+                                <component :is="item.icon" class="nav-item__icon" />
+                              </RouterLink>
+                            </template>
+                            {{ item.label }}
+                          </NTooltip>
+
                           <RouterLink
+                            v-else
                             :to="item.to"
                             class="nav-item"
                             :class="{ active: activeMenuKey === item.key }"
                           >
                             <component :is="item.icon" class="nav-item__icon" />
+                            <span class="nav-item__label">{{ item.label }}</span>
+                            <button
+                              class="nav-item__fav"
+                              :class="{ active: isFavorite(item.key) }"
+                              type="button"
+                              :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                              @click.stop.prevent="toggleFavorite(item.key)"
+                            >
+                              <NIcon class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }">
+                                <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
+                              </NIcon>
+                            </button>
                           </RouterLink>
                         </template>
-                        {{ item.label }}
-                      </NTooltip>
 
-                      <RouterLink
-                        v-else
-                        :to="item.to"
-                        class="nav-item"
-                        :class="{ active: activeMenuKey === item.key }"
-                      >
-                        <component :is="item.icon" class="nav-item__icon" />
-                        <span class="nav-item__label">{{ item.label }}</span>
-                        <button
-                          class="nav-item__fav"
-                          type="button"
-                          :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                          @click.stop.prevent="toggleFavorite(item.key)"
-                        >
-                          <component
-                            :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                            class="nav-item__fav-icon"
-                            :class="{ active: isFavorite(item.key) }"
-                          />
-                        </button>
-                      </RouterLink>
-                    </template>
+                        <template v-else>
+                          <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
+                            <template #trigger>
+                              <div class="nav-item nav-item--disabled">
+                                <component :is="item.icon" class="nav-item__icon" />
+                              </div>
+                            </template>
+                            {{ item.disabledReason || item.label }}
+                          </NTooltip>
 
-                    <template v-else>
-                      <NTooltip v-if="siderCollapsed" placement="right" :show-arrow="false">
-                        <template #trigger>
-                          <div class="nav-item nav-item--disabled">
+                          <div
+                            v-else
+                            class="nav-item nav-item--disabled"
+                            :title="item.disabledReason || item.label"
+                          >
                             <component :is="item.icon" class="nav-item__icon" />
+                            <span class="nav-item__label">{{ item.label }}</span>
+                            <button
+                              class="nav-item__fav"
+                              :class="{ active: isFavorite(item.key) }"
+                              type="button"
+                              :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                              @click.stop.prevent="toggleFavorite(item.key)"
+                            >
+                              <NIcon class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }">
+                                <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
+                              </NIcon>
+                            </button>
                           </div>
                         </template>
-                        {{ item.disabledReason || item.label }}
-                      </NTooltip>
-
-                      <div
-                        v-else
-                        class="nav-item nav-item--disabled"
-                        :title="item.disabledReason || item.label"
-                      >
-                        <component :is="item.icon" class="nav-item__icon" />
-                        <span class="nav-item__label">{{ item.label }}</span>
-                        <button
-                          class="nav-item__fav"
-                          type="button"
-                          :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                          @click.stop.prevent="toggleFavorite(item.key)"
-                        >
-                          <component
-                            :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                            class="nav-item__fav-icon"
-                            :class="{ active: isFavorite(item.key) }"
-                          />
-                        </button>
                       </div>
-                    </template>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </template>
+                </template>
               </nav>
             </NScrollbar>
 
@@ -1157,35 +1155,50 @@ watch(
   height: 22px;
   width: 22px;
   border-radius: 7px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid rgba(127, 127, 127, 0.15);
+  background: rgba(127, 127, 127, 0.04);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 120ms ease, background-color 120ms ease;
+  opacity: 0.5;
+  transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease;
 }
 
 .nav-item-row:hover .nav-item__fav,
-.nav-item__fav-icon.active {
+.nav-item__fav.active {
   opacity: 1;
-  pointer-events: auto;
+}
+
+.nav-item-row:hover .nav-item__fav {
+  background: rgba(127, 127, 127, 0.08);
+  border-color: rgba(127, 127, 127, 0.25);
 }
 
 .nav-item__fav:hover {
   background: rgba(127, 127, 127, 0.08);
+  border-color: rgba(127, 127, 127, 0.22);
+}
+
+.nav-item__fav.active {
+  background: rgba(245, 158, 11, 0.26);
+  border-color: rgba(245, 158, 11, 0.58);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.26);
 }
 
 .nav-item__fav-icon {
-  width: 16px;
-  height: 16px;
+  font-size: 16px;
   color: var(--n-text-color-3);
+  transition: color 120ms ease;
 }
 
 .nav-item__fav-icon.active {
   color: var(--n-warning-color);
+}
+
+.nav-item__fav.active .nav-item__fav-icon {
+  color: rgb(245, 158, 11);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.28));
 }
 
 .sider-footer {
