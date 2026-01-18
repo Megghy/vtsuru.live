@@ -1,5 +1,5 @@
 <script setup>
-import { NBadge } from 'naive-ui'
+import { NBadge } from 'naive-ui';
 import { computed } from 'vue'
 import AuthorChip from './AuthorChip.vue'
 import * as constants from './constants'

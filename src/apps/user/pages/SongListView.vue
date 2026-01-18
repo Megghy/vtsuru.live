@@ -3,7 +3,7 @@ import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { useStorage } from '@vueuse/core'
 import { addSeconds } from 'date-fns'
-import { NButton, NModal, NSpin, useMessage } from 'naive-ui'
+import { NButton, NModal, NSpin, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { DownloadConfig, useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MenuOption } from 'naive-ui'
-import { NButton, NFlex, NIcon, NMenu, NPopover, NScrollbar, NSpace, NText } from 'naive-ui'
+import { NButton, NFlex, NIcon, NMenu, NPopover, NScrollbar, NText } from 'naive-ui';
 import { computed, h, inject, onBeforeUnmount, ref, toRaw } from 'vue'
 import {
   AddCircleOutline,
@@ -489,7 +489,7 @@ onBeforeUnmount(() => {
 
     <Transition name="fade-slide">
       <div v-if="selectionCount > 1" style="margin-bottom: 8px">
-        <NSpace size="small" align="center">
+        <NFlex size="small" align="center">
           <NText depth="3">
             已选择 {{ selectionCount }} 个区块
           </NText>
@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
           <NButton size="tiny" type="error" secondary @click="bulkDelete">
             批量删除
           </NButton>
-        </NSpace>
+        </NFlex>
       </div>
     </Transition>
 

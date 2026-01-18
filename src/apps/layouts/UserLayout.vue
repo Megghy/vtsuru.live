@@ -1,35 +1,11 @@
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
-import {
-  BookCoins20Filled,
-  CalendarClock24Filled,
-  CheckmarkCircle24Filled,
-  Person48Filled,
-  VideoAdd20Filled,
-  WindowWrench20Filled,
-} from '@vicons/fluent'
+import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Person48Filled, VideoAdd20Filled, WindowWrench20Filled, } from '@vicons/fluent'
 import { Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
-  darkTheme,
-  NAvatar,
-  NBackTop,
-  NButton,
-  NConfigProvider,
-  NDivider,
-  NEllipsis,
-  NIcon,
-  NModal,
-  NResult,
-  NScrollbar,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
@@ -594,7 +570,7 @@ watch(
               v-if="userInfo?.streamerInfo"
               class="sider-profile"
             >
-              <NSpace
+              <NFlex
                 vertical
                 justify="center"
                 align="center"
@@ -614,7 +590,7 @@ watch(
                   v-if="siderWidth > 100"
                   style="max-width: 100%"
                 >
-                  <NSpace
+                  <NFlex
                     align="center"
                     :size="4"
                     :wrap="false"
@@ -627,9 +603,9 @@ watch(
                       class="live-indicator-dot"
                       title="直播中"
                     />
-                  </NSpace>
+                  </NFlex>
                 </NEllipsis>
-              </NSpace>
+              </NFlex>
             </div>
 
             <!-- 侧边栏加载状态 -->
@@ -727,7 +703,7 @@ watch(
 
             <!-- 侧边栏底部链接 -->
             <div v-if="siderWidth > 150" class="sider-footer">
-              <NSpace
+              <NFlex
                 justify="center"
                 align="center"
                 vertical
@@ -765,7 +741,7 @@ watch(
                     关于本站
                   </NButton>
                 </NText>
-              </NSpace>
+              </NFlex>
             </div>
           </div>
         </aside>

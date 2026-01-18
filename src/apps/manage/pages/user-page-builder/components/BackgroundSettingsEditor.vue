@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NColorPicker, NFlex, NForm, NFormItem, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { NAlert, NButton, NColorPicker, NFlex, NForm, NFormItem, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSwitch } from 'naive-ui';
 import { computed } from 'vue'
 
 type PageBackgroundType = 'none' | 'color' | 'image'
@@ -185,7 +185,7 @@ function clearAll() {
 
         <template v-else-if="type === 'image'">
           <NFormItem label="背景图片">
-            <NSpace align="center">
+            <NFlex align="center">
               <NButton
                 v-if="props.target.uploadImage"
                 size="small"
@@ -211,7 +211,7 @@ function clearAll() {
                   style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid var(--n-border-color);"
                 >
               </Transition>
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="图片填充方式">
             <NSelect

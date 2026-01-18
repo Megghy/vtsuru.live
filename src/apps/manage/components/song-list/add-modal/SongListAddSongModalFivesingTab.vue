@@ -3,7 +3,7 @@ import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
-import { NButton, NDivider, NInput, NPagination, NSpace, NTable, NTag, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NPagination, NFlex, NTable, NTag, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 
 defineProps<{
@@ -139,11 +139,11 @@ async function addFivesingSongs(song: SongsInfo) {
           <tr v-for="song in fivesingResults" :key="song.id">
             <td>{{ song.name }}</td>
             <td>
-              <NSpace>
+              <NFlex>
                 <NTag v-for="author in song.author" :key="author" size="small">
                   {{ author }}
                 </NTag>
-              </NSpace>
+              </NFlex>
             </td>
             <td style="display: flex; justify-content: flex-end">
               <NButton

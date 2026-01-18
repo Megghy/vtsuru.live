@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NCollapseItem, NDivider, NInput, NSelect, NSpace, NSwitch, NTag, useMessage } from 'naive-ui'
+import { NButton, NCollapseItem, NDivider, NInput, NSelect, NFlex, NSwitch, NTag, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -73,22 +73,22 @@ function getGuardLevelName(level: number): string {
     v-if="action.triggerType === TriggerType.GUARD"
     title="上舰触发设置"
   >
-    <NSpace vertical>
-      <NSpace
+    <NFlex vertical>
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
       >
         <span>防止重复发送:</span>
         <NSwitch v-model:value="action.triggerConfig.preventRepeat" />
-      </NSpace>
+      </NFlex>
 
       <template v-if="action.actionType === ActionType.SEND_PRIVATE_MSG">
         <NDivider title-placement="left">
           礼品码设置
         </NDivider>
 
-        <NSpace>
+        <NFlex>
           <NSelect
             v-model:value="tempGiftCodeLevel"
             style="width: 120px"
@@ -107,7 +107,7 @@ function getGuardLevelName(level: number): string {
           <NButton @click="addGiftCode">
             添加
           </NButton>
-        </NSpace>
+        </NFlex>
 
         <div v-if="action.triggerConfig.giftCodes && action.triggerConfig.giftCodes.length > 0">
           <div
@@ -131,7 +131,7 @@ function getGuardLevelName(level: number): string {
           </div>
         </div>
       </template>
-    </NSpace>
+    </NFlex>
   </NCollapseItem>
 </template>
 

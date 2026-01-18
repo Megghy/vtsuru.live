@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SongsInfo } from '@/api/api-models'
-import { NEmpty } from 'naive-ui'
+import { NEmpty } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'

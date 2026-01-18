@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SongsInfo } from '@/api/api-models'
 import { computed, ref } from 'vue'
-import { NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui'
+import { NModal, NScrollbar, NSpin, NTabPane, NTabs } from 'naive-ui';
 import SongListAddSongModalCustomTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalCustomTab.vue'
 import SongListAddSongModalDirectoryTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalDirectoryTab.vue'
 import SongListAddSongModalFileTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalFileTab.vue'

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { NSpace, NTag, NTooltip, useMessage } from 'naive-ui'
-
+import { NFlex, NTag, NTooltip, useMessage } from 'naive-ui';
 const props = defineProps({
   placeholders: {
     type: Array as () => { name: string, description: string }[],
@@ -23,12 +22,12 @@ function copyToClipboard(text: string) {
 
 <template>
   <div class="template-helper">
-    <NSpace vertical>
-      <NSpace align="center">
+    <NFlex vertical>
+      <NFlex align="center">
         <div style="font-weight: bold">
           可用变量:
         </div>
-        <NSpace style="flex-wrap: wrap">
+        <NFlex style="flex-wrap: wrap">
           <NTooltip
             v-for="item in props.placeholders"
             :key="item.name"
@@ -47,9 +46,9 @@ function copyToClipboard(text: string) {
             </template>
             {{ item.description }}
           </NTooltip>
-        </NSpace>
-      </NSpace>
-    </NSpace>
+        </NFlex>
+      </NFlex>
+    </NFlex>
   </div>
 </template>
 

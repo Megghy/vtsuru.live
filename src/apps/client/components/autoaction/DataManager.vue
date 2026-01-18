@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
 import { createStore, clear as idbClear, del as idbDel, get as idbGet, keys as idbKeys } from 'idb-keyval'
-import { NAlert, NButton, NCard, NDataTable, NDivider, NEmpty, NPopconfirm, NSpace, NSpin, NTag, NText, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDataTable, NDivider, NEmpty, NPopconfirm, NFlex, NSpin, NTag, NText, useMessage } from 'naive-ui';
 import { h, onMounted, ref } from 'vue'
 
 // --- 定义用户持久化数据的自定义存储区 (与 utils.ts 中保持一致) ---
@@ -224,7 +224,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace
+  <NFlex
     vertical
     size="large"
   >
@@ -243,7 +243,7 @@ onMounted(() => {
         这里显示的是脚本通过 <code>getData</code>, <code>setData</code> 管理的数据。
         这些数据仅在程序运行期间保留，程序关闭后将丢失。
       </NAlert>
-      <NSpace
+      <NFlex
         justify="end"
         style="margin-bottom: 16px;"
       >
@@ -270,7 +270,7 @@ onMounted(() => {
           </template>
           确定要清除所有当前会话的运行时数据吗？此操作不可逆！
         </NPopconfirm>
-      </NSpace>
+      </NFlex>
       <NSpin :show="runtimeLoading">
         <NDataTable
           :columns="runtimeColumns"
@@ -304,7 +304,7 @@ onMounted(() => {
       >
         这是持久化数据，程序关闭后不会丢失。
       </NAlert>
-      <NSpace
+      <NFlex
         justify="end"
         style="margin-bottom: 16px;"
       >
@@ -331,7 +331,7 @@ onMounted(() => {
           </template>
           确定要清除所有由自动操作脚本存储的用户数据吗？应用配置不会被清除。此操作不可逆！
         </NPopconfirm>
-      </NSpace>
+      </NFlex>
       <NSpin :show="persistentLoading">
         <NDataTable
           :columns="persistentColumns"
@@ -348,7 +348,7 @@ onMounted(() => {
         </NDataTable>
       </NSpin>
     </NCard>
-  </NSpace>
+  </NFlex>
 </template>
 
 <style scoped>

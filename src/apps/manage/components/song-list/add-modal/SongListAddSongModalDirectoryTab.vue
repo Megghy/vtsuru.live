@@ -6,18 +6,7 @@ import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { ArchiveOutline } from '@vicons/ionicons5'
 import {
-  NAlert,
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NIcon,
-  NSelect,
-  NSpace,
-  NText,
-  NTransfer,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCollapse, NCollapseItem, NDivider, NIcon, NSelect, NFlex, NText, NTransfer, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 
 const props = defineProps<{
@@ -236,7 +225,7 @@ async function selectFolder() {
     <template #header>
       功能说明
     </template>
-    <NSpace vertical>
+    <NFlex vertical>
       <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
       <div>支持的文件名格式：</div>
       <ul style="margin: 8px 0; padding-left: 20px">
@@ -249,7 +238,7 @@ async function selectFolder() {
       <NText type="error">
         <strong>注意：</strong>导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。
       </NText>
-    </NSpace>
+    </NFlex>
   </NAlert>
 
   <NButton type="primary" :loading="isScanningFolder" @click="selectFolder">
@@ -264,11 +253,11 @@ async function selectFolder() {
 
     <NCollapse>
       <NCollapseItem title="批量编辑工具" name="batch-edit">
-        <NSpace vertical style="width: 100%">
+        <NFlex vertical style="width: 100%">
           <NAlert type="info">
             选中歌曲后，可以批量设置作者、语言或标签信息
           </NAlert>
-          <NSpace align="center">
+          <NFlex align="center">
             <span>批量设置作者：</span>
             <NSelect
               style="width: 300px"
@@ -279,8 +268,8 @@ async function selectFolder() {
               placeholder="选择或输入作者"
               @update:value="(value) => batchEditFolderSongs('author', value)"
             />
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <span>批量设置语言：</span>
             <NSelect
               style="width: 300px"
@@ -291,8 +280,8 @@ async function selectFolder() {
               placeholder="选择或输入语言"
               @update:value="(value) => batchEditFolderSongs('language', value)"
             />
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <span>批量设置标签：</span>
             <NSelect
               style="width: 300px"
@@ -303,8 +292,8 @@ async function selectFolder() {
               placeholder="选择或输入标签"
               @update:value="(value) => batchEditFolderSongs('tags', value)"
             />
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCollapseItem>
     </NCollapse>
 

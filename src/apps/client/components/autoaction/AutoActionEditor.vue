@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapse, NCollapseItem, NDivider, NFlex } from 'naive-ui'
+import { NCollapse, NCollapseItem, NDivider, NFlex } from 'naive-ui';
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { computed } from 'vue'
 

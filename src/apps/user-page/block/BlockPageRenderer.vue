@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NConfigProvider } from 'naive-ui'
+import { darkTheme, NConfigProvider } from 'naive-ui';
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
 import { BLOCK_COMPONENTS } from './registry'

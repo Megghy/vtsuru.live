@@ -6,8 +6,7 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import { useThemeVars } from 'naive-ui'
-
+import { useThemeVars } from 'naive-ui';
 const { language, height = 400, theme = 'vs-dark', options, path } = defineProps<{
   language: string
   height?: number

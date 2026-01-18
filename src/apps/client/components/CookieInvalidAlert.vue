@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { NAlert, NButton } from 'naive-ui'
-
+import { NAlert, NButton } from 'naive-ui';
 import { useBiliCookie } from '../store/useBiliCookie'
 
 const props = withDefaults(defineProps<{

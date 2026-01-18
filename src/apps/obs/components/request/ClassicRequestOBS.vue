@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
-import { NDivider, NEmpty } from 'naive-ui'
+import { NDivider, NEmpty } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import {

@@ -2,7 +2,7 @@
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL } from '@/shared/config'
-import { NAlert, NButton, NSpin, NTag, NIcon } from 'naive-ui'
+import { NAlert, NButton, NSpin, NTag, NIcon } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { CalendarNumberOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'

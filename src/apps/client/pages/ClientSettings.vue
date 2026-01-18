@@ -5,19 +5,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import {
-  NAlert,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NMenu,
-  NRadio,
-  NRadioGroup,
-  NSpin,
-  NSwitch,
-} from 'naive-ui'
+  NAlert, NCard, NCheckbox, NDivider, NFormItem, NGrid, NGridItem, NMenu, NRadio, NRadioGroup, NSpin, NSwitch } from 'naive-ui';
 import { onMounted, ref, watch } from 'vue'
 import { ThemeType } from '@/api/api-models'
 import { useSettings } from '@/apps/client/store/useSettings'

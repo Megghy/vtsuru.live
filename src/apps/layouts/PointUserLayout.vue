@@ -2,26 +2,7 @@
 import type { UserInfo } from '@/api/api-models'
 import { useRouteHash } from '@vueuse/router'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NDescriptions,
-  NDescriptionsItem,
-  NFlex,
-  NLayout,
-  NLayoutContent,
-  NLayoutHeader,
-  NList,
-  NListItem,
-  NResult,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDataTable, NDescriptions, NDescriptionsItem, NFlex, NLayout, NLayoutContent, NLayoutHeader, NList, NListItem, NResult, NSpin, NTabPane, NTabs, NTag, NText, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { POINT_API_URL } from '@/shared/config'

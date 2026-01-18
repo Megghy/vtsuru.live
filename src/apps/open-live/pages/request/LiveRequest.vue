@@ -6,31 +6,7 @@ import type {
 } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NLi,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSpace,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  NTooltip,
-  NUl,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NSwitch, NTabPane, NTabs, NText, NTooltip, NUl, useMessage } from 'naive-ui';
 import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
@@ -323,12 +299,12 @@ onUnmounted(() => {
     </NAlert>
 
     <NDivider>样式与速度</NDivider>
-    <NSpace align="center">
+    <NFlex align="center">
       <NRadioGroup
         v-model:value="obsStyleType"
         name="obsStyle"
       >
-        <NSpace>
+        <NFlex>
           <NRadioButton value="classic">
             经典黑色风格
           </NRadioButton>
@@ -338,7 +314,7 @@ onUnmounted(() => {
           <NRadioButton value="minimal">
             极简无背景
           </NRadioButton>
-        </NSpace>
+        </NFlex>
       </NRadioGroup>
       <NInputGroup style="width: 220px">
         <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
@@ -356,7 +332,7 @@ onUnmounted(() => {
         </template>
         数值越大滚动越快 (0.5 ~ 5)
       </NTooltip>
-    </NSpace>
+    </NFlex>
 
     <NDivider>预览</NDivider>
     <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">

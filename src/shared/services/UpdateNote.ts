@@ -1,6 +1,6 @@
 import { h, type VNode } from 'vue'
 import { useStorage } from '@vueuse/core'
-import { NButton, NImage } from 'naive-ui'
+import { NButton, NImage } from 'naive-ui';
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 
 export const updateNotes: updateNoteType[] = [

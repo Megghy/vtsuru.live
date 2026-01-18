@@ -4,33 +4,7 @@ import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { List } from 'linqts'
 import {
-  NAvatar,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapseTransition,
-  NCountdown,
-  NDivider,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NList,
-  NListItem,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSpace,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-  useNotification,
-} from 'naive-ui'
+  NAvatar, NButton, NCard, NCheckbox, NCollapseTransition, NCountdown, NDivider, NEmpty, NGrid, NGridItem, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NRadioButton, NRadioGroup, NScrollbar, NFlex, NTag, NTime, NTooltip, useMessage, useNotification } from 'naive-ui';
 import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { QueryGetAPI } from '@/api/query'
@@ -276,11 +250,10 @@ function onFinishLottery() {
     description: `共${resultUsers.value?.length}人`,
     duration: 3000,
     content: () =>
-      h(
-        NSpace,
+      h(NFlex,
         { vertical: true },
         resultUsers.value?.map(user =>
-          h(NSpace, null, [
+          h(NFlex, null, [
             h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
             h('span', user.name),
           ]),
@@ -374,7 +347,7 @@ onUnmounted(() => {
             恢复默认
           </NButton>
         </template>
-        <NSpace justify="center">
+        <NFlex justify="center">
           <NRadioGroup
             v-model:value="currentType"
             name="用户类型"
@@ -387,9 +360,9 @@ onUnmounted(() => {
               转发
             </NRadioButton>
           </NRadioGroup>
-        </NSpace>
+        </NFlex>
         <NDivider style="margin: 10px 0 10px 0" />
-        <NSpace align="center">
+        <NFlex align="center">
           <NInputGroup style="max-width: 200px">
             <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
             <NInputNumber
@@ -437,9 +410,9 @@ onUnmounted(() => {
               减半
             </NRadioButton>
           </NRadioGroup>
-        </NSpace>
+        </NFlex>
       </NCard>
-      <NSpace
+      <NFlex
         justify="center"
         align="center"
       >
@@ -456,13 +429,13 @@ onUnmounted(() => {
           :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()"
           @finish="isCommentCountDown = true"
         />
-      </NSpace>
+      </NFlex>
       <br>
       <NCard
         v-if="currentUsers"
         size="small"
       >
-        <NSpace justify="center">
+        <NFlex justify="center">
           <NButton
             type="primary"
             :loading="isLottering"
@@ -478,7 +451,7 @@ onUnmounted(() => {
           >
             重置
           </NButton>
-        </NSpace>
+        </NFlex>
         <NDivider style="margin: 10px 0 10px 0">
           共 {{ validUsers?.length }} 人
         </NDivider>
@@ -497,7 +470,7 @@ onUnmounted(() => {
               style="height: 155px"
             >
               <template #header>
-                <NSpace
+                <NFlex
                   align="center"
                   vertical
                   :size="5"
@@ -510,7 +483,7 @@ onUnmounted(() => {
                     :src="`${item.avatar}@64w_64h`"
                     :img-props="{ referrerpolicy: 'no-referrer' }"
                   />
-                  <NSpace>
+                  <NFlex>
                     <NTag
                       v-if="item.isVIP"
                       size="tiny"
@@ -548,9 +521,9 @@ onUnmounted(() => {
                         {{ item.card.name }}
                       </NText>
                     </NTag>
-                  </NSpace>
+                  </NFlex>
                   {{ item.name }}
-                </NSpace>
+                </NFlex>
               </template>
             </NCard>
           </NGridItem>
@@ -595,8 +568,8 @@ onUnmounted(() => {
                   删除
                 </NButton>
               </template>
-              <NSpace vertical>
-                <NSpace
+              <NFlex vertical>
+                <NFlex
                   v-for="user in item.users"
                   :key="user.uId"
                 >
@@ -607,8 +580,8 @@ onUnmounted(() => {
                     :img-props="{ referrerpolicy: 'no-referrer' }"
                   />
                   {{ user.name }}
-                </NSpace>
-              </NSpace>
+                </NFlex>
+              </NFlex>
               <NDivider style="margin: 10px 0 10px 0" />
               <NButton
                 secondary

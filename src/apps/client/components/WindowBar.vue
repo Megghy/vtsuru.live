@@ -3,7 +3,8 @@ import type { UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent' // Maximize 和 Restore 图标
 import { Close, RemoveOutline as Minus } from '@vicons/ionicons5' // Close 和 Minimize 图标
-import { NButton, NFlex } from 'naive-ui' // 显式导入 Naive UI 组件（好习惯）
+import { NButton, NFlex } from 'naive-ui';
+// 显式导入 Naive UI 组件（好习惯）
 import { onMounted, onUnmounted, ref } from 'vue'
 
 const appWindow = getCurrentWindow()

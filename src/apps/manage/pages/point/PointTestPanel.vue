@@ -1,22 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import {
-  NCard,
-  NButton,
-  NForm,
-  NFormItem,
-  NInputNumber,
-  NInput,
-  NSelect,
-  NFlex,
-  NAlert,
-  NStatistic,
-  NPopconfirm,
-  useMessage,
-  NSpin,
-  NTag,
-  NDivider,
-} from 'naive-ui'
+  NCard, NButton, NForm, NFormItem, NInputNumber, NInput, NSelect, NFlex, NAlert, NStatistic, NPopconfirm, useMessage, NSpin, NTag, NDivider } from 'naive-ui';
 import type { SelectOption } from 'naive-ui'
 import { EventDataTypes   } from '@/api/api-models'
 import type {ResponsePointGoodModel, ResponsePointUserModel} from '@/api/api-models';

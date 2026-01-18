@@ -5,26 +5,7 @@ import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { TagQuestionMark16Filled } from '@vicons/fluent'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
-  NAlert,
-  NBadge,
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  NSpace,
-  NSpin,
-  NText,
-  NTimePicker,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NText, NTimePicker, NTooltip, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
@@ -558,7 +539,7 @@ function moveScheduleItem(index: number, direction: 'up' | 'down') {
   dayList[targetIndex] = temp
 }
 function renderOption({ node, option }: { node: VNode, option: SelectOption }) {
-  return h(NSpace, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
+  return h(NFlex, { align: 'center', size: 3, style: 'margin-left: 5px' }, () => [
     option.value ? h(NBadge, { dot: true, color: option.value?.toString() }) : null,
     node,
   ])
@@ -631,7 +612,7 @@ onMounted(() => {
     preset="card"
     title="添加周程"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       年份
       <NSelect
         v-model:value="selectedScheduleYear"
@@ -642,7 +623,7 @@ onMounted(() => {
         v-model:value="selectedScheduleWeek"
         :options="weekOptions"
       />
-    </NSpace>
+    </NFlex>
     <NDivider />
     <NButton
       :loading="isFetching"
@@ -660,7 +641,7 @@ onMounted(() => {
     <NAlert type="info">
       复制为
     </NAlert>
-    <NSpace vertical>
+    <NFlex vertical>
       年份
       <NSelect
         v-model:value="selectedScheduleYear"
@@ -671,7 +652,7 @@ onMounted(() => {
         v-model:value="selectedScheduleWeek"
         :options="weekOptions"
       />
-    </NSpace>
+    </NFlex>
     <NDivider />
     <NButton
       :loading="isFetching"
@@ -701,7 +682,7 @@ onMounted(() => {
           scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
         "
       >
-        <NSpace
+        <NFlex
           vertical
           :size="12"
         >
@@ -723,7 +704,7 @@ onMounted(() => {
             }"
           >
             <template #header>
-              <NSpace align="center" :size="8">
+              <NFlex align="center" :size="8">
                 <NText strong style="font-size: 14px;">
                   行程 {{ itemIndex + 1 }}
                 </NText>
@@ -743,7 +724,7 @@ onMounted(() => {
                 >
                   ↓
                 </NButton>
-              </NSpace>
+              </NFlex>
             </template>
             <template #header-extra>
               <NButton
@@ -755,11 +736,11 @@ onMounted(() => {
                 删除
               </NButton>
             </template>
-            <NSpace
+            <NFlex
               vertical
               :size="12"
             >
-              <NSpace align="center" :size="8" style="flex-wrap: wrap;">
+              <NFlex align="center" :size="8" style="flex-wrap: wrap;">
                 <NInputGroup style="width: auto; min-width: 200px;">
                   <NInputGroupLabel type="primary" style="min-width: 50px;">
                     标签
@@ -782,7 +763,7 @@ onMounted(() => {
                   :render-option="renderOption"
                   @update:value="(val, opt) => onSelectChange(val, opt, itemIndex)"
                 />
-              </NSpace>
+              </NFlex>
               <NInputGroup>
                 <NInputGroupLabel style="min-width: 50px;">
                   内容
@@ -794,7 +775,7 @@ onMounted(() => {
                   show-count
                 />
               </NInputGroup>
-              <NSpace align="center" :size="8">
+              <NFlex align="center" :size="8">
                 <NInputGroup style="width: auto;">
                   <NInputGroupLabel style="min-width: 50px;">
                     时间
@@ -822,10 +803,10 @@ onMounted(() => {
                     @update:value="(val) => item.tagColor = normalizeColor(val)"
                   />
                 </NInputGroup>
-              </NSpace>
-            </NSpace>
+              </NFlex>
+            </NFlex>
           </NCard>
-        </NSpace>
+        </NFlex>
       </div>
       <NDivider />
       <NButton

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImagesOutline as NineGridIcon } from '@vicons/ionicons5' // Example Icon
-import { NButton, NCard, NGrid, NGridItem, NIcon, NText } from 'naive-ui'
+import { NButton, NCard, NGrid, NGridItem, NIcon, NText } from 'naive-ui';
 import { shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'

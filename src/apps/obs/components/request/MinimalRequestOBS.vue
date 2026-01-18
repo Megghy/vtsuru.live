@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
-import { NEmpty } from 'naive-ui'
+import { NEmpty } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { SongRequestFrom } from '@/api/api-models'

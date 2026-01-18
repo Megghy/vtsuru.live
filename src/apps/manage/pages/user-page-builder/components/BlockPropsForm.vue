@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { NButton, NDatePicker, NDivider, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText } from 'naive-ui';
+  import { NButton, NDatePicker, NDivider, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NFlex, NSwitch, NText } from 'naive-ui'
   import type { BlockNode } from '@/apps/user-page/block/schema';
   import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue';
   import ImageGalleryPropsEditor from './ImageGalleryPropsEditor.vue';
@@ -238,19 +238,16 @@
     <NDivider style="margin: 0 0 10px" title-placement="left">
       默认属性
     </NDivider>
-    <PropsGrid>
+    <PropsGrid :row-gap="0">
       <NFormItem label="区块名称" style="justify-self: start; width: min(260px, 100%)">
         <NInput v-model:value="blockNameModel" maxlength="50" show-count placeholder="例如：直播信息 · 紧凑" />
       </NFormItem>
       <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示边框" style="justify-self: start; width: min(180px, 100%)">
-        <NSpace justify="end">
-          <NSwitch v-model:value="blockFramedModel" size="small" />
-        </NSpace>
+        <NSwitch v-model:value="blockFramedModel" size="small" />
+
       </NFormItem>
       <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示背景" style="justify-self: start; width: min(180px, 100%)">
-        <NSpace justify="end">
-          <NSwitch v-model:value="blockBackgroundedModel" size="small" />
-        </NSpace>
+        <NSwitch v-model:value="blockBackgroundedModel" size="small" />
       </NFormItem>
     </PropsGrid>
 
@@ -272,9 +269,9 @@
           </NFormItem>
 
           <NFormItem v-if="editor.ensureLayoutProps(props.block).layout === 'row'" label="允许换行">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensureLayoutProps(props.block).wrap" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
 
           <NFormItem v-if="editor.ensureLayoutProps(props.block).layout === 'grid'" label="列数">
@@ -323,7 +320,7 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).displayName" placeholder="为空则显示账号名" />
           </NFormItem>
           <NFormItem class="span-full" label="头像图片">
-            <NSpace align="center">
+            <NFlex align="center">
               <NButton
                 size="small" :loading="editor.isUploading.value"
                 @click="editor.triggerUpload(props.block, 'avatarFile')"
@@ -344,7 +341,7 @@
               <NText depth="3">
                 {{ editor.ensurePropsObject(props.block).avatarFile?.name || editor.ensurePropsObject(props.block).avatarFile?.path || '' }}
               </NText>
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="个人简介">
             <NInput
@@ -418,14 +415,14 @@
             />
           </NFormItem>
           <NFormItem label="显示图标">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showIcon" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示边框">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).bordered" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -441,24 +438,24 @@
             />
           </NFormItem>
           <NFormItem label="显示标题">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showTitle" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示分区">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showArea" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示封面">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showCover" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示按钮">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showButtons" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -480,19 +477,19 @@
             />
           </NFormItem>
           <NFormItem label="显示订阅(ICS)">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showIcs" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="高亮今天">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).highlightToday" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示标签">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showTag" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -508,34 +505,34 @@
             />
           </NFormItem>
           <NFormItem label="显示头像">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showAvatar" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示昵称">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showName" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示签名">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showSign" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示统计">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showStats" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示按钮">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showButtons" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="显示直播间按钮">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showLiveRoom" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="个人主页链接">
             <NInput
@@ -551,7 +548,7 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem class="span-full" label="链接项">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div v-for="(it, idx) in editor.ensureItems(props.block)" :key="idx" style="display:flex; gap: 8px">
                 <NInput v-model:value="it.label" placeholder="标题" />
                 <NInput v-model:value="it.url" placeholder="链接 https://..." />
@@ -565,7 +562,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -599,9 +596,9 @@
             />
           </NFormItem>
           <NFormItem label="按钮铺满宽度">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).fullWidth" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="按钮类型">
             <NSelect
@@ -633,7 +630,7 @@
             />
           </NFormItem>
           <NFormItem class="span-full" label="按钮项">
-            <NSpace vertical style="width: 100%; padding-right: 10px">
+            <NFlex vertical style="width: 100%; padding-right: 10px">
               <Draggable
                 :list="editor.ensureItems(props.block)"
                 :item-key="getButtonItemKey"
@@ -705,7 +702,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -725,9 +722,9 @@
             />
           </NFormItem>
           <NFormItem label="按钮铺满宽度">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).fullWidth" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem label="按钮类型">
             <NSelect
@@ -814,13 +811,13 @@
             />
           </NFormItem>
           <NFormItem label="显示文字">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showLabel" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
 
           <NFormItem class="span-full" label="链接项">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:flex; gap: 8px"
@@ -852,7 +849,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -886,16 +883,16 @@
             />
           </NFormItem>
           <NFormItem label="显示标题栏">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showTitle" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="例如：最近视频" />
           </NFormItem>
 
           <NFormItem v-if="editor.ensurePropsObject(props.block).source === 'manual'" class="span-full" label="手动视频列表">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:flex; gap: 8px"
@@ -912,7 +909,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -934,9 +931,9 @@
             />
           </NFormItem>
           <NFormItem label="紧凑模式">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).compact" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="链接">
             <NInput v-model:value="editor.ensurePropsObject(props.block).url" placeholder="https://..." />
@@ -964,13 +961,13 @@
             />
           </NFormItem>
           <NFormItem label="圆角">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).rounded" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
 
           <NFormItem class="span-full" label="标签项">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:flex; gap: 8px"
@@ -996,7 +993,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -1012,7 +1009,7 @@
             />
           </NFormItem>
           <NFormItem class="span-full" label="条目">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:grid; grid-template-columns: 160px 1fr 1.2fr auto; gap: 8px; align-items: start"
@@ -1040,7 +1037,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -1050,12 +1047,12 @@
       <NForm label-placement="top" size="small">
         <PropsGrid>
           <NFormItem label="手风琴模式">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).accordion" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="问答">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; align-items: start"
@@ -1069,7 +1066,7 @@
               <NButton type="info" secondary @click="ensureArrayProp<any>(props.block, 'items').push({ q: '', a: '' })">
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -1119,9 +1116,9 @@
             />
           </NFormItem>
           <NFormItem label="悬停暂停">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).pauseOnHover" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -1149,9 +1146,9 @@
             />
           </NFormItem>
           <NFormItem label="显示秒">
-            <NSpace justify="end">
+            <NFlex justify="end">
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showSeconds" size="small" />
-            </NSpace>
+            </NFlex>
           </NFormItem>
           <NFormItem class="span-full" label="到达后文案">
             <NInput v-model:value="editor.ensurePropsObject(props.block).doneText" placeholder="已到达" />
@@ -1175,15 +1172,52 @@
               :autosize="{ minRows: 2, maxRows: 6 }"
             />
           </NFormItem>
-          <NFormItem class="span-full" label="链接">
+          <NFormItem
+            v-if="!(editor.ensurePropsObject(props.block).embed && editor.ensurePropsObject(props.block).embedMode === 'questionBox')"
+            class="span-full"
+            label="链接 (https)"
+            :required="editor.ensurePropsObject(props.block).embed && editor.ensurePropsObject(props.block).embedMode === 'iframe'"
+          >
             <NInput v-model:value="editor.ensurePropsObject(props.block).url" placeholder="https://..." />
           </NFormItem>
-          <NFormItem label="内嵌">
-            <NSpace justify="end">
-              <NSwitch v-model:value="editor.ensurePropsObject(props.block).embed" size="small" />
-            </NSpace>
+          <NFormItem label="嵌入到页面">
+            <NFlex justify="start">
+              <NSwitch
+                v-model:value="editor.ensurePropsObject(props.block).embed"
+                size="small"
+                @update:value="(v) => {
+                  if (!v) return
+                  const o = editor.ensurePropsObject(props.block) as any
+                  if (o.embedMode !== 'questionBox' && o.embedMode !== 'iframe') o.embedMode = 'questionBox'
+                }"
+              />
+
+              <NAlert
+                type="info"
+                :show-icon="false"
+                style="font-size: 12px; padding: 6px 10px; border-radius: var(--vtsuru-page-radius)"
+              >
+                开启“嵌入到页面”后，可选择站内提问箱
+              </NAlert>
+            </NFlex>
           </NFormItem>
-          <NFormItem label="内嵌高度">
+          <NFormItem v-if="editor.ensurePropsObject(props.block).embed" class="span-full" label="嵌入内容">
+            <NFlex vertical style="width: 100%">
+              <NSelect
+                v-model:value="editor.ensurePropsObject(props.block).embedMode"
+                :options="[
+                  { label: '站内提问箱', value: 'questionBox' },
+                  { label: '站外 iframe', value: 'iframe' },
+                ]"
+              />
+            </NFlex>
+
+          </NFormItem>
+
+          <NFormItem
+            v-if="editor.ensurePropsObject(props.block).embed && editor.ensurePropsObject(props.block).embedMode !== 'questionBox'"
+            label="内嵌高度"
+          >
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).height" :min="200" :max="1200"
               style="width: 100%"
@@ -1206,7 +1240,7 @@
             />
           </NFormItem>
           <NFormItem class="span-full" label="赞助平台">
-            <NSpace vertical style="width: 100%">
+            <NFlex vertical style="width: 100%">
               <div
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:flex; gap: 8px"
@@ -1235,7 +1269,7 @@
               >
                 添加
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>
@@ -1264,7 +1298,7 @@
             <NInput v-model:value="editor.ensurePropsObject(props.block).alt" placeholder="图片加载失败时显示的文字" />
           </NFormItem>
           <NFormItem class="span-full" label="本地图片">
-            <NSpace align="center">
+            <NFlex align="center">
               <NButton
                 size="small" :loading="editor.isUploading.value"
                 @click="editor.triggerUpload(props.block, 'imageFile')"
@@ -1290,7 +1324,7 @@
               <NText depth="3">
                 {{ editor.ensurePropsObject(props.block).imageFile?.name || editor.ensurePropsObject(props.block).imageFile?.path || '' }}
               </NText>
-            </NSpace>
+            </NFlex>
           </NFormItem>
         </PropsGrid>
       </NForm>

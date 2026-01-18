@@ -2,8 +2,7 @@
 import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
-import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NList, NListItem, NPopconfirm, NSpace, NText, NTime, useThemeVars } from 'naive-ui'
-
+import { NBadge, NButton, NCard, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NList, NListItem, NPopconfirm, NFlex, NText, NTime, useThemeVars } from 'naive-ui';
 defineProps<{
   schedules: ScheduleWeekInfo[]
   isSelf: boolean
@@ -150,7 +149,7 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
           v-if="isSelf"
           #header-extra
         >
-          <NSpace>
+          <NFlex>
             <NButton
               size="small"
               @click="emit('onUpdate', item)"
@@ -174,7 +173,7 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
               </template>
               确定删除?
             </NPopconfirm>
-          </NSpace>
+          </NFlex>
         </template>
         <NGrid
           x-gap="8"
@@ -235,7 +234,7 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                     休息
                   </NText>
                 </NCard>
-                <NSpace
+                <NFlex
                   v-else
                   vertical
                   :size="4"
@@ -371,7 +370,7 @@ function getDayHeaderStyle(year: number, week: number, dayIndex: number, primary
                       </div>
                     </div>
                   </NCard>
-                </NSpace>
+                </NFlex>
               </div>
             </div>
           </NGridItem>

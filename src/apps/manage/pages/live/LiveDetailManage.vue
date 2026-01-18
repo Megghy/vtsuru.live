@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { NButton, NEmpty, NSpin, useMessage, useThemeVars } from 'naive-ui'
+import { NButton, NEmpty, NSpin, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'

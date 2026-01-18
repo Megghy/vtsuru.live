@@ -3,33 +3,12 @@
   import { NavigateToNewTab } from '@/shared/utils';
   import { useBiliAuth } from '@/store/useBiliAuth';
   import {
-    BookCoins20Filled,
-    CalendarClock24Filled,
-    Info24Filled,
-    Live24Filled,
-    Lottery24Filled,
-    PeopleQueue24Filled,
-    Person48Filled,
-    PersonFeedback24Filled,
-    TabletSpeaker24Filled,
-    VehicleShip24Filled,
-    VideoAdd20Filled,
-  } from '@vicons/fluent';
+    BookCoins20Filled, CalendarClock24Filled, Info24Filled, Live24Filled, Lottery24Filled, PeopleQueue24Filled, Person48Filled, PersonFeedback24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled, } from '@vicons/fluent';
   import {
-    AnalyticsSharp,
-    Bookmark,
-    BookmarkOutline,
-    Chatbox,
-    ChatbubbleEllipsesOutline,
-    DocumentTextOutline,
-    Eye,
-    GridOutline,
-    MusicalNote,
-    MusicalNotesOutline,
-    PlayCircleOutline
+    AnalyticsSharp, Bookmark, BookmarkOutline, Chatbox, ChatbubbleEllipsesOutline, DocumentTextOutline, Eye, GridOutline, MusicalNote, MusicalNotesOutline, PlayCircleOutline
   } from '@vicons/ionicons5';
   import { useStorage } from '@vueuse/core';
-  import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui';
+  import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
   import { computed, watchEffect } from 'vue';
   import { RouterLink, useRoute, useRouter } from 'vue-router';
 

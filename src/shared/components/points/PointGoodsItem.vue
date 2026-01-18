@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ResponsePointGoodModel } from '@/api/api-models'
 import { Pin16Filled } from '@vicons/fluent'
-import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui'
+import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui';
 import { GoodsTypes } from '@/api/api-models'
 import { IMGUR_URL } from '@/shared/config'
 

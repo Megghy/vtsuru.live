@@ -3,7 +3,7 @@ import type { SongsInfo } from '@/api/api-models'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput, NSpace, NTag, NText, NTooltip } from 'naive-ui'
+import { NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -223,7 +223,7 @@ function getMetaText(song: SongsInfo) {
             </NText>
           </div>
 
-          <NSpace
+          <NFlex
             v-if="song.options"
             size="small"
             justify="end"
@@ -261,7 +261,7 @@ function getMetaText(song: SongsInfo) {
             >
               舰长
             </NTag>
-          </NSpace>
+          </NFlex>
         </div>
       </div>
     </div>

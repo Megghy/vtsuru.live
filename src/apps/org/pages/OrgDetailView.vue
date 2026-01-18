@@ -1,47 +1,7 @@
 <script setup lang="ts">
+import { ChatbubblesOutline, LogOutOutline, Pencil, PeopleOutline, RefreshOutline, TimeOutline, WalletOutline, } from '@vicons/ionicons5'
 import {
-  ChatbubblesOutline,
-  LogOutOutline,
-  Pencil,
-  PeopleOutline,
-  RefreshOutline,
-  TimeOutline,
-  WalletOutline,
-} from '@vicons/ionicons5'
-import {
-  NAlert,
-  NAvatar,
-  NButton,
-  NCard,
-  NDescriptions,
-  NDescriptionsItem,
-  NDrawer,
-  NDrawerContent,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NHeatmap,
-  NIcon,
-  NImage,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NPageHeader,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NAvatar, NButton, NCard, NDescriptions, NDescriptionsItem, NDrawer, NDrawerContent, NEmpty, NForm, NFormItem, NGrid, NGridItem, NHeatmap, NIcon, NImage, NInput, NList, NListItem, NModal, NPageHeader, NPopconfirm, NSelect, NFlex, NSpin, NStatistic, NTabPane, NTabs, NTag, NTime, useMessage, useThemeVars } from 'naive-ui';
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isLoggedIn } from '@/api/account'
@@ -826,20 +786,20 @@ function handleGoConsole() {
     <template v-else>
       <NPageHeader @back="handleBack">
         <template #title>
-          <NSpace align="center">
+          <NFlex align="center">
             <span>{{ orgName || `组织 ${orgId}` }}</span>
             <NButton v-if="isOrgAdmin" size="tiny" circle secondary @click="showRenameModal = true; newOrgName = orgName">
               <template #icon>
                 <NIcon :component="Pencil" />
               </template>
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
         <template #subtitle>
           ID: {{ orgId }}
         </template>
         <template #extra>
-          <NSpace>
+          <NFlex>
             <NButton secondary @click="handleGoConsole">
               返回控制台
             </NButton>
@@ -860,7 +820,7 @@ function handleGoConsole() {
               </template>
               刷新
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
         <template #avatar>
           <NIcon :component="PeopleOutline" />

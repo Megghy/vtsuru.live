@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { ResponseLiveInfoModel } from '@/api/api-models'
-import {
-  ArrowSync24Filled,
-  Search24Filled
+import { ArrowSync24Filled, Search24Filled
 } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputNumber, NPagination, NSelect, NSkeleton, NSwitch, NText, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputNumber, NPagination, NSelect, NSkeleton, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLocalStorage, useSessionStorage, useStorage } from '@vueuse/core'

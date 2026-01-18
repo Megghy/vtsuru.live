@@ -5,24 +5,7 @@ import { CloudAdd20Filled, Play24Filled } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { throttle } from 'lodash'
 import {
-  NButton,
-  NCard,
-  NCollapseTransition,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NPopover,
-  NScrollbar,
-  NSelect,
-  NSpace,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
+  NButton, NCard, NCollapseTransition, NDivider, NEllipsis, NEmpty, NGrid, NGridItem, NIcon, NInput, NPopover, NScrollbar, NSelect, NFlex, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
@@ -126,7 +109,7 @@ function loadMore() {
         />
       </NCollapseTransition>
       <NDivider> 标签 </NDivider>
-      <NSpace>
+      <NFlex>
         <NButton
           v-for="tag in tags"
           :key="tag"
@@ -137,9 +120,9 @@ function loadMore() {
         >
           {{ tag }}
         </NButton>
-      </NSpace>
+      </NFlex>
       <NDivider> 搜索歌曲 </NDivider>
-      <NSpace vertical>
+      <NFlex vertical>
         <NInput
           v-model:value="searchKeyword"
           placeholder="歌名"
@@ -156,7 +139,7 @@ function loadMore() {
         />
         <NDivider />
         <LiveRequestOBS v-if="userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest)" />
-      </NSpace>
+      </NFlex>
     </NCard>
     <NEmpty
       v-if="!data || songs?.length === 0"
@@ -189,7 +172,7 @@ function loadMore() {
             style="height: 200px; min-width: 300px"
           >
             <template #header>
-              <NSpace
+              <NFlex
                 :wrap="false"
                 align="center"
               >
@@ -199,10 +182,10 @@ function loadMore() {
                 <NEllipsis>
                   {{ item.name }}
                 </NEllipsis>
-              </NSpace>
+              </NFlex>
             </template>
-            <NSpace vertical>
-              <NSpace
+            <NFlex vertical>
+              <NFlex
                 v-if="(item.author?.length ?? 0) > 0"
                 :size="0"
               >
@@ -227,15 +210,15 @@ function loadMore() {
                     />
                   </NButton>
                 </div>
-              </NSpace>
-            </NSpace>
+              </NFlex>
+            </NFlex>
             <template #footer>
-              <NSpace vertical>
+              <NFlex vertical>
                 <NEllipsis>
                   {{ item.description }}
                 </NEllipsis>
                 <template v-if="item.options">
-                  <NSpace>
+                  <NFlex>
                     <NTag
                       v-if="item.options?.scMinPrice"
                       size="small"
@@ -273,12 +256,12 @@ function loadMore() {
                     >
                       舰长
                     </NTag>
-                  </NSpace>
+                  </NFlex>
                 </template>
-              </NSpace>
+              </NFlex>
             </template>
             <template #action>
-              <NSpace
+              <NFlex
                 align="center"
                 :wrap="false"
               >
@@ -331,7 +314,7 @@ function loadMore() {
                       标签
                     </NButton>
                   </template>
-                  <NSpace :wrap="false">
+                  <NFlex :wrap="false">
                     <NButton
                       v-for="tag in item.tags"
                       :key="tag"
@@ -343,9 +326,9 @@ function loadMore() {
                         {{ tag }}
                       </NEllipsis>
                     </NButton>
-                  </NSpace>
+                  </NFlex>
                 </NPopover>
-                <NSpace
+                <NFlex
                   v-else
                   :wrap="false"
                 >
@@ -360,21 +343,21 @@ function loadMore() {
                       {{ tag }}
                     </NEllipsis>
                   </NButton>
-                </NSpace>
-              </NSpace>
+                </NFlex>
+              </NFlex>
             </template>
           </NCard>
         </NGridItem>
       </NGrid>
       <NDivider />
-      <NSpace justify="center">
+      <NFlex justify="center">
         <NButton
           v-if="data.length > index"
           @click="loadMore"
         >
           加载更多
         </NButton>
-      </NSpace>
+      </NFlex>
     </NScrollbar>
   </div>
 </template>

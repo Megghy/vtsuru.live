@@ -1,22 +1,5 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NSelect,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NList,
-  NListItem,
-  NSkeleton,
-  NSpace,
-  NStatistic,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NCard, NEmpty, NSelect, NGrid, NGridItem, NIcon, NList, NListItem, NSkeleton, NFlex, NStatistic, NTag, NTime, useMessage } from 'naive-ui';
 import { CashOutline, CubeOutline, GiftOutline, PeopleOutline, RefreshOutline, StorefrontOutline, TimeOutline } from '@vicons/ionicons5'
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI, unwrapOk } from '@/api/query'
@@ -184,14 +167,14 @@ onMounted(() => {
 
     <!-- 控制栏 -->
     <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-      <NSpace>
+      <NFlex>
         <NButton :loading="isLoading" @click="refreshData">
           <template #icon>
             <NIcon :component="RefreshOutline" />
           </template>
           刷新
         </NButton>
-      </NSpace>
+      </NFlex>
     </div>
 
     <!-- 加载状态 -->

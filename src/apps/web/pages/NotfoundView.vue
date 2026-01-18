@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NLayoutContent, NResult } from 'naive-ui'
+import { NButton, NLayoutContent, NResult } from 'naive-ui';
 import '@/apps/web/styles/web-page.css'
 </script>
 

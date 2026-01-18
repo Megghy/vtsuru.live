@@ -3,29 +3,7 @@ import type { BiliAuthModel } from '@/api/api-models'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
 import { useRouteQuery } from '@vueuse/router'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCode,
-  NCountdown,
-  NDivider,
-  NEllipsis,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCode, NCountdown, NDivider, NEllipsis, NFlex, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSelect, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { useRoute, useRouter } from 'vue-router'
@@ -415,9 +393,9 @@ onUnmounted(() => {
               </NFlex>
             </NFlex>
 
-            <NSpace vertical>
+            <NFlex vertical>
               <NCard size="small" bordered>
-                <NSpace :size="5">
+                <NFlex :size="5">
                   邮箱:
                   <NEllipsis
                     v-if="accountInfo?.isEmailVerified"
@@ -443,7 +421,7 @@ onUnmounted(() => {
                   >
                     修改邮箱
                   </NButton>
-                </NSpace>
+                </NFlex>
               </NCard>
               <NCard size="small" bordered>
                 主播 Bilibili 账户:
@@ -452,7 +430,7 @@ onUnmounted(() => {
                   style="max-width: 100%"
                 >
                   <NText style="color: var(--n-primary-color)">
-                    <NSpace
+                    <NFlex
                       :size="5"
                       align="center"
                     >
@@ -505,7 +483,7 @@ onUnmounted(() => {
                         </template>
                         确定解除认证吗? 解除后现有的数据跟踪数据将被删除并且无法恢复
                       </NPopconfirm>
-                    </NSpace>
+                    </NFlex>
                   </NText>
                 </NEllipsis>
                 <template v-else>
@@ -538,7 +516,7 @@ onUnmounted(() => {
                   style="max-width: 100%"
                 >
                   <NText style="color: var(--n-primary-color)">
-                    <NSpace
+                    <NFlex
                       :size="5"
                       align="center"
                     >
@@ -554,7 +532,7 @@ onUnmounted(() => {
                         </template>
                         确定解除绑定吗?
                       </NPopconfirm>
-                    </NSpace>
+                    </NFlex>
                   </NText>
                 </NEllipsis>
                 <template v-else>
@@ -606,7 +584,7 @@ onUnmounted(() => {
                   </NPopconfirm>
                 </NInputGroup>
               </NAlert>
-            </NSpace>
+            </NFlex>
             <NDivider />
 
             <NAlert
@@ -654,7 +632,7 @@ onUnmounted(() => {
     title="改绑邮箱"
     style="width: 400px; max-width: 90%"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NInput
         v-model:value="newEmailAddress"
         placeholder="新邮箱地址"
@@ -674,7 +652,7 @@ onUnmounted(() => {
           </template>
         </NButton>
       </NInputGroup>
-    </NSpace>
+    </NFlex>
     <template #footer>
       <NButton
         type="primary"
@@ -690,7 +668,7 @@ onUnmounted(() => {
     title="修改密码"
     style="width: 400px; max-width: 90%"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NInput
         v-model:value="newPassword"
         type="password"
@@ -701,7 +679,7 @@ onUnmounted(() => {
         type="password"
         placeholder="确认密码"
       />
-    </NSpace>
+    </NFlex>
     <template #footer>
       <NButton
         type="warning"
@@ -717,12 +695,12 @@ onUnmounted(() => {
     title="修改用户名"
     style="width: 400px; max-width: 90%"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NInput
         v-model:value="newName"
         placeholder="新用户名"
       />
-    </NSpace>
+    </NFlex>
     <template #footer>
       <NButton
         type="warning"
@@ -739,7 +717,7 @@ onUnmounted(() => {
     title="绑定/更新身份码"
     style="width: 400px; max-width: 90%"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NInputGroup>
         <NInput
           v-model:value="biliCode"
@@ -778,7 +756,7 @@ onUnmounted(() => {
           >
         </NTooltip>
       </NInputGroup>
-    </NSpace>
+    </NFlex>
     <NDivider />
     <VueTurnstile
       ref="turnstile"
@@ -803,7 +781,7 @@ onUnmounted(() => {
     title="绑定用户账户"
     style="width: 700px; max-width: 90%"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NAlert
         title="获取认证链接"
         type="info"
@@ -837,7 +815,7 @@ onUnmounted(() => {
           的链接即可
         </NTooltip>
       </NInputGroup>
-    </NSpace>
+    </NFlex>
     <template #footer>
       <NButton
         type="success"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NSpace, NUl } from 'naive-ui'
+import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NFlex, NUl } from 'naive-ui';
 import { computed } from 'vue'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
@@ -40,12 +40,12 @@ const baseUrl = computed(() => {
     title="OBS 浏览器源组件"
     closable
   >
-    <NSpace vertical :size="12">
+    <NFlex vertical :size="12">
       <NAlert title="使用方法" type="info" size="small" :bordered="false">
         将下方链接添加为 OBS（或其他直播软件）的浏览器源，即可在直播画面中显示队列。
       </NAlert>
 
-      <NSpace vertical :size="10">
+      <NFlex vertical :size="10">
         <NInputGroup>
           <NInputGroupLabel>URL</NInputGroupLabel>
           <NInput :value="baseUrl" readonly size="small" />
@@ -75,7 +75,7 @@ const baseUrl = computed(() => {
             复制带速度 URL
           </NButton>
         </NInputGroup>
-      </NSpace>
+      </NFlex>
 
       <NDivider style="margin: 0">
         预览（尺寸可能与实际不同）
@@ -105,7 +105,7 @@ const baseUrl = computed(() => {
           </NUl>
         </NCollapseItem>
       </NCollapse>
-    </NSpace>
+    </NFlex>
   </NModal>
 </template>
 

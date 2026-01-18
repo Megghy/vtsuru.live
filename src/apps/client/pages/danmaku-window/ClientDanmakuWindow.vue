@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DanmakuWindowBCData, DanmakuWindowSettings } from '@/apps/client/store/useDanmakuWindow'
 import type { EventModel } from '@/api/api-models'
-import { NSpin } from 'naive-ui'
+import { NSpin } from 'naive-ui';
 import { nanoid } from 'nanoid'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { EventDataTypes } from '@/api/api-models'

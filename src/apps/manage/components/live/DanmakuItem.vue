@@ -2,7 +2,7 @@
 import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
-import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui'
+import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui';
 import { EventDataTypes } from '@/api/api-models'
 
 const {

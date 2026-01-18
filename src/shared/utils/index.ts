@@ -7,15 +7,7 @@ import type { SongsInfo } from '@/api/api-models'
 import { SquareArrowForward24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import {
-  createDiscreteApi,
-  darkTheme,
-  dateZhCN,
-  NButton,
-  NIcon,
-  NTooltip,
-  useOsTheme,
-  zhCN,
-} from 'naive-ui'
+  createDiscreteApi, darkTheme, dateZhCN, NButton, NIcon, NTooltip, useOsTheme, zhCN } from 'naive-ui';
 import { computed } from 'vue'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NText, NIcon } from 'naive-ui'
+import { NCollapse, NCollapseItem, NText, NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { HelpCircleOutline, ChevronDownOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'

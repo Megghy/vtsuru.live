@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NList, NListItem, NSpin, NTime, useMessage } from 'naive-ui'
+import { NButton, NCard, NInput, NList, NListItem, NSpin, NTime, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { ORG_API_URL } from '@/shared/config'

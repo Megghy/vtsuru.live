@@ -2,7 +2,7 @@
 import { useElementSize } from '@vueuse/core'
 // Remove Vue3Marquee import if no longer needed elsewhere
 // import { Vue3Marquee } from 'vue3-marquee'
-import { NEmpty, NTag } from 'naive-ui'
+import { NEmpty, NTag } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { SongRequestFrom } from '@/api/api-models'

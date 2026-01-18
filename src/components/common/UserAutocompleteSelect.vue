@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SelectOption } from 'naive-ui'
-import { NSelect } from 'naive-ui'
+import { NSelect } from 'naive-ui';
 import { useDebounceFn } from '@vueuse/core'
 import { ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'

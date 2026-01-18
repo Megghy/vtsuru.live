@@ -6,28 +6,7 @@ import type { BodyOptionConfig, ControllerComponentStructure } from '@/apps/obs-
 import type { GamepadConfig, GamepadType } from '@/types/gamepad'
 import { useStorage } from '@vueuse/core'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NColorPicker,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NGrid,
-  NGridItem,
-  NInput,
-  NInputNumber,
-  NScrollbar,
-  NSelect,
-  NSlider,
-  NSpace,
-  NTag,
-  NText,
-  NTree,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NCollapse, NCollapseItem, NColorPicker, NDescriptions, NDescriptionsItem, NDivider, NGrid, NGridItem, NInput, NInputNumber, NScrollbar, NSelect, NSlider, NFlex, NTag, NText, NTree } from 'naive-ui';
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'
@@ -286,7 +265,7 @@ const gamepadDisplayUrl = computed(() => {
     size="small"
     class="gamepad-settings-container"
   >
-    <NSpace
+    <NFlex
       align="center"
       size="small"
     >
@@ -306,7 +285,7 @@ const gamepadDisplayUrl = computed(() => {
       >
         打开独立显示窗口
       </NButton>
-    </NSpace>
+    </NFlex>
 
     <NDivider size="small" />
 
@@ -332,11 +311,11 @@ const gamepadDisplayUrl = computed(() => {
       </template>
     </NAlert>
 
-    <NSpace
+    <NFlex
       vertical
       size="small"
     >
-      <NSpace
+      <NFlex
         align="center"
         size="small"
       >
@@ -349,9 +328,9 @@ const gamepadDisplayUrl = computed(() => {
         >
           {{ showComponentTree ? '隐藏' : '显示' }}控制器结构 (调试)
         </NButton>
-      </NSpace>
+      </NFlex>
 
-      <NSpace
+      <NFlex
         v-if="availableBodies.length > 1"
         align="center"
         size="small"
@@ -363,12 +342,12 @@ const gamepadDisplayUrl = computed(() => {
           size="small"
           style="min-width: 200px"
         />
-      </NSpace>
+      </NFlex>
 
       <NDivider title-placement="left">
         按键按下效果
       </NDivider>
-      <NSpace align="center">
+      <NFlex align="center">
         <NCheckbox v-model:checked="enableCustomPressedColor">
           自定义按下颜色
         </NCheckbox>
@@ -381,16 +360,16 @@ const gamepadDisplayUrl = computed(() => {
         <NText v-else>
           (默认使用反色效果)
         </NText>
-      </NSpace>
+      </NFlex>
 
       <NDivider title-placement="left">
         摇杆灵敏度
       </NDivider>
-      <NSpace
+      <NFlex
         vertical
         size="small"
       >
-        <NSpace align="center">
+        <NFlex align="center">
           <NText>移动幅度: {{ stickSensitivity }}</NText>
           <NSlider
             v-model:value="stickSensitivity"
@@ -412,25 +391,25 @@ const gamepadDisplayUrl = computed(() => {
           >
             重置
           </NButton>
-        </NSpace>
+        </NFlex>
         <NText
           size="small"
           depth="3"
         >
           数值越大，摇杆移动幅度越大。默认值为5。
         </NText>
-      </NSpace>
+      </NFlex>
 
       <NCard
         title="手柄实时预览"
         size="small"
         style="margin-top: 10px;"
       >
-        <NSpace align="center" size="small" style="margin-bottom: 6px;">
+        <NFlex align="center" size="small" style="margin-bottom: 6px;">
           <NButton size="small" type="info" @click="showPreview = !showPreview">
             {{ showPreview ? '隐藏预览' : '显示预览' }}
           </NButton>
-        </NSpace>
+        </NFlex>
         <div v-if="showPreview" style="position: relative; width: 100%; height: 300px; background-color: var(--n-color-embedded); border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius); overflow: hidden;">
           <GamepadDisplay
             :key="selectedType"
@@ -454,7 +433,7 @@ const gamepadDisplayUrl = computed(() => {
             size="small"
             title="控制器结构 (数据视图)"
           >
-            <NSpace vertical>
+            <NFlex vertical>
               <NScrollbar style="max-height: 300px;">
                 <NTree
                   :data="formatComponentsForTree(controllerComponents)"
@@ -488,15 +467,15 @@ const gamepadDisplayUrl = computed(() => {
                   </NDescriptionsItem>
                 </NDescriptions>
               </div>
-            </NSpace>
+            </NFlex>
           </NCard>
         </NGridItem>
       </NGrid>
 
       <NCollapse>
         <NCollapseItem title="高级布局设置 (用于独立显示窗口)">
-          <NSpace vertical>
-            <NSpace align="center">
+          <NFlex vertical>
+            <NFlex align="center">
               <NText>自定义ViewBox:</NText>
               <NInput
                 v-model:value="customViewBoxInput"
@@ -510,14 +489,14 @@ const gamepadDisplayUrl = computed(() => {
               >
                 重置
               </NButton>
-            </NSpace>
+            </NFlex>
             <NText size="small">
               ViewBox格式: minX minY width height. 当前生效: {{ effectiveViewBoxForDisplay }}
             </NText>
-          </NSpace>
+          </NFlex>
         </NCollapseItem>
       </NCollapse>
-    </NSpace>
+    </NFlex>
   </NCard>
   <NCard v-else>
     无效的游戏手柄类型: {{ currentGamepadType }}

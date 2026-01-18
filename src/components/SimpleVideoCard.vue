@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { VideoCollectVideo } from '@/api/api-models'
-import { NCard, NEllipsis, NImage, NText } from 'naive-ui'
-
+import { NCard, NEllipsis, NImage, NText } from 'naive-ui';
 defineProps<{
   video: VideoCollectVideo
   width?: number

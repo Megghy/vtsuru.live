@@ -7,36 +7,7 @@ import type { MusicRequestSettings } from '@/store/useMusicRequest'
 import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NEmpty,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NLi,
-  NList,
-  NListItem,
-  NModal,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpace,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  NTransfer,
-  NUl,
-  NVirtualList,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NList, NListItem, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NTabPane, NTabs, NTag, NText, NTooltip, NTransfer, NUl, NVirtualList, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
@@ -395,7 +366,7 @@ onUnmounted(() => {
       description="监听弹幕点歌、管理闲置歌单与黑名单。"
     >
       <template #actions>
-        <NSpace align="center" :wrap="true" :size="10">
+        <NFlex align="center" :wrap="true" :size="10">
           <NButton
             :type="listening ? 'error' : 'success'"
             data-umami-event="Use Music Request"
@@ -437,7 +408,7 @@ onUnmounted(() => {
             </template>
             这将覆盖当前设置，确定？
           </NPopconfirm>
-        </NSpace>
+        </NFlex>
       </template>
     </OpenLivePageHeader>
 
@@ -462,7 +433,7 @@ onUnmounted(() => {
             v-for="item in musicRquestStore.waitingMusics"
             :key="item.music.name"
           >
-            <NSpace align="center" :wrap="true" :size="8">
+            <NFlex align="center" :wrap="true" :size="8">
               <NButton
                 type="primary"
                 secondary
@@ -505,7 +476,7 @@ onUnmounted(() => {
               <NText depth="3">
                 {{ item.music.name }} - {{ item.music.author?.join('/') }}
               </NText>
-            </NSpace>
+            </NFlex>
           </NListItem>
         </NList>
       </NTabPane>
@@ -514,7 +485,7 @@ onUnmounted(() => {
         name="list"
         tab="闲置歌单"
       >
-        <NSpace align="center" :wrap="true" :size="10" class="music-request__tab-actions">
+        <NFlex align="center" :wrap="true" :size="10" class="music-request__tab-actions">
           <NPopconfirm @positive-click="clearMusic">
             <template #trigger>
               <NButton type="error" secondary size="small" class="open-live-action-btn">
@@ -526,7 +497,7 @@ onUnmounted(() => {
           <NButton size="small" class="open-live-action-btn" @click="showNeteaseModal = true">
             从网易云歌单导入
           </NButton>
-        </NSpace>
+        </NFlex>
 
         <NEmpty v-if="musicRquestStore.originMusics.length === 0">
           暂无
@@ -540,7 +511,7 @@ onUnmounted(() => {
         >
           <template #default="{ item }">
             <div class="music-request__list-row">
-              <NSpace align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
+              <NFlex align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
                 <NPopconfirm @positive-click="delMusic(item)">
                   <template #trigger>
                     <NButton
@@ -563,7 +534,7 @@ onUnmounted(() => {
                   播放
                 </NButton>
                 <NText> {{ item.name }} - {{ item.author?.join('/') }} </NText>
-              </NSpace>
+              </NFlex>
             </div>
           </template>
         </NVirtualList>
@@ -578,7 +549,7 @@ onUnmounted(() => {
             v-for="item in settings.blacklist"
             :key="item"
           >
-            <NSpace
+            <NFlex
               align="center"
               style="width: 100%"
             >
@@ -591,7 +562,7 @@ onUnmounted(() => {
                 删除
               </NButton>
               <NText> {{ item }} </NText>
-            </NSpace>
+            </NFlex>
           </NListItem>
         </NList>
       </NTabPane>
@@ -600,8 +571,8 @@ onUnmounted(() => {
         name="settings"
         tab="设置"
       >
-        <NSpace vertical :size="12">
-          <NSpace align="center" :wrap="true" :size="12">
+        <NFlex vertical :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NRadioGroup v-model:value="settings.platform" size="small">
               <NRadioButton value="netease">
                 网易云
@@ -635,16 +606,16 @@ onUnmounted(() => {
                 }"
               />
             </NInputGroup>
-          </NSpace>
-          <NSpace :wrap="true" :size="12">
+          </NFlex>
+          <NFlex :wrap="true" :size="12">
             <NCheckbox v-model:checked="settings.playMusicWhenFree">
               空闲时播放空闲歌单
             </NCheckbox>
             <NCheckbox v-model:checked="settings.orderMusicFirst">
               优先播放点歌
             </NCheckbox>
-          </NSpace>
-          <NSpace align="center" :wrap="true" :size="12">
+          </NFlex>
+          <NFlex align="center" :wrap="true" :size="12">
             <NTooltip>
               <template #trigger>
                 <NButton
@@ -666,8 +637,8 @@ onUnmounted(() => {
               size="small"
               @update:value="musicRquestStore.setSinkId"
             />
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NTabPane>
     </NTabs>
   </NCard>
@@ -731,7 +702,7 @@ onUnmounted(() => {
     preset="card"
     style="width: 900px; max-width: 90vw"
   >
-    <NSpace vertical :size="12">
+    <NFlex vertical :size="12">
       <NAlert title="这是什么？" type="info" size="small" :bordered="false">
         将等待队列以及结果显示在OBS中。
       </NAlert>
@@ -756,7 +727,7 @@ onUnmounted(() => {
           </NUl>
         </NCollapseItem>
       </NCollapse>
-    </NSpace>
+    </NFlex>
   </NModal>
 </template>
 

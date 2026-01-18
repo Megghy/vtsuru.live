@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
-import { NDivider } from 'naive-ui'
+import { NDivider } from 'naive-ui';
 import ScheduleList from '@/components/ScheduleList.vue'
 
 defineProps<ScheduleConfigType>()

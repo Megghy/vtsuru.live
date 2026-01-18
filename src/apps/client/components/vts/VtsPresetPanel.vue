@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { VtsPreset } from '@/apps/client/store/useVtsStore'
-import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NModal, NPopconfirm, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NModal, NPopconfirm, NText, useMessage } from 'naive-ui';
 import { computed, reactive, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 

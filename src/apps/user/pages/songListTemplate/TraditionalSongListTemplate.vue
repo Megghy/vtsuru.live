@@ -5,7 +5,7 @@ import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent'
 import { List } from 'linqts'
-import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui'
+import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui';
 import { computed, h, ref, watch } from 'vue'
 import { SongFrom } from '@/api/api-models'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'

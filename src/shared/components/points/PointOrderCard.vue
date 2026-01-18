@@ -9,31 +9,7 @@ import type {
 } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NAutoComplete,
-  NButton,
-  NCard,
-  NDataTable,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NScrollbar,
-  NSpace,
-  NStep,
-  NSteps,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NAutoComplete, NButton, NCard, NDataTable, NDivider, NEllipsis, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NScrollbar, NStep, NSteps, NTag, NText, NTime, NTooltip, useDialog, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import {
   GoodsTypes,
@@ -648,7 +624,7 @@ onMounted(() => {
                 </div>
               </template>
 
-              <NSpace
+              <NFlex
                 v-if="orderDetail.status !== PointOrderStatus.Completed"
                 vertical
                 size="small"
@@ -659,7 +635,7 @@ onMounted(() => {
                   class="status-action-item"
                   embedded
                 >
-                  <NSpace align="center">
+                  <NFlex align="center">
                     <NIcon
                       class="action-icon"
                       size="20"
@@ -684,7 +660,7 @@ onMounted(() => {
                         {{ statusMap[orderDetail.status].nextStatusText }}
                       </div>
                     </div>
-                  </NSpace>
+                  </NFlex>
                 </NCard>
 
                 <NCard
@@ -692,7 +668,7 @@ onMounted(() => {
                   class="status-action-item"
                   embedded
                 >
-                  <NSpace align="center">
+                  <NFlex align="center">
                     <NIcon
                       class="action-icon"
                       size="20"
@@ -717,9 +693,9 @@ onMounted(() => {
                         {{ statusMap[orderDetail.status].prevStatusText }}
                       </div>
                     </div>
-                  </NSpace>
+                  </NFlex>
                 </NCard>
-              </NSpace>
+              </NFlex>
             </NCard>
 
             <!-- 收货地址信息 -->
@@ -743,7 +719,7 @@ onMounted(() => {
                 size="small"
                 class="express-form"
               >
-                <NSpace
+                <NFlex
                   vertical
                   size="medium"
                 >
@@ -769,7 +745,7 @@ onMounted(() => {
                   >
                     更新快递信息
                   </NButton>
-                </NSpace>
+                </NFlex>
               </NCard>
             </template>
 

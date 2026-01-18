@@ -696,9 +696,19 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
       if (!propsObj) break
       if (propsObj.title !== undefined && typeof propsObj.title !== 'string') errors.push(`${userFacingName}: title 必须是 string`)
       if (propsObj.description !== undefined && typeof propsObj.description !== 'string') errors.push(`${userFacingName}: description 必须是 string`)
-      if (propsObj.url !== undefined && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      if (propsObj.embedMode !== undefined && !['questionBox', 'iframe'].includes(String(propsObj.embedMode))) {
+        errors.push(`${userFacingName}: embedMode 不支持`)
+      }
+      if (propsObj.url !== undefined) {
+        if (typeof propsObj.url !== 'string') errors.push(`${userFacingName}: url 必须是 string`)
+        else if (propsObj.url.trim().length > 0 && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      }
       if (propsObj.buttonText !== undefined && typeof propsObj.buttonText !== 'string') errors.push(`${userFacingName}: buttonText 必须是 string`)
       if (propsObj.embed !== undefined && typeof propsObj.embed !== 'boolean') errors.push(`${userFacingName}: embed 必须是 boolean`)
+      if (propsObj.embed === true && propsObj.embedMode === 'iframe') {
+        if (!isNonEmptyString(propsObj.url)) errors.push(`${userFacingName}: url 不能为空`)
+        else if (!isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)
+      }
       if (propsObj.height !== undefined) {
         const v = Number(propsObj.height)
         if (!Number.isFinite(v) || v < 200 || v > 1200) errors.push(`${userFacingName}: height 必须是 200~1200 的数字`)

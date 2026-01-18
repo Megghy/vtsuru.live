@@ -1,37 +1,10 @@
 <script setup lang="ts">
 import type { PaginationResponse, UserInfo } from '@/api/api-models'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
-import {
-  ArrowCircleLeft12Regular,
-  Comment24Regular,
-  Delete24Filled,
-  Eye24Regular,
-} from '@vicons/fluent'
+import { ArrowCircleLeft12Regular, Comment24Regular, Delete24Filled, Eye24Regular, } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
 import {
-  NAvatar,
-  NAvatarGroup,
-  NBackTop,
-  NButton,
-  NCard,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NPagination,
-  NPopconfirm,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAvatar, NAvatarGroup, NBackTop, NButton, NCard, NDivider, NEllipsis, NEmpty, NFlex, NIcon, NInput, NList, NListItem, NModal, NPagination, NPopconfirm, NTag, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'

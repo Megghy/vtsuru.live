@@ -8,38 +8,11 @@ import type {
   VideoCollectTable,
   VideoInfo,
 } from '@/api/api-models'
-import {
-  ArrowLeft24Regular,
-  Delete24Regular,
-  Edit24Regular,
-  MoreVertical24Regular,
-  Share24Regular,
-  TableDismiss24Regular,
-} from '@vicons/fluent'
+import { ArrowLeft24Regular, Delete24Regular, Edit24Regular, MoreVertical24Regular, Share24Regular, TableDismiss24Regular, } from '@vicons/fluent'
 import { useWindowSize } from '@vueuse/core'
 import { List } from 'linqts'
 import {
-  NBadge,
-  NButton,
-  NDatePicker,
-  NDropdown,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSpace,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NBadge, NButton, NDatePicker, NDropdown, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NFlex, NTabPane, NTabs, NText, useMessage, useThemeVars } from 'naive-ui';
 import Qrcode from 'qrcode.vue'
 import { computed, h, onActivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -325,7 +298,7 @@ onActivated(async () => {
           返回
         </NButton>
 
-        <NSpace v-if="width > 800">
+        <NFlex v-if="width > 800">
           <NButton secondary strong size="small" @click="shareModalVisiable = true">
             <template #icon>
               <NIcon><Share24Regular /></NIcon>
@@ -370,7 +343,7 @@ onActivated(async () => {
             </template>
             确定删除表? 此操作无法撤销
           </NPopconfirm>
-        </NSpace>
+        </NFlex>
 
         <NDropdown
           v-else

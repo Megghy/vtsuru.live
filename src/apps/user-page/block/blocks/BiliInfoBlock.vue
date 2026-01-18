@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NFlex, NIcon, NText } from 'naive-ui'
+import { NAvatar, NButton, NFlex, NIcon, NText } from 'naive-ui';
 import { computed } from 'vue'
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'

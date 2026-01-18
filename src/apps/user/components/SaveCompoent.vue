@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
-import { NButton, useMessage } from 'naive-ui'
-
+import { NButton, useMessage } from 'naive-ui';
 const props = defineProps<{
   compoent: any
   fileName: string

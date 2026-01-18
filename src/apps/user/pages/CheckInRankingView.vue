@@ -2,19 +2,7 @@
 import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NInput,
-  NPagination,
-  NSelect,
-  NSpace,
-  NSpin,
-  NTag,
-  NTooltip,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NEmpty, NIcon, NInput, NPagination, NSelect, NFlex, NSpin, NTag, NTooltip } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { CHECKIN_API_URL } from '@/shared/config'
@@ -155,7 +143,7 @@ onMounted(() => {
     bordered
   >
     <template #header-extra>
-      <NSpace :wrap="true" :size="8">
+      <NFlex :wrap="true" :size="8">
         <NSelect
           v-model:value="timeRange"
           size="small"
@@ -178,7 +166,7 @@ onMounted(() => {
         >
           刷新
         </NButton>
-      </NSpace>
+      </NFlex>
     </template>
 
     <NSpin :show="isLoading">

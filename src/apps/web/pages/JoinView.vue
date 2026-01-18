@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NDescriptions, NDescriptionsItem, NDivider, NFlex, NResult, NSpace, NSpin, NTag, NTime, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NDescriptions, NDescriptionsItem, NDivider, NFlex, NResult, NSpin, NTag, NTime, useMessage } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isLoggedIn } from '@/api/account'
@@ -238,14 +238,14 @@ async function rejectStreamer() {
               </template>
 
               <template v-else>
-                <NSpace>
+                <NFlex>
                   <NButton type="primary" :loading="isBusy" @click="acceptStreamer">
                     授权
                   </NButton>
                   <NButton type="error" :loading="isBusy" @click="rejectStreamer">
                     拒绝
                   </NButton>
-                </NSpace>
+                </NFlex>
               </template>
             </NFlex>
           </template>

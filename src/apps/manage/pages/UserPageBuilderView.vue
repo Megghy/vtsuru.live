@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NIcon, NModal, NPopconfirm, NScrollbar, NSpace, NSplit, NSpin, NSelect, NSwitch, NText } from 'naive-ui'
+import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NIcon, NModal, NPopconfirm, NScrollbar, NSplit, NSpin, NSelect, NSwitch, NText } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, provide, ref, watchEffect } from 'vue'
 import type { CSSProperties } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
@@ -457,12 +457,12 @@ onBeforeRouteLeave(() => {
           <NText depth="3">
             {{ editor.saveStatusText.value }}
           </NText>
-          <NSpace align="center" size="small">
+          <NFlex align="center" size="small">
             <NText depth="3">
               自动保存
             </NText>
             <NSwitch v-model:value="editor.autoSaveEnabled.value" size="small" />
-          </NSpace>
+          </NFlex>
         </NFlex>
       </template>
     </ManagePageHeader>
@@ -628,7 +628,7 @@ onBeforeRouteLeave(() => {
           </template>
         </Draggable>
         <template #footer>
-          <NSpace justify="space-between">
+          <NFlex justify="space-between">
             <NButton
               size="small"
               secondary
@@ -639,7 +639,7 @@ onBeforeRouteLeave(() => {
             <NButton size="small" type="primary" @click="layoutModal = false">
               完成
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
       </NModal>
 
@@ -650,15 +650,15 @@ onBeforeRouteLeave(() => {
         style="width: 900px; max-width: 95vw"
         :auto-focus="false"
       >
-        <NSpace vertical>
-          <NSpace justify="space-between" align="center">
+        <NFlex vertical>
+          <NFlex justify="space-between" align="center">
             <NText depth="3">
               共 {{ editor.fileRefs.value.length }} 个文件引用
             </NText>
             <NButton size="small" secondary @click="editor.normalizeRichTextImagesFile">
               整理 richText 引用
             </NButton>
-          </NSpace>
+          </NFlex>
           <NScrollbar style="max-height: 70vh">
             <div
               v-for="f in editor.fileRefs.value"
@@ -694,7 +694,7 @@ onBeforeRouteLeave(() => {
               </div>
             </div>
           </NScrollbar>
-        </NSpace>
+        </NFlex>
       </NModal>
 
       <NModal
@@ -734,11 +734,11 @@ onBeforeRouteLeave(() => {
                   />
                 </NFormItem>
               </NFlex>
-              <NSpace justify="end">
+              <NFlex justify="end">
                 <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearGlobalTheme">
                   清除全局主题
                 </NButton>
-              </NSpace>
+              </NFlex>
             </NForm>
 
             <NDivider style="margin: 12px 0">
@@ -759,7 +759,7 @@ onBeforeRouteLeave(() => {
         style="width: 720px; max-width: 95vw"
         :auto-focus="false"
       >
-        <NSpace vertical>
+        <NFlex vertical>
           <NText depth="3">
             配置大小：{{ editor.publishCheckBytes.value }} bytes（后端上限 131072 bytes / 128KB）
           </NText>
@@ -778,9 +778,9 @@ onBeforeRouteLeave(() => {
               {{ it }}
             </div>
           </NAlert>
-        </NSpace>
+        </NFlex>
         <template #footer>
-          <NSpace justify="end">
+          <NFlex justify="end">
             <NButton @click="editor.publishModal.value = false">
               取消
             </NButton>
@@ -792,7 +792,7 @@ onBeforeRouteLeave(() => {
             >
               确认发布
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
       </NModal>
     </NSpin>

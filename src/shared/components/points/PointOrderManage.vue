@@ -8,20 +8,7 @@ import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NSpin,
-  NText,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NModal, NPopconfirm, NSelect, NSpin, NText, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
@@ -455,7 +442,7 @@ onMounted(async () => {
         preset="card"
         style="max-width: 400px"
       >
-        <NSpace vertical>
+        <NFlex vertical>
           <NText>请选择您想要将订单更新为的状态</NText>
           <NSelect
             v-model:value="targetStatus"
@@ -482,7 +469,7 @@ onMounted(async () => {
               确认更新
             </NButton>
           </NFlex>
-        </NSpace>
+        </NFlex>
       </NModal>
     </template>
   </NSpin>

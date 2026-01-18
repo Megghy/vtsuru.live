@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NText } from 'naive-ui'
+import { NText } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 // 确保导入 TriggerType

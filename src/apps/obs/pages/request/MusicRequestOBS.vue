@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
-import { NDivider, NEmpty } from 'naive-ui'
+import { NDivider, NEmpty } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'

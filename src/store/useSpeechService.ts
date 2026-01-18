@@ -1,7 +1,7 @@
 import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
 import GraphemeSplitter from 'grapheme-splitter'
-import { useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui';
 import { reactive, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 import type { EventModel } from '@/api/api-models'

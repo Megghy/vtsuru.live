@@ -1,17 +1,5 @@
 <script setup lang="ts">
-import {
-  dateZhCN,
-  NConfigProvider,
-  NDialogProvider,
-  NElement,
-  NLayoutContent,
-  NLoadingBarProvider,
-  NMessageProvider,
-  NModalProvider,
-  NNotificationProvider,
-  NSpin,
-  zhCN,
-} from 'naive-ui'
+import { dateZhCN, NConfigProvider, NDialogProvider, NElement, NLayoutContent, NLoadingBarProvider, NMessageProvider, NModalProvider, NNotificationProvider, NSpin, zhCN } from 'naive-ui';
 import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import TempComponent from '@/app/components/TempComponent.vue'

@@ -1,5 +1,5 @@
 <script setup>
-import { NTooltip } from 'naive-ui'
+import { NTooltip } from 'naive-ui';
 import { computed } from 'vue'
 import { FILE_BASE_URL } from '@/shared/config'
 import * as constants from './constants'

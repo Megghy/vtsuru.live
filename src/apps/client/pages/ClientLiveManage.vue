@@ -3,7 +3,7 @@ import { getVersion } from '@tauri-apps/api/app'
 import { watch, ref, computed, onMounted, onUnmounted } from 'vue'
 import { startLive, stopLive, updateRoom, getLiveAreas, getLiveVersion, updateRoomNews, uploadCover, updateCover } from '@/apps/client/api/live-manage'
 import type { LiveArea } from '@/apps/client/api/live-manage'
-import type { UploadFileInfo } from 'naive-ui'
+import type { UploadFileInfo } from 'naive-ui';
 import { useAccount } from '@/api/account'
 import { roomInfo } from '@/apps/client/data/info'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'

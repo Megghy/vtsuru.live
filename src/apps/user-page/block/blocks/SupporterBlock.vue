@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
+import { NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { ArrowForwardOutline, CafeOutline, CardOutline, CashOutline, FlashOutline, Heart as HeartIcon, LogoTwitch, LogoYoutube } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'

@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-  NCard,
-  NInputNumber,
-  NRadio,
-  NRadioGroup,
-  NText,
-  NDivider,
-  NFlex,
-} from 'naive-ui'
+import { NCard, NInputNumber, NRadio, NRadioGroup, NText, NDivider, NFlex } from 'naive-ui';
 import { watch } from 'vue'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 

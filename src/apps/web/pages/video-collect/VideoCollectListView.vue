@@ -4,23 +4,7 @@ import { Clock24Regular, Person24Regular, Question24Regular } from '@vicons/flue
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NEllipsis,
-  NIcon,
-  NImage,
-  NLayoutContent,
-  NList,
-  NListItem,
-  NProgress,
-  NResult,
-  NSpace,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDivider, NEllipsis, NIcon, NImage, NLayoutContent, NList, NListItem, NProgress, NResult, NFlex, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { VideoStatus } from '@/api/api-models'
@@ -141,7 +125,7 @@ function formatSecondsToTime(seconds: number): string {
         type="line"
         :percentage="Math.round((watchedTime / totalTime) * 100)"
       />
-      <NSpace
+      <NFlex
         justify="center"
         :size="5"
       >
@@ -152,7 +136,7 @@ function formatSecondsToTime(seconds: number): string {
         已观看 [<NText type="success">
           {{ formatSecondsToTime(watchedTime) }}
         </NText>]
-      </NSpace>
+      </NFlex>
       <NDivider>
         共 {{ acceptVideos?.length }} 条
         <NDivider vertical />
@@ -174,7 +158,7 @@ function formatSecondsToTime(seconds: number): string {
             :hoverable="!item.video.watched"
             :embedded="!item.video.watched"
           >
-            <NSpace>
+            <NFlex>
               <NImage
                 :src="`${item.video.cover}@100h`"
                 lazy
@@ -184,7 +168,7 @@ function formatSecondsToTime(seconds: number): string {
                 style="cursor: pointer"
                 @click="onClick(item.video)"
               />
-              <NSpace
+              <NFlex
                 vertical
                 :size="5"
               >
@@ -214,18 +198,18 @@ function formatSecondsToTime(seconds: number): string {
                     {{ item.video.description }}
                   </NEllipsis>
                 </NText>
-                <NSpace style="font-size: 12px">
-                  <NSpace>
+                <NFlex style="font-size: 12px">
+                  <NFlex>
                     <NIcon :component="Clock24Regular" />
                     {{ formatSeconds(item.video.length) }}
-                  </NSpace>
-                  <NSpace>
+                  </NFlex>
+                  <NFlex>
                     <NIcon :component="Person24Regular" />
                     {{ item.video.ownerName }}
-                  </NSpace>
-                </NSpace>
-              </NSpace>
-            </NSpace>
+                  </NFlex>
+                </NFlex>
+              </NFlex>
+            </NFlex>
           </NCard>
         </NListItem>
       </NList>

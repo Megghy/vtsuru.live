@@ -156,7 +156,7 @@ export function createBlockNode(type: BlockType, id: string): BlockNode {
   if (type === 'quote') block.props = { text: '', author: '', align: 'center' }
   if (type === 'marquee') block.props = { text: '', direction: 'left', durationSec: 18, pauseOnHover: true, framed: false, backgrounded: false }
   if (type === 'countdown') block.props = { title: '', target: '', style: 'cards', showSeconds: true, doneText: '已到达', framed: false, backgrounded: false }
-  if (type === 'feedback') block.props = { title: '留言 / 提问', description: '', url: '', buttonText: '打开', embed: false, height: 520 }
+  if (type === 'feedback') block.props = { title: '留言 / 提问', description: '', url: '', buttonText: '打开', embed: false, embedMode: 'questionBox', height: 520 }
   if (type === 'supporter') block.props = { title: '支持我', description: '', items: [] }
   return block
 }

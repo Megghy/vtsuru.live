@@ -1,18 +1,6 @@
 <script setup lang="ts">
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NInput,
-  NInputNumber,
-  NLayoutContent,
-  NResult,
-  NSpace,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NCard, NDivider, NInput, NInputNumber, NLayoutContent, NResult, NFlex, NText, useMessage } from 'naive-ui';
 import { onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
@@ -124,7 +112,7 @@ onUnmounted(() => {
           type="error"
           title="该征集表已截止"
         />
-        <NSpace
+        <NFlex
           v-else
           vertical
         >
@@ -160,7 +148,7 @@ onUnmounted(() => {
             theme="auto"
             style="text-align: center"
           />
-        </NSpace>
+        </NFlex>
       </NCard>
     </div>
   </NLayoutContent>

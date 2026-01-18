@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
-import { NAvatar, NButton, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui'
+import { NAvatar, NButton, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui';
 import { computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { useForumStore } from '@/store/useForumStore'

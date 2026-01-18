@@ -6,20 +6,7 @@ import type {
   FormRules,
 } from 'naive-ui'
 import type { AccountInfo } from '@/api/api-models'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCountdown,
-  NDivider,
-  NForm,
-  NFormItem,
-  NInput,
-  NSpace,
-  NTabPane,
-  NTabs,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NCard, NCountdown, NDivider, NForm, NFormItem, NInput, NFlex, NTabPane, NTabs, useMessage } from 'naive-ui';
 import { onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { cookie } from '@/api/auth'
@@ -266,7 +253,7 @@ onUnmounted(() => {
           >
             忘记密码
           </NButton>
-          <NSpace
+          <NFlex
             vertical
             justify="center"
             align="center"
@@ -279,7 +266,7 @@ onUnmounted(() => {
             >
               登陆
             </NButton>
-          </NSpace>
+          </NFlex>
         </NTabPane>
         <NTabPane
           name="register"
@@ -335,7 +322,7 @@ onUnmounted(() => {
               />
             </NFormItem>
           </NForm>
-          <NSpace
+          <NFlex
             vertical
             justify="center"
             align="center"
@@ -348,7 +335,7 @@ onUnmounted(() => {
             >
               注册
             </NButton>
-          </NSpace>
+          </NFlex>
         </NTabPane>
         <NTabPane
           v-if="isForgetPassword"
@@ -361,7 +348,7 @@ onUnmounted(() => {
             maxlength="64"
           />
           <NDivider />
-          <NSpace
+          <NFlex
             vertical
             justify="center"
             align="center"
@@ -379,7 +366,7 @@ onUnmounted(() => {
               :duration="60000"
               @finish="canSendForgetPassword = true"
             />
-          </NSpace>
+          </NFlex>
         </NTabPane>
       </NTabs>
       <br>

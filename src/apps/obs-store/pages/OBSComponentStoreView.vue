@@ -4,7 +4,7 @@ import type { UserInfo } from '@/api/api-models'
 import type { OBSComponentDefinition } from '@/apps/obs-store/data/obsConstants'
 
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
-import { NAlert, NButton, NCard, NGrid, NGridItem, NModal, NPageHeader, NSpace, NSpin, NTag, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NGrid, NGridItem, NModal, NPageHeader, NFlex, NSpin, NTag, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { OBSComponentMap } from '@/apps/obs-store/data/obsConstants'
@@ -291,7 +291,7 @@ onMounted(() => {
       @update:show="handlePreviewModalUpdateShow"
     >
       <template #header-extra>
-        <NSpace>
+        <NFlex>
           <NButton
             v-if="dynamicComponentRef?.Config"
             type="primary"
@@ -307,7 +307,7 @@ onMounted(() => {
           >
             刷新组件
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
       <div class="component-preview-area">
         <NAlert
@@ -340,11 +340,11 @@ onMounted(() => {
         </NSpin>
       </div>
       <template #footer>
-        <NSpace justify="end">
+        <NFlex justify="end">
           <NButton @click="showPreviewModal = false">
             关闭
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NModal>
 
@@ -364,7 +364,7 @@ onMounted(() => {
         @update:config-data="onDynamicFormUpdate"
       />
       <template #footer>
-        <NSpace justify="end">
+        <NFlex justify="end">
           <NButton @click="showSettingModal = false">
             取消
           </NButton>
@@ -374,7 +374,7 @@ onMounted(() => {
           >
             保存配置
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NModal>
   </div>

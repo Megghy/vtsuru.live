@@ -1,23 +1,5 @@
 <script setup lang="ts">
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NEmpty,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSkeleton,
-  NSpace,
-  NSwitch,
-  NTag,
-  NTime,
-} from 'naive-ui'
+import { NAvatar, NButton, NCard, NCollapse, NCollapseItem, NEmpty, NIcon, NInput, NInputNumber, NList, NListItem, NPopconfirm, NSkeleton, NFlex, NSwitch, NTag, NTime } from 'naive-ui';
 import { CopyOutline, SearchOutline, TrashOutline } from '@vicons/ionicons5'
 import UserAutocompleteSelect from '@/components/common/UserAutocompleteSelect.vue'
 
@@ -61,14 +43,14 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
       <NCollapse style="margin-bottom: 16px;">
         <NCollapseItem title="邀请主播" name="1">
           <NCard size="small" embedded :bordered="false">
-            <NSpace vertical>
+            <NFlex vertical>
               <UserAutocompleteSelect
                 v-model:value="streamerInviteTargetUserId"
                 style="width: 100%;"
                 placeholder="输入B站UID/用户名搜索主播(可选)"
                 @error="(m) => props.onUserSearchError(m)"
               />
-              <NSpace align="center">
+              <NFlex align="center">
                 <NInputNumber v-model:value="streamerInviteExpireDays" placeholder="有效期(天)" :min="1" size="small" />
                 <NPopconfirm @positive-click="props.createStreamerInvite">
                   <template #trigger>
@@ -78,9 +60,9 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
                   </template>
                   确定要发送主播邀请吗？
                 </NPopconfirm>
-              </NSpace>
+              </NFlex>
               <div v-if="props.streamerInviteUrl">
-                <NSpace>
+                <NFlex>
                   <NInput :value="props.streamerInviteUrl" readonly size="small" placeholder="邀请链接" />
                   <NButton size="small" secondary type="success" @click="props.copyToClipboard(props.streamerInviteUrl)">
                     <template #icon>
@@ -88,9 +70,9 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
                     </template>
                     复制
                   </NButton>
-                </NSpace>
+                </NFlex>
               </div>
-            </NSpace>
+            </NFlex>
           </NCard>
         </NCollapseItem>
       </NCollapse>
@@ -131,7 +113,7 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
                 <span>使用次数: {{ inv.usedCount }}<template v-if="inv.lastUsedAt">, 最近使用: <NTime :time="inv.lastUsedAt" format="yyyy-MM-dd HH:mm" /></template></span>
               </div>
 
-              <NSpace>
+              <NFlex>
                 <NInput :value="inv.joinUrl" readonly size="small" placeholder="邀请链接" />
                 <NButton size="small" secondary type="success" @click="props.copyToClipboard(inv.joinUrl)">
                   <template #icon>
@@ -139,35 +121,35 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
                   </template>
                   复制
                 </NButton>
-              </NSpace>
+              </NFlex>
             </div>
           </NListItem>
         </NList>
       </NCard>
 
       <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-        <NSpace align="center" justify="space-between">
+        <NFlex align="center" justify="space-between">
           <NInput v-model:value="streamerSearch" placeholder="搜索主播名称或ID" size="small" style="width: 200px">
             <template #prefix>
               <NIcon :component="SearchOutline" />
             </template>
           </NInput>
-          <NSpace align="center">
+          <NFlex align="center">
             <span style="opacity: .8; font-size: 12px;">包含非 Active 状态</span>
             <NSwitch v-model:value="includeAllStreamers" size="small" />
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCard>
     </template>
     <template v-else>
       <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-        <NSpace align="center" justify="start">
+        <NFlex align="center" justify="start">
           <NInput v-model:value="streamerSearch" placeholder="搜索主播名称或ID" size="small" style="width: 200px">
             <template #prefix>
               <NIcon :component="SearchOutline" />
             </template>
           </NInput>
-        </NSpace>
+        </NFlex>
       </NCard>
     </template>
 
@@ -178,7 +160,7 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
     <NList v-else hoverable clickable>
       <NListItem v-for="s in props.filteredStreamers" :key="s.streamer.id" @click="props.openStreamerDetailDrawer(s.streamer.id)">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-          <NSpace align="center">
+          <NFlex align="center">
             <NAvatar
               round
               :size="48"
@@ -187,14 +169,14 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
               fallback-src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
               style="border: 1px solid var(--n-divider-color);"
             />
-            <NSpace vertical :size="2">
+            <NFlex vertical :size="2">
               <div style="font-weight: 600; font-size: 15px;">
                 {{ s.streamer.name }}
               </div>
               <div style="font-size: 12px; opacity: 0.6;">
                 ID: {{ s.streamer.id }}
               </div>
-            </NSpace>
+            </NFlex>
             <NTag :bordered="false" :type="props.streamerStatusTagType(s.status)" size="small">
               {{ props.streamerStatusLabel(s.status) }}
             </NTag>
@@ -204,7 +186,7 @@ const includeAllStreamers = defineModel<boolean>('includeAllStreamers', { requir
             <NTag v-else :bordered="false" size="small">
               未绑定
             </NTag>
-          </NSpace>
+          </NFlex>
 
           <div style="text-align: right; display: flex; align-items: center; gap: 12px;">
             <div style="font-size: 12px; opacity: 0.7;">

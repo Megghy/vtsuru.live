@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EventModel } from '@/api/api-models'
-import { NAlert } from 'naive-ui'
+import { NAlert } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 // @ts-ignore
 import { DownloadConfig, GetConfigHash, useAccount } from '@/api/account'

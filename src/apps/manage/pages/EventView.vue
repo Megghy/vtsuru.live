@@ -9,51 +9,12 @@ import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/Event
 import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
 import { GuidUtils } from '@/shared/utils'
 import {
-  ArrowDownload24Regular,
-  ArrowSync24Filled,
-  Delete24Regular,
-  Grid28Filled,
-  List16Filled,
-} from '@vicons/fluent'
+  ArrowDownload24Regular, ArrowSync24Filled, Delete24Regular, Grid28Filled, List16Filled, } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
-  NAlert,
-  NAvatar,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDataTable,
-  NDatePicker,
-  NDivider,
-  NEllipsis,
-  NGrid,
-  NGridItem,
-  NH3,
-  NIcon,
-  NInfiniteScroll,
-  NInput,
-  NInputNumber,
-  NLi,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpace,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTable,
-  NText,
-  NTime,
-  NUl,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NAvatar, NButton, NCard, NCollapse, NCollapseItem, NDataTable, NDatePicker, NDivider, NEllipsis, NGrid, NGridItem, NH3, NIcon, NInfiniteScroll, NInput, NInputNumber, NLi, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NSpin, NStatistic, NTabPane, NTabs, NTag, NTable, NText, NTime, NUl, useMessage, useThemeVars } from 'naive-ui';
 import { computed, h, ref, watch } from 'vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 
@@ -561,18 +522,18 @@ async function onTabChange(value: string) {
             tab="历史记录"
           >
             <!-- 历史记录面板 -->
-            <NSpace
+            <NFlex
               vertical
               size="large"
             >
               <!-- 筛选工具栏 -->
               <div class="filter-bar">
-                <NSpace
+                <NFlex
                   align="center"
                   wrap
                   justify="space-between"
                 >
-                  <NSpace
+                  <NFlex
                     align="center"
                     wrap
                   >
@@ -621,16 +582,16 @@ async function onTabChange(value: string) {
                     >
                       清空
                     </NButton>
-                  </NSpace>
+                  </NFlex>
 
-                  <NSpace align="center">
+                  <NFlex align="center">
                     <!-- 导出功能 -->
                     <NCard
                       size="small"
                       embedded
                       content-style="padding: 4px 12px;"
                     >
-                      <NSpace align="center">
+                      <NFlex align="center">
                         <NRadioGroup
                           v-model:value="exportType"
                           size="small"
@@ -654,10 +615,10 @@ async function onTabChange(value: string) {
                           </template>
                           导出
                         </NButton>
-                      </NSpace>
+                      </NFlex>
                     </NCard>
-                  </NSpace>
-                </NSpace>
+                  </NFlex>
+                </NFlex>
               </div>
 
               <!-- 视图切换和统计信息 -->
@@ -666,7 +627,7 @@ async function onTabChange(value: string) {
                 size="small"
                 embedded
               >
-                <NSpace
+                <NFlex
                   align="center"
                   wrap
                 >
@@ -713,10 +674,10 @@ async function onTabChange(value: string) {
                   >
                     添加上舰记录
                   </NButton>
-                </NSpace>
+                </NFlex>
               </NCard>
 
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -734,7 +695,7 @@ async function onTabChange(value: string) {
                     <NIcon :component="List16Filled" />
                   </NRadioButton>
                 </NRadioGroup>
-              </NSpace>
+              </NFlex>
 
               <!-- 数据展示区域 -->
               <NSpin :show="isLoading">
@@ -791,7 +752,7 @@ async function onTabChange(value: string) {
                               </template>
                               确定删除这条上舰记录？
                             </NPopconfirm>
-                            <NSpace
+                            <NFlex
                               align="center"
                               vertical
                               :size="5"
@@ -805,7 +766,7 @@ async function onTabChange(value: string) {
                                 :img-props="{ referrerpolicy: 'no-referrer' }"
                                 class="event-avatar"
                               />
-                              <NSpace size="small">
+                              <NFlex size="small">
                                 <NTag
                                   v-if="selectedType === EventDataTypes.Guard"
                                   size="tiny"
@@ -824,7 +785,7 @@ async function onTabChange(value: string) {
                                 >
                                   {{ item.price }}
                                 </NTag>
-                              </NSpace>
+                              </NFlex>
                               <NText
                                 strong
                                 class="event-username"
@@ -846,7 +807,7 @@ async function onTabChange(value: string) {
                               >
                                 {{ item.msg }}
                               </NEllipsis>
-                            </NSpace>
+                            </NFlex>
                           </NCard>
                         </NGridItem>
                       </NGrid>
@@ -964,7 +925,7 @@ async function onTabChange(value: string) {
                   </NAlert>
                 </Transition>
               </NSpin>
-            </NSpace>
+            </NFlex>
           </NTabPane>
 
           <NTabPane
@@ -972,7 +933,7 @@ async function onTabChange(value: string) {
             tab="当前在舰用户"
           >
             <!-- 当前在舰用户面板 -->
-            <NSpace
+            <NFlex
               vertical
               size="large"
             >
@@ -1044,7 +1005,7 @@ async function onTabChange(value: string) {
               </NGrid>
 
               <!-- 工具栏 -->
-              <NSpace justify="end">
+              <NFlex justify="end">
                 <NButton
                   secondary
                   type="primary"
@@ -1056,7 +1017,7 @@ async function onTabChange(value: string) {
                   </template>
                   刷新列表
                 </NButton>
-              </NSpace>
+              </NFlex>
 
               <!-- 列表 -->
               <NDataTable
@@ -1075,7 +1036,7 @@ async function onTabChange(value: string) {
               >
                 暂无在舰用户
               </NAlert>
-            </NSpace>
+            </NFlex>
           </NTabPane>
         </NTabs>
       </template>
@@ -1112,7 +1073,7 @@ async function onTabChange(value: string) {
           </NCollapseItem>
         </NCollapse>
         <NDivider style="margin-bottom: 10px" />
-        <NSpace justify="center">
+        <NFlex justify="center">
           <NButton
             tag="a"
             href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
@@ -1121,7 +1082,7 @@ async function onTabChange(value: string) {
           >
             部署指南
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NCard>
   </div>

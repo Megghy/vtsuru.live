@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
-import { NButton, NDropdown, NIcon, NText } from 'naive-ui'
+import { NButton, NDropdown, NIcon, NText } from 'naive-ui';
 import { computed, inject } from 'vue'
 import Draggable from 'vuedraggable-es'
 import {

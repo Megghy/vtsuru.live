@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NModal, NProgress, NRadioButton, NRadioGroup, NSelect, NSpace, NSwitch, NText } from 'naive-ui'
+import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NModal, NProgress, NRadioButton, NRadioGroup, NSelect, NSwitch, NText } from 'naive-ui';
 import { computed, inject, ref } from 'vue'
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { UserPageEditorKey } from '../context'
@@ -253,7 +253,7 @@ const pageOverrideThemeMode = computed({
         />
       </NFlex>
     </template>
-    <NSpace vertical size="large">
+    <NFlex vertical size="large">
       <NCollapse
         v-if="editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block'"
         :default-expanded-names="[]"
@@ -292,7 +292,7 @@ const pageOverrideThemeMode = computed({
         </NCollapseItem>
 
         <NCollapseItem v-if="editor.currentPage.value.mode !== 'block'" title="页面背景" name="page-bg">
-          <NSpace justify="space-between" align="center" style="margin-bottom: 10px">
+          <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
             <NText depth="3">
               不设置时将使用全局背景或默认背景。
             </NText>
@@ -304,14 +304,14 @@ const pageOverrideThemeMode = computed({
             >
               使用全局背景
             </NButton>
-          </NSpace>
+          </NFlex>
           <BackgroundSettingsEditor
             :target="pageOverrideBgTarget"
           />
         </NCollapseItem>
 
         <NCollapseItem v-if="editor.currentPage.value.mode !== 'block'" title="页面主题" name="page-theme">
-          <NSpace justify="space-between" align="center" style="margin-bottom: 10px">
+          <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
             <NText depth="3">
               不设置时将使用全局主题或站点主题。
             </NText>
@@ -323,7 +323,7 @@ const pageOverrideThemeMode = computed({
             >
               清除页面主题
             </NButton>
-          </NSpace>
+          </NFlex>
           <NForm label-placement="top" size="small">
             <PropsGrid>
               <NFormItem label="主题色 primary">
@@ -445,14 +445,14 @@ const pageOverrideThemeMode = computed({
               投稿页配置加载中...
             </NAlert>
             <template v-else-if="editor.contribConfigItems.value">
-              <NSpace justify="space-between" align="center" style="margin-top: 12px">
+              <NFlex justify="space-between" align="center" style="margin-top: 12px">
                 <NText strong>
                   页面配置
                 </NText>
                 <NButton size="small" secondary @click="editor.resetContribConfigToDefault">
                   重置为默认
                 </NButton>
-              </NSpace>
+              </NFlex>
               <ErrorBoundary title="配置面板渲染失败">
                 <ContribConfigEditor
                   :config="editor.contribConfigItems.value"
@@ -525,14 +525,14 @@ const pageOverrideThemeMode = computed({
                   <NDivider style="margin: 10px 0">
                     导入 / 导出
                   </NDivider>
-                  <NSpace>
+                  <NFlex>
                     <NButton size="small" secondary @click="openExportModal">
                       导出 JSON
                     </NButton>
                     <NButton size="small" secondary @click="importModal = true">
                       导入 JSON
                     </NButton>
-                  </NSpace>
+                  </NFlex>
 
                   <NDivider style="margin: 10px 0">
                     区块页背景
@@ -571,7 +571,7 @@ const pageOverrideThemeMode = computed({
       <NButton block secondary @click="editor.openPreview">
         打开对外预览页
       </NButton>
-    </NSpace>
+    </NFlex>
 
     <input
       ref="uploadInput"
@@ -584,37 +584,37 @@ const pageOverrideThemeMode = computed({
   </NCard>
 
   <NModal v-model:show="exportModal" preset="card" title="导出区块页 JSON" style="width: min(720px, 92vw)">
-    <NSpace vertical>
+    <NFlex vertical>
       <NAlert type="info" :show-icon="true">
         这是当前页面的区块配置 JSON，仅包含当前页。导入到其他账号/页面时，图片等资源引用可能需要重新上传替换。
       </NAlert>
       <NInput v-model:value="exportJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" readonly />
-      <NSpace justify="end">
+      <NFlex justify="end">
         <NButton size="small" secondary @click="copyExportJson">
           复制
         </NButton>
         <NButton size="small" secondary @click="downloadExportJson">
           下载
         </NButton>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NModal>
 
   <NModal v-model:show="importModal" preset="card" title="导入区块页 JSON" style="width: min(720px, 92vw)">
-    <NSpace vertical>
+    <NFlex vertical>
       <NAlert type="warning" :show-icon="true">
         导入会覆盖当前页面的区块配置，不可自动回退，建议先导出备份。
       </NAlert>
       <NInput v-model:value="importJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" placeholder="粘贴导出的 JSON，支持 vtsuru-block-page 包装或直接 BlockPageProject" />
-      <NSpace justify="end">
+      <NFlex justify="end">
         <NButton secondary @click="importModal = false">
           取消
         </NButton>
         <NButton type="primary" :disabled="!importJson.trim().length" @click="confirmImportJson">
           导入并覆盖
         </NButton>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NModal>
 </template>
 

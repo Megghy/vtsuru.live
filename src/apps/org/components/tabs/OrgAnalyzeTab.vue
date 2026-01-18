@@ -1,17 +1,5 @@
 <script setup lang="ts">
-import {
-  NCard,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NRadioButton,
-  NRadioGroup,
-  NSkeleton,
-  NSpace,
-  NStatistic,
-  NTag,
-} from 'naive-ui'
+import { NCard, NEmpty, NGrid, NGridItem, NIcon, NRadioButton, NRadioGroup, NSkeleton, NFlex, NStatistic, NTag } from 'naive-ui';
 import { TrendingDown, TrendingUp } from '@vicons/ionicons5'
 
 export type SummaryRange = 'last7Days' | 'last30Days'
@@ -147,7 +135,7 @@ function toggleMetric(metricValue: string) {
 
     <NCard title="趋势图表" size="small" :segmented="{ content: true }" style="margin-top: 16px;">
       <template #header-extra>
-        <NSpace>
+        <NFlex>
           <NTag
             v-for="m in props.chartMetrics"
             :key="m.value"
@@ -157,7 +145,7 @@ function toggleMetric(metricValue: string) {
           >
             {{ m.label }}
           </NTag>
-        </NSpace>
+        </NFlex>
       </template>
       <div v-if="!props.hasChartData" style="padding: 12px;">
         <NEmpty description="暂无图表数据" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ResponseFeedbackModel } from '@/api/api-models'
-import { NCard, NDivider, NEllipsis, NFlex, NSpace, NSpin, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { NCard, NDivider, NEllipsis, NFlex, NSpin, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { FeedbackStatus, FeedbackType } from '@/api/api-models'
 
 defineProps<{
@@ -135,7 +135,7 @@ defineProps<{
       #footer
     >
       <NDivider style="margin: 0px 0 10px 0" />
-      <NSpace
+      <NFlex
         align="center"
         :wrap="false"
       >
@@ -145,7 +145,7 @@ defineProps<{
             {{ item.replyMessage }}
           </NText>
         </NEllipsis>
-      </NSpace>
+      </NFlex>
     </template>
   </NCard>
 </template>

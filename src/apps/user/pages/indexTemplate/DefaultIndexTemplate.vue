@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
-import { NAvatar, NButton, NCard, NDivider, NFlex, NSpace, NText, useMessage } from 'naive-ui'
+import { NAvatar, NButton, NCard, NDivider, NFlex, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
@@ -101,7 +101,7 @@ export const Config = defineTemplateConfig([
       <br>
     </template>
 
-    <NSpace
+    <NFlex
       justify="center"
       align="center"
       vertical
@@ -117,7 +117,7 @@ export const Config = defineTemplateConfig([
         }"
         :style="{ boxShadow: isDarkMode ? 'rgb(195 192 192 / 35%) 0px 5px 20px' : '0 5px 15px rgba(0, 0, 0, 0.2)' }"
       />
-      <NSpace
+      <NFlex
         align="baseline"
         justify="center"
       >
@@ -134,7 +134,7 @@ export const Config = defineTemplateConfig([
         >
           ({{ userInfo?.streamerInfo?.name }})
         </NText>
-      </NSpace>
+      </NFlex>
       <NText
         strong
         depth="3"
@@ -149,9 +149,9 @@ export const Config = defineTemplateConfig([
       >
         {{ biliInfo?.sign }}
       </NText>
-    </NSpace>
+    </NFlex>
     <NDivider />
-    <NSpace
+    <NFlex
       align="center"
       justify="center"
     >
@@ -168,7 +168,7 @@ export const Config = defineTemplateConfig([
       >
         直播间
       </NButton>
-    </NSpace>
+    </NFlex>
     <template v-if="orderedLinks.length > 0">
       <NDivider> 相关链接 </NDivider>
       <NFlex
@@ -206,7 +206,7 @@ export const Config = defineTemplateConfig([
     </template>
   </template>
   <template v-else>
-    <NSpace
+    <NFlex
       justify="center"
       align="center"
     >
@@ -217,6 +217,6 @@ export const Config = defineTemplateConfig([
         {{ userInfo?.name }}
       </NText>
       未认证
-    </NSpace>
+    </NFlex>
   </template>
 </template>

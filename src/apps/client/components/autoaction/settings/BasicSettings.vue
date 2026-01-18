@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch } from 'naive-ui'
+import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch } from 'naive-ui';
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 
 defineProps({

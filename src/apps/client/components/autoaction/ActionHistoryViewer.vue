@@ -3,21 +3,7 @@ import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 
 import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled } from '@vicons/fluent'
 import {
-  NButton,
-  NCard,
-  NDataTable,
-  NEmpty,
-  NIcon,
-  NPopconfirm,
-  NSpace,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCard, NDataTable, NEmpty, NIcon, NPopconfirm, NFlex, NSpin, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui'
 
 import { h, onMounted, onUnmounted, ref } from 'vue'
@@ -198,7 +184,7 @@ onUnmounted(() => {
     :segmented="{ content: true }"
   >
     <template #header-extra>
-      <NSpace>
+      <NFlex>
         <NButton
           size="small"
           :loading="loading"
@@ -227,7 +213,7 @@ onUnmounted(() => {
           </template>
           确定要清空所有类型的历史记录吗？此操作不可恢复。
         </NPopconfirm>
-      </NSpace>
+      </NFlex>
     </template>
 
     <NTabs
@@ -242,8 +228,8 @@ onUnmounted(() => {
         :tab="label"
       >
         <NSpin :show="loading">
-          <NSpace vertical>
-            <NSpace justify="end">
+          <NFlex vertical>
+            <NFlex justify="end">
               <NPopconfirm
                 placement="bottom"
                 @positive-click="() => handleClearHistory(type as HistoryType)"
@@ -262,7 +248,7 @@ onUnmounted(() => {
                 </template>
                 确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
               </NPopconfirm>
-            </NSpace>
+            </NFlex>
 
             <NDataTable
               :columns="columns"
@@ -280,7 +266,7 @@ onUnmounted(() => {
                 <NEmpty description="暂无历史记录" />
               </template>
             </NDataTable>
-          </NSpace>
+          </NFlex>
         </NSpin>
       </NTabPane>
     </NTabs>

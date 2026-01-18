@@ -1,19 +1,7 @@
 <script setup lang="ts">
 import { BrowsersOutline } from '@vicons/ionicons5'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NIcon,
-  NLayoutContent,
-  NSpin,
-  NSpace,
-  NText,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDivider, NFlex, NIcon, NLayoutContent, NSpin, NText, useMessage, useThemeVars } from 'naive-ui';
 import { ref, watch } from 'vue'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { isLoadingAccount } from '@/api/account'
@@ -81,7 +69,7 @@ function switchToBackupAPI() {
           </NFlex>
         </template>
 
-        <NSpace vertical size="large" style="padding: 8px 0;">
+        <NFlex vertical size="large" style="padding: 8px 0;">
           <NFlex justify="center" align="center">
             <NText style="font-size: 16px; text-align: center;">
               请登录或注册后使用
@@ -113,7 +101,7 @@ function switchToBackupAPI() {
               回到主页
             </NButton>
           </NFlex>
-        </NSpace>
+        </NFlex>
       </NCard>
     </template>
 
@@ -129,7 +117,7 @@ function switchToBackupAPI() {
             style="margin-top: 20px; max-width: 400px;"
             title="加载时间较长"
           >
-            <NSpace vertical>
+            <NFlex vertical>
               <NText>当前API响应较慢，是否切换到备用API？</NText>
               <NFlex justify="end" :size="8">
                 <NButton size="small" @click="showAPISwitchDialog = false">
@@ -139,7 +127,7 @@ function switchToBackupAPI() {
                   切换到备用API
                 </NButton>
               </NFlex>
-            </NSpace>
+            </NFlex>
           </NAlert>
         </NFlex>
       </NCard>

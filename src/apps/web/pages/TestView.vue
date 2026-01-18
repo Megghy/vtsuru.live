@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NInput, NSpin } from 'naive-ui'
+import { NButton, NInput, NSpin } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'

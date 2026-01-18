@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NPopconfirm, NSlider, NSwitch, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NInput, NInputNumber, NPopconfirm, NSlider, NSwitch, NText, useMessage } from 'naive-ui';
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsParamSlot } from '@/apps/client/store/useVtsStore'
 

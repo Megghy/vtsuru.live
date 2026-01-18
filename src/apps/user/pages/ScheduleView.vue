@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { TagQuestionMark16Filled } from '@vicons/fluent'
-import { NButton, NDivider, NFlex, NInput, NInputGroup, NSpin, NTooltip, useMessage } from 'naive-ui'
+import { NButton, NDivider, NFlex, NInput, NInputGroup, NSpin, NTooltip, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL } from '@/shared/config'

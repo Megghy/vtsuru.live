@@ -2,29 +2,7 @@
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ArrowDown24Regular, ArrowUp24Regular, Edit16Regular, Target24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NDivider,
-  NDropdown,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDataTable, NDivider, NDropdown, NEmpty, NFlex, NIcon, NInputNumber, NModal, NPopconfirm, NSelect, NSwitch, NTabPane, NTabs, NTag, NText, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, h, reactive, ref } from 'vue'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
@@ -290,7 +268,7 @@ function createActionsColumn(type: TriggerType, items: AutoActionItem[]) {
         ),
       )
 
-      return h(NSpace, { justify: 'end', align: 'center' }, { default: () => buttons })
+      return h(NFlex, { justify: 'end', align: 'center' }, { default: () => buttons })
     },
   }
 }
@@ -520,8 +498,8 @@ function confirmTest() {
                     {{ label }}
                   </span>
                 </template>
-                <NSpace vertical>
-                  <NSpace
+                <NFlex vertical>
+                  <NFlex
                     v-if="enabledTriggerTypes"
                     align="center"
                     style="padding: 8px 0; margin-bottom: 8px"
@@ -531,7 +509,7 @@ function confirmTest() {
                       @update:value="toggleTypeStatus(type)"
                     />
                     <span>{{ enabledTriggerTypes[type] ? '启用' : '禁用' }}所有{{ label }}</span>
-                  </NSpace>
+                  </NFlex>
 
                   <NAlert
                     v-if="type === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
@@ -543,7 +521,7 @@ function confirmTest() {
                     当前连接模式 (OpenLive) 无法获取用户UID，因此无法执行【发送私信】操作。如需使用私信功能，请考虑切换至直连模式。
                   </NAlert>
 
-                  <NSpace
+                  <NFlex
                     justify="end"
                     style="margin-bottom: 12px;"
                   >
@@ -563,7 +541,7 @@ function confirmTest() {
                       </template>
                       {{ `确认模拟一个 ${label} 事件来测试所有启用的 ${label} 操作吗？\n注意：这可能会发送真实的消息、执行操作，并可能触发B站风控限制。` }}
                     </NPopconfirm>
-                  </NSpace>
+                  </NFlex>
 
                   <div v-if="activeTab === TriggerType.SCHEDULED">
                     <GlobalScheduledSettings />
@@ -572,7 +550,7 @@ function confirmTest() {
                       class="next-action-display"
                     >
                       <NDivider style="margin: 12px 0 8px 0;" />
-                      <NSpace
+                      <NFlex
                         align="center"
                         justify="space-between"
                       >
@@ -606,7 +584,7 @@ function confirmTest() {
                           </template>
                           手动设置下一个要执行的操作
                         </NTooltip>
-                      </NSpace>
+                      </NFlex>
                     </div>
                     <NAlert
                       v-else-if="enabledTriggerTypes && !enabledTriggerTypes[TriggerType.SCHEDULED]"
@@ -661,7 +639,7 @@ function confirmTest() {
                     v-else
                     class="edit-container"
                   >
-                    <NSpace vertical>
+                    <NFlex vertical>
                       <NButton
                         size="small"
                         style="align-self: flex-start; margin-bottom: 8px"
@@ -684,9 +662,9 @@ function confirmTest() {
                           <AutoActionEditor :action="action" />
                         </div>
                       </transition-group>
-                    </NSpace>
+                    </NFlex>
                   </div>
-                </NSpace>
+                </NFlex>
               </NTabPane>
             </NTabs>
           </NTabPane>
@@ -726,7 +704,7 @@ function confirmTest() {
               bordered
             >
               <NFlex vertical :size="12">
-                <NSpace align="center">
+                <NFlex align="center">
                   <span>弹幕队列间隔(毫秒):</span>
                   <NInputNumber
                     v-model:value="biliFunc.danmakuInterval"
@@ -739,8 +717,8 @@ function confirmTest() {
                   >
                     每{{ biliFunc.danmakuInterval }}ms 发送一条弹幕
                   </NText>
-                </NSpace>
-                <NSpace align="center">
+                </NFlex>
+                <NFlex align="center">
                   <span>私信队列间隔(毫秒):</span>
                   <NInputNumber
                     v-model:value="biliFunc.pmInterval"
@@ -753,7 +731,7 @@ function confirmTest() {
                   >
                     每{{ biliFunc.pmInterval }}ms 发送一条私信
                   </NText>
-                </NSpace>
+                </NFlex>
               </NFlex>
             </NCard>
           </NTabPane>
@@ -770,7 +748,7 @@ function confirmTest() {
       class="modal-with-transition"
       @positive-click="addAutoAction"
     >
-      <NSpace vertical>
+      <NFlex vertical>
         <div>请选择要添加的自动操作类型：</div>
         <NSelect
           v-model:value="selectedTriggerType"
@@ -778,7 +756,7 @@ function confirmTest() {
           placeholder="选择触发类型"
           style="width: 100%"
         />
-      </NSpace>
+      </NFlex>
     </NModal>
 
     <NModal
@@ -789,7 +767,7 @@ function confirmTest() {
       negative-text="取消"
       @positive-click="confirmSetNextAction"
     >
-      <NSpace vertical>
+      <NFlex vertical>
         <div>选择下一个要执行的定时操作：</div>
         <NSelect
           v-model:value="targetNextActionId"
@@ -807,7 +785,7 @@ function confirmTest() {
           只会列出当前已启用、类型也已启用且使用全局定时器的操作。
           选择后，下一个全局定时周期将执行您指定的操作。
         </NText>
-      </NSpace>
+      </NFlex>
     </NModal>
 
     <NModal
@@ -818,7 +796,7 @@ function confirmTest() {
       negative-text="取消"
       @positive-click="confirmTest"
     >
-      <NSpace vertical>
+      <NFlex vertical>
         <div>请输入私信接收者的UID：</div>
         <BiliUserSelector
           v-model:value="testUid"
@@ -831,7 +809,7 @@ function confirmTest() {
         >
           这是接收私信消息的B站用户UID，测试将向此UID发送私信。请确保该UID有效且您有权限向其发送私信。
         </NText>
-      </NSpace>
+      </NFlex>
     </NModal>
   </NFlex>
 </template>

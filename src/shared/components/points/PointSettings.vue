@@ -2,29 +2,7 @@
 import type { Setting_Point } from '@/api/api-models'
 import { Delete24Regular, Info24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NDivider,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSpin,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTag, NTooltip, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'

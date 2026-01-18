@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NModal, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NFlex, NModal, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 

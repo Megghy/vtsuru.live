@@ -2,25 +2,7 @@
 import type { DanmujiConfig } from '@/apps/obs/pages/DanmujiOBS.vue'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGi,
-  NGrid,
-  NInput,
-  NInputNumber,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NSplit,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCard, NCheckbox, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NInputNumber, NPopconfirm, NSelect, NSplit, NSwitch, NTabPane, NTabs, useMessage } from 'naive-ui';
 import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -656,7 +638,7 @@ function copyObsUrl() {
                     <template #header>
                       <NFlex justify="space-between" align="center">
                         <span>基本设置</span>
-                        <NSpace>
+                        <NFlex>
                           <NButton size="small" type="primary" secondary @click="uploadConfigToServer">
                             保存到云端
                           </NButton>
@@ -668,7 +650,7 @@ function copyObsUrl() {
                             </template>
                             确定要重设为默认配置吗？
                           </NPopconfirm>
-                        </NSpace>
+                        </NFlex>
                       </NFlex>
                     </template>
                     

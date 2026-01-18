@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import {
-  BookCoins20Filled,
-  Chat24Filled,
-  Info24Filled,
-  Lottery24Filled,
-  MoreHorizontal24Filled,
-  PersonFeedback24Filled,
-  TabletSpeaker24Filled,
-  VehicleShip24Filled,
-  VideoAdd20Filled,
-} from '@vicons/fluent'
+import { BookCoins20Filled, Chat24Filled, Info24Filled, Lottery24Filled, MoreHorizontal24Filled, PersonFeedback24Filled, TabletSpeaker24Filled, VehicleShip24Filled, VideoAdd20Filled, } from '@vicons/fluent'
 import { AnalyticsSharp, BrowsersOutline, Calendar, Chatbox, ListCircle, MusicalNote, OpenOutline } from '@vicons/ionicons5'
 import { useWindowSize } from '@vueuse/core'
 import type { IOptions, RecursivePartial } from '@tsparticles/engine'
-import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NSpace, NText, NTooltip, useThemeVars } from 'naive-ui'
+import { NButton, NCard, NFlex, NGradientText, NIcon, NNumberAnimation, NText, NTooltip, useThemeVars } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
@@ -309,7 +299,7 @@ onMounted(async () => {
 <template>
   <div class="index-background" :style="indexGlassVars">
     <vue-particles id="tsparticles" :key="isDarkMode ? 'dark' : 'light'" :options="particlesOptions" />
-    <NSpace vertical justify="center" align="center" class="main-container">
+    <NFlex vertical justify="center" align="center" class="main-container">
       <!-- 顶部标题部分 -->
       <NCard
         :style="{
@@ -318,9 +308,9 @@ onMounted(async () => {
           borderRadius: borderRadius.xlarge,
         }" class="hero-card glass-card"
       >
-        <NSpace justify="center" align="center" :size="width > 700 ? 50 : 0" :vertical="width <= 700">
+        <NFlex justify="center" align="center" :size="width > 700 ? 50 : 0" :vertical="width <= 700">
           <vtb class="hero-icon" />
-          <NSpace vertical justify="center" :align="width <= 700 ? 'center' : 'start'">
+          <NFlex vertical justify="center" :align="width <= 700 ? 'center' : 'start'">
             <NGradientText
               :size="width > 700 ? '3rem' : '2.5rem'" :gradient="{
                 deg: 180,
@@ -416,8 +406,8 @@ onMounted(async () => {
                 关于
               </NButton>
             </NFlex>
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCard>
 
       <!-- 用户统计部分 -->
@@ -638,7 +628,7 @@ onMounted(async () => {
           </NFlex>
 
           <NFlex justify="center" style="margin-top: 20px;">
-            <NSpace>
+            <NFlex>
               <NButton
                 type="primary" tag="a" href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii" target="_blank"
                 :style="{ borderRadius: borderRadius.medium }"
@@ -660,7 +650,7 @@ onMounted(async () => {
               >
                 逻辑代码
               </NButton>
-            </NSpace>
+            </NFlex>
           </NFlex>
         </NFlex>
       </NCard>
@@ -795,7 +785,7 @@ onMounted(async () => {
           </div>
         </NFlex>
       </NCard>
-    </NSpace>
+    </NFlex>
     <NFlex justify="center" class="footer">
       <span :style="{ color: textColor }">
         BY

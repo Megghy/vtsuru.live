@@ -7,24 +7,7 @@ import { Info24Filled } from '@vicons/fluent'
 import { ArchiveOutline } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFormItem,
-  NIcon,
-  NInput,
-  NP,
-  NSpace,
-  NText,
-  NTooltip,
-  NTransfer,
-  NUpload,
-  NUploadDragger,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NDivider, NFormItem, NIcon, NInput, NP, NFlex, NText, NTooltip, NTransfer, NUpload, NUploadDragger, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
@@ -248,7 +231,7 @@ async function addUploadFileSong() {
     导入设置
   </NDivider>
 
-  <NSpace vertical>
+  <NFlex vertical>
     <NCheckbox v-model:checked="useCustomColumnMapping">
       自定义列头映射
       <NTooltip>
@@ -261,7 +244,7 @@ async function addUploadFileSong() {
 
     <NCollapse v-if="useCustomColumnMapping">
       <NCollapseItem title="自定义列头映射" name="custom-mapping">
-        <NSpace vertical>
+        <NFlex vertical>
           <NAlert type="info">
             请输入各字段对应的Excel列头名称，多个名称用逗号分隔。导入时会自动匹配这些名称，不区分大小写。
           </NAlert>
@@ -286,21 +269,21 @@ async function addUploadFileSong() {
           <NFormItem label="标签">
             <NInput v-model:value="columnMappings.tags" placeholder="使用逗号分隔多个可能的列头名称" />
           </NFormItem>
-          <NSpace>
+          <NFlex>
             <NButton type="primary" @click="saveColumnMappings">
               保存映射
             </NButton>
             <NButton type="warning" @click="resetColumnMappings">
               重置为默认映射
             </NButton>
-          </NSpace>
+          </NFlex>
           <NAlert type="info">
             设置完成后请点击"保存映射"，设置将自动保存到本地浏览器，下次访问时仍会使用
           </NAlert>
-        </NSpace>
+        </NFlex>
       </NCollapseItem>
     </NCollapse>
-  </NSpace>
+  </NFlex>
 
   <NDivider>
     文件上传

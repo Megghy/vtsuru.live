@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
+import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui';
 import { computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/api-models'

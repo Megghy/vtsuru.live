@@ -2,19 +2,7 @@
 import type { ResponseFeedbackModel } from '@/api/api-models'
 import { List } from 'linqts'
 import {
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NInput,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSpace,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCheckbox, NDivider, NEmpty, NInput, NModal, NRadioButton, NRadioGroup, NFlex, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { FeedbackStatus, FeedbackType } from '@/api/api-models'
@@ -97,7 +85,7 @@ async function add() {
 </script>
 
 <template>
-  <NSpace align="center">
+  <NFlex align="center">
     <NTooltip :disabled="accountInfo !== undefined">
       <template #trigger>
         <NButton
@@ -113,7 +101,7 @@ async function add() {
     <NText depth="3">
       或者直接加群 873260337 说也可以
     </NText>
-  </NSpace>
+  </NFlex>
   <NDivider>
     <NTooltip>
       <template #trigger>
@@ -136,86 +124,86 @@ async function add() {
     v-if="feedbacks.length === 0"
     description="暂无反馈"
   />
-  <NSpace v-else-if="orderType === 'time'">
+  <NFlex v-else-if="orderType === 'time'">
     <FeedbackItem
       v-for="item in selectedFeedback"
       :key="item.createAt"
       :item="item"
     />
-  </NSpace>
+  </NFlex>
   <template v-else>
     <NDivider> 开发计划 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Developing).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Developing)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
     <NDivider> 处理中 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Progressing).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Progressing)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
     <NDivider> 等待回复 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Padding).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Padding)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
     <NDivider> 计划中 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Todo).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Todo)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
     <NDivider> 已完成 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Finish).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Finish)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
     <NDivider> 搁置 </NDivider>
     <NEmpty
       v-if="selectedFeedback.filter((f) => f.status === FeedbackStatus.Reject).length === 0"
       description="无"
     />
-    <NSpace v-else>
+    <NFlex v-else>
       <FeedbackItem
         v-for="item in selectedFeedback.filter((f) => f.status === FeedbackStatus.Reject)"
         :key="item.createAt"
         :item="item"
       />
-    </NSpace>
+    </NFlex>
   </template>
   <NModal
     v-model:show="showAddModal"
@@ -223,7 +211,7 @@ async function add() {
     title="添加反馈"
     style="width: 600px; max-width: 90vw"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <NInput
         v-model:value="newFeedback.message"
         type="textarea"
@@ -259,6 +247,6 @@ async function add() {
       >
         发送
       </NButton>
-    </NSpace>
+    </NFlex>
   </NModal>
 </template>

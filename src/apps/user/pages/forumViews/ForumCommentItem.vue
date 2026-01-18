@@ -2,7 +2,7 @@
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, SyncCircleSharp } from '@vicons/ionicons5'
-import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip, useThemeVars } from 'naive-ui'
+import { NAvatar, NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip, useThemeVars } from 'naive-ui';
 import { computed } from 'vue'
 import { useAccount } from '@/api/account'
 import { VTSURU_API_URL } from '@/shared/config'

@@ -2,7 +2,7 @@
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { Code24Regular, Info24Filled, LiveOff24Regular } from '@vicons/fluent'
 import GraphemeSplitter from 'grapheme-splitter'
-import { NAlert, NBadge, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
+import { NAlert, NBadge, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { EventDataTypes } from '@/api/api-models'
 import { evaluateTemplateExpressions, extractJsExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'

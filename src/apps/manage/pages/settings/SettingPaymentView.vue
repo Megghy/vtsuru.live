@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  NTabPane,
-  NTabs,
-  NAlert,
-  NCard,
-  NDivider,
-  NText,
-} from 'naive-ui'
+import { NTabPane, NTabs, NAlert, NCard, NDivider, NText } from 'naive-ui';
 import { defineComponent, h, onMounted, shallowRef } from 'vue'
 import { useAccount } from '@/api/account'
 import { ConsumptionTypes } from '@/api/models/consumption'

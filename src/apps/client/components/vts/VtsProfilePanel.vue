@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui';
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsProfile } from '@/apps/client/store/useVtsStore'
 

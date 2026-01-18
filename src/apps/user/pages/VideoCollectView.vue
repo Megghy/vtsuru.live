@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { UserInfo, VideoCollectTable } from '@/api/api-models'
-import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui'
+import { NCard, NEmpty, NFlex, NList, NListItem, NSpin, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'

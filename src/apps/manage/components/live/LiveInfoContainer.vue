@@ -1,21 +1,9 @@
 <script setup lang="ts">
 import type { ResponseLiveInfoModel } from '@/api/api-models'
-import {
-  Info24Filled,
-  Chat24Regular,
-  HandRight24Regular,
-  Money24Regular
+import { Info24Filled, Chat24Regular, HandRight24Regular, Money24Regular
 } from '@vicons/fluent'
 import {
-  NIcon,
-  NNumberAnimation,
-  NPopover,
-  NSpace,
-  NTag,
-  NTime,
-  NTooltip,
-  NText,
-} from 'naive-ui'
+  NIcon, NNumberAnimation, NPopover, NFlex, NTag, NTime, NTooltip, NText } from 'naive-ui';
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -67,7 +55,7 @@ watch(
 
         <!-- Meta Data -->
         <div class="meta-row">
-          <NSpace align="center" size="small" wrap>
+          <NFlex align="center" size="small" wrap>
             <NTag v-if="!live.isFinish" size="small" :bordered="false" type="success" class="status-tag">
               直播中
             </NTag>
@@ -97,7 +85,7 @@ watch(
                 已直播: {{ ((Date.now() - (live.startAt ?? 0)) / (3600 * 1000)).toFixed(1) }} 小时
               </div>
             </NPopover>
-          </NSpace>
+          </NFlex>
         </div>
       </div>
 

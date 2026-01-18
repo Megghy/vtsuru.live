@@ -2,21 +2,7 @@
 import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
 import { Delete24Regular } from '@vicons/fluent'
 import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NSpace,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NInput, NModal, NPopconfirm, NTag, NTooltip, useMessage } from 'naive-ui';
 import { computed, inject, ref } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
@@ -292,7 +278,7 @@ await loadIndexInfo()
           <template #trigger>
             <div>
               <SimpleVideoCard :video="item" />
-              <NSpace style="margin-top: 6px">
+              <NFlex style="margin-top: 6px">
                 <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'up')">
                   上移
                 </NButton>
@@ -302,7 +288,7 @@ await loadIndexInfo()
                 <NButton type="warning" size="small" :disabled="isLoading" @click="removeVideo(item.id)">
                   删除
                 </NButton>
-              </NSpace>
+              </NFlex>
             </div>
           </template>
           {{ item.title }}
@@ -350,7 +336,7 @@ await loadIndexInfo()
               </template>
               {{ link[1] }}
             </NTooltip>
-            <NSpace>
+            <NFlex>
               <NButton size="tiny" secondary text @click="moveLink(link[0], 'up')">
                 ↑
               </NButton>
@@ -370,7 +356,7 @@ await loadIndexInfo()
                 </template>
                 确定要删除这个链接吗?
               </NPopconfirm>
-            </NSpace>
+            </NFlex>
           </template>
         </NFlex>
       </NFlex>
