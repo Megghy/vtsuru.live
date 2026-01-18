@@ -28,10 +28,30 @@ const editor = useUserPageEditor()
 provide(UserPageEditorKey, editor)
 let stopBeforeUnload: (() => void) | null = null
 let stopResize: (() => void) | null = null
+let stopSplitDragEmergency: (() => void) | null = null
+let stopSplitDragInterceptor: (() => void) | null = null
 const route = useRoute()
 const router = useRouter()
 const builderBodyEl = ref<HTMLElement | null>(null)
 const builderBodyWidthPx = ref(0)
+
+function releaseStuckSplitDrag() {
+  if (typeof window === 'undefined') return
+  try {
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }))
+  } finally {
+    // naive-ui NSplit 会在 mouseup 时清理，但在极端情况下可能错过 mouseup
+    document.body.style.cursor = ''
+  }
+}
+
+function shouldForceReleaseSplitDrag(ev: Event) {
+  const cursor = document.body.style.cursor
+  if (!(cursor === 'col-resize' || cursor === 'row-resize')) return false
+  const target = (ev.target as HTMLElement | null) ?? null
+  if (target?.closest?.('.n-split__resize-trigger-wrapper')) return false
+  return true
+}
 
 type BuilderColumnId = 'pages' | 'blocks' | 'preview' | 'props'
 
@@ -194,6 +214,7 @@ const layoutColumnsModel = computed<BuilderColumnId[]>({
     return isPropsMergedInBlocks.value ? columnsOrder.value.filter(id => id !== 'props') : columnsOrder.value
   },
   set(next) {
+    releaseStuckSplitDrag()
     if (!isPropsMergedInBlocks.value) {
       columnsOrder.value = normalizeColumnsOrder(next)
       return
@@ -218,10 +239,12 @@ watchEffect(() => {
 
 function togglePagesCollapse() {
   if (!isPagesResizable.value) return
+  releaseStuckSplitDrag()
   columnWidths.value.pages = isPagesCollapsed.value ? lastExpandedSidebarSize : '52px'
 }
 
 function toggleMergePropsInBlocks() {
+  releaseStuckSplitDrag()
   isPropsMergedInBlocks.value = !isPropsMergedInBlocks.value
 }
 
@@ -344,15 +367,28 @@ onMounted(async () => {
 
   stopBeforeUnload = useEventListener(window, 'beforeunload', beforeUnloadHandler)
   stopResize = useEventListener(window, 'resize', updateBuilderBodyWidth)
+  stopSplitDragEmergency = useEventListener(window, 'blur', releaseStuckSplitDrag)
+  stopSplitDragInterceptor = useEventListener(
+    document,
+    'mousedown',
+    (ev) => {
+      if (shouldForceReleaseSplitDrag(ev)) releaseStuckSplitDrag()
+    },
+    { capture: true },
+  )
 })
 
 onBeforeUnmount(() => {
+  releaseStuckSplitDrag()
   stopBeforeUnload?.()
   stopResize?.()
+  stopSplitDragEmergency?.()
+  stopSplitDragInterceptor?.()
   editor.destroy()
 })
 
 onBeforeRouteLeave(() => {
+  releaseStuckSplitDrag()
   if (!editor.isDirty.value) return true
   // eslint-disable-next-line no-alert
   return window.confirm('当前有未保存的更改，确定离开吗？')

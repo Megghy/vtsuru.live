@@ -26,7 +26,7 @@ import {
   useThemeVars,
 } from 'naive-ui'
 import { computed, h, reactive, ref } from 'vue'
-import { TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
+import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -98,11 +98,13 @@ function getStatusTag(action: AutoActionItem) {
   if (!action.enabled) {
     return { type: 'error' as const, text: '已禁用', tooltip: '此操作已被手动禁用' }
   }
-  // 3. Check if template is empty
-  if (!action.template
-    || (typeof action.template === 'string' && action.template.trim() === '')
-    || (Array.isArray(action.template) && action.template.length === 0)) {
-    return { type: 'warning' as const, text: '模板为空', tooltip: '请设置有效的模板内容' }
+  // 3. Check if template is empty (仅对“文本模板类”动作生效)
+  if ([ActionType.SEND_DANMAKU, ActionType.SEND_PRIVATE_MSG, ActionType.EXECUTE_COMMAND].includes(action.actionType)) {
+    if (!action.template
+      || (typeof action.template === 'string' && action.template.trim() === '')
+      || (Array.isArray(action.template) && action.template.length === 0)) {
+      return { type: 'warning' as const, text: '模板为空', tooltip: '请设置有效的模板内容' }
+    }
   }
   // 4. Check onlyDuringLive condition
   if (action.triggerConfig.onlyDuringLive && !autoActionStore.isLive) {

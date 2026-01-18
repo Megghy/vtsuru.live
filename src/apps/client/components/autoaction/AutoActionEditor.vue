@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { NCollapse, NCollapseItem, NDivider, NFlex } from 'naive-ui'
-import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
+import { computed } from 'vue'
 
 import AdvancedSettings from './settings/AdvancedSettings.vue'
 // 引入拆分的子组件
@@ -14,6 +15,24 @@ import GuardSettings from './settings/GuardSettings.vue'
 import ScheduledSettings from './settings/ScheduledSettings.vue'
 import SuperChatSettings from './settings/SuperChatSettings.vue'
 import TemplateSettings from './settings/TemplateSettings.vue'
+import VtsSettings from './settings/VtsSettings.vue'
+
+const showTemplate = computed(() => {
+  return [
+    ActionType.SEND_DANMAKU,
+    ActionType.SEND_PRIVATE_MSG,
+    ActionType.EXECUTE_COMMAND,
+  ].includes(props.action.actionType)
+})
+
+const showVtsSettings = computed(() => {
+  return [
+    ActionType.VTS_HOTKEY,
+    ActionType.VTS_PRESET,
+    ActionType.VTS_DROP_ITEM,
+    ActionType.VTS_PARAM_ADD,
+  ].includes(props.action.actionType)
+})
 
 const props = defineProps({
   action: {
@@ -61,13 +80,15 @@ const TriggerSettings = getTriggerSettings()
 
 <template>
   <NFlex class="auto-action-editor" vertical :size="12">
-    <TemplateSettings :action="action" :custom-test-context="customTestContext" />
+    <TemplateSettings v-if="showTemplate" :action="action" :custom-test-context="customTestContext" />
 
     <BasicSettings
       :action="action"
       :hide-name="hideName"
       :hide-enabled="hideEnabled"
     />
+
+    <VtsSettings v-if="showVtsSettings" :action="action" />
 
     <NCollapse>
       <NCollapseItem title="高级选项" name="advanced">

@@ -81,8 +81,8 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       if (cfg.mode === 'block') scanProject(cfg.block)
     })
 
-    if (embedCount > 0) publishCheckWarnings.value.push(`包含 embed：${embedCount} 个（发布会做 provider 白名单校验）`)
-    if (externalLinkCount > 0) publishCheckWarnings.value.push(`包含外链：约 ${externalLinkCount} 个（访客打开将自动 noopener/noreferrer）`)
+    if (embedCount > 0) publishCheckWarnings.value.push(`包含 embed：${embedCount} 个，发布时会做 provider 白名单校验`)
+    if (externalLinkCount > 0) publishCheckWarnings.value.push(`包含外链：约 ${externalLinkCount} 个，访客打开将自动 noopener/noreferrer`)
   }
 
   function openPublishModal() {
@@ -98,14 +98,14 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     const publishSnapshot = deepCloneJson(opts.settings.value)
     const prunedCount = pruneHiddenEmptyBlocks(publishSnapshot)
     if (prunedCount > 0) {
-      publishCheckWarnings.value.push(`发布前会自动清理隐藏空区块：${prunedCount} 个（草稿保存不会自动清理）`)
+      publishCheckWarnings.value.push(`发布前会自动清理隐藏空区块：${prunedCount} 个；草稿保存不会自动清理`)
     } else {
-      publishCheckWarnings.value.push('提示：发布前会自动清理“隐藏且内容为空”的区块（草稿保存不会自动清理）')
+      publishCheckWarnings.value.push('提示：发布前会自动清理“隐藏且内容为空”的区块；草稿保存不会自动清理')
     }
 
     const json = JSON.stringify(publishSnapshot)
     publishCheckBytes.value = estimateUtf8Bytes(json)
-    if (publishCheckBytes.value > opts.maxConfigBytes) publishCheckErrors.value.push(`配置过大：${publishCheckBytes.value} bytes（后端上限 ${opts.maxConfigBytes} bytes）`)
+    if (publishCheckBytes.value > opts.maxConfigBytes) publishCheckErrors.value.push(`配置过大：${publishCheckBytes.value} bytes，后端上限 ${opts.maxConfigBytes} bytes`)
 
     scanPublishWarnings(opts.settings.value)
     publishModal.value = true

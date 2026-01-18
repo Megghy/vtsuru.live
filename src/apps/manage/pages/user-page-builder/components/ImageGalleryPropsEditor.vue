@@ -76,15 +76,15 @@ function getItemKey(it: any) {
         <NInputNumber v-model:value="gallery.columns" :min="1" :max="12" style="width: 100%" />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'carousel'" label="间距 gap（px）">
+      <NFormItem v-if="gallery.layout !== 'carousel'" label="间距 px">
         <NInputNumber v-model:value="gallery.gap" :min="0" :max="80" style="width: 100%" />
       </NFormItem>
 
-      <NFormItem label="最大宽度（可选）">
+      <NFormItem label="最大宽度">
         <NInput v-model:value="gallery.maxWidth" placeholder="例如 100% 或 720px" />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'masonry'" label="图片最大高度（可选）">
+      <NFormItem v-if="gallery.layout !== 'masonry'" label="图片最大高度">
         <NInput v-model:value="gallery.maxHeight" placeholder="例如 320px" />
       </NFormItem>
 
@@ -92,8 +92,8 @@ function getItemKey(it: any) {
         <NSelect
           v-model:value="gallery.fit"
           :options="[
-            { label: '裁剪铺满（cover）', value: 'cover' },
-            { label: '完整显示（contain）', value: 'contain' },
+            { label: '裁剪铺满 - cover', value: 'cover' },
+            { label: '完整显示 - contain', value: 'contain' },
           ]"
         />
       </NFormItem>
@@ -111,14 +111,14 @@ function getItemKey(it: any) {
           <NSelect
             v-model:value="gallery.effect"
             :options="[
-              { label: '滑动（slide）', value: 'slide' },
-              { label: '淡入淡出（fade）', value: 'fade' },
-              { label: '卡片（card）', value: 'card' },
+              { label: '滑动 - slide', value: 'slide' },
+              { label: '淡入淡出 - fade', value: 'fade' },
+              { label: '卡片 - card', value: 'card' },
             ]"
           />
         </NFormItem>
 
-        <NFormItem v-if="gallery.autoplay" label="轮播间隔（ms）">
+        <NFormItem v-if="gallery.autoplay" label="轮播间隔 ms">
           <NInputNumber v-model:value="gallery.interval" :min="1000" :max="20000" style="width: 100%" />
         </NFormItem>
 
@@ -199,8 +199,8 @@ function getItemKey(it: any) {
               </NFlex>
 
               <div style="margin-top: 10px">
-                <NFormItem label="图片描述（显示在图片下方）" :show-feedback="false">
-                  <NInput v-model:value="ensureItem(index).desc" placeholder="可选" />
+                <NFormItem label="图片描述" :show-feedback="false">
+                  <NInput v-model:value="ensureItem(index).desc" placeholder="可选，显示在图片下方" />
                 </NFormItem>
               </div>
             </div>

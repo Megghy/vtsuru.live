@@ -184,7 +184,7 @@ function clearAll() {
         </template>
 
         <template v-else-if="type === 'image'">
-          <NFormItem label="背景图片（上传）">
+          <NFormItem label="背景图片">
             <NSpace align="center">
               <NButton
                 v-if="props.target.uploadImage"
@@ -217,7 +217,7 @@ function clearAll() {
             <NSelect
               v-model:value="fit"
               :options="[
-                { label: '铺满（推荐）', value: 'cover' },
+                { label: '铺满', value: 'cover' },
                 { label: '完整显示', value: 'contain' },
                 { label: '拉伸填满', value: 'fill' },
                 { label: '原始大小', value: 'none' },
@@ -235,13 +235,13 @@ function clearAll() {
 
     <template v-if="type !== 'none'">
       <NFlex justify="space-between" align="center" :wrap="false" style="margin-bottom: 10px">
-        <div style="font-size: 12px; color: var(--n-text-color-3)">
-          覆盖导航区域（建议开启以让内置页面也生效）
+        <div style="font-size: 12px; color: var(--n-text-color-3)" title="建议开启以让内置页面也生效">
+          覆盖导航区域
         </div>
         <NSwitch v-model:value="coverSidebar" size="small" />
       </NFlex>
 
-      <NFormItem label="遮罩颜色（scrim）">
+      <NFormItem label="遮罩颜色">
         <NRadioGroup v-model:value="scrimMode" size="small" style="width: 100%">
           <NRadioButton value="auto" style="width: 33.3%; text-align: center">
             自动
@@ -255,7 +255,7 @@ function clearAll() {
         </NRadioGroup>
       </NFormItem>
 
-      <NFormItem label="遮罩强度（%）" :show-feedback="false">
+      <NFormItem label="遮罩强度 %" :show-feedback="false">
         <NInputNumber v-model:value="scrimStrength" :min="0" :max="100" style="width: 100%" />
       </NFormItem>
 
@@ -273,7 +273,7 @@ function clearAll() {
         </NRadioGroup>
       </NFormItem>
 
-      <NFormItem label="强度（px）" :show-feedback="false">
+      <NFormItem label="强度 px" :show-feedback="false">
         <NInputNumber v-model:value="blur" :min="0" :max="40" style="width: 100%" :disabled="blurMode === 'none'" />
       </NFormItem>
     </template>

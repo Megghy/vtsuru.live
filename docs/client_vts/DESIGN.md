@@ -121,15 +121,15 @@
 
 ### 5.1 目录与模块拆分（建议落点）
 
-> 以“薄 API 层 + 单一 store + 多 UI 组件”的方式落地，避免把 WebSocket 细节散落到页面里。
+> 以“单一 store + 多 UI 组件”的方式落地，避免把通信细节散落到页面里。
 
+- 通信层：使用现有库 `vtubestudio` 的 `ApiClient`（自动连接/重连/鉴权），**不自研 WebSocket**。
 - `src/apps/client/api/vts/`
-  - `client.ts`：WebSocket 连接、requestID 管理、收发消息、超时/断线处理（fail-fast）。
-  - `messages.ts`：请求/响应类型定义（最小可用即可，逐步补全）。
-  - `helpers.ts`：常用封装（listHotkeys、triggerHotkey、moveModel、injectParams、listItems、loadItem、unloadItem）。
+  - `messages.ts`：本项目侧 UI/配置需要的最小类型（不负责通信）。
+  - `icon.ts`：`src/svgs/ic_vtuber.svg` -> 128x128 PNG base64（用于 VTS token 弹窗展示）。
 - `src/apps/client/store/useVtsStore.ts`
   - state：连接状态、认证状态、token、当前模型信息、hotkeys、items、统计信息、错误信息。
-  - actions：connect/auth/reconnect、refreshHotkeys、triggerHotkey、applyPreset、runMacro、toggleItem、dropItem、startParamHold/stopParamHold。
+  - actions：connect/auth、refreshHotkeys、triggerHotkey、applyPreset、runMacro、toggleItem、dropItem、startParamHold/stopParamHold。
 - `src/apps/client/pages/ClientVTS.vue`
   - UI 容器页（与 ClientSettings/ClientAutoAction 并列）。
 - `src/apps/client/components/vts/*`

@@ -56,6 +56,16 @@ export default {
       },
     },
     {
+      path: 'vts',
+      name: 'client-vts',
+      component: async () => import('@/apps/client/pages/ClientVTS.vue'),
+      meta: {
+        title: 'VTS 控制',
+        forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'read-danmaku',
       name: 'client-read-danmaku',
       component: async () => import('@/apps/client/pages/ClientReadDanmaku.vue'),

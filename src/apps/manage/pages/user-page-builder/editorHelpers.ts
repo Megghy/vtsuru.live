@@ -19,7 +19,7 @@ export function deepCloneJson<T>(v: T): T {
   }
   const seen = new WeakSet<object>()
   const json = JSON.stringify(raw, (_key: string, value: unknown): unknown => {
-    if (typeof value === 'bigint') throw new Error('不支持 BigInt（无法序列化）')
+    if (typeof value === 'bigint') throw new Error('不支持 BigInt：无法序列化')
     if (!value || typeof value !== 'object') return value
 
     if (g.window && value === g.window) return undefined

@@ -65,7 +65,7 @@ const mergedTopSize = useStorage<string | number>(USER_PAGE_BUILDER_SPLIT_BLOCKS
 
 
     <NAlert type="info" :show-icon="true">
-      请选择一个区块进行编辑（支持 Ctrl/Shift 多选做批量操作）。
+      请选择一个区块进行编辑。支持 Ctrl/Shift 多选批量操作。
     </NAlert>
   </NCard>
 </template>

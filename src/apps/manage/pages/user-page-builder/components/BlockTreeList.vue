@@ -136,13 +136,13 @@ function onExpandAfterLeave(el: Element) {
 function scrollToPreviewBlock(blockId: string) {
   const previewRoot = document.querySelector('.user-page-builder .preview-content') as HTMLElement | null
   if (!previewRoot) {
-    editor.message.warning('预览未就绪（当前页可能不是区块模式）')
+    editor.message.warning('预览未就绪，当前页可能不是区块模式')
     return
   }
 
   const el = previewRoot.querySelector(`[data-block-id="${blockId}"]`) as HTMLElement | null
   if (!el) {
-    editor.message.warning('预览中未找到对应区块（可能未渲染或已被隐藏）')
+    editor.message.warning('预览中未找到对应区块，可能未渲染或已被隐藏')
     return
   }
 
@@ -204,7 +204,7 @@ function scrollToPreviewBlock(blockId: string) {
           </NIcon>
           <div v-else class="expand-placeholder" />
 
-          <NIcon class="drag-handle" size="18" title="拖拽排序（靠近上下边缘）；拖到区块中间松开：成组/加入组">
+          <NIcon class="drag-handle" size="18" title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组">
             <ReorderThreeOutline />
           </NIcon>
 

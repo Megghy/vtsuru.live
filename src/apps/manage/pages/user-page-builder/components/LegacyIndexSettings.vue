@@ -240,7 +240,7 @@ await loadIndexInfo()
     type="warning"
     :show-icon="true"
   >
-    传统模式设置仅支持主页（home）。
+    传统模式设置仅支持主页 home。
   </NAlert>
 
   <template v-else>
