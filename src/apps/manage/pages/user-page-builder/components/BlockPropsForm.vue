@@ -652,13 +652,19 @@
                       />
                       <NSelect
                         style="width: 110px; flex: 0 0 110px"
-                        :value="(it as any).page ? 'page' : 'external'"
-                        :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }]"
+                        :value="(it as any).back === true ? 'back' : ((it as any).page ? 'page' : 'external')"
+                        :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }, { label: '返回', value: 'back' }]"
                         @update:value="(v) => {
-                          if (v === 'page') {
+                          if (v === 'back') {
+                            (it as any).back = true;
+                            delete (it as any).page;
+                            delete (it as any).url;
+                          } else if (v === 'page') {
+                            delete (it as any).back;
                             if (!(it as any).page) (it as any).page = 'home';
                             delete (it as any).url;
                           } else {
+                            delete (it as any).back;
                             if (typeof (it as any).url !== 'string' || !(it as any).url.trim().length) (it as any).url = 'https://';
                             delete (it as any).page;
                           }
@@ -673,11 +679,14 @@
                         style="width: 100%"
                       />
                       <NInput
-                        v-else
+                        v-else-if="!(it as any).back"
                         v-model:value="(it as any).url"
                         placeholder="链接 https://..."
                         style="width: 100%"
                       />
+                      <NText v-else depth="3" style="display:block; padding: 6px 2px">
+                        点击后返回上一页
+                      </NText>
                     </div>
                     <div style="margin-top: 8px; display:flex; align-items:center; justify-content: space-between; gap: 10px">
                       <NButton type="error" secondary size="small" @click="editor.ensureItems(props.block).splice(idx, 1)">
@@ -750,14 +759,20 @@
           </NFormItem>
           <NFormItem class="span-full" label="跳转类型">
             <NSelect
-              :value="editor.ensurePropsObject(props.block).page ? 'page' : 'external'"
-              :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }]"
+              :value="(editor.ensurePropsObject(props.block) as any).back === true ? 'back' : (editor.ensurePropsObject(props.block).page ? 'page' : 'external')"
+              :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }, { label: '返回', value: 'back' }]"
               @update:value="(v) => {
                 const obj: any = editor.ensurePropsObject(props.block);
-                if (v === 'page') {
+                if (v === 'back') {
+                  obj.back = true;
+                  delete obj.page;
+                  delete obj.url;
+                } else if (v === 'page') {
+                  delete obj.back;
                   if (!obj.page) obj.page = 'home';
                   delete obj.url;
                 } else {
+                  delete obj.back;
                   if (typeof obj.url !== 'string' || !obj.url.trim().length) obj.url = 'https://';
                   delete obj.page;
                 }
@@ -771,10 +786,13 @@
               :options="internalPageOptions"
             />
             <NInput
-              v-else
+              v-else-if="!(editor.ensurePropsObject(props.block) as any).back"
               v-model:value="editor.ensurePropsObject(props.block).url"
               placeholder="链接 https://..."
             />
+            <NText v-else depth="3">
+              点击后返回上一页
+            </NText>
           </NFormItem>
         </PropsGrid>
       </NForm>

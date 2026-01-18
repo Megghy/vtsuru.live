@@ -30,7 +30,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
@@ -56,7 +56,7 @@ const useAuth = useBiliAuth() // 获取认证状态 Store
 const id = computed(() => route.params.id)
 
 // 主题设置
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+const themeType = useStorage<ThemeType>('Settings.Theme', ThemeType.Auto)
 
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
@@ -171,6 +171,27 @@ const effectiveIsDark = computed(() => {
 })
 
 const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
+
+let themeTypeBeforeForce: ThemeType | null = null
+watch(
+  () => [pageThemeMode.value, themeType.value] as const,
+  ([mode]) => {
+    if (mode === 'dark' || mode === 'light') {
+      if (themeTypeBeforeForce == null) themeTypeBeforeForce = themeType.value
+      const forced = mode === 'dark' ? ThemeType.Dark : ThemeType.Light
+      if (themeType.value !== forced) themeType.value = forced
+      return
+    }
+    if (themeTypeBeforeForce != null) {
+      if (themeType.value !== themeTypeBeforeForce) themeType.value = themeTypeBeforeForce
+      themeTypeBeforeForce = null
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
+})
 
 const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const vars = mergedLayoutVars.value as Record<string, string>

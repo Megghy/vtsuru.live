@@ -307,12 +307,17 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
         if (!isNonEmptyString(obj.label)) errors.push(`${userFacingName}: items[${idx}].label 不能为空`)
         const hasUrl = obj.url !== undefined
         const hasPage = obj.page !== undefined
-        if (hasUrl && hasPage) {
-          errors.push(`${userFacingName}: items[${idx}] 只能设置 url 或 page 其中一个`)
+        const backDefined = obj.back !== undefined
+        const hasBack = obj.back === true
+        if (backDefined && typeof obj.back !== 'boolean') errors.push(`${userFacingName}: items[${idx}].back 必须是 boolean`)
+        if (backDefined && obj.back === false) errors.push(`${userFacingName}: items[${idx}].back 必须为 true`)
+        const setCount = Number(hasUrl) + Number(hasPage) + Number(hasBack)
+        if (setCount > 1) {
+          errors.push(`${userFacingName}: items[${idx}] 只能设置 url/page/back 其中一个`)
           return
         }
-        if (!hasUrl && !hasPage) {
-          errors.push(`${userFacingName}: items[${idx}] 必须提供 url 或 page`)
+        if (setCount === 0) {
+          errors.push(`${userFacingName}: items[${idx}] 必须提供 url/page/back`)
           return
         }
         if (hasUrl && !isHttpsUrlString(obj.url)) errors.push(`${userFacingName}: items[${idx}].url 必须是 https URL`)
@@ -341,12 +346,17 @@ function validateBlockProps(block: BlockNode, userFacingName: string, errors: st
 
       const hasUrl = propsObj.url !== undefined
       const hasPage = propsObj.page !== undefined
-      if (hasUrl && hasPage) {
-        errors.push(`${userFacingName}: 只能设置 url 或 page 其中一个`)
+      const backDefined = propsObj.back !== undefined
+      const hasBack = propsObj.back === true
+      if (backDefined && typeof propsObj.back !== 'boolean') errors.push(`${userFacingName}: back 必须是 boolean`)
+      if (backDefined && propsObj.back === false) errors.push(`${userFacingName}: back 必须为 true`)
+      const setCount = Number(hasUrl) + Number(hasPage) + Number(hasBack)
+      if (setCount > 1) {
+        errors.push(`${userFacingName}: 只能设置 url/page/back 其中一个`)
         break
       }
-      if (!hasUrl && !hasPage) {
-        errors.push(`${userFacingName}: 必须提供 url 或 page`)
+      if (setCount === 0) {
+        errors.push(`${userFacingName}: 必须提供 url/page/back`)
         break
       }
       if (hasUrl && !isHttpsUrlString(propsObj.url)) errors.push(`${userFacingName}: url 必须是 https URL`)

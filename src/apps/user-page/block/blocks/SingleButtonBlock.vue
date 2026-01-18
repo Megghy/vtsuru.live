@@ -77,12 +77,18 @@ const internalTarget = computed(() => {
   return getInternalPath(v.trim())
 })
 
+const isBack = computed(() => propsObj.value.back === true)
+
 const externalHref = computed(() => {
   const v = propsObj.value.url
   return typeof v === 'string' ? v : 'https://'
 })
 
 function handleClick() {
+  if (isBack.value) {
+    router.back()
+    return
+  }
   if (internalTarget.value) {
     void router.push(internalTarget.value)
   }
@@ -95,7 +101,7 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
   <BlockCard :framed="framed" :backgrounded="backgrounded">
     <NFlex :justify="justify" :align="'center'" style="width: 100%">
       <NButton
-        v-if="internalTarget"
+        v-if="isBack || internalTarget"
         :type="buttonType as any"
         :secondary="variant === 'secondary'"
         :tertiary="variant === 'tertiary'"
