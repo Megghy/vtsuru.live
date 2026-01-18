@@ -557,12 +557,6 @@ const pageOverrideThemeMode = computed({
                   <BlockTypeEditor :block="editor.selectedBlock.value" />
                 </ErrorBoundary>
               </div>
-
-              <div v-else key="multi" style="margin-top: 12px">
-                <NAlert type="info" :show-icon="true">
-                  已多选 {{ editor.selectedBlockIds.value.length }} 个区块：可在上方做批量隐藏/删除/复制/粘贴。
-                </NAlert>
-              </div>
             </Transition>
           </template>
 

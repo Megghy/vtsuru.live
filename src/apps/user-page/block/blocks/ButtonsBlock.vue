@@ -44,7 +44,7 @@ function isHttpsUrlString(v: unknown): v is string {
 
 type NormalizedButtonItem = {
   label: string
-  kind: 'external' | 'page'
+  kind: 'external' | 'page' | 'back'
   href?: string
   to?: string
 }
@@ -54,6 +54,7 @@ const normalizedItems = computed<NormalizedButtonItem[]>(() => {
   return list.map((raw) => {
     const it = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw as any : {}
     const label = typeof it.label === 'string' ? it.label : ''
+    if (it.back === true) return { label, kind: 'back' }
     const page = typeof it.page === 'string' ? it.page.trim() : ''
     if (page) {
       const to = getInternalPath(page)
@@ -159,7 +160,7 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
           :ghost="variant === 'ghost'"
           class="vtsuru-btn"
           :style="fullWidth ? 'width: 100%' : undefined"
-          @click="router.push(it.to || route.fullPath)"
+          @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"
         >
           {{ it.label }}
         </NButton>
