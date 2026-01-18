@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
+import { NAlert } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 

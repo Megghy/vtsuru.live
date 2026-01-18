@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCarousel } from 'naive-ui'
+import { NCarousel } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 

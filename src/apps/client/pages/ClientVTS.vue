@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NFlex, useMessage } from 'naive-ui'
+import { NAlert, NFlex, useMessage } from 'naive-ui';
 import { onMounted } from 'vue'
 import { isTauri } from '@/shared/config'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'

@@ -3,19 +3,7 @@ import type {
   DataTableColumns,
 } from 'naive-ui'
 import type { ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/api-models'
-import {
-  NButton,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NInput,
-  NModal,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+import { NButton, NDataTable, NDivider, NEmpty, NFlex, NInput, NModal, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { h, ref } from 'vue'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
 import PointGoodsItem from './PointGoodsItem.vue'

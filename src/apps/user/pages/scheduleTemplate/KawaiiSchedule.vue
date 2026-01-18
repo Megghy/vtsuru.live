@@ -7,7 +7,7 @@ import type { ScheduleWeekInfo, UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes' // Use base type
 import type { ExtractConfigData, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { getWeek, getYear } from 'date-fns'
-import { NDivider, NSelect, NSpace } from 'naive-ui'
+import { NDivider, NSelect, NFlex } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 import SaveCompoent from '@/apps/user/components/SaveCompoent.vue' // 引入截图组件
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -189,7 +189,7 @@ defineExpose({ Config, DefaultConfig })
 
 <template>
   <div class="kawaii-schedule-selector">
-    <NSpace align="center">
+    <NFlex align="center">
       <NSelect
         v-model:value="selectedDate"
         :options="weekOptions"
@@ -204,7 +204,7 @@ defineExpose({ Config, DefaultConfig })
         :file-name="`日程表_${selectedDate || '当前'}_${props.userInfo?.name || '用户'}`"
         tooltip-text="保存当前周表为图片"
       />
-    </NSpace>
+    </NFlex>
     <NDivider />
   </div>
 

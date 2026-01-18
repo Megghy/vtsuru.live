@@ -2,7 +2,7 @@
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import draggable from 'vuedraggable-es'
 import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
-import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText } from 'naive-ui'
+import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui';
 import { computed } from 'vue'
 import PropsGrid from './PropsGrid.vue'
 
@@ -143,7 +143,7 @@ function getItemKey(it: any) {
     </template>
 
     <NFormItem label="图片列表">
-      <NSpace vertical style="width: 100%">
+      <NFlex vertical style="width: 100%">
         <NFlex justify="space-between" align="center" :wrap="false">
           <NText depth="3">
             可拖拽排序
@@ -213,7 +213,7 @@ function getItemKey(it: any) {
           </template>
           添加图片
         </NButton>
-      </NSpace>
+      </NFlex>
     </NFormItem>
   </NForm>
 </template>

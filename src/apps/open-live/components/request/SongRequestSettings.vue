@@ -1,18 +1,6 @@
 <script setup lang="ts">
 import type { Setting_LiveRequest } from '@/api/api-models'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NSpace,
-  NSpin,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NCard, NCheckbox, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NFlex, NSpin, useMessage } from 'naive-ui';
 import { computed } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { useLiveRequest } from '@/composables/useLiveRequest'
@@ -87,10 +75,10 @@ async function updateSettings() {
 
 <template>
   <NSpin :show="liveRequest.isLoading">
-    <NSpace vertical :size="12">
+    <NFlex vertical :size="12">
       <NCard size="small" bordered title="规则">
-        <NSpace vertical :size="12">
-          <NSpace align="center" :wrap="true" :size="12">
+        <NFlex vertical :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NInputGroup class="song-request-settings__w-280">
               <NInputGroupLabel>点播弹幕前缀</NInputGroupLabel>
               <template v-if="liveRequest.configCanEdit">
@@ -113,7 +101,7 @@ async function updateSettings() {
             >
               前缀包含空格，可能导致用户输入困难。
             </NAlert>
-          </NSpace>
+          </NFlex>
 
           <NInputGroup class="song-request-settings__w-280">
             <NInputGroupLabel>最大队列长度</NInputGroupLabel>
@@ -133,7 +121,7 @@ async function updateSettings() {
             </NButton>
           </NInputGroup>
 
-          <NSpace align="center" :wrap="true" :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.enableOnStreaming"
               :disabled="!liveRequest.configCanEdit"
@@ -148,10 +136,10 @@ async function updateSettings() {
             >
               允许所有弹幕点播
             </NCheckbox>
-          </NSpace>
+          </NFlex>
 
           <template v-if="!accountInfo.settings.songRequest.allowAllDanmaku">
-            <NSpace align="center" :wrap="true" :size="12">
+            <NFlex align="center" :wrap="true" :size="12">
               <NCheckbox
                 v-model:checked="accountInfo.settings.songRequest.needWearFanMedal"
                 :disabled="!liveRequest.configCanEdit"
@@ -202,10 +190,10 @@ async function updateSettings() {
               >
                 只允许总督
               </NCheckbox>
-            </NSpace>
+            </NFlex>
           </template>
 
-          <NSpace align="center" :wrap="true" :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.allowSC"
               :disabled="!liveRequest.configCanEdit"
@@ -242,12 +230,12 @@ async function updateSettings() {
                 保存
               </NButton>
             </NInputGroup>
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCard>
 
       <NCard size="small" bordered title="点歌">
-        <NSpace align="center" :wrap="true" :size="12">
+        <NFlex align="center" :wrap="true" :size="12">
           <NCheckbox
             v-model:checked="accountInfo.settings.songRequest.onlyAllowSongList"
             :disabled="!liveRequest.configCanEdit"
@@ -288,12 +276,12 @@ async function updateSettings() {
           >
             允许匿名网页点歌
           </NCheckbox>
-        </NSpace>
+        </NFlex>
       </NCard>
 
       <NCard size="small" bordered title="冷却（秒）">
-        <NSpace vertical :size="12">
-          <NSpace align="center" :wrap="true" :size="12">
+        <NFlex vertical :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NCheckbox
               v-model:checked="accountInfo.settings.songRequest.enableCooldown"
               :disabled="!liveRequest.configCanEdit"
@@ -308,9 +296,9 @@ async function updateSettings() {
             >
               启用网页点播冷却
             </NCheckbox>
-          </NSpace>
+          </NFlex>
 
-          <NSpace v-if="accountInfo.settings.songRequest.enableCooldown" :wrap="true" :size="12">
+          <NFlex v-if="accountInfo.settings.songRequest.enableCooldown" :wrap="true" :size="12">
             <NInputGroup class="song-request-settings__w-280">
               <NInputGroupLabel>普通弹幕</NInputGroupLabel>
               <NInputNumber
@@ -379,7 +367,7 @@ async function updateSettings() {
                 保存
               </NButton>
             </NInputGroup>
-          </NSpace>
+          </NFlex>
 
           <NInputGroup
             v-if="accountInfo.settings.songRequest.enableWebCooldown"
@@ -401,11 +389,11 @@ async function updateSettings() {
               保存
             </NButton>
           </NInputGroup>
-        </NSpace>
+        </NFlex>
       </NCard>
 
       <NCard size="small" bordered title="OBS">
-        <NSpace align="center" :wrap="true" :size="12">
+        <NFlex align="center" :wrap="true" :size="12">
           <NInputGroup class="song-request-settings__w-260">
             <NInputGroupLabel>标题</NInputGroupLabel>
             <template v-if="configCanEdit">
@@ -440,7 +428,7 @@ async function updateSettings() {
           >
             显示点播用户粉丝牌
           </NCheckbox>
-        </NSpace>
+        </NFlex>
       </NCard>
 
       <NCard size="small" bordered title="警告消息">
@@ -451,7 +439,7 @@ async function updateSettings() {
           自动关闭警告消息
         </NCheckbox>
       </NCard>
-    </NSpace>
+    </NFlex>
   </NSpin>
 </template>
 

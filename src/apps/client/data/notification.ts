@@ -2,7 +2,7 @@ import type { Options } from '@tauri-apps/plugin-notification'
 import type { QAInfo, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { NButton, NFlex } from 'naive-ui'
+import { NButton, NFlex } from 'naive-ui';
 import QuestionItem from '@/components/QuestionItem.vue'
 import { CN_HOST } from '@/shared/config'
 import { useSettings } from '../store/useSettings'

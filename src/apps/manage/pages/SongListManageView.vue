@@ -3,7 +3,7 @@ import type { SongsInfo } from '@/api/api-models'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NInputGroup, NSpin, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NFlex, NInput, NInputGroup, NSpin, NText, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'

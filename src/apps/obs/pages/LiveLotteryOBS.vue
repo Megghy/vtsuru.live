@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
-import { NDivider, NEmpty, NSpace, NText } from 'naive-ui'
+import { NDivider, NEmpty, NFlex, NText } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'
@@ -140,7 +140,7 @@ onUnmounted(() => {
               margin: 10px;
             "
           >
-            <NSpace vertical>
+            <NFlex vertical>
               <img
                 height="50"
                 width="50"
@@ -152,10 +152,10 @@ onUnmounted(() => {
               <NText style="font-size: large">
                 {{ user.name }}
               </NText>
-            </NSpace>
+            </NFlex>
           </div>
         </Vue3Marquee>
-        <NSpace
+        <NFlex
           v-else
           justify="center"
         >
@@ -187,7 +187,7 @@ onUnmounted(() => {
               {{ user.name }}
             </NText>
           </div>
-        </NSpace>
+        </NFlex>
       </template>
     </div>
   </div>

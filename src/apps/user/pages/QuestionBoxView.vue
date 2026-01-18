@@ -3,28 +3,7 @@ import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AddCircle24Regular, DismissCircle24Regular, History24Regular } from '@vicons/fluent'
 import GraphemeSplitter from 'grapheme-splitter'
 import {
-  NAlert,
-  NAvatar,
-  NBadge,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NDrawer,
-  NDrawerContent,
-  NEmpty,
-  NIcon,
-  NImage,
-  NInput,
-  NList,
-  NListItem,
-  NSpace,
-  NSpin,
-  NTag,
-  NText,
-  NTime,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NAvatar, NBadge, NButton, NCard, NCheckbox, NDivider, NDrawer, NDrawerContent, NEmpty, NIcon, NImage, NInput, NList, NListItem, NFlex, NSpin, NTag, NText, NTime, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStorage } from '@vueuse/core'
@@ -477,7 +456,7 @@ onUnmounted(() => {
           </NBadge>
         </template>
 
-        <NSpace vertical :size="16">
+        <NFlex vertical :size="16">
           <!-- 话题选择区域 -->
           <div v-if="tags.length > 0" class="section">
             <label class="section-label">投稿话题</label>
@@ -643,7 +622,7 @@ onUnmounted(() => {
               您不能向自己发起提问
             </NAlert>
           </div>
-        </NSpace>
+        </NFlex>
       </NCard>
 
       <!-- 公开列表 -->
@@ -717,7 +696,7 @@ onUnmounted(() => {
       >
         <NDrawerContent closable>
           <template #header>
-            <NSpace justify="space-between" align="center" style="width: 100%;">
+            <NFlex justify="space-between" align="center" style="width: 100%;">
               <NText strong style="font-size: 16px;">
                 本地提问记录
               </NText>
@@ -730,7 +709,7 @@ onUnmounted(() => {
               >
                 清空全部
               </NButton>
-            </NSpace>
+            </NFlex>
           </template>
 
           <div v-if="localQuestions.length === 0" class="empty-local-questions">
@@ -752,15 +731,15 @@ onUnmounted(() => {
                 hoverable
               >
                 <template #header>
-                  <NSpace :size="8" align="center" justify="space-between">
-                    <NSpace :size="8" align="center">
+                  <NFlex :size="8" align="center" justify="space-between">
+                    <NFlex :size="8" align="center">
                       <NText strong>
                         提给：{{ item.targetUserName }}
                       </NText>
                       <NTag v-if="item.tag" size="small" type="info">
                         {{ item.tag }}
                       </NTag>
-                    </NSpace>
+                    </NFlex>
                     <NButton
                       text
                       type="error"
@@ -771,17 +750,17 @@ onUnmounted(() => {
                         <NIcon :component="DismissCircle24Regular" />
                       </template>
                     </NButton>
-                  </NSpace>
+                  </NFlex>
                 </template>
 
-                <NSpace vertical :size="8">
+                <NFlex vertical :size="8">
                   <div class="local-question-message">
                     {{ item.message }}
                   </div>
 
                   <NDivider style="margin: 8px 0;" />
 
-                  <NSpace :size="4" vertical>
+                  <NFlex :size="4" vertical>
                     <NText depth="3" style="font-size: 12px;">
                       <NTime :time="item.sendAt" format="yyyy-MM-dd HH:mm:ss" />
                     </NText>
@@ -794,8 +773,8 @@ onUnmounted(() => {
                     <NTag v-if="item.hasImage" size="tiny" type="success">
                       包含图片
                     </NTag>
-                  </NSpace>
-                </NSpace>
+                  </NFlex>
+                </NFlex>
               </NCard>
             </NListItem>
           </NList>

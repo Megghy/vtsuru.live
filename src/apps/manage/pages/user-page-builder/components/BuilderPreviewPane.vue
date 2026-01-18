@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { NAlert, NCard, NConfigProvider, NScrollbar } from 'naive-ui'
+import { NAlert, NCard, NConfigProvider, NScrollbar } from 'naive-ui';
 import { computed, inject } from 'vue'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
-import { NButton, NCard, NFlex, NSwitch } from 'naive-ui'
+import { NButton, NCard, NFlex, NSwitch } from 'naive-ui';
 import { onReceivedQuestion } from '@/apps/client/data/notification'
 import { useSettings } from '@/apps/client/store/useSettings'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'

@@ -7,40 +7,7 @@ import { useStorage } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NImage,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NList,
-  NListItem,
-  NModal,
-  NPagination,
-  NPopconfirm,
-  NSelect,
-  NSlider,
-  NSpace,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  NGrid,
-  NGi,
-  NCollapse,
-  NCollapseItem,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NImage, NInput, NInputGroup, NInputGroupLabel, NList, NListItem, NModal, NPagination, NPopconfirm, NSelect, NSlider, NSpin, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage, NGrid, NGi, NCollapse, NCollapseItem, useThemeVars } from 'naive-ui';
 import QrcodeVue from 'qrcode.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -327,7 +294,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             title="通知与提示"
             name="1"
           >
-            <NSpace vertical>
+            <NFlex vertical>
               <NAlert
                 v-if="useQB.reviewing > 0"
                 type="warning"
@@ -348,7 +315,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                   新功能还不稳定, 如果启用后遇到任何问题请向我反馈
                 </NTooltip>
               </NAlert>
-            </NSpace>
+            </NFlex>
           </NCollapseItem>
         </NCollapse>
       </ManagePageHeader>
@@ -428,7 +395,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
               item-style="margin-bottom: 8px;"
             >
               <!-- 左侧操作 -->
-              <NSpace>
+              <NFlex>
                 <NButton
                   type="primary"
                   @click="$router.push({ name: 'question-display' })"
@@ -453,9 +420,9 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                     </NText>
                   </template>
                 </NSelect>
-              </NSpace>
+              </NFlex>
               <!-- 右侧筛选 -->
-              <NSpace>
+              <NFlex>
                 <NCheckbox v-model:checked="useQB.onlyFavorite">
                   只看收藏
                 </NCheckbox>
@@ -465,7 +432,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                 <NCheckbox v-model:checked="useQB.onlyUnread">
                   只看未读
                 </NCheckbox>
-              </NSpace>
+              </NFlex>
             </NFlex>
 
             <NDivider style="margin: 10px 0;" />
@@ -489,7 +456,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
               <!-- 问题列表 -->
               <QuestionItems :questions="pagedQuestions">
                 <template #footer="{ item }">
-                  <NSpace>
+                  <NFlex>
                     <!-- 读/未读 按钮 -->
                     <NButton
                       size="small"
@@ -537,7 +504,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       </template>
                       确认删除这条提问？ 删除后无法恢复。
                     </NPopconfirm>
-                  </NSpace>
+                  </NFlex>
                 </template>
                 <template #header-extra="{ item }">
                   <!-- 回复/查看回复 按钮 -->
@@ -602,7 +569,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       align="center"
                       justify="space-between"
                     >
-                      <NSpace
+                      <NFlex
                         :size="8"
                         align="center"
                       >
@@ -620,7 +587,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                         >
                           {{ item.target.name }}
                         </NButton>
-                      </NSpace>
+                      </NFlex>
                       <NText
                         depth="3"
                         style="font-size: 12px;"
@@ -749,7 +716,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                   is-trash
                 >
                   <template #footer="{ item }">
-                    <NSpace justify="end">
+                    <NFlex justify="end">
                       <!-- 标记为正常 -->
                       <NButton
                         size="small"
@@ -787,7 +754,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                         </template>
                         确认彻底删除这条提问？ 删除后无法恢复。
                       </NPopconfirm>
-                    </NSpace>
+                    </NFlex>
                   </template>
                   <template #header-extra>
                     <!-- 此处垃圾站问题不可回复, 不显示按钮 -->
@@ -810,7 +777,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             >
               <!-- 左侧设置项 -->
               <NGi>
-                <NSpace vertical>
+                <NFlex vertical>
                   <!-- 基础设定 -->
                   <NCard
                     title="基础设定"
@@ -823,7 +790,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                         size="18"
                       />
                     </template>
-                    <NSpace vertical>
+                    <NFlex vertical>
                       <NCheckbox
                         v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
                         :disabled="useQB.isLoading"
@@ -838,7 +805,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       >
                         允许上传图片
                       </NCheckbox>
-                    </NSpace>
+                    </NFlex>
                   </NCard>
 
                   <!-- 内容审查 -->
@@ -879,7 +846,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                     size="small"
                     segmented
                   >
-                    <NSpace vertical>
+                    <NFlex vertical>
                       <NCheckbox
                         v-model:checked="accountInfo.settings.sendEmail.recieveQA"
                         :disabled="useQB.isLoading"
@@ -894,9 +861,9 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                       >
                         我发送的提问收到回复时发送邮件通知
                       </NCheckbox>
-                    </NSpace>
+                    </NFlex>
                   </NCard>
-                </NSpace>
+                </NFlex>
               </NGi>
 
               <!-- 右侧设置项: 标签管理 -->
@@ -963,7 +930,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                           {{ item.name }}
                         </NTag>
                         <!-- 操作按钮 -->
-                        <NSpace size="small">
+                        <NFlex size="small">
                           <NTooltip placement="top">
                             <template #trigger>
                               <NPopconfirm @positive-click="useQB.updateTagVisiable(item.name, !item.visiable)">
@@ -1003,7 +970,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
                             </template>
                             删除标签
                           </NTooltip>
-                        </NSpace>
+                        </NFlex>
                       </NFlex>
                     </NListItem>
                   </NList>
@@ -1040,7 +1007,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         {{ useQB.currentQuestion.question?.message }}
       </NCard>
       <NDivider style="margin: 15px 0;" />
-      <NSpace vertical>
+      <NFlex vertical>
         <NInput
           v-model:value="replyMessage"
           placeholder="请输入回复内容..."
@@ -1058,7 +1025,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             公开这条提问和我的回复 (其他人可在你的提问页看到)
           </NCheckbox>
         </NSpin>
-      </NSpace>
+      </NFlex>
       <NDivider style="margin: 15px 0;" />
       <NFlex justify="end">
         <NButton @click="replyModalVisiable = false">
@@ -1128,7 +1095,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     <NDivider style="margin-top: 20px; margin-bottom: 10px;">
       分享链接设置
     </NDivider>
-    <NSpace vertical>
+    <NFlex vertical>
       <NSelect
         v-model:value="selectedShareTag"
         placeholder="选择要附加到链接的话题 (可选)"
@@ -1137,7 +1104,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
         style="width: 100%;"
       />
-    </NSpace>
+    </NFlex>
 
     <NDivider style="margin-top: 20px; margin-bottom: 10px;">
       分享链接
@@ -1157,7 +1124,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     </NInputGroup>
 
     <NDivider style="margin-top: 20px; margin-bottom: 15px;" />
-    <NSpace justify="center">
+    <NFlex justify="center">
       <NButton
         type="primary"
         @click="saveShareImage"
@@ -1171,7 +1138,7 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
       >
         保存二维码
       </NButton>
-    </NSpace>
+    </NFlex>
   </NModal>
 
   <!-- OBS预览模态框 -->

@@ -5,7 +5,7 @@ import type {
 } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { NDivider, NEmpty, NMessageProvider } from 'naive-ui'
+import { NDivider, NEmpty, NMessageProvider } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'

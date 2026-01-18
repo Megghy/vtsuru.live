@@ -1,4 +1,4 @@
-import { NButton, NFlex, NText } from 'naive-ui'
+import { NButton, NFlex, NText } from 'naive-ui';
 import { h } from 'vue'
 import { GetSelfAccount, UpdateAccountLoop, useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'

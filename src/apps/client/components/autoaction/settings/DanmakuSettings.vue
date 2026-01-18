@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NCollapseItem, NDivider, NInput, NRadioButton, NRadioGroup, NSpace, NTag, useMessage } from 'naive-ui'
+import { NButton, NCollapseItem, NDivider, NInput, NRadioButton, NRadioGroup, NFlex, NTag, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 import { KeywordMatchType } from '@/apps/client/store/autoAction/types'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
@@ -80,11 +80,11 @@ function removeBlockword(index: number) {
     v-if="action.triggerType === TriggerType.DANMAKU"
     title="自动回复设置"
   >
-    <NSpace vertical>
+    <NFlex vertical>
       <div class="section-title">
         触发关键词:
       </div>
-      <NSpace>
+      <NFlex>
         <NInput
           v-model:value="tempKeyword"
           placeholder="输入关键词"
@@ -93,9 +93,9 @@ function removeBlockword(index: number) {
         <NButton @click="addKeyword">
           添加
         </NButton>
-      </NSpace>
+      </NFlex>
 
-      <NSpace align="center">
+      <NFlex align="center">
         <span>匹配方式:</span>
         <NRadioGroup
           v-model:value="action.triggerConfig.keywordMatchType"
@@ -111,9 +111,9 @@ function removeBlockword(index: number) {
             正则
           </NRadioButton>
         </NRadioGroup>
-      </NSpace>
+      </NFlex>
 
-      <NSpace>
+      <NFlex>
         <template v-if="action.triggerConfig.keywords">
           <NTag
             v-for="(keyword, index) in action.triggerConfig.keywords"
@@ -124,14 +124,14 @@ function removeBlockword(index: number) {
             {{ keyword }}
           </NTag>
         </template>
-      </NSpace>
+      </NFlex>
 
       <NDivider />
 
       <div class="section-title">
         屏蔽词:
       </div>
-      <NSpace>
+      <NFlex>
         <NInput
           v-model:value="tempBlockword"
           placeholder="输入屏蔽词"
@@ -140,9 +140,9 @@ function removeBlockword(index: number) {
         <NButton @click="addBlockword">
           添加
         </NButton>
-      </NSpace>
+      </NFlex>
 
-      <NSpace align="center">
+      <NFlex align="center">
         <span>匹配方式:</span>
         <NRadioGroup
           v-model:value="action.triggerConfig.blockwordMatchType"
@@ -158,9 +158,9 @@ function removeBlockword(index: number) {
             正则
           </NRadioButton>
         </NRadioGroup>
-      </NSpace>
+      </NFlex>
 
-      <NSpace>
+      <NFlex>
         <template v-if="action.triggerConfig.blockwords">
           <NTag
             v-for="(blockword, index) in action.triggerConfig.blockwords"
@@ -172,8 +172,8 @@ function removeBlockword(index: number) {
             {{ blockword }}
           </NTag>
         </template>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCollapseItem>
 </template>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton } from 'naive-ui'
+import { NAlert, NButton } from 'naive-ui';
 import { useAccount } from '@/api/account'
 
 const accountInfo = useAccount()

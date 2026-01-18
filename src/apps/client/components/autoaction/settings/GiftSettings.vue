@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NCollapseItem, NInput, NInputNumber, NSelect, NSpace, NSwitch, NTag, useMessage } from 'naive-ui'
+import { NButton, NCollapseItem, NInput, NInputNumber, NSelect, NFlex, NSwitch, NTag, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -54,8 +54,8 @@ function removeGiftName(index: number) {
     v-if="action.triggerType === TriggerType.GIFT"
     title="礼物触发设置"
   >
-    <NSpace vertical>
-      <NSpace
+    <NFlex vertical>
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -66,10 +66,10 @@ function removeGiftName(index: number) {
           style="width: 200px"
           :options="giftFilterModeOptions"
         />
-      </NSpace>
+      </NFlex>
 
       <template v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'">
-        <NSpace>
+        <NFlex>
           <NInput
             v-model:value="tempGiftName"
             placeholder="输入礼物名称"
@@ -78,9 +78,9 @@ function removeGiftName(index: number) {
           <NButton @click="addGiftName">
             添加
           </NButton>
-        </NSpace>
+        </NFlex>
 
-        <NSpace>
+        <NFlex>
           <template v-if="action.triggerConfig.filterGiftNames">
             <NTag
               v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
@@ -91,11 +91,11 @@ function removeGiftName(index: number) {
               {{ giftName }}
             </NTag>
           </template>
-        </NSpace>
+        </NFlex>
       </template>
 
       <template v-if="action.triggerConfig.filterMode === 'value'">
-        <NSpace
+        <NFlex
           align="center"
           justify="space-between"
           style="width: 100%"
@@ -106,19 +106,19 @@ function removeGiftName(index: number) {
             :min="0"
             style="width: 120px"
           />
-        </NSpace>
+        </NFlex>
       </template>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
       >
         <span>包含礼物数量:</span>
         <NSwitch v-model:value="action.triggerConfig.includeQuantity" />
-      </NSpace>
+      </NFlex>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -130,9 +130,9 @@ function removeGiftName(index: number) {
           :max="20"
           style="width: 120px"
         />
-      </NSpace>
+      </NFlex>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -144,7 +144,7 @@ function removeGiftName(index: number) {
           :max="10"
           style="width: 120px"
         />
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCollapseItem>
 </template>

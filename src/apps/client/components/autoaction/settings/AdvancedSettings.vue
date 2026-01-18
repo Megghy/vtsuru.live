@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapse, NCollapseItem, NInput, NInputNumber, NSpace, NSwitch } from 'naive-ui'
+import { NCollapse, NCollapseItem, NInput, NInputNumber, NFlex, NSwitch } from 'naive-ui';
 import { computed } from 'vue'
 import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
@@ -77,12 +77,12 @@ const customJsModified = computed(() => {
       :class="{ 'section-modified': userFilterModified }"
     >
       <div>
-        <NSpace
+        <NFlex
           key="user-filter-enabled"
           vertical
           class="settings-subsection"
         >
-          <NSpace
+          <NFlex
             align="center"
             justify="space-between"
             style="width: 100%"
@@ -90,10 +90,10 @@ const customJsModified = computed(() => {
           >
             <span>启用用户过滤:</span>
             <NSwitch v-model:value="action.triggerConfig.userFilterEnabled" />
-          </NSpace>
+          </NFlex>
 
           <template v-if="action.triggerConfig.userFilterEnabled">
-            <NSpace
+            <NFlex
               key="require-medal"
               align="center"
               justify="space-between"
@@ -102,9 +102,9 @@ const customJsModified = computed(() => {
             >
               <span>要求本房间勋章:</span>
               <NSwitch v-model:value="action.triggerConfig.requireMedal" />
-            </NSpace>
+            </NFlex>
 
-            <NSpace
+            <NFlex
               key="require-captain"
               align="center"
               justify="space-between"
@@ -113,9 +113,9 @@ const customJsModified = computed(() => {
             >
               <span>要求任意舰长:</span>
               <NSwitch v-model:value="action.triggerConfig.requireCaptain" />
-            </NSpace>
+            </NFlex>
           </template>
-        </NSpace>
+        </NFlex>
       </div>
     </NCollapseItem>
 
@@ -127,7 +127,7 @@ const customJsModified = computed(() => {
       :class="{ 'section-modified': cooldownModified }"
     >
       <div>
-        <NSpace
+        <NFlex
           key="ignore-cooldown"
           align="center"
           justify="space-between"
@@ -136,9 +136,9 @@ const customJsModified = computed(() => {
         >
           <span>忽略全局冷却:</span>
           <NSwitch v-model:value="action.ignoreCooldown" />
-        </NSpace>
+        </NFlex>
 
-        <NSpace
+        <NFlex
           key="delay-seconds"
           align="center"
           justify="space-between"
@@ -152,9 +152,9 @@ const customJsModified = computed(() => {
             :max="600"
             style="width: 120px"
           />
-        </NSpace>
+        </NFlex>
 
-        <NSpace
+        <NFlex
           key="cooldown-seconds"
           align="center"
           justify="space-between"
@@ -168,7 +168,7 @@ const customJsModified = computed(() => {
             :max="3600"
             style="width: 120px"
           />
-        </NSpace>
+        </NFlex>
       </div>
     </NCollapseItem>
 
@@ -180,7 +180,7 @@ const customJsModified = computed(() => {
       :class="{ 'section-modified': logicalExpressionModified }"
     >
       <div>
-        <NSpace vertical>
+        <NFlex vertical>
           <p class="description">
             当表达式为真时才会执行此操作。可使用JS语法，例如: <code>user.guardLevel > 0 || gift.price > 10</code>
           </p>
@@ -191,7 +191,7 @@ const customJsModified = computed(() => {
             :autosize="{ minRows: 2, maxRows: 5 }"
             :class="{ 'input-modified': isModified('logicalExpression', action.logicalExpression) }"
           />
-        </NSpace>
+        </NFlex>
       </div>
     </NCollapseItem>
 
@@ -203,7 +203,7 @@ const customJsModified = computed(() => {
       :class="{ 'section-modified': customJsModified }"
     >
       <div>
-        <NSpace vertical>
+        <NFlex vertical>
           <p class="description">
             可访问 context, event, biliFunc, roomId 等变量
           </p>
@@ -214,7 +214,7 @@ const customJsModified = computed(() => {
             :autosize="{ minRows: 3, maxRows: 8 }"
             :class="{ 'input-modified': isModified('executeCommand', action.executeCommand) }"
           />
-        </NSpace>
+        </NFlex>
       </div>
     </NCollapseItem>
   </NCollapse>

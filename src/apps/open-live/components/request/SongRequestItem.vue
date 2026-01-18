@@ -1,24 +1,9 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
 import type { SongRequestInfo } from '@/api/api-models'
+import { Checkmark12Regular, Dismiss16Filled, Mic24Filled, Play24Filled, PresenceBlocked16Regular, } from '@vicons/fluent'
 import {
-  Checkmark12Regular,
-  Dismiss16Filled,
-  Mic24Filled,
-  Play24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NIcon,
-  NPopconfirm,
-  NSpace,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+  NButton, NCard, NIcon, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, inject } from 'vue'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
@@ -104,9 +89,9 @@ const hasOtherSingSong = computed(() => {
     :bordered="isSingingStatus"
     :style="isSingingStatus ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
   >
-    <NSpace justify="space-between" align="center" :wrap="false">
+    <NFlex justify="space-between" align="center" :wrap="false">
       <!-- 左侧信息 -->
-      <NSpace align="center" :size="8" :wrap="false">
+      <NFlex align="center" :size="8" :wrap="false">
         <!-- 序号 -->
         <span :style="getIndexStyle(song.status)">
           {{ index }}
@@ -183,10 +168,10 @@ const hasOtherSingSong = computed(() => {
           </template>
           <NTime :time="song.createAt" />
         </NTooltip>
-      </NSpace>
+      </NFlex>
 
       <!-- 右侧操作按钮 -->
-      <NSpace justify="end" align="center" :size="6" :wrap="false">
+      <NFlex justify="end" align="center" :size="6" :wrap="false">
         <NTooltip v-if="hasSong">
           <template #trigger>
             <NButton
@@ -272,7 +257,7 @@ const hasOtherSingSong = computed(() => {
           </template>
           拉黑
         </NTooltip>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCard>
 </template>

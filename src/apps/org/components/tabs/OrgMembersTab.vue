@@ -1,23 +1,5 @@
 <script setup lang="ts">
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NEmpty,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSelect,
-  NSkeleton,
-  NSpace,
-  NTag,
-  NTime,
-} from 'naive-ui'
+import { NAvatar, NButton, NCard, NCollapse, NCollapseItem, NEmpty, NIcon, NInput, NInputNumber, NList, NListItem, NPopconfirm, NSelect, NSkeleton, NFlex, NTag, NTime } from 'naive-ui';
 import { CopyOutline, SearchOutline, TrashOutline } from '@vicons/ionicons5'
 import UserAutocompleteSelect from '@/components/common/UserAutocompleteSelect.vue'
 
@@ -62,8 +44,8 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
       <NCollapse style="margin-bottom: 16px;">
         <NCollapseItem title="邀请成员" name="1">
           <NCard size="small" embedded :bordered="false">
-            <NSpace vertical>
-              <NSpace align="center">
+            <NFlex vertical>
+              <NFlex align="center">
                 <NSelect
                   v-model:value="memberInviteRole"
                   style="width: 120px;"
@@ -80,8 +62,8 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
                   placeholder="输入B站UID/用户名搜索成员(可选)"
                   @error="(m) => props.onUserSearchError(m)"
                 />
-              </NSpace>
-              <NSpace align="center">
+              </NFlex>
+              <NFlex align="center">
                 <NInputNumber v-model:value="memberInviteExpireDays" placeholder="有效期(天)" :min="1" size="small" />
                 <NPopconfirm @positive-click="props.createMemberInvite">
                   <template #trigger>
@@ -91,9 +73,9 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
                   </template>
                   确定要发送成员邀请吗？
                 </NPopconfirm>
-              </NSpace>
+              </NFlex>
               <div v-if="props.memberInviteUrl">
-                <NSpace>
+                <NFlex>
                   <NInput :value="props.memberInviteUrl" readonly size="small" placeholder="邀请链接" />
                   <NButton size="small" secondary type="success" @click="props.copyToClipboard(props.memberInviteUrl)">
                     <template #icon>
@@ -101,9 +83,9 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
                     </template>
                     复制
                   </NButton>
-                </NSpace>
+                </NFlex>
               </div>
-            </NSpace>
+            </NFlex>
           </NCard>
         </NCollapseItem>
       </NCollapse>
@@ -147,7 +129,7 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
                 <span>使用次数: {{ inv.usedCount }}<template v-if="inv.lastUsedAt">, 最近使用: <NTime :time="inv.lastUsedAt" format="yyyy-MM-dd HH:mm" /></template></span>
               </div>
 
-              <NSpace>
+              <NFlex>
                 <NInput :value="inv.joinUrl" readonly size="small" placeholder="邀请链接" />
                 <NButton size="small" secondary type="success" @click="props.copyToClipboard(inv.joinUrl)">
                   <template #icon>
@@ -155,7 +137,7 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
                   </template>
                   复制
                 </NButton>
-              </NSpace>
+              </NFlex>
             </div>
           </NListItem>
         </NList>
@@ -163,13 +145,13 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
     </template>
 
     <NCard size="small" style="margin-bottom: 12px; background: transparent;" :bordered="false">
-      <NSpace align="center" justify="start">
+      <NFlex align="center" justify="start">
         <NInput v-model:value="memberSearch" placeholder="搜索成员名称或ID" size="small" style="width: 200px">
           <template #prefix>
             <NIcon :component="SearchOutline" />
           </template>
         </NInput>
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <template v-if="props.filteredMembers.length === 0">
@@ -179,7 +161,7 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
     <NList v-else hoverable>
       <NListItem v-for="m in props.filteredMembers" :key="m.user.id">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-          <NSpace align="center">
+          <NFlex align="center">
             <NAvatar
               round
               :size="40"
@@ -188,18 +170,18 @@ const memberSearch = defineModel<string>('memberSearch', { required: true })
               fallback-src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
               style="border: 1px solid var(--n-divider-color);"
             />
-            <NSpace vertical :size="2">
+            <NFlex vertical :size="2">
               <div style="font-weight: 600;">
                 {{ m.user.name }}
               </div>
               <div style="font-size: 12px; opacity: 0.6;">
                 ID: {{ m.user.id }}
               </div>
-            </NSpace>
+            </NFlex>
             <NTag :bordered="false" size="small" type="info">
               {{ props.roleLabel(m.role) }}
             </NTag>
-          </NSpace>
+          </NFlex>
 
           <div style="display: flex; align-items: center; gap: 12px;">
             <span style="font-size: 12px; opacity: 0.7;">

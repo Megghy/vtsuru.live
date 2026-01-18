@@ -2,20 +2,7 @@
 import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
 import { Add24Filled, Delete24Filled, Pause24Filled, Play24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
 import {
-  NButton,
-  NCheckbox,
-  NCollapseTransition,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSpace,
-} from 'naive-ui'
-
+  NButton, NCheckbox, NCollapseTransition, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NRadioButton, NRadioGroup, NFlex } from 'naive-ui';
 defineProps<{
   option: LotteryOption
   isStartLottery: boolean
@@ -40,10 +27,10 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 <template>
   <div class="settings-wrapper">
     <div class="settings-header">
-      <NSpace align="center">
+      <NFlex align="center">
         <NIcon :component="Sparkle24Filled" color="var(--n-warning-color)" />
         <span style="font-weight: bold; font-size: 16px">抽奖设置</span>
-      </NSpace>
+      </NFlex>
       <NButton
         size="tiny"
         secondary
@@ -124,7 +111,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             </template>
 
             <NFormItem label="身份限制">
-              <NSpace>
+              <NFlex>
                 <NCheckbox v-model:checked="option.needGuard" :disabled="isStartLottery">
                   舰长
                 </NCheckbox>
@@ -134,7 +121,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                 <NCheckbox v-model:checked="option.needWearFanMedal" :disabled="isStartLottery">
                   佩戴
                 </NCheckbox>
-              </NSpace>
+              </NFlex>
             </NFormItem>
 
             <NCollapseTransition :show="option.needFanMedal">

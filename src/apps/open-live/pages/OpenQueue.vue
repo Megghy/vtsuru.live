@@ -10,47 +10,13 @@ import type {
   ResponseQueueModel,
   Setting_Queue,
 } from '@/api/api-models'
-import {
-  Checkmark12Regular,
-  ClipboardTextLtr24Filled,
-  Delete24Filled,
-  Dismiss16Filled,
-  Info24Filled,
-  PeopleQueue24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
+import { Checkmark12Regular, ClipboardTextLtr24Filled, Delete24Filled, Dismiss16Filled, Info24Filled, PeopleQueue24Filled, PresenceBlocked16Regular, } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { useStorage } from '@vueuse/core'
 import { isSameDay } from 'date-fns'
 import { List } from 'linqts'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useNotification,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage, useNotification } from 'naive-ui';
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
@@ -790,7 +756,7 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
         ),
       )
 
-      return h(NSpace, { justify: 'center', size: 4 }, () => buttons) // 减小间距
+      return h(NFlex, { justify: 'center', size: 4 }, () => buttons) // 减小间距
     },
   },
 ])
@@ -1027,7 +993,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
     <!-- 顶部功能开关与全局操作 -->
     <NCard v-if="accountInfo?.id" size="small" bordered>
       <template #header>
-        <NSpace align="center">
+        <NFlex align="center">
           <NText>启用弹幕队列功能</NText>
           <NSwitch
             size="small"
@@ -1035,7 +1001,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
             :loading="isLoading"
             @update:value="onUpdateFunctionEnable"
           />
-        </NSpace>
+        </NFlex>
       </template>
       <NAlert
         v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.Queue)"
@@ -1100,14 +1066,14 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
             size="small"
             :bordered="false"
           >
-            <NSpace
+            <NFlex
               align="center"
               justify="space-between"
               wrap
               :item-style="{ marginBottom: '8px' }"
             >
               <!-- 队列统计信息 -->
-              <NSpace align="center">
+              <NFlex align="center">
                 <NTag
                   type="info"
                   :bordered="false"
@@ -1130,7 +1096,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                   {{ historySongs.filter((s) => s.status === QueueStatus.Finish && isSameDay(s.finishAt ?? 0, Date.now())).length }}
                   人
                 </NTag>
-              </NSpace>
+              </NFlex>
 
               <!-- 手动添加 -->
               <NInputGroup style="max-width: 250px;">
@@ -1151,7 +1117,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
               </NInputGroup>
 
               <!-- 排序和操作 -->
-              <NSpace align="center">
+              <NFlex align="center">
                 <NPopconfirm @positive-click="deactiveAllSongs">
                   <template #trigger>
                     <NButton
@@ -1198,8 +1164,8 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                 >
                   倒序
                 </NCheckbox>
-              </NSpace>
-            </NSpace>
+              </NFlex>
+            </NFlex>
           </NCard>
 
           <NDivider style="margin: 10px 0;" />
@@ -1223,13 +1189,13 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                     :bordered="queueData.status === QueueStatus.Progressing"
                     :style="queueData.status === QueueStatus.Progressing ? 'border-left: 4px solid var(--n-success-color);' : 'border-left: 4px solid transparent;'"
                   >
-                    <NSpace
+                    <NFlex
                       justify="space-between"
                       align="center"
                       :wrap="false"
                     >
                       <!-- 左侧信息 -->
-                      <NSpace
+                      <NFlex
                         align="center"
                         :size="8"
                         :wrap="false"
@@ -1333,10 +1299,10 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                             format="yyyy-MM-dd HH:mm:ss"
                           />
                         </NTooltip>
-                      </NSpace>
+                      </NFlex>
 
                       <!-- 右侧操作按钮 -->
-                      <NSpace
+                      <NFlex
                         justify="end"
                         align="center"
                         :size="6"
@@ -1432,8 +1398,8 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                           </template>
                           取消排队
                         </NTooltip>
-                      </NSpace>
-                    </NSpace>
+                      </NFlex>
+                    </NFlex>
                   </NCard>
                   <NDivider style="margin: 0" />
                 </div>
@@ -1457,11 +1423,11 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
             :bordered="false"
             style="margin-bottom: 10px;"
           >
-            <NSpace
+            <NFlex
               align="center"
               justify="space-between"
             >
-              <NSpace align="center">
+              <NFlex align="center">
                 <NInputGroup style="width: 300px">
                   <NInputGroupLabel> 筛选用户 </NInputGroupLabel>
                   <NInput
@@ -1473,7 +1439,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                 <NCheckbox v-model:checked="filterNameContains">
                   模糊匹配
                 </NCheckbox>
-              </NSpace>
+              </NFlex>
               <NButton
                 size="small"
                 type="error"
@@ -1483,7 +1449,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
               >
                 清空所有历史记录
               </NButton>
-            </NSpace>
+            </NFlex>
           </NCard>
           <NDataTable
             ref="table"

@@ -1,39 +1,11 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
 import type { Setting_QuestionDisplay } from '@/api/api-models'
-import {
-  ArrowCircleLeft12Filled,
-  ArrowCircleRight12Filled,
-  Info24Filled,
-  TextAlignCenter16Filled,
-  TextAlignLeft16Filled,
-  TextAlignRight16Filled,
-} from '@vicons/fluent'
+import { ArrowCircleLeft12Filled, ArrowCircleRight12Filled, Info24Filled, TextAlignCenter16Filled, TextAlignLeft16Filled, TextAlignRight16Filled, } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
 import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NColorPicker,
-  NDivider,
-  NDrawer,
-  NDrawerContent,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NButton, NCard, NCheckbox, NColorPicker, NDivider, NDrawer, NDrawerContent, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NRadioButton, NRadioGroup, NScrollbar, NSelect, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { QuestionDisplayAlign } from '@/api/api-models'

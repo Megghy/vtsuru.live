@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
+import { NSpin } from 'naive-ui';
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { useWebFetcher } from '@/store/useWebFetcher'

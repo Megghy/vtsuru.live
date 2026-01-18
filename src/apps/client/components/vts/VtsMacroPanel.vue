@@ -1,20 +1,5 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NCard,
-  NDivider,
-  NDropdown,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSwitch,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { NButton, NCard, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NSelect, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsMacro, VtsMacroStep } from '@/apps/client/store/useVtsStore'

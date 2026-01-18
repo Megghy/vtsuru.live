@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { VNode } from 'vue'
 import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
-import { NDivider, NGrid } from 'naive-ui'
+import { NDivider, NGrid } from 'naive-ui';
 import { updateNotes } from '@/shared/services/UpdateNote'
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {

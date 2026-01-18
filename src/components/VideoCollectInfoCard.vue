@@ -5,17 +5,7 @@ import type {
 import type { VideoCollectTable } from '@/api/api-models'
 import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
 import {
-  NCard,
-  NCountdown,
-  NDivider,
-  NEllipsis,
-  NIcon,
-  NSpace,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+  NCard, NCountdown, NDivider, NEllipsis, NIcon, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { CURRENT_HOST } from '@/shared/config'
 import router from '@/app/router'
 
@@ -49,7 +39,7 @@ function onClick() {
     @click="onClick"
   >
     <template #header>
-      <NSpace :size="5">
+      <NFlex :size="5">
         <NTag
           v-if="item.isFinish"
           size="small"
@@ -65,7 +55,7 @@ function onClick() {
         </NTag>
         <NDivider vertical />
         {{ item.name }}
-      </NSpace>
+      </NFlex>
     </template>
     <template #header-extra>
       <slot name="header-extra" />
@@ -91,11 +81,11 @@ function onClick() {
       </NEllipsis>
     </NText>
     <template #footer>
-      <NSpace
+      <NFlex
         :size="5"
         align="center"
       >
-        <NSpace>
+        <NFlex>
           <NIcon :component="NumberRow24Regular" />
           <NTooltip>
             <template #trigger>
@@ -103,10 +93,10 @@ function onClick() {
             </template>
             已征集数量 / 最大征集数量
           </NTooltip>
-        </NSpace>
+        </NFlex>
         <template v-if="!item.isFinish">
           <NDivider vertical />
-          <NSpace>
+          <NFlex>
             <NIcon :component="Clock24Regular" />
             <NTooltip>
               <template #trigger>
@@ -119,9 +109,9 @@ function onClick() {
               </template>
               结束于 <NTime :time="item.endAt" />
             </NTooltip>
-          </NSpace>
+          </NFlex>
         </template>
-      </NSpace>
+      </NFlex>
     </template>
   </NCard>
 </template>

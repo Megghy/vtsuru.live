@@ -5,31 +5,7 @@ import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24F
 import { useDebounceFn, useLocalStorage } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import {
-  NAvatar,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NCollapse,
-  NCollapseItem,
-  NCollapseTransition,
-  NDivider,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSkeleton,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAvatar, NButton, NCard, NCheckbox, NCheckboxGroup, NCollapse, NCollapseItem, NCollapseTransition, NDivider, NIcon, NInput, NInputNumber, NList, NListItem, NModal, NRadioButton, NRadioGroup, NSkeleton, NFlex, NSpin, NSwitch, NTag, NTooltip, useMessage } from 'naive-ui';
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -479,7 +455,7 @@ defineExpose({
         导出
       </template>
       <NSpin :show="isExporting">
-        <NSpace
+        <NFlex
           vertical
           align="center"
         >
@@ -543,7 +519,7 @@ defineExpose({
             </NCollapseItem>
           </NCollapse>
           <span style="color: gray" />
-        </NSpace>
+        </NFlex>
       </NSpin>
     </NModal>
     <NCard
@@ -606,11 +582,11 @@ defineExpose({
         <br v-else>
       </template>
       <NCollapseTransition :show="innerShowTools && !isRanking">
-        <NSpace
+        <NFlex
           vertical
           style="padding-bottom: 16px"
         >
-          <NSpace align="center">
+          <NFlex align="center">
             <NButton
               type="primary"
               size="small"
@@ -642,8 +618,8 @@ defineExpose({
             >
               按价格排序
             </NCheckbox>
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <NInput
               v-model:value="keyword"
               size="small"
@@ -668,8 +644,8 @@ defineExpose({
             >
               反选
             </NCheckbox>
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <NInputNumber
               v-model:value="price"
               placeholder="最低价格"
@@ -723,12 +699,12 @@ defineExpose({
             >
               100
             </NTag>
-          </NSpace>
+          </NFlex>
           <NCheckboxGroup
             v-model:value="filterSelected"
             @update:value="UpdateDanmakus"
           >
-            <NSpace>
+            <NFlex>
               <NCheckbox
                 :value="EventDataTypes.Message"
                 label="弹幕"
@@ -751,9 +727,9 @@ defineExpose({
                 :value="EventDataTypes.Enter"
                 label="入场"
               />
-            </NSpace>
+            </NFlex>
           </NCheckboxGroup>
-        </NSpace>
+        </NFlex>
         <NDivider
           style="margin-top: 0px; margin-bottom: 12px"
           title-placement="left"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NDivider } from 'naive-ui'
+import { NDivider } from 'naive-ui';
 import { computed } from 'vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()

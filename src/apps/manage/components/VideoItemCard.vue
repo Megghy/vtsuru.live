@@ -3,17 +3,7 @@ import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
 import { VideoStatus } from '@/api/api-models'
 import { Clock24Filled, Person24Filled } from '@vicons/fluent'
 import {
-  NButton,
-  NCard,
-  NEllipsis,
-  NIcon,
-  NPopconfirm,
-  NScrollbar,
-  NSpace,
-  NTag,
-  NText,
-} from 'naive-ui'
-
+  NButton, NCard, NEllipsis, NIcon, NPopconfirm, NScrollbar, NFlex, NTag, NText } from 'naive-ui';
 const props = defineProps<{
   videoInfo: VideoInfo
   videoData: VideoCollectVideo
@@ -141,7 +131,7 @@ function openVideo() {
 
       <div class="action-area">
         <template v-if="type === 'padding'">
-          <NSpace
+          <NFlex
             justify="space-between"
             :wrap="false"
           >
@@ -167,11 +157,11 @@ function openVideo() {
             >
               拒绝
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
 
         <template v-if="type === 'accept'">
-          <NSpace
+          <NFlex
             justify="space-between"
             :wrap="false"
           >
@@ -199,11 +189,11 @@ function openVideo() {
               </template>
               确定要拒绝这个已通过的视频吗？
             </NPopconfirm>
-          </NSpace>
+          </NFlex>
         </template>
 
         <template v-if="type === 'reject'">
-          <NSpace
+          <NFlex
             justify="space-between"
             :wrap="false"
           >
@@ -227,7 +217,7 @@ function openVideo() {
             >
               重置
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
       </div>
     </div>

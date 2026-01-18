@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NCollapse, NCollapseItem, NDivider, NInput, NLi, NModal, NSpace, NUl } from 'naive-ui'
+import { NAlert, NCollapse, NCollapseItem, NDivider, NInput, NLi, NModal, NFlex, NUl } from 'naive-ui';
 import { computed } from 'vue'
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
@@ -33,7 +33,7 @@ const url = computed(() => {
     closable
     content-style="overflow: auto"
   >
-    <NSpace vertical :size="12">
+    <NFlex vertical :size="12">
       <NAlert title="这是什么？" type="info" size="small" :bordered="false">
         将抽奖等待队列与结果显示在 OBS 的浏览器源中。
       </NAlert>
@@ -57,7 +57,7 @@ const url = computed(() => {
           </NUl>
         </NCollapseItem>
       </NCollapse>
-    </NSpace>
+    </NFlex>
   </NModal>
 </template>
 

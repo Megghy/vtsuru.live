@@ -1,46 +1,12 @@
 <script lang="ts" setup>
-import {
-  ChatbubblesOutline,
-  PeopleOutline,
-  RefreshOutline,
-  TimeOutline,
-  TrendingDown,
-  TrendingUp,
-  WalletOutline,
-} from '@vicons/ionicons5'
+import { ChatbubblesOutline, PeopleOutline, RefreshOutline, TimeOutline, TrendingDown, TrendingUp, WalletOutline, } from '@vicons/ionicons5'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
-  DataZoomComponent,
-  GridComponent,
-  LegendComponent,
-  MarkLineComponent,
-  MarkPointComponent,
-  TitleComponent,
-  TooltipComponent,
-} from 'echarts/components'
+  DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent, } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NDescriptions,
-  NDescriptionsItem,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NNumberAnimation,
-  NProgress,
-  NSkeleton,
-  NSpace,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NButton, NCard, NCheckbox, NCheckboxGroup, NDescriptions, NDescriptionsItem, NEmpty, NGrid, NGridItem, NIcon, NNumberAnimation, NProgress, NSkeleton, NFlex, NTag, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { ANALYZE_API_URL } from '@/shared/config'
@@ -553,11 +519,11 @@ onUnmounted(() => {
       <NCard size="small" title="趋势分析" class="chart-card" style="margin-top: 16px;">
         <template #header-extra>
           <NCheckboxGroup v-model:value="selectedMetrics">
-            <NSpace>
+            <NFlex>
               <NCheckbox v-for="metric in chartMetrics" :key="metric.value" :value="metric.value">
                 <span :style="{ color: metric.color }">{{ metric.label }}</span>
               </NCheckbox>
-            </NSpace>
+            </NFlex>
           </NCheckboxGroup>
         </template>
         <div ref="chartRef" class="main-chart" />

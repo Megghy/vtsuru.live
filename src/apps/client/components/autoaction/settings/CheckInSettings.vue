@@ -3,7 +3,7 @@ import type { DataTableColumns } from 'naive-ui'
 import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
 
 import { Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NDataTable, NDivider, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NSpace, NSpin, NSwitch, NTabPane, NTabs, NText, NTime, NTooltip } from 'naive-ui'
+import { NAlert, NButton, NCard, NDataTable, NDivider, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputNumber, NPopconfirm, NSelect, NFlex, NSpin, NSwitch, NTabPane, NTabs, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, h, onMounted, ref } from 'vue'
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
@@ -684,13 +684,13 @@ onMounted(() => {
         tab="签到排行榜"
       >
         <div class="checkin-ranking">
-          <NSpace vertical>
+          <NFlex vertical>
             <NAlert type="info">
               显示用户签到排行榜，包括连续签到天数和积分情况。选择时间段可查看不同期间的签到情况。
             </NAlert>
 
             <div class="ranking-filter">
-              <NSpace align="center">
+              <NFlex align="center">
                 <span>时间段：</span>
                 <NSelect
                   v-model:value="timeRange"
@@ -714,7 +714,7 @@ onMounted(() => {
                 >
                   刷新排行榜
                 </NButton>
-              </NSpace>
+              </NFlex>
             </div>
 
             <NDataTable
@@ -735,12 +735,12 @@ onMounted(() => {
             <NDivider />
 
             <div class="ranking-actions">
-              <NSpace vertical>
+              <NFlex vertical>
                 <NAlert type="warning">
                   以下操作将重置用户的签到记录，请谨慎操作。重置后数据无法恢复。
                 </NAlert>
 
-                <NSpace justify="end">
+                <NFlex justify="end">
                   <NPopconfirm @positive-click="resetAllCheckIn">
                     <template #trigger>
                       <NButton
@@ -758,10 +758,10 @@ onMounted(() => {
                       </div>
                     </template>
                   </NPopconfirm>
-                </NSpace>
-              </NSpace>
+                </NFlex>
+              </NFlex>
             </div>
-          </NSpace>
+          </NFlex>
         </div>
       </NTabPane>
 
@@ -770,7 +770,7 @@ onMounted(() => {
         tab="测试签到"
       >
         <div class="test-checkin">
-          <NSpace vertical>
+          <NFlex vertical>
             <NAlert type="info">
               在此可以模拟用户签到，测试签到功能是否正常工作。
             </NAlert>
@@ -813,7 +813,7 @@ onMounted(() => {
             >
               <NText>{{ testResult.message }}</NText>
             </NCard>
-          </NSpace>
+          </NFlex>
         </div>
       </NTabPane>
     </NTabs>

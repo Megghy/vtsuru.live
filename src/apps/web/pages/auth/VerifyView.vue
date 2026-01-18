@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AccountInfo } from '@/api/api-models'
-import { NButton, NCard, NLayoutContent, NSpace, useMessage } from 'naive-ui'
+import { NButton, NCard, NLayoutContent, NFlex, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ACCOUNT } from '@/api/account'
@@ -49,7 +49,7 @@ async function VerifyAccount() {
         <template #header>
           激活账户
         </template>
-        <NSpace
+        <NFlex
           justify="center"
           align="center"
           vertical
@@ -62,7 +62,7 @@ async function VerifyAccount() {
           >
             进行账户激活
           </NButton>
-        </NSpace>
+        </NFlex>
       </NCard>
     </div>
   </NLayoutContent>

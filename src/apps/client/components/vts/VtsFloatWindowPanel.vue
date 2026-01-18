@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NInputNumber, NSwitch, NText, useMessage } from 'naive-ui'
+import { NAlert, NButton, NCard, NFlex, NInputNumber, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, onMounted } from 'vue'
 import { useVtsFloatWindow } from '@/apps/client/store/useVtsFloatWindow'
 

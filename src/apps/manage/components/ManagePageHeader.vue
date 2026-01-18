@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { FunctionTypes } from '@/api/api-models'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { useMessage, NFlex, NSpace, NSwitch, NText } from 'naive-ui'
+import { useMessage, NFlex, NSwitch, NText } from 'naive-ui';
 import { ref } from 'vue'
 
 const props = defineProps<{
@@ -78,9 +78,9 @@ async function setFunctionEnable(enable: boolean) {
           </NSwitch>
         </NFlex>
 
-        <NSpace class="manage-page-header__actions" :wrap="true">
+        <NFlex class="manage-page-header__actions" :wrap="true">
           <slot name="action" />
-        </NSpace>
+        </NFlex>
       </NFlex>
     </NFlex>
 

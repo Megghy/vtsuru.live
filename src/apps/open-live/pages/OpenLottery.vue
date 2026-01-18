@@ -5,21 +5,7 @@ import { Delete24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle
 import { useLocalStorage, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import {
-  NAlert,
-  NAvatar,
-  NButton,
-  NCard,
-  NDivider,
-  NEmpty,
-  NIcon,
-  NNumberAnimation,
-  NProgress,
-  NResult,
-  NSpace,
-  NTag,
-  useMessage,
-  useNotification,
-} from 'naive-ui'
+  NAlert, NAvatar, NButton, NCard, NDivider, NEmpty, NIcon, NNumberAnimation, NProgress, NResult, NFlex, NTag, useMessage, useNotification } from 'naive-ui';
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { OpenLiveLotteryType } from '@/api/api-models'
@@ -453,9 +439,9 @@ function onFinishLottery() {
     description: `共${resultUsers.value?.length}人`,
     duration: 3000,
     content: () =>
-      h(NSpace, { vertical: true }, () =>
+      h(NFlex, { vertical: true }, () =>
         resultUsers.value?.map(user =>
-          h(NSpace, null, () => [
+          h(NFlex, null, () => [
             h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
             h('span', user.name),
           ]),
@@ -747,7 +733,7 @@ onUnmounted(() => {
         style="margin-top: 16px; min-height: 400px"
       >
         <template #header>
-          <NSpace
+          <NFlex
             align="center"
             justify="space-between"
           >
@@ -760,7 +746,7 @@ onUnmounted(() => {
               />
               <span class="unit">人</span>
             </div>
-            <NSpace>
+            <NFlex>
               <NButton
                 :type="isStartLottery ? 'warning' : 'success'"
                 :loading="isStartLottery && !isLotteried"
@@ -779,8 +765,8 @@ onUnmounted(() => {
               >
                 清空
               </NButton>
-            </NSpace>
-          </NSpace>
+            </NFlex>
+          </NFlex>
         </template>
 
         <div
@@ -791,7 +777,7 @@ onUnmounted(() => {
             v-if="isStartLottery"
             style="color: var(--n-primary-color)"
           >
-            <NSpace
+            <NFlex
               align="center"
               justify="center"
             >
@@ -800,7 +786,7 @@ onUnmounted(() => {
                 class="n-icon-spin"
               />
               正在监听弹幕/礼物中...
-            </NSpace>
+            </NFlex>
           </div>
           <div v-else-if="lotteryProgress > 0 && lotteryProgress < 100">
             <NProgress

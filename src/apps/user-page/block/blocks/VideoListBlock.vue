@@ -2,7 +2,7 @@
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { USER_INDEX_API_URL } from '@/shared/config'
-import { NAlert, NFlex, NSpin, NText, NIcon } from 'naive-ui'
+import { NAlert, NFlex, NSpin, NText, NIcon } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { PlayCircleOutline } from '@vicons/ionicons5'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'

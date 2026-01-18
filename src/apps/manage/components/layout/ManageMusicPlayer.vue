@@ -2,18 +2,7 @@
 import { ChevronDown, ChevronUp, MusicalNote, Pause, Play, PlayBack, PlayForward, TrashBin, VolumeHigh } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
-  NButton,
-  NCard,
-  NFlex,
-  NIcon,
-  NLayoutFooter,
-  NSlider,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NButton, NCard, NFlex, NIcon, NLayoutFooter, NSlider, NTag, NText, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'

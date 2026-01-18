@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import {
-  NCollapseItem,
-  NDivider,
-  NInputNumber,
-  NRadio,
-  NRadioGroup,
-  NSpace,
-  NSwitch,
-  NText,
-} from 'naive-ui'
+import { NCollapseItem, NDivider, NInputNumber, NRadio, NRadioGroup, NFlex, NSwitch, NText } from 'naive-ui';
 import { ref, watch } from 'vue'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
@@ -50,11 +41,11 @@ const schedulingModeOptions = [
     v-if="action.triggerType === TriggerType.SCHEDULED"
     title="定时触发设置"
   >
-    <NSpace
+    <NFlex
       vertical
       :size="16"
     >
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -68,7 +59,7 @@ const schedulingModeOptions = [
             否
           </template>
         </NSwitch>
-      </NSpace>
+      </NFlex>
 
       <NText
         type="info"
@@ -86,7 +77,7 @@ const schedulingModeOptions = [
         独立设置 (仅在不使用全局定时器时生效)
       </NDivider>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -100,9 +91,9 @@ const schedulingModeOptions = [
           style="width: 120px"
           :disabled="useGlobalTimer"
         />
-      </NSpace>
+      </NFlex>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -113,7 +104,7 @@ const schedulingModeOptions = [
           v-model:value="action.triggerConfig.schedulingMode"
           :disabled="useGlobalTimer"
         >
-          <NSpace>
+          <NFlex>
             <NRadio
               v-for="option in schedulingModeOptions"
               :key="option.value"
@@ -121,10 +112,10 @@ const schedulingModeOptions = [
             >
               {{ option.label }}
             </NRadio>
-          </NSpace>
+          </NFlex>
         </NRadioGroup>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCollapseItem>
 </template>
 

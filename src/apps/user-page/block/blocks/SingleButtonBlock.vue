@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
+import { NButton, NFlex } from 'naive-ui';
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BlockCard from '../BlockCard.vue'

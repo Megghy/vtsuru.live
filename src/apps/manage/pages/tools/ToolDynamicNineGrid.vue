@@ -2,7 +2,7 @@
 import type { UploadFileInfo } from 'naive-ui'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { NButton, NCard, NDivider, NH4, NInputNumber, NSelect, NSpace, NText, NUpload, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NH4, NInputNumber, NSelect, NFlex, NText, NUpload, NSwitch, useMessage } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
@@ -398,7 +398,7 @@ function getFileName(index: number) {
 <template>
   <div class="dynamic-nine-grid-tool">
     <NCard title="动态九图生成器">
-      <NSpace vertical :size="24">
+      <NFlex vertical :size="24">
         <!-- 上传区域 -->
         <section class="upload-section">
           <NUpload
@@ -638,7 +638,7 @@ function getFileName(index: number) {
             </div>
           </section>
         </template>
-      </NSpace>
+      </NFlex>
     </NCard>
   </div>
 </template>

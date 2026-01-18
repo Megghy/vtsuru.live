@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LotteryHistory } from '@/apps/open-live/components/lottery/lotteryTypes'
-import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NSpace, NTime, NAvatar } from 'naive-ui'
+import { NButton, NCard, NEmpty, NList, NListItem, NModal, NScrollbar, NFlex, NTime, NAvatar } from 'naive-ui';
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -45,8 +45,8 @@ const showModel = computed({
                 删除
               </NButton>
             </template>
-            <NSpace vertical :size="10">
-              <NSpace v-for="user in item.users" :key="user.openId" align="center" :size="10">
+            <NFlex vertical :size="10">
+              <NFlex v-for="user in item.users" :key="user.openId" align="center" :size="10">
                 <NAvatar
                   round
                   lazy
@@ -54,8 +54,8 @@ const showModel = computed({
                   :img-props="{ referrerpolicy: 'no-referrer' }"
                 />
                 {{ user.name }}
-              </NSpace>
-            </NSpace>
+              </NFlex>
+            </NFlex>
           </NCard>
         </NListItem>
       </NList>

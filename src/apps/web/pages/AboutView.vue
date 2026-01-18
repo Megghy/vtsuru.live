@@ -2,7 +2,7 @@
 import { CodeOutline, HeartOutline, LogoGithub, ServerOutline } from '@vicons/ionicons5'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { NButton, NCard, NDivider, NIcon, NLayoutContent, NSpace, NTag, NText, NTimeline, NTimelineItem, useThemeVars } from 'naive-ui'
+import { NButton, NCard, NDivider, NIcon, NLayoutContent, NFlex, NTag, NText, NTimeline, NTimelineItem, useThemeVars } from 'naive-ui';
 import { computed } from 'vue'
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 
@@ -26,7 +26,7 @@ const themeVars = useThemeVars()
 
 <template>
   <NLayoutContent style="height: 100vh; padding: 20px 0;">
-    <NSpace
+    <NFlex
       style="margin-top: 30px"
       justify="center"
       align="center"
@@ -76,7 +76,7 @@ const themeVars = useThemeVars()
           </NButton>
         </NText>
         <template #footer>
-          <NSpace
+          <NFlex
             vertical
             align="center"
             style="margin-bottom: 16px;"
@@ -125,7 +125,7 @@ const themeVars = useThemeVars()
                 <span>服务状态</span>
               </NButton>
             </div>
-          </NSpace>
+          </NFlex>
           <NDivider
             title-placement="left"
             style="margin-top: 12px;"
@@ -134,7 +134,7 @@ const themeVars = useThemeVars()
               <span>技术栈</span>
             </div>
           </NDivider>
-          <NSpace
+          <NFlex
             vertical
             style="padding: 0 12px; margin-bottom: 16px;"
           >
@@ -256,7 +256,7 @@ const themeVars = useThemeVars()
                 </NButton>
               </NTag>
             </div>
-          </NSpace>
+          </NFlex>
           <NDivider title-placement="left">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span>赞助我</span>
@@ -446,7 +446,7 @@ const themeVars = useThemeVars()
       >
         回到控制台
       </NButton>
-    </NSpace>
+    </NFlex>
   </NLayoutContent>
 </template>
 

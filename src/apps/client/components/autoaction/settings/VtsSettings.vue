@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace, NText } from 'naive-ui'
+import { NButton, NCard, NForm, NFormItem, NInput, NInputNumber, NSelect, NFlex, NText } from 'naive-ui';
 import { computed } from 'vue'
 import { ActionType } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
@@ -49,7 +49,7 @@ const itemFileOptions = computed(() => vts.availableItemFiles.map(f => ({ label:
       </NFormItem>
 
       <NFormItem v-if="action.actionType === ActionType.VTS_DROP_ITEM" label="item fileName">
-        <NSpace align="center" style="width: 100%" :wrap="true">
+        <NFlex align="center" style="width: 100%" :wrap="true">
           <NSelect
             v-model:value="action.actionConfig.vtsItemFileName"
             filterable
@@ -61,14 +61,14 @@ const itemFileOptions = computed(() => vts.availableItemFiles.map(f => ({ label:
           <NButton size="tiny" :disabled="!vts.canOperate" @click="vts.refreshItems({ includeFiles: true })">
             刷新 Items
           </NButton>
-        </NSpace>
+        </NFlex>
       </NFormItem>
 
       <NFormItem v-if="action.actionType === ActionType.VTS_DROP_ITEM" label="drop x / size">
-        <NSpace align="center" :wrap="true">
+        <NFlex align="center" :wrap="true">
           <NInputNumber v-model:value="action.actionConfig.vtsItemDropX" placeholder="x (默认0)" :step="0.05" style="width: 180px" />
           <NInputNumber v-model:value="action.actionConfig.vtsItemDropSize" placeholder="size (默认0.32)" :step="0.01" :min="0" :max="1" style="width: 220px" />
-        </NSpace>
+        </NFlex>
       </NFormItem>
 
       <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
@@ -76,10 +76,10 @@ const itemFileOptions = computed(() => vts.availableItemFiles.map(f => ({ label:
           <NInput v-model:value="action.actionConfig.vtsParamId" placeholder="例如：Blush" />
         </NFormItem>
         <NFormItem label="value / weight">
-          <NSpace align="center" :wrap="true">
+          <NFlex align="center" :wrap="true">
             <NInputNumber v-model:value="action.actionConfig.vtsParamValue" placeholder="value" :step="0.01" style="width: 200px" />
             <NInputNumber v-model:value="action.actionConfig.vtsParamWeight" placeholder="weight(可选)" :step="0.1" style="width: 200px" />
-          </NSpace>
+          </NFlex>
         </NFormItem>
         <NText depth="3">
           使用 `InjectParameterDataRequest` 的 `mode=add`，不会强行接管面捕。

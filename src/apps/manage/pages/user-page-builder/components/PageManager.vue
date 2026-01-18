@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NSpace, NSwitch, NText } from 'naive-ui'
+import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NSwitch, NText } from 'naive-ui';
 import { computed, h, inject, ref } from 'vue'
 import { ChevronDownOutline, ChevronUpOutline, CopyOutline, CreateOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
@@ -150,7 +150,7 @@ function confirmDuplicatePage() {
 
 <template>
   <div>
-    <NSpace vertical>
+    <NFlex vertical>
       <NButton
         type="primary"
         @click="editor.currentKey.value = 'home'"
@@ -165,7 +165,7 @@ function confirmDuplicatePage() {
       >
         新建子页面
       </NButton>
-      <NSpace vertical>
+      <NFlex vertical>
         <template v-if="visiblePages.length">
           <NText depth="3" style="font-size: 12px; margin-top: 4px">
             子页面 · 导航显示
@@ -313,8 +313,8 @@ function confirmDuplicatePage() {
             </div>
           </div>
         </template>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
 
     <NModal
       v-model:show="addPageModal"
@@ -332,14 +332,14 @@ function confirmDuplicatePage() {
         </NAlert>
       </NForm>
       <template #footer>
-        <NSpace justify="end">
+        <NFlex justify="end">
           <NButton @click="addPageModal = false">
             取消
           </NButton>
           <NButton type="primary" @click="createPage">
             创建
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NModal>
 
@@ -359,14 +359,14 @@ function confirmDuplicatePage() {
         </NFormItem>
       </NForm>
       <template #footer>
-        <NSpace justify="end">
+        <NFlex justify="end">
           <NButton @click="renamePageModal = false">
             取消
           </NButton>
           <NButton type="primary" @click="confirmRenamePage">
             确定
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NModal>
 
@@ -389,14 +389,14 @@ function confirmDuplicatePage() {
         </NText>
       </NForm>
       <template #footer>
-        <NSpace justify="end">
+        <NFlex justify="end">
           <NButton @click="duplicatePageModal = false">
             取消
           </NButton>
           <NButton type="primary" @click="confirmDuplicatePage">
             确定
           </NButton>
-        </NSpace>
+        </NFlex>
       </template>
     </NModal>
   </div>

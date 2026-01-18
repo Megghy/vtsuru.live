@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { FlagOutline } from '@vicons/ionicons5'
-import { NIcon, NText, NTimeline, NTimelineItem } from 'naive-ui'
+import { NIcon, NText, NTimeline, NTimelineItem } from 'naive-ui';
 import BlockCard from '../BlockCard.vue'
 
 interface MilestoneItem {

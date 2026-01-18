@@ -3,7 +3,7 @@ import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 import type { APIRoot } from '@/api/api-models'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui';
 import { onBeforeUnmount, shallowRef } from 'vue'
 import { GetHeaders } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'

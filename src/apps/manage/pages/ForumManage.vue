@@ -4,28 +4,7 @@ import type {
 } from 'naive-ui'
 import type { UserBasicInfo } from '@/api/api-models'
 import type { ForumModel, ForumUserModel } from '@/api/models/forum'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDataTable,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NModal,
-  NSelect,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
+import { NAlert, NButton, NCard, NCheckbox, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NTabPane, NTabs, NTag, NTime, useMessage } from 'naive-ui';
 import { h, onMounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { ForumUserLevels } from '@/api/models/forum'

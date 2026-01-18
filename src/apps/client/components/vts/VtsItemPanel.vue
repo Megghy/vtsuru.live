@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
 import { computed } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsAccessoryBinding, VtsPrankBinding } from '@/apps/client/store/useVtsStore'

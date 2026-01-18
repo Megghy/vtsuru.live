@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NText, NIcon } from 'naive-ui'
+import { NText, NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NScrollbar, useMessage } from 'naive-ui'
+import { NScrollbar, useMessage } from 'naive-ui';
 import { onMounted } from 'vue'
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'

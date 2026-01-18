@@ -4,21 +4,7 @@ import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NButton,
-  NCheckbox,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NSelect,
-  NSpace,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCheckbox, NFlex, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NSelect, NTooltip, useMessage } from 'naive-ui';
 import { ref } from 'vue'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 
@@ -160,7 +146,7 @@ async function addCustomSong() {
           这个不是控制是否允许点歌的! 启用后将会覆盖点歌功能中的设置, 用于单独设置歌曲要求
         </NTooltip>
       </template>
-      <NSpace vertical>
+      <NFlex vertical>
         <NCheckbox
           :checked="addSongModel.options !== undefined"
           @update:checked="(checked: boolean) => {
@@ -176,7 +162,7 @@ async function addCustomSong() {
           是否启用
         </NCheckbox>
         <template v-if="addSongModel.options !== undefined">
-          <NSpace>
+          <NFlex>
             <NCheckbox v-model:checked="addSongModel.options.needJianzhang">
               需要舰长
             </NCheckbox>
@@ -186,8 +172,8 @@ async function addCustomSong() {
             <NCheckbox v-model:checked="addSongModel.options.needZongdu">
               需要总督
             </NCheckbox>
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <NCheckbox
               :checked="addSongModel.options.scMinPrice !== undefined"
               @update:checked="(checked: boolean) => {
@@ -200,8 +186,8 @@ async function addCustomSong() {
               <NInputGroupLabel> SC最低价格 </NInputGroupLabel>
               <NInputNumber v-model:value="addSongModel.options.scMinPrice" min="30" />
             </NInputGroup>
-          </NSpace>
-          <NSpace align="center">
+          </NFlex>
+          <NFlex align="center">
             <NCheckbox
               :checked="addSongModel.options.fanMedalMinLevel !== undefined"
               @update:checked="(checked: boolean) => {
@@ -220,9 +206,9 @@ async function addCustomSong() {
               <NInputGroupLabel> 最低等级 </NInputGroupLabel>
               <NInputNumber v-model:value="addSongModel.options.fanMedalMinLevel" min="0" />
             </NInputGroup>
-          </NSpace>
+          </NFlex>
         </template>
-      </NSpace>
+      </NFlex>
     </NFormItem>
   </NForm>
   <NFlex align="center">

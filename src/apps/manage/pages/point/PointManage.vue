@@ -7,48 +7,10 @@ import type {
   ResponsePointGoodModel,
   UploadPointGoodsModel,
 } from '@/api/api-models'
-import {
-  Add24Filled,
-  ArrowSync24Filled,
-  Delete24Filled,
-  Edit24Filled,
-  Eye24Filled,
-  Info24Filled,
-  ShoppingBag24Filled,
-} from '@vicons/fluent'
+import { Add24Filled, ArrowSync24Filled, Delete24Filled, Edit24Filled, Eye24Filled, Info24Filled, ShoppingBag24Filled, } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NDynamicTags,
-  NEmpty,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NTabPane,
-  NTabs,
-  NText,
-  NTooltip,
-  NUpload,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NDivider, NDynamicTags, NEmpty, NFlex, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputGroup, NInputNumber, NModal, NPopconfirm, NProgress, NRadioButton, NRadioGroup, NScrollbar, NSelect, NTabPane, NTabs, NText, NTooltip, NUpload, useDialog, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import {

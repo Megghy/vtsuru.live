@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ScheduleConfigType } from '@/shared/types/TemplateTypes'
 import { getWeek, getYear } from 'date-fns'
-import { NDivider, NSelect, NSpace } from 'naive-ui'
+import { NDivider, NSelect, NFlex } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import SaveCompoent from '@/apps/user/components/SaveCompoent.vue'
 
@@ -59,7 +59,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpace>
+  <NFlex>
     <NSelect
       v-model:value="selectedDate"
       :options="options"
@@ -70,7 +70,7 @@ onMounted(() => {
       :compoent="table"
       :file-name="`周表_${selectedDate}_${props.userInfo?.name}`"
     />
-  </NSpace>
+  </NFlex>
   <NDivider />
   <div
     ref="table"

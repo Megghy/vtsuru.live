@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { OpenLiveInfo } from '@/api/api-models'
-import { NAlert, NButton, NCard, NFlex, NGi, NGrid, NText } from 'naive-ui'
+import { NAlert, NButton, NCard, NFlex, NGi, NGrid, NText } from 'naive-ui';
 import { useAccount } from '@/api/account'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 

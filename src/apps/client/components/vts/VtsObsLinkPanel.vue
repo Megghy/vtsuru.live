@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, watch } from 'vue'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'

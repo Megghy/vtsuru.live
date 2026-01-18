@@ -2,23 +2,7 @@
 import type { AccountInfo } from '@/api/api-models'
 import { Info24Filled, Mail24Filled, PersonFeedback24Filled } from '@vicons/fluent'
 import {
-  NAlert,
-  NBackTop,
-  NButton,
-  NCard,
-  NCountdown,
-  NDivider,
-  NElement,
-  NFlex,
-  NIcon,
-  NPopconfirm,
-  NSpace,
-  NSpin,
-  NTag,
-  NText,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NBackTop, NButton, NCard, NCountdown, NDivider, NElement, NFlex, NIcon, NPopconfirm, NSpin, NTag, NText, useMessage, useThemeVars } from 'naive-ui';
 import { ref, watchEffect } from 'vue'
 import { RouterView } from 'vue-router'
 import { cookie } from '@/api/auth'
@@ -107,7 +91,7 @@ function logout() {
     <template v-else>
       <div class="manage-page manage-page--md">
         <NCard size="small" :bordered="true">
-          <NSpace vertical size="large" align="center">
+          <NFlex vertical size="large" align="center">
             <NFlex justify="center" align="center" vertical>
               <NIcon size="48" :color="themeVars.primaryColor">
                 <Mail24Filled />
@@ -131,7 +115,7 @@ function logout() {
               如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
             </NAlert>
 
-            <NSpace>
+            <NFlex>
               <NButton
                 type="primary"
                 :disabled="!canResendEmail"
@@ -152,7 +136,7 @@ function logout() {
                 />
                 后可重新发送
               </NTag>
-            </NSpace>
+            </NFlex>
 
             <NDivider style="width: 80%; min-width: 250px;" />
 
@@ -169,7 +153,7 @@ function logout() {
               </template>
               确定要登出当前账号吗？
             </NPopconfirm>
-          </NSpace>
+          </NFlex>
         </NCard>
       </div>
     </template>

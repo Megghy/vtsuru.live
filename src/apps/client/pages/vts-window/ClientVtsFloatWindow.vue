@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NFlex, NTabPane, NTabs, NTag, NText, useMessage } from 'naive-ui'
+import { NAlert, NButton, NDivider, NFlex, NTabPane, NTabs, NTag, NText, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { isTauri } from '@/shared/config'

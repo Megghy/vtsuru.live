@@ -3,7 +3,7 @@ import type { ComponentPublicInstance } from 'vue'
 import type { BodyOptionConfig, ControllerComponentStructure } from '@/apps/obs-store/data/gamepadConfigs'
 import type { GamepadConfig, GamepadType, LogicalButton } from '@/types/gamepad'
 import { useRouteQuery } from '@vueuse/router'
-import { NCard, NText } from 'naive-ui'
+import { NCard, NText } from 'naive-ui';
 import { computed, nextTick, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'

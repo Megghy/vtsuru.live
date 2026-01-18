@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AddressInfo } from '@/api/api-models'
-import { NFlex, NTag, NText } from 'naive-ui'
+import { NFlex, NTag, NText } from 'naive-ui';
 import { ref } from 'vue'
 
 const { size = 'default' } = defineProps<{

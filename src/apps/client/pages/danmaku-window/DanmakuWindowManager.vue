@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import {
-  ResizeTable24Filled,
-} from '@vicons/fluent'
-import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NDivider, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSpace, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui'
-
+import { ResizeTable24Filled, } from '@vicons/fluent'
+import { NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NColorPicker, NDivider, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NInputNumber, NRadioButton, NRadioGroup, NSelect, NSlider, NSwitch, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 
@@ -187,7 +184,7 @@ const separatorOptions = [
                   </template>
                   重置位置
                 </NButton>
-                <NSpace>
+                <NFlex>
                   <NFormItem label="总是置顶">
                     <NSwitch
                       v-model:value="danmakuWindow.danmakuWindowSetting.alwaysOnTop"
@@ -198,7 +195,7 @@ const separatorOptions = [
                       v-model:value="danmakuWindow.danmakuWindowSetting.interactive"
                     />
                   </NFormItem>
-                </NSpace>
+                </NFlex>
               </NFlex>
             </NFlex>
           </NTabPane>
@@ -283,7 +280,7 @@ const separatorOptions = [
                 justify="space-between"
                 align="center"
               >
-                <NSpace>
+                <NFlex>
                   <NButton @click="applyPreset('dark')">
                     暗色主题
                   </NButton>
@@ -293,7 +290,7 @@ const separatorOptions = [
                   <NButton @click="applyPreset('transparent')">
                     透明主题
                   </NButton>
-                </NSpace>
+                </NFlex>
               </NFlex>
             </NFlex>
           </NTabPane>
@@ -309,7 +306,7 @@ const separatorOptions = [
               <NGi>
                 <NFormItem label="展示风格">
                   <NRadioGroup v-model:value="danmakuWindow.danmakuWindowSetting.displayStyle">
-                    <NSpace>
+                    <NFlex>
                       <NRadioButton
                         v-for="option in displayStyleOptions"
                         :key="option.value"
@@ -317,7 +314,7 @@ const separatorOptions = [
                       >
                         {{ option.label }}
                       </NRadioButton>
-                    </NSpace>
+                    </NFlex>
                   </NRadioGroup>
                 </NFormItem>
               </NGi>
@@ -326,21 +323,21 @@ const separatorOptions = [
               <NGi>
                 <NFormItem label="信息显示">
                   <NCheckboxGroup v-model:value="danmakuWindow.danmakuWindowSetting.filterTypes">
-                    <NSpace>
+                    <NFlex>
                       <NCheckbox
                         v-for="option in filterTypeOptions"
                         :key="option.value"
                         :value="option.value"
                         :label="option.label"
                       />
-                    </NSpace>
+                    </NFlex>
                   </NCheckboxGroup>
                 </NFormItem>
               </NGi>
 
               <NGi>
                 <NFormItem label="显示选项">
-                  <NSpace>
+                  <NFlex>
                     <NCheckbox
                       v-model:checked="danmakuWindow.danmakuWindowSetting.showAvatar"
                     >
@@ -361,14 +358,14 @@ const separatorOptions = [
                     >
                       显示舰长图标
                     </NCheckbox>
-                  </NSpace>
+                  </NFlex>
                 </NFormItem>
               </NGi>
 
               <!-- 新增：纯文本风格特定设置 -->
               <NGi v-if="danmakuWindow.danmakuWindowSetting.displayStyle === 'text'">
                 <NDivider>纯文本风格设置</NDivider>
-                <NSpace vertical>
+                <NFlex vertical>
                   <NFormItem label="紧凑布局">
                     <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.textStyleCompact" />
                     <NText
@@ -396,7 +393,7 @@ const separatorOptions = [
                       style="width: 160px"
                     />
                   </NFormItem>
-                </NSpace>
+                </NFlex>
               </NGi>
 
               <NGi>
@@ -405,13 +402,13 @@ const separatorOptions = [
 
               <NGi>
                 <NFormItem label="弹幕方向">
-                  <NSpace align="center">
+                  <NFlex align="center">
                     <NText>从上往下</NText>
                     <NSwitch
                       v-model:value="danmakuWindow.danmakuWindowSetting.reverseOrder"
                     />
                     <NText>从下往上</NText>
-                  </NSpace>
+                  </NFlex>
                 </NFormItem>
               </NGi>
 
@@ -456,7 +453,7 @@ const separatorOptions = [
 
               <NGi>
                 <NFormItem label="自动消失时间">
-                  <NSpace vertical>
+                  <NFlex vertical>
                     <NSlider
                       v-model:value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
                       :min="0"
@@ -468,7 +465,7 @@ const separatorOptions = [
                         300: '5分钟',
                       }"
                     />
-                    <NSpace justify="space-between">
+                    <NFlex justify="space-between">
                       <NButton
                         v-for="option in autoDisappearOptions"
                         :key="option.value"
@@ -478,7 +475,7 @@ const separatorOptions = [
                       >
                         {{ option.label }}
                       </NButton>
-                    </NSpace>
+                    </NFlex>
                     <NText
                       v-if="danmakuWindow.danmakuWindowSetting.autoDisappearTime > 0"
                       depth="3"
@@ -491,7 +488,7 @@ const separatorOptions = [
                     >
                       弹幕不会自动消失
                     </NText>
-                  </NSpace>
+                  </NFlex>
                 </NFormItem>
               </NGi>
             </NGrid>
@@ -508,7 +505,7 @@ const separatorOptions = [
             >
               <NGi>
                 <NDivider>调试选项</NDivider>
-                <NSpace vertical>
+                <NFlex vertical>
                   <NButton
                     type="info"
                     @click="danmakuWindow.sendTestDanmaku && danmakuWindow.sendTestDanmaku()"
@@ -540,7 +537,7 @@ const separatorOptions = [
                       重新加载表情数据
                     </NButton>
                   </NFlex>
-                </NSpace>
+                </NFlex>
               </NGi>
             </NGrid>
           </NTabPane>

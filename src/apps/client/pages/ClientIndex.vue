@@ -7,8 +7,7 @@ import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { roomInfo } from '@/apps/client/data/info'
-import { useThemeVars } from 'naive-ui'
-
+import { useThemeVars } from 'naive-ui';
 const accountInfo = useAccount()
 const themeVars = useThemeVars()
 
@@ -109,12 +108,12 @@ function logout() {
           content-style="padding: 0;"
         >
           <template #header>
-            <NSpace align="center">
+            <NFlex align="center">
               直播状态
               <NTag :type="roomInfo?.live_status === 1 ? 'success' : 'error'" size="small" :bordered="false">
                 {{ roomInfo?.live_status === 1 ? '直播中' : '未直播' }}
               </NTag>
-            </NSpace>
+            </NFlex>
           </template>
 
           <div v-if="roomCover" class="client-index-cover">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
 import { isSameDay } from 'date-fns'
-import { NButton, NCard, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NPopconfirm, NRadioButton, NRadioGroup, NSpace, NTag } from 'naive-ui'
+import { NButton, NCard, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NPopconfirm, NRadioButton, NRadioGroup, NFlex, NTag } from 'naive-ui';
 import { computed, provide } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { QueueSortType, SongRequestStatus } from '@/api/api-models'
@@ -52,11 +52,11 @@ async function updateSettings() {
 </script>
 
 <template>
-  <NSpace vertical :size="12">
+  <NFlex vertical :size="12">
     <NCard size="small" :bordered="false" content-style="padding: 0;">
-      <NSpace justify="space-between" align="center">
+      <NFlex justify="space-between" align="center">
         <!-- 左侧统计 -->
-        <NSpace align="center" :size="16">
+        <NFlex align="center" :size="16">
           <NTag type="success" round :bordered="false">
             <template #icon>
               <NIcon :component="PeopleQueue24Filled" />
@@ -72,10 +72,10 @@ async function updateSettings() {
           <NText depth="3" style="font-size: 12px">
             共 {{ songRequest.activeSongs.length }} 首
           </NText>
-        </NSpace>
+        </NFlex>
 
         <!-- 右侧操作 -->
-        <NSpace align="center">
+        <NFlex align="center">
           <NInputGroup size="small">
             <NInput
               :value="songRequest.newSongName"
@@ -131,8 +131,8 @@ async function updateSettings() {
             </template>
             确定全部取消吗?
           </NPopconfirm>
-        </NSpace>
-      </NSpace>
+        </NFlex>
+      </NFlex>
     </NCard>
 
     <div v-if="songRequest.activeSongs.length > 0" class="song-list-container">
@@ -158,7 +158,7 @@ async function updateSettings() {
       description="暂无点播内容"
       style="margin-top: 40px"
     />
-  </NSpace>
+  </NFlex>
 </template>
 
 <style scoped>

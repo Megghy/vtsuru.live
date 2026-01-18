@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
-import { NList, NListItem } from 'naive-ui'
+import { NList, NListItem } from 'naive-ui';
 import QuestionItem from './QuestionItem.vue'
 
 defineProps<{

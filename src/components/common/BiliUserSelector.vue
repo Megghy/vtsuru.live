@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui'
+import { NAutoComplete, NAvatar, NFlex, NText } from 'naive-ui';
 import type { AutoCompleteOption } from 'naive-ui'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, h, ref, watch } from 'vue'

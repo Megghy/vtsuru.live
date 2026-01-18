@@ -7,22 +7,7 @@ import type {
 } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NButton,
-  NCard,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSpin,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCard, NDescriptions, NDescriptionsItem, NDivider, NEmpty, NFlex, NInput, NInputNumber, NModal, NSpin, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'

@@ -3,23 +3,7 @@ import type {
   FormRules,
 } from 'naive-ui'
 import type { VideoCollectTable } from '@/api/api-models'
-import {
-  NButton,
-  NCard,
-  NDatePicker,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NSpin,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { NButton, NCard, NDatePicker, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NText, useMessage } from 'naive-ui';
 import { Add20Regular } from '@vicons/fluent'
 import { ref } from 'vue'
 import { FunctionTypes } from '@/api/api-models'

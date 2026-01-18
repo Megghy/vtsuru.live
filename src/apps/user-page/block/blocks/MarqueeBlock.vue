@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
+import { NIcon } from 'naive-ui';
 import { computed, nextTick, ref, watch } from 'vue'
 import { MegaphoneOutline } from '@vicons/ionicons5'
 import { Vue3Marquee } from 'vue3-marquee'

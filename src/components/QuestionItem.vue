@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
-import { NCard, NDivider, NFlex, NImage, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { NCard, NDivider, NFlex, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { ref } from 'vue'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
@@ -145,7 +145,7 @@ function getScoreColor(score: number | undefined): string {
       />
     </template>
     <template v-if="item.questionImages && item.questionImages.length > 0">
-      <NSpace
+      <NFlex
         size="small"
       >
         <NImage
@@ -155,7 +155,7 @@ function getScoreColor(score: number | undefined): string {
           height="100"
           lazy
         />
-      </NSpace>
+      </NFlex>
     </template>
 
     <NText

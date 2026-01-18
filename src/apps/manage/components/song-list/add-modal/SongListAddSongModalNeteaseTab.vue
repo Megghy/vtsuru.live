@@ -4,7 +4,7 @@ import type { Option } from 'naive-ui/es/transfer/src/interface'
 import { QueryGetAPI } from '@/api/query'
 import { SONG_API_URL } from '@/shared/config'
 import { computed, ref } from 'vue'
-import { NButton, NDivider, NInput, NTag, NTransfer, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NTag, NTransfer, useMessage } from 'naive-ui';
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 

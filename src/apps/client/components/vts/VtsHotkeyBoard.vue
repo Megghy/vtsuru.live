@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NColorPicker, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NPopover, NSelect, NSwitch, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NColorPicker, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NPopover, NSelect, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, reactive, ref } from 'vue'
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'

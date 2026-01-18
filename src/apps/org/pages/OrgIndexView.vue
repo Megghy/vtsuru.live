@@ -1,28 +1,7 @@
 <script setup lang="ts">
+import { AddOutline, ArrowForward, BusinessOutline, RefreshOutline, } from '@vicons/ionicons5'
 import {
-  AddOutline,
-  ArrowForward,
-  BusinessOutline,
-  RefreshOutline,
-} from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NModal,
-  NPageHeader,
-  NSpace,
-  NSkeleton,
-  NTag,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NModal, NPageHeader, NFlex, NSkeleton, NTag, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch  } from 'vue'
 
 import { useRouter } from 'vue-router'
@@ -157,7 +136,7 @@ watch(
           组织管理
         </template>
         <template #extra>
-          <NSpace>
+          <NFlex>
             <NButton secondary @click="handleGoConsole">
               返回控制台
             </NButton>
@@ -173,7 +152,7 @@ watch(
               </template>
               创建组织
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
       </NPageHeader>
 
@@ -182,10 +161,10 @@ watch(
           <NGrid :x-gap="16" :y-gap="16" cols="1 600:2 900:3 1200:4" item-responsive>
             <NGridItem v-for="i in 4" :key="i">
               <NCard class="org-card" content-style="padding: 16px;">
-                <NSpace justify="space-between" align="start">
+                <NFlex justify="space-between" align="start">
                   <NSkeleton :width="32" :height="32" :sharp="false" />
                   <NSkeleton :width="60" :height="22" :sharp="false" />
-                </NSpace>
+                </NFlex>
                 <div style="margin-top: 12px;">
                   <NSkeleton text style="width: 60%; margin-bottom: 4px;" />
                   <NSkeleton text style="width: 40%; font-size: 12px;" />
@@ -216,12 +195,12 @@ watch(
               class="org-card"
               @click="openOrg(org.id)"
             >
-              <NSpace justify="space-between" align="start">
+              <NFlex justify="space-between" align="start">
                 <NIcon size="32" color="var(--n-primary-color)" :component="BusinessOutline" />
                 <NTag :bordered="false" :type="roleType(org.role)" size="small">
                   {{ roleLabel(org.role) }}
                 </NTag>
-              </NSpace>
+              </NFlex>
 
               <div style="margin-top: 12px;">
                 <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;" class="text-ellipsis">

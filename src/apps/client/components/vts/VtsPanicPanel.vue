@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NText, useMessage } from 'naive-ui'
+import { NButton, NCard, NFlex, NSelect, NText, useMessage } from 'naive-ui';
 import { computed } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 

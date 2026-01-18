@@ -6,7 +6,7 @@ import { listContribPageRefs, getContribPageImporter } from '@/apps/user-page/co
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { debounceFilter, useRefHistory } from '@vueuse/core'
-import { useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 import { createId, deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'

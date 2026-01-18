@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NScrollbar, NSplit } from 'naive-ui'
+import { NAlert, NButton, NCard, NScrollbar, NSplit } from 'naive-ui';
 import { useStorage } from '@vueuse/core'
 import { inject } from 'vue'
 import BlockManager from './BlockManager.vue'

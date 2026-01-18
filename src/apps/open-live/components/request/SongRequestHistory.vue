@@ -2,7 +2,7 @@
 import type { DataTableColumns } from 'naive-ui'
 import type { SongRequestInfo } from '@/api/api-models'
 import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
-import { NButton, NCheckbox, NDataTable, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NSpace, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { NButton, NCheckbox, NDataTable, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NFlex, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
@@ -146,8 +146,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
     key: 'manage',
     width: 100,
     render(row: SongRequestInfo) {
-      return h(
-        NSpace,
+      return h(NFlex,
         {
           justify: 'center',
           size: 10,
@@ -206,8 +205,8 @@ const columns: DataTableColumns<SongRequestInfo> = [
 </script>
 
 <template>
-  <NSpace vertical :size="12">
-    <NSpace>
+  <NFlex vertical :size="12">
+    <NFlex>
       <NInputGroup style="width: 250px">
         <NInputGroupLabel> 筛选曲名 </NInputGroupLabel>
         <NInput
@@ -244,7 +243,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
           </template>
         </NInput>
       </NInputGroup>
-    </NSpace>
+    </NFlex>
     <NDataTable
       ref="table"
       size="small"
@@ -255,7 +254,7 @@ const columns: DataTableColumns<SongRequestInfo> = [
       :pagination="{ pageSize: 10 }"
       :row-class-name="(row, index) => (row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'song-active' : '')"
     />
-  </NSpace>
+  </NFlex>
 </template>
 
 <style>

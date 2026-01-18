@@ -3,23 +3,7 @@ import type { Setting_Queue } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import { useStorage } from '@vueuse/core'
 import {
-  NAlert,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSpace,
-  NSpin,
-  NText,
-  NTooltip,
-} from 'naive-ui'
+  NAlert, NCard, NCheckbox, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NRadioButton, NRadioGroup, NSelect, NFlex, NSpin, NText, NTooltip } from 'naive-ui';
 import { KeywordMatchType, QueueGiftFilterType } from '@/api/api-models'
 
 defineProps<{
@@ -40,14 +24,14 @@ function onChange() {
 
 <template>
   <NSpin :show="isLoading">
-    <NSpace vertical :size="12">
+    <NFlex vertical :size="12">
       <NAlert type="info" size="small" :bordered="false" closable title="提示">
         修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。
       </NAlert>
 
       <NCard size="small" title="加入规则" bordered>
-        <NSpace vertical :size="12">
-          <NSpace align="center">
+        <NFlex vertical :size="12">
+          <NFlex align="center">
             <NInputGroup style="width: 350px">
               <NInputGroupLabel> 弹幕关键词 </NInputGroupLabel>
               <NInput v-model:value="settings.keyword" placeholder="留空则禁用弹幕加入" @change="onChange" />
@@ -68,7 +52,7 @@ function onChange() {
                 正则
               </NRadioButton>
             </NRadioGroup>
-          </NSpace>
+          </NFlex>
           <NInputGroup style="width: 250px">
             <NInputGroupLabel> 最大队列长度 </NInputGroupLabel>
             <NInputNumber
@@ -88,7 +72,7 @@ function onChange() {
           <NCheckbox v-model:checked="settings.allowAllDanmaku" @update:checked="onChange">
             允许所有用户通过弹幕加入 (无视下方限制)
           </NCheckbox>
-          <NSpace v-if="!settings.allowAllDanmaku" vertical :size="10" style="margin-left: 20px;">
+          <NFlex v-if="!settings.allowAllDanmaku" vertical :size="10" style="margin-left: 20px;">
             <NInputGroup style="width: 270px">
               <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
               <NInputNumber v-model:value="settings.fanMedalMinLevel" min="0" @update:value="onChange" />
@@ -102,16 +86,16 @@ function onChange() {
             <NCheckbox v-model:checked="settings.needZongdu" @update:checked="onChange">
               需要总督
             </NCheckbox>
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCard>
 
       <NCard size="small" title="礼物规则" bordered>
-        <NSpace vertical :size="12">
+        <NFlex vertical :size="12">
           <NCheckbox v-model:checked="settings.allowGift" @update:checked="onChange">
             允许通过发送指定礼物直接加入队列
           </NCheckbox>
-          <NSpace v-if="settings.allowGift" vertical :size="10" style="margin-left: 20px;">
+          <NFlex v-if="settings.allowGift" vertical :size="10" style="margin-left: 20px;">
             <NInputGroup style="width: 250px">
               <NInputGroupLabel> 最低礼物价值 (元) </NInputGroupLabel>
               <NInputNumber
@@ -121,7 +105,7 @@ function onChange() {
                 @update:value="onChange"
               />
             </NInputGroup>
-            <NSpace align="center">
+            <NFlex align="center">
               <NText> 指定礼物名称 </NText>
               <NSelect
                 v-model:value="settings.giftNames"
@@ -134,7 +118,7 @@ function onChange() {
                 :show="false"
                 @update:value="onChange"
               />
-            </NSpace>
+            </NFlex>
             <NRadioGroup v-model:value="settings.giftFilterType" size="small" @update:value="onChange">
               <NRadioButton :value="QueueGiftFilterType.And">
                 需同时满足名称和价值
@@ -155,24 +139,24 @@ function onChange() {
             <NCheckbox v-model:checked="settings.sendGiftIgnoreLimit" @update:checked="onChange">
               赠送符合条件的礼物后无视上述用户限制 (粉丝牌/舰长等)
             </NCheckbox>
-          </NSpace>
+          </NFlex>
           <NDivider style="margin: 5px 0;" />
           <NCheckbox v-model:checked="settings.allowIncreasePaymentBySendGift" @update:checked="onChange">
             允许通过送礼累计队列中的付费金额 (影响付费排序)
           </NCheckbox>
-          <NSpace v-if="settings.allowIncreasePaymentBySendGift" style="margin-left: 20px;">
+          <NFlex v-if="settings.allowIncreasePaymentBySendGift" style="margin-left: 20px;">
             <NCheckbox v-model:checked="settings.allowIncreaseByAnyPayment" @update:checked="onChange">
               允许发送任意礼物叠加金额 (否则仅限上方指定的礼物)
             </NCheckbox>
-          </NSpace>
-        </NSpace>
+          </NFlex>
+        </NFlex>
       </NCard>
 
       <NCard size="small" title="冷却时间 (CD)" bordered>
         <NCheckbox v-model:checked="settings.enableCooldown" @update:checked="onChange">
           启用排队冷却 (用户完成后需等待一段时间才能再次加入)
         </NCheckbox>
-        <NSpace v-if="settings.enableCooldown" vertical :size="10" style="margin-left: 20px; margin-top: 10px;">
+        <NFlex v-if="settings.enableCooldown" vertical :size="10" style="margin-left: 20px; margin-top: 10px;">
           <NInputGroup style="width: 280px">
             <NInputGroupLabel> 普通用户 CD (秒) </NInputGroupLabel>
             <NInputNumber v-model:value="settings.cooldownSecond" min="0" @update:value="onChange" />
@@ -189,11 +173,11 @@ function onChange() {
             <NInputGroupLabel> 总督 CD (秒) </NInputGroupLabel>
             <NInputNumber v-model:value="settings.zongduCooldownSecond" min="0" @update:value="onChange" />
           </NInputGroup>
-        </NSpace>
+        </NFlex>
       </NCard>
 
       <NCard size="small" title="显示与界面" bordered>
-        <NSpace vertical :size="12">
+        <NFlex vertical :size="12">
           <NDivider title-placement="left" style="margin: 5px 0;">
             OBS 组件显示
           </NDivider>
@@ -212,8 +196,8 @@ function onChange() {
           <NCheckbox v-model:checked="isWarnMessageAutoClose">
             自动关闭"加入队列失败"的通知消息 (默认3秒)
           </NCheckbox>
-        </NSpace>
+        </NFlex>
       </NCard>
-    </NSpace>
+    </NFlex>
   </NSpin>
 </template>

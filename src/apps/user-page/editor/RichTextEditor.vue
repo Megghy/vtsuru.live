@@ -3,7 +3,7 @@ import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 import type { UploadFileResponse } from '@/api/api-models'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
+import { useMessage, useThemeVars } from 'naive-ui';
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import { uploadFiles } from '@/shared/services/fileUpload'

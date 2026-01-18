@@ -3,18 +3,7 @@ import type { UserInfo } from '@/api/api-models'
 import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
 import { useStorage } from '@vueuse/core'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NText,
-  NTime,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui';
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'

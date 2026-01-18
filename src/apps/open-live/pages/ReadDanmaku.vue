@@ -1,46 +1,8 @@
 <script setup lang="ts">
 import type { EventModel } from '@/api/api-models'
+import { CheckmarkCircle20Filled, Dismiss20Filled, Info24Filled, Mic24Filled, MicOff24Filled, Play20Filled, Settings20Filled, } from '@vicons/fluent'
 import {
-  CheckmarkCircle20Filled,
-  Dismiss20Filled,
-  Info24Filled,
-  Mic24Filled,
-  MicOff24Filled,
-  Play20Filled,
-  Settings20Filled,
-} from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NEmpty,
-  NGi,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSlider,
-  NSpace,
-  NSpin,
-  NStatistic,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NCollapse, NCollapseItem, NDivider, NEmpty, NGi, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NPopconfirm, NRadioButton, NRadioGroup, NScrollbar, NSelect, NSlider, NFlex, NSpin, NStatistic, NTag, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -405,7 +367,7 @@ onUnmounted(() => {
         description="将弹幕/事件转为语音，支持本地与 API TTS。"
       >
         <template #actions>
-          <NSpace align="center" :wrap="true" :size="10">
+          <NFlex align="center" :wrap="true" :size="10">
             <NButton
               :type="speechState.canSpeech ? 'error' : 'success'"
               size="medium"
@@ -476,11 +438,11 @@ onUnmounted(() => {
               </template>
               保存配置
             </NButton>
-          </NSpace>
+          </NFlex>
         </template>
       </OpenLivePageHeader>
 
-      <NSpace vertical :size="12">
+      <NFlex vertical :size="12">
         <NAlert
           v-if="settings.voiceType === 'local'"
           type="info"
@@ -543,7 +505,7 @@ onUnmounted(() => {
             Edge 设置
           </NButton>
         </NAlert>
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <!-- 状态统计区域 -->
@@ -616,7 +578,7 @@ onUnmounted(() => {
 
         <NGi>
           <NStatistic label="队列分布">
-            <NSpace
+            <NFlex
               :size="8"
               style="margin-top: 4px"
             >
@@ -656,7 +618,7 @@ onUnmounted(() => {
                 </template>
                 等待合并的礼物
               </NTooltip>
-            </NSpace>
+            </NFlex>
           </NStatistic>
         </NGi>
       </NGrid>
@@ -695,7 +657,7 @@ onUnmounted(() => {
                 v-for="(item, index) in speakQueue"
                 :key="`${item.data.time}-${index}`"
               >
-                <NSpace
+                <NFlex
                   align="center"
                   :size="8"
                 >
@@ -753,7 +715,7 @@ onUnmounted(() => {
                   <NText depth="3">
                     {{ speechService.getTextFromDanmaku(item.data) }}
                   </NText>
-                </NSpace>
+                </NFlex>
               </NListItem>
             </NList>
           </NScrollbar>
@@ -767,13 +729,13 @@ onUnmounted(() => {
       size="small"
       bordered
     >
-      <NSpace
+      <NFlex
         vertical
         :size="12"
       >
         <!-- 输出设备选择 -->
         <div>
-          <NSpace justify="space-between" align="center">
+          <NFlex justify="space-between" align="center">
             <NText strong>
               输出设备
             </NText>
@@ -787,7 +749,7 @@ onUnmounted(() => {
             >
               加载设备列表
             </NButton>
-          </NSpace>
+          </NFlex>
           <NSelect
             v-model:value="settings.outputDeviceId"
             :options="audioOutputDevices"
@@ -819,7 +781,7 @@ onUnmounted(() => {
           size="large"
         >
           <NRadioButton value="local">
-            <NSpace :size="4">
+            <NFlex :size="4">
               <span>本地语音</span>
               <NTooltip>
                 <template #trigger>
@@ -830,11 +792,11 @@ onUnmounted(() => {
                 </template>
                 使用浏览器内置的语音合成功能
               </NTooltip>
-            </NSpace>
+            </NFlex>
           </NRadioButton>
 
           <NRadioButton value="azure">
-            <NSpace :size="4">
+            <NFlex :size="4">
               <span>Azure TTS</span>
               <NTooltip>
                 <template #trigger>
@@ -845,11 +807,11 @@ onUnmounted(() => {
                 </template>
                 使用 Microsoft Azure 语音合成服务, 混合语言输出效果和音质好, 略有延迟
               </NTooltip>
-            </NSpace>
+            </NFlex>
           </NRadioButton>
 
           <NRadioButton value="api">
-            <NSpace :size="4">
+            <NFlex :size="4">
               <span>API 语音</span>
               <NTooltip>
                 <template #trigger>
@@ -860,7 +822,7 @@ onUnmounted(() => {
                 </template>
                 自定义语音API，可以播放自己训练的模型或其他TTS
               </NTooltip>
-            </NSpace>
+            </NFlex>
           </NRadioButton>
         </NRadioGroup>
 
@@ -869,7 +831,7 @@ onUnmounted(() => {
           mode="out-in"
         >
           <!-- 本地语音设置 -->
-          <NSpace
+          <NFlex
             v-if="settings.voiceType === 'local'"
             vertical
             :size="16"
@@ -891,7 +853,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -899,7 +861,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.volume"
                 :min="0"
@@ -910,7 +872,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -918,7 +880,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ settings.speechInfo.pitch.toFixed(2) }}
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.pitch"
                 :min="0"
@@ -929,7 +891,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -937,7 +899,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ settings.speechInfo.rate.toFixed(2) }}
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.rate"
                 :min="0"
@@ -946,10 +908,10 @@ onUnmounted(() => {
                 style="margin-top: 8px"
               />
             </div>
-          </NSpace>
+          </NFlex>
 
           <!-- Azure TTS 设置 -->
-          <NSpace
+          <NFlex
             v-else-if="settings.voiceType === 'azure'"
             vertical
             :size="16"
@@ -965,7 +927,7 @@ onUnmounted(() => {
             </NAlert>
 
             <div>
-              <NSpace justify="space-between" align="center">
+              <NFlex justify="space-between" align="center">
                 <NText strong>
                   语音选择
                 </NText>
@@ -982,7 +944,7 @@ onUnmounted(() => {
                 <NText v-else depth="3" style="font-size: 12px">
                   共 {{ azureVoices.length }} 个语音
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSelect
                 v-model:value="settings.azureVoice"
                 :options="azureVoices.length > 0 ? azureVoices : [
@@ -1014,7 +976,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -1022,7 +984,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.volume"
                 :min="0"
@@ -1033,7 +995,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -1041,7 +1003,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ settings.speechInfo.pitch.toFixed(2) }}
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.pitch"
                 :min="0.5"
@@ -1052,7 +1014,7 @@ onUnmounted(() => {
             </div>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -1060,7 +1022,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ settings.speechInfo.rate.toFixed(2) }}
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.rate"
                 :min="0.5"
@@ -1069,10 +1031,10 @@ onUnmounted(() => {
                 style="margin-top: 8px"
               />
             </div>
-          </NSpace>
+          </NFlex>
 
           <!-- API 语音设置 -->
-          <NSpace
+          <NFlex
             v-else
             vertical
             :size="16"
@@ -1082,7 +1044,7 @@ onUnmounted(() => {
                 title="📖 使用说明"
                 name="requirements"
               >
-                <NSpace
+                <NFlex
                   vertical
                   :size="8"
                 >
@@ -1103,7 +1065,7 @@ onUnmounted(() => {
                   >
                     vits-simple-api
                   </NButton>
-                </NSpace>
+                </NFlex>
               </NCollapseItem>
             </NCollapse>
 
@@ -1166,7 +1128,7 @@ onUnmounted(() => {
               <template #icon>
                 <NIcon :component="Info24Filled" />
               </template>
-              <NSpace
+              <NFlex
                 vertical
                 :size="8"
               >
@@ -1174,11 +1136,11 @@ onUnmounted(() => {
                 <NCheckbox v-model:checked="settings.useAPIDirectly">
                   不使用代理（需要了解可能产生的影响）
                 </NCheckbox>
-              </NSpace>
+              </NFlex>
             </NAlert>
 
             <div>
-              <NSpace
+              <NFlex
                 justify="space-between"
                 align="center"
               >
@@ -1186,7 +1148,7 @@ onUnmounted(() => {
                 <NText depth="3">
                   {{ (settings.speechInfo.volume * 100).toFixed(0) }}%
                 </NText>
-              </NSpace>
+              </NFlex>
               <NSlider
                 v-model:value="settings.speechInfo.volume"
                 :min="0"
@@ -1195,7 +1157,7 @@ onUnmounted(() => {
                 style="margin-top: 8px"
               />
             </div>
-          </NSpace>
+          </NFlex>
         </Transition>
 
         <!-- 隐藏的音频元素 - 用于 API 和 Azure TTS -->
@@ -1211,7 +1173,7 @@ onUnmounted(() => {
           @error="onAudioError"
           @loadedmetadata="setAudioOutputDevice"
         />
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <!-- 模板设置区域 -->
@@ -1220,7 +1182,7 @@ onUnmounted(() => {
       size="small"
       bordered
     >
-      <NSpace
+      <NFlex
         vertical
         :size="12"
       >
@@ -1233,7 +1195,7 @@ onUnmounted(() => {
           </template>
           <NText>支持的变量（点击复制）：</NText>
           <NDivider style="margin: 8px 0" />
-          <NSpace :size="8">
+          <NFlex :size="8">
             <NButton
               v-for="item in Object.values(templateConstants)"
               :key="item.name"
@@ -1245,7 +1207,7 @@ onUnmounted(() => {
               <NDivider vertical />
               {{ item.name }}
             </NButton>
-          </NSpace>
+          </NFlex>
         </NAlert>
 
         <NText depth="3" style="font-size: 12px; margin-bottom: 8px;">
@@ -1341,7 +1303,7 @@ onUnmounted(() => {
             </NButton>
           </NInputGroup>
         </div>
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <!-- 高级设置区域 -->
@@ -1350,18 +1312,18 @@ onUnmounted(() => {
       size="small"
       bordered
     >
-      <NSpace
+      <NFlex
         vertical
         :size="12"
       >
-        <NSpace align="center">
+        <NFlex align="center">
           <NCheckbox
             :checked="settings.combineGiftDelay !== undefined"
             @update:checked="(checked: boolean) => {
               settings.combineGiftDelay = checked ? 2 : undefined
             }"
           >
-            <NSpace
+            <NFlex
               :size="4"
               align="center"
             >
@@ -1377,7 +1339,7 @@ onUnmounted(() => {
                 <br>
                 这也会导致送的礼物会等待指定时间之后才会念，即使没有连续赠送。
               </NTooltip>
-            </NSpace>
+            </NFlex>
           </NCheckbox>
 
           <NInputGroup
@@ -1394,13 +1356,13 @@ onUnmounted(() => {
               }"
             />
           </NInputGroup>
-        </NSpace>
+        </NFlex>
 
         <NCheckbox
           v-if="settings.voiceType === 'api'"
           v-model:checked="settings.splitText"
         >
-          <NSpace
+          <NFlex
             :size="4"
             align="center"
           >
@@ -1418,9 +1380,9 @@ onUnmounted(() => {
               <br>
               结果: 'Megghy' 说: U P P E R C A S E 单词
             </NTooltip>
-          </NSpace>
+          </NFlex>
         </NCheckbox>
-      </NSpace>
+      </NFlex>
     </NCard>
   </template>
 </template>

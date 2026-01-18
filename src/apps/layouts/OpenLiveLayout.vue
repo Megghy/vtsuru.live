@@ -4,28 +4,8 @@ import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vi
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
 import { useElementSize, useStorage } from '@vueuse/core' // 引入 VueUse 组合式函数
 import {
-  NAlert,
-  NAvatar,
-  NBackTop,
-  NButton,
-  NEllipsis,
-  NIcon,
-  NLayout,
-  NLayoutContent,
-  NLayoutFooter,
-  NLayoutHeader,
-  NLayoutSider,
-  NMenu,
-  NPageHeader,
-  NResult,
-  NScrollbar,
-  NSpace,
-  NSpin,
-  NSwitch,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui' // 引入 Naive UI 组件
+  NAlert, NAvatar, NBackTop, NButton, NEllipsis, NIcon, NLayout, NLayoutContent, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NPageHeader, NResult, NScrollbar, NFlex, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
+// 引入 Naive UI 组件
 import { computed, h, onMounted, ref } from 'vue' // 引入 Vue 相关 API
 import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 相关 API
 import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
@@ -236,7 +216,7 @@ onMounted(async () => {
 
         <!-- 右侧额外操作区域 -->
         <template #extra>
-          <NSpace
+          <NFlex
             align="center"
             :size="20"
           >
@@ -260,7 +240,7 @@ onMounted(async () => {
                 <NIcon :component="Sunny" />
               </template>
             </NSwitch>
-          </NSpace>
+          </NFlex>
         </template>
       </NPageHeader>
     </NLayoutHeader>
@@ -286,7 +266,7 @@ onMounted(async () => {
           v-if="danmakuClient.authInfo"
           style="margin-top: 8px"
         >
-          <NSpace
+          <NFlex
             vertical
             justify="center"
             align="center"
@@ -305,7 +285,7 @@ onMounted(async () => {
                 {{ danmakuClient.authInfo?.anchor_info?.uname }}
               </NText>
             </NEllipsis>
-          </NSpace>
+          </NFlex>
         </div>
         <NMenu
           :default-value="$route.name?.toString()"
@@ -313,7 +293,7 @@ onMounted(async () => {
           :collapsed-icon-size="22"
           :options="menuOptions"
         />
-        <NSpace justify="center">
+        <NFlex justify="center">
           <NText
             v-if="siderWidth > 150"
             depth="3"
@@ -327,7 +307,7 @@ onMounted(async () => {
               反馈
             </NButton>
           </NText>
-        </NSpace>
+        </NFlex>
       </NLayoutSider>
 
       <!-- 右侧主内容区域 -->

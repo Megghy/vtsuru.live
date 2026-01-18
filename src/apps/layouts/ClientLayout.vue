@@ -6,8 +6,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 
 import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
-import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NSpace, NSpin, NTag, NText, NTooltip } from 'naive-ui'
-
+import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NFlex, NSpin, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue' // 引入 ref, h, computed
 
 import { RouterLink, RouterView, useRouter } from 'vue-router' // 引入 Vue Router 组件
@@ -210,11 +209,11 @@ onMounted(() => {
         </div>
       </template>
 
-      <NSpace
+      <NFlex
         vertical
         size="large"
       >
-        <NSpace vertical>
+        <NFlex vertical>
           <div class="token-label-container">
             <span class="token-label">Token</span>
             <NTooltip placement="top">
@@ -236,7 +235,7 @@ onMounted(() => {
             placeholder="请输入Token"
             @keyup.enter="login"
           />
-        </NSpace>
+        </NFlex>
 
         <NButton
           block
@@ -247,7 +246,7 @@ onMounted(() => {
         >
           登陆
         </NButton>
-      </NSpace>
+      </NFlex>
     </NCard>
 
     <NSpin

@@ -3,16 +3,10 @@ import { Info24Filled } from '@vicons/fluent'
 import { addDays, endOfDay, format, startOfDay } from 'date-fns'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
-  DataZoomComponent,
-  GridComponent,
-  LegendComponent,
-  TitleComponent,
-  ToolboxComponent,
-  TooltipComponent,
-} from 'echarts/components'
+  DataZoomComponent, GridComponent, LegendComponent, TitleComponent, ToolboxComponent, TooltipComponent, } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NSpace, NSpin, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui'
+import { NAlert, NButton, NCard, NDatePicker, NDivider, NIcon, NFlex, NSpin, NText, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 import { useAccount } from '@/api/account'
@@ -545,7 +539,7 @@ watch(
             关于数据更新
           </NButton>
         </template>
-        <NSpace vertical>
+        <NFlex vertical>
           <NText strong>
             所有数据改为每天更新一次
           </NText>
@@ -568,11 +562,11 @@ watch(
           >
             投稿数据: 500粉以上: 每天一次
           </NText>
-        </NSpace>
+        </NFlex>
       </NTooltip>
       <br>
       <br>
-      <NSpace align="center">
+      <NFlex align="center">
         <NText depth="3">
           日期范围：
         </NText>
@@ -583,9 +577,9 @@ watch(
           separator="至"
           :shortcuts="dateShortcuts"
         />
-      </NSpace>
+      </NFlex>
       <br>
-      <NSpace
+      <NFlex
         vertical
         class="charts-container"
       >
@@ -676,7 +670,7 @@ watch(
         :style="{ height: chartHeight }"
         class="chart"
       /> -->
-      </NSpace>
+      </NFlex>
     </NCard>
   </div>
 </template>

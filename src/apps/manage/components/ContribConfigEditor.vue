@@ -3,7 +3,7 @@ import type { UploadFileResponse, UserFileTypes } from '@/api/api-models'
 import { UserFileLocation, UserFileTypes as UserFileTypesEnum } from '@/api/api-models'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
-import { NAlert, NButton, NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect, NSpace, NSwitch, NText, useMessage } from 'naive-ui'
+import { NAlert, NButton, NColorPicker, NForm, NFormItem, NInput, NInputNumber, NSelect, NFlex, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { uploadFiles } from '@/shared/services/fileUpload'
 
@@ -152,15 +152,15 @@ function removeUploadedFile(key: string, idx: number) {
           />
         </template>
         <template v-else-if="item.type === 'file'">
-          <NSpace vertical style="width: 100%">
-            <NSpace>
+          <NFlex vertical style="width: 100%">
+            <NFlex>
               <NButton size="small" @click="triggerUpload(item.key)">
                 上传
               </NButton>
               <NText depth="3">
                 {{ (typeof item.fileLimit === 'number' && item.fileLimit > 0) ? `限制 ${item.fileLimit} 个` : '' }}
               </NText>
-            </NSpace>
+            </NFlex>
             <div v-if="ensureArrayValue(item.key).length === 0">
               <NText depth="3">
                 暂无文件
@@ -181,7 +181,7 @@ function removeUploadedFile(key: string, idx: number) {
                 删除
               </NButton>
             </div>
-          </NSpace>
+          </NFlex>
         </template>
         <template v-else>
           <NText depth="3">

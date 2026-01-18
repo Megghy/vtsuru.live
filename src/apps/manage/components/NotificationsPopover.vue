@@ -1,22 +1,7 @@
 <script setup lang="ts">
 import { NotificationsOutline } from '@vicons/ionicons5'
 import {
-  NBadge,
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NList,
-  NListItem,
-  NPopover,
-  NScrollbar,
-  NSpace,
-  NSpin,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+  NBadge, NButton, NCard, NEmpty, NIcon, NList, NListItem, NPopover, NScrollbar, NFlex, NSpin, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
@@ -212,7 +197,7 @@ watch(
                       {{ item.message }}
                     </div>
 
-                    <NSpace>
+                    <NFlex>
                       <template v-if="isOrgInviteNotification(item)">
                         <NButton size="small" type="primary" @click.stop="acceptOrgInvite(item)">
                           接受
@@ -227,7 +212,7 @@ watch(
                       <NButton v-if="!item.isReaded" size="small" tertiary @click.stop="markRead(item.id)">
                         标记已读
                       </NButton>
-                    </NSpace>
+                    </NFlex>
                   </div>
                 </NListItem>
               </NList>

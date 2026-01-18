@@ -12,25 +12,7 @@ import type {
 } from '@/shared/config/templates'
 import { useRouteQuery } from '@vueuse/router'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NList,
-  NListItem,
-  NModal,
-  NSelect,
-  NSpace,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NFlex, NList, NListItem, NModal, NSelect, NSpin, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
 import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef, watch } from 'vue'
 import {
   DelBiliBlackList,
@@ -382,7 +364,7 @@ async function getTemplateConfig() {
 
 // 操作按钮组
 const buttonGroup = computed(() => {
-  return h(NSpace, () => [
+  return h(NFlex, () => [
     h(NButton, { type: 'primary', onClick: () => SaveTemplateSetting() }, () => '设为展示模板'),
     h(NButton, {
       type: 'info',
@@ -492,7 +474,7 @@ onMounted(async () => {
           </NCheckboxGroup>
 
           <NDivider> 通知 </NDivider>
-          <NSpace>
+          <NFlex>
             <NCheckbox
               v-model:checked="accountInfo.settings.sendEmail.recieveQA"
               @update:checked="SaveComboSetting"
@@ -511,17 +493,17 @@ onMounted(async () => {
             >
               积分礼物有新用户兑换时发送邮件
             </NCheckbox>
-          </NSpace>
+          </NFlex>
 
           <NDivider> 提问箱 </NDivider>
-          <NSpace>
+          <NFlex>
             <NCheckbox
               v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
               @update:checked="SaveComboSetting"
             >
               允许未注册用户提问
             </NCheckbox>
-          </NSpace>
+          </NFlex>
         </NTabPane>
 
         <!-- 黑名单标签页 -->

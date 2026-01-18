@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NLayoutContent, NSpace, useMessage } from 'naive-ui'
+import { NButton, NCard, NInput, NLayoutContent, NFlex, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { QueryGetAPI } from '@/api/query'
@@ -53,7 +53,7 @@ function changePassword() {
   <NLayoutContent class="web-center">
     <div class="web-page web-page--md">
       <NCard title="修改密码" size="small" bordered>
-        <NSpace vertical>
+        <NFlex vertical>
           <NInput
             v-model:value="password"
             type="password"
@@ -71,7 +71,7 @@ function changePassword() {
           >
             修改密码
           </NButton>
-        </NSpace>
+        </NFlex>
       </NCard>
     </div>
   </NLayoutContent>

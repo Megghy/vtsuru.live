@@ -1,18 +1,5 @@
 <script setup lang="ts">
-import {
-  NAvatar,
-  NCard,
-  NEmpty,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NImage,
-  NSkeleton,
-  NSpace,
-  NTag,
-  NTime,
-  NTooltip,
-} from 'naive-ui'
+import { NAvatar, NCard, NEmpty, NGrid, NGridItem, NIcon, NImage, NSkeleton, NFlex, NTag, NTime, NTooltip } from 'naive-ui';
 import { ChatbubblesOutline, PeopleOutline, TimeOutline, WalletOutline } from '@vicons/ionicons5'
 
 const props = defineProps<{
@@ -94,7 +81,7 @@ const props = defineProps<{
           </div>
 
           <template #footer>
-            <NSpace justify="space-between" size="small" style="font-size: 12px; opacity: 0.9;">
+            <NFlex justify="space-between" size="small" style="font-size: 12px; opacity: 0.9;">
               <span title="营收">
                 <NIcon :component="WalletOutline" style="vertical-align: -2px;" />
                 {{ item.live.totalIncomeWithGuard.toFixed(0) }}
@@ -107,7 +94,7 @@ const props = defineProps<{
                 <NIcon :component="ChatbubblesOutline" style="vertical-align: -2px;" />
                 {{ item.live.danmakusCount }}
               </span>
-            </NSpace>
+            </NFlex>
           </template>
         </NCard>
       </NGridItem>

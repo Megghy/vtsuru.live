@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAvatar } from 'naive-ui'
+import { NAvatar } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 

@@ -3,7 +3,7 @@ import type { SelectOption, UploadFileInfo } from 'naive-ui'
 import type { UploadFileResponse } from '@/api/api-models'
 import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Info24Filled } from '@vicons/fluent'
-import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NSpace, NText, NTooltip, NUpload, useMessage, useThemeVars } from 'naive-ui'
+import { NButton, NCard, NCheckbox, NColorPicker, NEmpty, NFlex, NForm, NGrid, NIcon, NInput, NInputNumber, NModal, NProgress, NScrollbar, NSelect, NSlider, NText, NTooltip, NUpload, useMessage, useThemeVars } from 'naive-ui';
 import { computed, h, onMounted, ref } from 'vue'
 import { UploadConfig } from '@/api/account'
 import { UserFileLocation } from '@/api/api-models'
@@ -393,7 +393,7 @@ function renderDecorativeImages(key: string) {
                   h('img', { src: img.path, style: { width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px', backgroundColor: themeVars.value.inputColor } }),
                   h('span', `ID: ${img.id}`),
                 ]),
-                h(NSpace, null, () => [
+                h(NFlex, null, () => [
                   h(NButton, { size: 'tiny', circle: true, secondary: true, title: '上移一层', onClick: (e: Event) => {
                     e.stopPropagation(); changeZIndex(img.id, 'up', key)
                   } }, { icon: () => h(NIcon, { component: ArrowUp20Filled }) }),

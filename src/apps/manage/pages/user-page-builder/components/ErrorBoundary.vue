@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NResult } from 'naive-ui'
+import { NButton, NResult } from 'naive-ui';
 import { onErrorCaptured, ref } from 'vue'
 
 const props = defineProps<{

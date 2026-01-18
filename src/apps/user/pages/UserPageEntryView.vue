@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAlert, NButton, NResult, NSpin, NText } from 'naive-ui'
+import { NAlert, NButton, NResult, NSpin, NText } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'

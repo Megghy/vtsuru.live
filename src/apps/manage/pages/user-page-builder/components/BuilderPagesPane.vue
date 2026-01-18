@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NIcon, NScrollbar, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NIcon, NScrollbar, NText } from 'naive-ui';
 import { ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import PageManager from './PageManager.vue'
 

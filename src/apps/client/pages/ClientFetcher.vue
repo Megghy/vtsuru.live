@@ -10,24 +10,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 // Tauri APIs (Optional - Remove if not using Tauri)
 import { platform, type, version } from '@tauri-apps/plugin-os'
 import {
-  AlertCircleOutline,
-  BarChartOutline,
-  CheckmarkCircleOutline,
-  CloseCircleOutline,
-  CloudDownloadOutline,
-  HardwareChipOutline,
-  HelpCircle,
-  LogInOutline,
-  LogOutOutline,
-  PeopleOutline,
-  PersonCircleOutline,
-  RefreshOutline,
-  TimeOutline,
-  TimerOutline,
-  TrendingUpOutline,
-  TvOutline,
-  WifiOutline,
-} from '@vicons/ionicons5'
+  AlertCircleOutline, BarChartOutline, CheckmarkCircleOutline, CloseCircleOutline, CloudDownloadOutline, HardwareChipOutline, HelpCircle, LogInOutline, LogOutOutline, PeopleOutline, PersonCircleOutline, RefreshOutline, TimeOutline, TimerOutline, TrendingUpOutline, TvOutline, WifiOutline, } from '@vicons/ionicons5'
 
 // Date & Formatters
 import { formatDistanceToNow, intervalToDuration } from 'date-fns'
@@ -35,51 +18,13 @@ import { zhCN } from 'date-fns/locale'
 
 import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
 import {
-  DataZoomComponent,
-  GridComponent,
-  LegendComponent,
-  MarkLineComponent,
-  MarkPointComponent,
-  TitleComponent,
-  ToolboxComponent,
-  TooltipComponent,
-} from 'echarts/components'
+  DataZoomComponent, GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, TitleComponent, ToolboxComponent, TooltipComponent, } from 'echarts/components'
 // ECharts
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 // Naive UI & Icons
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NDataTable,
-  NDescriptions,
-  NDescriptionsItem,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NPopconfirm,
-  NQrCode,
-  NRadioButton,
-  NRadioGroup,
-  NSpin,
-  NStatistic,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NDataTable, NDescriptions, NDescriptionsItem, NDivider, NEllipsis, NEmpty, NFlex, NGi, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NQrCode, NRadioButton, NRadioGroup, NSpin, NStatistic, NSwitch, NTabPane, NTabs, NTag, NText, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui'
 import { computed, h, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VChart from 'vue-echarts'

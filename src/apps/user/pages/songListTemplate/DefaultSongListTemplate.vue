@@ -2,7 +2,7 @@
 import type { SongsInfo } from '@/api/api-models'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { ChevronLeft24Filled, ChevronRight24Filled, CloudAdd20Filled } from '@vicons/fluent'
-import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip } from 'naive-ui'
+import { NButton, NCard, NCollapse, NCollapseItem, NDivider, NIcon, NTooltip } from 'naive-ui';
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import SongList from '@/components/SongList.vue'

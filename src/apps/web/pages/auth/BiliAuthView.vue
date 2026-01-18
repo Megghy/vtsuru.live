@@ -1,19 +1,7 @@
 <script setup lang="ts">
 import { breakpointsTailwind, useStorage, useBreakpoints as useVueUseBreakpoints } from '@vueuse/core'
 import {
-  NAlert,
-  NButton,
-  NCard,
-  NCountdown,
-  NInput,
-  NInputGroup,
-  NPopconfirm,
-  NSpin,
-  NStep,
-  NSteps,
-  NText,
-  useMessage,
-} from 'naive-ui'
+  NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NPopconfirm, NSpin, NStep, NSteps, NText, useMessage } from 'naive-ui';
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'

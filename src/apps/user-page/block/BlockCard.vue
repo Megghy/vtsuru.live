@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCard } from 'naive-ui'
+import { NCard } from 'naive-ui';
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
@@ -96,27 +96,27 @@ const borderTitleAlignClass = computed(() => {
 
 .border-title.align-left {
   justify-content: flex-start;
-  padding-left: 12px;
+  padding-left: var(--vtsuru-page-spacing, 14px);
 }
 .border-title.align-center {
   justify-content: center;
 }
 .border-title.align-right {
   justify-content: flex-end;
-  padding-right: 12px;
+  padding-right: var(--vtsuru-page-spacing, 14px);
 }
 
 .border-title__text {
   position: relative;
   display: inline-block;
-  padding: 0 6px;
+  padding: 0;
   font-size: 12px;
   line-height: 1;
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
   color: var(--n-text-color, var(--vtsuru-page-text, currentColor));
   font-weight: 600;
   letter-spacing: 0.2px;
-  opacity: 0.85;
+  opacity: 0.9;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
 .vtsuru-block-card {

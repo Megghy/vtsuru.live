@@ -5,28 +5,7 @@ import type {
 import type { AddressInfo } from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
 import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NList,
-  NListItem,
-  NModal,
-  NPopconfirm,
-  NScrollbar,
-  NSelect,
-  NSpin,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
+  NButton, NCard, NCheckbox, NCollapse, NCollapseItem, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NList, NListItem, NModal, NPopconfirm, NScrollbar, NSelect, NSpin, NTag, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'

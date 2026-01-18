@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NFlex, NTag } from 'naive-ui'
+import { NFlex, NTag } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 

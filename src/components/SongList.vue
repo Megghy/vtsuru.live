@@ -1,45 +1,12 @@
 <script setup lang="ts">
 // [导入] UI 组件和图标
-import {
-  Delete24Filled,
-  Info24Filled,
-  NotepadEdit20Filled,
-  Play24Filled,
-} from '@vicons/fluent'
+import { Delete24Filled, Info24Filled, NotepadEdit20Filled, Play24Filled, } from '@vicons/fluent'
 import { refDebounced, useLocalStorage } from '@vueuse/core' // VueUse 工具函数
 import { List } from 'linqts' // LINQ for TypeScript
 import type {
-  DataTableBaseColumn,
-  DataTableColumns,
-  DataTableRowKey,
-  FormInst,
-  FormRules} from 'naive-ui';
-import {
-  NButton,
-  NCard,
-  NCheckbox,
-  NDataTable,
-  NDivider,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpace,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage, // Naive UI 组件
-} from 'naive-ui'
-import type { VNodeChild} from 'vue';
+  DataTableBaseColumn, DataTableColumns, DataTableRowKey, FormInst, FormRules } from 'naive-ui'
+import { NButton, NCard, NCheckbox, NDataTable, NDivider, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NSelect, NFlex, NSwitch, NTabPane, NTabs, NTag, NText, NTooltip, useMessage } from 'naive-ui'
+import type { VNodeChild } from 'vue'
 import { computed, h, onMounted, ref, watch } from 'vue' // Vue 核心 API
 
 // [导入] 依赖项和类型
@@ -254,7 +221,7 @@ const authorColumn = ref<DataTableBaseColumn<SongsInfo>>({
   filterOptionValue: selectedAuthorFilter.value,
   render(data) {
     // 渲染作者按钮，点击时更新列筛选状态
-    return h(NSpace, { size: 5 }, () =>
+    return h(NFlex, { size: 5 }, () =>
       (data.author?.map(a => // 使用 ?. 防止 author 为空
         h(NButton, { size: 'tiny', type: 'info', secondary: true, onClick: () => onAuthorClick(a) }, () => a),
       ) ?? null) // 如果 author 为空则不渲染
@@ -300,7 +267,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       sorter: true, // 启用默认排序
       render(data) {
         // 同时显示原名和翻译名 (如果存在)
-        return h(NSpace, { vertical: true, size: 0, wrap: false }, () => [
+        return h(NFlex, { vertical: true, size: 0, wrap: false }, () => [
           h(NText, { style: { color: data.options?.scMinPrice ? '#c36767' : '' } }, () => data.name), // SC 歌曲标红
           data.translateName ? h(NText, { depth: '3', style: { fontSize: '12px' } }, () => data.translateName) : null, // 显示翻译名
         ])
@@ -321,7 +288,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         // 使用 NTag 显示语言
         return data.language?.length // 使用 ?.length 检查
-          ? h(NSpace, { size: 5 }, () =>
+          ? h(NFlex, { size: 5 }, () =>
               data.language?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a)) )
           : null
       },
@@ -363,7 +330,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
         if (data.options.fanMedalMinLevel) {
           tags.push(h(NTag, { type: 'info', size: 'small' }, () => `粉丝牌 ≥ ${data.options?.fanMedalMinLevel}`)) // 优化显示
         }
-        return tags.length > 0 ? h(NSpace, { size: 5 }, () => tags) : null
+        return tags.length > 0 ? h(NFlex, { size: 5 }, () => tags) : null
       },
     },
     {
@@ -380,7 +347,7 @@ function createColumns(): DataTableColumns<SongsInfo> {
       render(data) {
         // 使用 NTag 显示标签
         return data.tags?.length
-          ? h(NSpace, { size: 5 }, () => data.tags?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a)))
+          ? h(NFlex, { size: 5 }, () => data.tags?.map(a => h(NTag, { bordered: false, size: 'small' }, () => a)))
           : null
       },
     },
@@ -469,8 +436,8 @@ function createColumns(): DataTableColumns<SongsInfo> {
           buttons.push(...props.extraButton(data))
         }
 
-        // 使用 NSpace 渲染所有按钮
-        return h(NSpace, { justify: 'end', size: 8, wrap: false }, () => buttons) // 增加间距，禁止换行
+        // 使用 NFlex 渲染所有按钮
+        return h(NFlex, { justify: 'end', size: 8, wrap: false }, () => buttons) // 增加间距，禁止换行
       },
       width: actionColumnWidth.value, // 使用计算属性
     },
@@ -720,7 +687,7 @@ onMounted(() => {
     :bordered="false"
     style="margin-bottom: 10px;"
   >
-    <NSpace
+    <NFlex
       align="center"
       wrap
       item-style="margin-bottom: 5px;"
@@ -768,7 +735,7 @@ onMounted(() => {
         max-tag-count="responsive"
       />
       <!-- 显示控制开关 -->
-      <NSpace
+      <NFlex
         item-style="display: flex; align-items: center;"
         size="small"
       >
@@ -790,12 +757,12 @@ onMounted(() => {
             链接
           </NText>
         </template>
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCard>
 
   <!-- 歌曲数量与批量编辑按钮 -->
-  <NSpace
+  <NFlex
     justify="space-between"
     align="center"
     style="margin-bottom: 5px;"
@@ -814,7 +781,7 @@ onMounted(() => {
     >
       批量操作 ({{ selectedColumn.length }})
     </NButton>
-  </NSpace>
+  </NFlex>
   <!-- <NDivider style="margin-top: 5px; margin-bottom: 10px;" /> -->
 
   <!-- 试听播放器区域 -->
@@ -957,7 +924,7 @@ onMounted(() => {
             启用后将覆盖全局点歌设置，用于单独设置歌曲要求。不启用则遵循全局设置。
           </NTooltip>
         </template>
-        <NSpace vertical>
+        <NFlex vertical>
           <!-- 启用开关 -->
           <NCheckbox
             :checked="updateSongModel.options != null"
@@ -975,7 +942,7 @@ onMounted(() => {
           </NCheckbox>
           <!-- 详细设置 -->
           <template v-if="updateSongModel.options != null">
-            <NSpace>
+            <NFlex>
               <NCheckbox v-model:checked="updateSongModel.options!.needJianzhang">
                 舰长
               </NCheckbox>
@@ -985,8 +952,8 @@ onMounted(() => {
               <NCheckbox v-model:checked="updateSongModel.options!.needZongdu">
                 总督
               </NCheckbox>
-            </NSpace>
-            <NSpace align="center">
+            </NFlex>
+            <NFlex align="center">
               <NCheckbox
                 :checked="updateSongModel.options!.scMinPrice != null"
                 @update:checked="(checked: boolean) => updateSongModel.options!.scMinPrice = checked ? 30 : undefined"
@@ -1010,8 +977,8 @@ onMounted(() => {
                   元
                 </NInputGroupLabel>
               </NInputGroup>
-            </NSpace>
-            <NSpace align="center">
+            </NFlex>
+            <NFlex align="center">
               <NCheckbox
                 :checked="updateSongModel.options?.fanMedalMinLevel != null"
                 @update:checked="(checked: boolean) => {
@@ -1048,9 +1015,9 @@ onMounted(() => {
                   级
                 </NInputGroupLabel>
               </NInputGroup>
-            </NSpace>
+            </NFlex>
           </template>
-        </NSpace>
+        </NFlex>
       </NFormItem>
       <!-- 链接 -->
       <NFormItem
@@ -1079,7 +1046,7 @@ onMounted(() => {
     </NForm>
     <!-- 底部按钮 -->
     <template #footer>
-      <NSpace justify="end">
+      <NFlex justify="end">
         <NButton @click="showModal = false">
           取消
         </NButton>
@@ -1090,7 +1057,7 @@ onMounted(() => {
         >
           确认更新
         </NButton>
-      </NSpace>
+      </NFlex>
     </template>
   </NModal>
 
@@ -1206,7 +1173,7 @@ onMounted(() => {
         name="option"
         tab="点歌要求"
       >
-        <NSpace vertical>
+        <NFlex vertical>
           <NCheckbox
             :checked="batchUpdate_Option != null"
             @update:checked="(checked: boolean) => {
@@ -1222,7 +1189,7 @@ onMounted(() => {
             启用/禁用独立要求 (将覆盖原有设置)
           </NCheckbox>
           <template v-if="batchUpdate_Option != null">
-            <NSpace>
+            <NFlex>
               <NCheckbox v-model:checked="batchUpdate_Option!.needJianzhang">
                 舰长
               </NCheckbox>
@@ -1232,8 +1199,8 @@ onMounted(() => {
               <NCheckbox v-model:checked="batchUpdate_Option!.needZongdu">
                 总督
               </NCheckbox>
-            </NSpace>
-            <NSpace align="center">
+            </NFlex>
+            <NFlex align="center">
               <NCheckbox
                 :checked="batchUpdate_Option!.scMinPrice != null"
                 @update:checked="(checked: boolean) => batchUpdate_Option!.scMinPrice = checked ? 30 : undefined"
@@ -1257,8 +1224,8 @@ onMounted(() => {
                   元
                 </NInputGroupLabel>
               </NInputGroup>
-            </NSpace>
-            <NSpace align="center">
+            </NFlex>
+            <NFlex align="center">
               <NCheckbox
                 :checked="batchUpdate_Option!.fanMedalMinLevel != null"
                 @update:checked="(checked: boolean) => batchUpdate_Option!.fanMedalMinLevel = checked ? 1 : undefined"
@@ -1282,9 +1249,9 @@ onMounted(() => {
                   级
                 </NInputGroupLabel>
               </NInputGroup>
-            </NSpace>
+            </NFlex>
           </template>
-        </NSpace>
+        </NFlex>
         <NDivider />
         <NButton
           type="primary"

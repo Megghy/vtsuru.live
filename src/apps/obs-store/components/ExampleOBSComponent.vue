@@ -3,7 +3,8 @@ import type { UserInfo } from '@/api/api-models'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 // ConfigItemType is imported in the script block above
 // import { ConfigItemDefinition, ConfigItemType, ExtractConfigData, defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes';
-import { NAlert, NButton, NCard, NForm, NFormItem, NInput, useMessage } from 'naive-ui'; import { computed, onMounted, ref, watch } from 'vue'
+import { NAlert, NButton, NCard, NForm, NFormItem, NInput, useMessage } from 'naive-ui'
+import { computed, onMounted, ref, watch } from 'vue'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
 
 // --- Props ---

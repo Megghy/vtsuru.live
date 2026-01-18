@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapseItem, NInputNumber, NSelect, NSpace, NSwitch } from 'naive-ui'
+import { NCollapseItem, NInputNumber, NSelect, NFlex, NSwitch } from 'naive-ui';
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 
 defineProps({
@@ -22,8 +22,8 @@ const scFilterModeOptions = [
     v-if="action.triggerType === TriggerType.SUPER_CHAT"
     title="SC触发设置"
   >
-    <NSpace vertical>
-      <NSpace
+    <NFlex vertical>
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -34,10 +34,10 @@ const scFilterModeOptions = [
           style="width: 200px"
           :options="scFilterModeOptions"
         />
-      </NSpace>
+      </NFlex>
 
       <template v-if="action.triggerConfig.scFilterMode === 'price'">
-        <NSpace
+        <NFlex
           align="center"
           justify="space-between"
           style="width: 100%"
@@ -48,19 +48,19 @@ const scFilterModeOptions = [
             :min="0"
             style="width: 120px"
           />
-        </NSpace>
+        </NFlex>
       </template>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
       >
         <span>防止重复发送:</span>
         <NSwitch v-model:value="action.triggerConfig.preventRepeat" />
-      </NSpace>
+      </NFlex>
 
-      <NSpace
+      <NFlex
         align="center"
         justify="space-between"
         style="width: 100%"
@@ -72,7 +72,7 @@ const scFilterModeOptions = [
           :max="20"
           style="width: 120px"
         />
-      </NSpace>
-    </NSpace>
+      </NFlex>
+    </NFlex>
   </NCollapseItem>
 </template>
