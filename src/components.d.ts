@@ -12,8 +12,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppHeader: typeof import('./components/layout/AppHeader.vue')['default']
-    AppSider: typeof import('./components/layout/AppSider.vue')['default']
     BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
@@ -25,6 +23,8 @@ declare module 'vue' {
     NEllipsis: typeof import('naive-ui')['NEllipsis']
     NEmpty: typeof import('naive-ui')['NEmpty']
     NFlex: typeof import('naive-ui')['NFlex']
+    NForm: typeof import('naive-ui')['NForm']
+    NFormItem: typeof import('naive-ui')['NFormItem']
     NFormItemGi: typeof import('naive-ui')['NFormItemGi']
     NGi: typeof import('naive-ui')['NGi']
     NGrid: typeof import('naive-ui')['NGrid']
@@ -61,8 +61,6 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
-  const AppHeader: typeof import('./components/layout/AppHeader.vue')['default']
-  const AppSider: typeof import('./components/layout/AppSider.vue')['default']
   const BiliUserSelector: typeof import('./components/common/BiliUserSelector.vue')['default']
   const NAlert: typeof import('naive-ui')['NAlert']
   const NAvatar: typeof import('naive-ui')['NAvatar']
@@ -74,6 +72,8 @@ declare global {
   const NEllipsis: typeof import('naive-ui')['NEllipsis']
   const NEmpty: typeof import('naive-ui')['NEmpty']
   const NFlex: typeof import('naive-ui')['NFlex']
+  const NForm: typeof import('naive-ui')['NForm']
+  const NFormItem: typeof import('naive-ui')['NFormItem']
   const NFormItemGi: typeof import('naive-ui')['NFormItemGi']
   const NGi: typeof import('naive-ui')['NGi']
   const NGrid: typeof import('naive-ui')['NGrid']

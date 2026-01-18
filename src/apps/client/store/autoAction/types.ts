@@ -18,6 +18,10 @@ export enum ActionType {
   SEND_DANMAKU = 'send_danmaku', // 发送弹幕
   SEND_PRIVATE_MSG = 'send_private_msg', // 发送私信
   EXECUTE_COMMAND = 'execute_command', // 执行命令
+  VTS_HOTKEY = 'vts_hotkey', // 触发 VTS hotkey
+  VTS_PRESET = 'vts_preset', // 应用 VTS 机位预设
+  VTS_DROP_ITEM = 'vts_drop_item', // 掉落 VTS 道具
+  VTS_PARAM_ADD = 'vts_param_add', // 注入 VTS 参数（mode=add）
 }
 
 // 关键词匹配类型
@@ -60,6 +64,16 @@ export interface AutoActionItem {
     maxUsersPerMsg?: number // 每条消息最大用户数
     maxItemsPerUser?: number // 每用户最大项目数 (礼物等)
     cooldownSeconds?: number // 冷却时间(秒)
+
+    // --- VTS 动作配置（按 actionType 使用） ---
+    vtsHotkeyId?: string
+    vtsPresetId?: string
+    vtsItemFileName?: string
+    vtsItemDropX?: number
+    vtsItemDropSize?: number
+    vtsParamId?: string
+    vtsParamValue?: number
+    vtsParamWeight?: number
   }
 }
 

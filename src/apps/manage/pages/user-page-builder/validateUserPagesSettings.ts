@@ -20,25 +20,25 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
 
     const t = obj.pageBackgroundType === undefined ? 'none' : String(obj.pageBackgroundType)
     const typeOk = t === 'none' || t === 'color' || t === 'image'
-    if (!typeOk) problems.push(`${label}: background.pageBackgroundType 不合法（${t}）`)
+    if (!typeOk) problems.push(`${label}: background.pageBackgroundType 不合法：${t}`)
 
     if (obj.pageBackgroundCoverSidebar !== undefined && typeof obj.pageBackgroundCoverSidebar !== 'boolean') {
       problems.push(`${label}: background.pageBackgroundCoverSidebar 必须是 boolean`)
     }
     if (obj.pageBackgroundImageFit !== undefined) {
       const fit = String(obj.pageBackgroundImageFit)
-      if (!(fit === 'cover' || fit === 'contain' || fit === 'fill' || fit === 'none')) problems.push(`${label}: background.pageBackgroundImageFit 不合法（${fit}）`)
+      if (!(fit === 'cover' || fit === 'contain' || fit === 'fill' || fit === 'none')) problems.push(`${label}: background.pageBackgroundImageFit 不合法：${fit}`)
     }
     if (obj.pageBackgroundBlurMode !== undefined) {
       const m = String(obj.pageBackgroundBlurMode)
-      if (!(m === 'none' || m === 'background' || m === 'glass')) problems.push(`${label}: background.pageBackgroundBlurMode 不合法（${m}）`)
+      if (!(m === 'none' || m === 'background' || m === 'glass')) problems.push(`${label}: background.pageBackgroundBlurMode 不合法：${m}`)
     }
     if (obj.pageBackgroundBlur !== undefined && typeof obj.pageBackgroundBlur !== 'number') {
       problems.push(`${label}: background.pageBackgroundBlur 必须是 number`)
     }
     if (obj.pageBackgroundScrimMode !== undefined) {
       const m = String(obj.pageBackgroundScrimMode)
-      if (!(m === 'auto' || m === 'black' || m === 'white')) problems.push(`${label}: background.pageBackgroundScrimMode 不合法（${m}）`)
+      if (!(m === 'auto' || m === 'black' || m === 'white')) problems.push(`${label}: background.pageBackgroundScrimMode 不合法：${m}`)
     }
     if (obj.pageBackgroundScrimStrength !== undefined) {
       if (typeof obj.pageBackgroundScrimStrength !== 'number') {
@@ -74,7 +74,7 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
     if (obj.backgroundColor !== undefined && typeof obj.backgroundColor !== 'string') problems.push(`${label}: theme.backgroundColor 必须是 string`)
     if (obj.pageThemeMode !== undefined) {
       const m = String(obj.pageThemeMode)
-      if (!(m === 'auto' || m === 'light' || m === 'dark')) problems.push(`${label}: theme.pageThemeMode 不合法（${m}）`)
+      if (!(m === 'auto' || m === 'light' || m === 'dark')) problems.push(`${label}: theme.pageThemeMode 不合法：${m}`)
     }
   }
 

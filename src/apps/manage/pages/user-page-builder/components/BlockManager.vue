@@ -341,7 +341,7 @@ const blockActionOptions = computed(() => {
     { label: '在上方插入副本', key: 'dup-up', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
     { label: '在下方插入副本', key: 'dup-down', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
     { type: 'divider' },
-    { label: '解散分组（仅布局）', key: 'ungroup', icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
+    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
     { type: 'divider' },
   ]
 
@@ -355,7 +355,7 @@ function handleBlockAction(key: string, blockId: string) {
   else if (key === 'rename') {
     const current = editor.getBlockById(blockId)?.name ?? ''
     // eslint-disable-next-line no-alert
-    const next = window.prompt('区块名称（仅编辑用，不会对外展示）', current)
+    const next = window.prompt('区块名称：仅用于编辑，不对外展示', current)
     if (next === null) return
     editor.setBlockName(blockId, next)
   }

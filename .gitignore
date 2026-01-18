@@ -30,6 +30,7 @@ env.d.ts
 /.cursor
 # SpecStory explanation file
 .specstory/.what-is-this.md
+*.tsbuildinfo
 
 /VTsuru/
 VTsuru

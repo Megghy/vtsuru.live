@@ -146,6 +146,12 @@ const menuOptions = computed(() => {
     },
     {
       label: () =>
+        h(RouterLink, { to: { name: 'client-vts' } }, () => 'VTS 控制'),
+      key: 'vts',
+      icon: () => h(FlashAuto24Filled),
+    },
+    {
+      label: () =>
         h(RouterLink, { to: { name: 'client-read-danmaku' } }, () => '读弹幕'),
       key: 'read-danmaku',
       icon: () => h(Mic24Filled),

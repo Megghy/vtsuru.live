@@ -363,7 +363,7 @@ export function useUserPageEditor() {
     if (isSaving.value || isAutoSaving.value) return '保存中...'
     if (isDirty.value) return '未保存'
     if (!lastSavedAt.value) return '已保存'
-    return `已保存（${new Date(lastSavedAt.value).toLocaleTimeString()}）`
+    return `已保存 · ${new Date(lastSavedAt.value).toLocaleTimeString()}`
   })
 
   watch(
@@ -496,7 +496,7 @@ export function useUserPageEditor() {
 
     const bytes = estimateUtf8Bytes(JSON.stringify(nextSettings))
     if (bytes > MAX_CONFIG_BYTES) {
-      throw new Error(`导入失败：配置体积超限（${bytes} / ${MAX_CONFIG_BYTES} bytes）`)
+      throw new Error(`导入失败：配置体积超限 ${bytes} / ${MAX_CONFIG_BYTES} bytes`)
     }
 
     batchHistory(() => {

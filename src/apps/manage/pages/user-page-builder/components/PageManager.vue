@@ -168,7 +168,7 @@ function confirmDuplicatePage() {
       <NSpace vertical>
         <template v-if="visiblePages.length">
           <NText depth="3" style="font-size: 12px; margin-top: 4px">
-            子页面（导航显示）
+            子页面 · 导航显示
           </NText>
           <div
             v-for="p in visiblePages"
@@ -214,7 +214,7 @@ function confirmDuplicatePage() {
               </NFlex>
               <div style="height: 8px" />
               <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                页面名称（可选）
+                页面名称 · 可选
               </NText>
               <NInput
                 size="small"
@@ -224,7 +224,7 @@ function confirmDuplicatePage() {
               />
               <div style="height: 8px" />
               <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                排序权重（数字越小越靠前）
+                排序权重 · 数字越小越靠前
               </NText>
               <NInputNumber
                 size="small"
@@ -242,7 +242,7 @@ function confirmDuplicatePage() {
 
         <template v-if="hiddenPages.length">
           <NText depth="3" style="font-size: 12px; margin-top: 10px">
-            隐藏页面（仅可通过按钮跳转）
+            隐藏页面 · 仅可通过按钮跳转
           </NText>
           <div
             v-for="p in hiddenPages"
@@ -288,7 +288,7 @@ function confirmDuplicatePage() {
               </NFlex>
               <div style="height: 8px" />
               <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                页面名称（可选）
+                页面名称 · 可选
               </NText>
               <NInput
                 size="small"
@@ -298,7 +298,7 @@ function confirmDuplicatePage() {
               />
               <div style="height: 8px" />
               <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                排序权重（数字越小越靠前）
+                排序权重 · 数字越小越靠前
               </NText>
               <NInputNumber
                 size="small"
@@ -323,12 +323,14 @@ function confirmDuplicatePage() {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NSpace vertical>
-        <NInput v-model:value="newSlug" placeholder="slug，例如 links / sponsor / faq" />
+      <NForm size="small" label-placement="top">
+        <NFormItem label="slug" required>
+          <NInput v-model:value="newSlug" placeholder="例如 links / sponsor / faq" />
+        </NFormItem>
         <NAlert type="info" :show-icon="true">
           创建后可访问：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
         </NAlert>
-      </NSpace>
+      </NForm>
       <template #footer>
         <NSpace justify="end">
           <NButton @click="addPageModal = false">
@@ -348,12 +350,14 @@ function confirmDuplicatePage() {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NSpace vertical>
+      <NForm size="small" label-placement="top">
         <NAlert type="info" :show-icon="true">
           原 slug：/{{ renameFromSlug || 'slug' }}
         </NAlert>
-        <NInput v-model:value="renameToSlug" placeholder="新 slug，例如 links / sponsor / faq" />
-      </NSpace>
+        <NFormItem label="新 slug" required>
+          <NInput v-model:value="renameToSlug" placeholder="例如 links / sponsor / faq" />
+        </NFormItem>
+      </NForm>
       <template #footer>
         <NSpace justify="end">
           <NButton @click="renamePageModal = false">
@@ -373,15 +377,17 @@ function confirmDuplicatePage() {
       style="width: 420px; max-width: 90vw"
       :auto-focus="false"
     >
-      <NSpace vertical>
+      <NForm size="small" label-placement="top">
         <NAlert type="info" :show-icon="true">
           复制自：/{{ duplicateFromSlug || 'slug' }}
         </NAlert>
-        <NInput v-model:value="duplicateToSlug" placeholder="新 slug，例如 links-copy" />
+        <NFormItem label="新 slug" required>
+          <NInput v-model:value="duplicateToSlug" placeholder="例如 links-copy" />
+        </NFormItem>
         <NText depth="3">
           会自动为区块页生成新的 block.id，避免与原页面冲突。
         </NText>
-      </NSpace>
+      </NForm>
       <template #footer>
         <NSpace justify="end">
           <NButton @click="duplicatePageModal = false">

@@ -159,14 +159,14 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       return
     }
     if (files.some(f => !isImageFile(f))) {
-      opts.notify.error('仅支持上传图片文件（png/jpg/jpeg/gif/webp）')
+      opts.notify.error('仅支持上传图片文件：png/jpg/jpeg/gif/webp')
       return
     }
 
     if (ctx.kind !== 'pageBackground' && ctx.kind !== 'globalBackground' && ctx.kind !== 'pageBackgroundOverride') {
       const block = findBlockById(project.blocks, ctx.blockId)
       if (!block) {
-        opts.notify.error('找不到要上传到的区块（可能已被删除）')
+        opts.notify.error('找不到要上传到的区块，可能已被删除')
         return
       }
 
@@ -195,11 +195,11 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       })()
       if (ctx.kind === 'galleryBulk') {
         if (currentImages + files.length > MAX_PAGE_IMAGES) {
-          opts.notify.error(`图片数量将超出上限（${currentImages + files.length}/${MAX_PAGE_IMAGES}），请减少选择数量或先删除一些图片`)
+          opts.notify.error(`图片数量将超出上限 ${currentImages + files.length}/${MAX_PAGE_IMAGES}，请减少选择数量或先删除一些图片`)
           return
         }
       } else if (willAddNewImage && currentImages >= MAX_PAGE_IMAGES) {
-        opts.notify.error(`图片数量已达上限（${currentImages}/${MAX_PAGE_IMAGES}），请先删除一些图片`)
+        opts.notify.error(`图片数量已达上限 ${currentImages}/${MAX_PAGE_IMAGES}，请先删除一些图片`)
         return
       }
     }
@@ -222,7 +222,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
         if ((opts.currentPage.value.background as any).pageBackgroundType !== 'image') (opts.currentPage.value.background as any).pageBackgroundType = 'image'
       } else {
         const block = findBlockById(project.blocks, ctx.blockId)
-        if (!block) throw new Error('找不到要上传到的区块（可能已被删除）')
+        if (!block) throw new Error('找不到要上传到的区块，可能已被删除')
 
         if (ctx.kind === 'block') {
           const propsObj = opts.ensurePropsObject(block)
@@ -231,7 +231,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
           const propsObj = opts.ensurePropsObject(block)
           if (block.type !== 'imageGallery') throw new Error('当前区块不是图片组，无法写入上传结果')
           if (!Array.isArray(propsObj.items)) propsObj.items = []
-          if (ctx.itemIndex >= propsObj.items.length) throw new Error('找不到要上传到的图片项（可能已被删除）')
+          if (ctx.itemIndex >= propsObj.items.length) throw new Error('找不到要上传到的图片项，可能已被删除')
           const it = propsObj.items[ctx.itemIndex]
           if (!it || typeof it !== 'object' || Array.isArray(it)) throw new Error('图片项数据异常，无法写入上传结果')
           it.imageFile = uploadedList[0]

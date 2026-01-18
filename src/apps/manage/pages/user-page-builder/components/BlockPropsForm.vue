@@ -6,7 +6,8 @@
   import PropsGrid from './PropsGrid.vue';
   import { computed, inject } from 'vue';
   import { UserPageEditorKey } from '../context';
-  import { ImageOutline, PersonCircleOutline } from '@vicons/ionicons5';
+  import Draggable from 'vuedraggable-es';
+  import { ImageOutline, PersonCircleOutline, ReorderThreeOutline } from '@vicons/ionicons5';
 
   const props = defineProps<{
     block: BlockNode;
@@ -14,6 +15,15 @@
 
   const editor = inject(UserPageEditorKey);
   if (!editor) throw new Error('UserPageEditor context is missing');
+
+  function getButtonItemKey(it: any) {
+    if (!it || typeof it !== 'object') return String(it ?? '')
+    if (typeof (it as any)._k !== 'string') {
+      const v = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`
+      Object.defineProperty(it, '_k', { value: v, enumerable: false })
+    }
+    return (it as any)._k as string
+  }
 
   const internalPageOptions = computed(() => {
     const pages = editor.settings.value.pages ?? {};
@@ -28,7 +38,7 @@
     return [
       { label: '主页', value: 'home' },
       ...entries.map(it => ({
-        label: `${it.title}${it.navVisible ? '' : '（隐藏）'}`,
+        label: `${it.title}${it.navVisible ? '' : ' · 隐藏'}`,
         value: it.slug,
       })),
     ];
@@ -164,35 +174,35 @@
   const layoutProps = computed(() => editor.ensureLayoutProps(props.block) as any);
 
   const justifyOptionsHorizontal = [
-    { label: 'start（靠左）', value: 'start' },
-    { label: 'center（居中）', value: 'center' },
-    { label: 'end（靠右）', value: 'end' },
-    { label: 'between（两端对齐）', value: 'between' },
-    { label: 'around（环绕分布）', value: 'around' },
-    { label: 'evenly（均匀分布）', value: 'evenly' },
+    { label: 'start - 靠左', value: 'start' },
+    { label: 'center - 居中', value: 'center' },
+    { label: 'end - 靠右', value: 'end' },
+    { label: 'between - 两端对齐', value: 'between' },
+    { label: 'around - 环绕分布', value: 'around' },
+    { label: 'evenly - 均匀分布', value: 'evenly' },
   ];
 
   const justifyOptionsVertical = [
-    { label: 'start（靠上）', value: 'start' },
-    { label: 'center（居中）', value: 'center' },
-    { label: 'end（靠下）', value: 'end' },
-    { label: 'between（上下两端对齐）', value: 'between' },
-    { label: 'around（上下环绕分布）', value: 'around' },
-    { label: 'evenly（上下均匀分布）', value: 'evenly' },
+    { label: 'start - 靠上', value: 'start' },
+    { label: 'center - 居中', value: 'center' },
+    { label: 'end - 靠下', value: 'end' },
+    { label: 'between - 上下两端对齐', value: 'between' },
+    { label: 'around - 上下环绕分布', value: 'around' },
+    { label: 'evenly - 上下均匀分布', value: 'evenly' },
   ];
 
   const alignOptionsHorizontal = [
-    { label: 'start（靠左）', value: 'start' },
-    { label: 'center（居中）', value: 'center' },
-    { label: 'end（靠右）', value: 'end' },
-    { label: 'stretch（拉伸/等高）', value: 'stretch' },
+    { label: 'start - 靠左', value: 'start' },
+    { label: 'center - 居中', value: 'center' },
+    { label: 'end - 靠右', value: 'end' },
+    { label: 'stretch - 拉伸/等高', value: 'stretch' },
   ];
 
   const alignOptionsVertical = [
-    { label: 'start（靠上）', value: 'start' },
-    { label: 'center（居中）', value: 'center' },
-    { label: 'end（靠下）', value: 'end' },
-    { label: 'stretch（拉伸/等高）', value: 'stretch' },
+    { label: 'start - 靠上', value: 'start' },
+    { label: 'center - 居中', value: 'center' },
+    { label: 'end - 靠下', value: 'end' },
+    { label: 'stretch - 拉伸/等高', value: 'stretch' },
   ];
 
   const horizontalAlignModel = computed({
@@ -229,8 +239,8 @@
       默认属性
     </NDivider>
     <PropsGrid>
-      <NFormItem label="区块名称（仅编辑用）" style="justify-self: start; width: min(260px, 100%)">
-        <NInput v-model:value="blockNameModel" maxlength="50" show-count placeholder="例如：直播信息（紧凑）" />
+      <NFormItem label="区块名称" style="justify-self: start; width: min(260px, 100%)">
+        <NInput v-model:value="blockNameModel" maxlength="50" show-count placeholder="例如：直播信息 · 紧凑" />
       </NFormItem>
       <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示边框" style="justify-self: start; width: min(180px, 100%)">
         <NSpace justify="end">
@@ -254,9 +264,9 @@
           <NFormItem label="布局类型">
             <NSelect
               v-model:value="editor.ensureLayoutProps(props.block).layout" :options="[
-                { label: 'Row（横向）', value: 'row' },
-                { label: 'Column（纵向）', value: 'column' },
-                { label: 'Grid（网格）', value: 'grid' },
+                { label: 'Row - 横向', value: 'row' },
+                { label: 'Column - 纵向', value: 'column' },
+                { label: 'Grid - 网格', value: 'grid' },
               ]"
             />
           </NFormItem>
@@ -306,7 +316,7 @@
     <template v-else-if="props.block.type === 'profile'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem label="头像链接（可选）">
+          <NFormItem label="头像链接">
             <NInput v-model:value="editor.ensurePropsObject(props.block).avatarUrl" placeholder="https://..." />
           </NFormItem>
           <NFormItem label="显示名称">
@@ -352,7 +362,7 @@
           <NFormItem label="标题文字">
             <NInput v-model:value="editor.ensurePropsObject(props.block).text" placeholder="请输入标题" />
           </NFormItem>
-          <NFormItem label="标题级别（1/2/3）">
+          <NFormItem label="标题级别 1/2/3">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).level" :min="1" :max="3"
               style="width: 100%"
@@ -398,7 +408,7 @@
               ]"
             />
           </NFormItem>
-          <NFormItem label="标题（可选）">
+          <NFormItem label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="可选" />
           </NFormItem>
           <NFormItem class="span-full" label="内容">
@@ -463,7 +473,7 @@
               :options="[{ label: '列表', value: 'list' }, { label: '表格', value: 'table' }]"
             />
           </NFormItem>
-          <NFormItem label="展示周数（1~8）">
+          <NFormItem label="展示周数 1~8">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).weeksCount" :min="1" :max="8"
               style="width: 100%"
@@ -527,7 +537,7 @@
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showLiveRoom" size="small" />
             </NSpace>
           </NFormItem>
-          <NFormItem class="span-full" label="个人主页链接（可选）">
+          <NFormItem class="span-full" label="个人主页链接">
             <NInput
               v-model:value="editor.ensurePropsObject(props.block).spaceUrl"
               placeholder="https://space.bilibili.com/..."
@@ -544,7 +554,7 @@
             <NSpace vertical style="width: 100%">
               <div v-for="(it, idx) in editor.ensureItems(props.block)" :key="idx" style="display:flex; gap: 8px">
                 <NInput v-model:value="it.label" placeholder="标题" />
-                <NInput v-model:value="it.url" placeholder="链接（https://...）" />
+                <NInput v-model:value="it.url" placeholder="链接 https://..." />
                 <NButton type="error" secondary @click="editor.ensureItems(props.block).splice(idx, 1)">
                   删除
                 </NButton>
@@ -564,7 +574,7 @@
     <template v-else-if="props.block.type === 'buttons'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem label="边框标题（可选）">
+          <NFormItem label="边框标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).borderTitle" placeholder="例如：导航" />
           </NFormItem>
           <NFormItem label="标题对齐">
@@ -576,7 +586,7 @@
           <NFormItem label="排列方向">
             <NSelect
               v-model:value="editor.ensurePropsObject(props.block).direction"
-              :options="[{ label: '竖向', value: 'vertical' }, { label: '横向（自动换行）', value: 'horizontal' }]"
+              :options="[{ label: '竖向', value: 'vertical' }, { label: '横向 - 自动换行', value: 'horizontal' }]"
             />
           </NFormItem>
           <NFormItem label="对齐方式">
@@ -616,46 +626,70 @@
               ]"
             />
           </NFormItem>
-          <NFormItem label="间距 gap（px）">
+          <NFormItem label="间距 px">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).gap" :min="0" :max="32"
               style="width: 100%"
             />
           </NFormItem>
           <NFormItem class="span-full" label="按钮项">
-            <NSpace vertical style="width: 100%">
-              <div v-for="(it, idx) in editor.ensureItems(props.block)" :key="idx" style="display:flex; gap: 8px">
-                <NInput v-model:value="it.label" placeholder="标题" />
-                <NSelect
-                  style="width: 110px"
-                  :value="(it as any).page ? 'page' : 'external'"
-                  :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }]"
-                  @update:value="(v) => {
-                    if (v === 'page') {
-                      if (!(it as any).page) (it as any).page = 'home';
-                      delete (it as any).url;
-                    } else {
-                      if (typeof (it as any).url !== 'string' || !(it as any).url.trim().length) (it as any).url = 'https://';
-                      delete (it as any).page;
-                    }
-                  }"
-                />
-                <NSelect
-                  v-if="(it as any).page"
-                  v-model:value="(it as any).page"
-                  :options="internalPageOptions"
-                  style="flex: 1; min-width: 0"
-                />
-                <NInput
-                  v-else
-                  v-model:value="(it as any).url"
-                  placeholder="链接（https://...）"
-                  style="flex: 1; min-width: 0"
-                />
-                <NButton type="error" secondary @click="editor.ensureItems(props.block).splice(idx, 1)">
-                  删除
-                </NButton>
-              </div>
+            <NSpace vertical style="width: 100%; padding-right: 10px">
+              <Draggable
+                :list="editor.ensureItems(props.block)"
+                :item-key="getButtonItemKey"
+                handle=".drag-handle"
+                :animation="160"
+              >
+                <template #item="{ element: it, index: idx }">
+                  <div
+                    style="width: 100%; min-width: 0; margin-bottom: 10px; padding: 10px; border-radius: 10px; border: 1px solid rgba(127, 127, 127, 0.28); background: var(--n-color-embedded); box-sizing: border-box"
+                  >
+                    <div style="display:flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; min-width: 0">
+                      <NInput
+                        v-model:value="it.label"
+                        placeholder="标题"
+                        style="flex: 1 1 160px; min-width: 120px"
+                      />
+                      <NSelect
+                        style="width: 110px; flex: 0 0 110px"
+                        :value="(it as any).page ? 'page' : 'external'"
+                        :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }]"
+                        @update:value="(v) => {
+                          if (v === 'page') {
+                            if (!(it as any).page) (it as any).page = 'home';
+                            delete (it as any).url;
+                          } else {
+                            if (typeof (it as any).url !== 'string' || !(it as any).url.trim().length) (it as any).url = 'https://';
+                            delete (it as any).page;
+                          }
+                        }"
+                      />
+                    </div>
+                    <div style="margin-top: 8px; width: 100%; min-width: 0">
+                      <NSelect
+                        v-if="(it as any).page"
+                        v-model:value="(it as any).page"
+                        :options="internalPageOptions"
+                        style="width: 100%"
+                      />
+                      <NInput
+                        v-else
+                        v-model:value="(it as any).url"
+                        placeholder="链接 https://..."
+                        style="width: 100%"
+                      />
+                    </div>
+                    <div style="margin-top: 8px; display:flex; align-items:center; justify-content: space-between; gap: 10px">
+                      <NButton type="error" secondary size="small" @click="editor.ensureItems(props.block).splice(idx, 1)">
+                        删除
+                      </NButton>
+                      <NIcon class="drag-handle" size="18" style="cursor: grab; opacity: 0.75">
+                        <ReorderThreeOutline />
+                      </NIcon>
+                    </div>
+                  </div>
+                </template>
+              </Draggable>
               <NButton
                 type="info" secondary
                 @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })"
@@ -739,7 +773,7 @@
             <NInput
               v-else
               v-model:value="editor.ensurePropsObject(props.block).url"
-              placeholder="链接（https://...）"
+              placeholder="链接 https://..."
             />
           </NFormItem>
         </PropsGrid>
@@ -812,7 +846,7 @@
           <NFormItem label="数据源">
             <NSelect
               v-model:value="editor.ensurePropsObject(props.block).source"
-              :options="[{ label: '手动列表', value: 'manual' }, { label: '用户主页数据（近期视频）', value: 'userIndex' }]"
+              :options="[{ label: '手动列表', value: 'manual' }, { label: '用户主页数据 - 近期视频', value: 'userIndex' }]"
             />
           </NFormItem>
           <NFormItem label="布局">
@@ -821,7 +855,7 @@
               :options="[{ label: '网格', value: 'grid' }, { label: '横向滚动', value: 'row' }]"
             />
           </NFormItem>
-          <NFormItem label="列数（网格）">
+          <NFormItem label="网格列数">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).columns" :min="1" :max="6"
               style="width: 100%"
@@ -838,7 +872,7 @@
               <NSwitch v-model:value="editor.ensurePropsObject(props.block).showTitle" size="small" />
             </NSpace>
           </NFormItem>
-          <NFormItem class="span-full" label="标题（可选）">
+          <NFormItem class="span-full" label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="例如：最近视频" />
           </NFormItem>
 
@@ -848,8 +882,8 @@
                 v-for="(it, idx) in ensureArrayProp<any>(props.block, 'items')" :key="idx"
                 style="display:flex; gap: 8px"
               >
-                <NInput v-model:value="it.title" placeholder="标题（可选）" />
-                <NInput v-model:value="it.url" placeholder="视频链接（https://...）" />
+                <NInput v-model:value="it.title" placeholder="标题，可选" />
+                <NInput v-model:value="it.url" placeholder="视频链接 https://..." />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
@@ -875,7 +909,7 @@
               :options="[{ label: 'netease', value: 'netease' }, { label: 'spotify', value: 'spotify' }, { label: 'custom', value: 'custom' }]"
             />
           </NFormItem>
-          <NFormItem label="高度（px）">
+          <NFormItem label="高度 px">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).height" :min="60" :max="900"
               style="width: 100%"
@@ -896,7 +930,7 @@
     <template v-else-if="props.block.type === 'tags'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem label="边框标题（可选）">
+          <NFormItem label="边框标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).borderTitle" placeholder="例如：标签" />
           </NFormItem>
           <NFormItem label="标题对齐">
@@ -933,7 +967,7 @@
                     { label: 'error', value: 'error' },
                   ]"
                 />
-                <NInput v-model:value="it.color" placeholder="自定义色（可选，如 #fb7299）" />
+                <NInput v-model:value="it.color" placeholder="自定义色，可选，如 #fb7299" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
@@ -976,7 +1010,7 @@
                 <NInput v-model:value="it.title" placeholder="标题" />
                 <NInput
                   v-model:value="it.description" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                  placeholder="描述（可选）"
+                  placeholder="描述，可选"
                 />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
@@ -1032,7 +1066,7 @@
               :autosize="{ minRows: 3, maxRows: 8 }"
             />
           </NFormItem>
-          <NFormItem label="作者（可选）">
+          <NFormItem label="作者">
             <NInput v-model:value="editor.ensurePropsObject(props.block).author" />
           </NFormItem>
           <NFormItem label="对齐">
@@ -1060,7 +1094,7 @@
               :options="[{ label: 'left', value: 'left' }, { label: 'right', value: 'right' }]"
             />
           </NFormItem>
-          <NFormItem label="滚动时长（秒）">
+          <NFormItem label="滚动时长 秒">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).durationSec" :min="4" :max="120"
               style="width: 100%"
@@ -1078,7 +1112,7 @@
     <template v-else-if="props.block.type === 'countdown'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem class="span-full" label="标题（可选）">
+          <NFormItem class="span-full" label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" placeholder="例如：生日倒计时" />
           </NFormItem>
           <NFormItem class="span-full" label="目标时间">
@@ -1117,7 +1151,7 @@
           <NFormItem label="按钮文字">
             <NInput v-model:value="editor.ensurePropsObject(props.block).buttonText" />
           </NFormItem>
-          <NFormItem class="span-full" label="描述（可选）">
+          <NFormItem class="span-full" label="描述">
             <NInput
               v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
               :autosize="{ minRows: 2, maxRows: 6 }"
@@ -1147,7 +1181,7 @@
           <NFormItem label="标题">
             <NInput v-model:value="editor.ensurePropsObject(props.block).title" />
           </NFormItem>
-          <NFormItem class="span-full" label="描述（可选）">
+          <NFormItem class="span-full" label="描述">
             <NInput
               v-model:value="editor.ensurePropsObject(props.block).description" type="textarea"
               :autosize="{ minRows: 2, maxRows: 6 }"
@@ -1172,7 +1206,7 @@
                   :menu-props="{ style: { minWidth: '180px' } }"
                 />
                 <NInput v-model:value="it.url" placeholder="https://..." />
-                <NInput v-model:value="it.label" placeholder="显示名（可选）" />
+                <NInput v-model:value="it.label" placeholder="显示名，可选" />
                 <NButton type="error" secondary @click="ensureArrayProp(props.block, 'items').splice(idx, 1)">
                   删除
                 </NButton>
@@ -1192,19 +1226,19 @@
     <template v-else-if="props.block.type === 'image'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem label="最大宽度（可选）">
+          <NFormItem label="最大宽度">
             <NInput v-model:value="editor.ensurePropsObject(props.block).maxWidth" placeholder="例如 100% 或 480px" />
           </NFormItem>
-          <NFormItem label="最大高度（可选）">
+          <NFormItem label="最大高度">
             <NInput v-model:value="editor.ensurePropsObject(props.block).maxHeight" placeholder="例如 100% 或 320px" />
           </NFormItem>
           <NFormItem label="形状">
             <NSelect
               v-model:value="editor.ensurePropsObject(props.block).shape"
               :options="[
-                { label: '圆角（Rounded）', value: 'rounded' },
-                { label: '直角（Square）', value: 'square' },
-                { label: '圆形（Circle）', value: 'circle' },
+                { label: '圆角 - Rounded', value: 'rounded' },
+                { label: '直角 - Square', value: 'square' },
+                { label: '圆形 - Circle', value: 'circle' },
               ]"
             />
           </NFormItem>
@@ -1267,7 +1301,7 @@
     <template v-else-if="props.block.type === 'divider'">
       <NForm label-placement="top" size="small">
         <PropsGrid>
-          <NFormItem label="文字（可选）">
+          <NFormItem label="文字">
             <NInput v-model:value="editor.ensurePropsObject(props.block).text" />
           </NFormItem>
           <NFormItem label="文字位置">
@@ -1279,13 +1313,13 @@
               ]"
             />
           </NFormItem>
-          <NFormItem label="上边距（px）">
+          <NFormItem label="上边距 px">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).marginTop" :min="0" :max="80"
               style="width: 100%"
             />
           </NFormItem>
-          <NFormItem label="下边距（px）">
+          <NFormItem label="下边距 px">
             <NInputNumber
               v-model:value="editor.ensurePropsObject(props.block).marginBottom" :min="0" :max="80"
               style="width: 100%"
@@ -1308,7 +1342,7 @@
 
     <template v-else-if="props.block.type === 'footer'">
       <NForm label-placement="top" size="small">
-        <NFormItem label="文字（可选）">
+        <NFormItem label="文字">
           <NInput v-model:value="editor.ensurePropsObject(props.block).text" />
         </NFormItem>
       </NForm>

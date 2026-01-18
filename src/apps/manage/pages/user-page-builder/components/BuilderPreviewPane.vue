@@ -135,7 +135,7 @@ const previewBgClass = computed(() => ({
                 type="warning"
                 :show-icon="true"
               >
-                当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}（非区块页），此处不展示预览。
+                当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，非区块页，不展示预览。
               </NAlert>
             </div>
           </Transition>
