@@ -2,11 +2,11 @@
 import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
 import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Person48Filled, VideoAdd20Filled, WindowWrench20Filled, } from '@vicons/fluent'
-import { Bookmark, BookmarkOutline, BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize, useStorage } from '@vueuse/core'
 import {
   darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip, useMessage } from 'naive-ui';
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
@@ -16,7 +16,7 @@ import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { FETCH_API } from '@/shared/config' // 移除了未使用的 AVATAR_URL
+import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import '@/apps/user/styles/user-page.css'
@@ -65,15 +65,6 @@ type UserNavGroup = {
 
 // 侧边栏菜单项
 const navGroups = ref<UserNavGroup[]>([])
-const favoriteNavItems = useStorage<string[]>('Settings.UserFavoriteNavItems', [])
-const isFavorite = (key: string) => (favoriteNavItems.value ?? []).includes(key)
-function toggleFavorite(key: string) {
-  const list = favoriteNavItems.value ?? []
-  const idx = list.indexOf(key)
-  if (idx === -1) list.unshift(key)
-  else list.splice(idx, 1)
-  favoriteNavItems.value = [...list]
-}
 const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
 
 const activeMenuKey = computed(() => {
@@ -165,7 +156,16 @@ watch(
   },
   { immediate: true },
 )
+const USERPAGE_HOST_CLASS = 'vtsuru-userpage-host'
+
+onMounted(() => {
+  document.documentElement.classList.add(USERPAGE_HOST_CLASS)
+  // 移动端进入用户页时默认收缩侧栏
+  if (window.innerWidth < 768) siderCollapsed.value = true
+})
+
 onBeforeUnmount(() => {
+  document.documentElement.classList.remove(USERPAGE_HOST_CLASS)
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
@@ -305,14 +305,7 @@ function updateMenuOptions() {
       to: { name: 'user-page', params: { id: route.params.id, pageSlug: it.slug } },
     })) as UserNavItem[]
 
-  const allItems = [...baseItems, ...pageItems]
-  const allMap = new Map(allItems.map(i => [i.key, i]))
-  const favorites = (favoriteNavItems.value ?? [])
-    .map(k => allMap.get(k))
-    .filter(Boolean) as UserNavItem[]
-
   const groups: UserNavGroup[] = []
-  if (favorites.length) groups.push({ key: 'user-favorites', label: '收藏', items: favorites })
   if (baseItems.length) groups.push({ key: 'user-core', label: '导航', items: baseItems })
   if (pageItems.length) groups.push({ key: 'user-pages', label: '页面', items: pageItems })
 
@@ -325,16 +318,12 @@ async function RequestBiliUserData() {
   if (!userInfo.value?.biliId) return
 
   try {
-    const response = await fetch(`${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/${userInfo.value.biliId}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
+    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${userInfo.value.biliId}`)
     const data = await response.json()
-    if (data.code === 0) {
-      biliUserInfo.value = data.card // 存储获取到的 B 站信息
+    if (data?.code === 0 && data?.data?.card) {
+      biliUserInfo.value = data.data.card
     } else {
-      console.error('Bili User API Error:', data.message)
-      // message.warning('获取B站信息失败: ' + data.message) // 可选: 轻微提示用户
+      biliUserInfo.value = null
     }
   } catch (error) {
     console.error('Failed to fetch Bili user data:', error)
@@ -650,17 +639,6 @@ watch(
                           >
                             <component :is="item.icon" class="nav-item__icon" />
                             <span class="nav-item__label">{{ item.label }}</span>
-                            <button
-                              class="nav-item__fav"
-                              :class="{ active: isFavorite(item.key) }"
-                              type="button"
-                              :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                              @click.stop.prevent="toggleFavorite(item.key)"
-                            >
-                              <NIcon class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }">
-                                <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
-                              </NIcon>
-                            </button>
                           </RouterLink>
                         </template>
 
@@ -681,17 +659,6 @@ watch(
                           >
                             <component :is="item.icon" class="nav-item__icon" />
                             <span class="nav-item__label">{{ item.label }}</span>
-                            <button
-                              class="nav-item__fav"
-                              :class="{ active: isFavorite(item.key) }"
-                              type="button"
-                              :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                              @click.stop.prevent="toggleFavorite(item.key)"
-                            >
-                              <NIcon class="nav-item__fav-icon" :class="{ active: isFavorite(item.key) }">
-                                <component :is="isFavorite(item.key) ? Bookmark : BookmarkOutline" />
-                              </NIcon>
-                            </button>
                           </div>
                         </template>
                       </div>
@@ -759,7 +726,6 @@ watch(
           <NScrollbar
             v-else-if="userInfo && !notFound"
             class="viewer-scroll"
-            x-scrollable
           >
             <div class="viewer-page-content">
               <!-- 路由视图和动画 -->
@@ -865,6 +831,8 @@ watch(
   align-items: center;
   border-bottom: 1px solid var(--n-border-color); // 底部边框
   flex-shrink: 0; // 防止头部被压缩
+  position: relative;
+  z-index: 20;
 }
 
 .layout-header__inner {
@@ -912,10 +880,24 @@ watch(
 
 .page-root {
   height: 100vh;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: var(--n-body-color);
+}
+
+:global(html.vtsuru-userpage-host),
+:global(html.vtsuru-userpage-host body) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+:global(html.vtsuru-userpage-host body) {
+  overscroll-behavior-x: none;
 }
 
 .main-layout-body {
@@ -971,6 +953,25 @@ watch(
   background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+}
+
+.page-root.bg-host.glass .layout-header {
+  position: relative;
+  border-bottom-color: transparent;
+}
+.page-root.bg-host.glass .layout-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -14px;
+  height: 14px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--glass-surface-bg, rgba(255, 255, 255, 0.55)),
+    transparent
+  );
 }
 
 .page-root.bg-host :deep(.n-card) {
@@ -1168,56 +1169,6 @@ watch(
   min-width: 0;
 }
 
-.nav-item__fav {
-  height: 22px;
-  width: 22px;
-  border-radius: 7px;
-  border: 1px solid rgba(127, 127, 127, 0.15);
-  background: rgba(127, 127, 127, 0.04);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 120ms ease, background-color 120ms ease, border-color 120ms ease;
-}
-
-.nav-item-row:hover .nav-item__fav,
-.nav-item__fav.active {
-  opacity: 1;
-}
-
-.nav-item-row:hover .nav-item__fav {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.25);
-}
-
-.nav-item__fav:hover {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.22);
-}
-
-.nav-item__fav.active {
-  background: rgba(245, 158, 11, 0.26);
-  border-color: rgba(245, 158, 11, 0.58);
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.26);
-}
-
-.nav-item__fav-icon {
-  font-size: 16px;
-  color: var(--n-text-color-3);
-  transition: color 120ms ease;
-}
-
-.nav-item__fav-icon.active {
-  color: var(--n-warning-color);
-}
-
-.nav-item__fav.active .nav-item__fav-icon {
-  color: rgb(245, 158, 11);
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.28));
-}
-
 .sider-footer {
   width: 100%;
   text-align: center;
@@ -1261,11 +1212,33 @@ watch(
   min-height: 0;
 }
 
+.viewer-scroll {
+  touch-action: pan-y;
+}
+
+.viewer-scroll :deep(.n-scrollbar-container) {
+  overflow-x: hidden;
+}
+
+.viewer-scroll :deep(.n-scrollbar-content) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .viewer-page-content {
   padding: var(--vtsuru-content-padding);
   box-sizing: border-box;
   position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
   background-color: var(--n-body-color);
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+@media (max-width: 520px) {
+  .viewer-page-content {
+    padding-left: 10px;
+    padding-right: 12px;
+  }
 }
 
 // --- 返回顶部按钮 ---

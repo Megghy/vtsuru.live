@@ -36,7 +36,7 @@ const cfg = computed<BlockConfig>(() => {
     variant,
     showTitle: typeof o.showTitle === 'boolean' ? o.showTitle : true,
     showArea: typeof o.showArea === 'boolean' ? o.showArea : true,
-    showCover: typeof o.showCover === 'boolean' ? o.showCover : false,
+    showCover: typeof o.showCover === 'boolean' ? o.showCover : true,
     showButtons: typeof o.showButtons === 'boolean' ? o.showButtons : true,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
@@ -47,7 +47,9 @@ const model = computed(() => {
   const s = props.userInfo?.streamerInfo
   const isStreaming = !!s?.isStreaming
   const title = typeof s?.title === 'string' ? s.title : ''
-  const coverUrl = typeof s?.coverUrl === 'string' ? s.coverUrl : ''
+  const coverUrl = (typeof s?.coverUrl === 'string' && s.coverUrl)
+    ? s.coverUrl
+    : ((typeof s?.frameUrl === 'string' && s.frameUrl) ? s.frameUrl : '')
   const area = typeof s?.area === 'string' ? s.area : ''
   const parentArea = typeof s?.parentArea === 'string' ? s.parentArea : ''
   const avatarUrl = typeof s?.faceUrl === 'string' ? s.faceUrl : ''
@@ -171,7 +173,7 @@ const liveDurationText = computed(() => {
         >
           <!-- Background Layer -->
           <div class="live-bg">
-            <img :src="model.coverUrl" alt="">
+            <img :src="model.coverUrl" alt="" referrerpolicy="no-referrer" decoding="async" loading="lazy">
             <div class="live-bg-overlay" />
           </div>
 
