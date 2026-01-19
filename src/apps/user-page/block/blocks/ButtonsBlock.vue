@@ -137,6 +137,7 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
       <template v-for="(it, idx) in normalizedItems" :key="idx">
         <NButton
           v-if="it.kind === 'external'"
+          size="small"
           tag="a"
           :type="buttonType as any"
           :secondary="variant === 'secondary'"
@@ -153,6 +154,7 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
         </NButton>
         <NButton
           v-else
+          size="small"
           :type="buttonType as any"
           :secondary="variant === 'secondary'"
           :tertiary="variant === 'tertiary'"
@@ -172,6 +174,9 @@ const flexAlign = computed<'start' | 'center' | 'end'>(() => (direction.value ==
 <style scoped>
 .buttons-container {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px;
 }
 
 .vtsuru-btn {

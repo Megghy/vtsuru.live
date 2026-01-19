@@ -137,7 +137,7 @@ const blockComponents = BLOCK_COMPONENTS
   width: 100%;
   max-width: var(--vtsuru-page-max-width, 820px);
   margin: 0 auto;
-  padding: var(--vtsuru-page-spacing);
+  padding: var(--vtsuru-page-spacing) 0 var(--vtsuru-page-spacing) 0;
   display: flex;
   flex-direction: column;
   gap: var(--vtsuru-page-spacing);
