@@ -364,7 +364,7 @@ async function fetchUserData(userId: string | string[] | undefined) {
       // 基于新的用户信息更新菜单
       updateMenuOptions()
       // 异步获取 B 站信息（不阻塞主流程）
-      RequestBiliUserData()
+      void RequestBiliUserData()
     }
   } catch (error) {
     console.error('获取用户信息时出错:', error)

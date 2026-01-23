@@ -71,13 +71,24 @@ const currentGoodsCost = computed(() => {
   if (!currentGoods.value) return 0
   const isFree = !!currentGoods.value.canFreeBuy || currentGoods.value.price <= 0
   const unitPrice = isFree ? 0 : currentGoods.value.price
-  return Number((unitPrice * buyCount.value).toFixed(1))
+  return Number((unitPrice * buyCount.value).toFixed(2))
 })
 
-// 格式化积分显示，保留一位小数
+async function refreshCurrentPoint() {
+  if (!useAuth.isAuthed) return
+  if (!biliAuth.value.id) return
+  try {
+    const p = await useAuth.GetSpecificPoint(props.userInfo.id)
+    currentPoint.value = p ?? -1
+  } catch {
+    currentPoint.value = -1
+  }
+}
+
+// 格式化积分显示，保留两位小数（后端按 2 位精度落库）
 const formattedCurrentPoint = computed(() => {
   if (currentPoint.value < 0) return currentPoint.value
-  return Number(currentPoint.value.toFixed(1))
+  return Number(currentPoint.value.toFixed(2))
 })
 
 const currentRoomGuardLevel = computed(() => biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0)
@@ -290,10 +301,8 @@ async function buyGoods() {
 
         if (data.code === 200) {
           message.success('兑换成功')
-          // 更新本地积分显示
-          if (currentPoint.value >= 0) {
-            currentPoint.value = Number((currentPoint.value - currentGoodsCost.value).toFixed(1))
-          }
+          // 不做本地扣减：避免小数精度/并发增长导致与账户页不一致
+          void refreshCurrentPoint()
 
           // 构建对话框内容
           const isVirtualGoods = data.data.type === GoodsTypes.Virtual
@@ -413,7 +422,7 @@ onMounted(async () => {
       }
       // 如果获取到 B站 用户信息，则获取该主播直播间的积分
       if (biliAuth.value.id) {
-        currentPoint.value = (await useAuth.GetSpecificPoint(props.userInfo.id)) ?? -1
+        await refreshCurrentPoint()
       }
     }
     // 获取礼物列表

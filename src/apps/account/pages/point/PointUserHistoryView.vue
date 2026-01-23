@@ -21,22 +21,6 @@ const streamerFilter = ref<string | null>('')
 const pointTypeFilter = ref<'all' | 'increase' | 'decrease'>('all')
 const dateRange = ref<[number, number] | null>(null)
 
-// 积分历史统计
-const historyStats = computed(() => {
-  const totalIncrease = history.value.filter(h => h.point > 0).reduce((sum, h) => sum + h.point, 0)
-  const totalDecrease = Math.abs(history.value.filter(h => h.point < 0).reduce((sum, h) => sum + h.point, 0))
-  return {
-    total: history.value.length,
-    totalIncrease: Number(totalIncrease.toFixed(1)),
-    totalDecrease: Number(totalDecrease.toFixed(1)),
-    netIncrease: Number((totalIncrease - totalDecrease).toFixed(1)),
-    fromManual: history.value.filter(h => h.from === PointFrom.Manual).length,
-    fromDanmaku: history.value.filter(h => h.from === PointFrom.Danmaku).length,
-    fromCheckIn: history.value.filter(h => h.from === PointFrom.CheckIn).length,
-    fromUse: history.value.filter(h => h.from === PointFrom.Use).length,
-  }
-})
-
 // 获取积分历史记录
 async function getHistories() {
   try {
@@ -84,17 +68,8 @@ const filteredHistory = computed(() => {
   // 主播筛选
   if (streamerFilter.value && streamerFilter.value !== '') {
     result = result.filter((item) => {
-      // 只筛选主播操作、弹幕来源和签到
-      if ([PointFrom.Manual, PointFrom.Danmaku, PointFrom.CheckIn].includes(item.from)) {
-        // 精确匹配主播名称
-        return item.extra?.user?.name === streamerFilter.value
-      }
-      // 如果是使用积分的记录，则始终显示
-      if (item.from === PointFrom.Use) {
-        return true
-      }
-      // 其他类型的记录，在筛选时隐藏
-      return false
+      // 统一按 extra.user.name 进行匹配（Use 也带 user），避免筛选时仍混入其它主播的消耗记录
+      return item.extra?.user?.name === streamerFilter.value
     })
   }
 
@@ -111,6 +86,22 @@ const filteredHistory = computed(() => {
   }
 
   return result
+})
+
+// 积分历史统计（跟随筛选条件）
+const historyStats = computed(() => {
+  const totalIncrease = filteredHistory.value.filter(h => h.point > 0).reduce((sum, h) => sum + h.point, 0)
+  const totalDecrease = Math.abs(filteredHistory.value.filter(h => h.point < 0).reduce((sum, h) => sum + h.point, 0))
+  return {
+    total: filteredHistory.value.length,
+    totalIncrease: Number(totalIncrease.toFixed(1)),
+    totalDecrease: Number(totalDecrease.toFixed(1)),
+    netIncrease: Number((totalIncrease - totalDecrease).toFixed(1)),
+    fromManual: filteredHistory.value.filter(h => h.from === PointFrom.Manual).length,
+    fromDanmaku: filteredHistory.value.filter(h => h.from === PointFrom.Danmaku).length,
+    fromCheckIn: filteredHistory.value.filter(h => h.from === PointFrom.CheckIn).length,
+    fromUse: filteredHistory.value.filter(h => h.from === PointFrom.Use).length,
+  }
 })
 
 // 计算可选的主播列表
