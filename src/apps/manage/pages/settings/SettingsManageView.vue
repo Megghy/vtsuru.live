@@ -245,7 +245,7 @@ const settingModalVisiable = ref(false)
  */
 async function RequestBiliUserData() {
   try {
-    const response = await fetch(`${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/10021741`)
+    const response = await fetch(`${FETCH_API}https://workers.vrp.moe/api/bilibili/user-info/${accountInfo.value?.biliId}`)
     const data = await response.json()
     if (data.code == 0) {
       biliUserInfo.value = data.card
@@ -420,8 +420,8 @@ onActivated(() => {
 })
 
 // 组件挂载时初始化数据
-onMounted(async () => {
-  await RequestBiliUserData()
+onMounted(() => {
+  void RequestBiliUserData()
 })
 </script>
 
