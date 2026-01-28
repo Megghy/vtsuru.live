@@ -281,14 +281,43 @@ const message = useMessage()
 
 const isLoading = ref(true)
 
+function sortSchedules(list: ScheduleWeekInfo[]) {
+  return [...list].sort((a, b) => (b.year - a.year) || (b.week - a.week))
+}
+
 const showUpdateModal = ref(false)
 const showAddModal = ref(false)
 const showCopyModal = ref(false)
+const showBatchAddModal = ref(false)
 const updateScheduleModel = ref<ScheduleWeekInfo>(createEmptyWeek())
 
 const selectedDay = ref(0)
 const selectedScheduleYear = ref(new Date().getFullYear())
 const selectedScheduleWeek = ref(Number(format(Date.now(), 'w')) + 1)
+
+const batchAddYear = ref(new Date().getFullYear())
+const batchAddWeekFrom = ref(Number(format(Date.now(), 'w')) + 1)
+const batchAddWeekTo = ref(Number(format(Date.now(), 'w')) + 1)
+const batchAddDay = ref(0)
+const batchAddItem = ref<ScheduleDayInfo>(createEmptyDay())
+const batchWeekOptions = computed(() => {
+  const all = getAllWeeks(batchAddYear.value)
+  return all.map(week => ({
+    label: `第${week[0] + 1}周 (${week[1]})`,
+    value: week[0] + 1,
+  }) satisfies SelectOption)
+})
+const batchDayOptions = computed(() => {
+  return weekdays.map((label, index) => ({
+    label,
+    value: index,
+  }) satisfies SelectOption)
+})
+
+const showItemTransferModal = ref(false)
+const itemTransferMode = ref<'copy' | 'move'>('copy')
+const itemTransferItemIndex = ref<number | null>(null)
+const itemTransferTargetDay = ref(0)
 
 watch(showUpdateModal, (visible) => {
   if (visible) {
@@ -330,7 +359,7 @@ async function get() {
   })
     .then((data) => {
       if (data.code == 200) {
-        schedules.value = (data.data ?? []).map(week => normalizeWeek(week))
+        schedules.value = sortSchedules((data.data ?? []).map(week => normalizeWeek(week)))
       } else {
         message.error(`加载失败: ${data.message}`)
       }
@@ -353,7 +382,7 @@ async function addSchedule() {
       if (data.code == 200) {
         message.success('添加成功')
         showAddModal.value = false
-        schedules.value = [...schedules.value, emptyWeek]
+        schedules.value = sortSchedules([...schedules.value, emptyWeek])
       } else {
         message.error(`添加失败: ${data.message}`)
       }
@@ -416,6 +445,7 @@ async function saveSchedule(day: number | null) {
         } else {
           schedules.value.push(normalizedWeek)
         }
+        schedules.value = sortSchedules(schedules.value)
         updateScheduleModel.value = normalizeWeek({
           year: payload.year,
           week: payload.week,
@@ -512,6 +542,130 @@ function onSelectChange(value: string | null, option: SelectOption, itemIndex: n
   }
 }
 
+function onBatchSelectChange(value: string | null, option: SelectOption) {
+  if (!value) return
+  batchAddItem.value.tagColor = value
+  batchAddItem.value.tag = option.label as string
+}
+
+async function onBatchAddSchedule() {
+  const year = batchAddYear.value
+  const weekFrom = batchAddWeekFrom.value
+  const weekTo = batchAddWeekTo.value
+  const dayIndex = batchAddDay.value
+
+  const maxWeeks = getAllWeeks(year).length
+  if (weekTo < weekFrom) {
+    message.error('结束周不能小于开始周')
+    return
+  }
+  if (weekFrom < 1 || weekTo > maxWeeks) {
+    message.error(`周数范围应为 1-${maxWeeks}`)
+    return
+  }
+  if (dayIndex < 0 || dayIndex > 6) {
+    message.error('星期范围应为 0-6')
+    return
+  }
+
+  const fixedItem: ScheduleDayInfo = {
+    title: batchAddItem.value.title?.trim() || null,
+    tag: batchAddItem.value.tag?.trim() || null,
+    tagColor: normalizeColor(batchAddItem.value.tagColor),
+    time: batchAddItem.value.time?.trim() || null,
+    id: null,
+  }
+  if (!fixedItem.title && !fixedItem.tag && !fixedItem.time) {
+    message.error('请至少填写标签/内容/时间其中一项')
+    return
+  }
+
+  isFetching.value = true
+  try {
+    for (let week = weekFrom; week <= weekTo; week++) {
+      const existing = schedules.value.find(s => s.year === year && s.week === week)
+      const targetWeek = existing ? cloneWeek(existing) : createEmptyWeek(year, week)
+      ensureDayInitialized(targetWeek, dayIndex)
+      targetWeek.days[dayIndex].push({ ...fixedItem, id: null })
+
+      const sanitizedDays = sanitizeDays(targetWeek.days)
+      const resp = await QueryPostAPI(`${SCHEDULE_API_URL}update`, {
+        year,
+        week,
+        days: sanitizedDays,
+      })
+
+      if (resp.code !== 200) {
+        message.error(`第${week}周添加失败: ${resp.message}`)
+        return
+      }
+
+      const normalizedWeek = normalizeWeek({ year, week, days: sanitizedDays })
+      const index = schedules.value.findIndex(s => s.year === year && s.week === week)
+      if (index >= 0) {
+        schedules.value.splice(index, 1, normalizedWeek)
+      } else {
+        schedules.value.push(normalizedWeek)
+      }
+    }
+
+    schedules.value = sortSchedules(schedules.value)
+    message.success('批量添加完成')
+    showBatchAddModal.value = false
+  } catch {
+    message.error('批量添加失败')
+  } finally {
+    isFetching.value = false
+  }
+}
+
+function onOpenItemTransferModal(mode: 'copy' | 'move', itemIndex: number) {
+  itemTransferMode.value = mode
+  itemTransferItemIndex.value = itemIndex
+  itemTransferTargetDay.value = selectedDay.value
+  showItemTransferModal.value = true
+}
+
+function onConfirmItemTransfer() {
+  const itemIndex = itemTransferItemIndex.value
+  if (itemIndex === null) return
+
+  const fromDay = selectedDay.value
+  const toDay = itemTransferTargetDay.value
+
+  if (itemTransferMode.value === 'move' && fromDay === toDay) {
+    message.error('移动目标不能是当前星期')
+    return
+  }
+
+  const fromList = updateScheduleModel.value.days[fromDay]
+  const target = fromList?.[itemIndex]
+  if (!target) return
+
+  if (!Array.isArray(updateScheduleModel.value.days[toDay])) {
+    updateScheduleModel.value.days[toDay] = []
+  }
+  const toList = updateScheduleModel.value.days[toDay]
+
+  if (itemTransferMode.value === 'copy') {
+    toList.push({
+      title: target.title ?? null,
+      tag: target.tag ?? null,
+      tagColor: normalizeColor(target.tagColor),
+      time: target.time ?? null,
+      id: null,
+    })
+  } else {
+    const [moved] = fromList.splice(itemIndex, 1)
+    toList.push(moved)
+    if (fromList.length === 0) {
+      fromList.push(createEmptyDay())
+    }
+  }
+
+  showItemTransferModal.value = false
+}
+
 function addScheduleItem() {
   ensureDayInitialized(updateScheduleModel.value, selectedDay.value)
   updateScheduleModel.value.days[selectedDay.value].push(createEmptyDay())
@@ -561,6 +715,12 @@ onMounted(() => {
         @click="showAddModal = true"
       >
         添加周程
+      </NButton>
+      <NButton
+        secondary
+        @click="showBatchAddModal = true"
+      >
+        批量添加
       </NButton>
       <NButton @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'schedule' } })">
         修改模板
@@ -662,6 +822,116 @@ onMounted(() => {
     </NButton>
   </NModal>
   <NModal
+    v-model:show="showBatchAddModal"
+    style="width: 700px; max-width: 95vw"
+    preset="card"
+    title="批量添加固定行程"
+  >
+    <NAlert type="info">
+      一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。
+    </NAlert>
+    <NFlex vertical :size="12" style="margin-top: 12px;">
+      年份
+      <NSelect
+        v-model:value="batchAddYear"
+        :options="yearOptions"
+      />
+      周范围
+      <NFlex align="center" wrap :size="8">
+        <NSelect
+          v-model:value="batchAddWeekFrom"
+          :options="batchWeekOptions"
+          style="min-width: 220px;"
+        />
+        <NText depth="3">
+          到
+        </NText>
+        <NSelect
+          v-model:value="batchAddWeekTo"
+          :options="batchWeekOptions"
+          style="min-width: 220px;"
+        />
+      </NFlex>
+      星期
+      <NSelect
+        v-model:value="batchAddDay"
+        :options="batchDayOptions"
+      />
+      <NDivider />
+      <NFlex align="center" :size="8" style="flex-wrap: wrap;">
+        <NInputGroup style="width: auto; min-width: 200px;">
+          <NInputGroupLabel type="primary" style="min-width: 50px;">
+            标签
+          </NInputGroupLabel>
+          <NInput
+            v-model:value="batchAddItem.tag"
+            placeholder="标签名称"
+            style="width: 150px;"
+            maxlength="10"
+            show-count
+          />
+        </NInputGroup>
+        <NSelect
+          :value="null"
+          :options="existTagOptions"
+          filterable
+          clearable
+          placeholder="选择已用标签"
+          style="width: 160px;"
+          :render-option="renderOption"
+          @update:value="(val, opt) => onBatchSelectChange(val, opt)"
+        />
+      </NFlex>
+      <NInputGroup>
+        <NInputGroupLabel style="min-width: 50px;">
+          内容
+        </NInputGroupLabel>
+        <NInput
+          v-model:value="batchAddItem.title"
+          placeholder="事件内容描述"
+          maxlength="50"
+          show-count
+        />
+      </NInputGroup>
+      <NFlex align="center" :size="8">
+        <NInputGroup style="width: auto;">
+          <NInputGroupLabel style="min-width: 50px;">
+            时间
+          </NInputGroupLabel>
+          <NTimePicker
+            v-model:formatted-value="batchAddItem.time"
+            default-formatted-value="20:00"
+            format="HH:mm"
+            style="width: 140px"
+            clearable
+          />
+        </NInputGroup>
+        <NInputGroup style="width: auto;">
+          <NInputGroupLabel style="min-width: 50px;">
+            颜色
+          </NInputGroupLabel>
+          <NColorPicker
+            :value="normalizeColor(batchAddItem.tagColor)"
+            :swatches="['#18A058', '#2080F0', '#F0A020', '#D03050', '#9333EA', '#14B8A6']"
+            default-value="#2080F0"
+            :show-alpha="false"
+            :modes="['hex']"
+            style="width: 140px;"
+            @update:value="(val) => batchAddItem.tagColor = normalizeColor(val)"
+          />
+        </NInputGroup>
+      </NFlex>
+    </NFlex>
+    <NDivider />
+    <NButton
+      type="primary"
+      :loading="isFetching"
+      @click="onBatchAddSchedule"
+    >
+      批量添加
+    </NButton>
+  </NModal>
+  <NModal
     v-model:show="showUpdateModal"
     style="width: 800px; max-width: 95vw; max-height: 90vh;"
     preset="card"
@@ -727,14 +997,30 @@ onMounted(() => {
               </NFlex>
             </template>
             <template #header-extra>
-              <NButton
-                size="tiny"
-                type="error"
-                quaternary
-                @click="removeScheduleItem(itemIndex)"
-              >
-                删除
-              </NButton>
+              <NFlex :size="6">
+                <NButton
+                  size="tiny"
+                  quaternary
+                  @click="onOpenItemTransferModal('copy', itemIndex)"
+                >
+                  复制
+                </NButton>
+                <NButton
+                  size="tiny"
+                  quaternary
+                  @click="onOpenItemTransferModal('move', itemIndex)"
+                >
+                  移动
+                </NButton>
+                <NButton
+                  size="tiny"
+                  type="error"
+                  quaternary
+                  @click="removeScheduleItem(itemIndex)"
+                >
+                  删除
+                </NButton>
+              </NFlex>
             </template>
             <NFlex
               vertical
@@ -818,6 +1104,33 @@ onMounted(() => {
         保存全部
       </NButton>
     </template>
+  </NModal>
+  <NModal
+    v-model:show="showItemTransferModal"
+    style="width: 520px; max-width: 90vw"
+    preset="card"
+    title="复制/移动行程项"
+  >
+    <NAlert v-if="itemTransferMode === 'copy'" type="info">
+      复制会在目标星期新增一条行程项（不会影响当前行程项）。
+    </NAlert>
+    <NAlert v-else type="warning">
+      移动会把当前行程项从本星期移到目标星期。
+    </NAlert>
+    <NFlex vertical :size="12" style="margin-top: 12px;">
+      目标星期
+      <NSelect
+        v-model:value="itemTransferTargetDay"
+        :options="batchDayOptions"
+      />
+    </NFlex>
+    <NDivider />
+    <NButton
+      type="primary"
+      @click="onConfirmItemTransfer"
+    >
+      确定
+    </NButton>
   </NModal>
   <NSpin
     v-if="isLoading"

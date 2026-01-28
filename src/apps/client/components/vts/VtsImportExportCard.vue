@@ -131,7 +131,7 @@ function cancelImport() {
   <NModal v-model:show="showPreview" preset="card" title="导入预览（将覆盖现有配置）" style="width: 640px">
     <NCard size="small" :bordered="false">
       <NFlex vertical :size="10">
-        <NText depth="3" v-for="line in previewLines" :key="line">
+        <NText v-for="line in previewLines" :key="line" depth="3">
           {{ line }}
         </NText>
         <NFlex justify="end" :size="8">

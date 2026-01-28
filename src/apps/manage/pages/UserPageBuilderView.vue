@@ -125,11 +125,11 @@ function minWidthSum(ids: BuilderColumnId[]) {
 
 function readPxNumber(v: string | number) {
   if (typeof v === 'number') return v
-  if (typeof v !== 'string') return NaN
+  if (typeof v !== 'string') return Number.NaN
   const s = v.trim().toLowerCase()
-  if (!s.endsWith('px')) return NaN
+  if (!s.endsWith('px')) return Number.NaN
   const n = Number.parseFloat(s.slice(0, -2))
-  return Number.isFinite(n) ? n : NaN
+  return Number.isFinite(n) ? n : Number.NaN
 }
 
 function updateBuilderBodyWidth() {

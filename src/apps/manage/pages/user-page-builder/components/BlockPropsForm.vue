@@ -244,7 +244,6 @@
       </NFormItem>
       <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示边框" style="justify-self: start; width: min(180px, 100%)">
         <NSwitch v-model:value="blockFramedModel" size="small" />
-
       </NFormItem>
       <NFormItem v-if="!hideCardChromeOptionsForType(props.block.type)" label="显示背景" style="justify-self: start; width: min(180px, 100%)">
         <NSwitch v-model:value="blockBackgroundedModel" size="small" />
@@ -1211,7 +1210,6 @@
                 ]"
               />
             </NFlex>
-
           </NFormItem>
 
           <NFormItem

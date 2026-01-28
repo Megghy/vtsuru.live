@@ -17,23 +17,6 @@ import SuperChatSettings from './settings/SuperChatSettings.vue'
 import TemplateSettings from './settings/TemplateSettings.vue'
 import VtsSettings from './settings/VtsSettings.vue'
 
-const showTemplate = computed(() => {
-  return [
-    ActionType.SEND_DANMAKU,
-    ActionType.SEND_PRIVATE_MSG,
-    ActionType.EXECUTE_COMMAND,
-  ].includes(props.action.actionType)
-})
-
-const showVtsSettings = computed(() => {
-  return [
-    ActionType.VTS_HOTKEY,
-    ActionType.VTS_PRESET,
-    ActionType.VTS_DROP_ITEM,
-    ActionType.VTS_PARAM_ADD,
-  ].includes(props.action.actionType)
-})
-
 const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
@@ -51,6 +34,23 @@ const props = defineProps({
     type: Object,
     default: undefined,
   },
+})
+
+const showTemplate = computed(() => {
+  return [
+    ActionType.SEND_DANMAKU,
+    ActionType.SEND_PRIVATE_MSG,
+    ActionType.EXECUTE_COMMAND,
+  ].includes(props.action.actionType)
+})
+
+const showVtsSettings = computed(() => {
+  return [
+    ActionType.VTS_HOTKEY,
+    ActionType.VTS_PRESET,
+    ActionType.VTS_DROP_ITEM,
+    ActionType.VTS_PARAM_ADD,
+  ].includes(props.action.actionType)
 })
 
 // 根据触发类型获取对应的设置组件

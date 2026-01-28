@@ -28,7 +28,6 @@ function setMapping(scene: string, presetId: string) {
 
 function removeMapping(scene: string) {
   const next = { ...vts.obsLinkConfig.sceneToPresetId }
-  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
   delete next[scene]
   void vts.setObsLinkConfig({ ...vts.obsLinkConfig, sceneToPresetId: next })
 }
@@ -120,4 +119,3 @@ watch(
     </NFlex>
   </NCard>
 </template>
-

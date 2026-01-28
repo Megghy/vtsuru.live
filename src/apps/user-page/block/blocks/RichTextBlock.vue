@@ -35,7 +35,7 @@ function sanitizeRichText(input: string) {
     if (!v) return false
     if (/url\s*\(/.test(v)) return false
     if (/^var\(--[a-z0-9_-]+\)$/.test(v)) return true
-    if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(v)) return true
+    if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(v)) return true
     if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(v)) return true
     if (/^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/.test(v)) return true
     return false
@@ -172,7 +172,7 @@ function sanitizeRichText(input: string) {
     const safeInlineStyle = inlineStyle ? sanitizeInlineStyle(inlineStyle) : ''
     if (safeInlineStyle) safeStyleParts.push(safeInlineStyle)
     if (alignValue && ['left', 'center', 'right', 'justify'].includes(alignValue.toLowerCase())) {
-      if (!safeStyleParts.some((s) => /(^|;)text-align:/i.test(s))) safeStyleParts.push(`text-align:${alignValue.toLowerCase()}`)
+      if (!safeStyleParts.some((s) => /(?:^|;)text-align:/i.test(s))) safeStyleParts.push(`text-align:${alignValue.toLowerCase()}`)
     }
     if (safeStyleParts.length) outEl.setAttribute('style', safeStyleParts.join(';'))
 

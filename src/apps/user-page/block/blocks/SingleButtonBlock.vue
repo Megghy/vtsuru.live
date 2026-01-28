@@ -99,7 +99,7 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
 
 <template>
   <BlockCard :framed="framed" :backgrounded="backgrounded">
-    <NFlex :justify="justify" :align="'center'" style="width: 100%">
+    <NFlex :justify="justify" align="center" style="width: 100%">
       <NButton
         v-if="isBack || internalTarget"
         :type="buttonType as any"
