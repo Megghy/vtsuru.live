@@ -361,7 +361,7 @@ export const useVtsStore = defineStore('vts', () => {
     assertArray(p.pranks, 'pranks')
 
     for (let i = 0; i < p.hotkeyCustomizations.length; i++) {
-      const c = p.hotkeyCustomizations[i] as unknown
+      const c = p.hotkeyCustomizations[i]
       assertRecord(c, `hotkeyCustomizations[${i}]`)
       assertString(c.hotkeyID, `hotkeyCustomizations[${i}].hotkeyID`)
       assertBoolean(c.favorite, `hotkeyCustomizations[${i}].favorite`)
@@ -391,7 +391,7 @@ export const useVtsStore = defineStore('vts', () => {
       assertString(m.name, `macros[${i}].name`)
       assertArray(m.steps, `macros[${i}].steps`)
       for (let j = 0; j < m.steps.length; j++) {
-        const step = m.steps[j] as unknown
+        const step = m.steps[j]
         assertRecord(step, `macros[${i}].steps[${j}]`)
         assertString(step.type, `macros[${i}].steps[${j}].type`)
         if (step.type === 'hotkey') {
@@ -487,8 +487,8 @@ export const useVtsStore = defineStore('vts', () => {
     await presetsTarget.set(p.presets)
     await macrosTarget.set(p.macros)
     await paramSlotsTarget.set(p.paramSlots)
-    await panicTarget.set(p.panic as VtsPanicConfig)
-    if (p.obsLink) await obsLinkTarget.set(p.obsLink as VtsObsLinkConfig)
+    await panicTarget.set(p.panic)
+    if (p.obsLink) await obsLinkTarget.set(p.obsLink)
     await accessoriesTarget.set(p.accessories)
     await pranksTarget.set(p.pranks)
     await init()
@@ -814,7 +814,7 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function waitForItemEvent(itemInstanceID: string, acceptTypes: string[], timeoutMs: number) {
     const accept = new Set(acceptTypes)
-    return await new Promise<VtsItemEventData | null>((resolve) => {
+    return new Promise<VtsItemEventData | null>((resolve) => {
       const timer = window.setTimeout(() => {
         itemEventWaiters.delete(itemInstanceID)
         resolve(null)
@@ -993,8 +993,9 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) {
       throw new Error('未连接到 VTS')
     }
+    const c = client.value
     const iconBase64 = await svgUrlToPngBase64(pluginSvgUrl, 128)
-    const data = await withHistory('authToken', PLUGIN_NAME, () => client.value!.authenticationToken({
+    const data = await withHistory('authToken', PLUGIN_NAME, async () => c.authenticationToken({
       pluginName: PLUGIN_NAME,
       pluginDeveloper: PLUGIN_DEVELOPER,
       pluginIcon: iconBase64,
@@ -1010,12 +1011,13 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) {
       throw new Error('未连接到 VTS')
     }
+    const c = client.value
     if (!authToken.value) {
       throw new Error('尚未获取 authenticationToken')
     }
 
     const started = performance.now()
-    const data = await withHistory('authenticate', undefined, () => client.value!.authentication({
+    const data = await withHistory('authenticate', undefined, async () => c.authentication({
       pluginName: PLUGIN_NAME,
       pluginDeveloper: PLUGIN_DEVELOPER,
       authenticationToken: authToken.value,
@@ -1034,8 +1036,9 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) {
       throw new Error('未连接到 VTS')
     }
+    const c = client.value
     const started = performance.now()
-    const data = await withHistory('apiState', undefined, () => client.value!.apiState())
+    const data = await withHistory('apiState', undefined, async () => c.apiState())
     lastRttMs.value = Math.round(performance.now() - started)
     apiActive.value = data.active
     apiVersion.value = data.vTubeStudioVersion
@@ -1046,15 +1049,16 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) {
       throw new Error('未连接到 VTS')
     }
+    const c = client.value
     const started = performance.now()
-    const data = await withHistory('hotkeys', undefined, () => client.value!.hotkeysInCurrentModel({}))
+    const data = await withHistory('hotkeys', undefined, async () => c.hotkeysInCurrentModel({}))
     lastRttMs.value = Math.round(performance.now() - started)
     currentModelLoaded.value = data.modelLoaded
     currentModelName.value = data.modelName
     currentModelId.value = data.modelID
     hotkeys.value = (data.availableHotkeys ?? []).map((h) => {
       if (!Array.isArray((h as any).keyCombination)) {
-        throw new Error('Hotkey keyCombination 无效')
+        throw new TypeError('Hotkey keyCombination 无效')
       }
       return {
         ...(h as any),
@@ -1067,16 +1071,18 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) {
       throw new Error('未连接到 VTS')
     }
+    const c = client.value
     if (!authenticated.value) {
       throw new Error('未完成鉴权')
     }
     const started = performance.now()
-    await withHistory('hotkeyTrigger', hotkeyID, () => client.value!.hotkeyTrigger({ hotkeyID }), { hotkeyID })
+    await withHistory('hotkeyTrigger', hotkeyID, async () => c.hotkeyTrigger({ hotkeyID }), { hotkeyID })
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
   async function moveModel(preset: Pick<VtsPreset, 'timeInSeconds' | 'positionX' | 'positionY' | 'rotation' | 'size'>) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const payload = {
       timeInSeconds: preset.timeInSeconds,
@@ -1086,7 +1092,7 @@ export const useVtsStore = defineStore('vts', () => {
       size: preset.size,
     }
     const started = performance.now()
-    await withHistory('moveModel', undefined, () => client.value!.moveModel({
+    await withHistory('moveModel', undefined, async () => c.moveModel({
       timeInSeconds: preset.timeInSeconds,
       valuesAreRelativeToModel: false,
       positionX: preset.positionX,
@@ -1151,7 +1157,7 @@ export const useVtsStore = defineStore('vts', () => {
         }
         if (step.type === 'wait') {
           if (!Number.isFinite(step.seconds) || step.seconds < 0) {
-            throw new Error('宏步骤 wait.seconds 无效')
+            throw new TypeError('宏步骤 wait.seconds 无效')
           }
           await new Promise<void>((r) => setTimeout(r, step.seconds * 1000))
           continue
@@ -1162,17 +1168,17 @@ export const useVtsStore = defineStore('vts', () => {
         }
         if (step.type === 'accessory') {
           if (typeof step.accessoryId !== 'string' || !step.accessoryId) {
-            throw new Error('宏步骤 accessory.accessoryId 无效')
+            throw new TypeError('宏步骤 accessory.accessoryId 无效')
           }
           if (typeof step.visible !== 'boolean') {
-            throw new Error('宏步骤 accessory.visible 无效')
+            throw new TypeError('宏步骤 accessory.visible 无效')
           }
           await toggleAccessory(step.accessoryId, step.visible)
           continue
         }
         if (step.type === 'prank') {
           if (typeof step.prankId !== 'string' || !step.prankId) {
-            throw new Error('宏步骤 prank.prankId 无效')
+            throw new TypeError('宏步骤 prank.prankId 无效')
           }
           const prank = pranks.value.find(p => p.id === step.prankId)
           if (!prank) throw new Error('宏步骤 prank.prankId 不存在')
@@ -1186,13 +1192,13 @@ export const useVtsStore = defineStore('vts', () => {
         }
         if (step.type === 'playAudio') {
           if (typeof step.url !== 'string' || !step.url) {
-            throw new Error('宏步骤 playAudio.url 无效')
+            throw new TypeError('宏步骤 playAudio.url 无效')
           }
           if (step.volume !== undefined && (!Number.isFinite(step.volume) || step.volume < 0 || step.volume > 1)) {
-            throw new Error('宏步骤 playAudio.volume 无效')
+            throw new TypeError('宏步骤 playAudio.volume 无效')
           }
           if (step.waitForEnd !== undefined && typeof step.waitForEnd !== 'boolean') {
-            throw new Error('宏步骤 playAudio.waitForEnd 无效')
+            throw new TypeError('宏步骤 playAudio.waitForEnd 无效')
           }
           const audio = new Audio(step.url)
           if (step.volume !== undefined) audio.volume = step.volume
@@ -1212,11 +1218,12 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function injectParametersAdd(values: Array<{ id: string, value: number, weight?: number }>) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     if (values.length === 0) return
 
     const started = performance.now()
-    await withHistory('injectParam', values.map(v => v.id).join(','), () => client.value!.injectParameterData({
+    await withHistory('injectParam', values.map(v => v.id).join(','), async () => c.injectParameterData({
       mode: 'add',
       parameterValues: values,
     }), { values })
@@ -1327,12 +1334,12 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function panicCalibrate() {
     if (!panicConfig.value.calibrateHotkeyId) throw new Error('未配置“校准”热键')
-    await withHistory('panicCalibrate', panicConfig.value.calibrateHotkeyId, () => triggerHotkey(panicConfig.value.calibrateHotkeyId), { hotkeyID: panicConfig.value.calibrateHotkeyId })
+    await withHistory('panicCalibrate', panicConfig.value.calibrateHotkeyId, async () => triggerHotkey(panicConfig.value.calibrateHotkeyId), { hotkeyID: panicConfig.value.calibrateHotkeyId })
   }
 
   async function panicResetPhysics() {
     if (!panicConfig.value.resetPhysicsHotkeyId) throw new Error('未配置“重置物理”热键')
-    await withHistory('panicResetPhysics', panicConfig.value.resetPhysicsHotkeyId, () => triggerHotkey(panicConfig.value.resetPhysicsHotkeyId), { hotkeyID: panicConfig.value.resetPhysicsHotkeyId })
+    await withHistory('panicResetPhysics', panicConfig.value.resetPhysicsHotkeyId, async () => triggerHotkey(panicConfig.value.resetPhysicsHotkeyId), { hotkeyID: panicConfig.value.resetPhysicsHotkeyId })
   }
 
   async function setHotkeyCustomization(next: VtsHotkeyCustomization) {
@@ -1352,13 +1359,14 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function refreshItems(options?: { includeFiles?: boolean }) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    const data = await withHistory('itemList', undefined, () => client.value!.itemList({
+    const data = await withHistory('itemList', undefined, async () => c.itemList({
       includeAvailableSpots: false,
       includeItemInstancesInScene: true,
       includeAvailableItemFiles: options?.includeFiles ?? true,
-    } as any))
+    }))
     lastRttMs.value = Math.round(performance.now() - started)
 
     canLoadItems.value = data.canLoadItemsRightNow
@@ -1368,9 +1376,10 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function loadItem(fileName: string, options?: { x?: number, y?: number, size?: number, rotation?: number, fadeTime?: number, order?: number }) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    const data = await withHistory('itemLoad', fileName, () => client.value!.itemLoad({
+    const data = await withHistory('itemLoad', fileName, async () => c.itemLoad({
       fileName,
       positionX: options?.x,
       positionY: options?.y,
@@ -1380,7 +1389,7 @@ export const useVtsStore = defineStore('vts', () => {
       order: options?.order,
       failIfOrderTaken: false,
       unloadWhenPluginDisconnects: true,
-    } as any), { fileName, ...options })
+    }), { fileName, ...options })
     lastRttMs.value = Math.round(performance.now() - started)
     if (!(data as any)?.instanceID) throw new Error('ItemLoadResponse 缺少 instanceID')
     return data as any as VtsItemLoadResponseData
@@ -1388,6 +1397,7 @@ export const useVtsStore = defineStore('vts', () => {
 
   async function unloadItems(payload: { instanceIDs?: string[], fileNames?: string[] }) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const instanceIDs = payload.instanceIDs ?? []
     const fileNames = payload.fileNames ?? []
@@ -1395,36 +1405,38 @@ export const useVtsStore = defineStore('vts', () => {
       throw new Error('ItemUnload 失败：未指定 instanceIDs 或 fileNames')
     }
     const started = performance.now()
-    await withHistory('itemUnload', fileNames.join(',') || instanceIDs.join(',') || undefined, () => client.value!.itemUnload({
+    await withHistory('itemUnload', fileNames.join(',') || instanceIDs.join(',') || undefined, async () => c.itemUnload({
       unloadAllInScene: false,
       unloadAllLoadedByThisPlugin: false,
       allowUnloadingItemsLoadedByUserOrOtherPlugins: true,
       instanceIDs,
       fileNames,
-    } as any), { instanceIDs, fileNames })
+    }), { instanceIDs, fileNames })
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
   async function setItemOpacity(itemInstanceID: string, opacity: number) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const started = performance.now()
-    await withHistory('itemOpacity', `${itemInstanceID}:${opacity}`, () => client.value!.itemAnimationControl({
+    await withHistory('itemOpacity', `${itemInstanceID}:${opacity}`, async () => c.itemAnimationControl({
       itemInstanceID,
       opacity,
-    } as any), { itemInstanceID, opacity })
+    }), { itemInstanceID, opacity })
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
   async function dropItem(fileName: string, options?: { x?: number, size?: number }) {
     if (!client.value) throw new Error('未连接到 VTS')
+    const c = client.value
     if (!authenticated.value) throw new Error('未完成鉴权')
     const x = options?.x ?? 0
     const size = options?.size ?? 0.32
     await withHistory('dropItem', fileName, async () => {
       const loaded = await loadItem(fileName, { x, y: 1.1, size, fadeTime: 0.1 })
       try {
-        await client.value!.itemMove({
+        await c.itemMove({
           itemsToMove: [{
             itemInstanceID: loaded.instanceID,
             timeInSeconds: 0.6,
@@ -1432,7 +1444,7 @@ export const useVtsStore = defineStore('vts', () => {
             positionX: x,
             positionY: -0.2,
           }],
-        } as any)
+        })
         const event = await waitForItemEvent(loaded.instanceID, ['DroppedPinned', 'DroppedUnpinned'], 1600)
         const delay = event ? 300 : 1200
         window.setTimeout(() => {

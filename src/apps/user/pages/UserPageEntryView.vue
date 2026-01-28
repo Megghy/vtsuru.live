@@ -102,7 +102,7 @@ const mergedBlockProject = computed(() => {
 
 const effectiveIsDark = computed(() => {
   const mode = (mergedBlockProject.value?.theme as any)?.pageThemeMode
-  return mode === 'light' ? false : true
+  return mode !== 'light'
 })
 
 const contentBg = computed(() => {

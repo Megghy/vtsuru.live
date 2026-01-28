@@ -4,9 +4,6 @@ import { computed, reactive, ref } from 'vue'
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 
-const vts = useVtsStore()
-const message = useMessage()
-
 const props = defineProps<{
   hotkeys: VtsHotkeyInfo[]
   disabled?: boolean
@@ -23,6 +20,9 @@ const emit = defineEmits<{
   (e: 'trigger', hotkeyID: string): void
   (e: 'refresh'): void
 }>()
+
+const vts = useVtsStore()
+const message = useMessage()
 
 const query = ref('')
 const onlyFavorites = ref(props.defaultOnlyFavorites ?? false)
@@ -260,13 +260,13 @@ const grouped = computed(() => {
             <NGi v-for="hk in filtered" :key="hk.hotkeyID">
               <NPopover trigger="hover">
                 <template #trigger>
-	                  <NButton
-	                    block
-	                    size="small"
-	                    :disabled="disabled"
-	                    :type="safeClick && armedHotkeyID === hk.hotkeyID ? 'warning' : 'default'"
-	                    @click="handleTrigger(hk.hotkeyID)"
-	                  >
+                  <NButton
+                    block
+                    size="small"
+                    :disabled="disabled"
+                    :type="safeClick && armedHotkeyID === hk.hotkeyID ? 'warning' : 'default'"
+                    @click="handleTrigger(hk.hotkeyID)"
+                  >
                     <span
                       v-if="getCustom(hk.hotkeyID)?.color"
                       class="hotkey-color-dot"
@@ -327,13 +327,13 @@ const grouped = computed(() => {
               <NGi v-for="hk in list" :key="hk.hotkeyID">
                 <NPopover trigger="hover">
                   <template #trigger>
-	                    <NButton
-	                      block
-	                      size="small"
-	                      :disabled="disabled"
-	                      :type="safeClick && armedHotkeyID === hk.hotkeyID ? 'warning' : 'default'"
-	                      @click="handleTrigger(hk.hotkeyID)"
-	                    >
+                    <NButton
+                      block
+                      size="small"
+                      :disabled="disabled"
+                      :type="safeClick && armedHotkeyID === hk.hotkeyID ? 'warning' : 'default'"
+                      @click="handleTrigger(hk.hotkeyID)"
+                    >
                       <span
                         v-if="getCustom(hk.hotkeyID)?.color"
                         class="hotkey-color-dot"
@@ -385,10 +385,10 @@ const grouped = computed(() => {
 
   <NModal v-model:show="showEdit" preset="card" title="Hotkey 设置" style="width: 640px">
     <NCard size="small" :bordered="false">
-        <NFlex vertical :size="10">
-          <NText depth="3">
-            hotkeyID: {{ editForm.hotkeyID }}
-          </NText>
+      <NFlex vertical :size="10">
+        <NText depth="3">
+          hotkeyID: {{ editForm.hotkeyID }}
+        </NText>
 
         <NFlex align="center" :wrap="true" :size="10">
           <NSwitch v-model:value="editForm.favorite" size="small">

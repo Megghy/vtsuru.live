@@ -70,7 +70,7 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
-  const safeUrl = img ? img.replaceAll('\"', '\\\\\"') : ''
+  const safeUrl = img ? img.replaceAll('"', "\\\"") : ''
 
   const blurPx = bg.blurMode === 'none' ? 0 : bg.blurPx
 
@@ -103,7 +103,7 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
 
   return {
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
-    '--user-page-bg-image': safeUrl ? `url(\"${safeUrl}\")` : 'none',
+    '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
     '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
     '--user-page-bg-blur': `${blurPx}px`,
     '--user-page-bg-scrim': scrim,
