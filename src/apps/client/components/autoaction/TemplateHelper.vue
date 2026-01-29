@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { NFlex, NTag, NTooltip, useMessage } from 'naive-ui';
+import { Copy16Regular, Add16Regular, Search16Regular } from '@vicons/fluent'
+import { NButton, NFlex, NIcon, NInput, NScrollbar, useMessage } from 'naive-ui';
+import { computed, ref } from 'vue'
+
 const props = defineProps({
   placeholders: {
     type: Array as () => { name: string, description: string }[],
@@ -7,66 +10,133 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits<{
+  (e: 'insert', value: string): void
+}>()
+
 const message = useMessage()
+const searchText = ref('')
+
+const filteredPlaceholders = computed(() => {
+  if (!searchText.value) return props.placeholders
+  const lower = searchText.value.toLowerCase()
+  return props.placeholders.filter(p => 
+    p.name.toLowerCase().includes(lower) || 
+    p.description.toLowerCase().includes(lower)
+  )
+})
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text)
     .then(() => {
-      message.success('已复制到剪贴板')
+      message.success('已复制')
     })
     .catch(() => {
       message.error('复制失败')
     })
 }
+
+function handleInsert(text: string) {
+  emit('insert', text)
+}
 </script>
 
 <template>
   <div class="template-helper">
-    <NFlex vertical>
-      <NFlex align="center">
-        <div style="font-weight: bold">
-          可用变量:
-        </div>
-        <NFlex style="flex-wrap: wrap">
-          <NTooltip
-            v-for="item in props.placeholders"
+    <NFlex vertical :size="8">
+      <NInput v-model:value="searchText" placeholder="搜索变量..." size="small" clearable>
+        <template #prefix>
+          <NIcon :component="Search16Regular" />
+        </template>
+      </NInput>
+      
+      <NScrollbar style="max-height: 200px">
+        <NFlex vertical :size="4">
+          <div
+            v-for="item in filteredPlaceholders"
             :key="item.name"
-            trigger="hover"
+            class="variable-item"
+            @click="handleInsert(item.name)"
           >
-            <template #trigger>
-              <NTag
-                :bordered="false"
-                type="info"
-                size="small"
-                style="cursor: pointer"
-                @click="copyToClipboard(item.name)"
-              >
-                {{ item.name }}
-              </NTag>
-            </template>
-            {{ item.description }}
-          </NTooltip>
+            <NFlex justify="space-between" align="center">
+              <div class="variable-info">
+                <div class="variable-code">
+                  {{ item.name }}
+                </div>
+                <div class="variable-desc">
+                  {{ item.description }}
+                </div>
+              </div>
+              <div class="variable-actions">
+                <NButton size="tiny" quaternary circle title="复制" @click.stop="copyToClipboard(item.name)">
+                  <template #icon>
+                    <NIcon :component="Copy16Regular" />
+                  </template>
+                </NButton>
+                <NButton size="tiny" quaternary circle title="插入" @click.stop="handleInsert(item.name)">
+                  <template #icon>
+                    <NIcon :component="Add16Regular" />
+                  </template>
+                </NButton>
+              </div>
+            </NFlex>
+          </div>
+          <div v-if="filteredPlaceholders.length === 0" class="no-results">
+            无匹配变量
+          </div>
         </NFlex>
-      </NFlex>
+      </NScrollbar>
     </NFlex>
   </div>
 </template>
 
 <style scoped>
 .template-helper {
-  margin-bottom: 16px;
-}
-
-.alert-header {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-}
-
-code {
-  background-color: var(--n-code-color);
-  padding: 2px 4px;
+  background-color: var(--n-color-embedded);
   border-radius: var(--n-border-radius);
+  padding: 8px;
+  border: 1px solid var(--n-border-color);
+}
+
+.variable-item {
+  padding: 6px 8px;
+  border-radius: var(--n-border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.variable-item:hover {
+  background-color: var(--n-hover-color);
+}
+
+.variable-code {
   font-family: monospace;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--n-primary-color);
+}
+
+.variable-desc {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  margin-top: 2px;
+}
+
+.variable-actions {
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  gap: 2px;
+}
+
+.variable-item:hover .variable-actions {
+  opacity: 1;
+}
+
+.no-results {
+  text-align: center;
+  color: var(--n-text-color-disabled);
+  font-size: 12px;
+  padding: 12px 0;
 }
 </style>

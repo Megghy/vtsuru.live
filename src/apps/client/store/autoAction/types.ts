@@ -44,6 +44,7 @@ export enum Priority {
 export interface AutoActionItem {
   id: string // 唯一ID
   name: string // 操作名称
+  description?: string // 操作描述 (可选)
   enabled: boolean // 是否启用
   triggerType: TriggerType // 触发类型
   actionType: ActionType // 操作类型

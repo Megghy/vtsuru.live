@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch } from 'naive-ui';
+import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NTooltip, NIcon } from 'naive-ui';
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
+import { Info16Regular } from '@vicons/fluent'
 
 defineProps({
   action: {
@@ -52,45 +53,64 @@ const priorityOptions = [
 
 <template>
   <NCard
-    title="基础设置"
+    title="常规设置"
     size="small"
     bordered
-    :segmented="{ content: true }"
+    embedded
+    class="basic-settings-card"
   >
     <NForm
       label-placement="left"
-      label-width="120"
+      label-width="100"
       size="small"
+      :show-feedback="false"
     >
       <NGrid
         cols="1 m:2"
         responsive="screen"
-        :x-gap="12"
-        :y-gap="8"
+        :x-gap="24"
+        :y-gap="12"
       >
         <NGi v-if="!hideName" span="1 m:2">
-          <NFormItem label="名称">
+          <NFormItem label="操作名称">
             <NInput
               v-model:value="action.name"
-              placeholder="未命名自动操作"
+              placeholder="例如：给礼物老板点赞"
+              clearable
             />
           </NFormItem>
         </NGi>
 
         <NGi v-if="!hideEnabled">
-          <NFormItem label="启用">
+          <NFormItem label="是否启用">
             <NSwitch v-model:value="action.enabled" size="small" />
           </NFormItem>
         </NGi>
 
         <NGi>
-          <NFormItem label="仅直播中启用">
+          <NFormItem>
+            <template #label>
+              <NTooltip trigger="hover">
+                <template #trigger>
+                  <span>仅直播时 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                </template>
+                关闭直播后将不会触发此操作
+              </NTooltip>
+            </template>
             <NSwitch v-model:value="action.triggerConfig.onlyDuringLive" size="small" />
           </NFormItem>
         </NGi>
 
         <NGi>
-          <NFormItem label="天选时刻忽略">
+          <NFormItem>
+            <template #label>
+              <NTooltip trigger="hover">
+                <template #trigger>
+                  <span>忽略天选 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+                </template>
+                开启天选时刻期间暂停触发（防止被风控）
+              </NTooltip>
+            </template>
             <NSwitch v-model:value="action.triggerConfig.ignoreTianXuan" size="small" />
           </NFormItem>
         </NGi>
@@ -106,7 +126,7 @@ const priorityOptions = [
         </NGi>
 
         <NGi>
-          <NFormItem label="操作类型">
+          <NFormItem label="执行动作">
             <NSelect
               v-model:value="action.actionType"
               :options="actionTypeOptions"
@@ -115,7 +135,7 @@ const priorityOptions = [
         </NGi>
 
         <NGi>
-          <NFormItem label="优先级">
+          <NFormItem label="执行优先级">
             <NSelect
               v-model:value="action.priority"
               :options="priorityOptions"
@@ -128,4 +148,11 @@ const priorityOptions = [
 </template>
 
 <style scoped>
+.basic-settings-card {
+  border-radius: var(--n-border-radius);
+}
+
+:deep(.n-form-item-label) {
+  font-weight: 500;
+}
 </style>

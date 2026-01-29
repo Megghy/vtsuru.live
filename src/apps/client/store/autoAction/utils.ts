@@ -165,7 +165,8 @@ export function evaluateExpression(expression: string, context: ExecutionContext
       // 礼物相关
       giftValue: () => {
         if (!context.event) return 0
-        return (context.event.price || 0) * (context.event.num || 1) / 1000
+        // EventModel.price 在当前实现中已统一为 “元”（礼物为总价值，可能为负数）
+        return Math.abs(context.event.price || 0)
       },
 
       giftName: () => context.event?.msg || '',
@@ -417,12 +418,16 @@ export function buildExecutionContext(
 
     // 根据不同触发类型添加特定变量
     if (triggerType === TriggerType.GIFT) {
+      const count = event.num || 1
+      const totalPrice = event.price || 0
       context.variables.gift = {
         name: event.msg, // 礼物名称通常存在msg字段
-        count: event.num,
-        price: (event.price || 0) / 1000, // B站价格单位通常是 1/1000 元
-        totalPrice: ((event.price || 0) / 1000) * (event.num || 1),
-        summary: `${event.num || 1}个${event.msg || '礼物'}`,
+        count,
+        // EventModel.price 在当前实现中已统一为 “元”
+        // - 礼物：总价值（元，可能为负数表示非付费/抵扣类礼物）
+        price: totalPrice / count, // 单价（元）
+        totalPrice, // 总价值（元）
+        summary: `${count}个${event.msg || '礼物'}`,
       }
     } else if (triggerType === TriggerType.GUARD) {
       const guardLevelMap: Record<number, string> = {
@@ -439,7 +444,8 @@ export function buildExecutionContext(
     } else if (triggerType === TriggerType.SUPER_CHAT) {
       context.variables.sc = {
         message: event.msg,
-        price: (event.price || 0) / 1000,
+        // EventModel.price 在当前实现中已统一为 “元”
+        price: event.price || 0,
       }
     }
   }

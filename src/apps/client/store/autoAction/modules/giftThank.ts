@@ -46,7 +46,8 @@ export function useGiftThank(
     if (giftActions.length > 0 && roomId.value) {
       // 礼物基本信息
       const giftName = event.msg
-      const giftPrice = event.price / 1000
+      // EventModel.price 在当前实现中已统一为 “元”（礼物为总价值）
+      const giftValue = Math.abs(event.price || 0)
 
       executeActions(
         giftActions,
@@ -72,7 +73,7 @@ export function useGiftThank(
               }
 
               // 礼物价值过滤
-              if (action.triggerConfig.minValue && giftPrice < action.triggerConfig.minValue) {
+              if (action.triggerConfig.minValue && giftValue < action.triggerConfig.minValue) {
                 return false
               }
 
