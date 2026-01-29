@@ -10,8 +10,9 @@ import type {
   UserInfo,
 } from '@/api/api-models'
 import { useDebounceFn } from '@vueuse/core'
+import { ArrowSync24Regular, Search24Regular, Filter24Regular, Person24Regular } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCheckbox, NDivider, NEmpty, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NInputNumber, NModal, NSelect, NSpin, NTag, NText, NTooltip, useDialog, useMessage } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NImage, NInput, NInputNumber, NModal, NScrollbar, NSelect, NSpin, NTag, NText, NTooltip, useDialog, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -47,6 +48,8 @@ const currentGoods = ref<ResponsePointGoodModel>() // 当前选中的礼物
 const buyCount = ref(1) // 购买数量
 const selectedAddress = ref<AddressInfo>() // 选中的地址
 const remark = ref('') // 新增：用于存储用户备注
+type BuySubItem = { subItemId: number, quantity: number }
+const selectedSubItems = ref<BuySubItem[]>([]) // 选中的子选项（可多选）
 
 // 筛选相关状态
 const selectedTag = ref<string>() // 选中的标签
@@ -69,10 +72,67 @@ watch(searchKeyword, (newVal) => {
 
 const currentGoodsCost = computed(() => {
   if (!currentGoods.value) return 0
-  const isFree = !!currentGoods.value.canFreeBuy || currentGoods.value.price <= 0
-  const unitPrice = isFree ? 0 : currentGoods.value.price
-  return Number((unitPrice * buyCount.value).toFixed(2))
+  
+  // 如果标记为免费，直接返回 0
+  if (currentGoods.value.canFreeBuy) return 0
+
+  // 子选项模式：按子选项的最终价累加
+  if (hasSubItems.value) {
+    // 建立 ID 到子项的映射，使用 String 键处理可能的类型不一致
+    const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+    const sum = selectedSubItems.value.reduce((acc, s) => {
+      const sub = subMap.get(String(s.subItemId))
+      if (!sub) return acc
+      return acc + (Number(sub.price) || 0) * (Number(s.quantity) || 0)
+    }, 0)
+    return Number(sum.toFixed(2))
+  }
+
+  // 旧模式：按父商品价格 * 数量
+  const unitPrice = currentGoods.value.price <= 0 ? 0 : currentGoods.value.price
+  return Number((unitPrice * (buyCount.value || 1)).toFixed(2))
 })
+
+const hasSubItems = computed(() => (currentGoods.value?.subItems?.length ?? 0) > 0)
+
+const needAddress = computed(() => {
+  if (!currentGoods.value) return false
+  if (!hasSubItems.value) return currentGoods.value.type === GoodsTypes.Physical && !currentGoods.value.collectUrl
+
+  const selectedIds = new Set(selectedSubItems.value.map(s => String(s.subItemId)))
+  return (currentGoods.value.subItems ?? []).some(s =>
+    selectedIds.has(String(s.id))
+    && s.type === GoodsTypes.Physical
+    && !s.collectUrl,
+  )
+})
+
+function isSubItemChecked(id: number) {
+  return selectedSubItems.value.some(s => String(s.subItemId) === String(id))
+}
+
+function toggleSubItem(id: number, checked: boolean) {
+  const targetId = Number(id)
+  if (checked) {
+    if (!selectedSubItems.value.some(s => Number(s.subItemId) === targetId)) {
+      // 使用赋值操作触发响应式
+      selectedSubItems.value = [...selectedSubItems.value, { subItemId: targetId, quantity: 1 }]
+    }
+  } else {
+    selectedSubItems.value = selectedSubItems.value.filter(s => Number(s.subItemId) !== targetId)
+  }
+}
+
+function updateSubItemQuantity(id: number, quantity: number | null) {
+  const targetId = Number(id)
+  const q = Number(quantity ?? 1)
+  selectedSubItems.value = selectedSubItems.value.map(s => {
+    if (Number(s.subItemId) === targetId) {
+      return { ...s, quantity: q }
+    }
+    return s
+  })
+}
 
 async function refreshCurrentPoint() {
   if (!useAuth.isAuthed) return
@@ -124,8 +184,26 @@ const canDoBuy = computed(() => {
   // 优先使用后端返回的购买状态
   if (!currentGoods.value.canPurchase) return false
 
-  // 额外的前端检查
-  // 检查购买数量是否超出限制
+  // 子选项模式：必须先选择子选项
+  if (hasSubItems.value) {
+    if (selectedSubItems.value.length === 0) return false
+    if (selectedSubItems.value.some(s => s.quantity < 1 || !Number.isInteger(s.quantity))) return false
+
+    const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+    // 简单库存校验（后端仍会强校验）
+    for (const s of selectedSubItems.value) {
+      const sub = subMap.get(String(s.subItemId))
+      if (!sub) return false
+      if (sub.count === 0) return false
+      if (sub.count != null && s.quantity > sub.count) return false
+    }
+
+    const pointCheck = currentGoods.value.canFreeBuy || currentGoodsCost.value <= currentPoint.value
+    const addressCheck = !needAddress.value || !!selectedAddress.value
+    return pointCheck && addressCheck
+  }
+
+  // 旧模式：按父商品数量购买
   const totalCount = (currentGoods.value.purchasedCount ?? 0) + buyCount.value
   if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) return false
 
@@ -215,10 +293,19 @@ function getTooltip(goods: ResponsePointGoodModel): string {
 
   // 后备检查逻辑
   if (!biliAuth.value.id) return '请先进行账号认证'
-  if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
-  if (!goods.isAllowRebuy && goods.hasPurchased) return '该礼物不允许重复兑换'
-  if (goods.purchasedCount >= (goods.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${goods.maxBuyCount})`
-  if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return `积分不足(需要${goods.price}, 当前${currentPoint.value ?? 0})`
+
+  const hasSubs = (goods.subItems?.length ?? 0) > 0
+  if (hasSubs) {
+    const available = (goods.subItems ?? []).filter(s => s.count == null || s.count > 0)
+    if (!available.length) return '库存不足'
+    const minPrice = Math.min(...available.map(s => Number(s.price)))
+    if ((currentPoint.value ?? 0) < minPrice && !goods.canFreeBuy) return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
+  } else {
+    if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
+    if (!goods.isAllowRebuy && goods.hasPurchased) return '该礼物不允许重复兑换'
+    if (goods.purchasedCount >= (goods.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${goods.maxBuyCount})`
+    if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return `积分不足(需要${goods.price}, 当前${currentPoint.value ?? 0})`
+  }
 
   // 检查舰长等级要求
   const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
@@ -237,6 +324,7 @@ function resetBuyModalState() {
   showAddressSelect.value = false
   selectedAddress.value = undefined
   buyCount.value = 1
+  selectedSubItems.value = []
   currentGoods.value = undefined
   remark.value = '' // 新增：重置备注
 }
@@ -250,53 +338,92 @@ function handleModalUpdateShow(show: boolean) {
 
 // 执行购买操作
 async function buyGoods() {
-  // 输入验证
-  if (buyCount.value < 1) {
-    message.error('兑换数量不能小于1')
-    return
-  }
-  if (!Number.isInteger(buyCount.value)) {
-    message.error('兑换数量必须为整数')
-    return
-  }
+  if (!currentGoods.value) return
 
   // 检查后端购买状态
-  if (!currentGoods.value?.canPurchase) {
-    message.error(currentGoods.value?.cannotPurchaseReason || '无法兑换该礼物')
+  if (!currentGoods.value.canPurchase) {
+    message.error(currentGoods.value.cannotPurchaseReason || '无法兑换该礼物')
     return
   }
 
-  // 检查是否超出兑换次数限制
-  const totalCount = (currentGoods.value.purchasedCount ?? 0) + buyCount.value
-  if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) {
-    message.error(`超出最大兑换次数限制(${currentGoods.value.maxBuyCount})`)
-    return
+  const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
+  const hasSubs = hasSubItems.value
+
+  // 输入验证
+  if (hasSubs) {
+    if (selectedSubItems.value.length === 0) {
+      message.error('请选择至少一个款式')
+      return
+    }
+    for (const s of selectedSubItems.value) {
+      const sub = subMap.get(String(s.subItemId))
+      if (!sub) {
+        message.error('款式数据异常，请刷新后重试')
+        return
+      }
+      if (s.quantity < 1) {
+        message.error('款式数量不能小于1')
+        return
+      }
+      if (!Number.isInteger(s.quantity)) {
+        message.error('款式数量必须为整数')
+        return
+      }
+      if (sub.type === GoodsTypes.Virtual && s.quantity !== 1) {
+        message.error(`${sub.name} 为虚拟礼物，数量固定为 1`)
+        return
+      }
+    }
+  } else {
+    if (buyCount.value < 1) {
+      message.error('兑换数量不能小于1')
+      return
+    }
+    if (!Number.isInteger(buyCount.value)) {
+      message.error('兑换数量必须为整数')
+      return
+    }
+
+    // 检查是否超出兑换次数限制
+    const totalCount = (currentGoods.value.purchasedCount ?? 0) + buyCount.value
+    if (totalCount > (currentGoods.value.maxBuyCount ?? Number.MAX_VALUE)) {
+      message.error(`超出最大兑换次数限制(${currentGoods.value.maxBuyCount})`)
+      return
+    }
   }
 
-  if (
-    currentGoods.value?.type === GoodsTypes.Physical // 是实物
-    && !currentGoods.value.collectUrl // 没有外部收集链接
-    && !selectedAddress.value // 且没有选择地址
-  ) {
+  if (needAddress.value && !selectedAddress.value) {
     message.error('请选择收货地址')
     return
   }
 
+  const selectedSummary = hasSubs
+    ? selectedSubItems.value
+      .map(s => `${subMap.get(String(s.subItemId))?.name ?? s.subItemId}×${s.quantity}`)
+      .join('、')
+    : `${buyCount.value} 个`
+
+  const dialogContent = hasSubs
+    ? `确定要花费 ${currentGoodsCost.value} 积分兑换 \"${currentGoods.value!.name}\" 吗？\n款式：${selectedSummary}`
+    : `确定要花费 ${currentGoodsCost.value} 积分兑换 ${buyCount.value} 个 \"${currentGoods.value!.name}\" 吗？`
+
   // 确认对话框
   dialog.warning({
     title: '确认兑换',
-    content: `确定要花费 ${currentGoodsCost.value} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`,
+    content: dialogContent,
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
       try {
         isLoading.value = true
+        const count = hasSubs ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0) : buyCount.value
         const data = await useAuth.QueryBiliAuthPostAPI<ResponsePointOrder2UserModel>(`${POINT_API_URL}buy`, {
           vId: props.userInfo.id,
-          goodsId: currentGoods.value?.id,
-          count: buyCount.value,
+          goodsId: currentGoods.value!.id,
+          count,
           addressId: selectedAddress.value?.id ?? null, // 如果地址未选择，则传 null
           remark: remark.value, // 新增：将备注添加到请求中
+          ...(hasSubs ? { selectedSubItems: selectedSubItems.value } : {}),
         })
 
         if (data.code === 200) {
@@ -307,6 +434,13 @@ async function buyGoods() {
           // 构建对话框内容
           const isVirtualGoods = data.data.type === GoodsTypes.Virtual
           const hasContent = data.data.goods.content
+          const orderSubItems = data.data.selectedSubItems ?? []
+          const subItemText = orderSubItems.length
+            ? orderSubItems.map(s => `${s.nameSnapshot}×${s.quantity}`).join('、')
+            : ''
+          const keyText = orderSubItems
+            .flatMap(s => (s.assignedVirtualKeys || []).map(k => `${s.nameSnapshot}: ${k}`))
+            .join('\n')
 
           // 显示成功对话框
           dialog.success({
@@ -315,6 +449,24 @@ async function buyGoods() {
               const elements: any[] = [
                 h(NText, null, { default: () => `兑换成功，订单号：${data.data.id}` }),
               ]
+
+              if (subItemText) {
+                elements.push(
+                  h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '已选款式' }),
+                  h(NText, null, { default: () => subItemText }),
+                )
+              }
+
+              if (keyText) {
+                elements.push(
+                  h(NDivider, { style: 'margin: 16px 0;' }, { default: () => '密钥' }),
+                  h(
+                    NAlert,
+                    { type: 'success', bordered: false, style: 'white-space: pre-wrap; word-break: break-word;' },
+                    { default: () => keyText },
+                  ),
+                )
+              }
 
               // 如果是虚拟礼物且有内容，则显示礼物内容
               if (isVirtualGoods && hasContent) {
@@ -366,6 +518,7 @@ async function buyGoods() {
 function onBuyClick(good: ResponsePointGoodModel) {
   currentGoods.value = good
   buyCount.value = 1 // 重置购买数量
+  selectedSubItems.value = [] // 重置子选项
   selectedAddress.value = undefined // 重置地址选择
   showBuyModal.value = true
 }
@@ -444,330 +597,367 @@ onMounted(async () => {
       type="warning"
       title="需要认证"
       size="small"
+      :bordered="false"
     >
-      你尚未进行 Bilibili 账号认证, 无法查看积分或兑换礼物。
-      <NButton
-        type="primary"
-        size="small"
-        style="margin-top: 8px"
-        @click="$router.push({ name: 'bili-auth' })"
-      >
-        立即认证
-      </NButton>
+      <NFlex vertical :gap="8">
+        <NText>你尚未进行 Bilibili 账号认证, 无法查看积分或兑换礼物。</NText>
+        <NFlex>
+          <NButton
+            type="primary"
+            size="small"
+            @click="$router.push({ name: 'bili-auth' })"
+          >
+            立即认证
+          </NButton>
+        </NFlex>
+      </NFlex>
     </NAlert>
 
-    <!-- 优化后的用户信息与筛选区域 -->
-    <NCard
-      v-else
-      class="header-section"
-      bordered
-      size="small"
-      content-style="padding: 0;"
-    >
-      <!-- 用户信息区域 -->
-      <div class="user-info-section">
-        <NFlex
-          justify="space-between"
-          align="center"
-        >
-          <NFlex align="center">
-            <NText class="username" strong>
-              你好, {{ biliAuth.name }}
-            </NText>
-            <NTag
-              v-if="currentRoomGuardLevel > 0"
-              size="small"
-              type="warning"
-              :bordered="false"
-            >
-              ⚓ {{ currentRoomGuardLabel }}
-            </NTag>
-            <NDivider vertical />
-            <NText
-              v-if="currentPoint >= 0"
-              class="point-info"
-            >
-              你在本直播间的积分: <strong class="point-value">{{ formattedCurrentPoint }}</strong>
-            </NText>
-            <NText
-              v-else
-              class="point-info loading"
-            >
-              积分加载中...
-            </NText>
-          </NFlex>
-          <NFlex :size="8">
-            <NButton
-              secondary
-              size="small"
-              @click="gotoAuthPage"
-            >
-              账号中心
-            </NButton>
-            <NButton
-              secondary
-              size="small"
-              @click="NavigateToNewTab('/bili-user#settings')"
-            >
-              切换账号
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </div>
-
-      <NDivider style="margin: 4px 0;" />
-
-      <!-- 礼物筛选区域 -->
-      <div
-        v-if="tags.length > 0 || goods.length > 0"
-        class="filter-section"
-      >
-        <!-- 标签筛选 -->
-        <NFlex
-          v-if="tags.length > 0"
-          wrap
-          class="tags-container"
-        >
-          <div class="filter-label">
-            分类:
-          </div>
-          <div class="tags-wrapper">
-            <NButton
-              v-for="tag in tags"
-              :key="tag"
-              :type="tag === selectedTag ? 'primary' : 'default'"
-              :secondary="tag !== selectedTag"
-              class="tag-button"
-              size="tiny"
-              round
-              @click="selectedTag = selectedTag === tag ? undefined : tag"
-            >
-              {{ tag }}
-            </NButton>
-          </div>
-        </NFlex>
-
-        <!-- 搜索与高级筛选 -->
-        <NFlex
-          justify="space-between"
-          align="center"
-          wrap
-          class="search-filter-row"
-        >
-          <!-- 搜索框 -->
-          <NInput
-            v-model:value="searchKeyword"
-            placeholder="搜索礼物名称"
-            clearable
-            size="small"
-            class="search-input"
-          >
-            <template #prefix>
-              🔍
-            </template>
-          </NInput>
-
-          <!-- 筛选选项 -->
-          <NFlex
-            wrap
-            align="center"
-            class="filter-options"
-          >
-            <NCheckbox
-              v-model:checked="onlyCanBuy"
-              size="small"
-              class="filter-checkbox"
-            >
-              仅显示可兑换
-            </NCheckbox>
-            <NCheckbox
-              v-model:checked="ignoreGuard"
-              size="small"
-              class="filter-checkbox"
-            >
-              忽略舰长限制
-            </NCheckbox>
-            <!-- 排序方式 -->
-            <NSelect
-              v-model:value="sortOrder"
-              :options="[
-                { label: '默认排序', value: null },
-                { label: '价格 ↑', value: 'price_asc' },
-                { label: '价格 ↓', value: 'price_desc' },
-                { label: '名称 ↑', value: 'name_asc' },
-                { label: '名称 ↓', value: 'name_desc' },
-                { label: '类型', value: 'type' },
-                { label: '置顶', value: 'popular' },
-              ]"
-              placeholder="排序方式"
-              size="small"
-              class="sort-select"
-            />
-          </NFlex>
-        </NFlex>
-      </div>
-    </NCard>
-
-    <div v-if="goods.length > 0" style="margin-top: 16px;" />
-    <!-- 礼物列表区域 -->
-    <NSpin
-      :show="isLoading"
-      class="goods-list-container"
-    >
-      <template #description>
-        加载中...
-      </template>
-      <NEmpty
-        v-if="!isLoading && selectedItems.length === 0"
-        :description="goods.length === 0 ? '当前没有可兑换的礼物哦~' : '没有找到符合筛选条件的礼物'"
-      >
-        <template #extra>
-          <NButton
-            v-if="goods.length > 0 && (selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder)"
-            size="small"
-            @click="clearFilters"
-          >
-            清空筛选条件
-          </NButton>
-        </template>
-      </NEmpty>
-      <NGrid
-        v-else
-        cols="1 500:2 750:3 1000:4 1300:5"
-        :x-gap="12"
-        :y-gap="12"
-        class="goods-list"
-        style="justify-items: center;"
-      >
-        <NGi
-          v-for="item in selectedItems"
-          :key="item.id"
-          style="width: 100%;"
-        >
-          <PointGoodsItem
-            :goods="item"
-            content-style="max-width: 300px; min-width: 250px; height: 380px;"
-            class="goods-item"
-            :class="{
-              'pinned-item': item.isPinned,
-              'purchased-item': item.hasPurchased,
-              'cannot-purchase-item': !item.canPurchase,
-            }"
-          >
-            <template #footer>
-              <NFlex
-                vertical
-                :size="8"
-              >
-                <NFlex
-                  v-if="item.hasPurchased || !item.canPurchase"
-                  :size="4"
-                  wrap
-                >
+    <template v-else>
+      <!-- 用户信息与工具栏 -->
+      <NCard class="header-card" :bordered="false">
+        <div class="header-container">
+          <!-- 用户简要信息 -->
+          <div class="user-status-bar">
+            <NFlex justify="space-between" align="center">
+              <NFlex align="center" :gap="16">
+                <NFlex align="center" :gap="8">
+                  <NIcon :component="Person24Regular" size="20" class="status-icon" />
+                  <NText strong class="username">
+                    {{ biliAuth.name }}
+                  </NText>
                   <NTag
-                    v-if="item.hasPurchased"
-                    :type="item.isAllowRebuy ? 'info' : 'warning'"
+                    v-if="currentRoomGuardLevel > 0"
                     size="small"
+                    type="warning"
                     :bordered="false"
+                    round
                   >
-                    {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
-                  </NTag>
-                  <NTag
-                    v-if="!item.canPurchase && item.cannotPurchaseReason"
-                    type="error"
-                    size="small"
-                    :bordered="false"
-                  >
-                    {{ item.cannotPurchaseReason }}
+                    ⚓ {{ currentRoomGuardLabel }}
                   </NTag>
                 </NFlex>
-                <NFlex
-                  justify="space-between"
-                  align="center"
-                  class="goods-footer"
-                >
+                
+                <NDivider vertical />
+                
+                <NFlex align="center" :gap="4">
+                  <NText depth="3">
+                    当前积分:
+                  </NText>
+                  <NText v-if="currentPoint >= 0" type="primary" strong class="point-value">
+                    {{ formattedCurrentPoint }}
+                  </NText>
+                  <NText v-else depth="3" italic>
+                    加载中...
+                  </NText>
+                </NFlex>
+              </NFlex>
+
+              <NFlex align="center" :gap="12">
+                <NButton quaternary size="small" @click="gotoAuthPage">
+                  <template #icon>
+                    <NIcon :component="Person24Regular" />
+                  </template>
+                  账号中心
+                </NButton>
+                <NButton quaternary size="small" @click="NavigateToNewTab('/bili-user#settings')">
+                  <template #icon>
+                    <NIcon :component="ArrowSync24Regular" />
+                  </template>
+                  切换账号
+                </NButton>
+              </NFlex>
+            </NFlex>
+          </div>
+
+          <NDivider style="margin: 4px 0;" />
+
+          <!-- 筛选工具栏 -->
+          <div class="toolbar-section">
+            <NFlex vertical :gap="16">
+              <!-- 标签分类 -->
+              <NFlex v-if="tags.length > 0" align="center" :gap="12">
+                <NText depth="3" class="filter-label">
+                  分类:
+                </NText>
+                <NFlex :gap="8" wrap>
+                  <NButton
+                    v-for="tag in tags"
+                    :key="tag"
+                    size="tiny"
+                    round
+                    :type="tag === selectedTag ? 'primary' : 'default'"
+                    :secondary="tag !== selectedTag"
+                    @click="selectedTag = selectedTag === tag ? undefined : tag"
+                  >
+                    {{ tag }}
+                  </NButton>
+                </NFlex>
+              </NFlex>
+
+              <!-- 搜索与排序 -->
+              <NFlex justify="space-between" align="center" wrap :gap="12">
+                <NFlex align="center" :gap="12" wrap>
+                  <NInput
+                    v-model:value="searchKeyword"
+                    placeholder="搜索礼物名称..."
+                    clearable
+                    size="medium"
+                    style="width: 240px"
+                  >
+                    <template #prefix>
+                      <NIcon :component="Search24Regular" />
+                    </template>
+                  </NInput>
+
+                  <NSelect
+                    v-model:value="sortOrder"
+                    :options="[
+                      { label: '默认排序', value: null },
+                      { label: '价格从低到高', value: 'price_asc' },
+                      { label: '价格从高到低', value: 'price_desc' },
+                      { label: '名称 A-Z', value: 'name_asc' },
+                      { label: '最近更新', value: 'popular' },
+                    ]"
+                    placeholder="排序方式"
+                    size="medium"
+                    style="width: 160px"
+                    clearable
+                  />
+
+                  <NFlex align="center" :gap="16">
+                    <NCheckbox v-model:checked="onlyCanBuy">
+                      仅显示可兑换
+                    </NCheckbox>
+                    <NCheckbox v-model:checked="ignoreGuard">
+                      忽略等级限制
+                    </NCheckbox>
+                  </NFlex>
+                </NFlex>
+
+                <NFlex>
+                  <NButton
+                    v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder"
+                    quaternary
+                    size="medium"
+                    @click="clearFilters"
+                  >
+                    <template #icon>
+                      <NIcon :component="Filter24Regular" />
+                    </template>
+                    重置筛选
+                  </NButton>
+                  <NButton secondary size="medium" @click="refreshCurrentPoint">
+                    <template #icon>
+                      <NIcon :component="ArrowSync24Regular" />
+                    </template>
+                    刷新积分
+                  </NButton>
+                </NFlex>
+              </NFlex>
+            </NFlex>
+          </div>
+        </div>
+      </NCard>
+
+      <div style="margin-top: 20px;" />
+
+      <!-- 礼物列表区域 -->
+      <NSpin :show="isLoading">
+        <NEmpty
+          v-if="!isLoading && selectedItems.length === 0"
+          :description="goods.length === 0 ? '当前没有可兑换的礼物哦~' : '没有找到符合筛选条件的礼物'"
+        />
+        <NGrid
+          v-else
+          cols="1 500:2 800:3 1100:4 1500:5"
+          :x-gap="16"
+          :y-gap="16"
+        >
+          <NGi v-for="item in selectedItems" :key="item.id">
+            <PointGoodsItem
+              :goods="item"
+              class="goods-item-card"
+              :class="{ 'is-unavailable': getTooltip(item) !== '开始兑换' }"
+            >
+              <template #footer>
+                <NFlex vertical :gap="12">
+                  <NFlex v-if="item.hasPurchased || !item.canPurchase" :gap="4" wrap>
+                    <NTag v-if="item.hasPurchased" :type="item.isAllowRebuy ? 'info' : 'warning'" size="tiny" :bordered="false" round>
+                      {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
+                    </NTag>
+                    <NTag v-if="!item.canPurchase && item.cannotPurchaseReason" type="error" size="tiny" :bordered="false" round>
+                      {{ item.cannotPurchaseReason }}
+                    </NTag>
+                  </NFlex>
+                  
                   <NTooltip placement="bottom">
                     <template #trigger>
                       <NButton
+                        block
+                        :type="item.isPinned ? 'primary' : 'default'"
+                        :secondary="!item.isPinned"
                         :disabled="getTooltip(item) !== '开始兑换'"
-                        size="small"
-                        type="primary"
-                        class="exchange-btn"
+                        size="medium"
                         @click="onBuyClick(item)"
                       >
-                        {{ item.isPinned ? '🔥 兑换' : '兑换' }}
+                        {{ item.isPinned ? '立即兑换' : '兑换' }}
                       </NButton>
                     </template>
                     {{ getTooltip(item) }}
                   </NTooltip>
                 </NFlex>
-              </NFlex>
-            </template>
-          </PointGoodsItem>
-        </NGi>
-      </NGrid>
-    </NSpin>
-    <NDivider v-if="goods.length > 0" />
+              </template>
+            </PointGoodsItem>
+          </NGi>
+        </NGrid>
+      </NSpin>
+    </template>
 
     <!-- 兑换确认模态框 -->
     <NModal
       v-if="currentGoods"
       :show="showBuyModal"
       preset="card"
-      :title="`确认兑换: ${currentGoods.name}`"
-      style="width: 500px; max-width: 90vw;"
+      :title="currentGoods.name"
+      style="width: 520px; max-width: 95vw;"
       :mask-closable="!isLoading"
       :close-on-esc="!isLoading"
+      :segmented="{ content: true, action: true }"
       @update:show="handleModalUpdateShow"
     >
-      <template #header>
-        <NFlex align="baseline">
-          <NTag
-            :type="currentGoods.type === GoodsTypes.Physical ? 'info' : 'default'"
-            :bordered="false"
-          >
-            {{ currentGoods.type === GoodsTypes.Physical ? '实体礼物' : '虚拟物品' }}
-          </NTag>
-          <NText strong>
-            {{ currentGoods.name }}
-          </NText>
-        </NFlex>
+      <template #header-extra>
+        <NTag
+          :type="currentGoods.type === GoodsTypes.Physical ? 'info' : 'default'"
+          :bordered="false"
+          round
+          size="small"
+        >
+          {{ currentGoods.type === GoodsTypes.Physical ? '实体礼物' : '虚拟物品' }}
+        </NTag>
       </template>
 
-      <!-- 礼物信息展示 -->
-      <PointGoodsItem
-        :goods="currentGoods"
-        :show-footer="false"
-        content-style="height: auto;"
-      />
+      <!-- 滚动区域 -->
+      <NScrollbar style="max-height: 60vh; padding-right: 12px;">
+        <!-- 礼物信息展示 -->
+        <div style="margin-bottom: 16px;">
+          <PointGoodsItem
+            :goods="currentGoods"
+            :show-footer="false"
+            content-style="height: auto; border: none; box-shadow: none;"
+            style="border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius);"
+          />
+        </div>
 
-      <!-- 购买历史提示 -->
-      <NAlert
-        v-if="currentGoods.hasPurchased"
-        :type="currentGoods.isAllowRebuy ? 'info' : 'warning'"
-        style="margin-top: 12px;"
-      >
-        <template #header>
-          {{ currentGoods.isAllowRebuy ? '购买记录' : '重要提示' }}
-        </template>
-        你已兑换过此礼物 <strong>{{ currentGoods.purchasedCount }}</strong> 次
-        <span v-if="!currentGoods.isAllowRebuy">，该礼物不允许重复兑换</span>
-        <span v-else-if="currentGoods.maxBuyCount">
-          ，最多可兑换 <strong>{{ currentGoods.maxBuyCount }}</strong> 次
-          (剩余 <strong>{{ currentGoods.maxBuyCount - currentGoods.purchasedCount }}</strong> 次)
-        </span>
-      </NAlert>
-
-      <!-- 兑换选项 (仅对实物或需要数量选择的礼物显示) -->
-      <template v-if="currentGoods.type === GoodsTypes.Physical || (currentGoods.maxBuyCount ?? 1) > 1 || true">
-        <NDivider style="margin-top: 12px; margin-bottom: 12px;">
-          兑换选项
-        </NDivider>
-        <NForm
-          label-placement="left"
-          label-width="auto"
+        <!-- 购买历史提示 -->
+        <NAlert
+          v-if="currentGoods.hasPurchased"
+          :type="currentGoods.isAllowRebuy ? 'info' : 'warning'"
+          style="margin-bottom: 16px;"
+          :bordered="false"
         >
+          <template #header>
+            {{ currentGoods.isAllowRebuy ? '购买记录' : '重要提示' }}
+          </template>
+          你已兑换过此礼物 <strong>{{ currentGoods.purchasedCount }}</strong> 次
+          <span v-if="!currentGoods.isAllowRebuy">，该礼物不允许重复兑换</span>
+          <span v-else-if="currentGoods.maxBuyCount">
+            ，最多可兑换 <strong>{{ currentGoods.maxBuyCount }}</strong> 次
+            (剩余 <strong>{{ currentGoods.maxBuyCount - currentGoods.purchasedCount }}</strong> 次)
+          </span>
+        </NAlert>
+
+        <!-- 兑换选项 -->
+        <NForm
+          label-placement="top"
+          :show-feedback="false"
+        >
+          <!-- 款式选择（可多选） -->
           <NFormItem
+            v-if="hasSubItems"
+            label="选择款式"
+            required
+          >
+            <NFlex vertical :gap="12" style="width: 100%;">
+              <div
+                v-for="sub in (currentGoods.subItems ?? [])"
+                :key="sub.id"
+                class="sub-item-card"
+                :class="{ 'active': isSubItemChecked(sub.id), 'disabled': sub.count === 0 }"
+                @click="sub.count !== 0 && toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
+              >
+                <NFlex align="center" justify="space-between" :gap="12" style="width: 100%;">
+                  <NFlex align="center" :gap="12" style="flex: 1; overflow: hidden;">
+                    <!-- Checkbox -->
+                    <NCheckbox
+                      :checked="isSubItemChecked(sub.id)"
+                      :disabled="sub.count === 0"
+                      @click.stop
+                      @update:checked="(v) => toggleSubItem(sub.id, v)"
+                    />
+                    
+                    <!-- Cover -->
+                    <NImage
+                      v-if="sub.cover?.path"
+                      :src="sub.cover.path"
+                      width="48"
+                      height="48"
+                      class="sub-item-cover"
+                      object-fit="cover"
+                      @click.stop
+                    />
+                    
+                    <!-- Info -->
+                    <NFlex vertical :gap="4" style="flex: 1; min-width: 0;">
+                      <NFlex align="center" :gap="8">
+                        <NText strong :depth="sub.count === 0 ? 3 : 1" class="sub-item-name">
+                          {{ sub.name }}
+                        </NText>
+                        <NTag size="tiny" :bordered="false" round type="primary" secondary>
+                          {{ sub.price }} 积分
+                        </NTag>
+                      </NFlex>
+                      
+                      <!-- Description -->
+                      <NText v-if="sub.description" depth="3" style="font-size: 12px; line-height: 1.2;">
+                        {{ sub.description }}
+                      </NText>
+
+                      <NText depth="3" style="font-size: 12px;">
+                        <span v-if="sub.count === 0">缺货</span>
+                        <span v-else-if="sub.count != null">库存 {{ sub.count }}</span>
+                        <span v-else>库存不限</span>
+                      </NText>
+                    </NFlex>
+                  </NFlex>
+
+                  <!-- Quantity -->
+                  <div v-if="isSubItemChecked(sub.id)" @click.stop>
+                    <NInputNumber
+                      :value="selectedSubItems.find(s => s.subItemId === sub.id)?.quantity ?? 1"
+                      :min="1"
+                      :max="Math.min(
+                        sub.maxBuyCount ?? 100000,
+                        sub.count == null ? 100000 : sub.count,
+                      )"
+                      button-placement="both"
+                      size="small"
+                      style="width: 100px"
+                      step="1"
+                      :precision="0"
+                      @update:value="(v) => updateSubItemQuantity(sub.id, v)"
+                    />
+                  </div>
+                </NFlex>
+              </div>
+              <NText depth="3" style="font-size: 12px; margin-left: 4px;">
+                * 可多选，价格按所选款式累计计算
+              </NText>
+            </NFlex>
+          </NFormItem>
+
+          <!-- 旧模式：父商品数量 -->
+          <NFormItem
+            v-else
             label="兑换数量"
             required
           >
@@ -778,90 +968,105 @@ onMounted(async () => {
                 currentGoods.maxBuyCount ?? 100000,
                 (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0),
               )"
-              style="max-width: 120px"
+              button-placement="both"
+              style="max-width: 140px"
               step="1"
               :precision="0"
             />
             <NText
               depth="3"
-              style="margin-left: 8px;"
+              style="margin-left: 12px; font-size: 12px;"
             >
-              ({{
+              {{
                 currentGoods.hasPurchased
-                  ? `已兑换 ${currentGoods.purchasedCount} 个，还可兑换 ${
-                    (currentGoods.maxBuyCount ?? 100000) - (currentGoods.purchasedCount ?? 0)
-                  } 个`
-                  : `最多可兑换 ${currentGoods.maxBuyCount ?? '无限'} 个`
-              }})
+                  ? `已兑换 ${currentGoods.purchasedCount} / ${currentGoods.maxBuyCount ?? '∞'}`
+                  : `库存: ${currentGoods.count ?? '无限'} | 限购: ${currentGoods.maxBuyCount ?? '无限'}`
+              }}
             </NText>
           </NFormItem>
-          <!-- 地址选择 (仅对无外部收集链接的实物礼物显示) -->
+
+          <!-- 地址选择 -->
           <NFormItem
-            v-if="currentGoods.type === GoodsTypes.Physical && !currentGoods.collectUrl"
+            v-if="needAddress"
             label="收货地址"
             required
           >
-            <NSelect
-              v-model:show="showAddressSelect"
-              :value="selectedAddress?.id"
-              :options="addressOptions"
-              :render-label="renderLabel"
-              :render-option="renderOption"
-              placeholder="请选择地址"
-              style="flex-grow: 1; margin-right: 8px;"
-            />
-            <NButton
-              size="small"
-              type="info"
-              secondary
-              @click="NavigateToNewTab('/bili-user#settings')"
-            >
-              管理地址
-            </NButton>
+            <NFlex style="width: 100%" :gap="8">
+              <NSelect
+                v-model:show="showAddressSelect"
+                :value="selectedAddress?.id"
+                :options="addressOptions"
+                :render-label="renderLabel"
+                :render-option="renderOption"
+                placeholder="请选择收货地址"
+                style="flex-grow: 1;"
+              />
+              <NButton
+                secondary
+                type="primary"
+                @click="NavigateToNewTab('/bili-user#settings')"
+              >
+                管理地址
+              </NButton>
+            </NFlex>
           </NFormItem>
+
           <!-- 备注输入 -->
-          <NFormItem label="备注">
+          <NFormItem label="备注信息">
             <NInput
               v-model:value="remark"
               type="textarea"
-              placeholder="可以在这里留下备注信息（可选）"
+              placeholder="如有特殊需求请留言（可选）"
               :autosize="{ minRows: 2, maxRows: 4 }"
               maxlength="100"
               show-count
             />
           </NFormItem>
         </NForm>
+      </NScrollbar>
+
+      <!-- 底部操作栏 -->
+      <template #action>
+        <NFlex justify="space-between" align="center">
+          <NFlex vertical :gap="2">
+            <NFlex align="baseline" :gap="4">
+              <NText depth="3" style="font-size: 12px;">
+                总计花费
+              </NText>
+              <NText type="primary" style="font-size: 18px; font-weight: bold;">
+                {{ currentGoodsCost }}
+              </NText>
+              <NText depth="3" style="font-size: 12px;">
+                积分
+              </NText>
+            </NFlex>
+            <NText depth="3" style="font-size: 12px;">
+              当前持有: {{ currentPoint >= 0 ? formattedCurrentPoint : '--' }}
+            </NText>
+          </NFlex>
+
+          <NFlex align="center">
+            <NButton @click="showBuyModal = false">
+              取消
+            </NButton>
+            <NButton
+              type="primary"
+              :disabled="!canDoBuy || isLoading"
+              :loading="isLoading"
+              @click="buyGoods"
+            >
+              确认兑换
+            </NButton>
+          </NFlex>
+        </NFlex>
+        
+        <!-- 错误提示 -->
+        <div v-if="!canDoBuy && (currentGoods.cannotPurchaseReason || currentGoodsCost > currentPoint)" style="margin-top: 12px; text-align: right;">
+          <NText type="error" style="font-size: 12px;">
+            {{ currentGoods.cannotPurchaseReason || '积分不足或条件不满足' }}
+          </NText>
+        </div>
       </template>
-
-      <NDivider style="margin-top: 16px; margin-bottom: 16px;">
-        <NTag :type="!canDoBuy ? 'error' : 'success'">
-          {{
-            !canDoBuy
-              ? (currentGoods.cannotPurchaseReason || (currentGoodsCost > currentPoint ? '积分不足' : '信息不完整'))
-              : '可兑换'
-          }}
-        </NTag>
-      </NDivider>
-
-      <!-- 操作按钮和信息 -->
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NButton
-          type="primary"
-          :disabled="!canDoBuy || isLoading"
-          :loading="isLoading"
-          @click="buyGoods"
-        >
-          确认兑换
-        </NButton>
-        <NText depth="2">
-          所需积分: {{ currentGoodsCost }}
-          <NDivider vertical />
-          当前积分: {{ currentPoint >= 0 ? formattedCurrentPoint : '加载中' }}
-        </NText>
-      </NFlex>
     </NModal>
   </div>
 </template>
@@ -871,80 +1076,34 @@ onMounted(async () => {
   width: 100%;
 }
 
-.header-section {
-  margin-bottom: 12px;
+.header-card {
+  margin-bottom: 24px;
 }
 
-.user-info-section {
-  padding: 6px 10px;
+.header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-status-bar {
+  padding: 4px 0;
 }
 
 .username {
   font-size: 1.1em;
 }
 
-.point-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 .point-value {
-  color: var(--n-primary-color);
   font-size: 1.1em;
 }
 
-.point-info.loading {
-  font-style: italic;
-  color: var(--n-text-color-3);
-}
-
-.filter-section {
-  padding: 12px;
-}
-
-.tags-container {
-  margin-bottom: 12px;
-  align-items: center;
+.toolbar-section {
+  padding: 8px 0;
 }
 
 .filter-label {
-  margin-right: 8px;
-  white-space: nowrap;
-}
-
-.tags-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex-grow: 1;
-}
-
-.tag-button {
-  margin: 0;
-  padding: 0 8px;
-}
-
-.search-filter-row {
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.search-input {
-  min-width: 180px;
-  max-width: 250px;
-  flex: 1 1 200px;
-}
-
-.filter-options {
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.filter-checkbox {
-  margin: 0;
-
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -952,48 +1111,55 @@ onMounted(async () => {
   min-height: 200px;
 }
 
-.goods-list {
-  margin-top: 16px;
-  justify-items: center;
-}
-
-.goods-item {
-  break-inside: avoid;
-  margin: 0 auto;
-}
-
-.pinned-item {
-  outline: 1px solid var(--n-primary-color);
-  outline-offset: -1px;
-}
-
-.pin-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9em;
-  margin-right: 2px;
-}
-
-.goods-content {
+.goods-item-card {
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  transition: all 0.3s var(--n-bezier);
 }
 
-.price-section {
-  margin-bottom: 8px;
+.is-unavailable {
+  opacity: 0.8;
+  filter: grayscale(0.2);
 }
 
-.price-display {
-  gap: 8px;
+.sub-item-card {
+  padding: 12px;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: var(--n-color);
 }
 
-.goods-footer {
-  padding: 10px 12px;
+.sub-item-card:hover:not(.disabled) {
+  border-color: var(--n-primary-color);
+  background-color: color-mix(in srgb, var(--n-primary-color), transparent 95%);
 }
 
-.exchange-btn {
-  min-width: 90px;
+.sub-item-card.active {
+  border-color: var(--n-primary-color);
+  background-color: color-mix(in srgb, var(--n-primary-color), transparent 90%);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+}
+
+.sub-item-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--n-color-modal);
+}
+
+.sub-item-cover {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--n-border-color);
+}
+
+.sub-item-name {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .user-status-bar, .toolbar-section {
+    padding: 12px;
+  }
 }
 </style>

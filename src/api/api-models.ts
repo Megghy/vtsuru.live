@@ -713,6 +713,29 @@ export interface PointGoodsSetting {
   guardLevelMonths?: { year: number, month: number }[]
   allowGuardLevel?: GuardLevel
 }
+
+export interface ResponseSubPointGoodModel {
+  id: number
+  name: string
+  description?: string
+  count?: number
+  price: number
+  tags: string[]
+  type: GoodsTypes
+  collectUrl?: string
+  embedCollectUrl?: boolean
+  isAllowRebuy: boolean
+  maxBuyCount: number
+  canFreeBuy: boolean
+  allowGuardLevel: GuardLevel
+  setting: PointGoodsSetting
+  cover?: UploadFileResponse
+
+  // 虚拟礼物专用（仅管理端/订单快照可能存在）
+  content?: string
+  virtualKeys?: string[]
+  keySelectionMode?: KeySelectionMode
+}
 export interface ResponsePointGoodModel {
   id: number
   name: string
@@ -745,6 +768,28 @@ export interface ResponsePointGoodModel {
   virtualKeys?: string[]
   keySelectionMode?: KeySelectionMode
   currentKeyIndex?: number
+
+  // 子选项（可多选规格）
+  subItems?: ResponseSubPointGoodModel[]
+}
+
+export interface UploadSubPointGoodsModel {
+  id?: number
+  name: string
+  price: number
+  stock?: number
+  description?: string
+  type?: GoodsTypes
+  tags?: string[]
+  cover?: UploadFileResponse
+  collectUrl?: string
+  embedCollectUrl?: boolean
+  isAllowRebuy?: boolean
+  maxBuyCount?: number
+  content?: string
+  virtualKeys?: string[]
+  keySelectionMode?: KeySelectionMode
+  setting?: PointGoodsSetting
 }
 export interface UploadPointGoodsModel {
   id?: number
@@ -769,6 +814,9 @@ export interface UploadPointGoodsModel {
   virtualKeys?: string[]
   keySelectionMode?: KeySelectionMode
   currentKeyIndex?: number
+
+  // 子选项（可多选规格）
+  subItems?: UploadSubPointGoodsModel[]
 }
 export interface AddressInfo {
   id?: string
@@ -821,6 +869,7 @@ export interface ResponsePointOrder2OwnerModel {
   remark?: string
   trackingNumber?: string
   expressCompany?: string
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
 }
 
 export interface ResponsePointOrder2UserModel {
@@ -836,6 +885,16 @@ export interface ResponsePointOrder2UserModel {
 
   trackingNumber?: string
   expressCompany?: string
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
+}
+
+export interface ResponseSelectedSubItemOrderInfo {
+  subItemId: number
+  nameSnapshot: string
+  priceSnapshot: number
+  quantity: number
+  typeSnapshot: GoodsTypes
+  assignedVirtualKeys: string[]
 }
 export enum PointOrderStatus {
   Pending, // 订单正在等待处理
@@ -854,6 +913,7 @@ export interface PointHistoryExtraBase {
   goods?: ResponsePointGoodModel | null
   isDiscontinued?: boolean
   remark?: string
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[]
   // DailyFirstInteraction 类型特有字段
   interactionType?: string // 'danmaku' | 'gift'
 }
@@ -870,7 +930,7 @@ export interface ResponsePointHisrotyModel {
    * 根据 from 字段，extra 包含不同的数据：
    * - PointFrom.Danmaku: { user: UserBasicInfo, danmaku: DanmakuModel }
    * - PointFrom.Manual: { user: UserBasicInfo, reason?: string }
-   * - PointFrom.Use: { user: UserBasicInfo, goods: ResponsePointGoodModel | null, isDiscontinued: boolean, remark?: string }
+   * - PointFrom.Use: { user: UserBasicInfo, goods: ResponsePointGoodModel | null, isDiscontinued: boolean, remark?: string, selectedSubItems?: ResponseSelectedSubItemOrderInfo[] }
    * - PointFrom.CheckIn: { user: UserBasicInfo }
    * - PointFrom.DailyFirstInteraction: { user: UserBasicInfo, interactionType: string, danmaku?: DanmakuModel | null }
    */

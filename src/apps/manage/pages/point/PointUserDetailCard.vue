@@ -5,9 +5,10 @@ import type {
   ResponsePointOrder2OwnerModel,
   ResponsePointUserModel,
 } from '@/api/api-models'
-import { Info24Filled } from '@vicons/fluent'
+import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
 import {
-  NButton, NCard, NDescriptions, NDescriptionsItem, NDivider, NEmpty, NFlex, NInput, NInputNumber, NModal, NSpin, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
+  NAvatar, NButton, NDivider, NEmpty, NFlex, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NStatistic, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage,
+} from 'naive-ui'
 import { onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
@@ -48,14 +49,17 @@ async function getOrders() {
 
     if (data.code == 200) {
       return data.data
-    } else {
+    }
+    else {
       message.error(`获取订单失败: ${data.message}`)
       console.error(data)
     }
-  } catch (err) {
+  }
+  catch (err) {
     message.error(`获取订单失败: ${err}`)
     console.error(err)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 
@@ -79,14 +83,17 @@ async function getPointHistory() {
 
     if (data.code == 200) {
       return data.data
-    } else {
+    }
+    else {
       message.error(`获取积分历史失败: ${data.message}`)
       console.error(data)
     }
-  } catch (err) {
+  }
+  catch (err) {
     message.error(`获取积分历史失败: ${err}`)
     console.error(err)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 
@@ -112,13 +119,15 @@ async function givePoint() {
         count: addPointCount.value,
         reason: addPointReason.value ?? '',
       }
-    } else if (props.user.info?.userId) {
+    }
+    else if (props.user.info?.userId) {
       params = {
         uId: props.user.info?.userId,
         count: addPointCount.value,
         reason: addPointReason.value ?? '',
       }
-    } else {
+    }
+    else {
       params = {
         oId: props.user.info?.openId,
         count: addPointCount.value,
@@ -141,14 +150,17 @@ async function givePoint() {
       // 重置表单
       addPointCount.value = 0
       addPointReason.value = ''
-    } else {
+    }
+    else {
       message.error(`添加积分失败: ${data.message}`)
       console.error(data)
     }
-  } catch (err) {
+  }
+  catch (err) {
     message.error(`添加积分失败: ${err}`)
     console.error(err)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -164,118 +176,154 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NCard
-    :bordered="false"
-    content-style="padding-top: 0"
-    class="user-detail-card"
-  >
+  <div class="user-detail-container">
     <!-- 用户基本信息 -->
-    <NCard :title="`用户信息 | ${user.isAuthed ? '已认证' : '未认证'}`">
-      <template #header>
-        <NFlex
-          align="center"
-          :gap="8"
-        >
-          <NTag
-            :bordered="false"
-            :type="user.isAuthed ? 'success' : 'error'"
-            size="small"
-          >
-            {{ user.isAuthed ? '已认证' : '未认证' }}
-          </NTag>
-          <span>关于</span>
-        </NFlex>
-      </template>
-
-      <NDescriptions
-        label-placement="left"
-        bordered
-        size="small"
-        :column="2"
+    <div class="user-header">
+      <NFlex
+        justify="space-between"
+        align="start"
+        :wrap="false"
       >
-        <NDescriptionsItem label="用户名">
-          {{ user.info.name || '未知' }}
-        </NDescriptionsItem>
-
-        <NDescriptionsItem
-          v-if="user.info.userId > 0"
-          label="UId"
+        <NFlex
+          :gap="16"
+          align="center"
         >
-          {{ user.info.userId }}
-        </NDescriptionsItem>
-
-        <NDescriptionsItem
-          v-if="user.info.openId && user.info.openId !== '00000000-0000-0000-0000-000000000000'"
-          label="OpenId"
-        >
-          {{ user.info.openId }}
-        </NDescriptionsItem>
-
-        <NDescriptionsItem label="积分">
-          {{ Number(user.point.toFixed(1)) }}
-        </NDescriptionsItem>
-
-        <NDescriptionsItem
-          v-if="user.isAuthed"
-          label="认证时间"
-        >
-          <NTime :time="user.info.createAt" />
-        </NDescriptionsItem>
-      </NDescriptions>
-
-      <template #footer>
-        <NFlex justify="end">
-          <NButton
-            type="primary"
-            size="small"
-            @click="showAddPointModal = true"
-          >
-            给予/扣除积分
-          </NButton>
+          <NAvatar
+            :src="user.info.avatar"
+            round
+            :size="64"
+            fallback-src="/img/no-face.png"
+            style="border: 1px solid var(--n-border-color);"
+          />
+          <div class="user-basic-info">
+            <NFlex
+              align="center"
+              :gap="8"
+              style="margin-bottom: 4px;"
+            >
+              <span class="user-name">{{ user.info.name || '未知用户' }}</span>
+              <NTag
+                :type="user.isAuthed ? 'success' : 'warning'"
+                size="small"
+                round
+                :bordered="false"
+              >
+                {{ user.isAuthed ? '已认证' : '未认证' }}
+              </NTag>
+            </NFlex>
+            <NFlex
+              vertical
+              :gap="2"
+              class="user-ids"
+            >
+              <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
+              <span v-if="user.info.openId && user.info.openId !== '00000000-0000-0000-0000-000000000000'">OpenId: {{ user.info.openId }}</span>
+            </NFlex>
+          </div>
         </NFlex>
-      </template>
-    </NCard>
 
-    <!-- 订单信息 -->
-    <NDivider> 订单 </NDivider>
-    <NSpin :show="isLoading">
-      <NEmpty
-        v-if="orders.length === 0"
-        description="暂无订单"
-        class="empty-container"
-      />
-      <PointOrderCard
-        v-else
-        :order="orders"
-        type="owner"
-        :goods="goods"
-      />
-    </NSpin>
+        <NButton
+          type="primary"
+          secondary
+          @click="showAddPointModal = true"
+        >
+          <template #icon>
+            <NIcon :component="AddSquare24Regular" />
+          </template>
+          积分调整
+        </NButton>
+      </NFlex>
 
-    <!-- 积分历史 -->
-    <NDivider> 积分历史 </NDivider>
-    <NSpin :show="isLoading">
-      <NEmpty
-        v-if="!pointHistory.length"
-        description="暂无积分记录"
-        class="empty-container"
-      />
-      <PointHistoryCard
-        v-else
-        :histories="pointHistory"
-      />
-    </NSpin>
+      <NDivider style="margin: 20px 0" />
+
+      <NGrid
+        cols="2 400:4"
+        :x-gap="24"
+        :y-gap="12"
+      >
+        <NGridItem>
+          <NStatistic
+            label="当前积分"
+            :value="user.point"
+            :precision="1"
+          />
+        </NGridItem>
+        <NGridItem>
+          <NStatistic
+            label="订单总数"
+            :value="user.orderCount"
+          />
+        </NGridItem>
+        <NGridItem>
+          <div class="info-item-static">
+            <div class="info-label">
+              认证时间
+            </div>
+            <div class="info-value">
+              <NTime
+                v-if="user.isAuthed"
+                :time="user.info.createAt"
+              />
+              <span v-else>--</span>
+            </div>
+          </div>
+        </NGridItem>
+      </NGrid>
+    </div>
+
+    <!-- 数据标签页 -->
+    <div class="data-tabs">
+      <NTabs
+        type="line"
+        animated
+        default-value="orders"
+      >
+        <NTabPane
+          name="orders"
+          tab="订单记录"
+        >
+          <NSpin :show="isLoading">
+            <NEmpty
+              v-if="orders.length === 0"
+              description="暂无订单"
+              class="empty-container"
+            />
+            <PointOrderCard
+              v-else
+              :order="orders"
+              type="owner"
+              :goods="goods"
+            />
+          </NSpin>
+        </NTabPane>
+        <NTabPane
+          name="history"
+          tab="积分流水"
+        >
+          <NSpin :show="isLoading">
+            <NEmpty
+              v-if="!pointHistory.length"
+              description="暂无积分记录"
+              class="empty-container"
+            />
+            <PointHistoryCard
+              v-else
+              :histories="pointHistory"
+            />
+          </NSpin>
+        </NTabPane>
+      </NTabs>
+    </div>
 
     <!-- 积分调整弹窗 -->
     <NModal
       v-model:show="showAddPointModal"
       preset="card"
-      style="width: 500px; max-width: 90vw; height: auto"
+      style="width: 480px; max-width: 90vw;"
+      title="给予/扣除积分"
+      :bordered="false"
+      size="small"
     >
-      <template #header>
-        给予/扣除积分
-      </template>
-
       <NFlex
         vertical
         :gap="16"
@@ -288,49 +336,105 @@ onMounted(async () => {
           <NInputNumber
             v-model:value="addPointCount"
             type="number"
-            placeholder="负数为扣除"
-            style="max-width: 120px"
-          />
+            placeholder="积分数量"
+            style="flex: 1"
+          >
+            <template #prefix>
+              <NIcon :component="AddSquare24Regular" />
+            </template>
+          </NInputNumber>
 
           <NTooltip>
             <template #trigger>
-              <NIcon :component="Info24Filled" />
+              <NIcon
+                :component="Info24Filled"
+                class="info-icon"
+              />
             </template>
-            负数为扣除积分
+            正数为给予，负数为扣除
           </NTooltip>
         </NFlex>
 
         <NInput
           v-model:value="addPointReason"
-          placeholder="请输入备注"
+          placeholder="请输入备注 (可选)"
           :maxlength="100"
           show-count
           clearable
+          type="textarea"
+          :autosize="{ minRows: 2, maxRows: 4 }"
         />
 
-        <NButton
-          type="primary"
-          :loading="isLoading"
-          :disabled="!addPointCount || addPointCount === 0"
-          @click="givePoint"
-        >
-          {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '给予' : '扣除') }}
-        </NButton>
+        <div style="display: flex; justify-content: flex-end;">
+          <NButton
+            type="primary"
+            :loading="isLoading"
+            :disabled="!addPointCount || addPointCount === 0"
+            @click="givePoint"
+          >
+            {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '确认给予' : '确认扣除') }}
+          </NButton>
+        </div>
       </NFlex>
     </NModal>
-  </NCard>
+  </div>
 </template>
 
 <style scoped>
-.user-detail-card {
-  width: 100%;
+.user-detail-container {
+  padding: 20px;
+}
+
+.user-header {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.user-ids {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+}
+
+.info-item-static {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  margin-bottom: 4px;
+}
+
+.info-value {
+  font-size: 20px; /* match NStatistic value size approximately */
+  color: var(--n-text-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-tabs {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px 24px;
 }
 
 .empty-container {
-  margin: 16px 0;
+  margin: 32px 0;
   min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+
+.info-icon {
+  color: var(--n-text-color-3);
+  cursor: help;
 }
 </style>
