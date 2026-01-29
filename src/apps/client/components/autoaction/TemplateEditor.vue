@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
-import { Code24Regular, Info24Filled, LiveOff24Regular } from '@vicons/fluent'
+import { Code24Regular, Info24Filled, LiveOff24Regular, AppsListDetail24Regular } from '@vicons/fluent'
 import GraphemeSplitter from 'grapheme-splitter'
-import { NAlert, NBadge, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
-import { computed, ref } from 'vue'
+import { NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage, NGrid, NGi } from 'naive-ui';
+import { computed, ref, nextTick } from 'vue'
 import { EventDataTypes } from '@/api/api-models'
 import { evaluateTemplateExpressions, extractJsExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'
 import { TriggerType } from '@/apps/client/store/autoAction/types'
@@ -31,7 +31,15 @@ const props = defineProps({
     type: Object,
     default: undefined,
   },
+  templateIndex: {
+    type: Number,
+    default: 0
+  }
 })
+
+const emit = defineEmits<{
+  (e: 'update:template', payload: { index: number, value: string }): void
+}>()
 
 const mergedPlaceholders = computed(() => {
   const basePlaceholders = [
@@ -141,6 +149,7 @@ const activeTab = ref('editor')
 const showLivePreview = ref(true)
 const splitter = new GraphemeSplitter()
 const showSyntaxModal = ref(false)
+const inputInst = ref<any>(null) // NInput instance
 
 function countGraphemes(value: string) {
   return splitter.countGraphemes(value)
@@ -253,7 +262,34 @@ const templateExamples = [
 
 function insertExample(template: string) {
   props.template.template = template
+  emit('update:template', { index: props.templateIndex, value: template })
   message.success('已插入示例模板')
+}
+
+function handleVariableInsert(text: string) {
+  const inputEl = inputInst.value?.textareaElRef
+  let newTemplate = props.template.template || ''
+  
+  if (inputEl) {
+    const start = inputEl.selectionStart
+    const end = inputEl.selectionEnd
+    newTemplate = newTemplate.substring(0, start) + text + newTemplate.substring(end)
+    
+    // Update value
+    props.template.template = newTemplate
+    emit('update:template', { index: props.templateIndex, value: newTemplate })
+    
+    // Restore cursor position
+    nextTick(() => {
+      inputEl.focus()
+      inputEl.setSelectionRange(start + text.length, start + text.length)
+    })
+  } else {
+    // Fallback: append to end
+    newTemplate += text
+    props.template.template = newTemplate
+    emit('update:template', { index: props.templateIndex, value: newTemplate })
+  }
 }
 </script>
 
@@ -262,6 +298,7 @@ function insertExample(template: string) {
     :title="title"
     size="small"
     class="template-editor-card"
+    :bordered="false"
   >
     <template
       v-if="mergedPlaceholders.length > 0"
@@ -299,106 +336,119 @@ function insertExample(template: string) {
         name="editor"
         tab="编辑"
       >
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <!-- 模板帮助组件 -->
-          <TemplateHelper :placeholders="mergedPlaceholders" />
-
-          <!-- 当前模板预览 -->
-          <NInput
-            v-model:value="template.template"
-            type="textarea"
-            placeholder="输入模板内容... 使用 {{变量名}} 插入变量， {{js: 表达式}} 执行JS"
-            :autosize="{ minRows: 3, maxRows: 6 }"
-            :show-count="checkLength"
-            :count-graphemes="countGraphemes"
-            :status="checkLength && lengthStatus.status !== 'normal' ? (lengthStatus.status === 'error' ? 'error' : 'warning') : undefined"
-            class="template-input"
-          />
-
-          <!-- 长度检查警告 -->
-          <NAlert
-            v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
-            :type="lengthStatus.status === 'error' ? 'error' : 'warning'"
-            class="length-alert"
-          >
-            {{ lengthStatus.message }}
-          </NAlert>
-
-          <!-- 实时预览 -->
-          <NFlex
-            align="center"
-            justify="space-between"
-            class="preview-toggle"
-          >
-            <NButton
-              quaternary
-              size="small"
-              @click="showLivePreview = !showLivePreview"
-            >
-              <template #icon>
-                <NIcon :component="showLivePreview ? LiveOff24Regular : Code24Regular" />
-              </template>
-              {{ showLivePreview ? '隐藏预览' : '显示预览' }}
-            </NButton>
-
-            <transition name="fade">
-              <div
-                v-if="showLivePreview && previewResult"
-                class="live-preview"
+        <NGrid :x-gap="16" :cols="5" item-responsive responsive="screen">
+          <NGi span="5 m:3">
+            <NFlex vertical :size="8">
+              <!-- 长度检查警告 -->
+              <NAlert
+                v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
+                :type="lengthStatus.status === 'error' ? 'error' : 'warning'"
+                class="length-alert"
+                :show-icon="false"
+                style="margin-bottom: 4px;"
               >
-                <NBadge
-                  dot
-                  type="info"
-                /> 实时预览:
-                <NHighlight
-                  :text="previewResult"
-                  :patterns="highlightPatterns"
-                />
-              </div>
-            </transition>
-          </NFlex>
+                {{ lengthStatus.message }}
+              </NAlert>
 
-          <!-- 模板示例 -->
-          <NCollapse
-            class="template-examples"
-          >
-            <NCollapseItem
-              name="examples"
-              title="模板示例 (点击展开)"
-            >
+              <!-- 模板输入框 -->
+              <NInput
+                ref="inputInst"
+                v-model:value="template.template"
+                type="textarea"
+                placeholder="输入模板内容... 点击右侧变量可快速插入"
+                :autosize="{ minRows: 6, maxRows: 12 }"
+                :show-count="checkLength"
+                :count-graphemes="countGraphemes"
+                :status="checkLength && lengthStatus.status !== 'normal' ? (lengthStatus.status === 'error' ? 'error' : 'warning') : undefined"
+                class="template-input"
+                @update:value="(val) => emit('update:template', { index: templateIndex, value: val })"
+              />
+
+              <!-- 实时预览 -->
               <NFlex
-                vertical
-                :size="8"
+                align="center"
+                justify="space-between"
+                class="preview-toggle"
               >
-                <div
-                  v-for="(category, idx) in templateExamples"
-                  :key="idx"
-                  class="example-category"
+                <NButton
+                  quaternary
+                  size="small"
+                  @click="showLivePreview = !showLivePreview"
                 >
-                  <h4>{{ category.title }}</h4>
-                  <NFlex
-                    wrap
-                    :size="8"
-                  >
-                    <NButton
-                      v-for="(example, i) in category.examples"
-                      :key="i"
-                      size="small"
-                      tertiary
-                      class="example-button"
-                      @click="insertExample(example.template)"
-                    >
-                      {{ example.label }}
-                    </NButton>
-                  </NFlex>
-                </div>
+                  <template #icon>
+                    <NIcon :component="showLivePreview ? LiveOff24Regular : Code24Regular" />
+                  </template>
+                  {{ showLivePreview ? '隐藏预览' : '显示预览' }}
+                </NButton>
+                  
+                <div style="flex: 1" />
               </NFlex>
-            </NCollapseItem>
-          </NCollapse>
-        </NFlex>
+
+              <transition name="fade">
+                <div
+                  v-if="showLivePreview"
+                  class="live-preview-container"
+                >
+                  <div class="live-preview-label">
+                    <NIcon :component="AppsListDetail24Regular" /> 效果预览
+                  </div>
+                  <div class="live-preview-content">
+                    <NHighlight
+                      v-if="previewResult"
+                      :text="previewResult"
+                      :patterns="highlightPatterns"
+                    />
+                    <NText v-else depth="3" italic>
+                      等待输入...
+                    </NText>
+                  </div>
+                </div>
+              </transition>
+            </NFlex>
+          </NGi>
+          
+          <NGi span="5 m:2">
+            <div class="helper-container">
+              <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block;">
+                可用变量 (点击插入)
+              </NText>
+              <TemplateHelper :placeholders="mergedPlaceholders" @insert="handleVariableInsert" />
+            </div>
+          </NGi>
+        </NGrid>
+      </NTabPane>
+      
+      <NTabPane
+        name="examples"
+        tab="示例库"
+      >
+        <div class="examples-container">
+          <NFlex vertical :size="16">
+            <div
+              v-for="(category, idx) in templateExamples"
+              :key="idx"
+              class="example-category"
+            >
+              <NText strong class="category-title">
+                {{ category.title }}
+              </NText>
+              <NGrid :x-gap="12" :y-gap="12" cols="1 s:2" responsive="screen">
+                <NGi v-for="(example, i) in category.examples" :key="i">
+                  <NCard size="small" hoverable class="example-card" @click="insertExample(example.template)">
+                    <div class="example-header">
+                      <NText strong>
+                        {{ example.label }}
+                      </NText>
+                    </div>
+                    <div class="example-code">
+                      {{ example.template }}
+                    </div>
+                  </NCard>
+                </NGi>
+              </NGrid>
+            </div>
+          </NFlex>
+        </div>
       </NTabPane>
     </NTabs>
 
@@ -436,7 +486,9 @@ function insertExample(template: string) {
           使用 <code>{{ '\{\{js+: 代码...\}\}' }}</code> 或 <code>{{ '\{\{js-run: 代码...\}\}' }}</code> 执行多行 JS 代码。<br>
           <strong style="color: var(--warning-color);">需要显式使用 <code>return</code> 语句来指定输出到模板的值。</strong><br>
           适合需要临时变量、多步逻辑或调用 <code>getData/setData</code> 等函数的场景。<br>
-          <pre><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
+          <NScrollbar x-scrollable>
+            <pre><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
+          </NScrollbar>
         </NAlert>
 
         <NCollapse arrow-placement="right">
@@ -477,7 +529,9 @@ function insertExample(template: string) {
               <li><code>removeStorageData(key)</code>: 移除持久化数据 (异步)。</li>
               <li><code>clearStorageData()</code>: 清除所有用户持久化数据 (异步)。</li>
             </ul>
-            <pre><code>{{ '\{\{js+:\n  // 异步获取并设置持久化数据\n  const key = \`user:${user.uid}:visitCount\`;\n  const count = (await getStorageData(key, 0)) + 1;\n  await setStorageData(key, count);\n  return \`你是第 ${count} 次访问！\`;\n\}\}' }}</code></pre>
+            <NScrollbar x-scrollable>
+              <pre><code>{{ '\{\{js+:\n  // 异步获取并设置持久化数据\n  const key = \`user:${user.uid}:visitCount\`;\n  const count = (await getStorageData(key, 0)) + 1;\n  await setStorageData(key, count);\n  return \`你是第 ${count} 次访问！\`;\n\}\}' }}</code></pre>
+            </NScrollbar>
           </NCollapseItem>
         </NCollapse>
         <br>
@@ -521,7 +575,6 @@ function insertExample(template: string) {
 }
 
 .template-input {
-  margin-top: 8px;
   font-family: 'Courier New', Courier, monospace;
 }
 
@@ -531,39 +584,72 @@ function insertExample(template: string) {
 }
 
 .length-alert {
-  margin-top: 8px;
   font-size: 13px;
 }
 
-.live-preview {
+.live-preview-container {
+  margin-top: 8px;
   background-color: var(--n-color-embedded);
   border-radius: var(--n-border-radius);
+  border: 1px solid var(--n-border-color);
+  overflow: hidden;
+}
+
+.live-preview-label {
   padding: 4px 8px;
-  font-size: 13px;
-  border-left: 3px solid var(--n-primary-color);
-  word-break: break-all;
-  margin-left: 8px;
+  background-color: var(--n-action-color);
+  font-size: 12px;
+  color: var(--n-text-color-2);
   display: flex;
   align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--n-divider-color);
 }
 
-.live-preview .n-badge {
-  margin-right: 6px;
-}
-
-.template-examples {
-  margin-top: 16px;
-}
-
-.example-category h4 {
-  margin: 0 0 6px 0;
+.live-preview-content {
+  padding: 8px 12px;
   font-size: 14px;
-  color: var(--n-text-color-2);
+  word-break: break-all;
+  min-height: 40px;
 }
 
-.example-button {}
+.example-category {
+  margin-bottom: 8px;
+}
 
-.btn-with-transition {}
+.category-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.example-card {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.example-card:hover {
+  border-color: var(--n-primary-color);
+}
+
+.example-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.example-code {
+  background-color: var(--n-color-embedded);
+  padding: 4px 6px;
+  border-radius: var(--n-border-radius);
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .function-list {
   list-style: none;
@@ -588,7 +674,6 @@ function insertExample(template: string) {
   padding: 6px 8px;
   background-color: var(--n-code-color);
   border-radius: var(--n-border-radius);
-  overflow-x: auto;
   font-size: 12px;
   line-height: 1.4;
 }

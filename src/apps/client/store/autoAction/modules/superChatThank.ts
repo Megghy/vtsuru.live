@@ -62,7 +62,7 @@ export function useSuperChatThank(
               // 价格过滤模式
               if (action.triggerConfig.scFilterMode === 'price'
                 && action.triggerConfig.scMinPrice
-                && event.price < action.triggerConfig.scMinPrice * 1000) {
+                && (event.price || 0) < action.triggerConfig.scMinPrice) {
                 return false
               }
 

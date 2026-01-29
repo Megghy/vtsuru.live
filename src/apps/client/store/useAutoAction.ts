@@ -315,6 +315,29 @@ export const useAutoAction = defineStore('autoAction', () => {
           }
         })
 
+        // 兼容旧版本：触发类型启用状态可能缺少新字段（例如 gift / super_chat）
+        const defaultEnabled: Record<TriggerType, boolean> = {
+          [TriggerType.DANMAKU]: true,
+          [TriggerType.GIFT]: true,
+          [TriggerType.GUARD]: true,
+          [TriggerType.FOLLOW]: true,
+          [TriggerType.ENTER]: true,
+          [TriggerType.SCHEDULED]: true,
+          [TriggerType.SUPER_CHAT]: true,
+        }
+        let patched = false
+        for (const triggerType of Object.values(TriggerType)) {
+          const t = triggerType as TriggerType
+          if (enabledTriggerTypes.value[t] === undefined) {
+            enabledTriggerTypes.value[t] = defaultEnabled[t]
+            patched = true
+          }
+        }
+        if (patched) {
+          enabledTriggerTypes.value = { ...enabledTriggerTypes.value }
+          console.log('[AutoAction] 已补全缺失的触发类型启用配置.')
+        }
+
         startGlobalTimer()
         startIndividualScheduledActions()
       }

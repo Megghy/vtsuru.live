@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCollapse, NCollapseItem, NDivider, NFlex } from 'naive-ui';
+import { NCard, NCollapse, NCollapseItem, NDivider, NFlex, NText } from 'naive-ui';
 import { ActionType, TriggerType } from '@/apps/client/store/useAutoAction'
 import { computed } from 'vue'
 
@@ -76,32 +76,65 @@ function getTriggerSettings() {
 }
 
 const TriggerSettings = getTriggerSettings()
+
+// 获取高级设置的简要状态
+function getAdvancedSummary() {
+  const summaries: string[] = []
+  const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression, executeCommand } = props.action
+
+  if (triggerConfig.userFilterEnabled) summaries.push('用户过滤')
+  if (!ignoreCooldown && (actionConfig.cooldownSeconds > 0 || actionConfig.delaySeconds > 0)) summaries.push('冷却/延迟')
+  if (logicalExpression) summaries.push('逻辑条件')
+  if (executeCommand) summaries.push('自定义JS')
+
+  if (summaries.length === 0) return ''
+  return `(${summaries.join(', ')})`
+}
 </script>
 
 <template>
-  <NFlex class="auto-action-editor" vertical :size="12">
-    <TemplateSettings v-if="showTemplate" :action="action" :custom-test-context="customTestContext" />
-
+  <NFlex class="auto-action-editor" vertical :size="16">
+    <!-- 1. 基础设置 -->
     <BasicSettings
       :action="action"
       :hide-name="hideName"
       :hide-enabled="hideEnabled"
     />
 
-    <VtsSettings v-if="showVtsSettings" :action="action" />
+    <!-- 2. 内容配置 (模板或VTS) -->
+    <NCard
+      v-if="showTemplate || showVtsSettings"
+      size="small"
+      embedded
+      :bordered="false"
+      class="content-settings-card"
+    >
+      <TemplateSettings v-if="showTemplate" :action="action" :custom-test-context="customTestContext" />
+      <VtsSettings v-if="showVtsSettings" :action="action" />
+    </NCard>
 
+    <!-- 3. 高级设置 (触发器特定 & 通用高级) -->
     <NCollapse>
-      <NCollapseItem title="高级选项" name="advanced">
-        <NFlex vertical :size="12">
+      <NCollapseItem title="高级规则与触发条件" name="advanced">
+        <template #header-extra>
+          <NText depth="3" style="font-size: 12px">
+            {{ getAdvancedSummary() }}
+          </NText>
+        </template>
+        <NFlex vertical :size="16" style="padding-top: 8px">
+          <!-- 触发器特定设置 -->
           <component
             :is="TriggerSettings"
             v-if="TriggerSettings"
             :action="action"
             class="trigger-settings"
           />
-          <NDivider style="margin: 0;">
+
+          <NDivider v-if="TriggerSettings" style="margin: 0;">
             通用高级设置
           </NDivider>
+
+          <!-- 通用高级设置 -->
           <AdvancedSettings
             :action="action"
             class="advanced-settings"
@@ -116,6 +149,11 @@ const TriggerSettings = getTriggerSettings()
 .auto-action-editor {
   width: 100%;
 }
+
+.content-settings-card {
+  background-color: var(--n-color-modal); 
+}
+
 .trigger-settings {
   width: 100%;
 }

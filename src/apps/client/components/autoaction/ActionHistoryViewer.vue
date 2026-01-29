@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 
-import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled } from '@vicons/fluent'
+import { ArrowClockwise16Filled, CheckmarkCircle16Filled, Delete16Filled, DismissCircle16Filled, History16Regular } from '@vicons/fluent'
 import {
   NButton, NCard, NDataTable, NEmpty, NIcon, NPopconfirm, NFlex, NSpin, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui'
@@ -34,7 +34,7 @@ const columns: DataTableColumns<HistoryItem> = [
   {
     title: '时间',
     key: 'timestamp',
-    width: 180,
+    width: 160,
     sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
     render: (row: HistoryItem) => {
       return h(NTooltip, {
@@ -50,7 +50,9 @@ const columns: DataTableColumns<HistoryItem> = [
   {
     title: '操作名称',
     key: 'actionName',
-    width: 160,
+    width: 140,
+    ellipsis: { tooltip: true },
+    render: (row: HistoryItem) => h(NTag, { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' })
   },
   {
     title: '内容',
@@ -63,11 +65,14 @@ const columns: DataTableColumns<HistoryItem> = [
     title: '目标',
     key: 'target',
     width: 120,
+    ellipsis: { tooltip: true },
+    render: (row: HistoryItem) => row.target ? h(NTag, { size: 'small', type: 'info', bordered: false }, { default: () => row.target }) : '-'
   },
   {
     title: '状态',
     key: 'success',
     width: 100,
+    align: 'center',
     render: (row: HistoryItem) => {
       if (row.success) {
         return h(
@@ -75,9 +80,9 @@ const columns: DataTableColumns<HistoryItem> = [
           { trigger: 'hover' },
           {
             trigger: () => h(
-              NTag,
-              { type: 'success', size: 'small', round: true },
-              { default: () => '成功', icon: () => h(NIcon, { component: CheckmarkCircle16Filled }) },
+              NIcon,
+              { color: 'var(--n-success-color)', size: 20 },
+              { default: () => h(CheckmarkCircle16Filled) }
             ),
             default: () => '执行成功',
           },
@@ -88,9 +93,9 @@ const columns: DataTableColumns<HistoryItem> = [
           { trigger: 'hover' },
           {
             trigger: () => h(
-              NTag,
-              { type: 'error', size: 'small', round: true },
-              { default: () => '失败', icon: () => h(NIcon, { component: DismissCircle16Filled }) },
+              NIcon,
+              { color: 'var(--n-error-color)', size: 20 },
+              { default: () => h(DismissCircle16Filled) }
             ),
             default: () => row.error || '执行失败',
           },
@@ -178,15 +183,23 @@ onUnmounted(() => {
 
 <template>
   <NCard
-    title="执行历史"
     size="small"
     bordered
     :segmented="{ content: true }"
+    class="history-viewer-card"
   >
+    <template #header>
+      <NFlex align="center">
+        <NIcon :component="History16Regular" />
+        <span>执行历史记录</span>
+      </NFlex>
+    </template>
+    
     <template #header-extra>
-      <NFlex>
+      <NFlex size="small">
         <NButton
           size="small"
+          quaternary
           :loading="loading"
           @click="loadHistory"
         >
@@ -203,12 +216,12 @@ onUnmounted(() => {
             <NButton
               size="small"
               type="error"
-              ghost
+              quaternary
             >
               <template #icon>
                 <NIcon :component="Delete16Filled" />
               </template>
-              清空所有历史
+              清空所有
             </NButton>
           </template>
           确定要清空所有类型的历史记录吗？此操作不可恢复。
@@ -220,6 +233,7 @@ onUnmounted(() => {
       v-model:value="activeTab"
       type="line"
       animated
+      pane-style="padding: 12px 0 0 0;"
     >
       <NTabPane
         v-for="(label, type) in typeNameMap"
@@ -228,28 +242,7 @@ onUnmounted(() => {
         :tab="label"
       >
         <NSpin :show="loading">
-          <NFlex vertical>
-            <NFlex justify="end">
-              <NPopconfirm
-                placement="bottom"
-                @positive-click="() => handleClearHistory(type as HistoryType)"
-              >
-                <template #trigger>
-                  <NButton
-                    size="small"
-                    type="warning"
-                    ghost
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete16Filled" />
-                    </template>
-                    清空{{ label }}历史
-                  </NButton>
-                </template>
-                确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
-              </NPopconfirm>
-            </NFlex>
-
+          <NFlex vertical :size="12">
             <NDataTable
               :columns="columns"
               :data="historyData[type as HistoryType]"
@@ -261,11 +254,34 @@ onUnmounted(() => {
               }"
               :row-key="row => row.id"
               default-sort-order="descend"
+              size="small"
+              scroll-x="800"
             >
               <template #empty>
                 <NEmpty description="暂无历史记录" />
               </template>
             </NDataTable>
+            
+            <NFlex v-if="historyData[type as HistoryType].length > 0" justify="end">
+              <NPopconfirm
+                placement="bottom"
+                @positive-click="() => handleClearHistory(type as HistoryType)"
+              >
+                <template #trigger>
+                  <NButton
+                    size="tiny"
+                    type="warning"
+                    quaternary
+                  >
+                    <template #icon>
+                      <NIcon :component="Delete16Filled" />
+                    </template>
+                    清空{{ label }}历史
+                  </NButton>
+                </template>
+                确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
+              </NPopconfirm>
+            </NFlex>
           </NFlex>
         </NSpin>
       </NTabPane>
@@ -274,4 +290,34 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.history-viewer-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-card__content) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+:deep(.n-tabs) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-tab-pane) {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-spin-container), :deep(.n-spin-content) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 </style>
