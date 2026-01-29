@@ -284,9 +284,9 @@ async function checkEligibility() {
 </script>
 
 <template>
-  <NCard title="积分测试系统">
+  <NCard title="积分测试系统" size="small">
     <template #header-extra>
-      <NTag type="info">
+      <NTag type="info" size="small" :bordered="false">
         测试账户 OUId: 00000000-0000-0000-0000-000000000000
       </NTag>
     </template>
@@ -294,20 +294,18 @@ async function checkEligibility() {
     <NSpin :show="isLoading">
       <NFlex
         vertical
-        :gap="16"
+        :gap="24"
       >
         <NAlert
           type="info"
           closable
+          :bordered="false"
         >
           此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock 账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
         </NAlert>
 
         <!-- 测试账户积分显示 -->
-        <NCard
-          size="small"
-          :bordered="false"
-        >
+        <div class="section-container">
           <NFlex
             justify="space-between"
             align="center"
@@ -330,6 +328,7 @@ async function checkEligibility() {
                   type="error"
                   :loading="isLoading"
                   secondary
+                  size="small"
                 >
                   重置积分
                 </NButton>
@@ -337,14 +336,17 @@ async function checkEligibility() {
               确定要重置测试账户的积分吗？
             </NPopconfirm>
           </NFlex>
-        </NCard>
+        </div>
 
-        <NDivider>测试表单</NDivider>
+        <NDivider title-placement="left" style="margin: 0">
+          测试事件模拟
+        </NDivider>
 
         <!-- 测试表单 -->
         <NForm
           label-placement="left"
-          label-width="120"
+          label-width="100"
+          style="max-width: 600px"
         >
           <NFormItem
             label="事件类型"
@@ -440,20 +442,21 @@ async function checkEligibility() {
         <NAlert
           v-if="!accountInfo?.settings?.point"
           type="warning"
+          :bordered="false"
         >
           请先配置积分设置
         </NAlert>
 
-        <NDivider>兑换资格查询</NDivider>
+        <NDivider title-placement="left" style="margin: 0">
+          兑换资格查询
+        </NDivider>
 
-        <NCard
-          size="small"
-          :bordered="false"
-        >
+        <div class="section-container">
           <NSpin :show="isCheckingEligibility || isLoadingEligibilityOptions">
             <NForm
               label-placement="left"
-              label-width="120"
+              label-width="100"
+              style="max-width: 600px"
             >
               <NFormItem label="目标用户" required>
                 <NSelect
@@ -488,7 +491,7 @@ async function checkEligibility() {
                 v-if="selectedGoods"
                 type="info"
                 :bordered="false"
-                style="margin-bottom: 12px"
+                style="margin-bottom: 24px"
               >
                 当前选择: {{ selectedGoods.name }} (ID: {{ selectedGoods.id }})
               </NAlert>
@@ -514,6 +517,7 @@ async function checkEligibility() {
               v-if="eligibilityResult"
               :type="eligibilityResult.eligible ? 'success' : 'error'"
               style="margin-top: 12px"
+              :bordered="false"
             >
               <template #header>
                 {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
@@ -526,26 +530,32 @@ async function checkEligibility() {
                 :gap="12"
                 style="margin-top: 8px"
               >
-                <NTag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'">
+                <NTag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'" :bordered="false">
                   {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}
                 </NTag>
-                <NTag type="info">
+                <NTag type="info" :bordered="false">
                   当前积分: {{ eligibilityResult.userPoint }}
                 </NTag>
-                <NTag type="info">
+                <NTag type="info" :bordered="false">
                   已兑换次数: {{ eligibilityResult.purchasedCount }}
                 </NTag>
-                <NTag type="warning">
+                <NTag type="warning" :bordered="false">
                   需要积分: {{ eligibilityResult.needPoint }}
                 </NTag>
               </NFlex>
             </NAlert>
           </NSpin>
-        </NCard>
+        </div>
       </NFlex>
     </NSpin>
   </NCard>
 </template>
 
 <style scoped>
+.section-container {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px;
+}
 </style>

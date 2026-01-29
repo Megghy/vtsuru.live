@@ -4,6 +4,7 @@ import { Pin16Filled } from '@vicons/fluent'
 import { NCard, NEllipsis, NEmpty, NIcon, NImage, NTag } from 'naive-ui';
 import { GoodsTypes } from '@/api/api-models'
 import { IMGUR_URL } from '@/shared/config'
+import { computed } from 'vue'
 
 const props = defineProps<{
   goods: ResponsePointGoodModel | undefined
@@ -14,6 +15,33 @@ const props = defineProps<{
 
 // 默认封面图片
 const emptyCover = `${IMGUR_URL}None.png`
+
+const hasSubItems = computed(() => (props.goods?.subItems?.length ?? 0) > 0)
+const subItems = computed(() => props.goods?.subItems ?? [])
+const availableSubItemCount = computed(() => subItems.value.filter(s => s.count == null || s.count > 0).length)
+const isSoldOut = computed(() => {
+  if (!props.goods) return false
+  if (!hasSubItems.value) return props.goods.count === 0
+  return subItems.value.length > 0 && subItems.value.every(s => s.count === 0)
+})
+const priceMin = computed(() => {
+  if (!props.goods) return 0
+  if (!hasSubItems.value) return props.goods.price
+  const list = subItems.value.map(s => s.price)
+  return list.length ? Math.min(...list) : props.goods.price
+})
+const priceMax = computed(() => {
+  if (!props.goods) return 0
+  if (!hasSubItems.value) return props.goods.price
+  const list = subItems.value.map(s => s.price)
+  return list.length ? Math.max(...list) : props.goods.price
+})
+const priceRangeText = computed(() => {
+  if (!props.goods) return ''
+  if (!hasSubItems.value) return props.goods.price > 0 ? String(props.goods.price) : '免费'
+  if (priceMin.value <= 0 && priceMax.value <= 0) return '免费'
+  return priceMin.value === priceMax.value ? `${priceMin.value}` : `${priceMin.value}~${priceMax.value}`
+})
 </script>
 
 <template>
@@ -49,7 +77,7 @@ const emptyCover = `${IMGUR_URL}None.png`
         </div>
 
         <!-- 售罄遮罩 -->
-        <div v-if="goods.count === 0" class="sold-out-mask">
+        <div v-if="isSoldOut" class="sold-out-mask">
           <span class="sold-out-text">已售完</span>
         </div>
 
@@ -72,6 +100,15 @@ const emptyCover = `${IMGUR_URL}None.png`
             </NTag>
 
             <NTag
+              v-if="hasSubItems"
+              size="tiny"
+              :bordered="false"
+              class="glass-tag"
+            >
+              多选
+            </NTag>
+
+            <NTag
               v-if="goods.allowGuardLevel > 0"
               size="tiny"
               :bordered="false"
@@ -84,12 +121,12 @@ const emptyCover = `${IMGUR_URL}None.png`
           <!-- 右侧价格 -->
           <div class="price-pill">
             <span class="coin-icon">🪙</span>
-            <template v-if="goods.canFreeBuy && goods.price > 0">
-              <span class="price-original">{{ goods.price }}</span>
+            <template v-if="goods.canFreeBuy && priceMax > 0">
+              <span class="price-original">{{ priceRangeText }}</span>
               <span class="price-highlight">免费</span>
             </template>
             <template v-else>
-              <span class="price-current">{{ goods.price > 0 ? goods.price : '免费' }}</span>
+              <span class="price-current">{{ priceRangeText }}</span>
             </template>
           </div>
         </div>
@@ -112,9 +149,12 @@ const emptyCover = `${IMGUR_URL}None.png`
         </div>
 
         <!-- 库存显示 -->
-        <div class="stock-badge" :class="{ 'stock-none': goods.count === 0, 'stock-inf': !goods.count && goods.count !== 0 }">
-          <template v-if="goods.count === 0">
+        <div class="stock-badge" :class="{ 'stock-none': isSoldOut, 'stock-inf': hasSubItems ? availableSubItemCount > 0 : (!goods.count && goods.count !== 0) }">
+          <template v-if="isSoldOut">
             缺货
+          </template>
+          <template v-else-if="hasSubItems">
+            {{ availableSubItemCount }} 选
           </template>
           <template v-else-if="goods.count && goods.count > 0">
             余 {{ goods.count }}
@@ -168,6 +208,13 @@ const emptyCover = `${IMGUR_URL}None.png`
         <div v-if="goods.type === GoodsTypes.Physical" class="info-cell">
           <span class="label">📮 地址</span>
           <span class="value">{{ goods.collectUrl ? '站外' : '本站' }}</span>
+        </div>
+        <!-- 子商品简略信息 -->
+        <div v-if="hasSubItems" class="info-cell sub-items-summary">
+          <span class="label">🎨 款式</span>
+          <NEllipsis class="value">
+            {{ subItems.map(s => s.name).join(' / ') }}
+          </NEllipsis>
         </div>
       </div>
     </div>
@@ -438,6 +485,13 @@ const emptyCover = `${IMGUR_URL}None.png`
   padding: 8px;
   border-radius: 8px;
   margin-top: 4px;
+}
+
+.sub-items-summary {
+  grid-column: span 2;
+  border-top: 1px dashed var(--n-border-color);
+  padding-top: 4px;
+  margin-top: 2px;
 }
 
 .info-cell {

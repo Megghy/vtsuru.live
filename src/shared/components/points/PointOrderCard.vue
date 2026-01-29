@@ -9,7 +9,7 @@ import type {
 } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert, NAutoComplete, NButton, NCard, NDataTable, NDivider, NEllipsis, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NScrollbar, NStep, NSteps, NTag, NText, NTime, NTooltip, useDialog, useMessage } from 'naive-ui';
+  NAlert, NAutoComplete, NButton, NCard, NDataTable, NDivider, NEllipsis, NEmpty, NFlex, NGrid, NGi, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NScrollbar, NStep, NSteps, NTag, NText, NTime, NTooltip, useDialog, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import {
   GoodsTypes,
@@ -36,6 +36,11 @@ const isLoading = ref(false)
 const showDetailModal = ref(false)
 const selectedItem = ref<DataTableRowKey[]>([])
 const orderDetail = ref<OrderType>()
+
+const selectedSubItems = computed(() => {
+  if (!orderDetail.value) return []
+  return orderDetail.value.selectedSubItems || []
+})
 
 // 监听加载状态
 watch(() => props.loading, (val) => {
@@ -147,9 +152,20 @@ const orderColumn: DataTableColumns<OrderType> = [
   {
     title: '礼物名',
     key: 'giftName',
-    minWidth: 150,
+    minWidth: 180,
     render: (row: OrderType) => {
-      return row.goods?.name
+      const name = row.goods?.name || '未知礼物'
+      const subs = row.selectedSubItems || []
+      
+      if (subs.length === 0) return name
+
+      return h(NFlex, { vertical: true, gap: 4 }, () => [
+        h(NText, { strong: true }, () => name),
+        h(NFlex, { gap: 4, wrap: true }, () => 
+          subs.map(s => h(NTag, { size: 'tiny', type: 'info', bordered: false, key: s.subItemId }, 
+            () => `${s.nameSnapshot} x ${s.quantity}`))
+        )
+      ])
     },
   },
   {
@@ -457,6 +473,37 @@ onMounted(() => {
             />
           </NFlex>
 
+          <!-- 已选款式详情 -->
+          <template v-if="selectedSubItems.length > 0">
+            <NDivider>已选款式</NDivider>
+            <NGrid cols="1 400:2" :x-gap="12" :y-gap="12">
+              <NGi v-for="sub in selectedSubItems" :key="sub.subItemId">
+                <div class="selected-sub-item-display">
+                  <NFlex align="center" :gap="12">
+                    <div class="sub-info" style="flex: 1">
+                      <NFlex align="center" justify="space-between">
+                        <NText strong>
+                          {{ sub.nameSnapshot }}
+                        </NText>
+                        <NText depth="3">
+                          x {{ sub.quantity }}
+                        </NText>
+                      </NFlex>
+                      <NFlex justify="space-between" align="center" style="margin-top: 4px">
+                        <NTag size="tiny" :bordered="false" type="primary" secondary>
+                          {{ sub.priceSnapshot }} 积分
+                        </NTag>
+                        <NText v-if="sub.assignedVirtualKeys && sub.assignedVirtualKeys.length > 0" type="success" style="font-size: 12px">
+                          已分配 {{ sub.assignedVirtualKeys.length }} 个密钥
+                        </NText>
+                      </NFlex>
+                    </div>
+                  </NFlex>
+                </div>
+              </NGi>
+            </NGrid>
+          </template>
+
           <!-- 移动并修改备注信息 -->
           <template v-if="orderDetail.remark">
             <NAlert
@@ -541,6 +588,8 @@ onMounted(() => {
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
                     <circle
                       cx="12"
@@ -581,6 +630,8 @@ onMounted(() => {
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                     <polyline points="22 4 12 14.01 9 11.01" />
@@ -840,6 +891,13 @@ onMounted(() => {
 .goods-item {
   max-width: 300px;
   width: 100%;
+}
+
+.selected-sub-item-display {
+  padding: 12px;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  background-color: var(--n-color-modal);
 }
 
 .order-status-steps {

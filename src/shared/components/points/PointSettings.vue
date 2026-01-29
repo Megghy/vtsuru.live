@@ -2,7 +2,7 @@
 import type { Setting_Point } from '@/api/api-models'
 import { Delete24Regular, Info24Filled } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTag, NTooltip, useMessage } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTag, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
@@ -264,7 +264,7 @@ watch(
     if (props.orgId) {
       loadOrgSetting()
     }
-  },
+  }
 )
 </script>
 
@@ -274,6 +274,7 @@ watch(
     v-if="!orgId && !accountInfo.eventFetcherState.online"
     type="warning"
     class="alert-margin"
+    :bordered="false"
   >
     由于你尚未部署
     <NButton
@@ -292,91 +293,267 @@ watch(
   <NAlert
     type="info"
     class="alert-margin"
+    :bordered="false"
   >
     积分总是最多保留两位小数, 四舍五入
   </NAlert>
 
-  <NDivider> 常用 </NDivider>
-
   <NSpin :show="isLoading">
     <NFlex
       vertical
-      :gap="12"
+      :gap="16"
     >
-      <!-- 通知设置 -->
-      <NFlex
-        v-if="!orgId"
-        align="center"
-        :gap="12"
+      <!-- 通用设置 -->
+      <NCard
+        title="通用设置"
+        size="small"
       >
-        <span>通知设置:</span>
-        <NCheckbox
-          v-model:checked="accountInfo.settings.sendEmail.receiveOrder"
-          :disabled="!canEdit"
-          @update:checked="SaveComboSetting"
+        <NFlex
+          vertical
+          :gap="12"
         >
-          积分礼物有新用户兑换时发送邮件
-        </NCheckbox>
-      </NFlex>
+          <NFlex
+            v-if="!orgId"
+            align="center"
+            :gap="12"
+          >
+            <span class="setting-label">通知:</span>
+            <NCheckbox
+              v-model:checked="accountInfo.settings.sendEmail.receiveOrder"
+              :disabled="!canEdit"
+              @update:checked="SaveComboSetting"
+            >
+              积分礼物有新用户兑换时发送邮件
+            </NCheckbox>
+          </NFlex>
 
-      <NFlex
-        align="center"
-        :gap="12"
+          <NFlex
+            align="center"
+            :gap="12"
+          >
+            <span class="setting-label">库存:</span>
+            <NCheckbox
+              v-model:checked="setting.shouldDiscontinueWhenSoldOut"
+              :disabled="!canEdit"
+              @update:checked="updateSettings"
+            >
+              礼物售罄时自动下架
+            </NCheckbox>
+          </NFlex>
+
+          <NFlex
+            align="center"
+            :gap="12"
+          >
+            <span class="setting-label">兑换:</span>
+            <NCheckbox
+              v-model:checked="setting.requireAuth"
+              :disabled="!canEdit"
+              @update:checked="updateSettings"
+            >
+              仅允许已认证用户兑换礼物
+            </NCheckbox>
+          </NFlex>
+        </NFlex>
+      </NCard>
+
+      <!-- 签到设置 -->
+      <NCard
+        title="签到配置"
+        size="small"
       >
-        <span>其他: </span>
-        <NCheckbox
-          v-model:checked="setting.shouldDiscontinueWhenSoldOut"
-          :disabled="!canEdit"
-          @update:checked="updateSettings"
+        <NFlex
+          vertical
+          :gap="16"
         >
-          礼物售罄时自动下架
-        </NCheckbox>
-      </NFlex>
+          <NCheckbox
+            v-model:checked="setting.enableCheckIn"
+            :disabled="!canEdit"
+            @update:checked="updateSettings"
+          >
+            启用签到功能
+          </NCheckbox>
 
-      <!-- 积分来源设置 -->
-      <NFlex
-        align="center"
-        :gap="12"
-      >
-        <span>允许的积分来源:</span>
-        <NCheckboxGroup
-          v-model:value="setting.allowType"
-          :disabled="!canEdit"
-          @update:value="updateSettings"
-        >
-          <NCheckbox :value="EventDataTypes.Guard">
-            上舰
-          </NCheckbox>
-          <NCheckbox :value="EventDataTypes.SC">
-            Superchat
-          </NCheckbox>
-          <NCheckbox :value="EventDataTypes.Gift">
-            礼物
-          </NCheckbox>
-        </NCheckboxGroup>
-      </NFlex>
-      
-      <NCheckbox
-        v-model:checked="setting.checkInOnlyOnStreaming"
-        :disabled="!canEdit"
-        @update:checked="updateSettings"
-      >
-        仅开播时允许签到
-      </NCheckbox>
+          <template v-if="setting.enableCheckIn">
+            <NDivider style="margin: 0" />
 
-      <!-- 舰长设置区域 -->
-      <template v-if="setting.allowType.includes(EventDataTypes.Guard)">
-        <NDivider>上舰设置</NDivider>
+            <div class="setting-row">
+              <NInputGroup
+                class="input-group"
+                :disabled="!canEdit"
+              >
+                <NInputGroupLabel> 签到关键词 </NInputGroupLabel>
+                <NInput
+                  v-model:value="setting.checkInKeyword"
+                  :disabled="!canEdit"
+                  placeholder="默认: 签到"
+                  @change="updateSettings"
+                />
+              </NInputGroup>
+            </div>
+
+            <NFlex :gap="24">
+              <NCheckbox
+                v-model:checked="setting.checkInOnlyOnStreaming"
+                :disabled="!canEdit"
+                @update:checked="updateSettings"
+              >
+                仅开播时允许签到
+              </NCheckbox>
+              <NCheckbox
+                v-model:checked="setting.allowSelfCheckIn"
+                :disabled="!canEdit"
+                @update:checked="updateSettings"
+              >
+                允许主播自己签到
+              </NCheckbox>
+            </NFlex>
+
+            <NDivider style="margin: 0" />
+
+            <NCheckbox
+              v-model:checked="setting.givePointsForCheckIn"
+              :disabled="!canEdit"
+              @update:checked="updateSettings"
+            >
+              签到奖励积分
+            </NCheckbox>
+
+            <template v-if="setting.givePointsForCheckIn">
+              <div class="setting-row">
+                <NInputGroup
+                  class="input-group"
+                  :disabled="!canEdit"
+                >
+                  <NInputGroupLabel> 基础积分 </NInputGroupLabel>
+                  <NInputNumber
+                    v-model:value="setting.baseCheckInPoints"
+                    :disabled="!canEdit"
+                    min="0"
+                    :show-button="false"
+                    @blur="updateSettings"
+                  />
+                  <NButton
+                    type="primary"
+                    ghost
+                    :disabled="!canEdit"
+                    @click="updateSettings"
+                  >
+                    保存
+                  </NButton>
+                </NInputGroup>
+              </div>
+
+              <NCheckbox
+                v-model:checked="setting.enableConsecutiveBonus"
+                :disabled="!canEdit"
+                @update:checked="updateSettings"
+              >
+                启用连续签到奖励
+              </NCheckbox>
+
+              <template v-if="setting.enableConsecutiveBonus">
+                <NFlex :gap="16">
+                  <NInputGroup
+                    class="input-group"
+                    :disabled="!canEdit"
+                  >
+                    <NInputGroupLabel> 每日递增 </NInputGroupLabel>
+                    <NInputNumber
+                      v-model:value="setting.bonusPointsPerDay"
+                      :disabled="!canEdit"
+                      min="0"
+                      :show-button="false"
+                      @blur="updateSettings"
+                    />
+                    <NButton
+                      type="primary"
+                      ghost
+                      :disabled="!canEdit"
+                      @click="updateSettings"
+                    >
+                      保存
+                    </NButton>
+                  </NInputGroup>
+
+                  <NInputGroup
+                    class="input-group"
+                    :disabled="!canEdit"
+                  >
+                    <NInputGroupLabel> 最大奖励 </NInputGroupLabel>
+                    <NInputNumber
+                      v-model:value="setting.maxBonusPoints"
+                      :disabled="!canEdit"
+                      min="0"
+                      :show-button="false"
+                      @blur="updateSettings"
+                    />
+                    <NButton
+                      type="primary"
+                      ghost
+                      :disabled="!canEdit"
+                      @click="updateSettings"
+                    >
+                      保存
+                    </NButton>
+                  </NInputGroup>
+                </NFlex>
+                <NText
+                  depth="3"
+                  style="font-size: 12px"
+                >
+                  例如：基础10分，递增2分，最大20分。第一天10，第二天12，第三天14...直到20分封顶。
+                </NText>
+              </template>
+            </template>
+          </template>
+        </NFlex>
+      </NCard>
+
+      <!-- 积分来源 -->
+      <NCard
+        title="积分来源"
+        size="small"
+      >
         <NFlex
           align="center"
-          vertical
-          :gap="10"
-          class="settings-section"
+          :gap="12"
         >
-          <span>上舰所给予的积分:</span>
+          <span class="setting-label">启用来源:</span>
+          <NCheckboxGroup
+            v-model:value="setting.allowType"
+            :disabled="!canEdit"
+            @update:value="updateSettings"
+          >
+            <NCheckbox :value="EventDataTypes.Guard">
+              上舰
+            </NCheckbox>
+            <NCheckbox :value="EventDataTypes.SC">
+              Superchat
+            </NCheckbox>
+            <NCheckbox :value="EventDataTypes.Gift">
+              礼物
+            </NCheckbox>
+          </NCheckboxGroup>
+        </NFlex>
+      </NCard>
+
+      <!-- 舰长设置区域 -->
+      <NCard
+        v-if="setting.allowType.includes(EventDataTypes.Guard)"
+        title="上舰积分配置"
+        size="small"
+      >
+        <NFlex
+          vertical
+          :gap="12"
+        >
+          <NText depth="3">
+            配置不同等级舰长获得的固定积分
+          </NText>
           <NFlex
             :wrap="true"
-            :gap="8"
+            :gap="16"
           >
             <NInputGroup
               class="input-group"
@@ -387,13 +564,15 @@ watch(
                 v-model:value="setting.jianzhangPoint"
                 :disabled="!canEdit"
                 min="0"
+                :show-button="false"
               />
               <NButton
-                type="info"
+                type="primary"
+                ghost
                 :disabled="!canEdit"
                 @click="updateSettings"
               >
-                确定
+                保存
               </NButton>
             </NInputGroup>
 
@@ -406,13 +585,15 @@ watch(
                 v-model:value="setting.tiduPoint"
                 :disabled="!canEdit"
                 min="0"
+                :show-button="false"
               />
               <NButton
-                type="info"
+                type="primary"
+                ghost
                 :disabled="!canEdit"
                 @click="updateSettings"
               >
-                确定
+                保存
               </NButton>
             </NInputGroup>
 
@@ -425,200 +606,239 @@ watch(
                 v-model:value="setting.zongduPoint"
                 :disabled="!canEdit"
                 min="0"
+                :show-button="false"
               />
               <NButton
-                type="info"
+                type="primary"
+                ghost
                 :disabled="!canEdit"
                 @click="updateSettings"
               >
-                确定
+                保存
               </NButton>
             </NInputGroup>
           </NFlex>
         </NFlex>
-      </template>
+      </NCard>
 
       <!-- SC设置区域 -->
-      <template v-if="setting.allowType.includes(EventDataTypes.SC)">
-        <NDivider>SC设置</NDivider>
-        <NFlex
-          :gap="12"
-          class="settings-section"
-        >
-          <NInputGroup
-            class="input-group-wide"
-            :disabled="!canEdit"
-          >
-            <NInputGroupLabel> SC转换倍率 </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="setting.scPointPercent"
-              :disabled="!canEdit"
-              min="0"
-              step="0.01"
-              max="1"
-            />
-            <NButton
-              type="info"
-              :disabled="!canEdit"
-              @click="updateSettings"
-            >
-              确定
-              <NTooltip>
-                <template #trigger>
-                  <NIcon :component="Info24Filled" />
-                </template>
-                将SC的价格以指定比例转换为积分, 如这里是0.5, 则一个30块的sc获得的积分为 30 * 0.5 = 15
-              </NTooltip>
-            </NButton>
-          </NInputGroup>
-        </NFlex>
-      </template>
-
-      <!-- 每日首次互动奖励设置 -->
-      <NDivider>每日首次互动奖励</NDivider>
-      <NFlex
-        vertical
-        :gap="12"
-        class="settings-section"
+      <NCard
+        v-if="setting.allowType.includes(EventDataTypes.SC)"
+        title="Superchat 积分配置"
+        size="small"
       >
-        <NAlert
-          type="info"
-          closable
-        >
-          每日首次发送弹幕或礼物时可以给予额外积分，每个用户每天只能获得一次
-        </NAlert>
-
-        <!-- 每日首次弹幕奖励 -->
-        <NFlex
-          align="center"
-          :gap="12"
-        >
-          <NCheckbox
-            v-model:checked="setting.enableDailyFirstDanmaku"
-            :disabled="!canEdit"
-            @update:checked="updateSettings"
-          >
-            启用每日首次弹幕奖励
-          </NCheckbox>
-        </NFlex>
-
         <NInputGroup
-          v-if="setting.enableDailyFirstDanmaku"
           class="input-group-wide"
           :disabled="!canEdit"
         >
-          <NInputGroupLabel> 每日首次弹幕积分 </NInputGroupLabel>
+          <NInputGroupLabel> SC转换倍率 </NInputGroupLabel>
           <NInputNumber
-            v-model:value="setting.dailyFirstDanmakuPoints"
+            v-model:value="setting.scPointPercent"
             :disabled="!canEdit"
             min="0"
+            step="0.01"
+            max="1"
+            :show-button="false"
           />
           <NButton
-            type="info"
+            type="primary"
+            ghost
             :disabled="!canEdit"
             @click="updateSettings"
           >
-            确定
+            保存
           </NButton>
-        </NInputGroup>
-
-        <!-- 每日首次礼物奖励 -->
-        <NFlex
-          align="center"
-          :gap="12"
-        >
-          <NCheckbox
-            v-model:checked="setting.enableDailyFirstGift"
-            :disabled="!canEdit"
-            @update:checked="updateSettings"
-          >
-            启用每日首次礼物奖励
-          </NCheckbox>
-        </NFlex>
-
-        <template v-if="setting.enableDailyFirstGift">
-          <NRadioGroup
-            v-model:value="setting.useDailyFirstGiftPercent"
-            @update:value="updateSettings"
-          >
-            <NRadioButton :value="false">
-              固定积分
-            </NRadioButton>
-            <NRadioButton :value="true">
-              按礼物价值比例
-            </NRadioButton>
-          </NRadioGroup>
-
-          <NInputGroup
-            v-if="!setting.useDailyFirstGiftPercent"
-            class="input-group-wide"
-            :disabled="!canEdit"
-          >
-            <NInputGroupLabel> 固定积分数量 </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="setting.dailyFirstGiftPoints"
-              :disabled="!canEdit"
-              min="0"
-            />
-            <NButton
-              type="info"
-              :disabled="!canEdit"
-              @click="updateSettings"
-            >
-              确定
-            </NButton>
-          </NInputGroup>
-
-          <NInputGroup
-            v-else
-            class="input-group-wide"
-            :disabled="!canEdit"
-          >
-            <NInputGroupLabel> 礼物价值比例 </NInputGroupLabel>
-            <NInputNumber
-              v-model:value="setting.dailyFirstGiftPercent"
-              :disabled="!canEdit"
-              min="0"
-              step="0.01"
-              max="1"
-            />
-            <NButton
-              type="info"
-              :disabled="!canEdit"
-              @click="updateSettings"
-            >
-              确定
-              <NTooltip>
-                <template #trigger>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton
+                quaternary
+                circle
+              >
+                <template #icon>
                   <NIcon :component="Info24Filled" />
                 </template>
-                例如设置0.1，送10元礼物获得1积分。免费礼物不给予积分
-              </NTooltip>
-            </NButton>
-          </NInputGroup>
+              </NButton>
+            </template>
+            将SC的价格以指定比例转换为积分, 如这里是0.5, 则一个30块的sc获得的积分为 30 * 0.5 = 15
+          </NTooltip>
+        </NInputGroup>
+      </NCard>
+
+      <!-- 每日首次互动奖励设置 -->
+      <NCard
+        title="每日首次互动奖励"
+        size="small"
+      >
+        <template #header-extra>
+          <NFlex align="center">
+            <NCheckbox
+              v-model:checked="setting.dailyFirstOnlyOnStreaming"
+              :disabled="!canEdit"
+              @update:checked="updateSettings"
+            >
+              仅开播时生效
+            </NCheckbox>
+          </NFlex>
         </template>
-
-        <NFlex
-          align="center"
-          :gap="12"
+        <NAlert
+          type="info"
+          :bordered="false"
+          style="margin-bottom: 16px"
         >
-          <NCheckbox
-            v-model:checked="setting.dailyFirstOnlyOnStreaming"
-            :disabled="!canEdit"
-            @update:checked="updateSettings"
-          >
-            仅开播时生效
-          </NCheckbox>
-        </NFlex>
-      </NFlex>
+          每日首次发送弹幕或礼物时可以给予额外积分，每个用户每天只能获得一次。
+        </NAlert>
 
-      <!-- 礼物设置区域 -->
-      <template v-if="setting.allowType.includes(EventDataTypes.Gift)">
-        <NDivider>礼物设置</NDivider>
         <NFlex
           vertical
-          :gap="12"
-          class="settings-section"
+          :gap="20"
+        >
+          <!-- 每日首次弹幕奖励 -->
+          <div class="setting-row-group">
+            <NFlex align="center" style="margin-bottom: 12px">
+              <NCheckbox
+                v-model:checked="setting.enableDailyFirstDanmaku"
+                :disabled="!canEdit"
+                @update:checked="updateSettings"
+              >
+                <span style="font-weight: 500">每日首次弹幕奖励</span>
+              </NCheckbox>
+            </NFlex>
+
+            <NFlex v-if="setting.enableDailyFirstDanmaku" style="padding-left: 28px">
+              <NInputGroup
+                class="input-group-wide"
+                :disabled="!canEdit"
+              >
+                <NInputGroupLabel> 奖励积分 </NInputGroupLabel>
+                <NInputNumber
+                  v-model:value="setting.dailyFirstDanmakuPoints"
+                  :disabled="!canEdit"
+                  min="0"
+                  :show-button="false"
+                  @blur="updateSettings"
+                />
+                <NButton
+                  type="primary"
+                  ghost
+                  :disabled="!canEdit"
+                  @click="updateSettings"
+                >
+                  保存
+                </NButton>
+              </NInputGroup>
+            </NFlex>
+          </div>
+
+          <NDivider style="margin: 0" />
+
+          <!-- 每日首次礼物奖励 -->
+          <div class="setting-row-group">
+            <NFlex align="center" style="margin-bottom: 12px">
+              <NCheckbox
+                v-model:checked="setting.enableDailyFirstGift"
+                :disabled="!canEdit"
+                @update:checked="updateSettings"
+              >
+                <span style="font-weight: 500">每日首次礼物奖励</span>
+              </NCheckbox>
+            </NFlex>
+
+            <NFlex
+              v-if="setting.enableDailyFirstGift"
+              vertical
+              :gap="12"
+              style="padding-left: 28px"
+            >
+              <NRadioGroup
+                v-model:value="setting.useDailyFirstGiftPercent"
+                size="small"
+                @update:value="updateSettings"
+              >
+                <NRadioButton :value="false">
+                  固定积分
+                </NRadioButton>
+                <NRadioButton :value="true">
+                  按礼物价值比例
+                </NRadioButton>
+              </NRadioGroup>
+
+              <NFlex>
+                <NInputGroup
+                  v-if="!setting.useDailyFirstGiftPercent"
+                  class="input-group-wide"
+                  :disabled="!canEdit"
+                >
+                  <NInputGroupLabel> 奖励积分 </NInputGroupLabel>
+                  <NInputNumber
+                    v-model:value="setting.dailyFirstGiftPoints"
+                    :disabled="!canEdit"
+                    min="0"
+                    :show-button="false"
+                    @blur="updateSettings"
+                  />
+                  <NButton
+                    type="primary"
+                    ghost
+                    :disabled="!canEdit"
+                    @click="updateSettings"
+                  >
+                    保存
+                  </NButton>
+                </NInputGroup>
+
+                <NInputGroup
+                  v-else
+                  class="input-group-wide"
+                  :disabled="!canEdit"
+                >
+                  <NInputGroupLabel> 价值比例 </NInputGroupLabel>
+                  <NInputNumber
+                    v-model:value="setting.dailyFirstGiftPercent"
+                    :disabled="!canEdit"
+                    min="0"
+                    step="0.01"
+                    max="1"
+                    :show-button="false"
+                    @blur="updateSettings"
+                  />
+                  <NButton
+                    type="primary"
+                    ghost
+                    :disabled="!canEdit"
+                    @click="updateSettings"
+                  >
+                    保存
+                  </NButton>
+                  <NTooltip trigger="hover">
+                    <template #trigger>
+                      <NButton
+                        quaternary
+                        circle
+                        size="small"
+                      >
+                        <template #icon>
+                          <NIcon :component="Info24Filled" />
+                        </template>
+                      </NButton>
+                    </template>
+                    例如设置0.1，送10元礼物获得1积分。免费礼物不给予积分。
+                  </NTooltip>
+                </NInputGroup>
+              </NFlex>
+            </NFlex>
+          </div>
+        </NFlex>
+      </NCard>
+
+      <!-- 礼物设置区域 -->
+      <NCard
+        v-if="setting.allowType.includes(EventDataTypes.Gift)"
+        title="礼物积分配置"
+        size="small"
+      >
+        <NFlex
+          vertical
+          :gap="16"
         >
           <!-- 礼物类型选择 -->
           <NRadioGroup
@@ -626,7 +846,7 @@ watch(
             @update:value="updateSettings"
           >
             <NRadioButton :value="SettingPointGiftAllowType.WhiteList">
-              只包含下方的礼物
+              仅包含自定义列表中的礼物
             </NRadioButton>
             <NRadioButton :value="SettingPointGiftAllowType.All">
               包含所有礼物
@@ -646,136 +866,129 @@ watch(
                 min="0"
                 step="0.01"
                 max="1"
+                :show-button="false"
               />
               <NButton
-                type="info"
+                type="primary"
+                ghost
                 :disabled="!canEdit"
                 @click="updateSettings"
               >
-                确定
-                <NTooltip>
-                  <template #trigger>
-                    <NIcon :component="Info24Filled" />
-                  </template>
-                  将礼物的价格以指定比例转换为积分, 如这里是0.5, 则一个10块的礼物获得的积分为 10 * 0.5 = 5
-                </NTooltip>
+                保存
               </NButton>
+              <NTooltip trigger="hover">
+                <template #trigger>
+                  <NButton
+                    quaternary
+                    circle
+                  >
+                    <template #icon>
+                      <NIcon :component="Info24Filled" />
+                    </template>
+                  </NButton>
+                </template>
+                将礼物的价格以指定比例转换为积分, 如这里是0.5, 则一个10块的礼物获得的积分为 10 * 0.5 = 5
+              </NTooltip>
             </NInputGroup>
           </template>
 
+          <NDivider style="margin: 0" />
+
           <!-- 礼物列表 -->
-          <NCard class="gift-card">
+          <div class="gift-list-section">
             <NFlex
-              vertical
-              :gap="12"
+              justify="space-between"
+              align="center"
+              style="margin-bottom: 16px"
             >
-              <NFlex
-                justify="space-between"
-                align="center"
-              >
-                <span class="section-title">
-                  自定义礼物列表
-                  <NTag
-                    v-if="Object.keys(setting.giftPercentMap).length > 0"
-                    :bordered="false"
-                    size="small"
-                    type="info"
-                    style="margin-left: 8px"
-                  >
-                    {{ Object.keys(setting.giftPercentMap).length }} 个礼物
-                  </NTag>
-                </span>
-                <NButton
-                  type="primary"
-                  :disabled="!canEdit"
+              <div class="section-title">
+                自定义礼物列表
+                <NTag
+                  v-if="Object.keys(setting.giftPercentMap).length > 0"
+                  :bordered="false"
                   size="small"
-                  @click="showAddGiftModal = true"
+                  type="info"
+                  style="margin-left: 8px"
                 >
-                  添加礼物
-                </NButton>
-              </NFlex>
-
-              <NEmpty
-                v-if="!Object.keys(setting.giftPercentMap).length"
-                description="暂无自定义礼物"
-                style="margin: 12px 0"
-              />
-
-              <div
-                v-else
-                class="gift-list"
+                  {{ Object.keys(setting.giftPercentMap).length }}
+                </NTag>
+              </div>
+              <NButton
+                type="primary"
+                :disabled="!canEdit"
+                size="small"
+                @click="showAddGiftModal = true"
               >
-                <div
-                  v-for="item in Object.entries(setting.giftPercentMap)"
-                  :key="item[0]"
-                  class="gift-item"
+                添加礼物
+              </NButton>
+            </NFlex>
+
+            <NEmpty
+              v-if="!Object.keys(setting.giftPercentMap).length"
+              description="暂无自定义礼物"
+              style="margin: 24px 0"
+            />
+
+            <div
+              v-else
+              class="gift-grid"
+            >
+              <div
+                v-for="item in Object.entries(setting.giftPercentMap)"
+                :key="item[0]"
+                class="gift-item-card"
+              >
+                <NFlex
+                  align="center"
+                  justify="space-between"
+                  :wrap="false"
                 >
                   <NFlex
-                    align="center"
-                    justify="space-between"
-                    style="width: 100%"
+                    vertical
+                    :gap="4"
+                    style="flex: 1; overflow: hidden"
                   >
-                    <NFlex
-                      align="center"
-                      :gap="12"
-                    >
-                      <NTag
-                        :bordered="false"
-                        size="medium"
-                        type="success"
-                        class="gift-name-tag"
-                      >
-                        {{ item[0] }}
-                      </NTag>
-                      <NText depth="2">
-                        {{ setting.giftPercentMap[item[0]] }} 积分
-                      </NText>
-                    </NFlex>
-
-                    <NFlex
-                      align="center"
-                      :gap="8"
-                    >
-                      <NInputGroup
-                        style="width: 140px"
-                        :disabled="!canEdit"
-                      >
-                        <NInputNumber
-                          :value="setting.giftPercentMap[item[0]]"
-                          :disabled="!canEdit"
-                          min="0"
-                          size="small"
-                          @update:value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
-                        />
-                        <NButton
-                          type="info"
-                          size="small"
-                          :disabled="!canEdit"
-                          @click="updateSettings"
-                        >
-                          更新
-                        </NButton>
-                      </NInputGroup>
-                      <NPopconfirm @positive-click="deleteGift(item[0])">
-                        <template #trigger>
-                          <NButton
-                            type="error"
-                            size="small"
-                            :disabled="!canEdit"
-                          >
-                            <template #icon>
-                              <NIcon :component="Delete24Regular" />
-                            </template>
-                          </NButton>
-                        </template>
-                        确定要删除这个礼物吗?
-                      </NPopconfirm>
-                    </NFlex>
+                    <div class="gift-name">
+                      {{ item[0] }}
+                    </div>
+                    <NText depth="3" style="font-size: 12px">
+                      固定赠送 {{ setting.giftPercentMap[item[0]] }} 积分
+                    </NText>
                   </NFlex>
-                </div>
+
+                  <NFlex align="center" :gap="8">
+                    <NInputNumber
+                      :value="setting.giftPercentMap[item[0]]"
+                      :disabled="!canEdit"
+                      min="0"
+                      size="small"
+                      placeholder="积分"
+                      :show-button="false"
+                      style="width: 80px"
+                      @update:value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
+                      @blur="updateSettings"
+                    />
+                    <NPopconfirm @positive-click="deleteGift(item[0])">
+                      <template #trigger>
+                        <NButton
+                          type="error"
+                          size="small"
+                          quaternary
+                          circle
+                          :disabled="!canEdit"
+                        >
+                          <template #icon>
+                            <NIcon :component="Delete24Regular" />
+                          </template>
+                        </NButton>
+                      </template>
+                      确定要删除这个礼物配置吗?
+                    </NPopconfirm>
+                  </NFlex>
+                </NFlex>
               </div>
-            </NFlex>
-          </NCard>
+            </div>
+          </div>
         </NFlex>
 
         <!-- 添加礼物弹窗 -->
@@ -789,7 +1002,8 @@ watch(
           <NForm>
             <NAlert
               title="注意"
-              type="warning"
+              type="info"
+              :bordered="false"
               closable
               style="margin-bottom: 16px"
             >
@@ -851,9 +1065,8 @@ watch(
             </NFlex>
           </NForm>
         </NModal>
-      </template>
+      </NCard>
     </NFlex>
-    <NDivider />  
   </NSpin>
 </template>
 
@@ -862,8 +1075,15 @@ watch(
   margin-bottom: 12px;
 }
 
-.settings-section {
-  margin: 8px 0;
+.setting-label {
+  width: 48px;
+  font-weight: 500;
+  color: var(--n-text-color-3);
+}
+
+.setting-row-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .input-group {
@@ -872,7 +1092,7 @@ watch(
 }
 
 .input-group-wide {
-  width: 280px;
+  width: 320px;
   max-width: 100%;
 }
 
@@ -889,27 +1109,32 @@ watch(
   margin-top: 8px;
 }
 
-.gift-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.gift-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
 }
 
-.gift-item {
+.gift-item-card {
   padding: 12px;
   border: 1px solid var(--n-border-color);
   border-radius: var(--n-border-radius);
   background-color: var(--n-card-color);
+  transition: all 0.3s var(--n-bezier);
 }
 
-.gift-item:hover {
+.gift-item-card:hover {
   background-color: var(--n-color-embedded);
   border-color: var(--n-primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.gift-name-tag {
+.gift-name {
   font-weight: 500;
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .modal-input {

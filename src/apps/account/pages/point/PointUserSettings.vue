@@ -4,8 +4,9 @@ import type {
 } from 'naive-ui'
 import type { AddressInfo } from '@/api/api-models'
 import { useStorage } from '@vueuse/core'
+import { Add24Regular, Person24Regular, Delete24Regular, Edit24Regular, DocumentText24Regular } from '@vicons/fluent'
 import {
-  NButton, NCard, NCheckbox, NCollapse, NCollapseItem, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NList, NListItem, NModal, NPopconfirm, NScrollbar, NSelect, NSpin, NTag, NText, useMessage } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NEmpty, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NScrollbar, NSelect, NSpin, NTag, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
@@ -277,6 +278,13 @@ async function addAccount() {
   }
 }
 
+// 复制登录链接
+function copyLoginUrl() {
+  const url = `${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`
+  navigator.clipboard.writeText(url)
+  message.success('已复制到剪贴板')
+}
+
 // 提供给父组件调用的重置方法
 function reset() {
   // 重置表单数据或其他状态
@@ -295,187 +303,216 @@ defineExpose({
 <template>
   <NSpin :show="useAuth.isLoading">
     <NFlex
-      justify="center"
-      align="center"
       vertical
       :gap="16"
+      style="width: 100%; max-width: 800px; margin: 0 auto;"
     >
+      <!-- 地址管理 -->
       <NCard
-        title="更多"
-        embedded
-        style="width: 100%; max-width: 800px"
+        title="收货地址"
+        size="small"
       >
-        <NCollapse>
-          <NCollapseItem
-            title="收货地址"
-            name="1"
+        <template #header-extra>
+          <NButton
+            type="primary"
+            size="small"
+            secondary
+            @click="onOpenAddressModal"
           >
-            <NFlex
-              vertical
-              :gap="12"
+            <template #icon>
+              <NIcon :component="Add24Regular" />
+            </template>
+            添加新地址
+          </NButton>
+        </template>
+
+        <NFlex vertical :gap="12">
+          <NEmpty
+            v-if="!biliAuth.address || biliAuth.address.length === 0"
+            description="暂无收货地址"
+            style="margin: 20px 0"
+          />
+          <div v-else class="address-grid">
+            <div
+              v-for="address in biliAuth.address"
+              :key="address.id"
+              class="address-card"
             >
-              <NButton
-                type="primary"
-                block
-                @click="onOpenAddressModal"
-              >
-                添加地址
-              </NButton>
-              <NEmpty
-                v-if="!biliAuth.address || biliAuth.address.length === 0"
-                description="暂无收货地址"
-                style="margin: 20px 0"
-              />
-              <NList
-                v-else
-                size="small"
-                bordered
-              >
-                <NListItem
-                  v-for="address in biliAuth.address"
-                  :key="address.id"
-                  class="address-item"
-                >
-                  <AddressDisplay :address="address">
-                    <template #actions>
-                      <NFlex :gap="8">
+              <AddressDisplay :address="address">
+                <template #actions>
+                  <NFlex :gap="8">
+                    <NButton
+                      size="tiny"
+                      quaternary
+                      circle
+                      type="info"
+                      @click="() => {
+                        currentAddress = JSON.parse(JSON.stringify(address))
+                        showAddressModal = true
+                      }"
+                    >
+                      <template #icon>
+                        <NIcon :component="Edit24Regular" />
+                      </template>
+                    </NButton>
+                    <NPopconfirm @positive-click="() => deleteAddress(address?.id ?? '')">
+                      <template #trigger>
                         <NButton
-                          size="small"
-                          type="info"
-                          @click="() => {
-                            currentAddress = address
-                            showAddressModal = true
-                          }
-                          "
+                          size="tiny"
+                          quaternary
+                          circle
+                          type="error"
                         >
-                          修改
-                        </NButton>
-                        <NPopconfirm @positive-click="() => deleteAddress(address?.id ?? '')">
-                          <template #trigger>
-                            <NButton
-                              size="small"
-                              type="error"
-                            >
-                              删除
-                            </NButton>
+                          <template #icon>
+                            <NIcon :component="Delete24Regular" />
                           </template>
-                          确定要删除这个收货信息吗?
-                        </NPopconfirm>
-                      </NFlex>
-                    </template>
-                  </AddressDisplay>
-                </NListItem>
-              </NList>
-            </NFlex>
-          </NCollapseItem>
-          <NCollapseItem
-            title="登录链接"
-            name="2"
-          >
-            <NFlex
-              vertical
-              :gap="8"
-            >
-              <NText depth="3">
-                使用此链接可以直接登录到您的账号
-              </NText>
-              <NInput
-                type="textarea"
-                :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
-                readonly
-                :autosize="{ minRows: 2, maxRows: 4 }"
-              />
-            </NFlex>
-          </NCollapseItem>
-        </NCollapse>
+                        </NButton>
+                      </template>
+                      确定要删除这个收货信息吗?
+                    </NPopconfirm>
+                  </NFlex>
+                </template>
+              </AddressDisplay>
+            </div>
+          </div>
+        </NFlex>
       </NCard>
+
+      <!-- 账号管理 -->
       <NCard
-        title="账号操作"
-        embedded
-        style="width: 100%; max-width: 800px"
+        title="账号管理"
+        size="small"
       >
-        <NFlex
-          vertical
-          :gap="12"
-        >
+        <template #header-extra>
           <NFlex :gap="8">
+            <NButton
+              type="primary"
+              size="small"
+              secondary
+              @click="showAddAccountModal = true"
+            >
+              <template #icon>
+                <NIcon :component="Add24Regular" />
+              </template>
+              添加账号
+            </NButton>
             <NPopconfirm @positive-click="logout">
               <template #trigger>
                 <NButton
                   type="warning"
                   size="small"
+                  secondary
                 >
-                  登出当前账号
+                  登出当前
                 </NButton>
               </template>
-              确定要登出吗?
+              确定要登出当前账号吗?
             </NPopconfirm>
-            <NButton
-              type="primary"
-              size="small"
-              @click="showAddAccountModal = true"
-            >
-              添加账号
-            </NButton>
           </NFlex>
-          <NDivider style="margin: 8px 0">
-            切换账号
-          </NDivider>
+        </template>
+
+        <NFlex vertical :gap="12">
+          <NAlert type="info" :bordered="false" size="small">
+            您可以添加多个 Bilibili 账号并在其中快速切换。
+          </NAlert>
+
           <NEmpty
             v-if="useAuth.biliTokens.length === 0"
-            description="暂无其他账号"
+            description="暂无授权账号"
           />
-          <NList
-            v-else
-            clickable
-            bordered
-          >
-            <NListItem
+          <div v-else class="account-list">
+            <div
               v-for="item in useAuth.biliTokens"
               :key="item.token"
-              class="account-item"
-              :class="{ 'current-account': useAuth.biliToken === item.token }"
+              class="account-item-card"
+              :class="{ 'is-current': useAuth.biliToken === item.token }"
               @click="switchAuth(item.token)"
             >
-              <NFlex
-                align="center"
-                justify="space-between"
-                style="width: 100%"
-              >
-                <NFlex
-                  align="center"
-                  :gap="8"
-                >
-                  <NTag
-                    v-if="useAuth.biliToken === item.token"
-                    type="success"
-                    size="small"
-                  >
-                    当前
-                  </NTag>
-                  <NText strong>
-                    {{ item.name }}
-                  </NText>
-                  <NDivider
-                    vertical
-                    style="margin: 0"
-                  />
-                  <NText depth="3">
-                    {{ item.uId }}
-                  </NText>
+              <NFlex align="center" justify="space-between" :wrap="false">
+                <NFlex align="center" :gap="12" style="flex: 1; overflow: hidden;">
+                  <div class="account-avatar">
+                    <NIcon :component="Person24Regular" size="24" />
+                  </div>
+                  <NFlex vertical :gap="2" style="flex: 1; overflow: hidden;">
+                    <NText strong class="account-name">
+                      {{ item.name }}
+                    </NText>
+                    <NText depth="3" style="font-size: 12px;">
+                      UID: {{ item.uId }}
+                    </NText>
+                  </NFlex>
                 </NFlex>
+                
+                <NTag
+                  v-if="useAuth.biliToken === item.token"
+                  type="success"
+                  size="small"
+                  round
+                  :bordered="false"
+                >
+                  当前
+                </NTag>
+                <NButton
+                  v-else
+                  size="small"
+                  quaternary
+                  round
+                >
+                  切换
+                </NButton>
               </NFlex>
-            </NListItem>
-          </NList>
+            </div>
+          </div>
         </NFlex>
       </NCard>
+
+      <!-- 登录链接 -->
+      <NCard
+        title="快捷登录"
+        size="small"
+      >
+        <NFlex vertical :gap="8">
+          <NText depth="3" style="font-size: 13px">
+            使用此链接可以在其他设备直接登录您的账号，请妥善保管。
+          </NText>
+          <NFlex :wrap="false" :gap="8">
+            <NInput
+              type="textarea"
+              :value="`${CURRENT_HOST}bili-user?auth=${useAuth.biliToken}`"
+              readonly
+              :autosize="{ minRows: 1, maxRows: 3 }"
+              style="flex: 1"
+            />
+            <NButton
+              secondary
+              type="primary"
+              @click="copyLoginUrl"
+            >
+              复制
+            </NButton>
+          </NFlex>
+        </NFlex>
+      </NCard>
+
+      <!-- 用户协议按钮 -->
+      <NFlex justify="center" style="margin-top: 8px">
+        <NButton text type="info" size="small" @click="showAgreementModal = true">
+          <template #icon>
+            <NIcon :component="DocumentText24Regular" />
+          </template>
+          查看用户协议
+        </NButton>
+      </NFlex>
     </NFlex>
   </NSpin>
+
+  <!-- 弹窗部分保持类似，但进行样式微调 -->
   <NModal
     v-model:show="showAddressModal"
     preset="card"
-    style="width: 800px; max-width: 90vw; height: auto"
-    title="添加/更新地址"
+    style="width: 600px; max-width: 95vw;"
+    title="收货地址"
+    :segmented="{ content: true, action: true }"
   >
     <NSpin
       v-if="currentAddress"
@@ -662,26 +699,71 @@ defineExpose({
 </template>
 
 <style scoped>
-.address-item {
-  transition: background-color 0.15s ease;
+.address-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
 }
 
-.address-item:hover {
-  background-color: var(--n-hover-color);
+.address-card {
+  padding: 12px;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  background-color: var(--n-color-embedded);
+  transition: all 0.3s var(--n-bezier);
 }
 
-.account-item {
-  transition: background-color 0.15s ease;
+.address-card:hover {
+  border-color: var(--n-primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-item-card {
+  padding: 12px 16px;
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
   cursor: pointer;
+  transition: all 0.3s var(--n-bezier);
+  background-color: var(--n-card-color);
 }
 
-.account-item:hover {
-  background-color: var(--n-hover-color);
+.account-item-card:hover {
+  background-color: var(--n-color-embedded);
+  border-color: var(--n-primary-color);
 }
 
-.current-account {
-  background-color: var(--n-primary-color-suppl);
-  border-left: 3px solid var(--n-primary-color);
+.account-item-card.is-current {
+  border-color: var(--n-primary-color);
+  background-color: color-mix(in srgb, var(--n-primary-color), transparent 95%);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
+}
+
+.account-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--n-color-embedded);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--n-text-color-3);
+  border: 1px solid var(--n-border-color);
+}
+
+.is-current .account-avatar {
+  color: var(--n-primary-color);
+  border-color: var(--n-primary-color);
+  background-color: color-mix(in srgb, var(--n-primary-color), transparent 90%);
+}
+
+.account-name {
+  font-size: 15px;
 }
 
 /* 移动端优化 */

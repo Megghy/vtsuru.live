@@ -8,7 +8,8 @@ import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import {
-  NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NModal, NPopconfirm, NSelect, NSpin, NText, useMessage } from 'naive-ui';
+  NButton, NCheckbox, NDivider, NEmpty, NFlex, NGrid, NIcon, NModal, NPopconfirm, NSelect, NSpin, NText, useMessage
+} from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
@@ -17,6 +18,7 @@ import { QueryPostAPI } from '@/api/query'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
+import { ArrowSync24Regular, ArrowDownload24Regular, Delete24Regular, Edit24Regular, Filter24Regular } from '@vicons/fluent'
 
 // 订单筛选设置类型定义
 interface OrderFilterSettings {
@@ -191,6 +193,7 @@ function exportData() {
             ? `${s.address?.province}省${s.address?.city}市${s.address?.district}区${s.address?.street}街道${s.address?.address}`
             : '无',
           礼物名: gift?.name ?? '已删除',
+          款式: (s.selectedSubItems ?? []).map(sub => `${sub.nameSnapshot} x ${sub.quantity}`).join('; ') || '-',
           礼物数量: s.count,
           礼物单价: gift?.price ? Number(gift.price.toFixed(1)) : 0,
           礼物总价: Number(s.point.toFixed(1)),
@@ -247,185 +250,193 @@ onMounted(async () => {
     />
     <template v-else>
       <!-- 统计卡片 -->
-      <NCard
-        size="small"
-        :bordered="false"
+      <NGrid
+        cols="2 600:3 900:6"
+        :x-gap="12"
+        :y-gap="12"
         style="margin-bottom: 16px"
       >
-        <NFlex
-          justify="space-around"
-          wrap
-          :gap="16"
-        >
-          <div class="stat-item">
-            <div class="stat-value">
-              {{ orderStats.total }}
-            </div>
-            <div class="stat-label">
-              总订单
-            </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            总订单
           </div>
-          <div class="stat-item">
-            <div class="stat-value warning">
-              {{ orderStats.pending }}
-            </div>
-            <div class="stat-label">
-              待发货
-            </div>
+          <div class="stat-value">
+            {{ orderStats.total }}
           </div>
-          <div class="stat-item">
-            <div class="stat-value info">
-              {{ orderStats.shipped }}
-            </div>
-            <div class="stat-label">
-              已发货
-            </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            待发货
           </div>
-          <div class="stat-item">
-            <div class="stat-value success">
-              {{ orderStats.completed }}
-            </div>
-            <div class="stat-label">
-              已完成
-            </div>
+          <div class="stat-value warning">
+            {{ orderStats.pending }}
           </div>
-          <div class="stat-item">
-            <div class="stat-value">
-              {{ orderStats.physical }} / {{ orderStats.virtual }}
-            </div>
-            <div class="stat-label">
-              实体 / 虚拟
-            </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            已发货
           </div>
-          <div class="stat-item">
-            <div class="stat-value primary">
-              {{ orderStats.totalPoints }}
-            </div>
-            <div class="stat-label">
-              总积分
-            </div>
+          <div class="stat-value info">
+            {{ orderStats.shipped }}
           </div>
-        </NFlex>
-      </NCard>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            已完成
+          </div>
+          <div class="stat-value success">
+            {{ orderStats.completed }}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            实体 / 虚拟
+          </div>
+          <div class="stat-value">
+            {{ orderStats.physical }} / {{ orderStats.virtual }}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">
+            总积分
+          </div>
+          <div class="stat-value primary">
+            {{ orderStats.totalPoints }}
+          </div>
+        </div>
+      </NGrid>
 
-      <!-- 操作按钮 -->
-      <NFlex
-        :wrap="false"
-        justify="start"
-        :gap="12"
-        class="action-buttons"
-      >
-        <NButton @click="refresh">
-          刷新
-        </NButton>
-        <NButton
-          secondary
-          type="info"
-          @click="exportData"
-        >
-          导出数据
-        </NButton>
-      </NFlex>
+      <!-- 工具栏区域 -->
+      <div class="toolbar-section">
+        <NFlex vertical :gap="12">
+          <!-- 筛选行 -->
+          <NFlex justify="space-between" align="center" wrap :gap="12">
+            <NFlex align="center" :gap="12" wrap>
+              <NSelect
+                v-if="orgId && streamerOptions?.length"
+                v-model:value="filterSettings.streamerId"
+                :options="streamerOptions"
+                placeholder="主播"
+                clearable
+                size="medium"
+                style="min-width: 140px; max-width: 220px"
+              />
+              <NSelect
+                v-model:value="filterSettings.type"
+                :options="[
+                  { label: '实体订单', value: GoodsTypes.Physical },
+                  { label: '虚拟订单', value: GoodsTypes.Virtual },
+                ]"
+                clearable
+                placeholder="订单类型"
+                size="medium"
+                style="min-width: 140px"
+              />
+              <NSelect
+                v-model:value="filterSettings.status"
+                :options="[
+                  { label: '已完成', value: PointOrderStatus.Completed },
+                  { label: '等待发货', value: PointOrderStatus.Pending },
+                  { label: '已发货', value: PointOrderStatus.Shipped },
+                ]"
+                placeholder="订单状态"
+                clearable
+                size="medium"
+                style="min-width: 140px"
+              />
+              <NSelect
+                v-model:value="filterSettings.customer"
+                :options="new List(orders)
+                  .DistinctBy((s) => s.customer.userId)
+                  .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
+                  .ToArray()
+                "
+                placeholder="按用户筛选"
+                filterable
+                clearable
+                size="medium"
+                style="min-width: 160px; max-width: 240px"
+              />
+              <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo">
+                仅未填单号
+              </NCheckbox>
+            </NFlex>
 
-      <NDivider />
+            <NButton
+              secondary
+              size="medium"
+              type="warning"
+              @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
+            >
+              <template #icon>
+                <NIcon :component="Filter24Regular" />
+              </template>
+              重置筛选
+            </NButton>
+          </NFlex>
+          
+          <NDivider style="margin: 0" />
 
-      <!-- 筛选条件卡片 -->
-      <NCard
-        size="small"
-        title="筛选订单"
-      >
-        <template #header-extra>
-          <NButton
-            size="small"
-            type="warning"
-            @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
-          >
-            重置
-          </NButton>
-        </template>
-        <NFlex
-          align="center"
-          :wrap="true"
-          :gap="8"
-        >
-          <NSelect
-            v-if="orgId && streamerOptions?.length"
-            v-model:value="filterSettings.streamerId"
-            :options="streamerOptions"
-            placeholder="主播"
-            clearable
-            style="min-width: 140px; max-width: 220px"
-          />
-          <NSelect
-            v-model:value="filterSettings.type"
-            :options="[
-              { label: '实体', value: GoodsTypes.Physical },
-              { label: '虚拟', value: GoodsTypes.Virtual },
-            ]"
-            clearable
-            placeholder="订单类型"
-            style="min-width: 120px; max-width: 150px"
-          />
-          <NSelect
-            v-model:value="filterSettings.status"
-            :options="[
-              { label: '已完成', value: PointOrderStatus.Completed },
-              { label: '等待发货', value: PointOrderStatus.Pending },
-              { label: '已发货', value: PointOrderStatus.Shipped },
-            ]"
-            placeholder="订单状态"
-            clearable
-            style="min-width: 120px; max-width: 150px"
-          />
-          <NSelect
-            v-model:value="filterSettings.customer"
-            :options="new List(orders)
-              .DistinctBy((s) => s.customer.userId)
-              .Select((s) => ({ label: s.customer.name, value: s.customer.userId }))
-              .ToArray()
-            "
-            placeholder="用户"
-            clearable
-            style="min-width: 120px; max-width: 150px"
-          />
-          <NCheckbox v-model:checked="filterSettings.onlyRequireShippingInfo">
-            仅包含未填写快递单号的订单
-          </NCheckbox>
-        </NFlex>
-      </NCard>
-
-      <NDivider title-placement="left">
-        <NFlex
-          :gap="8"
-          :wrap="false"
-        >
-          <NPopconfirm v-if="!orgId" @positive-click="deleteOrder">
-            <template #trigger>
-              <NButton
-                size="tiny"
-                type="error"
-                :disabled="!selectedItem?.length"
-              >
-                删除选中的订单 | {{ selectedItem?.length ?? 0 }}
+          <!-- 操作行 -->
+          <NFlex justify="space-between" align="center" wrap :gap="12">
+            <NFlex :gap="12">
+              <NButton secondary size="medium" @click="refresh">
+                <template #icon>
+                  <NIcon :component="ArrowSync24Regular" />
+                </template>
+                刷新
               </NButton>
-            </template>
-            确定删除吗?
-          </NPopconfirm>
-
-          <NPopconfirm @positive-click="openStatusUpdateModal">
-            <template #trigger>
               <NButton
-                size="tiny"
+                secondary
                 type="info"
-                :disabled="!selectedItem?.length"
+                size="medium"
+                @click="exportData"
               >
-                批量更新状态
+                <template #icon>
+                  <NIcon :component="ArrowDownload24Regular" />
+                </template>
+                导出数据
               </NButton>
-            </template>
-            确定要更新选中订单的状态吗?
-          </NPopconfirm>
+            </NFlex>
+
+            <NFlex :gap="12">
+              <NPopconfirm @positive-click="openStatusUpdateModal">
+                <template #trigger>
+                  <NButton
+                    size="medium"
+                    type="info"
+                    :disabled="!selectedItem?.length"
+                  >
+                    <template #icon>
+                      <NIcon :component="Edit24Regular" />
+                    </template>
+                    批量更新状态 ({{ selectedItem?.length ?? 0 }})
+                  </NButton>
+                </template>
+                确定要更新选中订单的状态吗?
+              </NPopconfirm>
+
+              <NPopconfirm v-if="!orgId" @positive-click="deleteOrder">
+                <template #trigger>
+                  <NButton
+                    size="medium"
+                    type="error"
+                    :disabled="!selectedItem?.length"
+                  >
+                    <template #icon>
+                      <NIcon :component="Delete24Regular" />
+                    </template>
+                    批量删除 ({{ selectedItem?.length ?? 0 }})
+                  </NButton>
+                </template>
+                确定删除吗?
+              </NPopconfirm>
+            </NFlex>
+          </NFlex>
         </NFlex>
-      </NDivider>
+      </div>
+
+      <NDivider style="margin: 16px 0" />
 
       <!-- 订单列表 -->
       <PointOrderCard
@@ -446,7 +457,7 @@ onMounted(async () => {
           <NText>请选择您想要将订单更新为的状态</NText>
           <NSelect
             v-model:value="targetStatus"
-            :options="[
+            :options=" [
               { label: '已完成', value: PointOrderStatus.Completed },
               { label: '等待发货', value: PointOrderStatus.Pending },
               { label: '已发货', value: PointOrderStatus.Shipped },
@@ -476,55 +487,49 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.action-buttons {
-  margin: 12px 0;
+.stat-card {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.3s var(--n-bezier);
 }
 
-.stat-item {
-  text-align: center;
-  min-width: 80px;
+.stat-card:hover {
+  border-color: var(--n-primary-color);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--n-text-color);
-  margin-bottom: 4px;
-}
-
-.stat-value.primary {
-  color: var(--n-primary-color);
-}
-
-.stat-value.success {
-  color: var(--n-success-color);
-}
-
-.stat-value.info {
-  color: var(--n-info-color);
-}
-
-.stat-value.warning {
-  color: var(--n-warning-color);
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--n-text-color-3);
 }
 
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .stat-item {
-    min-width: 70px;
-  }
+.stat-value.primary { color: var(--n-primary-color); }
+.stat-value.success { color: var(--n-success-color); }
+.stat-value.info { color: var(--n-info-color); }
+.stat-value.warning { color: var(--n-warning-color); }
 
+.toolbar-section {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 12px 16px;
+}
+
+@media (max-width: 768px) {
   .stat-value {
     font-size: 20px;
-  }
-
-  .stat-label {
-    font-size: 11px;
   }
 }
 </style>

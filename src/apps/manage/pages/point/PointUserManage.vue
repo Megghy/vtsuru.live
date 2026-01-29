@@ -4,12 +4,12 @@ import type {
 } from 'naive-ui'
 
 import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
-import { Info24Filled, Warning24Regular } from '@vicons/fluent'
+import { Info24Filled, Search24Regular, ArrowSync24Regular, AddSquare24Regular, ArrowDownload24Regular, Delete24Regular, Warning24Regular } from '@vicons/fluent'
 import { useDebounceFn, useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import {
-  NButton, NCard, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NScrollbar, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
+  NButton, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NScrollbar, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
@@ -397,149 +397,125 @@ onMounted(async () => {
     class="user-manage-container"
   >
     <!-- 统计卡片 -->
-    <NCard
-      size="small"
-      :bordered="false"
+    <NGrid
+      cols="2 600:4 800:5"
+      :x-gap="12"
+      :y-gap="12"
       style="margin-bottom: 16px"
     >
-      <NFlex
-        justify="space-around"
-        wrap
-        :gap="16"
-      >
-        <div class="stat-item">
-          <div class="stat-value">
-            {{ userStats.total }}
-          </div>
-          <div class="stat-label">
-            总用户
-          </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总用户
         </div>
-        <div class="stat-item">
-          <div class="stat-value success">
-            {{ userStats.authed }}
-          </div>
-          <div class="stat-label">
-            已认证
-          </div>
+        <div class="stat-value">
+          {{ userStats.total }}
         </div>
-        <div class="stat-item">
-          <div class="stat-value primary">
-            {{ userStats.totalPoints }}
-          </div>
-          <div class="stat-label">
-            总积分
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          已认证
         </div>
-        <div class="stat-item">
-          <div class="stat-value info">
-            {{ userStats.totalOrders }}
-          </div>
-          <div class="stat-label">
-            总订单
-          </div>
+        <div class="stat-value success">
+          {{ userStats.authed }}
         </div>
-        <div class="stat-item">
-          <div class="stat-value">
-            {{ userStats.avgPoints }}
-          </div>
-          <div class="stat-label">
-            平均积分
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总积分
         </div>
-      </NFlex>
-    </NCard>
+        <div class="stat-value primary">
+          {{ userStats.totalPoints }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总订单
+        </div>
+        <div class="stat-value info">
+          {{ userStats.totalOrders }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          平均积分
+        </div>
+        <div class="stat-value">
+          {{ userStats.avgPoints }}
+        </div>
+      </div>
+    </NGrid>
 
-    <!-- 设置卡片 -->
-    <NCard title="设置">
-      <template #header-extra>
-        <NPopconfirm @positive-click="settings = JSON.parse(JSON.stringify(defaultSettings))">
-          <template #trigger>
-            <NButton
-              size="small"
-              type="warning"
-            >
-              恢复默认
-            </NButton>
-          </template>
-          <span>确定要恢复默认设置吗?</span>
-        </NPopconfirm>
-      </template>
-
-      <template #footer>
-        <NFlex
-          :wrap="true"
-          :gap="8"
-        >
-          <NButton
-            type="primary"
-            @click="refresh"
-          >
-            刷新
-          </NButton>
-          <NButton
-            type="info"
-            @click="showGivePointModal = true"
-          >
-            给予/扣除积分
-          </NButton>
-          <NButton
-            type="info"
-            @click="exportData"
-          >
-            导出积分数据
-          </NButton>
-          <NButton
-            type="error"
-            @click="showResetAllPointsModal = true"
-          >
-            重置所有积分
-          </NButton>
-        </NFlex>
-      </template>
-
-      <NFlex
-        :wrap="true"
-        :gap="12"
-        align="center"
-      >
-        <NFlex
-          :wrap="false"
-          align="center"
-          :gap="5"
-        >
+    <!-- 工具栏 -->
+    <div class="toolbar-section">
+      <NFlex justify="space-between" align="center" wrap :gap="12">
+        <!-- 左侧：筛选与搜索 -->
+        <NFlex align="center" :gap="12" wrap>
           <NInput
             v-model:value="searchKeyword"
             placeholder="搜索用户 (用户名或UID)"
-            style="width: 220px"
+            style="width: 240px"
             clearable
-            size="small"
+            size="medium"
           >
             <template #prefix>
-              🔍
+              <NIcon :component="Search24Regular" />
             </template>
           </NInput>
+          
+          <NCheckbox v-model:checked="settings.onlyAuthed">
+            只显示已认证用户
+          </NCheckbox>
+
           <NTooltip>
             <template #trigger>
-              <NIcon :component="Info24Filled" />
+              <NIcon :component="Info24Filled" class="info-icon" />
             </template>
             <div class="tooltip-content">
-              <p>
-                1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户
-                (因为开放平台提供的是OpenId, 不通用)
-              </p>
-              <p>2. 用户名只会保持在首条记录出现时的用户名, 即用户更换用户名之后这里也只会保持不变</p>
+              <p>1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)</p>
+              <p>2. 用户名只会保持在首条记录出现时的用户名</p>
             </div>
           </NTooltip>
         </NFlex>
 
-        <NCheckbox v-model:checked="settings.onlyAuthed">
-          只显示已认证用户
-        </NCheckbox>
-      </NFlex>
-    </NCard>
+        <!-- 右侧：操作按钮 -->
+        <NFlex align="center" :gap="8" wrap>
+          <NButton secondary size="medium" @click="refresh">
+            <template #icon>
+              <NIcon :component="ArrowSync24Regular" />
+            </template>
+            刷新
+          </NButton>
+          
+          <NButton secondary type="info" size="medium" @click="showGivePointModal = true">
+            <template #icon>
+              <NIcon :component="AddSquare24Regular" />
+            </template>
+            积分调整
+          </NButton>
 
-    <NDivider />
+          <NButton secondary type="info" size="medium" @click="exportData">
+            <template #icon>
+              <NIcon :component="ArrowDownload24Regular" />
+            </template>
+            导出
+          </NButton>
+          
+          <NPopconfirm @positive-click="showResetAllPointsModal = true">
+            <template #trigger>
+              <NButton secondary type="error" size="medium">
+                <template #icon>
+                  <NIcon :component="Delete24Regular" />
+                </template>
+                重置
+              </NButton>
+            </template>
+            确定要重置所有用户的积分吗？慎点！
+          </NPopconfirm>
+        </NFlex>
+      </NFlex>
+    </div>
+
+    <NDivider style="margin: 16px 0;" />
 
     <!-- 无数据提示 -->
     <NEmpty
@@ -705,6 +681,7 @@ onMounted(async () => {
   </NModal>
 </template>
 
+
 <style scoped>
 .user-manage-container {
   min-height: 200px;
@@ -715,49 +692,51 @@ onMounted(async () => {
   max-width: 300px;
 }
 
-.stat-item {
-  text-align: center;
-  min-width: 80px;
+.stat-card {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.3s var(--n-bezier);
+}
+
+.stat-card:hover {
+  border-color: var(--n-primary-color);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--n-text-color);
-  margin-bottom: 4px;
-}
-
-.stat-value.primary {
-  color: var(--n-primary-color);
-}
-
-.stat-value.success {
-  color: var(--n-success-color);
-}
-
-.stat-value.info {
-  color: var(--n-info-color);
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--n-text-color-3);
 }
 
+.stat-value.primary { color: var(--n-primary-color); }
+.stat-value.success { color: var(--n-success-color); }
+.stat-value.info { color: var(--n-info-color); }
+
+.toolbar-section {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 12px 16px;
+}
+
+.info-icon {
+  color: var(--n-text-color-3);
+  cursor: help;
+}
+
 @media (max-width: 768px) {
-  .table-actions {
-    flex-direction: column;
-    align-items: start;
-  }
-
-  .table-actions > * {
-    margin-bottom: 8px;
-  }
-
-  .stat-item {
-    min-width: 70px;
-  }
-
   .stat-value {
     font-size: 20px;
   }

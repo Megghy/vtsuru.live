@@ -2,7 +2,8 @@
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NDatePicker, NEmpty, NFlex, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui';
+import { ArrowSync24Regular, ArrowDownload24Regular } from '@vicons/fluent'
+import { NButton, NDatePicker, NEmpty, NFlex, NGrid, NIcon, NRadioButton, NRadioGroup, NSelect, NSpin, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { PointFrom } from '@/api/api-models'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
@@ -137,6 +138,7 @@ function exportHistoryData() {
           积分变化: Number(item.point.toFixed(1)),
           来源: pointFromText[item.from] || '未知',
           主播: item.extra?.user?.name || '-',
+          款式: (item.extra?.selectedSubItems ?? []).map(s => `${s.nameSnapshot} x ${s.quantity}`).join('; ') || '-',
           数量: item.count || '-',
           备注: item.extra?.reason || '-',
         }
@@ -164,112 +166,103 @@ function exportHistoryData() {
 <template>
   <NSpin :show="isLoading">
     <!-- 统计卡片 -->
-    <NCard
-      size="small"
-      bordered
-      class="stats-card"
+    <NGrid
+      cols="2 600:4"
+      :x-gap="12"
+      :y-gap="12"
+      style="margin-bottom: 16px"
     >
-      <NFlex
-        justify="space-around"
-        wrap
-        :gap="16"
-      >
-        <div class="stat-item">
-          <div class="stat-value">
-            {{ historyStats.total }}
-          </div>
-          <div class="stat-label">
-            总记录
-          </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总记录
         </div>
-        <div class="stat-item">
-          <div class="stat-value success">
-            +{{ historyStats.totalIncrease }}
-          </div>
-          <div class="stat-label">
-            总获得
-          </div>
+        <div class="stat-value">
+          {{ historyStats.total }}
         </div>
-        <div class="stat-item">
-          <div class="stat-value error">
-            -{{ historyStats.totalDecrease }}
-          </div>
-          <div class="stat-label">
-            总消耗
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总获得
         </div>
-        <div class="stat-item">
-          <div class="stat-value primary">
-            {{ historyStats.netIncrease }}
-          </div>
-          <div class="stat-label">
-            净增加
-          </div>
+        <div class="stat-value success">
+          +{{ historyStats.totalIncrease }}
         </div>
-      </NFlex>
-    </NCard>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总消耗
+        </div>
+        <div class="stat-value error">
+          -{{ historyStats.totalDecrease }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          净增加
+        </div>
+        <div class="stat-value primary">
+          {{ historyStats.netIncrease }}
+        </div>
+      </div>
+    </NGrid>
 
-    <!-- 筛选和搜索 -->
-    <NFlex
-      justify="space-between"
-      align="center"
-      style="margin-bottom: 12px"
-      wrap
-      :gap="12"
-    >
-      <NFlex
-        :gap="12"
-        wrap
-      >
-        <NSelect
-          v-model:value="streamerFilter"
-          :options="streamerOptions"
-          placeholder="按主播筛选"
-          clearable
-          size="small"
-          style="min-width: 120px; max-width: 180px"
-        />
-        <NRadioGroup
-          v-model:value="pointTypeFilter"
-          size="small"
-        >
-          <NRadioButton value="all">
-            全部
-          </NRadioButton>
-          <NRadioButton value="increase">
-            增加
-          </NRadioButton>
-          <NRadioButton value="decrease">
-            减少
-          </NRadioButton>
-        </NRadioGroup>
-        <NDatePicker
-          v-model:value="dateRange"
-          type="datetimerange"
-          clearable
-          size="small"
-          style="max-width: 360px"
-          placeholder="选择时间范围"
-        />
+    <!-- 工具栏 -->
+    <div class="toolbar-section">
+      <NFlex vertical :gap="12">
+        <!-- 筛选行 -->
+        <NFlex justify="space-between" align="center" wrap :gap="12">
+          <NFlex align="center" :gap="12" wrap>
+            <NSelect
+              v-model:value="streamerFilter"
+              :options="streamerOptions"
+              placeholder="按主播筛选"
+              clearable
+              size="medium"
+              style="min-width: 140px; max-width: 200px"
+            />
+            <NRadioGroup
+              v-model:value="pointTypeFilter"
+              size="medium"
+            >
+              <NRadioButton value="all">
+                全部
+              </NRadioButton>
+              <NRadioButton value="increase">
+                增加
+              </NRadioButton>
+              <NRadioButton value="decrease">
+                减少
+              </NRadioButton>
+            </NRadioGroup>
+            <NDatePicker
+              v-model:value="dateRange"
+              type="datetimerange"
+              clearable
+              size="medium"
+              style="max-width: 360px"
+              placeholder="选择时间范围"
+            />
+          </NFlex>
+
+          <NFlex :gap="8">
+            <NButton secondary size="medium" type="info" @click="exportHistoryData">
+              <template #icon>
+                <NIcon :component="ArrowDownload24Regular" />
+              </template>
+              导出
+            </NButton>
+            <NButton secondary size="medium" @click="getHistories">
+              <template #icon>
+                <NIcon :component="ArrowSync24Regular" />
+              </template>
+              刷新
+            </NButton>
+          </NFlex>
+        </NFlex>
       </NFlex>
-      <NFlex :gap="8">
-        <NButton
-          size="small"
-          type="info"
-          secondary
-          @click="exportHistoryData"
-        >
-          导出数据
-        </NButton>
-        <NButton
-          size="small"
-          type="primary"
-          @click="getHistories"
-        >
-          刷新记录
-        </NButton>
-      </NFlex>
-    </NFlex>
+    </div>
+
+    <div style="margin-top: 16px;" />
 
     <NEmpty
       v-if="filteredHistory.length === 0"
@@ -283,36 +276,48 @@ function exportHistoryData() {
 </template>
 
 <style scoped>
-.stats-card {
-  margin-bottom: 12px;
+.stat-card {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.3s var(--n-bezier);
 }
 
-.stat-item {
-  text-align: center;
-  min-width: 80px;
+.stat-card:hover {
+  border-color: var(--n-primary-color);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: var(--n-text-color-1);
-  margin-bottom: 4px;
-}
-
-.stat-value.primary {
-  color: var(--n-primary-color);
-}
-
-.stat-value.success {
-  color: var(--n-success-color);
-}
-
-.stat-value.error {
-  color: var(--n-error-color);
+  line-height: 1.2;
+  color: var(--n-text-color);
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--n-text-color-3);
+}
+
+.stat-value.primary { color: var(--n-primary-color); }
+.stat-value.success { color: var(--n-success-color); }
+.stat-value.error { color: var(--n-error-color); }
+
+.toolbar-section {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 12px 16px;
+}
+
+@media (max-width: 768px) {
+  .stat-value {
+    font-size: 20px;
+  }
 }
 </style>

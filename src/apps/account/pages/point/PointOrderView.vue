@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
-import { NButton, NCard, NEmpty, NFlex, NSelect, NSpin, useMessage } from 'naive-ui';
+import { ArrowSync24Regular } from '@vicons/fluent'
+import { NButton, NEmpty, NFlex, NGrid, NIcon, NSelect, NSpin, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue'
 import { PointOrderStatus } from '@/api/api-models'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
@@ -92,91 +93,85 @@ onMounted(async () => {
 <template>
   <NSpin :show="isLoading">
     <!-- 统计卡片 -->
-    <NCard
-      size="small"
-      bordered
-      class="stats-card"
+    <NGrid
+      cols="2 600:3 900:5"
+      :x-gap="12"
+      :y-gap="12"
+      style="margin-bottom: 16px"
     >
-      <NFlex
-        justify="space-around"
-        wrap
-        :gap="16"
-      >
-        <div class="stat-item">
-          <div class="stat-value">
-            {{ orderStats.total }}
-          </div>
-          <div class="stat-label">
-            总订单
-          </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总订单
         </div>
-        <div class="stat-item">
-          <div class="stat-value warning">
-            {{ orderStats.pending }}
-          </div>
-          <div class="stat-label">
-            待发货
-          </div>
+        <div class="stat-value">
+          {{ orderStats.total }}
         </div>
-        <div class="stat-item">
-          <div class="stat-value info">
-            {{ orderStats.shipped }}
-          </div>
-          <div class="stat-label">
-            已发货
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          待发货
         </div>
-        <div class="stat-item">
-          <div class="stat-value success">
-            {{ orderStats.completed }}
-          </div>
-          <div class="stat-label">
-            已完成
-          </div>
+        <div class="stat-value warning">
+          {{ orderStats.pending }}
         </div>
-        <div class="stat-item">
-          <div class="stat-value primary">
-            {{ orderStats.totalPoints }}
-          </div>
-          <div class="stat-label">
-            总积分
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          已发货
         </div>
-      </NFlex>
-    </NCard>
+        <div class="stat-value info">
+          {{ orderStats.shipped }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          已完成
+        </div>
+        <div class="stat-value success">
+          {{ orderStats.completed }}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          总消耗积分
+        </div>
+        <div class="stat-value primary">
+          {{ orderStats.totalPoints }}
+        </div>
+      </div>
+    </NGrid>
 
-    <!-- 筛选和搜索 -->
-    <NFlex
-      justify="space-between"
-      align="center"
-      style="margin-bottom: 12px"
-      wrap
-      :gap="12"
-    >
-      <NFlex
-        :gap="12"
-        wrap
-      >
-        <NSelect
-          v-model:value="statusFilter"
-          :options="[
-            { label: '全部状态', value: null as any },
-            { label: '待发货', value: PointOrderStatus.Pending },
-            { label: '已发货', value: PointOrderStatus.Shipped },
-            { label: '已完成', value: PointOrderStatus.Completed },
-          ]"
-          style="width: 120px"
-          size="small"
-        />
+    <!-- 工具栏 -->
+    <div class="toolbar-section">
+      <NFlex justify="space-between" align="center" wrap :gap="12">
+        <NFlex align="center" :gap="12">
+          <NSelect
+            v-model:value="statusFilter"
+            :options="[
+              { label: '全部状态', value: null as any },
+              { label: '待发货', value: PointOrderStatus.Pending },
+              { label: '已发货', value: PointOrderStatus.Shipped },
+              { label: '已完成', value: PointOrderStatus.Completed },
+            ]"
+            style="width: 140px"
+            placeholder="订单状态"
+            clearable
+            size="medium"
+          />
+        </NFlex>
+
+        <NFlex align="center" :gap="8">
+          <NButton secondary size="medium" @click="getOrders">
+            <template #icon>
+              <NIcon :component="ArrowSync24Regular" />
+            </template>
+            刷新
+          </NButton>
+        </NFlex>
       </NFlex>
-      <NButton
-        size="small"
-        type="primary"
-        @click="getOrders"
-      >
-        刷新订单
-      </NButton>
-    </NFlex>
+    </div>
+
+    <div style="margin-top: 16px;" />
 
     <NEmpty
       v-if="filteredOrders.length === 0"
@@ -192,40 +187,49 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.stats-card {
-  margin-bottom: 12px;
+.stat-card {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.3s var(--n-bezier);
 }
 
-.stat-item {
-  text-align: center;
-  min-width: 80px;
+.stat-card:hover {
+  border-color: var(--n-primary-color);
+  box-shadow: 0 0 0 1px var(--n-primary-color) inset;
 }
 
 .stat-value {
   font-size: 24px;
   font-weight: 600;
-  color: var(--n-text-color-1);
-  margin-bottom: 4px;
-}
-
-.stat-value.primary {
-  color: var(--n-primary-color);
-}
-
-.stat-value.success {
-  color: var(--n-success-color);
-}
-
-.stat-value.info {
-  color: var(--n-info-color);
-}
-
-.stat-value.warning {
-  color: var(--n-warning-color);
+  line-height: 1.2;
+  color: var(--n-text-color);
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--n-text-color-3);
+}
+
+.stat-value.primary { color: var(--n-primary-color); }
+.stat-value.success { color: var(--n-success-color); }
+.stat-value.info { color: var(--n-info-color); }
+.stat-value.warning { color: var(--n-warning-color); }
+
+.toolbar-section {
+  background-color: var(--n-card-color);
+  border: 1px solid var(--n-border-color);
+  border-radius: var(--n-border-radius);
+  padding: 12px 16px;
+}
+
+@media (max-width: 768px) {
+  .stat-value {
+    font-size: 20px;
+  }
 }
 </style>

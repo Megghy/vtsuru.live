@@ -1423,7 +1423,7 @@ export const useVtsStore = defineStore('vts', () => {
     await withHistory('itemOpacity', `${itemInstanceID}:${opacity}`, async () => c.itemAnimationControl({
       itemInstanceID,
       opacity,
-    }), { itemInstanceID, opacity })
+    } as any), { itemInstanceID, opacity })
     lastRttMs.value = Math.round(performance.now() - started)
   }
 
