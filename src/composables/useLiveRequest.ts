@@ -44,7 +44,11 @@ export const useLiveRequest = defineStore('songRequest', () => {
   const isLrcLoading = ref('')
 
   const configCanEdit = computed(() => {
-    return accountInfo.value != null && accountInfo.value?.id !== undefined
+    return isLoggedIn.value
+  })
+
+  const isLoggedIn = computed(() => {
+    return accountInfo.value != null && accountInfo.value.id !== undefined
   })
 
   const songs = computed<SongRequestInfo[]>(() => {
@@ -100,7 +104,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   })
 
   const activeSongs = computed(() => {
-    return (accountInfo.value?.id ? songs.value : localActiveSongs.value)
+    return (isLoggedIn.value ? songs.value : localActiveSongs.value)
       .sort((a, b) => b.status - a.status)
       .filter((song) => {
         return song.status == SongRequestStatus.Waiting || song.status == SongRequestStatus.Singing
@@ -108,7 +112,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   })
 
   const historySongs = computed(() => {
-    return (accountInfo.value?.id ? songs.value : localActiveSongs.value)
+    return (isLoggedIn.value ? songs.value : localActiveSongs.value)
       .sort((a, b) => a.status - b.status)
       .filter((song) => {
         return song.status == SongRequestStatus.Finish || song.status == SongRequestStatus.Cancel
@@ -123,7 +127,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   async function getAllSong() {
-    if (accountInfo.value?.id) {
+    if (isLoggedIn.value) {
       try {
         const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-all`, {
           id: accountInfo.value.id,
@@ -165,7 +169,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       return
     }
 
-    if (accountInfo.value?.id) {
+    if (isLoggedIn.value) {
       await QueryPostAPI<SongRequestInfo>(`${SONG_REQUEST_API_URL}try-add`, danmaku).then((data) => {
         if (data.code == 200) {
           window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
@@ -214,7 +218,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       return
     }
 
-    if (accountInfo.value?.id) {
+    if (isLoggedIn.value) {
       await QueryPostAPIWithParams<SongRequestInfo>(`${SONG_REQUEST_API_URL}add`, {
         name: newSongName.value,
       }).then((data) => {
@@ -347,7 +351,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   async function updateActive() {
-    if (!accountInfo.value?.id) return
+    if (!isLoggedIn.value) return
 
     try {
       const data = await QueryGetAPI<SongRequestInfo[]>(`${SONG_REQUEST_API_URL}get-active`, {
@@ -398,7 +402,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   function checkMessage(msg: string) {
-    if (accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest) != true) {
+    if (isLoggedIn.value && accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest) != true) {
       return false
     }
     const prefix = accountInfo.value?.settings?.songRequest?.orderPrefix || defaultPrefix.value

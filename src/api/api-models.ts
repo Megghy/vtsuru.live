@@ -750,6 +750,7 @@ export interface ResponsePointGoodModel {
   type: GoodsTypes
   isAllowRebuy: boolean
   maxBuyCount?: number
+  maxSubItemSelections?: number
   collectUrl?: string
   embedCollectUrl?: boolean
   isPinned: boolean
@@ -806,6 +807,7 @@ export interface UploadPointGoodsModel {
   content?: string
   isAllowRebuy: boolean
   maxBuyCount?: number
+  maxSubItemSelections?: number
   isPinned: boolean
 
   setting: PointGoodsSetting

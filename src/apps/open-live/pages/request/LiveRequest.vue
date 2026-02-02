@@ -205,7 +205,7 @@ onUnmounted(() => {
     <!-- 主体内容 -->
     <NCard size="small" bordered>
       <NTabs
-        v-if="!accountInfo || accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
+        v-if="!accountInfo?.id || accountInfo.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest)"
         type="line"
         animated
         size="small"

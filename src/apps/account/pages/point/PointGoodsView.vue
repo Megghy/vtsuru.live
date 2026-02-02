@@ -12,7 +12,7 @@ import type {
 import { useDebounceFn } from '@vueuse/core'
 import { ArrowSync24Regular, Search24Regular, Filter24Regular, Person24Regular } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NImage, NInput, NInputNumber, NModal, NScrollbar, NSelect, NSpin, NTag, NText, NTooltip, useDialog, useMessage } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NForm, NFormItem, NGi, NGrid, NIcon, NImage, NInput, NInputNumber, NModal, NScrollbar, NSelect, NSpin, NTag, NText, useDialog, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -114,6 +114,11 @@ function isSubItemChecked(id: number) {
 function toggleSubItem(id: number, checked: boolean) {
   const targetId = Number(id)
   if (checked) {
+    const maxSelections = currentGoods.value?.maxSubItemSelections
+    if (maxSelections && maxSelections > 0 && selectedSubItems.value.length >= maxSelections) {
+      message.warning(`最多只能选择 ${maxSelections} 种子商品`)
+      return
+    }
     if (!selectedSubItems.value.some(s => Number(s.subItemId) === targetId)) {
       // 使用赋值操作触发响应式
       selectedSubItems.value = [...selectedSubItems.value, { subItemId: targetId, quantity: 1 }]
@@ -187,6 +192,8 @@ const canDoBuy = computed(() => {
   // 子选项模式：必须先选择子选项
   if (hasSubItems.value) {
     if (selectedSubItems.value.length === 0) return false
+    const maxSelections = currentGoods.value.maxSubItemSelections
+    if (maxSelections && maxSelections > 0 && selectedSubItems.value.length > maxSelections) return false
     if (selectedSubItems.value.some(s => s.quantity < 1 || !Number.isInteger(s.quantity))) return false
 
     const subMap = new Map((currentGoods.value.subItems ?? []).map(s => [String(s.id), s]))
@@ -790,21 +797,15 @@ onMounted(async () => {
                     </NTag>
                   </NFlex>
                   
-                  <NTooltip placement="bottom">
-                    <template #trigger>
-                      <NButton
-                        block
-                        :type="item.isPinned ? 'primary' : 'default'"
-                        :secondary="!item.isPinned"
-                        :disabled="getTooltip(item) !== '开始兑换'"
-                        size="medium"
-                        @click="onBuyClick(item)"
-                      >
-                        {{ item.isPinned ? '立即兑换' : '兑换' }}
-                      </NButton>
-                    </template>
-                    {{ getTooltip(item) }}
-                  </NTooltip>
+                  <NButton
+                    block
+                    :type="item.isPinned ? 'primary' : 'default'"
+                    :secondary="!item.isPinned"
+                    size="medium"
+                    @click="onBuyClick(item)"
+                  >
+                    {{ getTooltip(item) === '开始兑换' ? (item.isPinned ? '立即兑换' : '兑换') : '查看详情' }}
+                  </NButton>
                 </NFlex>
               </template>
             </PointGoodsItem>
@@ -882,15 +883,18 @@ onMounted(async () => {
                 v-for="sub in (currentGoods.subItems ?? [])"
                 :key="sub.id"
                 class="sub-item-card"
-                :class="{ 'active': isSubItemChecked(sub.id), 'disabled': sub.count === 0 }"
-                @click="sub.count !== 0 && toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
+                :class="{ 
+                  'active': isSubItemChecked(sub.id), 
+                  'disabled': sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))
+                }"
+                @click="(sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))) ? null : toggleSubItem(sub.id, !isSubItemChecked(sub.id))"
               >
                 <NFlex align="center" justify="space-between" :gap="12" style="width: 100%;">
                   <NFlex align="center" :gap="12" style="flex: 1; overflow: hidden;">
                     <!-- Checkbox -->
                     <NCheckbox
                       :checked="isSubItemChecked(sub.id)"
-                      :disabled="sub.count === 0"
+                      :disabled="sub.count === 0 || (currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0 && selectedSubItems.length >= currentGoods.maxSubItemSelections && !isSubItemChecked(sub.id))"
                       @click.stop
                       @update:checked="(v) => toggleSubItem(sub.id, v)"
                     />
@@ -951,6 +955,9 @@ onMounted(async () => {
               </div>
               <NText depth="3" style="font-size: 12px; margin-left: 4px;">
                 * 可多选，价格按所选款式累计计算
+                <span v-if="currentGoods.maxSubItemSelections && currentGoods.maxSubItemSelections > 0">
+                  （最多选 {{ currentGoods.maxSubItemSelections }} 种，已选 {{ selectedSubItems.length }} 种）
+                </span>
               </NText>
             </NFlex>
           </NFormItem>

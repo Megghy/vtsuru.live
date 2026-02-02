@@ -1149,6 +1149,24 @@ onMounted(() => { })
                 前台兑换时可多选款式；款式价格为最终价；库存按款式独立计算。未上传款式封面时默认沿用父商品封面。
               </NAlert>
 
+              <NFormItem label="最多可选款式数" style="margin-bottom: 16px;">
+                <NFlex align="center" :gap="12">
+                  <NInputNumber
+                    v-model:value="currentGoodsModel.goods.maxSubItemSelections"
+                    :min="0"
+                    placeholder="0表示不限制"
+                    style="width: 200px"
+                  >
+                    <template #suffix>
+                      种
+                    </template>
+                  </NInputNumber>
+                  <NText depth="3" style="font-size: 12px;">
+                    限制用户最多可以选择多少种不同的款式，0或留空表示不限制
+                  </NText>
+                </NFlex>
+              </NFormItem>
+
               <NFlex justify="space-between" align="center" style="margin-bottom: 8px;">
                 <NText depth="2">
                   已配置 {{ (currentGoodsModel.goods.subItems ?? []).length }} 个款式
