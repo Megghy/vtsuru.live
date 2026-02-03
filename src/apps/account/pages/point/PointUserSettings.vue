@@ -3,13 +3,13 @@ import type {
   FormRules,
 } from 'naive-ui'
 import type { AddressInfo } from '@/api/api-models'
-import { useStorage } from '@vueuse/core'
 import { Add24Regular, Person24Regular, Delete24Regular, Edit24Regular, DocumentText24Regular } from '@vicons/fluent'
 import {
   NAlert, NButton, NCard, NCheckbox, NEmpty, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NModal, NPopconfirm, NScrollbar, NSelect, NSpin, NTag, NText, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 // @ts-expect-error 导入有点问题
 import UserAgreement from '@/content/agreements/UserAgreement.md'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -35,7 +35,7 @@ const currentAddress = ref<AddressInfo>()
 const authCodeInput = ref('')
 
 // 本地存储区域数据
-const areas = useStorage<{
+const areas = usePersistedStorage<{
   createAt: number
   data: AreaData
 }>('Data.Areas', {

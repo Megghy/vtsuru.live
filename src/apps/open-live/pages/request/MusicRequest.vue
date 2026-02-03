@@ -4,7 +4,6 @@ import type {
 } from 'naive-ui'
 import type { DanmakuUserInfo, EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
 import type { MusicRequestSettings } from '@/store/useMusicRequest'
-import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import {
   NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NList, NListItem, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NTabPane, NTabs, NTag, NText, NTooltip, NTransfer, NUl, NVirtualList, useMessage } from 'naive-ui';
@@ -19,6 +18,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 interface Music {
   id: number
@@ -44,7 +44,7 @@ const route = useRoute()
 const settings = computed(() => {
   return musicRquestStore.settings
 })
-const cooldown = useStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
+const cooldown = usePersistedStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
 const musicRquestStore = useMusicRequestProvider()
 const client = await useDanmakuClient().initOpenlive()
 

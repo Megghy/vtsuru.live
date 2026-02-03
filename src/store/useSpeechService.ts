@@ -1,4 +1,3 @@
-import { useStorage } from '@vueuse/core'
 import EasySpeech from 'easy-speech'
 import GraphemeSplitter from 'grapheme-splitter'
 import { useMessage } from 'naive-ui';
@@ -8,6 +7,7 @@ import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import { FETCH_API, TTS_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface SpeechSettings {
   speechInfo: SpeechInfo
@@ -124,7 +124,7 @@ function createSpeechService() {
   const accountInfo = useAccount()
   const splitter = new GraphemeSplitter()
 
-  const settings = useStorage<SpeechSettings>('Setting.Speech', DEFAULT_SETTINGS)
+  const settings = usePersistedStorage<SpeechSettings>('Setting.Speech', DEFAULT_SETTINGS)
   const speechState = reactive<SpeechState>({
     isSpeaking: false,
     speakingText: '',

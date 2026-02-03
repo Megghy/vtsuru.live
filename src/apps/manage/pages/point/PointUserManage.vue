@@ -5,7 +5,7 @@ import type {
 
 import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
 import { Info24Filled, Search24Regular, ArrowSync24Regular, AddSquare24Regular, ArrowDownload24Regular, Delete24Regular, Warning24Regular } from '@vicons/fluent'
-import { useDebounceFn, useStorage } from '@vueuse/core'
+import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import {
@@ -15,6 +15,7 @@ import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import { POINT_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import PointUserDetailCard from './PointUserDetailCard.vue'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
@@ -37,7 +38,7 @@ const defaultSettings: PointUserSettings = {
 }
 
 // 使用持久化存储保存筛选设置
-const settings = useStorage<PointUserSettings>('Settings.Point.Users', JSON.parse(JSON.stringify(defaultSettings)))
+const settings = usePersistedStorage<PointUserSettings>('Settings.Point.Users', JSON.parse(JSON.stringify(defaultSettings)))
 
 // 分页参数
 const pn = ref(1)

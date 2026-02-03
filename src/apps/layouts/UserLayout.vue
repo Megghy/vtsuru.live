@@ -3,7 +3,7 @@ import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
 import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Person48Filled, VideoAdd20Filled, WindowWrench20Filled, } from '@vicons/fluent'
 import { BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
-import { useElementSize, useStorage } from '@vueuse/core'
+import { useElementSize } from '@vueuse/core'
 import {
   darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip, useMessage } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -19,6 +19,7 @@ import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import '@/apps/user/styles/user-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -32,7 +33,7 @@ const useAuth = useBiliAuth() // 获取认证状态 Store
 const id = computed(() => route.params.id)
 
 // 主题设置
-const themeType = useStorage<ThemeType>('Settings.Theme', ThemeType.Auto)
+const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Auto)
 
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
@@ -45,7 +46,7 @@ const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
 const sider = ref() // 侧边栏 DOM 引用
 const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
 const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
-const siderCollapsed = useStorage<boolean>('Settings.UserSiderCollapsed', windowWidth < 768)
+const siderCollapsed = usePersistedStorage<boolean>('Settings.UserSiderCollapsed', windowWidth < 768)
 const siderAvatarSize = computed(() => (siderCollapsed.value ? 34 : 42))
 
 type UserNavItem = {

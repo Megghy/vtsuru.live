@@ -3,7 +3,7 @@
 import type { Setting_QuestionDisplay } from '@/api/api-models'
 import { ArrowCircleLeft12Filled, ArrowCircleRight12Filled, Info24Filled, TextAlignCenter16Filled, TextAlignLeft16Filled, TextAlignRight16Filled, } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import { useDebounceFn, useElementSize, useStorage } from '@vueuse/core'
+import { useDebounceFn, useElementSize } from '@vueuse/core'
 import {
   NButton, NCard, NCheckbox, NColorPicker, NDivider, NDrawer, NDrawerContent, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NRadioButton, NRadioGroup, NScrollbar, NSelect, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
@@ -15,6 +15,7 @@ import { CURRENT_HOST } from '@/shared/config'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { useWebRTC } from '@/store/useRTC'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 const message = useMessage()
 const themeVars = useThemeVars()
@@ -31,11 +32,11 @@ const isLoading = ref(false)
 
 const cardRef = ref<HTMLElement>()
 const cardSize = useElementSize(cardRef)
-const savedCardSize = useStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', {
+const savedCardSize = usePersistedStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', {
   width: 400,
   height: 400,
 })
-const customCss = useStorage<string>('Settings.QuestionDisplay.CustomCss', '')
+const customCss = usePersistedStorage<string>('Settings.QuestionDisplay.CustomCss', '')
 
 const debouncedSize = useDebounceFn(() => {
   savedCardSize.value = { width: cardSize.width.value, height: cardSize.height.value }
@@ -82,7 +83,7 @@ async function updateSettings() {
     message.success('完成')
   }
 }
-const fontsOptions = useStorage<{ label: string, value: string }[]>('Settings.Fonts', [])
+const fontsOptions = usePersistedStorage<{ label: string, value: string }[]>('Settings.Fonts', [])
 async function loadFonts() {
   if ('queryLocalFonts' in window) {
     // @ts-expect-error 不知道为啥不存在

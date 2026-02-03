@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LotteryUserInfo } from '@/api/api-models'
-import { useLocalStorage, useStorage } from '@vueuse/core'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { format } from 'date-fns'
 import { List } from 'linqts'
 import {
@@ -33,7 +33,7 @@ interface LotteryHistory {
   url: string
 }
 
-const lotteryHistory = useStorage<LotteryHistory[]>('LotteryHistory', [])
+const lotteryHistory = usePersistedStorage<LotteryHistory[]>('LotteryHistory', [])
 
 const message = useMessage()
 const notification = useNotification()
@@ -48,7 +48,7 @@ const defaultOption = {
   needCharge: false,
   fanCardLevel: 1,
 } as LotteryOption
-const lotteryOption = useLocalStorage('Settings.LotteryOption', defaultOption)
+const lotteryOption = usePersistedStorage('Settings.LotteryOption', defaultOption)
 
 const isLoading = ref(false)
 const isLottering = ref(false)

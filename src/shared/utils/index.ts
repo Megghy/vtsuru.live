@@ -5,17 +5,17 @@ import type {
 import type { DiscreteApiType } from 'naive-ui/es/discrete/src/interface'
 import type { SongsInfo } from '@/api/api-models'
 import { SquareArrowForward24Filled } from '@vicons/fluent'
-import { useStorage } from '@vueuse/core'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import {
   createDiscreteApi, darkTheme, dateZhCN, NButton, NIcon, NTooltip, useOsTheme, zhCN } from 'naive-ui';
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 import { SongFrom, ThemeType } from '@/api/api-models'
 import { getThemeOverrides, VTSURU_API_URL } from '@/shared/config'
 
 const osThemeRef = useOsTheme() // 获取当前系统主题
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 export const theme = computed(() => {
   if (themeType.value == ThemeType.Auto) {
     const osThemeRef = useOsTheme() // 获取当前系统主题
@@ -251,20 +251,18 @@ export function GetPlayButton(song: SongsInfo) {
       return h(NTooltip, null, {
         trigger: () =>
           h(
-            h(
-              NButton,
-              {
-                size: 'small',
-                color: '#00BBB3',
-                ghost: true,
-                onClick: () => {
-                  window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
-                },
+            NButton,
+            {
+              size: 'small',
+              color: '#00BBB3',
+              ghost: true,
+              onClick: () => {
+                window.open(`http://5sing.kugou.com/bz/${song.id}.html`)
               },
-              {
-                icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
-              },
-            ),
+            },
+            {
+              icon: () => h(FiveSingIcon, { class: 'svg-icon fivesing' }),
+            },
           ),
         default: () => '在5sing打开',
       })

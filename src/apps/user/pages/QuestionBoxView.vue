@@ -6,12 +6,12 @@ import {
   NAlert, NAvatar, NBadge, NButton, NCard, NCheckbox, NDivider, NDrawer, NDrawerContent, NEmpty, NIcon, NImage, NInput, NList, NListItem, NFlex, NSpin, NTag, NText, NTime, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useStorage } from '@vueuse/core'
 import VueTurnstile from 'vue-turnstile'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { AVATAR_URL, FILE_API_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/shared/config'
 import { uploadFiles } from '@/shared/services/fileUpload'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 const { userInfo } = defineProps<{
   userInfo: UserInfo | undefined
@@ -37,7 +37,7 @@ const route = useRoute()
 const splitter = new GraphemeSplitter()
 
 // 本地提问历史
-const localQuestions = useStorage<LocalQuestion[]>('vtsuru-local-questions', [], undefined, {
+const localQuestions = usePersistedStorage<LocalQuestion[]>('vtsuru-local-questions', [], {
   serializer: {
     read: (v: any) => v ? JSON.parse(v) : [],
     write: (v: any) => JSON.stringify(v),

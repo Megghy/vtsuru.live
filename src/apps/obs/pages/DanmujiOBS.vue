@@ -9,6 +9,7 @@ import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { usePersistedStorage } from '@/shared/storage/persist'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
@@ -68,7 +69,7 @@ const defaultConfig: DanmujiConfig = {
 }
 
 defineExpose({ setCss, testAddMessage })
-const customCss = useStorage('danmuji-css', '')
+const customCss = usePersistedStorage('danmuji-css', '')
 
 const isOBS = computed(() => {
   // @ts-ignore

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { NAlert, NButton, NCard, NScrollbar, NSplit } from 'naive-ui';
-import { useStorage } from '@vueuse/core'
 import { inject } from 'vue'
 import BlockManager from './BlockManager.vue'
 import BuilderPropsPane from './BuilderPropsPane.vue'
 import { UserPageEditorKey } from '../context'
 import { USER_PAGE_BUILDER_SPLIT_BLOCKS_MERGED_TOP_SIZE_KEY } from '../storageKeys'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineOptions({ name: 'BuilderBlocksPane' })
 
@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const mergedTopSize = useStorage<string | number>(USER_PAGE_BUILDER_SPLIT_BLOCKS_MERGED_TOP_SIZE_KEY, '420px')
+const mergedTopSize = usePersistedStorage<string | number>(USER_PAGE_BUILDER_SPLIT_BLOCKS_MERGED_TOP_SIZE_KEY, '420px')
 </script>
 
 <template>

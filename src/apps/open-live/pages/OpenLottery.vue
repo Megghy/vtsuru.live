@@ -2,7 +2,7 @@
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { Delete24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
-import { useLocalStorage, useStorage } from '@vueuse/core'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { format } from 'date-fns'
 import {
   NAlert, NAvatar, NButton, NCard, NDivider, NEmpty, NIcon, NNumberAnimation, NProgress, NResult, NFlex, NTag, useMessage, useNotification } from 'naive-ui';
@@ -39,8 +39,8 @@ const defaultOption = {
   fanCardLevel: 1,
   animationSpeed: 1000,
 } as LotteryOption
-const lotteryOption = useLocalStorage('Settings.OpenLive.LotteryOption', defaultOption)
-const lotteryHistory = useStorage<LotteryHistory[]>('OpenLive.LotteryHistory', [])
+const lotteryOption = usePersistedStorage('Settings.OpenLive.LotteryOption', defaultOption)
+const lotteryHistory = usePersistedStorage<LotteryHistory[]>('OpenLive.LotteryHistory', [])
 
 const message = useMessage()
 const accountInfo = useAccount()

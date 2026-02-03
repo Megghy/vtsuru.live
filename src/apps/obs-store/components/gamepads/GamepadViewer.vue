@@ -4,7 +4,7 @@ import type {
 } from 'naive-ui'
 import type { BodyOptionConfig, ControllerComponentStructure } from '@/apps/obs-store/data/gamepadConfigs'
 import type { GamepadConfig, GamepadType } from '@/types/gamepad'
-import { useStorage } from '@vueuse/core'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import {
   NAlert, NButton, NCard, NCheckbox, NCollapse, NCollapseItem, NColorPicker, NDescriptions, NDescriptionsItem, NDivider, NGrid, NGridItem, NInput, NInputNumber, NScrollbar, NSelect, NSlider, NFlex, NTag, NText, NTree } from 'naive-ui';
 import { computed, defineAsyncComponent, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -21,7 +21,7 @@ interface Props {
   viewBox?: string
 }
 // 基本设置
-const selectedType = useStorage<GamepadType>('Setting.Gamepad.SelectedType', 'xbox')
+const selectedType = usePersistedStorage<GamepadType>('Setting.Gamepad.SelectedType', 'xbox')
 const currentGamepadType = computed(() => selectedType.value)
 const gamepadTypeOptions = [
   { label: 'Xbox', value: 'xbox' as GamepadType },
@@ -35,17 +35,17 @@ const controllerComponents = computed(() => controllerStructures[selectedType.va
 
 // 存储、配置与状态
 const viewBoxStorageKey = computed(() => `gamepad-viewBox-${selectedType.value}`)
-const customViewBoxInput = useStorage<string>(viewBoxStorageKey, props.viewBox || '')
-const useOverlayButtons = useStorage<boolean>(`Setting.Gamepad.UseOverlayButtons`, true)
+const customViewBoxInput = usePersistedStorage<string>(viewBoxStorageKey, props.viewBox || '')
+const useOverlayButtons = usePersistedStorage<boolean>(`Setting.Gamepad.UseOverlayButtons`, true)
 const showComponentTree = ref(false)
 
 // 摇杆灵敏度设置
 const stickSensitivityStorageKey = computed(() => `gamepad-stick-sensitivity-${selectedType.value}`)
-const stickSensitivity = useStorage<number>(stickSensitivityStorageKey, 5)
+const stickSensitivity = usePersistedStorage<number>(stickSensitivityStorageKey, 5)
 
 // 按下颜色配置
 const pressedColorStorageKey = computed(() => `gamepad-pressed-color-${selectedType.value}`)
-const customPressedColor = useStorage<string | null>(pressedColorStorageKey, null)
+const customPressedColor = usePersistedStorage<string | null>(pressedColorStorageKey, null)
 const enableCustomPressedColor = computed({
   get: () => customPressedColor.value !== null && customPressedColor.value !== 'null',
   set: (val) => {
@@ -69,7 +69,7 @@ const bodyOptions = computed(() => availableBodies.value.map(body => ({
 })))
 
 const bodyIdStorageKey = computed(() => `gamepad-body-${selectedType.value}`)
-const selectedBodyId = useStorage<string>(bodyIdStorageKey, '')
+const selectedBodyId = usePersistedStorage<string>(bodyIdStorageKey, '')
 // 是否显示实时预览（避免首次进入即加载大体积渲染资源）
 const showPreview = ref(false)
 

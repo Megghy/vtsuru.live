@@ -11,6 +11,7 @@ import { ThemeType } from '@/api/api-models'
 import { useSettings } from '@/apps/client/store/useSettings'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- State ---
 
@@ -65,7 +66,7 @@ const navOptions: MenuOption[] = [
 
 // Theme
 
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 
 // Autostart Settings
 const isStartOnBoot = ref(false)

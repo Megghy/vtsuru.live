@@ -4,9 +4,10 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watchEffect } from 
 import type { CSSProperties } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ArrowRedoOutline, ArrowUndoOutline, ReorderThreeOutline } from '@vicons/ionicons5'
-import { useEventListener, useStorage } from '@vueuse/core'
+import { useEventListener } from '@vueuse/core'
 import Draggable from 'vuedraggable-es'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { persistedGetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
 import { UserPageEditorKey } from './user-page-builder/context'
 import {
   USER_PAGE_BUILDER_COLUMNS_ORDER_KEY,
@@ -79,18 +80,17 @@ function normalizeColumnsOrder(value: unknown): BuilderColumnId[] {
   return result
 }
 
-const columnsOrder = useStorage<BuilderColumnId[]>(USER_PAGE_BUILDER_COLUMNS_ORDER_KEY, [...DEFAULT_COLUMNS_ORDER])
+const columnsOrder = usePersistedStorage<BuilderColumnId[]>(USER_PAGE_BUILDER_COLUMNS_ORDER_KEY, [...DEFAULT_COLUMNS_ORDER])
 watchEffect(() => {
   const next = normalizeColumnsOrder(columnsOrder.value)
   if (next.join('|') !== columnsOrder.value.join('|')) columnsOrder.value = next
 })
 
-const isPropsMergedInBlocks = useStorage<boolean>(USER_PAGE_BUILDER_MERGE_PROPS_IN_BLOCKS_KEY, false)
+const isPropsMergedInBlocks = usePersistedStorage<boolean>(USER_PAGE_BUILDER_MERGE_PROPS_IN_BLOCKS_KEY, false)
 const activeColumnsOrder = computed<BuilderColumnId[]>(() => (isPropsMergedInBlocks.value ? columnsOrder.value.filter(id => id !== 'props') : columnsOrder.value))
 
-function readLegacySplitSize(key: string, fallback: string | number): string | number {
-  if (typeof window === 'undefined') return fallback
-  const raw = window.localStorage.getItem(key)
+async function readLegacySplitSize(key: string, fallback: string | number): Promise<string | number> {
+  const raw = await persistedGetItemRaw(key)
   if (raw == null) return fallback
   try {
     const parsed = JSON.parse(raw)
@@ -101,19 +101,26 @@ function readLegacySplitSize(key: string, fallback: string | number): string | n
   return raw
 }
 
-const hadWidthsKey = typeof window !== 'undefined' && window.localStorage.getItem(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY) != null
-const columnWidths = useStorage<Record<BuilderColumnId, string | number>>(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY, {
+const columnWidths = usePersistedStorage<Record<BuilderColumnId, string | number>>(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY, {
   pages: '220px',
   blocks: '320px',
   preview: '640px',
   props: '360px',
-})
+}, {
+  writeDefaults: false,
+  onReady: () => {
+    void (async () => {
+      const hadWidthsKey = await persistedGetItemRaw(USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY) != null
+      if (hadWidthsKey) return
 
-if (!hadWidthsKey) {
-  columnWidths.value.pages = readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_LEFT_SIZE_KEY, columnWidths.value.pages)
-  columnWidths.value.blocks = readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_BLOCKS_SIZE_KEY, columnWidths.value.blocks)
-  columnWidths.value.preview = readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_CENTER_SIZE_KEY, columnWidths.value.preview)
-}
+      const next: Record<BuilderColumnId, string | number> = { ...columnWidths.value }
+      next.pages = await readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_LEFT_SIZE_KEY, next.pages)
+      next.blocks = await readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_BLOCKS_SIZE_KEY, next.blocks)
+      next.preview = await readLegacySplitSize(USER_PAGE_BUILDER_SPLIT_CENTER_SIZE_KEY, next.preview)
+      columnWidths.value = next
+    })()
+  },
+})
 
 function px(n: number) {
   return `${n}px`

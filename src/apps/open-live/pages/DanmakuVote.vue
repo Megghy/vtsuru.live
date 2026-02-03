@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
 import { Add24Filled, Delete24Regular, Pause24Regular, Play24Regular, Settings24Regular, ShareAndroid24Regular } from '@vicons/fluent'
-import { useStorage } from '@vueuse/core'
 import {
   NAlert, NButton, NCard, NCheckbox, NColorPicker, NDivider, NEmpty, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NProgress, NRadio, NRadioGroup, NSelect, NFlex, NSpin, NSwitch, NTag, NText, NThing, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -11,6 +10,7 @@ import { VOTE_API_URL } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { copyToClipboard } from '@/shared/utils'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -337,7 +337,7 @@ watch(() => voteConfig.value, (newConfig) => {
 }, { immediate: true })
 
 // 初始模板
-const savedTemplates = useStorage<{ title: string, options: string[] }[]>('DanmakuVoteTemplates', [])
+const savedTemplates = usePersistedStorage<{ title: string, options: string[] }[]>('DanmakuVoteTemplates', [])
 const templateName = ref('')
 
 // 保存模板

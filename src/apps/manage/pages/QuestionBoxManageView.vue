@@ -2,16 +2,15 @@
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
 import { ArrowSync24Filled, Copy24Filled, Delete24Filled, Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
 import { Heart, HeartOutline, SettingsOutline, TrashBin } from '@vicons/ionicons5'
-import { useStorage } from '@vueuse/core'
 // @ts-ignore
 import { saveAs } from 'file-saver'
 import html2canvas from 'html2canvas'
 import {
-  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NImage, NInput, NInputGroup, NInputGroupLabel, NList, NListItem, NModal, NPagination, NPopconfirm, NSelect, NSlider, NSpin, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage, NGrid, NGi, NCollapse, NCollapseItem, useThemeVars } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NImage, NInput, NInputGroup, NInputGroupLabel, NList, NListItem, NModal, NPagination, NPopconfirm, NSelect, NSlider, NSpin, NSwitch, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage, NGrid, NGi, NCollapse, NCollapseItem, useThemeVars } from 'naive-ui';
 import QrcodeVue from 'qrcode.vue'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
@@ -21,6 +20,7 @@ import router from '@/app/router'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { copyToClipboard, downloadImage } from '@/shared/utils'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- 响应式状态和全局实例 ---
 const accountInfo = useAccount() // 获取账户信息
@@ -46,7 +46,8 @@ const selectedShareTag = ref<string | null>(null) // 分享时选择的标签
 const selectedDirectShareTag = ref<string | null>(null) // 主链接区域选择的标签
 const ps = ref(20) // 分页大小 (每页条数)
 const pn = ref(1) // 当前页码
-const savedCardSize = useStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', { // 问题展示卡片尺寸 (持久化存储)
+const functionSwitchLoading = ref(false)
+const savedCardSize = usePersistedStorage<{ width: number, height: number }>('Settings.QuestionDisplay.CardSize', { // 问题展示卡片尺寸 (持久化存储)
   width: 400,
   height: 400,
 })
@@ -232,6 +233,33 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
     tempSaftyLevel.value = newLevel
   }
 }, { immediate: true }) // 立即执行一次以设置初始值
+
+async function setFunctionEnable(enable: boolean) {
+  functionSwitchLoading.value = true
+  try {
+    const success = enable
+      ? await EnableFunction(FunctionTypes.QuestionBox)
+      : await DisableFunction(FunctionTypes.QuestionBox)
+    if (success) {
+      message.success(`提问箱功能已${enable ? '启用' : '禁用'}`)
+      if (accountInfo.value?.settings?.enableFunctions) {
+        const list = accountInfo.value.settings.enableFunctions
+        if (enable && !list.includes(FunctionTypes.QuestionBox)) {
+          list.push(FunctionTypes.QuestionBox)
+        } else if (!enable) {
+          const index = list.indexOf(FunctionTypes.QuestionBox)
+          if (index > -1) list.splice(index, 1)
+        }
+      }
+    } else {
+      message.error(`无法${enable ? '启用' : '禁用'}提问箱功能`)
+    }
+  } catch (err) {
+    message.error(`操作失败: ${String(err)}`)
+  } finally {
+    functionSwitchLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -325,15 +353,18 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
         size="small"
         :bordered="true"
         content-style="padding: 12px;"
+        style="max-width: 800px;"
       >
         <NFlex
           align="center"
           justify="space-between"
           wrap
+          :size="12"
         >
           <NFlex
             align="center"
             style="flex-grow: 1;"
+            :size="8"
           >
             <NIcon
               :component="Link24Filled"
@@ -362,15 +393,31 @@ watch(() => accountInfo.value?.settings?.questionBox?.saftyLevel, (newLevel) => 
             </NInputGroup>
           </NFlex>
 
-          <NSelect
-            v-model:value="selectedDirectShareTag"
-            placeholder="附加话题参数 (可选)"
-            filterable
-            clearable
-            size="small"
-            :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
-            style="width: 200px;"
-          />
+          <NFlex align="center" :size="8">
+            <NSelect
+              v-model:value="selectedDirectShareTag"
+              placeholder="附加话题参数 (可选)"
+              filterable
+              clearable
+              size="small"
+              :options="useQB.tags.filter(t => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
+              style="width: 180px;"
+            />
+            <NDivider vertical />
+            <NTag
+              :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'"
+              :bordered="false"
+              size="small"
+            >
+              {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox) ? '展示页已开启' : '展示页已关闭' }}
+            </NTag>
+            <NSwitch
+              :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox)"
+              :loading="functionSwitchLoading"
+              :disabled="functionSwitchLoading"
+              @update:value="setFunctionEnable"
+            />
+          </NFlex>
         </NFlex>
       </NCard>
 

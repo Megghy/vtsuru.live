@@ -6,6 +6,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { QueryBiliAPI } from '../data/utils'
 import { useTauriStore } from './useTauriStore'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- 常量定义 ---
 // Tauri Store 存储键名
@@ -72,7 +73,7 @@ type CookieCloudState = 'unset' | 'valid' | 'invalid' | 'syncing'
 export const useBiliCookie = defineStore('biliCookie', () => {
   // --- 依赖和持久化存储实例 ---
   // 使用 useTauriStore 获取持久化存储目标
-  const biliCookieStore = useStorage<BiliCookieStoreData>(BILI_COOKIE_KEY, {
+  const biliCookieStore = usePersistedStorage<BiliCookieStoreData>(BILI_COOKIE_KEY, {
     cookie: '',
     refreshToken: undefined, // 可选，未使用
     lastRefresh: new Date(0), // 默认值

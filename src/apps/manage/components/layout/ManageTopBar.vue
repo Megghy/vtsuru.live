@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStorage } from '@vueuse/core'
 import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
 import { ThemeType } from '@/api/api-models'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
 import { isDarkMode } from '@/shared/utils'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 defineProps<{
@@ -13,9 +13,9 @@ defineProps<{
 }>()
 
 const router = useRouter()
-const themeType = useStorage('Settings.Theme', ThemeType.Auto)
+const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const defaultCollapsed = window.innerWidth < 750
-const siderCollapsed = useStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
+const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
 
 const themeToggleIcon = computed(() => (isDarkMode.value ? Sunny : Moon))
 const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主题' : '切换到暗色主题'))

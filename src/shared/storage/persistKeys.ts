@@ -1,0 +1,102 @@
+export const PERSIST_LEGACY_KEY_MAP = {
+  Cookie: 'vtsuru:cookie',
+  JWT_Token: 'vtsuru:jwt-token',
+  Version: 'vtsuru:version',
+  UpdateNoteVer: 'vtsuru:update-note-ver',
+
+  LotteryHistory: 'vtsuru:lottery-history',
+  DanmakuVoteTemplates: 'vtsuru:danmaku-vote-templates',
+
+  'Settings.Theme': 'vtsuru:settings:theme',
+  'Settings.UserSiderCollapsed': 'vtsuru:settings:user-sider-collapsed',
+  'Settings.ManageSiderCollapsed': 'vtsuru:settings:manage-sider-collapsed',
+  'Settings.ManageSiderExpandedGroups': 'vtsuru:settings:manage-sider-expanded-groups',
+  'Settings.FavoriteMenuItems': 'vtsuru:settings:favorite-menu-items',
+  'Settings.MusicPlayer.Minimized': 'vtsuru:settings:music-player:minimized',
+  'Settings.AplayerVolume': 'vtsuru:settings:aplayer-volume',
+  'Settings.LotteryOption': 'vtsuru:settings:lottery-option',
+  'Settings.OpenLive.LotteryOption': 'vtsuru:settings:open-live:lottery-option',
+  'Settings.Point.Users': 'vtsuru:settings:point:users',
+  'Settings.QuestionDisplay.CardSize': 'vtsuru:settings:question-display:card-size',
+  'Settings.QuestionDisplay.CustomCss': 'vtsuru:settings:question-display:custom-css',
+  'Settings.Fonts': 'vtsuru:settings:fonts',
+  'Settings.SelectedAPI': 'vtsuru:settings:selected-api',
+  'Settings.Queue.DefaultKeyword': 'vtsuru:settings:queue:default-keyword',
+  'Settings.SongRequest.DefaultPrefix': 'vtsuru:settings:song-request:default-prefix',
+  'Setting.Point.OrderFilter.owner': 'vtsuru:setting:point:order-filter:owner',
+
+  'Setting.HideAvatar': 'vtsuru:setting:hide-avatar',
+  'Setting.DanmakuWindow': 'vtsuru:setting:danmaku-window',
+  'Setting.Speech': 'vtsuru:setting:speech',
+  'Setting.MusicRequest': 'vtsuru:setting:music-request',
+  'Setting.MusicRequest.Cooldown': 'vtsuru:setting:music-request:cooldown',
+  'Setting.MusicRequest.Waiting': 'vtsuru:setting:music-request:waiting',
+  'Setting.Gamepad.SelectedType': 'vtsuru:setting:gamepad:selected-type',
+  'Setting.Gamepad.UseOverlayButtons': 'vtsuru:setting:gamepad:use-overlay-buttons',
+
+  'OpenLive.LotteryHistory': 'vtsuru:open-live:lottery-history',
+
+  'ManageLive.pageSize': 'vtsuru:manage-live:page-size',
+  'ManageLive.keyword': 'vtsuru:manage-live:keyword',
+  'ManageLive.status': 'vtsuru:manage-live:status',
+  'ManageLive.sort': 'vtsuru:manage-live:sort',
+  'ManageLive.order': 'vtsuru:manage-live:order',
+  'ManageLive.autoRefresh': 'vtsuru:manage-live:auto-refresh',
+  'ManageLive.refreshSeconds': 'vtsuru:manage-live:refresh-seconds',
+
+  'Queue.Settings.WarnMessageAutoClose': 'vtsuru:queue:settings:warn-message-auto-close',
+  'Queue.Settings.Reverse': 'vtsuru:queue:settings:reverse',
+
+  'Local.Queue': 'vtsuru:local:queue',
+
+  'SongRequest.ActiveSongs': 'vtsuru:song-request:active-songs',
+  'SongRequest.Settings.WarnMessageAutoClose': 'vtsuru:song-request:settings:warn-message-auto-close',
+  'SongRequest.Settings.Reverse': 'vtsuru:song-request:settings:reverse',
+
+  'SongList.NextRequestTime': 'vtsuru:song-list:next-request-time',
+  'SongList.ShowListenButton': 'vtsuru:song-list:show-listen-button',
+  'SongList.ShowLinkButton': 'vtsuru:song-list:show-link-button',
+
+  'Bili.Auth.Key': 'vtsuru:bili:auth:key',
+  'Bili.Auth.Selected': 'vtsuru:bili:auth:selected',
+  'Bili.Auth.Tokens': 'vtsuru:bili:auth:tokens',
+
+  'Forum.PostTopic': 'vtsuru:forum:post-topic',
+
+  'Data.Emoji': 'vtsuru:data:emoji',
+  'Data.Areas': 'vtsuru:data:areas',
+
+  'vtsuru-local-questions': 'vtsuru:vtsuru-local-questions',
+
+  'song-list-column-mappings': 'vtsuru:song-list-column-mappings',
+  'danmuji-css': 'vtsuru:danmuji-css',
+  'danmuji-config': 'vtsuru:danmuji-config',
+  'danmuji-active-tab': 'vtsuru:danmuji-active-tab',
+
+  'user.bilibili.cookie': 'vtsuru:user:bilibili:cookie',
+  'user.bilibili.cookie_cloud': 'vtsuru:user:bilibili:cookie-cloud',
+  'cache.bilibili.userInfo': 'vtsuru:cache:bilibili:user-info',
+
+  'gamepad-viewBox-xbox': 'vtsuru:gamepad-view-box-xbox',
+  'gamepad-viewBox-ps': 'vtsuru:gamepad-view-box-ps',
+  'gamepad-viewBox-nintendo': 'vtsuru:gamepad-view-box-nintendo',
+  'gamepad-stick-sensitivity-xbox': 'vtsuru:gamepad-stick-sensitivity-xbox',
+  'gamepad-stick-sensitivity-ps': 'vtsuru:gamepad-stick-sensitivity-ps',
+  'gamepad-stick-sensitivity-nintendo': 'vtsuru:gamepad-stick-sensitivity-nintendo',
+  'gamepad-pressed-color-xbox': 'vtsuru:gamepad-pressed-color-xbox',
+  'gamepad-pressed-color-ps': 'vtsuru:gamepad-pressed-color-ps',
+  'gamepad-pressed-color-nintendo': 'vtsuru:gamepad-pressed-color-nintendo',
+  'gamepad-body-xbox': 'vtsuru:gamepad-body-xbox',
+  'gamepad-body-ps': 'vtsuru:gamepad-body-ps',
+  'gamepad-body-nintendo': 'vtsuru:gamepad-body-nintendo',
+
+  'vtsuru.user-pages.local-draft.v1': 'vtsuru:user-pages:local-draft:v1',
+  'vtsuru.user-page.block-clipboard.v1': 'vtsuru:user-page:block-clipboard:v1',
+  'vtsuru.user-page-builder.split.left-size.v1': 'vtsuru:user-page-builder:split:left-size:v1',
+  'vtsuru.user-page-builder.split.blocks-size.v1': 'vtsuru:user-page-builder:split:blocks-size:v1',
+  'vtsuru.user-page-builder.split.center-size.v1': 'vtsuru:user-page-builder:split:center-size:v1',
+  'vtsuru.user-page-builder.columns.order.v1': 'vtsuru:user-page-builder:columns:order:v1',
+  'vtsuru.user-page-builder.columns.widths.v1': 'vtsuru:user-page-builder:columns:widths:v1',
+  'vtsuru.user-page-builder.merge-props-in-blocks.v1': 'vtsuru:user-page-builder:merge-props-in-blocks:v1',
+  'vtsuru.user-page-builder.split.blocks-merged-top-size.v1': 'vtsuru:user-page-builder:split:blocks-merged-top-size:v1',
+} as const

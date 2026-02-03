@@ -1,4 +1,5 @@
-import { StorageSerializers, useLocalStorage } from '@vueuse/core'
+import { StorageSerializers } from '@vueuse/core'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface AuthCookie {
   cookie: string
@@ -6,9 +7,8 @@ export interface AuthCookie {
 }
 
 // 允许在登出/失效时清空
-export const cookie = useLocalStorage<AuthCookie | undefined>(
+export const cookie = usePersistedStorage<AuthCookie | undefined>(
   'Cookie',
   { cookie: '', refreshDate: 0 },
   { serializer: StorageSerializers.object },
 )
-

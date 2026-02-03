@@ -2,13 +2,14 @@
 <script setup lang="ts">
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { Info12Filled, Money20Regular, Money24Regular, Search24Filled, Wrench24Filled } from '@vicons/fluent'
-import { useDebounceFn, useLocalStorage } from '@vueuse/core'
+import { useDebounceFn } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import {
   NAvatar, NButton, NCard, NCheckbox, NCheckboxGroup, NCollapse, NCollapseItem, NCollapseTransition, NDivider, NIcon, NInput, NInputNumber, NList, NListItem, NModal, NRadioButton, NRadioGroup, NSkeleton, NFlex, NSpin, NSwitch, NTag, NTooltip, useMessage } from 'naive-ui';
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import DanmakuItem from './DanmakuItem.vue'
 import { GetString } from './danmakuExport'
 import LiveInfoContainer from './LiveInfoContainer.vue'
@@ -57,7 +58,7 @@ const isLoading = ref(false)
 const showModal = ref(false)
 const showExportModal = ref(false)
 const userDanmakus = ref<DanmakuModel[] | undefined>()
-const hideAvatar = useLocalStorage('Setting.HideAvatar', false)
+const hideAvatar = usePersistedStorage('Setting.HideAvatar', false)
 
 const keyword = ref('')
 const enableRegex = ref(false)
