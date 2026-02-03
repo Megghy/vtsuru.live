@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronUp, MusicalNote, Pause, Play, PlayBack, PlayForward, TrashBin, VolumeHigh } from '@vicons/ionicons5'
-import { useElementSize, useStorage } from '@vueuse/core'
+import { useElementSize } from '@vueuse/core'
 import {
   NButton, NCard, NFlex, NIcon, NLayoutFooter, NSlider, NTag, NText, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 const emit = defineEmits<{
   (e: 'heightChange', height: number): void
@@ -23,7 +24,7 @@ const isPlayerVisible = computed(
   () => musicRquestStore.originMusics.length > 0 || musicRquestStore.waitingMusics.length > 0,
 )
 
-const isPlayerMinimized = useStorage('Settings.MusicPlayer.Minimized', false)
+const isPlayerMinimized = usePersistedStorage('Settings.MusicPlayer.Minimized', false)
 
 const playerVolume = computed({
   get: () => musicRquestStore.settings.volume,

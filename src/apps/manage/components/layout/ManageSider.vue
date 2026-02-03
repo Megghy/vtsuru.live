@@ -7,7 +7,7 @@
   import {
     AnalyticsSharp, Bookmark, BookmarkOutline, Chatbox, ChatbubbleEllipsesOutline, DocumentTextOutline, Eye, GridOutline, MusicalNote, MusicalNotesOutline, PlayCircleOutline
   } from '@vicons/ionicons5';
-  import { useStorage } from '@vueuse/core';
+  import { usePersistedStorage } from '@/shared/storage/persist';
   import { NButton, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
   import { computed, watchEffect } from 'vue';
   import { RouterLink, useRoute, useRouter } from 'vue-router';
@@ -34,11 +34,11 @@
   const router = useRouter();
 
   const defaultCollapsed = window.innerWidth < 750;
-  const collapsed = useStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed);
+  const collapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed);
   const siderWidth = 180;
   const siderCollapsedWidth = 56;
 
-  const expandedGroups = useStorage<string[]>('Settings.ManageSiderExpandedGroups', [
+  const expandedGroups = usePersistedStorage<string[]>('Settings.ManageSiderExpandedGroups', [
     'group-favorites',
     'group-common',
     'group-data',
@@ -46,7 +46,7 @@
     'group-danmaku',
   ]);
 
-  const favoriteMenuItems = useStorage<string[]>('Settings.FavoriteMenuItems', []);
+  const favoriteMenuItems = usePersistedStorage<string[]>('Settings.FavoriteMenuItems', []);
   const isFavorite = (key: string) => (favoriteMenuItems.value ?? []).includes(key);
   function toggleFavorite(key: string) {
     const list = favoriteMenuItems.value ?? [];

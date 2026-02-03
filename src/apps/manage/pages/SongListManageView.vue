@@ -3,9 +3,9 @@ import type { SongsInfo } from '@/api/api-models'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NInputGroup, NSpin, NText, useMessage } from 'naive-ui';
+import { NButton, NCard, NDivider, NFlex, NInput, NInputGroup, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
 import { onMounted, ref } from 'vue'
-import { useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -18,6 +18,34 @@ const message = useMessage()
 const accountInfo = useAccount()
 
 const isLoading = ref(true)
+const switchLoading = ref(false)
+
+async function setFunctionEnable(enable: boolean) {
+  switchLoading.value = true
+  try {
+    const success = enable
+      ? await EnableFunction(FunctionTypes.SongList)
+      : await DisableFunction(FunctionTypes.SongList)
+    if (success) {
+      message.success(`歌单功能已${enable ? '启用' : '禁用'}`)
+      if (accountInfo.value?.settings?.enableFunctions) {
+        const list = accountInfo.value.settings.enableFunctions
+        if (enable && !list.includes(FunctionTypes.SongList)) {
+          list.push(FunctionTypes.SongList)
+        } else if (!enable) {
+          const index = list.indexOf(FunctionTypes.SongList)
+          if (index > -1) list.splice(index, 1)
+        }
+      }
+    } else {
+      message.error(`无法${enable ? '启用' : '禁用'}歌单功能`)
+    }
+  } catch (err) {
+    message.error(`操作失败: ${String(err)}`)
+  } finally {
+    switchLoading.value = false
+  }
+}
 const showModal = ref(false)
 const songs = ref<SongsInfo[]>([])
 
@@ -107,17 +135,35 @@ onMounted(async () => {
     </template>
   </ManagePageHeader>
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;">
-    <NText class="manage-kicker">
-      歌单展示页链接
-    </NText>
-    <NFlex align="center" style="margin-top: 10px;">
-      <NInputGroup style="max-width: 420px;">
-        <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
-        <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
-          复制
-        </NButton>
-      </NInputGroup>
+  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
+    <NFlex justify="space-between" align="center" wrap :size="12">
+      <NFlex align="center" :size="8" style="flex: 1;">
+        <NText class="manage-kicker">
+          歌单展示页链接
+        </NText>
+        <NInputGroup style="max-width: 420px;">
+          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
+          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
+            复制
+          </NButton>
+        </NInputGroup>
+      </NFlex>
+      <NDivider vertical />
+      <NFlex align="center" :size="8">
+        <NTag
+          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
+          :bordered="false"
+          size="small"
+        >
+          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList) ? '展示页已开启' : '展示页已关闭' }}
+        </NTag>
+        <NSwitch
+          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList)"
+          :loading="switchLoading"
+          :disabled="switchLoading"
+          @update:value="setFunctionEnable"
+        />
+      </NFlex>
     </NFlex>
   </NCard>
 

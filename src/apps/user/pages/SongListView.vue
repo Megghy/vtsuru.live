@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
-import { useStorage } from '@vueuse/core'
 import { addSeconds } from 'date-fns'
 import { NButton, NModal, NSpin, useMessage } from 'naive-ui';
 import { computed, onMounted, ref, watch } from 'vue'
@@ -10,6 +9,7 @@ import { QueryGetAPI, QueryPostAPIWithParams } from '@/api/query'
 import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { useBiliAuth } from '@/store/useBiliAuth'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // 组件属性
 const props = defineProps<{
@@ -21,7 +21,7 @@ const props = defineProps<{
 // 用户账号信息
 const accountInfo = useAccount()
 // 下次点歌时间
-const nextRequestTime = useStorage('SongList.NextRequestTime', new Date())
+const nextRequestTime = usePersistedStorage('SongList.NextRequestTime', new Date())
 // 点歌冷却时间(秒)
 const minRequestTime = 30
 // 设置弹窗显示状态

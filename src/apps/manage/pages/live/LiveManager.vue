@@ -5,7 +5,7 @@ import { ArrowSync24Filled, Search24Filled
 import { NAlert, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputNumber, NPagination, NSelect, NSkeleton, NSwitch, NText, useMessage } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useLocalStorage, useSessionStorage, useStorage } from '@vueuse/core'
+import { useSessionStorage } from '@vueuse/core'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
@@ -13,6 +13,7 @@ import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/Event
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { LIVE_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineOptions({ name: 'ManageLiveView' })
 
@@ -28,17 +29,17 @@ const loadError = ref<string | null>(null)
 
 // pagination & query sync
 const page = useSessionStorage<number>('ManageLive.page', 1)
-const pageSize = useStorage<number>('ManageLive.pageSize', 10)
+const pageSize = usePersistedStorage<number>('ManageLive.pageSize', 10)
 
 // search / filter / sort
-const keyword = useLocalStorage<string>('ManageLive.keyword', '')
-const statusFilter = useLocalStorage<'all' | 'live' | 'finished'>('ManageLive.status', 'all')
-const sortKey = useLocalStorage<'startAt' | 'danmakusCount' | 'totalIncome' | 'interactionCount'>('ManageLive.sort', 'startAt')
-const sortOrder = useLocalStorage<'desc' | 'asc'>('ManageLive.order', 'desc')
+const keyword = usePersistedStorage<string>('ManageLive.keyword', '')
+const statusFilter = usePersistedStorage<'all' | 'live' | 'finished'>('ManageLive.status', 'all')
+const sortKey = usePersistedStorage<'startAt' | 'danmakusCount' | 'totalIncome' | 'interactionCount'>('ManageLive.sort', 'startAt')
+const sortOrder = usePersistedStorage<'desc' | 'asc'>('ManageLive.order', 'desc')
 
 // refresh
-const enableAutoRefresh = useLocalStorage<boolean>('ManageLive.autoRefresh', false)
-const refreshSeconds = useLocalStorage<number>('ManageLive.refreshSeconds', 60)
+const enableAutoRefresh = usePersistedStorage<boolean>('ManageLive.autoRefresh', false)
+const refreshSeconds = usePersistedStorage<number>('ManageLive.refreshSeconds', 60)
 let refreshTimer: number | undefined
 
 watch([lives, pageSize], () => {

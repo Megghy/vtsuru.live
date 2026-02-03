@@ -1,15 +1,15 @@
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
-import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
   const biliAuth = ref<BiliAuthModel>({} as BiliAuthModel)
 
-  const biliTokens = useStorage<
+  const biliTokens = usePersistedStorage<
     {
       id: number
       uId: number
@@ -17,7 +17,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       token: string
     }[]
   >('Bili.Auth.Tokens', [])
-  const currentToken = useStorage<string>('Bili.Auth.Selected', null)
+  const currentToken = usePersistedStorage<string>('Bili.Auth.Selected', null)
 
   const isLoading = ref(false)
   const isAuthed = computed(() => currentToken.value != null && currentToken.value.length > 0)

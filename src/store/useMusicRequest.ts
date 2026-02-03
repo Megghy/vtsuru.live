@@ -1,8 +1,8 @@
 import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
-import { useStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { SongFrom } from '@/api/api-models'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface WaitMusicInfo {
   from: DanmakuUserInfo
@@ -34,7 +34,7 @@ export interface MusicRequestSettings {
 }
 
 export const useMusicRequestProvider = defineStore('MusicRequest', () => {
-  const waitingMusics = useStorage<WaitMusicInfo[]>(
+  const waitingMusics = usePersistedStorage<WaitMusicInfo[]>(
     'Setting.MusicRequest.Waiting',
     [],
   )
@@ -53,7 +53,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const currentOriginMusic = ref<WaitMusicInfo>()
   const isPlayingOrderMusic = ref(false)
   const aplayerRef = ref()
-  const settings = useStorage<MusicRequestSettings>('Setting.MusicRequest', {
+  const settings = usePersistedStorage<MusicRequestSettings>('Setting.MusicRequest', {
     playMusicWhenFree: true,
     repeat: 'repeat-all',
     listMaxHeight: '300',

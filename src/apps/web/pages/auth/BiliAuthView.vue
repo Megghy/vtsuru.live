@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { breakpointsTailwind, useStorage, useBreakpoints as useVueUseBreakpoints } from '@vueuse/core'
+import { breakpointsTailwind, useBreakpoints as useVueUseBreakpoints } from '@vueuse/core'
 import {
   NAlert, NButton, NCard, NCountdown, NInput, NInputGroup, NPopconfirm, NSpin, NStep, NSteps, NText, useMessage } from 'naive-ui';
 import { v4 as uuidv4 } from 'uuid'
@@ -7,6 +7,7 @@ import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { BILI_AUTH_API_URL, CURRENT_HOST } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 interface AuthStartModel {
   code: string
@@ -19,8 +20,8 @@ const message = useMessage()
 const breakpoints = useVueUseBreakpoints(breakpointsTailwind)
 const isSmallScreen = breakpoints.smaller('md')
 
-const guidKey = useStorage('Bili.Auth.Key', uuidv4())
-const currentToken = useStorage<string>('Bili.Auth.Selected', null)
+const guidKey = usePersistedStorage('Bili.Auth.Key', uuidv4())
+const currentToken = usePersistedStorage<string>('Bili.Auth.Selected', null)
 const useAuth = useBiliAuth()
 
 const startModel = ref<AuthStartModel>()

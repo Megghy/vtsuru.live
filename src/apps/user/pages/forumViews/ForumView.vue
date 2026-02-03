@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
 import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
-import { useStorage } from '@vueuse/core'
 import {
   NAlert, NButton, NCard, NDivider, NFlex, NInput, NList, NListItem, NModal, NText, NTime } from 'naive-ui';
 import { onMounted, onUnmounted, ref } from 'vue'
@@ -10,6 +9,7 @@ import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
 import TurnstileVerify from '@/apps/user/components/TurnstileVerify.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { useForumStore } from '@/store/useForumStore'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import ForumPreviewItem from './ForumPreviewItem.vue'
 
 const { userInfo } = defineProps<{
@@ -20,7 +20,7 @@ const token = ref('')
 const turnstile = ref()
 const editor = ref()
 
-const postTopicBackup = useStorage<{ [key: number]: ForumPostTopicModel }>('Forum.PostTopic', {})
+const postTopicBackup = usePersistedStorage<{ [key: number]: ForumPostTopicModel }>('Forum.PostTopic', {})
 const showPostTopicModal = ref(false)
 const currentPostTopicModel = ref<ForumPostTopicModel>({} as ForumPostTopicModel)
 const lastBackupTopic = ref(Date.now())

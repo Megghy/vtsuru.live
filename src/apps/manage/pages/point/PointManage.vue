@@ -15,6 +15,7 @@ import {
   NCheckbox,
   NCollapse,
   NCollapseItem,
+  NDivider,
   NDynamicTags,
   NEmpty,
   NFlex,
@@ -33,8 +34,10 @@ import {
   NRadioGroup,
   NScrollbar,
   NSelect,
+  NSwitch,
   NTabPane,
   NTabs,
+  NTag,
   NText,
   NTooltip,
   NUpload,
@@ -42,7 +45,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
-import { useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import {
   FunctionTypes,
   GoodsStatus,
@@ -68,6 +71,34 @@ const accountInfo = useAccount()
 const dialog = useDialog()
 const biliAuth = useBiliAuth()
 const formRef = ref()
+const functionSwitchLoading = ref(false)
+
+async function setFunctionEnable(enable: boolean) {
+  functionSwitchLoading.value = true
+  try {
+    const success = enable
+      ? await EnableFunction(FunctionTypes.Point)
+      : await DisableFunction(FunctionTypes.Point)
+    if (success) {
+      message.success(`积分功能已${enable ? '启用' : '禁用'}`)
+      if (accountInfo.value?.settings?.enableFunctions) {
+        const list = accountInfo.value.settings.enableFunctions
+        if (enable && !list.includes(FunctionTypes.Point)) {
+          list.push(FunctionTypes.Point)
+        } else if (!enable) {
+          const index = list.indexOf(FunctionTypes.Point)
+          if (index > -1) list.splice(index, 1)
+        }
+      }
+    } else {
+      message.error(`无法${enable ? '启用' : '禁用'}积分功能`)
+    }
+  } catch (err) {
+    message.error(`操作失败: ${String(err)}`)
+  } finally {
+    functionSwitchLoading.value = false
+  }
+}
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
 const showAddGoodsModal = ref(false)
@@ -667,7 +698,7 @@ onMounted(() => { })
     :function-type="FunctionTypes.Point"
   />
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
     <NFlex justify="space-between" align="center" wrap :gap="12">
       <NAlert
         v-if="!accountInfo.eventFetcherState.online"
@@ -708,17 +739,35 @@ onMounted(() => { })
     </NFlex>
   </NCard>
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;">
-    <NText class="manage-kicker">
-      礼物展示页链接
-    </NText>
-    <NFlex align="center" :gap="12" style="margin-top: 10px;">
-      <NInputGroup style="max-width: 420px;">
-        <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
-        <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)">
-          复制
-        </NButton>
-      </NInputGroup>
+  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
+    <NFlex justify="space-between" align="center" wrap :size="12">
+      <NFlex vertical :size="8" style="flex: 1;">
+        <NText class="manage-kicker">
+          礼物展示页链接
+        </NText>
+        <NInputGroup style="max-width: 420px;">
+          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
+          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)">
+            复制
+          </NButton>
+        </NInputGroup>
+      </NFlex>
+      <NDivider vertical />
+      <NFlex align="center" :size="8">
+        <NTag
+          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point) ? 'success' : 'warning'"
+          :bordered="false"
+          size="small"
+        >
+          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point) ? '展示页已开启' : '展示页已关闭' }}
+        </NTag>
+        <NSwitch
+          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point)"
+          :loading="functionSwitchLoading"
+          :disabled="functionSwitchLoading"
+          @update:value="setFunctionEnable"
+        />
+      </NFlex>
     </NFlex>
   </NCard>
 

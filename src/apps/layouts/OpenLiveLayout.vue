@@ -2,7 +2,7 @@
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient' // 引入开放平台认证信息类型
 import { Lottery24Filled, PeopleQueue24Filled, TabletSpeaker24Filled } from '@vicons/fluent' // 引入 Fluent UI 图标
 import { Moon, MusicalNote, Sunny } from '@vicons/ionicons5' // 引入 Ionicons 图标
-import { useElementSize, useStorage } from '@vueuse/core' // 引入 VueUse 组合式函数
+import { useElementSize } from '@vueuse/core' // 引入 VueUse 组合式函数
 import {
   NAlert, NAvatar, NBackTop, NButton, NEllipsis, NIcon, NLayout, NLayoutContent, NLayoutFooter, NLayoutHeader, NLayoutSider, NMenu, NPageHeader, NResult, NScrollbar, NFlex, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
 // 引入 Naive UI 组件
@@ -11,6 +11,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router' // 引入 Vue Route
 import { ThemeType } from '@/api/api-models' // 引入主题类型枚举
 import { useDanmakuClient } from '@/store/useDanmakuClient' // 引入弹幕客户端状态管理
 import { isDarkMode } from '@/shared/utils' // 引入暗黑模式判断工具
+import { usePersistedStorage } from '@/shared/storage/persist'
 import '@/apps/open-live/styles/open-live-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -18,7 +19,7 @@ import logoUrl from '@/svgs/ic_vtuber.svg?url'
 const route = useRoute() // 获取当前路由信息
 const router = useRouter() // 获取路由实例
 const message = useMessage() // 获取 Naive UI 消息提示 API
-const themeType = useStorage('Settings.Theme', ThemeType.Auto) // 使用 useStorage 持久化主题设置 (默认自动)
+const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto) // 使用持久化存储主题设置 (默认自动)
 const danmakuClient = useDanmakuClient() // 获取弹幕客户端实例
 
 // -- 侧边栏状态 --

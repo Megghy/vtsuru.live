@@ -12,7 +12,6 @@ import type {
 } from '@/api/api-models'
 import { Checkmark12Regular, ClipboardTextLtr24Filled, Delete24Filled, Dismiss16Filled, Info24Filled, PeopleQueue24Filled, PresenceBlocked16Regular, } from '@vicons/fluent'
 import { ReloadCircleSharp } from '@vicons/ionicons5'
-import { useStorage } from '@vueuse/core'
 import { isSameDay } from 'date-fns'
 import { List } from 'linqts'
 import {
@@ -35,6 +34,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 import QueueObsModal from '@/apps/open-live/components/queue/QueueObsModal.vue'
 import QueueSettingsTab from '@/apps/open-live/components/queue/QueueSettingsTab.vue'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // Props 定义 (虽然未在逻辑中直接使用，但可能由父组件传入或用于类型检查)
 defineProps<{
@@ -90,8 +90,8 @@ const message = useMessage()
 const notice = useNotification()
 const client = await useDanmakuClient().initOpenlive() // 初始化弹幕客户端
 
-const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false) // 警告消息是否自动关闭
-const isReverse = useStorage('Queue.Settings.Reverse', false) // 本地存储的倒序设置 (未登录时使用)
+const isWarnMessageAutoClose = usePersistedStorage('Queue.Settings.WarnMessageAutoClose', false) // 警告消息是否自动关闭
+const isReverse = usePersistedStorage('Queue.Settings.Reverse', false) // 倒序设置 (持久化)
 // const volumn = useStorage('Settings.Volumn', 0.5) // 未使用
 
 const isLoading = ref(false) // 加载状态
@@ -116,7 +116,7 @@ const settings = computed({
   },
 })
 
-const localQueues = useStorage('Local.Queue', [] as ResponseQueueModel[]) // 本地存储的队列 (未登录时使用)
+const localQueues = usePersistedStorage('Local.Queue', [] as ResponseQueueModel[]) // 本地存储的队列 (未登录时使用)
 const originQueue = ref<ResponseQueueModel[]>([]) // 从 API 获取或本地存储的原始队列数据
 const queue = computed(() => { // 当前显示的活动队列 (过滤、排序后)
   let list = new List(accountInfo.value ? originQueue.value : localQueues.value)
@@ -171,7 +171,7 @@ const historySongs = computed(() => { // 历史队列 (已完成或取消)
 
 const newQueueName = ref('') // 手动添加的用户名
 
-const defaultKeyword = useStorage('Settings.Queue.DefaultKeyword', '排队') // 本地存储的默认关键词
+const defaultKeyword = usePersistedStorage('Settings.Queue.DefaultKeyword', '排队') // 本地存储的默认关键词
 const configCanEdit = computed(() => { // 配置是否可编辑 (是否已登录)
   return accountInfo.value != null && accountInfo.value != undefined
 })

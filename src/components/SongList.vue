@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // [导入] UI 组件和图标
 import { Delete24Filled, Info24Filled, NotepadEdit20Filled, Play24Filled, } from '@vicons/fluent'
-import { refDebounced, useLocalStorage } from '@vueuse/core' // VueUse 工具函数
+import { refDebounced } from '@vueuse/core' // VueUse 工具函数
 import { List } from 'linqts' // LINQ for TypeScript
 import type {
   DataTableBaseColumn, DataTableColumns, DataTableRowKey, FormInst, FormRules } from 'naive-ui'
@@ -15,6 +15,7 @@ import { SongFrom } from '@/api/api-models' // API 数据模型
 import { QueryGetAPI, QueryPostAPI } from '@/api/query' // API 请求方法
 import { SONG_API_URL } from '@/shared/config' // API 地址常量
 import { GetPlayButton } from '@/shared/utils' // 公用方法：获取播放/信息按钮
+import { usePersistedStorage } from '@/shared/storage/persist'
 import SongPlayer from './SongPlayer.vue' // 子组件：歌曲播放器
 
 // --- Props 定义 ---
@@ -27,9 +28,9 @@ const props = defineProps<{
 
 // --- 响应式状态 ---
 const message = useMessage() // Naive UI 消息提示
-const volume = useLocalStorage('Settings.AplayerVolume', 0.8) // 播放器音量，持久化存储
-const showListenButton = useLocalStorage('SongList.ShowListenButton', true) // 是否显示试听按钮
-const showLinkButton = useLocalStorage('SongList.ShowLinkButton', true) // 是否显示跳转按钮
+const volume = usePersistedStorage('Settings.AplayerVolume', 0.8) // 播放器音量，持久化存储
+const showListenButton = usePersistedStorage('SongList.ShowListenButton', true) // 是否显示试听按钮
+const showLinkButton = usePersistedStorage('SongList.ShowLinkButton', true) // 是否显示跳转按钮
 const songsInternal = ref<SongsInfo[]>([]) // 内部维护的歌曲列表，避免直接修改 props
 const playingSong = ref<SongsInfo>() // 当前正在试听的歌曲
 const isLrcLoading = ref<string>() // 歌词加载状态（存储歌曲 key）
@@ -696,7 +697,7 @@ onMounted(() => {
       <NInput
         v-model:value="searchMusicKeyword"
         placeholder="搜索曲名/译名"
-        size="small"
+        size="medium"
         clearable
         style="min-width: 150px; flex-grow: 1;"
       />
@@ -707,7 +708,7 @@ onMounted(() => {
         :options="authorsOptions"
         clearable
         filterable
-        size="small"
+        size="medium"
         style="min-width: 150px; flex-grow: 1;"
       />
       <!-- 语言筛选 (控制 computed 属性) -->
@@ -718,7 +719,7 @@ onMounted(() => {
         multiple
         clearable
         filterable
-        size="small"
+        size="medium"
         style="min-width: 180px; flex-grow: 1;"
         max-tag-count="responsive"
       />
@@ -730,7 +731,7 @@ onMounted(() => {
         multiple
         clearable
         filterable
-        size="small"
+        size="medium"
         style="min-width: 180px; flex-grow: 1;"
         max-tag-count="responsive"
       />

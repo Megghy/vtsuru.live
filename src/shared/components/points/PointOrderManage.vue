@@ -3,7 +3,6 @@ import type {
   DataTableRowKey,
 } from 'naive-ui'
 import type { ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
-import { useStorage } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
@@ -19,6 +18,7 @@ import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
 import { ArrowSync24Regular, ArrowDownload24Regular, Delete24Regular, Edit24Regular, Filter24Regular } from '@vicons/fluent'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 // 订单筛选设置类型定义
 interface OrderFilterSettings {
@@ -41,8 +41,10 @@ const defaultSettings = {
 } as OrderFilterSettings
 
 // 使用持久化存储保存筛选设置
-const filterKey = computed(() => `Setting.Point.OrderFilter.${props.orgId ? `org-${props.orgId}` : 'owner'}`)
-const filterSettings = useStorage<OrderFilterSettings>(filterKey, defaultSettings)
+const filterKey = computed(() => (props.orgId
+  ? `vtsuru:setting:point:order-filter:org-${props.orgId}`
+  : 'vtsuru:setting:point:order-filter:owner'))
+const filterSettings = usePersistedStorage<OrderFilterSettings>(filterKey, defaultSettings)
 
 watch(
   () => filterSettings.value.streamerId,

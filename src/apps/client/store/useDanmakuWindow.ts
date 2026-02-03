@@ -6,6 +6,7 @@ import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface DanmakuWindowSettings {
   width: number
@@ -161,7 +162,7 @@ function generateTestDanmaku(): EventModel {
 
 export const useDanmakuWindow = defineStore('danmakuWindow', () => {
   const danmakuWindow = ref<WebviewWindow>()
-  const danmakuWindowSetting = useStorage<DanmakuWindowSettings>('Setting.DanmakuWindow', {
+  const danmakuWindowSetting = usePersistedStorage<DanmakuWindowSettings>('Setting.DanmakuWindow', {
     width: 400,
     height: 600,
     x: 100,
@@ -192,7 +193,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     textStyleNameSeparator: ': ', // 新增：默认用户名和消息之间的分隔符为冒号+空格
     enableAnimation: true, // 新增：默认启用动画效果
   })
-  const emojiData = useStorage<{
+  const emojiData = usePersistedStorage<{
     updateAt: number
     data: {
       inline: { [key: string]: string }

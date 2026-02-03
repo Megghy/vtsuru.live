@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { Setting_Queue } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
-import { useStorage } from '@vueuse/core'
 import {
   NAlert, NCard, NCheckbox, NDivider, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NRadioButton, NRadioGroup, NSelect, NFlex, NSpin, NText, NTooltip } from 'naive-ui';
 import { KeywordMatchType, QueueGiftFilterType } from '@/api/api-models'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 defineProps<{
   isLoading: boolean
@@ -15,7 +15,7 @@ const emit = defineEmits<{
   (e: 'change'): void
 }>()
 
-const isWarnMessageAutoClose = useStorage('Queue.Settings.WarnMessageAutoClose', false)
+const isWarnMessageAutoClose = usePersistedStorage('Queue.Settings.WarnMessageAutoClose', false)
 
 function onChange() {
   emit('change')

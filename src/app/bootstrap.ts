@@ -5,6 +5,7 @@ import { QueryGetAPI } from '@/api/query'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
 import { apiFail, BASE_API_URL, isTauri } from '@/shared/config'
+import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
 import { createNaiveUIApi } from '@/shared/utils'
 
 let currentVersion: string
@@ -14,11 +15,11 @@ const { notification } = createNaiveUIApi(['notification'])
 
 export function InitVTsuru() {
   QueryGetAPI<string>(`${BASE_API_URL}vtsuru/version`)
-    .then((version) => {
+    .then(async (version) => {
       if (version.code == 200) {
         currentVersion = version.data
-        const savedVersion = localStorage.getItem('Version')
-        localStorage.setItem('Version', currentVersion)
+        const savedVersion = await persistedGetItemRaw('Version')
+        await persistedSetItemRaw('Version', currentVersion)
 
         if (currentVersion && savedVersion && savedVersion !== currentVersion) {
           setTimeout(() => {
@@ -35,7 +36,7 @@ export function InitVTsuru() {
           InitVersionCheck()
         }
       }
-      InitOther()
+      await InitOther()
     })
     .catch(() => {
       apiFail.value = true
@@ -91,7 +92,7 @@ function InitVersionCheck() {
         ) {
           isHaveNewVersion = true
           currentVersion = keepCheckData.data
-          localStorage.setItem('Version', currentVersion)
+          void persistedSetItemRaw('Version', currentVersion)
           console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
           if (window.$route.meta.forceReload || isTauri()) {

@@ -5,6 +5,7 @@ import type { ComputedRef, Ref } from 'vue'
 import { computed } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { USER_PAGE_BLOCK_CLIPBOARD_KEY } from './storageKeys'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface UseUserPageBlocksOptions {
   currentProject: ComputedRef<BlockPageProject | null>
@@ -77,12 +78,9 @@ function flattenBlocks(list: BlockNode[], out: BlockNode[] = []): BlockNode[] {
 }
 
 export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
-  const clipboardBlocks = useStorage<BlockNode[]>(
-    USER_PAGE_BLOCK_CLIPBOARD_KEY,
-    [],
-    typeof window === 'undefined' ? undefined : window.localStorage,
-    { writeDefaults: false },
-  )
+  const clipboardBlocks = typeof window === 'undefined'
+    ? useStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], undefined, { writeDefaults: false })
+    : usePersistedStorage<BlockNode[]>(USER_PAGE_BLOCK_CLIPBOARD_KEY, [], { writeDefaults: false })
 
   const selectedBlocks = computed<BlockNode[]>(() => {
     const p = opts.currentProject.value

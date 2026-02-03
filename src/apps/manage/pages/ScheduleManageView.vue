@@ -5,9 +5,9 @@ import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
 import { TagQuestionMark16Filled } from '@vicons/fluent'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
-  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NText, NTimePicker, NTooltip, useMessage } from 'naive-ui';
+  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NSwitch, NTag, NText, NTimePicker, NTooltip, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { useAccount } from '@/api/account'
+import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -278,6 +278,34 @@ function getAllWeeks(year: number) {
 const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>([])
 const message = useMessage()
+const functionSwitchLoading = ref(false)
+
+async function setFunctionEnable(enable: boolean) {
+  functionSwitchLoading.value = true
+  try {
+    const success = enable
+      ? await EnableFunction(FunctionTypes.Schedule)
+      : await DisableFunction(FunctionTypes.Schedule)
+    if (success) {
+      message.success(`日程表功能已${enable ? '启用' : '禁用'}`)
+      if (accountInfo.value?.settings?.enableFunctions) {
+        const list = accountInfo.value.settings.enableFunctions
+        if (enable && !list.includes(FunctionTypes.Schedule)) {
+          list.push(FunctionTypes.Schedule)
+        } else if (!enable) {
+          const index = list.indexOf(FunctionTypes.Schedule)
+          if (index > -1) list.splice(index, 1)
+        }
+      }
+    } else {
+      message.error(`无法${enable ? '启用' : '禁用'}日程表功能`)
+    }
+  } catch (err) {
+    message.error(`操作失败: ${String(err)}`)
+  } finally {
+    functionSwitchLoading.value = false
+  }
+}
 
 const isLoading = ref(true)
 
@@ -728,21 +756,39 @@ onMounted(() => {
     </template>
   </ManagePageHeader>
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;">
-    <NText class="manage-kicker">
-      日程表展示页链接
-    </NText>
-    <NFlex align="center" style="margin-top: 10px;">
-      <NInputGroup style="max-width: 420px;">
-        <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
-        <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)">
-          复制
-        </NButton>
-      </NInputGroup>
+  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
+    <NFlex justify="space-between" align="center" wrap :size="12">
+      <NFlex vertical :size="8" style="flex: 1;">
+        <NText class="manage-kicker">
+          日程表展示页链接
+        </NText>
+        <NInputGroup style="max-width: 420px;">
+          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
+          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)">
+            复制
+          </NButton>
+        </NInputGroup>
+      </NFlex>
+      <NDivider vertical />
+      <NFlex align="center" :size="8">
+        <NTag
+          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
+          :bordered="false"
+          size="small"
+        >
+          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule) ? '展示页已开启' : '展示页已关闭' }}
+        </NTag>
+        <NSwitch
+          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule)"
+          :loading="functionSwitchLoading"
+          :disabled="functionSwitchLoading"
+          @update:value="setFunctionEnable"
+        />
+      </NFlex>
     </NFlex>
   </NCard>
 
-  <NCard size="small" :bordered="true" content-style="padding: 12px;">
+  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
     <NFlex justify="space-between" align="center" wrap :size="12">
       <NText class="manage-kicker">
         订阅链接

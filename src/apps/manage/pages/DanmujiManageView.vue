@@ -9,10 +9,11 @@ import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { CURRENT_HOST } from '@/shared/config'
 import { defaultDanmujiCss } from '@/shared/config/defaultDanmujiCss'
 import { isDarkMode } from '@/shared/utils'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 
 const accountInfo = useAccount()
-const css = useStorage('danmuji-css', defaultDanmujiCss)
+const css = usePersistedStorage('danmuji-css', defaultDanmujiCss)
 const danmujiObsRef = ref<InstanceType<typeof DanmujiOBS> | null>(null)
 const message = useMessage()
 const windowWidth = useWindowSize().width
@@ -76,7 +77,7 @@ function generateTestMedalName() {
 }
 
 // 保存DanmujiConfig的配置
-const danmujiConfig = useStorage<DanmujiConfig>('danmuji-config', {
+const danmujiConfig = usePersistedStorage<DanmujiConfig>('danmuji-config', {
   minGiftPrice: 0.1,
   showDanmaku: true,
   showGift: true,
@@ -97,7 +98,7 @@ const danmujiConfig = useStorage<DanmujiConfig>('danmuji-config', {
 })
 
 // 修改为使用标签页的活动键存储
-const activeTab = useStorage('danmuji-active-tab', 'style')
+const activeTab = usePersistedStorage('danmuji-active-tab', 'style')
 
 // 自动生成弹幕设置
 const isAutoGenerating = ref(true)

@@ -1,5 +1,5 @@
-import { useStorage } from '@vueuse/core'
 import { ref } from 'vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 const debugAPI: string
   = import.meta.env.VITE_API == 'dev'
@@ -25,7 +25,7 @@ export const availableAPIs: APIConfig[] = [
   { name: '备用API (国外)', url: failoverAPI, key: 'failover' },
 ]
 
-export const selectedAPIKey = useStorage<string>('Settings.SelectedAPI', 'main')
+export const selectedAPIKey = usePersistedStorage<string>('Settings.SelectedAPI', 'main')
 
 export function getCurrentAPIUrl(): string {
   if (import.meta.env.NODE_ENV === 'development') {
@@ -55,4 +55,3 @@ export const BASE_URL
 
 export const BASE_API_URL = `${BASE_URL}api/`
 export const BASE_HUB_URL = `${BASE_URL}hub/`
-

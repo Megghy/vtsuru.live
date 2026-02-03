@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { cookie } from './auth'
 import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { ACCOUNT_API_URL, USER_CONFIG_API_URL } from '@/shared/config'
+import { persistedRemoveItem } from '@/shared/storage/persist'
 
 export const ACCOUNT = ref<AccountInfo>({} as AccountInfo)
 export const isLoadingAccount = ref(true)
@@ -31,7 +32,7 @@ export async function GetSelfAccount(token?: string) {
       }
       return result.data
     } else if (result.code == 401) {
-      localStorage.removeItem('JWT_Token')
+      await persistedRemoveItem('JWT_Token')
       if (!token) {
         cookie.value = undefined
         console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')

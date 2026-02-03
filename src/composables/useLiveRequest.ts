@@ -5,11 +5,11 @@ import type {
   SongRequestInfo,
   SongsInfo,
 } from '@/api/api-models'
-import { useStorage } from '@vueuse/core'
 import { List } from 'linqts'
 import { NTime } from 'naive-ui';
 import { computed, h, ref } from 'vue'
 import { AddBiliBlackList, useAccount } from '@/api/account'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import {
   EventDataTypes,
   FunctionTypes,
@@ -27,10 +27,10 @@ import { SONG_REQUEST_API_URL } from '@/shared/config'
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()
 
-  const localActiveSongs = useStorage('SongRequest.ActiveSongs', [] as SongRequestInfo[])
-  const isWarnMessageAutoClose = useStorage('SongRequest.Settings.WarnMessageAutoClose', false)
-  const isReverse = useStorage('SongRequest.Settings.Reverse', false)
-  const defaultPrefix = useStorage('Settings.SongRequest.DefaultPrefix', '点播')
+  const localActiveSongs = usePersistedStorage('SongRequest.ActiveSongs', [] as SongRequestInfo[])
+  const isWarnMessageAutoClose = usePersistedStorage('SongRequest.Settings.WarnMessageAutoClose', false)
+  const isReverse = usePersistedStorage('SongRequest.Settings.Reverse', false)
+  const defaultPrefix = usePersistedStorage('Settings.SongRequest.DefaultPrefix', '点播')
 
   const isLoading = ref(false)
   const originSongs = ref<SongRequestInfo[]>([])

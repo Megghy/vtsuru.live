@@ -5,12 +5,12 @@ import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { Info24Filled } from '@vicons/fluent'
 import { ArchiveOutline } from '@vicons/ionicons5'
-import { useStorage } from '@vueuse/core'
 import {
   NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NDivider, NFormItem, NIcon, NInput, NP, NFlex, NText, NTooltip, NTransfer, NUpload, NUploadDragger, useMessage } from 'naive-ui';
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const message = useMessage()
 
 const useCustomColumnMapping = ref(false)
-const columnMappings = useStorage('song-list-column-mappings', {
+const columnMappings = usePersistedStorage('song-list-column-mappings', {
   name: '名称,歌名,标题,title,name',
   translateName: '翻译名称,译名,translated,translate',
   author: '作者,歌手,演唱,singer,author,artist',

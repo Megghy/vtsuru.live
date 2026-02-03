@@ -1,7 +1,7 @@
 import { h, type VNode } from 'vue'
-import { useStorage } from '@vueuse/core'
 import { NButton, NImage } from 'naive-ui';
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const updateNotes: updateNoteType[] = [
   {
@@ -295,7 +295,7 @@ export const updateNotes: updateNoteType[] = [
 
 export const currentUpdateNoteVer = updateNotes.sort((a, b) => b.ver - a.ver)[0].ver
 export const currentUpdateNote = updateNotes.sort((a, b) => b.ver - a.ver)[0].items
-export const savedUpdateNoteVer = useStorage('UpdateNoteVer', 0)
+export const savedUpdateNoteVer = usePersistedStorage('UpdateNoteVer', 0)
 
 export function checkUpdateNote() {
   if (savedUpdateNoteVer.value < currentUpdateNoteVer) {
