@@ -38,7 +38,7 @@ async function resolvePersistBackend(): Promise<PersistBackend> {
   if (!resolveBackendPromise) {
     resolveBackendPromise = (async () => {
       if (typeof window === 'undefined') {
-        throw new Error('[persist] window 未定义，无法使用持久化存储')
+        throw new TypeError('[persist] window 未定义，无法使用持久化存储')
       }
 
       if (typeof indexedDB === 'undefined') return 'local'
@@ -146,11 +146,26 @@ const persistedAsyncStorage: StorageLikeAsync = {
 
 type PersistKey = string | Ref<string> | (() => string)
 
+const sharedRefCache = new Map<string, RemovableRef<any>>()
+
 export function usePersistedStorage<T>(
   key: PersistKey,
   initialValue: T,
   options?: UseStorageAsyncOptions<T>,
 ): RemovableRef<T> {
+  const keyValue = toValue(key)
+  const isStaticKey = typeof key === 'string'
+
+  if (isStaticKey) {
+    const canonicalKey = canonicalizePersistKey(keyValue)
+    const cached = sharedRefCache.get(canonicalKey)
+    if (cached) {
+      // console.log('[persist] cache hit:', canonicalKey)
+      return cached as RemovableRef<T>
+    }
+    // console.log('[persist] cache miss:', canonicalKey)
+  }
+
   const canonicalKey = computed(() => canonicalizePersistKey(toValue(key)))
 
   const state = ref<T>(initialValue) as RemovableRef<T>
@@ -203,6 +218,10 @@ export function usePersistedStorage<T>(
     const storageRef = active
     if (storageRef?.remove) return storageRef.remove()
     return persistedAsyncStorage.removeItem(canonicalKey.value)
+  }
+
+  if (isStaticKey) {
+    sharedRefCache.set(canonicalizePersistKey(keyValue), state)
   }
 
   return state
