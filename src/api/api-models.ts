@@ -761,6 +761,7 @@ export interface ResponsePointGoodModel {
 
   // 购买状态信息
   purchasedCount: number
+  soldCount?: number
   hasPurchased: boolean
   canPurchase: boolean
   cannotPurchaseReason?: string
