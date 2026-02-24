@@ -746,220 +746,224 @@ onMounted(async () => {
 <template>
   <div class="point-goods-container">
     <!-- 未认证提示 -->
-    <NAlert
-      v-if="!useAuth.isAuthed"
-      type="warning"
-      title="需要认证"
-      size="small"
-      :bordered="false"
-    >
-      <NFlex vertical :gap="8">
-        <NText>你尚未进行 Bilibili 账号认证, 无法查看积分或兑换礼物。</NText>
-        <NFlex>
-          <NButton
-            type="primary"
-            size="small"
-            @click="$router.push({ name: 'bili-auth' })"
-          >
-            立即认证
-          </NButton>
+    <div v-if="!useAuth.isAuthed">
+      <NAlert
+      
+        type="warning"
+        title="需要认证"
+        size="small"
+        :bordered="false"
+      >
+        <NFlex vertical :gap="8">
+          <NText>你尚未进行 Bilibili 账号认证, 可先浏览礼物，认证后可查看积分并兑换礼物。</NText>
+          <NFlex>
+            <NButton
+              type="primary"
+              size="small"
+              @click="$router.push({ name: 'bili-auth' })"
+            >
+              立即认证
+            </NButton>
+          </NFlex>
         </NFlex>
-      </NFlex>
-    </NAlert>
+      </NAlert>
+      <NDivider />
+    </div>
+    
 
-    <template v-else>
-      <!-- 用户信息与工具栏 -->
-      <NCard class="header-card" :bordered="false">
-        <div class="header-container">
-          <!-- 用户简要信息 -->
-          <div class="user-status-bar">
-            <NFlex justify="space-between" align="center">
-              <NFlex align="center" :gap="16">
-                <NFlex align="center" :gap="8">
-                  <NIcon :component="Person24Regular" size="20" class="status-icon" />
-                  <NText strong class="username">
-                    {{ biliAuth.name }}
-                  </NText>
-                  <NTag
-                    v-if="currentRoomGuardLevel > 0"
-                    size="small"
-                    type="warning"
-                    :bordered="false"
-                    round
-                  >
-                    ⚓ {{ currentRoomGuardLabel }}
-                  </NTag>
-                </NFlex>
+    <!-- 用户信息与工具栏 -->
+    <NCard v-if="useAuth.isAuthed" class="header-card" :bordered="false">
+      <div class="header-container">
+        <!-- 用户简要信息 -->
+        <div class="user-status-bar">
+          <NFlex justify="space-between" align="center">
+            <NFlex align="center" :gap="16">
+              <NFlex align="center" :gap="8">
+                <NIcon :component="Person24Regular" size="20" class="status-icon" />
+                <NText strong class="username">
+                  {{ biliAuth.name }}
+                </NText>
+                <NTag
+                  v-if="currentRoomGuardLevel > 0"
+                  size="small"
+                  type="warning"
+                  :bordered="false"
+                  round
+                >
+                  ⚓ {{ currentRoomGuardLabel }}
+                </NTag>
+              </NFlex>
                 
-                <NDivider vertical />
+              <NDivider vertical />
                 
-                <NFlex align="center" :gap="4">
-                  <NText depth="3">
-                    当前积分:
-                  </NText>
-                  <NText v-if="currentPoint >= 0" type="primary" strong class="point-value">
-                    {{ formattedCurrentPoint }}
-                  </NText>
-                  <NText v-else depth="3" italic>
-                    加载中...
-                  </NText>
+              <NFlex align="center" :gap="4">
+                <NText depth="3">
+                  当前积分:
+                </NText>
+                <NText v-if="currentPoint >= 0" type="primary" strong class="point-value">
+                  {{ formattedCurrentPoint }}
+                </NText>
+                <NText v-else depth="3" italic>
+                  加载中...
+                </NText>
+              </NFlex>
+            </NFlex>
+
+            <NFlex align="center" :gap="12">
+              <NButton quaternary size="small" @click="gotoAuthPage">
+                <template #icon>
+                  <NIcon :component="Person24Regular" />
+                </template>
+                账号中心
+              </NButton>
+              <NButton quaternary size="small" @click="NavigateToNewTab('/bili-user#settings')">
+                <template #icon>
+                  <NIcon :component="ArrowSync24Regular" />
+                </template>
+                切换账号
+              </NButton>
+            </NFlex>
+          </NFlex>
+        </div>
+
+        <NDivider style="margin: 4px 0;" />
+
+        <!-- 筛选工具栏 -->
+        <div class="toolbar-section">
+          <NFlex vertical :gap="16">
+            <!-- 标签分类 -->
+            <NFlex v-if="tags.length > 0" align="center" :gap="12">
+              <NText depth="3" class="filter-label">
+                分类:
+              </NText>
+              <NFlex :gap="8" wrap>
+                <NButton
+                  v-for="tag in tags"
+                  :key="tag"
+                  size="tiny"
+                  round
+                  :type="tag === selectedTag ? 'primary' : 'default'"
+                  :secondary="tag !== selectedTag"
+                  @click="selectedTag = selectedTag === tag ? undefined : tag"
+                >
+                  {{ tag }}
+                </NButton>
+              </NFlex>
+            </NFlex>
+
+            <!-- 搜索与排序 -->
+            <NFlex justify="space-between" align="center" wrap :gap="12">
+              <NFlex align="center" :gap="12" wrap>
+                <NInput
+                  v-model:value="searchKeyword"
+                  placeholder="搜索礼物名称..."
+                  clearable
+                  size="medium"
+                  style="width: 240px"
+                >
+                  <template #prefix>
+                    <NIcon :component="Search24Regular" />
+                  </template>
+                </NInput>
+
+                <NSelect
+                  v-model:value="sortOrder"
+                  :options="[
+                    { label: '默认排序', value: null },
+                    { label: '价格从低到高', value: 'price_asc' },
+                    { label: '价格从高到低', value: 'price_desc' },
+                    { label: '名称 A-Z', value: 'name_asc' },
+                    { label: '最近更新', value: 'popular' },
+                  ]"
+                  placeholder="排序方式"
+                  size="medium"
+                  style="width: 160px"
+                  clearable
+                />
+
+                <NFlex align="center" :gap="16">
+                  <NCheckbox v-model:checked="onlyCanBuy">
+                    仅显示可兑换
+                  </NCheckbox>
+                  <NCheckbox v-model:checked="ignoreGuard">
+                    忽略等级限制
+                  </NCheckbox>
                 </NFlex>
               </NFlex>
 
-              <NFlex align="center" :gap="12">
-                <NButton quaternary size="small" @click="gotoAuthPage">
+              <NFlex>
+                <NButton
+                  v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder"
+                  quaternary
+                  size="medium"
+                  @click="clearFilters"
+                >
                   <template #icon>
-                    <NIcon :component="Person24Regular" />
+                    <NIcon :component="Filter24Regular" />
                   </template>
-                  账号中心
+                  重置筛选
                 </NButton>
-                <NButton quaternary size="small" @click="NavigateToNewTab('/bili-user#settings')">
+                <NButton secondary size="medium" @click="refreshCurrentPoint">
                   <template #icon>
                     <NIcon :component="ArrowSync24Regular" />
                   </template>
-                  切换账号
+                  刷新积分
                 </NButton>
               </NFlex>
             </NFlex>
-          </div>
-
-          <NDivider style="margin: 4px 0;" />
-
-          <!-- 筛选工具栏 -->
-          <div class="toolbar-section">
-            <NFlex vertical :gap="16">
-              <!-- 标签分类 -->
-              <NFlex v-if="tags.length > 0" align="center" :gap="12">
-                <NText depth="3" class="filter-label">
-                  分类:
-                </NText>
-                <NFlex :gap="8" wrap>
-                  <NButton
-                    v-for="tag in tags"
-                    :key="tag"
-                    size="tiny"
-                    round
-                    :type="tag === selectedTag ? 'primary' : 'default'"
-                    :secondary="tag !== selectedTag"
-                    @click="selectedTag = selectedTag === tag ? undefined : tag"
-                  >
-                    {{ tag }}
-                  </NButton>
-                </NFlex>
-              </NFlex>
-
-              <!-- 搜索与排序 -->
-              <NFlex justify="space-between" align="center" wrap :gap="12">
-                <NFlex align="center" :gap="12" wrap>
-                  <NInput
-                    v-model:value="searchKeyword"
-                    placeholder="搜索礼物名称..."
-                    clearable
-                    size="medium"
-                    style="width: 240px"
-                  >
-                    <template #prefix>
-                      <NIcon :component="Search24Regular" />
-                    </template>
-                  </NInput>
-
-                  <NSelect
-                    v-model:value="sortOrder"
-                    :options="[
-                      { label: '默认排序', value: null },
-                      { label: '价格从低到高', value: 'price_asc' },
-                      { label: '价格从高到低', value: 'price_desc' },
-                      { label: '名称 A-Z', value: 'name_asc' },
-                      { label: '最近更新', value: 'popular' },
-                    ]"
-                    placeholder="排序方式"
-                    size="medium"
-                    style="width: 160px"
-                    clearable
-                  />
-
-                  <NFlex align="center" :gap="16">
-                    <NCheckbox v-model:checked="onlyCanBuy">
-                      仅显示可兑换
-                    </NCheckbox>
-                    <NCheckbox v-model:checked="ignoreGuard">
-                      忽略等级限制
-                    </NCheckbox>
-                  </NFlex>
-                </NFlex>
-
-                <NFlex>
-                  <NButton
-                    v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder"
-                    quaternary
-                    size="medium"
-                    @click="clearFilters"
-                  >
-                    <template #icon>
-                      <NIcon :component="Filter24Regular" />
-                    </template>
-                    重置筛选
-                  </NButton>
-                  <NButton secondary size="medium" @click="refreshCurrentPoint">
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Regular" />
-                    </template>
-                    刷新积分
-                  </NButton>
-                </NFlex>
-              </NFlex>
-            </NFlex>
-          </div>
+          </NFlex>
         </div>
-      </NCard>
+      </div>
+    </NCard>
 
-      <div style="margin-top: 20px;" />
+    <div v-if="useAuth.isAuthed" style="margin-top: 20px;" />
 
-      <!-- 礼物列表区域 -->
-      <NSpin :show="isLoading">
-        <NEmpty
-          v-if="!isLoading && selectedItems.length === 0"
-          :description="goods.length === 0 ? '当前没有可兑换的礼物哦~' : '没有找到符合筛选条件的礼物'"
-        />
-        <NGrid
-          v-else
-          cols="1 500:2 800:3 1100:4 1500:5"
-          :x-gap="16"
-          :y-gap="16"
-        >
-          <NGi v-for="item in selectedItems" :key="item.id">
-            <PointGoodsItem
-              :goods="item"
-              class="goods-item-card"
-              :class="{ 'is-unavailable': getTooltip(item) !== '开始兑换' }"
-            >
-              <template #footer>
-                <NFlex vertical :gap="12">
-                  <NFlex v-if="item.hasPurchased || !item.canPurchase" :gap="4" wrap>
-                    <NTag v-if="item.hasPurchased" :type="item.isAllowRebuy ? 'info' : 'warning'" size="tiny" :bordered="false" round>
-                      {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
-                    </NTag>
-                    <NTag v-if="!item.canPurchase && item.cannotPurchaseReason" type="error" size="tiny" :bordered="false" round>
-                      {{ item.cannotPurchaseReason }}
-                    </NTag>
-                  </NFlex>
-                  
-                  <NButton
-                    block
-                    :type="item.isPinned ? 'primary' : 'default'"
-                    :secondary="!item.isPinned"
-                    size="medium"
-                    @click="onBuyClick(item)"
-                  >
-                    {{ getTooltip(item) === '开始兑换' ? (item.isPinned ? '立即兑换' : '兑换') : '查看详情' }}
-                  </NButton>
+    <!-- 礼物列表区域 -->
+    <NSpin :show="isLoading">
+      <NEmpty
+        v-if="!isLoading && selectedItems.length === 0"
+        :description="goods.length === 0 ? '当前没有可兑换的礼物哦~' : '没有找到符合筛选条件的礼物'"
+      />
+      <NGrid
+        v-else
+        cols="1 500:2 800:3 1100:4 1500:5"
+        :x-gap="16"
+        :y-gap="16"
+      >
+        <NGi v-for="item in selectedItems" :key="item.id">
+          <PointGoodsItem
+            :goods="item"
+            class="goods-item-card"
+            :class="{ 'is-unavailable': getTooltip(item) !== '开始兑换' }"
+          >
+            <template #footer>
+              <NFlex vertical :gap="12">
+                <NFlex v-if="item.hasPurchased || !item.canPurchase" :gap="4" wrap>
+                  <NTag v-if="item.hasPurchased" :type="item.isAllowRebuy ? 'info' : 'warning'" size="tiny" :bordered="false" round>
+                    {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
+                  </NTag>
+                  <NTag v-if="!item.canPurchase && item.cannotPurchaseReason" type="error" size="tiny" :bordered="false" round>
+                    {{ item.cannotPurchaseReason }}
+                  </NTag>
                 </NFlex>
-              </template>
-            </PointGoodsItem>
-          </NGi>
-        </NGrid>
-      </NSpin>
-    </template>
+                
+                <NButton
+                  block
+                  :type="item.isPinned ? 'primary' : 'default'"
+                  :secondary="!item.isPinned"
+                  size="medium"
+                  @click="onBuyClick(item)"
+                >
+                  {{ getTooltip(item) === '开始兑换' ? (item.isPinned ? '立即兑换' : '兑换') : '查看详情' }}
+                </NButton>
+              </NFlex>
+            </template>
+          </PointGoodsItem>
+        </NGi>
+      </NGrid>
+      
+      <NDivider v-if="selectedItems.length > 0"/>
+    </NSpin>
 
     <!-- 兑换确认模态框 -->
     <NModal
@@ -1392,6 +1396,7 @@ onMounted(async () => {
         </NForm>
       </NSpin>
     </NModal>
+    
   </div>
 </template>
 
