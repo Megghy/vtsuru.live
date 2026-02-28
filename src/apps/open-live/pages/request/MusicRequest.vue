@@ -586,7 +586,7 @@ onUnmounted(() => {
               <NInput v-model:value="settings.orderPrefix" size="small" />
             </NInputGroup>
             <NCheckbox
-              :checked="settings.orderCooldown !== undefined"
+              :checked="settings.orderCooldown != null"
               @update:checked="(checked: boolean) => {
                 settings.orderCooldown = checked ? 300 : undefined
               }"

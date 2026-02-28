@@ -1461,7 +1461,7 @@ onMounted(() => { })
                       :gap="8"
                     >
                       <NCheckbox
-                        :checked="currentGoodsModel.goods.setting?.guardFreeMonths !== undefined"
+                        :checked="Array.isArray(currentGoodsModel.goods.setting?.guardFreeMonths)"
                         @update:checked="
                           (v) => {
                             if (!currentGoodsModel.goods.setting) {
@@ -1620,7 +1620,7 @@ onMounted(() => { })
                       </NText>
 
                       <NCheckbox
-                        :checked="currentGoodsModel.goods.setting?.guardLevelMonths !== undefined"
+                        :checked="Array.isArray(currentGoodsModel.goods.setting?.guardLevelMonths)"
                         @update:checked="
                           (v) => {
                             if (!currentGoodsModel.goods.setting) {

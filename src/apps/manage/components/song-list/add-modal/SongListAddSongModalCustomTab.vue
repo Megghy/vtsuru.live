@@ -148,7 +148,7 @@ async function addCustomSong() {
       </template>
       <NFlex vertical>
         <NCheckbox
-          :checked="addSongModel.options !== undefined"
+          :checked="addSongModel.options != null"
           @update:checked="(checked: boolean) => {
             addSongModel.options = checked
               ? ({
@@ -161,7 +161,7 @@ async function addCustomSong() {
         >
           是否启用
         </NCheckbox>
-        <template v-if="addSongModel.options !== undefined">
+        <template v-if="addSongModel.options != null">
           <NFlex>
             <NCheckbox v-model:checked="addSongModel.options.needJianzhang">
               需要舰长
@@ -175,7 +175,7 @@ async function addCustomSong() {
           </NFlex>
           <NFlex align="center">
             <NCheckbox
-              :checked="addSongModel.options.scMinPrice !== undefined"
+              :checked="addSongModel.options.scMinPrice != null"
               @update:checked="(checked: boolean) => {
                 if (addSongModel.options) addSongModel.options.scMinPrice = checked ? 30 : undefined
               }"
@@ -189,7 +189,7 @@ async function addCustomSong() {
           </NFlex>
           <NFlex align="center">
             <NCheckbox
-              :checked="addSongModel.options.fanMedalMinLevel !== undefined"
+              :checked="addSongModel.options.fanMedalMinLevel != null"
               @update:checked="(checked: boolean) => {
                 if (addSongModel.options) addSongModel.options.fanMedalMinLevel = checked ? 5 : undefined
               }"

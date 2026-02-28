@@ -5,6 +5,7 @@
       "Bash(npm run:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "bypassPermissions"
   }
 }

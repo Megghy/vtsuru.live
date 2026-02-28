@@ -1318,7 +1318,7 @@ onUnmounted(() => {
       >
         <NFlex align="center">
           <NCheckbox
-            :checked="settings.combineGiftDelay !== undefined"
+            :checked="settings.combineGiftDelay != null"
             @update:checked="(checked: boolean) => {
               settings.combineGiftDelay = checked ? 2 : undefined
             }"
@@ -1343,7 +1343,7 @@ onUnmounted(() => {
           </NCheckbox>
 
           <NInputGroup
-            v-if="settings.combineGiftDelay !== undefined"
+            v-if="settings.combineGiftDelay != null"
             style="width: 200px"
           >
             <NInputGroupLabel>延迟（秒）</NInputGroupLabel>
