@@ -64,6 +64,7 @@ import { copyToClipboard } from '@/shared/utils'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import PointUserManage from './PointUserManage.vue'
+import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 
 const message = useMessage()
@@ -982,6 +983,14 @@ onMounted(() => { })
       display-directive="show:lazy"
     >
       <PointUserManage :goods="goods" />
+    </NTabPane>
+
+    <NTabPane
+      name="guard-duplicates"
+      tab="重复上舰"
+      display-directive="show:lazy"
+    >
+      <PointGuardDuplicateManage />
     </NTabPane>
 
     <!-- 设置标签页 -->
@@ -2017,3 +2026,4 @@ onMounted(() => { })
   }
 
 </style>
+

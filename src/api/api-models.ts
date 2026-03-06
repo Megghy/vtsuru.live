@@ -856,6 +856,106 @@ export interface ResponsePointUserModel {
   expressCompany?: string
 }
 
+export interface ResponsePointGuardDuplicatePointValues {
+  jianzhang: number
+  tidu: number
+  zongdu: number
+}
+
+export interface ResponsePointGuardDuplicateLevelCounts {
+  jianzhang: number
+  tidu: number
+  zongdu: number
+  total: number
+}
+
+export interface ResponsePointGuardDuplicateUserModel {
+  guardOUId: string
+  info: BiliAuthBaseModel
+  duplicateGroups: number
+  duplicateEventCount: number
+  duplicateLiveCount: number
+  duplicateCount: number
+  affectedLiveCount: number
+  levelCounts: ResponsePointGuardDuplicateLevelCounts
+  estimatedPoints: number
+  firstEventAt: number
+  lastEventAt: number
+}
+
+export interface ResponsePointGuardDuplicateEntryModel {
+  eventId: number
+  time: number
+  message: string
+  guardLevel: number
+  num: number
+  price: number
+  isDuplicate: boolean
+}
+
+export interface ResponsePointGuardDuplicateGroupModel {
+  sourceType: string
+  liveId?: string | null
+  liveTitle?: string | null
+  anchorAt: number
+  lastAt: number
+  duplicateCount: number
+  levelCounts: ResponsePointGuardDuplicateLevelCounts
+  entries: ResponsePointGuardDuplicateEntryModel[]
+}
+
+export interface ResponsePointGuardDuplicateScanModel {
+  from: number
+  to: number
+  windowSeconds: number
+  livesScanned: number
+  guardEventsScanned: number
+  liveGuardEventsScanned: number
+  duplicatedUserCount: number
+  duplicateGroupCount: number
+  duplicateEventCount: number
+  duplicateLiveCount: number
+  currentPointValues: ResponsePointGuardDuplicatePointValues
+  users: ResponsePointGuardDuplicateUserModel[]
+}
+
+export interface ResponsePointGuardDuplicateDetailModel {
+  user: ResponsePointGuardDuplicateUserModel
+  currentPointValues: ResponsePointGuardDuplicatePointValues
+  groups: ResponsePointGuardDuplicateGroupModel[]
+}
+
+export interface RequestPointGuardDuplicatePointValues {
+  jianzhang: number
+  tidu: number
+  zongdu: number
+}
+
+export interface RequestApplyPointGuardDuplicateFixModel {
+  dayCount: number
+  windowSeconds: number
+  includeLiving: boolean
+  includeFinished: boolean
+  excludeFixed: boolean
+  deductPoints: boolean
+  deleteEvents: boolean
+  cleanLiveData: boolean
+  useManualPointValues: boolean
+  manualPointValues?: RequestPointGuardDuplicatePointValues | null
+  guardOuIds?: string[] | null
+}
+
+export interface ResponsePointGuardDuplicateApplyResult {
+  batchId: string
+  selectedUserCount: number
+  fixRowsInserted: number
+  pointHistoryInserted: number
+  totalPointsDeducted: number
+  eventRowsDeleted: number
+  tempEventRowsDeleted: number
+  liveRowsUpdated: number
+  liveDuplicateRowsRemoved: number
+}
 export interface ResponsePointOrder2OwnerModel {
   instanceOf: 'owner'
   id: number
@@ -1090,3 +1190,4 @@ export interface VoteOBSData {
   displayPosition: string
   endTime?: number
 }
+
