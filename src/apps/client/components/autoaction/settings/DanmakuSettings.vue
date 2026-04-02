@@ -82,7 +82,9 @@ function removeBlockword(index: number) {
     <NFlex vertical :size="16">
       <!-- 触发关键词 -->
       <div class="settings-group">
-        <NText strong class="group-title">触发关键词</NText>
+        <NText strong class="group-title">
+          触发关键词
+        </NText>
         <NFlex vertical :size="12">
           <NFlex :wrap="false">
             <NInput
@@ -97,14 +99,22 @@ function removeBlockword(index: number) {
           </NFlex>
 
           <NFlex align="center" :size="12">
-            <NText depth="3" style="font-size: 12px;">匹配方式:</NText>
+            <NText depth="3" style="font-size: 12px;">
+              匹配方式:
+            </NText>
             <NRadioGroup
               v-model:value="action.triggerConfig.keywordMatchType"
               size="small"
             >
-              <NRadioButton :value="KeywordMatchType.Full">完全</NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Contains">包含</NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Regex">正则</NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Full">
+                完全
+              </NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Contains">
+                包含
+              </NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Regex">
+                正则
+              </NRadioButton>
             </NRadioGroup>
           </NFlex>
 
@@ -120,7 +130,9 @@ function removeBlockword(index: number) {
                 {{ keyword }}
               </NTag>
             </template>
-            <NText v-else depth="3" italic style="font-size: 12px;">未设置关键词 (将匹配所有弹幕)</NText>
+            <NText v-else depth="3" italic style="font-size: 12px;">
+              未设置关键词 (将匹配所有弹幕)
+            </NText>
           </NFlex>
         </NFlex>
       </div>
@@ -129,7 +141,9 @@ function removeBlockword(index: number) {
 
       <!-- 屏蔽词 -->
       <div class="settings-group">
-        <NText strong class="group-title">屏蔽关键词</NText>
+        <NText strong class="group-title">
+          屏蔽关键词
+        </NText>
         <NFlex vertical :size="12">
           <NFlex :wrap="false">
             <NInput
@@ -144,14 +158,22 @@ function removeBlockword(index: number) {
           </NFlex>
 
           <NFlex align="center" :size="12">
-            <NText depth="3" style="font-size: 12px;">匹配方式:</NText>
+            <NText depth="3" style="font-size: 12px;">
+              匹配方式:
+            </NText>
             <NRadioGroup
               v-model:value="action.triggerConfig.blockwordMatchType"
               size="small"
             >
-              <NRadioButton :value="KeywordMatchType.Full">完全</NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Contains">包含</NRadioButton>
-              <NRadioButton :value="KeywordMatchType.Regex">正则</NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Full">
+                完全
+              </NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Contains">
+                包含
+              </NRadioButton>
+              <NRadioButton :value="KeywordMatchType.Regex">
+                正则
+              </NRadioButton>
             </NRadioGroup>
           </NFlex>
 
@@ -168,7 +190,9 @@ function removeBlockword(index: number) {
                 {{ blockword }}
               </NTag>
             </template>
-            <NText v-else depth="3" italic style="font-size: 12px;">无屏蔽词</NText>
+            <NText v-else depth="3" italic style="font-size: 12px;">
+              无屏蔽词
+            </NText>
           </NFlex>
         </NFlex>
       </div>

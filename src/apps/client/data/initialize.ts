@@ -21,6 +21,7 @@ import { useWebFetcher } from '@/store/useWebFetcher'
 import { useAutoAction } from '../store/useAutoAction'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
+import { useClientBackup } from '../store/useClientBackup'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
 import { useSettings } from '../store/useSettings'
 import { initInfo } from './info'
@@ -451,6 +452,7 @@ export async function initAll(isOnBoot: boolean) {
 
   useAutoAction().init()
   useBiliFunction().init()
+  await useClientBackup().init()
 
   // startHeartbeat()
 
@@ -475,6 +477,7 @@ export function OnClientUnmounted() {
 
   stopHeartbeat()
   stopUpdateCheck()
+  void useClientBackup().dispose()
   tray.close()
   // useDanmakuWindow().closeWindow();
 }

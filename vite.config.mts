@@ -6,7 +6,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
-import { defineConfig } from 'vite'
+import { createLogger, defineConfig } from 'vite'
 import svgLoader from 'vite-svg-loader'
 import { VineVitePlugin } from 'vue-vine/vite'
 // import MonacoEditorNlsPlugin, { esbuildPluginMonacoEditorNls, Languages } from 'vite-plugin-monaco-editor-nls'
@@ -30,8 +30,18 @@ const removeSodipodiInkscape = {
   },
 }
 
+const logger = createLogger()
+const loggerWarn = logger.warn.bind(logger)
+logger.warn = (msg, options) => {
+  if (msg.includes('Both esbuild and oxc options were set.')) {
+    return
+  }
+  loggerWarn(msg, options)
+}
+
 export default defineConfig({
   appType: 'spa',
+  customLogger: logger,
   plugins: [
     vue({
       script: { propsDestructure: true, defineModel: true },
@@ -112,10 +122,18 @@ export default defineConfig({
     sourcemap: false,
     target: 'esnext',
     minify: 'oxc',
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
+    // 当前存在 Monaco 与部分按页面懒加载的大块产物，保留告警会持续产生已知噪音。
+    chunkSizeWarningLimit: 4000,
+    rolldownOptions: {
+      onLog(level, log, defaultHandler) {
+        const logId = log.id ?? log.loc?.file ?? ''
+        if (level === 'warn' && log.code === 'EVAL' && logId.includes('@protobufjs/inquire/index.js')) {
+          return
+        }
+        defaultHandler(level, log)
+      },
       output: { // @ts-ignore
-        advancedChunks: {
+        codeSplitting: {
           groups: [
             {
               name: 'vue-vendor',

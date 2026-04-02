@@ -4,6 +4,15 @@ export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'messa
 export interface NotificationSettings {
   enableTypes: NotificationType[]
 }
+export interface ClientBackupSettings {
+  directory: string
+  scheduleEnabled: boolean
+  presetHours: number
+  customHours: number | null
+  keepCount: number
+  lastBackupAt: number | null
+  lastBackupFile: string | null
+}
 export interface VTsuruClientSettings {
   useDanmakuClientType: 'openlive' | 'direct'
   fallbackToOpenLive: boolean
@@ -23,6 +32,7 @@ export interface VTsuruClientSettings {
   enableEventFetcher: boolean
 
   dev_disableDanmakuClient: boolean
+  backup: ClientBackupSettings
 }
 
 export const useSettings = defineStore('settings', () => {
@@ -47,6 +57,16 @@ export const useSettings = defineStore('settings', () => {
     enableEventFetcher: true,
 
     dev_disableDanmakuClient: false,
+
+    backup: {
+      directory: '',
+      scheduleEnabled: false,
+      presetHours: 24,
+      customHours: null,
+      keepCount: 10,
+      lastBackupAt: null,
+      lastBackupFile: null,
+    },
   }
   const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings))
 
@@ -59,6 +79,14 @@ export const useSettings = defineStore('settings', () => {
     settings.value.pmInterval ??= defaultSettings.pmInterval
     // 初始化 EventFetcher 开关
     settings.value.enableEventFetcher ??= defaultSettings.enableEventFetcher
+    settings.value.backup ??= Object.assign({}, defaultSettings.backup)
+    settings.value.backup.directory ??= defaultSettings.backup.directory
+    settings.value.backup.scheduleEnabled ??= defaultSettings.backup.scheduleEnabled
+    settings.value.backup.presetHours ??= defaultSettings.backup.presetHours
+    settings.value.backup.customHours ??= defaultSettings.backup.customHours
+    settings.value.backup.keepCount ??= defaultSettings.backup.keepCount
+    settings.value.backup.lastBackupAt ??= defaultSettings.backup.lastBackupAt
+    settings.value.backup.lastBackupFile ??= defaultSettings.backup.lastBackupFile
   }
   async function save() {
     await store.set(settings.value)

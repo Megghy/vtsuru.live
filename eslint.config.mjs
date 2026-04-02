@@ -86,12 +86,23 @@ export default antfu(
       'ts/no-unsafe-assignment': 'off', // 允许不安全的赋值
       'ts/no-unsafe-member-access': 'off', // 允许不安全的成员访问
       'ts/no-unsafe-call': 'off', // 允许不安全的调用
+      'ts/no-unsafe-return': 'off',
       'ts/switch-exhaustiveness-check': 'off',
       'ts/restrict-template-expressions': 'off', // 允许模板字符串表达式不受限制
 
       'perfectionist/sort-imports': 'off',
       'perfectionist/sort-named-imports': 'off',
       'ts/no-unsafe-argument': 'off', // 允许不安全的参数传递
+      'e18e/prefer-array-at': 'off',
+      'e18e/prefer-array-fill': 'off',
+      'e18e/prefer-array-from-map': 'off',
+      'e18e/prefer-array-some': 'off',
+      'e18e/prefer-date-now': 'off',
+      'e18e/prefer-nullish-coalescing': 'off',
+      'e18e/prefer-object-has-own': 'off',
+      'e18e/prefer-regex-test': 'off',
+      'e18e/prefer-static-regex': 'off',
+      'e18e/prefer-timer-args': 'off',
 
       // JSON 相关规则
       'jsonc/sort-keys': 'off', // 关闭 JSON key 排序要求
