@@ -3,11 +3,14 @@
     "target": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"],
     "useDefineForClassFields": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "vue": ["./node_modules/vue"],
+      "@vue/*": ["./node_modules/@vue/*"]
     },
     "incremental": true,
     "resolveJsonModule": true,

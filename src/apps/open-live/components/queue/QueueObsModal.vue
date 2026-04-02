@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NFlex, NUl } from 'naive-ui';
+import { Info24Filled } from '@vicons/fluent'
+import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NTooltip, NUl } from 'naive-ui';
 import { computed } from 'vue'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
@@ -9,11 +10,13 @@ const props = defineProps<{
   show: boolean
   userId?: number
   speed: number
+  style: 'classic' | 'fresh' | 'minimal'
 }>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'update:speed', value: number): void
+  (e: 'update:style', value: 'classic' | 'fresh' | 'minimal'): void
 }>()
 
 const showModel = computed({
@@ -26,9 +29,14 @@ const speedModel = computed({
   set: value => emit('update:speed', value),
 })
 
-const baseUrl = computed(() => {
+const styleModel = computed({
+  get: () => props.style,
+  set: value => emit('update:style', value),
+})
+
+const previewUrl = computed(() => {
   if (!props.userId) return ''
-  return `${CURRENT_HOST}obs/queue?id=${props.userId}`
+  return `${CURRENT_HOST}obs/queue?id=${props.userId}&style=${styleModel.value}&speed=${speedModel.value}`
 })
 </script>
 
@@ -37,53 +45,73 @@ const baseUrl = computed(() => {
     v-model:show="showModel"
     preset="card"
     style="width: 900px; max-width: 90vw"
-    title="OBS 浏览器源组件"
+    title="OBS组件"
     closable
   >
+    <template #header-extra>
+      <NButton
+        tag="a"
+        type="primary"
+        size="small"
+        target="_blank"
+        :href="previewUrl"
+      >
+        浏览
+      </NButton>
+    </template>
     <NFlex vertical :size="12">
-      <NAlert title="使用方法" type="info" size="small" :bordered="false">
-        将下方链接添加为 OBS（或其他直播软件）的浏览器源，即可在直播画面中显示队列。
+      <NAlert title="这是什么？" type="info" size="small" :bordered="false">
+        将等待队列显示在 OBS 中，并可像点播组件一样切换不同视觉风格。
       </NAlert>
 
-      <NFlex vertical :size="10">
-        <NInputGroup>
-          <NInputGroupLabel>URL</NInputGroupLabel>
-          <NInput :value="baseUrl" readonly size="small" />
-          <NButton type="primary" secondary size="small" :disabled="!baseUrl" @click="copyToClipboard(baseUrl)">
-            复制
-          </NButton>
-        </NInputGroup>
+      <NDivider style="margin: 0">
+        样式与速度
+      </NDivider>
+      <NFlex align="center" :wrap="true" :size="12">
+        <NRadioGroup
+          v-model:value="styleModel"
+          name="queueObsStyle"
+        >
+          <NFlex :wrap="true">
+            <NRadioButton value="classic">
+              经典黑色风格
+            </NRadioButton>
+            <NRadioButton value="fresh">
+              清新明亮风格
+            </NRadioButton>
+            <NRadioButton value="minimal">
+              极简无背景
+            </NRadioButton>
+          </NFlex>
+        </NRadioGroup>
 
-        <NInputGroup>
-          <NInputGroupLabel>滚动速度</NInputGroupLabel>
+        <NInputGroup class="queue-obs-modal__speed-group">
+          <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
           <NInputNumber
             v-model:value="speedModel"
             :min="0.5"
             :max="5"
             :step="0.1"
-            placeholder="默认 1.0"
-            size="small"
-            class="queue-obs-modal__speed"
+            placeholder="1"
           />
-          <NButton
-            type="primary"
-            secondary
-            size="small"
-            :disabled="!baseUrl"
-            @click="copyToClipboard(`${baseUrl}&speed=${speedModel}`)"
-          >
-            复制带速度 URL
-          </NButton>
         </NInputGroup>
+        <NTooltip>
+          <template #trigger>
+            <NIcon :component="Info24Filled" />
+          </template>
+          数值越大滚动越快（0.5 ~ 5）
+        </NTooltip>
       </NFlex>
 
       <NDivider style="margin: 0">
-        预览（尺寸可能与实际不同）
+        预览
       </NDivider>
       <div class="queue-obs-modal__preview">
         <QueueOBS
           v-if="userId"
           :id="userId"
+          :key="`${userId}-${styleModel}-${speedModel}`"
+          :style="styleModel"
           :speed-multiplier="speedModel"
         />
         <NEmpty
@@ -94,14 +122,31 @@ const baseUrl = computed(() => {
         />
       </div>
 
+      <NInputGroup>
+        <NInput
+          :value="previewUrl"
+          readonly
+          size="small"
+        />
+        <NButton
+          type="primary"
+          secondary
+          size="small"
+          :disabled="!previewUrl"
+          @click="copyToClipboard(previewUrl)"
+        >
+          复制
+        </NButton>
+      </NInputGroup>
+
       <NCollapse accordion>
-        <NCollapseItem title="详细说明">
+        <NCollapseItem title="使用说明">
           <NUl>
-            <NLi>在 OBS 中添加一个新的「浏览器」来源。</NLi>
+            <NLi>在 OBS 来源中添加一个新的「浏览器」源。</NLi>
             <NLi>将上方 URL 粘贴到「URL」栏中。</NLi>
-            <NLi>推荐宽度设置为 280–350px，高度根据需要调整（例如 500–700px）。</NLi>
-            <NLi>可在「设置」标签页中调整 OBS 组件的显示内容。</NLi>
-            <NLi>如需自定义样式，可在 OBS 的「自定义 CSS」中添加覆盖样式。</NLi>
+            <NLi>推荐宽度 280px 左右，高度 500px 以上，可按直播布局调整。</NLi>
+            <NLi>可通过 `style` 参数切换 `classic`、`fresh`、`minimal` 三种风格。</NLi>
+            <NLi>可通过 `speed` 参数调节列表滚动速度。</NLi>
           </NUl>
         </NCollapseItem>
       </NCollapse>
@@ -111,7 +156,7 @@ const baseUrl = computed(() => {
 
 <style scoped>
 .queue-obs-modal__preview {
-  height: 450px;
+  height: 500px;
   width: 280px;
   position: relative;
   margin: 0 auto;
@@ -123,7 +168,7 @@ const baseUrl = computed(() => {
   padding-top: 100px;
 }
 
-.queue-obs-modal__speed {
-  width: 140px;
+.queue-obs-modal__speed-group {
+  width: 220px;
 }
 </style>

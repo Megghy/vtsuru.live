@@ -558,8 +558,8 @@ async function buyGoods() {
     : `${buyCount.value} 个`
 
   const dialogContent = hasSubs
-    ? `确定要花费 ${currentGoodsCost.value} 积分兑换 \"${currentGoods.value!.name}\" 吗？\n款式：${selectedSummary}`
-    : `确定要花费 ${currentGoodsCost.value} 积分兑换 ${buyCount.value} 个 \"${currentGoods.value!.name}\" 吗？`
+    ? `确定要花费 ${currentGoodsCost.value} 积分兑换 "${currentGoods.value!.name}" 吗？\n款式：${selectedSummary}`
+    : `确定要花费 ${currentGoodsCost.value} 积分兑换 ${buyCount.value} 个 "${currentGoods.value!.name}" 吗？`
 
   // 确认对话框
   dialog.warning({
@@ -962,7 +962,7 @@ onMounted(async () => {
         </NGi>
       </NGrid>
       
-      <NDivider v-if="selectedItems.length > 0"/>
+      <NDivider v-if="selectedItems.length > 0" />
     </NSpin>
 
     <!-- 兑换确认模态框 -->
@@ -1396,7 +1396,6 @@ onMounted(async () => {
         </NForm>
       </NSpin>
     </NModal>
-    
   </div>
 </template>
 

@@ -97,6 +97,7 @@ const isReverse = usePersistedStorage('Queue.Settings.Reverse', false) // 倒序
 const isLoading = ref(false) // 加载状态
 const showOBSModal = ref(false) // OBS 组件模态框显示状态
 const obsScrollSpeed = ref(1.0) // OBS 组件滚动速度
+const obsStyleType = ref<'classic' | 'fresh' | 'minimal'>('classic')
 
 const filterName = ref('') // 历史记录筛选用户名
 const filterNameContains = ref(false) // 历史记录筛选是否包含
@@ -1493,6 +1494,7 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
   <QueueObsModal
     v-model:show="showOBSModal"
     v-model:speed="obsScrollSpeed"
+    v-model:style="obsStyleType"
     :user-id="accountInfo?.id"
   />
 </template>

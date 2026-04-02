@@ -44,16 +44,12 @@ function switchToBackupAPI() {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      height: '100vh',
-      width: '100vw',
+      minHeight: '100vh',
+      width: '100%',
       backgroundColor: themeVars.bodyColor,
-      padding: 0,
+      padding: '16px 0',
       margin: 0,
       boxSizing: 'border-box',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      overflow: 'auto',
     }"
   >
     <template v-if="!isLoadingAccount">

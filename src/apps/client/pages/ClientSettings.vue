@@ -9,6 +9,7 @@ import {
 import { onMounted, ref, watch } from 'vue'
 import { ThemeType } from '@/api/api-models'
 import { useSettings } from '@/apps/client/store/useSettings'
+import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -60,6 +61,7 @@ const handleCheckUpdate = async () => {
 const navOptions: MenuOption[] = [
   { label: '常规', key: 'general' },
   { label: '通知', key: 'notification' },
+  { label: '备份', key: 'backup' },
   { label: '其他', key: 'other' },
   { label: '关于', key: 'about' },
 ]
@@ -283,6 +285,12 @@ function handleTitleClick() {
                         </NCard>
                       </template>
                     </NFlex>
+                  </NCard>
+                </template>
+
+                <template v-else-if="currentTab === 'backup'">
+                  <NCard title="备份" size="small" bordered>
+                    <ClientBackupPanel />
                   </NCard>
                 </template>
 

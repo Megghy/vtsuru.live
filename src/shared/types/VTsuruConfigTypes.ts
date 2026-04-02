@@ -218,14 +218,7 @@ export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBas
    * @param this 当前的 TemplateConfigRenderItem 实例。
    * @param config 整个配置对象 (类型为 T, 默认为 unknown)。
    *               在实现内部可能需要类型断言 (例如 `config as MyConfig`)。
-   * @param defaultData 从此项的 'default' 属性派生的数据。
-   *               如果 `default` 存在，其类型为 `Widen<D>` (D 是 default 的类型)，否则为 `unknown`。
    * @returns 表示渲染输出的 VNode。
-   *
-   * @importantUsage 调用此方法时，如果项定义了 `default` 属性，
-   *                 则 **必须** 将该项的默认值 (或与其 Widen 后的类型兼容的值)
-   *                 作为第二个参数传递。如果不存在 `default`，则传递 `undefined` 或 `null`。
-   *                 示例: `item.render(config, item.default)`
    */
   render: (this: this, config: T) => VNode
 

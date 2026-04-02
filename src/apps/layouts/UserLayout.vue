@@ -806,7 +806,10 @@ watch(
     </NAlert>
     <br>
     <!-- 异步加载注册登录组件，优化初始加载性能 -->
-    <RegisterAndLogin @close="registerAndLoginModalVisiable = false" />
+    <RegisterAndLogin
+      closable
+      @close="registerAndLoginModalVisiable = false"
+    />
   </NModal>
 </template>
 

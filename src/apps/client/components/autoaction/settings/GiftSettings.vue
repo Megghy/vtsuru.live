@@ -93,7 +93,9 @@ function removeGiftName(index: number) {
                     {{ giftName }}
                   </NTag>
                 </template>
-                <NText v-else depth="3" italic style="font-size: 12px;">列表为空</NText>
+                <NText v-else depth="3" italic style="font-size: 12px;">
+                  列表为空
+                </NText>
               </NFlex>
             </NFlex>
           </div>
@@ -107,7 +109,9 @@ function removeGiftName(index: number) {
               style="width: 140px"
               placeholder="0"
             >
-              <template #suffix>元</template>
+              <template #suffix>
+                元
+              </template>
             </NInputNumber>
           </NFormItem>
         </transition>

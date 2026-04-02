@@ -288,18 +288,32 @@ const columns: DataTableColumns<DuplicateUserRow> = [
 
     <NCard size="small" title="扫描条件">
       <NFlex wrap :size="12" align="center">
-        <NText depth="3">最近</NText>
+        <NText depth="3">
+          最近
+        </NText>
         <NInputNumber v-model:value="dayCount" :min="1" :max="90" style="width: 110px;" />
-        <NText depth="3">天</NText>
-        <NText depth="3">窗口</NText>
+        <NText depth="3">
+          天
+        </NText>
+        <NText depth="3">
+          窗口
+        </NText>
         <NInputNumber v-model:value="windowSeconds" :min="1" :max="30" style="width: 110px;" />
-        <NText depth="3">秒</NText>
+        <NText depth="3">
+          秒
+        </NText>
         <NSwitch v-model:value="includeLiving" />
-        <NText depth="3">包含正在直播</NText>
+        <NText depth="3">
+          包含正在直播
+        </NText>
         <NSwitch v-model:value="includeFinished" />
-        <NText depth="3">包含历史直播</NText>
+        <NText depth="3">
+          包含历史直播
+        </NText>
         <NSwitch v-model:value="excludeFixed" />
-        <NText depth="3">排除已处理</NText>
+        <NText depth="3">
+          排除已处理
+        </NText>
         <NButton type="primary" :loading="scanLoading" @click="scanDuplicates">
           <template #icon>
             <NIcon :component="ArrowSync24Regular" />
@@ -320,11 +334,17 @@ const columns: DataTableColumns<DuplicateUserRow> = [
           </NRadioButton>
         </NRadioGroup>
         <NFlex wrap :size="12" align="center">
-          <NText depth="3">舰长</NText>
+          <NText depth="3">
+            舰长
+          </NText>
           <NInputNumber v-model:value="manualPointValues.jianzhang" :min="0" :precision="2" :disabled="pointMode !== 'manual'" style="width: 120px;" />
-          <NText depth="3">提督</NText>
+          <NText depth="3">
+            提督
+          </NText>
           <NInputNumber v-model:value="manualPointValues.tidu" :min="0" :precision="2" :disabled="pointMode !== 'manual'" style="width: 120px;" />
-          <NText depth="3">总督</NText>
+          <NText depth="3">
+            总督
+          </NText>
           <NInputNumber v-model:value="manualPointValues.zongdu" :min="0" :precision="2" :disabled="pointMode !== 'manual'" style="width: 120px;" />
           <NButton secondary :disabled="pointMode !== 'manual'" @click="resetManualPointValues">
             恢复当前设置
@@ -346,10 +366,18 @@ const columns: DataTableColumns<DuplicateUserRow> = [
         <NText>清理 Live 数据</NText>
       </NFlex>
       <NFlex wrap :size="12" align="center" style="margin-top: 12px;">
-        <NTag type="warning" :bordered="false">已选 {{ selectedUsers.length }} 人</NTag>
-        <NTag type="error" :bordered="false">预计扣分 {{ formatPoints(selectedPreviewPoints) }}</NTag>
-        <NTag type="warning" :bordered="false">事件重复 {{ selectedEventDuplicates }}</NTag>
-        <NTag type="warning" :bordered="false">Live 重复 {{ selectedLiveDuplicates }}</NTag>
+        <NTag type="warning" :bordered="false">
+          已选 {{ selectedUsers.length }} 人
+        </NTag>
+        <NTag type="error" :bordered="false">
+          预计扣分 {{ formatPoints(selectedPreviewPoints) }}
+        </NTag>
+        <NTag type="warning" :bordered="false">
+          事件重复 {{ selectedEventDuplicates }}
+        </NTag>
+        <NTag type="warning" :bordered="false">
+          Live 重复 {{ selectedLiveDuplicates }}
+        </NTag>
         <NPopconfirm @positive-click="applyCleanup(true)">
           <template #trigger>
             <NButton type="error" :loading="applyLoading">
@@ -416,7 +444,9 @@ const columns: DataTableColumns<DuplicateUserRow> = [
                     <NTag :bordered="false" type="info">
                       重复 {{ group.duplicateCount }} 条
                     </NTag>
-                    <NText v-if="group.liveTitle">{{ group.liveTitle }}</NText>
+                    <NText v-if="group.liveTitle">
+                      {{ group.liveTitle }}
+                    </NText>
                   </NFlex>
                   <NText depth="3">
                     {{ formatUnixTime(group.anchorAt) }} ~ {{ formatUnixTime(group.lastAt) }}
@@ -436,12 +466,20 @@ const columns: DataTableColumns<DuplicateUserRow> = [
                         {{ entry.isDuplicate ? '重复' : '保留' }}
                       </NTag>
                       <NText>{{ formatUnixTime(entry.time) }}</NText>
-                      <NText depth="3">{{ entry.message }}</NText>
+                      <NText depth="3">
+                        {{ entry.message }}
+                      </NText>
                     </NFlex>
                     <NFlex align="center" :size="12" wrap>
-                      <NText depth="3">数量 {{ entry.num }}</NText>
-                      <NText depth="3">价格 {{ formatPoints(entry.price) }}</NText>
-                      <NText depth="3">等级 {{ entry.guardLevel }}</NText>
+                      <NText depth="3">
+                        数量 {{ entry.num }}
+                      </NText>
+                      <NText depth="3">
+                        价格 {{ formatPoints(entry.price) }}
+                      </NText>
+                      <NText depth="3">
+                        等级 {{ entry.guardLevel }}
+                      </NText>
                     </NFlex>
                   </NFlex>
                 </NFlex>

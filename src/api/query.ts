@@ -7,6 +7,68 @@ export function unwrapOk<T>(resp: { code: number, message?: string, data: T }, f
   return resp.data
 }
 
+export type QueryRequestOptions = {
+  signal?: AbortSignal
+  timeoutMs?: number
+  retryOnFailover?: boolean
+}
+
+export class QueryRequestError extends Error {
+  constructor(
+    public kind: 'timeout' | 'aborted' | 'network',
+    message: string,
+    public cause?: unknown,
+  ) {
+    super(message)
+    this.name = 'QueryRequestError'
+  }
+}
+
+function createRequestSignal(signal?: AbortSignal, timeoutMs?: number) {
+  const controller = new AbortController()
+  let didTimeout = false
+  let timeoutId: number | undefined
+
+  const abortFromParent = () => {
+    controller.abort()
+  }
+
+  if (signal) {
+    if (signal.aborted) {
+      abortFromParent()
+    } else {
+      signal.addEventListener('abort', abortFromParent, { once: true })
+    }
+  }
+
+  if (timeoutMs && timeoutMs > 0) {
+    timeoutId = window.setTimeout(() => {
+      didTimeout = true
+      controller.abort()
+    }, timeoutMs)
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
+      signal?.removeEventListener('abort', abortFromParent)
+    },
+    didTimeout: () => didTimeout,
+  }
+}
+
+function toQueryRequestError(error: unknown, didTimeout: boolean) {
+  if (error instanceof QueryRequestError) return error
+  if (didTimeout) return new QueryRequestError('timeout', '请求超时', error)
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return new QueryRequestError('aborted', '请求已取消', error)
+  }
+  return new QueryRequestError('network', '网络请求失败', error)
+}
+
 function buildAuthHeaders(headers?: [string, string][]) {
   const h: Record<string, string> = {}
   ;(headers ?? []).forEach((header) => {
@@ -31,8 +93,9 @@ export async function QueryPostAPI<T>(
   body?: unknown,
   headers?: [string, string][],
   contentType?: string,
+  options?: QueryRequestOptions,
 ): Promise<APIRoot<T>> {
-  return QueryPostAPIWithParams<T>(urlString, undefined, body, contentType, headers)
+  return QueryPostAPIWithParams<T>(urlString, undefined, body, contentType, headers, options)
 }
 
 export async function QueryPostAPIWithParams<T>(
@@ -41,6 +104,7 @@ export async function QueryPostAPIWithParams<T>(
   body?: unknown,
   contentType: string = 'application/json',
   headers?: [string, string][],
+  options?: QueryRequestOptions,
 ): Promise<APIRoot<T>> {
   return QueryPostAPIWithParamsInternal<APIRoot<T>>(
     urlString,
@@ -48,6 +112,7 @@ export async function QueryPostAPIWithParams<T>(
     body,
     contentType,
     headers,
+    options,
   )
 }
 
@@ -57,6 +122,7 @@ async function QueryPostAPIWithParamsInternal<T>(
   body: unknown,
   contentType: string,
   headers: [string, string][] = [],
+  options?: QueryRequestOptions,
 ): Promise<T> {
   let url: URL
   try {
@@ -76,39 +142,51 @@ async function QueryPostAPIWithParamsInternal<T>(
     method: 'post',
     headers: h,
     body: serializeBody(body),
-  })
+  }, options)
 }
-async function QueryAPIInternal<T>(url: URL, init: RequestInit) {
+async function QueryAPIInternal<T>(url: URL, init: RequestInit, options?: QueryRequestOptions) {
   const rawUrl = url.toString()
   const request = async () => {
     const mappedUrl = mapToCurrentAPI(rawUrl)
-    const data = await fetch(mappedUrl, init)
-    return (await data.json()) as T
+    const { signal, cleanup, didTimeout } = createRequestSignal(options?.signal, options?.timeoutMs)
+    try {
+      const data = await fetch(mappedUrl, { ...init, signal })
+      return (await data.json()) as T
+    } catch (error) {
+      throw toQueryRequestError(error, didTimeout())
+    } finally {
+      cleanup()
+    }
   }
 
   try {
     return await request()
   } catch (e) {
     console.error(`[${init.method}] API调用失败: ${e}`)
-    if (!apiFail.value) {
+    const queryError = toQueryRequestError(e, false)
+    if (queryError.kind !== 'aborted' && !apiFail.value) {
       apiFail.value = true
       console.log('默认API异常, 切换至故障转移节点')
-      return request()
+      if (options?.retryOnFailover ?? true) {
+        return request()
+      }
     }
-    throw e
+    throw queryError
   }
 }
 export async function QueryGetAPI<T>(
   urlString: string,
   params?: QueryParams,
   headers?: [string, string][],
+  options?: QueryRequestOptions,
 ): Promise<APIRoot<T>> {
-  return QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers)
+  return QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers, options)
 }
 async function QueryGetAPIInternal<T>(
   urlString: string,
   params?: QueryParams,
   headers?: [string, string][],
+  options?: QueryRequestOptions,
 ) {
   try {
     let url: URL
@@ -119,7 +197,7 @@ async function QueryGetAPIInternal<T>(
     }
     url.search = getParams(params)
     const h = buildAuthHeaders(headers)
-    return await QueryAPIInternal<T>(url, { method: 'get', headers: h })
+    return await QueryAPIInternal<T>(url, { method: 'get', headers: h }, options)
   } catch (err) {
     console.log(`url:${urlString}, error:${err}`)
     throw err
