@@ -4,11 +4,11 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable", "ScriptHost"],
     "useDefineForClassFields": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@/*": ["src/*"],
+      "*": ["./*"],
+      "@/*": ["./src/*"],
       "vue": ["./node_modules/vue"],
       "@vue/*": ["./node_modules/@vue/*"]
     },
@@ -17,7 +17,6 @@
     "types": ["node", "vue-vine/macros", "jszip"],
     "allowJs": false,
     "strict": false,
-    "alwaysStrict": false,
     "noImplicitAny": false,
     "noImplicitThis": false,
     "strictBindCallApply": false,

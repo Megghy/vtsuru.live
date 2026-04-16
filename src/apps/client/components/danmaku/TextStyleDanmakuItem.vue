@@ -18,6 +18,7 @@ const {
   guardColor,
   displayName,
   displayContent,
+  giftDisplay,
   priceText,
   textModeColor,
   parsedMessage,
@@ -64,6 +65,38 @@ const {
       v-if="setting.showUsername && displayContent"
       class="separator-text-mode"
     >{{ setting.textStyleNameSeparator }}</span>
+
+    <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
+      <template #trigger>
+        <span
+          class="mystery-box-text-mode"
+          :style="{ color: textModeColor }"
+        >盲盒 ￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+      </template>
+      <div class="mystery-box-text-tooltip">
+        <div
+          v-if="giftDisplay.mysteryBoxName"
+          class="mystery-box-text-tooltip__row"
+        >
+          <span class="mystery-box-text-tooltip__label">来源</span>
+          <span class="mystery-box-text-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+        </div>
+        <div
+          v-if="giftDisplay.mysteryBoxPriceText"
+          class="mystery-box-text-tooltip__row"
+        >
+          <span class="mystery-box-text-tooltip__label">盲盒价</span>
+          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+        </div>
+        <div
+          v-if="giftDisplay.giftPriceText"
+          class="mystery-box-text-tooltip__row"
+        >
+          <span class="mystery-box-text-tooltip__label">开出价</span>
+          <span class="mystery-box-text-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+        </div>
+      </div>
+    </NTooltip>
 
     <!-- 价格信息(如果有) -->
     <span
@@ -182,6 +215,41 @@ const {
   margin-right: 4px;
   flex-shrink: 0;
   opacity: 1; /* 确保文本完全不透明 */
+}
+
+.mystery-box-text-mode {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: rgba(192, 120, 16, 0.14);
+  font-weight: 700;
+  font-size: 0.92em;
+  cursor: help;
+  opacity: 1;
+}
+
+.mystery-box-text-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.mystery-box-text-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mystery-box-text-tooltip__label {
+  color: var(--n-text-color-3);
+}
+
+.mystery-box-text-tooltip__value {
+  text-align: right;
+  word-break: break-all;
 }
 
 .content-text-mode {

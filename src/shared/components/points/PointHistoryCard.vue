@@ -6,6 +6,7 @@ import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { NButton, NDataTable, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NTag, NText, NTime, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
+import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import PointGoodsItem from './PointGoodsItem.vue'
 
 defineProps<{
@@ -17,6 +18,38 @@ const showGoodsModal = ref(false)
 const currentHistory = ref<ResponsePointHisrotyModel>()
 const currentGoods = computed(() => currentHistory.value?.extra?.goods)
 const selectedSubItems = computed(() => currentHistory.value?.extra?.selectedSubItems || [])
+
+function renderGiftDetail(row: ResponsePointHisrotyModel, labelType: 'info' | 'warning') {
+  const danmaku = row.extra?.danmaku
+  if (!danmaku) {
+    return h(NText, { depth: 3, italic: true }, () => '礼物详情缺失')
+  }
+
+  const giftDisplay = getDanmakuGiftDisplayMeta({
+    ...danmaku,
+    num: row.count ?? danmaku.num,
+  })
+
+  const detailText = [
+    giftDisplay.mysteryBoxName ? `来源 ${giftDisplay.mysteryBoxName}` : undefined,
+    giftDisplay.mysteryBoxPriceText ? `盲盒 ￥${giftDisplay.mysteryBoxPriceText}` : undefined,
+    giftDisplay.giftPriceText ? `${giftDisplay.hasMysteryBoxGift ? '开出' : '礼物'} ￥${giftDisplay.giftPriceText}` : undefined,
+  ].filter(Boolean).join(' / ')
+
+  return h(NFlex, { align: 'center', gap: 6, wrap: true }, () => [
+    h(NTag, { type: labelType, size: 'small', style: { margin: '0' }, bordered: false }, () => '礼物'),
+    h('span', {}, giftDisplay.giftSummaryText),
+    giftDisplay.hasMysteryBoxGift
+      ? h(NTooltip, null, {
+          trigger: () => h(NTag, { type: 'warning', size: 'tiny', bordered: false }, () => giftDisplay.mysteryBoxPriceText ? `盲盒 ￥${giftDisplay.mysteryBoxPriceText}` : '盲盒'),
+          default: () => detailText || '盲盒礼物',
+        })
+      : null,
+    giftDisplay.giftPriceText
+      ? h(NTag, { type: 'error', size: 'tiny', style: { margin: '0' }, bordered: false }, () => `￥${giftDisplay.giftPriceText}`)
+      : null,
+  ])
+}
 
 // 数据表格列定义
 const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
@@ -191,19 +224,11 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
                 row.extra?.danmaku.msg,
               ])
             case EventDataTypes.Gift:
-              return h(NFlex, { align: 'center' }, () => [
-                h(NTag, { type: 'info', size: 'small', style: { margin: '0' } }, () => '礼物'),
-                row.extra?.danmaku.msg,
-                h(
-                  NTag,
-                  { type: 'warning', size: 'tiny', style: { margin: '0' }, bordered: false },
-                  () => `${row.count ?? 1}个`,
-                ),
-              ])
+              return renderGiftDetail(row, 'info')
             case EventDataTypes.SC:
               return h(NFlex, { align: 'center' }, () => [
                 h(NTag, { type: 'warning', size: 'small', style: { margin: '0' } }, () => 'SC'),
-                row.extra?.danmaku.price,
+                `￥${formatDanmakuPrice(row.extra?.danmaku?.price) ?? row.extra?.danmaku?.price ?? 0}`,
               ])
           }
           break
@@ -227,13 +252,17 @@ const historyColumn: DataTableColumns<ResponsePointHisrotyModel> = [
         case PointFrom.DailyFirstInteraction: {
           // 每日首次互动奖励
           const interactionType = row.extra?.interactionType
+          if (interactionType === 'gift') {
+            return renderGiftDetail(row, 'warning')
+          }
+
           return h(NFlex, { align: 'center' }, () => [
             h(NTag, {
-              type: interactionType === 'danmaku' ? 'info' : 'warning',
+              type: 'info',
               size: 'small',
               bordered: false,
-            }, () => interactionType === 'danmaku' ? '弹幕' : '礼物'),
-            h('span', {}, interactionType === 'danmaku' ? row.extra?.danmaku?.msg : `${row.extra?.danmaku?.msg} x ${row.extra?.danmaku?.num}`),
+            }, () => '弹幕'),
+            h('span', {}, row.extra?.danmaku?.msg),
           ])
         }
         case PointFrom.Use:

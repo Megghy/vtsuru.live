@@ -3,6 +3,7 @@ import { Info24Filled } from '@vicons/fluent'
 import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NTooltip, NUl } from 'naive-ui';
 import { computed } from 'vue'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
+import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
 
@@ -34,9 +35,19 @@ const styleModel = computed({
   set: value => emit('update:style', value),
 })
 
+const accountInfo = useAccount()
+
 const previewUrl = computed(() => {
   if (!props.userId) return ''
-  return `${CURRENT_HOST}obs/queue?id=${props.userId}&style=${styleModel.value}&speed=${speedModel.value}`
+  const params = new URLSearchParams({
+    id: String(props.userId),
+    style: styleModel.value,
+    speed: String(speedModel.value),
+  })
+  if (accountInfo.value.token) {
+    params.set('token', accountInfo.value.token)
+  }
+  return `${CURRENT_HOST}obs/queue?${params.toString()}`
 })
 </script>
 
