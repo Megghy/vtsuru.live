@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BaseDanmakuItemProps } from './danmakuUtils'
-import { VehicleShip24Filled } from '@vicons/fluent'
+import { Box24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
 import { useDanmakuWindow } from '../../store/useDanmakuWindow'
@@ -22,6 +22,7 @@ const {
   scColorClass,
   parsedMessage,
   medalColor,
+  giftDisplay,
 } = danmakuUtils
 </script>
 
@@ -58,15 +59,49 @@ const {
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Gift">
+          <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
+            <template #trigger>
+              <span class="gift-box-badge">
+                <NIcon
+                  :component="Box24Regular"
+                  size="12"
+                />
+                <span v-if="giftDisplay.mysteryBoxPriceText">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+              </span>
+            </template>
+            <div class="gift-box-tooltip">
+              <div
+                v-if="giftDisplay.mysteryBoxName"
+                class="gift-box-tooltip__row"
+              >
+                <span class="gift-box-tooltip__label">来源</span>
+                <span class="gift-box-tooltip__value">{{ giftDisplay.mysteryBoxName }}</span>
+              </div>
+              <div
+                v-if="giftDisplay.mysteryBoxPriceText"
+                class="gift-box-tooltip__row"
+              >
+                <span class="gift-box-tooltip__label">盲盒价</span>
+                <span class="gift-box-tooltip__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+              </div>
+              <div
+                v-if="giftDisplay.giftPriceText"
+                class="gift-box-tooltip__row"
+              >
+                <span class="gift-box-tooltip__label">开出价</span>
+                <span class="gift-box-tooltip__value">￥{{ giftDisplay.giftPriceText }}</span>
+              </div>
+            </div>
+          </NTooltip>
           <span
             class="gift-badge"
-            :isPay="item?.price > 0"
+            :isPay="giftDisplay.hasPaidGift"
           >
-            {{ item?.num || 1 }} × {{ item?.msg }}
+            {{ giftDisplay.giftSummaryText }}
             <span
-              v-if="item?.price"
+              v-if="giftDisplay.giftPriceText"
               class="gift-price"
-            >￥{{ (item.price || 0).toFixed(1) }}</span>
+            >￥{{ giftDisplay.giftPriceText }}</span>
           </span>
         </template>
         <template v-else-if="item.type === EventDataTypes.Guard">
@@ -361,6 +396,44 @@ const {
     padding: 0 4px;
     font-size: 0.9em;
     margin-left: 4px;
+  }
+
+  .gift-box-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(192, 120, 16, 0.14);
+    color: #8a5a00;
+    font-size: 0.78em;
+    font-weight: 700;
+    cursor: help;
+    white-space: nowrap;
+  }
+
+  .gift-box-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+  }
+
+  .gift-box-tooltip__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .gift-box-tooltip__label {
+    color: var(--n-text-color-3);
+  }
+
+  .gift-box-tooltip__value {
+    text-align: right;
+    font-weight: 600;
+    word-break: break-all;
   }
 
   /* 上舰 徽章 */

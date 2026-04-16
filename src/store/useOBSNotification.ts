@@ -2,7 +2,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useVTsuruHub } from './useVTsuruHub'
 
-interface ObsNotificationPayload {
+export interface ObsNotificationPayload {
   Type: 'success' | 'failed'
   Title?: string
   Message: string
@@ -13,6 +13,7 @@ interface ObsNotificationPayload {
 
 const sourceLabelMap: Record<string, string> = {
   'live-request': '点歌',
+  'music-request': '点歌',
   'queue': '排队',
 }
 
@@ -77,7 +78,7 @@ export const useOBSNotification = defineStore('obs-notification', () => {
    * @param sources 可选的source过滤列表，如果提供则只显示这些类型的通知
    */
   async function init(sources?: string[]) {
-    const listenerId = sources ? sources.sort().join(',') : 'all'
+    const listenerId = sources ? [...sources].sort().join(',') : 'all'
 
     // 如果已经为这个过滤器初始化过，直接返回
     if (listeners.has(listenerId)) {
@@ -110,8 +111,23 @@ export const useOBSNotification = defineStore('obs-notification', () => {
     console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
   }
 
+  async function publish(payload: ObsNotificationPayload) {
+    const message = payload.Message?.trim()
+    if (!message) {
+      return
+    }
+
+    await hub.Init()
+    await hub.invoke('PublishObsNotification', {
+      ...payload,
+      Message: message,
+      Timestamp: payload.Timestamp ?? Date.now(),
+    })
+  }
+
   return {
     init,
+    publish,
   }
 })
 

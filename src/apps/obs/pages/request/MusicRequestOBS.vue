@@ -64,8 +64,7 @@ async function update() {
 
 const obsNotification = useOBSNotification()
 onMounted(() => {
-  // 只接收 live-request 类型的通知
-  void obsNotification.init(['live-request'])
+  void obsNotification.init(['music-request'])
   update()
   window.$mitt.on('onOBSComponentUpdate', () => {
     update()

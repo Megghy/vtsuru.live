@@ -35,6 +35,7 @@ import QueueObsModal from '@/apps/open-live/components/queue/QueueObsModal.vue'
 import QueueSettingsTab from '@/apps/open-live/components/queue/QueueSettingsTab.vue'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { formatDanmakuPrice, getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 
 // Props 定义 (虽然未在逻辑中直接使用，但可能由父组件传入或用于类型检查)
 defineProps<{
@@ -82,6 +83,42 @@ const STATUS_MAP = {
   [QueueStatus.Progressing]: '处理中',
   [QueueStatus.Finish]: '已完成',
   [QueueStatus.Cancel]: '已取消',
+}
+
+function getQueuePaymentMeta(item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>) {
+  return getGiftPaymentDisplayMeta({
+    giftPrice: item.giftPrice,
+    mysteryBoxName: item.mysteryBoxName,
+    mysteryBoxPrice: item.mysteryBoxPrice,
+  })
+}
+
+function buildQueuePaymentIncreaseMessage(
+  userName: string | undefined,
+  payment: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>,
+  totalGiftPrice: number | null | undefined,
+) {
+  const paymentMeta = getQueuePaymentMeta(payment)
+  const totalPriceText = formatDanmakuPrice(totalGiftPrice) ?? '0'
+
+  return `${userName ?? '用户'} 通过发送礼物再次付费: ${paymentMeta.detailText ?? paymentMeta.compactText}，当前累计开出价: ￥${totalPriceText}`
+}
+
+function getQueueSourceText(data: ResponseQueueModel) {
+  const paymentMeta = getQueuePaymentMeta(data)
+
+  switch (data.from) {
+    case QueueFrom.Danmaku:
+      return paymentMeta.hasPaidGift || paymentMeta.hasMysteryBoxPayment ? `弹幕 | ${paymentMeta.shortText}` : '弹幕'
+    case QueueFrom.Gift:
+      return paymentMeta.hasPaidGift || paymentMeta.hasMysteryBoxPayment ? `礼物 | ${paymentMeta.shortText}` : '礼物'
+    case QueueFrom.Web:
+      return '网页添加'
+    case QueueFrom.Manual:
+      return '手动添加'
+    default:
+      return '未知'
+  }
 }
 
 // const route = useRoute() // 未使用
@@ -235,7 +272,15 @@ async function add(danmaku: EventModel) {
             const newPrice = data.data?.giftPrice ?? 0
             if (newPrice > oldPrice) {
               message.info(
-                `${data.data.user?.name} 通过发送礼物再次付费: ¥ ${(newPrice - oldPrice).toFixed(1)}, 当前总计付费: ¥ ${newPrice.toFixed(1)}`,
+                buildQueuePaymentIncreaseMessage(
+                  data.data.user?.name,
+                  {
+                    giftPrice: newPrice - oldPrice,
+                    mysteryBoxName: danmaku.mystery_box_name,
+                    mysteryBoxPrice: danmaku.mystery_box_price,
+                  },
+                  newPrice,
+                ),
               )
             }
             originQueue.value.splice(existingIndex, 1, data.data) // 替换现有条目
@@ -262,7 +307,10 @@ async function add(danmaku: EventModel) {
     const songData = {
       status: QueueStatus.Waiting,
       from: danmaku.type == EventDataTypes.Message ? QueueFrom.Danmaku : QueueFrom.Gift,
-      giftPrice: danmaku.type == EventDataTypes.SC ? danmaku.price : undefined,
+      giftPrice: danmaku.type == EventDataTypes.Gift ? danmaku.price : undefined,
+      mysteryBoxName: danmaku.type == EventDataTypes.Gift ? danmaku.mystery_box_name : undefined,
+      mysteryBoxPrice: danmaku.type == EventDataTypes.Gift ? danmaku.mystery_box_price : undefined,
+      content: danmaku.msg,
       user: {
         name: danmaku.uname,
         uid: danmaku.uid,
@@ -308,7 +356,9 @@ async function addManual() {
     const songData = {
       status: QueueStatus.Waiting,
       from: QueueFrom.Manual,
-      scPrice: undefined,
+      giftPrice: undefined,
+      mysteryBoxName: undefined,
+      mysteryBoxPrice: undefined,
       user: { name: newQueueName.value } as DanmakuUserInfo,
       createAt: Date.now(),
       isInLocal: true,
@@ -615,34 +665,40 @@ const columns = computed<DataTableColumns<ResponseQueueModel>>(() => [
   {
     title: '来源',
     key: 'from',
-    width: 120,
+    width: 180,
     render(data) {
       let fromType: 'info' | 'success' | 'default' | 'error' = 'default'
-      let text = ''
       switch (data.from) {
         case QueueFrom.Danmaku: {
           fromType = 'info'
-          text = `弹幕${data.giftPrice ? ` | ¥${data.giftPrice.toFixed(1)}` : ''}`
           break
         }
         case QueueFrom.Gift: {
           fromType = 'error'
-          text = `礼物 | ¥${data.giftPrice?.toFixed(1) ?? '0.0'}`
           break
         }
         case QueueFrom.Web: {
           fromType = 'success'
-          text = '网页添加'
           break
         }
         case QueueFrom.Manual: {
           fromType = 'default'
-          text = '手动添加'
           break
         }
-        default: text = '未知'
       }
-      return h(NTag, { size: 'small', type: fromType, bordered: false }, () => text)
+
+      const text = getQueueSourceText(data)
+      const detailText = getQueuePaymentMeta(data).detailText
+      const tag = h(NTag, { size: 'small', type: fromType, bordered: false }, () => text)
+
+      if (!detailText) {
+        return tag
+      }
+
+      return h(NTooltip, null, {
+        trigger: () => tag,
+        default: () => detailText,
+      })
     },
   },
   {
@@ -804,15 +860,29 @@ async function updateActive() {
           if (queueData.status !== item.status) {
             queueData.status = item.status
           }
-          if (queueData.giftPrice !== item.giftPrice) {
+          const paymentChanged = queueData.giftPrice !== item.giftPrice
+            || queueData.mysteryBoxName !== item.mysteryBoxName
+            || queueData.mysteryBoxPrice !== item.mysteryBoxPrice
+
+          if (paymentChanged) {
             const oldPrice = queueData.giftPrice ?? 0
             const newPrice = item.giftPrice ?? 0
             if (newPrice > oldPrice) { // 仅在价格增加时提示
               message.info(
-                `${queueData.user?.name} 通过发送礼物再次付费: ¥ ${(newPrice - oldPrice).toFixed(1)}, 当前总计付费: ¥ ${newPrice.toFixed(1)}`,
+                buildQueuePaymentIncreaseMessage(
+                  queueData.user?.name,
+                  {
+                    giftPrice: newPrice - oldPrice,
+                    mysteryBoxName: item.mysteryBoxName,
+                    mysteryBoxPrice: item.mysteryBoxPrice,
+                  },
+                  newPrice,
+                ),
               )
             }
             queueData.giftPrice = item.giftPrice
+            queueData.mysteryBoxName = item.mysteryBoxName
+            queueData.mysteryBoxPrice = item.mysteryBoxPrice
           }
           // 如果有其他需要同步的字段，在此处添加比较和更新
           // if (updated) {
@@ -1248,13 +1318,28 @@ function getIndexStyle(status: QueueStatus): CSSProperties {
                           {{ queueData.user?.guard_level === 1 ? '总督' : queueData.user?.guard_level === 2 ? '提督' : '舰长' }}
                         </NTag>
                         <!-- 付费信息 -->
+                        <NTooltip
+                          v-if="settings.showPayment && getQueuePaymentMeta(queueData).hasMysteryBoxPayment"
+                          placement="top"
+                        >
+                          <template #trigger>
+                            <NTag
+                              size="small"
+                              :bordered="false"
+                              type="warning"
+                            >
+                              {{ getQueuePaymentMeta(queueData).shortText }}
+                            </NTag>
+                          </template>
+                          {{ getQueuePaymentMeta(queueData).detailText }}
+                        </NTooltip>
                         <NTag
-                          v-if="settings.showPayment && (queueData.giftPrice ?? 0) > 0"
+                          v-if="settings.showPayment && getQueuePaymentMeta(queueData).giftPriceText"
                           size="small"
                           :bordered="false"
                           type="error"
                         >
-                          ¥ {{ queueData.giftPrice?.toFixed(1) }}
+                          ￥ {{ getQueuePaymentMeta(queueData).giftPriceText }}
                         </NTag>
                         <!-- 附加内容提示 -->
                         <NTooltip

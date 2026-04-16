@@ -7,7 +7,7 @@ import type {
 import { Info24Filled } from '@vicons/fluent'
 import {
   NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NSwitch, NTabPane, NTabs, NText, NTooltip, NUl, useMessage } from 'naive-ui';
-import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import {
   FunctionTypes,
@@ -36,6 +36,17 @@ const client = await useDanmakuClient().initOpenlive()
 const showOBSModal = ref(false)
 const obsStyleType = ref<'classic' | 'fresh' | 'minimal'>('classic')
 const obsScrollSpeedMultiplierRef = ref(1)
+const obsUrl = computed(() => {
+  const params = new URLSearchParams({
+    id: String(accountInfo.value?.id ?? 0),
+    style: obsStyleType.value,
+    speed: String(obsScrollSpeedMultiplierRef.value),
+  })
+  if (accountInfo.value?.token) {
+    params.set('token', accountInfo.value.token)
+  }
+  return `${CURRENT_HOST}obs/live-request?${params.toString()}`
+})
 
 // 使用composable管理歌曲请求核心逻辑
 const liveRequest = useLiveRequest()
@@ -284,7 +295,7 @@ onUnmounted(() => {
         type="primary"
         size="small"
         target="_blank"
-        :href="`${CURRENT_HOST}obs/live-request?id=${accountInfo?.id ?? 0}&style=${obsStyleType}&speed=${obsScrollSpeedMultiplierRef}`"
+        :href="obsUrl"
       >
         浏览
       </NButton>
@@ -345,7 +356,7 @@ onUnmounted(() => {
     </div>
     <br>
     <NInput
-      :value="`${CURRENT_HOST}obs/live-request?id=${accountInfo?.id ?? 0}&style=${obsStyleType}&speed=${obsScrollSpeedMultiplierRef}`"
+      :value="obsUrl"
       readonly
     />
     <NDivider />

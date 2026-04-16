@@ -16,6 +16,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
+import { useOBSNotification } from '@/store/useOBSNotification'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -52,6 +53,7 @@ const deviceList = ref<SelectOption[]>([])
 
 const accountInfo = useAccount()
 const message = useMessage()
+const obsNotification = useOBSNotification()
 
 const listening = ref(false)
 const originMusics = computed(() => {
@@ -62,6 +64,15 @@ const isLoading = ref(false)
 
 const showNeteaseModal = ref(false)
 const showOBSModal = ref(false)
+const obsUrl = computed(() => {
+  const params = new URLSearchParams({
+    id: String(accountInfo.value?.id ?? 0),
+  })
+  if (accountInfo.value?.token) {
+    params.set('token', accountInfo.value.token)
+  }
+  return `${CURRENT_HOST}obs/music-request?${params.toString()}`
+})
 const neteaseIdInput = ref('')
 const neteaseSongListId = computed(() => {
   try {
@@ -113,17 +124,53 @@ async function get() {
 async function searchMusic(keyword: string) {
   const inSongList = originMusics.value.find(m => m.name.toLowerCase().trim() == keyword.toLowerCase().trim())
   if (inSongList) {
-    return inSongList
+    return {
+      song: inSongList,
+      reason: undefined,
+    }
   }
-  const data = await QueryGetAPI<SongsInfo>(`${MUSIC_REQUEST_API_URL}search-${settings.value.platform}`, {
-    keyword,
+  try {
+    const data = await QueryGetAPI<SongsInfo>(`${MUSIC_REQUEST_API_URL}search-${settings.value.platform}`, {
+      keyword,
+    })
+    if (data.code == 200) {
+      return {
+        song: data.data,
+        reason: undefined,
+      }
+    }
+
+    const reason = data.code === 404
+      ? `未找到包含关键词“${keyword}”的歌曲`
+      : `搜索失败: ${data.message}`
+    message.error(reason)
+    return {
+      song: undefined,
+      reason,
+    }
+  } catch (err) {
+    console.error(err)
+    const reason = '搜索歌曲失败'
+    message.error(reason)
+    return {
+      song: undefined,
+      reason,
+    }
+  }
+}
+function publishMusicRequestResult(success: boolean, userName: string, content: string) {
+  if (!accountInfo.value.id) {
+    return
+  }
+  void obsNotification.publish({
+    Type: success ? 'success' : 'failed',
+    Title: '点歌',
+    Message: content,
+    Source: 'music-request',
+    UserName: userName,
+  }).catch((err) => {
+    console.warn('[OBS] 发布点歌通知失败', err)
   })
-  if (data.code == 200) {
-    return data.data
-  } else if (data.code == 404) {
-    message.error(`未找到包含关键词: ${keyword} 的歌曲`)
-  }
-  return undefined
 }
 async function getNeteaseSongList() {
   isLoading.value = true
@@ -259,33 +306,39 @@ async function onGetEvent(data: EventModel) {
   if (settings.value.orderCooldown && cooldown.value[data.uid] && data.uid != (accountInfo.value?.biliId ?? -1)) {
     const lastRequest = cooldown.value[data.uid]
     if (Date.now() - lastRequest < settings.value.orderCooldown * 1000) {
-      message.info(
-        `[${data.uname}] 冷却中，距离下次点歌还有 ${((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)} 秒`,
-      )
+      const remainSeconds = ((settings.value.orderCooldown * 1000 - (Date.now() - lastRequest)) / 1000).toFixed(1)
+      const failureMessage = `冷却中，还需等待 ${remainSeconds} 秒`
+      message.info(`[${data.uname}] ${failureMessage}`)
+      publishMusicRequestResult(false, data.uname, failureMessage)
       return
     }
   }
   const name = data.msg.replace(new RegExp(settings.value.orderPrefix.trimStart()), '').trim()
-  const result = await searchMusic(name)
-  if (result) {
-    if (settings.value.blacklist.includes(result.name)) {
-      message.warning(`[${data.uname}] 点歌失败，因为 ${result.name} 在黑名单中`)
-      return
-    }
-    cooldown.value[data.uid] = Date.now()
-    const music = {
-      from: {
-        name: data.uname,
-        uid: data.uid,
-        guard_level: data.guard_level,
-        fans_medal_level: data.fans_medal_level,
-        fans_medal_name: data.fans_medal_name,
-        fans_medal_wearing_status: data.fans_medal_wearing_status,
-      },
-      music: result,
-    } as WaitMusicInfo
-    musicRquestStore.addWaitingMusic(music)
+  const { song, reason } = await searchMusic(name)
+  if (!song) {
+    publishMusicRequestResult(false, data.uname, reason ?? '点歌失败')
+    return
   }
+  if (settings.value.blacklist.includes(song.name)) {
+    const failureMessage = `${song.name} 在黑名单中`
+    message.warning(`[${data.uname}] 点歌失败，因为 ${failureMessage}`)
+    publishMusicRequestResult(false, data.uname, failureMessage)
+    return
+  }
+  cooldown.value[data.uid] = Date.now()
+  const music = {
+    from: {
+      name: data.uname,
+      uid: data.uid,
+      guard_level: data.guard_level,
+      fans_medal_level: data.fans_medal_level,
+      fans_medal_name: data.fans_medal_name,
+      fans_medal_wearing_status: data.fans_medal_wearing_status,
+    },
+    music: song,
+  } as WaitMusicInfo
+  musicRquestStore.addWaitingMusic(music)
+  publishMusicRequestResult(true, data.uname, `点歌成功: ${song.name}`)
 }
 function checkMessage(msg: string) {
   return msg.trim().toLowerCase().startsWith(settings.value.orderPrefix.trimStart())
@@ -713,7 +766,7 @@ onUnmounted(() => {
         <MusicRequestOBS :id="accountInfo?.id" />
       </div>
       <NInput
-        :value="`${CURRENT_HOST}obs/music-request?id=${accountInfo?.id}`"
+        :value="obsUrl"
         size="small"
         readonly
       />

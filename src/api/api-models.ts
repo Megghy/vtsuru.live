@@ -607,6 +607,8 @@ export interface EventModel {
   time: number
   num: number
   price: number
+  mystery_box_name?: string | null
+  mystery_box_price?: number | null
   guard_level: GuardLevel
   fans_medal_level: number
   fans_medal_name: string
@@ -628,7 +630,9 @@ export interface ResponseQueueModel {
   id: number
   status: QueueStatus
   from: QueueFrom
-  giftPrice?: number
+  giftPrice?: number | null
+  mysteryBoxName?: string | null
+  mysteryBoxPrice?: number | null
   content?: string
   user?: DanmakuUserInfo
   createAt: number
@@ -659,6 +663,8 @@ export interface DanmakuModel {
   time: number
   msg: string | null
   price: number | null
+  mysteryBoxName?: string | null
+  mysteryBoxPrice?: number | null
   isEmoji: boolean
   num: number
   ouId: string

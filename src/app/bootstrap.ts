@@ -61,7 +61,8 @@ async function InitOther() {
   }
   // 加载其他数据
   void InitTTS()
-  await GetSelfAccount()
+  const routeToken = new URLSearchParams(window.location.search).get('token')?.trim() || undefined
+  await GetSelfAccount(routeToken)
   const account = useAccount()
   const useAuth = useBiliAuth()
   if (account.value.id) {

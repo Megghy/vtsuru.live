@@ -4,6 +4,7 @@ import type { EventModel } from '@/api/api-models'
 import { computed } from 'vue'
 import { EventDataTypes } from '@/api/api-models'
 import { GetGuardColor } from '@/shared/utils'
+import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 
 // 粉丝勋章等级对应的颜色
 export const MEDAL_LEVEL_COLORS: { [key: number]: string } = {
@@ -188,12 +189,19 @@ export function useDanmakuUtils(
     }
   })
 
+  const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(props.item))
+
   // 获取礼物或SC的价格文本
   const priceText = computed(() => {
-    if (props.item.type === EventDataTypes.SC
-      || (props.item.type === EventDataTypes.Gift && props.item.price > 0)) {
-      return `￥${props.item.price || 0}`
+    if (props.item.type === EventDataTypes.SC) {
+      const price = formatDanmakuPrice(props.item.price)
+      return price ? `￥${price}` : ''
     }
+
+    if (props.item.type === EventDataTypes.Gift && giftDisplay.value.giftPriceText) {
+      return `￥${giftDisplay.value.giftPriceText}`
+    }
+
     return ''
   })
 
@@ -208,7 +216,7 @@ export function useDanmakuUtils(
       case EventDataTypes.Message:
         return props.item.msg || ''
       case EventDataTypes.Gift:
-        return `${props.item.num || 1} × ${props.item.msg}`
+        return giftDisplay.value.giftSummaryText
       case EventDataTypes.SC:
         return props.item.msg || ''
       case EventDataTypes.Guard:
@@ -254,6 +262,7 @@ export function useDanmakuUtils(
     showAvatar,
     parsedMessage,
     typeLabel,
+    giftDisplay,
     priceText,
     displayName,
     displayContent,

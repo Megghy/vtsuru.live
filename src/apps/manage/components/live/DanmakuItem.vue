@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { AccountInfo, DanmakuModel } from '@/api/api-models'
-import { Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
+import { Box24Regular, Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { NButton, NCard, NDivider, NIcon, NTag, NTooltip } from 'naive-ui';
 import { EventDataTypes } from '@/api/api-models'
+import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
+import { computed } from 'vue'
 
 const {
   danmaku,
@@ -41,6 +43,8 @@ function GetGuardColor(price: number | null | undefined): string {
   }
   return ''
 }
+
+const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 </script>
 
 <template>
@@ -192,15 +196,54 @@ function GetGuardColor(price: number | null | undefined): string {
       </span>
       <span
         v-else-if="danmaku.type === EventDataTypes.Gift"
+        class="gift-line"
         :style="`color:${(danmaku.price ?? 0) > 0 ? 'var(--n-error-color)' : 'var(--n-text-color-3)'}`"
       >
+        <NTooltip v-if="giftDisplay.hasMysteryBoxGift">
+          <template #trigger>
+            <span class="mystery-box-badge">
+              <NIcon
+                :component="Box24Regular"
+                size="12"
+              />
+              <span v-if="giftDisplay.mysteryBoxPriceText">{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </span>
+          </template>
+          <div class="mystery-box-tooltip-card">
+            <div class="mystery-box-tooltip-card__title">
+              盲盒礼物
+            </div>
+            <div
+              v-if="giftDisplay.mysteryBoxName"
+              class="mystery-box-tooltip-card__row"
+            >
+              <span class="mystery-box-tooltip-card__label">来源</span>
+              <span class="mystery-box-tooltip-card__value">{{ giftDisplay.mysteryBoxName }}</span>
+            </div>
+            <div
+              v-if="giftDisplay.mysteryBoxPriceText"
+              class="mystery-box-tooltip-card__row"
+            >
+              <span class="mystery-box-tooltip-card__label">盲盒价</span>
+              <span class="mystery-box-tooltip-card__value">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
+            </div>
+            <div
+              v-if="giftDisplay.giftPriceText"
+              class="mystery-box-tooltip-card__row"
+            >
+              <span class="mystery-box-tooltip-card__label">开出价</span>
+              <span class="mystery-box-tooltip-card__value">￥{{ giftDisplay.giftPriceText }}</span>
+            </div>
+          </div>
+        </NTooltip>
+        <span>{{ giftDisplay.sourceLabelText }}</span>
+        <NDivider vertical />
         <NTag
-          v-if="(danmaku.price ?? 0) > 0"
+          v-if="giftDisplay.giftPriceText"
           size="tiny"
           type="error"
           :bordered="false"
-        > <NIcon :component="Money24Regular" /> {{ danmaku.price }} </NTag>
-        {{ danmaku.price ?? 0 > 0 ? '' : '免费' }}礼物
+        > <NIcon :component="Money24Regular" /> {{ giftDisplay.giftPriceText }} </NTag>
         <NDivider vertical />
         {{ danmaku.msg }}
         <NTag
@@ -236,5 +279,51 @@ function GetGuardColor(price: number | null | undefined): string {
 <style>
 .danmaku-item {
   margin-right: 5px;
+}
+
+.gift-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mystery-box-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(192, 120, 16, 0.14);
+  color: #8a5a00;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: help;
+}
+
+.mystery-box-tooltip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.mystery-box-tooltip-card__title {
+  font-weight: 700;
+}
+
+.mystery-box-tooltip-card__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mystery-box-tooltip-card__label {
+  color: var(--n-text-color-3);
+}
+
+.mystery-box-tooltip-card__value {
+  text-align: right;
+  word-break: break-all;
 }
 </style>

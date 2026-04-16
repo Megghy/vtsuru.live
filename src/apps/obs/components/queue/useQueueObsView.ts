@@ -6,16 +6,16 @@ import type {
   ObsDisplayFooterTag,
   ObsDisplayItem,
 } from '@/apps/obs/components/shared/obsDisplay'
+import type { ResponseQueueModel } from '@/api/api-models'
+import { getGiftPaymentDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { useQueueData } from './useQueueData'
 
-function buildPaymentBadgeText(from: QueueFrom, giftPrice?: number | null) {
+function buildPaymentBadgeText(from: QueueFrom, item: Pick<ResponseQueueModel, 'giftPrice' | 'mysteryBoxName' | 'mysteryBoxPrice'>) {
   if (from === QueueFrom.Manual) {
     return '主播添加'
   }
-  if (giftPrice === undefined || giftPrice === null) {
-    return '无'
-  }
-  return `¥ ${giftPrice}`
+
+  return getGiftPaymentDisplayMeta(item).compactText
 }
 
 export function useQueueObsView(currentId: string) {
@@ -41,9 +41,13 @@ export function useQueueObsView(currentId: string) {
       })
     }
 
-    if (data.progressing.value.from === QueueFrom.Manual || data.settings.value.showPayment || (data.progressing.value.giftPrice ?? 0) > 0) {
+    if (
+      data.progressing.value.from === QueueFrom.Manual
+      || data.settings.value.showPayment
+      || (data.progressing.value.giftPrice ?? data.progressing.value.mysteryBoxPrice ?? 0) > 0
+    ) {
       badges.push({
-        text: buildPaymentBadgeText(data.progressing.value.from, data.progressing.value.giftPrice),
+        text: buildPaymentBadgeText(data.progressing.value.from, data.progressing.value),
         tone: data.progressing.value.from === QueueFrom.Manual ? 'accent' : 'danger',
       })
     }
@@ -70,9 +74,11 @@ export function useQueueObsView(currentId: string) {
               tone: 'muted',
             }
           : null,
-        item.from === QueueFrom.Manual || data.settings.value.showPayment || (item.giftPrice ?? 0) > 0
+        item.from === QueueFrom.Manual
+          || data.settings.value.showPayment
+          || (item.giftPrice ?? item.mysteryBoxPrice ?? 0) > 0
           ? {
-              text: buildPaymentBadgeText(item.from, item.giftPrice),
+              text: buildPaymentBadgeText(item.from, item),
               tone: item.from === QueueFrom.Manual ? 'accent' : 'danger',
             }
           : null,
