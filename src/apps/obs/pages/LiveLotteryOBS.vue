@@ -201,7 +201,7 @@ onUnmounted(() => {
   width: 100% !important;
   min-height: 100px !important;
   min-width: 100px !important;
-  background-color: #0f0f0f48 !important;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16)) !important;
   border-radius: 10px !important;
   color: white !important;
 }
@@ -230,7 +230,7 @@ onUnmounted(() => {
   background-color: #ffffffd5 !important;
 }
 .lottery-content {
-  background-color: #0f0f0f4f !important;
+  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2)) !important;
   margin: 10px !important;
   padding: 10px !important;
   height: 100% !important;

@@ -169,7 +169,7 @@ onUnmounted(() => {
   width: 100%;
   min-height: 100px;
   min-width: 100px;
-  background-color: #0f0f0f48;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
   border-radius: 10px;
   color: white;
 }
@@ -270,7 +270,7 @@ onUnmounted(() => {
 }
 
 .music-request-content {
-  background-color: #0f0f0f4f;
+  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));
   margin: 10px;
   padding: 10px;
   height: 100%;
@@ -329,7 +329,7 @@ onUnmounted(() => {
   padding: 2px;
   min-width: 15px;
   border-radius: 5px;
-  background-color: #0f0f0f48;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
@@ -340,7 +340,7 @@ onUnmounted(() => {
   padding: 2px;
   min-width: 15px;
   border-radius: 5px;
-  background-color: #0f0f0f48;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
 }
@@ -354,7 +354,7 @@ onUnmounted(() => {
   margin: 5px 0 5px 5px;
   height: 40px;
   border-radius: 3px;
-  background-color: #0f0f0f4f;
+  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));
   padding: 4px;
   padding-right: 6px;
   display: flex;

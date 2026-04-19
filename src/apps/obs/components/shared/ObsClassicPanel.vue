@@ -159,7 +159,7 @@ const {
   width: 100%;
   min-height: 100px;
   min-width: 100px;
-  background-color: #0f0f0f48;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
   border-radius: 10px;
   color: white;
 }
@@ -261,7 +261,7 @@ const {
 }
 
 .obs-classic-content {
-  background-color: #0f0f0f4f;
+  background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));
   margin: 10px;
   padding: 8px;
   height: 100%;
@@ -331,7 +331,7 @@ const {
   align-items: center;
   gap: 5px;
   padding: 4px 6px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--obs-classic-chip-bg, rgba(0, 0, 0, 0.12));
   border-radius: 6px;
   min-height: 36px;
   overflow: hidden;
@@ -379,7 +379,7 @@ const {
   border-radius: 4px;
   text-align: center;
   flex-shrink: 0;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--obs-classic-chip-bg, rgba(0, 0, 0, 0.12));
   color: rgba(204, 204, 204, 0.993);
 }
 
@@ -403,7 +403,7 @@ const {
   padding: 2px;
   min-width: 15px;
   border-radius: 5px;
-  background-color: #0f0f0f48;
+  background-color: var(--obs-classic-card-bg, rgba(15, 15, 15, 0.16));
   color: rgba(204, 204, 204, 0.993);
   font-size: 12px;
   flex-shrink: 0;
@@ -435,7 +435,7 @@ const {
 
 .obs-classic-footer {
   margin: 0 5px 5px 5px;
-  background-color: rgba(0, 0, 0, 0.25);
+  background-color: var(--obs-classic-footer-bg, rgba(0, 0, 0, 0.16));
   border-radius: 8px;
   padding: 8px 6px;
   overflow: hidden;
@@ -478,7 +478,7 @@ const {
   flex-direction: column;
   padding: 5px 8px;
   border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--obs-classic-tag-bg, rgba(255, 255, 255, 0.08));
   min-width: max-content;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

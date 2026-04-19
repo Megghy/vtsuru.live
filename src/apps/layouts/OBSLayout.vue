@@ -14,7 +14,38 @@ const _obsNotification = useOBSNotification()
 
 const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
 
-const originalBackgroundColor = ref('')
+const transparentTargets = [
+  () => document.documentElement,
+  () => document.body,
+  () => document.getElementById('app'),
+  () => document.querySelector('.n-layout-content'),
+  () => document.querySelector('.n-element'),
+  () => document.querySelector('.obs-container'),
+] as const
+
+const originalBackgroundStyles = new Map<HTMLElement, { color: string, image: string }>()
+
+function applyTransparentBackgrounds() {
+  for (const getElement of transparentTargets) {
+    const element = getElement()
+    if (!(element instanceof HTMLElement)) continue
+    originalBackgroundStyles.set(element, {
+      color: element.style.backgroundColor,
+      image: element.style.backgroundImage,
+    })
+    element.style.setProperty('background-color', 'transparent', 'important')
+    element.style.setProperty('background-image', 'none', 'important')
+  }
+}
+
+function restoreTransparentBackgrounds() {
+  for (const [element, style] of originalBackgroundStyles) {
+    element.style.setProperty('background-color', style.color)
+    element.style.setProperty('background-image', style.image)
+  }
+  originalBackgroundStyles.clear()
+}
+
 onMounted(async () => {
   timer.value = setInterval(() => {
     if (!visible.value || !active.value) return
@@ -36,21 +67,13 @@ onMounted(async () => {
       active.value = a
     }
   }
-  // 使 .n-layout-content 背景透明
-  const layoutContent = document.querySelector('.n-layout-content')
-  if (layoutContent instanceof HTMLElement) {
-    originalBackgroundColor.value = layoutContent.style.backgroundColor
-    layoutContent.style.setProperty('background-color', 'transparent')
-  }
+
+  applyTransparentBackgrounds()
 })
 
 onUnmounted(() => {
   clearInterval(timer.value)
-  // 还原 .n-layout-content 背景颜色
-  const layoutContent = document.querySelector('.n-layout-content')
-  if (layoutContent instanceof HTMLElement) {
-    layoutContent.style.setProperty('background-color', originalBackgroundColor.value)
-  }
+  restoreTransparentBackgrounds()
 })
 </script>
 
@@ -76,6 +99,11 @@ onUnmounted(() => {
 
 <style>
 .obs-container {
+  --obs-classic-card-bg: rgba(15, 15, 15, 0.16);
+  --obs-classic-surface-bg: rgba(15, 15, 15, 0.2);
+  --obs-classic-chip-bg: rgba(0, 0, 0, 0.12);
+  --obs-classic-footer-bg: rgba(0, 0, 0, 0.16);
+  --obs-classic-tag-bg: rgba(255, 255, 255, 0.08);
   height: 100vh;
   overflow: hidden;
   position: relative;
