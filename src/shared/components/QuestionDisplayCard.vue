@@ -101,7 +101,7 @@ onUnmounted(() => {
           fontFamily: setting.nameFont,
         }"
       >
-        {{ question?.sender?.name ?? '匿名用户' }}
+        {{ question?.sender?.name ?? question?.anonymousName ?? '匿名用户' }}
       </div>
     </Transition>
     <div

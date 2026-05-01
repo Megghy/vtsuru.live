@@ -421,8 +421,9 @@ async function onRegisterButtonClick() {
     )
 
     if (data.code !== 200) {
-      setFeedback('error', 'error', data.message || '注册失败')
-      message.error(data.message || '注册失败')
+      const failureMessage = data.message || '注册失败'
+      setFeedback('error', 'error', `无法完成注册：${failureMessage}`)
+      message.error(failureMessage)
       return
     }
 
