@@ -34,7 +34,7 @@ export async function onReceivedQuestion(question: QAInfo) {
   if (setting.settings.notificationSettings.enableTypes.includes('question-box')) {
     window.$notification.info({
       title: '提问箱',
-      description: `收到来自 [${question.sender.name || '匿名用户'}] 的提问`,
+      description: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
       duration: 0,
       action: () => h(NFlex, {}, () => [
         h(NButton, {
@@ -60,7 +60,7 @@ export async function onReceivedQuestion(question: QAInfo) {
     })
     trySendNotification({
       title: '提问箱',
-      body: `收到来自 [${question.sender.name || '匿名用户'}] 的提问`,
+      body: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
       extra: { type: 'question-box' },
     })
   }

@@ -54,7 +54,7 @@ function getScoreColor(score: number | undefined): string {
           :depth="item.isAnonymous ? 3 : 1"
           style=""
         >
-          {{ item.isAnonymous ? '匿名用户' : item.sender?.name }}
+          {{ item.isAnonymous ? (item.anonymousName || '匿名用户') : item.sender?.name }}
         </NText>
         <NTag
           v-if="item.isSenderRegisted"
