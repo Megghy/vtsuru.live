@@ -1,31 +1,13 @@
 import EasySpeech from 'easy-speech'
 import GraphemeSplitter from 'grapheme-splitter'
-import { useMessage } from 'naive-ui';
-import { reactive, ref } from 'vue'
+import { useMessage } from 'naive-ui'
+import { reactive, ref, watch } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
+import { createVoiceProvider, hasVoiceProvider } from '@/apps/open-live/voice-providers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
-import { FETCH_API, TTS_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
-
-export interface SpeechSettings {
-  speechInfo: SpeechInfo
-  danmakuTemplate: string
-  scTemplate: string
-  guardTemplate: string
-  giftTemplate: string
-  enterTemplate: string
-  voiceType: 'local' | 'api' | 'azure'
-  voiceAPISchemeType: 'http' | 'https'
-  voiceAPI: string
-  splitText: boolean
-  useAPIDirectly: boolean
-  combineGiftDelay: number | undefined
-  azureVoice: string
-  azureLanguage: string
-  outputDeviceId: string
-}
 
 export interface SpeechInfo {
   volume: number
@@ -49,28 +31,52 @@ export interface QueueItem {
   data: EventModel
 }
 
+export interface SpeechSettings {
+  provider: string
+  speechInfo: SpeechInfo
+  outputDeviceId: string
+  combineGiftDelay: number | undefined
+  danmakuTemplate: string
+  scTemplate: string
+  guardTemplate: string
+  giftTemplate: string
+  enterTemplate: string
+  providers: Record<string, any>
+}
+
 const MAX_QUEUE_SIZE = 50
+
 const DEFAULT_SETTINGS: SpeechSettings = {
+  provider: 'local',
   speechInfo: {
     volume: 1,
     pitch: 1,
     rate: 1,
     voice: '',
   },
+  outputDeviceId: 'default',
+  combineGiftDelay: 2,
   danmakuTemplate: '{name} 说: {message}',
   scTemplate: '{name} 发送了醒目留言: {message}',
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
   enterTemplate: '欢迎 {name} 进入直播间',
-  voiceType: 'local',
-  voiceAPISchemeType: 'https',
-  voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
-  useAPIDirectly: false,
-  splitText: false,
-  combineGiftDelay: 2,
-  azureVoice: 'zh-CN-XiaoxiaoNeural',
-  azureLanguage: 'zh-CN',
-  outputDeviceId: 'default',
+  providers: {
+    azure: {
+      azureVoice: 'zh-CN-XiaoxiaoNeural',
+      azureLanguage: 'zh-CN',
+    },
+    api: {
+      voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
+      voiceAPISchemeType: 'https',
+      useAPIDirectly: false,
+      splitText: false,
+    },
+    mimo: {
+      mimoVoice: 'mimo_default',
+      mimoStyleTag: '',
+    },
+  },
 }
 
 export const templateConstants = {
@@ -116,7 +122,63 @@ export const templateConstants = {
   },
 }
 
-// Singleton state
+function migrateLegacySettings(raw: any): SpeechSettings {
+  if (!raw) return DEFAULT_SETTINGS
+  if (raw.providers && typeof raw.provider === 'string') return raw as SpeechSettings
+
+  return {
+    provider: raw.voiceType ?? 'local',
+    speechInfo: {
+      volume: raw.speechInfo?.volume ?? 1,
+      pitch: raw.speechInfo?.pitch ?? 1,
+      rate: raw.speechInfo?.rate ?? 1,
+      voice: raw.speechInfo?.voice ?? '',
+    },
+    outputDeviceId: raw.outputDeviceId ?? 'default',
+    combineGiftDelay: raw.combineGiftDelay ?? 2,
+    danmakuTemplate: raw.danmakuTemplate ?? DEFAULT_SETTINGS.danmakuTemplate,
+    scTemplate: raw.scTemplate ?? DEFAULT_SETTINGS.scTemplate,
+    guardTemplate: raw.guardTemplate ?? DEFAULT_SETTINGS.guardTemplate,
+    giftTemplate: raw.giftTemplate ?? DEFAULT_SETTINGS.giftTemplate,
+    enterTemplate: raw.enterTemplate ?? DEFAULT_SETTINGS.enterTemplate,
+    providers: {
+      azure: {
+        azureVoice: raw.azureVoice ?? 'zh-CN-XiaoxiaoNeural',
+        azureLanguage: raw.azureLanguage ?? 'zh-CN',
+      },
+      api: {
+        voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI,
+        voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https',
+        useAPIDirectly: raw.useAPIDirectly ?? false,
+        splitText: raw.splitText ?? false,
+      },
+      mimo: {
+        mimoVoice: 'mimo_default',
+        mimoStyleTag: '',
+      },
+    },
+  }
+}
+
+function normalizeSettings(raw: any): SpeechSettings {
+  const settings = migrateLegacySettings(raw)
+  ensureProviderDefaults(settings)
+  return settings
+}
+
+function ensureProviderDefaults(settings: SpeechSettings) {
+  if (!settings.providers) settings.providers = {}
+  if (!settings.providers.azure) {
+    settings.providers.azure = { ...DEFAULT_SETTINGS.providers.azure }
+  }
+  if (!settings.providers.api) {
+    settings.providers.api = { ...DEFAULT_SETTINGS.providers.api }
+  }
+  if (!settings.providers.mimo) {
+    settings.providers.mimo = { ...DEFAULT_SETTINGS.providers.mimo }
+  }
+}
+
 let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null
 
 function createSpeechService() {
@@ -125,6 +187,11 @@ function createSpeechService() {
   const splitter = new GraphemeSplitter()
 
   const settings = usePersistedStorage<SpeechSettings>('Setting.Speech', DEFAULT_SETTINGS)
+  watch(settings, (value) => {
+    const normalized = normalizeSettings(value)
+    if (normalized !== value) settings.value = normalized
+  }, { immediate: true })
+
   const speechState = reactive<SpeechState>({
     isSpeaking: false,
     speakingText: '',
@@ -140,7 +207,7 @@ function createSpeechService() {
 
   const apiAudio = ref<HTMLAudioElement>()
   let checkTimer: number | undefined
-  let loadingTimeoutTimer: number | undefined // 音频加载超时计时器
+  let loadingTimeoutTimer: number | undefined
   let speechQueueTimer: number | undefined
 
   const speechSynthesisInfo = ref<{
@@ -150,41 +217,28 @@ function createSpeechService() {
     onvoiceschanged: boolean
   }>()
 
-  /**
-   * 初始化语音服务
-   */
+  function getCurrentProvider() {
+    const id = settings.value.provider
+    if (!hasVoiceProvider(id)) return undefined
+    return createVoiceProvider(id, () => settings.value)
+  }
+
   async function initialize() {
-    if (speechState.isInitialized) {
-      return
-    }
+    if (speechState.isInitialized) return
 
     try {
       await EasySpeech.init({ maxTimeout: 5000, interval: 250 })
       speechSynthesisInfo.value = EasySpeech.detect() as any
 
-      // 自动选择默认语音
-      const checkAndSetDefaultVoice = () => {
-        const voices = EasySpeech.voices()
-        if (voices.length > 0 && !settings.value.speechInfo.voice) {
-          const chineseVoice = voices.find(v => v.lang.startsWith('zh'))
-          settings.value.speechInfo.voice = chineseVoice?.name || voices[0].name
-          console.log(`[TTS] 自动选择默认语音: ${settings.value.speechInfo.voice}`)
-        }
+      const voices = EasySpeech.voices()
+      if (voices.length > 0 && !settings.value.speechInfo.voice) {
+        const chineseVoice = voices.find((v) => v.lang.startsWith('zh'))
+        settings.value.speechInfo.voice = chineseVoice?.name || voices[0].name
       }
 
-      checkAndSetDefaultVoice()
+      const provider = getCurrentProvider()
+      if (provider) await provider.initialize()
 
-      if (EasySpeech.voices().length === 0) {
-        const voiceCheckTimer = setInterval(() => {
-          if (EasySpeech.voices().length > 0) {
-            checkAndSetDefaultVoice()
-            clearInterval(voiceCheckTimer)
-          }
-        }, 100)
-        setTimeout(() => clearInterval(voiceCheckTimer), 10000)
-      }
-
-      // 启动队列处理
       speechQueueTimer = setInterval(() => {
         processQueue()
       }, 250)
@@ -197,25 +251,19 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 销毁语音服务
-   */
   function destroy() {
     if (speechQueueTimer) {
       clearInterval(speechQueueTimer)
       speechQueueTimer = undefined
     }
-
     if (checkTimer) {
       clearInterval(checkTimer)
       checkTimer = undefined
     }
-
     if (loadingTimeoutTimer) {
       clearInterval(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
-
     cancelSpeech()
     giftCombineMap.clear()
     speakQueue.value = []
@@ -223,9 +271,6 @@ function createSpeechService() {
     console.log('[TTS] 语音服务已销毁')
   }
 
-  /**
-   * 根据舰长等级数字返回对应的中文名称
-   */
   function getGuardLevelName(guardLevel: number): string {
     switch (guardLevel) {
       case 1: return '总督'
@@ -235,18 +280,10 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 全角转半角
-   */
-  /**
-   * 从事件数据生成要朗读的文本
-   */
   function getTextFromDanmaku(data: EventModel | undefined): string | undefined {
-    if (!data) {
-      return
-    }
+    if (!data) return
 
-    let text: string = ''
+    let text = ''
     switch (data.type) {
       case EventDataTypes.Message:
         if (!settings.value.danmakuTemplate) return
@@ -271,22 +308,18 @@ function createSpeechService() {
       case EventDataTypes.Like:
       case EventDataTypes.SCDel:
       case EventDataTypes.Follow:
-        // 这些事件类型不需要语音播报
         return
     }
 
+    const isApiWithSplit = settings.value.provider === 'api'
+      && (settings.value.providers.api?.splitText as boolean)
+
     text = text
-      .replace(
-        templateConstants.name.regex,
-        settings.value.voiceType == 'api' && settings.value.splitText ? `'${data.uname || ''}'` : (data.uname || ''),
-      )
+      .replace(templateConstants.name.regex, isApiWithSplit ? `'${data.uname || ''}'` : (data.uname || ''))
       .replace(templateConstants.count.regex, (data.num ?? 0).toString())
       .replace(templateConstants.price.regex, (data.price ?? 0).toString())
       .replace(templateConstants.message.regex, data.msg || '')
-      .replace(
-        templateConstants.guard_level.regex,
-        getGuardLevelName(data.guard_level),
-      )
+      .replace(templateConstants.guard_level.regex, getGuardLevelName(data.guard_level))
       .replace(templateConstants.fans_medal_level.regex, (data.fans_medal_level ?? 0).toString())
       .trim()
 
@@ -302,183 +335,112 @@ function createSpeechService() {
     return text
   }
 
-  /**
-   * 插入空格（用于拆分文本）
-   */
   function insertSpaces(sentence: string) {
-    sentence = sentence.replace(/\b[A-Z]{2,}\b/g, (match) => {
-      return match.split('').join(' ')
-    })
+    sentence = sentence.replace(/\b[A-Z]{2,}\b/g, (match) => match.split('').join(' '))
     sentence = sentence.replace(/\s+/g, ' ').trim()
     return sentence
   }
 
-  /**
-   * 使用本地TTS朗读
-   */
-  function speakDirect(text: string) {
-    try {
-      const synth = window.speechSynthesis
-      if (!synth) {
-        console.error('[TTS] 当前浏览器不支持语音合成')
-        return
-      }
-
-      synth.cancel()
-      const u = new SpeechSynthesisUtterance()
-      u.text = text
-      const voices = synth.getVoices()
-      const voice = voices.find(v => v.name === settings.value.speechInfo.voice)
-
-      if (voice) {
-        u.voice = voice
-        u.volume = settings.value.speechInfo.volume
-        u.rate = settings.value.speechInfo.rate
-        u.pitch = settings.value.speechInfo.pitch
-        synth.speak(u)
-
-        u.onend = () => {
-          cancelSpeech()
-        }
-
-        u.onerror = (err) => {
-          if (err.error == 'interrupted') {
-            return
-          }
-          console.error('[TTS] 播放错误:', err)
-          message.error(`无法播放语音: ${err.error}`)
-          cancelSpeech()
-        }
-      }
-    } catch (err) {
-      console.error('[TTS] 本地语音合成失败:', err)
-      cancelSpeech()
-    }
-  }
-
-  /**
-   * 构建API请求URL
-   */
   function buildApiUrl(text: string): string | null {
-    // Azure TTS
-    if (settings.value.voiceType === 'azure') {
-      const apiUrl = `${TTS_API_URL}azure?text=${encodeURIComponent(text)}`
-      return apiUrl
-    }
-
-    // 自定义 API
-    if (!settings.value.voiceAPI) {
-      message.error('未设置语音API')
+    const provider = getCurrentProvider()
+    if (!provider || !provider.buildAudioUrl) {
+      message.error('当前语音提供商不支持音频 URL 构建')
       return null
     }
 
-    const scheme
-      = settings.value.voiceAPISchemeType === 'https'
-        ? 'https://'
-        : settings.value.useAPIDirectly
-          ? 'http://'
-          : `${FETCH_API}http://`
+    const url = provider.buildAudioUrl(text)
+    if (!url) return null
 
-    const url = `${scheme}${settings.value.voiceAPI.trim().replace(/^https?:\/\//, '')}`.replace(
-      /\{\{\s*text\s*\}\}/,
-      encodeURIComponent(text),
-    )
-
+    // vtsuru 测试 API 特殊检查
     try {
       const tempURL = new URL(url)
-      const isVtsuruAPI = settings.value.voiceAPI.toLowerCase().trim().startsWith('voice.vtsuru.live')
-
+      const isVtsuruAPI = tempURL.hostname.toLowerCase().includes('voice.vtsuru.live')
       if (isVtsuruAPI) {
         tempURL.searchParams.set('vtsuruId', accountInfo.value?.id.toString() ?? '-1')
         if (splitter.countGraphemes(tempURL.searchParams.get('text') ?? '') > 100) {
-          message.error(`本站提供的测试接口字数不允许超过 100 字`)
+          message.error('本站提供的测试接口字数不允许超过 100 字')
           return null
         }
+        return tempURL.toString()
       }
-
-      return tempURL.toString()
-    } catch (err) {
-      console.error('[TTS] 无效的API地址:', err)
-      message.error(`无效的API地址: ${url}`)
-      return null
+    } catch {
+      // 非标准 URL，跳过检查
     }
+
+    return url
   }
 
-  /**
-   * 使用API TTS朗读
-   */
-  function speakFromAPI(text: string) {
-    let url = buildApiUrl(text)
-    if (!url) {
+  function doSpeak(text: string) {
+    const provider = getCurrentProvider()
+    if (!provider) {
       cancelSpeech()
       return
     }
 
-    // 如果是 Azure TTS，添加额外参数
-    if (settings.value.voiceType === 'azure') {
-      const azureUrl = new URL(url)
-      azureUrl.searchParams.set('voice', settings.value.azureVoice)
-      azureUrl.searchParams.set('language', settings.value.azureLanguage)
-      azureUrl.searchParams.set('rate', settings.value.speechInfo.rate.toString())
-      azureUrl.searchParams.set('pitch', settings.value.speechInfo.pitch.toString())
-      azureUrl.searchParams.set('streaming', 'true')
-      url = azureUrl.toString()
-    }
-
     speechState.isSpeaking = true
-    speechState.isApiAudioLoading = true
+    speechState.speakingText = text
 
-    // 先清空 apiAudioSrc，确保 audio 元素能够正确重新加载
-    // 这样可以避免连续播放时 src 更新不触发加载的问题
-    speechState.apiAudioSrc = ''
+    if (checkTimer) clearInterval(checkTimer)
+    checkTimer = setInterval(() => {
+      message.error('语音播放超时')
+      cancelSpeech()
+    }, 30000)
 
-    // 使用 nextTick 确保 DOM 更新后再设置新的 src
-    // 但由于这是在 store 中，我们使用 setTimeout 来模拟
-    setTimeout(() => {
-      speechState.apiAudioSrc = url
-    }, 0)
-
-    // 设置 10 秒加载超时
-    if (loadingTimeoutTimer) {
-      clearInterval(loadingTimeoutTimer)
-    }
-    loadingTimeoutTimer = setInterval(() => {
-      if (speechState.isApiAudioLoading) {
-        console.error('[TTS] 音频加载超时 (10秒)')
-        message.error('音频加载超时，请检查网络连接或API状态')
+    if (provider.isAudioProvider && provider.buildAudioUrl) {
+      const url = provider.buildAudioUrl(text)
+      if (!url) {
         cancelSpeech()
+        return
       }
-    }, 10000) // 10 秒超时
+
+      speechState.isApiAudioLoading = true
+      speechState.apiAudioSrc = ''
+      setTimeout(() => {
+        speechState.apiAudioSrc = url
+      }, 0)
+
+      if (loadingTimeoutTimer) clearInterval(loadingTimeoutTimer)
+      loadingTimeoutTimer = setInterval(() => {
+        if (speechState.isApiAudioLoading) {
+          console.error('[TTS] 音频加载超时 (10秒)')
+          message.error('音频加载超时，请检查网络连接或API状态')
+          cancelSpeech()
+        }
+      }, 10000)
+    } else {
+      Promise.resolve(provider.speak(text))
+        .then(() => {
+          if (speechState.isSpeaking) cancelSpeech()
+        })
+        .catch((error) => {
+          console.error('[TTS] 播放错误:', error)
+          message.error(`无法播放语音: ${error instanceof Error ? error.message : '未知错误'}`)
+          cancelSpeech()
+        })
+    }
+
+    console.log(`[TTS] 正在朗读: ${text}`)
   }
 
-  /**
-   * 处理队列中的下一个事件
-   */
   async function processQueue() {
-    if (speechState.isSpeaking || speakQueue.value.length == 0) {
-      return
-    }
+    if (speechState.isSpeaking || speakQueue.value.length === 0) return
 
-    let targetIndex = -1
     const now = Date.now()
     const combineDelay = (settings.value.combineGiftDelay ?? 0) * 1000
 
+    let targetIndex = -1
     for (let i = 0; i < speakQueue.value.length; i++) {
       const item = speakQueue.value[i]
-
-      if (item.data.type == EventDataTypes.Gift
+      if (item.data.type === EventDataTypes.Gift
         && combineDelay > 0
         && item.updateAt > now - combineDelay) {
         continue
       }
-
       targetIndex = i
       break
     }
 
-    if (targetIndex === -1) {
-      return
-    }
+    if (targetIndex === -1) return
 
     const targetItem = speakQueue.value.splice(targetIndex, 1)[0]
 
@@ -486,44 +448,23 @@ function createSpeechService() {
       giftCombineMap.clear()
       speakQueue.value.forEach((item, index) => {
         if (item.data.type === EventDataTypes.Gift) {
-          const giftKey = `${item.data.uid}-${item.data.msg}`
-          giftCombineMap.set(giftKey, index)
+          giftCombineMap.set(`${item.data.uid}-${item.data.msg}`, index)
         }
       })
     }
 
     let text = getTextFromDanmaku(targetItem.data)
     if (text) {
-      speechState.isSpeaking = true
       readedDanmaku.value++
-      speechState.speakingText = text
 
-      if (checkTimer) {
-        clearInterval(checkTimer)
+      if (settings.value.provider === 'api' && settings.value.providers.api?.splitText) {
+        text = insertSpaces(text)
       }
 
-      checkTimer = setInterval(() => {
-        message.error('语音播放超时')
-        cancelSpeech()
-      }, 30000)
-
-      if (settings.value.voiceType == 'local') {
-        speakDirect(text)
-      } else {
-        // 只有自定义 API 且启用了 splitText 才进行文本拆分
-        if (settings.value.voiceType === 'api' && settings.value.splitText) {
-          text = insertSpaces(text)
-        }
-        speakFromAPI(text)
-      }
-
-      console.log(`[TTS] 正在朗读: ${text}`)
+      doSpeak(text)
     }
   }
 
-  /**
-   * 取消当前语音播放
-   */
   function cancelSpeech() {
     speechState.isSpeaking = false
 
@@ -531,7 +472,6 @@ function createSpeechService() {
       clearInterval(checkTimer)
       checkTimer = undefined
     }
-
     if (loadingTimeoutTimer) {
       clearInterval(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
@@ -542,17 +482,13 @@ function createSpeechService() {
     if (apiAudio.value && !apiAudio.value.paused) {
       apiAudio.value.pause()
     }
-
-    // 清空音频源，确保下次播放时能正确加载新的音频
     speechState.apiAudioSrc = ''
 
+    getCurrentProvider()?.stop()
     EasySpeech.cancel()
     speechState.speakingText = ''
   }
 
-  /**
-   * 清除音频加载超时计时器
-   */
   function clearLoadingTimeout() {
     if (loadingTimeoutTimer) {
       clearInterval(loadingTimeoutTimer)
@@ -560,31 +496,24 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 接收事件并添加到队列
-   */
   function addToQueue(data: EventModel) {
-    if (!speechState.canSpeech) {
+    if (!speechState.canSpeech) return
+
+    if (data.type === EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) {
+      return
+    }
+    if (data.type === EventDataTypes.Enter && !settings.value.enterTemplate) {
       return
     }
 
-    if (data.type == EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) {
-      return
-    }
-
-    if (data.type == EventDataTypes.Enter && !settings.value.enterTemplate) {
-      return
-    }
-
-    // 礼物合并逻辑
-    if (data.type == EventDataTypes.Gift && settings.value.combineGiftDelay) {
+    if (data.type === EventDataTypes.Gift && settings.value.combineGiftDelay) {
       const giftKey = `${data.uid}-${data.msg}`
       const existIndex = giftCombineMap.get(giftKey)
 
       if (existIndex !== undefined && existIndex < speakQueue.value.length) {
         const exist = speakQueue.value[existIndex]
         if (exist
-          && exist.data.type == EventDataTypes.Gift
+          && exist.data.type === EventDataTypes.Gift
           && exist.updateAt > Date.now() - (settings.value.combineGiftDelay * 1000)) {
           exist.updateAt = Date.now()
           exist.data.num += data.num
@@ -597,7 +526,6 @@ function createSpeechService() {
 
       const newIndex = speakQueue.value.length
       giftCombineMap.set(giftKey, newIndex)
-
       setTimeout(() => {
         if (giftCombineMap.get(giftKey) === newIndex) {
           giftCombineMap.delete(giftKey)
@@ -607,36 +535,27 @@ function createSpeechService() {
 
     speakQueue.value.push({
       data,
-      updateAt: data.type == EventDataTypes.Gift ? Date.now() : 0,
+      updateAt: data.type === EventDataTypes.Gift ? Date.now() : 0,
     })
 
-    // 队列清理
     if (speakQueue.value.length > MAX_QUEUE_SIZE) {
       const removed = speakQueue.value.splice(0, speakQueue.value.length - MAX_QUEUE_SIZE)
       console.warn(`[TTS] 队列过长，已移除 ${removed.length} 个旧项目`)
     }
   }
 
-  /**
-   * 强制播放指定事件（插队）
-   */
   function forceSpeak(data: EventModel) {
     cancelSpeech()
-
-    const index = speakQueue.value.findIndex(v => v.data == data)
+    const index = speakQueue.value.findIndex((v) => v.data === data)
     if (index !== -1) {
       speakQueue.value.splice(index, 1)
     }
-
     speakQueue.value.unshift({
       updateAt: 0,
       data,
     })
   }
 
-  /**
-   * 从队列中移除指定项
-   */
   function removeFromQueue(item: QueueItem) {
     const index = speakQueue.value.indexOf(item)
     if (index !== -1) {
@@ -644,37 +563,18 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 清空队列
-   */
-  function clearQueue() {
-    speakQueue.value = []
-    giftCombineMap.clear()
-  }
-
-  /**
-   * 开始监听
-   */
   function startSpeech() {
     speechState.canSpeech = true
     message.success('服务已启动')
   }
 
-  /**
-   * 停止监听
-   */
   function stopSpeech() {
     speechState.canSpeech = false
-    // 清空队列
     speakQueue.value = []
-    // 取消当前正在播放的语音
     cancelSpeech()
     message.success('已停止监听')
   }
 
-  /**
-   * 上传配置到服务器
-   */
   async function uploadConfig() {
     try {
       const result = await UploadConfig('Speech', settings.value)
@@ -689,14 +589,12 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 从服务器下载配置
-   */
   async function downloadConfig() {
     try {
       const result = await DownloadConfig<SpeechSettings>('Speech')
       if (result.status === 'success' && result.data) {
-        settings.value = result.data
+        const migrated = migrateLegacySettings(result.data)
+        settings.value = migrated
         message.success('已获取配置文件')
       } else if (result.status === 'notfound') {
         message.error('未上传配置文件')
@@ -709,35 +607,29 @@ function createSpeechService() {
     }
   }
 
-  /**
-   * 获取可用的语音列表
-   */
   function getAvailableVoices() {
-    const languageDisplayName = new Intl.DisplayNames(['zh'], { type: 'language' })
-    return EasySpeech.voices().map((v) => {
-      return {
-        label: `[${languageDisplayName.of(v.lang)}] ${v.name}`,
-        value: v.name,
-      }
-    })
+    const provider = getCurrentProvider()
+    if (!provider) return []
+    const voices = provider.getVoices()
+    return voices instanceof Promise ? [] : voices
   }
 
   return {
-    // State
     settings,
     speechState,
     speakQueue,
     readedDanmaku,
     speechSynthesisInfo,
     apiAudio,
-
-    // Methods
     initialize,
     destroy,
     addToQueue,
     forceSpeak,
     removeFromQueue,
-    clearQueue,
+    clearQueue: () => {
+      speakQueue.value = []
+      giftCombineMap.clear()
+    },
     startSpeech,
     stopSpeech,
     cancelSpeech,
@@ -747,12 +639,10 @@ function createSpeechService() {
     getTextFromDanmaku,
     getAvailableVoices,
     buildApiUrl,
+    getCurrentProvider,
   }
 }
 
-/**
- * 使用语音服务（单例模式）
- */
 export function useSpeechService() {
   if (!speechServiceInstance) {
     speechServiceInstance = createSpeechService()
