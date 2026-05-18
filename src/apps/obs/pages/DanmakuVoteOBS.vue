@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import type { EventModel, VoteConfig, VoteOBSData, VoteOption } from '@/api/api-models'
+import type { VoteOBSData, VoteOption } from '@/api/api-models'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import { QueryGetAPI } from '@/api/query'
 import { VOTE_API_URL } from '@/shared/config'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 const props = defineProps<{
-  roomId?: number
-  code?: string
   active?: boolean
   visible?: boolean
 }>()
 
 const route = useRoute()
-const client = useDanmakuClient()
 const voteData = ref<VoteOBSData | null>(null)
 const fetchIntervalId = ref<number | null>(null)
-const config = ref<VoteConfig | null>(null)
-const isLoading = ref(true)
 const nowMs = ref<number>(Date.now())
 const tickIntervalId = ref<number | null>(null)
 
@@ -68,12 +62,6 @@ async function fetchVoteData() {
   }
 }
 
-// 处理接收到的弹幕
-function processDanmaku(_event: EventModel) {
-  // 当使用API获取投票数据时，此处不需要处理投票逻辑
-  // 仅用于获取房间连接
-}
-
 // 从URL获取用户ID
 function getUserIdFromUrl(): string | null {
   const hash = route.query.hash as string
@@ -92,34 +80,26 @@ function calculatePercentage(count: number, total: number): number {
   return Math.round((count / total) * 100)
 }
 
-// 获取投票配置
-async function fetchVoteConfig() {
-  try {
-    const userId = getUserIdFromUrl()
-    if (!userId) return
-
-    const result = await QueryGetAPI<VoteConfig>(`${VOTE_API_URL}get-config`, { user: userId })
-
-    if (result.code === 200 && result.data) {
-      config.value = result.data
-    }
-  } catch (error) {
-    console.error('获取投票配置失败:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// 设置投票数据轮询
+// 设置投票数据轮询（有活跃数据时1秒，无数据时5秒）
+let lastHadData = false
 function setupPolling() {
   if (fetchIntervalId.value) {
     clearInterval(fetchIntervalId.value)
   }
 
-  // 每秒获取一次投票数据
   fetchVoteData()
-  fetchIntervalId.value = setInterval(() => {
-    fetchVoteData()
+  fetchIntervalId.value = setInterval(async () => {
+    await fetchVoteData()
+    // 无活跃投票时降频至5秒
+    const hasData = voteData.value != null
+    if (!hasData && lastHadData && fetchIntervalId.value) {
+      clearInterval(fetchIntervalId.value)
+      fetchIntervalId.value = setInterval(() => fetchVoteData(), 5000) as unknown as number
+    } else if (hasData && !lastHadData && fetchIntervalId.value) {
+      clearInterval(fetchIntervalId.value)
+      fetchIntervalId.value = setInterval(() => fetchVoteData(), 1000) as unknown as number
+    }
+    lastHadData = hasData
   }, 1000)
 }
 
@@ -137,27 +117,13 @@ const theme = computed(() => {
   return 'default'
 })
 
-onMounted(async () => {
-  // 设置房间ID和代码并连接
-  const roomId = props.roomId || Number(route.query.roomId)
-  const code = props.code || route.query.code
-
-  if (roomId && code) {
-    await client.initOpenlive()
-    // 监听弹幕事件 (仅用于保持连接)
-    client.onEvent('danmaku', processDanmaku)
-  }
-
-  // 获取投票配置和投票数据
-  await fetchVoteConfig()
+onMounted(() => {
   setupPolling()
-  // 本地计时器用于倒计时显示
   tickIntervalId.value = setInterval(() => {
     nowMs.value = Date.now()
   }, 1000)
 
   onUnmounted(() => {
-    client.dispose()
     if (fetchIntervalId.value) {
       clearInterval(fetchIntervalId.value)
     }
@@ -228,12 +194,7 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <div
-    v-else-if="isLoading"
-    class="danmaku-vote-loading"
-  >
-    加载中...
-  </div>
+
 </template>
 
 <style scoped>
@@ -251,16 +212,6 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-}
-
-.danmaku-vote-loading {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-family: "Microsoft YaHei", sans-serif;
 }
 
 .vote-container {

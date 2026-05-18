@@ -1141,10 +1141,8 @@ export interface VoteConfig {
   voteCommand: string
   voteEndCommand: string
   voteTitle: string
-  allowMultipleOptions: boolean
   allowMultipleVotes: boolean
   allowCustomOptions: boolean
-  logVotes: boolean
   defaultOptions: string[]
   backgroundFile?: APIFileModel
   backgroundColor: string

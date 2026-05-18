@@ -1,17 +1,7 @@
 import { TTS_API_URL } from '@/shared/config'
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
-export const MIMO_VOICES: VoiceOption[] = [
-  { value: 'mimo_default', label: 'mimo_default (默认)' },
-  { value: 'Chloe', label: 'Chloe' },
-  { value: 'Mia', label: 'Mia' },
-  { value: 'Milo', label: 'Milo' },
-  { value: 'Dean', label: 'Dean' },
-  { value: '冰糖', label: '冰糖' },
-  { value: '茉莉', label: '茉莉' },
-  { value: '苏打', label: '苏打' },
-  { value: '白桦', label: '白桦' },
-]
+export const DEFAULT_MIMO_VOICE = '冰糖'
 
 interface MimoProviderConfig {
   mimoVoice?: string
@@ -26,10 +16,43 @@ export class MimoVoiceProvider implements VoiceProvider {
 
   constructor(private getConfig: ConfigSource) {}
 
+  private voiceList: VoiceOption[] = []
+  private voiceListRequest?: Promise<VoiceOption[]>
+
   async initialize(): Promise<void> {}
 
-  getVoices(): VoiceOption[] {
-    return MIMO_VOICES
+  async getVoices(): Promise<VoiceOption[]> {
+    if (this.voiceList.length > 0) return this.voiceList
+    this.voiceListRequest ??= this.fetchVoices()
+    return this.voiceListRequest
+  }
+
+  private async fetchVoices(): Promise<VoiceOption[]> {
+    try {
+      const response = await fetch(`${TTS_API_URL}voices?provider=mimo`)
+      if (!response.ok) throw new Error('获取 MiMo 音色列表失败')
+
+      const voices = await response.json()
+      this.voiceList = voices.map((voice: any) => {
+        const id = voice.id ?? voice.Id
+        const name = voice.name ?? voice.Name ?? id
+        const language = voice.language ?? voice.Language
+        const gender = voice.gender ?? voice.Gender
+        const languageText = language === 'zh' ? '中文' : language === 'en' ? '英文' : '集群相关'
+        const genderText = gender === 'Male' ? '男' : gender === 'Female' ? '女' : ''
+        return {
+          label: genderText ? `${name} [${languageText}/${genderText}]` : `${name} [${languageText}]`,
+          value: id,
+          meta: { language, gender },
+        }
+      })
+      return this.voiceList
+    } catch (error) {
+      console.error('[MiMoTTS] 获取音色列表失败:', error)
+      return []
+    } finally {
+      this.voiceListRequest = undefined
+    }
   }
 
   buildAudioUrl(text: string): string | null {
@@ -38,7 +61,7 @@ export class MimoVoiceProvider implements VoiceProvider {
 
     const url = new URL(`${TTS_API_URL}mimo`)
     url.searchParams.set('text', text)
-    url.searchParams.set('voice', providerCfg?.mimoVoice ?? 'mimo_default')
+    url.searchParams.set('voice', providerCfg?.mimoVoice ?? DEFAULT_MIMO_VOICE)
     if (providerCfg?.mimoStyleTag) {
       url.searchParams.set('styleTag', providerCfg.mimoStyleTag)
     }

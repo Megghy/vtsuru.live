@@ -3,7 +3,7 @@ import GraphemeSplitter from 'grapheme-splitter'
 import { useMessage } from 'naive-ui'
 import { reactive, ref, watch } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
-import { createVoiceProvider, hasVoiceProvider } from '@/apps/open-live/voice-providers'
+import { createVoiceProvider, DEFAULT_MIMO_VOICE, hasVoiceProvider } from '@/apps/open-live/voice-providers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -73,7 +73,7 @@ const DEFAULT_SETTINGS: SpeechSettings = {
       splitText: false,
     },
     mimo: {
-      mimoVoice: 'mimo_default',
+      mimoVoice: DEFAULT_MIMO_VOICE,
       mimoStyleTag: '',
     },
   },
@@ -153,7 +153,7 @@ function migrateLegacySettings(raw: any): SpeechSettings {
         splitText: raw.splitText ?? false,
       },
       mimo: {
-        mimoVoice: 'mimo_default',
+        mimoVoice: DEFAULT_MIMO_VOICE,
         mimoStyleTag: '',
       },
     },
@@ -177,6 +177,10 @@ function ensureProviderDefaults(settings: SpeechSettings) {
   if (!settings.providers.mimo) {
     settings.providers.mimo = { ...DEFAULT_SETTINGS.providers.mimo }
   }
+  if (!settings.providers.mimo.mimoVoice || settings.providers.mimo.mimoVoice === 'mimo_default') {
+    settings.providers.mimo.mimoVoice = DEFAULT_MIMO_VOICE
+  }
+  settings.providers.mimo.mimoStyleTag ??= ''
 }
 
 let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null

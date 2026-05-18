@@ -2,7 +2,7 @@ import type { ConfigSource, VoiceProvider } from './types'
 import { LocalVoiceProvider } from './local'
 import { AzureVoiceProvider } from './azure'
 import { CustomApiVoiceProvider } from './custom-api'
-import { MimoVoiceProvider, MIMO_VOICES } from './mimo'
+import { DEFAULT_MIMO_VOICE, MimoVoiceProvider } from './mimo'
 
 type ProviderFactory = (getConfig: ConfigSource) => VoiceProvider
 
@@ -35,4 +35,4 @@ registerVoiceProvider('api', (getConfig) => new CustomApiVoiceProvider(getConfig
 registerVoiceProvider('mimo', (getConfig) => new MimoVoiceProvider(getConfig))
 
 export * from './types'
-export { LocalVoiceProvider, AzureVoiceProvider, CustomApiVoiceProvider, MimoVoiceProvider, MIMO_VOICES }
+export { LocalVoiceProvider, AzureVoiceProvider, CustomApiVoiceProvider, MimoVoiceProvider, DEFAULT_MIMO_VOICE }

@@ -6,7 +6,7 @@ import {
 import { computed, onMounted, ref, watch } from 'vue'
 import { copyToClipboard } from '@/shared/utils'
 import { useSpeechService } from '@/store/useSpeechService'
-import { MIMO_VOICES } from '@/apps/open-live/voice-providers'
+import { DEFAULT_MIMO_VOICE } from '@/apps/open-live/voice-providers'
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 
 const speechService = useSpeechService()
@@ -26,7 +26,18 @@ const localVoices = computed((): VoiceOption[] => {
   return speechService.getAvailableVoices()
 })
 
+const mimoSettings = computed(() => {
+  settings.value.providers.mimo ??= { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '' }
+  if (!settings.value.providers.mimo.mimoVoice || settings.value.providers.mimo.mimoVoice === 'mimo_default') {
+    settings.value.providers.mimo.mimoVoice = DEFAULT_MIMO_VOICE
+  }
+  settings.value.providers.mimo.mimoStyleTag ??= ''
+  return settings.value.providers.mimo as { mimoVoice: string; mimoStyleTag: string }
+})
+
 async function loadVoices() {
+  if (voicesLoading.value) return
+
   const provider = speechService.getCurrentProvider()
   if (!provider) {
     voices.value = []
@@ -353,11 +364,31 @@ onMounted(() => {
         </NAlert>
 
         <div>
-          <NText strong>声音选择</NText>
+          <NFlex justify="space-between" align="center">
+            <NText strong>声音选择</NText>
+            <NButton
+              v-if="voices.length === 0"
+              text
+              type="primary"
+              size="small"
+              :loading="voicesLoading"
+              @click="loadVoices"
+            >
+              加载音色列表
+            </NButton>
+            <NText v-else depth="3" style="font-size: 12px">共 {{ voices.length }} 个音色</NText>
+          </NFlex>
           <NSelect
-            v-model:value="settings.providers.mimo.mimoVoice"
-            :options="MIMO_VOICES"
+            v-model:value="mimoSettings.mimoVoice"
+            :options="voices"
+            :loading="voicesLoading"
+            :fallback-option="() => ({
+              label: mimoSettings.mimoVoice ? `已选择: ${mimoSettings.mimoVoice}` : '未选择',
+              value: mimoSettings.mimoVoice || '',
+            })"
             style="margin-top: 8px"
+            filterable
+            @focus="loadVoices"
           />
         </div>
 
@@ -372,7 +403,7 @@ onMounted(() => {
             </NTooltip>
           </NFlex>
           <NInput
-            v-model:value="settings.providers.mimo.mimoStyleTag"
+            v-model:value="mimoSettings.mimoStyleTag"
             placeholder="例如: (台湾腔) 或 [开心]"
             style="margin-top: 8px"
           />

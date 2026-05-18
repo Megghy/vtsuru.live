@@ -30,10 +30,8 @@ const voteConfig = ref<VoteConfig>({
   voteCommand: '投票',
   voteEndCommand: '结束投票',
   voteTitle: '投票',
-  allowMultipleOptions: false,
   allowMultipleVotes: false,
   allowCustomOptions: false,
-  logVotes: true,
   defaultOptions: ['选项1', '选项2'],
   backgroundColor: '#1e1e2e',
   textColor: '#ffffff',
@@ -105,7 +103,7 @@ async function saveVoteConfig() {
     isLoading.value = true
     const result = await QueryPostAPI<any>(`${VOTE_API_URL}save-config`, voteConfig.value)
 
-    if (result.code === 0) {
+    if (result.code === 200) {
       message.success('投票配置保存成功')
       showSettingsModal.value = false
     } else {
@@ -332,7 +330,7 @@ onMounted(async () => {
 })
 
 // 监视配置变化，更新创建表单中的默认值
-watch(() => voteConfig.value, (newConfig) => {
+watch(voteConfig, (newConfig) => {
   newVoteDuration.value = newConfig.voteDurationSeconds
 }, { immediate: true })
 
@@ -729,9 +727,6 @@ function deleteTemplate(index: number) {
             允许重复投票
           </NCheckbox>
 
-          <NCheckbox v-model:checked="voteConfig.logVotes">
-            记录投票详情
-          </NCheckbox>
         </NFlex>
 
         <NDivider style="margin: 0" />
