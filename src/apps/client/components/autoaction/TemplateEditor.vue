@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { Code24Regular, Info24Filled, LiveOff24Regular, AppsListDetail24Regular } from '@vicons/fluent'
-import GraphemeSplitter from 'grapheme-splitter'
 import { NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage, NGrid, NGi } from 'naive-ui';
 import { computed, ref, nextTick } from 'vue'
 import { EventDataTypes } from '@/api/api-models'
@@ -147,12 +146,12 @@ const testContext = computed(() => {
 const message = useMessage()
 const activeTab = ref('editor')
 const showLivePreview = ref(true)
-const splitter = new GraphemeSplitter()
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const showSyntaxModal = ref(false)
-const inputInst = ref<any>(null) // NInput instance
+const inputInst = ref<any>(null)
 
 function countGraphemes(value: string) {
-  return splitter.countGraphemes(value)
+  return [...segmenter.segment(value)].length
 }
 
 const highlightPatterns = computed(() => {

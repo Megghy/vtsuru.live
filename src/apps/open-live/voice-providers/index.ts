@@ -3,6 +3,7 @@ import { LocalVoiceProvider } from './local'
 import { AzureVoiceProvider } from './azure'
 import { CustomApiVoiceProvider } from './custom-api'
 import { DEFAULT_MIMO_VOICE, MimoVoiceProvider } from './mimo'
+import { OpenAICompatibleVoiceProvider } from './openai'
 
 type ProviderFactory = (getConfig: ConfigSource) => VoiceProvider
 
@@ -28,11 +29,18 @@ export function hasVoiceProvider(id: string): boolean {
   return providerFactories.has(id)
 }
 
-// 注册内置 provider
 registerVoiceProvider('local', (getConfig) => new LocalVoiceProvider(getConfig))
 registerVoiceProvider('azure', (getConfig) => new AzureVoiceProvider(getConfig))
 registerVoiceProvider('api', (getConfig) => new CustomApiVoiceProvider(getConfig))
 registerVoiceProvider('mimo', (getConfig) => new MimoVoiceProvider(getConfig))
+registerVoiceProvider('openai', (getConfig) => new OpenAICompatibleVoiceProvider(getConfig))
 
 export * from './types'
-export { LocalVoiceProvider, AzureVoiceProvider, CustomApiVoiceProvider, MimoVoiceProvider, DEFAULT_MIMO_VOICE }
+export {
+  AzureVoiceProvider,
+  CustomApiVoiceProvider,
+  DEFAULT_MIMO_VOICE,
+  LocalVoiceProvider,
+  MimoVoiceProvider,
+  OpenAICompatibleVoiceProvider,
+}

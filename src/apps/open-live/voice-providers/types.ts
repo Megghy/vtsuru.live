@@ -26,9 +26,12 @@ export interface VoiceProvider {
   readonly description: string
   readonly isAudioProvider: boolean
 
-  initialize(): Promise<void>
-  getVoices(): Promise<VoiceOption[]> | VoiceOption[]
-  speak(text: string, audioRef?: HTMLAudioElement): Promise<void> | void
-  stop(): void
-  buildAudioUrl?(text: string): string | null
+  initialize: () => Promise<void>
+  getVoices: () => Promise<VoiceOption[]> | VoiceOption[]
+  speak: (text: string, audioRef?: HTMLAudioElement) => Promise<void> | void
+  stop: () => void
+  /** 同步生成可直接喂给 <audio> 的 GET URL */
+  buildAudioUrl?: (text: string) => string | null
+  /** 异步获取音频 Blob，用于需要 POST 鉴权调用的 provider（如 OpenAI 兼容） */
+  fetchAudio?: (text: string) => Promise<Blob>
 }

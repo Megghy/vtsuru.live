@@ -1,33 +1,40 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
-import { NList, NListItem } from 'naive-ui';
 import QuestionItem from './QuestionItem.vue'
 
 defineProps<{
   questions: QAInfo[]
+  selectable?: boolean
+  selectedIds?: number[]
 }>()
+
+const emit = defineEmits<{ (e: 'select', id: number): void }>()
 </script>
 
 <template>
-  <NList bordered>
-    <NListItem
+  <div class="question-list">
+    <QuestionItem
       v-for="item in questions"
       :key="item?.id"
+      :item="item"
+      :selectable="selectable"
+      :selected="selectedIds?.includes(item.id)"
+      @select="emit('select', $event)"
     >
-      <QuestionItem :item="item">
-        <template #footer>
-          <slot
-            name="footer"
-            :item="item"
-          />
-        </template>
-        <template #header-extra>
-          <slot
-            name="header-extra"
-            :item="item"
-          />
-        </template>
-      </QuestionItem>
-    </NListItem>
-  </NList>
+      <template #footer>
+        <slot name="footer" :item="item" />
+      </template>
+      <template #header-extra>
+        <slot name="header-extra" :item="item" />
+      </template>
+    </QuestionItem>
+  </div>
 </template>
+
+<style scoped>
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+</style>

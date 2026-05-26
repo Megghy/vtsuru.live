@@ -1,8 +1,7 @@
 import EasySpeech from 'easy-speech'
-import GraphemeSplitter from 'grapheme-splitter'
 import { useMessage } from 'naive-ui'
 import { reactive, ref, watch } from 'vue'
-import { clearInterval, setInterval } from 'worker-timers'
+import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 import { createVoiceProvider, DEFAULT_MIMO_VOICE, hasVoiceProvider } from '@/apps/open-live/voice-providers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
@@ -42,9 +41,43 @@ export interface SpeechSettings {
   giftTemplate: string
   enterTemplate: string
   providers: Record<string, any>
+
+  // 事件类型开关
+  enabledEvents: {
+    message: boolean
+    gift: boolean
+    sc: boolean
+    guard: boolean
+    enter: boolean
+  }
+
+  // 过滤
+  blacklistUsers: string[]
+  blacklistKeywords: string[]
+  maxTextLength: number
+
+  // 防刷屏
+  antiSpamInterval: number
+  deduplicateIdentical: boolean
+
+  // 优先级
+  priorityEvents: string[]
+
+  // 文本替换
+  textReplacements: Array<{ pattern: string; replacement: string; isRegex: boolean }>
+
+  // 提示音
+  notificationSound: {
+    enabled: boolean
+    events: string[]
+    volume: number
+  }
+
+  // 队列策略
+  queueFullStrategy: 'drop-oldest' | 'reject-new'
+  maxQueueSize: number
 }
 
-const MAX_QUEUE_SIZE = 50
 
 const DEFAULT_SETTINGS: SpeechSettings = {
   provider: 'local',
@@ -61,6 +94,17 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
   enterTemplate: '欢迎 {name} 进入直播间',
+  enabledEvents: { message: true, gift: true, sc: true, guard: true, enter: true },
+  blacklistUsers: [],
+  blacklistKeywords: [],
+  maxTextLength: 0,
+  antiSpamInterval: 0,
+  deduplicateIdentical: true,
+  priorityEvents: ['sc', 'guard'],
+  textReplacements: [],
+  notificationSound: { enabled: false, events: ['sc', 'guard'], volume: 0.5 },
+  queueFullStrategy: 'drop-oldest',
+  maxQueueSize: 50,
   providers: {
     azure: {
       azureVoice: 'zh-CN-XiaoxiaoNeural',
@@ -75,6 +119,14 @@ const DEFAULT_SETTINGS: SpeechSettings = {
     mimo: {
       mimoVoice: DEFAULT_MIMO_VOICE,
       mimoStyleTag: '',
+      mimoApiKey: '',
+    },
+    openai: {
+      baseUrl: 'https://api.openai.com',
+      apiKey: '',
+      model: 'tts-1',
+      voice: 'alloy',
+      format: 'mp3',
     },
   },
 }
@@ -157,6 +209,17 @@ function migrateLegacySettings(raw: any): SpeechSettings {
         mimoStyleTag: '',
       },
     },
+    enabledEvents: { ...DEFAULT_SETTINGS.enabledEvents },
+    blacklistUsers: [],
+    blacklistKeywords: [],
+    maxTextLength: 0,
+    antiSpamInterval: 0,
+    deduplicateIdentical: true,
+    priorityEvents: ['sc', 'guard'],
+    textReplacements: [],
+    notificationSound: { ...DEFAULT_SETTINGS.notificationSound },
+    queueFullStrategy: 'drop-oldest',
+    maxQueueSize: 50,
   }
 }
 
@@ -181,6 +244,29 @@ function ensureProviderDefaults(settings: SpeechSettings) {
     settings.providers.mimo.mimoVoice = DEFAULT_MIMO_VOICE
   }
   settings.providers.mimo.mimoStyleTag ??= ''
+  settings.providers.mimo.mimoApiKey ??= ''
+  if (!settings.providers.openai) {
+    settings.providers.openai = { ...DEFAULT_SETTINGS.providers.openai }
+  } else {
+    settings.providers.openai.baseUrl ??= DEFAULT_SETTINGS.providers.openai.baseUrl
+    settings.providers.openai.model ??= DEFAULT_SETTINGS.providers.openai.model
+    settings.providers.openai.voice ??= DEFAULT_SETTINGS.providers.openai.voice
+    settings.providers.openai.format ??= DEFAULT_SETTINGS.providers.openai.format
+    settings.providers.openai.apiKey ??= ''
+  }
+
+  // 新增字段迁移
+  settings.enabledEvents ??= { ...DEFAULT_SETTINGS.enabledEvents }
+  settings.blacklistUsers ??= []
+  settings.blacklistKeywords ??= []
+  settings.maxTextLength ??= 0
+  settings.antiSpamInterval ??= 0
+  settings.deduplicateIdentical ??= true
+  settings.priorityEvents ??= ['sc', 'guard']
+  settings.textReplacements ??= []
+  settings.notificationSound ??= { ...DEFAULT_SETTINGS.notificationSound }
+  settings.queueFullStrategy ??= 'drop-oldest'
+  settings.maxQueueSize ??= 50
 }
 
 let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null
@@ -188,7 +274,7 @@ let speechServiceInstance: ReturnType<typeof createSpeechService> | null = null
 function createSpeechService() {
   const message = useMessage()
   const accountInfo = useAccount()
-  const splitter = new GraphemeSplitter()
+  const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
   const settings = usePersistedStorage<SpeechSettings>('Setting.Speech', DEFAULT_SETTINGS)
   watch(settings, (value) => {
@@ -208,11 +294,23 @@ function createSpeechService() {
   const speakQueue = ref<QueueItem[]>([])
   const giftCombineMap = new Map<string, number>()
   const readedDanmaku = ref(0)
+  const spokenHistory = ref<Array<{ text: string; uname: string; type: string; time: number }>>([])
+  const isPaused = ref(false)
+  const lastSpeakTimeByUser = new Map<string, number>()
+  const recentMessages = new Set<string>()
 
   const apiAudio = ref<HTMLAudioElement>()
   let checkTimer: number | undefined
   let loadingTimeoutTimer: number | undefined
   let speechQueueTimer: number | undefined
+  let pendingObjectUrl: string | undefined
+
+  function revokePendingObjectUrl() {
+    if (pendingObjectUrl) {
+      URL.revokeObjectURL(pendingObjectUrl)
+      pendingObjectUrl = undefined
+    }
+  }
 
   const speechSynthesisInfo = ref<{
     speechSynthesis: SpeechSynthesis | undefined
@@ -261,11 +359,11 @@ function createSpeechService() {
       speechQueueTimer = undefined
     }
     if (checkTimer) {
-      clearInterval(checkTimer)
+      clearTimeout(checkTimer)
       checkTimer = undefined
     }
     if (loadingTimeoutTimer) {
-      clearInterval(loadingTimeoutTimer)
+      clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
     cancelSpeech()
@@ -335,7 +433,25 @@ function createSpeechService() {
       text = text.replace(templateConstants.guard_num.regex, (data.num ?? 0).toString())
     }
 
-    console.log(text)
+    // 文本替换规则
+    if (settings.value.textReplacements.length > 0) {
+      for (const rule of settings.value.textReplacements) {
+        if (!rule.pattern) continue
+        try {
+          if (rule.isRegex) {
+            text = text.replace(new RegExp(rule.pattern, 'gi'), rule.replacement)
+          } else {
+            text = text.replaceAll(rule.pattern, rule.replacement)
+          }
+        } catch { /* invalid regex, skip */ }
+      }
+    }
+
+    // 字数截断
+    if (settings.value.maxTextLength > 0 && text.length > settings.value.maxTextLength) {
+      text = text.slice(0, settings.value.maxTextLength)
+    }
+
     return text
   }
 
@@ -361,7 +477,7 @@ function createSpeechService() {
       const isVtsuruAPI = tempURL.hostname.toLowerCase().includes('voice.vtsuru.live')
       if (isVtsuruAPI) {
         tempURL.searchParams.set('vtsuruId', accountInfo.value?.id.toString() ?? '-1')
-        if (splitter.countGraphemes(tempURL.searchParams.get('text') ?? '') > 100) {
+        if ([...segmenter.segment(tempURL.searchParams.get('text') ?? '')].length > 100) {
           message.error('本站提供的测试接口字数不允许超过 100 字')
           return null
         }
@@ -384,33 +500,54 @@ function createSpeechService() {
     speechState.isSpeaking = true
     speechState.speakingText = text
 
-    if (checkTimer) clearInterval(checkTimer)
-    checkTimer = setInterval(() => {
+    if (checkTimer) clearTimeout(checkTimer)
+    checkTimer = setTimeout(() => {
       message.error('语音播放超时')
       cancelSpeech()
     }, 30000)
 
-    if (provider.isAudioProvider && provider.buildAudioUrl) {
-      const url = provider.buildAudioUrl(text)
-      if (!url) {
-        cancelSpeech()
-        return
-      }
-
+    if (provider.isAudioProvider) {
       speechState.isApiAudioLoading = true
       speechState.apiAudioSrc = ''
-      setTimeout(() => {
-        speechState.apiAudioSrc = url
-      }, 0)
 
-      if (loadingTimeoutTimer) clearInterval(loadingTimeoutTimer)
-      loadingTimeoutTimer = setInterval(() => {
+      if (loadingTimeoutTimer) clearTimeout(loadingTimeoutTimer)
+      loadingTimeoutTimer = setTimeout(() => {
         if (speechState.isApiAudioLoading) {
-          console.error('[TTS] 音频加载超时 (10秒)')
+          console.error('[TTS] 音频加载超时 (25秒)')
           message.error('音频加载超时，请检查网络连接或API状态')
           cancelSpeech()
         }
-      }, 10000)
+      }, 25000)
+
+      if (provider.fetchAudio) {
+        provider
+          .fetchAudio(text)
+          .then((blob) => {
+            const url = URL.createObjectURL(blob)
+            revokePendingObjectUrl()
+            pendingObjectUrl = url
+            setTimeout(() => {
+              speechState.apiAudioSrc = url
+            }, 0)
+          })
+          .catch((error) => {
+            console.error('[TTS] 获取音频失败:', error)
+            message.error(`语音合成失败: ${error instanceof Error ? error.message : '未知错误'}`)
+            cancelSpeech()
+          })
+      } else if (provider.buildAudioUrl) {
+        const url = provider.buildAudioUrl(text)
+        if (!url) {
+          cancelSpeech()
+          return
+        }
+        setTimeout(() => {
+          speechState.apiAudioSrc = url
+        }, 0)
+      } else {
+        message.error('当前语音提供商未实现音频获取')
+        cancelSpeech()
+      }
     } else {
       Promise.resolve(provider.speak(text))
         .then(() => {
@@ -428,6 +565,7 @@ function createSpeechService() {
 
   async function processQueue() {
     if (speechState.isSpeaking || speakQueue.value.length === 0) return
+    if (isPaused.value) return
 
     const now = Date.now()
     const combineDelay = (settings.value.combineGiftDelay ?? 0) * 1000
@@ -461,6 +599,23 @@ function createSpeechService() {
     if (text) {
       readedDanmaku.value++
 
+      // 已播报历史
+      spokenHistory.value.unshift({
+        text,
+        uname: targetItem.data.uname,
+        type: String(targetItem.data.type),
+        time: Date.now(),
+      })
+      if (spokenHistory.value.length > 50) spokenHistory.value.length = 50
+
+      // 提示音
+      const eventKey = getEventKey(targetItem.data.type)
+      if (settings.value.notificationSound.enabled
+        && eventKey
+        && settings.value.notificationSound.events.includes(eventKey)) {
+        await playNotificationSound()
+      }
+
       if (settings.value.provider === 'api' && settings.value.providers.api?.splitText) {
         text = insertSpaces(text)
       }
@@ -469,15 +624,34 @@ function createSpeechService() {
     }
   }
 
+  async function playNotificationSound(): Promise<void> {
+    return new Promise((resolve) => {
+      try {
+        const ctx = new AudioContext()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.value = 880
+        osc.type = 'sine'
+        gain.gain.value = settings.value.notificationSound.volume ?? 0.3
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+        osc.start()
+        osc.stop(ctx.currentTime + 0.3)
+        osc.onended = () => { ctx.close(); resolve() }
+      } catch { resolve() }
+    })
+  }
+
   function cancelSpeech() {
     speechState.isSpeaking = false
 
     if (checkTimer) {
-      clearInterval(checkTimer)
+      clearTimeout(checkTimer)
       checkTimer = undefined
     }
     if (loadingTimeoutTimer) {
-      clearInterval(loadingTimeoutTimer)
+      clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
 
@@ -487,6 +661,7 @@ function createSpeechService() {
       apiAudio.value.pause()
     }
     speechState.apiAudioSrc = ''
+    revokePendingObjectUrl()
 
     getCurrentProvider()?.stop()
     EasySpeech.cancel()
@@ -495,7 +670,7 @@ function createSpeechService() {
 
   function clearLoadingTimeout() {
     if (loadingTimeoutTimer) {
-      clearInterval(loadingTimeoutTimer)
+      clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
   }
@@ -503,13 +678,53 @@ function createSpeechService() {
   function addToQueue(data: EventModel) {
     if (!speechState.canSpeech) return
 
-    if (data.type === EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) {
-      return
-    }
-    if (data.type === EventDataTypes.Enter && !settings.value.enterTemplate) {
-      return
+    // 事件类型开关
+    const eventKey = getEventKey(data.type)
+    if (eventKey && !settings.value.enabledEvents[eventKey]) return
+
+    // 纯表情/emoji 弹幕跳过
+    if (data.type === EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) return
+
+    // 模板为空则不播报
+    if (data.type === EventDataTypes.Enter && !settings.value.enterTemplate) return
+
+    // 黑名单用户
+    if (settings.value.blacklistUsers.length > 0) {
+      const lowerName = data.uname.toLowerCase()
+      if (settings.value.blacklistUsers.some(u => lowerName === u.toLowerCase())) return
     }
 
+    // 黑名单关键词
+    if (settings.value.blacklistKeywords.length > 0 && data.msg) {
+      const lowerMsg = data.msg.toLowerCase()
+      if (settings.value.blacklistKeywords.some(kw => lowerMsg.includes(kw.toLowerCase()))) return
+    }
+
+    // 防刷屏：同一用户间隔
+    if (settings.value.antiSpamInterval > 0) {
+      const userKey = String(data.uid)
+      const lastTime = lastSpeakTimeByUser.get(userKey)
+      const now = Date.now()
+      if (lastTime && now - lastTime < settings.value.antiSpamInterval * 1000) return
+      lastSpeakTimeByUser.set(userKey, now)
+    }
+
+    // 去重：完全相同内容
+    if (settings.value.deduplicateIdentical && data.msg) {
+      const dedupKey = `${data.uid}:${data.msg}`
+      if (recentMessages.has(dedupKey)) return
+      recentMessages.add(dedupKey)
+      setTimeout(() => recentMessages.delete(dedupKey), 10000)
+    }
+
+    // 队列满策略
+    const maxSize = settings.value.maxQueueSize || 50
+    if (speakQueue.value.length >= maxSize) {
+      if (settings.value.queueFullStrategy === 'reject-new') return
+      speakQueue.value.splice(0, speakQueue.value.length - maxSize + 1)
+    }
+
+    // 礼物合并
     if (data.type === EventDataTypes.Gift && settings.value.combineGiftDelay) {
       const giftKey = `${data.uid}-${data.msg}`
       const existIndex = giftCombineMap.get(giftKey)
@@ -523,7 +738,6 @@ function createSpeechService() {
           exist.data.num += data.num
           exist.data.price += data.price
           exist.combineCount = (exist.combineCount ?? 0) + data.num
-          console.log(`[TTS] ${data.uname} 增加礼物数量: ${data.msg} [${exist.data.num - data.num} => ${exist.data.num}]`)
           return
         }
       }
@@ -531,20 +745,32 @@ function createSpeechService() {
       const newIndex = speakQueue.value.length
       giftCombineMap.set(giftKey, newIndex)
       setTimeout(() => {
-        if (giftCombineMap.get(giftKey) === newIndex) {
-          giftCombineMap.delete(giftKey)
-        }
+        if (giftCombineMap.get(giftKey) === newIndex) giftCombineMap.delete(giftKey)
       }, (settings.value.combineGiftDelay + 1) * 1000)
     }
 
-    speakQueue.value.push({
+    const item: QueueItem = {
       data,
       updateAt: data.type === EventDataTypes.Gift ? Date.now() : 0,
-    })
+    }
 
-    if (speakQueue.value.length > MAX_QUEUE_SIZE) {
-      const removed = speakQueue.value.splice(0, speakQueue.value.length - MAX_QUEUE_SIZE)
-      console.warn(`[TTS] 队列过长，已移除 ${removed.length} 个旧项目`)
+    // 优先级插队
+    const isPriority = settings.value.priorityEvents.includes(eventKey ?? '')
+    if (isPriority) {
+      speakQueue.value.unshift(item)
+    } else {
+      speakQueue.value.push(item)
+    }
+  }
+
+  function getEventKey(type: EventDataTypes): keyof SpeechSettings['enabledEvents'] | null {
+    switch (type) {
+      case EventDataTypes.Message: return 'message'
+      case EventDataTypes.Gift: return 'gift'
+      case EventDataTypes.SC: return 'sc'
+      case EventDataTypes.Guard: return 'guard'
+      case EventDataTypes.Enter: return 'enter'
+      default: return null
     }
   }
 
@@ -565,6 +791,21 @@ function createSpeechService() {
     if (index !== -1) {
       speakQueue.value.splice(index, 1)
     }
+  }
+
+  function moveQueueItem(from: number, to: number) {
+    if (from === to) return
+    const len = speakQueue.value.length
+    if (from < 0 || from >= len || to < 0 || to >= len) return
+    const [moved] = speakQueue.value.splice(from, 1)
+    speakQueue.value.splice(to, 0, moved)
+  }
+
+  function pinToTop(item: QueueItem) {
+    const index = speakQueue.value.indexOf(item)
+    if (index <= 0) return
+    speakQueue.value.splice(index, 1)
+    speakQueue.value.unshift(item)
   }
 
   function startSpeech() {
@@ -618,11 +859,56 @@ function createSpeechService() {
     return voices instanceof Promise ? [] : voices
   }
 
+  async function previewVoice(text = '你好，这是一段试听'): Promise<void> {
+    const provider = getCurrentProvider()
+    if (!provider) {
+      message.error('未选择语音提供商')
+      return
+    }
+
+    if (!provider.isAudioProvider) {
+      try {
+        await provider.speak(text)
+      } catch (error) {
+        message.error(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      }
+      return
+    }
+
+    let audioUrl: string | null = null
+    let createdObjectUrl = false
+    try {
+      if (provider.fetchAudio) {
+        const blob = await provider.fetchAudio(text)
+        audioUrl = URL.createObjectURL(blob)
+        createdObjectUrl = true
+      } else if (provider.buildAudioUrl) {
+        audioUrl = provider.buildAudioUrl(text)
+      }
+      if (!audioUrl) throw new Error('无法构造音频地址')
+
+      const audio = new Audio(audioUrl)
+      audio.volume = settings.value.speechInfo.volume ?? 1
+      const cleanup = () => {
+        if (createdObjectUrl) URL.revokeObjectURL(audioUrl)
+      }
+      audio.addEventListener('ended', cleanup, { once: true })
+      audio.addEventListener('error', cleanup, { once: true })
+      await audio.play()
+    } catch (error) {
+      if (createdObjectUrl && audioUrl) URL.revokeObjectURL(audioUrl)
+      console.error('[TTS] 试听失败:', error)
+      message.error(`试听失败: ${error instanceof Error ? error.message : '未知错误'}`)
+    }
+  }
+
   return {
     settings,
     speechState,
     speakQueue,
     readedDanmaku,
+    spokenHistory,
+    isPaused,
     speechSynthesisInfo,
     apiAudio,
     initialize,
@@ -630,6 +916,8 @@ function createSpeechService() {
     addToQueue,
     forceSpeak,
     removeFromQueue,
+    moveQueueItem,
+    pinToTop,
     clearQueue: () => {
       speakQueue.value = []
       giftCombineMap.clear()
@@ -642,8 +930,11 @@ function createSpeechService() {
     downloadConfig,
     getTextFromDanmaku,
     getAvailableVoices,
+    previewVoice,
     buildApiUrl,
     getCurrentProvider,
+    togglePause: () => { isPaused.value = !isPaused.value },
+    skipCurrent: () => { cancelSpeech() },
   }
 }
 

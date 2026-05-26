@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AddCircle24Regular, DismissCircle24Regular, History24Regular } from '@vicons/fluent'
-import GraphemeSplitter from 'grapheme-splitter'
 import {
-  NAlert, NAvatar, NBadge, NButton, NCard, NCheckbox, NDivider, NDrawer, NDrawerContent, NEmpty, NIcon, NImage, NInput, NList, NListItem, NFlex, NSpin, NTag, NText, NTime, useMessage } from 'naive-ui';
+  NAlert, NAvatar, NBadge, NButton, NCard, NCheckbox, NDivider, NDrawer, NDrawerContent, NEmpty, NIcon, NImage, NInput, NList, NListItem, NFlex, NPagination, NSpin, NTag, NText, NTime, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
@@ -34,7 +33,7 @@ interface LocalQuestion {
 const message = useMessage()
 const accountInfo = useAccount()
 const route = useRoute()
-const splitter = new GraphemeSplitter()
+const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
 // 本地提问历史
 const localQuestions = usePersistedStorage<LocalQuestion[]>('vtsuru-local-questions', [], {
@@ -48,6 +47,11 @@ const showLocalQuestionsDrawer = ref(false)
 // 问题相关状态
 const questionMessage = ref('')
 const publicQuestions = ref<QAInfo[]>([])
+const publicPageSize = ref(10)
+const publicPageNum = ref(1)
+const pagedPublicQuestions = computed(() =>
+  publicQuestions.value.slice((publicPageNum.value - 1) * publicPageSize.value, publicPageNum.value * publicPageSize.value),
+)
 const tags = ref<string[]>([])
 const selectedTag = ref<string | null>(null)
 const isAnonymous = ref(true)
@@ -77,7 +81,7 @@ const isUserLoggedIn = computed(() => !!accountInfo.value?.id)
 
 // 辅助函数
 function countGraphemes(value: string) {
-  return splitter.countGraphemes(value)
+  return [...segmenter.segment(value)].length
 }
 
 function isValidEmail(email: string): boolean {
@@ -120,7 +124,7 @@ async function uploadAnonymousImage(file: File) {
   formData.append('targetUserId', userInfo.id.toString())
 
   try {
-    const data = await QueryPostAPI<string>(`${FILE_API_URL}upload-anonymous`, formData)
+    const data = await QueryPostAPI<string>(`${FILE_API_URL}upload-anonymous`, formData, [['Turnstile', token.value]])
     if (data.code === 200 && data.data) {
       anonymousImageToken.value = data.data
       const url = URL.createObjectURL(file)
@@ -634,7 +638,7 @@ onUnmounted(() => {
 
         <div v-if="publicQuestions.length > 0" class="questions-stack">
           <NCard
-            v-for="item in publicQuestions"
+            v-for="item in pagedPublicQuestions"
             :key="item.id"
             :bordered="true"
             size="small"
@@ -681,6 +685,13 @@ onUnmounted(() => {
             </div>
           </NCard>
         </div>
+        <NPagination
+          v-if="publicQuestions.length > publicPageSize"
+          v-model:page="publicPageNum"
+          :item-count="publicQuestions.length"
+          :page-size="publicPageSize"
+          style="margin-top: 16px; justify-content: center;"
+        />
 
         <NEmpty v-else-if="!isGetting" class="empty" description="暂无公开回复" />
         <NSpin v-else class="loading" />

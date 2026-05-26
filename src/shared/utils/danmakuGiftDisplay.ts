@@ -65,7 +65,7 @@ export function getGiftPaymentDisplayMeta(item: GiftPaymentLike): GiftPaymentDis
     mysteryBoxName ? `来源 ${mysteryBoxName}` : undefined,
     mysteryBoxPriceText ? `盲盒 ￥${mysteryBoxPriceText}` : undefined,
     giftPriceText ? `${hasMysteryBoxPayment ? '开出' : '礼物'} ￥${giftPriceText}` : undefined,
-  ].filter(Boolean) as string[]
+  ].filter(Boolean)
 
   return {
     hasMysteryBoxPayment,

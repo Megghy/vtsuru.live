@@ -1,4 +1,5 @@
 import { TTS_API_URL } from '@/shared/config'
+import { ACCOUNT } from '@/api/account'
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
 export const DEFAULT_MIMO_VOICE = '冰糖'
@@ -6,6 +7,7 @@ export const DEFAULT_MIMO_VOICE = '冰糖'
 interface MimoProviderConfig {
   mimoVoice?: string
   mimoStyleTag?: string
+  mimoApiKey?: string
 }
 
 export class MimoVoiceProvider implements VoiceProvider {
@@ -38,10 +40,11 @@ export class MimoVoiceProvider implements VoiceProvider {
         const name = voice.name ?? voice.Name ?? id
         const language = voice.language ?? voice.Language
         const gender = voice.gender ?? voice.Gender
-        const languageText = language === 'zh' ? '中文' : language === 'en' ? '英文' : '集群相关'
+        const langText = language === 'zh' ? '中' : language === 'en' ? '英' : ''
         const genderText = gender === 'Male' ? '男' : gender === 'Female' ? '女' : ''
+        const tags = [langText, genderText].filter(Boolean).join('·')
         return {
-          label: genderText ? `${name} [${languageText}/${genderText}]` : `${name} [${languageText}]`,
+          label: tags ? `${name}  ${tags}` : name,
           value: id,
           meta: { language, gender },
         }
@@ -56,23 +59,31 @@ export class MimoVoiceProvider implements VoiceProvider {
   }
 
   buildAudioUrl(text: string): string | null {
-    const config = this.getConfig()
-    const providerCfg = (config.providers as Record<string, unknown>)?.mimo as MimoProviderConfig | undefined
+    const cfg = this.readConfig()
+    const voice = cfg.mimoVoice ?? DEFAULT_MIMO_VOICE
+
+    if (voice.startsWith('custom:')) {
+      const voiceId = voice.replace('custom:', '')
+      const url = new URL(`${TTS_API_URL}mimo/custom`)
+      url.searchParams.set('text', text)
+      url.searchParams.set('voiceId', voiceId)
+      if (cfg.mimoApiKey) url.searchParams.set('apiKey', cfg.mimoApiKey)
+      if (ACCOUNT.value?.token) url.searchParams.set('token', ACCOUNT.value.token)
+      return url.toString()
+    }
 
     const url = new URL(`${TTS_API_URL}mimo`)
     url.searchParams.set('text', text)
-    url.searchParams.set('voice', providerCfg?.mimoVoice ?? DEFAULT_MIMO_VOICE)
-    if (providerCfg?.mimoStyleTag) {
-      url.searchParams.set('styleTag', providerCfg.mimoStyleTag)
-    }
+    url.searchParams.set('voice', voice)
+    if (cfg.mimoStyleTag) url.searchParams.set('styleTag', cfg.mimoStyleTag)
+    if (cfg.mimoApiKey) url.searchParams.set('apiKey', cfg.mimoApiKey)
     return url.toString()
   }
 
-  speak(): void {
-    // 通过 audio 元素播放
-  }
+  speak(): void {}
+  stop(): void {}
 
-  stop(): void {
-    // audio 元素的 stop 由 store 处理
+  private readConfig(): MimoProviderConfig {
+    return (this.getConfig().providers?.mimo ?? {}) as MimoProviderConfig
   }
 }

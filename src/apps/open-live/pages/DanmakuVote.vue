@@ -726,7 +726,6 @@ function deleteTemplate(index: number) {
           <NCheckbox v-model:checked="voteConfig.allowMultipleVotes">
             允许重复投票
           </NCheckbox>
-
         </NFlex>
 
         <NDivider style="margin: 0" />

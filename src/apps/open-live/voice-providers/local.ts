@@ -26,7 +26,7 @@ export class LocalVoiceProvider implements VoiceProvider {
     }))
   }
 
-  speak(text: string): Promise<void> {
+  async speak(text: string): Promise<void> {
     const config = this.getConfig()
     const speechInfo = config.speechInfo ?? {}
     const synth = window.speechSynthesis
