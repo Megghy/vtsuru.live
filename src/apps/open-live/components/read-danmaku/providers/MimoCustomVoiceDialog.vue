@@ -3,16 +3,28 @@ import {
   NAlert, NButton, NInput, NModal, NRadioButton, NRadioGroup, NText, NUpload, useMessage,
 } from 'naive-ui'
 import type { UploadFileInfo } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryPostAPI, GetHeaders } from '@/api/query'
 import { TTS_API_URL } from '@/shared/config'
+import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 
+interface EditVoice {
+  id: number
+  name: string
+  type: 'clone' | 'design'
+  description?: string
+  directorNote?: string
+}
+
+const props = defineProps<{ editVoice?: EditVoice | null }>()
 const emit = defineEmits<{ (e: 'created'): void }>()
 const show = defineModel<boolean>('show', { default: false })
 
 const message = useMessage()
 const account = useAccount()
+
+const isEdit = computed(() => !!props.editVoice)
 
 const name = ref('')
 const type = ref<'clone' | 'design'>('clone')
@@ -24,6 +36,18 @@ const saving = ref(false)
 const previewing = ref(false)
 const previewAudio = ref<HTMLAudioElement | null>(null)
 
+watch(show, (v) => {
+  if (v && props.editVoice) {
+    name.value = props.editVoice.name
+    type.value = props.editVoice.type
+    description.value = props.editVoice.description ?? ''
+    directorNote.value = props.editVoice.directorNote ?? ''
+    audioFileList.value = []
+  } else if (!v) {
+    reset()
+  }
+})
+
 const canPreview = computed(() => {
   if (!previewText.value.trim()) return false
   if (type.value === 'clone') return audioFileList.value.length > 0
@@ -33,6 +57,7 @@ const canPreview = computed(() => {
 
 const canSave = computed(() => {
   if (!name.value.trim()) return false
+  if (isEdit.value) return true
   return canPreview.value
 })
 
@@ -87,13 +112,44 @@ async function preview() {
 async function save() {
   saving.value = true
   try {
-    const fd = buildFormData(false)
-    fd.append('name', name.value)
-    const resp = await QueryPostAPI(`${TTS_API_URL}mimo/voices/custom`, fd)
-    if (resp.code !== 200) {
-      throw new Error(resp.message || '保存失败')
+    if (isEdit.value) {
+      const fd = new FormData()
+      if (description.value.trim()) fd.append('description', description.value)
+      fd.append('directorNote', directorNote.value)
+      if (type.value === 'clone' && audioFileList.value[0]?.file) {
+        fd.append('audioFile', audioFileList.value[0].file)
+      }
+      const headers = Object.fromEntries(GetHeaders())
+      const resp = await fetch(`${TTS_API_URL}mimo/voices/custom/${props.editVoice!.id}`, {
+        method: 'PUT', body: fd, headers,
+      })
+      const data = await resp.json().catch(() => null)
+      if (!data || data.code !== 200) throw new Error(data?.message || '更新失败')
+      if (type.value === 'clone' && audioFileList.value[0]?.file) {
+        const file = audioFileList.value[0].file
+        await saveVoiceAudio(props.editVoice!.id, {
+          blob: file,
+          mimeType: file.type || (file.name.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'),
+          name: name.value,
+        })
+      }
+      message.success('已更新')
+    } else {
+      const fd = buildFormData(false)
+      fd.append('name', name.value)
+      const resp = await QueryPostAPI(`${TTS_API_URL}mimo/voices/custom`, fd)
+      if (resp.code !== 200) throw new Error(resp.message || '保存失败')
+      const voiceId = (resp.data as any)?.Id ?? (resp.data as any)?.id
+      if (type.value === 'clone' && audioFileList.value[0]?.file && voiceId) {
+        const file = audioFileList.value[0].file
+        await saveVoiceAudio(voiceId, {
+          blob: file,
+          mimeType: file.type || (file.name.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'),
+          name: name.value,
+        })
+      }
+      message.success('自定义音色已保存')
     }
-    message.success('自定义音色已保存')
     show.value = false
     emit('created')
     reset()
@@ -117,7 +173,7 @@ function reset() {
   <NModal
     v-model:show="show"
     preset="card"
-    title="新建自定义音色"
+    :title="isEdit ? '编辑自定义音色' : '新建自定义音色'"
     style="max-width: 480px"
     :mask-closable="!saving"
     :closable="!saving"
@@ -127,10 +183,10 @@ function reset() {
         <NText strong style="font-size: 12px">
           名称
         </NText>
-        <NInput v-model:value="name" placeholder="给音色起个名字" size="small" />
+        <NInput v-model:value="name" placeholder="给音色起个名字" size="small" :disabled="isEdit" />
       </div>
 
-      <div class="field">
+      <div v-if="!isEdit" class="field">
         <NText strong style="font-size: 12px">
           类型
         </NText>
@@ -147,7 +203,7 @@ function reset() {
       <template v-if="type === 'clone'">
         <div class="field">
           <NText strong style="font-size: 12px">
-            参考音频
+            参考音频{{ isEdit ? '（留空保持不变）' : '' }}
           </NText>
           <NUpload
             v-model:file-list="audioFileList"
@@ -159,7 +215,7 @@ function reset() {
               选择文件 (mp3/wav, 最大 10MB)
             </NButton>
           </NUpload>
-          <NText depth="3" style="font-size: 11px; line-height: 1.5">
+          <NText v-if="!isEdit" depth="3" style="font-size: 11px; line-height: 1.5">
             要求：清晰的单人语音，时长 5~30 秒为佳，避免背景音乐/噪声/混响。
             <br>
             建议用手机录音 App 在安静环境下录一段正常语速的朗读。
@@ -175,12 +231,16 @@ function reset() {
           <NInput
             v-model:value="description"
             type="textarea"
-            :rows="2"
-            placeholder="1-2句话描述：年龄/性别、音质/音色、语速/节奏、情感基调"
+            :rows="3"
+            placeholder="用自然语言描述想要的音色特征，1-4 句即可"
             size="small"
           />
-          <NText depth="3" style="font-size: 11px">
-            示例：年轻女性，声音清亮温柔，语速适中，带有轻微的撒娇感
+          <NText depth="3" style="font-size: 11px; line-height: 1.6">
+            关键维度：性别/年龄、音色质感（磁性/醇厚/清亮/沙哑）、情绪语气、语速节奏。
+            <br>
+            可选加入：角色人设、说话风格、场景描写。描述越具体越好，但避免矛盾特征。
+            <br>
+            示例：一位年迈的老先生，带北方口音，语速缓慢沉稳，嗓音略带沙哑和沧桑感，仿佛饱经风霜的老爷爷在讲故事
           </NText>
         </div>
       </template>
@@ -191,9 +251,18 @@ function reset() {
         </NText>
         <NInput
           v-model:value="directorNote"
-          placeholder="如：用温柔的语气朗读"
+          type="textarea"
+          :rows="2"
+          placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
           size="small"
         />
+        <NText depth="3" style="font-size: 11px; line-height: 1.6">
+          用自然语言描述朗读方式，支持多风格切换、复合情绪、字粒度控制。
+          <br>
+          简单示例：用轻快上扬的语调，语速稍快，带着压抑不住的激动与小骄傲
+          <br>
+          导演模式：可从【角色】【场景】【指导】三个维度详细刻画，适合角色配音等高要求场景
+        </NText>
       </div>
 
       <div class="field">
@@ -229,7 +298,7 @@ function reset() {
           :loading="saving"
           @click="save"
         >
-          保存
+          {{ isEdit ? '更新' : '保存' }}
         </NButton>
       </div>
     </template>

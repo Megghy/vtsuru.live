@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
-import { NIcon, NTooltip } from 'naive-ui'
+import { NIcon, NPopover } from 'naive-ui'
 
 defineProps<{
   label: string
@@ -13,12 +13,14 @@ defineProps<{
   <div class="section-field">
     <div class="head">
       <span class="label">{{ label }}</span>
-      <NTooltip v-if="hint">
+      <NPopover v-if="hint || $slots.hint" trigger="hover" placement="top" style="max-width: 360px">
         <template #trigger>
           <NIcon :component="Info24Filled" :size="14" class="icon" />
         </template>
-        {{ hint }}
-      </NTooltip>
+        <slot name="hint">
+          <span style="font-size: 12px; line-height: 1.6; white-space: pre-wrap">{{ hint }}</span>
+        </slot>
+      </NPopover>
       <span v-if="value !== undefined" class="value">{{ value }}</span>
     </div>
     <div class="body">

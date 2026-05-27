@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
+import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
 import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
 import { ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
@@ -7,6 +7,8 @@ import { QueryGetAPI, GetHeaders } from '@/api/query'
 import { TTS_API_URL } from '@/shared/config'
 import { useSpeechService } from '@/store/useSpeechService'
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
+import { MimoVoiceProvider, type MimoCustomVoiceInfo } from '@/apps/open-live/voice-providers/mimo'
+import { deleteVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 import MimoCustomVoiceDialog from './MimoCustomVoiceDialog.vue'
@@ -16,6 +18,8 @@ interface CustomVoice {
   name: string
   type: 'clone' | 'design'
   description?: string
+  directorNote?: string
+  audioUrl?: string
   createdAt: string
 }
 
@@ -28,6 +32,7 @@ const voices = ref<VoiceOption[]>([])
 const voicesLoading = ref(false)
 const customVoices = ref<CustomVoice[]>([])
 const showCreateDialog = ref(false)
+const editingVoice = ref<CustomVoice | null>(null)
 
 async function loadVoices() {
   if (voicesLoading.value) return
@@ -47,8 +52,19 @@ async function loadCustomVoices() {
   if (!account.value) return
   try {
     const resp = await QueryGetAPI<CustomVoice[]>(`${TTS_API_URL}mimo/voices/custom`)
-    if (resp.code === 200 && Array.isArray(resp.data)) customVoices.value = resp.data
+    if (resp.code === 200 && Array.isArray(resp.data)) {
+      customVoices.value = resp.data
+      const provider = speechService.getCurrentProvider()
+      if (provider instanceof MimoVoiceProvider) {
+        provider.setCustomVoices(resp.data as MimoCustomVoiceInfo[])
+      }
+    }
   } catch { /* ignore */ }
+}
+
+function editCustomVoice(voice: CustomVoice) {
+  editingVoice.value = voice
+  showCreateDialog.value = true
 }
 
 async function deleteCustomVoice(id: number) {
@@ -64,6 +80,7 @@ async function deleteCustomVoice(id: number) {
       if (settings.value.providers.mimo.mimoVoice === `custom:${id}`) {
         settings.value.providers.mimo.mimoVoice = '冰糖'
       }
+      await deleteVoiceAudio(id)
       message.success('已删除')
     }
   } catch { message.error('删除失败') }
@@ -92,16 +109,30 @@ watch(() => settings.value.provider, (val) => {
       />
     </SectionField>
 
-    <SectionField label="风格标签" hint="在文本前加风格标签控制朗读风格，如 (台湾腔) (开心) [悲伤] 等">
+    <SectionField label="风格标签">
+      <template #hint>
+        <div style="font-size: 12px; line-height: 1.7">
+          <p style="margin: 0 0 6px">在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。</p>
+          <table style="border-collapse: collapse; width: 100%; font-size: 11px">
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">基础情绪</td><td style="padding: 2px 6px">开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠</td></tr>
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">复合情绪</td><td style="padding: 2px 6px">怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情</td></tr>
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">语调风格</td><td style="padding: 2px 6px">温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉</td></tr>
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">音色定位</td><td style="padding: 2px 6px">磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑</td></tr>
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">腔调方言</td><td style="padding: 2px 6px">夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语</td></tr>
+            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">特殊</td><td style="padding: 2px 6px">(唱歌) — 需放在最开头</td></tr>
+          </table>
+          <p style="margin: 6px 0 0; color: var(--n-text-color-3)">文中还可插入 [叹气] [笑] [哽咽] [颤抖] [气声] 等音频标签做细粒度控制</p>
+        </div>
+      </template>
       <NInput
         v-model:value="settings.providers.mimo.mimoStyleTag"
-        placeholder="(台湾腔) 或 [开心]，可留空"
+        placeholder="(慵懒 磁性) 或 [开心]，可留空"
         size="small"
         :input-props="{ autocomplete: 'off' }"
       />
     </SectionField>
 
-    <SectionField label="自定义 API Key (可选)" hint="留空则使用平台默认 Key">
+    <SectionField label="自定义 API Key (可选)" hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快">
       <NInput
         v-model:value="settings.providers.mimo.mimoApiKey"
         type="password"
@@ -110,6 +141,11 @@ watch(() => settings.value.provider, (val) => {
         size="small"
         :input-props="{ autocomplete: 'new-password' }"
       />
+      <NText depth="3" style="font-size: 11px">
+        <a href="https://platform.xiaomimimo.com" target="_blank" rel="noopener" style="color: var(--n-text-color-3)">
+          前往 MiMo 开放平台获取 API Key →
+        </a>
+      </NText>
     </SectionField>
 
     <!-- 自定义音色 -->
@@ -155,6 +191,11 @@ watch(() => settings.value.provider, (val) => {
             >
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
             </NButton>
+            <NButton size="tiny" tertiary @click="editCustomVoice(v)">
+              <template #icon>
+                <NIcon :component="Edit20Filled" />
+              </template>
+            </NButton>
             <NPopconfirm @positive-click="deleteCustomVoice(v.id)">
               <template #trigger>
                 <NButton size="tiny" tertiary type="error">
@@ -170,7 +211,12 @@ watch(() => settings.value.provider, (val) => {
       </div>
     </SectionField>
 
-    <MimoCustomVoiceDialog v-model:show="showCreateDialog" @created="loadCustomVoices" />
+    <MimoCustomVoiceDialog
+      v-model:show="showCreateDialog"
+      :edit-voice="editingVoice"
+      @created="loadCustomVoices"
+      @update:show="(v: boolean) => { if (!v) editingVoice = null }"
+    />
   </div>
 </template>
 
