@@ -413,8 +413,6 @@ export const useAutoAction = defineStore('autoAction', () => {
     const index = autoActions.value.findIndex(action => action.id === id)
     if (index !== -1) {
       const removedAction = autoActions.value[index]
-      const needsGlobalTimerAfterRemoval = false
-      const wasGlobalTimerAction = false
 
       if (removedAction.triggerType === TriggerType.SCHEDULED) {
         stopIndividualTimer(id)
@@ -422,7 +420,7 @@ export const useAutoAction = defineStore('autoAction', () => {
 
       autoActions.value.splice(index, 1)
 
-      if (wasGlobalTimerAction && needsGlobalTimerAfterRemoval) {
+      if (removedAction.triggerType === TriggerType.SCHEDULED && removedAction.triggerConfig.useGlobalTimer) {
         restartGlobalTimer()
       }
     }
@@ -450,11 +448,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     }
   }
 
-  // 天选状态检查
-  function checkTianXuanStatus() {
-    // TODO: 实现检查天选时刻状态的逻辑
-  }
-  setInterval(checkTianXuanStatus, 5 * 60 * 1000)
+
 
   /**
    * 处理接收到的事件

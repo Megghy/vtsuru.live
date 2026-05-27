@@ -1,5 +1,5 @@
 import type { OpenLiveInfo } from '@/api/api-models'
-import { LiveWS } from 'bilibili-live-danmaku'
+import { LiveWS } from '@laplace.live/ws/client'
 import { clearInterval, setInterval } from 'worker-timers'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
@@ -45,31 +45,29 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         authBody: JSON.parse(auth.data.websocket_info.auth_body),
         address: auth.data.websocket_info.wss_link[0],
       })
-      chatClient.addEventListener('MESSAGE', (cmd) => {
-        switch (cmd.data.cmd as string) {
+      chatClient.addEventListener('msg', ({ data }) => {
+        switch ((data as any)?.cmd) {
           case 'LIVE_OPEN_PLATFORM_DM':
-            this.onDanmaku(cmd.data)
+            this.onDanmaku(data)
             break
-          case 'LIVE_OPEN_PLATFORM_GIFT':
-            this.onGift(cmd.data)
+          case 'LIVE_OPEN_PLATFORM_SEND_GIFT':
+            this.onGift(data)
             break
           case 'LIVE_OPEN_PLATFORM_GUARD':
-            this.onGuard(cmd.data)
+            this.onGuard(data)
             break
-          case 'LIVE_OPEN_PLATFORM_SC':
-            this.onSC(cmd.data)
+          case 'LIVE_OPEN_PLATFORM_SUPER_CHAT':
+            this.onSC(data)
             break
           case 'LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER':
-            this.onEnter(cmd.data)
+            this.onEnter(data)
             break
           case 'LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL':
-            this.onScDel(cmd.data)
-            break
-          default:
+            this.onScDel(data)
             break
         }
       })
-      chatClient.addEventListener('CONNECT_SUCCESS', () => {
+      chatClient.addEventListener('live', () => {
         console.log(
           `[${this.type}] 已连接房间: ${auth.data?.anchor_info.room_id}`,
         )

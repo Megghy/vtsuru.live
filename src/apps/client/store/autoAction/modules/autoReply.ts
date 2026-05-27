@@ -12,9 +12,7 @@ import {
   KeywordMatchType,
   TriggerType,
 } from '../types'
-import {
-  buildExecutionContext,
-} from '../utils'
+
 
 /**
  * 自动回复模块
@@ -96,24 +94,7 @@ export function useAutoReply(
               return !blockwordMatch // 如果匹配屏蔽词返回false，否则返回true
             },
           ],
-          // 附加选项：只处理第一个匹配的自动回复
-          customContextBuilder: (event, roomId, triggerType) => {
-            const context = buildExecutionContext(event, roomId, triggerType)
 
-            // 添加时间段判断变量
-            context.variables.timeOfDay = () => {
-              const hour = new Date().getHours()
-              if (hour < 6) return '凌晨'
-              if (hour < 9) return '早上'
-              if (hour < 12) return '上午'
-              if (hour < 14) return '中午'
-              if (hour < 18) return '下午'
-              if (hour < 22) return '晚上'
-              return '深夜'
-            }
-
-            return context
-          },
         },
       )
     }

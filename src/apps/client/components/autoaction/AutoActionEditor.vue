@@ -151,10 +151,15 @@ function getAdvancedSummary() {
 }
 
 .content-settings-card {
-  background-color: var(--n-color-modal); 
+  background-color: var(--n-color-modal);
+  border-radius: var(--n-border-radius);
 }
 
 .trigger-settings {
   width: 100%;
+}
+
+:deep(.n-collapse-item__header) {
+  font-weight: 500;
 }
 </style>

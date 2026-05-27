@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
-import { createStore, clear as idbClear, del as idbDel, get as idbGet, keys as idbKeys } from 'idb-keyval'
+import { createStore, clear as idbClear, del as idbDel, entries as idbEntries } from 'idb-keyval'
 import { Database20Regular, Delete16Filled, ArrowClockwise16Filled, Copy16Regular, Search16Regular, Flash24Regular } from '@vicons/fluent'
 import { NAlert, NButton, NCard, NDataTable, NEmpty, NPopconfirm, NFlex, NTag, NText, useMessage, NInput, NIcon } from 'naive-ui';
 import { h, onMounted, ref, computed } from 'vue'
@@ -41,45 +41,24 @@ const persistentLoading = ref(true)
 async function fetchPersistentData() {
   persistentLoading.value = true
   try {
-    const keys = await idbKeys(userDataStore)
-    const fetchedData: DataItem[] = []
-    for (const key of keys) {
-      try {
-        const value = await idbGet(key, userDataStore)
-        let valueDisplay = ''
-        let type: string = typeof value
+    const allEntries = await idbEntries(userDataStore)
+    persistentData.value = allEntries.map(([key, value]) => {
+      let valueDisplay = ''
+      let type: string = typeof value
 
-        if (value === null) {
-          valueDisplay = 'null'
-          type = 'null'
-        } else if (value === undefined) {
-          valueDisplay = 'undefined'
-          type = 'undefined'
-        } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-          valueDisplay = String(value)
-        } else if (Array.isArray(value)) {
-          valueDisplay = `[Array (${value.length})]`
-          type = 'array'
-        } else if (typeof value === 'object') {
-          try {
-            valueDisplay = JSON.stringify(value, null, 2)
-          } catch {
-            valueDisplay = '[Object]' // 不可序列化对象
-          }
-          type = 'object'
-        } else {
-          valueDisplay = `[${typeof value}]` // 其他类型
-        }
+      if (value === null) { valueDisplay = 'null'; type = 'null' }
+      else if (value === undefined) { valueDisplay = 'undefined'; type = 'undefined' }
+      else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') { valueDisplay = String(value) }
+      else if (Array.isArray(value)) { valueDisplay = `[Array (${value.length})]`; type = 'array' }
+      else if (typeof value === 'object') {
+        try { valueDisplay = JSON.stringify(value, null, 2) } catch { valueDisplay = '[Object]' }
+        type = 'object'
+      } else { valueDisplay = `[${typeof value}]` }
 
-        fetchedData.push({ key: String(key), value, valueDisplay, type })
-      } catch (getValueError) {
-        console.error(`[UserData IDB Manager] Error getting value for key ${String(key)}:`, getValueError)
-        fetchedData.push({ key: String(key), value: undefined, valueDisplay: '[Error Reading Value]', type: 'error' })
-      }
-    }
-    persistentData.value = fetchedData
+      return { key: String(key), value, valueDisplay, type }
+    })
   } catch (error) {
-    console.error('[UserData IDB Manager] Error fetching keys:', error)
+    console.error('[UserData IDB Manager] Error fetching entries:', error)
     message.error('无法加载用户持久化数据')
     persistentData.value = []
   } finally {

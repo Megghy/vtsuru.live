@@ -160,14 +160,37 @@ export function processTemplate(
   }
 }
 
-// 辅助函数：发送弹幕并记录日志
+// 全局弹幕发送速率限制器
+const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_SENDS = 12
+const sendTimestamps: number[] = []
+
+function canSendWithRateLimit(): boolean {
+  const now = Date.now()
+  while (sendTimestamps.length > 0 && now - sendTimestamps[0] > RATE_LIMIT_WINDOW_MS) {
+    sendTimestamps.shift()
+  }
+  return sendTimestamps.length < RATE_LIMIT_MAX_SENDS
+}
+
+function recordSend() {
+  sendTimestamps.push(Date.now())
+}
+
 async function sendAndLogDanmaku(
   sendHandler: (roomId: number, message: string) => Promise<boolean>,
   action: AutoActionItem,
   roomId: number,
   message: string,
 ): Promise<boolean> {
+  if (!canSendWithRateLimit()) {
+    console.warn(`[AutoAction] 速率限制：每分钟最多 ${RATE_LIMIT_MAX_SENDS} 条弹幕，跳过: ${action.name || action.id}`)
+    logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, '速率限制')
+      .catch(err => console.error('记录弹幕历史失败:', err))
+    return false
+  }
   try {
+    recordSend()
     const success = await sendHandler(roomId, message)
     logDanmakuHistory(
       action.id,
@@ -368,140 +391,60 @@ export function executeActions(
         break
       }
 
-      case ActionType.VTS_HOTKEY: {
-        if (!isTauri()) {
-          console.warn('[AutoAction] 非 Tauri 环境，跳过 VTS 动作')
-          break
-        }
-        const vts = useVtsStore()
-        const hotkeyID = (action.actionConfig as any)?.vtsHotkeyId as string | undefined
-        if (!hotkeyID) {
-          console.warn(`[AutoAction] VTS_HOTKEY 缺少 vtsHotkeyId: ${action.name || action.id}`)
-          break
-        }
-        const run = async () => {
-          if (!vts.canOperate) {
-            throw new Error('VTS 未连接或未鉴权')
-          }
-          await vts.triggerHotkey(hotkeyID)
-          runtimeState.lastExecutionTime[action.id] = Date.now()
-          options?.onSuccess?.(action, context)
-        }
-
-        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => void run().catch((err) => {
-            console.error('[AutoAction] VTS_HOTKEY 执行失败:', err)
-            options?.onError?.(action, context, err)
-          }), action.actionConfig.delaySeconds * 1000)
-        } else {
-          void run().catch((err) => {
-            console.error('[AutoAction] VTS_HOTKEY 执行失败:', err)
-            options?.onError?.(action, context, err)
-          })
-        }
-        break
-      }
-
-      case ActionType.VTS_PRESET: {
-        if (!isTauri()) {
-          console.warn('[AutoAction] 非 Tauri 环境，跳过 VTS 动作')
-          break
-        }
-        const vts = useVtsStore()
-        const presetId = (action.actionConfig as any)?.vtsPresetId as string | undefined
-        if (!presetId) {
-          console.warn(`[AutoAction] VTS_PRESET 缺少 vtsPresetId: ${action.name || action.id}`)
-          break
-        }
-        const run = async () => {
-          if (!vts.canOperate) {
-            throw new Error('VTS 未连接或未鉴权')
-          }
-          await vts.applyPreset(presetId)
-          runtimeState.lastExecutionTime[action.id] = Date.now()
-          options?.onSuccess?.(action, context)
-        }
-
-        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => void run().catch((err) => {
-            console.error('[AutoAction] VTS_PRESET 执行失败:', err)
-            options?.onError?.(action, context, err)
-          }), action.actionConfig.delaySeconds * 1000)
-        } else {
-          void run().catch((err) => {
-            console.error('[AutoAction] VTS_PRESET 执行失败:', err)
-            options?.onError?.(action, context, err)
-          })
-        }
-        break
-      }
-
-      case ActionType.VTS_DROP_ITEM: {
-        if (!isTauri()) {
-          console.warn('[AutoAction] 非 Tauri 环境，跳过 VTS 动作')
-          break
-        }
-        const vts = useVtsStore()
-        const fileName = (action.actionConfig as any)?.vtsItemFileName as string | undefined
-        const x = (action.actionConfig as any)?.vtsItemDropX as number | undefined
-        const size = (action.actionConfig as any)?.vtsItemDropSize as number | undefined
-        if (!fileName) {
-          console.warn(`[AutoAction] VTS_DROP_ITEM 缺少 vtsItemFileName: ${action.name || action.id}`)
-          break
-        }
-        const run = async () => {
-          if (!vts.canOperate) {
-            throw new Error('VTS 未连接或未鉴权')
-          }
-          await vts.dropItem(fileName, { x, size })
-          runtimeState.lastExecutionTime[action.id] = Date.now()
-          options?.onSuccess?.(action, context)
-        }
-
-        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-          setTimeout(() => void run().catch((err) => {
-            console.error('[AutoAction] VTS_DROP_ITEM 执行失败:', err)
-            options?.onError?.(action, context, err)
-          }), action.actionConfig.delaySeconds * 1000)
-        } else {
-          void run().catch((err) => {
-            console.error('[AutoAction] VTS_DROP_ITEM 执行失败:', err)
-            options?.onError?.(action, context, err)
-          })
-        }
-        break
-      }
-
+      case ActionType.VTS_HOTKEY:
+      case ActionType.VTS_PRESET:
+      case ActionType.VTS_DROP_ITEM:
       case ActionType.VTS_PARAM_ADD: {
         if (!isTauri()) {
           console.warn('[AutoAction] 非 Tauri 环境，跳过 VTS 动作')
           break
         }
         const vts = useVtsStore()
-        const paramId = (action.actionConfig as any)?.vtsParamId as string | undefined
-        const value = (action.actionConfig as any)?.vtsParamValue as number | undefined
-        const weight = (action.actionConfig as any)?.vtsParamWeight as number | undefined
-        if (!paramId || value === undefined) {
-          console.warn(`[AutoAction] VTS_PARAM_ADD 缺少 vtsParamId/vtsParamValue: ${action.name || action.id}`)
-          break
-        }
         const run = async () => {
-          if (!vts.canOperate) {
-            throw new Error('VTS 未连接或未鉴权')
+          if (!vts.canOperate) throw new Error('VTS 未连接或未鉴权')
+
+          switch (action.actionType) {
+            case ActionType.VTS_HOTKEY: {
+              const hotkeyID = (action.actionConfig as any)?.vtsHotkeyId as string | undefined
+              if (!hotkeyID) throw new Error(`VTS_HOTKEY 缺少 vtsHotkeyId: ${action.name || action.id}`)
+              await vts.triggerHotkey(hotkeyID)
+              break
+            }
+            case ActionType.VTS_PRESET: {
+              const presetId = (action.actionConfig as any)?.vtsPresetId as string | undefined
+              if (!presetId) throw new Error(`VTS_PRESET 缺少 vtsPresetId: ${action.name || action.id}`)
+              await vts.applyPreset(presetId)
+              break
+            }
+            case ActionType.VTS_DROP_ITEM: {
+              const fileName = (action.actionConfig as any)?.vtsItemFileName as string | undefined
+              if (!fileName) throw new Error(`VTS_DROP_ITEM 缺少 vtsItemFileName: ${action.name || action.id}`)
+              const x = (action.actionConfig as any)?.vtsItemDropX as number | undefined
+              const size = (action.actionConfig as any)?.vtsItemDropSize as number | undefined
+              await vts.dropItem(fileName, { x, size })
+              break
+            }
+            case ActionType.VTS_PARAM_ADD: {
+              const paramId = (action.actionConfig as any)?.vtsParamId as string | undefined
+              const value = (action.actionConfig as any)?.vtsParamValue as number | undefined
+              const weight = (action.actionConfig as any)?.vtsParamWeight as number | undefined
+              if (!paramId || value === undefined) throw new Error(`VTS_PARAM_ADD 缺少 vtsParamId/vtsParamValue: ${action.name || action.id}`)
+              await vts.injectParametersAdd([{ id: paramId, value, weight }])
+              break
+            }
           }
-          await vts.injectParametersAdd([{ id: paramId, value, weight }])
           runtimeState.lastExecutionTime[action.id] = Date.now()
           options?.onSuccess?.(action, context)
         }
 
         if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
           setTimeout(() => void run().catch((err) => {
-            console.error('[AutoAction] VTS_PARAM_ADD 执行失败:', err)
+            console.error(`[AutoAction] ${action.actionType} 执行失败:`, err)
             options?.onError?.(action, context, err)
           }), action.actionConfig.delaySeconds * 1000)
         } else {
           void run().catch((err) => {
-            console.error('[AutoAction] VTS_PARAM_ADD 执行失败:', err)
+            console.error(`[AutoAction] ${action.actionType} 执行失败:`, err)
             options?.onError?.(action, context, err)
           })
         }

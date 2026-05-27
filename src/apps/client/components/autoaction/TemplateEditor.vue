@@ -2,7 +2,8 @@
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { Code24Regular, Info24Filled, LiveOff24Regular, AppsListDetail24Regular } from '@vicons/fluent'
 import { NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NHighlight, NIcon, NInput, NModal, NScrollbar, NTabPane, NTabs, NText, useMessage, NGrid, NGi } from 'naive-ui';
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { EventDataTypes } from '@/api/api-models'
 import { evaluateTemplateExpressions, extractJsExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'
 import { TriggerType } from '@/apps/client/store/autoAction/types'
@@ -187,14 +188,19 @@ function evaluateTemplateForUI(template: string): string {
   }
 }
 
-const evaluatedTemplateResult = computed(() => {
-  if (!props.template.template || !showLivePreview.value) return ''
-  return evaluateTemplateForUI(props.template.template)
-})
+const evaluatedTemplateResult = ref('')
 
-const previewResult = computed(() => {
-  return evaluatedTemplateResult.value
-})
+const updatePreview = useDebounceFn(() => {
+  if (!props.template.template || !showLivePreview.value) {
+    evaluatedTemplateResult.value = ''
+    return
+  }
+  evaluatedTemplateResult.value = evaluateTemplateForUI(props.template.template)
+}, 250)
+
+watch(() => [props.template.template, showLivePreview.value], updatePreview, { immediate: true })
+
+const previewResult = computed(() => evaluatedTemplateResult.value)
 
 const lengthStatus = computed(() => {
   if (!props.template.template || !props.checkLength || !showLivePreview.value) {

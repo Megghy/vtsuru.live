@@ -1,5 +1,4 @@
-import type { MessageData } from 'bilibili-live-danmaku'
-import { LiveWS } from 'bilibili-live-danmaku'
+import { LiveWS } from '@laplace.live/ws/client'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { GuidUtils } from '@/shared/utils'
 import { AVATAR_URL } from '@/shared/config'
@@ -37,27 +36,26 @@ export default class DirectClient extends BaseDanmakuClient {
         protover: 3,
       })
 
-      chatClient.addEventListener('CONNECT_SUCCESS', () => {
+      chatClient.addEventListener('live', () => {
         console.log(`[direct] 已连接房间: ${this.authInfo.roomId}`)
       })
-      chatClient.addEventListener('DANMU_MSG', data => this.onDanmaku(data.data))
-      chatClient.addEventListener('SEND_GIFT', data => this.onGift(data.data))
-      chatClient.addEventListener('GUARD_BUY', data => this.onGuard(data.data))
-      chatClient.addEventListener('SUPER_CHAT_MESSAGE', data => this.onSC(data.data))
-      // chatClient.addEventListener('INTERACT_WORD', data => this.onEnter(data.data))
-      chatClient.addEventListener('MESSAGE', (data) => {
-        switch (data.data.cmd) {
+      chatClient.addEventListener('DANMU_MSG', ({ data }) => this.onDanmaku(data))
+      chatClient.addEventListener('SEND_GIFT', ({ data }) => this.onGift(data))
+      chatClient.addEventListener('SUPER_CHAT_MESSAGE', ({ data }) => this.onSC(data))
+      chatClient.addEventListener('msg', ({ data }) => {
+        const cmd = (data as any)?.cmd
+        switch (cmd) {
+          case 'GUARD_BUY':
+            this.onGuard(data)
+            break
           case 'INTERACT_WORD_V2':
-            this.onEnter(data.data)
+            this.onEnter(data)
             break
           case 'LIKE_INFO_V3_CLICK':
-            this.onLike(data.data)
-            break
-          default:
+            this.onLike(data)
             break
         }
       })
-      // chatClient.addEventListener('SUPER_CHAT_MESSAGE_DELETE', data => this.onScDel(data))
 
       return super.initClientInner(chatClient)
     } else {
@@ -69,7 +67,7 @@ export default class DirectClient extends BaseDanmakuClient {
     }
   }
 
-  public onDanmaku(command: MessageData.DANMU_MSG): void {
+  public onDanmaku(command: any): void {
     const info = command.info
     this.eventsRaw?.danmaku?.forEach((d) => {
       d(info, command)
@@ -98,7 +96,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onGift(command: MessageData.SEND_GIFT): void {
+  public onGift(command: any): void {
     const data = command.data
     this.eventsRaw?.gift?.forEach((d) => {
       d(data, command)
@@ -126,7 +124,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onSC(command: MessageData.SUPER_CHAT_MESSAGE): void {
+  public onSC(command: any): void {
     const data = command.data
     this.eventsRaw?.sc?.forEach((d) => {
       d(data, command)
@@ -154,7 +152,7 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onGuard(command: MessageData.GUARD_BUY): void {
+  public onGuard(command: any): void {
     const data = command.data
     this.eventsRaw?.guard?.forEach((d) => {
       d(data, command)
@@ -182,8 +180,8 @@ export default class DirectClient extends BaseDanmakuClient {
     })
   }
 
-  public onEnter(command: MessageData.INTERACT_WORD_V2): void {
-    const data = command.decoded
+  public onEnter(command: any): void {
+    const data = command.decoded ?? command.data
     const msgType = data?.msgType
 
     if (msgType === 1) {

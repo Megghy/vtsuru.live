@@ -25,8 +25,7 @@ const typeNameMap = {
   [HistoryType.COMMAND]: '命令执行',
 }
 
-// 刷新间隔（毫秒）
-const refreshInterval = 10000
+const refreshInterval = 30000
 let refreshTimer: number | null = null
 
 // 列定义

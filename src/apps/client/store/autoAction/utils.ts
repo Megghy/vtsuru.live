@@ -98,92 +98,39 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
  */
 export function getRandomTemplate(template: string): string | null {
   if (!template) return null
-  return template
+  const lines = template.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  if (lines.length === 0) return null
+  if (lines.length === 1) return lines[0]
+  return lines[Math.floor(Math.random() * lines.length)]
 }
 
-/**
- * 格式化模板，替换变量
- * @param template 模板字符串
- * @param context 执行上下文
- */
-export function formatTemplate(template: string, context: ExecutionContext): string {
-  if (!template) return ''
 
-  // 简单的模板替换
-  return template.replace(/\{([^}]+)\}/g, (match, path) => {
-    try {
-      // 解析路径
-      const parts = path.trim().split('.')
-      let value: any = context
 
-      // 特殊处理函数类型
-      if (parts[0] === 'timeOfDay' && typeof context.variables.timeOfDay === 'function') {
-        return String(context.variables.timeOfDay())
-      }
 
-      // 特殊处理event直接访问
-      if (parts[0] === 'event') {
-        value = context.event
-        parts.shift()
-      } else {
-        // 否则从variables中获取
-        value = context.variables
-      }
 
-      // 递归获取嵌套属性
-      for (const part of parts) {
-        if (value === undefined || value === null) return match
-        value = value[part]
-        if (typeof value === 'function') value = value()
-      }
 
-      return value !== undefined && value !== null ? String(value) : match
-    } catch (error) {
-      console.error('模板格式化错误:', error)
-      return match // 出错时返回原始匹配项
-    }
-  })
-}
-
-/**
- * 计算逻辑表达式
- * @param expression 表达式字符串
- * @param context 执行上下文
- */
 export function evaluateExpression(expression: string, context: ExecutionContext): boolean {
-  if (!expression || expression.trim() === '') return true // 空表达式默认为true
+  if (!expression || expression.trim() === '') return true
 
   try {
-    // 预定义函数和变量
     const utils = {
-      // 事件相关
       inDanmaku: (keyword: string) => {
         if (!context.event?.msg) return false
         return context.event.msg.includes(keyword)
       },
-
-      // 礼物相关
       giftValue: () => {
         if (!context.event) return 0
-        // EventModel.price 在当前实现中已统一为 “元”（礼物为总价值，可能为负数）
         return Math.abs(context.event.price || 0)
       },
-
       giftName: () => context.event?.msg || '',
       giftCount: () => context.event?.num || 0,
-
-      // 用户相关
       hasMedal: () => context.event?.fans_medal_wearing_status || false,
       medalLevel: () => context.event?.fans_medal_level || 0,
       isCaptain: () => (context.event?.guard_level || 0) > 0,
-
-      // 时间相关
       time: {
         hour: new Date().getHours(),
         minute: new Date().getMinutes(),
       },
-
-      // 字符串处理
       str: {
         includes: (str: string, search: string) => str.includes(search),
         startsWith: (str: string, search: string) => str.startsWith(search),
@@ -191,88 +138,22 @@ export function evaluateExpression(expression: string, context: ExecutionContext
       },
     }
 
-    // 创建安全的eval环境
+    const scopeKeys = Object.keys(utils)
+    const scopeValues = Object.values(utils)
+
     // eslint-disable-next-line ts/no-implied-eval, no-new-func
     const evalFunc = new Function(
       'context',
       'event',
-      'utils',
-      `try {
-        with(utils) {
-          return (${expression});
-        }
-      } catch(e) {
-        console.error('表达式评估错误:', e);
-        return false;
-      }`,
+      ...scopeKeys,
+      `try { return (${expression}); } catch(e) { console.error('表达式评估错误:', e); return false; }`,
     )
 
-    // 执行表达式
-    return Boolean(evalFunc(context, context.event, utils))
+    return Boolean(evalFunc(context, context.event, ...scopeValues))
   } catch (error) {
     console.error('表达式评估错误:', error)
-    return false // 出错时返回false
+    return false
   }
-}
-
-/**
- * 格式化消息模板，替换变量
- * @param template 模板字符串
- * @param params 参数对象
- */
-export function formatMessage(template: string, params: Record<string, any>): string {
-  if (!template) return ''
-
-  // 简单的模板替换
-  return template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
-    try {
-      // 解析路径
-      const parts = path.trim().split('.')
-      let value: any = params
-
-      // 递归获取嵌套属性
-      for (const part of parts) {
-        if (value === undefined || value === null) return match
-        value = value[part]
-        if (typeof value === 'function') value = value()
-      }
-
-      return value !== undefined && value !== null ? String(value) : match
-    } catch (error) {
-      console.error('模板格式化错误:', error)
-      return match // 出错时返回原始匹配项
-    }
-  })
-}
-
-/**
- * 检查是否应该处理自动操作
- * @param config 配置对象，需要包含enabled和onlyDuringLive属性
- * @param config.enabled 是否启用
- * @param config.onlyDuringLive 是否仅直播中启用
- * @param isLive 当前是否为直播状态
- */
-export function shouldProcess(config: { enabled: boolean, onlyDuringLive: boolean }, isLive: boolean): boolean {
-  if (!config.enabled) return false
-  if (config.onlyDuringLive && !isLive) return false
-  return true
-}
-
-/**
- * 检查用户是否符合过滤条件
- * @param config 配置对象，需要包含userFilterEnabled、requireMedal和requireCaptain属性
- * @param config.userFilterEnabled 是否启用用户过滤
- * @param config.requireMedal 是否要求佩戴粉丝牌
- * @param config.requireCaptain 是否要求舰队身份
- * @param event 事件对象
- * @param event.fans_medal_wearing_status 是否佩戴粉丝牌
- * @param event.guard_level 舰队等级
- */
-export function checkUserFilter(config: { userFilterEnabled: boolean, requireMedal: boolean, requireCaptain: boolean }, event: { fans_medal_wearing_status?: boolean, guard_level?: number }): boolean {
-  if (!config.userFilterEnabled) return true
-  if (config.requireMedal && !event.fans_medal_wearing_status) return false
-  if (config.requireCaptain && (!event.guard_level || event.guard_level === 0)) return false
-  return true
 }
 
 /**

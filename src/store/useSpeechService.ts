@@ -49,6 +49,23 @@ export interface SpeechSettings {
     sc: boolean
     guard: boolean
     enter: boolean
+    follow: boolean
+  }
+
+  // 进入欢迎过滤
+  enterFilter: {
+    mode: 'all' | 'medal' | 'guard-3' | 'guard-2' | 'guard-1'
+    medalLevel: number
+  }
+
+  // 关注模板
+  followTemplate: string
+
+  // 定时播报
+  timedBroadcast: {
+    enabled: boolean
+    intervalMinutes: number
+    texts: string[]
   }
 
   // 过滤
@@ -94,7 +111,10 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
   giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
   enterTemplate: '欢迎 {name} 进入直播间',
-  enabledEvents: { message: true, gift: true, sc: true, guard: true, enter: true },
+  enabledEvents: { message: true, gift: true, sc: true, guard: true, enter: true, follow: true },
+  enterFilter: { mode: 'all', medalLevel: 0 },
+  followTemplate: '感谢 {name} 关注直播间',
+  timedBroadcast: { enabled: false, intervalMinutes: 10, texts: [] },
   blacklistUsers: [],
   blacklistKeywords: [],
   maxTextLength: 0,
@@ -210,6 +230,9 @@ function migrateLegacySettings(raw: any): SpeechSettings {
       },
     },
     enabledEvents: { ...DEFAULT_SETTINGS.enabledEvents },
+    enterFilter: { ...DEFAULT_SETTINGS.enterFilter },
+    followTemplate: DEFAULT_SETTINGS.followTemplate,
+    timedBroadcast: { ...DEFAULT_SETTINGS.timedBroadcast },
     blacklistUsers: [],
     blacklistKeywords: [],
     maxTextLength: 0,
@@ -257,6 +280,10 @@ function ensureProviderDefaults(settings: SpeechSettings) {
 
   // 新增字段迁移
   settings.enabledEvents ??= { ...DEFAULT_SETTINGS.enabledEvents }
+  settings.enabledEvents.follow ??= true
+  settings.enterFilter ??= { ...DEFAULT_SETTINGS.enterFilter }
+  settings.followTemplate ??= DEFAULT_SETTINGS.followTemplate
+  settings.timedBroadcast ??= { ...DEFAULT_SETTINGS.timedBroadcast }
   settings.blacklistUsers ??= []
   settings.blacklistKeywords ??= []
   settings.maxTextLength ??= 0
@@ -303,6 +330,8 @@ function createSpeechService() {
   let checkTimer: number | undefined
   let loadingTimeoutTimer: number | undefined
   let speechQueueTimer: number | undefined
+  let timedBroadcastTimer: number | undefined
+  let timedBroadcastIndex = 0
   let pendingObjectUrl: string | undefined
 
   function revokePendingObjectUrl() {
@@ -358,6 +387,16 @@ function createSpeechService() {
     }
   }
 
+  watch(
+    () => [
+      settings.value.timedBroadcast.enabled,
+      settings.value.timedBroadcast.intervalMinutes,
+      settings.value.timedBroadcast.texts.filter(t => t.trim()).join('\n'),
+      speechState.canSpeech,
+    ],
+    () => { startTimedBroadcast() },
+  )
+
   function destroy() {
     if (speechQueueTimer) {
       clearInterval(speechQueueTimer)
@@ -371,6 +410,7 @@ function createSpeechService() {
       clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
+    stopTimedBroadcast()
     cancelSpeech()
     giftCombineMap.clear()
     speakQueue.value = []
@@ -412,9 +452,12 @@ function createSpeechService() {
         if (!settings.value.enterTemplate) return
         text = settings.value.enterTemplate
         break
+      case EventDataTypes.Follow:
+        if (!settings.value.followTemplate) return
+        text = settings.value.followTemplate
+        break
       case EventDataTypes.Like:
       case EventDataTypes.SCDel:
-      case EventDataTypes.Follow:
         return
     }
 
@@ -693,6 +736,25 @@ function createSpeechService() {
     // 模板为空则不播报
     if (data.type === EventDataTypes.Enter && !settings.value.enterTemplate) return
 
+    // 进入欢迎身份过滤
+    if (data.type === EventDataTypes.Enter) {
+      const { mode, medalLevel } = settings.value.enterFilter
+      switch (mode) {
+        case 'medal':
+          if (!data.fans_medal_wearing_status || data.fans_medal_level < medalLevel) return
+          break
+        case 'guard-3':
+          if (!data.guard_level || data.guard_level > 3) return
+          break
+        case 'guard-2':
+          if (!data.guard_level || data.guard_level > 2) return
+          break
+        case 'guard-1':
+          if (data.guard_level !== 1) return
+          break
+      }
+    }
+
     // 黑名单用户
     if (settings.value.blacklistUsers.length > 0) {
       const lowerName = data.uname.toLowerCase()
@@ -775,6 +837,7 @@ function createSpeechService() {
       case EventDataTypes.SC: return 'sc'
       case EventDataTypes.Guard: return 'guard'
       case EventDataTypes.Enter: return 'enter'
+      case EventDataTypes.Follow: return 'follow'
       default: return null
     }
   }
@@ -818,10 +881,33 @@ function createSpeechService() {
     message.success('服务已启动')
   }
 
+  function startTimedBroadcast() {
+    stopTimedBroadcast()
+    if (!speechState.canSpeech) return
+    const { enabled, intervalMinutes, texts } = settings.value.timedBroadcast
+    const validTexts = texts.filter(t => t.trim())
+    if (!enabled || validTexts.length === 0 || intervalMinutes <= 0) return
+    timedBroadcastTimer = setInterval(() => {
+      if (!speechState.canSpeech || isPaused.value) return
+      if (speechState.isSpeaking || speechState.isApiAudioLoading) return
+      const text = validTexts[timedBroadcastIndex % validTexts.length]
+      timedBroadcastIndex++
+      doSpeak(text.trim())
+    }, intervalMinutes * 60 * 1000)
+  }
+
+  function stopTimedBroadcast() {
+    if (timedBroadcastTimer) {
+      clearInterval(timedBroadcastTimer)
+      timedBroadcastTimer = undefined
+    }
+  }
+
   function stopSpeech() {
     speechState.canSpeech = false
     speakQueue.value = []
     cancelSpeech()
+    stopTimedBroadcast()
     message.success('已停止监听')
   }
 

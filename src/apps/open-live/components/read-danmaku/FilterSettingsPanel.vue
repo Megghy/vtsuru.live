@@ -2,12 +2,20 @@
 import { Add20Filled, Delete20Filled } from '@vicons/fluent'
 import {
   NButton, NCheckbox, NDivider, NDynamicTags, NIcon,
-  NInput, NInputNumber, NSwitch, NText,
+  NInput, NInputNumber, NSelect, NSwitch, NText,
 } from 'naive-ui'
 import { useSpeechService } from '@/store/useSpeechService'
 import SectionField from './SectionField.vue'
 
 const { settings } = useSpeechService()
+
+const enterFilterOptions = [
+  { label: '所有人', value: 'all' },
+  { label: '戴粉丝牌', value: 'medal' },
+  { label: '舰长及以上', value: 'guard-3' },
+  { label: '提督及以上', value: 'guard-2' },
+  { label: '总督', value: 'guard-1' },
+]
 
 function addReplacement() {
   settings.value.textReplacements.push({ pattern: '', replacement: '', isRegex: false })
@@ -20,6 +28,27 @@ function removeReplacement(index: number) {
 
 <template>
   <div class="panel">
+    <SectionField label="进入欢迎过滤" hint="限制哪些身份的用户触发进入欢迎">
+      <NFlex align="center" :size="8">
+        <NSelect
+          v-model:value="settings.enterFilter.mode"
+          :options="enterFilterOptions"
+          size="small"
+          style="width: 140px"
+        />
+        <template v-if="settings.enterFilter.mode === 'medal'">
+          <NText depth="3" style="font-size: 11px">等级 ≥</NText>
+          <NInputNumber
+            v-model:value="settings.enterFilter.medalLevel"
+            :min="0" :max="40" size="small"
+            style="width: 80px"
+          />
+        </template>
+      </NFlex>
+    </SectionField>
+
+    <NDivider style="margin: 4px 0" />
+
     <SectionField label="屏蔽用户" hint="这些用户的弹幕/礼物不会播报">
       <NDynamicTags v-model:value="settings.blacklistUsers" size="small" />
     </SectionField>

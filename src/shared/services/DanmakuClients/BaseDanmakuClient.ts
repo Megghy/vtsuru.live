@@ -1,4 +1,4 @@
-import type { LiveWS } from 'bilibili-live-danmaku'
+import type { LiveWS } from '@laplace.live/ws/client'
 // BaseDanmakuClient.ts
 import type { EventModel } from '@/api/api-models'
 // 导入事件模型和类型枚举
@@ -197,8 +197,7 @@ export default abstract class BaseDanmakuClient {
       finishWait?.('error')
     })
 
-    // 监听连接成功事件
-    chatClient.addEventListener('CONNECT_SUCCESS', () => {
+    chatClient.addEventListener('live', () => {
       console.log(`[${this.type}] 弹幕客户端连接成功`)
       isConnected = true
       finishWait?.('connected')
@@ -216,7 +215,7 @@ export default abstract class BaseDanmakuClient {
 
     // 监听原始消息事件 (通用)
     // 注意: 子类可能也会监听特定事件名, 这里的 'msg' 是备用或处理未被特定监听器捕获的事件
-    chatClient.addEventListener('MESSAGE', (command: any) => this.onRawMessage(command.data))
+    chatClient.addEventListener('msg', (event: any) => this.onRawMessage(event.data))
 
     this.client = chatClient // 保存客户端实例
 

@@ -4,9 +4,9 @@ import { ArrowDown24Regular, ArrowUp24Regular, Edit16Regular, Add16Regular, Copy
 import type { DataTableColumns } from 'naive-ui'
 import {
   NButton, NDataTable, NDropdown, NEmpty, NFlex, NIcon, NTag, NText, NTooltip, useMessage,
-  NSwitch, NInput
+  NSwitch, NInput, useDialog
 } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, h, nextTick, ref } from 'vue'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import TimerCountdown from './TimerCountdown.vue'
@@ -24,6 +24,7 @@ const emit = defineEmits<{
 
 const autoActionStore = useAutoAction()
 const message = useMessage()
+const dialog = useDialog()
 const biliCookieStore = useBiliCookie()
 
 const searchText = ref('')
@@ -226,21 +227,71 @@ function duplicateAction(action: AutoActionItem) {
   autoActionStore.autoActions.push(newActionData)
   
   if (newActionData.triggerType === TriggerType.SCHEDULED) {
-    // Restart logic for scheduled
-    setTimeout(() => {
-       const added = autoActionStore.autoActions.find(a => a.id === newActionId)
-       if (added) {
-         if (added.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer()
-         else autoActionStore.startIndividualTimer(added)
-       }
-    }, 100)
+    nextTick(() => {
+      const added = autoActionStore.autoActions.find(a => a.id === newActionId)
+      if (added) {
+        if (added.triggerConfig.useGlobalTimer) autoActionStore.restartGlobalTimer()
+        else autoActionStore.startIndividualTimer(added)
+      }
+    })
   }
   message.success('已复制')
 }
 
 function deleteAction(action: AutoActionItem) {
-  autoActionStore.removeAutoAction(action.id)
-  message.success('已删除')
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除操作「${action.name || '未命名操作'}」吗？此操作不可撤销。`,
+    positiveText: '删除',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      autoActionStore.removeAutoAction(action.id)
+      message.success('已删除')
+    },
+  })
+}
+
+function exportActions() {
+  const actionsToExport = filteredActions.value
+  if (actionsToExport.length === 0) {
+    message.warning('没有可导出的操作')
+    return
+  }
+  const data = JSON.stringify(actionsToExport, null, 2)
+  const blob = new Blob([data], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `autoaction-${props.triggerType}-${Date.now()}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+  message.success(`已导出 ${actionsToExport.length} 条操作`)
+}
+
+function importActions() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const imported = JSON.parse(text) as AutoActionItem[]
+      if (!Array.isArray(imported)) throw new Error('无效的配置格式')
+      let count = 0
+      for (const item of imported) {
+        if (item.triggerType !== props.triggerType) continue
+        item.id = `auto-action-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        autoActionStore.autoActions.push(item)
+        count++
+      }
+      message.success(`已导入 ${count} 条操作`)
+    } catch (err) {
+      message.error(`导入失败: ${(err as Error).message}`)
+    }
+  }
+  input.click()
 }
 </script>
 
@@ -292,6 +343,20 @@ function deleteAction(action: AutoActionItem) {
             </template>
           </NInput>
           <slot name="extra-actions" />
+          <NDropdown
+            trigger="hover"
+            :options="[
+              { label: '导出配置', key: 'export' },
+              { label: '导入配置', key: 'import' },
+            ]"
+            @select="(key: string) => key === 'export' ? exportActions() : importActions()"
+          >
+            <NButton size="small" quaternary>
+              <template #icon>
+                <NIcon :component="MoreHorizontal24Regular" />
+              </template>
+            </NButton>
+          </NDropdown>
           <NButton size="small" secondary type="warning" @click="$emit('test')">
             测试
           </NButton>
@@ -327,8 +392,11 @@ function deleteAction(action: AutoActionItem) {
           :data="filteredActions"
           :row-key="row => row.id"
           :bordered="false"
+          :virtual-scroll="filteredActions.length > 20"
+          :max-height="filteredActions.length > 20 ? 600 : undefined"
           class="action-table"
           size="small"
+          striped
         />
       </transition>
     </div>
@@ -343,13 +411,18 @@ function deleteAction(action: AutoActionItem) {
 }
 
 .action-list-header {
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--n-divider-color);
-  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: var(--n-color-embedded);
+  border-radius: var(--n-border-radius);
+  margin-bottom: 12px;
 }
 
 .action-table :deep(.n-data-table-td) {
-  padding: 12px 8px;
+  padding: 10px 8px;
+}
+
+.action-table :deep(.n-data-table-tr:hover) {
+  background-color: var(--n-color-hover);
 }
 
 .action-name-cell {
@@ -362,13 +435,13 @@ function deleteAction(action: AutoActionItem) {
   display: flex;
   gap: 4px;
   border-left: 1px solid var(--n-divider-color);
-  padding-left: 16px;
+  padding-left: 12px;
+  margin-left: 4px;
 }
 
-/* Fade Transition */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .fade-enter-from,
