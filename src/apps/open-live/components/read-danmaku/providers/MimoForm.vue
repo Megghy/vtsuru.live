@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
 import { NButton, NEmpty, NFlex, NIcon, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, GetHeaders } from '@/api/query'
 import { TTS_API_URL } from '@/shared/config'
@@ -93,6 +93,18 @@ function useCustomVoice(voice: CustomVoice) {
 const isCustomSelected = (v: CustomVoice) =>
   settings.value.providers.mimo.mimoVoice === `custom:${v.id}`
 
+const allVoiceOptions = computed<any[]>(() => {
+  const customOptions = customVoices.value.map(v => ({
+    label: `${v.name}（${v.type === 'clone' ? '克隆' : '描述'}）`,
+    value: `custom:${v.id}`,
+  }))
+  if (customOptions.length === 0) return voices.value
+  return [
+    { type: 'group', label: '自定义音色', key: 'custom', children: customOptions },
+    { type: 'group', label: '预置音色', key: 'preset', children: voices.value },
+  ]
+})
+
 watch(() => settings.value.provider, (val) => {
   if (val === 'mimo') { loadVoices(); loadCustomVoices() }
 }, { immediate: true })
@@ -100,10 +112,10 @@ watch(() => settings.value.provider, (val) => {
 
 <template>
   <div class="form">
-    <SectionField label="预置音色">
+    <SectionField label="音色选择">
       <VoiceSelectWithPreview
         v-model="settings.providers.mimo.mimoVoice"
-        :options="voices"
+        :options="allVoiceOptions"
         :loading="voicesLoading"
         @focus="loadVoices"
       />
@@ -112,16 +124,56 @@ watch(() => settings.value.provider, (val) => {
     <SectionField label="风格标签">
       <template #hint>
         <div style="font-size: 12px; line-height: 1.7">
-          <p style="margin: 0 0 6px">在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。</p>
+          <p style="margin: 0 0 6px">
+            在文本开头用 <code>()</code> 或 <code>[]</code> 包裹风格词，可组合多个。
+          </p>
           <table style="border-collapse: collapse; width: 100%; font-size: 11px">
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">基础情绪</td><td style="padding: 2px 6px">开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠</td></tr>
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">复合情绪</td><td style="padding: 2px 6px">怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情</td></tr>
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">语调风格</td><td style="padding: 2px 6px">温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉</td></tr>
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">音色定位</td><td style="padding: 2px 6px">磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑</td></tr>
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">腔调方言</td><td style="padding: 2px 6px">夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语</td></tr>
-            <tr><td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">特殊</td><td style="padding: 2px 6px">(唱歌) — 需放在最开头</td></tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                基础情绪
+              </td><td style="padding: 2px 6px">
+                开心 / 悲伤 / 愤怒 / 恐惧 / 惊讶 / 兴奋 / 委屈 / 冷漠
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                复合情绪
+              </td><td style="padding: 2px 6px">
+                怅然 / 欣慰 / 无奈 / 愧疚 / 释然 / 忐忑 / 动情
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                语调风格
+              </td><td style="padding: 2px 6px">
+                温柔 / 高冷 / 活泼 / 慵懒 / 俏皮 / 深沉 / 凌厉
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                音色定位
+              </td><td style="padding: 2px 6px">
+                磁性 / 醇厚 / 清亮 / 空灵 / 甜美 / 沙哑
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                腔调方言
+              </td><td style="padding: 2px 6px">
+                夹子音 / 御姐音 / 正太音 / 台湾腔 / 东北话 / 粤语
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 6px; white-space: nowrap; color: var(--n-text-color-2)">
+                特殊
+              </td><td style="padding: 2px 6px">
+                (唱歌) — 需放在最开头
+              </td>
+            </tr>
           </table>
-          <p style="margin: 6px 0 0; color: var(--n-text-color-3)">文中还可插入 [叹气] [笑] [哽咽] [颤抖] [气声] 等音频标签做细粒度控制</p>
+          <p style="margin: 6px 0 0; color: var(--n-text-color-3)">
+            文中还可插入 [叹气] [笑] [哽咽] [颤抖] [气声] 等音频标签做细粒度控制
+          </p>
         </div>
       </template>
       <NInput

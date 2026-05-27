@@ -1,4 +1,5 @@
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
+import { createOpenAIClient, synthesizeSpeech } from './ai-client'
 
 interface OpenAIProviderConfig {
   baseUrl?: string
@@ -40,26 +41,14 @@ export class OpenAICompatibleVoiceProvider implements VoiceProvider {
     const speechInfo = this.getConfig().speechInfo ?? {}
     const speed = Math.min(4, Math.max(0.25, speechInfo.rate ?? 1))
 
-    const response = await fetch(`${baseUrl}/v1/audio/speech`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${cfg.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: cfg.model || 'tts-1',
-        input: text,
-        voice: cfg.voice,
-        response_format: cfg.format || 'mp3',
-        speed,
-      }),
+    const client = createOpenAIClient({ apiKey: cfg.apiKey, baseURL: `${baseUrl}/v1` })
+    return synthesizeSpeech(client, {
+      model: cfg.model || 'tts-1',
+      input: text,
+      voice: cfg.voice,
+      responseFormat: cfg.format || 'mp3',
+      speed,
     })
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => '')
-      throw new Error(`${response.status} ${response.statusText} ${text.slice(0, 200)}`)
-    }
-    return response.blob()
   }
 
   speak(): void {}

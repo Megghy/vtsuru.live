@@ -7,7 +7,7 @@ import type { VoiceOption } from '@/apps/open-live/voice-providers'
 
 defineProps<{
   modelValue: string
-  options: VoiceOption[]
+  options: any[]
   loading?: boolean
   placeholder?: string
   filterable?: boolean

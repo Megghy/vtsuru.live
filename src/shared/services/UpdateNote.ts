@@ -5,6 +5,29 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const updateNotes: updateNoteType[] = [
   {
+    ver: 11,
+    date: '2026.5.27',
+    items: [
+      {
+        type: 'new',
+        title: 'MiMo TTS 自定义音色支持编辑',
+        content: [
+          ['现在可以修改已创建的自定义音色的导演指令、描述和参考音频'],
+          ['自定义音色的音频数据不再依赖浏览器本地存储'],
+        ],
+      },
+      {
+        type: 'optimize',
+        title: 'MiMo TTS 体验优化',
+        content: [
+          ['填写 API Key 后试听也走直连，速度更快'],
+          ['音色选择下拉框中可直接看到并切换自定义音色'],
+          ['各输入项增加了风格标签、导演指令等用法参考'],
+        ],
+      },
+    ],
+  },
+  {
     ver: 10,
     date: '2026.1.16',
     items: [

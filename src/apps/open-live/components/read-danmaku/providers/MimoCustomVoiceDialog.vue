@@ -7,6 +7,8 @@ import { computed, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryPostAPI, GetHeaders } from '@/api/query'
 import { TTS_API_URL } from '@/shared/config'
+import { useSpeechService } from '@/store/useSpeechService'
+import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 
 interface EditVoice {
@@ -23,6 +25,7 @@ const show = defineModel<boolean>('show', { default: false })
 
 const message = useMessage()
 const account = useAccount()
+const { settings } = useSpeechService()
 
 const isEdit = computed(() => !!props.editVoice)
 
@@ -80,19 +83,15 @@ function buildFormData(includeText = false) {
 async function preview() {
   previewing.value = true
   try {
-    const fd = buildFormData(true)
-    const headers = Object.fromEntries(GetHeaders())
-    const resp = await fetch(`${TTS_API_URL}mimo/preview`, {
-      method: 'POST',
-      body: fd,
-      headers,
-    })
-    const ct = resp.headers.get('content-type') ?? ''
-    if (!resp.ok || ct.includes('application/json')) {
-      const err = await resp.json().catch(() => ({ error: resp.statusText }))
-      throw new Error(err.error || err.message || err.details || '试听失败')
+    const apiKey = settings.value.providers.mimo?.mimoApiKey
+    let blob: Blob
+
+    if (apiKey) {
+      blob = await previewDirect(apiKey)
+    } else {
+      blob = await previewViaBackend()
     }
-    const blob = await resp.blob()
+
     const url = URL.createObjectURL(blob)
     if (previewAudio.value) {
       previewAudio.value.pause()
@@ -107,6 +106,58 @@ async function preview() {
   } finally {
     previewing.value = false
   }
+}
+
+async function previewViaBackend(): Promise<Blob> {
+  const fd = buildFormData(true)
+  const headers = Object.fromEntries(GetHeaders())
+  const resp = await fetch(`${TTS_API_URL}mimo/preview`, {
+    method: 'POST',
+    body: fd,
+    headers,
+  })
+  const ct = resp.headers.get('content-type') ?? ''
+  if (!resp.ok || ct.includes('application/json')) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }))
+    throw new Error(err.error || err.message || err.details || '试听失败')
+  }
+  return resp.blob()
+}
+
+async function previewDirect(apiKey: string): Promise<Blob> {
+  const client = createMimoClient(apiKey)
+  let req: MimoTtsRequest
+
+  if (type.value === 'clone') {
+    const file = audioFileList.value[0]?.file
+    if (!file) throw new Error('请先选择参考音频')
+    const arrayBuf = await file.arrayBuffer()
+    const bytes = new Uint8Array(arrayBuf)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i += 8192) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
+    }
+    const mime = file.type || (file.name.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg')
+    const audioDataUrl = `data:${mime};base64,${btoa(binary)}`
+    const messages: Array<{ role: string; content: string }> = []
+    if (directorNote.value.trim()) messages.push({ role: 'user', content: directorNote.value })
+    messages.push({ role: 'assistant', content: previewText.value })
+    req = { model: 'mimo-v2.5-tts-voiceclone', messages, audio: { format: 'wav', voice: audioDataUrl } }
+  } else {
+    const userContent = directorNote.value.trim()
+      ? `${description.value}\n${directorNote.value}`
+      : description.value
+    req = {
+      model: 'mimo-v2.5-tts-voicedesign',
+      messages: [
+        { role: 'user', content: userContent },
+        { role: 'assistant', content: previewText.value },
+      ],
+      audio: { format: 'wav' },
+    }
+  }
+
+  return synthesizeMimoTts(client, req)
 }
 
 async function save() {

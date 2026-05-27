@@ -62,6 +62,7 @@
     "naive-ui": "^2.44.1",
     "nanoid": "^5.1.7",
     "obs-websocket-js": "^5.0.8",
+    "openai": "^6.39.0",
     "peerjs": "^1.5.5",
     "pinia": "^3.0.4",
     "qrcode.vue": "^3.8.0",

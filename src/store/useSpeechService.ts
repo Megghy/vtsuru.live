@@ -319,10 +319,15 @@ function createSpeechService() {
     onvoiceschanged: boolean
   }>()
 
+  let _cachedProvider: { id: string; instance: ReturnType<typeof createVoiceProvider> } | undefined
+
   function getCurrentProvider() {
     const id = settings.value.provider
     if (!hasVoiceProvider(id)) return undefined
-    return createVoiceProvider(id, () => settings.value)
+    if (_cachedProvider?.id === id) return _cachedProvider.instance
+    const instance = createVoiceProvider(id, () => settings.value)
+    _cachedProvider = { id, instance }
+    return instance
   }
 
   async function initialize() {

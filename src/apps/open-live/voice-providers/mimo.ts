@@ -1,11 +1,10 @@
 import { TTS_API_URL } from '@/shared/config'
 import { ACCOUNT } from '@/api/account'
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
+import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from './ai-client'
 import { ensureVoiceAudio } from './mimo-voice-store'
 
 export const DEFAULT_MIMO_VOICE = '冰糖'
-
-const MIMO_API_URL = 'https://api.xiaomimimo.com/v1/chat/completions'
 
 export interface MimoCustomVoiceInfo {
   id: number
@@ -83,46 +82,25 @@ export class MimoVoiceProvider implements VoiceProvider {
   }
 
   private async _directSynthesize(text: string, cfg: MimoProviderConfig): Promise<Blob> {
-    const apiKey = cfg.mimoApiKey!
+    const client = createMimoClient(cfg.mimoApiKey!)
     const voice = cfg.mimoVoice ?? DEFAULT_MIMO_VOICE
 
-    let body: object
+    let req: MimoTtsRequest
     if (voice.startsWith('custom:')) {
-      body = await this._buildCustomRequest(text, voice, cfg)
+      req = await this._buildCustomRequest(text, voice, cfg)
     } else {
       const content = `${cfg.mimoStyleTag ?? ''}${text}`
-      body = {
+      req = {
         model: 'mimo-v2.5-tts',
         messages: [{ role: 'assistant', content }],
         audio: { format: 'wav', voice },
       }
     }
 
-    const response = await fetch(MIMO_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-    })
-
-    if (!response.ok) {
-      const err = await response.text().catch(() => '')
-      throw new Error(`MiMo API 错误: ${response.status} ${err.slice(0, 200)}`)
-    }
-
-    const data = await response.json()
-    const audioBase64 = data?.choices?.[0]?.message?.audio?.data
-    if (!audioBase64) throw new Error('MiMo 响应中无音频数据')
-
-    const binary = atob(audioBase64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    return new Blob([bytes], { type: 'audio/wav' })
+    return synthesizeMimoTts(client, req)
   }
 
-  private async _buildCustomRequest(text: string, voice: string, cfg: MimoProviderConfig) {
+  private async _buildCustomRequest(text: string, voice: string, _cfg: MimoProviderConfig): Promise<MimoTtsRequest> {
     const voiceId = voice.replace('custom:', '')
     const voiceInfo = this._customVoices.get(voiceId)
     if (!voiceInfo) throw new Error(`未找到自定义音色 (id=${voiceId})`)
@@ -153,7 +131,7 @@ export class MimoVoiceProvider implements VoiceProvider {
     }
     const audioDataUrl = `data:${stored.mimeType};base64,${btoa(binary)}`
 
-    const messages: object[] = []
+    const messages: Array<{ role: string; content: string }> = []
     if (voiceInfo.directorNote) messages.push({ role: 'user', content: voiceInfo.directorNote })
     messages.push({ role: 'assistant', content: text })
 
