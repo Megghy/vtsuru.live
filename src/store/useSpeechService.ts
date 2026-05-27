@@ -180,8 +180,23 @@ export const templateConstants = {
 function migrateLegacySettings(raw: any): SpeechSettings {
   if (!raw) return structuredClone(DEFAULT_SETTINGS)
 
-  // Already new format
-  if (raw.templates && typeof raw.templates === 'object') return raw as SpeechSettings
+  // Already new format — just ensure all fields exist
+  if (raw.templates && typeof raw.templates === 'object') {
+    const s = raw as SpeechSettings
+    s.enabledEvents ??= { ...DEFAULT_SETTINGS.enabledEvents }
+    s.timedBroadcast ??= { ...DEFAULT_SETTINGS.timedBroadcast }
+    s.notificationSound ??= { ...DEFAULT_SETTINGS.notificationSound }
+    s.textReplacements ??= []
+    s.blacklistUsers ??= []
+    s.blacklistKeywords ??= []
+    s.maxTextLength ??= 0
+    s.antiSpamInterval ??= 0
+    s.deduplicateIdentical ??= true
+    s.priorityEvents ??= ['sc', 'guard']
+    s.queueFullStrategy ??= 'drop-oldest'
+    s.maxQueueSize ??= 50
+    return s
+  }
 
   // Migrate from old single-string templates
   const templates: Record<string, EventTemplateConfig> = {}
@@ -312,7 +327,7 @@ function createSpeechService() {
   watch(settings, (value) => {
     const normalized = normalizeSettings(value)
     if (normalized !== value) settings.value = normalized
-  }, { immediate: true })
+  }, { immediate: true, flush: 'sync' })
 
   const speechState = reactive<SpeechState>({
     isSpeaking: false,
