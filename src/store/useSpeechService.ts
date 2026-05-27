@@ -30,19 +30,32 @@ export interface QueueItem {
   data: EventModel
 }
 
+export type ConditionField = 'price' | 'count' | 'guard_level' | 'fans_medal_level' | 'message_length' | 'message'
+export type ConditionOp = '>=' | '<=' | '==' | 'contains' | 'regex'
+
+export interface TemplateCondition {
+  field: ConditionField
+  op: ConditionOp
+  value: string | number
+}
+
+export interface TemplateRule {
+  template: string
+  conditions: TemplateCondition[]
+}
+
+export interface EventTemplateConfig {
+  rules: TemplateRule[]
+}
+
 export interface SpeechSettings {
   provider: string
   speechInfo: SpeechInfo
   outputDeviceId: string
   combineGiftDelay: number | undefined
-  danmakuTemplate: string
-  scTemplate: string
-  guardTemplate: string
-  giftTemplate: string
-  enterTemplate: string
+  templates: Record<string, EventTemplateConfig>
   providers: Record<string, any>
 
-  // 事件类型开关
   enabledEvents: {
     message: boolean
     gift: boolean
@@ -52,68 +65,51 @@ export interface SpeechSettings {
     follow: boolean
   }
 
-  // 进入欢迎过滤
-  enterFilter: {
-    mode: 'all' | 'medal' | 'guard-3' | 'guard-2' | 'guard-1'
-    medalLevel: number
-  }
-
-  // 关注模板
-  followTemplate: string
-
-  // 定时播报
   timedBroadcast: {
     enabled: boolean
     intervalMinutes: number
     texts: string[]
   }
 
-  // 过滤
   blacklistUsers: string[]
   blacklistKeywords: string[]
   maxTextLength: number
-
-  // 防刷屏
   antiSpamInterval: number
   deduplicateIdentical: boolean
-
-  // 优先级
   priorityEvents: string[]
-
-  // 文本替换
   textReplacements: Array<{ pattern: string; replacement: string; isRegex: boolean }>
 
-  // 提示音
   notificationSound: {
     enabled: boolean
     events: string[]
     volume: number
   }
 
-  // 队列策略
   queueFullStrategy: 'drop-oldest' | 'reject-new'
   maxQueueSize: number
 }
 
 
+export function makeDefaultTemplate(template: string): EventTemplateConfig {
+  return { rules: [{ template, conditions: [] }] }
+}
+
+export const DEFAULT_TEMPLATES: Record<string, EventTemplateConfig> = {
+  message: makeDefaultTemplate('{name} 说: {message}'),
+  gift: makeDefaultTemplate('感谢 {name} 赠送的 {count} 个 {gift_name}'),
+  sc: makeDefaultTemplate('{name} 发送了醒目留言: {message}'),
+  guard: makeDefaultTemplate('感谢 {name} 的 {count} 个月 {guard_level}'),
+  enter: makeDefaultTemplate('欢迎 {name} 进入直播间'),
+  follow: makeDefaultTemplate('感谢 {name} 关注直播间'),
+}
+
 const DEFAULT_SETTINGS: SpeechSettings = {
   provider: 'local',
-  speechInfo: {
-    volume: 1,
-    pitch: 1,
-    rate: 1,
-    voice: '',
-  },
+  speechInfo: { volume: 1, pitch: 1, rate: 1, voice: '' },
   outputDeviceId: 'default',
   combineGiftDelay: 2,
-  danmakuTemplate: '{name} 说: {message}',
-  scTemplate: '{name} 发送了醒目留言: {message}',
-  guardTemplate: '感谢 {name} 的 {count} 个月 {guard_level}',
-  giftTemplate: '感谢 {name} 赠送的 {count} 个 {gift_name}',
-  enterTemplate: '欢迎 {name} 进入直播间',
+  templates: structuredClone(DEFAULT_TEMPLATES),
   enabledEvents: { message: true, gift: true, sc: true, guard: true, enter: true, follow: true },
-  enterFilter: { mode: 'all', medalLevel: 0 },
-  followTemplate: '感谢 {name} 关注直播间',
   timedBroadcast: { enabled: false, intervalMinutes: 10, texts: [] },
   blacklistUsers: [],
   blacklistKeywords: [],
@@ -126,28 +122,15 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   queueFullStrategy: 'drop-oldest',
   maxQueueSize: 50,
   providers: {
-    azure: {
-      azureVoice: 'zh-CN-XiaoxiaoNeural',
-      azureLanguage: 'zh-CN',
-    },
+    azure: { azureVoice: 'zh-CN-XiaoxiaoNeural', azureLanguage: 'zh-CN' },
     api: {
       voiceAPI: 'voice.vtsuru.live/voice/bert-vits2?text={{text}}&id=1&format=mp3&streaming=true',
       voiceAPISchemeType: 'https',
       useAPIDirectly: false,
       splitText: false,
     },
-    mimo: {
-      mimoVoice: DEFAULT_MIMO_VOICE,
-      mimoStyleTag: '',
-      mimoApiKey: '',
-    },
-    openai: {
-      baseUrl: 'https://api.openai.com',
-      apiKey: '',
-      model: 'tts-1',
-      voice: 'alloy',
-      format: 'mp3',
-    },
+    mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
+    openai: { baseUrl: 'https://api.openai.com', apiKey: '', model: 'tts-1', voice: 'alloy', format: 'mp3' },
   },
 }
 
@@ -195,11 +178,48 @@ export const templateConstants = {
 }
 
 function migrateLegacySettings(raw: any): SpeechSettings {
-  if (!raw) return DEFAULT_SETTINGS
-  if (raw.providers && typeof raw.provider === 'string') return raw as SpeechSettings
+  if (!raw) return structuredClone(DEFAULT_SETTINGS)
+
+  // Already new format
+  if (raw.templates && typeof raw.templates === 'object') return raw as SpeechSettings
+
+  // Migrate from old single-string templates
+  const templates: Record<string, EventTemplateConfig> = {}
+  const templateMap: Record<string, string> = {
+    message: raw.danmakuTemplate ?? DEFAULT_TEMPLATES.message.rules[0].template,
+    gift: raw.giftTemplate ?? DEFAULT_TEMPLATES.gift.rules[0].template,
+    sc: raw.scTemplate ?? DEFAULT_TEMPLATES.sc.rules[0].template,
+    guard: raw.guardTemplate ?? DEFAULT_TEMPLATES.guard.rules[0].template,
+    enter: raw.enterTemplate ?? DEFAULT_TEMPLATES.enter.rules[0].template,
+    follow: raw.followTemplate ?? DEFAULT_TEMPLATES.follow.rules[0].template,
+  }
+  for (const [key, tpl] of Object.entries(templateMap)) {
+    const rules: TemplateRule[] = []
+    if (tpl) rules.push({ template: tpl, conditions: [] })
+    templates[key] = { rules }
+  }
+
+  // Migrate enterFilter to conditions on enter template
+  if (raw.enterFilter && raw.enterFilter.mode !== 'all' && templates.enter.rules.length > 0) {
+    const rule = templates.enter.rules[0]
+    switch (raw.enterFilter.mode) {
+      case 'medal':
+        rule.conditions.push({ field: 'fans_medal_level', op: '>=', value: raw.enterFilter.medalLevel || 1 })
+        break
+      case 'guard-3':
+        rule.conditions.push({ field: 'guard_level', op: '>=', value: 3 })
+        break
+      case 'guard-2':
+        rule.conditions.push({ field: 'guard_level', op: '>=', value: 2 })
+        break
+      case 'guard-1':
+        rule.conditions.push({ field: 'guard_level', op: '==', value: 1 })
+        break
+    }
+  }
 
   return {
-    provider: raw.voiceType ?? 'local',
+    provider: raw.voiceType ?? raw.provider ?? 'local',
     speechInfo: {
       volume: raw.speechInfo?.volume ?? 1,
       pitch: raw.speechInfo?.pitch ?? 1,
@@ -208,41 +228,24 @@ function migrateLegacySettings(raw: any): SpeechSettings {
     },
     outputDeviceId: raw.outputDeviceId ?? 'default',
     combineGiftDelay: raw.combineGiftDelay ?? 2,
-    danmakuTemplate: raw.danmakuTemplate ?? DEFAULT_SETTINGS.danmakuTemplate,
-    scTemplate: raw.scTemplate ?? DEFAULT_SETTINGS.scTemplate,
-    guardTemplate: raw.guardTemplate ?? DEFAULT_SETTINGS.guardTemplate,
-    giftTemplate: raw.giftTemplate ?? DEFAULT_SETTINGS.giftTemplate,
-    enterTemplate: raw.enterTemplate ?? DEFAULT_SETTINGS.enterTemplate,
-    providers: {
-      azure: {
-        azureVoice: raw.azureVoice ?? 'zh-CN-XiaoxiaoNeural',
-        azureLanguage: raw.azureLanguage ?? 'zh-CN',
-      },
-      api: {
-        voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI,
-        voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https',
-        useAPIDirectly: raw.useAPIDirectly ?? false,
-        splitText: raw.splitText ?? false,
-      },
-      mimo: {
-        mimoVoice: DEFAULT_MIMO_VOICE,
-        mimoStyleTag: '',
-      },
+    templates,
+    providers: raw.providers ?? {
+      azure: { azureVoice: raw.azureVoice ?? 'zh-CN-XiaoxiaoNeural', azureLanguage: raw.azureLanguage ?? 'zh-CN' },
+      api: { voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI, voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https', useAPIDirectly: raw.useAPIDirectly ?? false, splitText: raw.splitText ?? false },
+      mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
     },
-    enabledEvents: { ...DEFAULT_SETTINGS.enabledEvents },
-    enterFilter: { ...DEFAULT_SETTINGS.enterFilter },
-    followTemplate: DEFAULT_SETTINGS.followTemplate,
-    timedBroadcast: { ...DEFAULT_SETTINGS.timedBroadcast },
-    blacklistUsers: [],
-    blacklistKeywords: [],
-    maxTextLength: 0,
-    antiSpamInterval: 0,
-    deduplicateIdentical: true,
-    priorityEvents: ['sc', 'guard'],
-    textReplacements: [],
-    notificationSound: { ...DEFAULT_SETTINGS.notificationSound },
-    queueFullStrategy: 'drop-oldest',
-    maxQueueSize: 50,
+    enabledEvents: raw.enabledEvents ?? { ...DEFAULT_SETTINGS.enabledEvents },
+    timedBroadcast: raw.timedBroadcast ?? { ...DEFAULT_SETTINGS.timedBroadcast },
+    blacklistUsers: raw.blacklistUsers ?? [],
+    blacklistKeywords: raw.blacklistKeywords ?? [],
+    maxTextLength: raw.maxTextLength ?? 0,
+    antiSpamInterval: raw.antiSpamInterval ?? 0,
+    deduplicateIdentical: raw.deduplicateIdentical ?? true,
+    priorityEvents: raw.priorityEvents ?? ['sc', 'guard'],
+    textReplacements: raw.textReplacements ?? [],
+    notificationSound: raw.notificationSound ?? { ...DEFAULT_SETTINGS.notificationSound },
+    queueFullStrategy: raw.queueFullStrategy ?? 'drop-oldest',
+    maxQueueSize: raw.maxQueueSize ?? 50,
   }
 }
 
@@ -281,8 +284,10 @@ function ensureProviderDefaults(settings: SpeechSettings) {
   // 新增字段迁移
   settings.enabledEvents ??= { ...DEFAULT_SETTINGS.enabledEvents }
   settings.enabledEvents.follow ??= true
-  settings.enterFilter ??= { ...DEFAULT_SETTINGS.enterFilter }
-  settings.followTemplate ??= DEFAULT_SETTINGS.followTemplate
+  settings.templates ??= structuredClone(DEFAULT_TEMPLATES)
+  for (const key of Object.keys(DEFAULT_TEMPLATES)) {
+    settings.templates[key] ??= structuredClone(DEFAULT_TEMPLATES[key])
+  }
   settings.timedBroadcast ??= { ...DEFAULT_SETTINGS.timedBroadcast }
   settings.blacklistUsers ??= []
   settings.blacklistKeywords ??= []
@@ -322,6 +327,7 @@ function createSpeechService() {
   const giftCombineMap = new Map<string, number>()
   const readedDanmaku = ref(0)
   const spokenHistory = ref<Array<{ text: string; uname: string; type: string; time: number }>>([])
+  const rejectedHistory = ref<Array<{ uname: string; type: string; reason: string; time: number }>>([])
   const isPaused = ref(false)
   const lastSpeakTimeByUser = new Map<string, number>()
   const recentMessages = new Set<string>()
@@ -427,44 +433,62 @@ function createSpeechService() {
     }
   }
 
+  function evaluateCondition(cond: TemplateCondition, data: EventModel): boolean {
+    let fieldValue: number | string
+    switch (cond.field) {
+      case 'price': fieldValue = data.price ?? 0; break
+      case 'count': fieldValue = data.num ?? 0; break
+      case 'guard_level': fieldValue = data.guard_level ?? 0; break
+      case 'fans_medal_level': fieldValue = data.fans_medal_level ?? 0; break
+      case 'message_length': fieldValue = (data.msg ?? '').length; break
+      case 'message': fieldValue = data.msg ?? ''; break
+      default: return false
+    }
+    const numVal = typeof fieldValue === 'number' ? fieldValue : Number.parseFloat(fieldValue)
+    const condNum = typeof cond.value === 'number' ? cond.value : Number.parseFloat(String(cond.value))
+    switch (cond.op) {
+      case '>=': return numVal >= condNum
+      case '<=': return numVal <= condNum
+      case '==': return numVal === condNum
+      case 'contains': return String(fieldValue).includes(String(cond.value))
+      case 'regex':
+        try { return new RegExp(String(cond.value), 'i').test(String(fieldValue)) }
+        catch { return false }
+      default: return false
+    }
+  }
+
+  function selectTemplate(config: EventTemplateConfig | undefined, data: EventModel): string | undefined {
+    if (!config || config.rules.length === 0) return undefined
+    const conditional: TemplateRule[] = []
+    const unconditional: TemplateRule[] = []
+    for (const rule of config.rules) {
+      if (!rule.template) continue
+      if (rule.conditions.length > 0) conditional.push(rule)
+      else unconditional.push(rule)
+    }
+    for (const rule of conditional) {
+      if (rule.conditions.every(c => evaluateCondition(c, data))) return rule.template
+    }
+    if (unconditional.length > 0) {
+      return unconditional[Math.floor(Math.random() * unconditional.length)].template
+    }
+    return undefined
+  }
+
   function getTextFromDanmaku(data: EventModel | undefined): string | undefined {
     if (!data) return
 
-    let text = ''
-    switch (data.type) {
-      case EventDataTypes.Message:
-        if (!settings.value.danmakuTemplate) return
-        text = settings.value.danmakuTemplate
-        break
-      case EventDataTypes.SC:
-        if (!settings.value.scTemplate) return
-        text = settings.value.scTemplate
-        break
-      case EventDataTypes.Guard:
-        if (!settings.value.guardTemplate) return
-        text = settings.value.guardTemplate
-        break
-      case EventDataTypes.Gift:
-        if (!settings.value.giftTemplate) return
-        text = settings.value.giftTemplate
-        break
-      case EventDataTypes.Enter:
-        if (!settings.value.enterTemplate) return
-        text = settings.value.enterTemplate
-        break
-      case EventDataTypes.Follow:
-        if (!settings.value.followTemplate) return
-        text = settings.value.followTemplate
-        break
-      case EventDataTypes.Like:
-      case EventDataTypes.SCDel:
-        return
-    }
+    const eventKey = getEventKey(data.type)
+    if (!eventKey) return
+    const config = settings.value.templates[eventKey]
+    const template = selectTemplate(config, data)
+    if (!template) return
 
     const isApiWithSplit = settings.value.provider === 'api'
       && (settings.value.providers.api?.splitText as boolean)
 
-    text = text
+    let text = template
       .replace(templateConstants.name.regex, isApiWithSplit ? `'${data.uname || ''}'` : (data.uname || ''))
       .replace(templateConstants.count.regex, (data.num ?? 0).toString())
       .replace(templateConstants.price.regex, (data.price ?? 0).toString())
@@ -481,7 +505,6 @@ function createSpeechService() {
       text = text.replace(templateConstants.guard_num.regex, (data.num ?? 0).toString())
     }
 
-    // 文本替换规则
     if (settings.value.textReplacements.length > 0) {
       for (const rule of settings.value.textReplacements) {
         if (!rule.pattern) continue
@@ -495,7 +518,6 @@ function createSpeechService() {
       }
     }
 
-    // 字数截断
     if (settings.value.maxTextLength > 0 && text.length > settings.value.maxTextLength) {
       text = text.slice(0, settings.value.maxTextLength)
     }
@@ -723,71 +745,78 @@ function createSpeechService() {
     }
   }
 
+  function reject(data: EventModel, reason: string) {
+    rejectedHistory.value.unshift({ uname: data.uname, type: String(data.type), reason, time: Date.now() })
+    if (rejectedHistory.value.length > 50) rejectedHistory.value.length = 50
+  }
+
   function addToQueue(data: EventModel) {
     if (!speechState.canSpeech) return
 
-    // 事件类型开关
     const eventKey = getEventKey(data.type)
-    if (eventKey && !settings.value.enabledEvents[eventKey]) return
+    if (eventKey && !settings.value.enabledEvents[eventKey]) {
+      reject(data, '事件类型已关闭')
+      return
+    }
 
-    // 纯表情/emoji 弹幕跳过
-    if (data.type === EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) return
+    if (data.type === EventDataTypes.Message && (data.emoji || /^(?:\[\w+\])+$/.test(data.msg))) {
+      reject(data, '纯表情弹幕')
+      return
+    }
 
-    // 模板为空则不播报
-    if (data.type === EventDataTypes.Enter && !settings.value.enterTemplate) return
-
-    // 进入欢迎身份过滤
-    if (data.type === EventDataTypes.Enter) {
-      const { mode, medalLevel } = settings.value.enterFilter
-      switch (mode) {
-        case 'medal':
-          if (!data.fans_medal_wearing_status || data.fans_medal_level < medalLevel) return
-          break
-        case 'guard-3':
-          if (!data.guard_level || data.guard_level > 3) return
-          break
-        case 'guard-2':
-          if (!data.guard_level || data.guard_level > 2) return
-          break
-        case 'guard-1':
-          if (data.guard_level !== 1) return
-          break
+    if (settings.value.blacklistUsers.length > 0) {
+      const lowerName = data.uname.toLowerCase()
+      if (settings.value.blacklistUsers.some(u => lowerName === u.toLowerCase())) {
+        reject(data, '用户黑名单')
+        return
       }
     }
 
-    // 黑名单用户
-    if (settings.value.blacklistUsers.length > 0) {
-      const lowerName = data.uname.toLowerCase()
-      if (settings.value.blacklistUsers.some(u => lowerName === u.toLowerCase())) return
-    }
-
-    // 黑名单关键词
     if (settings.value.blacklistKeywords.length > 0 && data.msg) {
       const lowerMsg = data.msg.toLowerCase()
-      if (settings.value.blacklistKeywords.some(kw => lowerMsg.includes(kw.toLowerCase()))) return
+      if (settings.value.blacklistKeywords.some(kw => lowerMsg.includes(kw.toLowerCase()))) {
+        reject(data, '关键词黑名单')
+        return
+      }
     }
 
-    // 防刷屏：同一用户间隔
     if (settings.value.antiSpamInterval > 0) {
       const userKey = String(data.uid)
       const lastTime = lastSpeakTimeByUser.get(userKey)
       const now = Date.now()
-      if (lastTime && now - lastTime < settings.value.antiSpamInterval * 1000) return
+      if (lastTime && now - lastTime < settings.value.antiSpamInterval * 1000) {
+        reject(data, '防刷屏间隔')
+        return
+      }
       lastSpeakTimeByUser.set(userKey, now)
     }
 
-    // 去重：完全相同内容
     if (settings.value.deduplicateIdentical && data.msg) {
       const dedupKey = `${data.uid}:${data.msg}`
-      if (recentMessages.has(dedupKey)) return
+      if (recentMessages.has(dedupKey)) {
+        reject(data, '重复内容')
+        return
+      }
       recentMessages.add(dedupKey)
       setTimeout(() => recentMessages.delete(dedupKey), 10000)
     }
 
-    // 队列满策略
+    // 模板条件匹配预检
+    if (eventKey) {
+      const config = settings.value.templates[eventKey]
+      const template = selectTemplate(config, data)
+      if (!template) {
+        reject(data, '无匹配模板规则')
+        return
+      }
+    }
+
     const maxSize = settings.value.maxQueueSize || 50
     if (speakQueue.value.length >= maxSize) {
-      if (settings.value.queueFullStrategy === 'reject-new') return
+      if (settings.value.queueFullStrategy === 'reject-new') {
+        reject(data, '队列已满')
+        return
+      }
       speakQueue.value.splice(0, speakQueue.value.length - maxSize + 1)
     }
 
@@ -999,6 +1028,7 @@ function createSpeechService() {
     speakQueue,
     readedDanmaku,
     spokenHistory,
+    rejectedHistory,
     isPaused,
     speechSynthesisInfo,
     apiAudio,

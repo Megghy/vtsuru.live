@@ -7,6 +7,10 @@ bun.lockb
 .*/
 target/
 
+# Large model files
+public/models/ocr/*.onnx
+public/models/ocr/*.wasm
+
 # local env files
 .env.local
 .env.*.local
