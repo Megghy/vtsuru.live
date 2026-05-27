@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ClientBackupModule, ClientBackupPreview } from '@/apps/client/store/useClientBackup'
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   NAlert,
   NButton,
@@ -24,6 +25,7 @@ import { useSettings } from '@/apps/client/store/useSettings'
 
 const settings = useSettings()
 const backup = useClientBackup()
+const router = useRouter()
 
 const showImportModal = ref(false)
 const importPreview = ref<ClientBackupPreview | null>(null)
@@ -120,7 +122,12 @@ async function handleConfirmImport() {
       type="warning"
       :bordered="false"
     >
-      当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >= {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。
+      <NFlex align="center" justify="space-between">
+        <span>当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >= {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。</span>
+        <NButton size="small" type="warning" @click="router.push({ name: 'client-settings', query: { tab: 'about' } })">
+          检查更新
+        </NButton>
+      </NFlex>
     </NAlert>
 
     <template v-else>

@@ -7,6 +7,7 @@ import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import {
   NAlert, NCard, NCheckbox, NDivider, NFormItem, NGrid, NGridItem, NMenu, NRadio, NRadioGroup, NSpin, NSwitch } from 'naive-ui';
 import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ThemeType } from '@/api/api-models'
 import { useSettings } from '@/apps/client/store/useSettings'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
@@ -16,7 +17,8 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- State ---
 
-const currentTab = ref('general')
+const route = useRoute()
+const currentTab = ref((route.query.tab as string) || 'general')
 const isLoading = ref(true)
 const errorMsg = ref<string | null>(null)
 const titleClickCount = ref(0) // 添加计数器状态变量
