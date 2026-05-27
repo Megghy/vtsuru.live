@@ -43,6 +43,16 @@ export default defineConfig({
   appType: 'spa',
   customLogger: logger,
   plugins: [
+    {
+      name: 'drop-ort-wasm',
+      generateBundle(_, bundle) {
+        for (const key of Object.keys(bundle)) {
+          if (key.includes('ort-wasm') && key.endsWith('.wasm')) {
+            delete bundle[key]
+          }
+        }
+      },
+    },
     vue({
       script: { propsDestructure: true, defineModel: true },
       include: [/\.vue$/, /\.md$/],

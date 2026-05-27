@@ -7,8 +7,7 @@ bun.lockb
 .*/
 target/
 
-# Large model files
-public/models/ocr/*.onnx
+# Large WASM files (loaded from CDN at runtime)
 public/models/ocr/*.wasm
 
 # local env files

@@ -5,7 +5,7 @@ import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
 
 ort.env.wasm.numThreads = 1
-ort.env.wasm.wasmPaths = '/models/ocr/'
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
 
 const message = useMessage()
 const { copy } = useClipboard()
