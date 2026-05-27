@@ -37,4 +37,14 @@ export default [
       forceReload: true,
     },
   },
+  {
+    path: '/gift-window',
+    name: 'client-gift-window',
+    component: async () => import('@/apps/client/pages/gift-window/ClientGiftWindow.vue'),
+    meta: {
+      title: '礼物窗口',
+      ignoreLogin: true,
+      forceReload: true,
+    },
+  },
 ] satisfies RouteRecordRaw[]

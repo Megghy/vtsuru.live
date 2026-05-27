@@ -2,6 +2,8 @@ import { createPinia } from 'pinia'
 import Particles from '@tsparticles/vue3'
 import { loadSlim } from '@tsparticles/slim'
 import { createApp } from 'vue'
+// @ts-expect-error vue3-konva types
+import VueKonva from 'vue3-konva'
 import App from './App.vue'
 import emitter from './mitt'
 import router from './router'
@@ -19,6 +21,7 @@ async function bootstrapApp() {
   app
     .use(router)
     .use(pinia)
+    .use(VueKonva)
     .use(Particles, {
       init: async (engine) => {
         await loadSlim(engine)

@@ -46,6 +46,16 @@ export default {
       },
     },
     {
+      path: 'gift-window-manage',
+      name: 'client-gift-window-manage',
+      component: async () => import('@/apps/client/pages/gift-window/GiftWindowManager.vue'),
+      meta: {
+        title: '礼物与排行',
+        forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'auto-action',
       name: 'client-auto-action-manage',
       component: async () => import('@/apps/client/pages/ClientAutoAction.vue'),

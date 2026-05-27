@@ -255,7 +255,77 @@ export default // 管理页面
       component: async () => import('@/apps/manage/pages/tools/ToolDynamicNineGrid.vue'),
       meta: {
         title: '动态九图生成器',
-        parent: 'manage-tools-dashboard', // 指向工具箱仪表盘
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/cover-maker',
+      name: 'ManageToolCoverMaker',
+      component: async () => import('@/apps/manage/pages/tools/ToolCoverMaker.vue'),
+      meta: {
+        title: '直播封面生成器',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/text-to-image',
+      name: 'ManageToolTextToImage',
+      component: async () => import('@/apps/manage/pages/tools/ToolTextToImage.vue'),
+      meta: {
+        title: '文字转图片',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/sticker-maker',
+      name: 'ManageToolStickerMaker',
+      component: async () => import('@/apps/manage/pages/tools/ToolStickerMaker.vue'),
+      meta: {
+        title: '表情包制作',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/image-compress',
+      name: 'ManageToolImageCompress',
+      component: async () => import('@/apps/manage/pages/tools/ToolImageCompress.vue'),
+      meta: {
+        title: '图片压缩',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/qrcode',
+      name: 'ManageToolQrcode',
+      component: async () => import('@/apps/manage/pages/tools/ToolQrcode.vue'),
+      meta: {
+        title: '二维码生成',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/remove-bg',
+      name: 'tools-remove-bg',
+      component: async () => import('@/apps/manage/pages/tools/ToolRemoveBg.vue'),
+      meta: {
+        title: '去背景',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/ocr',
+      name: 'ManageToolOcr',
+      component: async () => import('@/apps/manage/pages/tools/ToolOcr.vue'),
+      meta: {
+        title: '文字识别 (OCR)',
+        parent: 'manage-tools-dashboard',
         pageWidth: 'xl',
       },
     },

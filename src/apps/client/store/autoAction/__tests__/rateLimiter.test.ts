@@ -29,7 +29,7 @@ function makeAction(overrides: Partial<AutoActionItem> = {}): AutoActionItem {
     actionType: ActionType.SEND_DANMAKU,
     template: 'msg',
     ignoreCooldown: true,
-    priority: Priority.Normal,
+    priority: Priority.NORMAL,
     triggerConfig: {} as any,
     actionConfig: { delaySeconds: 0, cooldownSeconds: 0 } as any,
     logicalExpression: '',

@@ -615,6 +615,7 @@ export interface EventModel {
   fans_medal_wearing_status: boolean
   emoji?: string
   ouid: string
+  gift_icon?: string
 }
 export enum EventDataTypes {
   Guard,

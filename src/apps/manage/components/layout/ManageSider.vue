@@ -92,6 +92,7 @@
       { key: 'manage-questionBox', label: '棉花糖 (提问箱)', icon: Chatbox, to: { name: 'manage-questionBox' }, disabled: emailDisabled, group: 'tools' },
       { key: 'manage-videoCollect', label: '视频征集', icon: VideoAdd20Filled, to: { name: 'manage-videoCollect' }, disabled: emailDisabled, group: 'tools' },
       { key: 'manage-lottery', label: '动态抽奖', icon: Lottery24Filled, to: { name: 'manage-lottery' }, disabled: emailDisabled, group: 'tools' },
+      { key: 'manage-tools-dashboard', label: '工具箱', icon: GridOutline, to: { name: 'manage-tools-dashboard' }, disabled: emailDisabled, group: 'tools' },
 
       { key: 'manage-danmuji', label: '弹幕机', icon: ChatbubbleEllipsesOutline, to: { name: 'manage-danmuji' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },
       { key: 'manage-liveRequest', label: '点播', icon: PlayCircleOutline, to: { name: 'manage-liveRequest' }, disabled: biliDisabled, disabledReason: biliReason, group: 'danmaku' },

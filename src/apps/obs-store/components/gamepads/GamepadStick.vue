@@ -3,45 +3,38 @@ import type { Component } from 'vue'
 import type { Position } from '@/types/gamepad'
 import { computed } from 'vue'
 
-interface Props {
-  svg?: Component // 改为接受组件而非URL字符串
+const props = withDefaults(defineProps<{
+  svg?: Component
   position?: Position
-  axes?: { x: number, y: number }
-}
-
-const props = withDefaults(defineProps<Props>(), {
+  axes?: { x: number; y: number }
+  sensitivity?: number
+}>(), {
   svg: undefined,
   axes: () => ({ x: 0, y: 0 }),
   position: () => ({ top: '0', left: '0', width: '5%' }),
+  sensitivity: 15,
 })
 
-// 计算实际样式，加入摇杆位移
-const transformedStyle = computed(() => {
-  const moveScale = 15 // 摇杆移动的最大距离（以像素为单位）
-  const translateX = props.axes.x * moveScale
-  const translateY = props.axes.y * moveScale
-
-  return {
-    top: props.position?.top,
-    left: props.position?.left,
-    width: props.position?.width,
-    height: props.position?.height || 'auto',
-    transform: `translate(${translateX}px, ${translateY}px)`,
-  }
-})
+const style = computed(() => ({
+  top: props.position.top,
+  left: props.position.left,
+  width: props.position.width,
+  height: props.position.height || 'auto',
+  transform: `translate(${props.axes.x * props.sensitivity}px, ${props.axes.y * props.sensitivity}px)`,
+}))
 </script>
 
 <template>
   <component
     :is="svg"
     v-if="svg"
-    class="gamepad-component gamepad-stick"
-    :style="transformedStyle"
+    class="gamepad-stick"
+    :style="style"
   />
 </template>
 
 <style scoped>
-.gamepad-component {
+.gamepad-stick {
   position: absolute;
   user-select: none;
   transition: transform 0.1s ease-out;

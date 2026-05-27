@@ -1,911 +1,612 @@
 <script setup lang="ts">
-import type { UploadFileInfo } from 'naive-ui'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { NButton, NCard, NDivider, NH4, NInputNumber, NSelect, NFlex, NText, NUpload, NSwitch, useMessage } from 'naive-ui';
-import { computed, ref, watch } from 'vue'
+import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
+import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
 
-// 类型定义
-interface ExportSettings {
-  tileSize: number
-  format: 'png' | 'jpeg'
-  jpegQuality: number
+type FitMode = 'stretch-width' | 'contain' | 'cover' | 'stretch'
+
+interface AdditionalItem {
+  file: File
+  url: string
+  fit: FitMode
+  height: number // 0 = auto (stretch to tile width, keep ratio)
 }
 
 const message = useMessage()
 
-// 图片状态
-const originalImage = ref<string | null>(null)
-const croppedSquareImage = ref<string | null>(null)
-const additionalImages = ref<(string | null)[]>(Array.from({ length: 9 }, () => null))
-const finalImages = ref<string[]>([])
+const sourceFile = ref<File | null>(null)
+const sourceUrl = useObjectUrl(sourceFile)
+const croppedBlob = ref<Blob | null>(null)
+const croppedUrl = useObjectUrl(croppedBlob)
+const cellImages = ref<AdditionalItem[][]>(Array.from({ length: 9 }, () => []))
 const finalBlobs = ref<Blob[]>([])
-const lastHandledUploadId = ref<string | number | null>(null)
+const finalUrls = computed(() => finalBlobs.value.map(b => URL.createObjectURL(b)))
+const isGenerating = ref(false)
 
-// 导出设置
-const exportSettings = ref<ExportSettings>({
+const exportSettings = reactive({
   tileSize: 1024,
-  format: 'png',
+  format: 'png' as 'png' | 'jpeg',
   jpegQuality: 0.92,
+  gap: 0,
 })
-
-const formatOptions: { label: string, value: 'png' | 'jpeg' }[] = [
-  { label: 'PNG（无损）', value: 'png' },
-  { label: 'JPEG（有损）', value: 'jpeg' },
-]
-
-const sourceSquareSize = ref<number | null>(null)
-const maxTileSize = computed(() => {
-  const s = sourceSquareSize.value
-  if (!s) return 4096
-  return Math.max(128, Math.floor(s / 3))
-})
-const allowUpscale = ref<boolean>(false)
+const allowUpscale = ref(false)
+const sourceSquareSize = ref(0)
+const maxTileSize = computed(() => sourceSquareSize.value ? Math.max(128, Math.floor(sourceSquareSize.value / 3)) : 4096)
 const currentMaxTileSize = computed(() => allowUpscale.value ? 4096 : maxTileSize.value)
+
 watch([maxTileSize, allowUpscale], ([max, allow]) => {
-  if (!allow && exportSettings.value.tileSize > max) {
-    exportSettings.value.tileSize = max
-  }
+  if (!allow && exportSettings.tileSize > max) exportSettings.tileSize = max
 })
 
-// 状态标志
-const isGenerating = ref<boolean>(false)
+const formatOptions = [
+  { label: 'PNG (无损)', value: 'png' },
+  { label: 'JPEG (有损)', value: 'jpeg' },
+]
+const fitOptions: { label: string; value: FitMode }[] = [
+  { label: '等宽自适应', value: 'stretch-width' },
+  { label: '保持比例', value: 'contain' },
+  { label: '裁剪填满', value: 'cover' },
+  { label: '拉伸变形', value: 'stretch' },
+]
+// --- File input ---
+const dropZoneRef = ref<HTMLElement>()
+const { isOverDropZone } = useDropZone(dropZoneRef, { onDrop: files => files?.[0] && onFilePicked(files[0]) })
+const { open: openFilePicker, onChange } = useFileDialog({ accept: 'image/*', multiple: false })
+onChange(files => files?.[0] && onFilePicked(files[0]))
 
-// 裁剪器引用
+async function onFilePicked(file: File) {
+  sourceFile.value = file
+  finalBlobs.value = []
+  cellImages.value = Array.from({ length: 9 }, () => [])
+  croppedBlob.value = await applyCenterCrop(file)
+  message.success('图片已准备就绪')
+}
+
+// --- Image processing ---
+function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), type, quality),
+  )
+}
+
+async function applyCenterCrop(file: File): Promise<Blob> {
+  const bmp = await createImageBitmap(file)
+  const size = Math.min(bmp.width, bmp.height)
+  sourceSquareSize.value = size
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(bmp, (bmp.width - size) / 2, (bmp.height - size) / 2, size, size, 0, 0, size, size)
+  bmp.close()
+  return canvasToBlob(canvas)
+}
+
 const imgCutterRef = ref<any>(null)
-
-// 工具函数：加载图片为 DataURL
-function loadImageAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => resolve(e.target?.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-// 工具函数：加载图片元素
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = src
-  })
-}
-
-async function handleFileChange(data: { file: UploadFileInfo }) {
-  const uploadFile = data.file
-  if (uploadFile.status === 'removed') {
-    if (lastHandledUploadId.value === uploadFile.id)
-      lastHandledUploadId.value = null
-    return
-  }
-
-  const file = uploadFile.file
-  if (!file)
-    return
-
-  if (uploadFile.id && uploadFile.id === lastHandledUploadId.value)
-    return
-
-  lastHandledUploadId.value = uploadFile.id ?? null
-
-  try {
-    originalImage.value = await loadImageAsDataURL(file)
-    await updateImageMetaAndDefaultCrop()
-    // 重置状态
-    finalImages.value = []
-    additionalImages.value = Array.from({ length: 9 }, () => null)
-  }
-  catch (error) {
-    console.error('加载图片失败:', error)
-    message.error('加载图片失败，请重试')
-  }
-}
-
-async function updateImageMetaAndDefaultCrop() {
-  if (!originalImage.value)
-    return
-
-  try {
-    const img = await loadImage(originalImage.value)
-    // 如果不是正方形，提示用户可以手动裁剪
-    if (img.width !== img.height) {
-      message.info('检测到非正方形图片，已自动居中裁剪，您也可以开启手动裁剪模式')
-    }
-    await generatePreview()
-  }
-  catch (error) {
-    console.error('处理图片失败:', error)
-    message.error('处理图片失败')
-  }
-}
-
-async function generatePreview() {
-  if (!originalImage.value)
-    return
-
-  try {
-    const img = await loadImage(originalImage.value)
-
-    // 创建方形预览图
-    const size = Math.min(img.width, img.height)
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-
-    if (!ctx) {
-      message.error('无法创建画布')
-      return
-    }
-
-    const offsetX = (img.width - size) / 2
-    const offsetY = (img.height - size) / 2
-
-    canvas.width = size
-    canvas.height = size
-
-    ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size)
-    // 使用 PNG 格式保证无损质量
-    sourceSquareSize.value = size
-    croppedSquareImage.value = canvas.toDataURL('image/png')
-
-    message.success('图片已准备就绪，可以查看九宫格预览')
-  }
-  catch (error) {
-    console.error('生成预览失败:', error)
-    message.error('生成预览失败')
-  }
+function openManualCrop() {
+  if (!sourceUrl.value) return
+  imgCutterRef.value?.handleOpen({ name: 'image.jpg', src: sourceUrl.value })
 }
 
 async function handleCutDown(result: any) {
-  try {
-    const img = await loadImage(result.dataURL)
-    sourceSquareSize.value = img.width
-    croppedSquareImage.value = result.dataURL
-    message.success('已应用裁剪')
-  }
-  catch (error) {
-    console.error('裁剪失败:', error)
-    message.error('裁剪失败，请重试')
-  }
+  const blob = await fetch(result.dataURL).then(r => r.blob())
+  const bmp = await createImageBitmap(blob)
+  sourceSquareSize.value = bmp.width
+  bmp.close()
+  croppedBlob.value = blob
+  message.success('已应用裁剪')
 }
 
-function openManualCrop() {
-  if (!originalImage.value)
-    return
-  // 使用 handleOpen 方法打开裁剪器
-  imgCutterRef.value?.handleOpen({
-    name: 'image.jpg',
-    src: originalImage.value,
-  })
+// --- Tile generation ---
+async function calcItemHeight(item: AdditionalItem, tileSize: number): Promise<{ height: number; bmp: ImageBitmap }> {
+  const bmp = await createImageBitmap(item.file)
+  if (item.height > 0) return { height: item.height, bmp }
+  // stretch-width: scale to tile width, auto height
+  return { height: Math.round((tileSize / bmp.width) * bmp.height), bmp }
 }
 
-
-// 预览瓦片背景位置（背景图按 300% 缩放，位置采用 0/50/100%）
-function bgPosition(index: number) {
+function drawItem(ctx: CanvasRenderingContext2D, bmp: ImageBitmap, item: AdditionalItem, y: number, tileSize: number, h: number) {
+  const fit = item.height > 0 ? item.fit : 'stretch-width'
+  if (fit === 'stretch-width' || fit === 'stretch') {
+    ctx.drawImage(bmp, 0, y, tileSize, h)
+  } else if (fit === 'cover') {
+    const scale = Math.max(tileSize / bmp.width, h / bmp.height)
+    const sw = tileSize / scale; const sh = h / scale
+    ctx.drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, y, tileSize, h)
+  } else {
+    const scale = Math.min(tileSize / bmp.width, h / bmp.height)
+    const dw = bmp.width * scale; const dh = bmp.height * scale
+    ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, (tileSize - dw) / 2, y + (h - dh) / 2, dw, dh)
+  }
+}
+async function renderTile(src: ImageBitmap, index: number, cellSize: number): Promise<Blob> {
   const row = Math.floor(index / 3)
   const col = index % 3
-  const x = col * 50
-  const y = row * 50
-  return `${x}% ${y}%`
-}
+  const tileSize = exportSettings.tileSize
+  const mime = exportSettings.format === 'jpeg' ? 'image/jpeg' : 'image/png'
+  const quality = exportSettings.format === 'jpeg' ? exportSettings.jpegQuality : undefined
+  const items = cellImages.value[index]
+  const gap = exportSettings.gap
 
-async function handleAdditionalImageChange(data: { file: UploadFileInfo }, index: number) {
-  const file = data.file.file
-  if (!file)
-    return
-
-  try {
-    additionalImages.value[index] = await loadImageAsDataURL(file)
-    message.success(`第 ${index + 1} 格的附加图片已添加`)
+  // Pre-calculate all heights
+  const resolved: { bmp: ImageBitmap; height: number; item: AdditionalItem }[] = []
+  for (const item of items) {
+    const { bmp, height } = await calcItemHeight(item, tileSize)
+    resolved.push({ bmp, height, item })
   }
-  catch (error) {
-    console.error('加载附加图片失败:', error)
-    message.error('加载附加图片失败')
-  }
-}
-
-async function generateFinalImages() {
-  const sourceUrl = croppedSquareImage.value || originalImage.value
-  if (!sourceUrl) {
-    message.error('请先上传一张图片')
-    return
-  }
-
-  isGenerating.value = true
-  finalImages.value = []
-  finalBlobs.value = []
+  const totalAdditional = resolved.reduce((sum, r) => sum + r.height, 0) + Math.max(0, resolved.length - 1) * gap
 
   const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')
+  canvas.width = tileSize
+  canvas.height = tileSize + (totalAdditional > 0 ? totalAdditional + gap : 0)
+  const ctx = canvas.getContext('2d')!
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(src, col * cellSize, row * cellSize, cellSize, cellSize, 0, 0, tileSize, tileSize)
 
-  if (!ctx) {
-    message.error('无法创建画布')
-    isGenerating.value = false
-    return
+  let y = tileSize + gap
+  for (const { bmp, height, item } of resolved) {
+    drawItem(ctx, bmp, item, y, tileSize, height)
+    bmp.close()
+    y += height + gap
   }
+  return canvasToBlob(canvas, mime, quality)
+}
 
+async function generateTiles() {
+  const blob = croppedBlob.value
+  if (!blob) return message.error('请先上传图片')
+  isGenerating.value = true
   try {
-    ctx.imageSmoothingEnabled = true
-    ctx.imageSmoothingQuality = 'high'
-    let useBitmap = false
-    let srcImg: HTMLImageElement | ImageBitmap
-    if ('createImageBitmap' in window) {
-      try {
-        const blob = dataUrlToBlob(sourceUrl)
-        const bmp = await createImageBitmap(blob)
-        srcImg = bmp
-        useBitmap = true
-      } catch {
-        srcImg = await loadImage(sourceUrl)
-      }
-    } else {
-      srcImg = await loadImage(sourceUrl)
-    }
-
-    // 源图的正方形区域
-    const baseW = useBitmap ? (srcImg as ImageBitmap).width : (srcImg as HTMLImageElement).width
-    const baseH = useBitmap ? (srcImg as ImageBitmap).height : (srcImg as HTMLImageElement).height
-    const size = Math.min(baseW, baseH)
-    const offsetX = (baseW - size) / 2
-    const offsetY = (baseH - size) / 2
-    const cellSize = size / 3 // 每格源区域尺寸
-
-    // 生成九张图片
-    for (let i = 0; i < 9; i++) {
-      const row = Math.floor(i / 3)
-      const col = i % 3
-      const srcX = offsetX + col * cellSize
-      const srcY = offsetY + row * cellSize
-
-      // 处理附加图片
-      let additionalImg: HTMLImageElement | null = null
-      let additionalHeight = 0
-
-      if (additionalImages.value[i]) {
-        additionalImg = await loadImage(additionalImages.value[i] as string)
-        additionalHeight = (exportSettings.value.tileSize / additionalImg.width) * additionalImg.height
-      }
-
-      // 设置画布尺寸
-      canvas.width = exportSettings.value.tileSize
-      canvas.height = exportSettings.value.tileSize + additionalHeight
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // 绘制主图格子
-      ctx.drawImage(
-        srcImg as CanvasImageSource,
-        srcX,
-        srcY,
-        cellSize,
-        cellSize,
-        0,
-        0,
-        exportSettings.value.tileSize,
-        exportSettings.value.tileSize,
-      )
-
-      // 绘制附加图片
-      if (additionalImg) {
-        ctx.drawImage(
-          additionalImg,
-          0,
-          exportSettings.value.tileSize,
-          exportSettings.value.tileSize,
-          additionalHeight,
-        )
-      }
-
-      // 导出图片
-      const mime = exportSettings.value.format === 'png' ? 'image/png' : 'image/jpeg'
-      const dataUrl = exportSettings.value.format === 'jpeg'
-        ? canvas.toDataURL(mime, exportSettings.value.jpegQuality)
-        : canvas.toDataURL(mime)
-      finalImages.value.push(dataUrl)
-      try {
-        const blob: Blob = await new Promise((resolve, reject) => {
-          const quality = exportSettings.value.format === 'jpeg' ? exportSettings.value.jpegQuality : undefined
-          canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob failed')), mime, quality as number | undefined)
-        })
-        finalBlobs.value.push(blob)
-      } catch {
-        finalBlobs.value.push(dataUrlToBlob(dataUrl))
-      }
-    }
-
-    message.success('九宫格图片已生成！')
-  }
-  catch (error) {
-    console.error('生成图片失败:', error)
-    message.error('生成过程中出现问题，请重试')
-  }
-  finally {
-    isGenerating.value = false
-  }
-}
-
-function downloadImage(dataUrl: string, filename: string) {
-  const link = document.createElement('a')
-  link.href = dataUrl
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
-// 计算是否存在任一附加图片
-const hasAnyAdditional = computed(() => additionalImages.value.some(Boolean))
-
-function removeAllAdditionalImages() {
-  if (!hasAnyAdditional.value) return
-  additionalImages.value = Array.from({ length: 9 }, () => null)
-  message.success('已清空所有附加图片')
-}
-
-function removeAdditionalImage(index: number) {
-  additionalImages.value[index] = null
-  message.success('已删除附加图片')
-}
-
-function dataUrlToBlob(dataUrl: string): Blob {
-  const arr = dataUrl.split(',')
-  const mimeMatch = arr[0].match(/:(.*?);/)
-  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream'
-  const bstr = atob(arr[1])
-  let n = bstr.length
-  const u8arr = new Uint8Array(n)
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n)
-  }
-  return new Blob([u8arr], { type: mime })
-}
-
-async function downloadAllAsZip() {
-  if (finalImages.value.length === 0) {
-    message.error('请先生成九宫格图片')
-    return
-  }
-  try {
-    const zip = new JSZip()
-    if (finalBlobs.value.length === finalImages.value.length && finalBlobs.value.length > 0) {
-      finalBlobs.value.forEach((blob, index) => {
-        zip.file(getFileName(index), blob)
-      })
-    } else {
-      finalImages.value.forEach((dataUrl, index) => {
-        const blob = dataUrlToBlob(dataUrl)
-        zip.file(getFileName(index), blob)
-      })
-    }
-    const content = await zip.generateAsync({ type: 'blob' })
-    saveAs(content, 'dynamic-nine-grid.zip')
-    message.success('ZIP 已开始下载')
+    const src = await createImageBitmap(blob)
+    const cellSize = Math.min(src.width, src.height) / 3
+    const results: Blob[] = []
+    for (let i = 0; i < 9; i++) results.push(await renderTile(src, i, cellSize))
+    src.close()
+    finalBlobs.value = results
+    message.success('九宫格图片已生成')
   } catch (e) {
     console.error(e)
-    message.error('打包失败，请重试')
+    message.error('生成失败，请重试')
+  } finally {
+    isGenerating.value = false
   }
 }
 
-// 下载文件名
-function getFileName(index: number) {
-  const ext = exportSettings.value.format === 'png' ? 'png' : 'jpg'
-  return `grid_${index + 1}.${ext}`
+// --- Downloads ---
+function getFileName(i: number) {
+  return `grid_${i + 1}.${exportSettings.format === 'jpeg' ? 'jpg' : 'png'}`
 }
+function downloadSingle(i: number) { saveAs(finalBlobs.value[i], getFileName(i)) }
+async function downloadZip() {
+  const zip = new JSZip()
+  finalBlobs.value.forEach((blob, i) => zip.file(getFileName(i), blob))
+  saveAs(await zip.generateAsync({ type: 'blob' }), 'dynamic-nine-grid.zip')
+  message.success('ZIP 已开始下载')
+}
+
+// --- Cell image management ---
+const hasAnyAdditional = computed(() => cellImages.value.some(arr => arr.length > 0))
+const expandedCell = ref<number | null>(null)
+
+function addImageToCell(cellIndex: number) {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.multiple = true
+  input.onchange = () => {
+    if (!input.files) return
+    for (const file of input.files) {
+      cellImages.value[cellIndex].push({ file, url: URL.createObjectURL(file), fit: 'stretch-width', height: 0 })
+    }
+  }
+  input.click()
+}
+function removeImageFromCell(cellIndex: number, imgIndex: number) {
+  URL.revokeObjectURL(cellImages.value[cellIndex][imgIndex].url)
+  cellImages.value[cellIndex].splice(imgIndex, 1)
+}
+function clearAllCellImages() {
+  cellImages.value.forEach(arr => arr.forEach(item => URL.revokeObjectURL(item.url)))
+  cellImages.value = Array.from({ length: 9 }, () => [])
+}
+
+function bgPosition(index: number) {
+  return `${(index % 3) * 50}% ${Math.floor(index / 3) * 50}%`
+}
+function backToEdit() { finalBlobs.value = [] }
+
+// --- Cell preview ---
+const cellPreviewUrl = ref<string | null>(null)
+const previewVersion = ref(0)
+
+watchEffect(async () => {
+  const idx = expandedCell.value
+  const _v = previewVersion.value
+  void _v
+  if (idx === null || !croppedBlob.value) { cellPreviewUrl.value = null; return }
+  const items = cellImages.value[idx]
+  if (items.length === 0) { cellPreviewUrl.value = null; return }
+
+  const previewSize = 200
+  // Read all reactive deps so watchEffect re-triggers on changes
+  const _deps = items.map(it => `${it.fit}-${it.height}`)
+  void _deps
+  const gap = Math.round(exportSettings.gap * previewSize / exportSettings.tileSize)
+
+  try {
+    const src = await createImageBitmap(croppedBlob.value)
+    const cellSize = src.width / 3
+    const col = idx % 3; const row = Math.floor(idx / 3)
+
+    // Calculate total height
+    const resolved: { bmp: ImageBitmap; h: number; item: AdditionalItem }[] = []
+    for (const item of items) {
+      const bmp = await createImageBitmap(item.file)
+      const h = item.height > 0
+        ? Math.round(item.height * previewSize / exportSettings.tileSize)
+        : Math.round((previewSize / bmp.width) * bmp.height)
+      resolved.push({ bmp, h, item })
+    }
+    const totalExtra = resolved.reduce((s, r) => s + r.h, 0) + Math.max(0, resolved.length - 1) * gap
+
+    const canvas = document.createElement('canvas')
+    canvas.width = previewSize
+    canvas.height = previewSize + (totalExtra > 0 ? totalExtra + gap : 0)
+    const ctx = canvas.getContext('2d')!
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(src, col * cellSize, row * cellSize, cellSize, cellSize, 0, 0, previewSize, previewSize)
+    src.close()
+
+    let y = previewSize + gap
+    for (const { bmp, h, item } of resolved) {
+      drawItem(ctx, bmp, item, y, previewSize, h)
+      bmp.close()
+      y += h + gap
+    }
+
+    if (cellPreviewUrl.value) URL.revokeObjectURL(cellPreviewUrl.value)
+    cellPreviewUrl.value = URL.createObjectURL(await canvasToBlob(canvas))
+  } catch { cellPreviewUrl.value = null }
+})
 </script>
 
 <template>
-  <div class="dynamic-nine-grid-tool">
+  <div class="nine-grid-page">
     <NCard title="动态九图生成器">
-      <NFlex vertical :size="24">
-        <!-- 上传区域 -->
-        <section class="upload-section">
-          <NUpload
-            action="#"
-            :show-file-list="false"
-            accept="image/*"
-            @change="handleFileChange"
-          >
-            <NButton type="primary" size="large">
-              选择图片
-            </NButton>
-          </NUpload>
-          <NText depth="3" style="margin-top: 8px">
-            上传一张图片，将会自动分割成 3×3 九宫格
-          </NText>
-        </section>
+      <template #header-extra>
+        <NText depth="3">
+          将图片分割为 3×3 九宫格，适用于B站动态
+        </NText>
+      </template>
 
-        <template v-if="originalImage">
-          <NDivider />
+      <!-- Upload -->
+      <Transition name="fade" mode="out-in">
+        <div v-if="!sourceFile" ref="dropZoneRef" class="drop-zone" :class="{ active: isOverDropZone }" @click="() => openFilePicker()">
+          <div class="drop-zone-content">
+            <svg class="drop-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              <path d="M6 32l10-10 8 8 8-12 10 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="18" cy="18" r="3" stroke="currentColor" stroke-width="2.5" />
+            </svg>
+            <NText style="font-size: 15px">
+              拖拽图片到此处，或点击选择
+            </NText>
+            <NText depth="3" style="font-size: 13px">
+              支持 PNG / JPEG / WebP 格式
+            </NText>
+          </div>
+        </div>
+      </Transition>
 
-          <!-- 导出设置 -->
-          <section>
-            <NH4 style="margin: 0 0 12px 0">
-              导出设置
-            </NH4>
-            <div class="settings-grid">
-              <div class="setting-item">
-                <NText depth="3">
-                  单张尺寸
-                </NText>
-                <div style="display: flex; align-items: center; gap: 8px">
-                  <NInputNumber v-model:value="exportSettings.tileSize" :min="128" :max="currentMaxTileSize" :step="128" style="width: 140px" />
-                  <NText depth="3">
-                    px
-                  </NText>
-                  <NText depth="3">
-                    建议最大: {{ maxTileSize }} px
-                  </NText>
+      <!-- Edit mode -->
+      <Transition name="fade" mode="out-in">
+        <div v-if="sourceFile && finalBlobs.length === 0" class="edit-section">
+          <div class="crop-settings-row">
+            <div class="crop-section">
+              <div class="crop-preview">
+                <img v-if="croppedUrl" :src="croppedUrl" alt="裁剪预览" class="crop-img">
+                <div class="grid-overlay">
+                  <div v-for="i in 9" :key="i" class="grid-overlay-cell">
+                    <span class="cell-num">{{ i }}</span>
+                  </div>
                 </div>
               </div>
-
-              <div class="setting-item">
-                <NText depth="3">
-                  允许放大
-                </NText>
-                <NSwitch v-model:value="allowUpscale" />
-              </div>
-
-              <div class="setting-item">
-                <NText depth="3">
-                  格式
-                </NText>
-                <NSelect v-model:value="exportSettings.format" :options="formatOptions" style="width: 160px" />
-              </div>
-
-              <div v-if="exportSettings.format === 'jpeg'" class="setting-item">
-                <NText depth="3">
-                  质量
-                </NText>
-                <NInputNumber v-model:value="exportSettings.jpegQuality" :min="0.1" :max="1" :step="0.05" style="width: 120px" />
-              </div>
-            </div>
-          </section>
-
-          <NDivider />
-
-          <!-- 裁剪区域 -->
-          <div class="two-column-layout">
-            <section class="left-section">
-              <div class="section-header">
-                <NH4 style="margin: 0">
-                  图片裁剪
-                </NH4>
-              </div>
-
-              <div class="cropper-wrapper">
-                <img :src="originalImage || ''" alt="原始图片" class="original-image-preview">
-              </div>
-
-              <div class="cropper-actions">
-                <NButton size="small" @click="generatePreview">
+              <NFlex justify="center" :size="8" style="margin-top: 12px">
+                <NButton size="small" @click="onFilePicked(sourceFile!)">
                   居中裁剪
                 </NButton>
                 <NButton size="small" type="primary" @click="openManualCrop">
                   手动裁剪
                 </NButton>
-                <NUpload
-                  action="#"
-                  :show-file-list="false"
-                  accept="image/*"
-                  @change="handleFileChange"
-                >
-                  <NButton size="small">
-                    重新选择
-                  </NButton>
-                </NUpload>
-              </div>
-
-              <!-- ImgCutter 组件 -->
-              <ImgCutter
-                ref="imgCutterRef"
-                :is-modal="true"
-                :show-choose-btn="false"
-                rate="1:1"
-                :original-graph="true"
-                file-type="png"
-                :quality="1"
-                @cut-down="handleCutDown"
-              />
-            </section>
-
-            <section v-if="croppedSquareImage" class="right-section">
-              <NH4 style="margin: 0 0 12px 0">
-                完整预览
-              </NH4>
-              <NText depth="3" style="margin-bottom: 12px; display: block">
-                以下是裁剪后的完整图片，网格线显示了九宫格的分割位置
-              </NText>
-
-              <div class="whole-image-preview">
-                <img :src="croppedSquareImage" alt="完整预览" class="whole-preview-img">
-                <div class="grid-overlay">
-                  <div v-for="i in 9" :key="`overlay-${i}`" class="grid-overlay-cell">
-                    <div class="cell-number">
-                      {{ i }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <NH4 style="margin: 16px 0 12px 0">
-                九宫格编辑
-              </NH4>
-              <NText depth="3" style="margin-bottom: 12px; display: block">
-                每个格子可以添加附加图片，附加图片会显示在主图下方
-              </NText>
-
-              <div class="nine-grid-preview">
-                <div
-                  v-for="i in 9"
-                  :key="`grid-${i}`"
-                  class="grid-item-container"
-                >
-                  <div class="grid-image-container">
-                    <div class="grid-position-indicator">
-                      {{ i }}
-                    </div>
-                    <div class="grid-image-wrapper">
-                      <div
-                        class="grid-bg-tile"
-                        :style="{ backgroundImage: `url(${croppedSquareImage})`, backgroundPosition: bgPosition(i - 1) }"
-                      />
-                    </div>
-                  </div>
-                  <div v-if="additionalImages[i - 1]" class="additional-image-preview">
-                    <img :src="additionalImages[i - 1] || ''" alt="附加图片">
-                  </div>
-                  <div class="grid-controls">
-                    <NUpload
-                      action="#"
-                      :show-file-list="false"
-                      accept="image/*"
-                      @change="(data) => handleAdditionalImageChange(data, i - 1)"
-                    >
-                      <NButton size="tiny" quaternary>
-                        添加图片
-                      </NButton>
-                    </NUpload>
-                    <NButton
-                      v-if="additionalImages[i - 1]"
-                      size="tiny"
-                      type="error"
-                      quaternary
-                      @click="() => removeAdditionalImage(i - 1)"
-                    >
-                      移除
-                    </NButton>
-                  </div>
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <NButton
-                  v-if="hasAnyAdditional"
-                  size="small"
-                  @click="removeAllAdditionalImages"
-                >
-                  清空所有附加图片
+                <NButton size="small" tertiary @click="() => openFilePicker()">
+                  重新选择
                 </NButton>
+              </NFlex>
+            </div>
+            <div class="settings-panel">
+              <NText tag="h4" class="section-title">
+                导出设置
+              </NText>
+              <div class="settings-list">
+                <div class="setting-row">
+                  <NText depth="3">
+                    单张尺寸
+                  </NText>
+                  <NFlex align="center" :size="6">
+                    <NInputNumber v-model:value="exportSettings.tileSize" :min="128" :max="currentMaxTileSize" :step="128" style="width: 120px" />
+                    <NText depth="3" style="font-size: 12px">
+                      px
+                    </NText>
+                  </NFlex>
+                </div>
+                <div class="setting-row">
+                  <NText depth="3">
+                    允许放大
+                  </NText><NSwitch v-model:value="allowUpscale" />
+                </div>
+                <div class="setting-row">
+                  <NText depth="3">
+                    格式
+                  </NText><NSelect v-model:value="exportSettings.format" :options="formatOptions" style="width: 130px" />
+                </div>
+                <div v-if="exportSettings.format === 'jpeg'" class="setting-row">
+                  <NText depth="3">
+                    质量
+                  </NText><NInputNumber v-model:value="exportSettings.jpegQuality" :min="0.1" :max="1" :step="0.05" style="width: 100px" />
+                </div>
+                <div class="setting-row">
+                  <NText depth="3">
+                    图片间距
+                  </NText>
+                  <NFlex align="center" :size="6">
+                    <NInputNumber v-model:value="exportSettings.gap" :min="0" :max="200" :step="4" style="width: 100px" />
+                    <NText depth="3" style="font-size: 12px">
+                      px
+                    </NText>
+                  </NFlex>
+                </div>
               </div>
-            </section>
+              <NText depth="3" style="font-size: 12px; margin-top: 12px; display: block">
+                建议最大: {{ maxTileSize }}px（基于源图）
+              </NText>
+            </div>
           </div>
-
-          <NDivider />
-
-          <!-- 生成按钮 -->
-          <div class="generate-section">
-            <NButton
-              type="primary"
-              size="large"
-              :loading="isGenerating"
-              :disabled="!croppedSquareImage"
-              @click="generateFinalImages"
-            >
-              生成九宫格图片
-            </NButton>
-            <NButton
-              size="large"
-              :disabled="finalImages.length === 0 || isGenerating"
-              @click="downloadAllAsZip"
-            >
-              打包下载 ZIP
-            </NButton>
-          </div>
-        </template>
-        <!-- 最终结果 -->
-        <template v-if="finalImages.length > 0">
-          <NDivider />
-
-          <section>
-            <NH4 style="margin: 0 0 12px 0">
-              生成结果
-            </NH4>
-            <NText depth="3" style="margin-bottom: 16px; display: block">
-              共生成 {{ finalImages.length }} 张图片，可单独下载
+          <!-- TEMPLATE_GRID_EDITOR -->
+          <!-- Nine Grid Editor -->
+          <div class="grid-editor-header">
+            <NText tag="h4" class="section-title">
+              九宫格编辑
             </NText>
-            <div class="final-images-grid">
-              <div v-for="(imgDataUrl, index) in finalImages" :key="`final-${index}`" class="final-image-item">
-                <img :src="imgDataUrl" :alt="`图片 ${index + 1}`">
-                <div class="image-number">
-                  {{ index + 1 }}
-                </div>
-                <NButton size="small" class="download-button" @click="() => downloadImage(imgDataUrl, getFileName(index))">
-                  下载
-                </NButton>
+            <NButton v-if="hasAnyAdditional" size="tiny" quaternary @click="clearAllCellImages">
+              清空所有附加
+            </NButton>
+          </div>
+          <NText depth="3" style="font-size: 13px; margin-bottom: 12px; display: block">
+            点击格子添加附加图片，每格可添加多张，将按顺序拼接在主图下方
+          </NText>
+          <div class="nine-grid">
+            <div v-for="i in 9" :key="i" class="tile-card" :class="{ selected: expandedCell === i - 1 }" @click="expandedCell = expandedCell === i - 1 ? null : i - 1">
+              <div class="tile-main" :style="{ backgroundImage: `url(${croppedUrl})`, backgroundPosition: bgPosition(i - 1) }">
+                <span class="tile-badge">{{ i }}</span>
+                <span v-if="cellImages[i - 1].length" class="tile-count">{{ cellImages[i - 1].length }}</span>
               </div>
             </div>
-          </section>
-        </template>
-      </NFlex>
+          </div>
+
+          <!-- Cell editor (below grid) -->
+          <div v-if="expandedCell !== null" class="cell-editor-panel">
+            <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
+              <NText strong>
+                第 {{ expandedCell + 1 }} 格 · 附加图片
+              </NText>
+              <NButton size="tiny" quaternary @click="expandedCell = null">
+                收起
+              </NButton>
+            </NFlex>
+            <div class="cell-editor-body">
+              <div class="cell-editor-list">
+                <div v-if="cellImages[expandedCell].length === 0" class="cell-editor-empty">
+                  <NText depth="3" style="font-size: 13px">
+                    暂无附加图片，点击下方按钮添加
+                  </NText>
+                </div>
+                <div v-for="(item, j) in cellImages[expandedCell]" :key="j" class="cell-img-row">
+                  <img :src="item.url" class="cell-img-thumb" alt="">
+                  <NSelect v-model:value="item.fit" :options="fitOptions" size="tiny" style="width: 110px" />
+                  <NFlex align="center" :size="4">
+                    <NInputNumber v-model:value="item.height" :min="0" :max="4096" :step="32" size="tiny" style="width: 80px" />
+                    <NText v-if="item.height === 0" depth="3" style="font-size: 11px">
+                      自适应
+                    </NText>
+                  </NFlex>
+                  <NButton size="tiny" quaternary type="error" @click="removeImageFromCell(expandedCell!, j)">
+                    ×
+                  </NButton>
+                </div>
+                <NButton size="small" dashed style="width: 100%; margin-top: 8px" @click="addImageToCell(expandedCell!)">
+                  + 添加图片
+                </NButton>
+              </div>
+              <div v-if="cellPreviewUrl" class="cell-preview">
+                <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">
+                  效果预览
+                </NText>
+                <img :src="cellPreviewUrl" alt="预览" class="cell-preview-img">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action bar -->
+          <div class="action-bar">
+            <NButton type="primary" size="large" :loading="isGenerating" @click="generateTiles">
+              生成九宫格
+            </NButton>
+          </div>
+        </div>
+      </Transition>
+      <!-- TEMPLATE_RESULTS -->
+      <!-- Results -->
+      <Transition name="fade" mode="out-in">
+        <div v-if="finalBlobs.length > 0" class="results-section">
+          <NFlex justify="space-between" align="center" style="margin-bottom: 16px">
+            <NText tag="h4" class="section-title">
+              生成结果
+            </NText>
+            <NFlex :size="8">
+              <NButton size="small" tertiary @click="backToEdit">
+                返回编辑
+              </NButton>
+              <NButton type="primary" size="small" @click="downloadZip">
+                打包下载 ZIP
+              </NButton>
+            </NFlex>
+          </NFlex>
+          <div class="result-grid">
+            <div v-for="(url, i) in finalUrls" :key="i" class="result-item">
+              <img :src="url" :alt="`图片 ${i + 1}`">
+              <span class="tile-badge">{{ i + 1 }}</span>
+              <div class="result-hover-overlay" @click="downloadSingle(i)">
+                <span>下载</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </NCard>
+    <ImgCutter ref="imgCutterRef" :is-modal="true" :show-choose-btn="false" rate="1:1" :original-graph="true" file-type="png" :quality="1" @cut-down="handleCutDown" />
   </div>
 </template>
-
 <style scoped>
-.dynamic-nine-grid-tool {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.section-title { margin: 0; font-size: 16px; font-weight: 600; }
 
-.upload-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 48px 24px;
-  border: 2px dashed var(--n-border-color);
-  border-radius: var(--n-border-radius);
+.drop-zone {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 220px; border: 2px dashed var(--n-border-color);
+  border-radius: 12px; cursor: pointer; transition: all 0.25s ease;
 }
-
-.settings-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: center;
+.drop-zone:hover, .drop-zone.active {
+  border-color: var(--primary-color, #18a058);
+  background: color-mix(in srgb, var(--primary-color, #18a058) 4%, transparent);
 }
+.drop-zone.active { border-style: solid; }
+.drop-zone-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.drop-icon { width: 48px; height: 48px; color: var(--n-text-color-3); transition: color 0.2s; }
+.drop-zone:hover .drop-icon { color: var(--primary-color, #18a058); }
 
-.setting-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.edit-section, .results-section { animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.crop-settings-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, auto);
+  gap: 24px; align-items: start;
 }
+@media (max-width: 768px) { .crop-settings-row { grid-template-columns: 1fr; } }
 
-.two-column-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
+.crop-section { display: flex; flex-direction: column; align-items: center; }
+.crop-preview {
+  position: relative; width: 100%; max-width: 380px; aspect-ratio: 1;
+  border-radius: 10px; overflow: hidden; border: 1px solid var(--n-border-color);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
-
-@media (max-width: 1024px) {
-  .two-column-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-.left-section, .right-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-.cropper-wrapper {
-  border-radius: var(--n-border-radius);
-  overflow: hidden;
-  border: 1px solid var(--n-border-color);
-  max-height: 520px;
-}
-
-.original-image-preview {
-  width: 100%;
-  max-height: 480px;
-  object-fit: contain;
-  display: block;
-}
-
-.cropper-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.whole-image-preview {
-  position: relative;
-  margin: 0 auto 16px;
-  width: min(100%, 420px);
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  overflow: hidden;
-}
-
-.whole-preview-img {
-  width: 100%;
-  display: block;
-}
-
+.crop-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .grid-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  position: absolute; inset: 0; display: grid;
+  grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
   pointer-events: none;
 }
-
-.grid-overlay-cell {
-  border: 1px dashed rgba(255, 255, 255, 0.8);
+.grid-overlay-cell { border: 1px dashed rgba(255,255,255,0.6); position: relative; }
+.cell-num {
+  position: absolute; top: 4px; left: 4px;
+  background: rgba(0,0,0,0.55); color: #fff;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
 }
 
-.cell-number {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
+.settings-panel {
+  padding: 20px; border: 1px solid var(--n-border-color);
+  border-radius: 10px; background: var(--n-color-embedded); align-self: start;
 }
+.settings-list { display: flex; flex-direction: column; gap: 14px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* --- Nine Grid --- */
+.grid-editor-header { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 4px; }
+.nine-grid, .result-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; max-width: 540px; margin: 0 auto;
+}
+.tile-card {
+  position: relative; border: 1px solid var(--n-border-color);
+  border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+.tile-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.tile-card.selected { outline: 2px solid var(--primary-color, #18a058); outline-offset: -2px; }
+.tile-main {
+  position: relative; width: 100%; aspect-ratio: 1;
+  background-size: 300% 300%; background-repeat: no-repeat;
+}
+.tile-badge {
+  position: absolute; top: 5px; left: 5px;
+  background: rgba(0,0,0,0.6); color: #fff;
+  font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; z-index: 2;
+}
+.tile-count {
+  position: absolute; top: 5px; right: 5px;
+  background: var(--primary-color, #18a058); color: #fff;
+  font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; z-index: 2;
+}
+.tile-hover-overlay, .result-hover-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45); color: #fff; font-size: 13px; font-weight: 500;
+  opacity: 0; transition: opacity 0.2s; cursor: pointer;
+}
+.result-item:hover .result-hover-overlay { opacity: 1; }
 
-.nine-grid-preview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 16px;
-  border-radius: var(--n-border-radius);
+/* --- Cell Editor Panel --- */
+.cell-editor-panel {
+  max-width: 540px; margin: 12px auto 0;
+  padding: 14px; border: 1px solid var(--n-border-color);
+  border-radius: 8px; background: var(--n-color-embedded);
+}
+.cell-editor-body { display: flex; gap: 16px; align-items: flex-start; }
+.cell-editor-list { flex: 1; min-width: 0; }
+.cell-editor-empty { padding: 12px 0; text-align: center; }
+.cell-img-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.cell-img-row + .cell-img-row { border-top: 1px solid var(--n-border-color); }
+.cell-img-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.cell-preview { flex-shrink: 0; width: 120px; }
+.cell-preview-img {
+  width: 100%; border-radius: 6px;
   border: 1px solid var(--n-border-color);
-  margin-top: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.grid-item-container {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--n-border-radius);
-  overflow: hidden;
-  border: 1px solid var(--n-border-color);
+/* --- Action Bar --- */
+.action-bar {
+  position: sticky; bottom: 0;
+  display: flex; justify-content: center; align-items: center; gap: 12px;
+  margin-top: 28px; padding: 16px 0;
+  background: color-mix(in srgb, var(--n-color) 85%, transparent);
+  backdrop-filter: blur(8px); border-top: 1px solid var(--n-border-color); z-index: 10;
 }
 
-.grid-image-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
+/* --- Results --- */
+.result-item {
+  position: relative; border: 1px solid var(--n-border-color);
+  border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s;
 }
+.result-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.result-item img { width: 100%; display: block; }
 
-.grid-position-indicator {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background-color: rgba(0, 0, 0, 0.65);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 6px;
-  border-radius: var(--n-border-radius);
-  z-index: 2;
-}
-
-.grid-image-wrapper {
-  width: 100%;
-  height: 0;
-  padding-bottom: 100%;
-  position: relative;
-}
-
-.grid-bg-tile {
-  position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-  background-size: 300% 300%;
-}
-
-.additional-image-preview {
-  width: 100%;
-  padding-top: 6px;
-}
-
-.additional-image-preview img {
-  width: 100%;
-  display: block;
-  border-top: 1px solid var(--n-border-color);
-  max-height: 120px;
-  object-fit: contain;
-}
-
-.grid-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 6px;
-}
-
-.action-buttons, .generate-section {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.final-images-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
-}
-
-.final-image-item {
-  position: relative;
-  border: 1px solid var(--n-border-color);
-  border-radius: var(--n-border-radius);
-  overflow: hidden;
-}
-
-.final-image-item img {
-  width: 100%;
-  display: block;
-}
-
-.image-number {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.download-button {
-  margin: 10px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
-  .dynamic-nine-grid-tool {
-    padding: 16px;
-  }
-
-  .settings-grid {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .original-image-preview {
-    max-height: 320px;
-  }
-
-  .nine-grid-preview {
-    padding: 12px;
-    gap: 6px;
-  }
-
-  .final-images-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-  }
-}
+/* --- Transitions --- */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.fade-enter-from { opacity: 0; transform: translateY(6px); }
+.fade-leave-to { opacity: 0; transform: translateY(-6px); }
 </style>

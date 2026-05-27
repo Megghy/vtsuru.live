@@ -27,6 +27,8 @@ export const PERSIST_LEGACY_KEY_MAP = {
 
   'Setting.HideAvatar': 'vtsuru:setting:hide-avatar',
   'Setting.DanmakuWindow': 'vtsuru:setting:danmaku-window',
+  'Setting.GiftWindow': 'vtsuru:setting:gift-window',
+  'Setting.EnergyRank': 'vtsuru:setting:energy-rank',
   'Setting.Speech': 'vtsuru:setting:speech',
   'Setting.MusicRequest': 'vtsuru:setting:music-request',
   'Setting.MusicRequest.Cooldown': 'vtsuru:setting:music-request:cooldown',

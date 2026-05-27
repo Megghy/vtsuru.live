@@ -188,6 +188,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           uface: data.uface,
           open_id: data.open_id,
           ouid: data.open_id ?? GuidUtils.numToGuid(data.uid),
+          gift_icon: data.gift_icon,
         },
         command,
       )

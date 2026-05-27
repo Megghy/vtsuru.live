@@ -24,7 +24,7 @@ function makeAction(overrides: Partial<AutoActionItem> = {}): AutoActionItem {
     actionType: ActionType.SEND_DANMAKU,
     template: 'reply',
     ignoreCooldown: false,
-    priority: Priority.Normal,
+    priority: Priority.NORMAL,
     triggerConfig: {
       onlyDuringLive: false,
       userFilterEnabled: false,

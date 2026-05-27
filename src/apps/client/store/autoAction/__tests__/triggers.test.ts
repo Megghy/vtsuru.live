@@ -33,7 +33,7 @@ function makeAction(overrides: Partial<AutoActionItem> = {}): AutoActionItem {
     actionType: ActionType.SEND_DANMAKU,
     template: 'reply',
     ignoreCooldown: true,
-    priority: Priority.Normal,
+    priority: Priority.NORMAL,
     triggerConfig: {
       keywordMatchType: KeywordMatchType.Contains,
       blockwordMatchType: KeywordMatchType.Contains,

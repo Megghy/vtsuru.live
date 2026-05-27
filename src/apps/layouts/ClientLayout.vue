@@ -16,6 +16,7 @@ import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/acc
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { initAll, OnClientUnmounted, clientInited, clientInitStage } from '@/apps/client/data/initialize'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
+import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 // 引入子组件
 import WindowBar from '@/apps/client/components/WindowBar.vue'
@@ -28,6 +29,7 @@ import '@/apps/client/styles/client-page.css'
 const router = useRouter()
 const webfetcher = useWebFetcher()
 const danmakuWindow = useDanmakuWindow()
+const giftWindow = useGiftWindow()
 const biliCookie = useBiliCookie()
 // 用于存储用户输入的 Token
 const token = ref('')
@@ -131,11 +133,22 @@ const menuOptions = computed(() => {
       icon: () => h(Live24Filled),
     },
     {
-      label: () =>
-        h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
-      key: 'danmaku-window-manage',
+      label: '直播浮窗',
+      key: 'live-windows',
       icon: () => h(Chat24Filled),
-      show: danmakuWindow.danmakuWindow != undefined,
+      show: danmakuWindow.danmakuWindow != undefined || giftWindow.giftWindow != undefined,
+      children: [
+        {
+          label: () => h(RouterLink, { to: { name: 'client-danmaku-window-manage' } }, () => '弹幕机'),
+          key: 'danmaku-window-manage',
+          show: danmakuWindow.danmakuWindow != undefined,
+        },
+        {
+          label: () => h(RouterLink, { to: { name: 'client-gift-window-manage' } }, () => '礼物与排行'),
+          key: 'gift-window-manage',
+          show: giftWindow.giftWindow != undefined,
+        },
+      ],
     },
     {
       label: () =>

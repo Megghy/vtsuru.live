@@ -439,6 +439,16 @@ export async function initAll(isOnBoot: boolean) {
         console.log('弹幕窗口已打开')
       }
     }
+
+    const gw = windows.find(win => win.label === 'gift-window')
+    if (gw) {
+      const { useGiftWindow } = await import('@/apps/client/store/useGiftWindow')
+      const giftStore = useGiftWindow()
+      giftStore.init()
+      if (await gw.isVisible()) {
+        giftStore.isGiftWindowOpen = true
+      }
+    }
   })
 
   window.addEventListener('keydown', (event) => {

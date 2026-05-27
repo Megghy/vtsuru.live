@@ -46,7 +46,6 @@ import PsR1SvgComp from '@/assets/controller/PlayStation/ps-D-PAD Right.svg?comp
 import PsCreateSvgComp from '@/assets/controller/PlayStation/ps5-Create.svg?component'
 import PsOptionsSvgComp from '@/assets/controller/PlayStation/ps5-Option.svg?component'
 import PsGuideSvgComp from '@/assets/controller/PlayStation/ps-Guide.svg?component'
-
 import NintendoASvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt A.svg?component'
 import NintendoBSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt B.svg?component'
 import NintendoXSvgComp from '@/assets/controller/Nintendo/nintendo-positional prompt X.svg?component'
@@ -69,25 +68,15 @@ export interface BodyOptionConfig {
   defaultViewBox?: string
 }
 
-const L3 = 'LEFT_STICK_PRESS' as LogicalButton
-const R3 = 'RIGHT_STICK_PRESS' as LogicalButton
-const ACTIONDOWN = 'ACTION_DOWN' as LogicalButton
-const ACTIONRIGHT = 'ACTION_RIGHT' as LogicalButton
-const ACTIONLEFT = 'ACTION_LEFT' as LogicalButton
-const ACTIONUP = 'ACTION_UP' as LogicalButton
-const DPADUP = 'DPAD_UP' as LogicalButton
-const DPADDOWN = 'DPAD_DOWN' as LogicalButton
-const DPADLEFT = 'DPAD_LEFT' as LogicalButton
-const DPADRIGHT = 'DPAD_RIGHT' as LogicalButton
-const L1 = 'LEFT_SHOULDER_1' as LogicalButton
-const R1 = 'RIGHT_SHOULDER_1' as LogicalButton
-const L2 = 'LEFT_SHOULDER_2' as LogicalButton
-const R2 = 'RIGHT_SHOULDER_2' as LogicalButton
-const SELECT = 'SELECT' as LogicalButton
-const START = 'START' as LogicalButton
-const GUIDE = 'HOME' as LogicalButton
-const PSTOUCHPAD = 'PS_TOUCHPAD' as LogicalButton
-const NINTENDOCAPTURE = 'NINTENDO_CAPTURE' as LogicalButton
+export interface ControllerComponentStructure {
+  name: string
+  path?: string
+  type: 'button' | 'stick' | 'dpad' | 'trigger' | 'group'
+  logicalButton?: LogicalButton | string
+  childComponents?: ControllerComponentStructure[]
+}
+
+// --- Body Options ---
 
 export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
   xbox: [
@@ -112,616 +101,242 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
   ],
 }
 
-function parseAspectRatioToViewBox(aspectRatio: string): string | undefined {
-  const parts = aspectRatio.split('/')
-  if (parts.length === 2) {
-    const width = Number.parseFloat(parts[0])
-    const height = Number.parseFloat(parts[1])
-    if (!Number.isNaN(width) && !Number.isNaN(height)) {
-      return `0 0 ${width} ${height}`
-    }
-  }
-  return undefined
-}
+// --- Controller Structures (SVG 直接操作模式的按键映射) ---
 
-export interface ControllerComponentStructure {
-  name: string
-  path?: string
-  type: 'button' | 'stick' | 'dpad' | 'trigger' | 'group'
-  logicalButton?: LogicalButton | string
-  childComponents?: ControllerComponentStructure[]
-}
-
-const xboxControllerStructure: ControllerComponentStructure[] = [
+const xboxStructure: ControllerComponentStructure[] = [
   {
-    name: '控制器主体',
-    type: 'group',
-    path: 'Xbox One Controller Body',
-  },
-  {
-    name: '摇杆',
-    type: 'group',
+    name: '摇杆', type: 'group',
     childComponents: [
-      {
-        name: '左摇杆',
-        type: 'stick',
-        logicalButton: 'LEFT_STICK',
-        path: 'Left Stick',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' },
-        ],
-      },
-      {
-        name: '右摇杆',
-        type: 'stick',
-        logicalButton: 'RIGHT_STICK',
-        path: 'Right Stick',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' },
-        ],
-      },
+      { name: '左摇杆', type: 'stick', logicalButton: 'LEFT_STICK', path: 'Left Stick' },
+      { name: '右摇杆', type: 'stick', logicalButton: 'RIGHT_STICK', path: 'Right Stick' },
     ],
   },
   {
-    name: '中央按钮',
-    type: 'group',
+    name: '面部按钮', type: 'group',
     childComponents: [
-      {
-        name: 'Xbox按钮',
-        type: 'button',
-        logicalButton: GUIDE,
-        path: 'Xbox Guide Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Xbox Guide Button Outline' },
-          { name: 'Color', type: 'group', path: 'Xbox Guide Button Color' },
-          { name: 'Icon', type: 'group', path: 'Xbox Icon (OG)' },
-        ],
-      },
-      {
-        name: 'View按钮',
-        type: 'button',
-        logicalButton: SELECT,
-        path: 'View Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'View Button Outline' },
-          { name: 'Color', type: 'group', path: 'View Button Color' },
-          { name: 'Icon', type: 'group', path: 'View Button Icon' },
-        ],
-      },
-      {
-        name: 'Menu按钮',
-        type: 'button',
-        logicalButton: START,
-        path: 'Menu Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Menu Button Outline' },
-          { name: 'Color', type: 'group', path: 'Menu Button Color' },
-          { name: 'Icon', type: 'group', path: 'Menu Button Icon' },
-        ],
-      },
+      { name: 'A按钮', type: 'button', logicalButton: 'ACTION_DOWN', path: 'A Button' },
+      { name: 'B按钮', type: 'button', logicalButton: 'ACTION_RIGHT', path: 'B Button' },
+      { name: 'X按钮', type: 'button', logicalButton: 'ACTION_LEFT', path: 'X Button' },
+      { name: 'Y按钮', type: 'button', logicalButton: 'ACTION_UP', path: 'Y Button' },
     ],
   },
   {
-    name: '面部按钮',
-    type: 'group',
-    path: 'Face Button',
+    name: '方向键', type: 'group',
     childComponents: [
-      {
-        name: '面部按钮点',
-        type: 'group',
-        path: 'Face Button Dot',
-      },
-      {
-        name: 'A按钮',
-        type: 'button',
-        logicalButton: ACTIONDOWN,
-        path: 'A Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'A Button Outline' },
-          { name: 'Color', type: 'group', path: 'A Button Color' },
-          { name: 'Text', type: 'group', path: 'A Button Text' },
-        ],
-      },
-      {
-        name: 'B按钮',
-        type: 'button',
-        logicalButton: ACTIONRIGHT,
-        path: 'B Button',
-        childComponents: [
-          { name: 'Text', type: 'group', path: 'Text' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Outline', type: 'group', path: 'B Button Outline' },
-        ],
-      },
-      {
-        name: 'X按钮',
-        type: 'button',
-        logicalButton: ACTIONLEFT,
-        path: 'X Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'X Button Outline' },
-          { name: 'Color', type: 'group', path: 'X Button Color' },
-          { name: 'Text', type: 'group', path: 'X Button Text' },
-        ],
-      },
-      {
-        name: 'Y按钮',
-        type: 'button',
-        logicalButton: ACTIONUP,
-        path: 'Y Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Y Button Outline' },
-          { name: 'Color', type: 'group', path: 'Y Button Color' },
-          { name: 'Text', type: 'group', path: 'Y Button Text' },
-        ],
-      },
+      { name: '上', type: 'button', logicalButton: 'DPAD_UP', path: 'D-PAD Up' },
+      { name: '下', type: 'button', logicalButton: 'DPAD_DOWN', path: 'D-PAD Down' },
+      { name: '左', type: 'button', logicalButton: 'DPAD_LEFT', path: 'D-PAD Left' },
+      { name: '右', type: 'button', logicalButton: 'DPAD_RIGHT', path: 'D-PAD Right' },
     ],
   },
   {
-    name: '方向键组',
-    type: 'group',
-    path: 'Directional Pads',
+    name: '中央按钮', type: 'group',
     childComponents: [
-      {
-        name: 'D-PAD',
-        type: 'dpad',
-        path: 'D-PAD',
-        childComponents: [
-          { name: 'D-PAD正面轮廓', type: 'group', path: 'D-PAD Outline Front' },
-          { name: 'D-PAD底部轮廓', type: 'group', path: 'D-PAD Outline Bottom' },
-          { name: 'D-PAD相关主体轮廓', type: 'group', path: 'Body Outline' },
-          { name: 'D-PAD颜色', type: 'group', path: 'Color' },
-        ],
-      },
-      {
-        name: '上 (逻辑)',
-        type: 'button',
-        logicalButton: DPADUP,
-        path: 'D-PAD Up',
-      },
-      {
-        name: '下 (逻辑)',
-        type: 'button',
-        logicalButton: DPADDOWN,
-        path: 'D-PAD Down',
-      },
-      {
-        name: '左 (逻辑)',
-        type: 'button',
-        logicalButton: DPADLEFT,
-        path: 'D-PAD Left',
-      },
-      {
-        name: '右 (逻辑)',
-        type: 'button',
-        logicalButton: DPADRIGHT,
-        path: 'D-PAD Right',
-      },
+      { name: 'Xbox按钮', type: 'button', logicalButton: 'HOME', path: 'Xbox Guide Button' },
+      { name: 'View按钮', type: 'button', logicalButton: 'SELECT', path: 'View Button' },
+      { name: 'Menu按钮', type: 'button', logicalButton: 'START', path: 'Menu Button' },
     ],
   },
   {
-    name: '肩部按钮',
-    type: 'group',
-    path: 'Xbox One Bumpers',
+    name: '肩部按钮', type: 'group',
     childComponents: [
-      {
-        name: '左肩按钮',
-        type: 'button',
-        logicalButton: L1,
-        path: 'Left Bumper',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'LB Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'LB Text' },
-        ],
-      },
-      {
-        name: '右肩按钮',
-        type: 'button',
-        logicalButton: R1,
-        path: 'Right Bumper',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'RB Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'RB Text' },
-        ],
-      },
-      {
-        name: '配对按钮',
-        type: 'button',
-        path: 'Pair Button',
-      },
-      { name: 'Xbox One 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One Controller Outline' },
-      { name: 'Xbox One S 控制器轮廓 (肩部)', type: 'group', path: 'Xbox One S Controller Outline' },
-      { name: '肩部整体颜色', type: 'group', path: 'Color' },
+      { name: '左肩按钮', type: 'button', logicalButton: 'LEFT_SHOULDER_1', path: 'Left Bumper' },
+      { name: '右肩按钮', type: 'button', logicalButton: 'RIGHT_SHOULDER_1', path: 'Right Bumper' },
     ],
   },
   {
-    name: '扳机键',
-    type: 'group',
-    path: 'Xbox One Triggers',
+    name: '扳机键', type: 'group',
     childComponents: [
-      {
-        name: '左扳机',
-        type: 'trigger',
-        logicalButton: L2,
-        path: 'Left Trigger',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'LT Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'LT Text' },
-        ],
-      },
-      {
-        name: '右扳机',
-        type: 'trigger',
-        logicalButton: R2,
-        path: 'Right Trigger',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'RT Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'RT Text' },
-        ],
-      },
+      { name: '左扳机', type: 'trigger', logicalButton: 'LEFT_SHOULDER_2', path: 'Left Trigger' },
+      { name: '右扳机', type: 'trigger', logicalButton: 'RIGHT_SHOULDER_2', path: 'Right Trigger' },
     ],
   },
 ]
 
-const psControllerStructure: ControllerComponentStructure[] = [
+const psStructure: ControllerComponentStructure[] = [
   {
-    name: 'D-PAD',
-    type: 'group',
-    path: 'D-PAD',
+    name: '摇杆', type: 'group',
     childComponents: [
-      {
-        name: 'D-PAD Right',
-        type: 'button',
-        logicalButton: DPADRIGHT,
-        path: 'D-PAD Right',
-        childComponents: [
-          { name: 'Symbol', type: 'group', path: 'Symbol' },
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-        ],
-      },
-      {
-        name: 'D-PAD Down',
-        type: 'button',
-        logicalButton: DPADDOWN,
-        path: 'D-PAD Down',
-      },
-      {
-        name: 'D-PAD Left',
-        type: 'button',
-        logicalButton: DPADLEFT,
-        path: 'D-PAD Left',
-      },
-      {
-        name: 'D-PAD Up',
-        type: 'button',
-        logicalButton: DPADUP,
-        path: 'D-PAD Up',
-      },
+      { name: '左摇杆', type: 'stick', logicalButton: 'LEFT_STICK', path: 'Left Stick' },
+      { name: '右摇杆', type: 'stick', logicalButton: 'RIGHT_STICK', path: 'Right Stick' },
     ],
   },
   {
-    name: '摇杆',
-    type: 'group',
+    name: '面部按钮', type: 'group',
     childComponents: [
-      {
-        name: '左摇杆',
-        type: 'stick',
-        logicalButton: 'LEFT_STICK',
-        path: 'Left Stick',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' },
-        ],
-      },
-      {
-        name: '右摇杆',
-        type: 'stick',
-        logicalButton: 'RIGHT_STICK',
-        path: 'Right Stick',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' },
-        ],
-      },
+      { name: '十字按钮', type: 'button', logicalButton: 'ACTION_DOWN', path: 'Crosss' },
+      { name: '圆形按钮', type: 'button', logicalButton: 'ACTION_RIGHT', path: 'Circle' },
+      { name: '方形按钮', type: 'button', logicalButton: 'ACTION_LEFT', path: 'Square' },
+      { name: '三角按钮', type: 'button', logicalButton: 'ACTION_UP', path: 'Triangle' },
     ],
   },
   {
-    name: '面部按钮',
-    type: 'group',
+    name: '方向键', type: 'group',
     childComponents: [
-      {
-        name: 'Face Button',
-        type: 'group',
-        path: 'Face Button',
-      },
-      {
-        name: 'Option Button',
-        type: 'button',
-        logicalButton: START,
-        path: 'Option Button',
-      },
-      {
-        name: 'Create Button',
-        type: 'button',
-        logicalButton: SELECT,
-        path: 'Create Button',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Symbol', type: 'group', path: 'Symbol' },
-        ],
-      },
-      {
-        name: '十字按钮',
-        type: 'button',
-        path: 'Crosss',
-        logicalButton: ACTIONDOWN,
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Cross Outline' },
-          { name: 'Color', type: 'group', path: 'Cross Color' },
-        ],
-      },
-      {
-        name: '圆形按钮',
-        type: 'button',
-        path: 'Circle',
-        logicalButton: ACTIONRIGHT,
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Circle Outline' },
-          { name: 'Color', type: 'group', path: 'Circle Color' },
-        ],
-      },
-      {
-        name: '方形按钮',
-        type: 'button',
-        path: 'Square',
-        logicalButton: ACTIONLEFT,
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Square Outline' },
-          { name: 'Color', type: 'group', path: 'Square Color' },
-        ],
-      },
-      {
-        name: '三角按钮',
-        type: 'button',
-        path: 'Triangle',
-        logicalButton: ACTIONUP,
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Triangle Outline' },
-          { name: 'Color', type: 'group', path: 'Triangle Color' },
-        ],
-      },
+      { name: '上', type: 'button', logicalButton: 'DPAD_UP', path: 'D-PAD Up' },
+      { name: '下', type: 'button', logicalButton: 'DPAD_DOWN', path: 'D-PAD Down' },
+      { name: '左', type: 'button', logicalButton: 'DPAD_LEFT', path: 'D-PAD Left' },
+      { name: '右', type: 'button', logicalButton: 'DPAD_RIGHT', path: 'D-PAD Right' },
     ],
   },
   {
-    name: '静音按钮',
-    type: 'button',
-    path: 'Mute',
+    name: '中央按钮', type: 'group',
     childComponents: [
-      { name: 'Outline', type: 'group', path: 'Outline' },
-      {
-        name: 'LED',
-        type: 'group',
-        path: 'LED',
-        childComponents: [
-          { name: 'Mute With LED', type: 'group', path: 'Mute With LED' },
-          { name: 'Mute Without LED', type: 'group', path: 'Mute Without LED' },
-          { name: 'Mute Icon', type: 'group', path: 'Mute Icon' },
-        ],
-      },
+      { name: 'PS按钮', type: 'button', logicalButton: 'HOME', path: 'PS Button' },
+      { name: 'Create', type: 'button', logicalButton: 'SELECT', path: 'Create Button' },
+      { name: 'Options', type: 'button', logicalButton: 'START', path: 'Option Button' },
+      { name: '触摸板', type: 'button', logicalButton: 'PS_TOUCHPAD', path: 'Touchpad' },
     ],
   },
   {
-    name: 'Misc.',
-    type: 'group',
-    path: 'Misc.',
+    name: '肩部按钮', type: 'group',
     childComponents: [
-      { name: 'PS Button', type: 'button', logicalButton: GUIDE, path: 'PS Button' },
-      { name: 'Speakers', type: 'group', path: 'Speakers' },
-      { name: 'USB-C Plug', type: 'group', path: 'USB-C Plug' },
+      { name: 'L1', type: 'button', logicalButton: 'LEFT_SHOULDER_1', path: 'L1' },
+      { name: 'R1', type: 'button', logicalButton: 'RIGHT_SHOULDER_1', path: 'R1' },
     ],
   },
   {
-    name: '触摸板',
-    type: 'button',
-    logicalButton: PSTOUCHPAD,
-    path: 'Touchpad',
+    name: '扳机键', type: 'group',
     childComponents: [
-      { name: 'Outline', type: 'group', path: 'Touchpad Outline' },
-      { name: 'Color', type: 'group', path: 'Touchpad Color' },
-    ],
-  },
-  {
-    name: '分享按钮',
-    type: 'button',
-    logicalButton: SELECT,
-    path: 'Create Button',
-    childComponents: [
-      { name: 'Outline', type: 'group', path: 'Outline' },
-      { name: 'Color', type: 'group', path: 'Color' },
-    ],
-  },
-  {
-    name: '菜单按钮',
-    type: 'button',
-    logicalButton: START,
-    path: 'Option Button',
-    childComponents: [
-      { name: 'Outline', type: 'group', path: 'Outline' },
-      { name: 'Color', type: 'group', path: 'Color' },
-    ],
-  },
-  {
-    name: '肩部按钮',
-    type: 'group',
-    childComponents: [
-      {
-        name: '左肩按钮',
-        type: 'button',
-        logicalButton: L1,
-        path: 'L1',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' },
-        ],
-      },
-      {
-        name: '右肩按钮',
-        type: 'button',
-        logicalButton: R1,
-        path: 'R1',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' },
-        ],
-      },
-    ],
-  },
-  {
-    name: '扳机键',
-    type: 'group',
-    childComponents: [
-      {
-        name: '左扳机',
-        type: 'trigger',
-        logicalButton: L2,
-        path: 'L2 Triggers',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' },
-        ],
-      },
-      {
-        name: '右扳机',
-        type: 'trigger',
-        logicalButton: R2,
-        path: 'R2 Trigger',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Outline' },
-          { name: 'Color', type: 'group', path: 'Color' },
-          { name: 'Text', type: 'group', path: 'Text' },
-        ],
-      },
+      { name: 'L2', type: 'trigger', logicalButton: 'LEFT_SHOULDER_2', path: 'L2 Triggers' },
+      { name: 'R2', type: 'trigger', logicalButton: 'RIGHT_SHOULDER_2', path: 'R2 Trigger' },
     ],
   },
 ]
 
-const nintendoControllerStructure: ControllerComponentStructure[] = [
+const nintendoStructure: ControllerComponentStructure[] = [
   {
-    name: '摇杆',
-    type: 'group',
+    name: '摇杆', type: 'group',
     childComponents: [
-      {
-        name: '左摇杆',
-        type: 'stick',
-        logicalButton: 'LEFT_STICK',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Left Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Left Stick Color' },
-        ],
-      },
-      {
-        name: '右摇杆',
-        type: 'stick',
-        logicalButton: 'RIGHT_STICK',
-        childComponents: [
-          { name: 'Outline', type: 'group', path: 'Right Stick Outline' },
-          { name: 'Color', type: 'group', path: 'Right Stick Color' },
-        ],
-      },
+      { name: '左摇杆', type: 'stick', logicalButton: 'LEFT_STICK', path: 'Left Stick' },
+      { name: '右摇杆', type: 'stick', logicalButton: 'RIGHT_STICK', path: 'Right Stick' },
+    ],
+  },
+  {
+    name: '面部按钮', type: 'group',
+    childComponents: [
+      { name: 'B按钮', type: 'button', logicalButton: 'ACTION_DOWN', path: 'B Button' },
+      { name: 'A按钮', type: 'button', logicalButton: 'ACTION_RIGHT', path: 'A Button' },
+      { name: 'Y按钮', type: 'button', logicalButton: 'ACTION_LEFT', path: 'Y Button' },
+      { name: 'X按钮', type: 'button', logicalButton: 'ACTION_UP', path: 'X Button' },
+    ],
+  },
+  {
+    name: '方向键', type: 'group',
+    childComponents: [
+      { name: '上', type: 'button', logicalButton: 'DPAD_UP', path: 'D-PAD Up' },
+      { name: '下', type: 'button', logicalButton: 'DPAD_DOWN', path: 'D-PAD Down' },
+      { name: '左', type: 'button', logicalButton: 'DPAD_LEFT', path: 'D-PAD Left' },
+      { name: '右', type: 'button', logicalButton: 'DPAD_RIGHT', path: 'D-PAD Right' },
+    ],
+  },
+  {
+    name: '中央按钮', type: 'group',
+    childComponents: [
+      { name: 'Home', type: 'button', logicalButton: 'HOME', path: 'Home Button' },
+      { name: '-', type: 'button', logicalButton: 'SELECT', path: 'Minus Button' },
+      { name: '+', type: 'button', logicalButton: 'START', path: 'Plus Button' },
+      { name: 'Capture', type: 'button', logicalButton: 'NINTENDO_CAPTURE', path: 'Capture Button' },
+    ],
+  },
+  {
+    name: '肩部按钮', type: 'group',
+    childComponents: [
+      { name: 'L', type: 'button', logicalButton: 'LEFT_SHOULDER_1', path: 'L Button' },
+      { name: 'R', type: 'button', logicalButton: 'RIGHT_SHOULDER_1', path: 'R Button' },
+    ],
+  },
+  {
+    name: '扳机键', type: 'group',
+    childComponents: [
+      { name: 'ZL', type: 'trigger', logicalButton: 'LEFT_SHOULDER_2', path: 'ZL Trigger' },
+      { name: 'ZR', type: 'trigger', logicalButton: 'RIGHT_SHOULDER_2', path: 'ZR Trigger' },
     ],
   },
 ]
 
 export const controllerStructures: Record<GamepadType, ControllerComponentStructure[]> = {
-  xbox: xboxControllerStructure,
-  ps: psControllerStructure,
-  nintendo: nintendoControllerStructure,
+  xbox: xboxStructure,
+  ps: psStructure,
+  nintendo: nintendoStructure,
 }
+
+// --- Overlay 模式的组件配置 ---
 
 export const gamepadConfigs: AllGamepadConfigs = {
   xbox: {
     name: 'Xbox Controller',
     bodySvg: markRaw(XboxBodyBlackComp),
-    aspectRatio: '1000/625',
-    defaultViewBox: parseAspectRatioToViewBox('1000/625') || '0 0 1543 956',
+    aspectRatio: '1543/956',
+    defaultViewBox: '0 0 1543 956',
     components: [
       { type: 'stick', logicalButton: 'LEFT_STICK', svg: markRaw(StickSvgComp), position: { top: '48%', left: '23%', width: '16%' } },
       { type: 'stick', logicalButton: 'RIGHT_STICK', svg: markRaw(RightStickSvgComp), position: { top: '65%', left: '57%', width: '16%' } },
-      { type: 'button', logicalButton: L3, name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '48%', left: '23%', width: '16%' } },
-      { type: 'button', logicalButton: R3, name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '65%', left: '57%', width: '16%' } },
-      { type: 'button', logicalButton: ACTIONDOWN, name: 'A', svg: markRaw(XboxASvgComp), position: { top: '62%', left: '71.5%', width: '8%' } },
-      { type: 'button', logicalButton: ACTIONRIGHT, name: 'B', svg: markRaw(XboxBSvgComp), position: { top: '50%', left: '79%', width: '8%' } },
-      { type: 'button', logicalButton: ACTIONLEFT, name: 'X', svg: markRaw(XboxXSvgComp), position: { top: '50%', left: '64%', width: '8%' } },
-      { type: 'button', logicalButton: ACTIONUP, name: 'Y', svg: markRaw(XboxYSvgComp), position: { top: '38%', left: '71.5%', width: '8%' } },
-      { type: 'button', logicalButton: DPADUP, name: 'D-Up', svg: markRaw(XboxDpadUpSvgComp), position: { top: '35%', left: '37%', width: '7%' } },
-      { type: 'button', logicalButton: DPADDOWN, name: 'D-Down', svg: markRaw(XboxDpadDownSvgComp), position: { top: '47%', left: '37%', width: '7%' } },
-      { type: 'button', logicalButton: DPADLEFT, name: 'D-Left', svg: markRaw(XboxDpadLeftSvgComp), position: { top: '41%', left: '31%', width: '7%' } },
-      { type: 'button', logicalButton: DPADRIGHT, name: 'D-Right', svg: markRaw(XboxDpadRightSvgComp), position: { top: '41%', left: '43%', width: '7%' } },
-      { type: 'button', logicalButton: L1, name: 'LB', svg: markRaw(XboxLBSvgComp), position: { top: '18%', left: '25%', width: '10%' } },
-      { type: 'button', logicalButton: R1, name: 'RB', svg: markRaw(XboxRBSvgComp), position: { top: '18%', left: '65%', width: '10%' } },
-      { type: 'button', logicalButton: L2, name: 'LT', svg: markRaw(XboxLTSvgComp), position: { top: '7%', left: '25%', width: '10%' } },
-      { type: 'button', logicalButton: R2, name: 'RT', svg: markRaw(XboxRTSvgComp), position: { top: '7%', left: '65%', width: '10%' } },
-      { type: 'button', logicalButton: SELECT, name: 'View', svg: markRaw(XboxViewSvgComp), position: { top: '35%', left: '52%', width: '6%' } },
-      { type: 'button', logicalButton: START, name: 'Menu', svg: markRaw(XboxMenuSvgComp), position: { top: '35%', left: '62%', width: '6%' } },
-      { type: 'button', logicalButton: GUIDE, name: 'Guide', svg: markRaw(XboxGuideSvgComp), position: { top: '20%', left: '50%', width: '8%' } },
+      { type: 'button', logicalButton: 'LEFT_STICK_PRESS', name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '48%', left: '23%', width: '16%' } },
+      { type: 'button', logicalButton: 'RIGHT_STICK_PRESS', name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '65%', left: '57%', width: '16%' } },
+      { type: 'button', logicalButton: 'ACTION_DOWN', name: 'A', svg: markRaw(XboxASvgComp), position: { top: '62%', left: '71.5%', width: '8%' } },
+      { type: 'button', logicalButton: 'ACTION_RIGHT', name: 'B', svg: markRaw(XboxBSvgComp), position: { top: '50%', left: '79%', width: '8%' } },
+      { type: 'button', logicalButton: 'ACTION_LEFT', name: 'X', svg: markRaw(XboxXSvgComp), position: { top: '50%', left: '64%', width: '8%' } },
+      { type: 'button', logicalButton: 'ACTION_UP', name: 'Y', svg: markRaw(XboxYSvgComp), position: { top: '38%', left: '71.5%', width: '8%' } },
+      { type: 'button', logicalButton: 'DPAD_UP', name: 'D-Up', svg: markRaw(XboxDpadUpSvgComp), position: { top: '35%', left: '37%', width: '7%' } },
+      { type: 'button', logicalButton: 'DPAD_DOWN', name: 'D-Down', svg: markRaw(XboxDpadDownSvgComp), position: { top: '47%', left: '37%', width: '7%' } },
+      { type: 'button', logicalButton: 'DPAD_LEFT', name: 'D-Left', svg: markRaw(XboxDpadLeftSvgComp), position: { top: '41%', left: '31%', width: '7%' } },
+      { type: 'button', logicalButton: 'DPAD_RIGHT', name: 'D-Right', svg: markRaw(XboxDpadRightSvgComp), position: { top: '41%', left: '43%', width: '7%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_1', name: 'LB', svg: markRaw(XboxLBSvgComp), position: { top: '18%', left: '25%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_1', name: 'RB', svg: markRaw(XboxRBSvgComp), position: { top: '18%', left: '65%', width: '10%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_2', name: 'LT', svg: markRaw(XboxLTSvgComp), position: { top: '7%', left: '25%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_2', name: 'RT', svg: markRaw(XboxRTSvgComp), position: { top: '7%', left: '65%', width: '10%' } },
+      { type: 'button', logicalButton: 'SELECT', name: 'View', svg: markRaw(XboxViewSvgComp), position: { top: '35%', left: '52%', width: '6%' } },
+      { type: 'button', logicalButton: 'START', name: 'Menu', svg: markRaw(XboxMenuSvgComp), position: { top: '35%', left: '62%', width: '6%' } },
+      { type: 'button', logicalButton: 'HOME', name: 'Guide', svg: markRaw(XboxGuideSvgComp), position: { top: '20%', left: '50%', width: '8%' } },
     ],
   },
   ps: {
     name: 'PlayStation Controller',
-    bodySvg: markRaw(PS4BodyBlackComp),
-    aspectRatio: '1000/520',
-    defaultViewBox: parseAspectRatioToViewBox('1000/520') || '0 0 1000 520',
+    bodySvg: markRaw(PS5BodyBlackComp),
+    aspectRatio: '544.707/302.911',
+    defaultViewBox: '0 0 544.707 302.911',
     components: [
       { type: 'stick', logicalButton: 'LEFT_STICK', svg: markRaw(StickSvgComp), position: { top: '58%', left: '24%', width: '15%' } },
       { type: 'stick', logicalButton: 'RIGHT_STICK', svg: markRaw(RightStickSvgComp), position: { top: '58%', left: '61%', width: '15%' } },
-      { type: 'button', logicalButton: L3, name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '58%', left: '24%', width: '15%' } },
-      { type: 'button', logicalButton: R3, name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '58%', left: '61%', width: '15%' } },
-      { type: 'button', logicalButton: ACTIONDOWN, name: 'Cross', svg: markRaw(PsCrossSvgComp), position: { top: '58%', left: '78%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONRIGHT, name: 'Circle', svg: markRaw(PsCircleSvgComp), position: { top: '46%', left: '84%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONLEFT, name: 'Square', svg: markRaw(PsSquareSvgComp), position: { top: '46%', left: '72%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONUP, name: 'Triangle', svg: markRaw(PsTriangleSvgComp), position: { top: '34%', left: '78%', width: '7%' } },
-      { type: 'button', logicalButton: PSTOUCHPAD, name: 'Touchpad', svg: markRaw(PsTouchpadSvgComp), position: { top: '20%', left: '35%', width: '30%', height: '25%' } },
-      { type: 'button', logicalButton: L1, name: 'L1', svg: markRaw(PsL1SvgComp), position: { top: '25%', left: '20%', width: '10%' } },
-      { type: 'button', logicalButton: R1, name: 'R1', svg: markRaw(PsR1SvgComp), position: { top: '25%', left: '70%', width: '10%' } },
-      { type: 'button', logicalButton: L2, name: 'L2', svg: markRaw(XboxLTSvgComp), position: { top: '12%', left: '20%', width: '10%' } },
-      { type: 'button', logicalButton: R2, name: 'R2', svg: markRaw(XboxRTSvgComp), position: { top: '12%', left: '70%', width: '10%' } },
-      { type: 'button', logicalButton: SELECT, name: 'Create', svg: markRaw(PsCreateSvgComp), position: { top: '35%', left: '30%', width: '6%' } },
-      { type: 'button', logicalButton: START, name: 'Options', svg: markRaw(PsOptionsSvgComp), position: { top: '35%', left: '70%', width: '6%' } },
-      { type: 'button', logicalButton: GUIDE, name: 'PS Button', svg: markRaw(PsGuideSvgComp), position: { top: '40%', left: '50%', width: '8%' } },
+      { type: 'button', logicalButton: 'LEFT_STICK_PRESS', name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '58%', left: '24%', width: '15%' } },
+      { type: 'button', logicalButton: 'RIGHT_STICK_PRESS', name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '58%', left: '61%', width: '15%' } },
+      { type: 'button', logicalButton: 'ACTION_DOWN', name: 'Cross', svg: markRaw(PsCrossSvgComp), position: { top: '58%', left: '78%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_RIGHT', name: 'Circle', svg: markRaw(PsCircleSvgComp), position: { top: '46%', left: '84%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_LEFT', name: 'Square', svg: markRaw(PsSquareSvgComp), position: { top: '46%', left: '72%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_UP', name: 'Triangle', svg: markRaw(PsTriangleSvgComp), position: { top: '34%', left: '78%', width: '7%' } },
+      { type: 'button', logicalButton: 'PS_TOUCHPAD', name: 'Touchpad', svg: markRaw(PsTouchpadSvgComp), position: { top: '20%', left: '35%', width: '30%', height: '25%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_1', name: 'L1', svg: markRaw(PsL1SvgComp), position: { top: '25%', left: '20%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_1', name: 'R1', svg: markRaw(PsR1SvgComp), position: { top: '25%', left: '70%', width: '10%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_2', name: 'L2', svg: markRaw(XboxLTSvgComp), position: { top: '12%', left: '20%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_2', name: 'R2', svg: markRaw(XboxRTSvgComp), position: { top: '12%', left: '70%', width: '10%' } },
+      { type: 'button', logicalButton: 'SELECT', name: 'Create', svg: markRaw(PsCreateSvgComp), position: { top: '35%', left: '30%', width: '6%' } },
+      { type: 'button', logicalButton: 'START', name: 'Options', svg: markRaw(PsOptionsSvgComp), position: { top: '35%', left: '70%', width: '6%' } },
+      { type: 'button', logicalButton: 'HOME', name: 'PS Button', svg: markRaw(PsGuideSvgComp), position: { top: '40%', left: '50%', width: '8%' } },
     ],
   },
   nintendo: {
     name: 'Nintendo Switch Pro Controller',
     bodySvg: markRaw(SwitchProBodyComp),
-    aspectRatio: '1000/650',
-    defaultViewBox: parseAspectRatioToViewBox('1000/650') || '0 0 1200 780',
+    aspectRatio: '1200/780',
+    defaultViewBox: '0 0 1200 780',
     components: [
       { type: 'stick', logicalButton: 'LEFT_STICK', svg: markRaw(StickSvgComp), position: { top: '40%', left: '23%', width: '16%' } },
       { type: 'stick', logicalButton: 'RIGHT_STICK', svg: markRaw(RightStickSvgComp), position: { top: '58%', left: '58%', width: '16%' } },
-      { type: 'button', logicalButton: L3, name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '40%', left: '23%', width: '16%' } },
-      { type: 'button', logicalButton: R3, name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '58%', left: '58%', width: '16%' } },
-      { type: 'button', logicalButton: ACTIONDOWN, name: 'B', svg: markRaw(NintendoBSvgComp), position: { top: '57%', left: '78%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONRIGHT, name: 'A', svg: markRaw(NintendoASvgComp), position: { top: '45%', left: '85%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONLEFT, name: 'Y', svg: markRaw(NintendoYSvgComp), position: { top: '45%', left: '71%', width: '7%' } },
-      { type: 'button', logicalButton: ACTIONUP, name: 'X', svg: markRaw(NintendoXSvgComp), position: { top: '34%', left: '78%', width: '7%' } },
-      { type: 'button', logicalButton: NINTENDOCAPTURE, name: 'Capture', svg: markRaw(NintendoCaptureSvgComp), position: { top: '48%', left: '42%', width: '5%' } },
-      { type: 'button', logicalButton: L1, name: 'L', svg: markRaw(NintendoLSvgComp), position: { top: '20%', left: '25%', width: '10%' } },
-      { type: 'button', logicalButton: R1, name: 'R', svg: markRaw(NintendoRSvgComp), position: { top: '20%', left: '65%', width: '10%' } },
-      { type: 'button', logicalButton: L2, name: 'ZL', svg: markRaw(NintendoZLSvgComp), position: { top: '10%', left: '25%', width: '10%' } },
-      { type: 'button', logicalButton: R2, name: 'ZR', svg: markRaw(NintendoZRSvgComp), position: { top: '10%', left: '65%', width: '10%' } },
-      { type: 'button', logicalButton: SELECT, name: '-', svg: markRaw(NintendoMinusSvgComp), position: { top: '35%', left: '35%', width: '5%' } },
-      { type: 'button', logicalButton: START, name: '+', svg: markRaw(NintendoPlusSvgComp), position: { top: '35%', left: '65%', width: '5%' } },
+      { type: 'button', logicalButton: 'LEFT_STICK_PRESS', name: 'L3', svg: markRaw(StickClickSvgComp), position: { top: '40%', left: '23%', width: '16%' } },
+      { type: 'button', logicalButton: 'RIGHT_STICK_PRESS', name: 'R3', svg: markRaw(RightStickClickSvgComp), position: { top: '58%', left: '58%', width: '16%' } },
+      { type: 'button', logicalButton: 'ACTION_DOWN', name: 'B', svg: markRaw(NintendoBSvgComp), position: { top: '57%', left: '78%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_RIGHT', name: 'A', svg: markRaw(NintendoASvgComp), position: { top: '45%', left: '85%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_LEFT', name: 'Y', svg: markRaw(NintendoYSvgComp), position: { top: '45%', left: '71%', width: '7%' } },
+      { type: 'button', logicalButton: 'ACTION_UP', name: 'X', svg: markRaw(NintendoXSvgComp), position: { top: '34%', left: '78%', width: '7%' } },
+      { type: 'button', logicalButton: 'NINTENDO_CAPTURE', name: 'Capture', svg: markRaw(NintendoCaptureSvgComp), position: { top: '48%', left: '42%', width: '5%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_1', name: 'L', svg: markRaw(NintendoLSvgComp), position: { top: '20%', left: '25%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_1', name: 'R', svg: markRaw(NintendoRSvgComp), position: { top: '20%', left: '65%', width: '10%' } },
+      { type: 'button', logicalButton: 'LEFT_SHOULDER_2', name: 'ZL', svg: markRaw(NintendoZLSvgComp), position: { top: '10%', left: '25%', width: '10%' } },
+      { type: 'button', logicalButton: 'RIGHT_SHOULDER_2', name: 'ZR', svg: markRaw(NintendoZRSvgComp), position: { top: '10%', left: '65%', width: '10%' } },
+      { type: 'button', logicalButton: 'SELECT', name: '-', svg: markRaw(NintendoMinusSvgComp), position: { top: '35%', left: '35%', width: '5%' } },
+      { type: 'button', logicalButton: 'START', name: '+', svg: markRaw(NintendoPlusSvgComp), position: { top: '35%', left: '65%', width: '5%' } },
     ],
   },
 }
+
