@@ -50,6 +50,8 @@ const showVtsSettings = computed(() => {
     ActionType.VTS_PRESET,
     ActionType.VTS_DROP_ITEM,
     ActionType.VTS_PARAM_ADD,
+    ActionType.VTS_MACRO,
+    ActionType.VTS_ACCESSORY,
   ].includes(props.action.actionType)
 })
 

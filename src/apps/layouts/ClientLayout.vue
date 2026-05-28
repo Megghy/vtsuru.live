@@ -20,6 +20,7 @@ import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 // 引入子组件
 import WindowBar from '@/apps/client/components/WindowBar.vue'
+import SpeechMiniController from '@/apps/client/components/SpeechMiniController.vue'
 import { BASE_URL } from '@/shared/config'
 import '@/apps/client/styles/client-page.css'
 
@@ -392,6 +393,8 @@ onMounted(() => {
         </RouterView>
       </div>
     </NLayoutContent>
+
+    <SpeechMiniController />
   </NLayout>
 </template>
 

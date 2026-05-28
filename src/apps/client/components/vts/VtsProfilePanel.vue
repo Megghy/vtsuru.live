@@ -1,33 +1,23 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText, useMessage } from 'naive-ui';
+import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText } from 'naive-ui'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsProfile } from '@/apps/client/store/useVtsStore'
+import { useVtsAction } from './useVtsAction'
 
 const vts = useVtsStore()
-const message = useMessage()
+const { run } = useVtsAction()
 
-async function addProfile() {
-  const p = await vts.createProfile()
-  message.success(`已创建 Profile: ${p.name}`)
+function addProfile() {
+  run(() => vts.createProfile(), '已创建')
 }
 
-async function applyProfile(id: string) {
-  try {
-    await vts.applyProfile(id)
-    message.success('已应用 Profile')
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : String(err))
-  }
+function applyProfile(id: string) {
+  run(() => vts.applyProfile(id), '已应用')
 }
 
-async function captureToProfile(id: string) {
-  try {
-    await vts.captureCurrentToProfile(id)
-    message.success('已覆盖保存到该 Profile')
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : String(err))
-  }
+function captureToProfile(id: string) {
+  run(() => vts.captureCurrentToProfile(id), '已保存到 Profile')
 }
 
 async function renameProfile(p: VtsProfile) {
@@ -38,19 +28,12 @@ function sanitizeFileName(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, '_').slice(0, 60) || 'profile'
 }
 
-async function exportProfile(p: VtsProfile) {
-  try {
+function exportProfile(p: VtsProfile) {
+  run(async () => {
     const json = JSON.stringify(vts.exportProfile(p.id), null, 2)
-    saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), `vtsuru_vts_profile_${sanitizeFileName(p.name)}.json`)
-    try {
-      await navigator.clipboard.writeText(json)
-      message.success('已导出 Profile，并复制到剪贴板')
-    } catch {
-      message.success('已导出 Profile（剪贴板复制失败）')
-    }
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : String(err))
-  }
+    saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), `vts_profile_${sanitizeFileName(p.name)}.json`)
+    try { await navigator.clipboard.writeText(json) } catch {}
+  }, '已导出')
 }
 
 async function onImportFileChange(ev: Event) {
@@ -58,76 +41,47 @@ async function onImportFileChange(ev: Event) {
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
-
-  try {
+  run(async () => {
     const text = await file.text()
-    const parsed = JSON.parse(text) as unknown
-    const created = await vts.importProfile(parsed)
-    message.success(`已导入 Profile: ${created.name}`)
-  } catch (err) {
-    message.error(err instanceof Error ? err.message : String(err))
-  }
+    await vts.importProfile(JSON.parse(text))
+  }, '已导入')
 }
 </script>
 
 <template>
-  <NCard size="small" title="Profile / 场景包">
+  <NCard size="small" title="配置包 (Profile)">
     <NFlex vertical :size="10">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" @click="addProfile">
-          从当前配置创建 Profile
-        </NButton>
+        <NButton size="small" @click="addProfile">从当前创建</NButton>
         <NButton size="small" tag="label">
-          导入 Profile（json）
-          <input
-            type="file"
-            accept="application/json"
-            style="display: none"
-            @change="onImportFileChange"
-          >
+          导入
+          <input type="file" accept="application/json" style="display: none" @change="onImportFileChange">
         </NButton>
-        <NText depth="3">
-          Profile 仅保存 VTS 控制配置（不含 wsUrl/token）。
-        </NText>
+        <NText depth="3">保存/恢复 VTS 控制配置 (不含连接信息)</NText>
       </NFlex>
 
       <NFlex v-for="p in vts.profiles" :key="p.id" align="center" justify="space-between" :wrap="true" :size="10">
         <NFlex align="center" :wrap="true" :size="10">
-          <NTag v-if="vts.currentProfileId === p.id" type="success">
-            当前
-          </NTag>
-          <NInput
-            v-model:value="p.name"
-            placeholder="Profile 名称"
-            style="width: 220px"
-            @blur="renameProfile({ ...p })"
-          />
+          <NTag v-if="vts.currentProfileId === p.id" type="success" size="small">当前</NTag>
+          <NInput v-model:value="p.name" placeholder="名称" style="width: 200px" @blur="renameProfile({ ...p })" />
           <NText depth="3">
-            presets={{ p.data.presets.length }}, macros={{ p.data.macros.length }}, slots={{ p.data.paramSlots.length }}
+            预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
           </NText>
         </NFlex>
         <NFlex :wrap="true" :size="8">
-          <NButton size="small" type="primary" @click="applyProfile(p.id)">
-            应用
-          </NButton>
-          <NButton size="small" @click="exportProfile(p)">
-            导出
-          </NButton>
+          <NButton size="small" type="primary" @click="applyProfile(p.id)">应用</NButton>
+          <NButton size="small" @click="exportProfile(p)">导出</NButton>
           <NPopconfirm @positive-click="captureToProfile(p.id)">
             <template #trigger>
-              <NButton size="small">
-                用当前覆盖保存
-              </NButton>
+              <NButton size="small">覆盖保存</NButton>
             </template>
-            确认用“当前配置”覆盖该 Profile？
+            用当前配置覆盖此 Profile?
           </NPopconfirm>
           <NPopconfirm @positive-click="vts.deleteProfile(p.id)">
             <template #trigger>
-              <NButton size="small" type="error">
-                删除
-              </NButton>
+              <NButton size="small" type="error">删除</NButton>
             </template>
-            确认删除该 Profile？
+            确认删除?
           </NPopconfirm>
         </NFlex>
       </NFlex>

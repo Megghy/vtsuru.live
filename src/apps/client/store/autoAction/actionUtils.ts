@@ -394,7 +394,9 @@ export function executeActions(
       case ActionType.VTS_HOTKEY:
       case ActionType.VTS_PRESET:
       case ActionType.VTS_DROP_ITEM:
-      case ActionType.VTS_PARAM_ADD: {
+      case ActionType.VTS_PARAM_ADD:
+      case ActionType.VTS_MACRO:
+      case ActionType.VTS_ACCESSORY: {
         if (!isTauri()) {
           console.warn('[AutoAction] 非 Tauri 环境，跳过 VTS 动作')
           break
@@ -430,6 +432,19 @@ export function executeActions(
               const weight = (action.actionConfig as any)?.vtsParamWeight as number | undefined
               if (!paramId || value === undefined) throw new Error(`VTS_PARAM_ADD 缺少 vtsParamId/vtsParamValue: ${action.name || action.id}`)
               await vts.injectParametersAdd([{ id: paramId, value, weight }])
+              break
+            }
+            case ActionType.VTS_MACRO: {
+              const macroId = (action.actionConfig as any)?.vtsMacroId as string | undefined
+              if (!macroId) throw new Error(`VTS_MACRO 缺少 vtsMacroId: ${action.name || action.id}`)
+              await vts.runMacro(macroId)
+              break
+            }
+            case ActionType.VTS_ACCESSORY: {
+              const accessoryId = (action.actionConfig as any)?.vtsAccessoryId as string | undefined
+              const visible = (action.actionConfig as any)?.vtsAccessoryVisible as boolean | undefined
+              if (!accessoryId) throw new Error(`VTS_ACCESSORY 缺少 vtsAccessoryId: ${action.name || action.id}`)
+              await vts.toggleAccessory(accessoryId, visible ?? true)
               break
             }
           }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { OpenLiveInfo, OpenLiveLotteryUserInfo, UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import type { DanmakuInfo, GiftInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
-import { Delete24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle24Filled, Target24Filled } from '@vicons/fluent'
+import { Delete24Filled, Pause24Filled, PersonAdd24Filled, Play24Filled, Sparkle24Filled } from '@vicons/fluent'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { format } from 'date-fns'
 import {
@@ -13,6 +13,7 @@ import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { LOTTERY_API_URL } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import type { LotteryHistory, LotteryOption, ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
+import { getAvatarUrl, getRandomInt, isUserValid, shuffleArray } from '@/apps/open-live/components/lottery/lotteryUtils'
 import LotterySettingsPanel from '@/apps/open-live/components/lottery/LotterySettingsPanel.vue'
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
 import LotteryObsModal from '@/apps/open-live/components/lottery/LotteryObsModal.vue'
@@ -120,18 +121,16 @@ function addUser(user: OpenLiveLotteryUserInfo, danmu?: any) {
   if (originUsers.value.find(u => u.openId == user.openId) || (!isStartLottery.value && danmu)) {
     return
   }
-  if ((danmu && isUserValid(user, danmu)) || !danmu) {
-    if (!originUsers.value.find(u => u.openId == user.openId)) {
-      originUsers.value.push(user)
-      currentUsers.value.push(user)
-      ensureCardState(user.openId)
-      syncCardStates(currentUsers.value)
-      console.log(`[OPEN-LIVE-Lottery] ${user.name} 添加到队列中`)
-      updateUsers()
-    }
-  } else if (danmu) {
+  if (danmu && !isUserValid(user, danmu, lotteryOption.value)) {
     console.log(`[OPEN-LIVE-Lottery] ${user.name} 因不符合条件而被忽略`)
+    return
   }
+  originUsers.value.push(user)
+  currentUsers.value.push(user)
+  ensureCardState(user.openId)
+  syncCardStates(currentUsers.value)
+  console.log(`[OPEN-LIVE-Lottery] ${user.name} 添加到队列中`)
+  updateUsers()
 }
 
 // 手动添加用户
@@ -169,35 +168,6 @@ function removeHistoryItem(time: number) {
   const index = lotteryHistory.value.findIndex(h => h.time === time)
   if (index === -1) return
   lotteryHistory.value.splice(index, 1)
-}
-function isUserValid(u: OpenLiveLotteryUserInfo, danmu: any) {
-  const cmd = danmu.cmd
-  const data = danmu.data
-  if (lotteryOption.value.needWearFanMedal) {
-    if (!u.fans_medal_wearing_status) return false
-  }
-  if (lotteryOption.value.needFanMedal) {
-    if (u.fans_medal_level == 0) return false
-  }
-  if (lotteryOption.value.needGuard) {
-    if (u.guard_level == 0) return false
-  }
-  if (lotteryOption.value.danmakuKeyword && cmd === 'LIVE_OPEN_PLATFORM_DM') {
-    if (lotteryOption.value.danmakuFilterType == 'contains') {
-      if (!data.msg.includes(lotteryOption.value.danmakuKeyword)) return false
-    } else if (lotteryOption.value.danmakuFilterType == 'regex') {
-      if (!data.msg.match(lotteryOption.value.danmakuKeyword)) return false
-    } else {
-      if (data.msg != lotteryOption.value.danmakuKeyword) return false
-    }
-  }
-  if ((lotteryOption.value.giftMinPrice ?? 0) > 0 && cmd == 'LIVE_OPEN_PLATFORM_SEND_GIFT') {
-    if ((data.price * data.gift_num) / 1000 < (lotteryOption.value.giftMinPrice ?? 0)) return false
-  }
-  if (lotteryOption.value.giftName && cmd == 'LIVE_OPEN_PLATFORM_SEND_GIFT') {
-    if (data.gift_name != lotteryOption.value.giftName) return false
-  }
-  return true
 }
 function startLottery() {
   if (!isLottering.value && originUsers.value) {
@@ -284,13 +254,14 @@ function startHalfLottery() {
   } else {
     const half = Math.floor(currentUsers.value.length / 2)
     console.log(`[OPEN-LIVE-Lottery] 人数减半至${half}人`)
-    message.success(`人数减半至 ${half} 人`)
+    message.success(`人数减半至 ${half} 人，再次点击"开始抽取"继续`)
     while (currentUsers.value.length > half) {
       const randomIndex = getRandomInt(currentUsers.value.length)
       const eliminatedUser = currentUsers.value.splice(randomIndex, 1)[0]
       eliminatedUsers.value.push(eliminatedUser)
       ensureCardState(eliminatedUser.openId).eliminated = true
     }
+    lotteryProgress.value = (eliminatedUsers.value.length / (eliminatedUsers.value.length + currentUsers.value.length - lotteryOption.value.resultCount)) * 100
     isLottering.value = false
   }
 }
@@ -300,7 +271,7 @@ function startFlipLottery() {
   console.log('开始翻牌模式')
 
   // 预先随机选择获奖者
-  const shuffledUsers = [...currentUsers.value].sort(() => Math.random() - 0.5)
+  const shuffledUsers = shuffleArray(currentUsers.value)
   const winners = shuffledUsers.slice(0, Math.min(lotteryOption.value.resultCount, currentUsers.value.length))
 
   syncCardStates(currentUsers.value, { reset: true })
@@ -329,8 +300,9 @@ function startWheelLottery() {
   wheelRotation.value = 0
 
   // 随机转动角度
-  const spins = 3 + Math.random() * 3 // 3-6圈
-  const finalAngle = Math.random() * 360
+  const randomFloat = crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF
+  const spins = 3 + randomFloat * 3
+  const finalAngle = (crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * 360
   const totalRotation = spins * 360 + finalAngle
 
   wheelRotation.value = totalRotation
@@ -357,7 +329,7 @@ function startCardsLottery() {
   message.info('正在随机选择获奖卡片...')
 
   // 随机选择获奖者
-  const shuffledUsers = [...currentUsers.value].sort(() => Math.random() - 0.5)
+  const shuffledUsers = shuffleArray(currentUsers.value)
   const winners = shuffledUsers.slice(0, Math.min(lotteryOption.value.resultCount, currentUsers.value.length))
 
   // 设置获奖者标记
@@ -422,9 +394,6 @@ function startEliminationLottery() {
   }
 
   nextRound()
-}
-function getRandomInt(max: number) {
-  return Math.floor(Math.random() * max)
 }
 function onFinishLottery() {
   if (lotteryOption.value.lotteryType !== 'wheel') {
@@ -540,7 +509,7 @@ function clear() {
 function shuffleFlipCards() {
   if (lotteryOption.value.lotteryType !== 'flip') return
   // 打乱顺序
-  currentUsers.value = [...currentUsers.value].sort(() => Math.random() - 0.5)
+  currentUsers.value = shuffleArray(currentUsers.value)
   // 重置翻牌状态，但保留 isWinner 标记
   const next: Record<string, CardState> = {}
   currentUsers.value.forEach((u) => {
@@ -562,21 +531,6 @@ function removeUser(user: OpenLiveLotteryUserInfo) {
   updateUsers()
 }
 
-// 处理头像URL
-function getAvatarUrl(avatar: string) {
-  if (!avatar || avatar === 'https://i2.hdslb.com/bfs/face/member/noface.jpg') {
-    return 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
-  }
-
-  // 确保头像URL有正确的尺寸参数
-  if (avatar.includes('@')) {
-    return avatar.replace(/@\w+/, '@96w_96h')
-  } else {
-    return `${avatar}@96w_96h`
-  }
-}
-
-// 处理图片加载错误
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
   img.src = 'https://i2.hdslb.com/bfs/face/member/noface.jpg@96w_96h'
@@ -749,7 +703,6 @@ onUnmounted(() => {
             <NFlex>
               <NButton
                 :type="isStartLottery ? 'warning' : 'success'"
-                :loading="isStartLottery && !isLotteried"
                 @click="isStartLottery ? pause() : continueLottery()"
               >
                 <template #icon>
@@ -871,18 +824,6 @@ onUnmounted(() => {
             </div>
             <div class="wheel-pointer" />
           </div>
-          <NButton
-            v-if="!wheelSpinning && !isLottering"
-            type="primary"
-            size="large"
-            style="margin-top: 20px"
-            @click="startWheelLottery"
-          >
-            <template #icon>
-              <NIcon :component="Target24Filled" />
-            </template>
-            开始转动
-          </NButton>
         </div>
         <div v-else-if="lotteryOption.lotteryType === 'wheel'" class="wheel-container">
           <NEmpty description="转轮模式至少需要 2 位用户" />
@@ -917,6 +858,18 @@ onUnmounted(() => {
                     点击翻开
                   </div>
                   <div class="card-pattern" />
+                  <NButton
+                    v-if="!isLottering"
+                    class="remove-btn"
+                    size="small"
+                    circle
+                    quaternary
+                    @click.stop="removeUser(item)"
+                  >
+                    <template #icon>
+                      <NIcon :component="Delete24Filled" />
+                    </template>
+                  </NButton>
                 </div>
               </NCard>
 

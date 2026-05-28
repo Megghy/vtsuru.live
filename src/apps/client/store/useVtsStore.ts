@@ -249,6 +249,8 @@ export const useVtsStore = defineStore('vts', () => {
   const holdTimerBySlotId = new Map<string, number>()
   const panicConfig = ref<VtsPanicConfig>({ calibrateHotkeyId: '', resetPhysicsHotkeyId: '' })
 
+  const macroRunning = ref<{ macroId: string, stepIndex: number, totalSteps: number } | null>(null)
+
   const hotkeyCustomizations = ref<VtsHotkeyCustomization[]>([])
   const accessories = ref<VtsAccessoryBinding[]>([])
   const pranks = ref<VtsPrankBinding[]>([])
@@ -1145,8 +1147,12 @@ export const useVtsStore = defineStore('vts', () => {
     if (!client.value) throw new Error('未连接到 VTS')
     if (!authenticated.value) throw new Error('未完成鉴权')
 
-    await withHistory('macroRun', macroId, async () => {
-      for (const step of macro.steps) {
+    macroRunning.value = { macroId, stepIndex: 0, totalSteps: macro.steps.length }
+    try {
+      await withHistory('macroRun', macroId, async () => {
+        for (let i = 0; i < macro.steps.length; i++) {
+          macroRunning.value = { macroId, stepIndex: i, totalSteps: macro.steps.length }
+          const step = macro.steps[i]
         if (step.type === 'hotkey') {
           await triggerHotkey(step.hotkeyID)
           continue
@@ -1214,6 +1220,9 @@ export const useVtsStore = defineStore('vts', () => {
         throw new Error(`未知宏步骤类型: ${(step as any).type}`)
       }
     }, { macroId })
+    } finally {
+      macroRunning.value = null
+    }
   }
 
   async function injectParametersAdd(values: Array<{ id: string, value: number, weight?: number }>) {
@@ -1572,6 +1581,7 @@ export const useVtsStore = defineStore('vts', () => {
     upsertMacro,
     removeMacro,
     runMacro,
+    macroRunning,
     createMacro,
 
     injectParametersAdd,

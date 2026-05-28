@@ -38,7 +38,9 @@ const actionTypeOptions = [
   { label: 'VTS：触发热键', value: ActionType.VTS_HOTKEY },
   { label: 'VTS：机位预设', value: ActionType.VTS_PRESET },
   { label: 'VTS：掉落道具', value: ActionType.VTS_DROP_ITEM },
-  { label: 'VTS：参数注入(add)', value: ActionType.VTS_PARAM_ADD },
+  { label: 'VTS：参数注入', value: ActionType.VTS_PARAM_ADD },
+  { label: 'VTS：运行宏', value: ActionType.VTS_MACRO },
+  { label: 'VTS：配饰显隐', value: ActionType.VTS_ACCESSORY },
 ]
 
 // 优先级选项

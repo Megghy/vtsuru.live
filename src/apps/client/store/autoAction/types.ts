@@ -22,6 +22,8 @@ export enum ActionType {
   VTS_PRESET = 'vts_preset', // 应用 VTS 机位预设
   VTS_DROP_ITEM = 'vts_drop_item', // 掉落 VTS 道具
   VTS_PARAM_ADD = 'vts_param_add', // 注入 VTS 参数（mode=add）
+  VTS_MACRO = 'vts_macro', // 运行 VTS 宏
+  VTS_ACCESSORY = 'vts_accessory', // 配饰显隐
 }
 
 // 关键词匹配类型
@@ -75,6 +77,9 @@ export interface AutoActionItem {
     vtsParamId?: string
     vtsParamValue?: number
     vtsParamWeight?: number
+    vtsMacroId?: string
+    vtsAccessoryId?: string
+    vtsAccessoryVisible?: boolean
   }
 }
 

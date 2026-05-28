@@ -41,7 +41,16 @@ const progress = ref<{ key: string; current: number; total: number } | null>(nul
 export async function checkSupport(): Promise<boolean> {
   if (supported.value !== null) return supported.value
   supported.value = typeof WebAssembly !== 'undefined'
-  webgpuSupported.value = !!(navigator as any).gpu
+  if ((navigator as any).gpu) {
+    try {
+      const adapter = await (navigator as any).gpu.requestAdapter()
+      webgpuSupported.value = adapter !== null
+    } catch {
+      webgpuSupported.value = false
+    }
+  } else {
+    webgpuSupported.value = false
+  }
   if (options.device === 'gpu' && !webgpuSupported.value) options.device = 'cpu'
   return supported.value
 }
@@ -64,24 +73,38 @@ export async function preloadModel() {
   progress.value = null
 }
 
+async function runWithConfig(input: string | Blob, mode: ProcessMode, config: Config): Promise<Blob> {
+  switch (mode) {
+    case 'remove-fg':
+      return await removeForeground(input, config)
+    case 'mask':
+      return await segmentForeground(input, config)
+    default:
+      return await removeBackground(input, config)
+  }
+}
+
 export async function processRemoveBg(input: string | Blob, modeOverride?: ProcessMode): Promise<Blob> {
   if (!(await checkSupport())) throw new Error('当前浏览器不支持（需要 WebAssembly）')
   saveOptions(options)
   const config = buildConfig()
   const mode = modeOverride ?? options.mode
-  let result: Blob
-  switch (mode) {
-    case 'remove-fg':
-      result = await removeForeground(input, config)
-      break
-    case 'mask':
-      result = await segmentForeground(input, config)
-      break
-    default:
-      result = await removeBackground(input, config)
+  try {
+    const result = await runWithConfig(input, mode, config)
+    progress.value = null
+    return result
+  } catch (e: any) {
+    if (options.device === 'gpu' && /backend|webgpu|session/i.test(e?.message ?? '')) {
+      console.warn('[useRemoveBg] WebGPU failed, falling back to CPU:', e.message)
+      options.device = 'cpu'
+      saveOptions(options)
+      const cpuConfig = buildConfig()
+      const result = await runWithConfig(input, mode, cpuConfig)
+      progress.value = null
+      return result
+    }
+    throw e
   }
-  progress.value = null
-  return result
 }
 
 export function useRemoveBg() {

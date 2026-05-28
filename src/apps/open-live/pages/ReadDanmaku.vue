@@ -7,7 +7,7 @@ import {
   NAlert, NButton, NFlex, NIcon, NPopconfirm, NSpin,
   NStatistic, NTabPane, NTabs, NTag, NText, useMessage,
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 import type { EventModel } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -35,6 +35,7 @@ const {
 
 const audioOutputDevices = ref<{ label: string; value: string }[]>([])
 const audioOutputDevicesLoading = ref(false)
+const eventsRegistered = ref(false)
 
 const queueStats = computed(() => {
   const total = speakQueue.value.length
@@ -88,24 +89,29 @@ function onKeydown(e: KeyboardEvent) {
 
 onMounted(async () => {
   await speechService.initialize()
-  client.onEvent('danmaku', onGetEvent)
-  client.onEvent('sc', onGetEvent)
-  client.onEvent('guard', onGetEvent)
-  client.onEvent('gift', onGetEvent)
-  client.onEvent('enter', onGetEvent)
+  if (!eventsRegistered.value) {
+    client.onEvent('danmaku', onGetEvent)
+    client.onEvent('sc', onGetEvent)
+    client.onEvent('guard', onGetEvent)
+    client.onEvent('gift', onGetEvent)
+    client.onEvent('enter', onGetEvent)
+    eventsRegistered.value = true
+  }
   await fetchAudioOutputDevices()
   navigator.mediaDevices?.addEventListener('devicechange', fetchAudioOutputDevices)
   document.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
-  client.offEvent('danmaku', onGetEvent)
-  client.offEvent('sc', onGetEvent)
-  client.offEvent('guard', onGetEvent)
-  client.offEvent('gift', onGetEvent)
-  client.offEvent('enter', onGetEvent)
-  speechService.stopSpeech()
   navigator.mediaDevices?.removeEventListener('devicechange', fetchAudioOutputDevices)
+  document.removeEventListener('keydown', onKeydown)
+})
+
+onActivated(() => {
+  document.addEventListener('keydown', onKeydown)
+})
+
+onDeactivated(() => {
   document.removeEventListener('keydown', onKeydown)
 })
 </script>
