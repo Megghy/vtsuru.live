@@ -167,6 +167,8 @@ export default abstract class BaseDanmakuClient {
     // this.eventsRaw = this.createEmptyRawEventlisteners();
   }
 
+  protected onUnexpectedDisconnect(): void {}
+
   /**
    * 初始化客户端实例 (抽象方法，由子类实现具体的创建逻辑)
    * @returns Promise<{ success: boolean; message: string }> 初始化结果
@@ -209,6 +211,7 @@ export default abstract class BaseDanmakuClient {
       if (this.state !== 'disconnected') {
         this.state = 'disconnected'
         this.client = null
+        this.onUnexpectedDisconnect()
       }
       isConnected = false // 标记为未连接
     })

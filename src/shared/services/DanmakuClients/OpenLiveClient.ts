@@ -38,6 +38,10 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.roomAuthInfo = undefined
   }
 
+  protected onUnexpectedDisconnect(): void {
+    // OpenLiveClient 通过心跳机制检测断连并重连，不使用基类的钩子
+  }
+
   protected async initClient(): Promise<{ success: boolean, message: string }> {
     const auth = await this.getAuthInfo()
     if (auth.data) {
@@ -114,10 +118,28 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     }
   }
 
+  private isReconnecting = false
+
+  private async reconnect() {
+    this.Stop()
+    for (let attempt = 1; ; attempt++) {
+      const result = await this.Start()
+      if (result.success) {
+        console.log(`[${this.type}] 重连成功 (第 ${attempt} 次尝试)`)
+        return
+      }
+      const delay = Math.min(10_000 * attempt, 60_000)
+      console.error(`[${this.type}] 重连失败 (第 ${attempt} 次): ${result.message}, ${delay / 1000}s 后重试`)
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+
   private sendHeartbeat() {
-    if (this.state !== 'connected') {
-      clearInterval(this.timer)
-      this.timer = undefined
+    if (this.state !== 'connected' || this.isReconnecting) {
+      if (this.state !== 'connected' && !this.isReconnecting) {
+        clearInterval(this.timer)
+        this.timer = undefined
+      }
       return
     }
     const query = this.authInfo
@@ -126,12 +148,16 @@ export default class OpenLiveClient extends BaseDanmakuClient {
           this.authInfo,
         )
       : QueryGetAPI<OpenLiveInfo>(`${OPEN_LIVE_API_URL}heartbeat-internal`)
-    query.then((data) => {
+    query.then(async (data) => {
       if (data.code != 200) {
+        if (this.isReconnecting) return
+        this.isReconnecting = true
         console.error(`[${this.type}] 心跳失败, 将重新连接`)
-        this.client?.close()
-        this.client = null
-        this.initClient()
+        try {
+          await this.reconnect()
+        } finally {
+          this.isReconnecting = false
+        }
       }
     })
   }
