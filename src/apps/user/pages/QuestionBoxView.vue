@@ -8,8 +8,7 @@ import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { AVATAR_URL, FILE_API_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/shared/config'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 const { userInfo } = defineProps<{
@@ -66,12 +65,9 @@ const anonymousEmail = ref('')
 
 // 图片上传相关状态
 const allowUploadImage = computed(() => userInfo?.extra?.allowQuestionBoxUploadImage ?? false)
-const anonymousImageToken = ref<string | null>(null)
-const anonymousImagePreviewUrl = ref<string | null>(null)
-const isUploadingAnonymousImage = ref(false)
-const loggedInSelectedFiles = ref<File[]>([])
-const loggedInImagePreviewUrls = ref<string[]>([])
-const MAX_LOGGED_IN_IMAGES = 5
+const selectedFiles = ref<File[]>([])
+const imagePreviewUrls = ref<string[]>([])
+const maxImages = computed(() => isUserLoggedIn.value ? 9 : 3)
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -90,144 +86,54 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
-// 图片处理公共方法
+// 图片处理
 function validateImageFile(file: File): { valid: boolean, message?: string } {
   if (file.size > MAX_FILE_SIZE) {
     return { valid: false, message: '文件大小不能超过10MB' }
   }
-
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return { valid: false, message: '只支持上传 PNG, JPG, GIF, WEBP, SVG, ICO 格式的图片' }
   }
-
   return { valid: true }
 }
 
-// 匿名图片上传
-async function uploadAnonymousImage(file: File) {
-  if (!userInfo?.id) {
-    message.error('无法获取目标用户信息')
-    return
-  }
-
-  const validation = validateImageFile(file)
-  if (!validation.valid) {
-    message.error(validation.message || '图片上传失败')
-    return
-  }
-
-  isUploadingAnonymousImage.value = true
-  removeAnonymousImage()
-
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('targetUserId', userInfo.id.toString())
-
-  try {
-    const data = await QueryPostAPI<string>(`${FILE_API_URL}upload-anonymous`, formData, [['Turnstile', token.value]])
-    if (data.code === 200 && data.data) {
-      anonymousImageToken.value = data.data
-      const url = URL.createObjectURL(file)
-      anonymousImagePreviewUrl.value = url
-      message.success('匿名图片准备就绪')
-    } else {
-      message.error(data.message || '匿名图片上传失败')
-      removeAnonymousImage()
-    }
-  } catch (err: any) {
-    message.error(`匿名图片上传失败: ${err.message || err}`)
-    removeAnonymousImage()
-  } finally {
-    isUploadingAnonymousImage.value = false
-  }
-}
-
-function handleAnonymousFileSelect(event: Event) {
+function handleFileSelect(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files.length > 0) {
-    const file = input.files[0]
+  if (!input.files?.length) return
 
-    // 如果已经有图片，提示不能多选
-    if (anonymousImageToken.value) {
-      message.warning('匿名模式下只能上传一张图片')
-      input.value = ''
-      return
+  for (const file of Array.from(input.files)) {
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      message.error(validation.message!)
+      continue
     }
-
-    uploadAnonymousImage(file)
-    input.value = ''
-  }
-}
-
-function removeAnonymousImage() {
-  if (anonymousImagePreviewUrl.value) {
-    URL.revokeObjectURL(anonymousImagePreviewUrl.value as string)
-    anonymousImagePreviewUrl.value = null
-  }
-  anonymousImageToken.value = null
-}
-
-// 已登录用户图片上传
-function handleLoggedInFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (input.files && input.files.length > 0) {
-    // 处理多个文件 - 支持多选
-    const newFiles = Array.from(input.files)
-
-    // 检查每个文件
-    for (const file of newFiles) {
-      // 验证文件类型和大小
-      const validation = validateImageFile(file)
-      if (!validation.valid) {
-        message.error(validation.message || '图片上传失败')
-        continue
-      }
-
-      // 检查是否超出最大数量限制
-      if (loggedInSelectedFiles.value.length >= MAX_LOGGED_IN_IMAGES) {
-        message.warning(`最多只能上传${MAX_LOGGED_IN_IMAGES}张图片`)
-        break
-      }
-
-      // 检查文件是否重复（通过文件名、大小和最后修改时间判断）
-      // 避免重复选择相同图片
-      const isDuplicate = loggedInSelectedFiles.value.some(existingFile =>
-        existingFile.name === file.name
-        && existingFile.size === file.size
-        && existingFile.lastModified === file.lastModified,
-      )
-
-      if (isDuplicate) {
-        message.warning(`文件"${file.name}"已存在，不会重复添加`)
-        continue
-      }
-
-      // 添加到已选文件列表
-      loggedInSelectedFiles.value.push(file)
-      const url = URL.createObjectURL(file)
-      loggedInImagePreviewUrls.value.push(url)
+    if (selectedFiles.value.length >= maxImages.value) {
+      message.warning(`最多只能上传${maxImages.value}张图片`)
+      break
     }
-
-    // 清空输入框，允许重新选择文件
-    input.value = ''
+    const isDuplicate = selectedFiles.value.some(f =>
+      f.name === file.name && f.size === file.size && f.lastModified === file.lastModified,
+    )
+    if (isDuplicate) {
+      message.warning(`文件"${file.name}"已存在`)
+      continue
+    }
+    selectedFiles.value.push(file)
+    imagePreviewUrls.value.push(URL.createObjectURL(file))
   }
+  input.value = ''
 }
 
-function removeLoggedInImage(index: number) {
-  const url = loggedInImagePreviewUrls.value[index]
-  if (url) {
-    URL.revokeObjectURL(url as string)
-  }
-  loggedInImagePreviewUrls.value.splice(index, 1)
-  loggedInSelectedFiles.value.splice(index, 1)
+function removeImage(index: number) {
+  URL.revokeObjectURL(imagePreviewUrls.value[index])
+  imagePreviewUrls.value.splice(index, 1)
+  selectedFiles.value.splice(index, 1)
 }
 
-function clearAllLoggedInImages() {
-  loggedInImagePreviewUrls.value.forEach((url) => {
-    if (url) URL.revokeObjectURL(url as string)
-  })
-  loggedInImagePreviewUrls.value = []
-  loggedInSelectedFiles.value = []
+function clearAllImages() {
+  imagePreviewUrls.value.forEach(url => URL.revokeObjectURL(url))
+  imagePreviewUrls.value = []
+  selectedFiles.value = []
 }
 
 // API 交互方法
@@ -242,70 +148,41 @@ async function SendQuestion() {
     return
   }
 
-  // 验证邮箱格式
   if (anonymousEmail.value && !isValidEmail(anonymousEmail.value)) {
     message.error('邮箱格式不正确')
     return
   }
 
+  if (!token.value) {
+    message.warning('正在等待人机验证，请稍后再试')
+    return
+  }
+
   isSending.value = true
-  let uploadedFileIds: number[] = []
-  let imagePayload: { id: number }[] | undefined
-  let tokenPayload: string | undefined
 
   try {
-    // 处理图片上传
-    if (!isUserLoggedIn.value) {
-      if (anonymousImageToken.value) {
-        tokenPayload = anonymousImageToken.value
-      }
-    } else if (loggedInSelectedFiles.value.length > 0) {
-      message.info('正在上传图片...')
-
-      // 上传多张图片
-      const uploadPromises = loggedInSelectedFiles.value.map(file =>
-        uploadFiles(file, undefined, undefined, (stage) => {
-          console.log('上传阶段:', stage)
-        }),
-      )
-
-      const uploadResults = await Promise.all(uploadPromises)
-
-      // 提取所有上传的文件ID
-      uploadedFileIds = uploadResults
-        .filter(result => result && result.length > 0)
-        .map(result => result[0].id)
-
-      if (uploadedFileIds.length > 0) {
-        imagePayload = uploadedFileIds.map(id => ({ id }))
-        message.success('图片上传成功')
-      } else if (loggedInSelectedFiles.value.length > 0) {
-        throw new Error('图片上传失败，未返回文件信息')
-      }
-    }
-
-    // 发送问题
-    const payload = {
+    const formData = new FormData()
+    formData.append('Data', JSON.stringify({
       Target: userInfo?.id,
       IsAnonymous: !isUserLoggedIn.value || isAnonymous.value,
       Message: questionMessage.value,
       Tag: selectedTag.value,
-      Images: imagePayload,
-      ImageTokens: tokenPayload ? [tokenPayload] : undefined,
       AnonymousName: !isUserLoggedIn.value && anonymousName.value ? anonymousName.value : undefined,
       AnonymousEmail: !isUserLoggedIn.value && anonymousEmail.value ? anonymousEmail.value : undefined,
+    }))
+    for (const file of selectedFiles.value) {
+      formData.append('Files', file)
     }
 
     const data = await QueryPostAPI<QAInfo>(
       `${QUESTION_API_URL}send`,
-      payload,
+      formData,
       [['Turnstile', token.value]],
     )
 
     if (data.code == 200) {
       message.success('成功发送棉花糖')
 
-      // 如果是未登录用户，保存到本地历史
       if (!isUserLoggedIn.value && userInfo) {
         const localQuestion: LocalQuestion = {
           id: `local-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -315,7 +192,7 @@ async function SendQuestion() {
           tag: selectedTag.value,
           anonymousName: anonymousName.value,
           anonymousEmail: anonymousEmail.value,
-          hasImage: !!anonymousImageToken.value,
+          hasImage: selectedFiles.value.length > 0,
           sendAt: Date.now(),
         }
         localQuestions.value = [localQuestion, ...localQuestions.value]
@@ -324,24 +201,14 @@ async function SendQuestion() {
       questionMessage.value = ''
       anonymousName.value = ''
       anonymousEmail.value = ''
-      removeAnonymousImage()
-      clearAllLoggedInImages()
+      clearAllImages()
       nextSendQuestionTime.value = Date.now() + minSendQuestionTime
       getPublicQuestions()
     } else {
       message.error(data.message || '发送失败')
-      if (tokenPayload && (data.message.includes('token') || data.code === 400)) {
-        removeAnonymousImage()
-      }
     }
   } catch (err: any) {
     message.error(`发送失败: ${err.message || err}`)
-    if (loggedInSelectedFiles.value.length > 0 && uploadedFileIds.length === 0) {
-      clearAllLoggedInImages()
-    }
-    if (tokenPayload && (err.message?.includes('token'))) {
-      removeAnonymousImage()
-    }
   } finally {
     isSending.value = false
     turnstile.value?.reset()
@@ -420,8 +287,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   turnstile.value?.remove()
-  removeAnonymousImage()
-  clearAllLoggedInImages()
+  clearAllImages()
 })
 </script>
 
@@ -527,66 +393,41 @@ onUnmounted(() => {
           <div v-if="!isSelf && (isUserLoggedIn || allowUploadImage)" class="section">
             <label class="section-label">图片附件</label>
             <div class="image-upload-area">
-              <!-- 已登录用户 -->
-              <template v-if="isUserLoggedIn">
-                <div class="upload-grid">
-                  <div
-                    v-for="(url, index) in loggedInImagePreviewUrls"
-                    :key="index"
-                    class="upload-item"
+              <div class="upload-grid">
+                <div
+                  v-for="(url, index) in imagePreviewUrls"
+                  :key="index"
+                  class="upload-item"
+                >
+                  <NImage :src="url" object-fit="cover" />
+                  <NButton
+                    circle
+                    size="tiny"
+                    type="error"
+                    class="remove-btn"
+                    @click="removeImage(index)"
                   >
-                    <NImage :src="url" object-fit="cover" />
-                    <NButton
-                      circle
-                      size="tiny"
-                      type="error"
-                      class="remove-btn"
-                      @click="removeLoggedInImage(index)"
-                    >
-                      <template #icon>
-                        <NIcon :component="DismissCircle24Regular" />
-                      </template>
-                    </NButton>
-                  </div>
-                  <div
-                    v-if="loggedInSelectedFiles.length < MAX_LOGGED_IN_IMAGES"
-                    class="add-btn"
-                    @click="($refs.loggedInFileInput as HTMLInputElement)?.click()"
-                  >
-                    <NIcon :component="AddCircle24Regular" />
-                  </div>
+                    <template #icon>
+                      <NIcon :component="DismissCircle24Regular" />
+                    </template>
+                  </NButton>
                 </div>
-                <input ref="loggedInFileInput" type="file" style="display: none;" multiple @change="handleLoggedInFileSelect">
-              </template>
-
-              <!-- 匿名用户 -->
-              <template v-else-if="allowUploadImage">
-                <div class="upload-grid">
-                  <div v-if="anonymousImageToken" class="upload-item">
-                    <NImage :src="anonymousImagePreviewUrl!" object-fit="cover" />
-                    <NButton
-                      circle
-                      size="tiny"
-                      type="error"
-                      class="remove-btn"
-                      @click="removeAnonymousImage"
-                    >
-                      <template #icon>
-                        <NIcon :component="DismissCircle24Regular" />
-                      </template>
-                    </NButton>
-                  </div>
-                  <div
-                    v-else
-                    class="add-btn"
-                    @click="($refs.anonymousFileInput as HTMLInputElement)?.click()"
-                  >
-                    <NIcon :component="AddCircle24Regular" />
-                    <span class="btn-text">添加图片</span>
-                  </div>
+                <div
+                  v-if="selectedFiles.length < maxImages"
+                  class="add-btn"
+                  @click="($refs.fileInput as HTMLInputElement)?.click()"
+                >
+                  <NIcon :component="AddCircle24Regular" />
                 </div>
-                <input ref="anonymousFileInput" type="file" style="display: none;" @change="handleAnonymousFileSelect">
-              </template>
+              </div>
+              <input
+                ref="fileInput"
+                type="file"
+                style="display: none;"
+                multiple
+                accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon"
+                @change="handleFileSelect"
+              >
             </div>
           </div>
 
@@ -604,13 +445,13 @@ onUnmounted(() => {
 
             <div class="actions">
               <NButton
-                :disabled="isSelf || isUploadingAnonymousImage"
+                :disabled="isSelf || !token"
                 type="primary"
                 size="large"
                 :loading="isSending || !token"
                 @click="SendQuestion"
               >
-                提交问题
+                {{ isSending && selectedFiles.length > 0 ? '正在上传图片...' : (!token ? '人机验证中...' : '提交问题') }}
               </NButton>
               <NButton
                 v-if="isUserLoggedIn"
