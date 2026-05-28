@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { useClipboard, useDropZone, useEventListener, useFileDialog } from '@vueuse/core'
-import { NButton, NCard, NFlex, NSpin, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NSelect, NSpin, NText } from 'naive-ui'
 import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
+import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 
 ort.env.wasm.numThreads = 1
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
 
 const message = useMessage()
 const { copy } = useClipboard()
+const { targetLang, translating, translate, mode, modeOptions } = useTranslate()
 
 const MODEL_BASE = '/models/ocr'
 
@@ -27,6 +29,7 @@ interface ImageTask {
   processing: boolean
   lines: OcrLine[]
   fullText: string
+  translatedText: string
 }
 
 const tasks = ref<ImageTask[]>([])
@@ -70,6 +73,7 @@ function addFiles(files: File[]) {
       processing: false,
       lines: [],
       fullText: '',
+      translatedText: '',
     }
     tasks.value.push(task)
     if (activeTaskId.value === null) activeTaskId.value = task.id
@@ -193,6 +197,15 @@ async function copyOne(task: ImageTask) {
   await copy(task.fullText)
   message.success('已复制')
 }
+
+async function translateTask(task: ImageTask) {
+  if (!task.fullText) return message.warning('请先识别文字')
+  try {
+    task.translatedText = await translate(task.fullText)
+  } catch (e: any) {
+    message.error(`翻译失败: ${e?.message ?? e}`)
+  }
+}
 </script>
 
 <template>
@@ -248,6 +261,14 @@ async function copyOne(task: ImageTask) {
               </div>
               <div v-if="task.lines.length" class="split-right">
                 <textarea v-model="task.fullText" class="result-textarea" placeholder="识别结果（可编辑）" />
+                <NFlex :size="6" align="center" class="translate-bar">
+                  <NText depth="3" style="font-size: 11px">翻译为</NText>
+                  <NSelect v-model:value="targetLang" :options="LANG_OPTIONS" size="tiny" style="width: 100px" />
+                  <NText depth="3" style="font-size: 11px">使用</NText>
+                  <NSelect v-model:value="mode" :options="modeOptions" size="tiny" style="width: 110px" />
+                  <NButton size="tiny" :loading="translating" :disabled="!task.fullText" @click="translateTask(task)">翻译</NButton>
+                </NFlex>
+                <textarea v-if="task.translatedText" v-model="task.translatedText" class="result-textarea translated" readonly placeholder="翻译结果" />
                 <details class="line-details">
                   <summary class="line-summary">逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）</summary>
                   <div class="line-list">
@@ -333,4 +354,7 @@ async function copyOne(task: ImageTask) {
 .line-item:hover, .line-item.active { background: rgba(24, 160, 88, 0.1); }
 .line-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .line-conf { flex: none; font-size: 11px; opacity: 0.5; }
+
+.translate-bar { padding: 4px 0; }
+.result-textarea.translated { min-height: 120px; background: rgba(24, 160, 88, 0.03); }
 </style>

@@ -330,6 +330,16 @@ export default // 管理页面
       },
     },
     {
+      path: 'tools/translate',
+      name: 'ManageToolTranslate',
+      component: async () => import('@/apps/manage/pages/tools/ToolTranslate.vue'),
+      meta: {
+        title: '翻译工具',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'user-page-builder',
       name: 'manage-userPageBuilder',
       component: async () => import('@/apps/manage/pages/UserPageBuilderView.vue'),

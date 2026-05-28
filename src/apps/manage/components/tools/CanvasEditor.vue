@@ -241,7 +241,8 @@ function syncZOrder() {
 
 // --- Stage interaction ---
 function handleStageClick(e: any) {
-  if (e.target === e.target.getStage()) {
+  const stage = stageRef.value?.getStage()
+  if (e.target === stage) {
     selectedId.value = null
     updateTransformer()
   }

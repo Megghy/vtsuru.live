@@ -3,9 +3,14 @@ import type { SongsInfo } from '@/api/api-models'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NDivider, NFlex, NInput, NInputGroup, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
+import { MoreHorizontal24Filled } from '@vicons/fluent'
+import {
+  NButton, NCard, NDropdown, NFlex, NIcon, NInput, NInputGroup,
+  NSpin, NText, useMessage,
+} from 'naive-ui'
 import { onMounted, ref } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useRouter } from 'vue-router'
+import { useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -15,37 +20,10 @@ import { CURRENT_HOST, SONG_API_URL } from '@/shared/config'
 import { copyToClipboard, objectsToCSV } from '@/shared/utils'
 
 const message = useMessage()
+const router = useRouter()
 const accountInfo = useAccount()
 
 const isLoading = ref(true)
-const switchLoading = ref(false)
-
-async function setFunctionEnable(enable: boolean) {
-  switchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(FunctionTypes.SongList)
-      : await DisableFunction(FunctionTypes.SongList)
-    if (success) {
-      message.success(`歌单功能已${enable ? '启用' : '禁用'}`)
-      if (accountInfo.value?.settings?.enableFunctions) {
-        const list = accountInfo.value.settings.enableFunctions
-        if (enable && !list.includes(FunctionTypes.SongList)) {
-          list.push(FunctionTypes.SongList)
-        } else if (!enable) {
-          const index = list.indexOf(FunctionTypes.SongList)
-          if (index > -1) list.splice(index, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}歌单功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    switchLoading.value = false
-  }
-}
 const showModal = ref(false)
 const songs = ref<SongsInfo[]>([])
 
@@ -65,16 +43,17 @@ function onSongsAdded(addedSongs: SongsInfo[]) {
   songs.value.push(...addedSongs)
 }
 
-function exportData() {
+function exportData(filtered = false) {
+  const source = songs.value
   const from = (f: SongFrom) => {
     switch (f) {
       case SongFrom.Custom: return '手动添加'
       case SongFrom.Netease: return '网易云'
       case SongFrom.FiveSing: return '5sing'
+      default: return '其他'
     }
   }
-
-  const csvData = songs.value.map(s => ({
+  const csvData = source.map(s => ({
     id: s.id,
     名称: s.name,
     翻译名称: s.translateName,
@@ -87,82 +66,62 @@ function exportData() {
     标签: s.tags?.join(',') ?? '',
     链接: s.url,
   }))
-
   const text = objectsToCSV(csvData)
   const BOM = new Uint8Array([0xEF, 0xBB, 0xBF])
-  const utf8encoder = new TextEncoder()
-  const utf8array = utf8encoder.encode(text)
-
+  const utf8array = new TextEncoder().encode(text)
   const fileName = `歌单_${format(Date.now(), 'yyyy-MM-dd HH:mm:ss')}_${accountInfo.value?.name}_.csv`
   saveAs(new Blob([BOM, utf8array], { type: 'text/csv;charset=utf-8;' }), fileName)
 }
 
-onMounted(async () => {
-  await getSongs()
-})
+const moreActions = [
+  { label: '修改展示模板', key: 'template' },
+  { label: '导出为 CSV', key: 'export' },
+  { label: '前往点播管理页', key: 'live-request' },
+  { label: '前往歌单展示页', key: 'song-list' },
+]
+
+function handleMoreAction(key: string) {
+  switch (key) {
+    case 'template':
+      router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })
+      break
+    case 'export':
+      exportData()
+      break
+    case 'live-request':
+      router.push({ name: 'manage-liveRequest' })
+      break
+    case 'song-list':
+      router.push({ name: 'user-songList', params: { id: accountInfo.value?.name } })
+      break
+  }
+}
+
+onMounted(getSongs)
 </script>
 
 <template>
   <ManagePageHeader title="歌单管理" :function-type="FunctionTypes.SongList">
     <template #action>
-      <NButton type="primary" @click="showModal = true">
-        添加歌曲
-      </NButton>
-      <NButton
-        type="primary"
-        @click="$router.push({ name: 'manage-index', query: { tab: 'setting', setting: 'template', template: 'songlist' } })"
-      >
-        修改展示模板
-      </NButton>
-      <NButton type="primary" secondary @click="exportData">
-        导出为 CSV
-      </NButton>
-      <NButton secondary @click="$router.push({ name: 'manage-liveRequest' })">
-        前往点播管理页
-      </NButton>
-      <NButton secondary @click="$router.push({ name: 'user-songList', params: { id: accountInfo?.name } })">
-        前往歌单展示页
-      </NButton>
-      <NButton
-        :loading="isLoading"
-        @click="() => {
-          getSongs()
-          message.success('完成')
-        }"
-      >
-        刷新
-      </NButton>
+      <NButton type="primary" @click="showModal = true">添加歌曲</NButton>
+      <NButton :loading="isLoading" secondary @click="getSongs">刷新</NButton>
+      <NDropdown :options="moreActions" trigger="click" @select="handleMoreAction">
+        <NButton secondary>
+          <template #icon><NIcon :component="MoreHorizontal24Filled" /></template>
+          更多
+        </NButton>
+      </NDropdown>
     </template>
   </ManagePageHeader>
 
   <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
     <NFlex justify="space-between" align="center" wrap :size="12">
       <NFlex align="center" :size="8" style="flex: 1;">
-        <NText class="manage-kicker">
-          歌单展示页链接
-        </NText>
+        <NText class="manage-kicker">展示页链接</NText>
         <NInputGroup style="max-width: 420px;">
           <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
-          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
-            复制
-          </NButton>
+          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">复制</NButton>
         </NInputGroup>
-      </NFlex>
-      <NDivider vertical />
-      <NFlex align="center" :size="8">
-        <NTag
-          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList) ? 'success' : 'warning'"
-          :bordered="false"
-          size="small"
-        >
-          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList) ? '展示页已开启' : '展示页已关闭' }}
-        </NTag>
-        <NSwitch
-          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.SongList)"
-          :loading="switchLoading"
-          :disabled="switchLoading"
-          @update:value="setFunctionEnable"
-        />
       </NFlex>
     </NFlex>
   </NCard>

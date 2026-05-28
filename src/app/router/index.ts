@@ -139,22 +139,19 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   useLoadingBarStore().loadingBar?.start()
 
   // 保留 as 参数（如果存在）
   if (from.query.as && !to.query.as) {
-    next({
+    return {
       ...to,
       query: {
         ...to.query,
         as: from.query.as,
       },
-    })
-    return
+    }
   }
-
-  next()
 })
 router.afterEach(() => {
   const loadingBar = useLoadingBarStore().loadingBar

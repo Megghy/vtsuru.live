@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-  CheckmarkCircle20Filled, CloudArrowDown20Filled,
+  CloudArrowDown20Filled,
   Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled,
 } from '@vicons/fluent'
 import {
@@ -158,22 +158,15 @@ onUnmounted(() => {
 
             <NPopconfirm @positive-click="speechService.downloadConfig()">
               <template #trigger>
-                <NButton size="small" :disabled="!accountInfo">
+                <NButton size="small" :disabled="!accountInfo?.id">
                   <template #icon>
                     <NIcon :component="CloudArrowDown20Filled" />
                   </template>
-                  获取配置
+                  从云端同步
                 </NButton>
               </template>
               这将覆盖当前设置, 确定?
             </NPopconfirm>
-
-            <NButton size="small" :disabled="!accountInfo" @click="speechService.uploadConfig()">
-              <template #icon>
-                <NIcon :component="CheckmarkCircle20Filled" />
-              </template>
-              保存配置
-            </NButton>
           </NFlex>
         </template>
       </OpenLivePageHeader>

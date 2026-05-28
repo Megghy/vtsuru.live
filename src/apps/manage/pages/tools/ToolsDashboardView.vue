@@ -5,6 +5,7 @@ import {
   DocumentTextOutline as TextIcon,
   ImagesOutline as NineGridIcon,
   ImageOutline as CompressIcon,
+  LanguageOutline as TranslateIcon,
   QrCodeOutline as QrcodeIcon,
   ScanOutline as OcrIcon,
   VideocamOutline as CoverIcon,
@@ -50,6 +51,7 @@ const categories: ToolCategory[] = [
     tools: [
       { name: 'Qrcode', displayName: '二维码生成', description: '生成直播间、粉丝群等链接的二维码图片。', routeName: 'ManageToolQrcode', icon: QrcodeIcon },
       { name: 'Ocr', displayName: '文字识别 (OCR)', description: '基于 PP-OCRv5，从图片中提取文字，支持中英日韩等多语言。', routeName: 'ManageToolOcr', icon: OcrIcon },
+      { name: 'Translate', displayName: '翻译工具', description: '支持浏览器内置翻译和云端 AI 翻译，中英日韩等多语言互译。', routeName: 'ManageToolTranslate', icon: TranslateIcon },
     ],
   },
 ]

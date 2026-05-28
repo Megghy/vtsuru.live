@@ -1,10 +1,10 @@
 import EasySpeech from 'easy-speech'
 import { useMessage } from 'naive-ui'
-import { reactive, ref, watch } from 'vue'
+import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 import { createVoiceProvider, DEFAULT_MIMO_VOICE, hasVoiceProvider } from '@/apps/open-live/voice-providers'
 import type { EventModel } from '@/api/api-models'
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
@@ -329,6 +329,35 @@ function createSpeechService() {
     if (normalized !== value) settings.value = normalized
   }, { immediate: true, flush: 'sync' })
 
+  // 云端自动同步
+  let _cloudSyncSuppressed = false
+  let _cloudSaveTimer: ReturnType<typeof globalThis.setTimeout> | undefined
+
+  async function syncFromCloud() {
+    if (!isLoggedIn.value) return
+    try {
+      const result = await DownloadConfig<SpeechSettings>('Speech')
+      if (result.status === 'success' && result.data) {
+        _cloudSyncSuppressed = true
+        settings.value = migrateLegacySettings(result.data)
+        await nextTick()
+        _cloudSyncSuppressed = false
+      }
+    } catch (e) {
+      console.warn('[TTS] 云端配置同步失败:', e)
+    }
+  }
+
+  function debouncedSaveToCloud() {
+    if (_cloudSyncSuppressed || !isLoggedIn.value) return
+    if (_cloudSaveTimer) globalThis.clearTimeout(_cloudSaveTimer)
+    _cloudSaveTimer = globalThis.setTimeout(() => {
+      UploadConfig('Speech', settings.value)
+    }, 3000)
+  }
+
+  watch(settings, debouncedSaveToCloud, { deep: true })
+
   const speechState = reactive<SpeechState>({
     isSpeaking: false,
     speakingText: '',
@@ -382,6 +411,8 @@ function createSpeechService() {
 
   async function initialize() {
     if (speechState.isInitialized) return
+
+    await syncFromCloud()
 
     try {
       await EasySpeech.init({ maxTimeout: 5000, interval: 250 })
@@ -955,26 +986,14 @@ function createSpeechService() {
     message.success('已停止监听')
   }
 
-  async function uploadConfig() {
-    try {
-      const result = await UploadConfig('Speech', settings.value)
-      if (result) {
-        message.success('已保存至服务器')
-      } else {
-        message.error('保存失败')
-      }
-    } catch (error) {
-      console.error('[TTS] 上传配置失败:', error)
-      message.error(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
-    }
-  }
-
   async function downloadConfig() {
     try {
       const result = await DownloadConfig<SpeechSettings>('Speech')
       if (result.status === 'success' && result.data) {
-        const migrated = migrateLegacySettings(result.data)
-        settings.value = migrated
+        _cloudSyncSuppressed = true
+        settings.value = migrateLegacySettings(result.data)
+        await nextTick()
+        _cloudSyncSuppressed = false
         message.success('已获取配置文件')
       } else if (result.status === 'notfound') {
         message.error('未上传配置文件')
@@ -1062,7 +1081,6 @@ function createSpeechService() {
     stopSpeech,
     cancelSpeech,
     clearLoadingTimeout,
-    uploadConfig,
     downloadConfig,
     getTextFromDanmaku,
     getAvailableVoices,
