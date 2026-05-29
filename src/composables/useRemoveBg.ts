@@ -76,11 +76,11 @@ export async function preloadModel() {
 async function runWithConfig(input: string | Blob, mode: ProcessMode, config: Config): Promise<Blob> {
   switch (mode) {
     case 'remove-fg':
-      return await removeForeground(input, config)
+      return removeForeground(input, config)
     case 'mask':
-      return await segmentForeground(input, config)
+      return segmentForeground(input, config)
     default:
-      return await removeBackground(input, config)
+      return removeBackground(input, config)
   }
 }
 

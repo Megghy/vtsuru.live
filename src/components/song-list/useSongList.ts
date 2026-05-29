@@ -52,7 +52,7 @@ export function useSongList(props: { songs: SongsInfo[], isSelf: boolean }) {
     }
     if (selectedAuthorFilter.value) {
       result = result.filter(s =>
-        s.author?.includes(selectedAuthorFilter.value!),
+        s.author?.includes(selectedAuthorFilter.value),
       )
     }
 

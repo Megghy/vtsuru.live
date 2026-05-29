@@ -63,7 +63,9 @@ const rankByOptions = [
               </NGrid>
               <NFlex justify="end" style="margin-top: 8px">
                 <NButton secondary size="small" @click="energyRank.setPosition(0, 0); message.success('位置已重置')">
-                  <template #icon><NIcon :component="ResizeTable24Filled" /></template>
+                  <template #icon>
+                    <NIcon :component="ResizeTable24Filled" />
+                  </template>
                   重置位置
                 </NButton>
               </NFlex>

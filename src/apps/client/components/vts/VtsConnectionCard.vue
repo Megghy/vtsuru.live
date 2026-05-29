@@ -53,12 +53,24 @@ function handleRequestToken() {
   <NCard size="small" title="VTS 连接">
     <NFlex vertical :size="12">
       <NFlex align="center" :size="8" :wrap="true">
-        <NTag :type="statusType">{{ statusText }}</NTag>
-        <NText v-if="vts.apiVersion" depth="3">v{{ vts.apiVersion }}</NText>
-        <NText v-if="vts.lastRttMs != null" depth="3">{{ vts.lastRttMs }}ms</NText>
-        <NText v-if="vts.statistics?.framerate != null" depth="3">{{ vts.statistics.framerate }} FPS</NText>
-        <NTag v-if="faceTag" :type="faceTag.type" size="small">{{ faceTag.text }}</NTag>
-        <NText v-if="handTagText" depth="3">{{ handTagText }}</NText>
+        <NTag :type="statusType">
+          {{ statusText }}
+        </NTag>
+        <NText v-if="vts.apiVersion" depth="3">
+          v{{ vts.apiVersion }}
+        </NText>
+        <NText v-if="vts.lastRttMs != null" depth="3">
+          {{ vts.lastRttMs }}ms
+        </NText>
+        <NText v-if="vts.statistics?.framerate != null" depth="3">
+          {{ vts.statistics.framerate }} FPS
+        </NText>
+        <NTag v-if="faceTag" :type="faceTag.type" size="small">
+          {{ faceTag.text }}
+        </NTag>
+        <NText v-if="handTagText" depth="3">
+          {{ handTagText }}
+        </NText>
       </NFlex>
 
       <NFlex align="center" :wrap="true" :size="8">
@@ -66,7 +78,9 @@ function handleRequestToken() {
         <NButton size="small" type="primary" :loading="vts.connecting" :disabled="vts.connected" @click="handleConnect">
           连接
         </NButton>
-        <NButton size="small" :disabled="!vts.connected" @click="vts.disconnect">断开</NButton>
+        <NButton size="small" :disabled="!vts.connected" @click="vts.disconnect">
+          断开
+        </NButton>
         <NButton size="small" :disabled="!vts.connected" @click="run(() => vts.refreshApiState())">
           刷新状态
         </NButton>
@@ -79,11 +93,17 @@ function handleRequestToken() {
         <NButton size="small" :disabled="!vts.connected || !vts.authToken" @click="run(() => vts.authenticate(), '已鉴权')">
           使用已有 Token
         </NButton>
-        <NButton size="small" :disabled="!vts.authToken" @click="vts.clearAuthToken">清除 Token</NButton>
-        <NText v-if="vts.authToken" depth="3">Token 已保存</NText>
+        <NButton size="small" :disabled="!vts.authToken" @click="vts.clearAuthToken">
+          清除 Token
+        </NButton>
+        <NText v-if="vts.authToken" depth="3">
+          Token 已保存
+        </NText>
       </NFlex>
 
-      <NAlert v-if="vts.lastError" type="error" :show-icon="false">{{ vts.lastError }}</NAlert>
+      <NAlert v-if="vts.lastError" type="error" :show-icon="false">
+        {{ vts.lastError }}
+      </NAlert>
       <NAlert v-if="vts.monitorLastError" type="warning" :show-icon="false">
         监控异常: {{ vts.monitorLastError }}
       </NAlert>

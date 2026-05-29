@@ -48,7 +48,7 @@ async function compressOne(item: ImageItem) {
   item.processing = true
   try {
     const bmp = await createImageBitmap(item.file)
-    let w = bmp.width, h = bmp.height
+    let w = bmp.width; let h = bmp.height
     if (maxWidth.value && w > maxWidth.value) { h = Math.round(h * (maxWidth.value / w)); w = maxWidth.value }
     if (maxHeight.value && h > maxHeight.value) { w = Math.round(w * (maxHeight.value / h)); h = maxHeight.value }
     const canvas = new OffscreenCanvas(w, h)
@@ -117,44 +117,68 @@ function formatSize(bytes: number) {
   <div class="compress-page">
     <NCard title="图片压缩与格式转换">
       <template #header-extra>
-        <NText depth="3">批量压缩、调整尺寸、转换格式</NText>
+        <NText depth="3">
+          批量压缩、调整尺寸、转换格式
+        </NText>
       </template>
 
       <!-- Controls -->
       <NFlex align="center" :wrap="true" :size="16" style="margin-bottom: 16px">
         <NFlex align="center" :size="8">
-          <NText depth="3">格式</NText>
+          <NText depth="3">
+            格式
+          </NText>
           <NSelect v-model:value="format" :options="formatOptions" style="width: 140px" />
         </NFlex>
         <NFlex v-if="isLossy" align="center" :size="8">
-          <NText depth="3">质量</NText>
+          <NText depth="3">
+            质量
+          </NText>
           <NSlider v-model:value="quality" :min="10" :max="100" :step="5" style="width: 120px" />
-          <NText style="width: 36px; text-align: right">{{ quality }}%</NText>
+          <NText style="width: 36px; text-align: right">
+            {{ quality }}%
+          </NText>
         </NFlex>
         <NFlex align="center" :size="8">
-          <NText depth="3">最大宽度</NText>
+          <NText depth="3">
+            最大宽度
+          </NText>
           <NInputNumber v-model:value="maxWidth" :min="0" placeholder="不限" clearable style="width: 110px" />
         </NFlex>
         <NFlex align="center" :size="8">
-          <NText depth="3">最大高度</NText>
+          <NText depth="3">
+            最大高度
+          </NText>
           <NInputNumber v-model:value="maxHeight" :min="0" placeholder="不限" clearable style="width: 110px" />
         </NFlex>
-        <NButton v-if="items.length" size="small" @click="reprocessAll">重新压缩</NButton>
+        <NButton v-if="items.length" size="small" @click="reprocessAll">
+          重新压缩
+        </NButton>
       </NFlex>
 
       <!-- Drop zone -->
       <div ref="dropZoneRef" class="drop-zone" :class="{ active: isOverDropZone }" @click="() => openFilePicker()">
-        <NText style="font-size: 15px">拖拽图片到此处，或点击选择</NText>
-        <NText depth="3" style="font-size: 13px">支持多张图片同时上传</NText>
+        <NText style="font-size: 15px">
+          拖拽图片到此处，或点击选择
+        </NText>
+        <NText depth="3" style="font-size: 13px">
+          支持多张图片同时上传
+        </NText>
       </div>
 
       <!-- Results -->
       <template v-if="items.length">
         <NFlex justify="space-between" align="center" style="margin: 16px 0 8px">
-          <NText depth="3">共 {{ items.length }} 张图片</NText>
+          <NText depth="3">
+            共 {{ items.length }} 张图片
+          </NText>
           <NFlex :size="8">
-            <NButton size="small" type="primary" @click="downloadAll">打包下载 ZIP</NButton>
-            <NButton size="small" tertiary @click="clearAll">清空</NButton>
+            <NButton size="small" type="primary" @click="downloadAll">
+              打包下载 ZIP
+            </NButton>
+            <NButton size="small" tertiary @click="clearAll">
+              清空
+            </NButton>
           </NFlex>
         </NFlex>
 
@@ -162,18 +186,26 @@ function formatSize(bytes: number) {
           <div v-for="(item, idx) in items" :key="idx" class="image-card">
             <img :src="item.thumbUrl" class="thumb" alt="">
             <div class="info">
-              <NText class="filename" :title="item.file.name">{{ item.file.name }}</NText>
+              <NText class="filename" :title="item.file.name">
+                {{ item.file.name }}
+              </NText>
               <NText v-if="item.compressedBlob" depth="3" style="font-size: 12px">
                 {{ formatSize(item.originalSize) }} → {{ formatSize(item.compressedSize) }}
                 <NText :type="item.compressedSize < item.originalSize ? 'success' : 'warning'" style="font-size: 12px">
                   ({{ item.compressedSize < item.originalSize ? '-' : '+' }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
                 </NText>
               </NText>
-              <NText v-else-if="item.processing" depth="3" style="font-size: 12px">处理中...</NText>
+              <NText v-else-if="item.processing" depth="3" style="font-size: 12px">
+                处理中...
+              </NText>
             </div>
             <NFlex :size="4" class="actions">
-              <NButton size="tiny" :disabled="!item.compressedBlob" @click="downloadOne(item)">下载</NButton>
-              <NButton size="tiny" tertiary @click="removeItem(idx)">移除</NButton>
+              <NButton size="tiny" :disabled="!item.compressedBlob" @click="downloadOne(item)">
+                下载
+              </NButton>
+              <NButton size="tiny" tertiary @click="removeItem(idx)">
+                移除
+              </NButton>
             </NFlex>
           </div>
         </div>

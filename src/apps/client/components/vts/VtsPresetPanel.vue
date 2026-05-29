@@ -59,15 +59,21 @@ function addFromCurrent() {
   <NCard size="small" title="机位预设">
     <NFlex vertical :size="8">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" @click="addPreset">新建预设</NButton>
-        <NButton size="small" :disabled="!canReadCurrent" @click="addFromCurrent">从当前位置创建</NButton>
+        <NButton size="small" @click="addPreset">
+          新建预设
+        </NButton>
+        <NButton size="small" :disabled="!canReadCurrent" @click="addFromCurrent">
+          从当前位置创建
+        </NButton>
       </NFlex>
 
       <NDivider style="margin: 4px 0" />
 
       <NFlex v-for="p in vts.presets" :key="p.id" align="center" justify="space-between" :wrap="true" :size="8">
         <NFlex align="center" :wrap="true" :size="8">
-          <NText strong>{{ p.name }}</NText>
+          <NText strong>
+            {{ p.name }}
+          </NText>
           <NText depth="3">
             x={{ p.positionX.toFixed(2) }} y={{ p.positionY.toFixed(2) }} rot={{ p.rotation.toFixed(1) }} size={{ p.size.toFixed(1) }} t={{ p.timeInSeconds }}s
           </NText>
@@ -76,10 +82,14 @@ function addFromCurrent() {
           <NButton size="small" type="primary" :disabled="!vts.canOperate" @click="run(() => vts.applyPreset(p.id), '已应用')">
             应用
           </NButton>
-          <NButton size="small" @click="openEdit(p)">编辑</NButton>
+          <NButton size="small" @click="openEdit(p)">
+            编辑
+          </NButton>
           <NPopconfirm @positive-click="vts.removePreset(p.id)">
             <template #trigger>
-              <NButton size="small" type="error">删除</NButton>
+              <NButton size="small" type="error">
+                删除
+              </NButton>
             </template>
             确认删除此预设?
           </NPopconfirm>
@@ -95,7 +105,9 @@ function addFromCurrent() {
         <NButton size="small" :disabled="!canReadCurrent" @click="run(() => { fillFromCurrent() }, '已填入当前位姿')">
           填入当前位置
         </NButton>
-        <NText depth="3">需要 VTS 已鉴权且模型有移动事件</NText>
+        <NText depth="3">
+          需要 VTS 已鉴权且模型有移动事件
+        </NText>
       </NFlex>
       <NFlex :wrap="true" :size="10">
         <NInputNumber v-model:value="form.timeInSeconds" :min="0" :step="0.05" placeholder="过渡时间(s)" style="width: 150px" />
@@ -105,8 +117,12 @@ function addFromCurrent() {
         <NInputNumber v-model:value="form.size" :step="0.5" placeholder="大小" style="width: 130px" />
       </NFlex>
       <NFlex justify="end" :size="8">
-        <NButton @click="showEdit = false">取消</NButton>
-        <NButton type="primary" @click="saveEdit">保存</NButton>
+        <NButton @click="showEdit = false">
+          取消
+        </NButton>
+        <NButton type="primary" @click="saveEdit">
+          保存
+        </NButton>
       </NFlex>
     </NFlex>
   </NModal>

@@ -212,7 +212,9 @@ async function translateTask(task: ImageTask) {
   <NCard title="文字识别 (OCR)">
     <template #header-extra>
       <NFlex :size="8" align="center">
-        <NButton size="small" :disabled="tasks.every(t => !t.lines.length)" @click="copyAll">复制全部</NButton>
+        <NButton size="small" :disabled="tasks.every(t => !t.lines.length)" @click="copyAll">
+          复制全部
+        </NButton>
         <NButton size="small" type="primary" :loading="tasks.some(t => t.processing)" @click="recognizeAll">
           {{ modelLoading ? '加载模型中...' : '全部识别' }}
         </NButton>
@@ -232,8 +234,10 @@ async function translateTask(task: ImageTask) {
 
       <!-- Image tabs -->
       <div v-if="tasks.length > 1" class="tab-bar">
-        <button v-for="task in tasks" :key="task.id" class="tab-btn"
-          :class="{ active: task.id === activeTaskId }" @click="activeTaskId = task.id">
+        <button
+          v-for="task in tasks" :key="task.id" class="tab-btn"
+          :class="{ active: task.id === activeTaskId }" @click="activeTaskId = task.id"
+        >
           <span class="tab-name">{{ task.file.name.slice(0, 14) }}</span>
           <span v-if="task.lines.length" class="tab-badge">✓</span>
         </button>
@@ -246,36 +250,52 @@ async function translateTask(task: ImageTask) {
             <NButton size="small" type="primary" :loading="task.processing" @click="recognizeOne(task)">
               {{ task.processing ? (modelLoading ? '加载模型...' : '识别中...') : '开始识别' }}
             </NButton>
-            <NButton size="small" :disabled="!task.fullText" @click="copyOne(task)">复制文字</NButton>
-            <NButton size="small" quaternary type="error" @click="removeTask(task.id)">移除</NButton>
+            <NButton size="small" :disabled="!task.fullText" @click="copyOne(task)">
+              复制文字
+            </NButton>
+            <NButton size="small" quaternary type="error" @click="removeTask(task.id)">
+              移除
+            </NButton>
           </NFlex>
 
           <NSpin :show="task.processing" :description="modelLoading ? '正在加载模型...' : '正在识别...'">
             <div class="split-layout">
               <div class="split-left">
                 <div class="img-container">
-                  <img :ref="(el) => setImgRef(task.id, el)" :src="task.url" class="preview-img"
-                    @load="() => { if (task.lines.length) drawOverlay(task.id) }">
+                  <img
+                    :ref="(el) => setImgRef(task.id, el)" :src="task.url" class="preview-img"
+                    @load="() => { if (task.lines.length) drawOverlay(task.id) }"
+                  >
                   <canvas :ref="(el) => setCanvasRef(task.id, el)" class="overlay-canvas" />
                 </div>
               </div>
               <div v-if="task.lines.length" class="split-right">
                 <textarea v-model="task.fullText" class="result-textarea" placeholder="识别结果（可编辑）" />
                 <NFlex :size="6" align="center" class="translate-bar">
-                  <NText depth="3" style="font-size: 11px">翻译为</NText>
+                  <NText depth="3" style="font-size: 11px">
+                    翻译为
+                  </NText>
                   <NSelect v-model:value="targetLang" :options="LANG_OPTIONS" size="tiny" style="width: 100px" />
-                  <NText depth="3" style="font-size: 11px">使用</NText>
+                  <NText depth="3" style="font-size: 11px">
+                    使用
+                  </NText>
                   <NSelect v-model:value="mode" :options="modeOptions" size="tiny" style="width: 110px" />
-                  <NButton size="tiny" :loading="translating" :disabled="!task.fullText" @click="translateTask(task)">翻译</NButton>
+                  <NButton size="tiny" :loading="translating" :disabled="!task.fullText" @click="translateTask(task)">
+                    翻译
+                  </NButton>
                 </NFlex>
                 <textarea v-if="task.translatedText" v-model="task.translatedText" class="result-textarea translated" readonly placeholder="翻译结果" />
                 <details class="line-details">
-                  <summary class="line-summary">逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）</summary>
+                  <summary class="line-summary">
+                    逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）
+                  </summary>
                   <div class="line-list">
-                    <div v-for="(line, idx) in task.lines" :key="idx" class="line-item"
+                    <div
+                      v-for="(line, idx) in task.lines" :key="idx" class="line-item"
                       :class="{ active: hoveredLineIdx === idx && activeTaskId === task.id }"
                       @mouseenter="onLineHover(task.id, idx)"
-                      @mouseleave="onLineHover(task.id, null)">
+                      @mouseleave="onLineHover(task.id, null)"
+                    >
                       <span class="line-text">{{ line.text }}</span>
                       <span class="line-conf">{{ (line.confidence * 100).toFixed(0) }}%</span>
                     </div>

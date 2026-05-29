@@ -1,6 +1,5 @@
 import type { AutoActionItem, RuntimeState } from '../types'
 import type { EventModel } from '@/api/api-models'
-import { ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/apps/client/store/useBiliCookie', () => ({

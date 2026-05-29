@@ -56,7 +56,9 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
   <div v-else class="rank-window" :class="{ 'has-items': hasItems }">
     <div class="rank-window-bg" />
     <div class="rank-list">
-      <div class="rank-header">高能排行榜</div>
+      <div class="rank-header">
+        高能排行榜
+      </div>
       <TransitionGroup name="rank-list" tag="div" class="rank-list-container">
         <div
           v-for="(item, index) in rankList"

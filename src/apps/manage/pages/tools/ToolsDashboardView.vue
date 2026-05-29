@@ -66,7 +66,9 @@ function navigateToTool(routeName: string) {
     <ManagePageHeader title="直播工具箱" subtitle="常用工具快捷入口" />
 
     <div v-for="cat in categories" :key="cat.label" class="tool-category">
-      <NText strong class="category-label">{{ cat.label }}</NText>
+      <NText strong class="category-label">
+        {{ cat.label }}
+      </NText>
       <NGrid cols="1 s:2 m:3 l:3 xl:4" responsive="screen" :x-gap="14" :y-gap="14">
         <NGridItem v-for="tool in cat.tools" :key="tool.name">
           <div class="tool-card" @click="navigateToTool(tool.routeName)">
@@ -74,8 +76,12 @@ function navigateToTool(routeName: string) {
               <NIcon :component="tool.icon" size="24" />
             </div>
             <div class="tool-card__body">
-              <NText strong style="font-size: 14px">{{ tool.displayName }}</NText>
-              <NText depth="3" style="font-size: 12px; line-height: 1.4">{{ tool.description }}</NText>
+              <NText strong style="font-size: 14px">
+                {{ tool.displayName }}
+              </NText>
+              <NText depth="3" style="font-size: 12px; line-height: 1.4">
+                {{ tool.description }}
+              </NText>
             </div>
           </div>
         </NGridItem>

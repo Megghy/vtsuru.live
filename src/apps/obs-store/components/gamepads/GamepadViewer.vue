@@ -104,12 +104,18 @@ const displayUrl = computed(() => {
       </NFlex>
 
       <!-- 渲染模式 -->
-      <NCheckbox v-model:checked="useOverlayButtons">叠加式按钮 (更好的交互效果)</NCheckbox>
+      <NCheckbox v-model:checked="useOverlayButtons">
+        叠加式按钮 (更好的交互效果)
+      </NCheckbox>
 
       <!-- 按下颜色 -->
-      <NDivider title-placement="left" style="margin: 8px 0">按键按下效果</NDivider>
+      <NDivider title-placement="left" style="margin: 8px 0">
+        按键按下效果
+      </NDivider>
       <NFlex align="center" size="small">
-        <NCheckbox v-model:checked="enableCustomColor">自定义按下颜色</NCheckbox>
+        <NCheckbox v-model:checked="enableCustomColor">
+          自定义按下颜色
+        </NCheckbox>
         <NColorPicker
           v-if="enableCustomColor"
           v-model:value="customPressedColor"
@@ -117,17 +123,25 @@ const displayUrl = computed(() => {
           size="small"
           style="width: 120px"
         />
-        <NText v-else depth="3">(默认反色)</NText>
+        <NText v-else depth="3">
+          (默认反色)
+        </NText>
       </NFlex>
 
       <!-- 摇杆灵敏度 -->
-      <NDivider title-placement="left" style="margin: 8px 0">摇杆灵敏度</NDivider>
+      <NDivider title-placement="left" style="margin: 8px 0">
+        摇杆灵敏度
+      </NDivider>
       <NFlex align="center" size="small" :wrap="true">
         <NSlider v-model:value="stickSensitivity" :min="1" :max="20" :step="1" style="min-width: 180px; max-width: 280px" />
         <NInputNumber v-model:value="stickSensitivity" :min="1" :max="40" size="small" style="width: 72px" />
-        <NButton size="small" @click="stickSensitivity = 5">重置</NButton>
+        <NButton size="small" @click="stickSensitivity = 5">
+          重置
+        </NButton>
       </NFlex>
-      <NText depth="3" style="font-size: 12px">数值越大移动幅度越大，默认 5</NText>
+      <NText depth="3" style="font-size: 12px">
+        数值越大移动幅度越大，默认 5
+      </NText>
 
       <!-- 实时预览 -->
       <NDivider style="margin: 8px 0" />
@@ -154,13 +168,17 @@ const displayUrl = computed(() => {
           <NFlex align="center" size="small">
             <NText>ViewBox:</NText>
             <NInput v-model:value="customViewBox" :placeholder="defaultViewBox" size="small" style="width: 180px" />
-            <NButton size="small" @click="customViewBox = ''">重置</NButton>
+            <NButton size="small" @click="customViewBox = ''">
+              重置
+            </NButton>
           </NFlex>
         </NCollapseItem>
       </NCollapse>
     </NFlex>
   </NCard>
-  <NCard v-else>无效的游戏手柄类型</NCard>
+  <NCard v-else>
+    无效的游戏手柄类型
+  </NCard>
 </template>
 
 <style scoped>

@@ -3,7 +3,7 @@ import { saveAs } from 'file-saver'
 import { NButton, NButtonGroup, NColorPicker, NFlex, NIcon, NInput, NInputNumber, NSelect, NSlider, NText } from 'naive-ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useFileDialog } from '@vueuse/core'
-import { ImageOutline, TextOutline, TrashOutline, EyeOutline, EyeOffOutline, ChevronUpOutline, ChevronDownOutline } from '@vicons/ionicons5'
+import { ImageOutline, TextOutline, TrashOutline, EyeOutline, EyeOffOutline } from '@vicons/ionicons5'
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
@@ -282,9 +282,15 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="prop-row">
               <span>透明度</span><NSlider v-model:value="(selectedLayer as ImageLayer).opacity" :min="0" :max="1" :step="0.05" style="flex:1" />
             </div>
-            <div class="prop-row"><span>描边</span><NColorPicker v-model:value="(selectedLayer as ImageLayer).stroke" size="small" style="flex:1" /></div>
-            <div class="prop-row"><span>描边宽</span><NSlider v-model:value="(selectedLayer as ImageLayer).strokeWidth" :min="0" :max="20" style="flex:1" /></div>
-            <NButton size="small" block @click="showRemoveBg = true">去背景</NButton>
+            <div class="prop-row">
+              <span>描边</span><NColorPicker v-model:value="(selectedLayer as ImageLayer).stroke" size="small" style="flex:1" />
+            </div>
+            <div class="prop-row">
+              <span>描边宽</span><NSlider v-model:value="(selectedLayer as ImageLayer).strokeWidth" :min="0" :max="20" style="flex:1" />
+            </div>
+            <NButton size="small" block @click="showRemoveBg = true">
+              去背景
+            </NButton>
           </template>
         </div>
       </div>

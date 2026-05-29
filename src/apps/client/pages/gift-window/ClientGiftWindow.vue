@@ -98,9 +98,15 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
           >
             <div class="gw-item__icon">
               <img v-if="item.giftIcon" :src="item.giftIcon" class="gw-item__gift-img" alt="">
-              <div v-else-if="item.type === EventDataTypes.SC" class="gw-item__type-icon gw-item__type-icon--sc">SC</div>
-              <div v-else-if="item.type === EventDataTypes.Guard" class="gw-item__type-icon gw-item__type-icon--guard">{{ getGuardLabel(item.guardLevel).charAt(0) }}</div>
-              <div v-else class="gw-item__type-icon gw-item__type-icon--gift">礼</div>
+              <div v-else-if="item.type === EventDataTypes.SC" class="gw-item__type-icon gw-item__type-icon--sc">
+                SC
+              </div>
+              <div v-else-if="item.type === EventDataTypes.Guard" class="gw-item__type-icon gw-item__type-icon--guard">
+                {{ getGuardLabel(item.guardLevel).charAt(0) }}
+              </div>
+              <div v-else class="gw-item__type-icon gw-item__type-icon--gift">
+                礼
+              </div>
             </div>
             <div class="gw-item__body">
               <div class="gw-item__top">
@@ -121,7 +127,9 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
       <!-- 排行榜 -->
       <template v-if="setting.showRanking && rankList.length > 0">
         <div v-if="setting.showGiftList && giftList.length > 0" class="gw-divider" />
-        <div class="gw-rank-header">排行榜</div>
+        <div class="gw-rank-header">
+          排行榜
+        </div>
         <div class="gw-rank-list">
           <div v-for="(r, idx) in rankList" :key="r.uid" class="gw-rank-item" :class="{ 'gw-rank-top': idx < 3 }">
             <span class="gw-rank-idx" :class="`gw-rank-idx--${idx < 3 ? idx + 1 : 'n'}`">{{ idx + 1 }}</span>
@@ -130,7 +138,9 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
           </div>
         </div>
       </template>
-      <div v-if="!hasContent" class="gw-empty">等待中...</div>
+      <div v-if="!hasContent" class="gw-empty">
+        等待中...
+      </div>
     </div>
     <div class="gw-resize" @mousedown="startResize" />
   </div>

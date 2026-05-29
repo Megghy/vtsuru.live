@@ -1,4 +1,4 @@
-import { createStore, get, set, del, keys } from 'idb-keyval'
+import { createStore, get, set, del } from 'idb-keyval'
 
 const STORE = createStore('vtsuru-mimo-voices', 'audio-blobs')
 

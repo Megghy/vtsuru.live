@@ -2,7 +2,7 @@
 import type { SelectOption } from 'naive-ui'
 import type { SongRequestOption } from '@/api/api-models'
 import {
-  NButton, NCheckbox, NDivider, NFlex, NInputGroup, NInputGroupLabel,
+  NButton, NCheckbox, NFlex, NInputGroup, NInputGroupLabel,
   NInputNumber, NModal, NRadioButton, NRadioGroup, NSelect, NTabPane, NTabs, NText,
   useMessage,
 } from 'naive-ui'
@@ -71,40 +71,58 @@ defineExpose({ open, close })
       <NTabPane name="author" tab="作者">
         <NFlex vertical :size="12">
           <NRadioGroup v-model:value="authorMode" size="small">
-            <NRadioButton value="append">追加</NRadioButton>
-            <NRadioButton value="replace">替换</NRadioButton>
+            <NRadioButton value="append">
+              追加
+            </NRadioButton>
+            <NRadioButton value="replace">
+              替换
+            </NRadioButton>
           </NRadioGroup>
           <NSelect
             v-model:value="batchAuthor" :options="authorOptions"
             placeholder="选择或输入作者" filterable multiple tag clearable
           />
-          <NButton type="primary" @click="handleUpdateAuthor">应用</NButton>
+          <NButton type="primary" @click="handleUpdateAuthor">
+            应用
+          </NButton>
         </NFlex>
       </NTabPane>
       <NTabPane name="tag" tab="标签">
         <NFlex vertical :size="12">
           <NRadioGroup v-model:value="tagMode" size="small">
-            <NRadioButton value="append">追加</NRadioButton>
-            <NRadioButton value="replace">替换</NRadioButton>
+            <NRadioButton value="append">
+              追加
+            </NRadioButton>
+            <NRadioButton value="replace">
+              替换
+            </NRadioButton>
           </NRadioGroup>
           <NSelect
             v-model:value="batchTag" :options="tagOptions"
             placeholder="选择或输入标签" filterable multiple tag clearable
           />
-          <NButton type="primary" @click="handleUpdateTag">应用</NButton>
+          <NButton type="primary" @click="handleUpdateTag">
+            应用
+          </NButton>
         </NFlex>
       </NTabPane>
       <NTabPane name="language" tab="语言">
         <NFlex vertical :size="12">
           <NRadioGroup v-model:value="languageMode" size="small">
-            <NRadioButton value="append">追加</NRadioButton>
-            <NRadioButton value="replace">替换</NRadioButton>
+            <NRadioButton value="append">
+              追加
+            </NRadioButton>
+            <NRadioButton value="replace">
+              替换
+            </NRadioButton>
           </NRadioGroup>
           <NSelect
             v-model:value="batchLanguage" :options="languageOptions"
             placeholder="选择或输入语言" filterable multiple tag clearable
           />
-          <NButton type="primary" @click="handleUpdateLanguage">应用</NButton>
+          <NButton type="primary" @click="handleUpdateLanguage">
+            应用
+          </NButton>
         </NFlex>
       </NTabPane>
       <NTabPane name="option" tab="点歌要求">
@@ -117,40 +135,64 @@ defineExpose({ open, close })
           </NCheckbox>
           <template v-if="batchOption">
             <NFlex :size="12">
-              <NCheckbox v-model:checked="batchOption!.needJianzhang">舰长</NCheckbox>
-              <NCheckbox v-model:checked="batchOption!.needTidu">提督</NCheckbox>
-              <NCheckbox v-model:checked="batchOption!.needZongdu">总督</NCheckbox>
+              <NCheckbox v-model:checked="batchOption!.needJianzhang">
+                舰长
+              </NCheckbox>
+              <NCheckbox v-model:checked="batchOption!.needTidu">
+                提督
+              </NCheckbox>
+              <NCheckbox v-model:checked="batchOption!.needZongdu">
+                总督
+              </NCheckbox>
             </NFlex>
             <NFlex align="center" :size="8">
               <NCheckbox
                 :checked="batchOption!.scMinPrice != null"
                 @update:checked="(v: boolean) => batchOption!.scMinPrice = v ? 30 : undefined"
-              >SC</NCheckbox>
+              >
+                SC
+              </NCheckbox>
               <NInputGroup v-if="batchOption!.scMinPrice != null" style="width: auto;">
-                <NInputGroupLabel size="small">≥</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  ≥
+                </NInputGroupLabel>
                 <NInputNumber v-model:value="batchOption!.scMinPrice" :min="1" size="small" style="width: 80px;" />
-                <NInputGroupLabel size="small">元</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  元
+                </NInputGroupLabel>
               </NInputGroup>
             </NFlex>
             <NFlex align="center" :size="8">
               <NCheckbox
                 :checked="batchOption!.fanMedalMinLevel != null"
                 @update:checked="(v: boolean) => batchOption!.fanMedalMinLevel = v ? 1 : undefined"
-              >粉丝牌</NCheckbox>
+              >
+                粉丝牌
+              </NCheckbox>
               <NInputGroup v-if="batchOption!.fanMedalMinLevel != null" style="width: auto;">
-                <NInputGroupLabel size="small">≥</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  ≥
+                </NInputGroupLabel>
                 <NInputNumber v-model:value="batchOption!.fanMedalMinLevel" :min="1" size="small" style="width: 80px;" />
-                <NInputGroupLabel size="small">级</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  级
+                </NInputGroupLabel>
               </NInputGroup>
             </NFlex>
           </template>
-          <NButton type="primary" @click="handleUpdateOption">应用</NButton>
+          <NButton type="primary" @click="handleUpdateOption">
+            应用
+          </NButton>
         </NFlex>
       </NTabPane>
       <NTabPane name="delete" tab="删除">
         <NFlex vertical :size="12">
-          <NText type="error">确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。</NText>
-          <NButton type="error" @click="emit('delete')">确认删除</NButton>
+          <NText type="error">
+            确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。
+          </NText>
+          <NButton type="error" @click="emit('delete')">
+            确认删除
+          </NButton>
         </NFlex>
       </NTabPane>
     </NTabs>

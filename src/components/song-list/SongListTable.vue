@@ -207,18 +207,24 @@ async function handleBatchDelete() {
       <NFlex :size="8" align="center">
         <template v-if="hasAudio">
           <NSwitch v-model:value="showListenButton" size="small" />
-          <NText style="font-size: 12px;">试听</NText>
+          <NText style="font-size: 12px;">
+            试听
+          </NText>
         </template>
         <template v-if="hasLinks">
           <NSwitch v-model:value="showLinkButton" size="small" />
-          <NText style="font-size: 12px;">链接</NText>
+          <NText style="font-size: 12px;">
+            链接
+          </NText>
         </template>
       </NFlex>
     </NFlex>
   </NCard>
 
   <NFlex justify="space-between" align="center" style="margin-bottom: 6px;">
-    <NText depth="3">共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首</NText>
+    <NText depth="3">
+      共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首
+    </NText>
     <NButton
       v-if="isSelf" :disabled="selectedKeys.length === 0"
       type="primary" size="small" ghost @click="batchModalRef?.open()"

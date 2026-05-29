@@ -14,7 +14,9 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
           <div class="items">
             <div v-for="(item, i) in spokenHistory" :key="i" class="item">
               <span class="uname">{{ item.uname }}</span>
-              <NText depth="3" class="text">{{ item.text }}</NText>
+              <NText depth="3" class="text">
+                {{ item.text }}
+              </NText>
               <NTime :time="item.time" type="relative" class="time" />
             </div>
           </div>
@@ -26,7 +28,9 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
           <div class="items">
             <div v-for="(item, i) in rejectedHistory" :key="i" class="item">
               <span class="uname">{{ item.uname }}</span>
-              <NText type="error" class="reason">{{ item.reason }}</NText>
+              <NText type="error" class="reason">
+                {{ item.reason }}
+              </NText>
               <NTime :time="item.time" type="relative" class="time" />
             </div>
           </div>

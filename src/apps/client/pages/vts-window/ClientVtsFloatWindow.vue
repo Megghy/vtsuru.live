@@ -57,8 +57,12 @@ onUnmounted(() => {
     <div class="vts-float__header" data-tauri-drag-region>
       <NFlex align="center" justify="space-between" :wrap="false" :size="8" style="width: 100%">
         <NFlex align="center" :wrap="false" :size="8">
-          <NTag :type="connectionTag.type" size="small">{{ connectionTag.text }}</NTag>
-          <NText depth="3" style="font-size: 12px">VTS 快捷面板</NText>
+          <NTag :type="connectionTag.type" size="small">
+            {{ connectionTag.text }}
+          </NTag>
+          <NText depth="3" style="font-size: 12px">
+            VTS 快捷面板
+          </NText>
         </NFlex>
         <NFlex align="center" :wrap="false" :size="6">
           <NButton size="tiny" :disabled="vts.connecting || vts.connected" @click="run(() => vts.connect())">
@@ -100,7 +104,9 @@ onUnmounted(() => {
 
         <NTabPane name="macros" tab="宏">
           <NFlex vertical :size="8">
-            <NText depth="3" style="font-size: 12px">按顺序执行，任一步失败即终止</NText>
+            <NText depth="3" style="font-size: 12px">
+              按顺序执行，任一步失败即终止
+            </NText>
             <NDivider style="margin: 4px 0" />
             <NFlex v-for="m in vts.macros" :key="m.id" align="center" justify="space-between" :size="8">
               <NText>{{ m.name }}</NText>
@@ -113,10 +119,14 @@ onUnmounted(() => {
 
         <NTabPane name="items" tab="道具">
           <NFlex vertical :size="10">
-            <NText depth="3" style="font-size: 12px">配饰: 切换显隐 | 整活: 掉落道具</NText>
+            <NText depth="3" style="font-size: 12px">
+              配饰: 切换显隐 | 整活: 掉落道具
+            </NText>
             <NDivider style="margin: 4px 0" />
             <NFlex vertical :size="8">
-              <NText depth="3" style="font-size: 12px">配饰</NText>
+              <NText depth="3" style="font-size: 12px">
+                配饰
+              </NText>
               <NFlex v-for="a in vts.accessories" :key="a.id" align="center" justify="space-between" :size="8">
                 <NText>{{ a.name }}</NText>
                 <NButton size="tiny" :disabled="!vts.canOperate" @click="run(() => vts.toggleAccessory(a.id, !a.visible))">
@@ -126,7 +136,9 @@ onUnmounted(() => {
             </NFlex>
             <NDivider style="margin: 4px 0" />
             <NFlex vertical :size="8">
-              <NText depth="3" style="font-size: 12px">整活</NText>
+              <NText depth="3" style="font-size: 12px">
+                整活
+              </NText>
               <NFlex v-for="p in vts.pranks" :key="p.id" align="center" justify="space-between" :size="8">
                 <NText>{{ p.name }}</NText>
                 <NButton
@@ -144,7 +156,9 @@ onUnmounted(() => {
 
         <NTabPane name="panic" tab="应急">
           <NFlex vertical :size="10">
-            <NText depth="3" style="font-size: 12px">需要先在主界面配置对应热键</NText>
+            <NText depth="3" style="font-size: 12px">
+              需要先在主界面配置对应热键
+            </NText>
             <NFlex :wrap="true" :size="8">
               <NButton size="small" type="primary" :disabled="!vts.canOperate" @click="run(() => vts.panicCalibrate())">
                 校准

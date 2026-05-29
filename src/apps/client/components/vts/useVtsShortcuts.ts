@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { isTauri } from '@/shared/config'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
 import type { StoreTarget } from '@/apps/client/store/useTauriStore'

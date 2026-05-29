@@ -210,25 +210,45 @@ const grouped = computed(() => {
         <NFlex v-if="isSearchVisible" align="center" :wrap="true" :size="8">
           <NInput v-model:value="query" placeholder="搜索名称 / 描述 / 类型" style="min-width: 260px" />
           <NSwitch v-model:value="onlyFavorites" size="small">
-            <template #checked>收藏</template>
-            <template #unchecked>收藏</template>
+            <template #checked>
+              收藏
+            </template>
+            <template #unchecked>
+              收藏
+            </template>
           </NSwitch>
           <NSwitch v-model:value="onlyPinned" size="small">
-            <template #checked>置顶</template>
-            <template #unchecked>置顶</template>
+            <template #checked>
+              置顶
+            </template>
+            <template #unchecked>
+              置顶
+            </template>
           </NSwitch>
           <NSwitch v-model:value="safeClick" size="small" @update:value="disarm">
-            <template #checked>防误触</template>
-            <template #unchecked>防误触</template>
+            <template #checked>
+              防误触
+            </template>
+            <template #unchecked>
+              防误触
+            </template>
           </NSwitch>
           <NSelect v-model:value="groupMode" size="small" style="width: 130px" :options="groupModeOptions as any" />
           <NSwitch v-if="!props.embedded" v-model:value="deckMode" size="small">
-            <template #checked>大图标</template>
-            <template #unchecked>大图标</template>
+            <template #checked>
+              大图标
+            </template>
+            <template #unchecked>
+              大图标
+            </template>
           </NSwitch>
-          <NButton size="small" @click="emit('refresh')">刷新</NButton>
+          <NButton size="small" @click="emit('refresh')">
+            刷新
+          </NButton>
         </NFlex>
-        <NText v-if="isModelNameVisible && modelName" depth="3">当前模型: {{ modelName }}</NText>
+        <NText v-if="isModelNameVisible && modelName" depth="3">
+          当前模型: {{ modelName }}
+        </NText>
       </NFlex>
 
       <NEmpty v-if="filtered.length === 0" description="暂无可用表情/动作" />
@@ -255,8 +275,12 @@ const grouped = computed(() => {
       <template v-else>
         <div v-for="[key, list] in grouped" :key="key">
           <NFlex align="center" justify="space-between" :size="8">
-            <NText strong>{{ key }}</NText>
-            <NText depth="3">{{ list.length }}</NText>
+            <NText strong>
+              {{ key }}
+            </NText>
+            <NText depth="3">
+              {{ list.length }}
+            </NText>
           </NFlex>
           <NDivider style="margin: 6px 0" />
           <NGrid x-gap="8" y-gap="8" :cols="deckMode ? Math.min(cols, 4) : cols">
@@ -282,16 +306,26 @@ const grouped = computed(() => {
 
   <NModal v-model:show="showEdit" preset="card" title="自定义 Hotkey" style="width: 600px">
     <NFlex vertical :size="12">
-      <NText depth="3">ID: {{ editForm.hotkeyID }}</NText>
+      <NText depth="3">
+        ID: {{ editForm.hotkeyID }}
+      </NText>
 
       <NFlex align="center" :wrap="true" :size="10">
         <NSwitch v-model:value="editForm.favorite" size="small">
-          <template #checked>收藏</template>
-          <template #unchecked>收藏</template>
+          <template #checked>
+            收藏
+          </template>
+          <template #unchecked>
+            收藏
+          </template>
         </NSwitch>
         <NSwitch v-model:value="editForm.pinned" size="small">
-          <template #checked>置顶</template>
-          <template #unchecked>置顶</template>
+          <template #checked>
+            置顶
+          </template>
+          <template #unchecked>
+            置顶
+          </template>
         </NSwitch>
         <NInput v-model:value="editForm.group" placeholder="分组" style="width: 140px" />
         <NInput v-model:value="editForm.displayName" placeholder="显示名称" style="width: 200px" />
@@ -303,14 +337,22 @@ const grouped = computed(() => {
           选择图标
           <input type="file" accept="image/*" style="display:none" @change="onIconFileChange">
         </NButton>
-        <NButton size="small" :disabled="!editForm.iconDataUrl" @click="editForm.iconDataUrl = ''">清除图标</NButton>
+        <NButton size="small" :disabled="!editForm.iconDataUrl" @click="editForm.iconDataUrl = ''">
+          清除图标
+        </NButton>
         <img v-if="editForm.iconDataUrl" class="hotkey-icon-preview" :src="editForm.iconDataUrl" alt="">
       </NFlex>
 
       <NFlex justify="end" :size="8">
-        <NButton @click="showEdit = false">取消</NButton>
-        <NButton type="error" @click="clearCustomization">重置</NButton>
-        <NButton type="primary" @click="saveEdit">保存</NButton>
+        <NButton @click="showEdit = false">
+          取消
+        </NButton>
+        <NButton type="error" @click="clearCustomization">
+          重置
+        </NButton>
+        <NButton type="primary" @click="saveEdit">
+          保存
+        </NButton>
       </NFlex>
     </NFlex>
   </NModal>

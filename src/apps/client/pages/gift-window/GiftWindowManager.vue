@@ -66,7 +66,9 @@ function applyPreset(preset: keyof typeof presets) {
             <NCard title="排序方式" size="small" bordered>
               <NFlex vertical :size="8">
                 <NRadioGroup v-model:value="giftWindow.settings.sortBy">
-                    <NRadioButton v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</NRadioButton>
+                  <NRadioButton v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </NRadioButton>
                 </NRadioGroup>
                 <LabelItem label="倒序排列">
                   <NSwitch v-model:value="giftWindow.settings.reverseOrder" />
@@ -76,10 +78,14 @@ function applyPreset(preset: keyof typeof presets) {
             <NCard title="过滤条件" size="small" bordered>
               <NFormItem label="最低金额" label-placement="left">
                 <NInputNumber v-model:value="giftWindow.settings.minPrice" :min="0" :step="100">
-                  <template #suffix>金瓜子</template>
+                  <template #suffix>
+                    金瓜子
+                  </template>
                 </NInputNumber>
               </NFormItem>
-              <NText depth="3" style="font-size: 12px">低于此金额的礼物不会显示（1000金瓜子 = ¥1）</NText>
+              <NText depth="3" style="font-size: 12px">
+                低于此金额的礼物不会显示（1000金瓜子 = ¥1）
+              </NText>
             </NCard>
           </NFlex>
         </NTabPane>
@@ -111,15 +117,21 @@ function applyPreset(preset: keyof typeof presets) {
               </NGrid>
               <NFlex justify="end" style="margin-top: 8px">
                 <NButton secondary size="small" @click="giftWindow.setPosition(0, 0); message.success('位置已重置')">
-                  <template #icon><NIcon :component="ResizeTable24Filled" /></template>
+                  <template #icon>
+                    <NIcon :component="ResizeTable24Filled" />
+                  </template>
                   重置位置
                 </NButton>
               </NFlex>
             </NCard>
             <NCard title="窗口行为" size="small" bordered>
               <NFlex vertical :size="4">
-                <LabelItem label="总是置顶"><NSwitch v-model:value="giftWindow.settings.alwaysOnTop" /></LabelItem>
-                <LabelItem label="鼠标穿透"><NSwitch v-model:value="giftWindow.settings.interactive" /></LabelItem>
+                <LabelItem label="总是置顶">
+                  <NSwitch v-model:value="giftWindow.settings.alwaysOnTop" />
+                </LabelItem>
+                <LabelItem label="鼠标穿透">
+                  <NSwitch v-model:value="giftWindow.settings.interactive" />
+                </LabelItem>
               </NFlex>
             </NCard>
           </NFlex>
@@ -129,27 +141,65 @@ function applyPreset(preset: keyof typeof presets) {
           <NFlex vertical :size="12">
             <NCard title="颜色" size="small" bordered>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
-                <NGi><NFormItem label="卡片背景" label-placement="left"><NColorPicker v-model:value="giftWindow.settings.backgroundColor" :show-alpha="true" /></NFormItem></NGi>
-                <NGi><NFormItem label="窗口背景" label-placement="left"><NColorPicker v-model:value="giftWindow.settings.windowBackgroundColor" :show-alpha="true" /></NFormItem></NGi>
-                <NGi><NFormItem label="文字颜色" label-placement="left"><NColorPicker v-model:value="giftWindow.settings.textColor" :show-alpha="true" /></NFormItem></NGi>
-                <NGi><NFormItem label="金额高亮色" label-placement="left"><NColorPicker v-model:value="giftWindow.settings.highlightColor" :show-alpha="true" /></NFormItem></NGi>
+                <NGi>
+                  <NFormItem label="卡片背景" label-placement="left">
+                    <NColorPicker v-model:value="giftWindow.settings.backgroundColor" :show-alpha="true" />
+                  </NFormItem>
+                </NGi>
+                <NGi>
+                  <NFormItem label="窗口背景" label-placement="left">
+                    <NColorPicker v-model:value="giftWindow.settings.windowBackgroundColor" :show-alpha="true" />
+                  </NFormItem>
+                </NGi>
+                <NGi>
+                  <NFormItem label="文字颜色" label-placement="left">
+                    <NColorPicker v-model:value="giftWindow.settings.textColor" :show-alpha="true" />
+                  </NFormItem>
+                </NGi>
+                <NGi>
+                  <NFormItem label="金额高亮色" label-placement="left">
+                    <NColorPicker v-model:value="giftWindow.settings.highlightColor" :show-alpha="true" />
+                  </NFormItem>
+                </NGi>
               </NGrid>
               <NFlex style="margin-top: 8px" :size="8">
-                <NButton size="small" @click="applyPreset('dark')">暗黑</NButton>
-                <NButton size="small" @click="applyPreset('warm')">暖色</NButton>
-                <NButton size="small" @click="applyPreset('purple')">紫色</NButton>
+                <NButton size="small" @click="applyPreset('dark')">
+                  暗黑
+                </NButton>
+                <NButton size="small" @click="applyPreset('warm')">
+                  暖色
+                </NButton>
+                <NButton size="small" @click="applyPreset('purple')">
+                  紫色
+                </NButton>
               </NFlex>
             </NCard>
             <NCard title="样式" size="small" bordered>
               <NFlex vertical :size="4">
-                <NFormItem label="透明度" label-placement="left"><NSlider v-model:value="giftWindow.settings.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" /></NFormItem>
-                <NFormItem label="字体大小" label-placement="left"><NSlider v-model:value="giftWindow.settings.fontSize" :min="10" :max="24" :step="1" style="max-width: 300px" /></NFormItem>
-                <NFormItem label="圆角" label-placement="left"><NSlider v-model:value="giftWindow.settings.borderRadius" :min="0" :max="20" :step="1" style="max-width: 300px" /></NFormItem>
-                <NFormItem label="项目间距" label-placement="left"><NSlider v-model:value="giftWindow.settings.itemSpacing" :min="0" :max="20" :step="1" style="max-width: 300px" /></NFormItem>
-                <LabelItem label="显示头像"><NSwitch v-model:value="giftWindow.settings.showAvatar" /></LabelItem>
-                <LabelItem label="显示金额"><NSwitch v-model:value="giftWindow.settings.showPrice" /></LabelItem>
-                <LabelItem label="显示时间"><NSwitch v-model:value="giftWindow.settings.showTime" /></LabelItem>
-                <LabelItem label="紧凑模式"><NSwitch v-model:value="giftWindow.settings.compactMode" /></LabelItem>
+                <NFormItem label="透明度" label-placement="left">
+                  <NSlider v-model:value="giftWindow.settings.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" />
+                </NFormItem>
+                <NFormItem label="字体大小" label-placement="left">
+                  <NSlider v-model:value="giftWindow.settings.fontSize" :min="10" :max="24" :step="1" style="max-width: 300px" />
+                </NFormItem>
+                <NFormItem label="圆角" label-placement="left">
+                  <NSlider v-model:value="giftWindow.settings.borderRadius" :min="0" :max="20" :step="1" style="max-width: 300px" />
+                </NFormItem>
+                <NFormItem label="项目间距" label-placement="left">
+                  <NSlider v-model:value="giftWindow.settings.itemSpacing" :min="0" :max="20" :step="1" style="max-width: 300px" />
+                </NFormItem>
+                <LabelItem label="显示头像">
+                  <NSwitch v-model:value="giftWindow.settings.showAvatar" />
+                </LabelItem>
+                <LabelItem label="显示金额">
+                  <NSwitch v-model:value="giftWindow.settings.showPrice" />
+                </LabelItem>
+                <LabelItem label="显示时间">
+                  <NSwitch v-model:value="giftWindow.settings.showTime" />
+                </LabelItem>
+                <LabelItem label="紧凑模式">
+                  <NSwitch v-model:value="giftWindow.settings.compactMode" />
+                </LabelItem>
               </NFlex>
             </NCard>
           </NFlex>
@@ -160,14 +210,24 @@ function applyPreset(preset: keyof typeof presets) {
             <NCard title="合并与消失" size="small" bordered>
               <NFlex vertical :size="4">
                 <NFormItem label="合并时间窗口" label-placement="left">
-                  <NInputNumber v-model:value="giftWindow.settings.mergeWindowSeconds" :min="0" :max="60" :step="5"><template #suffix>秒</template></NInputNumber>
+                  <NInputNumber v-model:value="giftWindow.settings.mergeWindowSeconds" :min="0" :max="60" :step="5">
+                    <template #suffix>
+                      秒
+                    </template>
+                  </NInputNumber>
                 </NFormItem>
-                <NText depth="3" style="font-size: 12px">同一用户在此时间内送出的相同礼物会合并为一条</NText>
+                <NText depth="3" style="font-size: 12px">
+                  同一用户在此时间内送出的相同礼物会合并为一条
+                </NText>
                 <NFormItem label="最大条目数" label-placement="left">
                   <NInputNumber v-model:value="giftWindow.settings.maxItemCount" :min="5" :max="100" />
                 </NFormItem>
                 <NFormItem label="自动消失时间" label-placement="left">
-                  <NInputNumber v-model:value="giftWindow.settings.autoDisappearTime" :min="0" :max="600" :step="5"><template #suffix>秒</template></NInputNumber>
+                  <NInputNumber v-model:value="giftWindow.settings.autoDisappearTime" :min="0" :max="600" :step="5">
+                    <template #suffix>
+                      秒
+                    </template>
+                  </NInputNumber>
                 </NFormItem>
                 <NText depth="3" style="font-size: 12px">
                   {{ giftWindow.settings.autoDisappearTime > 0 ? `礼物将在 ${giftWindow.settings.autoDisappearTime} 秒后消失` : '设为 0 则不自动消失' }}
@@ -176,8 +236,12 @@ function applyPreset(preset: keyof typeof presets) {
             </NCard>
             <NCard title="调试" size="small" bordered>
               <NFlex :size="8" wrap>
-                <NButton size="small" type="info" @click="giftWindow.sendTestGift()">发送测试礼物</NButton>
-                <NButton size="small" type="warning" @click="giftWindow.clearGifts()">清空礼物</NButton>
+                <NButton size="small" type="info" @click="giftWindow.sendTestGift()">
+                  发送测试礼物
+                </NButton>
+                <NButton size="small" type="warning" @click="giftWindow.clearGifts()">
+                  清空礼物
+                </NButton>
               </NFlex>
             </NCard>
           </NFlex>
@@ -187,8 +251,12 @@ function applyPreset(preset: keyof typeof presets) {
           <NFlex vertical :size="12">
             <NCard title="显示控制" size="small" bordered>
               <NFlex vertical :size="8">
-                <LabelItem label="显示礼物列表"><NSwitch v-model:value="giftWindow.settings.showGiftList" /></LabelItem>
-                <LabelItem label="显示排行榜"><NSwitch v-model:value="giftWindow.settings.showRanking" /></LabelItem>
+                <LabelItem label="显示礼物列表">
+                  <NSwitch v-model:value="giftWindow.settings.showGiftList" />
+                </LabelItem>
+                <LabelItem label="显示排行榜">
+                  <NSwitch v-model:value="giftWindow.settings.showRanking" />
+                </LabelItem>
               </NFlex>
             </NCard>
             <NCard title="排行规则" size="small" bordered>

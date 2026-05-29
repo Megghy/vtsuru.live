@@ -96,29 +96,41 @@ function download() {
       <NFlex :size="8" align="center">
         <NTooltip>
           <template #trigger>
-            <NButton size="small" tertiary :loading="preloading" @click="handlePreload">预加载模型</NButton>
+            <NButton size="small" tertiary :loading="preloading" @click="handlePreload">
+              预加载模型
+            </NButton>
           </template>
           提前下载模型文件，避免首次处理时等待
         </NTooltip>
-        <NButton :disabled="!resultUrl" type="primary" size="small" @click="download">下载结果</NButton>
+        <NButton :disabled="!resultUrl" type="primary" size="small" @click="download">
+          下载结果
+        </NButton>
       </NFlex>
     </template>
 
     <NFlex vertical :size="16">
-      <NText v-if="supported === false" type="error">当前浏览器不支持（需要 WebAssembly）</NText>
+      <NText v-if="supported === false" type="error">
+        当前浏览器不支持（需要 WebAssembly）
+      </NText>
 
       <!-- Settings row -->
       <div class="settings-grid">
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">处理模式</NText>
+          <NText depth="3" style="font-size:11px">
+            处理模式
+          </NText>
           <NSelect v-model:value="options.mode" :options="modeOptions" size="small" />
         </div>
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">模型精度（首次使用需下载）</NText>
+          <NText depth="3" style="font-size:11px">
+            模型精度（首次使用需下载）
+          </NText>
           <NSelect v-model:value="options.model" :options="modelOptions" size="small" />
         </div>
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">计算设备</NText>
+          <NText depth="3" style="font-size:11px">
+            计算设备
+          </NText>
           <NSelect v-model:value="options.device" :options="deviceOptions" size="small" />
           <NText v-if="webgpuSupported === false" depth="3" style="font-size:10px; line-height:1.3">
             当前浏览器不支持 WebGPU。Chrome 113+ 默认启用；Edge/Firefox 需在
@@ -126,46 +138,64 @@ function download() {
           </NText>
         </div>
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">输出格式</NText>
+          <NText depth="3" style="font-size:11px">
+            输出格式
+          </NText>
           <NSelect v-model:value="options.format" :options="formatOptions" size="small" />
         </div>
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">输出质量 {{ Math.round(options.quality * 100) }}%</NText>
+          <NText depth="3" style="font-size:11px">
+            输出质量 {{ Math.round(options.quality * 100) }}%
+          </NText>
           <NSlider v-model:value="options.quality" :min="0.1" :max="1" :step="0.05" />
         </div>
         <div class="setting-item">
-          <NText depth="3" style="font-size:11px">后台处理 (Web Worker)</NText>
+          <NText depth="3" style="font-size:11px">
+            后台处理 (Web Worker)
+          </NText>
           <NSwitch v-model:value="options.proxyToWorker" />
-          <NText depth="3" style="font-size:10px; line-height:1.3">开启后处理不会阻塞页面操作</NText>
+          <NText depth="3" style="font-size:10px; line-height:1.3">
+            开启后处理不会阻塞页面操作
+          </NText>
         </div>
       </div>
 
       <!-- Upload -->
       <div v-if="!originalUrl" ref="dropZoneRef" class="upload-zone" @click="openFileDialog()">
-        <NText depth="3">拖拽图片到此处，或点击选择文件</NText>
+        <NText depth="3">
+          拖拽图片到此处，或点击选择文件
+        </NText>
       </div>
 
       <!-- Working area -->
       <template v-else>
         <NFlex :size="8" align="center">
-          <NButton size="small" secondary @click="openFileDialog()">重新选择</NButton>
+          <NButton size="small" secondary @click="openFileDialog()">
+            重新选择
+          </NButton>
           <NButton size="small" type="primary" :loading="processing" :disabled="processing || supported === false" @click="process">
             {{ modeOptions.find(m => m.value === options.mode)?.label ?? '处理' }}
           </NButton>
         </NFlex>
 
         <NProgress v-if="progress && progress.total" :percentage="progressPercent" :show-indicator="true" status="info">
-          <NText style="font-size:11px">{{ progress.key }} {{ progressPercent }}%</NText>
+          <NText style="font-size:11px">
+            {{ progress.key }} {{ progressPercent }}%
+          </NText>
         </NProgress>
 
         <NSpin :show="processing" :description="progress ? undefined : '正在处理...'">
           <div class="preview-row">
             <div class="preview-item">
-              <NText depth="3" style="font-size:12px">原图</NText>
+              <NText depth="3" style="font-size:12px">
+                原图
+              </NText>
               <img :src="originalUrl" class="preview-img">
             </div>
             <div v-if="resultUrl" class="preview-item">
-              <NText depth="3" style="font-size:12px">结果</NText>
+              <NText depth="3" style="font-size:12px">
+                结果
+              </NText>
               <img :src="resultUrl" class="preview-img checkerboard">
             </div>
           </div>

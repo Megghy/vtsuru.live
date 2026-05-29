@@ -130,7 +130,7 @@ export function useSvgGamepadRenderer(options: SvgRendererOptions) {
     if (!svgEl) return
     function walk(comp: ControllerComponentStructure) {
       if (!comp.path) { comp.childComponents?.forEach(walk); return }
-      const el = findElementByPath(svgEl!, comp.path)
+      const el = findElementByPath(svgEl, comp.path)
       if (!el) { comp.childComponents?.forEach(walk); return }
       if (comp.type === 'stick') {
         const t = originalTransforms.value.get(comp.path)

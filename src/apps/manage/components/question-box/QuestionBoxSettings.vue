@@ -3,12 +3,11 @@ import { Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vic
 import { SettingsOutline } from '@vicons/ionicons5'
 import {
   NButton, NCard, NCheckbox, NEmpty, NFlex, NGrid, NGi, NIcon, NInput, NInputGroup,
-  NList, NListItem, NPopconfirm, NSlider, NTag, NText, NTooltip, useMessage,
+  NList, NListItem, NPopconfirm, NSlider, NTag, NTooltip, useMessage, useThemeVars 
 } from 'naive-ui'
 import { h, ref, watch } from 'vue'
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
 import { useQuestionBox } from '@/store/useQuestionBox'
-import { useThemeVars } from 'naive-ui'
 
 const accountInfo = useAccount()
 const useQB = useQuestionBox()

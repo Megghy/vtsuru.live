@@ -212,7 +212,7 @@ function fireMock() {
             测试
           </NButton>
         </template>
-<!-- Rules list for this event type -->
+        <!-- Rules list for this event type -->
         <div class="rules-list">
           <div
             v-for="(rule, ri) in settings.templates[row.eventKey]?.rules ?? []"
@@ -220,9 +220,13 @@ function fireMock() {
             class="rule-card"
           >
             <div class="rule-header">
-              <NText depth="3" style="font-size: 11px">规则 {{ ri + 1 }}</NText>
+              <NText depth="3" style="font-size: 11px">
+                规则 {{ ri + 1 }}
+              </NText>
               <NButton size="tiny" tertiary type="error" @click="removeRule(row.eventKey, ri)">
-                <template #icon><NIcon :component="Delete20Filled" /></template>
+                <template #icon>
+                  <NIcon :component="Delete20Filled" />
+                </template>
               </NButton>
             </div>
             <NInput
@@ -236,7 +240,9 @@ function fireMock() {
                   {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
                 </NText>
                 <NButton size="tiny" tertiary type="primary" @click="addCondition(rule, row.eventKey)">
-                  <template #icon><NIcon :component="Add20Filled" /></template>
+                  <template #icon>
+                    <NIcon :component="Add20Filled" />
+                  </template>
                   添加条件
                 </NButton>
               </NFlex>
@@ -265,13 +271,17 @@ function fireMock() {
                   @update:value="(v: string) => cond.value = v"
                 />
                 <NButton size="tiny" tertiary type="error" @click="removeCondition(rule, ci)">
-                  <template #icon><NIcon :component="Delete20Filled" /></template>
+                  <template #icon>
+                    <NIcon :component="Delete20Filled" />
+                  </template>
                 </NButton>
               </div>
             </div>
           </div>
           <NButton size="tiny" tertiary type="primary" @click="addRule(row.eventKey)">
-            <template #icon><NIcon :component="Add20Filled" /></template>
+            <template #icon>
+              <NIcon :component="Add20Filled" />
+            </template>
             添加模板规则
           </NButton>
         </div>
@@ -294,19 +304,27 @@ function fireMock() {
           </NFlex>
           <NFlex :size="8" :wrap="true" align="center">
             <NFlex align="center" :size="4">
-              <NText depth="3" style="font-size: 11px">价格</NText>
+              <NText depth="3" style="font-size: 11px">
+                价格
+              </NText>
               <NInputNumber v-model:value="mockData.price" size="small" :min="0" style="width: 80px" />
             </NFlex>
             <NFlex align="center" :size="4">
-              <NText depth="3" style="font-size: 11px">数量</NText>
+              <NText depth="3" style="font-size: 11px">
+                数量
+              </NText>
               <NInputNumber v-model:value="mockData.num" size="small" :min="0" style="width: 80px" />
             </NFlex>
             <NFlex align="center" :size="4">
-              <NText depth="3" style="font-size: 11px">舰长</NText>
+              <NText depth="3" style="font-size: 11px">
+                舰长
+              </NText>
               <NInputNumber v-model:value="mockData.guard_level" size="small" :min="0" :max="3" style="width: 70px" />
             </NFlex>
             <NFlex align="center" :size="4">
-              <NText depth="3" style="font-size: 11px">勋章</NText>
+              <NText depth="3" style="font-size: 11px">
+                勋章
+              </NText>
               <NInputNumber v-model:value="mockData.fans_medal_level" size="small" :min="0" :max="40" style="width: 70px" />
             </NFlex>
           </NFlex>
@@ -321,14 +339,18 @@ function fireMock() {
 
     <NFlex align="center" :size="8">
       <NSwitch v-model:value="settings.timedBroadcast.enabled" size="small" />
-      <NText style="font-size: 12px">定时播报</NText>
+      <NText style="font-size: 12px">
+        定时播报
+      </NText>
       <NInputNumber
         v-model:value="settings.timedBroadcast.intervalMinutes"
         :min="1" :max="120" size="small"
         :disabled="!settings.timedBroadcast.enabled"
         style="width: 80px"
       />
-      <NText depth="3" style="font-size: 11px">分钟/次</NText>
+      <NText depth="3" style="font-size: 11px">
+        分钟/次
+      </NText>
     </NFlex>
 
     <template v-if="settings.timedBroadcast.enabled">
@@ -339,11 +361,15 @@ function fireMock() {
           style="flex: 1"
         />
         <NButton size="tiny" tertiary type="error" @click="settings.timedBroadcast.texts.splice(i, 1)">
-          <template #icon><NIcon :component="Delete20Filled" /></template>
+          <template #icon>
+            <NIcon :component="Delete20Filled" />
+          </template>
         </NButton>
       </div>
       <NButton size="tiny" tertiary type="primary" @click="settings.timedBroadcast.texts.push('')">
-        <template #icon><NIcon :component="Add20Filled" /></template>
+        <template #icon>
+          <NIcon :component="Add20Filled" />
+        </template>
         添加播报文本
       </NButton>
     </template>

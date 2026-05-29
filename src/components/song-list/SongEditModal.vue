@@ -109,30 +109,48 @@ defineExpose({ open, close, loading })
           </NCheckbox>
           <template v-if="model.options">
             <NFlex :size="12">
-              <NCheckbox v-model:checked="model.options!.needJianzhang">舰长</NCheckbox>
-              <NCheckbox v-model:checked="model.options!.needTidu">提督</NCheckbox>
-              <NCheckbox v-model:checked="model.options!.needZongdu">总督</NCheckbox>
+              <NCheckbox v-model:checked="model.options!.needJianzhang">
+                舰长
+              </NCheckbox>
+              <NCheckbox v-model:checked="model.options!.needTidu">
+                提督
+              </NCheckbox>
+              <NCheckbox v-model:checked="model.options!.needZongdu">
+                总督
+              </NCheckbox>
             </NFlex>
             <NFlex align="center" :size="8">
               <NCheckbox
                 :checked="model.options!.scMinPrice != null"
                 @update:checked="(v: boolean) => model.options!.scMinPrice = v ? 30 : undefined"
-              >SC</NCheckbox>
+              >
+                SC
+              </NCheckbox>
               <NInputGroup v-if="model.options!.scMinPrice != null" style="width: auto;">
-                <NInputGroupLabel size="small">≥</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  ≥
+                </NInputGroupLabel>
                 <NInputNumber v-model:value="model.options!.scMinPrice" :min="1" size="small" style="width: 80px;" />
-                <NInputGroupLabel size="small">元</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  元
+                </NInputGroupLabel>
               </NInputGroup>
             </NFlex>
             <NFlex align="center" :size="8">
               <NCheckbox
                 :checked="model.options!.fanMedalMinLevel != null"
                 @update:checked="(v: boolean) => model.options!.fanMedalMinLevel = v ? 1 : undefined"
-              >粉丝牌</NCheckbox>
+              >
+                粉丝牌
+              </NCheckbox>
               <NInputGroup v-if="model.options!.fanMedalMinLevel != null" style="width: auto;">
-                <NInputGroupLabel size="small">≥</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  ≥
+                </NInputGroupLabel>
                 <NInputNumber v-model:value="model.options!.fanMedalMinLevel" :min="1" size="small" style="width: 80px;" />
-                <NInputGroupLabel size="small">级</NInputGroupLabel>
+                <NInputGroupLabel size="small">
+                  级
+                </NInputGroupLabel>
               </NInputGroup>
             </NFlex>
           </template>
@@ -147,8 +165,12 @@ defineExpose({ open, close, loading })
     </NForm>
     <template #footer>
       <NFlex justify="end">
-        <NButton @click="show = false">取消</NButton>
-        <NButton type="primary" :loading="loading" @click="handleSave">确认更新</NButton>
+        <NButton @click="show = false">
+          取消
+        </NButton>
+        <NButton type="primary" :loading="loading" @click="handleSave">
+          确认更新
+        </NButton>
       </NFlex>
     </template>
   </NModal>

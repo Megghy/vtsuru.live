@@ -5,10 +5,10 @@ import { TrashBin } from '@vicons/ionicons5'
 import {
   NBadge, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup,
   NList, NListItem, NPopconfirm, NSelect, NSpin, NSwitch, NTabPane, NTabs,
-  NTag, NText, NTime, NTooltip, useMessage, useThemeVars,
+  NTag, NText, NTime, NTooltip, useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -97,19 +97,27 @@ onMounted(() => {
       <ManagePageHeader title="提问箱管理" :function-type="FunctionTypes.QuestionBox" :loading="useQB.isLoading">
         <template #action>
           <NButton secondary circle type="primary" :loading="useQB.isLoading" @click="refresh">
-            <template #icon><NIcon :component="ArrowSync24Filled" /></template>
+            <template #icon>
+              <NIcon :component="ArrowSync24Filled" />
+            </template>
           </NButton>
           <NTooltip>
             <template #trigger>
               <NButton secondary circle @click="shareModalVisible = true">
-                <template #icon><NIcon :component="Share24Filled" /></template>
+                <template #icon>
+                  <NIcon :component="Share24Filled" />
+                </template>
               </NButton>
             </template>
             分享提问箱
           </NTooltip>
-          <NButton secondary @click="showOBSModal = true">OBS 组件</NButton>
+          <NButton secondary @click="showOBSModal = true">
+            OBS 组件
+          </NButton>
           <NButton primary @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })">
-            <template #icon><NIcon :component="Link24Filled" /></template>
+            <template #icon>
+              <NIcon :component="Link24Filled" />
+            </template>
             前往提问页
           </NButton>
         </template>
@@ -129,11 +137,15 @@ onMounted(() => {
           />
           <NDivider vertical />
           <NIcon :component="Link24Filled" size="20" depth="3" />
-          <NText depth="3">我的提问链接:</NText>
+          <NText depth="3">
+            我的提问链接:
+          </NText>
           <NInputGroup style="max-width: 400px;">
             <NInput :value="directShareUrl" readonly size="small" />
             <NButton secondary size="small" @click="copyToClipboard(directShareUrl)">
-              <template #icon><NIcon :component="Copy24Filled" /></template>
+              <template #icon>
+                <NIcon :component="Copy24Filled" />
+              </template>
               复制
             </NButton>
           </NInputGroup>
@@ -174,7 +186,9 @@ onMounted(() => {
                   <template #header>
                     <NFlex align="center" justify="space-between">
                       <NFlex :size="8" align="center">
-                        <NTag size="small" :bordered="false" type="info">发给</NTag>
+                        <NTag size="small" :bordered="false" type="info">
+                          发给
+                        </NTag>
                         <NButton text type="primary" @click="router.push(`/user/${item.target.id}`)">
                           {{ item.target.name }}
                         </NButton>
@@ -196,13 +210,17 @@ onMounted(() => {
                     <NCard size="small" :bordered="false" embedded>
                       <template #header>
                         <NFlex justify="space-between" align="center">
-                          <NText depth="3" style="font-size: 13px;">对方的回复</NText>
+                          <NText depth="3" style="font-size: 13px;">
+                            对方的回复
+                          </NText>
                           <NText v-if="item.answer.createdAt" depth="3" style="font-size: 12px;">
                             <NTime :time="item.answer.createdAt" :to="Date.now()" type="relative" />
                           </NText>
                         </NFlex>
                       </template>
-                      <NText style="line-height: 1.5;">{{ item.answer.message }}</NText>
+                      <NText style="line-height: 1.5;">
+                        {{ item.answer.message }}
+                      </NText>
                     </NCard>
                   </template>
                 </NCard>
@@ -214,7 +232,9 @@ onMounted(() => {
           <NTabPane name="2" display-directive="show:lazy">
             <template #tab>
               <NBadge :value="useQB.trashQuestions.length" :max="99" type="warning" :offset="[8, -2]">
-                <NFlex align="center"><NIcon :component="TrashBin" />垃圾站</NFlex>
+                <NFlex align="center">
+                  <NIcon :component="TrashBin" />垃圾站
+                </NFlex>
               </NBadge>
             </template>
             <NEmpty v-if="useQB.trashQuestions.length === 0" description="暂无被过滤的提问" />
@@ -222,12 +242,18 @@ onMounted(() => {
               <QuestionItem v-for="question in useQB.trashQuestions" :key="question.id" :item="question">
                 <template #footer="{ item }">
                   <NFlex justify="end">
-                    <NButton size="small" type="primary" ghost @click="useQB.markAsNormal(item)">标记为正常</NButton>
-                    <NButton size="small" type="warning" ghost @click="useQB.blacklist(item)">拉黑提问者</NButton>
+                    <NButton size="small" type="primary" ghost @click="useQB.markAsNormal(item)">
+                      标记为正常
+                    </NButton>
+                    <NButton size="small" type="warning" ghost @click="useQB.blacklist(item)">
+                      拉黑提问者
+                    </NButton>
                     <NPopconfirm @positive-click="useQB.DelQA(item.id)">
                       <template #trigger>
                         <NButton size="small" type="error" ghost>
-                          <template #icon><NIcon :component="Delete24Filled" /></template>
+                          <template #icon>
+                            <NIcon :component="Delete24Filled" />
+                          </template>
                           彻底删除
                         </NButton>
                       </template>
@@ -247,7 +273,9 @@ onMounted(() => {
         </NTabs>
       </NSpin>
     </template>
-    <template #description>正在加载账户信息...</template>
+    <template #description>
+      正在加载账户信息...
+    </template>
   </NSpin>
 
   <!-- 模态框 -->

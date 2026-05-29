@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Konva from 'konva'
+import type Konva from 'konva'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { get as idbGet, set as idbSet } from 'idb-keyval'
 
@@ -83,8 +83,8 @@ const bgFill = computed(() => {
   if (props.backgroundGradient) {
     const { from, to, angle } = props.backgroundGradient
     const rad = (angle * Math.PI) / 180
-    const cos = Math.cos(rad), sin = Math.sin(rad)
-    const cx = props.width / 2, cy = props.height / 2
+    const cos = Math.cos(rad); const sin = Math.sin(rad)
+    const cx = props.width / 2; const cy = props.height / 2
     const len = Math.max(props.width, props.height)
     return {
       fillLinearGradientStartPoint: { x: cx - cos * len / 2, y: cy - sin * len / 2 },
@@ -402,7 +402,7 @@ defineExpose({ layers, selectedId, addImageLayer, addTextLayer, removeLayer, mov
 
 <template>
   <div ref="containerRef" class="canvas-editor">
-    <div class="canvas-stage-wrap" :style="{ width: stagePixelW + 'px', height: stagePixelH + 'px' }">
+    <div class="canvas-stage-wrap" :style="{ width: `${stagePixelW }px`, height: `${stagePixelH }px` }">
       <v-stage ref="stageRef" :config="{ width: stagePixelW, height: stagePixelH, scaleX: stageScale, scaleY: stageScale }" @click="handleStageClick" @tap="handleStageClick">
         <v-layer>
           <v-rect v-if="!bgImageObj" :config="{ x: 0, y: 0, width: props.width, height: props.height, listening: false, ...bgFill }" />

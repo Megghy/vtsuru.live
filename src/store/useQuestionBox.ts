@@ -337,7 +337,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const ids = [...selectedIds.value]
     if (!ids.length) return
     await Promise.allSettled(
-      ids.map(id => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
+      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
     )
     ids.forEach(id => {
       const q = recieveQuestions.value.find(q => q.id === id)
@@ -351,7 +351,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const ids = [...selectedIds.value]
     if (!ids.length) return
     await Promise.allSettled(
-      ids.map(id => QueryGetAPI(`${QUESTION_API_URL}del`, { id })),
+      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}del`, { id })),
     )
     recieveQuestions.value = recieveQuestions.value.filter(q => !ids.includes(q.id))
     clearSelection()
@@ -362,7 +362,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const ids = [...selectedIds.value]
     if (!ids.length) return
     await Promise.allSettled(
-      ids.map(id => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
+      ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
     )
     ids.forEach(id => {
       const q = recieveQuestions.value.find(q => q.id === id)

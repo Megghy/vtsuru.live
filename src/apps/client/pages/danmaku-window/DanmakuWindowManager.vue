@@ -162,9 +162,15 @@ function applyPreset(preset: keyof typeof presets) {
                 </NGi>
               </NGrid>
               <NFlex style="margin-top: 8px" :size="8">
-                <NButton size="small" @click="applyPreset('dark')">暗色预设</NButton>
-                <NButton size="small" @click="applyPreset('light')">亮色预设</NButton>
-                <NButton size="small" @click="applyPreset('transparent')">透明预设</NButton>
+                <NButton size="small" @click="applyPreset('dark')">
+                  暗色预设
+                </NButton>
+                <NButton size="small" @click="applyPreset('light')">
+                  亮色预设
+                </NButton>
+                <NButton size="small" @click="applyPreset('transparent')">
+                  透明预设
+                </NButton>
               </NFlex>
             </NCard>
 
@@ -255,9 +261,13 @@ function applyPreset(preset: keyof typeof presets) {
               <NFlex vertical :size="4">
                 <LabelItem label="弹幕方向">
                   <NFlex align="center" :size="8">
-                    <NText depth="3">从上往下</NText>
+                    <NText depth="3">
+                      从上往下
+                    </NText>
                     <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.reverseOrder" />
-                    <NText depth="3">从下往上</NText>
+                    <NText depth="3">
+                      从下往上
+                    </NText>
                   </NFlex>
                 </LabelItem>
                 <LabelItem label="启用动画">
@@ -268,7 +278,9 @@ function applyPreset(preset: keyof typeof presets) {
                     v-model:value="danmakuWindow.danmakuWindowSetting.animationDuration"
                     :min="0" :max="1000" :step="50"
                   >
-                    <template #suffix>ms</template>
+                    <template #suffix>
+                      ms
+                    </template>
                   </NInputNumber>
                 </NFormItem>
               </NFlex>
@@ -287,7 +299,9 @@ function applyPreset(preset: keyof typeof presets) {
                     v-model:value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
                     :min="0" :max="600" :step="5"
                   >
-                    <template #suffix>秒</template>
+                    <template #suffix>
+                      秒
+                    </template>
                   </NInputNumber>
                 </NFormItem>
                 <NText depth="3" style="font-size: 12px">

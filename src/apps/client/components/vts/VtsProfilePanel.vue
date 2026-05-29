@@ -52,34 +52,48 @@ async function onImportFileChange(ev: Event) {
   <NCard size="small" title="配置包 (Profile)">
     <NFlex vertical :size="10">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" @click="addProfile">从当前创建</NButton>
+        <NButton size="small" @click="addProfile">
+          从当前创建
+        </NButton>
         <NButton size="small" tag="label">
           导入
           <input type="file" accept="application/json" style="display: none" @change="onImportFileChange">
         </NButton>
-        <NText depth="3">保存/恢复 VTS 控制配置 (不含连接信息)</NText>
+        <NText depth="3">
+          保存/恢复 VTS 控制配置 (不含连接信息)
+        </NText>
       </NFlex>
 
       <NFlex v-for="p in vts.profiles" :key="p.id" align="center" justify="space-between" :wrap="true" :size="10">
         <NFlex align="center" :wrap="true" :size="10">
-          <NTag v-if="vts.currentProfileId === p.id" type="success" size="small">当前</NTag>
+          <NTag v-if="vts.currentProfileId === p.id" type="success" size="small">
+            当前
+          </NTag>
           <NInput v-model:value="p.name" placeholder="名称" style="width: 200px" @blur="renameProfile({ ...p })" />
           <NText depth="3">
             预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
           </NText>
         </NFlex>
         <NFlex :wrap="true" :size="8">
-          <NButton size="small" type="primary" @click="applyProfile(p.id)">应用</NButton>
-          <NButton size="small" @click="exportProfile(p)">导出</NButton>
+          <NButton size="small" type="primary" @click="applyProfile(p.id)">
+            应用
+          </NButton>
+          <NButton size="small" @click="exportProfile(p)">
+            导出
+          </NButton>
           <NPopconfirm @positive-click="captureToProfile(p.id)">
             <template #trigger>
-              <NButton size="small">覆盖保存</NButton>
+              <NButton size="small">
+                覆盖保存
+              </NButton>
             </template>
             用当前配置覆盖此 Profile?
           </NPopconfirm>
           <NPopconfirm @positive-click="vts.deleteProfile(p.id)">
             <template #trigger>
-              <NButton size="small" type="error">删除</NButton>
+              <NButton size="small" type="error">
+                删除
+              </NButton>
             </template>
             确认删除?
           </NPopconfirm>

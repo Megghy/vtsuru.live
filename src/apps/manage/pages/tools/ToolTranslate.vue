@@ -42,7 +42,9 @@ async function copyResult() {
     <template #header-extra>
       <NFlex :size="8" align="center">
         <NSelect v-model:value="mode" :options="modeOptions" size="small" style="width: 130px" />
-        <NButton size="small" type="primary" :loading="translating" @click="doTranslate">翻译</NButton>
+        <NButton size="small" type="primary" :loading="translating" @click="doTranslate">
+          翻译
+        </NButton>
       </NFlex>
     </template>
 
@@ -55,17 +57,25 @@ async function copyResult() {
       </NText>
 
       <div class="lang-bar">
-        <NText depth="3" style="font-size: 12px">源语言</NText>
+        <NText depth="3" style="font-size: 12px">
+          源语言
+        </NText>
         <NSelect v-model:value="sourceLang" :options="sourceLangOptions" size="small" style="width: 150px" />
-        <NButton quaternary circle size="small" title="交换原文和译文" @click="swapTexts">⇄</NButton>
-        <NText depth="3" style="font-size: 12px">目标语言</NText>
+        <NButton quaternary circle size="small" title="交换原文和译文" @click="swapTexts">
+          ⇄
+        </NButton>
+        <NText depth="3" style="font-size: 12px">
+          目标语言
+        </NText>
         <NSelect v-model:value="targetLang" :options="LANG_OPTIONS" size="small" style="width: 150px" />
       </div>
 
       <div class="translate-layout">
         <div class="translate-column">
           <div class="panel-header">
-            <NText depth="3" style="font-size: 12px">原文</NText>
+            <NText depth="3" style="font-size: 12px">
+              原文
+            </NText>
             <NText depth="3" style="font-size: 11px" :type="charLimitExceeded ? 'error' : undefined">
               {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
             </NText>
@@ -75,8 +85,12 @@ async function copyResult() {
 
         <div class="translate-column">
           <div class="panel-header">
-            <NText depth="3" style="font-size: 12px">译文</NText>
-            <NButton v-if="resultText" text size="tiny" @click="copyResult">复制</NButton>
+            <NText depth="3" style="font-size: 12px">
+              译文
+            </NText>
+            <NButton v-if="resultText" text size="tiny" @click="copyResult">
+              复制
+            </NButton>
           </div>
           <textarea v-model="resultText" class="translate-textarea" placeholder="翻译结果..." readonly />
         </div>

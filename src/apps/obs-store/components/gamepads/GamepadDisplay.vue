@@ -98,7 +98,9 @@ const gamepad = useGamepadStore()
           :viewBox="effectiveViewBox"
           preserveAspectRatio="xMidYMid meet"
         />
-        <NText v-else>无法加载手柄 SVG</NText>
+        <NText v-else>
+          无法加载手柄 SVG
+        </NText>
       </div>
       <div v-if="useOverlayButtons" class="gp-overlay">
         <template v-for="(comp, i) in config.components" :key="`${selectedType}-${i}`">
@@ -119,7 +121,9 @@ const gamepad = useGamepadStore()
         </template>
       </div>
     </div>
-    <NCard v-else class="gp-error">无效的游戏手柄类型: {{ selectedType }}</NCard>
+    <NCard v-else class="gp-error">
+      无效的游戏手柄类型: {{ selectedType }}
+    </NCard>
   </div>
 </template>
 

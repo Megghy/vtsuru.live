@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect } from 'naive-ui'
+import { NButton, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, useThemeVars, useMessage  } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 // @ts-ignore
 import { saveAs } from 'file-saver'
@@ -9,7 +9,6 @@ import { useAccount } from '@/api/account'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard, downloadImage } from '@/shared/utils'
-import { useThemeVars, useMessage } from 'naive-ui'
 
 const show = defineModel<boolean>('show', { required: true })
 const accountInfo = useAccount()
@@ -68,13 +67,21 @@ function saveQRCode() {
       <div class="share-card-content">
         <div class="share-card-main">
           <div class="share-card-text">
-            <div class="share-card-title">向我提问</div>
-            <div class="share-card-name">{{ accountInfo?.name }}</div>
+            <div class="share-card-title">
+              向我提问
+            </div>
+            <div class="share-card-name">
+              {{ accountInfo?.name }}
+            </div>
           </div>
           <div class="share-card-divider" />
           <div class="share-card-meta">
-            <div class="share-card-type">提问箱</div>
-            <div class="share-card-site">VTSURU.LIVE</div>
+            <div class="share-card-type">
+              提问箱
+            </div>
+            <div class="share-card-site">
+              VTSURU.LIVE
+            </div>
           </div>
         </div>
         <div class="share-card-qr">
@@ -83,7 +90,9 @@ function saveQRCode() {
       </div>
     </div>
 
-    <NDivider style="margin-top: 20px; margin-bottom: 10px;">分享链接设置</NDivider>
+    <NDivider style="margin-top: 20px; margin-bottom: 10px;">
+      分享链接设置
+    </NDivider>
     <NSelect
       v-model:value="selectedShareTag"
       placeholder="选择要附加到链接的话题 (可选)"
@@ -91,17 +100,25 @@ function saveQRCode() {
       :options="useQB.tags.filter(t => t.visiable).map(s => ({ label: s.name, value: s.name }))"
     />
 
-    <NDivider style="margin-top: 20px; margin-bottom: 10px;">分享链接</NDivider>
+    <NDivider style="margin-top: 20px; margin-bottom: 10px;">
+      分享链接
+    </NDivider>
     <NInputGroup>
       <NInputGroupLabel>链接</NInputGroupLabel>
       <NInput :value="modalShareUrl" readonly />
-      <NButton secondary @click="copyToClipboard(modalShareUrl)">复制</NButton>
+      <NButton secondary @click="copyToClipboard(modalShareUrl)">
+        复制
+      </NButton>
     </NInputGroup>
 
     <NDivider style="margin-top: 20px; margin-bottom: 15px;" />
     <NFlex justify="center">
-      <NButton type="primary" @click="saveShareImage">保存分享图</NButton>
-      <NButton type="primary" secondary @click="saveQRCode">保存二维码</NButton>
+      <NButton type="primary" @click="saveShareImage">
+        保存分享图
+      </NButton>
+      <NButton type="primary" secondary @click="saveQRCode">
+        保存二维码
+      </NButton>
     </NFlex>
   </NModal>
 </template>

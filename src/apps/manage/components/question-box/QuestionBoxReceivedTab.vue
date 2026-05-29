@@ -76,9 +76,15 @@ const sortOptions = [
         :options="sortOptions"
         style="width: 130px;"
       />
-      <NCheckbox v-model:checked="useQB.onlyFavorite">收藏</NCheckbox>
-      <NCheckbox v-model:checked="useQB.onlyPublic">公开</NCheckbox>
-      <NCheckbox v-model:checked="useQB.onlyUnread">未读</NCheckbox>
+      <NCheckbox v-model:checked="useQB.onlyFavorite">
+        收藏
+      </NCheckbox>
+      <NCheckbox v-model:checked="useQB.onlyPublic">
+        公开
+      </NCheckbox>
+      <NCheckbox v-model:checked="useQB.onlyUnread">
+        未读
+      </NCheckbox>
     </NFlex>
   </NFlex>
 
@@ -109,11 +115,15 @@ const sortOptions = [
             </template>
             {{ item.isFavorite ? '取消收藏' : '收藏' }}
           </NButton>
-          <NButton size="small" type="warning" ghost @click="useQB.blacklist(item)">拉黑提问者</NButton>
+          <NButton size="small" type="warning" ghost @click="useQB.blacklist(item)">
+            拉黑提问者
+          </NButton>
           <NPopconfirm @positive-click="useQB.DelQA(item.id)">
             <template #trigger>
               <NButton size="small" type="error" ghost>
-                <template #icon><NIcon :component="Delete24Filled" /></template>
+                <template #icon>
+                  <NIcon :component="Delete24Filled" />
+                </template>
                 删除
               </NButton>
             </template>
@@ -152,16 +162,26 @@ const sortOptions = [
       <NFlex align="center" justify="space-between">
         <NText>已选择 {{ useQB.selectedIds.length }} 项</NText>
         <NFlex :size="8">
-          <NButton size="small" @click="useQB.batchRead(true)">标记已读</NButton>
-          <NButton size="small" @click="useQB.batchRead(false)">标记未读</NButton>
-          <NButton size="small" @click="useQB.batchSetPublic(true)">设为公开</NButton>
+          <NButton size="small" @click="useQB.batchRead(true)">
+            标记已读
+          </NButton>
+          <NButton size="small" @click="useQB.batchRead(false)">
+            标记未读
+          </NButton>
+          <NButton size="small" @click="useQB.batchSetPublic(true)">
+            设为公开
+          </NButton>
           <NPopconfirm @positive-click="useQB.batchDelete()">
             <template #trigger>
-              <NButton size="small" type="error">批量删除</NButton>
+              <NButton size="small" type="error">
+                批量删除
+              </NButton>
             </template>
             确认删除选中的 {{ useQB.selectedIds.length }} 条提问？
           </NPopconfirm>
-          <NButton size="small" quaternary @click="useQB.clearSelection()">取消</NButton>
+          <NButton size="small" quaternary @click="useQB.clearSelection()">
+            取消
+          </NButton>
         </NFlex>
       </NFlex>
     </NCard>

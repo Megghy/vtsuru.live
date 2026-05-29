@@ -52,7 +52,9 @@ const accessoryOptions = computed(() => vts.accessories.map(a => ({ label: a.nam
                 style="flex: 1"
               />
               <NButton size="small" quaternary circle title="刷新" @click="vts.refreshHotkeys()">
-                <template #icon><NIcon :component="ArrowClockwise16Filled" /></template>
+                <template #icon>
+                  <NIcon :component="ArrowClockwise16Filled" />
+                </template>
               </NButton>
             </NFlex>
           </NFormItem>
@@ -77,17 +79,23 @@ const accessoryOptions = computed(() => vts.accessories.map(a => ({ label: a.nam
                   style="flex: 1"
                 />
                 <NButton size="small" quaternary circle :disabled="!vts.canOperate" title="刷新" @click="vts.refreshItems({ includeFiles: true })">
-                  <template #icon><NIcon :component="ArrowClockwise16Filled" /></template>
+                  <template #icon>
+                    <NIcon :component="ArrowClockwise16Filled" />
+                  </template>
                 </NButton>
               </NFlex>
             </NFormItem>
             <NFormItem label="位置与缩放">
               <NFlex align="center" :size="12">
                 <NInputNumber v-model:value="action.actionConfig.vtsItemDropX" placeholder="X" :step="0.05" style="width: 130px">
-                  <template #prefix>X:</template>
+                  <template #prefix>
+                    X:
+                  </template>
                 </NInputNumber>
                 <NInputNumber v-model:value="action.actionConfig.vtsItemDropSize" placeholder="大小" :step="0.01" :min="0" :max="1" style="width: 130px">
-                  <template #prefix>S:</template>
+                  <template #prefix>
+                    S:
+                  </template>
                 </NInputNumber>
               </NFlex>
             </NFormItem>
@@ -100,10 +108,14 @@ const accessoryOptions = computed(() => vts.accessories.map(a => ({ label: a.nam
             <NFormItem label="数值与权重">
               <NFlex align="center" :size="12">
                 <NInputNumber v-model:value="action.actionConfig.vtsParamValue" placeholder="值" :step="0.01" style="width: 130px">
-                  <template #prefix>值:</template>
+                  <template #prefix>
+                    值:
+                  </template>
                 </NInputNumber>
                 <NInputNumber v-model:value="action.actionConfig.vtsParamWeight" placeholder="权重" :step="0.1" :min="0" :max="1" style="width: 130px">
-                  <template #prefix>W:</template>
+                  <template #prefix>
+                    W:
+                  </template>
                 </NInputNumber>
               </NFlex>
             </NFormItem>
@@ -129,8 +141,12 @@ const accessoryOptions = computed(() => vts.accessories.map(a => ({ label: a.nam
             </NFormItem>
             <NFormItem label="操作">
               <NSwitch v-model:value="action.actionConfig.vtsAccessoryVisible">
-                <template #checked>显示</template>
-                <template #unchecked>隐藏</template>
+                <template #checked>
+                  显示
+                </template>
+                <template #unchecked>
+                  隐藏
+                </template>
               </NSwitch>
             </NFormItem>
           </template>

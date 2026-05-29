@@ -46,13 +46,23 @@ const emit = defineEmits<{
     <NFlex vertical :size="8" style="max-width: 320px">
       <div>
         <div>{{ hk.name }}</div>
-        <div v-if="hk.description">{{ hk.description }}</div>
-        <div v-if="hk.type">类型: {{ hk.type }}</div>
+        <div v-if="hk.description">
+          {{ hk.description }}
+        </div>
+        <div v-if="hk.type">
+          类型: {{ hk.type }}
+        </div>
       </div>
       <NFlex :wrap="true" :size="8">
-        <NButton size="tiny" @click="emit('edit')">编辑</NButton>
-        <NButton size="tiny" @click="emit('toggle-pinned')">{{ custom?.pinned ? '取消置顶' : '置顶' }}</NButton>
-        <NButton size="tiny" @click="emit('toggle-favorite')">{{ custom?.favorite ? '取消收藏' : '收藏' }}</NButton>
+        <NButton size="tiny" @click="emit('edit')">
+          编辑
+        </NButton>
+        <NButton size="tiny" @click="emit('toggle-pinned')">
+          {{ custom?.pinned ? '取消置顶' : '置顶' }}
+        </NButton>
+        <NButton size="tiny" @click="emit('toggle-favorite')">
+          {{ custom?.favorite ? '取消收藏' : '收藏' }}
+        </NButton>
       </NFlex>
     </NFlex>
   </NPopover>

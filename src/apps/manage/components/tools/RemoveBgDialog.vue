@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NModal, NProgress, NSelect, NSlider, NSwitch, NText } from 'naive-ui'
+import { NButton, NFlex, NModal, NProgress, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { useRemoveBg } from '@/composables/useRemoveBg'
 
@@ -77,39 +77,55 @@ function cancel() {
     <!-- Settings -->
     <div class="settings-row">
       <div class="s-item">
-        <NText depth="3" style="font-size:11px">模式</NText>
+        <NText depth="3" style="font-size:11px">
+          模式
+        </NText>
         <NSelect v-model:value="options.mode" :options="modeOptions" size="small" />
       </div>
       <div class="s-item">
-        <NText depth="3" style="font-size:11px">模型</NText>
+        <NText depth="3" style="font-size:11px">
+          模型
+        </NText>
         <NSelect v-model:value="options.model" :options="modelOptions" size="small" />
       </div>
       <div class="s-item">
-        <NText depth="3" style="font-size:11px">设备</NText>
+        <NText depth="3" style="font-size:11px">
+          设备
+        </NText>
         <NSelect v-model:value="options.device" :options="deviceOptions" size="small" />
       </div>
       <div class="s-item">
-        <NText depth="3" style="font-size:11px">Worker</NText>
+        <NText depth="3" style="font-size:11px">
+          Worker
+        </NText>
         <NSwitch v-model:value="options.proxyToWorker" />
       </div>
     </div>
 
     <!-- Progress -->
     <NProgress v-if="progress && progress.total" :percentage="progressPercent" status="info" style="margin:8px 0">
-      <NText style="font-size:11px">{{ progress.key }} {{ progressPercent }}%</NText>
+      <NText style="font-size:11px">
+        {{ progress.key }} {{ progressPercent }}%
+      </NText>
     </NProgress>
 
     <!-- Preview -->
     <div class="preview-area">
       <div class="preview-col">
-        <NText depth="3" style="font-size:11px">原图</NText>
+        <NText depth="3" style="font-size:11px">
+          原图
+        </NText>
         <img v-if="sourceUrl" :src="sourceUrl" class="preview-img">
       </div>
       <div class="preview-col">
-        <NText depth="3" style="font-size:11px">结果</NText>
+        <NText depth="3" style="font-size:11px">
+          结果
+        </NText>
         <img v-if="resultUrl" :src="resultUrl" class="preview-img checkerboard">
         <div v-else class="preview-placeholder">
-          <NText depth="3" style="font-size:12px">{{ processing ? '处理中...' : '点击下方按钮开始' }}</NText>
+          <NText depth="3" style="font-size:12px">
+            {{ processing ? '处理中...' : '点击下方按钮开始' }}
+          </NText>
         </div>
       </div>
     </div>
@@ -121,8 +137,12 @@ function cancel() {
           {{ resultUrl ? '重新处理' : '开始处理' }}
         </NButton>
         <NFlex :size="8">
-          <NButton size="small" @click="cancel">取消</NButton>
-          <NButton size="small" type="primary" :disabled="!resultBlob" @click="confirm">应用替换</NButton>
+          <NButton size="small" @click="cancel">
+            取消
+          </NButton>
+          <NButton size="small" type="primary" :disabled="!resultBlob" @click="confirm">
+            应用替换
+          </NButton>
         </NFlex>
       </NFlex>
     </template>

@@ -89,7 +89,9 @@ function dropPrank(p: VtsPrankBinding) {
   <NCard size="small" title="道具管理">
     <NFlex vertical :size="10">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" :disabled="!vts.canOperate" @click="refresh">刷新列表</NButton>
+        <NButton size="small" :disabled="!vts.canOperate" @click="refresh">
+          刷新列表
+        </NButton>
         <NText depth="3">
           {{ vts.canLoadItems == null ? '状态未知' : (vts.canLoadItems ? '可操作' : '当前不可操作 (VTS 有弹窗)') }}
         </NText>
@@ -99,8 +101,12 @@ function dropPrank(p: VtsPrankBinding) {
         <NTabPane name="accessories" tab="配饰">
           <NFlex vertical :size="8">
             <NFlex align="center" :wrap="true" :size="8">
-              <NButton size="small" @click="addAccessory">添加配饰</NButton>
-              <NText depth="3">绑定场景中的道具实例，通过透明度切换显隐</NText>
+              <NButton size="small" @click="addAccessory">
+                添加配饰
+              </NButton>
+              <NText depth="3">
+                绑定场景中的道具实例，通过透明度切换显隐
+              </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
             <NFlex v-for="acc in vts.accessories" :key="acc.id" align="center" justify="space-between" :wrap="true" :size="10">
@@ -114,11 +120,17 @@ function dropPrank(p: VtsPrankBinding) {
                   @update:value="(val) => saveAccessory({ ...acc, itemInstanceID: val as string })"
                 />
                 <NSwitch :value="acc.visible" :disabled="!vts.canOperate" @update:value="(val) => toggleAccessory(acc, val)">
-                  <template #checked>显示</template>
-                  <template #unchecked>隐藏</template>
+                  <template #checked>
+                    显示
+                  </template>
+                  <template #unchecked>
+                    隐藏
+                  </template>
                 </NSwitch>
               </NFlex>
-              <NButton size="small" type="error" @click="vts.removeAccessory(acc.id)">删除</NButton>
+              <NButton size="small" type="error" @click="vts.removeAccessory(acc.id)">
+                删除
+              </NButton>
             </NFlex>
           </NFlex>
         </NTabPane>
@@ -126,8 +138,12 @@ function dropPrank(p: VtsPrankBinding) {
         <NTabPane name="pranks" tab="整活">
           <NFlex vertical :size="8">
             <NFlex align="center" :wrap="true" :size="8">
-              <NButton size="small" @click="addPrank">添加整活</NButton>
-              <NText depth="3">通过文件掉落或触发热键来丢道具</NText>
+              <NButton size="small" @click="addPrank">
+                添加整活
+              </NButton>
+              <NText depth="3">
+                通过文件掉落或触发热键来丢道具
+              </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
             <NFlex v-for="p in vts.pranks" :key="p.id" align="center" justify="space-between" :wrap="true" :size="10">
@@ -150,10 +166,18 @@ function dropPrank(p: VtsPrankBinding) {
                 />
               </NFlex>
               <NFlex :wrap="true" :size="8">
-                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="loadPrank(p)">加载</NButton>
-                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="unloadPrank(p)">卸载</NButton>
-                <NButton size="small" type="primary" :disabled="!vts.canOperate" @click="dropPrank(p)">掉落</NButton>
-                <NButton size="small" type="error" @click="vts.removePrank(p.id)">删除</NButton>
+                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="loadPrank(p)">
+                  加载
+                </NButton>
+                <NButton size="small" :disabled="!vts.canOperate || !p.fileName" @click="unloadPrank(p)">
+                  卸载
+                </NButton>
+                <NButton size="small" type="primary" :disabled="!vts.canOperate" @click="dropPrank(p)">
+                  掉落
+                </NButton>
+                <NButton size="small" type="error" @click="vts.removePrank(p.id)">
+                  删除
+                </NButton>
               </NFlex>
             </NFlex>
           </NFlex>

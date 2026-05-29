@@ -83,26 +83,42 @@ const macroProgress = computed(() => {
   <NFlex vertical :size="12">
     <ClientPageHeader title="VTube Studio" description="通过 VTS API 控制表情动作、机位、道具和参数" />
 
-    <NAlert v-if="!isTauri()" type="error">当前不是桌面客户端环境</NAlert>
+    <NAlert v-if="!isTauri()" type="error">
+      当前不是桌面客户端环境
+    </NAlert>
 
     <template v-else>
       <NCard size="small" class="vts-status-bar">
         <NFlex align="center" justify="space-between" :wrap="true" :size="8">
           <NFlex align="center" :size="8">
-            <NTag :type="statusType" size="small">{{ statusText }}</NTag>
-            <NText v-if="vts.currentModelName" depth="3">{{ vts.currentModelName }}</NText>
-            <NText v-if="vts.statistics?.framerate" depth="3">{{ vts.statistics.framerate }} FPS</NText>
-            <NText v-if="vts.lastRttMs != null" depth="3">{{ vts.lastRttMs }}ms</NText>
+            <NTag :type="statusType" size="small">
+              {{ statusText }}
+            </NTag>
+            <NText v-if="vts.currentModelName" depth="3">
+              {{ vts.currentModelName }}
+            </NText>
+            <NText v-if="vts.statistics?.framerate" depth="3">
+              {{ vts.statistics.framerate }} FPS
+            </NText>
+            <NText v-if="vts.lastRttMs != null" depth="3">
+              {{ vts.lastRttMs }}ms
+            </NText>
           </NFlex>
           <NFlex align="center" :size="6">
-            <NButton v-if="!vts.connected" size="tiny" type="primary" :loading="vts.connecting" @click="run(() => vts.connect())">连接</NButton>
-            <NButton v-if="vts.connected" size="tiny" @click="vts.disconnect">断开</NButton>
+            <NButton v-if="!vts.connected" size="tiny" type="primary" :loading="vts.connecting" @click="run(() => vts.connect())">
+              连接
+            </NButton>
+            <NButton v-if="vts.connected" size="tiny" @click="vts.disconnect">
+              断开
+            </NButton>
             <NButton size="tiny" quaternary @click="showConnectionDetail = !showConnectionDetail">
               {{ showConnectionDetail ? '收起' : '详情' }}
             </NButton>
           </NFlex>
         </NFlex>
-        <NAlert v-if="vts.lastError" type="error" :show-icon="false" style="margin-top: 8px">{{ vts.lastError }}</NAlert>
+        <NAlert v-if="vts.lastError" type="error" :show-icon="false" style="margin-top: 8px">
+          {{ vts.lastError }}
+        </NAlert>
       </NCard>
 
       <Transition name="vts-slide">
@@ -113,8 +129,12 @@ const macroProgress = computed(() => {
       <Transition name="vts-slide">
         <NCard v-if="macroProgress" size="small">
           <NFlex align="center" :size="10">
-            <NText strong>{{ macroProgress.name }}</NText>
-            <NText depth="3">{{ macroProgress.step }}/{{ macroProgress.total }}</NText>
+            <NText strong>
+              {{ macroProgress.name }}
+            </NText>
+            <NText depth="3">
+              {{ macroProgress.step }}/{{ macroProgress.total }}
+            </NText>
             <NProgress type="line" :percentage="macroProgress.percent" :show-indicator="false" style="flex: 1; min-width: 100px" />
           </NFlex>
         </NCard>
@@ -178,14 +198,22 @@ const macroProgress = computed(() => {
 
             <NCard v-if="linkedAutoActions.length > 0" size="small" title="关联的自动动作">
               <NFlex vertical :size="8">
-                <NText depth="3">以下自动动作绑定了 VTS 操作</NText>
+                <NText depth="3">
+                  以下自动动作绑定了 VTS 操作
+                </NText>
                 <NFlex v-for="a in linkedAutoActions" :key="a.id" align="center" justify="space-between" :wrap="true" :size="8">
                   <NFlex align="center" :size="8">
-                    <NTag :type="a.enabled ? 'success' : 'default'" size="small">{{ a.enabled ? '启用' : '禁用' }}</NTag>
+                    <NTag :type="a.enabled ? 'success' : 'default'" size="small">
+                      {{ a.enabled ? '启用' : '禁用' }}
+                    </NTag>
                     <NText>{{ a.name || '未命名' }}</NText>
-                    <NText depth="3">{{ a.actionType }}</NText>
+                    <NText depth="3">
+                      {{ a.actionType }}
+                    </NText>
                   </NFlex>
-                  <NButton size="small" @click="router.push({ name: 'client-auto-action-manage' })">编辑</NButton>
+                  <NButton size="small" @click="router.push({ name: 'client-auto-action-manage' })">
+                    编辑
+                  </NButton>
                 </NFlex>
               </NFlex>
             </NCard>

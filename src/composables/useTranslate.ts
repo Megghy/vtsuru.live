@@ -17,7 +17,7 @@ export const LANG_OPTIONS = [
 ]
 
 export function useTranslate() {
-  const browserApiAvailable = ref('Translator' in self)
+  const browserApiAvailable = ref('Translator' in globalThis)
   const mode = ref<TranslateMode>(browserApiAvailable.value ? 'browser' : 'cloud')
   const sourceLang = ref<string | null>(null)
   const targetLang = ref('en')

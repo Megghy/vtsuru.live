@@ -74,7 +74,9 @@ async function download() {
       <NInput v-model:value="text" placeholder="输入链接或文本" clearable />
 
       <div>
-        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">链接预设</NText>
+        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">
+          链接预设
+        </NText>
         <NFlex :size="8">
           <NButton v-for="p in linkPresets" :key="p.label" size="small" secondary @click="text = p.value">
             {{ p.label }}
@@ -83,7 +85,9 @@ async function download() {
       </div>
 
       <div>
-        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">配色预设</NText>
+        <NText depth="3" style="font-size: 12px; margin-bottom: 6px; display: block">
+          配色预设
+        </NText>
         <NFlex :size="8" wrap>
           <NButton v-for="s in stylePresets" :key="s.label" size="small" secondary @click="applyStyle(s)">
             <template #icon>
@@ -96,15 +100,21 @@ async function download() {
 
       <NFlex :size="16" align="center" wrap>
         <NFlex vertical :size="8">
-          <NText depth="3">尺寸</NText>
+          <NText depth="3">
+            尺寸
+          </NText>
           <NInputNumber v-model:value="size" :min="128" :max="1024" :step="64" style="width: 100px" />
         </NFlex>
         <NFlex vertical :size="8" class="color-picker-wrap">
-          <NText depth="3">前景色</NText>
+          <NText depth="3">
+            前景色
+          </NText>
           <NColorPicker v-model:value="foreground" :show-alpha="false" />
         </NFlex>
         <NFlex vertical :size="8" class="color-picker-wrap">
-          <NText depth="3">背景色</NText>
+          <NText depth="3">
+            背景色
+          </NText>
           <NColorPicker v-model:value="background" :show-alpha="true" />
         </NFlex>
       </NFlex>
@@ -119,7 +129,9 @@ async function download() {
           :background="isTransparent ? 'transparent' : background"
           render-as="canvas"
         />
-        <NText v-else depth="3">请输入内容</NText>
+        <NText v-else depth="3">
+          请输入内容
+        </NText>
       </div>
 
       <NButton type="primary" :disabled="!text" @click="download">

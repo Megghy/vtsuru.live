@@ -70,7 +70,9 @@ const columns = computed(() => [
   <NCard size="small" title="操作记录">
     <NFlex vertical :size="10">
       <NFlex justify="end">
-        <NButton size="small" type="error" @click="run(() => vts.clearHistory(), '已清空')">清空</NButton>
+        <NButton size="small" type="error" @click="run(() => vts.clearHistory(), '已清空')">
+          清空
+        </NButton>
       </NFlex>
       <NDataTable
         size="small"

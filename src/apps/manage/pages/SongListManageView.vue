@@ -103,11 +103,17 @@ onMounted(getSongs)
 <template>
   <ManagePageHeader title="歌单管理" :function-type="FunctionTypes.SongList">
     <template #action>
-      <NButton type="primary" @click="showModal = true">添加歌曲</NButton>
-      <NButton :loading="isLoading" secondary @click="getSongs">刷新</NButton>
+      <NButton type="primary" @click="showModal = true">
+        添加歌曲
+      </NButton>
+      <NButton :loading="isLoading" secondary @click="getSongs">
+        刷新
+      </NButton>
       <NDropdown :options="moreActions" trigger="click" @select="handleMoreAction">
         <NButton secondary>
-          <template #icon><NIcon :component="MoreHorizontal24Filled" /></template>
+          <template #icon>
+            <NIcon :component="MoreHorizontal24Filled" />
+          </template>
           更多
         </NButton>
       </NDropdown>
@@ -117,10 +123,14 @@ onMounted(getSongs)
   <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
     <NFlex justify="space-between" align="center" wrap :size="12">
       <NFlex align="center" :size="8" style="flex: 1;">
-        <NText class="manage-kicker">展示页链接</NText>
+        <NText class="manage-kicker">
+          展示页链接
+        </NText>
         <NInputGroup style="max-width: 420px;">
           <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
-          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">复制</NButton>
+          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
+            复制
+          </NButton>
         </NInputGroup>
       </NFlex>
     </NFlex>

@@ -35,16 +35,24 @@ function getScoreColor(score: number | undefined): string {
           @update:checked="emit('select', item.id)"
           @click.stop
         />
-        <NTag v-if="!item.isReaded" type="warning" size="tiny">未读</NTag>
+        <NTag v-if="!item.isReaded" type="warning" size="tiny">
+          未读
+        </NTag>
         <NDivider v-if="!item.isReaded" vertical />
         <NText :depth="item.isAnonymous ? 3 : 1">
           {{ item.isAnonymous ? (item.anonymousName || '匿名用户') : item.sender?.name }}
         </NText>
-        <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false">已注册</NTag>
-        <NTag v-if="item.isPublic" size="small" type="success" :bordered="false">公开</NTag>
+        <NTag v-if="item.isSenderRegisted" size="small" type="info" :bordered="false">
+          已注册
+        </NTag>
+        <NTag v-if="item.isPublic" size="small" type="success" :bordered="false">
+          公开
+        </NTag>
         <NTooltip v-if="item.tag">
           <template #trigger>
-            <NTag size="small" type="success">{{ item.tag }}</NTag>
+            <NTag size="small" type="success">
+              {{ item.tag }}
+            </NTag>
           </template>
           标签/话题
         </NTooltip>
@@ -103,7 +111,9 @@ function getScoreColor(score: number | undefined): string {
 
     <template v-if="item.answer">
       <NDivider style="margin: 10px 0" />
-      <NText depth="3">{{ item.answer.message }}</NText>
+      <NText depth="3">
+        {{ item.answer.message }}
+      </NText>
     </template>
   </NCard>
 </template>

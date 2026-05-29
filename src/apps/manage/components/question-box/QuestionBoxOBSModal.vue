@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Setting_QuestionDisplay } from '@/api/api-models'
-import { NAlert, NButton, NDivider, NInput, NInputGroup, NModal } from 'naive-ui'
+import { NAlert, NButton, NDivider, NInput, NInputGroup, NModal, useThemeVars  } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
@@ -8,7 +8,6 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 import { CURRENT_HOST } from '@/shared/config'
 import { copyToClipboard } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { useThemeVars } from 'naive-ui'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 
 const show = defineModel<boolean>('show', { required: true })

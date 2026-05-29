@@ -23,7 +23,9 @@ function setResetPhysicsHotkey(id: string) {
 <template>
   <NCard size="small" title="应急控制">
     <NFlex vertical :size="10">
-      <NText depth="3">选择 VTS 中已配置的热键来绑定应急操作</NText>
+      <NText depth="3">
+        选择 VTS 中已配置的热键来绑定应急操作
+      </NText>
 
       <NFlex :wrap="true" :size="10" align="center">
         <NSelect

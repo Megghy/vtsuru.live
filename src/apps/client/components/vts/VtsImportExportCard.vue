@@ -77,23 +77,37 @@ async function confirmImport() {
 <template>
   <NCard size="small" title="导入 / 导出">
     <NFlex align="center" :wrap="true" :size="8">
-      <NButton size="small" @click="exportMinimal">导出连接信息</NButton>
-      <NButton size="small" @click="exportFull">导出全量配置</NButton>
+      <NButton size="small" @click="exportMinimal">
+        导出连接信息
+      </NButton>
+      <NButton size="small" @click="exportFull">
+        导出全量配置
+      </NButton>
       <NButton size="small" :loading="importing" tag="label">
         导入
         <input type="file" accept="application/json" style="display: none" @change="onImportFileChange">
       </NButton>
-      <NText depth="3">wsUrl: {{ vts.wsUrl || '未设置' }}</NText>
-      <NText depth="3">Token: {{ vts.authToken ? '已保存' : '无' }}</NText>
+      <NText depth="3">
+        wsUrl: {{ vts.wsUrl || '未设置' }}
+      </NText>
+      <NText depth="3">
+        Token: {{ vts.authToken ? '已保存' : '无' }}
+      </NText>
     </NFlex>
   </NCard>
 
   <NModal v-model:show="showPreview" preset="card" title="导入预览" style="width: 560px">
     <NFlex vertical :size="10">
-      <NText v-for="line in previewLines" :key="line" depth="3">{{ line }}</NText>
+      <NText v-for="line in previewLines" :key="line" depth="3">
+        {{ line }}
+      </NText>
       <NFlex justify="end" :size="8">
-        <NButton :disabled="importing" @click="showPreview = false; pending = null">取消</NButton>
-        <NButton type="primary" :loading="importing" @click="confirmImport">确认导入</NButton>
+        <NButton :disabled="importing" @click="showPreview = false; pending = null">
+          取消
+        </NButton>
+        <NButton type="primary" :loading="importing" @click="confirmImport">
+          确认导入
+        </NButton>
       </NFlex>
     </NFlex>
   </NModal>

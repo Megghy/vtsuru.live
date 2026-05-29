@@ -78,11 +78,11 @@ export class MimoVoiceProvider implements VoiceProvider {
   get fetchAudio(): ((text: string) => Promise<Blob>) | undefined {
     const cfg = this.readConfig()
     if (!cfg.mimoApiKey) return undefined
-    return (text: string) => this._directSynthesize(text, cfg)
+    return async (text: string) => this._directSynthesize(text, cfg)
   }
 
   private async _directSynthesize(text: string, cfg: MimoProviderConfig): Promise<Blob> {
-    const client = createMimoClient(cfg.mimoApiKey!)
+    const client = createMimoClient(cfg.mimoApiKey)
     const voice = cfg.mimoVoice ?? DEFAULT_MIMO_VOICE
 
     let req: MimoTtsRequest

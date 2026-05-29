@@ -29,11 +29,15 @@ function addSlot() {
   <NCard size="small" title="参数控制">
     <NFlex vertical :size="8">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" @click="addSlot">添加参数槽</NButton>
+        <NButton size="small" @click="addSlot">
+          添加参数槽
+        </NButton>
         <NButton size="small" :disabled="!vts.canOperate" @click="vts.stopAllParamHolds">
           全部停止持有
         </NButton>
-        <NText depth="3">Hold 模式会持续注入参数值</NText>
+        <NText depth="3">
+          Hold 模式会持续注入参数值
+        </NText>
       </NFlex>
 
       <NDivider style="margin: 4px 0" />
@@ -41,8 +45,12 @@ function addSlot() {
       <div v-for="slot in vts.paramSlots" :key="slot.id" class="param-slot">
         <NFlex align="center" justify="space-between" :wrap="true" :size="8">
           <NFlex align="center" :size="8">
-            <NText strong>{{ slot.name || slot.parameterId }}</NText>
-            <NText v-if="slot.name" depth="3">{{ slot.parameterId }}</NText>
+            <NText strong>
+              {{ slot.name || slot.parameterId }}
+            </NText>
+            <NText v-if="slot.name" depth="3">
+              {{ slot.parameterId }}
+            </NText>
           </NFlex>
           <NFlex :wrap="true" :size="8" align="center">
             <NSwitch
@@ -50,15 +58,21 @@ function addSlot() {
               :disabled="!vts.canOperate"
               @update:value="(val) => updateSlot({ ...slot, hold: val })"
             >
-              <template #checked>Hold</template>
-              <template #unchecked>Hold</template>
+              <template #checked>
+                Hold
+              </template>
+              <template #unchecked>
+                Hold
+              </template>
             </NSwitch>
             <NButton size="small" :disabled="!vts.canOperate" @click="injectOnce(slot)">
               注入
             </NButton>
             <NPopconfirm @positive-click="vts.removeParamSlot(slot.id)">
               <template #trigger>
-                <NButton size="small" type="error">删除</NButton>
+                <NButton size="small" type="error">
+                  删除
+                </NButton>
               </template>
               确认删除?
             </NPopconfirm>

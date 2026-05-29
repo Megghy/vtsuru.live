@@ -57,8 +57,12 @@ watch(
     <NFlex vertical :size="10">
       <NFlex align="center" :wrap="true" :size="10">
         <NSwitch :value="vts.obsLinkConfig.enabled" @update:value="setEnabled">
-          <template #checked>已启用</template>
-          <template #unchecked>未启用</template>
+          <template #checked>
+            已启用
+          </template>
+          <template #unchecked>
+            未启用
+          </template>
         </NSwitch>
         <NInputNumber
           :value="vts.obsLinkConfig.debounceMs"
@@ -67,9 +71,15 @@ watch(
           style="width: 140px"
           @update:value="(val) => setDebounceMs((val ?? 0) as number)"
         />
-        <NText depth="3">防抖 (ms)</NText>
-        <NButton size="small" :disabled="!obs.obsConnected" @click="obs.fetchObsScenes">刷新场景</NButton>
-        <NText depth="3">当前: {{ obs.currentObsScene || '未知' }}</NText>
+        <NText depth="3">
+          防抖 (ms)
+        </NText>
+        <NButton size="small" :disabled="!obs.obsConnected" @click="obs.fetchObsScenes">
+          刷新场景
+        </NButton>
+        <NText depth="3">
+          当前: {{ obs.currentObsScene || '未知' }}
+        </NText>
       </NFlex>
 
       <NDivider style="margin: 4px 0" />
@@ -81,7 +91,9 @@ watch(
       <NFlex v-else vertical :size="8">
         <NFlex v-for="scene in obs.obsScenes" :key="scene" align="center" justify="space-between" :wrap="true" :size="10">
           <NFlex align="center" :wrap="true" :size="10">
-            <NText strong style="min-width: 120px">{{ scene }}</NText>
+            <NText strong style="min-width: 120px">
+              {{ scene }}
+            </NText>
             <NSelect
               style="width: 280px"
               :options="presetOptions"

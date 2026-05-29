@@ -21,29 +21,47 @@ const clickThroughHint = computed(() =>
         <NButton size="small" type="primary" @click="run(() => floatWindow.toggle())">
           {{ floatWindow.opened ? '关闭小窗' : '打开小窗' }}
         </NButton>
-        <NText depth="3">独立无边框窗口，可置顶 + 穿透</NText>
+        <NText depth="3">
+          独立无边框窗口，可置顶 + 穿透
+        </NText>
       </NFlex>
 
       <NFlex align="center" :wrap="true" :size="12">
         <NFlex align="center" :size="8">
-          <NText depth="3">置顶</NText>
-          <NSwitch v-model:value="floatWindow.settings.alwaysOnTop" size="small"
-            @update:value="(v) => floatWindow.setSettings({ alwaysOnTop: v })" />
+          <NText depth="3">
+            置顶
+          </NText>
+          <NSwitch
+            v-model:value="floatWindow.settings.alwaysOnTop" size="small"
+            @update:value="(v) => floatWindow.setSettings({ alwaysOnTop: v })"
+          />
         </NFlex>
         <NFlex align="center" :size="8">
-          <NText depth="3">穿透</NText>
-          <NSwitch v-model:value="floatWindow.settings.clickThrough" size="small"
-            @update:value="(v) => floatWindow.setSettings({ clickThrough: v })" />
+          <NText depth="3">
+            穿透
+          </NText>
+          <NSwitch
+            v-model:value="floatWindow.settings.clickThrough" size="small"
+            @update:value="(v) => floatWindow.setSettings({ clickThrough: v })"
+          />
         </NFlex>
         <NFlex align="center" :size="8">
-          <NText depth="3">透明度</NText>
-          <NInputNumber v-model:value="floatWindow.settings.opacity" :min="0.2" :max="1" :step="0.05" style="width: 120px"
-            @update:value="(v) => floatWindow.setSettings({ opacity: Number(v) })" />
+          <NText depth="3">
+            透明度
+          </NText>
+          <NInputNumber
+            v-model:value="floatWindow.settings.opacity" :min="0.2" :max="1" :step="0.05" style="width: 120px"
+            @update:value="(v) => floatWindow.setSettings({ opacity: Number(v) })"
+          />
         </NFlex>
       </NFlex>
 
-      <NAlert v-if="clickThroughHint" type="warning" :show-icon="false">{{ clickThroughHint }}</NAlert>
-      <NAlert v-if="floatWindow.lastError" type="error" :show-icon="false">{{ floatWindow.lastError }}</NAlert>
+      <NAlert v-if="clickThroughHint" type="warning" :show-icon="false">
+        {{ clickThroughHint }}
+      </NAlert>
+      <NAlert v-if="floatWindow.lastError" type="error" :show-icon="false">
+        {{ floatWindow.lastError }}
+      </NAlert>
     </NFlex>
   </NCard>
 </template>

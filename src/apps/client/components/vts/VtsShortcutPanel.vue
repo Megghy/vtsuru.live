@@ -100,7 +100,9 @@ onUnmounted(() => shortcuts.cleanup())
         <NButton size="small" @click="shortcuts.addBinding({ label: '', shortcut: '', actionType: 'hotkey', targetId: '' })">
           添加快捷键
         </NButton>
-        <NText depth="3">窗口失焦时也能触发，适合直播中快速操作</NText>
+        <NText depth="3">
+          窗口失焦时也能触发，适合直播中快速操作
+        </NText>
       </NFlex>
 
       <NDivider v-if="shortcuts.bindings.value.length > 0" style="margin: 4px 0" />
@@ -139,7 +141,9 @@ onUnmounted(() => shortcuts.cleanup())
         </NFlex>
         <NPopconfirm @positive-click="shortcuts.removeBinding(b.id)">
           <template #trigger>
-            <NButton size="small" type="error">删除</NButton>
+            <NButton size="small" type="error">
+              删除
+            </NButton>
           </template>
           确认删除?
         </NPopconfirm>
