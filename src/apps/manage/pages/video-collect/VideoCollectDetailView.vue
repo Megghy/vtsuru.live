@@ -20,6 +20,7 @@ import {
   VideoStatus,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { formatDuration } from '@/apps/manage/composables/formatters'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -188,16 +189,6 @@ function setStatus(status: VideoStatus, video: VideoInfo) {
     .finally(() => {
       isLoading.value = false
     })
-}
-
-function formatSeconds(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-
-  const formattedMinutes = minutes.toString().padStart(2, '0')
-  const formattedSeconds = remainingSeconds.toString().padStart(2, '0')
-
-  return `${formattedMinutes}:${formattedSeconds}`
 }
 
 function dateDisabled(ts: number) {
@@ -377,7 +368,7 @@ onActivated(async () => {
           strong
           style="color: var(--n-text-color)"
         >
-          {{ formatSeconds(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }}
+          {{ formatDuration(new List(acceptVideos).Sum((v) => v?.video.length ?? 0)) }}
         </NText>
       </NText>
     </div>

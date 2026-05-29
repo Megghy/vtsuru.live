@@ -6,9 +6,10 @@ import type { VideoCollectTable } from '@/api/api-models'
 import { NButton, NCard, NDatePicker, NDivider, NEmpty, NFlex, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
 import { Add20Regular } from '@vicons/fluent'
 import { ref } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { VIDEO_COLLECT_API_URL } from '@/shared/config'
@@ -17,7 +18,7 @@ const message = useMessage()
 const accountInfo = useAccount()
 
 const isLoading = ref(true)
-const functionSwitchLoading = ref(false)
+const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.VideoCollect, '视频征集')
 const createModalVisible = ref(false)
 const formRef = ref()
 const defaultModel = { maxVideoCount: 50 } as VideoCollectTable
@@ -69,33 +70,6 @@ const createRules: FormRules = {
 }
 function dateDisabled(ts: number) {
   return ts < Date.now() + 1000 * 60 * 60
-}
-
-async function setFunctionEnable(enable: boolean) {
-  functionSwitchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(FunctionTypes.VideoCollect)
-      : await DisableFunction(FunctionTypes.VideoCollect)
-    if (success) {
-      message.success(`视频征集功能已${enable ? '启用' : '禁用'}`)
-      if (accountInfo.value?.settings?.enableFunctions) {
-        const list = accountInfo.value.settings.enableFunctions
-        if (enable && !list.includes(FunctionTypes.VideoCollect)) {
-          list.push(FunctionTypes.VideoCollect)
-        } else if (!enable) {
-          const index = list.indexOf(FunctionTypes.VideoCollect)
-          if (index > -1) list.splice(index, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}视频征集功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    functionSwitchLoading.value = false
-  }
 }
 
 const isLoading2 = ref(false)

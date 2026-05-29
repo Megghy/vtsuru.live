@@ -116,7 +116,7 @@ async function onGet() {
   }
   currentUsers.value?.users.forEach(u => (u.visiable = true))
 }
-async function getCommentsUsers() {
+async function fetchLotteryUsers(type: 'comments' | 'forward') {
   const dynamicId = inputDynamicId.value
   if (!dynamicId) {
     message.error('请输入正确的动态 ID 或链接')
@@ -124,19 +124,21 @@ async function getCommentsUsers() {
   }
   isLoading.value = true
   await QueryGetAPI<TempLotteryResponseModel>(
-    `${LOTTERY_API_URL}comments`,
-    {
-      id: dynamicId.toString(),
-    },
+    `${LOTTERY_API_URL}${type}`,
+    { id: dynamicId.toString() },
     [['Turnstile', token.value]],
   )
     .then((data) => {
       if (data.code == 200) {
         data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
         data.data.total = data.data.users.length
-
-        originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
-        commentUsers.value = data.data
+        if (type === 'comments') {
+          originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
+          commentUsers.value = data.data
+        } else {
+          originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
+          forwardUsers.value = data.data
+        }
         isCommentCountDown.value = false
       } else {
         message.error(`获取用户失败: ${data.message}`)
@@ -151,41 +153,8 @@ async function getCommentsUsers() {
       isLoading.value = false
     })
 }
-async function getForwardUsers() {
-  const dynamicId = inputDynamicId.value
-  if (!dynamicId) {
-    message.error('请输入正确的动态 ID 或链接')
-    return
-  }
-  isLoading.value = true
-  await QueryGetAPI<TempLotteryResponseModel>(
-    `${LOTTERY_API_URL}forward`,
-    {
-      id: dynamicId.toString(),
-    },
-    [['Turnstile', token.value]],
-  )
-    .then((data) => {
-      if (data.code == 200) {
-        data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
-        data.data.total = data.data.users.length
-
-        originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
-        forwardUsers.value = data.data
-        isCommentCountDown.value = false
-      } else {
-        message.error(`获取用户失败: ${data.message}`)
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      message.error('获取失败')
-    })
-    .finally(() => {
-      turnstile.value?.reset()
-      isLoading.value = false
-    })
-}
+const getCommentsUsers = () => fetchLotteryUsers('comments')
+const getForwardUsers = () => fetchLotteryUsers('forward')
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * max)
 }

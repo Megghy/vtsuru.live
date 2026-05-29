@@ -60,3 +60,14 @@
   box-sizing: border-box;
   border: 1px solid var(--n-border-color, rgba(148, 163, 184, 0.22));
 }
+
+/* 透明图片预览的棋盘格背景，工具页通用 */
+.manage-checkerboard {
+  background-color: #fafafa;
+  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}

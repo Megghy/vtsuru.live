@@ -45,7 +45,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import {
   FunctionTypes,
   GoodsStatus,
@@ -54,6 +54,7 @@ import {
   UserFileLocation,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
@@ -72,34 +73,8 @@ const accountInfo = useAccount()
 const dialog = useDialog()
 const biliAuth = useBiliAuth()
 const formRef = ref()
-const functionSwitchLoading = ref(false)
+const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.Point, '积分')
 
-async function setFunctionEnable(enable: boolean) {
-  functionSwitchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(FunctionTypes.Point)
-      : await DisableFunction(FunctionTypes.Point)
-    if (success) {
-      message.success(`积分功能已${enable ? '启用' : '禁用'}`)
-      if (accountInfo.value?.settings?.enableFunctions) {
-        const list = accountInfo.value.settings.enableFunctions
-        if (enable && !list.includes(FunctionTypes.Point)) {
-          list.push(FunctionTypes.Point)
-        } else if (!enable) {
-          const index = list.indexOf(FunctionTypes.Point)
-          if (index > -1) list.splice(index, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}积分功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    functionSwitchLoading.value = false
-  }
-}
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
 const showAddGoodsModal = ref(false)

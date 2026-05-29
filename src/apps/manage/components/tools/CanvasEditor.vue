@@ -401,7 +401,7 @@ defineExpose({ layers, selectedId, addImageLayer, addTextLayer, removeLayer, mov
 </script>
 
 <template>
-  <div ref="containerRef" class="canvas-editor">
+  <div ref="containerRef" class="canvas-editor manage-checkerboard">
     <div class="canvas-stage-wrap" :style="{ width: `${stagePixelW }px`, height: `${stagePixelH }px` }">
       <v-stage ref="stageRef" :config="{ width: stagePixelW, height: stagePixelH, scaleX: stageScale, scaleY: stageScale }" @click="handleStageClick" @tap="handleStageClick">
         <v-layer>
@@ -440,13 +440,6 @@ defineExpose({ layers, selectedId, addImageLayer, addTextLayer, removeLayer, mov
   border-radius: 8px;
   overflow: hidden;
   padding: 12px;
-  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-  background-color: #fafafa;
 }
 .canvas-stage-wrap {
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);

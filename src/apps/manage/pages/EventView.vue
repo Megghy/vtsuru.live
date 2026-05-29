@@ -4,6 +4,7 @@ import type { EventModel } from '@/api/api-models'
 import { useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import { AVATAR_URL, EVENT_API_URL, HISTORY_API_URL } from '@/shared/config'
@@ -40,6 +41,7 @@ interface GuardStatsModel {
 
 const accountInfo = useAccount()
 const message = useMessage()
+const { run } = useApiAction()
 const themeVars = useThemeVars()
 
 // #region Event History Logic
@@ -283,19 +285,9 @@ async function deleteGuardEvent(item: EventModel) {
     message.error('无法删除：缺少 id')
     return
   }
-  try {
-    const resp = await QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id })
-    if (resp.code !== 200) {
-      message.error(`删除失败: ${resp.message}`)
-      return
-    }
-
+  const ok = await run(() => QueryPostAPI<string>(`${EVENT_API_URL}guard/delete`, { id: item.id }), { success: '已删除', fail: '删除失败' })
+  if (ok !== undefined)
     events.value = events.value.filter(e => e.id !== item.id)
-    message.success('已删除')
-  }
-  catch (e) {
-    message.error(`删除失败: ${(e as Error).message}`)
-  }
 }
 
 // 获取SC颜色

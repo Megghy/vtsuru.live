@@ -106,6 +106,19 @@ export function GetGuardColor(level: number | null | undefined): string {
   }
   return ''
 }
+/** canvas.toBlob 的 Promise 封装 */
+export async function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type = 'image/png',
+  quality?: number,
+): Promise<Blob> {
+  const blob = await new Promise<Blob | null>(resolve =>
+    canvas.toBlob(b => resolve(b), type, quality),
+  )
+  if (!blob) throw new Error('canvas toBlob 失败')
+  return blob
+}
+
 export function downloadImage(imageSrc: string, filename: string) {
   const image = new Image()
   image.crossOrigin = 'Anonymous' // This might be needed depending on the image's server

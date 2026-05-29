@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import html2canvas from 'html2canvas'
+import { saveAs } from 'file-saver'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NText } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
+import { canvasToBlob } from '@/shared/utils'
 
 const message = useMessage()
 const account = useAccount()
@@ -54,16 +56,8 @@ async function download() {
       backgroundColor: isTransparent.value ? null : background.value,
       scale: 2,
     })
-    canvas.toBlob((blob) => {
-      if (!blob) { message.error('生成图片失败'); return }
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'qrcode.png'
-      a.click()
-      URL.revokeObjectURL(url)
-      message.success('已下载')
-    }, 'image/png')
+    saveAs(await canvasToBlob(canvas), 'qrcode.png')
+    message.success('已下载')
   } catch { message.error('导出失败') }
 }
 </script>
@@ -119,7 +113,7 @@ async function download() {
         </NFlex>
       </NFlex>
 
-      <div ref="qrContainer" class="qr-preview">
+      <div ref="qrContainer" class="qr-preview manage-checkerboard">
         <QrcodeVue
           v-if="text"
           :value="text"
@@ -149,13 +143,6 @@ async function download() {
   padding: 24px;
   border: 1px solid var(--n-border-color);
   border-radius: 8px;
-  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-  background-color: #fafafa;
 }
 .color-picker-wrap {
   width: 200px;

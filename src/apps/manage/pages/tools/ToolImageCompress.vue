@@ -4,6 +4,7 @@ import JSZip from 'jszip'
 import { NButton, NCard, NFlex, NInputNumber, NSelect, NSlider, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useDropZone, useFileDialog } from '@vueuse/core'
+import { formatFileSize } from '@/apps/manage/composables/formatters'
 
 const message = useMessage()
 
@@ -60,7 +61,7 @@ async function compressOne(item: ImageItem) {
     const blob = await canvas.convertToBlob({ type: mimeMap[format.value], quality: q })
     item.compressedBlob = blob
     item.compressedSize = blob.size
-  } catch (e) {
+  } catch {
     message.error(`处理失败: ${item.file.name}`)
   } finally {
     item.processing = false
@@ -106,11 +107,6 @@ function clearAll() {
   items.value = []
 }
 
-function formatSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
-}
 </script>
 
 <template>
@@ -190,7 +186,7 @@ function formatSize(bytes: number) {
                 {{ item.file.name }}
               </NText>
               <NText v-if="item.compressedBlob" depth="3" style="font-size: 12px">
-                {{ formatSize(item.originalSize) }} → {{ formatSize(item.compressedSize) }}
+                {{ formatFileSize(item.originalSize) }} → {{ formatFileSize(item.compressedSize) }}
                 <NText :type="item.compressedSize < item.originalSize ? 'success' : 'warning'" style="font-size: 12px">
                   ({{ item.compressedSize < item.originalSize ? '-' : '+' }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
                 </NText>

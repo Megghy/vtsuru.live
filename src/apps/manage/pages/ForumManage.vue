@@ -9,6 +9,7 @@ import { h, onMounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { ForumUserLevels } from '@/api/models/forum'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import UserBasicInfoCard from '@/apps/manage/components/UserBasicInfoCard.vue'
 import { FORUM_API_URL } from '@/shared/config'
 // @ts-ignore
@@ -19,6 +20,7 @@ import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 const useForum = useForumStore()
 const accountInfo = useAccount()
 const message = useMessage()
+const { run } = useApiAction()
 
 const managedForums = ref((await useForum.GetManagedForums()) ?? [])
 const currentForum = ref((await useForum.GetForumInfo(accountInfo.value.id)) ?? ({} as ForumModel))
@@ -71,21 +73,8 @@ async function createForum() {
     message.warning('请输入名称')
     return
   }
-  try {
-    const data = await QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, {
-      name: create_Name.value,
-    })
-    if (data.code == 200) {
-      message.success('创建成功')
-      currentForum.value = data.data
-    } else {
-      message.error(`创建失败:${data.message}`)
-      console.error(data.message)
-    }
-  } catch (err) {
-    console.error(err)
-    message.error(`创建失败:${err}`)
-  }
+  const data = await run(() => QueryPostAPI<ForumModel>(`${FORUM_API_URL}create`, { name: create_Name.value }), { success: '创建成功', fail: '创建失败' })
+  if (data) currentForum.value = data
 }
 async function SwitchForum(owner: number) {
   selectedForum.value = owner
@@ -208,83 +197,28 @@ const adminColumns: DataTableColumns<ForumUserModel> = [
 ]
 
 async function addAdmin(id: number) {
-  try {
-    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, {
-      forum: currentForum.value.owner.id,
-      id,
-    })
-    if (data.code == 200) {
-      message.success('已设置为管理员')
-      refreshForumInfo()
-      addAdminName.value = ''
-      showAddAdminModal.value = false
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${err}`)
+  const ok = await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/add-admin`, { forum: currentForum.value.owner.id, id }), { success: '已设置为管理员' })
+  if (ok) {
+    refreshForumInfo()
+    addAdminName.value = ''
+    showAddAdminModal.value = false
   }
 }
 async function removeAdmin(id: number) {
-  try {
-    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, {
-      forum: currentForum.value.owner.id,
-      id,
-    })
-    if (data.code == 200) {
-      message.success('已取消管理员权限')
-      refreshForumInfo()
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${err}`)
-  }
+  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/del-admin`, { forum: currentForum.value.owner.id, id }), { success: '已取消管理员权限' }))
+    refreshForumInfo()
 }
 async function banUser(id: number) {
-  try {
-    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, {
-      forum: currentForum.value.owner.id,
-      id,
-    })
-    if (data.code == 200) {
-      message.success('已封禁用户')
-      refreshForumInfo()
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${err}`)
-  }
+  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/ban`, { forum: currentForum.value.owner.id, id }), { success: '已封禁用户' }))
+    refreshForumInfo()
 }
 async function unbanUser(id: number) {
-  try {
-    const data = await QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, {
-      forum: currentForum.value.owner.id,
-      id,
-    })
-    if (data.code == 200) {
-      message.success('已解禁')
-      refreshForumInfo()
-    } else {
-      message.error(`操作失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${err}`)
-  }
+  if (await run(() => QueryGetAPI<ForumModel>(`${FORUM_API_URL}manage/unban`, { forum: currentForum.value.owner.id, id }), { success: '已解禁' }))
+    refreshForumInfo()
 }
 async function updateForumSettings() {
-  try {
-    const data = await QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings)
-    if (data.code == 200) {
-      message.success('修改成功')
-      refreshForumInfo()
-    } else {
-      message.error(`修改失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`修改失败: ${err}`)
-  }
+  if (await run(() => QueryPostAPI(`${FORUM_API_URL}manage/update-setting`, currentForum.value.settings), { success: '修改成功', fail: '修改失败' }))
+    refreshForumInfo()
 }
 
 onMounted(() => {

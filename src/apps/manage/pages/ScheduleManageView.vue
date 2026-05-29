@@ -7,9 +7,10 @@ import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfY
 import {
   NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NSwitch, NTag, NText, NTimePicker, NTooltip, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
@@ -278,34 +279,7 @@ function getAllWeeks(year: number) {
 const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>([])
 const message = useMessage()
-const functionSwitchLoading = ref(false)
-
-async function setFunctionEnable(enable: boolean) {
-  functionSwitchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(FunctionTypes.Schedule)
-      : await DisableFunction(FunctionTypes.Schedule)
-    if (success) {
-      message.success(`日程表功能已${enable ? '启用' : '禁用'}`)
-      if (accountInfo.value?.settings?.enableFunctions) {
-        const list = accountInfo.value.settings.enableFunctions
-        if (enable && !list.includes(FunctionTypes.Schedule)) {
-          list.push(FunctionTypes.Schedule)
-        } else if (!enable) {
-          const index = list.indexOf(FunctionTypes.Schedule)
-          if (index > -1) list.splice(index, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}日程表功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    functionSwitchLoading.value = false
-  }
-}
+const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.Schedule, '日程表')
 
 const isLoading = ref(true)
 

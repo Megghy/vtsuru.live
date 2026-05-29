@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver'
 import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NSelect, NSlider, NSwitch, NText } from 'naive-ui'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
+import { canvasToBlob } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -116,14 +117,13 @@ function render() {
 
 watch([text, style], () => nextTick(render), { deep: true, immediate: true })
 
-function download() {
+async function download() {
   const canvas = canvasRef.value
   if (!canvas) return
-  canvas.toBlob((blob) => {
-    if (!blob) { message.error('导出失败'); return }
-    saveAs(blob, `text-image-${Date.now()}.png`)
+  try {
+    saveAs(await canvasToBlob(canvas), `text-image-${Date.now()}.png`)
     message.success('已保存')
-  }, 'image/png')
+  } catch { message.error('导出失败') }
 }
 </script>
 

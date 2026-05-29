@@ -9,6 +9,7 @@ import {
   NButton, NCard, NCheckbox, NCheckboxGroup, NDescriptions, NDescriptionsItem, NEmpty, NGrid, NGridItem, NIcon, NNumberAnimation, NProgress, NSkeleton, NFlex, NTag, NTime, NTooltip, useMessage, useThemeVars } from 'naive-ui';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { QueryGetAPI } from '@/api/query'
+import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
 import { ANALYZE_API_URL } from '@/shared/config'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -108,25 +109,10 @@ const metricColorVars = computed(() => ({
 }))
 
 // 格式化工具函数
-function formatCurrency(value: number): string {
-  return `¥${value.toFixed(2)}`
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString()
-}
-
 function getTrendType(value: number): 'success' | 'error' | 'info' {
   if (value > 0) return 'success'
   if (value < 0) return 'error'
   return 'info'
-}
-
-// 格式化时间戳为日期
-function formatDate(timestamp: number): string {
-  // 如果时间戳超过 100亿，说明是毫秒，否则是秒
-  const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000)
-  return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
 }
 
 // 从ChartData对象转换为数组，并按时间戳排序

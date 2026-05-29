@@ -9,8 +9,9 @@ import {
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
+import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionBoxReceivedTab from '@/apps/manage/components/question-box/QuestionBoxReceivedTab.vue'
@@ -32,7 +33,7 @@ const selectedTabItem = ref(route.query.send ? '1' : '0')
 const replyModalVisible = ref(false)
 const shareModalVisible = ref(false)
 const showOBSModal = ref(false)
-const functionSwitchLoading = ref(false)
+const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.QuestionBox, '提问箱')
 
 const selectedDirectShareTag = ref<string | null>(null)
 const directShareUrl = computed(() => {
@@ -49,32 +50,6 @@ async function refresh() {
   if (selectedTabItem.value === '0' || selectedTabItem.value === '2') await useQB.GetRecieveQAInfo()
   if (selectedTabItem.value === '1') await useQB.GetSendQAInfo()
   message.success('已刷新')
-}
-
-async function setFunctionEnable(enable: boolean) {
-  functionSwitchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(FunctionTypes.QuestionBox)
-      : await DisableFunction(FunctionTypes.QuestionBox)
-    if (success) {
-      message.success(`提问箱功能已${enable ? '启用' : '禁用'}`)
-      const list = accountInfo.value?.settings?.enableFunctions
-      if (list) {
-        if (enable && !list.includes(FunctionTypes.QuestionBox)) list.push(FunctionTypes.QuestionBox)
-        else if (!enable) {
-          const idx = list.indexOf(FunctionTypes.QuestionBox)
-          if (idx > -1) list.splice(idx, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}提问箱功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    functionSwitchLoading.value = false
-  }
 }
 
 // 按需加载发送数据

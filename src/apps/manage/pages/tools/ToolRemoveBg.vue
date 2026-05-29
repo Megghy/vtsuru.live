@@ -196,7 +196,7 @@ function download() {
               <NText depth="3" style="font-size:12px">
                 结果
               </NText>
-              <img :src="resultUrl" class="preview-img checkerboard">
+              <img :src="resultUrl" class="preview-img manage-checkerboard">
             </div>
           </div>
         </NSpin>
@@ -223,14 +223,5 @@ function download() {
 .preview-img {
   max-width: 100%; max-height: 400px; object-fit: contain;
   border-radius: 6px; border: 1px solid var(--n-border-color);
-}
-.checkerboard {
-  background-color: #fafafa;
-  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
 }
 </style>

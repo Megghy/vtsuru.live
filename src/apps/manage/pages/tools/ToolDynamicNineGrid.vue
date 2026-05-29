@@ -5,6 +5,7 @@ import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'na
 import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
+import { canvasToBlob } from '@/shared/utils'
 
 type FitMode = 'stretch-width' | 'contain' | 'cover' | 'stretch'
 
@@ -66,12 +67,6 @@ async function onFilePicked(file: File) {
 }
 
 // --- Image processing ---
-function canvasToBlob(canvas: HTMLCanvasElement, type = 'image/png', quality?: number): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), type, quality),
-  )
-}
-
 async function applyCenterCrop(file: File): Promise<Blob> {
   const bmp = await createImageBitmap(file)
   const size = Math.min(bmp.width, bmp.height)

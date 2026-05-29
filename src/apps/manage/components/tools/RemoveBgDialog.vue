@@ -121,7 +121,7 @@ function cancel() {
         <NText depth="3" style="font-size:11px">
           结果
         </NText>
-        <img v-if="resultUrl" :src="resultUrl" class="preview-img checkerboard">
+        <img v-if="resultUrl" :src="resultUrl" class="preview-img manage-checkerboard">
         <div v-else class="preview-placeholder">
           <NText depth="3" style="font-size:12px">
             {{ processing ? '处理中...' : '点击下方按钮开始' }}
@@ -164,14 +164,5 @@ function cancel() {
 .preview-placeholder {
   flex: 1; display: flex; align-items: center; justify-content: center;
   border: 1px dashed var(--n-border-color); border-radius: 6px; min-height: 120px;
-}
-.checkerboard {
-  background-color: #fafafa;
-  background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
 }
 </style>

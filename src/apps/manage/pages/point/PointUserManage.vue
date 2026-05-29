@@ -13,6 +13,8 @@ import {
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI } from '@/api/query'
+import { formatNumber } from '@/apps/manage/composables/formatters'
+import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import { POINT_API_URL } from '@/shared/config'
 import { objectsToCSV } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -48,7 +50,8 @@ const ps = ref(25)
 const showModal = ref(false)
 const showGivePointModal = ref(false)
 const showResetAllPointsModal = ref(false)
-const isLoading = ref(true)
+const { loading: isLoading, run } = useApiAction()
+isLoading.value = true
 
 // 积分调整表单
 const addPointCount = ref(0)
@@ -176,11 +179,6 @@ function renderActions(user: ResponsePointUserModel) {
   ])
 }
 
-// 格式化数字，添加千位符
-function formatNumber(num: number) {
-  return num.toLocaleString('zh-CN')
-}
-
 // 渲染积分，添加千位符并加粗，保留一位小数
 function renderPoint(num: number) {
   const formattedNum = Number(num.toFixed(1))
@@ -227,21 +225,7 @@ const column: DataTableColumns<ResponsePointUserModel> = [
 
 // 获取所有用户
 async function getUsers() {
-  try {
-    isLoading.value = true
-    const data = await QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`)
-    if (data.code == 200) {
-      return data.data
-    } else {
-      message.error(`获取用户失败: ${data.message}`)
-    }
-  } catch (err) {
-    console.log(err)
-    message.error(`获取用户失败: ${err}`)
-  } finally {
-    isLoading.value = false
-  }
-  return []
+  return await run(() => QueryGetAPI<ResponsePointUserModel[]>(`${POINT_API_URL}get-all-users`), { fail: '获取用户失败' }) ?? []
 }
 
 // 刷新用户数据
@@ -262,94 +246,48 @@ async function givePoint() {
     return
   }
 
-  isLoading.value = true
-  try {
-    const data = await QueryGetAPI<{ totalPoint: number, userName?: string, uId?: number }>(`${POINT_API_URL}give-point`, {
-      uId: addPointTarget.value,
-      count: addPointCount.value,
-      reason: addPointReason.value || '',
-    })
+  const data = await run(() => QueryGetAPI<{ totalPoint: number, userName?: string, uId?: number }>(`${POINT_API_URL}give-point`, {
+    uId: addPointTarget.value,
+    count: addPointCount.value,
+    reason: addPointReason.value || '',
+  }), { fail: '添加失败' })
 
-    if (data.code == 200) {
-      const userName = data.data?.userName || selectedTargetUserName.value || `UID: ${addPointTarget.value}`
-      const action = addPointCount.value > 0 ? '添加' : '扣除'
-      message.success(`成功为 ${userName} ${action}了 ${Math.abs(addPointCount.value)} 积分`)
-      showGivePointModal.value = false
-
-      // 重新加载用户数据
-      setTimeout(() => {
-        refresh()
-      }, 1500)
-
-      // 重置表单
-      addPointCount.value = 0
-      addPointReason.value = ''
-      addPointTarget.value = undefined
-      selectedTargetUserName.value = undefined
-    } else {
-      message.error(`添加失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`添加失败: ${err}`)
-  } finally {
-    isLoading.value = false
+  if (data) {
+    const userName = data?.userName || selectedTargetUserName.value || `UID: ${addPointTarget.value}`
+    const action = addPointCount.value > 0 ? '添加' : '扣除'
+    message.success(`成功为 ${userName} ${action}了 ${Math.abs(addPointCount.value)} 积分`)
+    showGivePointModal.value = false
+    setTimeout(() => refresh(), 1500)
+    addPointCount.value = 0
+    addPointReason.value = ''
+    addPointTarget.value = undefined
+    selectedTargetUserName.value = undefined
   }
 }
 
 // 删除用户
 async function deleteUser(user: ResponsePointUserModel) {
-  isLoading.value = true
-  try {
-    // 根据用户认证状态构建请求参数
-    const params = user.isAuthed
-      ? { authId: user.info.id }
-      : user.info.userId
-        ? { uId: user.info.userId }
-        : { uId: user.info.openId }
+  const params = user.isAuthed
+    ? { authId: user.info.id }
+    : user.info.userId
+      ? { uId: user.info.userId }
+      : { uId: user.info.openId }
 
-    const data = await QueryGetAPI(`${POINT_API_URL}delete-user`, params)
-
-    if (data.code == 200) {
-      message.success('已删除')
-      users.value = users.value.filter(u => u != user)
-    } else {
-      message.error(`删除失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`删除失败: ${err}`)
-  } finally {
-    isLoading.value = false
-  }
+  if (await run(() => QueryGetAPI(`${POINT_API_URL}delete-user`, params), { success: '已删除', fail: '删除失败' }))
+    users.value = users.value.filter(u => u != user)
 }
 
 // 重置所有用户积分
 async function resetAllPoints() {
-  // 验证确认文本
   if (resetConfirmText.value !== RESET_CONFIRM_TEXT) {
     message.error(`请输入"${RESET_CONFIRM_TEXT}"以确认操作`)
     return
   }
 
-  isLoading.value = true
-  try {
-    const data = await QueryGetAPI(`${POINT_API_URL}reset`)
-
-    if (data.code == 200) {
-      message.success('已重置所有用户积分')
-      resetConfirmText.value = ''
-      showResetAllPointsModal.value = false
-
-      // 重新加载用户数据
-      setTimeout(() => {
-        refresh()
-      }, 1500)
-    } else {
-      message.error(`重置失败: ${data.message}`)
-    }
-  } catch (err) {
-    message.error(`重置失败: ${err}`)
-  } finally {
-    isLoading.value = false
+  if (await run(() => QueryGetAPI(`${POINT_API_URL}reset`), { success: '已重置所有用户积分', fail: '重置失败' })) {
+    resetConfirmText.value = ''
+    showResetAllPointsModal.value = false
+    setTimeout(() => refresh(), 1500)
   }
 }
 

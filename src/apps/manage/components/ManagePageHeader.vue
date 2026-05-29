@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { FunctionTypes } from '@/api/api-models'
-import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import { useMessage, NFlex, NSwitch, NText } from 'naive-ui';
-import { ref } from 'vue'
+import { useAccount } from '@/api/account'
+import { NFlex, NSwitch, NText } from 'naive-ui'
+import { computed } from 'vue'
+import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 
 const props = defineProps<{
   title: string
@@ -12,38 +13,8 @@ const props = defineProps<{
 }>()
 
 const accountInfo = useAccount()
-const message = useMessage()
-const switchLoading = ref(false)
-
-async function setFunctionEnable(enable: boolean) {
-  if (!props.functionType) return
-  switchLoading.value = true
-  try {
-    const success = enable
-      ? await EnableFunction(props.functionType)
-      : await DisableFunction(props.functionType)
-
-    if (success) {
-      message.success(`${props.title}功能已${enable ? '启用' : '禁用'}`)
-      // 更新本地状态
-      if (accountInfo.value?.settings?.enableFunctions) {
-        const list = accountInfo.value.settings.enableFunctions
-        if (enable && !list.includes(props.functionType)) {
-          list.push(props.functionType)
-        } else if (!enable) {
-          const index = list.indexOf(props.functionType)
-          if (index > -1) list.splice(index, 1)
-        }
-      }
-    } else {
-      message.error(`无法${enable ? '启用' : '禁用'}${props.title}功能`)
-    }
-  } catch (err) {
-    message.error(`操作失败: ${String(err)}`)
-  } finally {
-    switchLoading.value = false
-  }
-}
+const toggle = props.functionType != null ? useFunctionToggle(props.functionType, props.title) : null
+const switchLoading = computed(() => toggle?.loading.value ?? false)
 </script>
 
 <template>
@@ -67,7 +38,7 @@ async function setFunctionEnable(enable: boolean) {
             :value="accountInfo.settings?.enableFunctions?.includes(functionType)"
             :loading="switchLoading"
             :disabled="loading || switchLoading"
-            @update:value="setFunctionEnable"
+            @update:value="toggle?.setEnable"
           >
             <template #checked>
               已启用

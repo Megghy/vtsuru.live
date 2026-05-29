@@ -33,6 +33,7 @@ import {
 import { computed, h, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
+import { formatPoints, formatTime } from '@/apps/manage/composables/formatters'
 import { POINT_API_URL } from '@/shared/config'
 
 interface DuplicateUserRow extends ResponsePointGuardDuplicateUserModel {
@@ -99,14 +100,6 @@ const selectedUsers = computed(() => {
 const selectedPreviewPoints = computed(() => selectedUsers.value.reduce((sum, row) => sum + row.previewPoints, 0))
 const selectedEventDuplicates = computed(() => selectedUsers.value.reduce((sum, row) => sum + row.duplicateEventCount, 0))
 const selectedLiveDuplicates = computed(() => selectedUsers.value.reduce((sum, row) => sum + row.duplicateLiveCount, 0))
-
-function formatUnixTime(unix: number) {
-  return new Date(unix).toLocaleString('zh-CN', { hour12: false })
-}
-
-function formatPoints(value: number) {
-  return value.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
-}
 
 function getUserSecondaryText(user: ResponsePointGuardDuplicateUserModel) {
   if (user.info?.userId) return `UID ${user.info.userId}`
@@ -262,7 +255,7 @@ const columns: DataTableColumns<DuplicateUserRow> = [
     title: '时间范围',
     key: 'timeRange',
     width: 260,
-    render: row => `${formatUnixTime(row.firstEventAt)} ~ ${formatUnixTime(row.lastEventAt)}`,
+    render: row => `${formatTime(row.firstEventAt)} ~ ${formatTime(row.lastEventAt)}`,
   },
   {
     title: '操作',
@@ -449,7 +442,7 @@ const columns: DataTableColumns<DuplicateUserRow> = [
                     </NText>
                   </NFlex>
                   <NText depth="3">
-                    {{ formatUnixTime(group.anchorAt) }} ~ {{ formatUnixTime(group.lastAt) }}
+                    {{ formatTime(group.anchorAt) }} ~ {{ formatTime(group.lastAt) }}
                   </NText>
                 </NFlex>
                 <NFlex vertical :size="8" style="margin-top: 12px;">
@@ -465,7 +458,7 @@ const columns: DataTableColumns<DuplicateUserRow> = [
                       <NTag :type="entry.isDuplicate ? 'warning' : 'success'" :bordered="false">
                         {{ entry.isDuplicate ? '重复' : '保留' }}
                       </NTag>
-                      <NText>{{ formatUnixTime(entry.time) }}</NText>
+                      <NText>{{ formatTime(entry.time) }}</NText>
                       <NText depth="3">
                         {{ entry.message }}
                       </NText>
