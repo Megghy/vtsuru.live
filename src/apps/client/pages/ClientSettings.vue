@@ -13,6 +13,7 @@ import { useSettings } from '@/apps/client/store/useSettings'
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
+import { useWebFetcher } from '@/store/useWebFetcher'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 // --- State ---
@@ -45,7 +46,11 @@ const handleCheckUpdate = async () => {
       
       // 询问是否立即重启
       const { relaunch } = await import('@tauri-apps/plugin-process')
-      setTimeout(() => relaunch(), 2000)
+      setTimeout(() => {
+        void useWebFetcher().Stop()
+          .catch(err => console.warn('重启前停止 EventFetcher 失败:', err))
+          .then(() => relaunch())
+      }, 2000)
     } else {
       window.$message.success('当前已是最新版本')
     }

@@ -314,6 +314,11 @@ async function handleUpdateInstall(update: any) {
 
     // 延迟 3 秒后重启
     await new Promise(resolve => setTimeout(resolve, 3000))
+    try {
+      await useWebFetcher().Stop()
+    } catch (stopError) {
+      warn(`[更新] 重启前停止 EventFetcher 失败: ${stopError}`)
+    }
     await relaunch()
   } catch (error) {
     warn(`[更新] 安装更新失败: ${error}`)

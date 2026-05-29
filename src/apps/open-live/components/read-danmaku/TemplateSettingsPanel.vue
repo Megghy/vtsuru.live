@@ -34,6 +34,7 @@ const fieldOptionsByEvent: Record<string, Array<{ label: string; value: Conditio
   gift: [
     { label: '价格 (元)', value: 'price' },
     { label: '数量', value: 'count' },
+    { label: '礼物名称', value: 'gift_name' },
     { label: '粉丝勋章等级', value: 'fans_medal_level' },
     { label: '舰长等级', value: 'guard_level' },
   ],
@@ -72,8 +73,12 @@ function getTextOps(): Array<{ label: string; value: ConditionOp }> {
   ]
 }
 
+function isTextField(field: ConditionField): boolean {
+  return field === 'message' || field === 'gift_name'
+}
+
 function getOpsForField(field: ConditionField) {
-  return field === 'message' ? getTextOps() : getNumericOps()
+  return isTextField(field) ? getTextOps() : getNumericOps()
 }
 
 function addRule(eventKey: string) {
@@ -89,8 +94,8 @@ function removeRule(eventKey: string, index: number) {
 function addCondition(rule: TemplateRule, eventKey: string) {
   const fields = fieldOptionsByEvent[eventKey]
   const defaultField = fields?.[0]?.value ?? 'price'
-  const defaultOp = defaultField === 'message' ? 'contains' : '>='
-  rule.conditions.push({ field: defaultField, op: defaultOp as ConditionOp, value: defaultField === 'message' ? '' : 0 })
+  const defaultOp = isTextField(defaultField) ? 'contains' : '>='
+  rule.conditions.push({ field: defaultField, op: defaultOp as ConditionOp, value: isTextField(defaultField) ? '' : 0 })
 }
 
 function removeCondition(rule: TemplateRule, index: number) {
@@ -98,7 +103,7 @@ function removeCondition(rule: TemplateRule, index: number) {
 }
 
 function onFieldChange(cond: TemplateCondition) {
-  if (cond.field === 'message') {
+  if (isTextField(cond.field)) {
     cond.op = 'contains'
     cond.value = ''
   } else {
@@ -259,7 +264,7 @@ function fireMock() {
                   size="small" style="width: 80px"
                 />
                 <NInputNumber
-                  v-if="cond.field !== 'message'"
+                  v-if="!isTextField(cond.field)"
                   :value="cond.value as number"
                   size="small" style="width: 100px" :min="0"
                   @update:value="(v: number | null) => cond.value = v ?? 0"

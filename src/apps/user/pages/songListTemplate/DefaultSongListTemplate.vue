@@ -9,7 +9,6 @@ import SongList from '@/components/SongList.vue'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { getSongRequestTooltip } from './utils/songRequestUtils'
-import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
 // 所有模板都应该有这些
 const props = defineProps<SongListConfigType>()

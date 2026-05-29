@@ -532,7 +532,7 @@ async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boo
   })
   settings.settings.useDanmakuClientType = type
   settings.save()
-  webfetcher.Stop()
+  await webfetcher.Stop()
   noticeRef.content = '正在连接弹幕服务器...'
   const result = await callStartDanmakuClient()
   noticeRef.destroy()
@@ -572,7 +572,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
   } else {
     // 禁用 EventFetcher
     if (webfetcher.state !== 'disconnected') {
-      webfetcher.Stop()
+      await webfetcher.Stop()
       message.info('EventFetcher 已停止')
     }
     // 重置弹幕客户端初始化状态，确保重新启用时能正确连接

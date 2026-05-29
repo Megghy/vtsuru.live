@@ -104,6 +104,13 @@ export default {
       },
     },
     {
+      path: 'gift-window',
+      name: 'client-gift-window-redirect',
+      redirect: {
+        name: 'client-gift-window',
+      },
+    },
+    {
       path: 'test',
       name: 'client-test',
       component: async () => import('@/apps/client/pages/ClientTest.vue'),

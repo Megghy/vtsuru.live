@@ -30,7 +30,7 @@ export interface QueueItem {
   data: EventModel
 }
 
-export type ConditionField = 'price' | 'count' | 'guard_level' | 'fans_medal_level' | 'message_length' | 'message'
+export type ConditionField = 'price' | 'count' | 'guard_level' | 'fans_medal_level' | 'message_length' | 'message' | 'gift_name'
 export type ConditionOp = '>=' | '<=' | '==' | 'contains' | 'regex'
 
 export interface TemplateCondition {
@@ -331,6 +331,7 @@ function createSpeechService() {
 
   // 云端自动同步
   let _cloudSyncSuppressed = false
+  let _initComplete = false
   let _cloudSaveTimer: ReturnType<typeof globalThis.setTimeout> | undefined
 
   async function syncFromCloud() {
@@ -349,7 +350,7 @@ function createSpeechService() {
   }
 
   function debouncedSaveToCloud() {
-    if (_cloudSyncSuppressed || !isLoggedIn.value) return
+    if (_cloudSyncSuppressed || !isLoggedIn.value || !_initComplete) return
     if (_cloudSaveTimer) globalThis.clearTimeout(_cloudSaveTimer)
     _cloudSaveTimer = globalThis.setTimeout(() => {
       UploadConfig('Speech', settings.value)
@@ -432,6 +433,7 @@ function createSpeechService() {
       }, 250)
 
       speechState.isInitialized = true
+      _initComplete = true
       console.log('[TTS] 语音服务初始化完成')
     } catch (error) {
       console.error('[TTS] 初始化失败:', error)
@@ -488,6 +490,7 @@ function createSpeechService() {
       case 'fans_medal_level': fieldValue = data.fans_medal_level ?? 0; break
       case 'message_length': fieldValue = (data.msg ?? '').length; break
       case 'message': fieldValue = data.msg ?? ''; break
+      case 'gift_name': fieldValue = data.msg ?? ''; break
       default: return false
     }
     const numVal = typeof fieldValue === 'number' ? fieldValue : Number.parseFloat(fieldValue)

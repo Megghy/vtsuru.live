@@ -41,6 +41,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   const danmakuServerUrl = ref<string>()
   /** SignalR 连接 ID */
   const signalRConnectionId = ref<string>()
+  const serverDisconnectReason = ref<string>()
   // const heartbeatLatency = ref<number>(null); // 心跳延迟暂不实现，复杂度较高
 
   // --- 事件处理 ---
@@ -84,11 +85,16 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     startedAt.value = new Date()
     isFromClient = _isFromClient
     state.value = 'connecting' // 设置为连接中状态
+    disconnectedByServer = false
+    serverDisconnectReason.value = undefined
 
     // 使用 navigator.locks 确保同一时间只有一个 Start 操作执行
     const result = await navigator.locks.request('webFetcherStartLock', async () => {
       console.log(`${prefix.value}开始启动...`)
       while (!(await connectSignalR())) {
+        if (serverDisconnectReason.value) {
+          return { success: false, message: serverDisconnectReason.value }
+        }
         console.log(`${prefix.value}连接 SignalR 失败, 5秒后重试`)
         await new Promise(resolve => setTimeout(resolve, 5000))
         // 如果用户手动停止，则退出重试循环
@@ -121,7 +127,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
 
     // 如果启动过程中因为手动停止而失败，需要确保状态是 disconnected
     if (!result.success) {
-      Stop() // 确保清理资源
+      await Stop() // 确保清理资源
       return { success: false, message: result.message || '启动失败' }
     }
 
@@ -131,7 +137,9 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   /**
    * 停止 WebFetcher 服务
    */
-  function Stop() {
+  async function Stop() {
+    disconnectedByServer = false
+    serverDisconnectReason.value = undefined
     if (state.value === 'disconnected') return
 
     console.log(`${prefix.value}正在停止...`)
@@ -148,9 +156,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     danmakuServerUrl.value = undefined
 
     // 停止 SignalR 连接
-    signalRClient.value?.stop()
+    const connection = signalRClient.value
     signalRClient.value = undefined
     signalRConnectionId.value = undefined
+    await connection?.stop()
 
     // 清理状态
     startedAt.value = undefined
@@ -215,6 +224,30 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
   }
 
   let isConnectingSignalR = false
+  async function disconnectByServer(reason: unknown, connection: signalR.HubConnection) {
+    const message = String(reason)
+    console.log(`${prefix.value}被服务器断开连接: ${message}`)
+    disconnectedByServer = true
+    serverDisconnectReason.value = message
+    window.$message.error(`被服务器要求断开连接: ${message}`)
+    state.value = 'disconnected'
+    signalRClient.value = undefined
+    signalRConnectionId.value = undefined
+    await connection.stop()
+  }
+
+  async function waitServerAcceptance(connection: signalR.HubConnection): Promise<void> {
+    return new Promise((resolve, reject) => {
+      connection.on('Finished', () => resolve())
+      connection.on('Disconnect', (reason: unknown) => {
+        void disconnectByServer(reason, connection).then(
+          () => reject(new Error(String(reason))),
+          reject,
+        )
+      })
+    })
+  }
+
   /**
    * 连接 SignalR 服务器
    */
@@ -223,36 +256,33 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       return false
     }
     isConnectingSignalR = true
-    if (signalRClient.value && signalRClient.value.state !== signalR.HubConnectionState.Disconnected) {
-      console.log(`${prefix.value}SignalR 已连接或正在连接`)
-      return true
-    }
-    signalRClient.value?.stop()
-    signalRClient.value = undefined
-    signalRConnectionId.value = undefined
-    console.log(`${prefix.value}正在连接到 vtsuru 服务器...`)
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`, { // 使用 account.token
-        headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets,
-      })
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) => {
-          return retryContext.elapsedMilliseconds < 60 * 1000 ? 10 * 1000 : 30 * 1000
-        },
-      }) // 自动重连策略
-      .withHubProtocol(new msgpack.MessagePackHubProtocol()) // 使用 MessagePack 协议
-      .build()
-
-    connection.on('Disconnect', (reason: unknown) => {
-      console.log(`${prefix.value}被服务器断开连接: ${reason}`)
-      disconnectedByServer = true // 标记是服务器主动断开
-      window.$message.error(`被服务器要求断开连接: ${reason}`)
-    })
-    // --- 尝试启动连接 ---
     try {
+      if (signalRClient.value && signalRClient.value.state !== signalR.HubConnectionState.Disconnected) {
+        console.log(`${prefix.value}SignalR 已连接或正在连接`)
+        return true
+      }
+      await signalRClient.value?.stop()
+      signalRClient.value = undefined
+      signalRConnectionId.value = undefined
+      console.log(`${prefix.value}正在连接到 vtsuru 服务器...`)
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`, { // 使用 account.token
+          headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
+          skipNegotiation: true,
+          transport: signalR.HttpTransportType.WebSockets,
+        })
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds: (retryContext) => {
+            return retryContext.elapsedMilliseconds < 60 * 1000 ? 10 * 1000 : 30 * 1000
+          },
+        }) // 自动重连策略
+        .withHubProtocol(new msgpack.MessagePackHubProtocol()) // 使用 MessagePack 协议
+        .build()
+
+      const accepted = waitServerAcceptance(connection)
+      // --- 尝试启动连接 ---
       await connection.start()
+      await accepted
       signalRConnectionId.value = connection.connectionId ?? undefined // 保存连接ID
       await sendSelfInfo(connection) // 发送客户端信息
       signalRId.value = signalRConnectionId.value
@@ -283,6 +313,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
           signalRClient.value = undefined
           signalRConnectionId.value = undefined
           setTimeout(() => {
+            if (state.value === 'disconnected') return
             console.log(`${prefix.value}尝试重启...`)
             connectSignalR()
           }, 30 * 1000)
