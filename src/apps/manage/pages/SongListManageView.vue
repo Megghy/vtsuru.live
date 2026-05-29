@@ -43,7 +43,7 @@ function onSongsAdded(addedSongs: SongsInfo[]) {
   songs.value.push(...addedSongs)
 }
 
-function exportData(filtered = false) {
+function exportData() {
   const source = songs.value
   const from = (f: SongFrom) => {
     switch (f) {

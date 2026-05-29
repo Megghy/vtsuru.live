@@ -119,7 +119,6 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   const rankMap = ref(new Map<number, RankEntry>())
   let bc: BroadcastChannel | undefined
   let isInited = false
-  let cleanupTimer: ReturnType<typeof setInterval> | undefined
 
   function closeWindow() {
     giftWindow.value?.hide()
@@ -309,7 +308,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       sendGiftList()
     }, { deep: true })
 
-    cleanupTimer = setInterval(cleanupExpired, 1000)
+    setInterval(cleanupExpired, 1000)
     isInited = true
   }
 

@@ -7,12 +7,15 @@ import { h, onMounted, onUnmounted, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import SongList from '@/components/SongList.vue'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { getSongRequestTooltip } from './utils/songRequestUtils'
+import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
 // 所有模板都应该有这些
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
 const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 
 const isLoading = ref('')
 const songListRef = ref<InstanceType<typeof SongList> | null>(null)
@@ -79,14 +82,17 @@ function buttons(song: SongsInfo) {
                   onClick: () => {
                     isLoading.value = song.key
                     emits('requestSong', song)
-                    isLoading.value = ''
+                    window.setTimeout(() => { isLoading.value = '' }, 2000)
                   },
                 },
                 {
                   icon: () => h(NIcon, { component: CloudAdd20Filled }),
                 },
               ),
-            default: () => getSongRequestTooltip(song, props.liveRequestSettings),
+            default: () => getSongRequestTooltip(song, props.liveRequestSettings, {
+              isLoggedIn: !!accountInfo.value.id,
+              isBiliAuthed: biliAuth.isAuthed,
+            }),
           },
         )
       : undefined,
@@ -133,6 +139,7 @@ function buttons(song: SongsInfo) {
       :songs="data ?? []"
       :is-self="accountInfo?.id === userInfo?.id"
       :extra-button="buttons"
+      :live-request-active="liveRequestActive"
       v-bind="$attrs"
     />
     <NCollapse v-if="userInfo?.canRequestSong">

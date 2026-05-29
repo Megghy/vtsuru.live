@@ -4,11 +4,12 @@ import type { SongRequestOption, SongsInfo } from '@/api/api-models'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'
 import { ArrowCounterclockwise20Filled, ArrowSortDown20Filled, ArrowSortUp20Filled, SquareArrowForward24Filled } from '@vicons/fluent'
-import { List } from 'linqts'
 import { NButton, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NSelect, NTag, NTooltip } from 'naive-ui';
 import { computed, h, ref, watch } from 'vue'
 import { SongFrom } from '@/api/api-models'
+import { useAccount } from '@/api/account'
 import { defineTemplateConfig } from '@/shared/types/VTsuruConfigTypes'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import bilibili from '@/svgs/bilibili.svg'
 import douyin from '@/svgs/douyin.svg'
 import FiveSingIcon from '@/svgs/fivesing.svg'
@@ -16,6 +17,7 @@ import neteaseMusic from '@/svgs/neteaseMusic.svg'
 import qqMusic from '@/svgs/qqMusic.svg'
 import { isDarkMode } from '@/shared/utils'
 import { getSongRequestConfirmText, getSongRequestTooltip } from './utils/songRequestUtils'
+import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
 // Interface Tab - can be reused for both language and tag buttons
 interface FilterButton {
@@ -27,6 +29,14 @@ const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
 const emits = defineEmits(['requestSong'])
 defineExpose({ Config, DefaultConfig })
 const isHovering = ref(false)
+const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
+const requestAuthState = computed(() => ({
+  isLoggedIn: !!accountInfo.value.id,
+  isBiliAuthed: biliAuth.isAuthed,
+}))
+
+const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 // --- State for Filters ---
 const selectedLanguage = ref<string | undefined>()
@@ -40,6 +50,15 @@ const selectedOption = ref<string | undefined>()
 type SortKey = 'name' | 'author' | 'language' | 'tags' | 'options' | 'description' | null
 const sortKey = ref<SortKey>(null) // 当前排序列
 const sortOrder = ref<'asc' | 'desc'>('asc') // 当前排序顺序
+
+const optionFilters: Record<string, (song: SongsInfo) => boolean> = {
+  未设定: song => !song.options,
+  舰长: song => song.options?.needJianzhang === true,
+  提督: song => song.options?.needTidu === true,
+  总督: song => song.options?.needZongdu === true,
+  粉丝牌: song => (song.options?.fanMedalMinLevel ?? 0) > 0,
+  SC: song => (song.options?.scMinPrice ?? 0) > 0,
+}
 
 // --- Computed Properties for Filter Buttons ---
 
@@ -89,20 +108,7 @@ const tagButtons = computed<FilterButton[]>(() =>
 
 // --- 添加点歌条件筛选按钮 ---
 // 提取所有唯一的点歌条件类型
-const allOptionTypes = computed<string[]>(() => {
-  const optionTypes = new Set<string>()
-
-  // 添加"未设定"选项
-  optionTypes.add('未设定')
-  // 添加基本选项类型
-  optionTypes.add('舰长')
-  optionTypes.add('提督')
-  optionTypes.add('总督')
-  optionTypes.add('粉丝牌')
-  optionTypes.add('SC')
-
-  return Array.from(optionTypes)
-})
+const allOptionTypes = computed<string[]>(() => Object.keys(optionFilters))
 
 // 创建点歌条件筛选按钮
 const optionButtons = computed<FilterButton[]>(() =>
@@ -129,110 +135,56 @@ const artistOptions = computed(() => {
   return allArtists.value.map(artist => ({ label: artist, value: artist }))
 })
 
-// --- Updated Filtered & Sorted Songs Logic using linq-ts ---
 const filteredAndSortedSongs = computed(() => {
-  if (!props.data) return []
+  const lowerSearch = searchQuery.value.trim().toLowerCase()
+  const songs = (props.data ?? []).filter((song) => {
+    return matchesArrayFilter(song.language, selectedLanguage.value)
+      && matchesArrayFilter(song.tags, selectedTag.value)
+      && (!selectedArtist.value || song.author?.includes(selectedArtist.value))
+      && (!selectedOption.value || optionFilters[selectedOption.value]?.(song))
+      && (!lowerSearch || getSearchText(song).includes(lowerSearch))
+  })
 
-  let query = new List<SongsInfo>(props.data)
+  if (!sortKey.value) return songs
 
-  // 1. Filter by Selected Language
-  if (selectedLanguage.value) {
-    const lang = selectedLanguage.value
-    if (lang === '未设定') {
-      // 筛选没有设置语言或语言数组为空的歌曲
-      query = query.Where(song => !song.language || song.language.length === 0)
-    } else {
-      query = query.Where(song => song.language?.includes(lang))
-    }
-  }
-
-  // 2. Filter by Selected Tag
-  if (selectedTag.value) {
-    const tag = selectedTag.value
-    if (tag === '未设定') {
-      // 筛选没有设置标签或标签数组为空的歌曲
-      query = query.Where(song => !song.tags || song.tags.length === 0)
-    } else {
-      query = query.Where(song => song.tags?.includes(tag) ?? false)
-    }
-  }
-
-  // 3. Filter by Selected Artist
-  if (selectedArtist.value) {
-    const artist = selectedArtist.value
-    query = query.Where(song => song.author?.includes(artist) ?? false)
-  }
-
-  // 新增: 4. 根据点歌条件筛选
-  if (selectedOption.value) {
-    const option = selectedOption.value
-
-    if (option === '未设定') {
-      // 筛选没有设置点歌条件的歌曲
-      query = query.Where(song => !song.options)
-    } else if (option === '舰长') {
-      query = query.Where(song => song.options?.needJianzhang === true)
-    } else if (option === '提督') {
-      query = query.Where(song => song.options?.needTidu === true)
-    } else if (option === '总督') {
-      query = query.Where(song => song.options?.needZongdu === true)
-    } else if (option === '粉丝牌') {
-      query = query.Where(song => (song.options?.fanMedalMinLevel ?? 0) > 0)
-    } else if (option === 'SC') {
-      query = query.Where(song => (song.options?.scMinPrice ?? 0) > 0)
-    }
-  }
-
-  // 原有的搜索逻辑
-  // 4. Filter by Search Query (case-insensitive, including tags)
-  if (searchQuery.value.trim()) {
-    const lowerSearch = searchQuery.value.toLowerCase().trim()
-    query = query.Where(song =>
-      song.name.toLowerCase().includes(lowerSearch)
-      || (song.author?.some(a => a.toLowerCase().includes(lowerSearch)) ?? false)
-      || (song.language?.some(l => l.toLowerCase().includes(lowerSearch)) ?? false)
-      || (song.tags?.some(t => t.toLowerCase().includes(lowerSearch)) ?? false)
-      || (song.description?.toLowerCase().includes(lowerSearch) ?? false),
-    )
-  }
-
-  // 5. Sort the filtered songs using linq-ts
-  if (sortKey.value) {
-    const key = sortKey.value
-
-    // Define selector function for linq-ts
-    const keySelector = (song: SongsInfo): any => {
-      if (key === 'options') {
-        // Prefer sorting by specific conditions first if needed, then by presence
-        // Example: Sort by 'needZongdu' first if key is 'options'
-        // For simplicity, just sorting by presence (1) vs absence (0)
-        return song.options ? 1 : 0
-      }
-      const val = song[key]
-      // Handle potential array values for sorting (simple join)
-      if (Array.isArray(val)) return val.join('').toLowerCase() // Lowercase for consistent string sort
-      // Handle strings and other types, provide default for null/undefined
-      return (typeof val === 'string' ? val.toLowerCase() : val) ?? ''
-    }
-
-    // Define a stable secondary sort key selector
-    const secondaryKeySelector = (song: SongsInfo): string | number => {
-      return song.id ?? (`${song.name}-${song.author?.join('/') ?? ''}`) // Use ID or fallback key
-    }
-
-    if (sortOrder.value === 'asc') {
-      query = query.OrderBy(keySelector).ThenBy(secondaryKeySelector) // Add ThenBy for stability
-    } else {
-      query = query.OrderByDescending(keySelector).ThenBy(secondaryKeySelector) // Add ThenBy for stability
-    }
-  }
-  // else if no primary sort key, maybe apply a default sort? e.g., by name
-  // else {
-  //    query = query.OrderBy(s => s.name);
-  // }
-
-  return query.ToArray() // Get the final array
+  const order = sortOrder.value === 'asc' ? 1 : -1
+  return songs.toSorted((left, right) => {
+    const primary = compareSortValue(getSortValue(left, sortKey.value), getSortValue(right, sortKey.value))
+    if (primary !== 0) return primary * order
+    return compareSortValue(getStableSortValue(left), getStableSortValue(right))
+  })
 })
+
+function matchesArrayFilter(values: string[] | undefined, selected: string | undefined) {
+  if (!selected) return true
+  if (selected === '未设定') return !values?.length
+  return values?.includes(selected) ?? false
+}
+
+function getSearchText(song: SongsInfo) {
+  return [
+    song.name,
+    song.author?.join(' '),
+    song.language?.join(' '),
+    song.tags?.join(' '),
+    song.description,
+  ].filter(Boolean).join(' ').toLowerCase()
+}
+
+function getSortValue(song: SongsInfo, key: Exclude<SortKey, null>) {
+  if (key === 'options') return song.options ? 1 : 0
+  const value = song[key]
+  if (Array.isArray(value)) return value.join('').toLowerCase()
+  return typeof value === 'string' ? value.toLowerCase() : value ?? ''
+}
+
+function getStableSortValue(song: SongsInfo) {
+  return song.id ?? `${song.name}-${song.author?.join('/') ?? ''}`
+}
+
+function compareSortValue(left: string | number, right: string | number) {
+  return String(left).localeCompare(String(right), undefined, { numeric: true })
+}
 
 // --- Methods ---
 
@@ -348,7 +300,7 @@ function randomOrder() {
 }
 
 function onSongClick(song: SongsInfo) {
-  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings)
+  const tooltip = getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState.value)
   const confirmText = getSongRequestConfirmText(song)
   window.$modal.create({
     preset: 'dialog',
@@ -929,6 +881,14 @@ export const Config = defineTemplateConfig([
                 >
                   <td>
                     <span class="song-name">
+                      <span
+                        v-if="singingSongKeySet.has(song.key)"
+                        class="status-badge singing"
+                      >演唱中</span>
+                      <span
+                        v-else-if="queuedSongKeySet.has(song.key)"
+                        class="status-badge queued"
+                      >排队中</span>
                       <component :is="GetPlayButton(song)" />
                       <NTooltip>
                         <template #trigger>
@@ -939,7 +899,7 @@ export const Config = defineTemplateConfig([
                             {{ song.name }}
                           </span>
                         </template>
-                        {{ getSongRequestTooltip(song, props.liveRequestSettings) }}
+                        {{ getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState) }}
                       </NTooltip>
                     </span>
                   </td>
@@ -1534,6 +1494,26 @@ html.dark .song-name {
   text-align: center;
   font-style: italic;
   color: #999999;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.status-badge.singing {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+.status-badge.queued {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
 }
 
 html.dark .no-results td {

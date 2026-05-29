@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
 import type { VNodeChild } from 'vue'
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
+import { SongFrom, SongRequestStatus } from '@/api/api-models'
 import { Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
 import {
   NButton, NCard, NDataTable, NFlex, NIcon, NInput, NPopconfirm,
@@ -21,6 +21,7 @@ const props = defineProps<{
   canEdit?: boolean
   isSelf: boolean
   extraButton?: (song: SongsInfo) => VNodeChild[]
+  liveRequestActive?: SongRequestInfo[]
 }>()
 
 const message = useMessage()
@@ -33,6 +34,21 @@ const {
   updateSong, deleteSong, deleteBatch, batchUpdate,
   nextPage, prevPage,
 } = state
+
+const singingKeySet = computed(() => {
+  const set = new Set<string>()
+  props.liveRequestActive?.forEach(item => {
+    if (item.status === SongRequestStatus.Singing && item.song?.key) set.add(item.song.key)
+  })
+  return set
+})
+const queuedKeySet = computed(() => {
+  const set = new Set<string>()
+  props.liveRequestActive?.forEach(item => {
+    if (item.status !== SongRequestStatus.Singing && item.song?.key) set.add(item.song.key)
+  })
+  return set
+})
 
 const volume = usePersistedStorage('Settings.AplayerVolume', 0.8)
 const showListenButton = usePersistedStorage('SongList.ShowListenButton', true)
@@ -74,10 +90,18 @@ const columns = computed(() => {
     { type: 'selection', disabled: () => !props.isSelf },
     {
     key: 'name', title: '曲名', resizable: true, minWidth: 150, width: 300, sorter: true,
-    render: (row) => h(NFlex, { vertical: true, size: 0, wrap: false }, () => [
-      h(NText, { style: { color: row.options?.scMinPrice ? '#c36767' : '' } }, () => row.name),
-      row.translateName ? h(NText, { depth: '3', style: { fontSize: '12px' } }, () => row.translateName) : null,
-    ]),
+    render: (row) => {
+      const items: VNodeChild[] = []
+      if (singingKeySet.value.has(row.key))
+        items.push(h(NTag, { type: 'warning', size: 'small', style: { marginRight: '6px' } }, () => '演唱中'))
+      else if (queuedKeySet.value.has(row.key))
+        items.push(h(NTag, { type: 'success', size: 'small', style: { marginRight: '6px' } }, () => '排队中'))
+      items.push(h(NFlex, { vertical: true, size: 0, wrap: false }, () => [
+        h(NText, { style: { color: row.options?.scMinPrice ? '#c36767' : '' } }, () => row.name),
+        row.translateName ? h(NText, { depth: '3', style: { fontSize: '12px' } }, () => row.translateName) : null,
+      ]))
+      return h(NFlex, { align: 'center', size: 0 }, () => items)
+    },
   },
   {
     key: 'author', title: '作者', width: 200, resizable: true,

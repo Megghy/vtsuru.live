@@ -6,7 +6,7 @@ import {
 import { useSpeechService } from '@/store/useSpeechService'
 import SectionField from './SectionField.vue'
 
-const props = defineProps<{
+defineProps<{
   audioOutputDevices: Array<{ label: string; value: string }>
   audioOutputDevicesLoading: boolean
 }>()

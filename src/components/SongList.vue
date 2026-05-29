@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { VNodeChild } from 'vue'
-import type { SongsInfo } from '@/api/api-models'
+import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
 import SongListTable from '@/components/song-list/SongListTable.vue'
 import { ref } from 'vue'
 
@@ -9,6 +9,7 @@ defineProps<{
   canEdit?: boolean
   isSelf: boolean
   extraButton?: (song: SongsInfo) => VNodeChild[]
+  liveRequestActive?: SongRequestInfo[]
 }>()
 
 const tableRef = ref<InstanceType<typeof SongListTable>>()
@@ -21,5 +22,5 @@ defineExpose({
 </script>
 
 <template>
-  <SongListTable ref="tableRef" :songs="songs" :can-edit="canEdit" :is-self="isSelf" :extra-button="extraButton" />
+  <SongListTable ref="tableRef" :songs="songs" :can-edit="canEdit" :is-self="isSelf" :extra-button="extraButton" :live-request-active="liveRequestActive" />
 </template>

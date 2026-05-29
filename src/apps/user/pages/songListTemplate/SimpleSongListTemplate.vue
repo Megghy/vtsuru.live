@@ -14,6 +14,7 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 import { GetGuardColor } from '@/shared/utils'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
+import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -23,6 +24,10 @@ const index = ref(20)
 
 const accountInfo = useAccount()
 const biliAuth = useBiliAuth()
+const requestAuthState = computed(() => ({
+  isLoggedIn: !!accountInfo.value.id,
+  isBiliAuthed: biliAuth.isAuthed,
+}))
 
 const selectedTag = ref('')
 const selectedSong = ref<SongsInfo>()
@@ -31,6 +36,8 @@ const selectedAuthor = ref<string>()
 
 const isLrcLoading = ref('')
 const isLoading = ref('')
+
+const { singing: singingSongKeySet, queued: queuedSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 const tags = computed(() => {
   if (props.data) {
@@ -84,6 +91,11 @@ function loadMore() {
   if (props.data) {
     index.value += props.data.length > 20 + index.value ? 20 : props.data.length - index.value
   }
+}
+function handleRequestSong(song: SongsInfo) {
+  isLoading.value = song.key
+  emits('requestSong', song)
+  window.setTimeout(() => { isLoading.value = '' }, 2000)
 }
 </script>
 
@@ -177,11 +189,23 @@ function loadMore() {
                 align="center"
               >
                 <div
-                  :style="`border-radius: 4px; background-color: ${item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"
+                  :style="`border-radius: 4px; background-color: ${singingSongKeySet.has(item.key) ? '#f0a040' : item.options ? '#bd5757' : '#577fb8'}; width: 7px; height: 20px`"
                 />
                 <NEllipsis>
                   {{ item.name }}
                 </NEllipsis>
+                <span
+                  v-if="singingSongKeySet.has(item.key)"
+                  style="flex-shrink: 0; font-size: 11px; color: #f0a040; font-weight: 600;"
+                >
+                  正在演唱
+                </span>
+                <span
+                  v-else-if="queuedSongKeySet.has(item.key)"
+                  style="flex-shrink: 0; font-size: 11px; color: #52c41a; font-weight: 600;"
+                >
+                  排队中
+                </span>
               </NFlex>
             </template>
             <NFlex vertical>
@@ -284,21 +308,16 @@ function loadMore() {
                   <template #trigger>
                     <NButton
                       size="small"
-                      :type="getSongRequestButtonType(item, liveRequestSettings, !!accountInfo, biliAuth.isAuthed)"
+                      :type="getSongRequestButtonType(item, liveRequestSettings, requestAuthState)"
                       :loading="isLoading === item.key"
-                      @click="() => {
-                        isLoading = item.key
-                        emits('requestSong', item)
-                        isLoading = ''
-                      }
-                      "
+                      @click="() => handleRequestSong(item)"
                     >
                       <template #icon>
                         <NIcon :component="CloudAdd20Filled" />
                       </template>
                     </NButton>
                   </template>
-                  {{ getSongRequestTooltip(item, liveRequestSettings) }}
+                  {{ getSongRequestTooltip(item, liveRequestSettings, requestAuthState) }}
                 </NTooltip>
 
                 <NPopover

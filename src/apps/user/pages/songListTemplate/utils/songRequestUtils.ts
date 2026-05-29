@@ -1,6 +1,47 @@
 import type { Setting_LiveRequest, SongsInfo, UserInfo } from '@/api/api-models'
-import { useAccount } from '@/api/account'
-import { useBiliAuth } from '@/store/useBiliAuth'
+
+interface SongRequestAuthState {
+  isLoggedIn: boolean
+  isBiliAuthed: boolean
+}
+
+export interface SongRequestCheckResult {
+  canRequest: boolean
+  reason?: string
+  shouldCopyOnly?: boolean
+}
+
+const COPY_REASONS = {
+  special: '此项目有特殊要求, 请在直播间内点歌, 点歌弹幕已复制到剪切板',
+  webDisabled: '主播不允许从网页点歌, 点歌弹幕已复制到剪切板',
+  anonymousDisabled: '主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点歌弹幕已复制到剪切板',
+} as const
+
+const TOOLTIP_REASONS = {
+  special: '点歌 | 此项目有特殊要求, 请在直播间内点歌, 点击后将复制点歌内容到剪切板',
+  webDisabled: '点歌 | 主播不允许从网页点歌, 点击后将复制点歌内容到剪切板',
+  anonymousDisabled: '点歌 | 主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点击后将复制点歌内容到剪切板',
+} as const
+
+function isAnonymousWebRequestBlocked(
+  liveRequestSettings: Setting_LiveRequest | undefined,
+  { isLoggedIn, isBiliAuthed }: SongRequestAuthState,
+) {
+  return !!liveRequestSettings?.allowFromWeb
+    && !liveRequestSettings.allowAnonymousFromWeb
+    && !isLoggedIn
+    && !isBiliAuthed
+}
+
+function getCopyOnlyReason(
+  song: SongsInfo,
+  liveRequestSettings: Setting_LiveRequest | undefined,
+  authState: SongRequestAuthState,
+) {
+  if (song.options) return COPY_REASONS.special
+  if (isAnonymousWebRequestBlocked(liveRequestSettings, authState)) return COPY_REASONS.anonymousDisabled
+  if (!liveRequestSettings?.allowFromWeb) return COPY_REASONS.webDisabled
+}
 
 /**
  * 获取点歌按钮的tooltip文本
@@ -11,32 +52,11 @@ import { useBiliAuth } from '@/store/useBiliAuth'
 export function getSongRequestTooltip(
   song: SongsInfo,
   liveRequestSettings: Setting_LiveRequest | undefined,
+  authState: SongRequestAuthState,
 ): string {
-  const accountInfo = useAccount()
-  const biliAuth = useBiliAuth()
-  // 歌曲有特殊要求
-  if (song.options) {
-    return '点歌 | 此项目有特殊要求, 请在直播间内点歌, 点击后将复制点歌内容到剪切板'
-  }
-
-  // 主播不允许从网页点歌
-  if (liveRequestSettings?.allowFromWeb === false) {
-    return '点歌 | 主播不允许从网页点歌, 点击后将复制点歌内容到剪切板'
-  }
-
-  // 主播不允许匿名点歌且用户未登录
-  if (liveRequestSettings?.allowFromWeb
-    && !liveRequestSettings.allowAnonymousFromWeb
-    && !accountInfo.value.id
-    && !biliAuth.isAuthed) {
-    return '点歌 | 主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点击后将复制点歌内容到剪切板'
-  }
-
-  // 用户未登录
-  if (!accountInfo.value.id && !biliAuth.isAuthed) {
-    return '点歌 | 根据主播设置, 需要登录后才能点歌'
-  }
-
+  if (song.options) return TOOLTIP_REASONS.special
+  if (isAnonymousWebRequestBlocked(liveRequestSettings, authState)) return TOOLTIP_REASONS.anonymousDisabled
+  if (liveRequestSettings?.allowFromWeb === false) return TOOLTIP_REASONS.webDisabled
   return '点歌'
 }
 
@@ -44,26 +64,15 @@ export function getSongRequestTooltip(
  * 获取点歌按钮的类型
  * @param song 歌曲信息
  * @param liveRequestSettings 直播点歌设置
- * @param isLoggedIn 用户是否已登录
- * @param isBiliAuthed B站是否已授权
+ * @param authState 当前用户登录和B站授权状态
  * @returns 按钮类型
  */
 export function getSongRequestButtonType(
   song: SongsInfo,
   liveRequestSettings: Setting_LiveRequest | undefined,
-  isLoggedIn: boolean = true,
-  isBiliAuthed: boolean = false,
+  authState: SongRequestAuthState,
 ): 'warning' | 'info' {
-  if (song.options
-    || liveRequestSettings?.allowFromWeb === false
-    || (liveRequestSettings?.allowFromWeb
-      && !liveRequestSettings.allowAnonymousFromWeb
-      && !isLoggedIn
-      && !isBiliAuthed)) {
-    return 'warning'
-  }
-
-  return 'info'
+  return getCopyOnlyReason(song, liveRequestSettings, authState) ? 'warning' : 'info'
 }
 
 /**
@@ -81,37 +90,18 @@ export function canRequestSong(
   userInfo: UserInfo | undefined,
   liveRequestSettings: Setting_LiveRequest | undefined,
   isLoggedIn: boolean,
-  isBiliAuthed: boolean = false,
+  isBiliAuthed: boolean,
   nextRequestTime?: Date,
-): { canRequest: boolean, reason?: string, shouldCopyOnly?: boolean } {
-  // 检查主播信息
+): SongRequestCheckResult {
+  const reason = getCopyOnlyReason(song, liveRequestSettings, { isLoggedIn, isBiliAuthed })
+  if (reason) {
+    return { canRequest: false, reason, shouldCopyOnly: true }
+  }
+
   if (!userInfo?.id) {
     return { canRequest: false, reason: '无法获取主播信息，无法完成点歌' }
   }
 
-  // 判断是否应该只复制到剪贴板
-  const shouldCopyOnly = song.options
-    || !liveRequestSettings?.allowFromWeb
-    || (liveRequestSettings?.allowFromWeb
-      && !liveRequestSettings.allowAnonymousFromWeb
-      && !isLoggedIn
-      && !isBiliAuthed)
-
-  if (shouldCopyOnly) {
-    let reason = ''
-
-    if (song.options) {
-      reason = '此项目有特殊要求, 请在直播间内点歌, 点歌弹幕已复制到剪切板'
-    } else if (!liveRequestSettings?.allowAnonymousFromWeb && !isLoggedIn && !isBiliAuthed) {
-      reason = '主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点歌弹幕已复制到剪切板'
-    } else if (!liveRequestSettings?.allowFromWeb) {
-      reason = '主播不允许从网页点歌, 点歌弹幕已复制到剪切板'
-    }
-
-    return { canRequest: false, reason, shouldCopyOnly: true }
-  }
-
-  // 检查点歌冷却时间
   if (!isLoggedIn && nextRequestTime && nextRequestTime > new Date()) {
     const remainingSeconds = Math.ceil((nextRequestTime.getTime() - new Date().getTime()) / 1000)
     return {

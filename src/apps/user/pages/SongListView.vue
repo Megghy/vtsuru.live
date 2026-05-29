@@ -10,6 +10,7 @@ import { SONG_API_URL, SONG_REQUEST_API_URL } from '@/shared/config'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { canRequestSong } from './songListTemplate/utils/songRequestUtils'
 
 // 组件属性
 const props = defineProps<{
@@ -64,6 +65,7 @@ const selectedTemplate = computed(() => {
 const currentConfig = ref({}) // 当前配置
 const message = useMessage() // 消息提示
 const biliAuth = useBiliAuth() // B站授权
+const isLoggedIn = computed(() => !!accountInfo.value.id)
 
 /**
  * 获取点歌设置和当前点歌列表
@@ -178,38 +180,24 @@ function copyToClipboard(text: string, sendMessage: boolean = true) {
  * 点歌处理
  */
 async function requestSong(song: SongsInfo) {
-  if (!song) return
-
   const orderText = `${settings.value.orderPrefix || ''} ${song.name}`
+  const check = canRequestSong(
+    song,
+    props.userInfo,
+    settings.value,
+    isLoggedIn.value,
+    biliAuth.isAuthed,
+    nextRequestTime.value,
+  )
 
-  // 检查是否需要复制到剪贴板而不是直接点歌
-  const shouldCopyOnly = song.options
-    || !settings.value.allowFromWeb
-    || (settings.value.allowFromWeb && !settings.value.allowAnonymousFromWeb && !accountInfo.value.id && !biliAuth.isAuthed)
-
-  if (shouldCopyOnly) {
+  if (check.shouldCopyOnly) {
     copyToClipboard(orderText, false)
-
-    if (song.options) {
-      message.info('此项目有特殊要求, 请在直播间内点歌, 点歌弹幕已复制到剪切板')
-    } else if (!settings.value.allowAnonymousFromWeb && !accountInfo.value.id && !biliAuth.isAuthed) {
-      message.info('主播不允许匿名点歌, 需要从网页点歌的话请注册登录, 点歌弹幕已复制到剪切板')
-    } else if (!settings.value.allowFromWeb) {
-      message.info('主播不允许从网页点歌, 点歌弹幕已复制到剪切板')
-    }
+    message.info(check.reason)
     return
   }
 
-  // 执行网页点歌
-  if (!props.userInfo?.id) {
-    message.error('无法获取主播信息，无法完成点歌')
-    return
-  }
-
-  // 检查点歌冷却时间
-  if (!accountInfo.value.id && nextRequestTime.value > new Date()) {
-    const remainingSeconds = Math.ceil((nextRequestTime.value.getTime() - new Date().getTime()) / 1000)
-    message.warning(`距离点歌冷却还有${remainingSeconds}秒`)
+  if (!check.canRequest) {
+    message.warning(check.reason)
     return
   }
 

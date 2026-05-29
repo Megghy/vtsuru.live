@@ -9,7 +9,7 @@ import {
 } from 'naive-ui'
 import { ref } from 'vue'
 
-const props = defineProps<{
+defineProps<{
   languageOptions: SelectOption[]
   tagOptions: SelectOption[]
   authorOptions: SelectOption[]

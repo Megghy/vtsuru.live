@@ -69,7 +69,6 @@ function makeRuntimeState(): RuntimeState {
 
 describe('filterValidActions', () => {
   const isLive = ref(true)
-  const isTianXuanActive = ref(false)
 
   it('filters by triggerType and enabled', () => {
     const actions = [

@@ -3,12 +3,14 @@ import type { SongsInfo } from '@/api/api-models'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
-import { NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui';
+import {
+  NButton, NEllipsis, NEmpty, NIcon, NInput, NFlex, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { GetGuardColor } from '@/shared/utils'
 import { getSongRequestButtonType, getSongRequestTooltip } from './utils/songRequestUtils'
+import { useLiveRequestStatus } from './utils/useLiveRequestStatus'
 
 const props = defineProps<SongListConfigType>()
 const emits = defineEmits(['requestSong'])
@@ -45,14 +47,12 @@ const isSelf = computed(() => {
   return !!props.userInfo?.id && accountInfo.value?.id === props.userInfo.id
 })
 
-const activeSongKeySet = computed(() => {
-  const set = new Set<string>()
-  props.liveRequestActive?.forEach((item) => {
-    const key = item.song?.key
-    if (key) set.add(key)
-  })
-  return set
-})
+const requestAuthState = computed(() => ({
+  isLoggedIn: !!accountInfo.value.id,
+  isBiliAuthed: biliAuth.isAuthed,
+}))
+
+const { active: activeSongKeySet, singing: singingSongKeySet } = useLiveRequestStatus(() => props.liveRequestActive)
 
 function commitSearch() {
   searchKeyword.value = inputKeyword.value.trim()
@@ -112,7 +112,10 @@ function getMetaText(song: SongsInfo) {
         v-for="song in filteredSongs"
         :key="song.key"
         class="song-card"
-        :class="{ 'is-active': activeSongKeySet.has(song.key) }"
+        :class="{
+          'is-active': activeSongKeySet.has(song.key),
+          'is-singing': singingSongKeySet.has(song.key)
+        }"
       >
         <div class="card-top">
           <div class="title-left">
@@ -136,7 +139,7 @@ function getMetaText(song: SongsInfo) {
                     </NEllipsis>
                   </button>
                 </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings) }}
+                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
               </NTooltip>
 
               <div class="sub">
@@ -164,10 +167,16 @@ function getMetaText(song: SongsInfo) {
               SC ¥{{ song.options.scMinPrice }}
             </span>
             <span
-              v-if="activeSongKeySet.has(song.key)"
+              v-if="singingSongKeySet.has(song.key)"
+              class="badge badge-singing"
+            >
+              正在演唱
+            </span>
+            <span
+              v-else-if="activeSongKeySet.has(song.key)"
               class="badge badge-active"
             >
-              Active
+              排队中
             </span>
             <div
               v-if="!isSelf"
@@ -179,7 +188,7 @@ function getMetaText(song: SongsInfo) {
                     size="small"
                     quaternary
                     class="request-button"
-                    :type="getSongRequestButtonType(song, liveRequestSettings, !!accountInfo?.id, biliAuth.isAuthed)"
+                    :type="getSongRequestButtonType(song, liveRequestSettings, requestAuthState)"
                     @click="requestSong(song)"
                   >
                     <template #icon>
@@ -187,7 +196,7 @@ function getMetaText(song: SongsInfo) {
                     </template>
                   </NButton>
                 </template>
-                {{ getSongRequestTooltip(song, liveRequestSettings) }}
+                {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
               </NTooltip>
             </div>
           </div>
@@ -369,6 +378,11 @@ html.dark .song-list-card-template {
   border-color: hsl(var(--sl-success) / 0.35);
 }
 
+.song-card.is-singing {
+  border-color: hsla(30, 90%, 50%, 0.45);
+  box-shadow: 0 1px 8px hsla(30, 90%, 50%, 0.15);
+}
+
 .song-card:hover {
   box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.28);
   transform: translateY(-1px);
@@ -489,6 +503,18 @@ html.dark .song-card:hover {
   background: hsl(var(--sl-success) / 0.12);
   color: hsl(var(--sl-success));
   border: 1px solid hsl(var(--sl-success) / 0.28);
+}
+
+.badge-singing {
+  background: hsla(30, 90%, 50%, 0.12);
+  color: hsl(30, 90%, 45%);
+  border: 1px solid hsla(30, 90%, 50%, 0.28);
+  animation: pulse-singing 2s ease-in-out infinite;
+}
+
+@keyframes pulse-singing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .request-button {

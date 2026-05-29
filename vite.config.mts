@@ -116,7 +116,8 @@ export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
   define: {
     'process.env': {},
-    'global': 'window',
+    // 用 globalThis 而非 window：主线程/Web Worker/Node 均存在，避免 worker 内 window 未定义报错
+    'global': 'globalThis',
     '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {

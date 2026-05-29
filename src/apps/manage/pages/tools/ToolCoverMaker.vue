@@ -60,7 +60,7 @@ const selectedLayer = computed<EditorLayer | null>(() => {
 
 const dragLayerId = ref<string | null>(null)
 function onDragStart(id: string) { dragLayerId.value = id }
-function onDragOver(e: DragEvent, id: string) { e.preventDefault() }
+function onDragOver(e: DragEvent) { e.preventDefault() }
 function onDrop(id: string) {
   if (dragLayerId.value && dragLayerId.value !== id) {
     editorRef.value?.reorderLayer(dragLayerId.value, id)
@@ -168,7 +168,7 @@ async function onRemoveBgConfirm(blob: Blob) {
               :class="{ active: editorRef?.selectedId === layer.id, dragging: dragLayerId === layer.id }"
               draggable="true"
               @dragstart="onDragStart(layer.id)"
-              @dragover="onDragOver($event, layer.id)"
+              @dragover="onDragOver"
               @drop="onDrop(layer.id)"
               @click="() => { if (editorRef) editorRef.selectedId = layer.id }"
             >

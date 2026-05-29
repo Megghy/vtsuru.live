@@ -260,6 +260,26 @@ export default // 管理页面
       },
     },
     {
+      path: 'tools/image-stitch',
+      name: 'ManageToolImageStitch',
+      component: async () => import('@/apps/manage/pages/tools/ToolImageStitch.vue'),
+      meta: {
+        title: '图片拼接',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'tools/media-convert',
+      name: 'ManageToolMediaConvert',
+      component: async () => import('@/apps/manage/pages/tools/ToolMediaConvert.vue'),
+      meta: {
+        title: '音视频转换/压缩',
+        parent: 'manage-tools-dashboard',
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'tools/cover-maker',
       name: 'ManageToolCoverMaker',
       component: async () => import('@/apps/manage/pages/tools/ToolCoverMaker.vue'),
