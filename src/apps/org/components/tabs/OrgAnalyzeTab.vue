@@ -1,63 +1,96 @@
 <script setup lang="ts">
-import { NCard, NEmpty, NGrid, NGridItem, NIcon, NRadioButton, NRadioGroup, NSkeleton, NFlex, NStatistic, NTag } from 'naive-ui';
-import { TrendingDown, TrendingUp } from '@vicons/ionicons5'
+import { NButton, NCard, NEmpty, NGrid, NGridItem, NIcon, NProgress, NRadioButton, NRadioGroup, NSkeleton, NFlex, NStatistic, NTag, useThemeVars } from 'naive-ui'
+import { DownloadOutline, TrendingDown, TrendingUp } from '@vicons/ionicons5'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useOrgContext } from '../../composables/useOrgContext'
+import { useOrgAnalyze } from '../../composables/useOrgAnalyze'
+import { injectOrgLives } from '../../composables/useOrgLives'
+import { useOrgAnalyzeChart } from '../useOrgAnalyzeChart'
+import type { OrgAnalyzeChartMetric } from '../useOrgAnalyzeChart'
+import { exportCsv, formatDate } from '../../utils'
+import OrgUserAvatar from '../OrgUserAvatar.vue'
 
-export type SummaryRange = 'last7Days' | 'last30Days'
+const ctx = useOrgContext()
+const { data, loading, range, summary, hasChartData, load } = useOrgAnalyze(ctx)
+const { ranking, load: loadLives } = injectOrgLives()
+const themeVars = useThemeVars()
 
-interface SummaryData {
-  totalIncome: number
-  totalInteractions: number
-  totalDanmakuCount: number
-  totalLiveMinutes: number
-  incomeTrend: number
-  interactionTrend: number
-  danmakuTrend: number
-}
+const chartRef = ref<HTMLElement | null>(null)
+const selectedMetrics = ref<string[]>(['income', 'interactionCount'])
+const chartMetrics: OrgAnalyzeChartMetric[] = [
+  { label: '收入', value: 'income', color: '#f5a623', type: 'line', yAxisIndex: 1 },
+  { label: '互动数', value: 'interactionCount', color: '#2080f0', type: 'line', yAxisIndex: 0 },
+  { label: '弹幕数', value: 'danmakuCount', color: '#18a058', type: 'line', yAxisIndex: 0 },
+  { label: '点赞数', value: 'likeCount', color: '#d03050', type: 'line', yAxisIndex: 0 },
+  { label: '互动人数', value: 'interactionUsers', color: '#8a2be2', type: 'bar', yAxisIndex: 0 },
+  { label: '付费人数', value: 'payingUsers', color: '#ff69b4', type: 'bar', yAxisIndex: 0 },
+]
 
-interface ChartMetric {
-  label: string
-  value: string
-}
+const { initChart, updateChartOption, disposeChart } = useOrgAnalyzeChart({
+  chartRef, analyzeData: data, formatDate, themeVars, selectedMetrics, chartMetrics,
+})
 
-const props = defineProps<{
-  loading: boolean
-  summaryRange: SummaryRange
-  summaryData: SummaryData | null
-  chartMetrics: ChartMetric[]
-  selectedMetrics: string[]
-  hasChartData: boolean
-  setChartRef: (el: HTMLElement | null) => void
-}>()
+const summaryCards = computed(() => {
+  const s = summary.value
+  if (!s) return []
+  const prefix = range.value === 'last7Days' ? '近7日' : '近30日'
+  return [
+    { label: `${prefix}总收入`, value: s.totalIncome, precision: 2, money: true, trend: s.incomeTrend },
+    { label: `${prefix}互动数`, value: s.totalInteractions, trend: s.interactionTrend },
+    { label: `${prefix}弹幕数`, value: s.totalDanmakuCount, trend: s.danmakuTrend },
+    { label: `${prefix}直播时长`, value: s.totalLiveMinutes, suffix: 'min' },
+  ]
+})
 
-const emit = defineEmits<{
-  (e: 'update:summaryRange', value: SummaryRange): void
-  (e: 'update:selectedMetrics', value: string[]): void
-}>()
+type RankMetric = 'income' | 'danmaku' | 'interaction'
+const rankMetric = ref<RankMetric>('income')
+const rankUnit: Record<RankMetric, string> = { income: '¥', danmaku: '弹幕', interaction: '互动' }
+const topStreamers = computed(() => {
+  const list = [...ranking.value].sort((a, b) => b[rankMetric.value] - a[rankMetric.value]).slice(0, 10)
+  const max = list[0]?.[rankMetric.value] || 1
+  return list.map(s => ({ ...s, pct: Math.round((s[rankMetric.value] / max) * 100) }))
+})
 
-function getTrendType(value: number): 'success' | 'error' | 'default' {
-  if (value > 0) return 'success'
-  if (value < 0) return 'error'
+function trendType(v: number): 'success' | 'error' | 'default' {
+  if (v > 0) return 'success'
+  if (v < 0) return 'error'
   return 'default'
 }
 
-function toggleMetric(metricValue: string) {
-  const exists = props.selectedMetrics.includes(metricValue)
-  emit(
-    'update:selectedMetrics',
-    exists
-      ? props.selectedMetrics.filter(x => x !== metricValue)
-      : [...props.selectedMetrics, metricValue],
+function toggleMetric(value: string) {
+  selectedMetrics.value = selectedMetrics.value.includes(value)
+    ? selectedMetrics.value.filter(x => x !== value)
+    : [...selectedMetrics.value, value]
+}
+
+function exportRanking() {
+  exportCsv(
+    `主播排行_${Date.now()}.csv`,
+    ['主播', 'ID', '收入', '弹幕', '互动', '场次'],
+    [...ranking.value]
+      .sort((a, b) => b[rankMetric.value] - a[rankMetric.value])
+      .map(s => [s.name, s.id, s.income.toFixed(2), s.danmaku, s.interaction, s.liveCount]),
   )
 }
+
+watch(selectedMetrics, updateChartOption, { deep: true })
+
+onMounted(async () => {
+  await Promise.all([
+    load(() => {
+      disposeChart()
+      initChart()
+    }),
+    loadLives(),
+  ])
+})
+
+onUnmounted(disposeChart)
 </script>
 
 <template>
-  <div style="margin-bottom: 12px; display: flex; justify-content: flex-end;">
-    <NRadioGroup
-      :value="props.summaryRange"
-      size="small"
-      @update:value="v => emit('update:summaryRange', v as SummaryRange)"
-    >
+  <NFlex justify="end" style="margin-bottom: 12px;">
+    <NRadioGroup v-model:value="range" size="small">
       <NRadioButton value="last7Days">
         近7日
       </NRadioButton>
@@ -65,68 +98,26 @@ function toggleMetric(metricValue: string) {
         近30日
       </NRadioButton>
     </NRadioGroup>
-  </div>
+  </NFlex>
 
-  <template v-if="props.loading">
-    <NSkeleton text :repeat="4" />
-  </template>
-
-  <template v-else-if="!props.summaryData">
-    <NEmpty description="暂无分析数据" />
-  </template>
-
+  <NSkeleton v-if="loading" text :repeat="4" />
+  <NEmpty v-else-if="!summary" description="暂无分析数据" />
   <template v-else>
     <NGrid :x-gap="12" :y-gap="12" :cols="4" item-responsive responsive="screen">
-      <NGridItem span="4 m:2 l:1">
+      <NGridItem v-for="card in summaryCards" :key="card.label" span="4 m:2 l:1">
         <NCard size="small" :bordered="false" class="stat-card">
-          <NStatistic :label="props.summaryRange === 'last7Days' ? '近7日总收入' : '近30日总收入'" :value="props.summaryData.totalIncome" :precision="2">
-            <template #prefix>
+          <NStatistic :label="card.label" :value="card.value" :precision="card.precision">
+            <template v-if="card.money" #prefix>
               ¥
             </template>
             <template #suffix>
-              <NTag :type="getTrendType(props.summaryData.incomeTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
+              <span v-if="card.suffix">{{ card.suffix }}</span>
+              <NTag v-else-if="card.trend != null" :type="trendType(card.trend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
                 <template #icon>
-                  <NIcon :component="props.summaryData.incomeTrend >= 0 ? TrendingUp : TrendingDown" />
+                  <NIcon :component="card.trend >= 0 ? TrendingUp : TrendingDown" />
                 </template>
-                {{ Math.abs(props.summaryData.incomeTrend) }}%
+                {{ Math.abs(card.trend) }}%
               </NTag>
-            </template>
-          </NStatistic>
-        </NCard>
-      </NGridItem>
-      <NGridItem span="4 m:2 l:1">
-        <NCard size="small" :bordered="false" class="stat-card">
-          <NStatistic :label="props.summaryRange === 'last7Days' ? '近7日互动数' : '近30日互动数'" :value="props.summaryData.totalInteractions">
-            <template #suffix>
-              <NTag :type="getTrendType(props.summaryData.interactionTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
-                <template #icon>
-                  <NIcon :component="props.summaryData.interactionTrend >= 0 ? TrendingUp : TrendingDown" />
-                </template>
-                {{ Math.abs(props.summaryData.interactionTrend) }}%
-              </NTag>
-            </template>
-          </NStatistic>
-        </NCard>
-      </NGridItem>
-      <NGridItem span="4 m:2 l:1">
-        <NCard size="small" :bordered="false" class="stat-card">
-          <NStatistic :label="props.summaryRange === 'last7Days' ? '近7日弹幕数' : '近30日弹幕数'" :value="props.summaryData.totalDanmakuCount">
-            <template #suffix>
-              <NTag :type="getTrendType(props.summaryData.danmakuTrend)" :bordered="false" size="tiny" style="vertical-align: middle; margin-left: 4px;">
-                <template #icon>
-                  <NIcon :component="props.summaryData.danmakuTrend >= 0 ? TrendingUp : TrendingDown" />
-                </template>
-                {{ Math.abs(props.summaryData.danmakuTrend) }}%
-              </NTag>
-            </template>
-          </NStatistic>
-        </NCard>
-      </NGridItem>
-      <NGridItem span="4 m:2 l:1">
-        <NCard size="small" :bordered="false" class="stat-card">
-          <NStatistic :label="props.summaryRange === 'last7Days' ? '近7日直播时长' : '近30日直播时长'" :value="props.summaryData.totalLiveMinutes">
-            <template #suffix>
-              min
             </template>
           </NStatistic>
         </NCard>
@@ -137,20 +128,77 @@ function toggleMetric(metricValue: string) {
       <template #header-extra>
         <NFlex>
           <NTag
-            v-for="m in props.chartMetrics"
+            v-for="m in chartMetrics"
             :key="m.value"
             clickable
-            :type="props.selectedMetrics.includes(m.value) ? 'primary' : 'default'"
+            :type="selectedMetrics.includes(m.value) ? 'primary' : 'default'"
             @click="toggleMetric(m.value)"
           >
             {{ m.label }}
           </NTag>
         </NFlex>
       </template>
-      <div v-if="!props.hasChartData" style="padding: 12px;">
-        <NEmpty description="暂无图表数据" />
-      </div>
-      <div v-else :ref="props.setChartRef" style="height: 420px; width: 100%;" />
+      <NEmpty v-if="!hasChartData" description="暂无图表数据" style="padding: 12px;" />
+      <div v-else ref="chartRef" style="height: 420px; width: 100%;" />
+    </NCard>
+
+    <NCard size="small" :segmented="{ content: true }" style="margin-top: 16px;">
+      <template #header>
+        主播排行榜 Top 10
+      </template>
+      <template #header-extra>
+        <NFlex align="center">
+          <NRadioGroup v-model:value="rankMetric" size="small">
+            <NRadioButton value="income">
+              收入
+            </NRadioButton>
+            <NRadioButton value="danmaku">
+              弹幕
+            </NRadioButton>
+            <NRadioButton value="interaction">
+              互动
+            </NRadioButton>
+          </NRadioGroup>
+          <NButton size="small" secondary :disabled="ranking.length === 0" @click="exportRanking">
+            <template #icon>
+              <NIcon :component="DownloadOutline" />
+            </template>
+            导出
+          </NButton>
+        </NFlex>
+      </template>
+      <NEmpty v-if="topStreamers.length === 0" description="暂无主播数据" />
+      <NFlex v-else vertical :size="10">
+        <NFlex v-for="(s, i) in topStreamers" :key="s.id" align="center" :wrap="false" style="gap: 10px;">
+          <span class="rank-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
+          <OrgUserAvatar :face-url="s.faceUrl" :size="28" />
+          <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;">
+            {{ s.name }}
+          </div>
+          <NProgress type="line" :percentage="s.pct" :show-indicator="false" :height="8" style="flex: 1;" />
+          <span style="width: 90px; text-align: right; font-size: 13px; font-weight: 600;">
+            {{ rankMetric === 'income' ? rankUnit.income + s.income.toFixed(0) : s[rankMetric] }}
+            <span v-if="rankMetric !== 'income'" style="opacity: .6; font-weight: 400;"> {{ rankUnit[rankMetric] }}</span>
+          </span>
+        </NFlex>
+      </NFlex>
     </NCard>
   </template>
 </template>
+
+<style scoped>
+.stat-card {
+  border: 1px solid var(--n-border-color);
+}
+.rank-no {
+  width: 22px;
+  text-align: center;
+  font-weight: 600;
+  opacity: .5;
+  flex: 0 0 auto;
+}
+.rank-no.top {
+  opacity: 1;
+  color: var(--n-primary-color);
+}
+</style>

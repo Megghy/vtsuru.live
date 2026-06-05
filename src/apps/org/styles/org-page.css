@@ -12,6 +12,12 @@
   max-width: 1200px;
 }
 
+@media (max-width: 600px) {
+  .org-page {
+    padding: 8px;
+  }
+}
+
 /* shadcn-like card rhythm */
 .org-page .n-card {
   border-radius: var(--n-border-radius);

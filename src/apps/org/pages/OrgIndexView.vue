@@ -2,28 +2,16 @@
 import { AddOutline, ArrowForward, BusinessOutline, RefreshOutline, } from '@vicons/ionicons5'
 import {
   NAlert, NButton, NCard, NEmpty, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NModal, NPageHeader, NFlex, NSkeleton, NTag, useMessage } from 'naive-ui';
-import { computed, onMounted, ref, watch  } from 'vue'
+import { onMounted, ref, watch  } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { isLoggedIn } from '@/api/account'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { ORG_API_URL } from '@/shared/config'
 import '@/apps/org/styles/org-page.css'
-
-interface OrgInfoModel {
-  id: number
-  name: string
-  ownerUserId: number
-  role: number
-}
-
-interface CreateOrgResponse {
-  id: number
-  name: string
-  ownerUserId: number
-  role: number
-}
+import { roleLabel, roleTagType } from '../utils'
+import type { OrgInfoModel } from '../types'
 
 const router = useRouter()
 const message = useMessage()
@@ -35,30 +23,11 @@ const showCreateModal = ref(false)
 const creating = ref(false)
 const orgName = ref('')
 
-const roleLabel = computed(() => {
-  return (role: number) => {
-    if (role === 0) return 'Owner'
-    if (role === 1) return 'Admin'
-    return 'Member'
-  }
-})
-
-function roleType(role: number): 'success' | 'info' | 'warning' | 'error' | 'default' {
-  if (role === 0) return 'success' // Owner
-  if (role === 1) return 'info'    // Admin
-  return 'default'                 // Member
-}
-
 async function loadMyOrgs() {
   if (!isLoggedIn.value) return
   isLoading.value = true
   try {
-    const resp = await QueryGetAPI<OrgInfoModel[]>(`${ORG_API_URL}my`)
-    if (resp.code === 200) {
-      orgs.value = resp.data
-    } else {
-      message.error(resp.message)
-    }
+    orgs.value = unwrapOk(await QueryGetAPI<OrgInfoModel[]>(`${ORG_API_URL}my`), '加载失败')
   } catch (err) {
     message.error(err instanceof Error ? err.message : '加载失败')
   } finally {
@@ -73,20 +42,13 @@ async function createOrg() {
     message.warning('请输入组织名称')
     return
   }
-
   creating.value = true
   try {
-    const resp = await QueryPostAPI<CreateOrgResponse>(`${ORG_API_URL}create`, { name })
-    if (resp.code === 200) {
-      message.success('创建成功')
-      orgName.value = ''
-      showCreateModal.value = false
-      await loadMyOrgs()
-      // Optional: Redirect immediately
-      // router.push({ name: 'org-detail', params: { orgId: resp.data.id } })
-    } else {
-      message.error(resp.message)
-    }
+    unwrapOk(await QueryPostAPI(`${ORG_API_URL}create`, { name }), '创建失败')
+    message.success('创建成功')
+    orgName.value = ''
+    showCreateModal.value = false
+    await loadMyOrgs()
   } catch (err) {
     message.error(err instanceof Error ? err.message : '创建失败')
   } finally {
@@ -102,9 +64,7 @@ function handleGoConsole() {
   router.push({ name: 'manage-index' })
 }
 
-onMounted(() => {
-  loadMyOrgs()
-})
+onMounted(loadMyOrgs)
 
 watch(
   () => isLoggedIn.value,
@@ -197,7 +157,7 @@ watch(
             >
               <NFlex justify="space-between" align="start">
                 <NIcon size="32" color="var(--n-primary-color)" :component="BusinessOutline" />
-                <NTag :bordered="false" :type="roleType(org.role)" size="small">
+                <NTag :bordered="false" :type="roleTagType(org.role)" size="small">
                   {{ roleLabel(org.role) }}
                 </NTag>
               </NFlex>

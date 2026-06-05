@@ -94,6 +94,14 @@ const hash = computed({
     realHash.value = `#${val}`
   },
 })
+const currentPointSetting = computed(() => accountInfo.value?.settings.point)
+
+function openPointSourceSettings() {
+  hash.value = 'settings'
+  window.setTimeout(() => {
+    document.getElementById('point-source-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, 0)
+}
 
 // 商品数据及模型
 const goods = ref<ResponsePointGoodModel[]>(await biliAuth.GetGoods(accountInfo.value?.id, message))
@@ -957,7 +965,11 @@ onMounted(() => { })
       tab="用户"
       display-directive="show:lazy"
     >
-      <PointUserManage :goods="goods" />
+      <PointUserManage
+        :goods="goods"
+        :point-setting="currentPointSetting"
+        @open-source-settings="openPointSourceSettings"
+      />
     </NTabPane>
 
     <NTabPane
@@ -974,7 +986,7 @@ onMounted(() => { })
       tab="设置"
       display-directive="show:lazy"
     >
-      <PointSettings />
+      <PointSettings source-anchor-id="point-source-settings" />
     </NTabPane>
 
     <!-- 测试标签页 -->

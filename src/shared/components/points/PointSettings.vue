@@ -12,6 +12,7 @@ import { ORG_API_URL } from '@/shared/config'
 const props = defineProps<{
   orgId?: number
   streamerId?: number | null
+  sourceAnchorId?: string
 }>()
 const accountInfo = useAccount()
 const message = useMessage()
@@ -512,6 +513,7 @@ watch(
 
       <!-- 积分来源 -->
       <NCard
+        :id="props.sourceAnchorId"
         title="积分来源"
         size="small"
       >

@@ -51,4 +51,22 @@ export const SongListTemplateMap: TemplateMapType = {
       async () => import('@/apps/user/pages/songListTemplate/SimpleSongListTemplate.vue'),
     )),
   },
+  'gallery': {
+    name: '封面画廊',
+    component: markRaw(defineAsyncComponent(
+      async () => import('@/apps/user/pages/songListTemplate/GallerySongListTemplate.vue'),
+    )),
+  },
+  'compact': {
+    name: '紧凑列表 (大曲库',
+    component: markRaw(defineAsyncComponent(
+      async () => import('@/apps/user/pages/songListTemplate/CompactSongListTemplate.vue'),
+    )),
+  },
+  'immersive': {
+    name: '沉浸播放器',
+    component: markRaw(defineAsyncComponent(
+      async () => import('@/apps/user/pages/songListTemplate/ImmersiveSongListTemplate.vue'),
+    )),
+  },
 }

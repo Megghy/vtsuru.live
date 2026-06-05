@@ -4,7 +4,12 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { format } from 'date-fns'
 import { List } from 'linqts'
 import {
-  NAvatar, NButton, NCard, NCheckbox, NCollapseTransition, NCountdown, NDivider, NEmpty, NGrid, NGridItem, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NRadioButton, NRadioGroup, NScrollbar, NFlex, NTag, NTime, NTooltip, useMessage, useNotification } from 'naive-ui';
+  NAvatar, NButton, NCard, NCheckbox, NCollapseTransition, NCountdown, NDivider,
+  NEmpty, NGrid, NGridItem, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber,
+  NList, NListItem, NModal, NRadioButton, NRadioGroup, NScrollbar, NFlex, NStatistic,
+  NTag, NText, NTime, NTooltip, useMessage, useNotification,
+} from 'naive-ui'
+import { Dice24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
 import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { QueryGetAPI } from '@/api/query'
@@ -76,14 +81,19 @@ const inputDynamicId = computed(() => {
   return null
 })
 const isCommentCountDown = ref(true)
-const originCommentUsers = ref<TempLotteryResponseModel>()
-const originForwardUsers = ref<TempLotteryResponseModel>()
 const currentType = ref<'comment' | 'forward'>('comment')
 
 const resultUsers = ref<LotteryUserInfo[]>()
+// 抽取动画中被淘汰用户的 uId 集合, 用于实时灰显
+const eliminatedIds = ref<Set<number>>(new Set())
+// 当前高亮滚动的用户 uId, 营造"正在抽取"效果
+const rollingId = ref<number>()
+const winnerIds = computed(() => new Set(resultUsers.value?.map(u => u.uId) ?? []))
 
 const commentUsers = ref<TempLotteryResponseModel>()
 const forwardUsers = ref<TempLotteryResponseModel>()
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const currentUsers = computed(() => {
   return getCurrentUsers()
@@ -133,12 +143,11 @@ async function fetchLotteryUsers(type: 'comments' | 'forward') {
         data.data.users = new List(data.data.users).DistinctBy(u => u.uId).ToArray()
         data.data.total = data.data.users.length
         if (type === 'comments') {
-          originCommentUsers.value = JSON.parse(JSON.stringify(data.data))
           commentUsers.value = data.data
         } else {
-          originForwardUsers.value = JSON.parse(JSON.stringify(data.data))
           forwardUsers.value = data.data
         }
+        reset()
         isCommentCountDown.value = false
       } else {
         message.error(`获取用户失败: ${data.message}`)
@@ -173,85 +182,84 @@ function isUserValid(u: LotteryUserInfo) {
   }
   return true
 }
-function startLottery() {
-  if (!isLottering.value && currentUsers.value) {
-    isLottering.value = true
-    try {
-      const data = currentUsers.value
-      if ((validUsers.value?.length ?? -1) < lotteryOption.value.resultCount) {
-        message.warning('符合条件的抽奖人数达不到抽选人数')
-        isLottering.value = false
-        return
+async function startLottery() {
+  if (isLottering.value || !currentUsers.value) return
+  const valid = validUsers.value ?? []
+  if (valid.length < lotteryOption.value.resultCount) {
+    message.warning('符合条件的抽奖人数达不到抽选人数')
+    return
+  }
+
+  isLottering.value = true
+  isLotteried.value = false
+  resultUsers.value = []
+  eliminatedIds.value = new Set()
+  rollingId.value = undefined
+
+  try {
+    const pool = [...valid]
+    const target = lotteryOption.value.resultCount
+
+    if (lotteryOption.value.lotteryType === 'single') {
+      // 逐个淘汰, 池子越大节奏越快, 临近结果时放慢制造悬念
+      while (pool.length > target) {
+        rollingId.value = pool[getRandomInt(pool.length)].uId
+        const removed = pool.splice(getRandomInt(pool.length), 1)[0]
+        eliminatedIds.value = new Set(eliminatedIds.value).add(removed.uId)
+        await delay(pool.length > 30 ? 90 : pool.length - target <= 3 ? 600 : 300)
       }
-
-      const tempUsers = getCurrentUsers()
-      if (tempUsers) tempUsers.users = validUsers.value ?? []
-
-      switch (lotteryOption.value.lotteryType) {
-        case 'single': {
-          console.log('开始抽取单个用户')
-          removeSingleUser()
-          function removeSingleUser() {
-            if (data.users.length > lotteryOption.value.resultCount) {
-              console.log(`[${data.users.length}] 移除${data.users.splice(getRandomInt(data.users.length), 1)[0].name}`)
-              setTimeout(() => {
-                removeSingleUser()
-              }, 500)
-            } else {
-              onFinishLottery()
-            }
-          }
-          break
+    } else {
+      // 减半: 每轮淘汰约一半, 快速收敛
+      while (pool.length > target) {
+        const removeCount = Math.min(Math.ceil(pool.length / 2), pool.length - target)
+        const next = new Set(eliminatedIds.value)
+        for (let i = 0; i < removeCount; i++) {
+          next.add(pool.splice(getRandomInt(pool.length), 1)[0].uId)
         }
+        eliminatedIds.value = next
+        await delay(650)
       }
-    } catch (err) {
-      console.error(err)
-      message.error('发生错误')
     }
+    rollingId.value = undefined
+    onFinishLottery(pool)
+  } catch (err) {
+    console.error(err)
+    message.error('抽奖过程中发生错误')
+    isLottering.value = false
   }
 }
-function onFinishLottery() {
-  resultUsers.value = JSON.parse(JSON.stringify(currentUsers.value?.users))
+function onFinishLottery(winners: LotteryUserInfo[]) {
+  resultUsers.value = JSON.parse(JSON.stringify(winners))
   isLottering.value = false
   isLotteried.value = true
   notification.create({
-    title: '抽奖完成',
-    description: `共${resultUsers.value?.length}人`,
-    duration: 3000,
+    title: '🎉 抽奖完成',
+    description: `共 ${winners.length} 位中奖者`,
+    duration: 4000,
     content: () =>
-      h(NFlex,
-        { vertical: true },
-        resultUsers.value?.map(user =>
-          h(NFlex, null, [
-            h(NAvatar, { src: `${user.avatar}@32w_32h`, imgProps: { referrerpolicy: 'no-referrer' } }),
+      h(NFlex, { vertical: true, size: 6 },
+        () => winners.map(user =>
+          h(NFlex, { align: 'center', size: 8 }, () => [
+            h(NAvatar, { round: true, size: 'small', src: `${user.avatar}@48w_48h`, imgProps: { referrerpolicy: 'no-referrer' } }),
             h('span', user.name),
           ]),
         ),
       ),
     meta: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-    onAfterLeave: () => {
-      message.success('已保存至历史')
-    },
   })
-  lotteryHistory.value.push({
-    users: currentUsers.value?.users ?? [],
+  lotteryHistory.value.unshift({
+    users: winners,
     time: Date.now(),
     type: currentType.value,
     url: inputDynamicId.value ? `https://t.bilibili.com/${inputDynamicId.value}` : inputDynamic.value ?? '',
   })
+  message.success('结果已保存至历史记录')
 }
 function reset() {
-  switch (currentType.value) {
-    case 'comment': {
-      commentUsers.value = JSON.parse(JSON.stringify(originCommentUsers.value))
-      break
-    }
-    case 'forward': {
-      forwardUsers.value = JSON.parse(JSON.stringify(originForwardUsers.value))
-      break
-    }
-  }
   isLotteried.value = false
+  eliminatedIds.value = new Set()
+  resultUsers.value = []
+  rollingId.value = undefined
 }
 function getLevelColor(level: number) {
   switch (level) {
@@ -286,285 +294,330 @@ onUnmounted(() => {
 
 <template>
   <div class="lottery-view">
-    <ManagePageHeader title="动态抽奖" subtitle="从动态评论/转发中抽取用户">
+    <ManagePageHeader title="动态抽奖" subtitle="从 B 站动态的评论或转发中随机抽取幸运用户">
       <template #action>
         <NButton secondary size="small" @click="showModal = true">
+          <template #icon>
+            <NIcon :component="History24Filled" />
+          </template>
           历史记录
+          <NTag v-if="lotteryHistory.length" size="tiny" round :bordered="false" style="margin-left: 6px">
+            {{ lotteryHistory.length }}
+          </NTag>
         </NButton>
       </template>
     </ManagePageHeader>
 
     <NCard size="small" :bordered="true">
-      <NInput
-        v-model:value="inputDynamic"
-        placeholder="动态链接或直接输入动态Id"
-        :status="inputDynamicId ? 'success' : 'warning'"
-        :disabled="isLoading || isLottering"
-      />
-      <NDivider style="margin: 10px 0 10px 0" />
-      <NCard
-        size="small"
-        embedded
-        title="选项"
-      >
+      <NInputGroup>
+        <NInputGroupLabel>动态</NInputGroupLabel>
+        <NInput
+          v-model:value="inputDynamic"
+          placeholder="粘贴动态链接, 或直接输入动态 ID"
+          clearable
+          :status="inputDynamic && !inputDynamicId ? 'error' : inputDynamicId ? 'success' : undefined"
+          :disabled="isLoading || isLottering"
+        />
+      </NInputGroup>
+      <NText v-if="inputDynamic && !inputDynamicId" depth="3" style="font-size: 12px">
+        无法识别动态 ID, 请检查链接是否正确
+      </NText>
+
+      <NDivider style="margin: 12px 0" />
+
+      <NCard size="small" embedded title="抽奖选项">
         <template #header-extra>
-          <NButton
-            size="small"
-            secondary
-            @click="lotteryOption = defaultOption"
-          >
+          <NButton size="tiny" secondary :disabled="isLottering" @click="lotteryOption = { ...defaultOption }">
             恢复默认
           </NButton>
         </template>
         <NFlex justify="center">
-          <NRadioGroup
-            v-model:value="currentType"
-            name="用户类型"
-            :disabled="isLottering"
-          >
+          <NRadioGroup v-model:value="currentType" :disabled="isLottering">
             <NRadioButton value="comment">
-              评论
+              评论区
             </NRadioButton>
             <NRadioButton value="forward">
               转发
             </NRadioButton>
           </NRadioGroup>
         </NFlex>
-        <NDivider style="margin: 10px 0 10px 0" />
-        <NFlex align="center">
-          <NInputGroup style="max-width: 200px">
-            <NInputGroupLabel> 抽选人数 </NInputGroupLabel>
+        <NDivider style="margin: 12px 0" />
+        <NFlex align="center" :size="16" wrap>
+          <NInputGroup style="width: 180px">
+            <NInputGroupLabel>抽取人数</NInputGroupLabel>
             <NInputNumber
               v-model:value="lotteryOption.resultCount"
-              placeholder=""
-              min="1"
+              :min="1"
+              :disabled="isLottering"
             />
           </NInputGroup>
-          <NCheckbox v-model:checked="lotteryOption.needVIP">
-            需要大会员
+          <NRadioGroup v-model:value="lotteryOption.lotteryType" size="small" :disabled="isLottering">
+            <NRadioButton value="single">
+              <NTooltip>
+                <template #trigger>
+                  逐个淘汰
+                </template>
+                每次随机淘汰一人, 紧张刺激
+              </NTooltip>
+            </NRadioButton>
+            <NRadioButton value="half">
+              <NTooltip>
+                <template #trigger>
+                  快速减半
+                </template>
+                每轮淘汰约一半, 人数多时更快
+              </NTooltip>
+            </NRadioButton>
+          </NRadioGroup>
+        </NFlex>
+        <NDivider style="margin: 12px 0" />
+        <NFlex align="center" :size="16" wrap>
+          <NText depth="3" style="font-size: 13px">
+            参与条件
+          </NText>
+          <NCheckbox v-model:checked="lotteryOption.needVIP" :disabled="isLottering">
+            大会员
           </NCheckbox>
           <template v-if="currentType === 'comment'">
-            <NCheckbox v-model:checked="lotteryOption.needCharge">
-              需要充电
+            <NCheckbox v-model:checked="lotteryOption.needCharge" :disabled="isLottering">
+              已充电
             </NCheckbox>
-            <NCheckbox v-model:checked="lotteryOption.needFanCard">
-              需要粉丝牌
+            <NCheckbox v-model:checked="lotteryOption.needGuard" :disabled="isLottering">
+              舰长
             </NCheckbox>
-            <NCollapseTransition>
-              <NInputGroup
-                v-if="lotteryOption.needFanCard"
-                style="max-width: 200px"
-              >
-                <NInputGroupLabel> 最低粉丝牌等级 </NInputGroupLabel>
+            <NCheckbox v-model:checked="lotteryOption.needFanCard" :disabled="isLottering">
+              佩戴粉丝牌
+            </NCheckbox>
+            <NCollapseTransition :show="lotteryOption.needFanCard">
+              <NInputGroup style="width: 200px">
+                <NInputGroupLabel>最低牌等级</NInputGroupLabel>
                 <NInputNumber
                   v-model:value="lotteryOption.fanCardLevel"
-                  min="1"
-                  max="50"
-                  :default-value="1"
+                  :min="1"
+                  :max="50"
                   :disabled="isLottering"
                 />
               </NInputGroup>
             </NCollapseTransition>
           </template>
-          <NRadioGroup
-            v-model:value="lotteryOption.lotteryType"
-            name="抽取类型"
-            size="small"
-            :disabled="isLottering"
-          >
-            <NRadioButton value="single">
-              单个
-            </NRadioButton>
-            <NRadioButton value="half">
-              减半
-            </NRadioButton>
-          </NRadioGroup>
         </NFlex>
       </NCard>
-      <NFlex
-        justify="center"
-        align="center"
-      >
+      <NFlex justify="center" align="center" :size="12" style="margin-top: 16px">
         <NButton
           :disabled="!inputDynamicId || !isCommentCountDown || !token || isLottering"
           :loading="!token || isLoading"
           type="primary"
           @click="onGet"
         >
-          加载用户
+          {{ currentUsers ? '重新加载用户' : '加载用户' }}
         </NButton>
-        <NCountdown
-          v-if="!isCommentCountDown"
-          :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()"
-          @finish="isCommentCountDown = true"
-        />
+        <NFlex v-if="!isCommentCountDown" align="center" :size="6">
+          <NText depth="3" style="font-size: 13px">
+            冷却中
+          </NText>
+          <NCountdown
+            :duration="(currentUsers?.createTime ?? -1) + 60000 - Date.now()"
+            @finish="isCommentCountDown = true"
+          />
+        </NFlex>
       </NFlex>
-      <br>
-      <NCard
-        v-if="currentUsers"
-        size="small"
-      >
-        <NFlex justify="center">
+    </NCard>
+
+    <!-- 中奖结果展示 -->
+    <NCard v-if="isLotteried && resultUsers?.length" size="small" class="winner-card">
+      <NFlex align="center" :size="8" style="margin-bottom: 12px">
+        <NIcon :component="Trophy24Filled" :size="22" color="#f0a020" />
+        <NText strong style="font-size: 16px">
+          恭喜以下 {{ resultUsers.length }} 位中奖
+        </NText>
+      </NFlex>
+      <NFlex :size="16" wrap>
+        <NFlex
+          v-for="user in resultUsers"
+          :key="user.uId"
+          align="center"
+          :size="10"
+          class="winner-item"
+        >
+          <NAvatar
+            round
+            :size="44"
+            :src="`${user.avatar}@88w_88h`"
+            :img-props="{ referrerpolicy: 'no-referrer' }"
+          />
+          <NText strong>
+            {{ user.name }}
+          </NText>
+        </NFlex>
+      </NFlex>
+    </NCard>
+
+    <NCard v-if="currentUsers" size="small">
+      <NFlex justify="space-between" align="center" wrap :size="12">
+        <NFlex align="center" :size="8">
+          <NStatistic label="符合条件" :value="validUsers?.length ?? 0" />
+          <NDivider vertical />
+          <NStatistic label="总参与" :value="currentUsers.total" />
+        </NFlex>
+        <NFlex :size="12">
           <NButton
             type="primary"
+            size="large"
             :loading="isLottering"
-            :disabled="isLotteried"
+            :disabled="isLotteried || !validUsers?.length"
             @click="startLottery"
           >
-            开始抽取
+            <template #icon>
+              <NIcon :component="Dice24Filled" />
+            </template>
+            {{ isLottering ? '抽取中...' : '开始抽取' }}
           </NButton>
           <NButton
-            type="info"
+            secondary
+            size="large"
             :disabled="isLottering || !isLotteried"
             @click="reset"
           >
             重置
           </NButton>
         </NFlex>
-        <NDivider style="margin: 10px 0 10px 0">
-          共 {{ validUsers?.length }} 人
-        </NDivider>
-        <NGrid
-          cols="1 500:2 800:3 1000:4"
-          :x-gap="12"
-          :y-gap="8"
+      </NFlex>
+      <NDivider style="margin: 12px 0" />
+      <NEmpty v-if="!validUsers?.length" description="没有符合条件的用户, 试试放宽参与条件" />
+      <NGrid
+        v-else
+        cols="2 500:3 800:5 1100:7"
+        :x-gap="10"
+        :y-gap="10"
+      >
+        <NGridItem
+          v-for="item in validUsers"
+          :key="item.uId"
         >
-          <NGridItem
-            v-for="item in validUsers"
-            :key="item.uId"
+          <div
+            class="user-cell"
+            :class="{
+              'is-eliminated': eliminatedIds.has(item.uId),
+              'is-rolling': rollingId === item.uId,
+              'is-winner': isLotteried && winnerIds.has(item.uId),
+            }"
           >
-            <NCard
-              size="small"
-              :title="item.name"
-              style="height: 155px"
-            >
-              <template #header>
-                <NFlex
-                  align="center"
-                  vertical
-                  :size="5"
-                >
-                  <NAvatar
-                    round
-                    lazy
-                    borderd
-                    :size="64"
-                    :src="`${item.avatar}@64w_64h`"
-                    :img-props="{ referrerpolicy: 'no-referrer' }"
-                  />
-                  <NFlex>
-                    <NTag
-                      v-if="item.isVIP"
-                      size="tiny"
-                      round
-                      type="warning"
-                    >
-                      大会员
-                    </NTag>
-                    <NTooltip>
-                      <template #trigger>
-                        <NTag
-                          v-if="item.level"
-                          size="tiny"
-                          :color="{ color: getLevelColor(item.level), textColor: 'white', borderColor: 'white' }"
-                          :borderd="false"
-                        >
-                          LV {{ item.level }}
-                        </NTag>
-                      </template>
-                      用户等级
-                    </NTooltip>
-                    <NTag
-                      v-if="item.card"
-                      size="tiny"
-                      round
-                    >
-                      <NTag
-                        size="tiny"
-                        round
-                        :bordered="false"
-                      >
-                        {{ item.card.level }}
-                      </NTag>
-                      <NText type="info" style="margin-left: 6px">
-                        {{ item.card.name }}
-                      </NText>
-                    </NTag>
-                  </NFlex>
-                  {{ item.name }}
-                </NFlex>
-              </template>
-            </NCard>
-          </NGridItem>
-        </NGrid>
-      </NCard>
+            <NAvatar
+              round
+              lazy
+              :size="52"
+              :src="`${item.avatar}@104w_104h`"
+              :img-props="{ referrerpolicy: 'no-referrer' }"
+            />
+            <NText class="user-cell__name" :depth="eliminatedIds.has(item.uId) ? 3 : 1">
+              {{ item.name }}
+            </NText>
+            <NFlex justify="center" :size="4" :wrap="false">
+              <NTag v-if="item.isVIP" size="tiny" round type="warning" :bordered="false">
+                会员
+              </NTag>
+              <NTag
+                v-if="item.level"
+                size="tiny"
+                round
+                :bordered="false"
+                :color="{ color: getLevelColor(item.level), textColor: '#fff' }"
+              >
+                LV{{ item.level }}
+              </NTag>
+              <NTooltip v-if="item.card">
+                <template #trigger>
+                  <NTag size="tiny" round :bordered="false" type="info">
+                    {{ item.card.name }} {{ item.card.level }}
+                  </NTag>
+                </template>
+                粉丝牌
+              </NTooltip>
+            </NFlex>
+          </div>
+        </NGridItem>
+      </NGrid>
     </NCard>
     <NModal
       v-model:show="showModal"
       preset="card"
-      title="抽奖结果"
+      title="历史记录"
       style="max-width: 90%; width: 800px"
       closable
     >
       <template #header-extra>
         <NButton
+          v-if="lotteryHistory.length"
           type="error"
           size="small"
+          secondary
           @click="lotteryHistory = []"
         >
-          清空
+          清空全部
         </NButton>
       </template>
       <NScrollbar
         v-if="lotteryHistory.length > 0"
-        style="max-height: 80vh"
+        style="max-height: 70vh"
       >
-        <NList>
+        <NList style="padding-right: 12px">
           <NListItem
             v-for="item in lotteryHistory"
             :key="item.time"
           >
             <NCard size="small">
               <template #header>
-                <NTime :time="item.time" />
+                <NFlex align="center" :size="8">
+                  <NTag size="small" round :bordered="false" :type="item.type === 'comment' ? 'success' : 'info'">
+                    {{ item.type === 'comment' ? '评论' : '转发' }}
+                  </NTag>
+                  <NText depth="3" style="font-size: 13px">
+                    <NTime :time="item.time" />
+                  </NText>
+                  <NText depth="3" style="font-size: 13px">
+                    · {{ item.users.length }} 人
+                  </NText>
+                </NFlex>
               </template>
               <template #header-extra>
-                <NButton
-                  type="error"
-                  size="small"
-                  @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"
-                >
-                  删除
-                </NButton>
+                <NFlex :size="8">
+                  <NButton size="small" tertiary @click="NavigateToNewTab(item.url)">
+                    目标动态
+                  </NButton>
+                  <NButton
+                    type="error"
+                    size="small"
+                    quaternary
+                    @click="lotteryHistory.splice(lotteryHistory.indexOf(item), 1)"
+                  >
+                    删除
+                  </NButton>
+                </NFlex>
               </template>
-              <NFlex vertical>
+              <NFlex :size="16" wrap>
                 <NFlex
                   v-for="user in item.users"
                   :key="user.uId"
+                  align="center"
+                  :size="8"
                 >
                   <NAvatar
                     round
                     lazy
+                    :size="32"
                     :src="`${user.avatar}@64w_64h`"
                     :img-props="{ referrerpolicy: 'no-referrer' }"
                   />
-                  {{ user.name }}
+                  <NText>{{ user.name }}</NText>
                 </NFlex>
               </NFlex>
-              <NDivider style="margin: 10px 0 10px 0" />
-              <NButton
-                secondary
-                @click="NavigateToNewTab(item.url)"
-              >
-                目标动态
-              </NButton>
             </NCard>
           </NListItem>
         </NList>
       </NScrollbar>
       <NEmpty
         v-else
-        description="暂无记录"
+        description="暂无抽奖记录"
       />
     </NModal>
     <VueTurnstile
@@ -582,5 +635,66 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* 用户卡片 */
+.user-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.18));
+  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+}
+
+.user-cell__name {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 已淘汰: 灰显缩小淡出 */
+.user-cell.is-eliminated {
+  opacity: 0.35;
+  filter: grayscale(0.9);
+  transform: scale(0.92);
+}
+
+/* 正在滚动选中 */
+.user-cell.is-rolling {
+  border-color: #f0a020;
+  box-shadow: 0 0 0 2px rgba(240, 160, 32, 0.45);
+  transform: scale(1.05);
+}
+
+/* 中奖高亮 */
+.user-cell.is-winner {
+  border-color: #f0a020;
+  box-shadow: 0 0 12px rgba(240, 160, 32, 0.5);
+  animation: winner-pop 0.5s ease;
+}
+
+@keyframes winner-pop {
+  0% { transform: scale(0.85); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* 中奖结果卡 */
+.winner-card {
+  border: 1px solid rgba(240, 160, 32, 0.5);
+  background: linear-gradient(135deg, rgba(240, 160, 32, 0.08), transparent);
+}
+
+.winner-item {
+  padding: 6px 14px 6px 6px;
+  border-radius: 24px;
+  background: rgba(240, 160, 32, 0.1);
 }
 </style>

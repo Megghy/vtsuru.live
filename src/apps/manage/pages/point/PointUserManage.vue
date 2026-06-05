@@ -3,15 +3,16 @@ import type {
   DataTableColumns,
 } from 'naive-ui'
 
-import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
-import { Info24Filled, Search24Regular, ArrowSync24Regular, AddSquare24Regular, ArrowDownload24Regular, Delete24Regular, Warning24Regular } from '@vicons/fluent'
+import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
+import { AddSquare24Regular, ArrowDownload24Regular, ArrowSync24Regular, Delete24Regular, Info24Filled, Search24Regular, Settings24Regular, Warning24Regular } from '@vicons/fluent'
 import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import {
-  NButton, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NScrollbar, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
+  NAlert, NButton, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NGrid, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NModal, NPopconfirm, NScrollbar, NSpin, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
+import { EventDataTypes } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { formatNumber } from '@/apps/manage/composables/formatters'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
@@ -27,8 +28,12 @@ interface PointUserSettings {
   searchKeyword?: string // 搜索关键词
 }
 
-defineProps<{
+const props = defineProps<{
   goods: ResponsePointGoodModel[]
+  pointSetting?: Setting_Point
+}>()
+const emit = defineEmits<{
+  openSourceSettings: []
 }>()
 
 const message = useMessage()
@@ -65,6 +70,40 @@ const RESET_CONFIRM_TEXT = '我确认删除'
 
 // 用户数据
 const users = ref<ResponsePointUserModel[]>([])
+
+const pointSourceOptions = [
+  { type: EventDataTypes.Guard, label: '上舰' },
+  { type: EventDataTypes.SC, label: 'Superchat' },
+  { type: EventDataTypes.Gift, label: '礼物' },
+] as const
+
+const enabledPointSources = computed(() => {
+  const allowType = props.pointSetting?.allowType ?? []
+  return pointSourceOptions
+    .filter(source => allowType.includes(source.type))
+    .map(source => source.label)
+})
+
+const pointSourceText = computed(() => {
+  if (!props.pointSetting) return '加载中'
+  return enabledPointSources.value.length > 0 ? enabledPointSources.value.join('、') : '未启用'
+})
+
+const hasPaymentPointSource = computed(() => {
+  const allowType = props.pointSetting?.allowType ?? []
+  return allowType.includes(EventDataTypes.SC) || allowType.includes(EventDataTypes.Gift)
+})
+
+const pointSourceAlertType = computed(() => {
+  if (!props.pointSetting) return 'info'
+  return hasPaymentPointSource.value ? 'info' : 'warning'
+})
+
+const pointSourceHelpText = computed(() => {
+  if (!props.pointSetting) return '正在读取当前积分来源。'
+  if (hasPaymentPointSource.value) return '只有启用的来源会写入积分记录。'
+  return 'SC / 礼物未启用时，送礼记录不会生成积分用户。'
+})
 
 // 搜索关键词
 const searchKeyword = ref('')
@@ -384,6 +423,44 @@ onMounted(async () => {
       </div>
     </NGrid>
 
+    <NAlert
+      class="point-source-alert"
+      :type="pointSourceAlertType"
+      :bordered="false"
+    >
+      <NFlex
+        align="center"
+        justify="space-between"
+        :gap="12"
+        wrap
+      >
+        <NFlex
+          vertical
+          :gap="2"
+        >
+          <NText strong>
+            当前积分来源：{{ pointSourceText }}
+          </NText>
+          <NText
+            depth="3"
+            style="font-size: 13px"
+          >
+            {{ pointSourceHelpText }}
+          </NText>
+        </NFlex>
+        <NButton
+          size="small"
+          secondary
+          @click="emit('openSourceSettings')"
+        >
+          <template #icon>
+            <NIcon :component="Settings24Regular" />
+          </template>
+          来源设置
+        </NButton>
+      </NFlex>
+    </NAlert>
+
     <!-- 工具栏 -->
     <div class="toolbar-section">
       <NFlex justify="space-between" align="center" wrap :gap="12">
@@ -662,6 +739,10 @@ onMounted(async () => {
 .stat-value.primary { color: var(--n-primary-color); }
 .stat-value.success { color: var(--n-success-color); }
 .stat-value.info { color: var(--n-info-color); }
+
+.point-source-alert {
+  margin-bottom: 16px;
+}
 
 .toolbar-section {
   background-color: var(--n-card-color);
