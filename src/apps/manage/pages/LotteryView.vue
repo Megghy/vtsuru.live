@@ -9,7 +9,7 @@ import {
   NList, NListItem, NModal, NRadioButton, NRadioGroup, NScrollbar, NFlex, NStatistic,
   NTag, NText, NTime, NTooltip, useMessage, useNotification,
 } from 'naive-ui'
-import { Dice24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
+import { Games24Filled, History24Filled, Trophy24Filled } from '@vicons/fluent'
 import { computed, h, onUnmounted, ref } from 'vue'
 import VueTurnstile from 'vue-turnstile'
 import { QueryGetAPI } from '@/api/query'
@@ -468,7 +468,7 @@ onUnmounted(() => {
             @click="startLottery"
           >
             <template #icon>
-              <NIcon :component="Dice24Filled" />
+              <NIcon :component="Games24Filled" />
             </template>
             {{ isLottering ? '抽取中...' : '开始抽取' }}
           </NButton>

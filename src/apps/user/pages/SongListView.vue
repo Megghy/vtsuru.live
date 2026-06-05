@@ -202,10 +202,13 @@ async function requestSong(song: SongsInfo) {
   }
 
   try {
-    const data = await QueryPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, {
+    const params = {
       target: props.userInfo.id,
       song: song.key,
-    })
+    }
+    const data = biliAuth.isAuthed
+      ? await biliAuth.QueryBiliAuthPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, params)
+      : await QueryPostAPIWithParams(`${SONG_REQUEST_API_URL}add-from-web`, params)
 
     if (data.code === 200) {
       message.success('点歌成功')

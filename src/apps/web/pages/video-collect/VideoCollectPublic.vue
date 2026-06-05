@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { NAlert, NButton, NCard, NDivider, NInput, NInputNumber, NLayoutContent, NResult, NFlex, NText, useMessage } from 'naive-ui';
-import { onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import VueTurnstile from 'vue-turnstile'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { TURNSTILE_KEY, VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 interface AddVideoModel {
   id: string
@@ -18,6 +19,7 @@ interface AddVideoModel {
 
 const message = useMessage()
 const route = useRoute()
+const biliAuth = useBiliAuth()
 
 const token = ref('')
 const turnstile = ref()
@@ -25,6 +27,17 @@ const turnstile = ref()
 const table = ref<VideoCollectTable | null>(await get())
 const addModel = ref({} as AddVideoModel)
 const isLoading = ref(false)
+const isBiliAuthed = computed(() => biliAuth.isAuthed && !!biliAuth.biliAuth?.userId)
+
+watch(
+  () => biliAuth.biliAuth,
+  (auth) => {
+    if (!auth?.userId) return
+    addModel.value.name = auth.name
+    addModel.value.uid = Number(auth.userId)
+  },
+  { immediate: true },
+)
 
 async function get() {
   try {
@@ -48,7 +61,11 @@ async function add() {
   isLoading.value = true
   const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   addModel.value.id = String(table.value?.id ?? id ?? '')
-  await QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, [['Turnstile', token.value]])
+  const headers: [string, string][] = [['Turnstile', token.value]]
+  const request = isBiliAuthed.value
+    ? biliAuth.QueryBiliAuthPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, headers)
+    : QueryPostAPI(`${VIDEO_COLLECT_API_URL}add`, addModel.value, headers)
+  await request
     .then((data) => {
       if (data.code == 200) {
         message.success('已成功推荐视频')
@@ -123,11 +140,13 @@ onUnmounted(() => {
           <NInput
             v-model:value="addModel.name"
             placeholder="(选填) 推荐人"
+            :disabled="isBiliAuthed"
           />
           <NInputNumber
             v-model:value="addModel.uid"
             placeholder="(选填) 推荐人UId"
             :show-button="false"
+            :disabled="isBiliAuthed"
           />
           <NInput
             v-model:value="addModel.description"

@@ -390,6 +390,7 @@ export interface QAReviewInfo {
 export interface QAInfo {
   id: number
   sender: UserBasicInfo
+  senderBiliAuthInfo?: BiliAuthBaseModel
   target: UserBasicInfo
   question: { message: string }
   answer?: { message: string, createdAt: number }
@@ -399,6 +400,7 @@ export interface QAInfo {
   isFavorite: boolean
   sendAt: number
   isAnonymous: boolean
+  isSenderBiliAuthed: boolean
 
   answerImages?: UploadFileResponse[]
   questionImages?: UploadFileResponse[]

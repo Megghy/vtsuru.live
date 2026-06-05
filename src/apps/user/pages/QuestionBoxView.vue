@@ -9,6 +9,7 @@ import VueTurnstile from 'vue-turnstile'
 import { useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { AVATAR_URL, QUESTION_API_URL, TURNSTILE_KEY } from '@/shared/config'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 const { userInfo } = defineProps<{
@@ -31,6 +32,7 @@ interface LocalQuestion {
 // 基础状态变量
 const message = useMessage()
 const accountInfo = useAccount()
+const biliAuth = useBiliAuth()
 const route = useRoute()
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
@@ -67,13 +69,19 @@ const anonymousEmail = ref('')
 const allowUploadImage = computed(() => userInfo?.extra?.allowQuestionBoxUploadImage ?? false)
 const selectedFiles = ref<File[]>([])
 const imagePreviewUrls = ref<string[]>([])
-const maxImages = computed(() => isUserLoggedIn.value ? 9 : 3)
+const maxImages = computed(() => isIdentified.value ? 9 : 3)
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // 计算属性
-const isSelf = computed(() => userInfo?.id === accountInfo.value?.id)
 const isUserLoggedIn = computed(() => !!accountInfo.value?.id)
+const isBiliAuthed = computed(() => biliAuth.isAuthed && !!biliAuth.biliAuth?.userId)
+const isIdentified = computed(() => isUserLoggedIn.value || isBiliAuthed.value)
+const isSelf = computed(() => {
+  if (userInfo?.id === accountInfo.value?.id) return true
+  if (!userInfo?.biliId || !biliAuth.biliAuth?.userId) return false
+  return String(userInfo.biliId) === String(biliAuth.biliAuth.userId)
+})
 
 // 辅助函数
 function countGraphemes(value: string) {
@@ -164,26 +172,25 @@ async function SendQuestion() {
     const formData = new FormData()
     formData.append('Data', JSON.stringify({
       Target: userInfo?.id,
-      IsAnonymous: !isUserLoggedIn.value || isAnonymous.value,
+      IsAnonymous: !isIdentified.value || isAnonymous.value,
       Message: questionMessage.value,
       Tag: selectedTag.value,
-      AnonymousName: !isUserLoggedIn.value && anonymousName.value ? anonymousName.value : undefined,
-      AnonymousEmail: !isUserLoggedIn.value && anonymousEmail.value ? anonymousEmail.value : undefined,
+      AnonymousName: !isIdentified.value && anonymousName.value ? anonymousName.value : undefined,
+      AnonymousEmail: !isIdentified.value && anonymousEmail.value ? anonymousEmail.value : undefined,
     }))
     for (const file of selectedFiles.value) {
       formData.append('Files', file)
     }
 
-    const data = await QueryPostAPI<QAInfo>(
-      `${QUESTION_API_URL}send`,
-      formData,
-      [['Turnstile', token.value]],
-    )
+    const headers: [string, string][] = [['Turnstile', token.value]]
+    const data = biliAuth.isAuthed
+      ? await biliAuth.QueryBiliAuthPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
+      : await QueryPostAPI<QAInfo>(`${QUESTION_API_URL}send`, formData, headers)
 
     if (data.code == 200) {
       message.success('成功发送棉花糖')
 
-      if (!isUserLoggedIn.value && userInfo) {
+      if (!isIdentified.value && userInfo) {
         const localQuestion: LocalQuestion = {
           id: `local-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           targetUserId: userInfo.id,
@@ -308,7 +315,7 @@ onUnmounted(() => {
         </template>
         <template #header-extra>
           <NBadge
-            v-if="!isUserLoggedIn"
+            v-if="!isIdentified"
             :value="localQuestions.length"
             :max="99"
             :show="localQuestions.length > 0"
@@ -361,7 +368,7 @@ onUnmounted(() => {
           <!-- 附件与选项 -->
           <div class="section options-grid">
             <!-- 匿名模式选项 - 已登录用户 -->
-            <div v-if="isUserLoggedIn" class="option-item">
+            <div v-if="isIdentified" class="option-item">
               <NCheckbox
                 v-model:checked="isAnonymous"
                 :disabled="isSelf"
@@ -370,7 +377,7 @@ onUnmounted(() => {
             </div>
 
             <!-- 匿名用户信息输入 - 未登录用户 -->
-            <template v-if="!isUserLoggedIn && !isSelf">
+            <template v-if="!isIdentified && !isSelf">
               <div class="anonymous-fields">
                 <NInput
                   v-model:value="anonymousName"
@@ -390,7 +397,7 @@ onUnmounted(() => {
           </div>
 
           <!-- 图片上传 -->
-          <div v-if="!isSelf && (isUserLoggedIn || allowUploadImage)" class="section">
+          <div v-if="!isSelf && (isIdentified || allowUploadImage)" class="section">
             <label class="section-label">图片附件</label>
             <div class="image-upload-area">
               <div class="upload-grid">

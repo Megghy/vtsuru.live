@@ -1,8 +1,9 @@
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
+import type { QueryParams, QueryRequestOptions } from '@/api/query'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { QueryGetAPI, QueryPostAPI } from '@/api/query'
+import { QueryGetAPI, QueryPostAPI, QueryPostAPIWithParams } from '@/api/query'
 import { BILI_AUTH_API_URL, POINT_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
@@ -77,19 +78,28 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     }
     return false
   }
-  async function QueryBiliAuthGetAPI<T>(url: string, params?: any, headers?: [string, string][]) {
-    headers ??= []
-    if (headers.find(h => h[0] == 'Bili-Auth') == null) {
-      headers.push(['Bili-Auth', currentToken.value ?? ''])
+  function getBiliAuthHeaders(headers?: [string, string][]) {
+    const result = [...(headers ?? [])]
+    if (result.find(h => h[0].toLowerCase() == 'bili-auth') == null) {
+      result.push(['Bili-Auth', currentToken.value ?? ''])
     }
-    return QueryGetAPI<T>(url, params, headers)
+    return result
+  }
+  async function QueryBiliAuthGetAPI<T>(url: string, params?: any, headers?: [string, string][]) {
+    return QueryGetAPI<T>(url, params, getBiliAuthHeaders(headers))
   }
   async function QueryBiliAuthPostAPI<T>(url: string, body?: unknown, headers?: [string, string][]) {
-    headers ??= []
-    if (headers.find(h => h[0] == 'Bili-Auth') == null) {
-      headers.push(['Bili-Auth', currentToken.value ?? ''])
-    }
-    return QueryPostAPI<T>(url, body, headers)
+    return QueryPostAPI<T>(url, body, getBiliAuthHeaders(headers))
+  }
+  async function QueryBiliAuthPostAPIWithParams<T>(
+    url: string,
+    params?: QueryParams,
+    body?: unknown,
+    contentType: string = 'application/json',
+    headers?: [string, string][],
+    options?: QueryRequestOptions,
+  ) {
+    return QueryPostAPIWithParams<T>(url, params, body, contentType, getBiliAuthHeaders(headers), options)
   }
 
   async function GetSpecificPoint(id: number) {
@@ -143,6 +153,8 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     getAuthInfo,
     QueryBiliAuthGetAPI,
     QueryBiliAuthPostAPI,
+    QueryBiliAuthPostAPIWithParams,
+    getBiliAuthHeaders,
     GetSpecificPoint,
     GetGoods,
     setCurrentAuth,
