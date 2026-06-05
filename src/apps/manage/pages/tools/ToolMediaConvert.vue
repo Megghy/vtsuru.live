@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import coreURL from '@ffmpeg/core?url'
-import wasmURL from '@ffmpeg/core/wasm?url'
 import { fetchFile } from '@ffmpeg/util'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
@@ -19,6 +17,12 @@ import {
 
 const message = useMessage()
 const ffmpeg = new FFmpeg()
+const ffmpegCoreVersion = '0.12.10'
+const ffmpegCoreBaseURL = `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${ffmpegCoreVersion}/dist/umd`
+const ffmpegCoreURLs = {
+  coreURL: `${ffmpegCoreBaseURL}/ffmpeg-core.js`,
+  wasmURL: `${ffmpegCoreBaseURL}/ffmpeg-core.wasm`,
+}
 
 type ProcessStatus = 'pending' | 'processing' | 'done' | 'error'
 
@@ -227,7 +231,7 @@ async function loadCore() {
   if (ffmpeg.loaded) return
   loadingCore.value = true
   try {
-    await ffmpeg.load({ coreURL, wasmURL })
+    await ffmpeg.load(ffmpegCoreURLs)
   } finally {
     loadingCore.value = false
   }
@@ -402,7 +406,7 @@ onBeforeUnmount(() => {
     <NCard title="音视频转换与压缩">
       <template #header-extra>
         <NText depth="3">
-          本地 ffmpeg.wasm 处理
+          浏览器本地处理
         </NText>
       </template>
 
@@ -1046,10 +1050,3 @@ img.preview {
   }
 }
 </style>
-
-
-
-
-
-
-

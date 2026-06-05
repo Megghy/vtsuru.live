@@ -14,7 +14,6 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@hyperdx/browser": "^0.22.0",
