@@ -3,6 +3,7 @@ import type {
   RuntimeState,
 } from './autoAction/types.js'
 import type { EventModel } from '@/api/api-models.js'
+import type { CheckInHubEvent } from './autoAction/modules/checkin'
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
@@ -10,6 +11,7 @@ import { useAccount } from '@/api/account.js'
 import { EventDataTypes } from '@/api/api-models.js'
 import { isDev } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
+import { useVTsuruHub } from '@/store/useVTsuruHub'
 import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
 
 import { useAutoReply } from './autoAction/modules/autoReply'
@@ -37,6 +39,7 @@ import { useBiliFunction } from './useBiliFunction.js'
 export const useAutoAction = defineStore('autoAction', () => {
   const danmakuClient = useDanmakuClient()
   const biliFunc = useBiliFunction()
+  const hub = useVTsuruHub()
   const account = useAccount()
 
   // 共享状态
@@ -355,6 +358,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     }, { immediate: true })
 
     registerEventListeners()
+    void registerCheckInResultListener()
   }
 
   // 初始化模块
@@ -388,6 +392,21 @@ export const useAutoAction = defineStore('autoAction', () => {
     } catch (err) {
       console.error('[AutoAction] 注册事件监听器时出错:', err)
     }
+  }
+
+  async function registerCheckInResultListener() {
+    try {
+      await hub.Init()
+      await hub.off('CheckInResult', onCheckInResult)
+      await hub.on('CheckInResult', onCheckInResult)
+      console.log('[AutoAction] 签到结果监听器已注册.')
+    } catch (err) {
+      console.error('[AutoAction] 注册签到结果监听器时出错:', err)
+    }
+  }
+
+  function onCheckInResult(payload: CheckInHubEvent) {
+    checkInModule.processCheckInResult(payload, runtimeState.value)
   }
 
   /**
@@ -455,11 +474,6 @@ export const useAutoAction = defineStore('autoAction', () => {
    */
   function processEvent(event: EventModel, triggerType: TriggerType) {
     if (!roomId.value) return
-
-    // 处理签到功能（独立于触发类型启用状态）
-    if (triggerType === TriggerType.DANMAKU) {
-      checkInModule.processCheckIn(event, runtimeState.value)
-    }
 
     // 其他功能依赖触发类型启用状态
     if (!enabledTriggerTypes.value[triggerType]) return

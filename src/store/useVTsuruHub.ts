@@ -14,10 +14,20 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
   const signalRClient = ref<HubConnection>()
   const isInited = ref(false)
   const isIniting = ref(false)
+  let initPromise: Promise<boolean> | null = null
   const accountInfo = useAccount()
 
   async function connectSignalR() {
-    if (isIniting.value) return
+    if (isInited.value) return true
+    if (initPromise) return initPromise
+
+    initPromise = doConnectSignalR()
+    const connected = await initPromise
+    initPromise = null
+    return connected
+  }
+
+  async function doConnectSignalR() {
     isIniting.value = true
 
     let currentAccount = accountInfo.value
@@ -71,7 +81,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
     if (!isInited.value) {
       await connectSignalR()
     }
-    signalRClient.value?.send(methodName, ...args)
+    return signalRClient.value?.send(methodName, ...args)
   }
   async function invoke<T>(methodName: string, ...args: unknown[]) {
     if (!isInited.value) {
@@ -99,7 +109,7 @@ export const useVTsuruHub = defineStore('VTsuruHub', () => {
   }
 
   async function Init() {
-    if (!isInited.value && !isIniting.value) {
+    if (!isInited.value) {
       await connectSignalR()
     }
     return useVTsuruHub()

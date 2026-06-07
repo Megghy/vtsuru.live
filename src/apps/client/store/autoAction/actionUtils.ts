@@ -200,6 +200,13 @@ async function sendAndLogDanmaku(
       success,
       success ? undefined : '发送失败',
     ).catch(err => console.error('记录弹幕历史失败:', err))
+    if (!success) {
+      window.$notification.error({
+        title: '自动回复发送失败',
+        content: message,
+        duration: 5000,
+      })
+    }
     return success
   } catch (err) {
     console.error(`[AutoAction] 发送弹幕失败 (${action.name || action.id}):`, err)
@@ -287,30 +294,40 @@ export function executeActions(
 
     // 根据操作类型执行不同的处理逻辑
     switch (action.actionType) {
-      case ActionType.SEND_DANMAKU:
-        if (!biliCookie.isCookieValid) {
-          continue // 如果未登录，则跳过
+      case ActionType.SEND_DANMAKU: {
+        const message = processTemplate(action, context)
+        if (!message) {
+          break
         }
+
+        if (!biliCookie.isCookieValid) {
+          logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, 'Cookie 未就绪或无效')
+            .catch(err => console.error('记录弹幕历史失败:', err))
+          window.$notification.error({
+            title: '自动回复发送失败',
+            content: 'Cookie 未就绪或无效',
+            duration: 5000,
+          })
+          break
+        }
+
         if (handlers.sendLiveDanmaku) {
-          // 处理弹幕发送
-          const message = processTemplate(action, context)
-          if (message) {
-            // 更新冷却时间
-            runtimeState.lastExecutionTime[action.id] = Date.now()
+          runtimeState.lastExecutionTime[action.id] = Date.now()
 
-            const sendAction = async () => sendAndLogDanmaku(handlers.sendLiveDanmaku, action, roomId, message)
+          const sendAction = async () => sendAndLogDanmaku(handlers.sendLiveDanmaku, action, roomId, message)
 
-            // 延迟发送
-            if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
-              setTimeout(sendAction, action.actionConfig.delaySeconds * 1000)
-            } else {
-              sendAction()
-            }
+          if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0) {
+            setTimeout(sendAction, action.actionConfig.delaySeconds * 1000)
+          } else {
+            sendAction()
           }
         } else {
           console.warn(`[AutoAction] 未提供弹幕发送处理器，无法执行操作: ${action.name || action.id}`)
+          logDanmakuHistory(action.id, action.name || '未命名操作', message, roomId, false, '未提供弹幕发送处理器')
+            .catch(err => console.error('记录弹幕历史失败:', err))
         }
         break
+      }
 
       case ActionType.SEND_PRIVATE_MSG:
         if (!biliCookie.isCookieValid) {

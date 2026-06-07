@@ -618,6 +618,7 @@ onMounted(() => {
                                 :action="config.successAction"
                                 :hide-name="true"
                                 :hide-enabled="true"
+                                :hide-user-filter="true"
                                 :custom-test-context="customTestContext"
                               />
                             </div>
@@ -630,6 +631,7 @@ onMounted(() => {
                                 :action="config.cooldownAction"
                                 :hide-name="true"
                                 :hide-enabled="true"
+                                :hide-user-filter="true"
                                 :custom-test-context="customTestContext"
                               />
                             </div>

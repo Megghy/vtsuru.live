@@ -77,6 +77,23 @@ const mixinKeyEncTab = [
   52,
 ]
 
+interface DanmakuQueueItem {
+  roomId: number
+  message: string
+  color?: string
+  fontsize?: number
+  mode?: number
+  resolve: (success: boolean) => void
+  reject: (error: unknown) => void
+}
+
+interface PrivateMessageQueueItem {
+  receiverId: number
+  message: string
+  resolve: (success: boolean) => void
+  reject: (error: unknown) => void
+}
+
 // 对 imgKey 和 subKey 进行字符顺序打乱编码
 function getMixinKey(orig: string): string {
   return mixinKeyEncTab.map(n => orig[n]).join('').slice(0, 32)
@@ -93,8 +110,8 @@ export const useBiliFunction = defineStore('biliFunction', () => {
   const wbiKeysTimestamp = ref<number | null>(null)
 
   // 队列相关状态
-  const danmakuQueue = ref<{ roomId: number, message: string, color?: string, fontsize?: number, mode?: number }[]>([])
-  const pmQueue = ref<{ receiverId: number, message: string }[]>([])
+  const danmakuQueue = ref<DanmakuQueueItem[]>([])
+  const pmQueue = ref<PrivateMessageQueueItem[]>([])
   const isDanmakuProcessing = ref(false)
   const isPmProcessing = ref(false)
   const danmakuTimer = ref<ReturnType<typeof setTimeout> | null>(null)
@@ -128,7 +145,11 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     console.log('[BiliFunction] 处理弹幕队列', danmakuQueue.value)
     try {
       const item = danmakuQueue.value[0]
-      await _sendLiveDanmaku(item.roomId, item.message, item.color, item.fontsize, item.mode)
+      const success = await _sendLiveDanmaku(item.roomId, item.message, item.color, item.fontsize, item.mode)
+      item.resolve(success)
+      danmakuQueue.value.shift()
+    } catch (error) {
+      danmakuQueue.value[0]?.reject(error)
       danmakuQueue.value.shift()
     } finally {
       isDanmakuProcessing.value = false
@@ -145,7 +166,11 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
     try {
       const item = pmQueue.value[0]
-      await _sendPrivateMessage(item.receiverId, item.message)
+      const success = await _sendPrivateMessage(item.receiverId, item.message)
+      item.resolve(success)
+      pmQueue.value.shift()
+    } catch (error) {
+      pmQueue.value[0]?.reject(error)
       pmQueue.value.shift()
     } finally {
       isPmProcessing.value = false
@@ -444,15 +469,17 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
   // 新的队列发送方法
   async function sendLiveDanmaku(roomId: number, message: string, color: string = 'ffffff', fontsize: number = 25, mode: number = 1): Promise<boolean> {
-    danmakuQueue.value.push({ roomId, message, color, fontsize, mode })
-    processDanmakuQueue()
-    return true
+    return new Promise((resolve, reject) => {
+      danmakuQueue.value.push({ roomId, message, color, fontsize, mode, resolve, reject })
+      processDanmakuQueue()
+    })
   }
 
   async function sendPrivateMessage(receiverId: number, message: string): Promise<boolean> {
-    pmQueue.value.push({ receiverId, message })
-    processPmQueue()
-    return true
+    return new Promise((resolve, reject) => {
+      pmQueue.value.push({ receiverId, message, resolve, reject })
+      processPmQueue()
+    })
   }
 
   /**

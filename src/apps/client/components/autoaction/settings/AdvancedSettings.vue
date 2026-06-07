@@ -11,11 +11,15 @@ const props = defineProps({
     type: Object as () => AutoActionItem,
     required: true,
   },
+  hideUserFilter: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // 根据触发类型判断是否显示用户过滤选项
 const showUserFilter = computed(() => {
-  return ![TriggerType.SCHEDULED].includes(props.action.triggerType)
+  return !props.hideUserFilter && ![TriggerType.SCHEDULED].includes(props.action.triggerType)
 })
 
 // 获取默认配置作为比较基准

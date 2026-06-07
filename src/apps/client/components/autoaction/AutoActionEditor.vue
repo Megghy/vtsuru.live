@@ -34,6 +34,10 @@ const props = defineProps({
     type: Object,
     default: undefined,
   },
+  hideUserFilter: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const showTemplate = computed(() => {
@@ -84,7 +88,7 @@ function getAdvancedSummary() {
   const summaries: string[] = []
   const { triggerConfig, ignoreCooldown, actionConfig, logicalExpression, executeCommand } = props.action
 
-  if (triggerConfig.userFilterEnabled) summaries.push('用户过滤')
+  if (!props.hideUserFilter && triggerConfig.userFilterEnabled) summaries.push('用户过滤')
   if (!ignoreCooldown && (actionConfig.cooldownSeconds > 0 || actionConfig.delaySeconds > 0)) summaries.push('冷却/延迟')
   if (logicalExpression) summaries.push('逻辑条件')
   if (executeCommand) summaries.push('自定义JS')
@@ -139,6 +143,7 @@ function getAdvancedSummary() {
           <!-- 通用高级设置 -->
           <AdvancedSettings
             :action="action"
+            :hide-user-filter="hideUserFilter"
             class="advanced-settings"
           />
         </NFlex>
