@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { OpenLiveInfo, RequestCreateBulletVote, ResponseVoteSession, VoteConfig } from '@/api/api-models'
 import { Add24Filled, Delete24Regular, Pause24Regular, Play24Regular, Settings24Regular, ShareAndroid24Regular } from '@vicons/fluent'
+import { ReorderThreeOutline } from '@vicons/ionicons5'
 import {
-  NAlert, NButton, NCard, NCheckbox, NColorPicker, NDivider, NEmpty, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NProgress, NRadio, NRadioGroup, NSelect, NFlex, NSpin, NSwitch, NTag, NText, NThing, useMessage } from 'naive-ui';
+  NAlert, NButton, NButtonGroup, NCard, NCheckbox, NColorPicker, NDivider, NEmpty, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NProgress, NRadio, NRadioGroup, NSelect, NFlex, NSpin, NSwitch, NTag, NText, NThing, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 import { clearInterval, setInterval } from 'worker-timers'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import { VOTE_API_URL } from '@/shared/config'
@@ -49,6 +51,18 @@ const isLoading = ref(false)
 const showSettingsModal = ref(false)
 const voteHistoryTab = ref<ResponseVoteSession[]>([])
 
+interface VoteFormOption {
+  id: string
+  text: string
+}
+
+function createVoteFormOption(text = ''): VoteFormOption {
+  return {
+    id: crypto.randomUUID(),
+    text,
+  }
+}
+
 const nowMs = ref<number>(Date.now())
 const timeLeftMs = computed(() => {
   if (!currentVote.value?.endTime) return null
@@ -64,20 +78,92 @@ function formatRemain(ms: number | null | undefined) {
   return `${mm}:${ss}`
 }
 
+// 当前投票的领先选项索引（用于高亮），并列或无票时返回 -1
+const leadingOptionIndex = computed(() => {
+  const options = currentVote.value?.options
+  if (!options?.length || !currentVote.value?.totalVotes) return -1
+  let maxCount = -1
+  let leader = -1
+  let tie = false
+  options.forEach((option, index) => {
+    if (option.count > maxCount) {
+      maxCount = option.count
+      leader = index
+      tie = false
+    } else if (option.count === maxCount) {
+      tie = true
+    }
+  })
+  return tie || maxCount <= 0 ? -1 : leader
+})
+
+// 快捷时长预设（秒）
+const durationPresets = [30, 60, 120, 300]
+
 // 创建投票相关
 const newVoteTitle = ref('')
-const newVoteOptions = ref<string[]>(['', ''])
+const newVoteOptions = ref<VoteFormOption[]>([createVoteFormOption(), createVoteFormOption()])
+const voteOptionNumberDrafts = ref<Record<string, number | null>>({})
 const newVoteDuration = ref(60)
 const newVoteAllowMultiple = ref(false)
 
 // 添加新选项
 function addOption() {
-  newVoteOptions.value.push('')
+  newVoteOptions.value.push(createVoteFormOption())
 }
 
 // 移除选项
 function removeOption(index: number) {
   newVoteOptions.value.splice(index, 1)
+}
+
+function setVoteFormOptions(options: string[]) {
+  newVoteOptions.value = options.map(option => createVoteFormOption(option))
+  while (newVoteOptions.value.length < 2) {
+    newVoteOptions.value.push(createVoteFormOption())
+  }
+  voteOptionNumberDrafts.value = {}
+}
+
+function getVoteOptionTexts() {
+  return newVoteOptions.value
+    .map(option => option.text.trim())
+    .filter(text => text !== '')
+}
+
+function getVoteOptionNumberValue(optionId: string, index: number) {
+  return Object.prototype.hasOwnProperty.call(voteOptionNumberDrafts.value, optionId)
+    ? voteOptionNumberDrafts.value[optionId]
+    : index + 1
+}
+
+function setVoteOptionNumberDraft(optionId: string, value: number | null) {
+  voteOptionNumberDrafts.value[optionId] = value
+}
+
+function applyVoteOptionNumber(optionId: string) {
+  const targetNumber = voteOptionNumberDrafts.value[optionId]
+  delete voteOptionNumberDrafts.value[optionId]
+
+  if (targetNumber == null || !Number.isFinite(targetNumber)) {
+    return
+  }
+
+  const fromIndex = newVoteOptions.value.findIndex(option => option.id === optionId)
+  if (fromIndex < 0) {
+    return
+  }
+
+  const toIndex = Math.min(newVoteOptions.value.length - 1, Math.max(0, Math.round(targetNumber) - 1))
+  if (fromIndex === toIndex) {
+    return
+  }
+
+  const [option] = newVoteOptions.value.splice(fromIndex, 1)
+  if (!option) {
+    return
+  }
+  newVoteOptions.value.splice(toIndex, 0, option)
 }
 
 // 获取当前用户的投票配置
@@ -151,7 +237,7 @@ async function createVote() {
     return
   }
 
-  const filteredOptions = newVoteOptions.value.filter(opt => opt.trim() !== '')
+  const filteredOptions = getVoteOptionTexts()
   if (filteredOptions.length < 2) {
     message.error('至少需要两个投票选项')
     return
@@ -186,7 +272,7 @@ async function createVote() {
 // 重置创建投票表单
 function resetCreateVoteForm() {
   newVoteTitle.value = ''
-  newVoteOptions.value = ['', '']
+  setVoteFormOptions(['', ''])
   newVoteDuration.value = voteConfig.value.voteDurationSeconds
   newVoteAllowMultiple.value = false
 }
@@ -276,29 +362,19 @@ function calculatePercentage(count: number, totalVotes: number) {
 // 加载模板
 function loadTemplate(template: { title: string, options: string[] }) {
   newVoteTitle.value = template.title
-  newVoteOptions.value = [...template.options]
-  // 确保至少有两个选项
-  while (newVoteOptions.value.length < 2) {
-    newVoteOptions.value.push('')
-  }
+  setVoteFormOptions(template.options)
 }
 
 // 导入默认选项
 function importDefaultOptions() {
   const opts = voteConfig.value.defaultOptions || []
-  newVoteOptions.value = [...opts]
-  while (newVoteOptions.value.length < 2) {
-    newVoteOptions.value.push('')
-  }
+  setVoteFormOptions(opts)
 }
 
 // 从历史复刻
 function reuseVote(vote: ResponseVoteSession) {
   newVoteTitle.value = vote.title
-  newVoteOptions.value = vote.options.map(o => o.text)
-  while (newVoteOptions.value.length < 2) {
-    newVoteOptions.value.push('')
-  }
+  setVoteFormOptions(vote.options.map(o => o.text))
 }
 
 // 初始化和轮询
@@ -345,7 +421,7 @@ function saveTemplate() {
     return
   }
 
-  const filteredOptions = newVoteOptions.value.filter(opt => opt.trim() !== '')
+  const filteredOptions = getVoteOptionTexts()
   if (filteredOptions.length < 2) {
     message.error('至少需要两个有效的投票选项')
     return
@@ -371,7 +447,7 @@ function deleteTemplate(index: number) {
     <NCard size="small" bordered :segmented="{ content: true }">
       <OpenLivePageHeader
         title="弹幕投票"
-        description="观众通过发送指定格式的弹幕参与投票，可自定义标题、选项与显示样式。"
+        description="观众可发送选项编号、选项内容或带命令的弹幕参与投票，可自定义标题、选项与显示样式。"
       >
         <template #actions>
           <NFlex align="center" :wrap="true" :size="10">
@@ -402,7 +478,7 @@ function deleteTemplate(index: number) {
       </OpenLivePageHeader>
 
       <NAlert type="info" size="small" :bordered="false">
-        提示：默认触发格式为 “{{ voteConfig.voteCommand }} 选项编号/内容”，也可在设置中自定义。
+        参与格式：直接发送“1”或“选项内容”；也支持“{{ voteConfig.voteCommand }} 1 / {{ voteConfig.voteCommand }} 选项内容”。
       </NAlert>
     </NCard>
 
@@ -474,10 +550,23 @@ function deleteTemplate(index: number) {
               <div
                 v-for="(option, index) in currentVote.options"
                 :key="index"
+                class="vote-result-row"
+                :class="{ 'vote-result-row--leading': index === leadingOptionIndex }"
               >
                 <NFlex vertical size="small">
                   <NFlex align="center" justify="space-between" :wrap="true" :size="8">
-                    <NText>{{ index + 1 }}. {{ option.text }}</NText>
+                    <NText :strong="index === leadingOptionIndex">
+                      {{ index + 1 }}. {{ option.text }}
+                      <NTag
+                        v-if="index === leadingOptionIndex"
+                        type="warning"
+                        size="small"
+                        :bordered="false"
+                        class="vote-leading-tag"
+                      >
+                        领先
+                      </NTag>
+                    </NText>
                     <NFlex align="center" :wrap="true" :size="6">
                       <NTag type="success" size="small" :bordered="false">
                         {{ option.count }}票
@@ -491,9 +580,9 @@ function deleteTemplate(index: number) {
                     type="line"
                     :percentage="calculatePercentage(option.count, currentVote.totalVotes)"
                     :height="10"
+                    :status="index === leadingOptionIndex ? 'warning' : 'default'"
                   />
                 </NFlex>
-                <NDivider v-if="index < currentVote.options.length - 1" style="margin: 10px 0" />
               </div>
             </NFlex>
           </template>
@@ -506,18 +595,40 @@ function deleteTemplate(index: number) {
                 size="small"
               />
 
-              <div
-                v-for="(option, index) in newVoteOptions"
-                :key="index"
+              <VueDraggable
+                v-model="newVoteOptions"
+                handle=".vote-option-handle"
+                ghost-class="vote-option-ghost"
+                :animation="150"
+                class="vote-option-editor"
               >
-                <NInputGroup>
-                  <NInputGroupLabel>{{ index + 1 }}</NInputGroupLabel>
+                <div
+                  v-for="(option, index) in newVoteOptions"
+                  :key="option.id"
+                  class="vote-option-row"
+                >
+                  <span class="vote-option-handle" title="拖拽排序">
+                    <NIcon><ReorderThreeOutline /></NIcon>
+                  </span>
+                  <NInputNumber
+                    class="vote-option-number"
+                    size="small"
+                    :show-button="false"
+                    :min="1"
+                    :max="newVoteOptions.length"
+                    :value="getVoteOptionNumberValue(option.id, index)"
+                    @update:value="(value: number | null) => setVoteOptionNumberDraft(option.id, value)"
+                    @blur="applyVoteOptionNumber(option.id)"
+                    @keydown.enter.prevent="applyVoteOptionNumber(option.id)"
+                  />
                   <NInput
-                    v-model:value="newVoteOptions[index]"
+                    v-model:value="option.text"
+                    class="vote-option-text"
                     placeholder="选项内容"
                     size="small"
                   />
                   <NButton
+                    class="vote-option-delete"
                     quaternary
                     size="small"
                     :disabled="newVoteOptions.length <= 2"
@@ -527,8 +638,8 @@ function deleteTemplate(index: number) {
                       <NIcon><Delete24Regular /></NIcon>
                     </template>
                   </NButton>
-                </NInputGroup>
-              </div>
+                </div>
+              </VueDraggable>
 
               <NFlex align="center" :wrap="true" :size="10">
                 <NButton size="small" @click="addOption">
@@ -556,6 +667,17 @@ function deleteTemplate(index: number) {
                     </template>
                   </NInputNumber>
                 </NInputGroup>
+
+                <NButtonGroup size="small">
+                  <NButton
+                    v-for="preset in durationPresets"
+                    :key="preset"
+                    :type="newVoteDuration === preset ? 'primary' : 'default'"
+                    @click="newVoteDuration = preset"
+                  >
+                    {{ preset }}s
+                  </NButton>
+                </NButtonGroup>
 
                 <NCheckbox v-model:checked="newVoteAllowMultiple">
                   允许重复投票
@@ -692,9 +814,13 @@ function deleteTemplate(index: number) {
           </NText>
 
           <NInputGroup>
-            <NInputGroupLabel>触发命令</NInputGroupLabel>
+            <NInputGroupLabel>命令前缀</NInputGroupLabel>
             <NInput v-model:value="voteConfig.voteCommand" size="small" />
           </NInputGroup>
+
+          <NText depth="3" style="font-size: 12px">
+            观众不输入命令前缀时，也可以直接发送选项编号或选项内容。
+          </NText>
 
           <NInputGroup>
             <NInputGroupLabel>结束命令</NInputGroupLabel>
@@ -831,5 +957,93 @@ function deleteTemplate(index: number) {
 
 .vote-duration {
   width: 120px;
+}
+
+.vote-result-row {
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--vtsuru-radius);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.vote-result-row + .vote-result-row {
+  margin-top: 8px;
+}
+
+.vote-result-row--leading {
+  background: var(--vtsuru-brand-soft);
+  border-color: var(--vtsuru-brand-rail);
+}
+
+.vote-leading-tag {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.vote-option-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vote-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vote-option-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: var(--vtsuru-radius-control);
+  cursor: grab;
+  user-select: none;
+  color: var(--vtsuru-fg-muted);
+  background: var(--vtsuru-bg-elevated);
+  flex: 0 0 auto;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.vote-option-handle:hover {
+  border-color: var(--vtsuru-border-hover);
+  color: var(--vtsuru-fg);
+}
+
+.vote-option-handle:active {
+  cursor: grabbing;
+}
+
+.vote-option-number {
+  width: 72px;
+  flex: 0 0 auto;
+}
+
+.vote-option-text {
+  min-width: 140px;
+  flex: 1 1 240px;
+}
+
+.vote-option-delete {
+  flex: 0 0 auto;
+}
+
+.vote-option-ghost {
+  opacity: 0.45;
+}
+
+@media (max-width: 560px) {
+  .vote-option-row {
+    flex-wrap: wrap;
+  }
+
+  .vote-option-text {
+    flex-basis: calc(100% - 112px);
+  }
 }
 </style>

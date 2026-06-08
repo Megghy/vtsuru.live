@@ -6,7 +6,7 @@
   import PropsGrid from './PropsGrid.vue';
   import { computed, inject } from 'vue';
   import { UserPageEditorKey } from '../context';
-  import Draggable from 'vuedraggable-es';
+  import { VueDraggable } from 'vue-draggable-plus';
   import { ImageOutline, PersonCircleOutline, ReorderThreeOutline } from '@vicons/ionicons5';
 
   const props = defineProps<{
@@ -172,6 +172,15 @@
   });
 
   const layoutProps = computed(() => editor.ensureLayoutProps(props.block) as any);
+  const buttonItemsModel = computed({
+    get() {
+      return editor.ensureItems(props.block);
+    },
+    set(next: any[]) {
+      const items = editor.ensureItems(props.block);
+      items.splice(0, items.length, ...next);
+    },
+  });
 
   const justifyOptionsHorizontal = [
     { label: 'start - 靠左', value: 'start' },
@@ -630,71 +639,70 @@
           </NFormItem>
           <NFormItem class="span-full" label="按钮项">
             <NFlex vertical style="width: 100%; padding-right: 10px">
-              <Draggable
-                :list="editor.ensureItems(props.block)"
-                :item-key="getButtonItemKey"
+              <VueDraggable
+                v-model="buttonItemsModel"
                 handle=".drag-handle"
                 :animation="160"
               >
-                <template #item="{ element: it, index: idx }">
-                  <div
-                    style="width: 100%; min-width: 0; margin-bottom: 10px; padding: 10px; border-radius: 10px; border: 1px solid rgba(127, 127, 127, 0.28); background: var(--n-color-embedded); box-sizing: border-box"
-                  >
-                    <div style="display:flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; min-width: 0">
-                      <NInput
-                        v-model:value="it.label"
-                        placeholder="标题"
-                        style="flex: 1 1 160px; min-width: 120px"
-                      />
-                      <NSelect
-                        style="width: 110px; flex: 0 0 110px"
-                        :value="(it as any).back === true ? 'back' : ((it as any).page ? 'page' : 'external')"
-                        :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }, { label: '返回', value: 'back' }]"
-                        @update:value="(v) => {
-                          if (v === 'back') {
-                            (it as any).back = true;
-                            delete (it as any).page;
-                            delete (it as any).url;
-                          } else if (v === 'page') {
-                            delete (it as any).back;
-                            if (!(it as any).page) (it as any).page = 'home';
-                            delete (it as any).url;
-                          } else {
-                            delete (it as any).back;
-                            if (typeof (it as any).url !== 'string' || !(it as any).url.trim().length) (it as any).url = 'https://';
-                            delete (it as any).page;
-                          }
-                        }"
-                      />
-                    </div>
-                    <div style="margin-top: 8px; width: 100%; min-width: 0">
-                      <NSelect
-                        v-if="(it as any).page"
-                        v-model:value="(it as any).page"
-                        :options="internalPageOptions"
-                        style="width: 100%"
-                      />
-                      <NInput
-                        v-else-if="!(it as any).back"
-                        v-model:value="(it as any).url"
-                        placeholder="链接 https://..."
-                        style="width: 100%"
-                      />
-                      <NText v-else depth="3" style="display:block; padding: 6px 2px">
-                        点击后返回上一页
-                      </NText>
-                    </div>
-                    <div style="margin-top: 8px; display:flex; align-items:center; justify-content: space-between; gap: 10px">
-                      <NButton type="error" secondary size="small" @click="editor.ensureItems(props.block).splice(idx, 1)">
-                        删除
-                      </NButton>
-                      <NIcon class="drag-handle" size="18" style="cursor: grab; opacity: 0.75">
-                        <ReorderThreeOutline />
-                      </NIcon>
-                    </div>
+                <div
+                  v-for="(it, idx) in buttonItemsModel"
+                  :key="getButtonItemKey(it)"
+                  style="width: 100%; min-width: 0; margin-bottom: 10px; padding: 10px; border-radius: 10px; border: 1px solid rgba(127, 127, 127, 0.28); background: var(--n-color-embedded); box-sizing: border-box"
+                >
+                  <div style="display:flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; min-width: 0">
+                    <NInput
+                      v-model:value="it.label"
+                      placeholder="标题"
+                      style="flex: 1 1 160px; min-width: 120px"
+                    />
+                    <NSelect
+                      style="width: 110px; flex: 0 0 110px"
+                      :value="(it as any).back === true ? 'back' : ((it as any).page ? 'page' : 'external')"
+                      :options="[{ label: '页面', value: 'page' }, { label: '外链', value: 'external' }, { label: '返回', value: 'back' }]"
+                      @update:value="(v) => {
+                        if (v === 'back') {
+                          (it as any).back = true;
+                          delete (it as any).page;
+                          delete (it as any).url;
+                        } else if (v === 'page') {
+                          delete (it as any).back;
+                          if (!(it as any).page) (it as any).page = 'home';
+                          delete (it as any).url;
+                        } else {
+                          delete (it as any).back;
+                          if (typeof (it as any).url !== 'string' || !(it as any).url.trim().length) (it as any).url = 'https://';
+                          delete (it as any).page;
+                        }
+                      }"
+                    />
                   </div>
-                </template>
-              </Draggable>
+                  <div style="margin-top: 8px; width: 100%; min-width: 0">
+                    <NSelect
+                      v-if="(it as any).page"
+                      v-model:value="(it as any).page"
+                      :options="internalPageOptions"
+                      style="width: 100%"
+                    />
+                    <NInput
+                      v-else-if="!(it as any).back"
+                      v-model:value="(it as any).url"
+                      placeholder="链接 https://..."
+                      style="width: 100%"
+                    />
+                    <NText v-else depth="3" style="display:block; padding: 6px 2px">
+                      点击后返回上一页
+                    </NText>
+                  </div>
+                  <div style="margin-top: 8px; display:flex; align-items:center; justify-content: space-between; gap: 10px">
+                    <NButton type="error" secondary size="small" @click="editor.ensureItems(props.block).splice(idx, 1)">
+                      删除
+                    </NButton>
+                    <NIcon class="drag-handle" size="18" style="cursor: grab; opacity: 0.75">
+                      <ReorderThreeOutline />
+                    </NIcon>
+                  </div>
+                </div>
+              </VueDraggable>
               <NButton
                 type="info" secondary
                 @click="editor.ensureItems(props.block).push({ label: '', url: 'https://' })"

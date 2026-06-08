@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver'
 import { NButton, NCard, NFlex, NProgress, NSelect, NSlider, NSpin, NSwitch, NText, NTooltip } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRemoveBg } from '@/composables/useRemoveBg'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 const { options, supported, webgpuSupported, progress, checkSupport, preloadModel, processRemoveBg } = useRemoveBg()
@@ -64,6 +65,12 @@ async function process() {
     const blob = await resp.blob()
     const result = await processRemoveBg(blob)
     resultUrl.value = URL.createObjectURL(result)
+    trackManageToolSuccess('RemoveBg', 'process', {
+      mode: options.mode,
+      model: options.model,
+      device: options.device,
+      format: fileExt.value,
+    })
     message.success('处理完成')
   } catch (e: any) {
     message.error(`处理失败: ${e?.message ?? e}`)

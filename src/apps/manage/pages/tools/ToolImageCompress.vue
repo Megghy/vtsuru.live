@@ -5,6 +5,7 @@ import { NButton, NCard, NFlex, NInputNumber, NSelect, NSlider, NText } from 'na
 import { computed, ref } from 'vue'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { formatFileSize } from '@/apps/manage/composables/formatters'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 
@@ -69,12 +70,23 @@ async function compressOne(item: ImageItem) {
 }
 
 async function processAll() {
-  await Promise.all(items.value.filter(i => !i.compressedBlob).map(compressOne))
+  await compressItems(items.value.filter(i => !i.compressedBlob))
 }
 
 async function reprocessAll() {
   items.value.forEach(i => { i.compressedBlob = null; i.compressedSize = 0 })
-  await Promise.all(items.value.map(compressOne))
+  await compressItems(items.value)
+}
+
+async function compressItems(targetItems: ImageItem[]) {
+  await Promise.all(targetItems.map(compressOne))
+  const succeeded = targetItems.filter(i => i.compressedBlob).length
+  if (succeeded > 0) {
+    trackManageToolSuccess('ImageCompress', 'compress', {
+      format: format.value,
+      count: succeeded,
+    })
+  }
 }
 
 function downloadOne(item: ImageItem) {

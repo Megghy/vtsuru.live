@@ -8,6 +8,7 @@ import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 const WIDTH = 1146
@@ -72,6 +73,9 @@ async function download() {
   if (!editorRef.value) return
   const blob = await editorRef.value.exportImage()
   saveAs(blob, `cover-${Date.now()}.png`)
+  trackManageToolSuccess('CoverMaker', 'download', {
+    bytes: blob.size,
+  })
   message.success('已下载')
 }
 async function exportProject() {
@@ -79,6 +83,7 @@ async function exportProject() {
   const json = await editorRef.value.exportJSON()
   const blob = new Blob([json], { type: 'application/json' })
   saveAs(blob, `cover-project-${Date.now()}.json`)
+  trackManageToolSuccess('CoverMaker', 'export-project')
   message.success('项目已导出')
 }
 
@@ -87,6 +92,7 @@ onImportChange(async (files) => {
   if (!files?.[0] || !editorRef.value) return
   const text = await files[0].text()
   await editorRef.value.importJSON(text)
+  trackManageToolSuccess('CoverMaker', 'import-project')
   message.success('项目已导入')
 })
 
@@ -99,6 +105,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   showRemoveBg.value = false
   if (!editorRef.value || !selectedLayer.value) return
   await editorRef.value.replaceLayerImage(selectedLayer.value.id, blob)
+  trackManageToolSuccess('CoverMaker', 'remove-bg')
   message.success('已替换')
 }
 </script>

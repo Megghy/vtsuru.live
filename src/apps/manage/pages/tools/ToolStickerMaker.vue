@@ -8,6 +8,7 @@ import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
@@ -69,6 +70,10 @@ async function download() {
   const blob = await editorRef.value.exportImage(mime, opts.format === 'jpeg' ? opts.quality : undefined)
   blobSize.value = blob.size
   saveAs(blob, `sticker-${Date.now()}.${opts.format === 'jpeg' ? 'jpg' : 'png'}`)
+  trackManageToolSuccess('StickerMaker', 'download', {
+    format: opts.format,
+    bytes: blob.size,
+  })
   message.success('已下载')
 }
 
@@ -81,6 +86,7 @@ async function onRemoveBgConfirm(blob: Blob) {
   showRemoveBg.value = false
   if (!editorRef.value || !selectedLayer.value) return
   await editorRef.value.replaceLayerImage(selectedLayer.value.id, blob)
+  trackManageToolSuccess('StickerMaker', 'remove-bg')
   message.success('已替换')
 }
 </script>

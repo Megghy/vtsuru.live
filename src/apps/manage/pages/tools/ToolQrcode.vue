@@ -6,6 +6,7 @@ import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { canvasToBlob } from '@/shared/utils'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 const account = useAccount()
@@ -57,6 +58,10 @@ async function download() {
       scale: 2,
     })
     saveAs(await canvasToBlob(canvas), 'qrcode.png')
+    trackManageToolSuccess('Qrcode', 'download', {
+      size: size.value,
+      transparent: isTransparent.value,
+    })
     message.success('已下载')
   } catch { message.error('导出失败') }
 }

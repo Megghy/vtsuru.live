@@ -4,6 +4,7 @@ import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NSelect, NSl
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { canvasToBlob } from '@/shared/utils'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 
@@ -122,6 +123,10 @@ async function download() {
   if (!canvas) return
   try {
     saveAs(await canvasToBlob(canvas), `text-image-${Date.now()}.png`)
+    trackManageToolSuccess('TextToImage', 'download', {
+      chars: text.value.length,
+      width: style.maxWidth,
+    })
     message.success('已保存')
   } catch { message.error('导出失败') }
 }

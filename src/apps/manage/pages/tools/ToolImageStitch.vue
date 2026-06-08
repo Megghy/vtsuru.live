@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
 import { NAlert, NButton, NCard, NColorPicker, NFlex, NGrid, NGridItem, NInputNumber, NSelect, NSlider, NSwitch, NTag, NText } from 'naive-ui'
-import Draggable from 'vuedraggable-es'
+import { VueDraggable } from 'vue-draggable-plus'
 import { computed, onBeforeUnmount, reactive, ref, watchEffect } from 'vue'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { canvasToBlob } from '@/shared/utils'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 type LayoutMode = 'vertical' | 'horizontal' | 'grid'
 type FitMode = 'contain' | 'cover' | 'stretch'
@@ -295,6 +296,11 @@ async function exportImage() {
     const blob = await canvasToBlob(canvas, mime, settings.format === 'png' ? undefined : settings.quality)
     lastExportSize.value = blob.size
     saveAs(blob, `stitched-${Date.now()}.${exportExt.value}`)
+    trackManageToolSuccess('ImageStitch', 'export', {
+      format: settings.format,
+      images: items.value.length,
+      bytes: blob.size,
+    })
     message.success(`已导出 ${formatFileSize(blob.size)}`)
   } catch (error) {
     message.error(`导出失败：${error instanceof Error ? error.message : error}`)
@@ -510,25 +516,29 @@ onBeforeUnmount(clearAll)
               </NFlex>
             </NFlex>
 
-            <Draggable v-model="items" item-key="id" handle=".drag-handle" :animation="150" class="image-list">
-              <template #item="{ element, index }">
-                <div class="image-row" :class="{ active: selectedId === element.id }" @click="selectedId = element.id">
-                  <span class="drag-handle" title="拖拽排序">{{ index + 1 }}</span>
-                  <img :src="element.url" alt="" class="thumb">
-                  <div class="image-row__body">
-                    <NText class="image-name" :title="element.file.name">
-                      {{ element.file.name }}
-                    </NText>
-                    <NText depth="3" class="image-meta">
-                      {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
-                    </NText>
-                  </div>
-                  <NButton size="tiny" quaternary type="error" @click.stop="removeItem(element.id)">
-                    删除
-                  </NButton>
+            <VueDraggable v-model="items" handle=".drag-handle" :animation="150" class="image-list">
+              <div
+                v-for="(element, index) in items"
+                :key="element.id"
+                class="image-row"
+                :class="{ active: selectedId === element.id }"
+                @click="selectedId = element.id"
+              >
+                <span class="drag-handle" title="拖拽排序">{{ index + 1 }}</span>
+                <img :src="element.url" alt="" class="thumb">
+                <div class="image-row__body">
+                  <NText class="image-name" :title="element.file.name">
+                    {{ element.file.name }}
+                  </NText>
+                  <NText depth="3" class="image-meta">
+                    {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
+                  </NText>
                 </div>
-              </template>
-            </Draggable>
+                <NButton size="tiny" quaternary type="error" @click.stop="removeItem(element.id)">
+                  删除
+                </NButton>
+              </div>
+            </VueDraggable>
 
             <div v-if="selectedItem" class="selected-box">
               <NFlex align="center" justify="space-between">

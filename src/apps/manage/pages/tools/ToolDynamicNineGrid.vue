@@ -6,6 +6,7 @@ import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
 import { canvasToBlob } from '@/shared/utils'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 type FitMode = 'stretch-width' | 'contain' | 'cover' | 'stretch'
 
@@ -162,6 +163,11 @@ async function generateTiles() {
     for (let i = 0; i < 9; i++) results.push(await renderTile(src, i, cellSize))
     src.close()
     finalBlobs.value = results
+    trackManageToolSuccess('DynamicNineGrid', 'generate', {
+      format: exportSettings.format,
+      cells: results.length,
+      tile_size: exportSettings.tileSize,
+    })
     message.success('九宫格图片已生成')
   } catch (e) {
     console.error(e)

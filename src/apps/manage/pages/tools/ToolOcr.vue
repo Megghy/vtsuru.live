@@ -4,6 +4,7 @@ import { NButton, NCard, NFlex, NSelect, NSpin, NText } from 'naive-ui'
 import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 ort.env.wasm.numThreads = 1
 ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
@@ -125,8 +126,14 @@ async function recognizeOne(task: ImageTask) {
     task.fullText = result.parragraphs.map(p => p.text).join('\n')
     await nextTick()
     drawOverlay(task.id)
+    trackManageToolSuccess('Ocr', 'recognize', {
+      lines: task.lines.length,
+      chars: task.fullText.length,
+    })
+    return true
   } catch (e: any) {
     message.error(`识别失败: ${e?.message ?? e}`)
+    return false
   } finally {
     task.processing = false
   }
@@ -135,8 +142,12 @@ async function recognizeOne(task: ImageTask) {
 async function recognizeAll() {
   const pending = tasks.value.filter(t => !t.lines.length && !t.processing)
   if (!pending.length) return message.info('没有待识别的图片')
-  for (const task of pending) await recognizeOne(task)
-  message.success(`全部识别完成`)
+  let succeeded = 0
+  for (const task of pending) {
+    if (await recognizeOne(task)) succeeded++
+  }
+  if (succeeded > 0) message.success(`已识别 ${succeeded} 张图片`)
+  else message.warning('没有图片识别成功')
 }
 
 function drawOverlay(taskId: number, highlightIdx?: number | null) {
@@ -202,6 +213,11 @@ async function translateTask(task: ImageTask) {
   if (!task.fullText) return message.warning('请先识别文字')
   try {
     task.translatedText = await translate(task.fullText)
+    trackManageToolSuccess('Ocr', 'translate', {
+      mode: mode.value,
+      target_lang: targetLang.value,
+      chars: task.fullText.length,
+    })
   } catch (e: any) {
     message.error(`翻译失败: ${e?.message ?? e}`)
   }

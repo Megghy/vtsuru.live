@@ -10,6 +10,7 @@ import {
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 import MediaTrimmer from './MediaTrimmer.vue'
 import {
   buildCommands, defaultSettings, formatMap, formats, positive, presets,
@@ -263,6 +264,13 @@ async function processAll() {
       message.info('已取消处理')
     } else {
       const failed = queue.filter(i => i.status === 'error').length
+      const succeeded = queue.filter(i => i.status === 'done').length
+      if (succeeded > 0) {
+        trackManageToolSuccess('MediaConvert', 'process', {
+          format: settings.format,
+          count: succeeded,
+        })
+      }
       message[failed ? 'warning' : 'success'](failed ? `处理完成，${failed} 个文件失败` : '全部处理完成')
     }
   } catch (error) {

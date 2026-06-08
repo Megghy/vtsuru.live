@@ -3,7 +3,7 @@ import type { BlockNode } from '@/apps/user-page/block/schema'
 import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
 import { NButton, NDropdown, NIcon, NText } from 'naive-ui';
 import { computed, inject } from 'vue'
-import Draggable from 'vuedraggable-es'
+import { VueDraggable } from 'vue-draggable-plus'
 import {
   AlertCircleOutline,
   ChevronForwardOutline,
@@ -39,6 +39,14 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const indentWidth = computed(() => `${props.depth * 14}px`)
+const blocksModel = computed({
+  get() {
+    return props.blocks
+  },
+  set(next: BlockNode[]) {
+    props.blocks.splice(0, props.blocks.length, ...next)
+  },
+})
 
 const iconMap = new Map(BLOCK_LIBRARY.map(it => [it.type, it.icon]))
 function getIcon(type: BlockNode['type']) {
@@ -161,161 +169,162 @@ function scrollToPreviewBlock(blockId: string) {
 </script>
 
 <template>
-  <Draggable
-    :list="props.blocks"
-    item-key="id"
+  <VueDraggable
+    v-model="blocksModel"
     handle=".drag-handle"
     :group="{ name: props.groupName, pull: true, put: true }"
     :animation="160"
     :invert-swap="true"
     :inverted-swap-threshold="0.35"
     ghost-class="drag-ghost"
-    :move="props.onMove"
+    :on-move="props.onMove"
     @start="props.onDragStart"
     @end="props.onDragEnd"
   >
-    <template #item="{ element: b }">
-      <div :data-block-id="b.id">
-        <div
-          class="block-item-row"
-          :class="{
-            active: props.selectionSet.has(b.id),
-            invalid: props.invalidSet.has(b.id),
-            hidden: b.hidden,
-            'is-layout': b.type === 'layout',
-            'drag-group-target': props.dragGroupTargetId === b.id,
-            'drag-group-target-wrap': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
-          }"
-          @click="props.onRowClick(b.id, $event)"
-          @mouseenter="editor.hoveredBlockId.value = b.id"
-          @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
+    <div
+      v-for="b in blocksModel"
+      :key="b.id"
+      :data-block-id="b.id"
+    >
+      <div
+        class="block-item-row"
+        :class="{
+          active: props.selectionSet.has(b.id),
+          invalid: props.invalidSet.has(b.id),
+          hidden: b.hidden,
+          'is-layout': b.type === 'layout',
+          'drag-group-target': props.dragGroupTargetId === b.id,
+          'drag-group-target-wrap': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
+        }"
+        @click="props.onRowClick(b.id, $event)"
+        @mouseenter="editor.hoveredBlockId.value = b.id"
+        @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
+      >
+        <div class="indent" :style="{ width: indentWidth }" />
+
+        <NIcon
+          v-if="b.type === 'layout'"
+          class="expand-toggle"
+          :class="{ expanded: props.expandedLayoutIdSet.has(b.id) }"
+          size="16"
+          title="折叠/展开"
+          @click.stop="props.onToggleExpanded(b.id)"
         >
-          <div class="indent" :style="{ width: indentWidth }" />
+          <ChevronForwardOutline />
+        </NIcon>
+        <div v-else class="expand-placeholder" />
 
-          <NIcon
-            v-if="b.type === 'layout'"
-            class="expand-toggle"
-            :class="{ expanded: props.expandedLayoutIdSet.has(b.id) }"
-            size="16"
-            title="折叠/展开"
-            @click.stop="props.onToggleExpanded(b.id)"
-          >
-            <ChevronForwardOutline />
-          </NIcon>
-          <div v-else class="expand-placeholder" />
+        <NIcon class="drag-handle" size="18" title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组">
+          <ReorderThreeOutline />
+        </NIcon>
 
-          <NIcon class="drag-handle" size="18" title="拖拽排序：靠近上下边缘；拖到区块中间松开：成组/加入组">
-            <ReorderThreeOutline />
-          </NIcon>
+        <NIcon v-if="getIcon(b.type)" class="type-icon" size="16">
+          <component :is="getIcon(b.type)!" />
+        </NIcon>
+        <div v-else class="type-icon-placeholder" />
 
-          <NIcon v-if="getIcon(b.type)" class="type-icon" size="16">
-            <component :is="getIcon(b.type)!" />
-          </NIcon>
-          <div v-else class="type-icon-placeholder" />
-
-          <div class="block-label">
-            <span class="truncate-text">
-              {{ getDisplayTitle(b) }}
-            </span>
-            <NText v-if="b.name && b.name.trim().length" depth="3" class="type-hint">
-              {{ getBlockLabel(b.type) }}
-            </NText>
-            <NText v-if="b.type === 'layout'" depth="3" style="margin-left: 6px; font-size: 12px">
-              ({{ getLayoutChildrenModel(b).length }})
-            </NText>
-          </div>
-
-          <Transition name="fade-scale">
-            <NText
-              v-if="props.dragGroupTargetId === b.id"
-              depth="3"
-              class="drag-group-hint"
-            >
-              {{ props.dragGroupTargetMode === 'into-layout' ? '松开加入组' : '松开成组' }}
-            </NText>
-          </Transition>
-
-          <NIcon
-            v-if="props.invalidSet.has(b.id)"
-            size="18"
-            title="该区块配置有误"
-            style="color: var(--n-error-color, #d03050)"
-          >
-            <AlertCircleOutline />
-          </NIcon>
-
-          <NButton
-            quaternary
-            circle
-            size="tiny"
-            :type="b.hidden ? 'default' : 'primary'"
-            :title="b.hidden ? '点击显示区块' : '点击隐藏区块'"
-            @click.stop="b.hidden = !b.hidden"
-          >
-            <template #icon>
-              <NIcon>
-                <EyeOutline v-if="!b.hidden" />
-                <EyeOffOutline v-else />
-              </NIcon>
-            </template>
-          </NButton>
-
-          <NButton
-            quaternary
-            circle
-            size="tiny"
-            title="在预览中定位"
-            @click.stop="scrollToPreviewBlock(b.id)"
-          >
-            <template #icon>
-              <NIcon><LocateOutline /></NIcon>
-            </template>
-          </NButton>
-
-          <NDropdown
-            trigger="click"
-            :options="props.blockActionOptions"
-            @select="(key) => props.onBlockAction(String(key), b.id)"
-          >
-            <NButton quaternary circle size="tiny" @click.stop>
-              <template #icon>
-                <NIcon><EllipsisHorizontalOutline /></NIcon>
-              </template>
-            </NButton>
-          </NDropdown>
+        <div class="block-label">
+          <span class="truncate-text">
+            {{ getDisplayTitle(b) }}
+          </span>
+          <NText v-if="b.name && b.name.trim().length" depth="3" class="type-hint">
+            {{ getBlockLabel(b.type) }}
+          </NText>
+          <NText v-if="b.type === 'layout'" depth="3" style="margin-left: 6px; font-size: 12px">
+            ({{ getLayoutChildrenModel(b).length }})
+          </NText>
         </div>
 
-        <Transition
-          @before-enter="onExpandBeforeEnter"
-          @enter="onExpandEnter"
-          @after-enter="onExpandAfterEnter"
-          @before-leave="onExpandBeforeLeave"
-          @leave="onExpandLeave"
-          @after-leave="onExpandAfterLeave"
-        >
-          <div v-if="b.type === 'layout' && props.expandedLayoutIdSet.has(b.id)" class="children">
-            <BlockTreeList
-              :blocks="getLayoutChildrenModel(b)"
-              :depth="props.depth + 1"
-              :group-name="props.groupName"
-              :selection-set="props.selectionSet"
-              :invalid-set="props.invalidSet"
-              :expanded-layout-id-set="props.expandedLayoutIdSet"
-              :drag-group-target-id="props.dragGroupTargetId"
-              :drag-group-target-mode="props.dragGroupTargetMode"
-              :on-row-click="props.onRowClick"
-              :on-block-action="props.onBlockAction"
-              :on-toggle-expanded="props.onToggleExpanded"
-              :on-drag-start="props.onDragStart"
-              :on-drag-end="props.onDragEnd"
-              :on-move="props.onMove"
-              :block-action-options="props.blockActionOptions"
-            />
-          </div>
+        <Transition name="fade-scale">
+          <NText
+            v-if="props.dragGroupTargetId === b.id"
+            depth="3"
+            class="drag-group-hint"
+          >
+            {{ props.dragGroupTargetMode === 'into-layout' ? '松开加入组' : '松开成组' }}
+          </NText>
         </Transition>
+
+        <NIcon
+          v-if="props.invalidSet.has(b.id)"
+          size="18"
+          title="该区块配置有误"
+          style="color: var(--n-error-color, #d03050)"
+        >
+          <AlertCircleOutline />
+        </NIcon>
+
+        <NButton
+          quaternary
+          circle
+          size="tiny"
+          :type="b.hidden ? 'default' : 'primary'"
+          :title="b.hidden ? '点击显示区块' : '点击隐藏区块'"
+          @click.stop="b.hidden = !b.hidden"
+        >
+          <template #icon>
+            <NIcon>
+              <EyeOutline v-if="!b.hidden" />
+              <EyeOffOutline v-else />
+            </NIcon>
+          </template>
+        </NButton>
+
+        <NButton
+          quaternary
+          circle
+          size="tiny"
+          title="在预览中定位"
+          @click.stop="scrollToPreviewBlock(b.id)"
+        >
+          <template #icon>
+            <NIcon><LocateOutline /></NIcon>
+          </template>
+        </NButton>
+
+        <NDropdown
+          trigger="click"
+          :options="props.blockActionOptions"
+          @select="(key) => props.onBlockAction(String(key), b.id)"
+        >
+          <NButton quaternary circle size="tiny" @click.stop>
+            <template #icon>
+              <NIcon><EllipsisHorizontalOutline /></NIcon>
+            </template>
+          </NButton>
+        </NDropdown>
       </div>
-    </template>
-  </Draggable>
+
+      <Transition
+        @before-enter="onExpandBeforeEnter"
+        @enter="onExpandEnter"
+        @after-enter="onExpandAfterEnter"
+        @before-leave="onExpandBeforeLeave"
+        @leave="onExpandLeave"
+        @after-leave="onExpandAfterLeave"
+      >
+        <div v-if="b.type === 'layout' && props.expandedLayoutIdSet.has(b.id)" class="children">
+          <BlockTreeList
+            :blocks="getLayoutChildrenModel(b)"
+            :depth="props.depth + 1"
+            :group-name="props.groupName"
+            :selection-set="props.selectionSet"
+            :invalid-set="props.invalidSet"
+            :expanded-layout-id-set="props.expandedLayoutIdSet"
+            :drag-group-target-id="props.dragGroupTargetId"
+            :drag-group-target-mode="props.dragGroupTargetMode"
+            :on-row-click="props.onRowClick"
+            :on-block-action="props.onBlockAction"
+            :on-toggle-expanded="props.onToggleExpanded"
+            :on-drag-start="props.onDragStart"
+            :on-drag-end="props.onDragEnd"
+            :on-move="props.onMove"
+            :block-action-options="props.blockActionOptions"
+          />
+        </div>
+      </Transition>
+    </div>
+  </VueDraggable>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>

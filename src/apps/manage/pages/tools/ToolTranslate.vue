@@ -2,6 +2,7 @@
 import { NButton, NCard, NFlex, NSelect, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
+import { trackManageToolSuccess } from '@/shared/services/umami'
 
 const message = useMessage()
 
@@ -19,6 +20,12 @@ async function doTranslate() {
   resultText.value = ''
   try {
     resultText.value = await translate(sourceText.value)
+    trackManageToolSuccess('Translate', 'translate', {
+      mode: mode.value,
+      source_lang: sourceLang.value,
+      target_lang: targetLang.value,
+      chars: sourceText.value.length,
+    })
   } catch (e: any) {
     message.error(`翻译失败: ${e?.message ?? e}`)
   }

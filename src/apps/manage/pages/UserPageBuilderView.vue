@@ -5,7 +5,7 @@ import type { CSSProperties } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ArrowRedoOutline, ArrowUndoOutline, ReorderThreeOutline } from '@vicons/ionicons5'
 import { useEventListener } from '@vueuse/core'
-import Draggable from 'vuedraggable-es'
+import { VueDraggable } from 'vue-draggable-plus'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { persistedGetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
 import { UserPageEditorKey } from './user-page-builder/context'
@@ -610,30 +610,29 @@ onBeforeRouteLeave(() => {
         <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
           拖拽调整列从左到右顺序。最后一列会自动填充剩余宽度（想让某列更宽/更窄，可以把它放到最后）。
         </NAlert>
-        <Draggable
-          :list="layoutColumnsModel"
-          :item-key="(id: any) => id"
+        <VueDraggable
+          v-model="layoutColumnsModel"
           handle=".drag-handle"
           :animation="160"
         >
-          <template #item="{ element: id }">
-            <div
-              style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--n-border-color); border-radius: 10px; margin: 8px 0"
-            >
-              <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
-                <NIcon class="drag-handle" size="18" style="cursor: grab">
-                  <ReorderThreeOutline />
-                </NIcon>
-                <NText strong>
-                  {{ COLUMN_META[id as any]?.label ?? id }}
-                </NText>
-              </div>
-              <NText depth="3" style="font-size: 12px; white-space: nowrap">
-                {{ id }}
+          <div
+            v-for="id in layoutColumnsModel"
+            :key="id"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--n-border-color); border-radius: 10px; margin: 8px 0"
+          >
+            <div style="min-width: 0; display: flex; align-items: center; gap: 10px">
+              <NIcon class="drag-handle" size="18" style="cursor: grab">
+                <ReorderThreeOutline />
+              </NIcon>
+              <NText strong>
+                {{ COLUMN_META[id as any]?.label ?? id }}
               </NText>
             </div>
-          </template>
-        </Draggable>
+            <NText depth="3" style="font-size: 12px; white-space: nowrap">
+              {{ id }}
+            </NText>
+          </div>
+        </VueDraggable>
         <template #footer>
           <NFlex justify="space-between">
             <NButton

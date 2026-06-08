@@ -7,7 +7,7 @@
  * - 暗色 / 亮色 token 由 buildTokens 统一产出，本文件不再读 isDark
  */
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { error, info, neutral, pickByMode, rgba, success, warning } from './colors'
+import { brand, error, info, neutral, pickByMode, rgba, success, warning } from './colors'
 import { buildTokens } from './tokens'
 
 export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
@@ -225,8 +225,11 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
     Switch: {
       // 关闭态保持中性灰
       railColor: isDark ? neutral[800] : neutral[200],
-      // 激活态使用品牌色：避免暗色模式下 white-on-white 对比不足
-      railColorActive: t.brand,
+      // 激活态使用品牌色。暗色下用深青(brand[600])而非亮青：
+      // Switch 只有单一 textColor，无法区分开/关两态，必须让两态轨道
+      // 同明度。暗色两态都是深底→统一白字；亮色两态都是浅底→统一深字。
+      railColorActive: isDark ? brand[600] : brand[400],
+      textColor: isDark ? '#fff' : neutral[950],
       railHeightMedium: '20px',
       railWidthMedium: '44px',
       railHeightSmall: '16px',
@@ -318,10 +321,12 @@ export function getThemeOverrides(isDark: boolean): GlobalThemeOverrides {
       padding: '0 12px',
     },
     Badge: {
-      colorInfo: infoColor,
-      colorSuccess: successColor,
-      colorWarning: warningColor,
-      colorError: errorColor,
+      // badge 文字色被 naive 写死为 #FFF（不走主题变量），因此填充必须用
+      // 固定的深色档（lightPressed），不能随明暗翻转，否则暗色下亮底白字塌陷
+      colorInfo: info.lightPressed,
+      colorSuccess: success.lightPressed,
+      colorWarning: warning.lightPressed,
+      colorError: error.lightPressed,
     },
     Avatar: {
       color: t.muted,

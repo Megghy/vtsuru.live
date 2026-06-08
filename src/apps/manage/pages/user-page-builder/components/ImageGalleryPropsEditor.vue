@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import draggable from 'vuedraggable-es'
+import { VueDraggable } from 'vue-draggable-plus'
 import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
 import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui';
 import { computed } from 'vue'
@@ -52,9 +52,16 @@ function getItemPreviewSrc(it: any) {
 }
 
 function getItemKey(it: any) {
+  if (!it || typeof it !== 'object') return String(it ?? '')
   const fileId = it?.imageFile?.id
   if (typeof fileId === 'number' && Number.isInteger(fileId) && fileId > 0) return `file:${fileId}`
-  return JSON.stringify(it ?? {})
+  if (typeof it._k !== 'string') {
+    Object.defineProperty(it, '_k', {
+      value: `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`,
+      enumerable: false,
+    })
+  }
+  return it._k as string
 }
 </script>
 
@@ -155,57 +162,58 @@ function getItemKey(it: any) {
             批量上传
           </NButton>
         </NFlex>
-        <draggable
+        <VueDraggable
           v-model="itemsModel"
-          :item-key="getItemKey"
           handle=".drag-handle"
           style="display:flex; flex-direction: column; gap: 10px"
         >
-          <template #item="{ element, index }">
-            <div style="border: 1px solid var(--n-border-color); border-radius: 10px; padding: 10px">
-              <NFlex align="center" justify="space-between">
-                <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
-                  <NText depth="3" class="drag-handle" style="cursor: grab; user-select: none">
-                    ≡
-                  </NText>
-                  <img
-                    v-if="getItemPreviewSrc(element)"
-                    :src="getItemPreviewSrc(element)"
-                    alt=""
-                    referrerpolicy="no-referrer"
-                    style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--n-border-color); flex: 0 0 auto"
-                  >
-                  <NText depth="3" style="white-space: nowrap">
-                    #{{ index + 1 }}
-                  </NText>
-                </NFlex>
-                <NFlex align="center" :wrap="false" style="gap: 8px">
-                  <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryItem(props.block, index)">
-                    <template #icon>
-                      <NIcon><ImageOutline /></NIcon>
-                    </template>
-                    上传
-                  </NButton>
-                  <NButton size="tiny" secondary @click="props.editor.clearUploadedGalleryItemFile(props.block, index)">
-                    清除
-                  </NButton>
-                  <NButton size="tiny" type="error" secondary @click="removeItem(index)">
-                    <template #icon>
-                      <NIcon><TrashOutline /></NIcon>
-                    </template>
-                    删除
-                  </NButton>
-                </NFlex>
+          <div
+            v-for="(element, index) in itemsModel"
+            :key="getItemKey(element)"
+            style="border: 1px solid var(--n-border-color); border-radius: 10px; padding: 10px"
+          >
+            <NFlex align="center" justify="space-between">
+              <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
+                <NText depth="3" class="drag-handle" style="cursor: grab; user-select: none">
+                  ≡
+                </NText>
+                <img
+                  v-if="getItemPreviewSrc(element)"
+                  :src="getItemPreviewSrc(element)"
+                  alt=""
+                  referrerpolicy="no-referrer"
+                  style="width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--n-border-color); flex: 0 0 auto"
+                >
+                <NText depth="3" style="white-space: nowrap">
+                  #{{ index + 1 }}
+                </NText>
               </NFlex>
+              <NFlex align="center" :wrap="false" style="gap: 8px">
+                <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryItem(props.block, index)">
+                  <template #icon>
+                    <NIcon><ImageOutline /></NIcon>
+                  </template>
+                  上传
+                </NButton>
+                <NButton size="tiny" secondary @click="props.editor.clearUploadedGalleryItemFile(props.block, index)">
+                  清除
+                </NButton>
+                <NButton size="tiny" type="error" secondary @click="removeItem(index)">
+                  <template #icon>
+                    <NIcon><TrashOutline /></NIcon>
+                  </template>
+                  删除
+                </NButton>
+              </NFlex>
+            </NFlex>
 
-              <div style="margin-top: 10px">
-                <NFormItem label="图片描述" :show-feedback="false">
-                  <NInput v-model:value="ensureItem(index).desc" placeholder="可选，显示在图片下方" />
-                </NFormItem>
-              </div>
+            <div style="margin-top: 10px">
+              <NFormItem label="图片描述" :show-feedback="false">
+                <NInput v-model:value="ensureItem(index).desc" placeholder="可选，显示在图片下方" />
+              </NFormItem>
             </div>
-          </template>
-        </draggable>
+          </div>
+        </VueDraggable>
 
         <NButton type="info" secondary @click="addItem">
           <template #icon>

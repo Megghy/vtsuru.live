@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsMacro, VtsMacroStep } from '@/apps/client/store/useVtsStore'
 import { useVtsAction } from './useVtsAction'
-import Draggable from 'vuedraggable-es'
+import { VueDraggable } from 'vue-draggable-plus'
 import { AddOutline, CopyOutline, ReorderThreeOutline, TrashOutline } from '@vicons/ionicons5'
 
 const vts = useVtsStore()
@@ -65,6 +65,12 @@ function upsertStep(stepId: string, next: VtsMacroStep) {
   const idx = macroSteps.value.findIndex(s => s.id === stepId)
   if (idx < 0) return
   macroSteps.value[idx] = { ...macroSteps.value[idx]!, step: next }
+}
+
+function patchStep(stepId: string, patch: Record<string, unknown>) {
+  const current = macroSteps.value.find(s => s.id === stepId)?.step
+  if (!current) return
+  upsertStep(stepId, { ...current, ...patch } as VtsMacroStep)
 }
 
 function setStepType(stepId: string, type: StepType) {
@@ -225,125 +231,128 @@ function runMacro(macroId: string) {
         </NDropdown>
       </NFlex>
 
-      <Draggable v-model="macroSteps" item-key="id" handle=".macro-step-handle" :animation="150">
-        <template #item="{ element, index }">
-          <NCard size="small" style="border-radius: 10px; margin-bottom: 8px">
-            <NFlex align="center" justify="space-between" :wrap="true" :size="8">
-              <NFlex align="center" :wrap="true" :size="8">
-                <span class="macro-step-handle" title="拖拽排序">
-                  <NIcon><ReorderThreeOutline /></NIcon>
-                </span>
-                <NText strong>
-                  {{ index + 1 }}. {{ stepLabelMap[element.step.type] ?? '未知' }}
-                </NText>
-                <NSelect
-                  size="small"
-                  :value="element.step.type"
-                  style="min-width: 180px"
-                  :options="stepTypeOptions.map(o => ({ label: o.label, value: o.key }))"
-                  @update:value="(v: StepType) => setStepType(element.id, v)"
-                />
-              </NFlex>
-              <NButton size="small" type="error" secondary @click="removeStep(element.id)">
-                <template #icon>
-                  <NIcon><TrashOutline /></NIcon>
-                </template>
-              </NButton>
-            </NFlex>
-
-            <NDivider style="margin: 8px 0" />
-
-            <NFlex v-if="element.step.type === 'hotkey'" :wrap="true" :size="10">
-              <NSelect
-                style="min-width: 380px" placeholder="选择热键" :options="hotkeyOptions" :value="element.step.hotkeyID"
-                @update:value="(v: string) => upsertStep(element.id, { type: 'hotkey', hotkeyID: v })"
-              />
-            </NFlex>
-
-            <NFlex v-else-if="element.step.type === 'preset'" :wrap="true" :size="10">
-              <NSelect
-                style="min-width: 380px" placeholder="选择预设" :options="presetOptions" :value="element.step.presetId"
-                @update:value="(v: string) => upsertStep(element.id, { type: 'preset', presetId: v })"
-              />
-            </NFlex>
-
-            <NFlex v-else-if="element.step.type === 'wait'" align="center" :wrap="true" :size="10">
-              <NText depth="3">
-                等待
+      <VueDraggable v-model="macroSteps" handle=".macro-step-handle" :animation="150">
+        <NCard
+          v-for="(element, index) in macroSteps"
+          :key="element.id"
+          size="small"
+          style="border-radius: 10px; margin-bottom: 8px"
+        >
+          <NFlex align="center" justify="space-between" :wrap="true" :size="8">
+            <NFlex align="center" :wrap="true" :size="8">
+              <span class="macro-step-handle" title="拖拽排序">
+                <NIcon><ReorderThreeOutline /></NIcon>
+              </span>
+              <NText strong>
+                {{ index + 1 }}. {{ stepLabelMap[element.step.type] ?? '未知' }}
               </NText>
-              <NInputNumber
-                :value="element.step.seconds" :min="0" :step="0.1" style="width: 160px"
-                @update:value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
+              <NSelect
+                size="small"
+                :value="element.step.type"
+                style="min-width: 180px"
+                :options="stepTypeOptions.map(o => ({ label: o.label, value: o.key }))"
+                @update:value="(v: StepType) => setStepType(element.id, v)"
               />
-              <NText depth="3">
-                秒
-              </NText>
             </NFlex>
+            <NButton size="small" type="error" secondary @click="removeStep(element.id)">
+              <template #icon>
+                <NIcon><TrashOutline /></NIcon>
+              </template>
+            </NButton>
+          </NFlex>
+
+          <NDivider style="margin: 8px 0" />
+
+          <NFlex v-if="element.step.type === 'hotkey'" :wrap="true" :size="10">
+            <NSelect
+              style="min-width: 380px" placeholder="选择热键" :options="hotkeyOptions" :value="element.step.hotkeyID"
+              @update:value="(v: string) => upsertStep(element.id, { type: 'hotkey', hotkeyID: v })"
+            />
+          </NFlex>
+
+          <NFlex v-else-if="element.step.type === 'preset'" :wrap="true" :size="10">
+            <NSelect
+              style="min-width: 380px" placeholder="选择预设" :options="presetOptions" :value="element.step.presetId"
+              @update:value="(v: string) => upsertStep(element.id, { type: 'preset', presetId: v })"
+            />
+          </NFlex>
+
+          <NFlex v-else-if="element.step.type === 'wait'" align="center" :wrap="true" :size="10">
+            <NText depth="3">
+              等待
+            </NText>
+            <NInputNumber
+              :value="element.step.seconds" :min="0" :step="0.1" style="width: 160px"
+              @update:value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
+            />
+            <NText depth="3">
+              秒
+            </NText>
+          </NFlex>
 
             <NFlex v-else-if="element.step.type === 'injectParam'" :wrap="true" :size="10">
               <NInput
                 style="min-width: 220px" placeholder="参数 ID" :value="element.step.parameterId"
-                @update:value="(v: string) => upsertStep(element.id, { ...element.step, parameterId: v })"
+                @update:value="(v: string) => patchStep(element.id, { parameterId: v })"
               />
               <NInputNumber
                 style="width: 140px" placeholder="值" :value="element.step.value"
-                @update:value="(v) => upsertStep(element.id, { ...element.step, value: Number(v ?? 0) })"
+                @update:value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
               />
               <NInputNumber
                 style="width: 140px" placeholder="权重" :value="element.step.weight ?? 1" :min="0" :step="0.1"
-                @update:value="(v) => upsertStep(element.id, { ...element.step, weight: Number(v ?? 1) })"
+                @update:value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
               />
             </NFlex>
 
             <NFlex v-else-if="element.step.type === 'accessory'" align="center" :wrap="true" :size="10">
               <NSelect
                 style="min-width: 320px" placeholder="选择配饰" :options="accessoryOptions" :value="element.step.accessoryId"
-                @update:value="(v: string) => upsertStep(element.id, { ...element.step, accessoryId: v })"
+                @update:value="(v: string) => patchStep(element.id, { accessoryId: v })"
               />
               <NSwitch
                 :value="element.step.visible"
-                @update:value="(v: boolean) => upsertStep(element.id, { ...element.step, visible: v })"
+                @update:value="(v: boolean) => patchStep(element.id, { visible: v })"
               >
-                <template #checked>
-                  显示
-                </template>
-                <template #unchecked>
-                  隐藏
-                </template>
-              </NSwitch>
-            </NFlex>
+              <template #checked>
+                显示
+              </template>
+              <template #unchecked>
+                隐藏
+              </template>
+            </NSwitch>
+          </NFlex>
 
             <NFlex v-else-if="element.step.type === 'prank'" :wrap="true" :size="10">
               <NSelect
                 style="min-width: 380px" placeholder="选择整活" :options="prankOptions" :value="element.step.prankId"
-                @update:value="(v: string) => upsertStep(element.id, { ...element.step, prankId: v })"
+                @update:value="(v: string) => patchStep(element.id, { prankId: v })"
               />
             </NFlex>
 
             <NFlex v-else-if="element.step.type === 'playAudio'" :wrap="true" :size="10">
               <NInput
                 style="min-width: 320px" placeholder="音效 URL" :value="element.step.url"
-                @update:value="(v: string) => upsertStep(element.id, { ...element.step, url: v })"
+                @update:value="(v: string) => patchStep(element.id, { url: v })"
               />
               <NInputNumber
                 style="width: 130px" placeholder="音量" :min="0" :max="1" :step="0.05" :value="element.step.volume ?? 0.8"
-                @update:value="(v) => upsertStep(element.id, { ...element.step, volume: Number(v ?? 0.8) })"
+                @update:value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
               />
               <NSwitch
                 :value="element.step.waitForEnd ?? false"
-                @update:value="(v: boolean) => upsertStep(element.id, { ...element.step, waitForEnd: v })"
+                @update:value="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
               >
-                <template #checked>
-                  等待结束
-                </template>
-                <template #unchecked>
-                  不等待
-                </template>
-              </NSwitch>
-            </NFlex>
-          </NCard>
-        </template>
-      </Draggable>
+              <template #checked>
+                等待结束
+              </template>
+              <template #unchecked>
+                不等待
+              </template>
+            </NSwitch>
+          </NFlex>
+        </NCard>
+      </VueDraggable>
 
       <NDivider style="margin: 4px 0" />
 
@@ -389,4 +398,3 @@ function runMacro(macroId: string) {
   cursor: grabbing;
 }
 </style>
-

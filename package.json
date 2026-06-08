@@ -84,6 +84,7 @@
     "vite-svg-loader": "^5.1.1",
     "vtubestudio": "^3.11.0",
     "vue": "3.5.31",
+    "vue-draggable-plus": "^0.6.1",
     "vue-echarts": "^8.0.1",
     "vue-img-cutter": "^3.0.7",
     "vue-router": "^5.0.4",
@@ -91,7 +92,6 @@
     "vue3-aplayer": "^1.7.3",
     "vue3-konva": "^2.1.7",
     "vue3-marquee": "^4.2.2",
-    "vuedraggable-es": "^4.1.1",
     "vueuc": "^0.4.65",
     "worker-timers": "^8.0.31",
     "xlsx": "^0.18.5"
