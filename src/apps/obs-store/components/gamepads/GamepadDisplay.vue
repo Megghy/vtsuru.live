@@ -2,12 +2,12 @@
 import type { ComponentPublicInstance } from 'vue'
 import type { BodyOptionConfig } from '@/apps/obs-store/data/gamepadConfigs'
 import type { GamepadConfig, GamepadType } from '@/types/gamepad'
-import { useRouteQuery } from '@vueuse/router'
 import { NCard, NText } from 'naive-ui'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import { controllerBodies, controllerStructures, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { useGamepadStore } from '@/store/useGamepadStore'
 import { useSvgGamepadRenderer } from '@/composables/useSvgGamepadRenderer'
+import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import GamepadButton from './GamepadButton.vue'
 import GamepadStick from './GamepadStick.vue'
 
@@ -34,12 +34,12 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 路由查询参数（独立显示窗口使用）
-const queryType = useRouteQuery<GamepadType>('type', 'xbox', { transform: String as (v: any) => GamepadType })
-const queryBodyId = useRouteQuery<string>('bodyId', '')
-const queryOverlay = useRouteQuery('overlay', 'true')
-const queryPressedColor = useRouteQuery<string | null>('pressedColor', null, { transform: v => v === 'null' ? null : String(v) })
-const queryViewBox = useRouteQuery<string>('viewBox', '')
-const querySensitivity = useRouteQuery<number>('stickSensitivity', 5, { transform: v => {
+const queryType = useRouteQueryParam<GamepadType>('type', 'xbox', { transform: String as (v: any) => GamepadType })
+const queryBodyId = useRouteQueryParam<string>('bodyId', '')
+const queryOverlay = useRouteQueryParam('overlay', 'true')
+const queryPressedColor = useRouteQueryParam<string | null>('pressedColor', null, { transform: v => v === 'null' ? null : String(v) })
+const queryViewBox = useRouteQueryParam<string>('viewBox', '')
+const querySensitivity = useRouteQueryParam<number>('stickSensitivity', 5, { transform: v => {
   const n = Number(v); return Number.isNaN(n) ? 5 : n
 } })
 
@@ -179,4 +179,3 @@ const gamepad = useGamepadStore()
 .gp-overlay > * { pointer-events: all; }
 .gp-error { max-width: 400px; }
 </style>
-

@@ -132,6 +132,7 @@ onDeactivated(() => {
             <NButton
               :type="speechState.canSpeech ? 'error' : 'success'"
               size="small" :loading="speechState.isApiAudioLoading"
+              :class="{ 'start-ripple': !speechState.canSpeech && !speechState.isApiAudioLoading }"
               @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()"
             >
               <template #icon>
@@ -279,5 +280,44 @@ onDeactivated(() => {
   flex: 1;
   justify-content: center;
   padding: 8px 0;
+}
+
+/* 开始按钮水波纹提示动效 */
+.start-ripple {
+  position: relative;
+  z-index: 0;
+  /* 留出外边距, 避免波纹扩散时盖住相邻按钮 */
+  margin-right: 8px;
+  animation: start-breathe 2s ease-in-out infinite;
+}
+.start-ripple::before,
+.start-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  border: 2px solid var(--n-success-color, #18a058);
+  opacity: 0;
+  animation: start-wave 2s ease-out infinite;
+  pointer-events: none;
+}
+.start-ripple::after {
+  animation-delay: 1s;
+}
+@keyframes start-wave {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes start-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(24, 160, 88, 0.35); }
+  50% { box-shadow: 0 0 10px 2px rgba(24, 160, 88, 0.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .start-ripple,
+  .start-ripple::before,
+  .start-ripple::after {
+    animation: none;
+  }
 }
 </style>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { NScrollbar, useMessage } from 'naive-ui';
+import { NButton, NIcon, NScrollbar, useMessage } from 'naive-ui';
+import { Bot24Regular } from '@vicons/fluent'
 import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { selectedAPIKey } from '@/shared/config'
@@ -10,9 +12,21 @@ import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
+import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
+import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 
 const accountInfo = useAccount()
 const message = useMessage()
+const route = useRoute()
+const assistant = useAssistantStore()
+
+function openAssistant() {
+  assistant.open({
+    routeName: route.name?.toString() ?? '',
+    title: (route.meta?.title as string) ?? route.name?.toString() ?? '管理后台',
+    path: route.path,
+  })
+}
 
 onMounted(() => {
   if (selectedAPIKey.value !== 'main') {
@@ -43,12 +57,35 @@ onMounted(() => {
         <ManageMusicPlayer />
       </div>
     </div>
+
+    <NButton
+      circle
+      type="primary"
+      size="large"
+      class="assistant-fab"
+      title="AI 助手"
+      @click="openAssistant"
+    >
+      <template #icon>
+        <NIcon :component="Bot24Regular" />
+      </template>
+    </NButton>
+
+    <AssistantModal />
   </div>
 
   <ManageAuthGate v-else />
 </template>
 
 <style scoped>
+.assistant-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 84px;
+  z-index: 1500;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
 .manage-shell {
   height: 100vh;
   display: flex;

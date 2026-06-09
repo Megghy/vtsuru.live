@@ -10,7 +10,6 @@ import type {
 import type {
   TemplateMapType,
 } from '@/shared/config/templates'
-import { useRouteQuery } from '@vueuse/router'
 import {
   NAlert, NButton, NCard, NCheckbox, NCheckboxGroup, NDivider, NEmpty, NFlex, NList, NListItem, NModal, NSelect, NSpin, NTabPane, NTabs, NText, useMessage } from 'naive-ui';
 import { computed, h, nextTick, onActivated, onMounted, ref, shallowRef, watch } from 'vue'
@@ -31,6 +30,7 @@ import {
   FETCH_API,
 } from '@/shared/config'
 import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templates'
+import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
 // 模板定义类型接口
 interface TemplateDefineTypes {
@@ -198,9 +198,8 @@ const templateOptions = [
   { label: '歌单', value: 'songlist' },
 ] as SelectOption[]
 
-// 使用 useRouteQuery 自动同步 URL 查询参数
-const selectedOption = useRouteQuery('template', 'songlist', { transform: String })
-const selectedTab = useRouteQuery('setting', 'general', { transform: String })
+const selectedOption = useRouteQueryParam('template', 'songlist', { transform: String })
+const selectedTab = useRouteQueryParam('setting', 'general', { transform: String })
 
 // 动态表单相关
 const dynamicConfigRef = shallowRef()

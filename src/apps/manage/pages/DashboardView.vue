@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { BiliAuthModel } from '@/api/api-models'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import { useRouteQuery } from '@vueuse/router'
 import {
   NAlert, NButton, NCard, NCode, NCountdown, NDivider, NEllipsis, NFlex, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSelect, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
 import { onUnmounted, ref } from 'vue'
@@ -17,6 +16,7 @@ import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
 const token = ref('')
 const turnstile = ref()
@@ -26,8 +26,7 @@ const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 
-// 使用 useRouteQuery 自动同步 URL 查询参数
-const selectedTab = useRouteQuery('tab', 'info', { transform: String })
+const selectedTab = useRouteQueryParam('tab', 'info', { transform: String })
 
 watch(
   () => [selectedTab.value, route.query.setting] as const,

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import { useRouteQuery } from '@vueuse/router'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 import { useWebRTC } from '@/store/useRTC'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
+import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
 defineProps<{
   id?: number
@@ -14,7 +14,7 @@ defineProps<{
 }>()
 
 const hash = ref('')
-const token = useRouteQuery('token')
+const token = useRouteQueryParam('token')
 const tokenStr = computed(() => {
   const v = token.value
   return Array.isArray(v) ? (v[0] ?? '') : (v ?? '')
