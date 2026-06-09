@@ -13,10 +13,15 @@ async function scrollToBottom() {
   scrollRef.value?.scrollTo({ top: 999999, behavior: 'smooth' })
 }
 
-watch(() => store.messages.map(m => `${m.id}:${m.text.length}:${m.actions.length}`).join(), scrollToBottom)
+watch(
+  () => store.messages.map(m =>
+    `${m.id}:${m.text.length}:${m.reasoning?.length ?? 0}:${m.usage?.totalTokens ?? 0}:${m.tools.map(t => `${t.id}:${t.status}:${t.summary?.length ?? 0}:${t.error?.length ?? 0}`).join('|')}:${m.actions.length}`,
+  ).join(),
+  scrollToBottom,
+)
 
-function onSend(text: string) {
-  store.send(text)
+function onSend(text: string, images: string[]) {
+  store.send(text, images)
 }
 </script>
 
@@ -26,7 +31,10 @@ function onSend(text: string) {
       <AssistantMessageList
         v-if="store.messages.length"
         :messages="store.messages"
+        :busy="store.sending"
         @retry="store.retry"
+        @rerun="store.rerun"
+        @edit-user="store.editAndRerun"
         @confirm="store.confirmAction"
         @reject="store.rejectActionById"
         @save="store.saveActionEdit"

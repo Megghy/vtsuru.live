@@ -75,6 +75,7 @@
     "peerjs": "^1.5.5",
     "pinia": "^3.0.4",
     "qrcode.vue": "^3.8.0",
+    "streaming-markdown": "^0.2.15",
     "superjson": "^2.2.6",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue-components": "^32.0.0",

@@ -12,9 +12,9 @@ const draft = defineModel<ScheduleEditItem[]>('draft')
 <template>
   <ScheduleActionCard
     v-if="proposal.kind === 'schedule.change'"
+    v-model:draft="draft"
     :preview="proposal.preview"
     :editable="editable"
-    v-model:draft="draft"
   />
   <GenericSchemaActionCard
     v-else

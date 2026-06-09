@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NInput, NTag, NText } from 'naive-ui'
+import { NFlex, NInput, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
 import type { AssistantPreviewItem, ScheduleEditItem } from '../../api/assistant'
 
@@ -35,14 +35,22 @@ function fieldOf(index: number) {
         <div class="schedule-item__body">
           <NFlex align="center" :size="6" :wrap="false">
             <span class="schedule-item__title">{{ item.title }}</span>
-            <NText v-if="item.time" depth="3" class="schedule-item__time">{{ item.time }}</NText>
+            <NText v-if="item.time" depth="3" class="schedule-item__time">
+              {{ item.time }}
+            </NText>
           </NFlex>
           <div v-if="item.before || item.after" class="schedule-item__diff">
-            <NText v-if="item.before" delete depth="3">{{ item.before }}</NText>
+            <NText v-if="item.before" delete depth="3">
+              {{ item.before }}
+            </NText>
             <span v-if="item.before && item.after" class="diff-arrow">→</span>
-            <NText v-if="item.after" type="success">{{ item.after }}</NText>
+            <NText v-if="item.after" type="success">
+              {{ item.after }}
+            </NText>
           </div>
-          <NText v-if="item.note" depth="3" class="schedule-item__note">{{ item.note }}</NText>
+          <NText v-if="item.note" depth="3" class="schedule-item__note">
+            {{ item.note }}
+          </NText>
         </div>
       </div>
     </div>

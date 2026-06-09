@@ -60,7 +60,9 @@ function saveEdit() {
   <NCard size="small" class="action-card" :bordered="true">
     <template #header>
       <NFlex align="center" :size="8" :wrap="false" class="action-card__header">
-        <NText class="action-card__title">{{ proposal.title }}</NText>
+        <NText class="action-card__title">
+          {{ proposal.title }}
+        </NText>
         <NTag size="tiny" :type="RISK_META[proposal.risk]?.type" :bordered="false">
           {{ RISK_META[proposal.risk]?.label }}
         </NTag>
@@ -72,10 +74,12 @@ function saveEdit() {
       </NTag>
     </template>
 
-    <NText v-if="proposal.summary" depth="3" class="action-card__summary">{{ proposal.summary }}</NText>
+    <NText v-if="proposal.summary" depth="3" class="action-card__summary">
+      {{ proposal.summary }}
+    </NText>
 
     <NSpin :show="isRunning" size="small">
-      <AssistantActionRenderer :proposal="proposal" :editable="editing" v-model:draft="scheduleDraft" />
+      <AssistantActionRenderer v-model:draft="scheduleDraft" :proposal="proposal" :editable="editing" />
     </NSpin>
 
     <NAlert v-if="proposal.status === 'failed' && proposal.error" type="error" :show-icon="false" class="action-card__alert">
@@ -90,17 +94,27 @@ function saveEdit() {
 
     <template v-if="editing" #action>
       <NFlex justify="end" :size="8">
-        <NButton size="small" tertiary @click="cancelEdit">放弃</NButton>
-        <NButton size="small" type="primary" @click="saveEdit">保存</NButton>
+        <NButton size="small" tertiary @click="cancelEdit">
+          放弃
+        </NButton>
+        <NButton size="small" type="primary" @click="saveEdit">
+          保存
+        </NButton>
       </NFlex>
     </template>
     <template v-else-if="isPending || proposal.status === 'failed'" #action>
       <NFlex justify="end" :size="8">
-        <NButton size="small" tertiary @click="startEdit">修改</NButton>
-        <NButton size="small" tertiary @click="emit('reject')">取消</NButton>
+        <NButton size="small" tertiary @click="startEdit">
+          修改
+        </NButton>
+        <NButton size="small" tertiary @click="emit('reject')">
+          取消
+        </NButton>
         <NPopconfirm v-if="isHighRisk" @positive-click="emit('confirm')">
           <template #trigger>
-            <NButton size="small" type="error">{{ proposal.status === 'failed' ? '重试' : '确认执行' }}</NButton>
+            <NButton size="small" type="error">
+              {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
+            </NButton>
           </template>
           确认执行该高风险操作?
         </NPopconfirm>
