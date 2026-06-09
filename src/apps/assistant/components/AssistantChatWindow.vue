@@ -1,23 +1,64 @@
 <script setup lang="ts">
-import { Sparkle24Regular } from '@vicons/fluent'
+import { ArrowSync20Regular, Sparkle24Regular } from '@vicons/fluent'
 import { NIcon, NScrollbar, NSpin } from 'naive-ui'
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useAssistantStore } from '../store/useAssistantStore'
 import AssistantComposer from './AssistantComposer.vue'
 import AssistantMessageList from './AssistantMessageList.vue'
 
 const store = useAssistantStore()
 const scrollRef = ref<InstanceType<typeof NScrollbar> | null>(null)
+const composerRef = ref<InstanceType<typeof AssistantComposer> | null>(null)
 
-const suggestions = [
+/** 预置操作池, 覆盖助手当前可用的各类能力, 每次随机抽 4 个展示 */
+const SUGGESTION_POOL = [
+  // 日程
   '帮我看看这周的直播日程',
   '下周三晚上8点加一场杂谈',
+  '把这周末的直播都改到晚上9点',
+  // 数据分析
   '最近30天的粉丝增长怎么样',
+  '分析一下最近7天的直播数据',
+  '这个月收益和上个月比如何',
+  // 舰长 / 积分
+  '看看我的舰长情况',
+  '积分商城现在有哪些商品',
+  '有没有待处理的积分兑换订单',
+  '帮我上架一个积分新商品',
+  // 提问箱
+  '提问箱里还有哪些没回复的',
   '帮我起草一条提问箱回复',
+  // 视频征集 / 歌单
+  '发起一个本周视频征集',
+  '我的歌单里有哪些日语歌',
+  '帮我往歌单里加几首歌',
+  // 联网
+  '帮我查一下这首歌的歌手资料',
 ]
+
+const suggestions = ref<string[]>([])
+
+/** 从池中随机抽 4 个不重复的预置操作 */
+function rollSuggestions() {
+  suggestions.value = [...SUGGESTION_POOL]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4)
+}
+
+onMounted(rollSuggestions)
+
+/** 贴底跟随: 用户在底部附近时流式输出才自动滚动; 一旦上滚查看 (如审批卡片) 即脱离, 不再强拉 */
+const stick = ref(true)
+const STICK_THRESHOLD = 80
+
+function onScroll(e: Event) {
+  const el = e.target as HTMLElement
+  stick.value = el.scrollHeight - el.scrollTop - el.clientHeight <= STICK_THRESHOLD
+}
 
 async function scrollToBottom() {
   await nextTick()
+  if (!stick.value) return
   scrollRef.value?.scrollTo({ top: 999999, behavior: 'smooth' })
 }
 
@@ -29,13 +70,20 @@ watch(
 )
 
 function onSend(text: string, images: string[]) {
+  // 用户主动发送, 重新贴底跟随本轮输出
+  stick.value = true
   store.send(text, images)
+}
+
+/** 点击预置操作: 仅填入输入框, 不直接发送 */
+function onPickSuggestion(text: string) {
+  composerRef.value?.fill(text)
 }
 </script>
 
 <template>
   <div class="chat-window">
-    <NScrollbar ref="scrollRef" class="chat-window__scroll">
+    <NScrollbar ref="scrollRef" class="chat-window__scroll" @scroll="onScroll">
       <AssistantMessageList
         v-if="store.messages.length"
         :messages="store.messages"
@@ -67,16 +115,26 @@ function onSend(text: string, images: string[]) {
             type="button"
             class="chat-window__chip"
             :disabled="store.sending"
-            @click="onSend(s, [])"
+            @click="onPickSuggestion(s)"
           >
             {{ s }}
+          </button>
+          <button
+            type="button"
+            class="chat-window__chip chat-window__chip--roll"
+            :disabled="store.sending"
+            title="换一批"
+            @click="rollSuggestions"
+          >
+            <NIcon :component="ArrowSync20Regular" size="15" />
+            换一批
           </button>
         </div>
       </div>
     </NScrollbar>
 
     <div class="chat-window__composer">
-      <AssistantComposer :loading="store.sending" @send="onSend" @stop="store.abortPending" />
+      <AssistantComposer ref="composerRef" :loading="store.sending" @send="onSend" @stop="store.abortPending" />
     </div>
   </div>
 </template>
@@ -130,4 +188,9 @@ function onSend(text: string, images: string[]) {
 }
 .chat-window__chip:active:not(:disabled) { transform: scale(0.97); }
 .chat-window__chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-window__chip--roll {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+  border-style: dashed;
+}
 </style>

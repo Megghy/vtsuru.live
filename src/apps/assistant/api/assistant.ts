@@ -17,6 +17,8 @@ export interface EditableField {
   key: string
   label: string
   value: string
+  /** 原值 (修改前), 用于只读对比; 新增项为空 */
+  before?: string
   /** text(默认) / textarea / time / number / tags(逗号分隔) */
   type: 'text' | 'textarea' | 'time' | 'number' | 'tags'
 }

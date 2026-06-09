@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Image24Regular, Dismiss12Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
 import { NButton, NIcon, NInput, NTooltip } from 'naive-ui'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 const props = defineProps<{ loading: boolean }>()
 const emit = defineEmits<{
@@ -13,6 +13,16 @@ const text = ref('')
 /** 待发送图片 (base64 data URL) */
 const images = ref<string[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
+const inputRef = ref<InstanceType<typeof NInput> | null>(null)
+
+/** 把文本填入输入框并聚焦, 供预置操作点击使用 (不直接发送) */
+async function fill(value: string) {
+  text.value = value
+  await nextTick()
+  inputRef.value?.focus()
+}
+
+defineExpose({ fill })
 
 const MAX_IMAGES = 5
 const MAX_SIZE = 8 * 1024 * 1024 // 单图 8MB
@@ -115,6 +125,7 @@ function removeImage(index: number) {
         @change="onPickFiles"
       >
       <NInput
+        ref="inputRef"
         v-model:value="text"
         type="textarea"
         placeholder="描述你想做的事, 或粘贴/上传日程截图让我识别"

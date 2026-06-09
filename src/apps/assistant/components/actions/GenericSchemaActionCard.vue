@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NEmpty, NInput, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
-import type { AssistantPreviewItem, ProposalEditItem } from '../../api/assistant'
+import type { AssistantPreviewItem, EditableField, ProposalEditItem } from '../../api/assistant'
 
 const props = defineProps<{ preview: AssistantPreviewItem[], editable?: boolean }>()
 
@@ -12,6 +12,15 @@ const OP_META: Record<string, { label: string, type: 'success' | 'warning' | 'er
   add: { label: '新增', type: 'success' },
   modify: { label: '修改', type: 'warning' },
   delete: { label: '删除', type: 'error' },
+}
+
+/** field 带 before(原值)时, 用结构化字段对比展示 (编辑后不过期); 否则回退 before/after 整串 diff */
+function hasFieldDiff(item: AssistantPreviewItem) {
+  return item.fields?.some(f => f.before != null) ?? false
+}
+
+function fieldChanged(f: EditableField) {
+  return f.before != null && f.before !== f.value
 }
 
 /** before/after 是 " | " 分隔的同构字段串, 逐段对比, 只标出真正变化的字段 */
@@ -33,18 +42,23 @@ function diffFields(before: string, after: string): FieldDiff[] {
 }
 
 const diffs = computed(() =>
-  props.preview.map(item => (item.before && item.after ? diffFields(item.before, item.after) : null)),
+  props.preview.map(item =>
+    (!hasFieldDiff(item) && item.before && item.after ? diffFields(item.before, item.after) : null),
+  ),
 )
 
-/** 取某预览项在草稿里对应字段的当前值引用 */
+/** 取某预览项在草稿里对应字段的当前值 */
 function fieldValue(index: number, key: string) {
-  const entry = draft.value?.find(d => d.index === index)
-  return entry?.values[key] ?? ''
+  return draft.value?.find(d => d.index === index)?.values[key] ?? ''
 }
 
 function setFieldValue(index: number, key: string, value: string) {
   const entry = draft.value?.find(d => d.index === index)
   if (entry) entry.values[key] = value
+}
+
+function displayValue(f: EditableField) {
+  return f.value || (f.type === 'tags' ? '无' : '空')
 }
 </script>
 
@@ -77,7 +91,20 @@ function setFieldValue(index: number, key: string, value: string) {
           </div>
         </div>
 
-        <!-- 只读态: 逐字段对比, 未变灰显, 变化高亮 -->
+        <!-- 只读态: 结构化字段对比 (field 带 before, 编辑后不过期) -->
+        <div v-else-if="hasFieldDiff(item)" class="generic-item__struct">
+          <div v-for="f in item.fields" :key="f.key" class="struct-field">
+            <NText depth="3" class="struct-field__label">{{ f.label }}</NText>
+            <span v-if="fieldChanged(f)" class="struct-field__val struct-field__val--changed">
+              <NText delete depth="3">{{ f.before || (f.type === 'tags' ? '无' : '空') }}</NText>
+              <span class="struct-field__arrow">→</span>
+              <NText type="success" class="struct-field__after">{{ displayValue(f) }}</NText>
+            </span>
+            <NText v-else depth="3" class="struct-field__val">{{ displayValue(f) }}</NText>
+          </div>
+        </div>
+
+        <!-- 只读态: 整串逐字段 diff (无 Fields 原值时回退) -->
         <template v-else>
           <div v-if="diffs[i]" class="generic-item__fields">
             <template v-for="(f, fi) in diffs[i]!" :key="fi">
@@ -120,6 +147,8 @@ function setFieldValue(index: number, key: string, value: string) {
 .generic-item__head { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .generic-item__title { font-weight: 500; min-width: 0; word-break: break-word; }
 .generic-item__time { font-size: 12px; }
+
+/* 整串逐字段 diff */
 .generic-item__fields {
   display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; font-size: 12px;
 }
@@ -130,6 +159,19 @@ function setFieldValue(index: number, key: string, value: string) {
 }
 .field__arrow { color: var(--n-text-color-3); }
 .field__after { font-weight: 600; }
+
+/* 结构化字段对比 */
+.generic-item__struct { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.struct-field { display: flex; align-items: baseline; gap: 6px; font-size: 12px; }
+.struct-field__label { flex-shrink: 0; min-width: 48px; }
+.struct-field__val { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; word-break: break-word; }
+.struct-field__val--changed {
+  padding: 0 6px; border-radius: 4px;
+  background: var(--n-color-success-suppl, rgba(24, 160, 88, 0.12));
+}
+.struct-field__arrow { color: var(--n-text-color-3); }
+.struct-field__after { font-weight: 600; }
+
 .generic-item__diff { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; }
 .diff-arrow { color: var(--n-text-color-3); }
 .generic-item__note { font-size: 12px; }
