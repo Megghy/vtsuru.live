@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCollapseTransition, NIcon, NInput, NSpin, NText, NTooltip } from 'naive-ui'
+import { NButton, NCollapseTransition, NIcon, NInput, NText, NTooltip } from 'naive-ui'
 import { reactive } from 'vue'
 import {
   ArrowClockwise16Regular,
@@ -11,7 +11,7 @@ import {
   Edit16Regular,
 } from '@vicons/fluent'
 import { copyToClipboard } from '@/shared/utils'
-import type { ScheduleEditItem } from '../api/assistant'
+import type { ProposalEditItem, AssistantToolEvent } from '../api/assistant'
 import type { AssistantMessage } from '../store/useAssistantStore'
 import AssistantActionCard from './AssistantActionCard.vue'
 import AssistantToolCallList from './AssistantToolCallList.vue'
@@ -24,7 +24,7 @@ const emit = defineEmits<{
   (e: 'edit-user', messageId: string, text: string): void
   (e: 'confirm', messageId: string, actionId: string): void
   (e: 'reject', messageId: string, actionId: string): void
-  (e: 'save', messageId: string, actionId: string, items: ScheduleEditItem[]): void
+  (e: 'save', messageId: string, actionId: string, items: ProposalEditItem[]): void
 }>()
 
 // 用户手动展开/收起的覆盖状态; 未操作时跟随 reasoningDone (思考中展开, 完成收起)
@@ -35,6 +35,37 @@ function isThinkingOpen(msg: AssistantMessage): boolean {
 }
 function toggleThinking(msg: AssistantMessage) {
   expanded[msg.id] = !isThinkingOpen(msg)
+}
+
+/** 工作过程是否含思考文本 (无思考则不显示折叠头, 工具直接铺在时间轴上) */
+function hasReasoning(msg: AssistantMessage): boolean {
+  return msg.process.some(s => s.kind === 'reasoning')
+}
+
+/** 折叠头标题: 思考中显示进行态; 完成后汇总本轮工具调用数 */
+function thinkLabel(msg: AssistantMessage): string {
+  if (!msg.reasoningDone) return '思考中…'
+  const n = msg.process.reduce((acc, s) => acc + (s.kind === 'tool' ? 1 : 0), 0)
+  return n ? `已深度思考 · 调用了 ${n} 个工具` : '已深度思考'
+}
+
+type ProcessBlock =
+  | { type: 'reasoning'; id: number; text: string }
+  | { type: 'tools'; id: number; tools: AssistantToolEvent[] }
+
+/** 把有序片段合并成渲染块: 连续工具并为一组, 思考文本各自成块, 保留交错时序 */
+function processBlocks(msg: AssistantMessage): ProcessBlock[] {
+  const blocks: ProcessBlock[] = []
+  for (const step of msg.process) {
+    if (step.kind === 'tool') {
+      const last = blocks[blocks.length - 1]
+      if (last?.type === 'tools') last.tools.push(step.tool)
+      else blocks.push({ type: 'tools', id: blocks.length, tools: [step.tool] })
+    } else {
+      blocks.push({ type: 'reasoning', id: blocks.length, text: step.text })
+    }
+  }
+  return blocks
 }
 
 function copyMessage(msg: AssistantMessage) {
@@ -88,26 +119,37 @@ function formatTokens(value?: number): string {
       :class="`msg-row--${msg.role}`"
     >
       <div class="msg-bubble" :class="`msg-bubble--${msg.role}`">
-        <!-- 思考过程: 可折叠, 思考中默认展开, 完成自动收起 -->
-        <div v-if="msg.reasoning" class="msg-think">
-          <div class="msg-think__head" @click="toggleThinking(msg)">
-            <NIcon :component="BrainCircuit20Regular" size="14" />
-            <span class="msg-think__title">{{ msg.reasoningDone ? '已深度思考' : '思考中…' }}</span>
+        <!-- 答复前的工作过程: 思考与只读工具调用按时序交错, 共享一条时间轴 -->
+        <div v-if="msg.process.length" class="msg-process" :class="{ 'is-thinking': hasReasoning(msg) && !msg.reasoningDone }">
+          <!-- 折叠头: 仅当有思考文本时出现, 控制思考片段的展开/收起 -->
+          <div v-if="hasReasoning(msg)" class="msg-think__head" @click="toggleThinking(msg)">
+            <NIcon :component="BrainCircuit20Regular" size="14" class="msg-think__icon" />
+            <span class="msg-think__title">{{ thinkLabel(msg) }}</span>
             <NIcon
               :component="ChevronDown12Regular" size="12"
               class="msg-think__chevron" :class="{ 'is-open': isThinkingOpen(msg) }"
             />
           </div>
-          <NCollapseTransition :show="isThinkingOpen(msg)">
-            <NText depth="3" class="msg-think__body">
-              {{ msg.reasoning }}
-            </NText>
-          </NCollapseTransition>
+
+          <div class="msg-process__body">
+            <template v-for="block in processBlocks(msg)" :key="block.id">
+              <!-- 思考片段: 随折叠头展开/收起 -->
+              <NCollapseTransition v-if="block.type === 'reasoning'" :show="isThinkingOpen(msg)">
+                <NText depth="3" class="msg-think__body">
+                  {{ block.text }}
+                </NText>
+              </NCollapseTransition>
+              <!-- 工具调用: 始终常驻可见, 不随思考折叠 -->
+              <AssistantToolCallList v-else :tools="block.tools" />
+            </template>
+          </div>
         </div>
 
-        <AssistantToolCallList v-if="msg.tools.length" :tools="msg.tools" />
-
-        <NSpin v-if="msg.role === 'assistant' && msg.status === 'sending' && !msg.text && !msg.reasoning && !msg.tools.length" size="small" />
+        <div v-if="msg.role === 'assistant' && msg.status === 'sending' && !msg.text && !msg.process.length" class="msg-typing">
+          <span class="msg-typing__dot" />
+          <span class="msg-typing__dot" />
+          <span class="msg-typing__dot" />
+        </div>
 
         <div v-if="msg.images?.length" class="msg-images">
           <img v-for="(img, i) in msg.images" :key="i" :src="img" class="msg-image" alt="附件">
@@ -160,13 +202,6 @@ function formatTokens(value?: number): string {
           <span>输出 {{ formatTokens(msg.usage.outputTokens) }}</span>
           <span v-if="msg.usage.reasoningTokens">推理 {{ formatTokens(msg.usage.reasoningTokens) }}</span>
           <span>总计 {{ formatTokens(msg.usage.totalTokens) }}</span>
-        </div>
-
-        <div
-          v-if="msg.role === 'assistant' && msg.status === 'sending' && (msg.text || msg.reasoning || msg.tools.length)"
-          class="msg-streaming"
-        >
-          <NSpin size="small" />
         </div>
 
         <div v-if="(msg.text || msg.images?.length || msg.hasImage) && !isEditing(msg)" class="msg-actions">
@@ -226,9 +261,13 @@ function formatTokens(value?: number): string {
 
 <style scoped>
 .msg-list { display: flex; flex-direction: column; gap: 12px; padding: 4px; }
-.msg-row { display: flex; }
+.msg-row { display: flex; animation: msg-row-in 0.26s ease both; }
 .msg-row--user { justify-content: flex-end; }
 .msg-row--assistant { justify-content: flex-start; }
+@keyframes msg-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .msg-bubble {
   --msg-bubble-bg: transparent;
   --msg-bubble-border: transparent;
@@ -253,23 +292,50 @@ function formatTokens(value?: number): string {
   width: 100%;
 }
 .msg-text { color: inherit; font-size: 14px; }
-.msg-think {
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.16));
-  border-radius: 8px; padding: 4px 8px;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
+.msg-process {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 2px;
+}
+.msg-process::before {
+  content: '';
+  position: absolute;
+  left: 3px; top: 6px; bottom: 6px;
+  width: 2px; border-radius: 1px;
+  background: var(--vtsuru-border, rgba(128, 128, 128, 0.2));
+}
+.msg-process.is-thinking::before {
+  background: linear-gradient(var(--vtsuru-brand, #23ade5), var(--vtsuru-border, rgba(128, 128, 128, 0.2)));
+}
+.msg-process__body {
+  display: flex; flex-direction: column; gap: 6px;
 }
 .msg-think__head {
   display: flex; align-items: center; gap: 5px;
   cursor: pointer; user-select: none;
+  margin-bottom: 6px;
   color: var(--vtsuru-fg-muted, var(--n-text-color-3));
   font-size: 12px;
+}
+.msg-think__icon { flex: 0 0 auto; }
+.msg-process.is-thinking .msg-think__icon {
+  color: var(--vtsuru-brand, #23ade5);
+  animation: msg-think-pulse 1.6s ease-in-out infinite;
+}
+.msg-process.is-thinking .msg-think__title { color: var(--vtsuru-brand, #23ade5); }
+@keyframes msg-think-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.06); }
 }
 .msg-think__title { flex: 1 1 auto; }
 .msg-think__chevron { transition: transform 0.2s; }
 .msg-think__chevron.is-open { transform: rotate(180deg); }
 .msg-think__body {
-  display: block; margin-top: 6px;
+  display: block;
+  padding: 6px 9px; border-radius: 8px;
   font-size: 12px; line-height: 1.6; white-space: pre-wrap;
+  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
+  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.14));
   color: var(--vtsuru-fg-muted, var(--n-text-color-3));
 }
 .msg-images { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -284,14 +350,28 @@ function formatTokens(value?: number): string {
   display: flex; align-items: center; justify-content: flex-end; gap: 6px;
 }
 .msg-usage {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 2px; padding-top: 6px;
+  border-top: 1px dashed var(--vtsuru-border, rgba(128, 128, 128, 0.16));
   color: var(--vtsuru-fg-muted, var(--n-text-color-3));
   font-size: 11px; line-height: 1.4;
 }
-.msg-streaming {
-  width: 20px; height: 20px;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: var(--vtsuru-fg-muted, var(--n-text-color-3));
+.msg-usage span { display: inline-flex; align-items: center; gap: 3px; }
+.msg-typing {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 20px; padding: 0 2px;
+}
+.msg-typing__dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--vtsuru-brand, #23ade5);
+  opacity: 0.35;
+  animation: msg-typing-bounce 1.3s ease-in-out infinite;
+}
+.msg-typing__dot:nth-child(2) { animation-delay: 0.18s; }
+.msg-typing__dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes msg-typing-bounce {
+  0%, 70%, 100% { opacity: 0.3; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-3px); }
 }
 .msg-actions {
   display: flex; align-items: center; gap: 2px;

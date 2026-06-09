@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
+import { Bot24Regular } from '@vicons/fluent'
 import { ThemeType } from '@/api/api-models'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
 import { isDarkMode } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 defineProps<{
@@ -13,6 +15,8 @@ defineProps<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
+const assistant = useAssistantStore()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const defaultCollapsed = window.innerWidth < 750
 const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
@@ -22,6 +26,14 @@ const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主�
 
 function toggleTheme() {
   themeType.value = isDarkMode.value ? ThemeType.Light : ThemeType.Dark
+}
+
+function openAssistant() {
+  assistant.open({
+    routeName: route.name?.toString() ?? '',
+    title: (route.meta?.title as string) ?? route.name?.toString() ?? '管理后台',
+    path: route.path,
+  })
 }
 
 async function goToUserPage(accountName?: string) {
@@ -51,6 +63,16 @@ async function goToUserPage(accountName?: string) {
     </div>
 
     <div class="manage-header__right">
+      <button
+        class="manage-header__assistant"
+        type="button"
+        title="VTsuru 助手"
+        @click="openAssistant"
+      >
+        <component :is="Bot24Regular" class="manage-header__icon" />
+        <span class="manage-header__assistant-text">助手</span>
+      </button>
+
       <NotificationsPopover />
 
       <button
@@ -125,6 +147,35 @@ async function goToUserPage(accountName?: string) {
   flex: 0 0 auto;
 }
 
+.manage-header__assistant {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--n-primary-color);
+  background: var(--n-primary-color);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.manage-header__assistant:hover {
+  filter: brightness(1.08);
+}
+
+.manage-header__assistant:active {
+  transform: translateY(0.5px);
+}
+
+.manage-header__assistant .manage-header__icon {
+  width: 15px;
+  height: 15px;
+}
+
 .manage-header__icon-button {
   height: 32px;
   width: 32px;
@@ -161,6 +212,7 @@ async function goToUserPage(accountName?: string) {
 .manage-header__icon {
   width: 18px;
   height: 18px;
+  display: block;
 }
 
 .manage-header__button {
@@ -187,5 +239,38 @@ async function goToUserPage(accountName?: string) {
 
 .manage-header__button:active {
   transform: translateY(0.5px);
+}
+
+/* 移动端: 收紧间距, 隐藏次要文字, 给助手按钮留出空间 */
+@media (max-width: 600px) {
+  .manage-header {
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .manage-header__left {
+    gap: 6px;
+  }
+
+  .manage-header__right {
+    gap: 6px;
+  }
+
+  .manage-header__brand {
+    display: none;
+  }
+
+  .manage-header__assistant {
+    padding: 0 8px;
+    gap: 0;
+  }
+
+  .manage-header__assistant-text {
+    display: none;
+  }
+
+  .manage-header__button {
+    padding: 0 8px;
+  }
 }
 </style>

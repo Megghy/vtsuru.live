@@ -4,7 +4,7 @@ import {
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 import type { AssistantAction } from '../store/useAssistantStore'
-import type { ScheduleEditItem } from '../api/assistant'
+import type { ProposalEditItem } from '../api/assistant'
 import type { ActionStatus } from '../schemas/assistant'
 import AssistantActionRenderer from './AssistantActionRenderer.vue'
 
@@ -12,7 +12,7 @@ const props = defineProps<{ action: AssistantAction }>()
 const emit = defineEmits<{
   (e: 'confirm'): void
   (e: 'reject'): void
-  (e: 'save', items: ScheduleEditItem[]): void
+  (e: 'save', items: ProposalEditItem[]): void
 }>()
 
 const STATUS_META: Record<ActionStatus, { label: string, type: 'default' | 'info' | 'warning' | 'success' | 'error' }> = {
@@ -32,17 +32,22 @@ const RISK_META: Record<string, { label: string, type: 'success' | 'warning' | '
 
 const proposal = computed(() => props.action.proposal)
 const editing = ref(false)
-const scheduleDraft = ref<ScheduleEditItem[]>([])
+const editDraft = ref<ProposalEditItem[]>([])
 const isPending = computed(() => proposal.value.status === 'draft' || proposal.value.status === 'requires_confirmation')
 const isRunning = computed(() => proposal.value.status === 'running')
 const isHighRisk = computed(() => proposal.value.risk === 'high')
+/** 任一预览项含可编辑字段才允许修改 */
+const canEdit = computed(() => proposal.value.preview.some(it => it.fields?.length))
 
 function startEdit() {
-  // 只把 add/modify 项放进可编辑草稿, 按 preview 下标对齐
-  scheduleDraft.value = proposal.value.preview
+  // 为每个含可编辑字段的预览项建草稿: index 对齐下标, values 用字段当前值初始化
+  editDraft.value = proposal.value.preview
     .map((it, index) => ({ it, index }))
-    .filter(({ it }) => it.op !== 'delete')
-    .map(({ it, index }) => ({ index, title: it.title, time: it.time ?? '' }))
+    .filter(({ it }) => it.fields?.length)
+    .map(({ it, index }) => ({
+      index,
+      values: Object.fromEntries(it.fields!.map(f => [f.key, f.value])),
+    }))
   editing.value = true
 }
 
@@ -51,7 +56,7 @@ function cancelEdit() {
 }
 
 function saveEdit() {
-  emit('save', scheduleDraft.value)
+  emit('save', editDraft.value)
   editing.value = false
 }
 </script>
@@ -79,7 +84,7 @@ function saveEdit() {
     </NText>
 
     <NSpin :show="isRunning" size="small">
-      <AssistantActionRenderer v-model:draft="scheduleDraft" :proposal="proposal" :editable="editing" />
+      <AssistantActionRenderer v-model:draft="editDraft" :proposal="proposal" :editable="editing" />
     </NSpin>
 
     <NAlert v-if="proposal.status === 'failed' && proposal.error" type="error" :show-icon="false" class="action-card__alert">
@@ -104,7 +109,7 @@ function saveEdit() {
     </template>
     <template v-else-if="isPending || proposal.status === 'failed'" #action>
       <NFlex justify="end" :size="8">
-        <NButton size="small" tertiary @click="startEdit">
+        <NButton v-if="canEdit" size="small" tertiary @click="startEdit">
           修改
         </NButton>
         <NButton size="small" tertiary @click="emit('reject')">

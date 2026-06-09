@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Image24Regular, Dismiss12Regular, Send24Filled } from '@vicons/fluent'
+import { Image24Regular, Dismiss12Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
 import { NButton, NIcon, NInput, NTooltip } from 'naive-ui'
 import { ref } from 'vue'
 
@@ -131,6 +131,9 @@ function removeImage(index: number) {
         class="composer__btn"
         @click="emit('stop')"
       >
+        <template #icon>
+          <NIcon :component="Stop24Filled" />
+        </template>
         停止
       </NButton>
       <NButton

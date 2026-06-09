@@ -12,6 +12,15 @@ export interface AssistantContext {
   path: string
 }
 
+/** 预览项里一个可编辑字段, 与后端 EditableField 对应 */
+export interface EditableField {
+  key: string
+  label: string
+  value: string
+  /** text(默认) / textarea / time / number / tags(逗号分隔) */
+  type: 'text' | 'textarea' | 'time' | 'number' | 'tags'
+}
+
 /** 单条操作预览项 (新增/修改/删除), 与后端 AssistantPreviewItem 对应 */
 export interface AssistantPreviewItem {
   op: 'add' | 'modify' | 'delete'
@@ -21,6 +30,8 @@ export interface AssistantPreviewItem {
   before?: string
   after?: string
   note?: string
+  /** 可编辑字段, 为空表示该项不可编辑 */
+  fields?: EditableField[]
 }
 
 /** 服务端待审批提案, id 为服务端 proposalId */
@@ -45,6 +56,13 @@ export interface AssistantToolEvent {
   error?: string
   time: number
   durationMs?: number
+}
+
+/** 工作过程有序片段, 与后端 AssistantProcessStepDto 对应 */
+export interface AssistantProcessStepDto {
+  kind: 'reasoning' | 'tool'
+  text?: string
+  tool?: AssistantToolEvent
 }
 
 /** 本轮助手回复 token 用量 */
@@ -96,15 +114,14 @@ export interface AssistantHistoryMessage {
   hasImage?: boolean
   usage?: AssistantTokenUsage
   proposal?: AssistantProposal
+  /** 答复前的工作过程 (思考 + 工具调用), 按时序排列; 仅 assistant 消息有 */
+  process?: AssistantProcessStepDto[]
 }
 
-/** 编辑提案的单项 (按预览下标改安全字段) */
-export interface ScheduleEditItem {
+/** 编辑提案的单项: index 对齐预览下标, values 为 字段key -> 新值, 与后端 ProposalEditItem 对应 */
+export interface ProposalEditItem {
   index: number
-  title?: string
-  time?: string
-  tag?: string
-  tagColor?: string
+  values: Record<string, string>
 }
 
 /**
@@ -213,7 +230,7 @@ export async function rejectAction(proposalId: string): Promise<AssistantProposa
 }
 
 /** 编辑提案展示字段, 重新校验后回到待确认 */
-export async function updateAction(proposalId: string, items: ScheduleEditItem[]): Promise<AssistantProposal> {
+export async function updateAction(proposalId: string, items: ProposalEditItem[]): Promise<AssistantProposal> {
   const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/update`, { items })
   if (resp.code !== 200) throw new Error(resp.message || '保存失败')
   return resp.data

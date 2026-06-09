@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { QueryRequestError } from '@/api/query'
 import type {
   AssistantContext,
@@ -9,7 +9,7 @@ import type {
   AssistantProposal,
   AssistantTokenUsage,
   AssistantToolEvent,
-  ScheduleEditItem,
+  ProposalEditItem,
 } from '../api/assistant'
 import {
   approveAction,
@@ -37,17 +37,23 @@ export interface AssistantAction {
   proposal: AssistantProposal
 }
 
+/**
+ * 答复前"工作过程"的有序片段: 思考文本与只读工具调用按到达时序交错。
+ * reasoning 片段可累积 (连续思考并入同一段), tool 片段引用工具事件 (按 id 原地更新)。
+ */
+export type AssistantProcessStep =
+  | { kind: 'reasoning'; text: string }
+  | { kind: 'tool'; tool: AssistantToolEvent }
+
 /** 单条聊天消息 */
 export interface AssistantMessage {
   id: string
   role: MessageRole
   text: string
-  /** 思考过程 (reasoning), 流式累积; 前端折叠展示 */
-  reasoning?: string
-  /** 思考是否结束 (用于 UI 自动收起) */
+  /** 答复前的工作过程 (思考 + 工具调用), 按时序排列 */
+  process: AssistantProcessStep[]
+  /** 思考是否结束 (用于 UI 自动收起思考文本) */
   reasoningDone?: boolean
-  /** 本轮工具调用状态 */
-  tools: AssistantToolEvent[]
   /** 本轮 token 用量 */
   usage?: AssistantTokenUsage
   status: MessageStatus
@@ -117,7 +123,12 @@ export const useAssistantStore = defineStore('assistant', () => {
       role: h.role,
       text: h.text,
       status: 'done' as MessageStatus,
-      tools: [],
+      // 后端片段结构与本地一致, 仅过滤掉缺字段的脏数据
+      process: (h.process ?? []).filter(
+        (s): s is AssistantProcessStep =>
+          (s.kind === 'reasoning' && typeof s.text === 'string') || (s.kind === 'tool' && !!s.tool),
+      ),
+      reasoningDone: true,
       usage: h.usage,
       actions: h.proposal ? [{ id: nextId(), proposal: h.proposal }] : [],
       images: h.images,
@@ -171,9 +182,8 @@ export const useAssistantStore = defineStore('assistant', () => {
   ) {
     assistantMsg.status = 'sending'
     assistantMsg.text = ''
-    assistantMsg.reasoning = ''
+    assistantMsg.process = []
     assistantMsg.reasoningDone = false
-    assistantMsg.tools = []
     assistantMsg.usage = undefined
     assistantMsg.actions = []
     assistantMsg.error = undefined
@@ -185,16 +195,23 @@ export const useAssistantStore = defineStore('assistant', () => {
       await streamMessage(
         prompt, context.value, currentConversationId.value, images, options.editMessageId,
         {
-          onReasoning: d => { assistantMsg.reasoning = (assistantMsg.reasoning ?? '') + d },
+          onReasoning: d => {
+            // 并入最后一个 reasoning 片段; 若末尾是工具调用则新开一段, 保留交错时序
+            const last = assistantMsg.process[assistantMsg.process.length - 1]
+            if (last?.kind === 'reasoning') last.text += d
+            else assistantMsg.process.push({ kind: 'reasoning', text: d })
+          },
           onText: d => {
-            // 首个正文增量到达 => 思考结束, UI 收起思考块
+            // 首个正文增量到达 => 思考结束, UI 收起思考文本
             if (!assistantMsg.reasoningDone) assistantMsg.reasoningDone = true
             assistantMsg.text += d
           },
           onTool: tool => {
-            const existing = assistantMsg.tools.find(t => t.id === tool.id)
-            if (existing) Object.assign(existing, tool)
-            else assistantMsg.tools.push(tool)
+            const existing = assistantMsg.process.find(
+              (s): s is Extract<AssistantProcessStep, { kind: 'tool' }> => s.kind === 'tool' && s.tool.id === tool.id,
+            )
+            if (existing) Object.assign(existing.tool, tool)
+            else assistantMsg.process.push({ kind: 'tool', tool })
           },
           onProposal: p => { assistantMsg.actions.push({ id: nextId(), proposal: p }) },
           onDone: e => {
@@ -235,13 +252,13 @@ export const useAssistantStore = defineStore('assistant', () => {
     const imgs = images && images.length ? images : undefined
     if ((!trimmed && !imgs) || sending.value) return
 
-    const userMsg: AssistantMessage = {
-      id: nextId(), role: 'user', text: trimmed, status: 'done', tools: [], actions: [], images: imgs,
-    }
-    const assistantMsg: AssistantMessage = {
-      id: nextId(), role: 'assistant', text: '', status: 'sending', tools: [], actions: [],
+    const userMsg: AssistantMessage = reactive({
+      id: nextId(), role: 'user', text: trimmed, status: 'done', process: [], actions: [], images: imgs,
+    })
+    const assistantMsg: AssistantMessage = reactive({
+      id: nextId(), role: 'assistant', text: '', status: 'sending', process: [], actions: [],
       sourcePrompt: trimmed, sourceImages: imgs,
-    }
+    })
     messages.value.push(userMsg, assistantMsg)
     await runReply(assistantMsg, trimmed, imgs, { sourceUserMsg: userMsg })
   }
@@ -279,16 +296,16 @@ export const useAssistantStore = defineStore('assistant', () => {
     msg.error = undefined
     messages.value.splice(index + 1)
 
-    const assistantMsg: AssistantMessage = {
+    const assistantMsg: AssistantMessage = reactive({
       id: nextId(),
       role: 'assistant',
       text: '',
       status: 'sending',
-      tools: [],
+      process: [],
       actions: [],
       sourcePrompt: text,
       sourceImages: msg.images,
-    }
+    })
     messages.value.push(assistantMsg)
     await runReply(assistantMsg, text, undefined, { editMessageId, sourceUserMsg: msg })
   }
@@ -305,9 +322,11 @@ export const useAssistantStore = defineStore('assistant', () => {
     action.proposal.error = undefined
     try {
       action.proposal = await approveAction(action.proposal.id)
+      window.$message?.success('操作已执行')
     } catch (e) {
       action.proposal.status = 'failed'
       action.proposal.error = e instanceof Error ? e.message : String(e)
+      window.$message?.error(action.proposal.error)
     }
   }
 
@@ -323,7 +342,7 @@ export const useAssistantStore = defineStore('assistant', () => {
   }
 
   /** 保存编辑 (按预览下标改安全字段), 重新校验后回到待确认 */
-  async function saveActionEdit(messageId: string, actionId: string, items: ScheduleEditItem[]) {
+  async function saveActionEdit(messageId: string, actionId: string, items: ProposalEditItem[]) {
     const action = findAction(messageId, actionId)
     if (!action) return
     action.proposal = await updateAction(action.proposal.id, items)

@@ -88,8 +88,6 @@ function formatDuration(ms?: number): string {
   display: grid;
   gap: 4px;
   margin: 1px 0 2px;
-  padding-left: 6px;
-  border-left: 2px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
 }
 
 .tool-line {

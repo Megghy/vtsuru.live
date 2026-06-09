@@ -113,7 +113,7 @@ onBeforeUnmount(endParser)
 </script>
 
 <template>
-  <div ref="root" class="streaming-markdown" />
+  <div ref="root" class="streaming-markdown" :class="{ 'is-streaming': streaming }" />
 </template>
 
 <style scoped>
@@ -273,5 +273,24 @@ onBeforeUnmount(endParser)
 .streaming-markdown :deep(equation-block) {
   display: block;
   margin: 0.55em 0;
+}
+
+/* 流式输出时, 在最后一个块级元素尾部追加闪烁光标 */
+.streaming-markdown.is-streaming :deep(> :last-child)::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 1px;
+  border-radius: 1px;
+  background: var(--vtsuru-brand, #23ade5);
+  vertical-align: -0.16em;
+  animation: smd-caret 1.05s steps(1) infinite;
+}
+
+@keyframes smd-caret {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
 }
 </style>

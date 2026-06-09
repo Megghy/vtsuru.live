@@ -62,6 +62,7 @@ import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
 import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { copyToClipboard } from '@/shared/utils'
+import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import PointUserManage from './PointUserManage.vue'
@@ -275,6 +276,20 @@ const rules = {
   },
 }
 
+async function uploadWatermarkedCover(file: File) {
+  const watermarkedFile = await addVtsuruLiveWatermark(file)
+  return uploadFiles(
+    [watermarkedFile],
+    undefined,
+    UserFileLocation.Local,
+    (stage: string) => {
+      if (stage === UploadStage.Uploading) {
+        uploadProgress.value = 0
+      }
+    },
+  )
+}
+
 async function updateGoods(e: MouseEvent) {
   if (isUpdating.value || !formRef.value) return
   e.preventDefault()
@@ -380,17 +395,8 @@ async function updateGoods(e: MouseEvent) {
     const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
     if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
       isUploadingCover.value = true
-      message.info('正在上传封面...')
-      const uploadResults = await uploadFiles(
-        [newFilesToUpload[0].file],
-        undefined,
-        UserFileLocation.Local,
-        (stage: string) => {
-          if (stage === UploadStage.Uploading) {
-            uploadProgress.value = 0
-          }
-        },
-      )
+      message.info('正在添加封面水印并上传...')
+      const uploadResults = await uploadWatermarkedCover(newFilesToUpload[0].file)
       isUploadingCover.value = false
       if (uploadResults && uploadResults.length > 0) {
         currentGoodsModel.value.goods.cover = uploadResults[0]
@@ -420,17 +426,8 @@ async function updateGoods(e: MouseEvent) {
       const newFilesToUpload = fileList.filter(f => f.file && f.status !== 'finished')
       if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
         isUploadingCover.value = true
-        message.info(`正在上传款式封面: ${sub.name || '未命名'}...`)
-        const uploadResults = await uploadFiles(
-          [newFilesToUpload[0].file],
-          undefined,
-          UserFileLocation.Local,
-          (stage: string) => {
-            if (stage === UploadStage.Uploading) {
-              uploadProgress.value = 0
-            }
-          },
-        )
+        message.info(`正在添加款式封面水印并上传: ${sub.name || '未命名'}...`)
+        const uploadResults = await uploadWatermarkedCover(newFilesToUpload[0].file)
         isUploadingCover.value = false
         if (uploadResults && uploadResults.length > 0) {
           sub.cover = uploadResults[0]

@@ -63,7 +63,7 @@ onMounted(() => {
       type="primary"
       size="large"
       class="assistant-fab"
-      title="AI 助手"
+      title="VTsuru 助手"
       @click="openAssistant"
     >
       <template #icon>

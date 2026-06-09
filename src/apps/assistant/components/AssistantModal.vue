@@ -2,13 +2,11 @@
 import { LineHorizontal320Regular, Add20Regular, QuestionCircle20Regular } from '@vicons/fluent'
 import { NButton, NDrawer, NDrawerContent, NFlex, NIcon, NModal, NPopover, NTag, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import { useAssistantStore } from '../store/useAssistantStore'
 import AssistantChatWindow from './AssistantChatWindow.vue'
 import AssistantConversationList from './AssistantConversationList.vue'
 
 const store = useAssistantStore()
-const route = useRoute()
 
 const ctx = computed(() => store.context)
 
@@ -38,7 +36,7 @@ function onClose() {
     class="assistant-modal"
     :title="undefined"
     :bordered="false"
-    :mask-closable="false"
+    :mask-closable="true"
     @after-leave="onClose"
   >
     <template #header>
@@ -49,7 +47,7 @@ function onClose() {
           </template>
         </NButton>
         <NText class="assistant-modal__brand">
-          AI 助手
+          VTsuru 助手
         </NText>
         <NPopover trigger="hover" placement="bottom-start" style="max-width: 280px">
           <template #trigger>
@@ -93,11 +91,6 @@ function onClose() {
       </aside>
 
       <div class="assistant-modal__main">
-        <div class="assistant-modal__ctx">
-          <NText depth="3" class="assistant-modal__ctx-line">
-            route: {{ ctx.routeName || route.name?.toString() || '-' }} · path: {{ ctx.path || route.path }}
-          </NText>
-        </div>
         <div class="assistant-modal__body">
           <AssistantChatWindow />
         </div>
@@ -131,13 +124,6 @@ function onClose() {
 }
 .assistant-modal__main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 
-.assistant-modal__ctx {
-  flex: 0 0 auto;
-  padding: 0 0 8px;
-  border-bottom: 1px solid var(--n-border-color, rgba(128, 128, 128, 0.18));
-  margin-bottom: 8px;
-}
-.assistant-modal__ctx-line { font-size: 12px; word-break: break-all; }
 .assistant-modal__body { flex: 1 1 0; min-height: 0; }
 
 :deep(.n-card__content) { display: flex; flex-direction: column; }
