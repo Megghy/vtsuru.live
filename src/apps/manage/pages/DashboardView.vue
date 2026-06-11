@@ -15,6 +15,7 @@ import { ACCOUNT_API_URL, availableAPIs, CN_HOST, selectedAPIKey, TURNSTILE_KEY 
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
+import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
@@ -308,7 +309,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="dashboard-view">
+  <div class="dashboard-view" :class="{ 'dashboard-view--wide': selectedTab === 'template' }">
     <ManagePageHeader title="面板" subtitle="账户与功能配置" />
 
     <div class="dashboard-alerts">
@@ -617,6 +618,13 @@ onUnmounted(() => {
         <SettingsManageView />
       </NTabPane>
       <NTabPane
+        name="template"
+        tab="模板"
+        display-directive="show:lazy"
+      >
+        <TemplateManager />
+      </NTabPane>
+      <NTabPane
         name="billing"
         tab="增值"
         display-directive="show:lazy"
@@ -836,6 +844,12 @@ onUnmounted(() => {
   max-width: 920px;
   width: 100%;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+/* 模板页解除 920px 居中限制, 填满外层放宽后的容器 */
+.dashboard-view--wide {
+  max-width: none;
 }
 
 .dashboard-alerts {
@@ -846,6 +860,22 @@ onUnmounted(() => {
 
 .dashboard-tabs :deep(.n-tabs-nav) {
   margin-bottom: 12px;
+}
+
+/* tab 切换淡入上移动画 */
+.dashboard-tabs :deep(.n-tab-pane) {
+  animation: dashboard-tab-in 0.28s ease;
+}
+
+@keyframes dashboard-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dashboard-token-group {

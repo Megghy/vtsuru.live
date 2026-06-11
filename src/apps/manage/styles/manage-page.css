@@ -3,9 +3,10 @@
   max-width: 1280px;
   padding: 16px 16px 48px;
   display: flex;
-  margin: 0 auto;   
+  margin: 0 auto;
   flex-direction: column;
   gap: 12px;
+  box-sizing: border-box;
 }
 
 .manage-page--md {
@@ -21,6 +22,11 @@
   margin: 0;
   padding: 0;
   gap: 0;
+}
+
+/* 内部页面(如 dashboard 模板 tab)请求更宽时, 放宽外层容器 */
+.manage-page:has(.dashboard-view--wide) {
+  max-width: min(2000px, 100%);
 }
 
 @media (max-width: 640px) {

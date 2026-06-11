@@ -14,6 +14,8 @@ const props = defineProps<{
   name?: string
   configData: any
   config: ConfigItemDefinition[] | undefined
+  // 撑满父容器高度: 表单区滚动, 提交按钮固定底部 (用于分栏布局)
+  fillHeight?: boolean
 }>()
 
 const message = useMessage()
@@ -83,135 +85,74 @@ function OnFileListChange(key: string, files: UploadFileInfo[]) {
   }
 }
 
-// 更新上传进度的函数
-function updateUploadProgress(stage: string, fileIndex?: number, totalFiles?: number) {
+// 更新上传进度
+function updateUploadProgress(stage: string, done?: number, total?: number) {
   uploadStage.value = stage
-
-  if (totalFiles !== undefined) {
-    totalFilesToUpload.value = totalFiles
-  }
-
-  if (fileIndex !== undefined) {
-    uploadedFilesCount.value = fileIndex
-    uploadProgress.value = Math.floor((fileIndex / totalFilesToUpload.value) * 100)
+  if (total !== undefined) totalFilesToUpload.value = total
+  if (done !== undefined) {
+    uploadedFilesCount.value = done
+    uploadProgress.value = totalFilesToUpload.value ? Math.floor((done / totalFilesToUpload.value) * 100) : 0
   }
 }
 
 async function uploadAllFiles() {
-  const allPendingFiles: File[] = []
-
-  // 计算待上传的文件总数
+  // 收集所有待上传分组 (普通文件 + 装饰图片)
+  const uploadGroups: { key: string, files: File[], decorative: boolean }[] = []
   for (const key in pendingFiles.value) {
-    if (pendingFiles.value[key]?.length > 0) {
-      allPendingFiles.push(...pendingFiles.value[key])
-    }
+    if (pendingFiles.value[key]?.length) uploadGroups.push({ key, files: pendingFiles.value[key], decorative: false })
   }
-
   for (const key in pendingDecorativeImages.value) {
-    if (pendingDecorativeImages.value[key]?.length > 0) {
-      allPendingFiles.push(...pendingDecorativeImages.value[key])
-    }
+    if (pendingDecorativeImages.value[key]?.length) uploadGroups.push({ key, files: pendingDecorativeImages.value[key], decorative: true })
   }
 
-  // 如果没有文件需要上传，直接返回
-  if (allPendingFiles.length === 0) {
-    return true
-  }
+  const total = uploadGroups.reduce((n, g) => n + g.files.length, 0)
+  if (total === 0) return true
 
-  // 显示上传模态框
-  totalFilesToUpload.value = allPendingFiles.length
+  totalFilesToUpload.value = total
   uploadedFilesCount.value = 0
   uploadProgress.value = 0
   showUploadModal.value = true
 
-  const uploadTasks = []
-  let fileCounter = 0
-
-  // 上传普通文件
-  for (const key in pendingFiles.value) {
-    if (pendingFiles.value[key]?.length > 0) {
-      const filesToUpload = pendingFiles.value[key]
-      uploadTasks.push(
-        uploadFiles(
-          filesToUpload,
-          undefined,
-          UserFileLocation.Local,
-          (stage) => {
-            updateUploadProgress(stage, fileCounter + filesToUpload.length, totalFilesToUpload.value)
-            if (stage === UploadStage.Success) {
-              fileCounter += filesToUpload.length
-            } else if (stage === UploadStage.Failed) {
-              message.error(`${key} 文件上传失败`)
-            }
-          },
-        ).then((results) => {
-          // 更新配置数据
-          props.configData[key] = results
-        }),
-      )
-    }
-  }
-
-  // 上传装饰图片
-  for (const key in pendingDecorativeImages.value) {
-    if (pendingDecorativeImages.value[key]?.length > 0) {
-      const filesToUpload = pendingDecorativeImages.value[key]
-      uploadTasks.push(
-        uploadFiles(
-          filesToUpload,
-          undefined,
-          UserFileLocation.Local,
-          (stage) => {
-            updateUploadProgress(stage, fileCounter + filesToUpload.length, totalFilesToUpload.value)
-            if (stage === UploadStage.Success) {
-              fileCounter += filesToUpload.length
-            } else if (stage === UploadStage.Failed) {
-              message.error(`装饰图片上传失败`)
-            }
-          },
-        ).then((results) => {
-          // 创建新的装饰图片对象并添加到现有数组中
-          const newImages: DecorativeImageProperties[] = results.map((result, index) => ({
-            id: Number(result.id),
-            path: result.path,
-            name: result.name,
-            hash: result.hash,
-            src: result.path,
-            x: 10 + index * 5,
-            y: 10 + index * 5,
-            width: 20,
-            rotation: 0,
-            opacity: 1,
-            zIndex: (props.configData[key]?.length ?? 0) + index + 1,
-          }))
-
-          const currentImages = props.configData[key] as DecorativeImageProperties[] || []
-          props.configData[key] = [...currentImages, ...newImages]
-        }),
-      )
-    }
-  }
-
-  // 等待所有上传任务完成
+  let done = 0
   try {
-    await Promise.all(uploadTasks)
-    // 完成上传，关闭模态框
-    updateUploadProgress(UploadStage.Success, totalFilesToUpload.value, totalFilesToUpload.value)
-    setTimeout(() => {
-      showUploadModal.value = false
-    }, 500) // 给用户一个短暂的视觉反馈，然后关闭模态框
+    // 串行上传, 每完成一组才推进进度, 保证进度条准确
+    for (const g of uploadGroups) {
+      const results = await uploadFiles(g.files, undefined, UserFileLocation.Local, (stage) => {
+        if (stage === UploadStage.Failed) message.error(`${g.key} 文件上传失败`)
+      })
 
-    // 清空待上传文件
+      if (g.decorative) {
+        const current = (props.configData[g.key] as DecorativeImageProperties[]) || []
+        const newImages: DecorativeImageProperties[] = results.map((result, index) => ({
+          id: Number(result.id),
+          path: result.path,
+          name: result.name,
+          hash: result.hash,
+          src: result.path,
+          x: 10 + index * 5,
+          y: 10 + index * 5,
+          width: 20,
+          rotation: 0,
+          opacity: 1,
+          zIndex: current.length + index + 1,
+        }))
+        props.configData[g.key] = [...current, ...newImages]
+      } else {
+        props.configData[g.key] = results
+      }
+
+      done += g.files.length
+      updateUploadProgress(UploadStage.Success, done, total)
+    }
+
+    setTimeout(() => { showUploadModal.value = false }, 500)
     pendingFiles.value = {}
     pendingDecorativeImages.value = {}
     return true
   } catch (error) {
-    console.error('文件上传失败:', error)
     message.error(`文件上传失败: ${error instanceof Error ? error.message : String(error)}`)
     updateUploadProgress(UploadStage.Failed)
-    setTimeout(() => {
-      showUploadModal.value = false
-    }, 2000) // 错误状态多显示一会儿
+    setTimeout(() => { showUploadModal.value = false }, 2000)
     return false
   }
 }
@@ -245,78 +186,35 @@ async function onSubmit() {
   }
 }
 
-// --- 颜色转换辅助函数 ---
+// --- 颜色转换 ---
+// NColorPicker 统一输出 rgba()/hex 字符串, 这里解析回 RGBAColor 对象存储
 function stringToRgba(colorString: string | null | undefined): RGBAColor {
-  const defaultColor: RGBAColor = { r: 0, g: 0, b: 0, a: 1 } // 默认黑色不透明
-  if (!colorString) return defaultColor
+  const fallback: RGBAColor = { r: 0, g: 0, b: 0, a: 1 }
+  if (!colorString) return fallback
 
-  try {
-    // 尝试匹配 rgba(r, g, b, a)
-    const rgbaMatch = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
-    if (rgbaMatch) {
-      return {
-        r: Number.parseInt(rgbaMatch[1], 10),
-        g: Number.parseInt(rgbaMatch[2], 10),
-        b: Number.parseInt(rgbaMatch[3], 10),
-        a: rgbaMatch[4] !== undefined ? Number.parseFloat(rgbaMatch[4]) : 1,
-      }
-    }
-
-    // 尝试匹配 #RRGGBBAA
-    const hex8Match = colorString.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-    if (hex8Match) {
-      return {
-        r: Number.parseInt(hex8Match[1], 16),
-        g: Number.parseInt(hex8Match[2], 16),
-        b: Number.parseInt(hex8Match[3], 16),
-        a: Number.parseInt(hex8Match[4], 16) / 255,
-      }
-    }
-
-    // 尝试匹配 #RRGGBB
-    const hex6Match = colorString.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)
-    if (hex6Match) {
-      return {
-        r: Number.parseInt(hex6Match[1], 16),
-        g: Number.parseInt(hex6Match[2], 16),
-        b: Number.parseInt(hex6Match[3], 16),
-        a: 1, // Hex6 doesn't have alpha, assume 1
-      }
-    }
-
-    // 尝试匹配 #RGBA
-    const shortHex4Match = colorString.match(/^#?([a-f\d])([a-f\d])([a-f\d])([a-f\d])$/i)
-    if (shortHex4Match) {
-      return {
-        r: Number.parseInt(shortHex4Match[1] + shortHex4Match[1], 16),
-        g: Number.parseInt(shortHex4Match[2] + shortHex4Match[2], 16),
-        b: Number.parseInt(shortHex4Match[3] + shortHex4Match[3], 16),
-        a: Number.parseInt(shortHex4Match[4] + shortHex4Match[4], 16) / 255,
-      }
-    }
-
-    // 尝试匹配 #RGB
-    const shortHex3Match = colorString.match(/^#?([a-f\d])([a-f\d])([a-f\d])$/i)
-    if (shortHex3Match) {
-      return {
-        r: Number.parseInt(shortHex3Match[1] + shortHex3Match[1], 16),
-        g: Number.parseInt(shortHex3Match[2] + shortHex3Match[2], 16),
-        b: Number.parseInt(shortHex3Match[3] + shortHex3Match[3], 16),
-        a: 1, // Hex3 doesn't have alpha, assume 1
-      }
-    }
-
-    console.warn(`无法解析颜色字符串: "${colorString}", 已返回默认颜色`)
-    return defaultColor
-  } catch (e) {
-    console.error(`解析颜色字符串 "${colorString}" 时出错:`, e)
-    return defaultColor
+  const rgba = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+  if (rgba) {
+    return { r: +rgba[1], g: +rgba[2], b: +rgba[3], a: rgba[4] !== undefined ? +rgba[4] : 1 }
   }
+
+  // #RGB / #RGBA / #RRGGBB / #RRGGBBAA
+  const hex = colorString.replace('#', '')
+  const expand = (s: string) => s.length <= 4 ? [...s].map(c => c + c).join('') : s
+  const full = expand(hex)
+  if (/^[a-f\d]{6}([a-f\d]{2})?$/i.test(full)) {
+    return {
+      r: Number.parseInt(full.slice(0, 2), 16),
+      g: Number.parseInt(full.slice(2, 4), 16),
+      b: Number.parseInt(full.slice(4, 6), 16),
+      a: full.length === 8 ? Number.parseInt(full.slice(6, 8), 16) / 255 : 1,
+    }
+  }
+
+  return fallback
 }
 
-// 确保 rgbaToString 也能处理 null/undefined
 function safeRgbaToString(color: RGBAColor | null | undefined): string {
-  return rgbaToString(color ?? { r: 0, g: 0, b: 0, a: 1 }) // 提供默认值以防万一
+  return rgbaToString(color ?? { r: 0, g: 0, b: 0, a: 1 })
 }
 
 // 装饰图片功能
@@ -449,99 +347,104 @@ onMounted(() => {
     v-if="!config || config.length === 0"
     description="此模板不支持配置"
   />
-  <NForm v-else>
-    <NGrid
-      x-gap="10"
-      y-gap="10"
-      cols="1 600:2 1200:3 1600:4"
-    >
-      <NFormItemGi
-        v-for="item in visibleItems"
-        :key="item.name.toString()"
-        :label="item.name.toString()"
+  <NForm v-else :class="{ 'dynamic-form--fill': fillHeight }">
+    <div class="dynamic-form__footer">
+      <NButton
+        type="primary"
+        :loading="isUploading"
+        @click="onSubmit"
       >
-        <component
-          :is="item.render(configData)"
-          v-if="item.type === 'render'"
-        />
-        <component
-          :is="renderDecorativeImages(item.key)"
-          v-else-if="item.type === 'decorativeImages'"
-        />
-        <template v-else-if="item.type === 'string'">
+        提交
+      </NButton>
+    </div>
+
+    <NScrollbar class="dynamic-form__scroll">
+      <NGrid
+        x-gap="12"
+        y-gap="16"
+        cols="1 600:2 1200:3 1600:4"
+      >
+        <NFormItemGi
+          v-for="item in visibleItems"
+          :key="item.name.toString()"
+          :label="item.name.toString()"
+          class="dynamic-form__item"
+        >
+          <component
+            :is="item.render(configData)"
+            v-if="item.type === 'render'"
+          />
+          <component
+            :is="renderDecorativeImages(item.key)"
+            v-else-if="item.type === 'decorativeImages'"
+          />
           <NInput
+            v-else-if="item.type === 'string'"
             :value="configData[item.key]"
             :placeholder="item.placeholder"
             :type="item.inputType"
             @update:value="configData[item.key] = $event"
           />
-        </template>
-        <NSelect
-          v-else-if="item.type === 'select'"
-          :value="configData[item.key]"
-          :options="getSelectOptions(item)"
-          :placeholder="item.placeholder"
-          :clearable="item.clearable"
-          @update:value="configData[item.key] = $event"
-        />
-        <NColorPicker
-          v-else-if="item.type === 'color'"
-          :value="safeRgbaToString(configData[item.key])"
-          :show-alpha="item.showAlpha ?? false"
-          @update:value="configData[item.key] = stringToRgba($event)"
-        />
-        <NInputNumber
-          v-else-if="item.type === 'number'"
-          :value="configData[item.key]"
-          :min="item.min"
-          @update:value="configData[item.key] = $event"
-        />
-        <NSlider
-          v-else-if="item.type === 'sliderNumber'"
-          :value="configData[item.key]"
-          :min="item.min"
-          :max="item.max"
-          :step="item.step"
-          @update:value="configData[item.key] = $event"
-        />
-        <template v-else-if="item.type === 'boolean'">
-          <NCheckbox
-            :checked="configData[item.key]"
-            @update:checked="configData[item.key] = $event"
+          <NSelect
+            v-else-if="item.type === 'select'"
+            :value="configData[item.key]"
+            :options="getSelectOptions(item)"
+            :placeholder="item.placeholder"
+            :clearable="item.clearable"
+            @update:value="configData[item.key] = $event"
+          />
+          <NColorPicker
+            v-else-if="item.type === 'color'"
+            :value="safeRgbaToString(configData[item.key])"
+            :show-alpha="item.showAlpha ?? false"
+            @update:value="configData[item.key] = stringToRgba($event)"
+          />
+          <NInputNumber
+            v-else-if="item.type === 'number'"
+            :value="configData[item.key]"
+            :min="item.min"
+            style="width: 100%"
+            @update:value="configData[item.key] = $event"
+          />
+          <NSlider
+            v-else-if="item.type === 'sliderNumber'"
+            :value="configData[item.key]"
+            :min="item.min"
+            :max="item.max"
+            :step="item.step"
+            @update:value="configData[item.key] = $event"
+          />
+          <NFlex v-else-if="item.type === 'boolean'" align="center" :size="6">
+            <NCheckbox
+              :checked="configData[item.key]"
+              @update:checked="configData[item.key] = $event"
+            >
+              启用
+            </NCheckbox>
+            <NTooltip
+              v-if="item.description"
+              placement="top"
+            >
+              <template #trigger>
+                <NIcon :component="Info24Filled" :depth="3" />
+              </template>
+              {{ item.description }}
+            </NTooltip>
+          </NFlex>
+          <NUpload
+            v-else-if="item.type === 'file'"
+            v-model:file-list="fileList[item.key]"
+            accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.mp3,.mp4,.pdf,.doc,.docx"
+            list-type="image-card"
+            :default-upload="false"
+            :max="item.fileLimit"
+            @update:file-list="file => OnFileListChange(item.key, file)"
           >
-            启用
-          </NCheckbox>
-          <NTooltip
-            v-if="item.description"
-            placement="top"
-          >
-            <template #trigger>
-              <NIcon :component="Info24Filled" />
-            </template>
-            {{ item.description }}
-          </NTooltip>
-        </template>
-        <NUpload
-          v-else-if="item.type === 'file'"
-          v-model:file-list="fileList[item.key]"
-          accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.mp3,.mp4,.pdf,.doc,.docx"
-          list-type="image-card"
-          :default-upload="false"
-          :max="item.fileLimit"
-          @update:file-list="file => OnFileListChange(item.key, file)"
-        >
-          上传文件
-        </NUpload>
-      </NFormItemGi>
-    </NGrid>
-
-    <NButton
-      type="primary"
-      :loading="isUploading"
-      @click="onSubmit"
-    >
-      提交
-    </NButton>
+            上传文件
+          </NUpload>
+        </NFormItemGi>
+      </NGrid>
+    </NScrollbar>
 
     <!-- 上传进度模态框 -->
     <NModal
@@ -570,3 +473,53 @@ onMounted(() => {
     </NModal>
   </NForm>
 </template>
+
+<style scoped>
+/* 表单整体用 flex column, 便于用 order 控制提交栏位置 */
+.n-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 非 fill: 提交栏在底部 */
+.dynamic-form__footer {
+  order: 1;
+  margin-top: 12px;
+}
+
+.dynamic-form__scroll {
+  order: 0;
+}
+
+.dynamic-form__item :deep(.n-form-item-blank) {
+  min-height: unset;
+}
+
+/* fill 模式: 撑满父高, 提交栏置顶, 下方表单滚动 */
+.dynamic-form--fill {
+  height: 100%;
+  min-height: 0;
+}
+
+.dynamic-form--fill .dynamic-form__footer {
+  flex-shrink: 0;
+  order: -1;
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--n-border-color, rgba(148, 163, 184, 0.22));
+}
+
+.dynamic-form--fill .dynamic-form__footer :deep(.n-button) {
+  width: 100%;
+}
+
+.dynamic-form--fill .dynamic-form__scroll {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.dynamic-form--fill .dynamic-form__scroll :deep(.n-scrollbar-content) {
+  padding-right: 8px;
+}
+</style>
