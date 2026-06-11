@@ -106,6 +106,29 @@ export function useSongList(props: { songs: SongsInfo[], isSelf: boolean }) {
       isLoading.value = false
     }
   }
+
+  async function updateSongs(songs: SongsInfo[], label: string) {
+    if (songs.length === 0) {
+      message.warning('请先选择歌曲')
+      return false
+    }
+    isLoading.value = true
+    try {
+      const payload = songs.map(song => ({ key: song.key, song }))
+      const { code, data, message: err } = await QueryPostAPI<SongsInfo[]>(`${SONG_API_URL}update-batch`, payload)
+      if (code === 200 && data) {
+        const updated = new Map(data.map(song => [song.key, song]))
+        songsInternal.value = songsInternal.value.map(song => updated.get(song.key) ?? song)
+        message.success(`已为 ${data.length} 首歌曲更新${label}`)
+        return true
+      }
+      message.error(`批量更新失败: ${err}`)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function deleteSong(song: SongsInfo) {
     isLoading.value = true
     try {
@@ -203,6 +226,7 @@ export function useSongList(props: { songs: SongsInfo[], isSelf: boolean }) {
     tagOptions,
     authorOptions,
     updateSong,
+    updateSongs,
     deleteSong,
     deleteBatch,
     batchUpdate,

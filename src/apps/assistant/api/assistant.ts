@@ -46,6 +46,8 @@ export interface AssistantProposal {
   status: ActionStatus
   preview: AssistantPreviewItem[]
   error?: string
+  /** 定时执行的目标时间 (Unix 毫秒, UTC); 仅 status=scheduled 时有值 */
+  scheduledTime?: number
 }
 
 /** 工具调用状态, 与后端 AssistantToolEventDto 对应 */
@@ -124,6 +126,13 @@ export interface AssistantHistoryMessage {
 export interface ProposalEditItem {
   index: number
   values: Record<string, string>
+}
+
+/** 主动建议提示项, 与后端 AssistantDigestItem 对应 */
+export interface AssistantDigestItem {
+  kind: string
+  text: string
+  prompt: string
 }
 
 /**
@@ -205,6 +214,13 @@ export async function getConversationMessages(id: number): Promise<AssistantHist
   return resp.data ?? []
 }
 
+/** 主动建议提示: 后台待办概览 */
+export async function getDigest(): Promise<AssistantDigestItem[]> {
+  const resp = await QueryGetAPI<AssistantDigestItem[]>(`${ASSISTANT_API_URL}digest`)
+  if (resp.code !== 200) throw new Error(resp.message || '获取建议失败')
+  return resp.data ?? []
+}
+
 /** 重命名会话 */
 export async function renameConversation(id: number, title: string): Promise<void> {
   const resp = await QueryPostAPI(`${ASSISTANT_API_URL}conversations/${id}/rename`, { title })
@@ -228,6 +244,20 @@ export async function approveAction(proposalId: string): Promise<AssistantPropos
 export async function rejectAction(proposalId: string): Promise<AssistantProposal> {
   const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/reject`)
   if (resp.code !== 200) throw new Error(resp.message || '拒绝失败')
+  return resp.data
+}
+
+/** 设定提案定时执行 (scheduledTime: Unix 毫秒, UTC) */
+export async function scheduleAction(proposalId: string, scheduledTime: number): Promise<AssistantProposal> {
+  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/schedule`, { scheduledTime })
+  if (resp.code !== 200) throw new Error(resp.message || '定时设定失败')
+  return resp.data
+}
+
+/** 取消提案定时执行 */
+export async function cancelScheduleAction(proposalId: string): Promise<AssistantProposal> {
+  const resp = await QueryPostAPI<AssistantProposal>(`${ASSISTANT_API_URL}actions/${proposalId}/cancel-schedule`)
+  if (resp.code !== 200) throw new Error(resp.message || '取消定时失败')
   return resp.data
 }
 

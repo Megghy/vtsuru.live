@@ -13,11 +13,13 @@ import type {
 } from '../api/assistant'
 import {
   approveAction,
+  cancelScheduleAction,
   deleteConversation,
   getConversationMessages,
   listConversations,
   rejectAction,
   renameConversation,
+  scheduleAction,
   streamMessage,
   updateAction,
 } from '../api/assistant'
@@ -82,6 +84,11 @@ export const useAssistantStore = defineStore('assistant', () => {
   const currentConversationId = ref<number | null>(null)
   const conversationsLoading = ref(false)
   const messagesLoading = ref(false)
+  /** 会话分页: 已加载页码与是否还有更多 */
+  const CONV_PAGE_SIZE = 20
+  const conversationsPage = ref(0)
+  const conversationsHasMore = ref(true)
+  const conversationsLoadingMore = ref(false)
 
   const lastError = computed(() => {
     const last = messages.value[messages.value.length - 1]
@@ -104,15 +111,37 @@ export const useAssistantStore = defineStore('assistant', () => {
     sending.value = false
   }
 
-  /** 拉取会话列表 */
+  /** 拉取会话列表 (首页, 重置分页) */
   async function loadConversations() {
     conversationsLoading.value = true
+    conversationsPage.value = 0
     try {
-      conversations.value = await listConversations()
+      const list = await listConversations(0, CONV_PAGE_SIZE)
+      conversations.value = list
+      conversationsHasMore.value = list.length >= CONV_PAGE_SIZE
     } catch (e) {
       console.warn('[assistant] 加载会话列表失败', e)
     } finally {
       conversationsLoading.value = false
+    }
+  }
+
+  /** 加载下一页会话, 追加到列表尾部 */
+  async function loadMoreConversations() {
+    if (conversationsLoadingMore.value || !conversationsHasMore.value || conversationsLoading.value) return
+    conversationsLoadingMore.value = true
+    try {
+      const next = conversationsPage.value + 1
+      const list = await listConversations(next, CONV_PAGE_SIZE)
+      // 去重追加 (并发刷新时可能重叠)
+      const existing = new Set(conversations.value.map(c => c.id))
+      conversations.value.push(...list.filter(c => !existing.has(c.id)))
+      conversationsPage.value = next
+      conversationsHasMore.value = list.length >= CONV_PAGE_SIZE
+    } catch (e) {
+      console.warn('[assistant] 加载更多会话失败', e)
+    } finally {
+      conversationsLoadingMore.value = false
     }
   }
 
@@ -348,6 +377,32 @@ export const useAssistantStore = defineStore('assistant', () => {
     action.proposal = await updateAction(action.proposal.id, items)
   }
 
+  /** 设定定时执行 (scheduledTime: Unix 毫秒) */
+  async function scheduleActionById(messageId: string, actionId: string, scheduledTime: number) {
+    const action = findAction(messageId, actionId)
+    if (!action) return
+    try {
+      action.proposal = await scheduleAction(action.proposal.id, scheduledTime)
+      window.$message?.success('已设定定时执行')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      window.$message?.error(msg)
+    }
+  }
+
+  /** 取消定时执行, 回到待确认 */
+  async function cancelScheduleById(messageId: string, actionId: string) {
+    const action = findAction(messageId, actionId)
+    if (!action) return
+    try {
+      action.proposal = await cancelScheduleAction(action.proposal.id)
+      window.$message?.info('已取消定时执行')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      window.$message?.error(msg)
+    }
+  }
+
   function reset() {
     newConversation()
   }
@@ -361,6 +416,8 @@ export const useAssistantStore = defineStore('assistant', () => {
     conversations,
     currentConversationId,
     conversationsLoading,
+    conversationsHasMore,
+    conversationsLoadingMore,
     messagesLoading,
     open,
     close,
@@ -372,8 +429,11 @@ export const useAssistantStore = defineStore('assistant', () => {
     confirmAction,
     rejectActionById,
     saveActionEdit,
+    scheduleActionById,
+    cancelScheduleById,
     reset,
     loadConversations,
+    loadMoreConversations,
     switchConversation,
     newConversation,
     renameConversationById,

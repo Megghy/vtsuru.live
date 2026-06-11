@@ -1,3 +1,6 @@
+// 本表仅用于将历史遗留的本地存储 key 映射到 vtsuru: 规范前缀, 供一次性数据迁移使用。
+// 约定: 新增持久化 key 一律直接使用 vtsuru:xxx 完整形式 (canonicalizePersistKey 对 vtsuru: 前缀直接放行),
+// 不要再往本表追加条目。待线上迁移率足够高后, 本表与相关迁移逻辑可整体移除。
 export const PERSIST_LEGACY_KEY_MAP = {
   Cookie: 'vtsuru:cookie',
   JWT_Token: 'vtsuru:jwt-token',
@@ -33,6 +36,7 @@ export const PERSIST_LEGACY_KEY_MAP = {
   'Setting.MusicRequest': 'vtsuru:setting:music-request',
   'Setting.MusicRequest.Cooldown': 'vtsuru:setting:music-request:cooldown',
   'Setting.MusicRequest.Waiting': 'vtsuru:setting:music-request:waiting',
+  'Setting.MusicRequest.History': 'vtsuru:setting:music-request:history',
   'Setting.Gamepad.SelectedType': 'vtsuru:setting:gamepad:selected-type',
   'Setting.Gamepad.UseOverlayButtons': 'vtsuru:setting:gamepad:use-overlay-buttons',
 

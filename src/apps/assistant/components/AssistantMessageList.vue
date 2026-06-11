@@ -25,6 +25,8 @@ const emit = defineEmits<{
   (e: 'confirm', messageId: string, actionId: string): void
   (e: 'reject', messageId: string, actionId: string): void
   (e: 'save', messageId: string, actionId: string, items: ProposalEditItem[]): void
+  (e: 'schedule', messageId: string, actionId: string, scheduledTime: number): void
+  (e: 'cancel-schedule', messageId: string, actionId: string): void
 }>()
 
 // 用户手动展开/收起的覆盖状态; 未操作时跟随 reasoningDone (思考中展开, 完成收起)
@@ -253,6 +255,8 @@ function formatTokens(value?: number): string {
           @confirm="emit('confirm', msg.id, action.id)"
           @reject="emit('reject', msg.id, action.id)"
           @save="patch => emit('save', msg.id, action.id, patch)"
+          @schedule="ts => emit('schedule', msg.id, action.id, ts)"
+          @cancel-schedule="emit('cancel-schedule', msg.id, action.id)"
         />
       </div>
     </div>

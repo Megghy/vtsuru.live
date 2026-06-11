@@ -13,7 +13,6 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import {
   EventDataTypes,
   FunctionTypes,
-  QueueSortType,
   SongRequestFrom,
   SongRequestStatus,
 } from '@/api/api-models'
@@ -23,6 +22,7 @@ import {
   QueryPostAPIWithParams,
 } from '@/api/query'
 import { SONG_REQUEST_API_URL } from '@/shared/config'
+import { sortByQueueType } from '@/shared/utils/queue'
 
 export const useLiveRequest = defineStore('songRequest', () => {
   const accountInfo = useAccount()
@@ -52,7 +52,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   })
 
   const songs = computed<SongRequestInfo[]>(() => {
-    let result = new List(originSongs.value).Where((s) => {
+    const filtered = new List(originSongs.value).Where((s) => {
       if (filterName.value) {
         if (filterNameContains.value) {
           if (!s?.user?.name.toLowerCase().includes(filterName.value.toLowerCase())) {
@@ -71,36 +71,17 @@ export const useLiveRequest = defineStore('songRequest', () => {
         }
       }
       return true
-    })
+    }).ToArray()
 
     const settings: Setting_LiveRequest = accountInfo.value?.settings?.songRequest
+    const reverse = configCanEdit.value ? settings.isReverse : isReverse.value
 
-    switch (settings.sortType) {
-      case QueueSortType.TimeFirst: {
-        result = result.ThenBy(q => q.createAt)
-        break
-      }
-      case QueueSortType.GuardFirst: {
-        result = result
-          .OrderBy(q => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-          .ThenBy(q => q.createAt)
-        break
-      }
-      case QueueSortType.PaymentFist: {
-        result = result.OrderByDescending(q => q.price ?? 0).ThenBy(q => q.createAt)
-        break
-      }
-      case QueueSortType.FansMedalFirst: {
-        result = result.OrderByDescending(q => q.user?.fans_medal_level ?? 0).ThenBy(q => q.createAt)
-        break
-      }
-    }
-
-    if ((configCanEdit.value && settings.isReverse) || (!configCanEdit.value && isReverse.value)) {
-      return result.Reverse().ToArray()
-    } else {
-      return result.ToArray()
-    }
+    return sortByQueueType(filtered, settings.sortType, reverse, {
+      createAt: q => q.createAt,
+      guardLevel: q => q.user?.guard_level,
+      price: q => q.price,
+      fansMedalLevel: q => q.user?.fans_medal_level,
+    })
   })
 
   const activeSongs = computed(() => {

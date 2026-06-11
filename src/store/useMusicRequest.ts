@@ -8,6 +8,14 @@ export interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: SongsInfo
 }
+/** 点歌历史记录项 (前端本地记录, 因后端不保存点歌历史) */
+export interface MusicHistoryEntry {
+  from: DanmakuUserInfo
+  music: SongsInfo
+  /** played: 已播放 / cancelled: 已取消 */
+  status: 'played' | 'cancelled'
+  time: number
+}
 export interface Music {
   id: number
   title: string
@@ -36,6 +44,11 @@ export interface MusicRequestSettings {
 export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const waitingMusics = usePersistedStorage<WaitMusicInfo[]>(
     'Setting.MusicRequest.Waiting',
+    [],
+  )
+  /** 点歌历史 (本地记录, 最多保留 200 条) */
+  const history = usePersistedStorage<MusicHistoryEntry[]>(
+    'Setting.MusicRequest.History',
     [],
   )
   const originMusics = ref<SongsInfo[]>([])
@@ -70,6 +83,33 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
 
   const message = window.$message
 
+  /** 记录一条点歌历史 (本地保留最多 200 条) */
+  function pushHistory(info: WaitMusicInfo, status: MusicHistoryEntry['status']) {
+    history.value.unshift({
+      from: info.from,
+      music: info.music,
+      status,
+      time: Date.now(),
+    })
+    if (history.value.length > 200) {
+      history.value.splice(200)
+    }
+  }
+
+  /** 从等待队列取消一首 (并记入历史) */
+  function cancelWaiting(info: WaitMusicInfo) {
+    const index = waitingMusics.value.indexOf(info)
+    if (index > -1) {
+      waitingMusics.value.splice(index, 1)
+    }
+    pushHistory(info, 'cancelled')
+  }
+
+  /** 清空点歌历史 */
+  function clearHistory() {
+    history.value = []
+  }
+
   function addWaitingMusic(info: WaitMusicInfo) {
     if (
       (settings.value.orderMusicFirst && !isPlayingOrderMusic.value)
@@ -77,6 +117,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     ) {
       playMusic(info.music)
       isPlayingOrderMusic.value = true
+      pushHistory(info, 'played')
       console.log(
         `正在播放 [${info.from.name}] 点的 ${info.music.name} - ${info.music.author?.join('/')}`,
       )
@@ -120,6 +161,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
         currentOriginMusic.value = info
         aplayerRef.value?.pause()
         playMusic(info.music)
+        pushHistory(info, 'played')
       }, 10)
       return true
     } else {
@@ -169,6 +211,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
 
   return {
     waitingMusics,
+    history,
     originMusics,
     aplayerMusics,
     currentMusic,
@@ -179,6 +222,8 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     playWaitingMusic,
     playMusic,
     addWaitingMusic,
+    cancelWaiting,
+    clearHistory,
     onMusicEnd,
     onMusicPlay,
     pauseMusic,

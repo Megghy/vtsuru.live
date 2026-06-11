@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ArrowSync20Regular, Sparkle24Regular } from '@vicons/fluent'
+import { ArrowSync20Regular, Sparkle24Regular, Alert24Regular } from '@vicons/fluent'
 import { NIcon, NScrollbar, NSpin } from 'naive-ui'
 import { nextTick, onMounted, ref, watch } from 'vue'
 import { useAssistantStore } from '../store/useAssistantStore'
+import { getDigest, type AssistantDigestItem } from '../api/assistant'
 import AssistantComposer from './AssistantComposer.vue'
 import AssistantMessageList from './AssistantMessageList.vue'
 
@@ -10,42 +11,92 @@ const store = useAssistantStore()
 const scrollRef = ref<InstanceType<typeof NScrollbar> | null>(null)
 const composerRef = ref<InstanceType<typeof AssistantComposer> | null>(null)
 
-/** 预置操作池, 覆盖助手当前可用的各类能力, 每次随机抽 4 个展示 */
-const SUGGESTION_POOL = [
+/** 主动建议提示 (后台待办概览), 仅在欢迎页拉取一次 */
+const digest = ref<AssistantDigestItem[]>([])
+async function loadDigest() {
+  try {
+    digest.value = await getDigest()
+  } catch (e) {
+    console.warn('[assistant] 加载建议提示失败', e)
+  }
+}
+
+/** 预置操作池: 每条带分类标签, 用于按当前页面加权抽样 */
+interface Suggestion { text: string, cat: string }
+const SUGGESTION_POOL: Suggestion[] = [
   // 日程
-  '帮我看看这周的直播日程',
-  '下周三晚上8点加一场杂谈',
-  '把这周末的直播都改到晚上9点',
+  { text: '帮我看看这周的直播日程', cat: 'schedule' },
+  { text: '下周三晚上8点加一场杂谈', cat: 'schedule' },
+  { text: '把这周末的直播都改到晚上9点', cat: 'schedule' },
   // 数据分析
-  '最近30天的粉丝增长怎么样',
-  '分析一下最近7天的直播数据',
-  '这个月收益和上个月比如何',
+  { text: '最近30天的粉丝增长怎么样', cat: 'analyze' },
+  { text: '分析一下最近7天的直播数据', cat: 'analyze' },
+  { text: '这个月收益和上个月比如何', cat: 'analyze' },
+  { text: '复盘一下我最近一场直播', cat: 'analyze' },
   // 舰长 / 积分
-  '看看我的舰长情况',
-  '积分商城现在有哪些商品',
-  '有没有待处理的积分兑换订单',
-  '帮我上架一个积分新商品',
+  { text: '看看我的舰长情况', cat: 'point' },
+  { text: '积分商城现在有哪些商品', cat: 'point' },
+  { text: '有没有待处理的积分兑换订单', cat: 'point' },
+  { text: '帮我上架一个积分新商品', cat: 'point' },
   // 提问箱
-  '提问箱里还有哪些没回复的',
-  '帮我起草一条提问箱回复',
-  // 视频征集 / 歌单
-  '发起一个本周视频征集',
-  '我的歌单里有哪些日语歌',
-  '帮我往歌单里加几首歌',
+  { text: '提问箱里还有哪些没回复的', cat: 'qa' },
+  { text: '帮我起草一条提问箱回复', cat: 'qa' },
+  // 视频征集
+  { text: '发起一个本周视频征集', cat: 'video' },
+  // 歌单
+  { text: '我的歌单里有哪些日语歌', cat: 'song' },
+  { text: '帮我往歌单里加几首歌', cat: 'song' },
   // 联网
-  '帮我查一下这首歌的歌手资料',
+  { text: '帮我查一下这首歌的歌手资料', cat: 'web' },
 ]
+
+/** 路由名 (片段匹配) -> 偏好的建议分类。命中的分类会被优先展示 */
+const ROUTE_CATEGORY: Record<string, string> = {
+  schedule: 'schedule',
+  analyze: 'analyze',
+  liveDetail: 'analyze',
+  live: 'analyze',
+  point: 'point',
+  questionBox: 'qa',
+  videoCollect: 'video',
+  songList: 'song',
+  musicRequest: 'song',
+}
+
+/** 根据当前页面路由名找出偏好分类 (无匹配返回 null) */
+function preferredCategory(): string | null {
+  const name = store.context.routeName ?? ''
+  for (const key in ROUTE_CATEGORY) {
+    if (name.includes(key)) return ROUTE_CATEGORY[key]
+  }
+  return null
+}
 
 const suggestions = ref<string[]>([])
 
-/** 从池中随机抽 4 个不重复的预置操作 */
+/**
+ * 抽 4 条建议: 当前页面相关分类的建议优先 (最多占 2 条), 其余随机补足, 整体打散。
+ */
 function rollSuggestions() {
-  suggestions.value = [...SUGGESTION_POOL]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 4)
+  const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5)
+  const cat = preferredCategory()
+  const picked: Suggestion[] = []
+
+  if (cat) {
+    picked.push(...shuffle(SUGGESTION_POOL.filter(s => s.cat === cat)).slice(0, 2))
+  }
+  const rest = shuffle(SUGGESTION_POOL.filter(s => !picked.includes(s)))
+  picked.push(...rest.slice(0, 4 - picked.length))
+
+  suggestions.value = shuffle(picked).map(s => s.text)
 }
 
-onMounted(rollSuggestions)
+onMounted(() => {
+  rollSuggestions()
+  loadDigest()
+})
+// 切换页面 (上下文变化) 时重抽, 让建议跟随当前页面
+watch(() => store.context.routeName, rollSuggestions)
 
 /** 贴底跟随: 用户在底部附近时流式输出才自动滚动; 一旦上滚查看 (如审批卡片) 即脱离, 不再强拉 */
 const stick = ref(true)
@@ -94,6 +145,8 @@ function onPickSuggestion(text: string) {
         @confirm="store.confirmAction"
         @reject="store.rejectActionById"
         @save="store.saveActionEdit"
+        @schedule="store.scheduleActionById"
+        @cancel-schedule="store.cancelScheduleById"
       />
       <div v-else-if="store.messagesLoading" class="chat-window__loading">
         <NSpin size="medium" />
@@ -107,6 +160,19 @@ function onPickSuggestion(text: string) {
         </div>
         <div class="chat-window__welcome-sub">
           用自然语言管理日程、查询数据, 或上传截图让我识别
+        </div>
+        <div v-if="digest.length" class="chat-window__digest">
+          <button
+            v-for="d in digest"
+            :key="d.kind + d.text"
+            type="button"
+            class="chat-window__digest-item"
+            :disabled="store.sending"
+            @click="onPickSuggestion(d.prompt)"
+          >
+            <NIcon :component="Alert24Regular" size="15" />
+            <span>{{ d.text }}</span>
+          </button>
         </div>
         <div class="chat-window__suggestions">
           <button
@@ -174,6 +240,25 @@ function onPickSuggestion(text: string) {
   display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
   margin-top: 12px; max-width: 440px;
 }
+.chat-window__digest {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 14px; width: 100%; max-width: 360px;
+}
+.chat-window__digest-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 10px; text-align: left;
+  border: 1px solid var(--vtsuru-warning-tint, rgba(240, 160, 32, 0.35));
+  background: var(--vtsuru-warning-soft, rgba(240, 160, 32, 0.08));
+  color: var(--vtsuru-fg, var(--n-text-color));
+  font-size: 13px; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.chat-window__digest-item:hover:not(:disabled) {
+  background: var(--vtsuru-warning-soft-hover, rgba(240, 160, 32, 0.16));
+}
+.chat-window__digest-item:active:not(:disabled) { transform: scale(0.99); }
+.chat-window__digest-item:disabled { opacity: 0.5; cursor: not-allowed; }
+.chat-window__digest-item > span { flex: 1 1 0; min-width: 0; }
 .chat-window__chip {
   padding: 7px 13px; border-radius: 999px;
   border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));

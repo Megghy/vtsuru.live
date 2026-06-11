@@ -8,6 +8,7 @@ export type MessageStatus = 'sending' | 'streaming' | 'done' | 'error'
 export const ACTION_STATUSES = [
   'draft',
   'requires_confirmation',
+  'scheduled',
   'running',
   'completed',
   'failed',

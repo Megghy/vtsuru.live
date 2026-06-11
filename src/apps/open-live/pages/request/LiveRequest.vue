@@ -1,23 +1,21 @@
-// 这是LiveRequest重构后的代码
-
 <script setup lang="ts">
 import type {
   OpenLiveInfo,
 } from '@/api/api-models'
-import { Info24Filled } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NModal, NRadioButton, NRadioGroup, NSwitch, NTabPane, NTabs, NText, NTooltip, NUl, useMessage } from 'naive-ui';
-import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
-import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
+  NAlert, NButton, NCard, NDivider, NTabPane, NTabs, NTooltip, useMessage } from 'naive-ui';
+import { onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
+import { SaveSetting, useAccount } from '@/api/account'
 import {
   FunctionTypes,
 } from '@/api/api-models'
 import SongPlayer from '@/components/SongPlayer.vue'
+import { useFunctionToggle } from '@/composables/useFunctionToggle'
 import { useLiveRequest } from '@/composables/useLiveRequest'
-import { CURRENT_HOST } from '@/shared/config'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
-import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
+import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
+import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
 
 import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
 import SongRequestList from '@/apps/open-live/components/request/SongRequestList.vue'
@@ -36,17 +34,6 @@ const client = await useDanmakuClient().initOpenlive()
 const showOBSModal = ref(false)
 const obsStyleType = ref<'classic' | 'fresh' | 'minimal'>('classic')
 const obsScrollSpeedMultiplierRef = ref(1)
-const obsUrl = computed(() => {
-  const params = new URLSearchParams({
-    id: String(accountInfo.value?.id ?? 0),
-    style: obsStyleType.value,
-    speed: String(obsScrollSpeedMultiplierRef.value),
-  })
-  if (accountInfo.value?.token) {
-    params.set('token', accountInfo.value.token)
-  }
-  return `${CURRENT_HOST}obs/live-request?${params.toString()}`
-})
 
 // 使用composable管理歌曲请求核心逻辑
 const liveRequest = useLiveRequest()
@@ -55,41 +42,14 @@ const liveRequest = useLiveRequest()
 provide('activeSongs', liveRequest.activeSongs)
 
 // 控制歌曲请求功能开关
-async function onUpdateFunctionEnable() {
-  if (accountInfo.value.id) {
-    const oldValue = JSON.parse(JSON.stringify(accountInfo.value.settings.enableFunctions))
-    if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)) {
-      accountInfo.value.settings.enableFunctions = accountInfo.value.settings.enableFunctions.filter(
-        f => f != FunctionTypes.LiveRequest,
-      )
-    } else {
-      accountInfo.value.settings.enableFunctions.push(FunctionTypes.LiveRequest)
-    }
+const { enabled: liveRequestEnabled, toggle: onUpdateFunctionEnable } = useFunctionToggle(FunctionTypes.LiveRequest, {
+  label: '点播功能',
+  onBeforeEnable: () => {
     if (!accountInfo.value.settings.songRequest.orderPrefix) {
       accountInfo.value.settings.songRequest.orderPrefix = liveRequest.defaultPrefix
     }
-    await SaveEnableFunctions(accountInfo.value?.settings.enableFunctions)
-      .then((data) => {
-        if (data.code == 200) {
-          message.success(
-            `已${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}点播功能`,
-          )
-        } else {
-          if (accountInfo.value.id) {
-            accountInfo.value.settings.enableFunctions = oldValue
-          }
-          message.error(
-            `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${data.message}`,
-          )
-        }
-      })
-      .catch((err) => {
-        message.error(
-          `点播功能${accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.LiveRequest) ? '启用' : '禁用'}失败: ${err}`,
-        )
-      })
-  }
-}
+  },
+})
 
 // 更新歌曲请求设置
 async function updateSettings() {
@@ -135,46 +95,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
-    <NCard size="small" bordered>
-      <OpenLivePageHeader
-        title="弹幕点播"
-        description="通过弹幕或 SC 触发点歌/点播，支持 OBS 展示与规则配置"
-      >
-        <template v-if="accountInfo.id" #actions>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                type="primary"
-                size="small"
-                class="open-live-action-btn"
-                :disabled="!accountInfo"
-                @click="showOBSModal = true"
-              >
-                OBS 组件
-              </NButton>
-            </template>
-            {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
-          </NTooltip>
-        </template>
-      </OpenLivePageHeader>
-    </NCard>
-
-    <!-- 顶部功能开关与提示 -->
-    <NCard v-if="accountInfo.id" size="small" bordered>
-      <NFlex align="center" justify="space-between" wrap :size="12">
-        <NFlex align="center" wrap :size="10">
-          <NText>启用弹幕点播功能</NText>
-          <NSwitch
+  <OpenLivePageLayout
+    title="弹幕点播"
+    description="通过弹幕或 SC 触发点歌/点播，支持 OBS 展示与规则配置"
+    :is-logged-in="!!accountInfo.id"
+    show-function-switch
+    switch-label="启用弹幕点播功能"
+    :enabled="liveRequestEnabled"
+    @update:enabled="onUpdateFunctionEnable"
+  >
+    <template v-if="accountInfo.id" #actions>
+      <NTooltip>
+        <template #trigger>
+          <NButton
+            type="primary"
             size="small"
-            :value="accountInfo?.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
-            @update:value="onUpdateFunctionEnable"
-          />
-        </NFlex>
-      </NFlex>
+            class="open-live-action-btn"
+            :disabled="!accountInfo"
+            @click="showOBSModal = true"
+          >
+            OBS 组件
+          </NButton>
+        </template>
+        {{ liveRequest.configCanEdit ? '配置 OBS 样式与参数' : '登陆后才可以使用此功能' }}
+      </NTooltip>
+    </template>
 
+    <template #switch-extra>
       <NAlert
-        v-if="accountInfo.settings.enableFunctions.includes(FunctionTypes.LiveRequest)"
         type="info"
         size="small"
         :bordered="false"
@@ -192,31 +140,12 @@ onUnmounted(() => {
         </NButton>
         ，则需要保持此页面开启才能点播；也不要同时开多个页面（可能导致点播重复）。
       </NAlert>
-    </NCard>
-
-    <NAlert
-      v-else
-      type="warning"
-      size="small"
-      title="你尚未注册并登录 VTsuru.live，大部分规则设置将不可用"
-      :bordered="false"
-    >
-      <NButton
-        tag="a"
-        href="/manage"
-        target="_blank"
-        type="primary"
-        size="small"
-        class="open-live-action-btn"
-      >
-        前往登录或注册
-      </NButton>
-    </NAlert>
+    </template>
 
     <!-- 主体内容 -->
     <NCard size="small" bordered>
       <NTabs
-        v-if="!accountInfo?.id || accountInfo.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest)"
+        v-if="!accountInfo?.id || liveRequestEnabled"
         type="line"
         animated
         size="small"
@@ -281,97 +210,25 @@ onUnmounted(() => {
         </NAlert>
       </template>
     </NCard>
-  </NFlex>
+  </OpenLivePageLayout>
 
-  <NModal
+  <ObsConfigModal
     v-model:show="showOBSModal"
-    title="OBS组件"
-    preset="card"
-    style="width: 900px; max-width: 90vw"
+    v-model:speed="obsScrollSpeedMultiplierRef"
+    v-model:style-type="obsStyleType"
+    obs-path="obs/live-request"
+    :user-id="accountInfo?.id"
+    description="将等待队列以及结果显示在 OBS 中。"
   >
-    <template #header-extra>
-      <NButton
-        tag="a"
-        type="primary"
-        size="small"
-        target="_blank"
-        :href="obsUrl"
-      >
-        浏览
-      </NButton>
-    </template>
-    <NAlert
-      title="这是什么?  "
-      type="info"
-      size="small"
-      :bordered="false"
-    >
-      将等待队列以及结果显示在OBS中
-    </NAlert>
-
-    <NDivider>样式与速度</NDivider>
-    <NFlex align="center">
-      <NRadioGroup
-        v-model:value="obsStyleType"
-        name="obsStyle"
-      >
-        <NFlex>
-          <NRadioButton value="classic">
-            经典黑色风格
-          </NRadioButton>
-          <NRadioButton value="fresh">
-            清新明亮风格
-          </NRadioButton>
-          <NRadioButton value="minimal">
-            极简无背景
-          </NRadioButton>
-        </NFlex>
-      </NRadioGroup>
-      <NInputGroup style="width: 220px">
-        <NInputGroupLabel>滚动速度倍率</NInputGroupLabel>
-        <NInputNumber
-          v-model:value="obsScrollSpeedMultiplierRef"
-          :min="0.5"
-          :max="5"
-          :step="0.1"
-          placeholder="1"
-        />
-      </NInputGroup>
-      <NTooltip>
-        <template #trigger>
-          <NIcon :component="Info24Filled" />
-        </template>
-        数值越大滚动越快 (0.5 ~ 5)
-      </NTooltip>
-    </NFlex>
-
-    <NDivider>预览</NDivider>
-    <div style="height: 500px; width: 280px; position: relative; margin: 0 auto">
+    <template #preview="{ styleType, speed }">
       <LiveRequestOBS
         :id="accountInfo?.id"
-        :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeedMultiplierRef}`"
-        :style="obsStyleType"
-        :speed-multiplier="obsScrollSpeedMultiplierRef"
+        :key="`${accountInfo?.id}-${styleType}-${speed}`"
+        :style="styleType"
+        :speed-multiplier="speed"
       />
-    </div>
-    <br>
-    <NInput
-      :value="obsUrl"
-      readonly
-    />
-    <NDivider />
-    <NCollapse>
-      <NCollapseItem title="使用说明">
-        <NUl>
-          <NLi>在 OBS 来源中添加源, 选择 浏览器</NLi>
-          <NLi>在 URL 栏填入上方链接</NLi>
-          <NLi>根据自己的需要调整宽度和高度 (这里是宽 280px 高 500px)</NLi>
-          <NLi>样式可选"经典黑色风格"或"清新明亮风格"</NLi>
-          <NLi>使用URL中的style参数可以切换不同样式</NLi>
-        </NUl>
-      </NCollapseItem>
-    </NCollapse>
-  </NModal>
+    </template>
+  </ObsConfigModal>
 </template>
 
 <style scoped>

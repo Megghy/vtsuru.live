@@ -31,7 +31,7 @@ const {
   searchKeyword, selectedLanguageFilter, selectedTagFilter, selectedAuthorFilter,
   selectedKeys, currentPage, pageSize, filteredSongs,
   languageOptions, tagOptions, authorOptions,
-  updateSong, deleteSong, deleteBatch, batchUpdate,
+  updateSong, updateSongs, deleteSong, deleteBatch, batchUpdate,
   nextPage, prevPage,
 } = state
 
@@ -177,12 +177,8 @@ async function handleBatchField(
     const ids = new Set(selectedKeys.value)
     const updates = songsInternal.value
       .filter(s => ids.has(s.key))
-      .map(s => ({ key: s.key, merged: [...new Set([...((s as any)[field] ?? []), ...value])] }))
-    for (const { key, merged } of updates) {
-      const song = songsInternal.value.find(s => s.key === key)
-      if (song) await updateSong({ ...song, [field]: merged })
-    }
-    message.success(`已为 ${updates.length} 首歌曲追加${label}`)
+      .map(song => ({ ...song, [field]: [...new Set([...(song[field] as string[]), ...value])] }))
+    await updateSongs(updates, label)
     return
   }
   await batchUpdate(endpoint, field, value, label)

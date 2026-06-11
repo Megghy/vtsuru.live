@@ -7,6 +7,7 @@ import {
 import { computed, inject } from 'vue'
 import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
 import { useLiveRequest } from '@/composables/useLiveRequest'
+import UserBadges from '@/apps/open-live/components/UserBadges.vue'
 
 const props = defineProps<{
   song: SongRequestInfo
@@ -119,29 +120,12 @@ const hasOtherSingSong = computed(() => {
           </NTooltip>
         </template>
 
-        <!-- 粉丝牌 -->
-        <NTag
-          v-if="(song.from === SongRequestFrom.Danmaku || song.from === SongRequestFrom.SC) && song.user?.fans_medal_wearing_status"
+        <!-- 用户粉丝牌 / 舰长 -->
+        <UserBadges
+          v-if="song.from === SongRequestFrom.Danmaku || song.from === SongRequestFrom.SC"
+          :user="song.user"
           size="tiny"
-          round
-          :bordered="false"
-          style="padding: 0 6px 0 0;"
-        >
-          <NTag size="tiny" round :bordered="false" type="info" style="margin-right: 4px;">
-            {{ song.user?.fans_medal_level }}
-          </NTag>
-          <span style="color: var(--n-info-color)">{{ song.user?.fans_medal_name }}</span>
-        </NTag>
-
-        <!-- 舰长 -->
-        <NTag
-          v-if="(song.user?.guard_level ?? 0) > 0"
-          size="tiny"
-          :bordered="false"
-          :color="{ textColor: 'white', color: songRequest.getGuardColor(song.user?.guard_level) }"
-        >
-          {{ song.user?.guard_level === 1 ? '总督' : song.user?.guard_level === 2 ? '提督' : '舰长' }}
-        </NTag>
+        />
 
         <!-- SC/礼物 -->
         <NTag

@@ -6,6 +6,7 @@ import ProviderTile from './ProviderTile.vue'
 import SectionField from './SectionField.vue'
 import LocalForm from './providers/LocalForm.vue'
 import AzureForm from './providers/AzureForm.vue'
+import CosyVoiceForm from './providers/CosyVoiceForm.vue'
 import CustomApiForm from './providers/CustomApiForm.vue'
 import MimoForm from './providers/MimoForm.vue'
 import OpenAIForm from './providers/OpenAIForm.vue'
@@ -14,10 +15,11 @@ const speechService = useSpeechService()
 const { settings } = speechService
 
 const supportsProsody = computed(() =>
-  settings.value.provider === 'local' || settings.value.provider === 'azure'
+  settings.value.provider === 'local' || settings.value.provider === 'azure' || settings.value.provider === 'cosyvoice'
 )
 
 const providers = [
+  { id: 'cosyvoice', title: 'CosyVoice3', desc: '阿里云百炼, 支持中英混合' },
   { id: 'mimo', title: 'MiMo TTS', desc: '小米 MiMo 语音, 支持风格标签' },
   { id: 'azure', title: 'Azure', desc: '本站托管的 Microsoft Azure 语音' },
   { id: 'local', title: '本地语音', desc: '使用浏览器内置 TTS' },
@@ -74,6 +76,7 @@ const providers = [
     <Transition name="fade" mode="out-in">
       <LocalForm v-if="settings.provider === 'local'" />
       <AzureForm v-else-if="settings.provider === 'azure'" />
+      <CosyVoiceForm v-else-if="settings.provider === 'cosyvoice'" />
       <CustomApiForm v-else-if="settings.provider === 'api'" />
       <MimoForm v-else-if="settings.provider === 'mimo'" />
       <OpenAIForm v-else-if="settings.provider === 'openai'" />

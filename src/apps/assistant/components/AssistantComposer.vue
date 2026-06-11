@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Image24Regular, Dismiss12Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
+import { Image24Regular, Dismiss12Regular, Send24Filled, Stop24Filled, Mic24Regular, Mic24Filled } from '@vicons/fluent'
 import { NButton, NIcon, NInput, NTooltip } from 'naive-ui'
-import { nextTick, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 
 const props = defineProps<{ loading: boolean }>()
 const emit = defineEmits<{
@@ -86,6 +86,43 @@ function onPaste(e: ClipboardEvent) {
 function removeImage(index: number) {
   images.value.splice(index, 1)
 }
+
+// 语音输入: Web Speech API, 把识别结果追加到输入框 (浏览器不支持则隐藏按钮)
+const SpeechRecognitionCtor =
+  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+const speechSupported = !!SpeechRecognitionCtor
+const listening = ref(false)
+let recognition: any = null
+/** 本次会话开始前已有的文本, 识别结果在其后追加 */
+let speechBaseText = ''
+
+function toggleSpeech() {
+  if (!speechSupported || props.loading) return
+  if (listening.value) {
+    recognition?.stop()
+    return
+  }
+
+  recognition = new SpeechRecognitionCtor()
+  recognition.lang = 'zh-CN'
+  recognition.continuous = true
+  recognition.interimResults = true
+  speechBaseText = text.value ? text.value.trimEnd() + ' ' : ''
+
+  recognition.onresult = (e: any) => {
+    let transcript = ''
+    for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript
+    text.value = speechBaseText + transcript
+  }
+  recognition.onend = () => { listening.value = false }
+  recognition.onerror = () => { listening.value = false }
+
+  listening.value = true
+  recognition.start()
+}
+
+onBeforeUnmount(() => recognition?.abort())
+
 </script>
 
 <template>
@@ -124,6 +161,23 @@ function removeImage(index: number) {
         hidden
         @change="onPickFiles"
       >
+      <NTooltip v-if="speechSupported">
+        <template #trigger>
+          <NButton
+            class="composer__attach"
+            :class="{ 'composer__mic--on': listening }"
+            quaternary
+            circle
+            :disabled="loading"
+            @click="toggleSpeech"
+          >
+            <template #icon>
+              <NIcon :component="listening ? Mic24Filled : Mic24Regular" />
+            </template>
+          </NButton>
+        </template>
+        {{ listening ? '点击停止语音输入' : '语音输入 (说话转文字)' }}
+      </NTooltip>
       <NInput
         ref="inputRef"
         v-model:value="text"
@@ -168,6 +222,11 @@ function removeImage(index: number) {
 .composer__row { display: flex; gap: 8px; align-items: flex-end; }
 .composer__input { flex: 1; min-width: 0; }
 .composer__btn, .composer__attach { flex: 0 0 auto; }
+.composer__mic--on { color: var(--vtsuru-brand, #23ade5); animation: composer-mic-pulse 1.4s ease-in-out infinite; }
+@keyframes composer-mic-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
 
 .composer__previews { display: flex; flex-wrap: wrap; gap: 8px; }
 .composer__preview {

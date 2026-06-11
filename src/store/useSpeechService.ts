@@ -2,7 +2,13 @@ import EasySpeech from 'easy-speech'
 import { useMessage } from 'naive-ui'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
-import { createVoiceProvider, DEFAULT_MIMO_VOICE, hasVoiceProvider } from '@/apps/open-live/voice-providers'
+import {
+  createVoiceProvider,
+  DEFAULT_COSYVOICE_MODEL,
+  DEFAULT_COSYVOICE_VOICE,
+  DEFAULT_MIMO_VOICE,
+  hasVoiceProvider,
+} from '@/apps/open-live/voice-providers'
 import type { EventModel } from '@/api/api-models'
 import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes } from '@/api/api-models'
@@ -131,6 +137,13 @@ const DEFAULT_SETTINGS: SpeechSettings = {
     },
     mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
     openai: { baseUrl: 'https://api.openai.com', apiKey: '', model: 'tts-1', voice: 'alloy', format: 'mp3' },
+    cosyvoice: {
+      apiKey: '',
+      model: DEFAULT_COSYVOICE_MODEL,
+      voice: DEFAULT_COSYVOICE_VOICE,
+      customVoices: [],
+      languageHint: 'zh',
+    },
   },
 }
 
@@ -248,6 +261,7 @@ function migrateLegacySettings(raw: any): SpeechSettings {
       azure: { azureVoice: raw.azureVoice ?? 'zh-CN-XiaoxiaoNeural', azureLanguage: raw.azureLanguage ?? 'zh-CN' },
       api: { voiceAPI: raw.voiceAPI ?? DEFAULT_SETTINGS.providers.api.voiceAPI, voiceAPISchemeType: raw.voiceAPISchemeType ?? 'https', useAPIDirectly: raw.useAPIDirectly ?? false, splitText: raw.splitText ?? false },
       mimo: { mimoVoice: DEFAULT_MIMO_VOICE, mimoStyleTag: '', mimoApiKey: '' },
+      cosyvoice: { ...DEFAULT_SETTINGS.providers.cosyvoice },
     },
     enabledEvents: raw.enabledEvents ?? { ...DEFAULT_SETTINGS.enabledEvents },
     timedBroadcast: raw.timedBroadcast ?? { ...DEFAULT_SETTINGS.timedBroadcast },
@@ -294,6 +308,15 @@ function ensureProviderDefaults(settings: SpeechSettings) {
     settings.providers.openai.voice ??= DEFAULT_SETTINGS.providers.openai.voice
     settings.providers.openai.format ??= DEFAULT_SETTINGS.providers.openai.format
     settings.providers.openai.apiKey ??= ''
+  }
+  if (!settings.providers.cosyvoice) {
+    settings.providers.cosyvoice = { ...DEFAULT_SETTINGS.providers.cosyvoice }
+  } else {
+    settings.providers.cosyvoice.apiKey ??= ''
+    settings.providers.cosyvoice.model ??= DEFAULT_COSYVOICE_MODEL
+    settings.providers.cosyvoice.voice ??= DEFAULT_COSYVOICE_VOICE
+    settings.providers.cosyvoice.customVoices ??= []
+    settings.providers.cosyvoice.languageHint ??= 'zh'
   }
 
   // 新增字段迁移

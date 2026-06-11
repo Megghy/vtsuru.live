@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Add16Regular, Edit16Regular, Delete16Regular } from '@vicons/fluent'
+import { Add16Regular, Edit16Regular, Delete16Regular, Search16Regular } from '@vicons/fluent'
 import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSpin, useDialog } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAssistantStore } from '../store/useAssistantStore'
 
 const store = useAssistantStore()
@@ -9,6 +9,14 @@ const dialog = useDialog()
 
 const editingId = ref<number | null>(null)
 const editingTitle = ref('')
+/** 会话标题搜索关键词 (本地过滤已加载的会话) */
+const keyword = ref('')
+
+const filteredConversations = computed(() => {
+  const kw = keyword.value.trim().toLowerCase()
+  if (!kw) return store.conversations
+  return store.conversations.filter(c => c.title.toLowerCase().includes(kw))
+})
 
 function startRename(id: number, title: string) {
   editingId.value = id
@@ -32,6 +40,15 @@ function confirmDelete(id: number, title: string) {
     onPositiveClick: () => store.deleteConversationById(id),
   })
 }
+
+/** 触底时加载下一页 (搜索状态下不自动加载, 避免与本地过滤混淆) */
+function onScroll(e: Event) {
+  if (keyword.value.trim()) return
+  const el = e.target as HTMLElement
+  if (el.scrollHeight - el.scrollTop - el.clientHeight <= 40) {
+    void store.loadMoreConversations()
+  }
+}
 </script>
 
 <template>
@@ -43,12 +60,24 @@ function confirmDelete(id: number, title: string) {
       新对话
     </NButton>
 
-    <NScrollbar class="conv-list__scroll">
+    <NInput
+      v-model:value="keyword"
+      size="small"
+      clearable
+      placeholder="搜索会话"
+      class="conv-list__search"
+    >
+      <template #prefix>
+        <NIcon :component="Search16Regular" />
+      </template>
+    </NInput>
+
+    <NScrollbar class="conv-list__scroll" @scroll="onScroll">
       <NSpin v-if="store.conversationsLoading && !store.conversations.length" size="small" class="conv-list__spin" />
-      <NEmpty v-else-if="!store.conversations.length" size="small" description="暂无历史" class="conv-list__empty" />
+      <NEmpty v-else-if="!filteredConversations.length" size="small" :description="keyword.trim() ? '无匹配会话' : '暂无历史'" class="conv-list__empty" />
 
       <div
-        v-for="conv in store.conversations"
+        v-for="conv in filteredConversations"
         :key="conv.id"
         class="conv-item"
         :class="{ 'conv-item--active': conv.id === store.currentConversationId }"
@@ -79,6 +108,8 @@ function confirmDelete(id: number, title: string) {
           </span>
         </template>
       </div>
+
+      <NSpin v-if="store.conversationsLoadingMore" size="small" class="conv-list__more-spin" />
     </NScrollbar>
   </div>
 </template>
@@ -86,8 +117,10 @@ function confirmDelete(id: number, title: string) {
 <style scoped>
 .conv-list { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 8px; }
 .conv-list__new { flex: 0 0 auto; }
+.conv-list__search { flex: 0 0 auto; }
 .conv-list__scroll { flex: 1 1 0; min-height: 0; }
 .conv-list__spin, .conv-list__empty { margin-top: 24px; }
+.conv-list__more-spin { display: flex; justify-content: center; padding: 8px 0; }
 .conv-item {
   --conv-item-bg: transparent;
   --conv-item-text: var(--vtsuru-fg, var(--n-text-color));

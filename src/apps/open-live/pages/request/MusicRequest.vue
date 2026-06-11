@@ -3,36 +3,28 @@ import type {
   SelectOption,
 } from 'naive-ui'
 import type { DanmakuUserInfo, EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
-import type { MusicRequestSettings } from '@/store/useMusicRequest'
+import type { Music, MusicRequestSettings, WaitMusicInfo } from '@/store/useMusicRequest'
 import { List } from 'linqts'
+import { Copy24Regular, Search24Regular } from '@vicons/fluent'
 import {
-  NAlert, NButton, NCheckbox, NCollapse, NCollapseItem, NDivider, NEmpty, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NLi, NList, NListItem, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NTabPane, NTabs, NTag, NText, NTooltip, NTransfer, NUl, NVirtualList, useMessage } from 'naive-ui';
+  NAlert, NButton, NCheckbox, NDivider, NEmpty, NIcon, NInput, NInputGroup, NInputGroupLabel, NInputNumber, NList, NListItem, NModal, NPopconfirm, NRadioButton, NRadioGroup, NSelect, NFlex, NTabPane, NTabs, NTag, NText, NTooltip, NTransfer, NVirtualList, useMessage } from 'naive-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { SongFrom } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { CURRENT_HOST, MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/config'
+import { MUSIC_REQUEST_API_URL, SONG_API_URL } from '@/shared/config'
+import { copyToClipboard } from '@/shared/utils'
+import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 import { useOBSNotification } from '@/store/useOBSNotification'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
-import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
+import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
+import ObsConfigModal from '@/apps/open-live/components/ObsConfigModal.vue'
+import OpenLivePageLayout from '@/apps/open-live/components/OpenLivePageLayout.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
-
-interface Music {
-  id: number
-  title: string
-  artist: string
-  src: string
-  pic: string
-  lrc: string
-}
-interface WaitMusicInfo {
-  from: DanmakuUserInfo
-  music: SongsInfo
-}
 
 defineProps<{
   roomInfo?: OpenLiveInfo
@@ -42,11 +34,11 @@ defineProps<{
 
 const route = useRoute()
 
+const musicRquestStore = useMusicRequestProvider()
 const settings = computed(() => {
   return musicRquestStore.settings
 })
 const cooldown = usePersistedStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
-const musicRquestStore = useMusicRequestProvider()
 const client = await useDanmakuClient().initOpenlive()
 
 const deviceList = ref<SelectOption[]>([])
@@ -64,37 +56,10 @@ const isLoading = ref(false)
 
 const showNeteaseModal = ref(false)
 const showOBSModal = ref(false)
-const obsUrl = computed(() => {
-  const params = new URLSearchParams({
-    id: String(accountInfo.value?.id ?? 0),
-  })
-  if (accountInfo.value?.token) {
-    params.set('token', accountInfo.value.token)
-  }
-  return `${CURRENT_HOST}obs/music-request?${params.toString()}`
-})
+const obsScrollSpeed = ref(1.0)
+const obsStyleType = ref<'classic' | 'fresh' | 'minimal'>('classic')
 const neteaseIdInput = ref('')
-const neteaseSongListId = computed(() => {
-  try {
-    const url = new URL(neteaseIdInput.value)
-    console.log(url)
-    if (url.host == 'music.163.com') {
-      const regex = /id=(\d+)/
-
-      // 使用exec方法在链接中查找匹配项
-      const match = regex.exec(neteaseIdInput.value)
-
-      // 如果找到了匹配项，那么match[1]就是分组1的值，也就是id的值
-      if (match) {
-        return Number(match[1])
-      }
-    }
-  } catch { }
-  try {
-    return Number(neteaseIdInput.value)
-  } catch { }
-  return null
-})
+const neteaseSongListId = computed(() => parseNeteaseSongListId(neteaseIdInput.value))
 const neteaseSongs = ref<SongsInfo[]>([])
 const neteaseSongsOptions = computed(() => {
   return neteaseSongs.value.map(s => ({
@@ -104,6 +69,62 @@ const neteaseSongsOptions = computed(() => {
   }))
 })
 const selectedNeteaseSongs = ref<string[]>([])
+
+// 当前点歌搜索过滤 (按歌名/点歌人)
+const waitingFilter = ref('')
+
+// 点歌冷却剩余可视化: 记录会话内 uid->name, 配合 nowTick 每秒刷新
+const cooldownNames = ref<Record<number, string>>({})
+const nowTick = ref(Date.now())
+let cooldownTimer: number | undefined
+
+const activeCooldowns = computed(() => {
+  const cd = settings.value.orderCooldown
+  if (!cd) {
+    return []
+  }
+  const cooldownMs = cd * 1000
+  return Object.entries(cooldown.value)
+    .map(([uid, last]) => {
+      const remain = Math.ceil((last + cooldownMs - nowTick.value) / 1000)
+      return {
+        uid: Number(uid),
+        name: cooldownNames.value[Number(uid)] ?? `UID ${uid}`,
+        remain,
+        total: cd,
+      }
+    })
+    .filter(c => c.remain > 0)
+    .sort((a, b) => a.remain - b.remain)
+})
+const filteredWaitingMusics = computed(() => {
+  const keyword = waitingFilter.value.trim().toLowerCase()
+  if (!keyword) {
+    return musicRquestStore.waitingMusics
+  }
+  return musicRquestStore.waitingMusics.filter(item =>
+    item.music.name?.toLowerCase().includes(keyword)
+    || item.from?.name?.toLowerCase().includes(keyword),
+  )
+})
+
+function copyWaitingList() {
+  const text = formatListForCopy(
+    musicRquestStore.waitingMusics,
+    item => item.music.name,
+    item => item.from?.name,
+  )
+  if (!text) {
+    return
+  }
+  copyToClipboard(text)
+}
+
+function formatHistoryTime(time: number) {
+  const d = new Date(time)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 async function get() {
   try {
@@ -286,10 +307,6 @@ async function downloadConfig() {
     })
 }
 function startListen() {
-  /* if (accountInfo.value?.settings.enableFunctions.includes(FunctionTypes.SongRequest)) {
-    message.warning('使用这个点歌则需要先关闭歌势点歌 (SongRequest)')
-    return
-  } */
   listening.value = true
   message.success('开始监听')
 }
@@ -326,6 +343,7 @@ async function onGetEvent(data: EventModel) {
     return
   }
   cooldown.value[data.uid] = Date.now()
+  cooldownNames.value[data.uid] = data.uname
   const music = {
     from: {
       name: data.uname,
@@ -342,6 +360,14 @@ async function onGetEvent(data: EventModel) {
 }
 function checkMessage(msg: string) {
   return msg.trim().toLowerCase().startsWith(settings.value.orderPrefix.trimStart())
+}
+
+/** 从网易云歌单链接或纯数字中解析歌单 ID, 解析不出返回 null */
+function parseNeteaseSongListId(input: string): number | null {
+  const fromUrl = /music\.163\.com.*?[?&]id=(\d+)/.exec(input)
+  if (fromUrl) return Number(fromUrl[1])
+  const asNumber = Number(input.trim())
+  return Number.isNaN(asNumber) || !input.trim() ? null : asNumber
 }
 
 function songToMusic(s: SongsInfo) {
@@ -403,136 +429,232 @@ onMounted(async () => {
     }
   }
   timer = setInterval(updateWaiting, 2000)
+  cooldownTimer = setInterval(() => {
+    nowTick.value = Date.now()
+  }, 1000)
 })
 onUnmounted(() => {
   client.offEvent('danmaku', onGetEvent)
   if (timer) {
     clearInterval(timer)
   }
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer)
+  }
 })
 </script>
 
 <template>
-  <NCard size="small" bordered :segmented="{ content: true }">
-    <OpenLivePageHeader
-      title="点歌"
-      description="监听弹幕点歌、管理闲置歌单与黑名单。"
-    >
-      <template #actions>
-        <NFlex align="center" :wrap="true" :size="10">
-          <NButton
-            :type="listening ? 'error' : 'success'"
-            data-umami-event="Use Music Request"
-            :data-umami-event-uid="accountInfo?.biliId"
-            size="small"
-            @click="listening ? stopListen() : startListen()"
-          >
-            {{ listening ? '停止监听' : '开始监听' }}
-          </NButton>
+  <OpenLivePageLayout
+    title="弹幕点歌"
+    description="监听弹幕点歌、管理闲置歌单与黑名单。"
+    :is-logged-in="true"
+  >
+    <template #actions>
+      <NButton
+        :type="listening ? 'error' : 'success'"
+        data-umami-event="Use Music Request"
+        :data-umami-event-uid="accountInfo?.biliId"
+        size="small"
+        @click="listening ? stopListen() : startListen()"
+      >
+        {{ listening ? '停止监听' : '开始监听' }}
+      </NButton>
+      <NTooltip>
+        <template #trigger>
           <NButton
             type="info"
             size="small"
             class="open-live-action-btn"
             @click="showOBSModal = true"
           >
-            OBS组件
+            OBS 组件
           </NButton>
+        </template>
+        配置 OBS 样式与滚动速度
+      </NTooltip>
+      <NButton
+        type="primary"
+        secondary
+        :disabled="!accountInfo"
+        size="small"
+        class="open-live-action-btn"
+        @click="uploadConfig"
+      >
+        保存配置
+      </NButton>
+      <NPopconfirm @positive-click="downloadConfig">
+        <template #trigger>
           <NButton
             type="primary"
             secondary
             :disabled="!accountInfo"
             size="small"
             class="open-live-action-btn"
-            @click="uploadConfig"
           >
-            保存配置
+            获取配置
           </NButton>
-          <NPopconfirm @positive-click="downloadConfig">
-            <template #trigger>
-              <NButton
-                type="primary"
-                secondary
-                :disabled="!accountInfo"
-                size="small"
-                class="open-live-action-btn"
-              >
-                获取配置
-              </NButton>
-            </template>
-            这将覆盖当前设置，确定？
-          </NPopconfirm>
-        </NFlex>
-      </template>
-    </OpenLivePageHeader>
+        </template>
+        这将覆盖当前设置，确定？
+      </NPopconfirm>
+    </template>
 
     <NAlert type="info" size="small" :bordered="false">
       搜索时会优先选择非VIP歌曲，所以点到付费曲目时可能会是猴版或者各种奇怪的歌。
     </NAlert>
-  </NCard>
 
-  <NCard size="small" bordered>
-    <NTabs type="line" animated size="small">
-      <NTabPane
-        name="queue"
-        tab="当前点歌"
-      >
-        <NEmpty v-if="musicRquestStore.waitingMusics.length === 0" description="暂无点歌" />
-        <NList
-          v-else
-          size="small"
-          bordered
+    <NCard size="small" bordered>
+      <NTabs type="line" animated size="small">
+        <NTabPane
+          name="queue"
+          tab="当前点歌"
         >
-          <NListItem
-            v-for="item in musicRquestStore.waitingMusics"
-            :key="item.music.name"
+          <NFlex
+            v-if="musicRquestStore.waitingMusics.length > 0"
+            align="center"
+            justify="space-between"
+            wrap
+            :size="10"
+            style="margin-bottom: 10px;"
           >
-            <NFlex align="center" :wrap="true" :size="8">
-              <NButton
-                type="primary"
-                secondary
+            <NInputGroup style="max-width: 260px;">
+              <NInput
+                v-model:value="waitingFilter"
+                placeholder="搜索歌名 / 点歌人"
+                clearable
                 size="small"
-                @click="musicRquestStore.playMusic(item.music)"
               >
-                播放
-              </NButton>
-              <NButton
-                type="error"
-                secondary
-                size="small"
-                @click="musicRquestStore.waitingMusics.splice(musicRquestStore.waitingMusics.indexOf(item), 1)"
-              >
-                取消
-              </NButton>
-              <NButton
-                type="warning"
-                secondary
-                size="small"
-                @click="blockMusic(item.music)"
-              >
-                拉黑
-              </NButton>
-              <span>
-                <NTag
-                  v-if="item.music.from === SongFrom.Netease"
-                  type="success"
-                  size="small"
-                > 网易</NTag>
-                <NTag
-                  v-else-if="item.music.from === SongFrom.Kugou"
-                  type="success"
-                  size="small"
-                > 酷狗</NTag>
-              </span>
-              <NText>
-                {{ item.from.name }}
+                <template #prefix>
+                  <NIcon :component="Search24Regular" />
+                </template>
+              </NInput>
+            </NInputGroup>
+            <NTooltip>
+              <template #trigger>
+                <NButton size="small" ghost @click="copyWaitingList">
+                  <template #icon>
+                    <NIcon :component="Copy24Regular" />
+                  </template>
+                  复制名单
+                </NButton>
+              </template>
+              复制当前点歌为文本名单
+            </NTooltip>
+          </NFlex>
+
+          <NCard
+            v-if="activeCooldowns.length > 0"
+            size="small"
+            embedded
+            :bordered="false"
+            content-style="padding: 8px 12px;"
+            style="margin-bottom: 10px;"
+          >
+            <NFlex align="center" :size="6" wrap>
+              <NText depth="3" style="font-size: 12px; margin-right: 4px;">
+                冷却中:
               </NText>
-              <NText depth="3">
-                {{ item.music.name }} - {{ item.music.author?.join('/') }}
-              </NText>
+              <NTooltip v-for="c in activeCooldowns" :key="c.uid">
+                <template #trigger>
+                  <NTag size="small" type="warning" :bordered="false" round>
+                    {{ c.name }} · {{ c.remain }}s
+                  </NTag>
+                </template>
+                {{ c.name }} 冷却剩余 {{ c.remain }} 秒 (共 {{ c.total }} 秒)
+              </NTooltip>
             </NFlex>
-          </NListItem>
-        </NList>
-      </NTabPane>
+          </NCard>
+
+          <NEmpty
+            v-if="musicRquestStore.waitingMusics.length === 0"
+            description="暂无点歌"
+            style="margin-top: 40px"
+          />
+          <NEmpty
+            v-else-if="filteredWaitingMusics.length === 0"
+            description="没有匹配的点歌"
+            style="margin-top: 40px"
+          />
+          <NFlex v-else vertical :size="0">
+            <template
+              v-for="item in filteredWaitingMusics"
+              :key="item.music.name"
+            >
+              <MusicRequestItem
+                :music="item.music"
+                :from-name="item.from?.name ?? '主播添加'"
+                :index="musicRquestStore.waitingMusics.indexOf(item) + 1"
+                @play="musicRquestStore.playMusic(item.music)"
+                @cancel="musicRquestStore.cancelWaiting(item)"
+                @block="blockMusic(item.music)"
+              />
+              <NDivider style="margin: 0" />
+            </template>
+          </NFlex>
+        </NTabPane>
+
+        <NTabPane
+          name="history"
+          tab="历史记录"
+        >
+          <NFlex
+            v-if="musicRquestStore.history.length > 0"
+            align="center"
+            justify="space-between"
+            wrap
+            :size="10"
+            style="margin-bottom: 10px;"
+          >
+            <NText depth="3" style="font-size: 12px;">
+              本地记录最近 {{ musicRquestStore.history.length }} 条 (已播放 / 已取消)
+            </NText>
+            <NPopconfirm @positive-click="musicRquestStore.clearHistory">
+              <template #trigger>
+                <NButton size="small" ghost type="error">
+                  清空历史
+                </NButton>
+              </template>
+              确定清空点歌历史吗?
+            </NPopconfirm>
+          </NFlex>
+
+          <NEmpty
+            v-if="musicRquestStore.history.length === 0"
+            description="暂无点歌历史"
+            style="margin-top: 40px"
+          />
+          <NFlex v-else vertical :size="0">
+            <template
+              v-for="(entry, index) in musicRquestStore.history"
+              :key="`${entry.time}-${index}`"
+            >
+              <NFlex align="center" justify="space-between" :wrap="false" style="padding: 6px 4px;">
+                <NFlex align="center" :size="8" :wrap="false" style="min-width: 0;">
+                  <NTag
+                    size="tiny"
+                    :type="entry.status === 'played' ? 'success' : 'error'"
+                    :bordered="false"
+                  >
+                    {{ entry.status === 'played' ? '已播放' : '已取消' }}
+                  </NTag>
+                  <NText style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ entry.music.name }}
+                  </NText>
+                  <NText depth="3" style="font-size: 12px; white-space: nowrap;">
+                    {{ entry.music.author?.join('/') }}
+                  </NText>
+                  <NText depth="2" style="font-size: 12px; white-space: nowrap;">
+                    点歌人: {{ entry.from?.name ?? '主播添加' }}
+                  </NText>
+                </NFlex>
+                <NText depth="3" style="font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+                  {{ formatHistoryTime(entry.time) }}
+                </NText>
+              </NFlex>
+              <NDivider style="margin: 0" />
+            </template>
+          </NFlex>
+        </NTabPane>
 
       <NTabPane
         name="list"
@@ -695,6 +817,8 @@ onUnmounted(() => {
       </NTabPane>
     </NTabs>
   </NCard>
+  </OpenLivePageLayout>
+
   <NModal
     v-model:show="showNeteaseModal"
     preset="card"
@@ -749,39 +873,23 @@ onUnmounted(() => {
       </NButton>
     </template>
   </NModal>
-  <NModal
+  <ObsConfigModal
     v-model:show="showOBSModal"
-    title="OBS组件"
-    preset="card"
-    style="width: 900px; max-width: 90vw"
+    v-model:speed="obsScrollSpeed"
+    v-model:style-type="obsStyleType"
+    obs-path="obs/music-request"
+    :user-id="accountInfo?.id"
+    description="将点歌队列显示在 OBS 中，并可切换不同视觉风格与滚动速度。"
   >
-    <NFlex vertical :size="12">
-      <NAlert title="这是什么？" type="info" size="small" :bordered="false">
-        将等待队列以及结果显示在OBS中。
-      </NAlert>
-      <NDivider style="margin: 0">
-        浏览
-      </NDivider>
-      <div class="music-request__obs-preview">
-        <MusicRequestOBS :id="accountInfo?.id" />
-      </div>
-      <NInput
-        :value="obsUrl"
-        size="small"
-        readonly
+    <template #preview="{ styleType, speed }">
+      <MusicRequestOBS
+        :id="accountInfo?.id"
+        :key="`${accountInfo?.id}-${styleType}-${speed}`"
+        :style="styleType"
+        :speed-multiplier="speed"
       />
-      <NCollapse>
-        <NCollapseItem title="使用说明">
-          <NUl>
-            <NLi>在 OBS 来源中添加源，选择「浏览器」。</NLi>
-            <NLi>在 URL 栏填入上方链接。</NLi>
-            <NLi>根据自己的需要调整宽度和高度（这里是宽 280px 高 500px）。</NLi>
-            <NLi>完成。</NLi>
-          </NUl>
-        </NCollapseItem>
-      </NCollapse>
-    </NFlex>
-  </NModal>
+    </template>
+  </ObsConfigModal>
 </template>
 
 <style>
@@ -813,13 +921,6 @@ onUnmounted(() => {
 .music-request__field--device {
   min-width: 220px;
   max-width: 360px;
-}
-
-.music-request__obs-preview {
-  height: 500px;
-  width: 280px;
-  position: relative;
-  margin: 0 auto;
 }
 
 .aplayer-list {
