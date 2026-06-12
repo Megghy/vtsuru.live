@@ -211,7 +211,7 @@ const grouped = computed(() => {
 </script>
 
 <template>
-  <component :is="props.embedded ? 'div' : NCard" v-bind="props.embedded ? {} : { size: 'small', title: '表情与动作' }">
+  <component :is="props.embedded ? 'div' : NCard" v-bind="props.embedded ? {} : { size: 'small', bordered: true, title: '表情与动作' }">
     <NFlex vertical :size="12">
       <NFlex v-if="isSearchVisible || (isModelNameVisible && modelName)" justify="space-between" align="center" :wrap="true" :size="8">
         <NFlex v-if="isSearchVisible" align="center" :wrap="true" :size="8">
@@ -317,7 +317,7 @@ const grouped = computed(() => {
         ID: {{ editForm.hotkeyID }}
       </NText>
 
-      <NFlex align="center" :wrap="true" :size="10">
+      <NFlex align="center" :wrap="true" :size="12">
         <NSwitch v-model:value="editForm.favorite" size="small">
           <template #checked>
             收藏
@@ -339,7 +339,7 @@ const grouped = computed(() => {
         <NColorPicker v-model:value="editForm.color" :modes="['hex']" :show-alpha="false" style="width: 180px" />
       </NFlex>
 
-      <NFlex align="center" :wrap="true" :size="10">
+      <NFlex align="center" :wrap="true" :size="12">
         <NButton size="small" tag="label">
           选择图标
           <input type="file" accept="image/*" style="display:none" @change="onIconFileChange">

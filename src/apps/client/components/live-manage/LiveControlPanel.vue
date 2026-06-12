@@ -16,20 +16,21 @@ const obsStore = c.obsStore
   >
     <NFlex
       vertical
-      gap="large"
+      :size="16"
     >
       <!-- 直播状态和操作 -->
       <div>
         <NFlex
-          gap="medium"
+          :size="12"
           align="center"
-          style="margin-bottom: 1rem;"
+          wrap
+          style="margin-bottom: 16px;"
         >
           <NTag
             :type="c.isLiving.value ? 'success' : 'default'"
             size="large"
             :bordered="false"
-            style="padding: 0.5rem 1rem;"
+            style="padding: 8px 16px;"
           >
             <template #icon>
               <div
@@ -38,7 +39,7 @@ const obsStore = c.obsStore
                   height: 8px;
                   border-radius: 50%;
                   background: currentColor;
-                  margin-right: 0.5rem;
+                  margin-right: 8px;
                 "
               />
             </template>
@@ -120,13 +121,13 @@ const obsStore = c.obsStore
       <div>
         <NText
           strong
-          style="font-size: 16px; display: block; margin-bottom: 1rem;"
+          style="font-size: 16px; display: block; margin-bottom: 12px;"
         >
           直播间设置
         </NText>
         <NFlex
           vertical
-          gap="medium"
+          :size="12"
         >
           <div>
             <NText strong>
@@ -139,7 +140,7 @@ const obsStore = c.obsStore
               maxlength="40"
               show-count
               size="large"
-              style="margin-top: 0.5rem;"
+              style="margin-top: 8px;"
               @update:value="c.markTitleEdited"
             />
           </div>
@@ -156,7 +157,7 @@ const obsStore = c.obsStore
               filterable
               check-strategy="child"
               size="large"
-              style="margin-top: 0.5rem;"
+              style="margin-top: 8px;"
               @update:value="c.markAreaEdited"
             />
           </div>
@@ -177,11 +178,11 @@ const obsStore = c.obsStore
           maxlength="60"
           show-count
           size="large"
-          style="margin-top: 0.5rem;"
+          style="margin-top: 8px;"
           :autosize="{ minRows: 2, maxRows: 4 }"
         />
         <NButton
-          style="margin-top: 0.5rem;"
+          style="margin-top: 8px;"
           type="primary"
           :loading="c.isUpdatingAnnouncement.value"
           @click="c.handleUpdateAnnouncement"

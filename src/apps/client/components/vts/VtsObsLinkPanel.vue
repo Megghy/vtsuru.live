@@ -61,9 +61,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard size="small" title="OBS 联动">
-    <NFlex vertical :size="10">
-      <NFlex align="center" :wrap="true" :size="10">
+  <NCard size="small" bordered title="OBS 联动">
+    <NFlex vertical :size="12">
+      <NFlex align="center" :wrap="true" :size="12">
         <NSwitch :value="vts.obsLinkConfig.enabled" @update:value="setEnabled">
           <template #checked>
             已启用
@@ -97,8 +97,8 @@ onUnmounted(() => {
       </NText>
 
       <NFlex v-else vertical :size="8">
-        <NFlex v-for="scene in obs.obsScenes" :key="scene" align="center" justify="space-between" :wrap="true" :size="10">
-          <NFlex align="center" :wrap="true" :size="10">
+        <NFlex v-for="scene in obs.obsScenes" :key="scene" align="center" justify="space-between" :wrap="true" :size="12">
+          <NFlex align="center" :wrap="true" :size="12">
             <NText strong style="min-width: 120px">
               {{ scene }}
             </NText>

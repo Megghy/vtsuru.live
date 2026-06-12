@@ -156,7 +156,7 @@ function handleTitleClick() {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex vertical :size="12" class="client-readable">
     <NCard size="small" bordered>
       <ClientPageHeader>
         <template #title>

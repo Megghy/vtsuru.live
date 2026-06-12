@@ -4,12 +4,12 @@ import type { MenuOption } from 'naive-ui'
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled } from '@vicons/fluent'
+import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled, VideoPerson24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
 import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NFlex, NSpin, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue' // 引入 ref, h, computed
 
-import { RouterLink, RouterView, useRouter } from 'vue-router' // 引入 Vue Router 组件
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 组件
 // 引入自定义 API 和状态管理
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
 
@@ -28,12 +28,15 @@ import '@/apps/client/styles/client-page.css'
 
 // 获取 webfetcher 状态管理的实例
 const router = useRouter()
+const route = useRoute()
 const webfetcher = useWebFetcher()
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
 const biliCookie = useBiliCookie()
 // 用于存储用户输入的 Token
 const token = ref('')
+// 侧边栏折叠状态
+const siderCollapsed = ref(false)
 
 const cookieStatusType = computed(() => {
   if (!biliCookie.hasBiliCookie) {
@@ -52,6 +55,20 @@ const cookieStatusText = computed(() => {
 function goCookieManagement() {
   router.push({ name: 'client-fetcher' })
 }
+
+// 当前路由对应的菜单高亮 key (修复切换页面后菜单不高亮的问题)
+const routeNameToMenuKey: Record<string, string> = {
+  'client-index': 'go-back-home',
+  'client-fetcher': 'fetcher',
+  'client-live-manage': 'live-manage',
+  'client-danmaku-window-manage': 'danmaku-window-manage',
+  'client-gift-window-manage': 'gift-window-manage',
+  'client-auto-action-manage': 'danmaku-auto-action-manage',
+  'client-vts': 'vts',
+  'client-read-danmaku': 'read-danmaku',
+  'client-settings': 'settings',
+}
+const activeMenuKey = computed(() => routeNameToMenuKey[route.name as string] ?? '')
 
 // --- 计算属性 ---
 // (这里没有显式的计算属性，但 isLoggedIn 本身可能是一个来自 account 模块的计算属性)
@@ -161,7 +178,7 @@ const menuOptions = computed(() => {
       label: () =>
         h(RouterLink, { to: { name: 'client-vts' } }, () => 'VTS 控制'),
       key: 'vts',
-      icon: () => h(FlashAuto24Filled),
+      icon: () => h(VideoPerson24Filled),
     },
     {
       label: () =>
@@ -276,13 +293,20 @@ onMounted(() => {
     @vue:mounted="initAll(true)"
   >
     <NLayoutSider
-      width="200"
       bordered
+      collapse-mode="width"
+      :collapsed="siderCollapsed"
+      :collapsed-width="64"
+      :width="200"
+      show-trigger="bar"
       class="main-layout-sider"
+      @collapse="siderCollapsed = true"
+      @expand="siderCollapsed = false"
     >
       <div class="sider-content">
-        <div class="sider-header">
+        <div class="sider-header" :class="{ 'sider-header--collapsed': siderCollapsed }">
           <NText
+            v-if="!siderCollapsed"
             tag="div"
             class="app-title"
           >
@@ -292,6 +316,7 @@ onMounted(() => {
             <template #trigger>
               <NButton
                 quaternary
+                circle
                 class="fetcher-status-button"
                 :type="webfetcher.state === 'connected' ? 'success' : 'error'"
               >
@@ -319,10 +344,16 @@ onMounted(() => {
 
         <NMenu
           :options="menuOptions"
-          default-value="go-back-home"
+          :value="activeMenuKey"
+          :collapsed="siderCollapsed"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
           class="sider-menu"
         />
-        <div class="cookie-status-card">
+        <div
+          v-if="!siderCollapsed"
+          class="cookie-status-card"
+        >
           <div class="cookie-status-header">
             <NText
               strong
@@ -404,8 +435,8 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* 计算高度，减去 WindowBar 的高度 (假设为 30px) */
-    height: calc(100vh - 30px);
+    /* 计算高度，减去 WindowBar 的高度 */
+    height: calc(100vh - var(--client-titlebar-height));
     background-color: var(--n-color);
     /* 可选：添加背景色 */
   }
@@ -438,7 +469,7 @@ onMounted(() => {
   .login-subtitle {
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: rgb(107, 114, 128);
+    color: var(--n-text-color-3);
     text-align: center;
     /* 居中副标题 */
   }
@@ -469,8 +500,8 @@ onMounted(() => {
 
   /* 主布局样式 */
   .main-layout {
-    /* 计算高度，减去 WindowBar 的高度 (假设为 30px) */
-    height: calc(100vh - 30px);
+    /* 计算高度，减去 WindowBar 的高度 */
+    height: calc(100vh - var(--client-titlebar-height));
   }
 
   /* 侧边栏内容容器 (用于可能的滚动或内边距) */
@@ -493,6 +524,12 @@ onMounted(() => {
     /* 让标题和图标分开 */
     flex-shrink: 0;
     /* 防止在 flex 布局中被压缩 */
+  }
+
+  /* 折叠时头部仅余状态按钮, 居中显示 */
+  .sider-header--collapsed {
+    padding: 0;
+    justify-content: center;
   }
 
   /* 应用标题样式 */
@@ -564,14 +601,14 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: calc(100vh - 30px - 2rem);
+    height: calc(100vh - var(--client-titlebar-height) - 2rem);
     /* 大致计算高度 */
     color: var(--n-text-color-3);
   }
 
   .init-overlay {
     position: fixed;
-    top: 30px;
+    top: var(--client-titlebar-height);
     left: 0;
     right: 0;
     bottom: 0;

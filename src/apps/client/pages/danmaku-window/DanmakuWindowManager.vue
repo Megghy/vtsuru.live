@@ -57,7 +57,7 @@ function applyPreset(preset: keyof typeof presets) {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex vertical :size="12" class="client-readable">
     <NCard size="small" bordered>
       <ClientPageHeader
         title="弹幕窗口管理"
@@ -80,7 +80,7 @@ function applyPreset(preset: keyof typeof presets) {
         <!-- 布局与位置 -->
         <NTabPane name="layout" tab="布局">
           <NFlex vertical :size="12">
-            <NCard title="窗口尺寸与位置" size="small" bordered>
+            <NCard title="窗口尺寸与位置" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="宽度" label-placement="left">
@@ -129,7 +129,7 @@ function applyPreset(preset: keyof typeof presets) {
               </NFlex>
             </NCard>
 
-            <NCard title="窗口行为" size="small" bordered>
+            <NCard title="窗口行为" size="small" embedded>
               <NFlex vertical :size="4">
                 <LabelItem label="总是置顶">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.alwaysOnTop" />
@@ -145,7 +145,7 @@ function applyPreset(preset: keyof typeof presets) {
         <!-- 外观 -->
         <NTabPane name="appearance" tab="外观">
           <NFlex vertical :size="12">
-            <NCard title="颜色" size="small" bordered>
+            <NCard title="颜色" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="弹幕背景" label-placement="left">
@@ -185,7 +185,7 @@ function applyPreset(preset: keyof typeof presets) {
               </NFlex>
             </NCard>
 
-            <NCard title="样式" size="small" bordered>
+            <NCard title="样式" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="透明度" label-placement="left">
                   <NSlider v-model:value="danmakuWindow.danmakuWindowSetting.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" />
@@ -210,7 +210,7 @@ function applyPreset(preset: keyof typeof presets) {
         <!-- 内容 -->
         <NTabPane name="content" tab="内容">
           <NFlex vertical :size="12">
-            <NCard title="展示风格" size="small" bordered>
+            <NCard title="展示风格" size="small" embedded>
               <NRadioGroup v-model:value="danmakuWindow.danmakuWindowSetting.displayStyle">
                 <NFlex>
                   <NRadioButton v-for="opt in displayStyleOptions" :key="opt.value" :value="opt.value">
@@ -238,7 +238,7 @@ function applyPreset(preset: keyof typeof presets) {
               </template>
             </NCard>
 
-            <NCard title="信息过滤" size="small" bordered>
+            <NCard title="信息过滤" size="small" embedded>
               <NCheckboxGroup v-model:value="danmakuWindow.danmakuWindowSetting.filterTypes">
                 <NFlex :size="[16, 8]" wrap>
                   <NCheckbox v-for="opt in filterTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
@@ -246,7 +246,7 @@ function applyPreset(preset: keyof typeof presets) {
               </NCheckboxGroup>
             </NCard>
 
-            <NCard title="显示元素" size="small" bordered>
+            <NCard title="显示元素" size="small" embedded>
               <NFlex vertical :size="4">
                 <LabelItem label="显示头像">
                   <NSwitch v-model:value="danmakuWindow.danmakuWindowSetting.showAvatar" />
@@ -268,7 +268,7 @@ function applyPreset(preset: keyof typeof presets) {
         <!-- 行为 -->
         <NTabPane name="behavior" tab="行为">
           <NFlex vertical :size="12">
-            <NCard title="弹幕方向与动画" size="small" bordered>
+            <NCard title="弹幕方向与动画" size="small" embedded>
               <NFlex vertical :size="4">
                 <LabelItem label="弹幕方向">
                   <NFlex align="center" :size="8">
@@ -297,7 +297,7 @@ function applyPreset(preset: keyof typeof presets) {
               </NFlex>
             </NCard>
 
-            <NCard title="数量与消失" size="small" bordered>
+            <NCard title="数量与消失" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="最大弹幕数量" label-placement="left">
                   <NInputNumber
@@ -326,7 +326,7 @@ function applyPreset(preset: keyof typeof presets) {
         <!-- 高级 -->
         <NTabPane name="advanced" tab="高级">
           <NFlex vertical :size="12">
-            <NCard title="调试" size="small" bordered>
+            <NCard title="调试" size="small" embedded>
               <NFlex :size="8" wrap>
                 <NButton size="small" type="info" @click="danmakuWindow.sendTestDanmaku()">
                   发送测试弹幕
@@ -337,7 +337,7 @@ function applyPreset(preset: keyof typeof presets) {
               </NFlex>
             </NCard>
 
-            <NCard title="表情数据" size="small" bordered>
+            <NCard title="表情数据" size="small" embedded>
               <NFlex align="center" justify="space-between">
                 <NText depth="3" style="font-size: 12px">
                   Inline: {{ Object.keys(danmakuWindow.emojiData.data.inline).length }} 个 /

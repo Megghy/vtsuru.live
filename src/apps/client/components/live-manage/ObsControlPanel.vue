@@ -53,7 +53,7 @@ const handleToggleConnect = () => {
     </template>
     <NFlex
       vertical
-      gap="medium"
+      :size="16"
     >
       <NFlex
         align="center"
@@ -79,7 +79,7 @@ const handleToggleConnect = () => {
 
       <NFlex
         vertical
-        gap="small"
+        :size="8"
       >
         <NInputGroup>
           <NInput
@@ -127,10 +127,11 @@ const handleToggleConnect = () => {
 
       <!-- __STATS__ -->
       <NGrid
-        :cols="3"
         :x-gap="12"
         :y-gap="12"
         responsive="screen"
+        item-responsive
+        cols="1 s:2 m:3"
       >
         <NGi>
           <NStatistic label="码率">
@@ -184,25 +185,16 @@ const handleToggleConnect = () => {
         </NGi>
       </NGrid>
 
-      <NText
-        v-if="obsStore.obsError"
-        type="error"
-        depth="3"
-        style="font-size: 12px;"
-      >
-        {{ obsStore.obsError }}
-      </NText>
-
       <!-- __SCENE__ -->
       <!-- OBS 场景控制 -->
-      <NDivider style="margin: 16px 0;" />
+      <NDivider style="margin: 0;" />
 
-      <NText strong style="margin-bottom: 12px; display: block;">
+      <NText strong style="display: block;">
         OBS 场景控制
       </NText>
 
       <!-- 场景切换 -->
-      <div style="margin-bottom: 16px;">
+      <div>
         <NFlex
           align="center"
           justify="space-between"
@@ -221,8 +213,7 @@ const handleToggleConnect = () => {
 
         <NFlex
           v-if="obsStore.obsScenes.length > 0"
-          gap="small"
-          style="margin-top: 8px;"
+          :size="8"
           wrap
         >
           <NTag
@@ -244,23 +235,21 @@ const handleToggleConnect = () => {
         </NFlex>
         <NEmpty
           v-else
-          description="无可用场景"
+          description="暂无可用场景"
           size="small"
-          style="margin-top: 8px;"
         />
       </div>
 
       <!-- 场景配置 -->
-      <NDivider style="margin: 8px 0;" />
+      <NDivider style="margin: 0;" />
 
       <NText strong>
-        场景联动配置：
+        场景联动配置
       </NText>
 
       <NFlex
         vertical
-        gap="small"
-        style="margin-top: 8px;"
+        :size="8"
       >
         <NFlex
           align="center"
@@ -291,47 +280,49 @@ const handleToggleConnect = () => {
       </NFlex>
 
       <template v-if="obsStore.obsSceneConfig.autoSwitchEnabled">
-        <div style="margin-top: 12px;">
-          <NText strong>
-            开播场景：
-          </NText>
-          <NSelect
-            v-model:value="obsStore.obsSceneConfig.startScene"
-            :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
-            placeholder="选择开播时自动切换的场景"
-            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-            style="margin-top: 0.5rem;"
-            @update:value="obsStore.saveSceneConfig"
-          />
-        </div>
+        <NFlex vertical :size="12">
+          <div>
+            <NText strong>
+              开播场景
+            </NText>
+            <NSelect
+              v-model:value="obsStore.obsSceneConfig.startScene"
+              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              placeholder="选择开播时自动切换的场景"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              style="margin-top: 8px;"
+              @update:value="obsStore.saveSceneConfig"
+            />
+          </div>
 
-        <div style="margin-top: 12px;">
-          <NText strong>
-            下播场景：
-          </NText>
-          <NSelect
-            v-model:value="obsStore.obsSceneConfig.stopScene"
-            :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
-            placeholder="选择下播时自动切换的场景"
-            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-            style="margin-top: 0.5rem;"
-            @update:value="obsStore.saveSceneConfig"
-          />
-        </div>
+          <div>
+            <NText strong>
+              下播场景
+            </NText>
+            <NSelect
+              v-model:value="obsStore.obsSceneConfig.stopScene"
+              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              placeholder="选择下播时自动切换的场景"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              style="margin-top: 8px;"
+              @update:value="obsStore.saveSceneConfig"
+            />
+          </div>
 
-        <div style="margin-top: 12px;">
-          <NText strong>
-            等待场景：
-          </NText>
-          <NSelect
-            v-model:value="obsStore.obsSceneConfig.waitingScene"
-            :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
-            placeholder="选择等待直播时的场景（可选）"
-            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-            style="margin-top: 0.5rem;"
-            @update:value="obsStore.saveSceneConfig"
-          />
-        </div>
+          <div>
+            <NText strong>
+              等待场景
+            </NText>
+            <NSelect
+              v-model:value="obsStore.obsSceneConfig.waitingScene"
+              :options="obsStore.obsScenes.map(scene => ({ label: scene, value: scene }))"
+              placeholder="选择等待直播时的场景（可选）"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              style="margin-top: 8px;"
+              @update:value="obsStore.saveSceneConfig"
+            />
+          </div>
+        </NFlex>
       </template>
 
       <!-- 错误提示 -->
@@ -339,7 +330,6 @@ const handleToggleConnect = () => {
         v-if="obsStore.obsSceneError"
         type="error"
         size="small"
-        style="margin-top: 12px;"
       >
         {{ obsStore.obsSceneError }}
       </NAlert>
@@ -347,9 +337,9 @@ const handleToggleConnect = () => {
       <!-- 帮助提示 -->
       <NText
         depth="3"
-        style="font-size: 12px; margin-top: 8px; display: block;"
+        style="font-size: 12px; display: block;"
       >
-        配置场景联动后，开播/下播时会自动切换到对应的场景。请确保OBS中已创建相应的场景。
+        配置场景联动后，开播/下播时会自动切换到对应的场景。请确保 OBS 中已创建相应的场景。
       </NText>
     </NFlex>
   </NCard>

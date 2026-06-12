@@ -50,7 +50,7 @@ function handleRequestToken() {
 </script>
 
 <template>
-  <NCard size="small" title="VTS 连接">
+  <NCard size="small" bordered title="VTS 连接">
     <NFlex vertical :size="12">
       <NFlex align="center" :size="8" :wrap="true">
         <NTag :type="statusType">

@@ -302,7 +302,7 @@ const triggerTypeOptions = [
           />
         </NLayoutSider>
         
-        <NLayoutContent content-style="padding: 24px; height: 100%;">
+        <NLayoutContent content-style="padding: 16px; height: 100%;">
           <NScrollbar class="main-scrollbar">
             <transition name="fade-slide" mode="out-in">
               <!-- 编辑模式 -->
@@ -338,7 +338,7 @@ const triggerTypeOptions = [
                 >
                   <template #header-content>
                     <!-- 定时发送专属设置 -->
-                    <div v-if="currentMenuKey === TriggerType.SCHEDULED" style="margin-bottom: 20px;">
+                    <div v-if="currentMenuKey === TriggerType.SCHEDULED" style="margin-bottom: 16px;">
                       <GlobalScheduledSettings />
                       <div
                         v-if="enabledTriggerTypes && enabledTriggerTypes[TriggerType.SCHEDULED] && autoActionStore.globalSchedulingMode === 'sequential' && autoActionStore.nextScheduledAction"
@@ -381,7 +381,7 @@ const triggerTypeOptions = [
                 <!-- 消息队列设置 -->
                 <div v-else-if="currentMenuKey === 'queue-settings'">
                   <NCard title="全局消息队列设置" size="small" bordered>
-                    <NFlex vertical :size="24">
+                    <NFlex vertical :size="16">
                       <div class="setting-item">
                         <div class="label">
                           弹幕队列间隔
@@ -507,6 +507,13 @@ const triggerTypeOptions = [
 
 .view-mode-container, .edit-mode-container {
   height: 100%;
+}
+
+/* 约束可读内容宽度, 避免宽屏下表单/编辑器被无限拉伸 */
+.editor-wrapper {
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .status-dot {

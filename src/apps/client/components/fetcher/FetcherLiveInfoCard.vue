@@ -30,7 +30,7 @@ const streamingDuration = computed(() => {
         未开播
       </NTag>
     </template>
-    <NSpin :show="!streamingInfo">
+    <NSpin :show="!streamingInfo" description="正在获取直播间信息...">
       <NDescriptions
         v-if="streamingInfo"
         label-placement="top"
@@ -55,8 +55,8 @@ const streamingDuration = computed(() => {
       </NDescriptions>
       <NEmpty
         v-else
-        description="未获取到直播间信息"
-        style="padding: 20px 0;"
+        description="暂无直播间信息"
+        style="padding: 16px 0;"
       />
     </NSpin>
   </NCard>

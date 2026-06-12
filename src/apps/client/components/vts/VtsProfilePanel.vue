@@ -49,8 +49,8 @@ async function onImportFileChange(ev: Event) {
 </script>
 
 <template>
-  <NCard size="small" title="配置包 (Profile)">
-    <NFlex vertical :size="10">
+  <NCard size="small" bordered title="配置包 (Profile)">
+    <NFlex vertical :size="12">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" @click="addProfile">
           从当前创建
@@ -64,8 +64,8 @@ async function onImportFileChange(ev: Event) {
         </NText>
       </NFlex>
 
-      <NFlex v-for="p in vts.profiles" :key="p.id" align="center" justify="space-between" :wrap="true" :size="10">
-        <NFlex align="center" :wrap="true" :size="10">
+      <NFlex v-for="p in vts.profiles" :key="p.id" align="center" justify="space-between" :wrap="true" :size="12">
+        <NFlex align="center" :wrap="true" :size="12">
           <NTag v-if="vts.currentProfileId === p.id" type="success" size="small">
             当前
           </NTag>

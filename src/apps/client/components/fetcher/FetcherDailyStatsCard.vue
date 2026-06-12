@@ -118,7 +118,7 @@ onMounted(loadHistoricalData)
         </NText>
       </template>
       <div v-if="currentStatistic">
-        <NGrid x-gap="12" y-gap="16" cols="1 s:2">
+        <NGrid :x-gap="16" :y-gap="16" cols="1 s:2" responsive="screen">
           <NGi>
             <NStatistic label="今日接收总数">
               <template #prefix>

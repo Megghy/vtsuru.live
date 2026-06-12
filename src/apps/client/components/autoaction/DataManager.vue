@@ -258,7 +258,7 @@ onMounted(() => {
   <NScrollbar class="data-manager-scrollbar">
     <NFlex
       vertical
-      size="large"
+      :size="16"
       class="data-manager"
     >
       <!-- 运行时数据 (SessionStorage) -->
@@ -466,7 +466,7 @@ onMounted(() => {
   font-size: 12px;
   background-color: var(--n-color-embedded);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--n-border-radius);
   max-height: 100px;
 }
 

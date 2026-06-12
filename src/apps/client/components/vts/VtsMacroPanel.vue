@@ -169,7 +169,7 @@ function runMacro(macroId: string) {
 </script>
 
 <template>
-  <NCard size="small" title="组合动作 (宏)">
+  <NCard size="small" bordered title="组合动作 (宏)">
     <NFlex vertical :size="8">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" @click="addMacro">
@@ -218,7 +218,7 @@ function runMacro(macroId: string) {
   </NCard>
 
   <NModal v-model:show="showEdit" preset="card" title="编辑宏" style="width: 720px">
-    <NFlex vertical :size="10">
+    <NFlex vertical :size="12">
       <NInput v-model:value="macroName" placeholder="宏名称" />
       <NFlex align="center" justify="space-between" :wrap="true" :size="8">
         <NText depth="3">
@@ -239,7 +239,7 @@ function runMacro(macroId: string) {
           v-for="(element, index) in macroSteps"
           :key="element.id"
           size="small"
-          style="border-radius: 10px; margin-bottom: 8px"
+          style="border-radius: var(--n-border-radius); margin-bottom: 8px"
         >
           <NFlex align="center" justify="space-between" :wrap="true" :size="8">
             <NFlex align="center" :wrap="true" :size="8">
@@ -266,21 +266,21 @@ function runMacro(macroId: string) {
 
           <NDivider style="margin: 8px 0" />
 
-          <NFlex v-if="element.step.type === 'hotkey'" :wrap="true" :size="10">
+          <NFlex v-if="element.step.type === 'hotkey'" :wrap="true" :size="12">
             <NSelect
               style="min-width: 380px" placeholder="选择热键" :options="hotkeyOptions" :value="element.step.hotkeyID"
               @update:value="(v: string) => upsertStep(element.id, { type: 'hotkey', hotkeyID: v })"
             />
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'preset'" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'preset'" :wrap="true" :size="12">
             <NSelect
               style="min-width: 380px" placeholder="选择预设" :options="presetOptions" :value="element.step.presetId"
               @update:value="(v: string) => upsertStep(element.id, { type: 'preset', presetId: v })"
             />
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'wait'" align="center" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'wait'" align="center" :wrap="true" :size="12">
             <NText depth="3">
               等待
             </NText>
@@ -293,7 +293,7 @@ function runMacro(macroId: string) {
             </NText>
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'injectParam'" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'injectParam'" :wrap="true" :size="12">
             <NInput
               style="min-width: 220px" placeholder="参数 ID" :value="element.step.parameterId"
               @update:value="(v: string) => patchStep(element.id, { parameterId: v })"
@@ -308,7 +308,7 @@ function runMacro(macroId: string) {
             />
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'accessory'" align="center" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'accessory'" align="center" :wrap="true" :size="12">
             <NSelect
               style="min-width: 320px" placeholder="选择配饰" :options="accessoryOptions" :value="element.step.accessoryId"
               @update:value="(v: string) => patchStep(element.id, { accessoryId: v })"
@@ -326,14 +326,14 @@ function runMacro(macroId: string) {
             </NSwitch>
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'prank'" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'prank'" :wrap="true" :size="12">
             <NSelect
               style="min-width: 380px" placeholder="选择整活" :options="prankOptions" :value="element.step.prankId"
               @update:value="(v: string) => patchStep(element.id, { prankId: v })"
             />
           </NFlex>
 
-          <NFlex v-else-if="element.step.type === 'playAudio'" :wrap="true" :size="10">
+          <NFlex v-else-if="element.step.type === 'playAudio'" :wrap="true" :size="12">
             <NInput
               style="min-width: 320px" placeholder="音效 URL" :value="element.step.url"
               @update:value="(v: string) => patchStep(element.id, { url: v })"
@@ -392,7 +392,7 @@ function runMacro(macroId: string) {
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: var(--n-border-radius);
   cursor: grab;
   user-select: none;
   opacity: 0.85;

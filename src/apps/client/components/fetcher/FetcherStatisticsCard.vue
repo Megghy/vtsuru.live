@@ -193,7 +193,9 @@ onUnmounted(stopSession)
         </NGi>
       </NGrid>
     </div>
-    <NEmpty v-else-if="!isConnected" description="WebFetcher 未连接" />
-    <NSpin v-else />
+    <NEmpty v-else-if="!isConnected" description="EventFetcher 未连接" />
+    <NFlex v-else justify="center" style="padding: 16px 0;">
+      <NSpin size="small" description="正在加载实时统计..." />
+    </NFlex>
   </NCard>
 </template>

@@ -139,9 +139,7 @@ function logout() {
             </div>
           </div>
           <div v-else class="client-index-cover__empty">
-            <NText depth="3">
-              暂无直播间封面信息
-            </NText>
+            <NEmpty size="small" description="暂无直播间封面信息" />
           </div>
 
           <div class="client-index-cover__footer">
@@ -179,8 +177,8 @@ function logout() {
 
   .client-index-cover__title {
     position: absolute;
-    left: 14px;
-    right: 14px;
+    left: 16px;
+    right: 16px;
     bottom: 12px;
     z-index: 2;
     color: white;
@@ -193,11 +191,13 @@ function logout() {
   }
 
   .client-index-cover__empty {
-    padding: 14px;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
   }
 
   .client-index-cover__footer {
-    padding: 12px 14px 14px;
+    padding: 12px 16px 16px;
     display: flex;
     justify-content: flex-end;
   }

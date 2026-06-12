@@ -26,7 +26,7 @@ function addSlot() {
 </script>
 
 <template>
-  <NCard size="small" title="参数控制">
+  <NCard size="small" bordered title="参数控制">
     <NFlex vertical :size="8">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" @click="addSlot">
@@ -104,7 +104,7 @@ function addSlot() {
 
         <NCollapse style="margin-top: 6px">
           <NCollapseItem title="参数配置" name="config">
-            <NFlex :wrap="true" :size="10" align="center">
+            <NFlex :wrap="true" :size="12" align="center">
               <NInput v-model:value="slot.name" placeholder="显示名" style="width: 140px" @blur="updateSlot({ ...slot })" />
               <NInput v-model:value="slot.parameterId" placeholder="参数 ID" style="width: 180px" @blur="updateSlot({ ...slot })" />
               <NInputNumber v-model:value="slot.weight" :min="0" :step="0.1" placeholder="权重" style="width: 120px" @blur="updateSlot({ ...slot })" />
@@ -121,7 +121,7 @@ function addSlot() {
 
 <style scoped>
 .param-slot {
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--n-border-color);
   border-radius: var(--n-border-radius);
 }

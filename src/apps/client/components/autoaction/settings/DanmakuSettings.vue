@@ -214,8 +214,7 @@ function removeBlockword(index: number) {
 .tag-container {
   min-height: 28px;
   padding: 4px 8px;
-  background-color: var(--n-color-modal);
+  background-color: var(--n-action-color);
   border-radius: var(--n-border-radius);
-  border: 1px dashed var(--n-divider-color);
 }
 </style>

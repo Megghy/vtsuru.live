@@ -67,8 +67,8 @@ const columns = computed(() => [
 </script>
 
 <template>
-  <NCard size="small" title="操作记录">
-    <NFlex vertical :size="10">
+  <NCard size="small" bordered title="操作记录">
+    <NFlex vertical :size="12">
       <NFlex justify="end">
         <NButton size="small" type="error" @click="run(() => vts.clearHistory(), '已清空')">
           清空

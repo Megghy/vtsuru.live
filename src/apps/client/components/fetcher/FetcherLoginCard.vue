@@ -136,7 +136,7 @@ onUnmounted(() => {
         未登录
       </NTag>
     </template>
-    <NFlex vertical>
+    <NFlex vertical :size="12">
       <NDescriptions label-placement="left" bordered size="small" :columns="1">
         <NDescriptionsItem v-if="biliCookie.isCookieValid" label="B站用户名">
           <NSpin
@@ -219,7 +219,7 @@ onUnmounted(() => {
           <NFlex
             v-if="!isQRCodeLogining || loginStatus === 'expired'"
             align="center"
-            gap="small"
+            :size="8"
           >
             <NButton id="bilibili-login" @click="startLogin">
               <template #icon>
@@ -245,9 +245,11 @@ onUnmounted(() => {
               </div>
             </NTooltip>
           </NFlex>
-          <div
+          <NFlex
             v-else
-            style="display: flex; align-items: center; justify-content: center; gap: 1rem;"
+            align="center"
+            justify="center"
+            :size="16"
           >
             <NSpin v-if="!loginUrl" />
             <NQrCode
@@ -257,7 +259,7 @@ onUnmounted(() => {
               error-level="H"
               :size="180"
             />
-          </div>
+          </NFlex>
         </NTabPane>
         <NTabPane name="cookiecloud" tab="Cookie Cloud">
           <FetcherCookieCloudCard />

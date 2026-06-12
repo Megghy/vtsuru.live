@@ -15,8 +15,8 @@ const clickThroughHint = computed(() =>
 </script>
 
 <template>
-  <NCard size="small" title="悬浮小窗">
-    <NFlex vertical :size="10">
+  <NCard size="small" bordered title="悬浮小窗">
+    <NFlex vertical :size="12">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" type="primary" @click="run(() => floatWindow.toggle())">
           {{ floatWindow.opened ? '关闭小窗' : '打开小窗' }}

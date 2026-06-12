@@ -113,6 +113,7 @@ function getAdvancedSummary() {
       size="small"
       embedded
       :bordered="false"
+      content-style="padding: 0;"
       class="content-settings-card"
     >
       <TemplateSettings v-if="showTemplate" :action="action" :custom-test-context="customTestContext" />

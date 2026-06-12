@@ -56,7 +56,7 @@ function addFromCurrent() {
 </script>
 
 <template>
-  <NCard size="small" title="机位预设">
+  <NCard size="small" bordered title="机位预设">
     <NFlex vertical :size="8">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" @click="addPreset">
@@ -109,7 +109,7 @@ function addFromCurrent() {
           需要 VTS 已鉴权且模型有移动事件
         </NText>
       </NFlex>
-      <NFlex :wrap="true" :size="10">
+      <NFlex :wrap="true" :size="12">
         <NInputNumber v-model:value="form.timeInSeconds" :min="0" :step="0.05" placeholder="过渡时间(s)" style="width: 150px" />
         <NInputNumber v-model:value="form.positionX" :step="0.01" placeholder="X" style="width: 130px" />
         <NInputNumber v-model:value="form.positionY" :step="0.01" placeholder="Y" style="width: 130px" />

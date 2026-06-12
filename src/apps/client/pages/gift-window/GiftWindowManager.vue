@@ -34,7 +34,7 @@ function applyPreset(preset: keyof typeof presets) {
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex vertical :size="12" class="client-readable">
     <NCard size="small" bordered>
       <ClientPageHeader
         title="礼物与排行"
@@ -56,14 +56,14 @@ function applyPreset(preset: keyof typeof presets) {
       <NTabs type="line" animated>
         <NTabPane name="filter" tab="筛选与排序">
           <NFlex vertical :size="12">
-            <NCard title="显示类型" size="small" bordered>
+            <NCard title="显示类型" size="small" embedded>
               <NCheckboxGroup v-model:value="giftWindow.settings.filterTypes">
                 <NFlex vertical :size="6">
                   <NCheckbox v-for="opt in filterOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
                 </NFlex>
               </NCheckboxGroup>
             </NCard>
-            <NCard title="排序方式" size="small" bordered>
+            <NCard title="排序方式" size="small" embedded>
               <NFlex vertical :size="8">
                 <NRadioGroup v-model:value="giftWindow.settings.sortBy">
                   <NRadioButton v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
@@ -75,7 +75,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </LabelItem>
               </NFlex>
             </NCard>
-            <NCard title="过滤条件" size="small" bordered>
+            <NCard title="过滤条件" size="small" embedded>
               <NFormItem label="最低金额" label-placement="left">
                 <NInputNumber v-model:value="giftWindow.settings.minPrice" :min="0" :step="100">
                   <template #suffix>
@@ -92,7 +92,7 @@ function applyPreset(preset: keyof typeof presets) {
 
         <NTabPane name="layout" tab="布局">
           <NFlex vertical :size="12">
-            <NCard title="窗口尺寸与位置" size="small" bordered>
+            <NCard title="窗口尺寸与位置" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="宽度" label-placement="left">
@@ -124,7 +124,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </NButton>
               </NFlex>
             </NCard>
-            <NCard title="窗口行为" size="small" bordered>
+            <NCard title="窗口行为" size="small" embedded>
               <NFlex vertical :size="4">
                 <LabelItem label="总是置顶">
                   <NSwitch v-model:value="giftWindow.settings.alwaysOnTop" />
@@ -139,7 +139,7 @@ function applyPreset(preset: keyof typeof presets) {
 
         <NTabPane name="appearance" tab="外观">
           <NFlex vertical :size="12">
-            <NCard title="颜色" size="small" bordered>
+            <NCard title="颜色" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="卡片背景" label-placement="left">
@@ -174,7 +174,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </NButton>
               </NFlex>
             </NCard>
-            <NCard title="样式" size="small" bordered>
+            <NCard title="样式" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="透明度" label-placement="left">
                   <NSlider v-model:value="giftWindow.settings.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" />
@@ -207,7 +207,7 @@ function applyPreset(preset: keyof typeof presets) {
 
         <NTabPane name="behavior" tab="行为">
           <NFlex vertical :size="12">
-            <NCard title="合并与消失" size="small" bordered>
+            <NCard title="合并与消失" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="合并时间窗口" label-placement="left">
                   <NInputNumber v-model:value="giftWindow.settings.mergeWindowSeconds" :min="0" :max="60" :step="5">
@@ -234,7 +234,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </NText>
               </NFlex>
             </NCard>
-            <NCard title="调试" size="small" bordered>
+            <NCard title="调试" size="small" embedded>
               <NFlex :size="8" wrap>
                 <NButton size="small" type="info" @click="giftWindow.sendTestGift()">
                   发送测试礼物
@@ -249,7 +249,7 @@ function applyPreset(preset: keyof typeof presets) {
 
         <NTabPane name="ranking" tab="排行榜">
           <NFlex vertical :size="12">
-            <NCard title="显示控制" size="small" bordered>
+            <NCard title="显示控制" size="small" embedded>
               <NFlex vertical :size="8">
                 <LabelItem label="显示礼物列表">
                   <NSwitch v-model:value="giftWindow.settings.showGiftList" />
@@ -259,7 +259,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </LabelItem>
               </NFlex>
             </NCard>
-            <NCard title="排行规则" size="small" bordered>
+            <NCard title="排行规则" size="small" embedded>
               <NFlex vertical :size="8">
                 <NFormItem label="显示人数" label-placement="left">
                   <NInputNumber v-model:value="giftWindow.settings.rankDisplayCount" :min="5" :max="100" />
@@ -269,7 +269,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </NText>
               </NFlex>
             </NCard>
-            <NCard title="数据" size="small" bordered>
+            <NCard title="数据" size="small" embedded>
               <NFlex vertical :size="8">
                 <NText depth="3" style="font-size: 12px">
                   当前已记录 {{ giftWindow.rankMap.size }} 位用户（本场直播）

@@ -65,17 +65,17 @@ async function handleToggleEventFetcher(enabled: boolean) {
 
 <template>
   <NCard title="设置" size="small" bordered style="width: 100%;">
-    <NFlex vertical gap="large">
+    <NFlex vertical :size="16">
       <!-- EventFetcher 功能开关 -->
       <div>
-        <NFlex align="center" justify="space-between" style="margin-bottom: 0.5rem;">
+        <NFlex align="center" justify="space-between" style="margin-bottom: 8px;">
           <div>
             <NText strong>
               EventFetcher 功能
             </NText>
             <NTooltip>
               <template #trigger>
-                <NIcon :component="HelpCircle" style="margin-left: 0.25rem; cursor: help;" />
+                <NIcon :component="HelpCircle" style="margin-left: 4px; cursor: help;" />
               </template>
               <div style="max-width: 300px;">
                 <p style="margin: 0 0 8px;">
@@ -110,7 +110,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
           v-if="!settings.settings.enableEventFetcher"
           type="warning"
           :bordered="false"
-          style="margin-top: 0.5rem;"
+          style="margin-top: 8px;"
         >
           EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传
         </NAlert>
@@ -120,7 +120,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
 
       <!-- 弹幕客户端模式选择 -->
       <div>
-        <NText strong style="display: block; margin-bottom: 0.5rem;">
+        <NText strong style="display: block; margin-bottom: 8px;">
           弹幕客户端模式
         </NText>
         <NRadioGroup

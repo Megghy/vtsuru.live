@@ -1,6 +1,19 @@
+/* ===== 客户端设计 token =====
+ * 间距档位: xs=4 sm=8 md=12 lg=16 xl=24
+ * 页面与卡片统一引用这些变量, 避免散落的魔法值
+ */
+:root {
+  --client-space-xs: 4px;
+  --client-space-sm: 8px;
+  --client-space-md: 12px;
+  --client-space-lg: 16px;
+  --client-space-xl: 24px;
+  --client-titlebar-height: 30px;
+}
+
 .client-page {
   min-height: 100%;
-  padding: 16px;
+  padding: var(--client-space-lg);
   box-sizing: border-box;
 }
 
@@ -10,7 +23,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--client-space-md);
   min-height: 100%;
   box-sizing: border-box;
 }
@@ -39,4 +52,25 @@
 
 .client-page-inner .n-card .n-card__content {
   padding: 14px;
+}
+
+/* 窄窗口下收紧外边距, 让内容获得更多可用宽度 */
+@media (max-width: 640px) {
+  .client-page {
+    padding: var(--client-space-md);
+  }
+
+  .client-page-inner {
+    gap: var(--client-space-sm);
+  }
+}
+
+/* 可读内容宽度约束: 表单/文本类内容在宽屏下不应无限拉伸.
+ * 给容器加 .client-readable 即可限制最大宽度并水平居中.
+ * 表格/看板等需要满宽的内容不要加. */
+.client-readable {
+  max-width: 920px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }

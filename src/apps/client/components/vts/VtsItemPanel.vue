@@ -96,8 +96,8 @@ function dropPrank(p: VtsPrankBinding) {
 </script>
 
 <template>
-  <NCard size="small" title="道具管理">
-    <NFlex vertical :size="10">
+  <NCard size="small" bordered title="道具管理">
+    <NFlex vertical :size="12">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" :loading="refreshing" :disabled="!vts.canOperate || refreshing" @click="refresh">
           刷新列表
@@ -119,8 +119,8 @@ function dropPrank(p: VtsPrankBinding) {
               </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
-            <NFlex v-for="acc in vts.accessories" :key="acc.id" align="center" justify="space-between" :wrap="true" :size="10">
-              <NFlex align="center" :wrap="true" :size="10">
+            <NFlex v-for="acc in vts.accessories" :key="acc.id" align="center" justify="space-between" :wrap="true" :size="12">
+              <NFlex align="center" :wrap="true" :size="12">
                 <NInput v-model:value="acc.name" placeholder="名称" style="width: 140px" @blur="saveAccessory({ ...acc })" />
                 <NSelect
                   style="width: 380px"
@@ -156,8 +156,8 @@ function dropPrank(p: VtsPrankBinding) {
               </NText>
             </NFlex>
             <NDivider style="margin: 4px 0" />
-            <NFlex v-for="p in vts.pranks" :key="p.id" align="center" justify="space-between" :wrap="true" :size="10">
-              <NFlex align="center" :wrap="true" :size="10">
+            <NFlex v-for="p in vts.pranks" :key="p.id" align="center" justify="space-between" :wrap="true" :size="12">
+              <NFlex align="center" :wrap="true" :size="12">
                 <NInput v-model:value="p.name" placeholder="名称" style="width: 140px" @blur="savePrank({ ...p })" />
                 <NSelect
                   style="width: 360px"

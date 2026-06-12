@@ -110,7 +110,7 @@ const highlightPatterns = computed(() => {
 })
 
 const MAX_LENGTH = 40
-const WARNING_THRESHOLD = 16
+const WARNING_THRESHOLD = 32
 
 function evaluateTemplateForUI(template: string): string {
   // 深度合并默认上下文和自定义上下文

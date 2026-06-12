@@ -92,7 +92,7 @@ async function manualCheckCookie() {
     title="Cookie Cloud 配置"
     size="small"
     bordered
-    style="width: 100%; margin-bottom: 12px;"
+    style="width: 100%;"
   >
     <template #header-extra>
       <NTag
@@ -105,7 +105,7 @@ async function manualCheckCookie() {
         }}
       </NTag>
     </template>
-    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+    <NFlex vertical :size="8">
       <NAlert type="info">
         设置 CookieCloud 后扫码登陆的登陆信息将被覆盖
       </NAlert>
@@ -137,7 +137,7 @@ async function manualCheckCookie() {
           placeholder="请输入 Host (可选)"
         />
       </NInputGroup>
-      <NFlex gap="small">
+      <NFlex :size="8">
         <NButton
           v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
           type="primary"
@@ -165,10 +165,10 @@ async function manualCheckCookie() {
           确定要清除配置吗？
         </NPopconfirm>
       </NFlex>
-      <NDivider style="margin: 8px 0;">
+      <NDivider style="margin: 0;">
         手动操作
       </NDivider>
-      <NFlex gap="small">
+      <NFlex :size="8">
         <NTooltip>
           <template #trigger>
             <NButton
@@ -200,6 +200,6 @@ async function manualCheckCookie() {
           {{ !biliCookie.hasBiliCookie ? '当前没有 Cookie' : checkCooldown.remaining.value > 0 ? `请等待 ${checkCooldown.remaining.value} 秒` : '手动检查当前 Cookie 的有效性' }}
         </NTooltip>
       </NFlex>
-    </div>
+    </NFlex>
   </NCard>
 </template>

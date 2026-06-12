@@ -39,6 +39,7 @@ const control = useLiveControl()
           <NFlex
             vertical
             :size="12"
+            class="client-readable"
           >
             <LiveControlPanel :control="control" />
             <LiveStreamInfo :control="control" />

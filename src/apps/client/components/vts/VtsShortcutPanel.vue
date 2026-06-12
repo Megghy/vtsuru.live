@@ -81,7 +81,7 @@ onUnmounted(() => shortcuts.cleanup())
 </script>
 
 <template>
-  <NCard size="small" title="全局快捷键">
+  <NCard size="small" bordered title="全局快捷键">
     <template v-if="versionTooLow">
       <NAlert type="warning" :show-icon="true">
         <NFlex align="center" justify="space-between" :wrap="true" :size="8">
@@ -95,7 +95,7 @@ onUnmounted(() => shortcuts.cleanup())
       </NAlert>
     </template>
 
-    <NFlex v-else vertical :size="10">
+    <NFlex v-else vertical :size="12">
       <NFlex align="center" :wrap="true" :size="8">
         <NButton size="small" @click="shortcuts.addBinding({ label: '', shortcut: '', actionType: 'hotkey', targetId: '' })">
           添加快捷键

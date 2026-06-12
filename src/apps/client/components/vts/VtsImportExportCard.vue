@@ -75,7 +75,7 @@ async function confirmImport() {
 </script>
 
 <template>
-  <NCard size="small" title="导入 / 导出">
+  <NCard size="small" bordered title="导入 / 导出">
     <NFlex align="center" :wrap="true" :size="8">
       <NButton size="small" @click="exportMinimal">
         导出连接信息
@@ -97,7 +97,7 @@ async function confirmImport() {
   </NCard>
 
   <NModal v-model:show="showPreview" preset="card" title="导入预览" style="width: 560px">
-    <NFlex vertical :size="10">
+    <NFlex vertical :size="12">
       <NText v-for="line in previewLines" :key="line" depth="3">
         {{ line }}
       </NText>

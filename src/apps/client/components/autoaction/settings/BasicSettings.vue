@@ -82,7 +82,7 @@ const priorityOptions = [
       <NGrid
         cols="1 m:2"
         responsive="screen"
-        :x-gap="24"
+        :x-gap="16"
         :y-gap="12"
       >
         <NGi v-if="!hideName" span="1 m:2">

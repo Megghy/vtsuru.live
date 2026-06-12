@@ -16,7 +16,7 @@ const rankByOptions = [
 </script>
 
 <template>
-  <NFlex vertical :size="12">
+  <NFlex vertical :size="12" class="client-readable">
     <NCard size="small" bordered>
       <ClientPageHeader
         title="高能排行榜"
@@ -38,7 +38,7 @@ const rankByOptions = [
       <NTabs type="line" animated>
         <NTabPane name="layout" tab="布局">
           <NFlex vertical :size="12">
-            <NCard title="窗口尺寸与位置" size="small" bordered>
+            <NCard title="窗口尺寸与位置" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="宽度" label-placement="left">
@@ -70,7 +70,7 @@ const rankByOptions = [
                 </NButton>
               </NFlex>
             </NCard>
-            <NCard title="窗口行为" size="small" bordered>
+            <NCard title="窗口行为" size="small" embedded>
               <NFlex vertical :size="4">
                 <LabelItem label="总是置顶">
                   <NSwitch v-model:value="energyRank.settings.alwaysOnTop" />
@@ -85,7 +85,7 @@ const rankByOptions = [
 
         <NTabPane name="appearance" tab="外观">
           <NFlex vertical :size="12">
-            <NCard title="颜色" size="small" bordered>
+            <NCard title="颜色" size="small" embedded>
               <NGrid cols="1 m:2" responsive="screen" :x-gap="12" :y-gap="4">
                 <NGi>
                   <NFormItem label="排行背景" label-placement="left">
@@ -104,7 +104,7 @@ const rankByOptions = [
                 </NGi>
               </NGrid>
             </NCard>
-            <NCard title="样式" size="small" bordered>
+            <NCard title="样式" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="透明度" label-placement="left">
                   <NSlider v-model:value="energyRank.settings.opacity" :min="0" :max="1" :step="0.05" style="max-width: 300px" />
@@ -122,7 +122,7 @@ const rankByOptions = [
 
         <NTabPane name="ranking" tab="排行设置">
           <NFlex vertical :size="12">
-            <NCard title="排行规则" size="small" bordered>
+            <NCard title="排行规则" size="small" embedded>
               <NFlex vertical :size="4">
                 <NFormItem label="排序方式" label-placement="left">
                   <NRadioGroup v-model:value="energyRank.settings.rankBy">
@@ -141,7 +141,7 @@ const rankByOptions = [
                 </NFormItem>
               </NFlex>
             </NCard>
-            <NCard title="数据管理" size="small" bordered>
+            <NCard title="数据管理" size="small" embedded>
               <NFlex vertical :size="8">
                 <NText depth="3" style="font-size: 12px">
                   当前已记录 {{ energyRank.rankMap.size }} 位用户的贡献数据（本场直播）

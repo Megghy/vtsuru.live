@@ -17,7 +17,7 @@ const c = props.control
     <NFlex
       vertical
       align="center"
-      gap="large"
+      :size="16"
     >
       <NText>
         请使用B站APP扫描下方二维码进行人脸认证
@@ -25,7 +25,7 @@ const c = props.control
 
       <div
         v-if="c.faceAuthQrCode.value"
-        style="padding: 1rem; background: var(--n-card-color); border-radius: var(--n-border-radius);"
+        style="padding: 16px; background: var(--n-card-color); border: 1px solid var(--n-border-color); border-radius: var(--n-border-radius);"
       >
         <img
           :src="c.faceAuthQrCode.value"

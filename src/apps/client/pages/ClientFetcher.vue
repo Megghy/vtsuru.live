@@ -22,20 +22,21 @@ const settings = useSettings()
       />
     </NCard>
 
-    <FetcherSettingsCard />
+    <FetcherSettingsCard class="client-readable" />
 
-    <FetcherStatusCard v-if="settings.settings.enableEventFetcher" />
+    <FetcherStatusCard v-if="settings.settings.enableEventFetcher" class="client-readable" />
 
-    <FetcherLoginCard />
+    <FetcherLoginCard class="client-readable" />
 
     <FetcherLiveInfoCard
       v-if="settings.settings.enableEventFetcher && settings.settings.useDanmakuClientType === 'openlive'"
+      class="client-readable"
     />
 
     <FetcherStatisticsCard v-if="settings.settings.enableEventFetcher" />
 
     <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
 
-    <FetcherSystemCard />
+    <FetcherSystemCard class="client-readable" />
   </NFlex>
 </template>

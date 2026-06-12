@@ -12,14 +12,14 @@ const c = props.control
       直播封面：
     </NText>
     <NFlex
-      gap="medium"
-      style="margin-top: 0.5rem;"
+      :size="16"
+      style="margin-top: 8px;"
     >
       <!-- 现有封面显示 -->
       <div style="flex-shrink: 0;">
         <NText
           depth="3"
-          style="display: block; margin-bottom: 0.5rem;"
+          style="display: block; margin-bottom: 8px;"
         >
           当前封面
         </NText>
@@ -56,15 +56,15 @@ const c = props.control
       <div style="flex: 1;">
         <NText
           depth="3"
-          style="display: block; margin-bottom: 0.5rem;"
+          style="display: block; margin-bottom: 8px;"
         >
           上传新封面
         </NText>
         <NFlex
           vertical
-          gap="small"
+          :size="8"
         >
-          <NFlex gap="small">
+          <NFlex :size="8">
             <NUpload
               :max="1"
               accept="image/jpeg,image/png,image/webp"

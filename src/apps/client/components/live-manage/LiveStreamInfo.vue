@@ -15,7 +15,7 @@ const obsStore = c.obsStore
   >
     <NFlex
       vertical
-      gap="medium"
+      :size="12"
     >
       <NAlert
         v-if="!c.rtmpServer.value"
@@ -29,7 +29,7 @@ const obsStore = c.obsStore
         <NText strong>
           推流服务器
         </NText>
-        <NInputGroup style="margin-top: 0.5rem;">
+        <NInputGroup style="margin-top: 8px;">
           <NInput
             :value="c.rtmpServer.value"
             readonly
@@ -50,7 +50,7 @@ const obsStore = c.obsStore
         <NText strong>
           推流码
         </NText>
-        <NInputGroup style="margin-top: 0.5rem;">
+        <NInputGroup style="margin-top: 8px;">
           <NInput
             :value="c.rtmpCode.value"
             readonly
@@ -80,7 +80,7 @@ const obsStore = c.obsStore
 
       <NText
         depth="3"
-        style="font-size: 12px; margin-top: 0.25rem; display: block;"
+        style="font-size: 12px; display: block;"
       >
         请在 OBS 等推流软件中将服务器设置为上方地址，串流密钥设置为上方推流码。
       </NText>

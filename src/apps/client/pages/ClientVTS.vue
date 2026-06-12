@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NProgress, NTabPane, NTabs, NTag, NText, NTooltip } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 import { isTauri } from '@/shared/config'
 import { useRouter } from 'vue-router'
@@ -109,7 +108,7 @@ const macroProgress = computed(() => {
               {{ vts.lastRttMs }}ms
             </NText>
           </NFlex>
-          <NFlex align="center" :size="6">
+          <NFlex align="center" :size="8">
             <NButton v-if="!vts.connected" size="tiny" type="primary" :loading="vts.connecting" @click="run(() => vts.connect())">
               连接
             </NButton>
@@ -133,7 +132,7 @@ const macroProgress = computed(() => {
       <!-- 宏执行进度 -->
       <Transition name="vts-slide">
         <NCard v-if="macroProgress" size="small">
-          <NFlex align="center" :size="10">
+          <NFlex align="center" :size="12">
             <NText strong>
               {{ macroProgress.name }}
             </NText>
@@ -148,7 +147,7 @@ const macroProgress = computed(() => {
       <!-- 快捷操作栏 -->
       <Transition name="vts-fade">
         <NCard v-if="favoriteHotkeys.length > 0 || vts.macros.length > 0 || vts.presets.length > 0" size="small">
-          <NFlex :wrap="true" :size="6">
+          <NFlex :wrap="true" :size="8">
             <TransitionGroup name="vts-btn">
               <NTooltip v-for="hk in favoriteHotkeys" :key="hk.hotkeyID" trigger="hover">
                 <template #trigger>
@@ -193,36 +192,47 @@ const macroProgress = computed(() => {
         </NTabPane>
 
         <NTabPane name="settings" tab="设置">
-          <NFlex vertical :size="12">
-            <VtsShortcutPanel />
-            <VtsObsLinkPanel />
-            <VtsFloatWindowPanel />
-            <VtsProfilePanel />
-            <VtsImportExportCard />
-            <VtsHistoryPanel />
-
-            <NCard v-if="linkedAutoActions.length > 0" size="small" title="关联的自动动作">
-              <NFlex vertical :size="8">
-                <NText depth="3">
-                  以下自动动作绑定了 VTS 操作
-                </NText>
-                <NFlex v-for="a in linkedAutoActions" :key="a.id" align="center" justify="space-between" :wrap="true" :size="8">
-                  <NFlex align="center" :size="8">
-                    <NTag :type="a.enabled ? 'success' : 'default'" size="small">
-                      {{ a.enabled ? '启用' : '禁用' }}
-                    </NTag>
-                    <NText>{{ a.name || '未命名' }}</NText>
-                    <NText depth="3">
-                      {{ a.actionType }}
-                    </NText>
-                  </NFlex>
-                  <NButton size="small" @click="router.push({ name: 'client-auto-action-manage' })">
-                    编辑
-                  </NButton>
-                </NFlex>
+          <NCollapse :default-expanded-names="['automation']" arrow-placement="right" class="client-readable">
+            <NCollapseItem title="自动化联动" name="automation">
+              <NFlex vertical :size="16">
+                <VtsShortcutPanel />
+                <VtsObsLinkPanel />
               </NFlex>
-            </NCard>
-          </NFlex>
+            </NCollapseItem>
+            <NCollapseItem title="窗口与配置" name="window">
+              <NFlex vertical :size="16">
+                <VtsFloatWindowPanel />
+                <VtsProfilePanel />
+                <VtsImportExportCard />
+              </NFlex>
+            </NCollapseItem>
+            <NCollapseItem title="历史与诊断" name="diagnostics">
+              <NFlex vertical :size="16">
+                <VtsHistoryPanel />
+                <NCard v-if="linkedAutoActions.length > 0" size="small" bordered title="关联的自动动作">
+                  <NFlex vertical :size="8">
+                    <NText depth="3">
+                      以下自动动作绑定了 VTS 操作
+                    </NText>
+                    <NFlex v-for="a in linkedAutoActions" :key="a.id" align="center" justify="space-between" :wrap="true" :size="8">
+                      <NFlex align="center" :size="8">
+                        <NTag :type="a.enabled ? 'success' : 'default'" size="small">
+                          {{ a.enabled ? '启用' : '禁用' }}
+                        </NTag>
+                        <NText>{{ a.name || '未命名' }}</NText>
+                        <NText depth="3">
+                          {{ a.actionType }}
+                        </NText>
+                      </NFlex>
+                      <NButton size="small" @click="router.push({ name: 'client-auto-action-manage' })">
+                        编辑
+                      </NButton>
+                    </NFlex>
+                  </NFlex>
+                </NCard>
+              </NFlex>
+            </NCollapseItem>
+          </NCollapse>
         </NTabPane>
       </NTabs>
     </template>
