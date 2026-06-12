@@ -33,6 +33,24 @@ const enterFilterModeOptions = [
           />
         </NFormItem>
 
+        <NFormItem v-if="action.triggerConfig.filterMode === 'medal'" label="最低牌子等级">
+          <template #label>
+            <NTooltip trigger="hover">
+              <template #trigger>
+                <span>最低牌子等级 <NIcon :component="Info16Regular" style="vertical-align: -2px" /></span>
+              </template>
+              仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级
+            </NTooltip>
+          </template>
+          <NInputNumber
+            v-model:value="action.triggerConfig.enterMedalMinLevel"
+            :min="0"
+            :max="40"
+            style="width: 140px"
+            placeholder="0"
+          />
+        </NFormItem>
+
         <NDivider style="margin: 0;" />
 
         <NFlex vertical :size="12">

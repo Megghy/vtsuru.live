@@ -58,11 +58,20 @@ export function useEntryWelcome(
           customFilters: [
             // 检查入场过滤条件
             (action, _context) => {
-              if (action.triggerConfig.filterMode === 'blacklist'
-                && action.triggerConfig.filterGiftNames?.includes(event.uname)) {
-                return false
+              const { filterMode, filterGiftNames, enterMedalMinLevel } = action.triggerConfig
+              switch (filterMode) {
+                case 'blacklist':
+                  return !filterGiftNames?.includes(event.uname)
+                case 'whitelist':
+                  return !!filterGiftNames?.includes(event.uname)
+                case 'guard':
+                  return (event.guard_level || 0) > 0
+                case 'medal':
+                  return event.fans_medal_wearing_status
+                    && (event.fans_medal_level || 0) >= (enterMedalMinLevel || 0)
+                default:
+                  return true
               }
-              return true
             },
           ],
         },

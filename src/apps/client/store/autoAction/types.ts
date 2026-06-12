@@ -129,6 +129,9 @@ export interface TriggerConfig {
   requireMedal?: boolean
   requireCaptain?: boolean
 
+  // Enter welcome: 仅欢迎佩戴勋章用户时的最低牌子等级 (0 表示不限制)
+  enterMedalMinLevel?: number
+
   // Common conditions
   onlyDuringLive?: boolean
   ignoreTianXuan?: boolean
@@ -140,7 +143,7 @@ export interface TriggerConfig {
   blockwordMatchType?: KeywordMatchType
 
   // Gift filters
-  filterMode?: 'blacklist' | 'whitelist' | 'value' | 'none' | 'free'
+  filterMode?: 'blacklist' | 'whitelist' | 'value' | 'none' | 'free' | 'guard' | 'medal'
   filterGiftNames?: string[]
   minValue?: number // For gift and SC minimum value (元)
   includeQuantity?: boolean // 是否包含礼物数量
