@@ -123,7 +123,7 @@ function handleInsert(text: string) {
 }
 
 .variable-actions {
-  opacity: 0;
+  opacity: 0.35;
   transition: opacity 0.2s;
   display: flex;
   gap: 2px;

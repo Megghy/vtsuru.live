@@ -8,6 +8,7 @@ import { EventDataTypes } from '@/api/api-models'
 import { evaluateTemplateExpressions, extractJsExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'
 import { TriggerType } from '@/apps/client/store/autoAction/types'
 import { buildExecutionContext } from '@/apps/client/store/autoAction/utils'
+import { getMergedPlaceholders } from './placeholders'
 import TemplateHelper from './TemplateHelper.vue'
 
 const props = defineProps({
@@ -41,61 +42,7 @@ const emit = defineEmits<{
   (e: 'update:template', payload: { index: number, value: string }): void
 }>()
 
-const mergedPlaceholders = computed(() => {
-  const basePlaceholders = [
-    { name: '{{user.name}}', description: '用户名称' },
-    { name: '{{user.uid}}', description: '用户ID' },
-    { name: '{{user.guardLevel}}', description: '用户舰队等级 (0:无, 1:总督, 2:提督, 3:舰长)' },
-    { name: '{{user.hasMedal}}', description: '用户是否佩戴粉丝勋章 (true/false)' },
-    { name: '{{user.medalLevel}}', description: '用户佩戴的粉丝勋章等级' },
-    { name: '{{user.medalName}}', description: '用户佩戴的粉丝勋章名称' },
-    { name: '{{date.formatted}}', description: '当前日期时间 (格式化)' },
-    { name: '{{date.year}}', description: '当前年份' },
-    { name: '{{date.month}}', description: '当前月份' },
-    { name: '{{date.day}}', description: '当前日期' },
-    { name: '{{date.hour}}', description: '当前小时 (0-23)' },
-    { name: '{{date.minute}}', description: '当前分钟' },
-    { name: '{{date.second}}', description: '当前秒数' },
-    { name: '{{timeOfDay}}', description: '当前时段 (凌晨/早上/上午/中午/下午/晚上/深夜)' },
-    { name: '{{event}}', description: '原始事件对象 (高级用法)' },
-  ]
-
-  const specificPlaceholders: { name: string, description: string }[] = []
-
-  switch (props.template.triggerType) {
-    case TriggerType.DANMAKU:
-      specificPlaceholders.push(
-        { name: '{{message}}', description: '弹幕内容' },
-        { name: '{{danmaku}}', description: '弹幕事件对象' },
-      )
-      break
-    case TriggerType.GIFT:
-      specificPlaceholders.push(
-        { name: '{{gift.name}}', description: '礼物名称' },
-        { name: '{{gift.count}}', description: '礼物数量' },
-        { name: '{{gift.price}}', description: '礼物单价(元)' },
-        { name: '{{gift.totalPrice}}', description: '礼物总价值(元)' },
-        { name: '{{gift.summary}}', description: '礼物概要 (例如: 5个小心心)' },
-      )
-      break
-    case TriggerType.GUARD:
-      specificPlaceholders.push(
-        { name: '{{guard.level}}', description: '开通的舰队等级 (1:总督, 2:提督, 3:舰长)' },
-        { name: '{{guard.levelName}}', description: '开通的舰队等级名称' },
-        { name: '{{guard.giftCode}}', description: '舰长礼物代码 (预留字段)' },
-      )
-      break
-    case TriggerType.SUPER_CHAT:
-      specificPlaceholders.push(
-        { name: '{{sc.message}}', description: 'SC留言内容' },
-        { name: '{{sc.price}}', description: 'SC金额(元)' },
-      )
-      break
-  }
-
-  const finalPlaceholders = [...specificPlaceholders, ...basePlaceholders]
-  return Array.from(new Map(finalPlaceholders.map(item => [item.name, item])).values())
-})
+const mergedPlaceholders = computed(() => getMergedPlaceholders(props.template.triggerType))
 
 // 深度合并两个对象的辅助函数
 function deepMerge(target: any, source: any): any {

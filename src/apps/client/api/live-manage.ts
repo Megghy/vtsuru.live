@@ -47,12 +47,23 @@ function appSign(params: AppSignParams, appsec: string): SignedParams {
   // 计算 MD5 签名
   const signString = queryString + appsec
   const sign = md5(signString)
-  
-  console.log('签名字符串:', signString)
-  console.log('签名结果:', sign)
-  
+
   // 添加签名
   return { ...sortedParams, sign }
+}
+
+/**
+ * 从 cookie 字符串中提取 CSRF 令牌 (bili_jct)
+ */
+function extractCsrfFromCookie(cookie: string): string {
+  return cookie.match(/bili_jct=([^;]+)/)?.[1] ?? ''
+}
+
+/**
+ * 从 cookie 字符串中提取用户 ID (DedeUserID)
+ */
+function extractUidFromCookie(cookie: string): string {
+  return cookie.match(/DedeUserID=([^;]+)/)?.[1] ?? ''
 }
 
 /**
@@ -82,24 +93,23 @@ async function getTimestamp(): Promise<number> {
  */
 export async function getLiveVersion(): Promise<LiveVersionInfo | null> {
   try {
-    console.log('正在获取直播姬版本号')
     const appkey = 'aae92bc66f3edfab'
     const appsec = 'af125a0d5279fd576c1b4418a3e8276d'
-    
+
     const ts = await getTimestamp()
-    
+
     // 准备参数并签名
     const params = appSign({
       appkey,
       system_version: 2,
       ts,
     }, appsec)
-    
+
     const query = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
       query.append(key, String(value))
     })
-    
+
     const resp = await QueryBiliAPI(
       `https://api.live.bilibili.com/xlive/app-blink/v1/liveVersionInfo/getHomePageLiveVersion?${query.toString()}`,
       'GET',
@@ -107,12 +117,11 @@ export async function getLiveVersion(): Promise<LiveVersionInfo | null> {
       false,
     )
     const json = await resp.json() as { code: number, data?: LiveVersionInfo }
-    
+
     if (json.code === 0 && json.data) {
-      console.log('获取直播姬版本成功:', json.data.curr_version, 'build:', json.data.build)
       return json.data
     }
-    
+
     return null
   }
   catch (err) {
@@ -189,16 +198,13 @@ export async function startLive(params: StartLiveParams): Promise<StartLiveRespo
   const biliCookieStore = useBiliCookie()
   const cookie = await biliCookieStore.getBiliCookie()
 
-  console.log('正在开始直播: ', params)
-  
   if (!cookie) {
     throw new Error('未登录或Cookie无效')
   }
 
   // 从cookie中提取bili_jct作为csrf
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
-  
+  const csrf = extractCsrfFromCookie(cookie)
+
   if (!csrf) {
     throw new Error('无法获取CSRF令牌')
   }
@@ -206,10 +212,10 @@ export async function startLive(params: StartLiveParams): Promise<StartLiveRespo
   // 准备参数
   const appkey = 'aae92bc66f3edfab'
   const appsec = 'af125a0d5279fd576c1b4418a3e8276d'
-  
+
   // 获取时间戳
   const ts = await getTimestamp()
-  
+
   const requestParams: Record<string, any> = {
     access_key: '', // 留空
     appkey,
@@ -222,12 +228,9 @@ export async function startLive(params: StartLiveParams): Promise<StartLiveRespo
     csrf_token: csrf,
     ts: ts.toString(),
   }
-  
+
   // 对参数按字典序排序并签名
   const signedParams = appSign(requestParams, appsec)
-  
-  console.log('已对参数进行签名')
-  console.log('开播请求参数:', signedParams)
 
   // 将参数作为URL查询字符串，而不是POST body
   const query = new URLSearchParams()
@@ -243,7 +246,6 @@ export async function startLive(params: StartLiveParams): Promise<StartLiveRespo
   )
 
   const json = await resp.json()
-  console.log('开播响应:', json)
   return json as StartLiveResponse
 }
 
@@ -276,9 +278,8 @@ export async function stopLive(params: StopLiveParams): Promise<StopLiveResponse
     throw new Error('未登录或Cookie无效')
   }
 
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
-  
+  const csrf = extractCsrfFromCookie(cookie)
+
   if (!csrf) {
     throw new Error('无法获取CSRF令牌')
   }
@@ -337,9 +338,8 @@ export async function updateRoom(params: UpdateRoomParams): Promise<UpdateRoomRe
     throw new Error('未登录或Cookie无效')
   }
 
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
-  
+  const csrf = extractCsrfFromCookie(cookie)
+
   if (!csrf) {
     throw new Error('无法获取CSRF令牌')
   }
@@ -426,11 +426,8 @@ export async function updateRoomNews(params: UpdateRoomNewsParams): Promise<Upda
     throw new Error('未登录或Cookie无效')
   }
 
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
-
-  const uidMatch = cookie.match(/DedeUserID=([^;]+)/)
-  const uid = uidMatch ? uidMatch[1] : ''
+  const csrf = extractCsrfFromCookie(cookie)
+  const uid = extractUidFromCookie(cookie)
 
   if (!csrf || !uid) {
     throw new Error('无法获取CSRF令牌或用户ID')
@@ -475,8 +472,7 @@ export async function uploadCover(file: File): Promise<UploadCoverResponse> {
     throw new Error('未登录或Cookie无效')
   }
 
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
+  const csrf = extractCsrfFromCookie(cookie)
 
   if (!csrf) {
     throw new Error('无法获取CSRF令牌')
@@ -554,8 +550,7 @@ export async function updateCover(coverUrl: string): Promise<UpdateCoverResponse
     throw new Error('未登录或Cookie无效')
   }
 
-  const csrfMatch = cookie.match(/bili_jct=([^;]+)/)
-  const csrf = csrfMatch ? csrfMatch[1] : ''
+  const csrf = extractCsrfFromCookie(cookie)
 
   if (!csrf) {
     throw new Error('无法获取CSRF令牌')

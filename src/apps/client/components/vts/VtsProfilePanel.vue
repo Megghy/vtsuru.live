@@ -32,7 +32,7 @@ function exportProfile(p: VtsProfile) {
   run(async () => {
     const json = JSON.stringify(vts.exportProfile(p.id), null, 2)
     saveAs(new Blob([json], { type: 'application/json;charset=utf-8' }), `vts_profile_${sanitizeFileName(p.name)}.json`)
-    try { await navigator.clipboard.writeText(json) } catch {}
+    try { await navigator.clipboard.writeText(json) } catch (err) { console.warn('写入剪贴板失败', err) }
   }, '已导出')
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NColorPicker, NDivider, NEmpty, NFlex, NGi, NGrid, NInput, NModal, NSelect, NSwitch, NText } from 'naive-ui'
-import { computed, reactive, ref } from 'vue'
+import { computed, onUnmounted, reactive, ref } from 'vue'
 import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { useVtsAction } from './useVtsAction'
@@ -154,6 +154,13 @@ function handleTrigger(hotkeyID: string) {
   if (armedTimer != null) clearTimeout(armedTimer)
   armedTimer = window.setTimeout(disarm, 1500)
 }
+
+onUnmounted(() => {
+  if (armedTimer != null) {
+    clearTimeout(armedTimer)
+    armedTimer = null
+  }
+})
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()

@@ -53,11 +53,14 @@ watch(() => setting.value, () => updateCssVariables(), { deep: true })
 
 <template>
   <NSpin v-if="!setting" show />
-  <div v-else class="rank-window" :class="{ 'has-items': hasItems }">
+  <div v-else class="rank-window has-items">
     <div class="rank-window-bg" />
     <div class="rank-list">
       <div class="rank-header">
         高能排行榜
+      </div>
+      <div v-if="!hasItems" class="rank-empty">
+        等待中...
       </div>
       <TransitionGroup name="rank-list" tag="div" class="rank-list-container">
         <div
@@ -100,6 +103,7 @@ html, body { background: transparent; overflow: hidden; }
 }
 .rank-list { padding: 8px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
 .rank-header { text-align: center; font-weight: 600; font-size: 1.1em; padding: 4px 0 8px; opacity: 0.9; }
+.rank-empty { text-align: center; opacity: 0.3; padding: 20px 0; font-size: 0.9em; }
 .rank-list-container { display: flex; flex-direction: column; gap: 4px; }
 
 .rank-item {
@@ -115,7 +119,7 @@ html, body { background: transparent; overflow: hidden; }
 .rank-top-2 .rank-index { color: #c0c0c0; font-weight: 700; }
 .rank-top-3 .rank-index { color: #cd7f32; font-weight: 700; }
 
-.rank-index { width: 24px; text-align: center; font-weight: 500; flex-shrink: 0; }
+.rank-index { min-width: 24px; padding: 0 2px; text-align: center; font-weight: 500; flex-shrink: 0; box-sizing: content-box; }
 .rank-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
 .rank-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rank-score { font-weight: 600; color: #fbbf24; flex-shrink: 0; }

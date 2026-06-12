@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NText, NTooltip } from 'naive-ui'
+import { NButton, NFlex, NIcon, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSpeechService } from '@/store/useSpeechService'
@@ -9,9 +9,15 @@ const router = useRouter()
 const route = useRoute()
 const speechService = useSpeechService()
 const { speechState, speakQueue, isPaused } = speechService
+const themeVars = useThemeVars()
 
 const isActive = computed(() => speechState.canSpeech && route.name !== 'client-read-danmaku')
 const queueCount = computed(() => speakQueue.value.length)
+const containerStyle = computed(() => ({
+  '--mini-bg': themeVars.value.popoverColor,
+  '--mini-border': themeVars.value.borderColor,
+  '--mini-badge-bg': themeVars.value.actionColor,
+}))
 
 function goToPage() {
   router.push({ name: 'client-read-danmaku' })
@@ -20,7 +26,7 @@ function goToPage() {
 
 <template>
   <Teleport to="body">
-    <div v-if="isActive" class="speech-mini-controller">
+    <div v-if="isActive" class="speech-mini-controller" :style="containerStyle">
       <NFlex align="center" :size="8" :wrap="false" style="flex: 1; overflow: hidden;">
         <NTooltip>
           <template #trigger>
@@ -68,8 +74,8 @@ function goToPage() {
   bottom: 16px;
   right: 16px;
   z-index: 9999;
-  background: #2a2a2c;
-  border: 1px solid #3a3a3c;
+  background: var(--mini-bg);
+  border: 1px solid var(--mini-border);
   border-radius: 8px;
   padding: 6px 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -88,7 +94,7 @@ function goToPage() {
 }
 .queue-badge {
   font-size: 11px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--mini-badge-bg);
   border-radius: 10px;
   padding: 0 6px;
   min-width: 18px;

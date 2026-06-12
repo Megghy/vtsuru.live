@@ -34,17 +34,32 @@ export const roomInfo = ref<BiliRoomInfo>() // 可以添加房间信息
 
 // --- Bili API 更新相关 ---
 const updateCount = ref(0) // 用于控制API调用频率的计数器
+let infoTimer: ReturnType<typeof setInterval> | null = null
 
 /**
  * 初始化统计和信息获取逻辑
  */
 export function initInfo() {
+  // 避免重复初始化导致多个定时器叠加
+  if (infoTimer !== null) {
+    return
+  }
   // 立即执行一次以加载或初始化当天数据
   updateCallback()
   // 设置定时器，定期检查和保存统计数据，并更新直播间信息
-  setInterval(() => {
+  infoTimer = setInterval(() => {
     updateCallback()
   }, 5000) // 每 5 秒检查一次统计数据保存和更新直播信息
+}
+
+/**
+ * 清理定时器 (在应用退出或不再需要时调用)
+ */
+export function cleanupInfo() {
+  if (infoTimer !== null) {
+    clearInterval(infoTimer)
+    infoTimer = null
+  }
 }
 
 /**
@@ -187,17 +202,23 @@ async function updateRoomAndStreamingInfo() {
     } else {
       error(`Failed to fetch Bili room info: ${json.message}`)
     }
+
+    // 没有有效 UID 时无法查询直播流信息，直接返回
+    const uid = roomInfo.value?.uid
+    if (!uid) {
+      return
+    }
     // 查询直播流信息 (开放平台或Web接口)
     // 注意：这里可能需要根据所选模式（openlive/direct）调用不同的API
     // 以下是Web接口示例
     const streamRes = await QueryBiliAPI(
-      `https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]=${roomInfo.value?.uid}`, // 通过 UID 查询
+      `https://api.live.bilibili.com/room/v1/Room/get_status_info_by_uids?uids[]=${uid}`, // 通过 UID 查询
       // 或者使用 `https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo?room_ids=${roomId}&req_biz=web_room_componet`
     )
     const streamJson = await streamRes.json()
-    if (streamJson.code === 0 && streamJson.data && roomInfo.value?.uid) {
+    if (streamJson.code === 0 && streamJson.data) {
       // Web API 返回的是一个以 UID 为 key 的对象
-      const uidData = streamJson.data[roomInfo.value.uid.toString()]
+      const uidData = streamJson.data[uid.toString()]
       if (uidData) {
         streamingInfo.value = {
           ...uidData, // 合并获取到的数据

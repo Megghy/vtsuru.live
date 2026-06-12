@@ -91,11 +91,23 @@ export async function getLoginInfoAsync(qrcodeKey: string): Promise<QRCodeLoginI
   return { status: 'confirmed', cookie: extractCookie(cookies), refresh_token: message.data.refresh_token }
 }
 
+// Cookie 属性名 (非真实 Cookie 键值), 需在解析时跳过
+const COOKIE_ATTRIBUTES = new Set([
+  'expires', 'max-age', 'domain', 'path', 'secure', 'httponly', 'samesite', 'priority', 'partitioned',
+])
+
+// 从合并的 set-cookie 头中精确提取 name=value 对。
+// 直接按 ',' 分割会被 Expires=Wed, 21-Oct-... 中的逗号干扰, 故用正则逐对匹配并跳过属性名。
 function extractCookie(cookies: string): string {
-  const cookieArray = cookies
-    .split(',')
-    .map(cookie => cookie.split(';')[0].trim())
-    .filter(Boolean)
-  const cookieSet = new Set(cookieArray)
-  return Array.from(cookieSet).join('; ')
+  const result = new Map<string, string>()
+  const regex = /([^=;,\s]+)=([^;,]*)/g
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(cookies)) !== null) {
+    const name = match[1].trim()
+    if (COOKIE_ATTRIBUTES.has(name.toLowerCase())) {
+      continue
+    }
+    result.set(name, match[2].trim())
+  }
+  return Array.from(result, ([name, value]) => `${name}=${value}`).join('; ')
 }

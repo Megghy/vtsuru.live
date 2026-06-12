@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { NDivider, NInputNumber, NRadio, NRadioGroup, NFlex, NSwitch, NText, NForm, NFormItem, NTooltip, NIcon } from 'naive-ui';
-import { ref, watch } from 'vue'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
 
@@ -23,11 +22,10 @@ if (props.action.triggerConfig.intervalSeconds === undefined) {
   props.action.triggerConfig.intervalSeconds = 300 // 默认5分钟
 }
 
-const useGlobalTimer = ref(props.action.triggerConfig.useGlobalTimer)
-
-// 同步到 action
-watch(useGlobalTimer, (value) => {
-  props.action.triggerConfig.useGlobalTimer = value
+// 双向绑定到 action, 保证父组件修改也能同步到子组件
+const useGlobalTimer = computed({
+  get: () => props.action.triggerConfig.useGlobalTimer,
+  set: (value) => { props.action.triggerConfig.useGlobalTimer = value },
 })
 
 // 定时模式选项

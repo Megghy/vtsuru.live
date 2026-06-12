@@ -79,6 +79,7 @@ const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 
 // Autostart Settings
 const isStartOnBoot = ref(false)
+const isUpdatingAutostart = ref(false)
 
 // --- Lifecycle Hooks ---
 
@@ -101,6 +102,7 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
   if (isLoading.value || newValue === oldValue) return
 
   errorMsg.value = null
+  isUpdatingAutostart.value = true
   try {
     if (newValue) {
       await enable()
@@ -112,10 +114,12 @@ watch(isStartOnBoot, async (newValue, oldValue) => {
     errorMsg.value = `设置开机启动失败: ${err instanceof Error ? err.message : '未知错误'}`
     isStartOnBoot.value = oldValue
     window.$message.error('设置开机启动失败')
+  } finally {
+    isUpdatingAutostart.value = false
   }
 })
 
-function renderNotifidactionEnable(name: NotificationType) {
+function renderNotificationEnable(name: NotificationType) {
   return h(NCheckbox, {
     checked: setting.settings.notificationSettings?.enableTypes.includes(name),
     onUpdateChecked: (value) => {
@@ -125,6 +129,7 @@ function renderNotifidactionEnable(name: NotificationType) {
       } else {
         setting.settings.notificationSettings.enableTypes = setting.settings.notificationSettings.enableTypes.filter(type => type !== name)
       }
+      setting.save()
     },
   }, () => '启用')
 }
@@ -205,7 +210,8 @@ function handleTitleClick() {
                         <LabelItem label="开机时启动应用" label-placement="left">
                           <NSwitch
                             v-model:value="isStartOnBoot"
-                            :disabled="isLoading"
+                            :disabled="isLoading || isUpdatingAutostart"
+                            :loading="isUpdatingAutostart"
                           />
                         </LabelItem>
                         <LabelItem
@@ -261,22 +267,22 @@ function handleTitleClick() {
                       <template v-if="setting.settings.enableNotification">
                         <NCard size="small" bordered title="提问箱通知">
                           <template #header-extra>
-                            <component :is="renderNotifidactionEnable('question-box')" />
+                            <component :is="renderNotificationEnable('question-box')" />
                           </template>
                         </NCard>
                         <NCard size="small" bordered title="积分兑换通知">
                           <template #header-extra>
-                            <component :is="renderNotifidactionEnable('goods-buy')" />
+                            <component :is="renderNotificationEnable('goods-buy')" />
                           </template>
                         </NCard>
                         <NCard size="small" bordered title="弹幕相关">
                           <template #header-extra>
-                            <component :is="renderNotifidactionEnable('danmaku')" />
+                            <component :is="renderNotificationEnable('danmaku')" />
                           </template>
                         </NCard>
                         <NCard size="small" bordered title="私信失败通知">
                           <template #header-extra>
-                            <component :is="renderNotifidactionEnable('message-failed')" />
+                            <component :is="renderNotificationEnable('message-failed')" />
                           </template>
                           <NText depth="3">
                             当 B 站私信发送失败时通知你
@@ -284,7 +290,7 @@ function handleTitleClick() {
                         </NCard>
                         <NCard size="small" bordered title="弹幕发送失败通知">
                           <template #header-extra>
-                            <component :is="renderNotifidactionEnable('live-danmaku-failed')" />
+                            <component :is="renderNotificationEnable('live-danmaku-failed')" />
                           </template>
                           <NText depth="3">
                             当直播弹幕发送失败时通知你

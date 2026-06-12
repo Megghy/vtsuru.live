@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
-import { computed, watch } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { useVtsAction } from './useVtsAction'
@@ -36,7 +36,7 @@ function removeMapping(scene: string) {
 let timer: number | null = null
 let lastScene: string | null = null
 
-watch(
+const stopWatch = watch(
   () => obs.currentObsScene,
   (scene) => {
     if (!scene || !vts.obsLinkConfig.enabled || !vts.canOperate) return
@@ -50,6 +50,14 @@ watch(
   },
   { immediate: true },
 )
+
+onUnmounted(() => {
+  stopWatch()
+  if (timer != null) {
+    window.clearTimeout(timer)
+    timer = null
+  }
+})
 </script>
 
 <template>

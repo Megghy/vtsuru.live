@@ -22,12 +22,12 @@ async function updateMaximizedState() {
 
 // 处理标题栏的鼠标按下事件 (拖动/双击最大化)
 function handleTitlebarMouseDown(event: MouseEvent) {
-  // 确保是鼠标左键按下
-  if (event.buttons === 1) {
+  // 确保是鼠标左键 (mousedown 时 button === 0 表示左键)
+  if (event.button === 0) {
     // event.detail 在 mousedown 事件中可以用来检测点击次数
     if (event.detail === 2) {
       // 双击：切换最大化
-      appWindow.toggleMaximize()
+      toggleMaximizeWindow()
     } else {
       // 单击：开始拖动
       appWindow.startDragging()
@@ -46,16 +46,6 @@ onMounted(async () => {
   unlisten = await appWindow.onResized(() => {
     updateMaximizedState()
   })
-
-  // 注意：某些情况下 (如 Linux 上的某些窗口管理器)，
-  // toggleMaximize 可能不会立即触发 onResized。
-  // 如果遇到图标不更新的问题，可以考虑在 toggleMaximize 调用后加一个小的延时再手动调用 updateMaximizedState。
-  // 例如：
-  // const handleToggleMaximize = () => {
-  //   appWindow.toggleMaximize();
-  //   setTimeout(updateMaximizedState, 100); // 略微延迟更新
-  // }
-  // 然后在 maximize 按钮上使用 @click="handleToggleMaximize"
 })
 
 onUnmounted(() => {
@@ -67,7 +57,11 @@ onUnmounted(() => {
 
 // --- Window Control Functions ---
 const minimizeWindow = () => appWindow.minimize()
-const toggleMaximizeWindow = () => appWindow.toggleMaximize()
+async function toggleMaximizeWindow() {
+  await appWindow.toggleMaximize()
+  // 某些窗口管理器下 toggleMaximize 不会触发 onResized, 主动补一次状态查询
+  await updateMaximizedState()
+}
 const closeWindow = () => appWindow.hide()
 </script>
 
@@ -99,6 +93,7 @@ const closeWindow = () => appWindow.hide()
         quaternary
         circle
         size="tiny"
+        title="最小化"
         aria-label="Minimize"
         @click="minimizeWindow"
       >
@@ -108,6 +103,7 @@ const closeWindow = () => appWindow.hide()
         quaternary
         circle
         size="tiny"
+        :title="isMaximized ? '还原' : '最大化'"
         :aria-label="isMaximized ? 'Restore' : 'Maximize'"
         @click="toggleMaximizeWindow"
       >
@@ -122,6 +118,7 @@ const closeWindow = () => appWindow.hide()
         quaternary
         circle
         size="tiny"
+        title="关闭"
         aria-label="Close"
         @click="closeWindow"
       >

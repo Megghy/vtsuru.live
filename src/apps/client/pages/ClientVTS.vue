@@ -24,14 +24,19 @@ import { useVtsAction } from '@/apps/client/components/vts/useVtsAction'
 
 const vts = useVtsStore()
 const autoAction = useAutoAction()
-const { run } = useVtsAction()
+const { run, message } = useVtsAction()
 const router = useRouter()
 const tab = ref<'control' | 'items' | 'settings'>('control')
 const showConnectionDetail = ref(false)
 
 onMounted(async () => {
   if (!isTauri()) return
-  await run(() => vts.init())
+  try {
+    await vts.init()
+  } catch (err) {
+    message.error(err instanceof Error ? err.message : String(err))
+    return
+  }
   if (vts.wsUrl && vts.authToken && !vts.connected) {
     run(() => vts.connect())
   }

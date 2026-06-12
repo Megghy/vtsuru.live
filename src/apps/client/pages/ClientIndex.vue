@@ -17,6 +17,7 @@ const roomCover = computed(() => {
   return isHover.value ? roomInfo.value?.keyframe : roomInfo.value?.user_cover
 })
 const { height } = useElementSize(coverRef)
+const liveRoomUrl = computed(() => `https://live.bilibili.com/${accountInfo.value.biliRoomId}`)
 
 function logout() {
   cookie.value = undefined
@@ -67,7 +68,7 @@ function logout() {
           <NFlex align="center" :size="12">
             <NAvatar
               :src="`${accountInfo.streamerInfo?.faceUrl}@100w`"
-              :fallback-src="accountInfo.name[.2]"
+              :fallback-src="accountInfo.name?.slice(0, 2)"
               bordered
               round
               :img-props="{ referrerpolicy: 'no-referrer' }"
@@ -129,7 +130,7 @@ function logout() {
             <div
               class="client-index-cover__mask"
               :style="{ height: `${height}px` }"
-              @click="openUrl(`https://live.bilibili.com/${accountInfo.biliRoomId}`)"
+              @click="openUrl(liveRoomUrl)"
               @mouseenter="isHover = true"
               @mouseleave="isHover = false"
             />
@@ -147,7 +148,7 @@ function logout() {
             <NButton
               type="primary"
               size="small"
-              @click="openUrl(`https://live.bilibili.com/${accountInfo.biliRoomId}`)"
+              @click="openUrl(liveRoomUrl)"
             >
               前往直播间
             </NButton>

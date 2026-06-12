@@ -84,7 +84,7 @@ function applyPreset(preset: keyof typeof presets) {
                 </NInputNumber>
               </NFormItem>
               <NText depth="3" style="font-size: 12px">
-                低于此金额的礼物不会显示（1000金瓜子 = ¥1）
+                按金瓜子计价（1000 金瓜子 = ¥1），礼物按单价×数量，SC/上舰按其金额。低于此值的礼物、SC、上舰都不会显示，设为 0 不过滤
               </NText>
             </NCard>
           </NFlex>

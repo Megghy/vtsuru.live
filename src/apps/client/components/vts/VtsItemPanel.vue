@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDivider, NFlex, NInput, NSelect, NSwitch, NTabPane, NTabs, NText } from 'naive-ui'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsAccessoryBinding, VtsPrankBinding } from '@/apps/client/store/useVtsStore'
 import { useVtsAction } from './useVtsAction'
@@ -29,8 +29,18 @@ const hotkeyOptions = computed(() =>
   })),
 )
 
+const refreshing = ref(false)
+
 function refresh() {
-  run(() => vts.refreshItems({ includeFiles: true }), '已刷新')
+  if (refreshing.value) return
+  refreshing.value = true
+  run(async () => {
+    try {
+      await vts.refreshItems({ includeFiles: true })
+    } finally {
+      refreshing.value = false
+    }
+  }, '已刷新')
 }
 
 function addAccessory() {
@@ -89,7 +99,7 @@ function dropPrank(p: VtsPrankBinding) {
   <NCard size="small" title="道具管理">
     <NFlex vertical :size="10">
       <NFlex align="center" :wrap="true" :size="8">
-        <NButton size="small" :disabled="!vts.canOperate" @click="refresh">
+        <NButton size="small" :loading="refreshing" :disabled="!vts.canOperate || refreshing" @click="refresh">
           刷新列表
         </NButton>
         <NText depth="3">

@@ -31,10 +31,15 @@ const searchText = ref('')
 
 const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes)
 
+// 该触发类型的全局真实顺序列表(不受搜索/排序影响), 用于排序按钮边界与移动判断
+const orderedActions = computed(() =>
+  (autoActionStore.autoActions as AutoActionItem[]).filter(a => a.triggerType === props.triggerType)
+)
+
 // Filter actions for this type
 const filteredActions = computed(() => {
-  let list = (autoActionStore.autoActions as AutoActionItem[]).filter(a => a.triggerType === props.triggerType)
-  
+  let list = [...orderedActions.value]
+
   if (searchText.value) {
     const lower = searchText.value.toLowerCase()
     list = list.filter(a => 
@@ -167,25 +172,25 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
     width: 140,
     align: 'right',
     render: (row: any) => {
-      const index = filteredActions.value.findIndex(a => a.id === row.id)
+      const index = orderedActions.value.findIndex(a => a.id === row.id)
       const buttons = []
-      
+
       // Move buttons for Scheduled
       if (props.triggerType === TriggerType.SCHEDULED) {
          buttons.push(
-           h(NButton, { 
-             size: 'tiny', 
-             tertiary: true, 
-             circle: true, 
-             disabled: index === 0, 
-             onClick: () => autoActionStore.moveAction(row.id, 'up') 
+           h(NButton, {
+             size: 'tiny',
+             tertiary: true,
+             circle: true,
+             disabled: index === 0,
+             onClick: () => autoActionStore.moveAction(row.id, 'up')
            }, { icon: () => h(NIcon, { component: ArrowUp24Regular }) }),
-           h(NButton, { 
-             size: 'tiny', 
-             tertiary: true, 
-             circle: true, 
-             disabled: index === filteredActions.value.length - 1, 
-             onClick: () => autoActionStore.moveAction(row.id, 'down') 
+           h(NButton, {
+             size: 'tiny',
+             tertiary: true,
+             circle: true,
+             disabled: index === orderedActions.value.length - 1,
+             onClick: () => autoActionStore.moveAction(row.id, 'down')
            }, { icon: () => h(NIcon, { component: ArrowDown24Regular }) })
          )
       }
@@ -219,11 +224,31 @@ const columns = computed<DataTableColumns<AutoActionItem>>(() => {
   return base
 })
 
+// 智能生成克隆名称: "X" -> "X (复制)" -> "X (复制 2)" -> "X (复制 3)"
+function nextDuplicateName(sourceName: string) {
+  // 剥离已有的 "(复制)" / "(复制 N)" 后缀, 得到基础名
+  const baseName = sourceName.replace(/\s*\(复制(?:\s*\d+)?\)$/, '').trim()
+  const escaped = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const re = new RegExp(`^${escaped}\\s*\\(复制(?:\\s*(\\d+))?\\)$`)
+
+  let maxN = 0
+  let hasCopy = false
+  for (const a of autoActionStore.autoActions as AutoActionItem[]) {
+    const m = a.name?.match(re)
+    if (m) {
+      hasCopy = true
+      maxN = Math.max(maxN, m[1] ? Number(m[1]) : 1)
+    }
+  }
+  if (!hasCopy) return `${baseName} (复制)`
+  return `${baseName} (复制 ${maxN + 1})`
+}
+
 function duplicateAction(action: AutoActionItem) {
   const newActionData = JSON.parse(JSON.stringify(action))
   const newActionId = `auto-action-${Date.now()}`
   newActionData.id = newActionId
-  newActionData.name += ' (复制)'
+  newActionData.name = nextDuplicateName(action.name || '未命名操作')
   autoActionStore.autoActions.push(newActionData)
   
   if (newActionData.triggerType === TriggerType.SCHEDULED) {

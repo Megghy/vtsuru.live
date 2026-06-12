@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { NAlert, NButton } from 'naive-ui';
+import { computed } from 'vue'
 import { useBiliCookie } from '../store/useBiliCookie'
 
 const props = withDefaults(defineProps<{
@@ -10,6 +11,16 @@ const props = withDefaults(defineProps<{
 })
 const biliCookie = useBiliCookie()
 const router = useRouter()
+
+const alertConfig = computed(() => props.variant === 'home'
+  ? {
+      title: '需重新登录 B 站账号',
+      message: '检测到 B 站 Cookie 已失效，客户端功能将受限。',
+    }
+  : {
+      title: 'EventFetcher 需要有效的 B 站 Cookie',
+      message: '请尽快同步或重新登录 Cookie，以保证事件采集稳定运行。',
+    })
 
 const goToFetcher = () => {
   router.push({ name: 'client-fetcher' })
@@ -25,16 +36,13 @@ const goToSettings = () => {
     v-if="biliCookie.hasBiliCookie && !biliCookie.isCookieValid"
     class="cookie-invalid-alert"
     type="error"
-    :title="props.variant === 'home' ? '需重新登录 B 站账号' : 'EventFetcher 需要有效的 B 站 Cookie'"
+    :title="alertConfig.title"
     :show-icon="true"
     :bordered="false"
   >
     <div class="cookie-invalid-alert__content">
       <p>
-        {{ props.variant === 'home'
-          ? '检测到 B 站 Cookie 已失效，客户端功能将受限。'
-          : '请尽快同步或重新登录 Cookie，以保证事件采集稳定运行。'
-        }}
+        {{ alertConfig.message }}
       </p>
       <p>
         如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。
@@ -68,7 +76,7 @@ const goToSettings = () => {
 .cookie-invalid-alert__content {
   font-size: 13px;
   line-height: 1.6;
-  color: rgb(51 54 57 / 90%);
+  color: var(--n-text-color);
 }
 
 .cookie-invalid-alert__actions {

@@ -7,6 +7,17 @@ import LabelItem from '@/apps/client/components/LabelItem.vue'
 
 const danmakuWindow = useDanmakuWindow()
 const message = useMessage()
+const emojiLoading = ref(false)
+
+async function reloadEmoji() {
+  emojiLoading.value = true
+  try {
+    await danmakuWindow.getEmojiData()
+    message.success('表情数据已重新加载')
+  } finally {
+    emojiLoading.value = false
+  }
+}
 
 const filterTypeOptions = [
   { label: '弹幕消息', value: 'Message' },
@@ -32,9 +43,9 @@ const separatorOptions = [
 ]
 
 const presets = {
-  dark: { backgroundColor: 'rgba(0,0,0,0.8)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.7)' },
-  light: { backgroundColor: 'rgba(255,255,255,0.8)', textColor: '#333333', shadowColor: 'rgba(0,0,0,0.2)' },
-  transparent: { backgroundColor: 'rgba(0,0,0,0.3)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.0)' },
+  dark: { backgroundColor: 'rgba(0,0,0,0.8)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.7)', enableShadow: true, borderRadius: 8, opacity: 0.95 },
+  light: { backgroundColor: 'rgba(255,255,255,0.8)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#333333', shadowColor: 'rgba(0,0,0,0.2)', enableShadow: true, borderRadius: 8, opacity: 0.95 },
+  transparent: { backgroundColor: 'rgba(0,0,0,0.3)', windowBackgroundColor: 'rgba(0,0,0,0)', textColor: '#ffffff', shadowColor: 'rgba(0,0,0,0.0)', enableShadow: false, borderRadius: 8, opacity: 0.9 },
 }
 
 function applyPreset(preset: keyof typeof presets) {
@@ -334,7 +345,8 @@ function applyPreset(preset: keyof typeof presets) {
                 </NText>
                 <NButton
                   size="small"
-                  @click="async () => { await danmakuWindow.getEmojiData(); message.success('表情数据已重新加载') }"
+                  :loading="emojiLoading"
+                  @click="reloadEmoji"
                 >
                   重新加载
                 </NButton>

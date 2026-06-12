@@ -20,6 +20,7 @@ import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { CHECKIN_API_URL } from '@/shared/config'
 import AutoActionEditor from '../AutoActionEditor.vue'
 import TemplateHelper from '../TemplateHelper.vue'
+import { CHECKIN_PLACEHOLDERS } from '../placeholders'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 
 const icons = {
@@ -47,12 +48,7 @@ const customTestContext = ref({
 })
 
 // 签到模板的特定占位符
-const checkInPlaceholders = [
-  { name: '{{checkin.points}}', description: '获得的总积分' },
-  { name: '{{checkin.consecutiveDays}}', description: '连续签到天数' },
-  { name: '{{checkin.todayRank}}', description: '今日签到排名' },
-  { name: '{{checkin.time}}', description: '签到时间对象' },
-]
+const checkInPlaceholders = CHECKIN_PLACEHOLDERS
 
 // 服务端签到设置（提供强类型默认值，避免模板中访问属性时报错）
 const defaultPointSetting: Setting_Point = {

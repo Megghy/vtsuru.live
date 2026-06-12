@@ -115,6 +115,8 @@ function normalizeStep(s: unknown): VtsMacroStep {
   }
   if (step.type === 'playAudio') {
     if (typeof step.url !== 'string' || !step.url) throw new Error('playAudio.url 无效')
+    if (step.volume != null && (typeof step.volume !== 'number' || !Number.isFinite(step.volume) || step.volume < 0 || step.volume > 1)) throw new Error('playAudio.volume 必须在 [0,1] 范围内')
+    if (step.waitForEnd != null && typeof step.waitForEnd !== 'boolean') throw new Error('playAudio.waitForEnd 必须是布尔值')
     return { type: 'playAudio', url: step.url, volume: step.volume, waitForEnd: step.waitForEnd }
   }
   throw new Error(`未知步骤类型: ${String(step.type)}`)
@@ -139,9 +141,10 @@ function addMacro() {
 function cloneMacro(m: VtsMacro) {
   run(async () => {
     const cloned = await vts.createMacro()
+    const baseName = m.name.replace(/(\s*\(副本\))+$/, '')
     await vts.upsertMacro({
       ...cloned,
-      name: `${m.name} (副本)`,
+      name: `${baseName} (副本)`,
       steps: structuredClone(m.steps),
     })
   }, '已克隆')

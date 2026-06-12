@@ -80,6 +80,7 @@ function parseColorToRgba(color?: string): ParsedColor | null {
 }
 
 let bc: BroadcastChannel | undefined
+let checkInterval: ReturnType<typeof setInterval> | undefined
 const setting = ref<DanmakuWindowSettings>()
 const danmakuList = ref<TempDanmakuType[]>([])
 const pendingDanmakuQueue = ref<TempDanmakuType[]>([]) // 新增：待处理弹幕队列
@@ -142,23 +143,25 @@ function processBatchUpdate() {
 
   isInBatchUpdate.value = true // 开始批量更新
 
-  const itemsToAdd = pendingDanmakuQueue.value.slice() // 复制队列
-  pendingDanmakuQueue.value = [] // 清空队列
+  try {
+    const itemsToAdd = pendingDanmakuQueue.value.slice() // 复制队列
+    pendingDanmakuQueue.value = [] // 清空队列
 
-  // 将新弹幕添加到列表开头
-  danmakuList.value.unshift(...itemsToAdd)
+    // 将新弹幕添加到列表开头
+    danmakuList.value.unshift(...itemsToAdd)
 
-  // 优化超出长度的弹幕处理
-  if (danmakuList.value.length > maxItems.value) {
-    danmakuList.value.splice(maxItems.value, danmakuList.value.length - maxItems.value)
+    // 优化超出长度的弹幕处理
+    if (danmakuList.value.length > maxItems.value) {
+      danmakuList.value.splice(maxItems.value, danmakuList.value.length - maxItems.value)
+    }
+  } finally {
+    isUpdateScheduled.value = false
+
+    // 在下一帧 DOM 更新后结束批量更新状态
+    nextTick(() => {
+      isInBatchUpdate.value = false
+    })
   }
-
-  isUpdateScheduled.value = false
-
-  // 在下一帧 DOM 更新后结束批量更新状态
-  nextTick(() => {
-    isInBatchUpdate.value = false
-  })
 }
 
 // 新增：安排批量更新
@@ -260,15 +263,18 @@ onMounted(() => {
   updateCssVariables()
 
   // 启动定时器，定期检查过期弹幕
-  const checkInterval = setInterval(checkAndRemoveExpiredDanmaku, 1000)
+  checkInterval = setInterval(checkAndRemoveExpiredDanmaku, 1000)
+})
 
-  onUnmounted(() => {
-    if (bc) {
-      bc.close()
-      bc = undefined
-    }
+onUnmounted(() => {
+  if (bc) {
+    bc.close()
+    bc = undefined
+  }
+  if (checkInterval) {
     clearInterval(checkInterval)
-  })
+    checkInterval = undefined
+  }
 })
 
 // 监听设置变化

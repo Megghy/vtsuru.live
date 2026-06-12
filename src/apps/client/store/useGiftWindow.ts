@@ -165,9 +165,12 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const now = Date.now()
     const mergeMs = settings.value.mergeWindowSeconds * 1000
 
-    const existing = giftList.value.find(
-      e => e.uid === data.uid && e.giftName === data.msg && e.type === data.type && (now - e.lastUpdateTime) < mergeMs,
-    )
+    // 仅礼物按礼物名合并；SC/Guard 每条都是独立内容，不合并
+    const existing = data.type === EventDataTypes.Gift
+      ? giftList.value.find(
+          e => e.uid === data.uid && e.type === EventDataTypes.Gift && e.giftName === data.msg && (now - e.lastUpdateTime) < mergeMs,
+        )
+      : undefined
 
     if (existing) {
       existing.totalNum += data.num || 1

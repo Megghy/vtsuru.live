@@ -115,8 +115,13 @@ export const useVtsFloatWindow = defineStore('vtsFloatWindow', () => {
   async function applyWindowFlags() {
     const w = windowRef.value
     if (!w) return
-    await w.setAlwaysOnTop(settings.value.alwaysOnTop)
-    await w.setIgnoreCursorEvents(settings.value.clickThrough)
+    try {
+      await w.setAlwaysOnTop(settings.value.alwaysOnTop)
+      await w.setIgnoreCursorEvents(settings.value.clickThrough)
+    } catch (err) {
+      lastError.value = err instanceof Error ? err.message : String(err)
+      throw err
+    }
   }
 
   async function open() {

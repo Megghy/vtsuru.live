@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
-import { NCard, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NTooltip, NIcon } from 'naive-ui';
+import { NCard, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NText, NTooltip, NIcon } from 'naive-ui';
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Info16Regular } from '@vicons/fluent'
 
-defineProps({
+const props = defineProps({
   action: {
     type: Object as () => AutoActionItem,
     required: true,
@@ -18,6 +18,18 @@ defineProps({
     default: false,
   },
 })
+
+// 需要模板内容的动作类型(发送弹幕/私信/执行命令)
+const requiresTemplate = computed(() => [
+  ActionType.SEND_DANMAKU,
+  ActionType.SEND_PRIVATE_MSG,
+  ActionType.EXECUTE_COMMAND,
+].includes(props.action.actionType))
+
+const nameInvalid = computed(() => !props.action.name?.trim())
+const templateInvalid = computed(() =>
+  requiresTemplate.value && (typeof props.action.template !== 'string' || !props.action.template.trim())
+)
 
 // 触发类型选项
 const triggerTypeOptions = [
@@ -75,11 +87,20 @@ const priorityOptions = [
       >
         <NGi v-if="!hideName" span="1 m:2">
           <NFormItem label="操作名称">
-            <NInput
-              v-model:value="action.name"
-              placeholder="例如：给礼物老板点赞"
-              clearable
-            />
+            <NFlex vertical :size="2" style="width: 100%">
+              <NInput
+                v-model:value="action.name"
+                placeholder="例如：给礼物老板点赞"
+                :status="nameInvalid ? 'error' : undefined"
+                clearable
+              />
+              <NText v-if="nameInvalid" type="error" style="font-size: 12px">
+                操作名称不能为空
+              </NText>
+              <NText v-else-if="templateInvalid" type="warning" style="font-size: 12px">
+                当前动作需要设置模板内容，否则不会生效
+              </NText>
+            </NFlex>
           </NFormItem>
         </NGi>
 
