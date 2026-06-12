@@ -71,9 +71,10 @@ const songs = computed(() => {
   if (props.data) {
     return props.data
       .filter((item) => {
+        const kw = searchKeyword.value.toLowerCase()
         return (
           (!selectedTag.value || item.tags?.includes(selectedTag.value))
-          && (!searchKeyword.value || item.name.toLowerCase().includes(searchKeyword.value.toLowerCase()))
+          && (!kw || item.name.toLowerCase().includes(kw) || (item.translateName?.toLowerCase().includes(kw) ?? false))
           && (!selectedAuthor.value || item.author?.includes(selectedAuthor.value) == true)
         )
       })
@@ -209,6 +210,15 @@ function handleRequestSong(song: SongsInfo) {
               </NFlex>
             </template>
             <NFlex vertical>
+              <NText
+                v-if="item.translateName"
+                depth="3"
+                style="font-size: 13px; margin-bottom: 2px;"
+              >
+                <NEllipsis>
+                  {{ item.translateName }}
+                </NEllipsis>
+              </NText>
               <NFlex
                 v-if="(item.author?.length ?? 0) > 0"
                 :size="0"

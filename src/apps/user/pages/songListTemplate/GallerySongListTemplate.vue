@@ -204,6 +204,13 @@ function requestSong(song: SongsInfo) {
             {{ song.name }}
           </div>
           <div
+            v-if="song.translateName"
+            class="translate"
+            :title="song.translateName"
+          >
+            {{ song.translateName }}
+          </div>
+          <div
             v-if="song.author?.length"
             class="author"
             :title="song.author.join(' / ')"
@@ -418,6 +425,15 @@ function requestSong(song: SongsInfo) {
   margin-top: 2px;
   font-size: 12px;
   color: var(--n-text-color-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.translate {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--n-text-color-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

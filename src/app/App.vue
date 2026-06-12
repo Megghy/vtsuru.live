@@ -102,6 +102,12 @@ onMounted(() => {
 </template>
 
 <style>
+/* 重置浏览器默认 body margin: 否则满高(100vh)布局会被顶下 8px, 形成一圈白边 + 仅能滚几像素的页面级滚动条 */
+html,
+body {
+  margin: 0;
+}
+
 :root {
   font-feature-settings: 'liga' 1, 'calt' 1;
   --vtsuru-header-height: 50px;

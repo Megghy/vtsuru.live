@@ -310,16 +310,7 @@ onUnmounted(() => {
 
 <template>
   <div class="dashboard-view" :class="{ 'dashboard-view--wide': selectedTab === 'template' }">
-    <ManagePageHeader title="面板" subtitle="账户与功能配置" />
-
     <div class="dashboard-alerts">
-      <NAlert type="success" :bordered="false">
-        本站新增国内镜像:
-        <NButton text tag="a" :href="CN_HOST" target="_blank">
-          {{ CN_HOST }}
-        </NButton>, 访问更快
-      </NAlert>
-
       <NAlert
         v-if="accountInfo?.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
         type="error"
