@@ -472,29 +472,29 @@ export const useAutoAction = defineStore('autoAction', () => {
   /**
    * 处理接收到的事件
    */
-  function processEvent(event: EventModel, triggerType: TriggerType) {
+  function processEvent(event: EventModel, triggerType: TriggerType, isTest = false) {
     if (!roomId.value) return
 
     // 其他功能依赖触发类型启用状态
     if (!enabledTriggerTypes.value[triggerType]) return
     switch (triggerType) {
       case TriggerType.DANMAKU:
-        autoReplyModule.onDanmaku(event, autoActions.value, runtimeState.value)
+        autoReplyModule.onDanmaku(event, autoActions.value, runtimeState.value, isTest)
         break
       case TriggerType.GIFT:
-        giftThankModule.processGift(event, autoActions.value, runtimeState.value)
+        giftThankModule.processGift(event, autoActions.value, runtimeState.value, isTest)
         break
       case TriggerType.GUARD:
-        guardPmModule.handleGuardBuy(autoActions.value, event, runtimeState.value)
+        guardPmModule.handleGuardBuy(autoActions.value, event, runtimeState.value, isTest)
         break
       case TriggerType.FOLLOW:
-        followThankModule.processFollow(event, autoActions.value, runtimeState.value)
+        followThankModule.processFollow(event, autoActions.value, runtimeState.value, isTest)
         break
       case TriggerType.ENTER:
-        entryWelcomeModule.processEnter(event, autoActions.value, runtimeState.value)
+        entryWelcomeModule.processEnter(event, autoActions.value, runtimeState.value, isTest)
         break
       case TriggerType.SUPER_CHAT:
-        superChatThankModule.processSuperChat(event, autoActions.value, runtimeState.value)
+        superChatThankModule.processSuperChat(event, autoActions.value, runtimeState.value, isTest)
         break
       default:
         console.warn(`[AutoAction] 未知触发类型: ${triggerType}`)
@@ -749,7 +749,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     }
 
     console.log(`[AutoAction Test] 创建测试事件:`, testEvent)
-    processEvent(testEvent, triggerType)
+    processEvent(testEvent, triggerType, true)
   }
 
   return {

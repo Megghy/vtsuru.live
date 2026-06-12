@@ -61,11 +61,12 @@ export function useAutoReply(
     event: EventModel,
     actions: AutoActionItem[],
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的自动回复操作
-    const replyActions = filterValidActions(actions, TriggerType.DANMAKU, isLive)
+    const replyActions = filterValidActions(actions, TriggerType.DANMAKU, isLive, undefined, { isTest })
 
     if (replyActions.length > 0 && roomId.value) {
       const message = event.msg
@@ -78,6 +79,7 @@ export function useAutoReply(
         runtimeState,
         { sendLiveDanmaku },
         {
+          isTest,
           customFilters: [
             // 关键词和屏蔽词检查
             (action, _context) => {

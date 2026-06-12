@@ -40,11 +40,12 @@ export function useFollowThank(
     event: EventModel,
     actions: AutoActionItem[],
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的关注感谢操作
-    const followActions = filterValidActions(actions, TriggerType.FOLLOW, isLive, isTianXuanActive)
+    const followActions = filterValidActions(actions, TriggerType.FOLLOW, isLive, isTianXuanActive, { isTest })
 
     // 使用通用执行函数处理关注事件
     if (followActions.length > 0 && roomId.value) {
@@ -55,6 +56,7 @@ export function useFollowThank(
         roomId.value,
         runtimeState,
         { sendLiveDanmaku },
+        { isTest },
       )
     }
   }

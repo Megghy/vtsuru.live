@@ -37,6 +37,7 @@ export function filterValidActions(
     actionType?: ActionType // 特定操作类型
     customFilter?: (action: AutoActionItem) => boolean // 自定义过滤器
     enabledTriggerTypes?: Ref<Record<TriggerType, boolean>> // 触发类型启用状态
+    isTest?: boolean // 测试模式：跳过直播/天选等运行时门槛
   },
 ): AutoActionItem[] {
   return actions.filter((action) => {
@@ -48,6 +49,11 @@ export function filterValidActions(
     // 检查触发类型是否启用
     if (options?.enabledTriggerTypes && !options.enabledTriggerTypes.value[triggerType]) {
       return false
+    }
+
+    // 测试模式下跳过所有运行时门槛，仅保留“类型匹配且已启用”
+    if (options?.isTest) {
+      return true
     }
 
     // 直播状态过滤
@@ -256,6 +262,7 @@ export function executeActions(
     customFilters?: Array<(action: AutoActionItem, context: ExecutionContext) => boolean>
     skipUserFilters?: boolean
     skipCooldownCheck?: boolean
+    isTest?: boolean
     onSuccess?: (action: AutoActionItem, context: ExecutionContext) => void
     onError?: (action: AutoActionItem, context: ExecutionContext, error: unknown) => void
   },
@@ -269,27 +276,30 @@ export function executeActions(
       ? options.customContextBuilder(event, roomId, triggerType)
       : buildExecutionContext(event, roomId, triggerType)
 
-    // 应用自定义过滤器
-    if (options?.customFilters) {
-      const passesAllFilters = options.customFilters.every(filter => filter(action, context))
-      if (!passesAllFilters) continue
-    }
+    // 测试模式下跳过过滤器/逻辑表达式/冷却，直接执行以预览效果
+    if (!options?.isTest) {
+      // 应用自定义过滤器
+      if (options?.customFilters) {
+        const passesAllFilters = options.customFilters.every(filter => filter(action, context))
+        if (!passesAllFilters) continue
+      }
 
-    // 检查用户过滤条件
-    if (!options?.skipUserFilters && event && !checkUserFilters(action, event)) {
-      continue
-    }
-
-    // 检查逻辑表达式
-    if (action.logicalExpression && event) {
-      if (!evaluateExpression(action.logicalExpression, context)) {
+      // 检查用户过滤条件
+      if (!options?.skipUserFilters && event && !checkUserFilters(action, event)) {
         continue
       }
-    }
 
-    // 检查冷却时间
-    if (!options?.skipCooldownCheck && !checkCooldown(action, runtimeState)) {
-      continue
+      // 检查逻辑表达式
+      if (action.logicalExpression && event) {
+        if (!evaluateExpression(action.logicalExpression, context)) {
+          continue
+        }
+      }
+
+      // 检查冷却时间
+      if (!options?.skipCooldownCheck && !checkCooldown(action, runtimeState)) {
+        continue
+      }
     }
 
     // 根据操作类型执行不同的处理逻辑

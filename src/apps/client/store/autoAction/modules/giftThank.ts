@@ -36,11 +36,12 @@ export function useGiftThank(
     event: EventModel,
     actions: AutoActionItem[],
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的礼物感谢操作
-    const giftActions = filterValidActions(actions, TriggerType.GIFT, isLive, isTianXuanActive)
+    const giftActions = filterValidActions(actions, TriggerType.GIFT, isLive, isTianXuanActive, { isTest })
 
     // 使用通用执行函数处理礼物事件
     if (giftActions.length > 0 && roomId.value) {
@@ -57,6 +58,7 @@ export function useGiftThank(
         runtimeState,
         { sendLiveDanmaku },
         {
+          isTest,
           customFilters: [
             // 礼物过滤逻辑
             (action, _context) => {

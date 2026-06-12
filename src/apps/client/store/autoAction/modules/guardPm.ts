@@ -36,12 +36,13 @@ export function useGuardPm(
     actions: AutoActionItem[],
     event: any,
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤舰长事件的操作
     const isLiveRef = computed(() => true)
-    const guardActions = filterValidActions(actions, TriggerType.GUARD, isLiveRef)
+    const guardActions = filterValidActions(actions, TriggerType.GUARD, isLiveRef, undefined, { isTest })
 
     // 使用通用执行函数处理舰长事件
     if (guardActions.length > 0 && roomId.value) {
@@ -53,6 +54,7 @@ export function useGuardPm(
         runtimeState,
         { sendPrivateMessage, sendLiveDanmaku },
         {
+          isTest,
           customFilters: [
             // 防止重复发送检查
             (action, _context) => {

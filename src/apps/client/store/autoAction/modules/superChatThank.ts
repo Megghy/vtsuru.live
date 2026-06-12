@@ -35,11 +35,12 @@ export function useSuperChatThank(
     event: EventModel,
     actions: AutoActionItem[],
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的SC感谢操作
-    const scActions = filterValidActions(actions, TriggerType.SUPER_CHAT, isLive, isTianXuanActive)
+    const scActions = filterValidActions(actions, TriggerType.SUPER_CHAT, isLive, isTianXuanActive, { isTest })
 
     // 使用通用执行函数处理SC事件
     if (scActions.length > 0 && roomId.value) {
@@ -51,6 +52,7 @@ export function useSuperChatThank(
         runtimeState,
         { sendLiveDanmaku },
         {
+          isTest,
           customFilters: [
             // SC价格过滤
             (action, _context) => {

@@ -39,11 +39,12 @@ export function useEntryWelcome(
     event: EventModel,
     actions: AutoActionItem[],
     runtimeState: RuntimeState,
+    isTest = false,
   ) {
     if (!roomId.value) return
 
     // 使用通用函数过滤有效的入场欢迎操作
-    const enterActions = filterValidActions(actions, TriggerType.ENTER, isLive, isTianXuanActive)
+    const enterActions = filterValidActions(actions, TriggerType.ENTER, isLive, isTianXuanActive, { isTest })
 
     // 使用通用执行函数处理入场事件
     if (enterActions.length > 0 && roomId.value) {
@@ -55,6 +56,7 @@ export function useEntryWelcome(
         runtimeState,
         { sendLiveDanmaku },
         {
+          isTest,
           customFilters: [
             // 检查入场过滤条件
             (action, _context) => {
