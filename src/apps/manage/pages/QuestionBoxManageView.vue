@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import type { QAInfo } from '@/api/api-models'
-import { ArrowSync24Filled, Copy24Filled, Delete24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
+import { ArrowSync24Filled, Delete24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
 import { TrashBin } from '@vicons/ionicons5'
 import {
-  NBadge, NButton, NCard, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup,
-  NList, NListItem, NPopconfirm, NSelect, NSpin, NSwitch, NTabPane, NTabs,
+  NBadge, NButton, NCard, NEmpty, NFlex, NIcon,
+  NList, NListItem, NPopconfirm, NSelect, NSpin, NTabPane, NTabs,
   NTag, NText, NTime, NTooltip, useMessage,
 } from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
-import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
 import QuestionBoxReceivedTab from '@/apps/manage/components/question-box/QuestionBoxReceivedTab.vue'
@@ -21,7 +20,6 @@ import QuestionBoxOBSModal from '@/apps/manage/components/question-box/QuestionB
 import QuestionBoxSettings from '@/apps/manage/components/question-box/QuestionBoxSettings.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { useQuestionBox } from '@/store/useQuestionBox'
-import { copyToClipboard } from '@/shared/utils'
 import router from '@/app/router'
 
 const accountInfo = useAccount()
@@ -33,7 +31,6 @@ const selectedTabItem = ref(route.query.send ? '1' : '0')
 const replyModalVisible = ref(false)
 const shareModalVisible = ref(false)
 const showOBSModal = ref(false)
-const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.QuestionBox, '提问箱')
 
 const selectedDirectShareTag = ref<string | null>(null)
 const directShareUrl = computed(() => {
@@ -69,7 +66,12 @@ onMounted(() => {
 <template>
   <NSpin :show="!accountInfo">
     <template v-if="accountInfo">
-      <ManagePageHeader title="提问箱管理" :function-type="FunctionTypes.QuestionBox" :loading="useQB.isLoading">
+      <ManagePageHeader
+        title="提问箱管理"
+        :function-type="FunctionTypes.QuestionBox"
+        :loading="useQB.isLoading"
+        :links="[{ label: '我的提问链接', value: directShareUrl }]"
+      >
         <template #action>
           <NButton secondary circle type="primary" :loading="useQB.isLoading" @click="refresh">
             <template #icon>
@@ -96,34 +98,7 @@ onMounted(() => {
             前往提问页
           </NButton>
         </template>
-      </ManagePageHeader>
-
-      <!-- 链接卡片 -->
-      <NCard size="small" :bordered="true" content-style="padding: 12px;" style="width: fit-content;">
-        <NFlex align="center" wrap :size="12">
-          <NTag :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox) ? 'success' : 'warning'" :bordered="false" size="small">
-            {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox) ? '展示页已开启' : '展示页已关闭' }}
-          </NTag>
-          <NSwitch
-            :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.QuestionBox)"
-            :loading="functionSwitchLoading"
-            :disabled="functionSwitchLoading"
-            @update:value="setFunctionEnable"
-          />
-          <NDivider vertical />
-          <NIcon :component="Link24Filled" size="20" depth="3" />
-          <NText depth="3">
-            我的提问链接:
-          </NText>
-          <NInputGroup style="max-width: 400px;">
-            <NInput :value="directShareUrl" readonly size="small" />
-            <NButton secondary size="small" @click="copyToClipboard(directShareUrl)">
-              <template #icon>
-                <NIcon :component="Copy24Filled" />
-              </template>
-              复制
-            </NButton>
-          </NInputGroup>
+        <template #links-extra>
           <NSelect
             v-model:value="selectedDirectShareTag"
             placeholder="附加话题 (可选)"
@@ -131,8 +106,8 @@ onMounted(() => {
             :options="useQB.tags.filter(t => t.visiable).map(s => ({ label: s.name, value: s.name }))"
             style="width: 160px;"
           />
-        </NFlex>
-      </NCard>
+        </template>
+      </ManagePageHeader>
 
       <!-- 主要内容 -->
       <NSpin :show="useQB.isLoading">

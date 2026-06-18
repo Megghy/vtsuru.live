@@ -54,14 +54,12 @@ import {
   UserFileLocation,
 } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import { CURRENT_HOST, POINT_API_URL } from '@/shared/config'
 import { uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import { useBiliAuth } from '@/store/useBiliAuth'
-import { copyToClipboard } from '@/shared/utils'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
@@ -74,7 +72,6 @@ const accountInfo = useAccount()
 const dialog = useDialog()
 const biliAuth = useBiliAuth()
 const formRef = ref()
-const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.Point, '积分')
 
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
@@ -96,6 +93,7 @@ const hash = computed({
   },
 })
 const currentPointSetting = computed(() => accountInfo.value?.settings.point)
+const goodsPageUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/goods` : '')
 
 function openPointSourceSettings() {
   hash.value = 'settings'
@@ -677,6 +675,7 @@ onMounted(() => { })
     title="积分管理"
     subtitle="礼物、订单、用户与配置"
     :function-type="FunctionTypes.Point"
+    :links="[{ label: '礼物展示页链接', value: goodsPageUrl }]"
   />
 
   <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
@@ -717,38 +716,6 @@ onMounted(() => { })
         </NFlex>
       </NAlert>
       <EventFetcherStatusCard />
-    </NFlex>
-  </NCard>
-
-  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-    <NFlex justify="space-between" align="center" wrap :size="12">
-      <NFlex vertical :size="8" style="flex: 1;">
-        <NText class="manage-kicker">
-          礼物展示页链接
-        </NText>
-        <NInputGroup style="max-width: 420px;">
-          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/goods`" readonly />
-          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/goods`)">
-            复制
-          </NButton>
-        </NInputGroup>
-      </NFlex>
-      <NDivider vertical />
-      <NFlex align="center" :size="8">
-        <NTag
-          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point) ? 'success' : 'warning'"
-          :bordered="false"
-          size="small"
-        >
-          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point) ? '展示页已开启' : '展示页已关闭' }}
-        </NTag>
-        <NSwitch
-          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Point)"
-          :loading="functionSwitchLoading"
-          :disabled="functionSwitchLoading"
-          @update:value="setFunctionEnable"
-        />
-      </NFlex>
     </NFlex>
   </NCard>
 

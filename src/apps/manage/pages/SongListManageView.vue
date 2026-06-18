@@ -5,10 +5,10 @@ import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { MoreHorizontal24Filled } from '@vicons/fluent'
 import {
-  NButton, NCard, NDropdown, NFlex, NIcon, NInput, NInputGroup,
-  NSpin, NText, useMessage,
+  NButton, NDropdown, NIcon,
+  NSpin, useMessage,
 } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, SongFrom } from '@/api/api-models'
@@ -17,7 +17,7 @@ import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST, SONG_API_URL } from '@/shared/config'
-import { copyToClipboard, objectsToCSV } from '@/shared/utils'
+import { objectsToCSV } from '@/shared/utils'
 
 const message = useMessage()
 const router = useRouter()
@@ -26,6 +26,7 @@ const accountInfo = useAccount()
 const isLoading = ref(true)
 const showModal = ref(false)
 const songs = ref<SongsInfo[]>([])
+const songListUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '')
 
 async function getSongs() {
   isLoading.value = true
@@ -101,7 +102,11 @@ onMounted(getSongs)
 </script>
 
 <template>
-  <ManagePageHeader title="歌单管理" :function-type="FunctionTypes.SongList">
+  <ManagePageHeader
+    title="歌单管理"
+    :function-type="FunctionTypes.SongList"
+    :links="[{ label: '展示页链接', value: songListUrl }]"
+  >
     <template #action>
       <NButton type="primary" @click="showModal = true">
         添加歌曲
@@ -119,22 +124,6 @@ onMounted(getSongs)
       </NDropdown>
     </template>
   </ManagePageHeader>
-
-  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-    <NFlex justify="space-between" align="center" wrap :size="12">
-      <NFlex align="center" :size="8" style="flex: 1;">
-        <NText class="manage-kicker">
-          展示页链接
-        </NText>
-        <NInputGroup style="max-width: 420px;">
-          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/song-list`" readonly />
-          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/song-list`)">
-            复制
-          </NButton>
-        </NInputGroup>
-      </NFlex>
-    </NFlex>
-  </NCard>
 
   <SongListAddSongModal v-model:show="showModal" :songs="songs" @added="onSongsAdded" />
 

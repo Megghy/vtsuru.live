@@ -3,28 +3,27 @@ import type {
   FormRules,
 } from 'naive-ui'
 import type { VideoCollectTable } from '@/api/api-models'
-import { NButton, NCard, NDatePicker, NDivider, NEmpty, NFlex, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NSwitch, NTag, NText, useMessage } from 'naive-ui';
+import { NButton, NCard, NDatePicker, NEmpty, NFlex, NForm, NFormItem, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NText, useMessage } from 'naive-ui';
 import { Add20Regular } from '@vicons/fluent'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
-import { VIDEO_COLLECT_API_URL } from '@/shared/config'
+import { CURRENT_HOST, VIDEO_COLLECT_API_URL } from '@/shared/config'
 
 const message = useMessage()
 const accountInfo = useAccount()
 
 const isLoading = ref(true)
-const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.VideoCollect, '视频征集')
 const createModalVisible = ref(false)
 const formRef = ref()
 const defaultModel = { maxVideoCount: 50 } as VideoCollectTable
 const createVideoModel = ref<VideoCollectTable>(JSON.parse(JSON.stringify(defaultModel)))
 
 const videoTables = ref<VideoCollectTable[]>(await get())
+const videoCollectUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '')
 
 const createRules: FormRules = {
   name: [
@@ -123,6 +122,7 @@ function createTable() {
       title="视频征集管理"
       subtitle="创建并管理您的视频征集活动"
       :function-type="FunctionTypes.VideoCollect"
+      :links="[{ label: '视频征集展示页链接', value: videoCollectUrl }]"
     >
       <template #action>
         <NButton
@@ -137,30 +137,6 @@ function createTable() {
         </NButton>
       </template>
     </ManagePageHeader>
-
-    <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-      <NFlex justify="space-between" align="center" wrap :size="12">
-        <NText class="manage-kicker">
-          视频征集功能状态
-        </NText>
-        <NDivider vertical />
-        <NFlex align="center" :size="8">
-          <NTag
-            :type="accountInfo?.settings?.enableFunctions?.includes(FunctionTypes.VideoCollect) ? 'success' : 'warning'"
-            :bordered="false"
-            size="small"
-          >
-            {{ accountInfo?.settings?.enableFunctions?.includes(FunctionTypes.VideoCollect) ? '展示页已开启' : '展示页已关闭' }}
-          </NTag>
-          <NSwitch
-            :value="accountInfo?.settings?.enableFunctions?.includes(FunctionTypes.VideoCollect)"
-            :loading="functionSwitchLoading"
-            :disabled="functionSwitchLoading"
-            @update:value="setFunctionEnable"
-          />
-        </NFlex>
-      </NFlex>
-    </NCard>
 
     <NSpin :show="isLoading">
       <NCard v-if="videoTables.length === 0 && !isLoading" size="small" :bordered="true" class="empty-card">

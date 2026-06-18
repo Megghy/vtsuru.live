@@ -2,19 +2,16 @@
 import type { SelectOption } from 'naive-ui'
 import type { VNode } from 'vue'
 import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
-import { TagQuestionMark16Filled } from '@vicons/fluent'
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
 import {
-  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NSwitch, NTag, NText, NTimePicker, NTooltip, useMessage } from 'naive-ui';
+  NAlert, NBadge, NButton, NCard, NColorPicker, NDivider, NFlex, NInput, NInputGroup, NInputGroupLabel, NModal, NSelect, NSpin, NText, NTimePicker, useMessage } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
-import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
-import { copyToClipboard } from '@/shared/utils'
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 const yearOptions = [
@@ -279,9 +276,10 @@ function getAllWeeks(year: number) {
 const accountInfo = useAccount()
 const schedules = ref<ScheduleWeekInfo[]>([])
 const message = useMessage()
-const { loading: functionSwitchLoading, setEnable: setFunctionEnable } = useFunctionToggle(FunctionTypes.Schedule, '日程表')
 
 const isLoading = ref(true)
+const schedulePageUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/schedule` : '')
+const scheduleSubscribeUrl = computed(() => accountInfo.value?.id ? `${SCHEDULE_API_URL}${accountInfo.value.id}.ics` : '')
 
 function sortSchedules(list: ScheduleWeekInfo[]) {
   return [...list].sort((a, b) => (b.year - a.year) || (b.week - a.week))
@@ -710,6 +708,10 @@ onMounted(() => {
   <ManagePageHeader
     title="日程表管理"
     :function-type="FunctionTypes.Schedule"
+    :links="[
+      { label: '日程表展示页链接', value: schedulePageUrl },
+      { label: '订阅链接', value: scheduleSubscribeUrl, description: '通过订阅链接可以订阅日程表到日历软件中' },
+    ]"
   >
     <template #action>
       <NButton
@@ -729,62 +731,6 @@ onMounted(() => {
       </NButton>
     </template>
   </ManagePageHeader>
-
-  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-    <NFlex justify="space-between" align="center" wrap :size="12">
-      <NFlex vertical :size="8" style="flex: 1;">
-        <NText class="manage-kicker">
-          日程表展示页链接
-        </NText>
-        <NInputGroup style="max-width: 420px;">
-          <NInput :value="`${CURRENT_HOST}@${accountInfo.name}/schedule`" readonly />
-          <NButton secondary @click="copyToClipboard(`${CURRENT_HOST}@${accountInfo.name}/schedule`)">
-            复制
-          </NButton>
-        </NInputGroup>
-      </NFlex>
-      <NDivider vertical />
-      <NFlex align="center" :size="8">
-        <NTag
-          :type="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule) ? 'success' : 'warning'"
-          :bordered="false"
-          size="small"
-        >
-          {{ accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule) ? '展示页已开启' : '展示页已关闭' }}
-        </NTag>
-        <NSwitch
-          :value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.Schedule)"
-          :loading="functionSwitchLoading"
-          :disabled="functionSwitchLoading"
-          @update:value="setFunctionEnable"
-        />
-      </NFlex>
-    </NFlex>
-  </NCard>
-
-  <NCard size="small" :bordered="true" content-style="padding: 12px;" style="max-width: 800px;">
-    <NFlex justify="space-between" align="center" wrap :size="12">
-      <NText class="manage-kicker">
-        订阅链接
-      </NText>
-      <NTooltip>
-        <template #trigger>
-          <NIcon>
-            <TagQuestionMark16Filled />
-          </NIcon>
-        </template>
-        通过订阅链接可以订阅日程表到日历软件中
-      </NTooltip>
-    </NFlex>
-    <NFlex align="center" style="margin-top: 10px;">
-      <NInputGroup style="max-width: 420px;">
-        <NInput :value="`${SCHEDULE_API_URL}${accountInfo.id}.ics`" readonly />
-        <NButton secondary @click="copyToClipboard(`${SCHEDULE_API_URL}${accountInfo.id}.ics`)">
-          复制
-        </NButton>
-      </NInputGroup>
-    </NFlex>
-  </NCard>
 
   <NModal
     v-model:show="showAddModal"
