@@ -863,8 +863,10 @@ function createSpeechService() {
       lastSpeakTimeByUser.set(userKey, now)
     }
 
-    if (settings.value.deduplicateIdentical && data.msg) {
-      const dedupKey = `${data.uid}:${data.msg}`
+    if (settings.value.deduplicateIdentical) {
+      // enter 等事件 msg 为空且 uid 恒为 0, 用 ouid/uname 作为稳定身份标识; 平台会对入场事件重复推送, 必须去重
+      const identity = data.uid || data.ouid || data.uname
+      const dedupKey = `${data.type}:${identity}:${data.msg}`
       if (recentMessages.has(dedupKey)) {
         reject(data, '重复内容')
         return
