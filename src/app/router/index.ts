@@ -142,6 +142,12 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   useLoadingBarStore().loadingBar?.start()
 
+  // iOS Safari / QQ 等 WebView 会把路径里的 @ 百分号编码成 %40, 而 vue-router 用未解码的 pathname
+  // 匹配字面量 @, 导致 /@:id 匹配失败落到 notfound. 这里规范化后重定向回 /@.
+  if (to.path.startsWith('/%40')) {
+    return to.fullPath.replace(/^\/%40/, '/@')
+  }
+
   // 保留 as 参数（如果存在）
   if (from.query.as && !to.query.as) {
     return {
