@@ -3,5 +3,5 @@ import ReadDanmaku from '@/apps/open-live/pages/ReadDanmaku.vue'
 </script>
 
 <template>
-  <ReadDanmaku />
+  <ReadDanmaku :auto-connect="false" />
 </template>

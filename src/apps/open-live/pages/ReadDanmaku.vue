@@ -21,11 +21,18 @@ import AdvancedSettingsPanel from '@/apps/open-live/components/read-danmaku/Adva
 import QueueList from '@/apps/open-live/components/read-danmaku/QueueList.vue'
 import SpokenHistoryPanel from '@/apps/open-live/components/read-danmaku/SpokenHistoryPanel.vue'
 
-defineProps<{ roomInfo?: any; code?: string | undefined; isOpenLive?: boolean }>()
+const props = withDefaults(defineProps<{
+  roomInfo?: any
+  code?: string | undefined
+  isOpenLive?: boolean
+  autoConnect?: boolean
+}>(), {
+  autoConnect: true,
+})
 
 const message = useMessage()
 const accountInfo = useAccount()
-const client = await useDanmakuClient().initOpenlive()
+const client = useDanmakuClient()
 const speechService = useSpeechService()
 
 const {
@@ -45,6 +52,26 @@ const queueStats = computed(() => {
 })
 
 function onGetEvent(data: EventModel) { speechService.addToQueue(data) }
+
+function registerEvents() {
+  if (eventsRegistered.value) return
+  client.onEvent('danmaku', onGetEvent)
+  client.onEvent('sc', onGetEvent)
+  client.onEvent('guard', onGetEvent)
+  client.onEvent('gift', onGetEvent)
+  client.onEvent('enter', onGetEvent)
+  eventsRegistered.value = true
+}
+
+function unregisterEvents() {
+  if (!eventsRegistered.value) return
+  client.offEvent('danmaku', onGetEvent)
+  client.offEvent('sc', onGetEvent)
+  client.offEvent('guard', onGetEvent)
+  client.offEvent('gift', onGetEvent)
+  client.offEvent('enter', onGetEvent)
+  eventsRegistered.value = false
+}
 
 function onAudioCanPlay() {
   speechState.isApiAudioLoading = false
@@ -89,20 +116,15 @@ function onKeydown(e: KeyboardEvent) {
 
 onMounted(async () => {
   await speechService.initialize()
-  if (!eventsRegistered.value) {
-    client.onEvent('danmaku', onGetEvent)
-    client.onEvent('sc', onGetEvent)
-    client.onEvent('guard', onGetEvent)
-    client.onEvent('gift', onGetEvent)
-    client.onEvent('enter', onGetEvent)
-    eventsRegistered.value = true
-  }
+  await client.ensureOpenlive({ connect: props.autoConnect })
+  registerEvents()
   await fetchAudioOutputDevices()
   navigator.mediaDevices?.addEventListener('devicechange', fetchAudioOutputDevices)
   document.addEventListener('keydown', onKeydown)
 })
 
 onUnmounted(() => {
+  unregisterEvents()
   navigator.mediaDevices?.removeEventListener('devicechange', fetchAudioOutputDevices)
   document.removeEventListener('keydown', onKeydown)
 })
