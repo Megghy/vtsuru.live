@@ -4,7 +4,6 @@ import { ref, watch } from 'vue'
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
 import { FunctionTypes } from '@/api/api-models'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
-import TemplateManager from './TemplateManager.vue'
 import BlackListPane from './BlackListPane.vue'
 
 const accountInfo = useAccount()

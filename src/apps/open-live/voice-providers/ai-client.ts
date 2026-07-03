@@ -25,7 +25,7 @@ export async function synthesizeSpeech(client: OpenAI, req: SpeechRequest): Prom
   const response = await client.audio.speech.create({
     model: req.model || 'tts-1',
     input: req.input,
-    voice: req.voice as any,
+    voice: req.voice,
     response_format: req.responseFormat || 'mp3',
     speed: req.speed,
   })
@@ -45,7 +45,7 @@ export async function synthesizeMimoTts(client: OpenAI, req: MimoTtsRequest): Pr
     model: req.model,
     messages: req.messages as any,
     audio: req.audio as any,
-  } as any)
+  })
 
   const audioData = (response as any).choices?.[0]?.message?.audio?.data
   if (!audioData) throw new Error('MiMo 响应中无音频数据')

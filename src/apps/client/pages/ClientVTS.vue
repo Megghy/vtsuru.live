@@ -62,13 +62,13 @@ const favoriteHotkeys = computed(() =>
   }),
 )
 
-const VTS_ACTION_TYPES = [
+const VTS_ACTION_TYPES = new Set([
   ActionType.VTS_HOTKEY, ActionType.VTS_PRESET, ActionType.VTS_DROP_ITEM,
   ActionType.VTS_PARAM_ADD, ActionType.VTS_MACRO, ActionType.VTS_ACCESSORY,
-]
+])
 
 const linkedAutoActions = computed(() =>
-  (autoAction.autoActions ?? []).filter(a => VTS_ACTION_TYPES.includes(a.actionType)),
+  (autoAction.autoActions ?? []).filter(a => VTS_ACTION_TYPES.has(a.actionType)),
 )
 
 const macroProgress = computed(() => {

@@ -30,7 +30,7 @@ export async function loadLocalFonts() {
     const fonts: any[] = await (window as any).queryLocalFonts()
     const set = new Set<string>()
     for (const f of fonts) set.add(f.family)
-    allFonts.value = [...set].sort()
+    allFonts.value = [...set].toSorted()
     loaded = true
   } catch {
     // permission denied

@@ -81,12 +81,12 @@ function ensureCardState(userId: string): CardState {
 }
 
 function syncCardStates(users: OpenLiveLotteryUserInfo[], options: { reset?: boolean } = {}) {
-  const { reset = false } = options
+  const { reset: shouldReset = false } = options
   const nextStates: Record<string, CardState> = {}
 
   users.forEach((user) => {
     const existing = cardStates.value[user.openId]
-    nextStates[user.openId] = reset || !existing
+    nextStates[user.openId] = shouldReset || !existing
       ? { flipped: false, isWinner: false, eliminated: false }
       : { ...existing }
   })
@@ -165,7 +165,7 @@ function clearHistory() {
 }
 
 function removeHistoryItem(time: number) {
-  const index = lotteryHistory.value.findIndex(h => h.time === time)
+  const index = lotteryHistory.value.findIndex(entry => entry.time === time)
   if (index === -1) return
   lotteryHistory.value.splice(index, 1)
 }

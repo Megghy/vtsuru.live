@@ -38,3 +38,5 @@ env.d.ts
 /VTsuru/
 VTsuru
 docs/
+# eslint cache
+.eslintcache

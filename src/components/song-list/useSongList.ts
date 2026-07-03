@@ -63,19 +63,19 @@ export function useSongList(props: { songs: SongsInfo[], isSelf: boolean }) {
   const languageOptions = computed(() => {
     const langs = new Set(['中文', '日语', '英语', '韩语', '法语', '西语', '其他'])
     songsInternal.value.forEach(s => s.language?.forEach(l => langs.add(l)))
-    return [...langs].sort().map(t => ({ label: t, value: t }))
+    return [...langs].toSorted().map(t => ({ label: t, value: t }))
   })
 
   const tagOptions = computed(() => {
     const tags = new Set<string>()
     songsInternal.value.forEach(s => s.tags?.forEach(t => tags.add(t)))
-    return [...tags].sort().map(t => ({ label: t, value: t }))
+    return [...tags].toSorted().map(t => ({ label: t, value: t }))
   })
 
   const authorOptions = computed(() => {
     const authors = new Set<string>()
     songsInternal.value.forEach(s => s.author?.forEach(a => authors.add(a)))
-    return [...authors].sort().map(t => ({ label: t, value: t }))
+    return [...authors].toSorted().map(t => ({ label: t, value: t }))
   })
 
   // 同步 props

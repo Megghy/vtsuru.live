@@ -79,8 +79,8 @@ function normalizeColor(color: any): string | null {
   if (color == null) return null
 
   // 将 HSL 转 RGB，返回 #RRGGBB
-  const hslToHex = (h: number, s: number, l: number) => {
-    const hue = ((h % 360) + 360) % 360 / 360 // 归一化到 [0, 1)
+  const hslToHex = (hue360: number, s: number, l: number) => {
+    const hue = ((hue360 % 360) + 360) % 360 / 360 // 归一化到 [0, 1)
     const saturation = Math.min(Math.max(s / 100, 0), 1)
     const lightness = Math.min(Math.max(l / 100, 0), 1)
 
@@ -134,10 +134,10 @@ function normalizeColor(color: any): string | null {
     // 2) 处理 hsla/hsl 字符串
     const hslMatch = str.match(/^hsla?\(\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)%\s*,\s*([+-]?\d+(?:\.\d+)?)%(?:\s*,\s*([+-]?\d+(?:\.\d+)?))?\s*\)$/i)
     if (hslMatch) {
-      const h = Number.parseFloat(hslMatch[1])
+      const hue = Number.parseFloat(hslMatch[1])
       const s = Number.parseFloat(hslMatch[2])
       const l = Number.parseFloat(hslMatch[3])
-      return hslToHex(h, s, l)
+      return hslToHex(hue, s, l)
     }
 
     // 3) 处理 rgba/rgb 字符串，忽略 alpha
@@ -156,8 +156,8 @@ function normalizeColor(color: any): string | null {
 
   // 如果是数组（[h, s, l, (a)] HS(L)A），转换为十六进制
   if (Array.isArray(color) && color.length >= 3) {
-    const [h, s, l] = color
-    return hslToHex(Number(h), Number(s), Number(l))
+    const [hue, s, l] = color
+    return hslToHex(Number(hue), Number(s), Number(l))
   }
 
   return null
@@ -282,7 +282,7 @@ const schedulePageUrl = computed(() => accountInfo.value?.name ? `${CURRENT_HOST
 const scheduleSubscribeUrl = computed(() => accountInfo.value?.id ? `${SCHEDULE_API_URL}${accountInfo.value.id}.ics` : '')
 
 function sortSchedules(list: ScheduleWeekInfo[]) {
-  return [...list].sort((a, b) => (b.year - a.year) || (b.week - a.week))
+  return [...list].toSorted((a, b) => (b.year - a.year) || (b.week - a.week))
 }
 
 const showUpdateModal = ref(false)

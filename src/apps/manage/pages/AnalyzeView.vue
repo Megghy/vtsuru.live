@@ -125,7 +125,7 @@ function getChartDataArray() {
       date: formatDate(Number.parseInt(timestamp, 10)),
       ...data,
     }))
-    .sort((a, b) => a.timestamp - b.timestamp)
+    .toSorted((a, b) => a.timestamp - b.timestamp)
 }
 
 // 获取主题色配置

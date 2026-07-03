@@ -150,7 +150,7 @@ describe('useDanmakuClient event sharing', () => {
 
     await initUpstream(store)
     const event = makeEvent({ uname: 'Alice', msg: '辣条', num: 3 })
-    store.danmakuClient!.eventsAsModel.gift[0](event, { cmd: 'gift' })
+    store.danmakuClient.eventsAsModel.gift[0](event, { cmd: 'gift' })
 
     expect(giftListener).toHaveBeenCalledWith(event, { cmd: 'gift' })
     expect(allListener).toHaveBeenCalledWith(event)
@@ -169,7 +169,7 @@ describe('useDanmakuClient event sharing', () => {
     await ensurePromise
 
     const event = makeEvent({ uname: 'Bob', msg: '小花花', num: 2 })
-    owner.danmakuClient!.eventsAsModel.gift[0](event)
+    owner.danmakuClient.eventsAsModel.gift[0](event)
 
     expect(giftListener).toHaveBeenCalledWith(event, undefined)
     expect(startMock).toHaveBeenCalledTimes(1)

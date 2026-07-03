@@ -68,7 +68,7 @@ export function useUserPageEditor() {
     const pagesCount = Object.keys(s.pages ?? {}).length
     if (pagesCount !== 0) return false
     if (!s.home || s.home.mode !== 'legacy') return false
-    const homeKeys = Object.keys(s.home as any)
+    const homeKeys = Object.keys(s.home)
     return homeKeys.length === 1 && homeKeys[0] === 'mode'
   }
 
@@ -458,7 +458,7 @@ export function useUserPageEditor() {
       version: 1 as const,
       exportedAt: new Date().toISOString(),
       pageKey: currentKey.value,
-      project: deepCloneJson(currentProject.value) as BlockPageProject,
+      project: deepCloneJson(currentProject.value),
     }
     return JSON.stringify(payload, null, 2)
   }
@@ -471,7 +471,7 @@ export function useUserPageEditor() {
     try {
       parsed = JSON.parse(raw)
     } catch (e) {
-      throw new Error(`JSON 解析失败: ${(e as Error).message || String(e)}`)
+      throw new Error(`JSON 解析失败: ${(e as Error).message || String(e)}`, { cause: e })
     }
 
     const candidate = (parsed && typeof parsed === 'object')

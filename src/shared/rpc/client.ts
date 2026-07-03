@@ -45,7 +45,7 @@ export interface RpcClient {
  * @param clientFunctions 本端实现 (接收弹幕推送等), 默认空实现
  * @param onClose 连接断开回调 (本地 fetcher 关闭时触发, 供上层降级)
  */
-export function connectLocalFetcher(
+export async function connectLocalFetcher(
   clientFunctions: Partial<ClientFunctions> = {},
   onClose?: () => void,
 ): Promise<RpcClient> {

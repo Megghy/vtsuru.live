@@ -25,7 +25,6 @@ import {
   NGridItem,
   NIcon,
   NInput,
-  NInputGroup,
   NInputNumber,
   NModal,
   NPopconfirm,
@@ -34,10 +33,8 @@ import {
   NRadioGroup,
   NScrollbar,
   NSelect,
-  NSwitch,
   NTabPane,
   NTabs,
-  NTag,
   NText,
   NTooltip,
   NUpload,
@@ -328,8 +325,7 @@ async function updateGoods(e: MouseEvent) {
       const url = currentGoodsModel.value.goods.collectUrl
       if (url !== undefined) {
         try {
-          // eslint-disable-next-line no-new
-          new URL(url)
+          void new URL(url)
         } catch {
           throw new Error('请输入正确的收集链接')
         }
@@ -372,8 +368,7 @@ async function updateGoods(e: MouseEvent) {
 
       if (sub.collectUrl !== undefined && sub.collectUrl !== '' && sub.collectUrl !== null) {
         try {
-          // eslint-disable-next-line no-new
-          new URL(String(sub.collectUrl))
+          void new URL(String(sub.collectUrl))
         } catch {
           throw new Error(`款式 ${name} 的收集链接不合法`)
         }
@@ -421,11 +416,11 @@ async function updateGoods(e: MouseEvent) {
     for (const sub of (currentGoodsModel.value.goods.subItems ?? [])) {
       const key = getSubItemKey(sub)
       const fileList = subItemFileLists.value[key] ?? []
-      const newFilesToUpload = fileList.filter(f => f.file && f.status !== 'finished')
-      if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
+      const subFilesToUpload = fileList.filter(f => f.file && f.status !== 'finished')
+      if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
         isUploadingCover.value = true
         message.info(`正在添加款式封面水印并上传: ${sub.name || '未命名'}...`)
-        const uploadResults = await uploadWatermarkedCover(newFilesToUpload[0].file)
+        const uploadResults = await uploadWatermarkedCover(subFilesToUpload[0].file)
         isUploadingCover.value = false
         if (uploadResults && uploadResults.length > 0) {
           sub.cover = uploadResults[0]

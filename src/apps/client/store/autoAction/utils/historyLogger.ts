@@ -140,6 +140,6 @@ export async function clearHistory(type: HistoryType): Promise<void> {
  */
 export async function clearAllHistory(): Promise<void> {
   await Promise.all(
-    Object.values(HistoryType).map(async type => clearHistory(type as HistoryType)),
+    Object.values(HistoryType).map(async type => clearHistory(type)),
   )
 }

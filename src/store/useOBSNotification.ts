@@ -78,7 +78,7 @@ export const useOBSNotification = defineStore('obs-notification', () => {
    * @param sources 可选的source过滤列表，如果提供则只显示这些类型的通知
    */
   async function init(sources?: string[]) {
-    const listenerId = sources ? [...sources].sort().join(',') : 'all'
+    const listenerId = sources ? [...sources].toSorted().join(',') : 'all'
 
     // 如果已经为这个过滤器初始化过，直接返回
     if (listeners.has(listenerId)) {

@@ -1,5 +1,4 @@
 import type {
-  DanmakuUserInfo,
   EventModel,
   Setting_LiveRequest,
   SongRequestInfo,
@@ -86,7 +85,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
   const activeSongs = computed(() => {
     return (isLoggedIn.value ? songs.value : localActiveSongs.value)
-      .sort((a, b) => b.status - a.status)
+      .toSorted((a, b) => b.status - a.status)
       .filter((song) => {
         return song.status == SongRequestStatus.Waiting || song.status == SongRequestStatus.Singing
       })
@@ -94,7 +93,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
 
   const historySongs = computed(() => {
     return (isLoggedIn.value ? songs.value : localActiveSongs.value)
-      .sort((a, b) => a.status - b.status)
+      .toSorted((a, b) => a.status - b.status)
       .filter((song) => {
         return song.status == SongRequestStatus.Finish || song.status == SongRequestStatus.Cancel
       })
@@ -182,7 +181,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
           fans_medal_name: danmaku.fans_medal_name,
           fans_medal_wearing_status: danmaku.fans_medal_wearing_status,
           guard_level: danmaku.guard_level,
-        } as DanmakuUserInfo,
+        },
         createAt: Date.now(),
         isInLocal: true,
         id: songs.value.length == 0 ? 1 : (new List(songs.value).Max(s => s.id) ?? 0) + 1,

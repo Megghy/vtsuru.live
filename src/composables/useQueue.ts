@@ -145,7 +145,7 @@ export const useQueue = defineStore('queue', () => {
   const historySongs = computed(() => {
     return (isLoggedIn.value ? originQueue.value : localQueues.value)
       .filter(s => s.status === QueueStatus.Finish || s.status === QueueStatus.Cancel)
-      .sort((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))
+      .toSorted((a, b) => (b.finishAt ?? b.createAt) - (a.finishAt ?? a.createAt))
   })
 
   function nextLocalId() {
@@ -357,8 +357,8 @@ export const useQueue = defineStore('queue', () => {
         isLoading.value = false
       }
     } else {
-      const ids = values.map(v => v.id)
-      localQueues.value = localQueues.value.filter(q => !ids.includes(q.id))
+      const ids = new Set(values.map(v => v.id))
+      localQueues.value = localQueues.value.filter(q => !ids.has(q.id))
       window.$message.success(`成功删除 ${values.length} 条本地记录`)
     }
   }

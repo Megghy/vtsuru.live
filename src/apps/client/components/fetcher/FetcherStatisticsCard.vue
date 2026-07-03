@@ -78,7 +78,7 @@ function updateGaugeChart() {
 function updateTypeDistributionChart() {
   const typeData = Object.entries(webfetcher.sessionEventTypeCounts || {})
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
+    .toSorted((a, b) => b.value - a.value)
   const option = {
     tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
     legend: { type: 'scroll', orient: 'vertical', right: 10, top: 20, bottom: 20, data: typeData.map(d => d.name) },

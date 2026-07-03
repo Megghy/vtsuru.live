@@ -6,7 +6,7 @@ import { SongFrom, SongRequestStatus } from '@/api/api-models'
 import { Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
 import {
   NButton, NCard, NDataTable, NFlex, NIcon, NInput, NPopconfirm,
-  NSelect, NSwitch, NTag, NText, NTooltip, useMessage,
+  NSelect, NSwitch, NTag, NText, NTooltip,
 } from 'naive-ui'
 import { computed, h, ref } from 'vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -24,7 +24,6 @@ const props = defineProps<{
   liveRequestActive?: SongRequestInfo[]
 }>()
 
-const message = useMessage()
 const state = useSongList(props)
 const {
   songsInternal, isLoading, playingSong, isLrcLoading,

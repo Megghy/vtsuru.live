@@ -92,7 +92,7 @@ const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
     for (const key of Object.keys(source)) {
       const val = (source as any)[key]
       if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-         result[key] = { ...(result[key] ?? {}), ...val }
+         result[key] = { ...result[key], ...val }
       } else {
          result[key] = val
       }

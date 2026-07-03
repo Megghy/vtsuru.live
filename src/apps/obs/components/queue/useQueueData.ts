@@ -134,7 +134,7 @@ export function useQueueData(currentId: string) {
 
   async function update() {
     const result = await get()
-    queue.value = result.queue.sort((a, b) => b.createAt - a.createAt)
+    queue.value = result.queue.toSorted((a, b) => b.createAt - a.createAt)
     settings.value = result.setting
   }
 

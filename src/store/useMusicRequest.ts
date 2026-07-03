@@ -62,7 +62,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     src: '',
     pic: '',
     lrc: '',
-  } as Music)
+  })
   const currentOriginMusic = ref<WaitMusicInfo>()
   const isPlayingOrderMusic = ref(false)
   const aplayerRef = ref()
@@ -189,7 +189,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
           : s.url,
       pic: s.cover ?? '',
       lrc: '',
-    } as Music
+    }
   }
   function setSinkId() {
     try {

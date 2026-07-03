@@ -60,7 +60,7 @@ onMounted(async () => {
       model,
       theme,
       automaticLayout: true,
-      ...(options ?? {}),
+      ...options,
     })
 
     // 同步 model -> v-model

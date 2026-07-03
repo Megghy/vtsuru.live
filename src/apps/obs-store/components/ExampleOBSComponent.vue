@@ -86,7 +86,7 @@ const dynamicTitle = ref(props.config?.title || '默认标题')
 const localConfig = computed<ExampleConfigType>(() => {
   return {
     ...DefaultConfig, // 先使用默认值
-    ...(props.config || {}), // 然后用传入的配置覆盖
+    ...props.config, // 然后用传入的配置覆盖
   }
 })
 

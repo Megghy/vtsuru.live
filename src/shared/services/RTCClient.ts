@@ -146,9 +146,6 @@ export abstract class BaseRTCClient {
 }
 
 export class SlaveRTCClient extends BaseRTCClient {
-  constructor(user: string, pass: string) {
-    super(user, pass)
-  }
   type: 'slave' = 'slave' as const
   public async connectToAllMaster() {
     const masters = (await this.getAllRTC()).filter(
@@ -193,9 +190,6 @@ export class SlaveRTCClient extends BaseRTCClient {
   }
 }
 export class MasterRTCClient extends BaseRTCClient {
-  constructor(user: string, pass: string) {
-    super(user, pass)
-  }
   type: 'master' = 'master' as const
 
   public connectRTC() {

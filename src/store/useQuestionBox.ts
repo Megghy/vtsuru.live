@@ -52,22 +52,22 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     const sorted = [...list]
     switch (sortMode.value) {
       case 'newest':
-        return sorted.sort((a, b) => b.sendAt - a.sendAt)
+        return sorted.toSorted((a, b) => b.sendAt - a.sendAt)
       case 'oldest':
-        return sorted.sort((a, b) => a.sendAt - b.sendAt)
+        return sorted.toSorted((a, b) => a.sendAt - b.sendAt)
       case 'repliedFirst':
-        return sorted.sort((a, b) => {
+        return sorted.toSorted((a, b) => {
           if (!!a.answer !== !!b.answer) return a.answer ? -1 : 1
           return b.sendAt - a.sendAt
         })
       case 'unrepliedFirst':
-        return sorted.sort((a, b) => {
+        return sorted.toSorted((a, b) => {
           if (!!a.answer !== !!b.answer) return a.answer ? 1 : -1
           return b.sendAt - a.sendAt
         })
       case 'unreadFirst':
       default:
-        return sorted.sort((a, b) => {
+        return sorted.toSorted((a, b) => {
           if (a.isReaded !== b.isReaded) return a.isReaded ? 1 : -1
           return b.sendAt - a.sendAt
         })
@@ -94,7 +94,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     try {
       const resp = await QueryGetAPI<{ questions: QAInfo[], reviewCount: number }>(`${QUESTION_API_URL}get-recieve`)
       if (resp.code === 200) {
-        recieveQuestions.value = [...resp.data.questions].sort((a, b) => {
+        recieveQuestions.value = [...resp.data.questions].toSorted((a, b) => {
           if (a.isReaded !== b.isReaded) return a.isReaded ? 1 : -1
           return b.sendAt - a.sendAt
         })
@@ -340,7 +340,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}read`, { id, read: isRead ? 'true' : 'false' })),
     )
     ids.forEach(id => {
-      const q = recieveQuestions.value.find(q => q.id === id)
+      const q = recieveQuestions.value.find(item => item.id === id)
       if (q) q.isReaded = isRead
     })
     clearSelection()
@@ -365,7 +365,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       ids.map(async id => QueryGetAPI(`${QUESTION_API_URL}public`, { id, public: pub })),
     )
     ids.forEach(id => {
-      const q = recieveQuestions.value.find(q => q.id === id)
+      const q = recieveQuestions.value.find(item => item.id === id)
       if (q) q.isPublic = pub
     })
     clearSelection()

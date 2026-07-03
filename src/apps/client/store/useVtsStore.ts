@@ -8,13 +8,11 @@ import { nanoid } from 'nanoid'
 import type {
   VtsHotkeyInfo,
   VtsStatisticsResponseData,
-  VtsFaceFoundResponseData,
   VtsModelMovedEventData,
   VtsItemEventData,
   VtsAvailableItemFile,
   VtsItemInstance,
   VtsItemListResponseData,
-  VtsItemLoadResponseData,
 } from '@/apps/client/api/vts/messages'
 import { svgUrlToPngBase64 } from '@/apps/client/api/vts/icon'
 
@@ -839,7 +837,7 @@ export const useVtsStore = defineStore('vts', () => {
     const started = performance.now()
     const data = await client.value.statistics()
     lastRttMs.value = Math.round(performance.now() - started)
-    statistics.value = data as any as VtsStatisticsResponseData
+    statistics.value = data
   }
 
   async function refreshFaceFound() {
@@ -849,7 +847,7 @@ export const useVtsStore = defineStore('vts', () => {
     const started = performance.now()
     const data = await client.value.faceFound()
     lastRttMs.value = Math.round(performance.now() - started)
-    faceFound.value = (data as any as VtsFaceFoundResponseData).found
+    faceFound.value = (data).found
   }
 
   async function pollMonitorOnce() {
@@ -1401,7 +1399,7 @@ export const useVtsStore = defineStore('vts', () => {
     }), { fileName, ...options })
     lastRttMs.value = Math.round(performance.now() - started)
     if (!(data as any)?.instanceID) throw new Error('ItemLoadResponse 缺少 instanceID')
-    return data as any as VtsItemLoadResponseData
+    return data
   }
 
   async function unloadItems(payload: { instanceIDs?: string[], fileNames?: string[] }) {

@@ -43,8 +43,8 @@ const { height: windowHeight } = useWindowSize()
 // 底部留白: 覆盖 manage-page 的 padding-bottom(48px) + 余量, 避免页面级残余滚动
 const BOTTOM_GAP = 56
 const workspaceHeight = computed(() => {
-  const h = windowHeight.value - workspaceTop.value - BOTTOM_GAP
-  return h > 320 ? `${h}px` : '320px'
+  const height = windowHeight.value - workspaceTop.value - BOTTOM_GAP
+  return height > 320 ? `${height}px` : '320px'
 })
 
 // 预览头部展示用的 B 站用户信息

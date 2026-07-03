@@ -16,12 +16,12 @@ import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import { useDanmakuClient } from './useDanmakuClient'
 
 // 写操作 origin 白名单 (与 Rust 端保持一致; 读操作已由 Rust 层门禁)
-const WRITE_ALLOWED_HOSTS = ['vtsuru.suki.club', 'vtsuru.live', 'localhost', '127.0.0.1', 'tauri.localhost']
+const WRITE_ALLOWED_HOSTS = new Set(['vtsuru.suki.club', 'vtsuru.live', 'localhost', '127.0.0.1', 'tauri.localhost'])
 
 function isWriteAllowed(origin: string): boolean {
   if (!origin) return false
   try {
-    return WRITE_ALLOWED_HOSTS.includes(new URL(origin).hostname)
+    return WRITE_ALLOWED_HOSTS.has(new URL(origin).hostname)
   } catch {
     return false
   }
@@ -104,8 +104,8 @@ export const useFetcherRpcServer = defineStore('FetcherRpcServer', () => {
   }
 
   function setSubscribed(connId: string, subscribed: boolean) {
-    const info = connections.value.find(c => c.connId === connId)
-    if (info) info.subscribed = subscribed
+    const connInfo = connections.value.find(c => c.connId === connId)
+    if (connInfo) connInfo.subscribed = subscribed
   }
 
   async function start() {

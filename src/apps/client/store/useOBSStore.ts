@@ -218,7 +218,7 @@ export const useOBSStore = defineStore('obs', () => {
         await tauriStore.set(OBS_CONFIG_KEY, {
           address,
           password: obsPassword.value || undefined,
-        } as ObsConfigState)
+        })
       }
       catch (err) {
         console.error('保存 OBS 配置失败:', err)

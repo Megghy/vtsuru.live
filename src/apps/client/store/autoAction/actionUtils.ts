@@ -26,6 +26,7 @@ import { useVtsStore } from '@/apps/client/store/useVtsStore'
  * @param options.actionType 特定操作类型
  * @param options.customFilter 自定义过滤器
  * @param options.enabledTriggerTypes 触发类型启用状态
+ * @param options.isTest 测试模式：跳过直播/天选等运行时门槛
  * @returns 过滤后的操作项
  */
 export function filterValidActions(
@@ -243,6 +244,7 @@ async function sendAndLogDanmaku(
  * @param options.customFilters 自定义过滤器列表
  * @param options.skipUserFilters 是否跳过用户过滤
  * @param options.skipCooldownCheck 是否跳过冷却检查
+ * @param options.isTest 测试模式：跳过直播/天选等运行时门槛
  * @param options.onSuccess 操作成功回调
  * @param options.onError 操作失败回调
  */

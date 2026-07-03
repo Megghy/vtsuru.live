@@ -440,7 +440,7 @@ function createSpeechService() {
 
     try {
       await EasySpeech.init({ maxTimeout: 5000, interval: 250 })
-      speechSynthesisInfo.value = EasySpeech.detect() as any
+      speechSynthesisInfo.value = EasySpeech.detect()
 
       const voices = EasySpeech.voices()
       if (voices.length > 0 && !settings.value.speechInfo.voice) {

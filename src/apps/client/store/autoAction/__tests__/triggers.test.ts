@@ -37,8 +37,8 @@ function makeAction(overrides: Partial<AutoActionItem> = {}): AutoActionItem {
     triggerConfig: {
       keywordMatchType: KeywordMatchType.Contains,
       blockwordMatchType: KeywordMatchType.Contains,
-    } as any,
-    actionConfig: { delaySeconds: 0, cooldownSeconds: 0 } as any,
+    },
+    actionConfig: { delaySeconds: 0, cooldownSeconds: 0 },
     logicalExpression: '',
     executeCommand: '',
     ...overrides,
@@ -96,7 +96,7 @@ describe('useAutoReply onDanmaku', () => {
       triggerConfig: {
         keywords: ['你好'],
         keywordMatchType: KeywordMatchType.Contains,
-      } as any,
+      },
     })
     reply.onDanmaku(makeEvent({ msg: '你好啊', uname: 'Alice' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -107,7 +107,7 @@ describe('useAutoReply onDanmaku', () => {
     const reply = useAutoReply(isLive, roomId, sendDanmaku)
     const action = makeAction({
       template: 'hi',
-      triggerConfig: { keywords: ['特定词'], keywordMatchType: KeywordMatchType.Contains } as any,
+      triggerConfig: { keywords: ['特定词'], keywordMatchType: KeywordMatchType.Contains },
     })
     reply.onDanmaku(makeEvent({ msg: '随便聊聊' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -118,7 +118,7 @@ describe('useAutoReply onDanmaku', () => {
     const reply = useAutoReply(isLive, roomId, sendDanmaku)
     const action = makeAction({
       template: 'ok',
-      triggerConfig: { keywords: ['hi'], keywordMatchType: KeywordMatchType.Full } as any,
+      triggerConfig: { keywords: ['hi'], keywordMatchType: KeywordMatchType.Full },
     })
     reply.onDanmaku(makeEvent({ msg: 'hi there' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -133,7 +133,7 @@ describe('useAutoReply onDanmaku', () => {
     const reply = useAutoReply(isLive, roomId, sendDanmaku)
     const action = makeAction({
       template: 'matched',
-      triggerConfig: { keywords: ['^早.*好$'], keywordMatchType: KeywordMatchType.Regex } as any,
+      triggerConfig: { keywords: ['^早.*好$'], keywordMatchType: KeywordMatchType.Regex },
     })
     reply.onDanmaku(makeEvent({ msg: '早上好' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -149,7 +149,7 @@ describe('useAutoReply onDanmaku', () => {
         blockwords: ['ban'],
         keywordMatchType: KeywordMatchType.Contains,
         blockwordMatchType: KeywordMatchType.Contains,
-      } as any,
+      },
     })
     reply.onDanmaku(makeEvent({ msg: 'hello ban' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -165,7 +165,7 @@ describe('useAutoReply onDanmaku', () => {
         userFilterEnabled: true,
         requireMedal: true,
         keywordMatchType: KeywordMatchType.Contains,
-      } as any,
+      },
     })
     reply.onDanmaku(
       makeEvent({ msg: 'x', fans_medal_wearing_status: false }),
@@ -181,8 +181,8 @@ describe('useAutoReply onDanmaku', () => {
     const action = makeAction({
       template: 'reply',
       ignoreCooldown: false,
-      actionConfig: { delaySeconds: 0, cooldownSeconds: 60 } as any,
-      triggerConfig: { keywords: ['x'], keywordMatchType: KeywordMatchType.Contains } as any,
+      actionConfig: { delaySeconds: 0, cooldownSeconds: 60 },
+      triggerConfig: { keywords: ['x'], keywordMatchType: KeywordMatchType.Contains },
     })
     const state = makeRuntimeState()
 
@@ -209,7 +209,7 @@ describe('useAutoReply onDanmaku', () => {
         keywords: ['x'],
         keywordMatchType: KeywordMatchType.Contains,
         onlyDuringLive: true,
-      } as any,
+      },
     })
     reply.onDanmaku(makeEvent({ msg: 'x' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -221,7 +221,7 @@ describe('useAutoReply onDanmaku', () => {
     const reply = useAutoReply(isLive, noRoom, sendDanmaku)
     const action = makeAction({
       template: 'reply',
-      triggerConfig: { keywords: ['x'], keywordMatchType: KeywordMatchType.Contains } as any,
+      triggerConfig: { keywords: ['x'], keywordMatchType: KeywordMatchType.Contains },
     })
     reply.onDanmaku(makeEvent({ msg: 'x' }), [action], makeRuntimeState())
     await vi.advanceTimersByTimeAsync(10)
@@ -354,7 +354,7 @@ describe('useGiftThank', () => {
     const action = makeAction({
       triggerType: TriggerType.GIFT,
       template: 'thanks',
-      triggerConfig: { minValue: 50 } as any,
+      triggerConfig: { minValue: 50 },
     })
     mod.processGift(
       makeEvent({ msg: '小心心', num: 1, price: 10 }),

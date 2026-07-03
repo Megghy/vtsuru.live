@@ -330,7 +330,7 @@ export const useAutoAction = defineStore('autoAction', () => {
         }
         let patched = false
         for (const triggerType of Object.values(TriggerType)) {
-          const t = triggerType as TriggerType
+          const t = triggerType
           if (enabledTriggerTypes.value[t] === undefined) {
             enabledTriggerTypes.value[t] = defaultEnabled[t]
             patched = true
@@ -449,7 +449,7 @@ export const useAutoAction = defineStore('autoAction', () => {
    * 切换自动操作项的启用/禁用状态
    */
   function toggleAutoAction(id: string, enabled: boolean) {
-    const action = autoActions.value.find(action => action.id === id)
+    const action = autoActions.value.find(item => item.id === id)
     if (action) {
       action.enabled = enabled
 

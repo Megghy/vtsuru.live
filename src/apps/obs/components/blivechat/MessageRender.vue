@@ -9,12 +9,12 @@ import TextMessage from './TextMessage.vue'
 import Ticker from './Ticker.vue'
 
 // 要添加的消息类型
-const ADD_MESSAGE_TYPES = [
+const ADD_MESSAGE_TYPES = new Set([
   constants.MESSAGE_TYPE_TEXT,
   constants.MESSAGE_TYPE_GIFT,
   constants.MESSAGE_TYPE_MEMBER,
   constants.MESSAGE_TYPE_SUPER_CHAT,
-]
+])
 // 发送消息时间间隔范围
 const MESSAGE_MIN_INTERVAL = 80
 const MESSAGE_MAX_INTERVAL = 1000
@@ -293,7 +293,7 @@ export default defineComponent({
       }
     },
     isAddMessage({ type }) {
-      return ADD_MESSAGE_TYPES.includes(type)
+      return ADD_MESSAGE_TYPES.has(type)
     },
     emitSmoothedMessages() {
       this.emitSmoothedMessageTimerId = null

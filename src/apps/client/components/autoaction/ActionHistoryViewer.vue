@@ -116,9 +116,9 @@ async function loadHistory() {
     ])
 
     historyData.value = {
-      [HistoryType.DANMAKU]: danmakuHistory.sort((a, b) => b.timestamp - a.timestamp),
-      [HistoryType.PRIVATE_MSG]: privateMsgHistory.sort((a, b) => b.timestamp - a.timestamp),
-      [HistoryType.COMMAND]: commandHistory.sort((a, b) => b.timestamp - a.timestamp),
+      [HistoryType.DANMAKU]: danmakuHistory.toSorted((a, b) => b.timestamp - a.timestamp),
+      [HistoryType.PRIVATE_MSG]: privateMsgHistory.toSorted((a, b) => b.timestamp - a.timestamp),
+      [HistoryType.COMMAND]: commandHistory.toSorted((a, b) => b.timestamp - a.timestamp),
     }
   } catch (error) {
     console.error('加载历史数据失败:', error)

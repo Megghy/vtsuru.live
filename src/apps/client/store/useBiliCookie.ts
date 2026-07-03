@@ -243,7 +243,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
           return cookieString
         } catch (decryptErr) {
           error(`[BiliCookie] CookieCloud Cookie 解密失败: ${String(decryptErr)}`)
-          throw new Error(`Cookie 解密失败: ${decryptErr instanceof Error ? decryptErr.message : String(decryptErr)}`)
+          throw new Error(`Cookie 解密失败: ${decryptErr instanceof Error ? decryptErr.message : String(decryptErr)}`, { cause: decryptErr })
         }
       } else if (json.cookie_data) {
         // 处理未加密的情况 (如果 CookieCloud 支持)
@@ -262,7 +262,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
       }
     } catch (networkErr) {
       error(`[BiliCookie] 请求 CookieCloud 时出错: ${String(networkErr)}`)
-      throw new Error(`请求 CookieCloud 时出错: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`)
+      throw new Error(`请求 CookieCloud 时出错: ${networkErr instanceof Error ? networkErr.message : String(networkErr)}`, { cause: networkErr })
     }
   }
 
@@ -459,7 +459,7 @@ export const useBiliCookie = defineStore('biliCookie', () => {
         error(`[BiliCookie] 保存 Bilibili Cookie 失败: ${String(err)}`)
         // 保存失败，状态回滚或标记为错误？暂时保持验证结果
         _updateCookieState(true, false) // Cookie 存在但保存失败，标记无效可能更安全
-        throw new Error('保存 Bilibili Cookie 失败') // 向上抛出错误
+        throw new Error('保存 Bilibili Cookie 失败', { cause: err }) // 向上抛出错误
       }
     } else {
       // 新 Cookie 无效，不保存，并标记状态

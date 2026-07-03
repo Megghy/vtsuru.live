@@ -37,7 +37,7 @@ export function useOrgLives(ctx: OrgContext) {
         i.live.title.toLowerCase().includes(q) || i.streamer.name.toLowerCase().includes(q),
       )
     }
-    return [...list].sort((a, b) => {
+    return [...list].toSorted((a, b) => {
       switch (sortKey.value) {
         case 'income': return b.live.totalIncomeWithGuard - a.live.totalIncomeWithGuard
         case 'interaction': return b.live.interactionCount - a.live.interactionCount

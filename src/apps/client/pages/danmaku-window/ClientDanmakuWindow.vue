@@ -66,7 +66,7 @@ function parseColorToRgba(color?: string): ParsedColor | null {
       return null
     }
 
-    if ([r, g, b, a].some(value => Number.isNaN(value))) {
+    if ([r, g, b, a].some(component => Number.isNaN(component))) {
       return null
     }
 

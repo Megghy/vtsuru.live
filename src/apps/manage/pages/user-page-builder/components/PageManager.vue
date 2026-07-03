@@ -39,7 +39,7 @@ const pageEntries = computed<PageEntry[]>(() => {
       navOrder: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
       title: editor.getPageLabel(slug),
     }))
-    .sort((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug))
+    .toSorted((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug))
 })
 
 const visiblePages = computed(() => pageEntries.value.filter(p => p.navVisible))

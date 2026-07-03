@@ -91,7 +91,7 @@ async function update() {
   const r = await get()
   if (r) {
     const isCountChange = originSongs.value.length !== r.songs.length
-    originSongs.value = r.songs.sort((a, b) => {
+    originSongs.value = r.songs.toSorted((a, b) => {
       return b.createAt - a.createAt
     })
     settings.value = r.setting

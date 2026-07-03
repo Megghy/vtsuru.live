@@ -65,7 +65,7 @@ export const useForumStore = defineStore('forum', () => {
     ps: number,
     sort: ForumTopicSortTypes,
     section?: number,
-    message?: MessageApiInjection,
+    messageApi?: MessageApiInjection,
   ) {
     try {
       isLoading.value = true
@@ -83,12 +83,12 @@ export const useForumStore = defineStore('forum', () => {
           more: data.more,
         }
       } else {
-        message?.error(`无法获取数据: ${data.message}`)
+        messageApi?.error(`无法获取数据: ${data.message}`)
         console.error(`无法获取数据: ${data.message}`)
         return undefined
       }
     } catch (err) {
-      message?.error(`无法获取数据: ${err}`)
+      messageApi?.error(`无法获取数据: ${err}`)
       console.error(`无法获取数据: ${err}`)
       return undefined
     } finally {

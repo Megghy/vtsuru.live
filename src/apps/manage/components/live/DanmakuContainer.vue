@@ -217,12 +217,12 @@ const filteredDanmakus = computed(() => {
     const matcher = (item: DanmakuModel) => {
       if (item.uId != null && item.uId.toString() === keywordValue) return true
       if (item.uName && item.uName === keywordValue) return true
-      const message = item.msg ?? ''
-      if (!message) return false
+      const danmakuText = item.msg ?? ''
+      if (!danmakuText) return false
       if (regex) {
-        return regex.test(message)
+        return regex.test(danmakuText)
       }
-      return message.toLowerCase().includes(keywordLower)
+      return danmakuText.toLowerCase().includes(keywordLower)
     }
     working = working.filter(item => (deselect.value ? !matcher(item) : matcher(item)))
   }
@@ -235,9 +235,9 @@ const filteredDanmakus = computed(() => {
   if (orderByPrice.value) {
     working = working
       .filter(item => item.type !== EventDataTypes.Message)
-      .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+      .toSorted((a, b) => (a.price ?? 0) - (b.price ?? 0))
   } else {
-    working = [...working].sort((a, b) => a.time - b.time)
+    working = [...working].toSorted((a, b) => a.time - b.time)
   }
 
   if (orderDecreasing.value) {

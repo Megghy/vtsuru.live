@@ -23,9 +23,10 @@ interface ClosePayload { conn_id: string }
 
 /**
  * 启动 RPC server, 返回停止函数。
- * @param resolveFunctions 为每个新连接生成其 ServerFunctions 实现 (可基于 origin 做授权)
- * @param onOpen  新连接建立回调 (拿到 rpc 句柄以便主动推送)
- * @param onClose 连接关闭回调
+ * @param options 配置项
+ * @param options.resolveFunctions 为每个新连接生成其 ServerFunctions 实现 (可基于 origin 做授权)
+ * @param options.onOpen 新连接建立回调 (拿到 rpc 句柄以便主动推送)
+ * @param options.onClose 连接关闭回调
  */
 export async function startRpcServer(options: {
   resolveFunctions: (conn: { connId: string, origin: string }) => ServerFunctions
@@ -44,7 +45,7 @@ export async function startRpcServer(options: {
     const rpc = createBirpc<ClientFunctions, ServerFunctions>(
       options.resolveFunctions({ connId, origin }),
       {
-        post: data => invoke('rpc_send', { connId, data }),
+        post: async data => invoke('rpc_send', { connId, data }),
         on: (fn) => { onMessage = fn },
         // Rust 中继传输的是字符串, 这里做 JSON 编解码
         serialize: v => JSON.stringify(v),

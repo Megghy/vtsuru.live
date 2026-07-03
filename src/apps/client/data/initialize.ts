@@ -476,7 +476,7 @@ export async function initAll(isOnBoot: boolean) {
   // 启动开放 RPC 接口 (供外部网页接入本地弹幕/发送能力)。
   // 老版本 client 二进制没有 Rust 中继, 前端跑在其上时不启动, 避免徒劳等待。
   if (clientSupportsRpc()) {
-    void useFetcherRpcServer().start().catch(err => warn(`[RPC] 启动失败: ${err}`))
+    void useFetcherRpcServer().start().catch(async err => warn(`[RPC] 启动失败: ${err}`))
   } else {
     warn(`[RPC] 当前 client 版本 ${clientVersion.value ?? '未知'} 过旧, 跳过开放接口 (需 ${REQUIRED_CLIENT_VERSION}+, 请更新客户端)`)
   }

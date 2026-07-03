@@ -75,7 +75,7 @@ export function sortByQueueType<T>(
   }
 
   const result = list.ToArray()
-  return isReverse ? result.reverse() : result
+  return isReverse ? result.toReversed() : result
 }
 
 /** 关键词匹配, 弹幕队列/点播共用。Regex 模式用原始 keyword 构造正则 */

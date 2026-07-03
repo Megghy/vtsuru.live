@@ -46,7 +46,7 @@ type RankMetric = 'income' | 'danmaku' | 'interaction'
 const rankMetric = ref<RankMetric>('income')
 const rankUnit: Record<RankMetric, string> = { income: '¥', danmaku: '弹幕', interaction: '互动' }
 const topStreamers = computed(() => {
-  const list = [...ranking.value].sort((a, b) => b[rankMetric.value] - a[rankMetric.value]).slice(0, 10)
+  const list = [...ranking.value].toSorted((a, b) => b[rankMetric.value] - a[rankMetric.value]).slice(0, 10)
   const max = list[0]?.[rankMetric.value] || 1
   return list.map(s => ({ ...s, pct: Math.round((s[rankMetric.value] / max) * 100) }))
 })
@@ -68,7 +68,7 @@ function exportRanking() {
     `主播排行_${Date.now()}.csv`,
     ['主播', 'ID', '收入', '弹幕', '互动', '场次'],
     [...ranking.value]
-      .sort((a, b) => b[rankMetric.value] - a[rankMetric.value])
+      .toSorted((a, b) => b[rankMetric.value] - a[rankMetric.value])
       .map(s => [s.name, s.id, s.income.toFixed(2), s.danmaku, s.interaction, s.liveCount]),
   )
 }

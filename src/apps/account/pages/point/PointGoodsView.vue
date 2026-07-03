@@ -399,23 +399,23 @@ const selectedItems = computed(() => {
   if (sortOrder.value) {
     switch (sortOrder.value) {
       case 'price_asc':
-        filteredItems = filteredItems.sort((a, b) => a.price - b.price)
+        filteredItems = filteredItems.toSorted((a, b) => a.price - b.price)
         break
       case 'price_desc':
-        filteredItems = filteredItems.sort((a, b) => b.price - a.price)
+        filteredItems = filteredItems.toSorted((a, b) => b.price - a.price)
         break
       case 'name_asc':
-        filteredItems = filteredItems.sort((a, b) => a.name.localeCompare(b.name))
+        filteredItems = filteredItems.toSorted((a, b) => a.name.localeCompare(b.name))
         break
       case 'name_desc':
-        filteredItems = filteredItems.sort((a, b) => b.name.localeCompare(a.name))
+        filteredItems = filteredItems.toSorted((a, b) => b.name.localeCompare(a.name))
         break
       case 'type':
-        filteredItems = filteredItems.sort((a, b) => a.type - b.type)
+        filteredItems = filteredItems.toSorted((a, b) => a.type - b.type)
         break
       case 'popular':
         // 按照热门程度排序（置顶的排在前面）
-        filteredItems = filteredItems.sort((a, b) => {
+        filteredItems = filteredItems.toSorted((a, b) => {
           if (a.isPinned && !b.isPinned) return -1
           if (!a.isPinned && b.isPinned) return 1
           return 0
@@ -425,7 +425,7 @@ const selectedItems = computed(() => {
   }
 
   // 无论是否有其他排序，置顶礼物始终排在前面
-  return filteredItems.sort((a, b) => {
+  return filteredItems.toSorted((a, b) => {
     // 先按置顶状态排序
     if (a.isPinned && !b.isPinned) return -1
     if (!a.isPinned && b.isPinned) return 1
@@ -439,32 +439,32 @@ const selectedItems = computed(() => {
 // --- 方法 ---
 
 // 获取礼物兑换按钮的提示文本
-function getTooltip(goods: ResponsePointGoodModel): string {
+function getTooltip(item: ResponsePointGoodModel): string {
   // 优先使用后端返回的购买状态信息
-  if (!goods.canPurchase && goods.cannotPurchaseReason) {
-    return goods.cannotPurchaseReason
+  if (!item.canPurchase && item.cannotPurchaseReason) {
+    return item.cannotPurchaseReason
   }
 
   // 后备检查逻辑
   if (!biliAuth.value.id) return '请先进行账号认证'
 
-  const hasSubs = (goods.subItems?.length ?? 0) > 0
+  const hasSubs = (item.subItems?.length ?? 0) > 0
   if (hasSubs) {
-    const available = (goods.subItems ?? []).filter(s => s.count == null || s.count > 0)
+    const available = (item.subItems ?? []).filter(s => s.count == null || s.count > 0)
     if (!available.length) return '库存不足'
     const minPrice = Math.min(...available.map(s => Number(s.price)))
-    if ((currentPoint.value ?? 0) < minPrice && !goods.canFreeBuy) return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
+    if ((currentPoint.value ?? 0) < minPrice && !item.canFreeBuy) return `积分不足(最低需要${minPrice}, 当前${currentPoint.value ?? 0})`
   } else {
-    if ((goods?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
-    if (!goods.isAllowRebuy && goods.hasPurchased) return '该礼物不允许重复兑换'
-    if (goods.purchasedCount >= (goods.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${goods.maxBuyCount})`
-    if ((currentPoint.value ?? 0) < goods.price && !goods.canFreeBuy) return `积分不足(需要${goods.price}, 当前${currentPoint.value ?? 0})`
+    if ((item?.count ?? Number.MAX_VALUE) <= 0) return '库存不足'
+    if (!item.isAllowRebuy && item.hasPurchased) return '该礼物不允许重复兑换'
+    if (item.purchasedCount >= (item.maxBuyCount ?? Number.MAX_VALUE)) return `已达兑换上限(${item.maxBuyCount})`
+    if ((currentPoint.value ?? 0) < item.price && !item.canFreeBuy) return `积分不足(需要${item.price}, 当前${currentPoint.value ?? 0})`
   }
 
   // 检查舰长等级要求
   const currentGuardLevel = biliAuth.value.guardInfo?.[props.userInfo.id] ?? 0
-  if (goods.allowGuardLevel > 0 && currentGuardLevel < goods.allowGuardLevel) {
-    const needText = goods.allowGuardLevel === 1 ? '总督' : goods.allowGuardLevel === 2 ? '提督' : '舰长'
+  if (item.allowGuardLevel > 0 && currentGuardLevel < item.allowGuardLevel) {
+    const needText = item.allowGuardLevel === 1 ? '总督' : item.allowGuardLevel === 2 ? '提督' : '舰长'
     const curText = currentGuardLevel === 1 ? '总督' : currentGuardLevel === 2 ? '提督' : currentGuardLevel === 3 ? '舰长' : '无'
     return `舰长等级不足(需要${needText}+, 当前${curText})`
   }

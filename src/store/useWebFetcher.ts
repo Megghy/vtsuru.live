@@ -341,8 +341,8 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       isConnectingSignalR = false
     }
   }
-  async function sendSelfInfo(client: signalR.HubConnection): Promise<void> {
-    return client.invoke<void>('SetSelfInfo', isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent, isFromClient ? 'tauri' : 'web', isFromClient ? await getVersion() : '1.0.0', webfetcherType.value === 'direct')
+  async function sendSelfInfo(connection: signalR.HubConnection): Promise<void> {
+    return connection.invoke<void>('SetSelfInfo', isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent, isFromClient ? 'tauri' : 'web', isFromClient ? await getVersion() : '1.0.0', webfetcherType.value === 'direct')
   }
   interface ResponseFetchRequestData {
     Message: string

@@ -174,7 +174,7 @@ const filtered = computed(() => {
   }
   if (onlyFavorites.value) list = list.filter(h => getCustom(h.hotkeyID)?.favorite)
   if (onlyPinned.value) list = list.filter(h => getCustom(h.hotkeyID)?.pinned)
-  return list.slice().sort((a, b) => {
+  return list.slice().toSorted((a, b) => {
     const ap = getCustom(a.hotkeyID)?.pinned ? 1 : 0
     const bp = getCustom(b.hotkeyID)?.pinned ? 1 : 0
     if (bp !== ap) return bp - ap
@@ -206,7 +206,7 @@ const grouped = computed(() => {
     arr.push(hk)
     map.set(key, arr)
   }
-  return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+  return Array.from(map.entries()).toSorted((a, b) => a[0].localeCompare(b[0]))
 })
 </script>
 

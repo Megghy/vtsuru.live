@@ -114,7 +114,7 @@ async function loadComponentConfig(settingName: string) {
   } catch (error) {
     console.error('加载组件配置失败:', error)
     message.error(`加载组件配置失败: ${error instanceof Error ? error.message : String(error)}`)
-    componentConfig.value = { ...(dynamicComponentRef.value?.DefaultConfig || {}) }
+    componentConfig.value = { ...dynamicComponentRef.value?.DefaultConfig }
   } finally {
     componentConfigForEditing.value = JSON.parse(JSON.stringify(componentConfig.value)) // 深拷贝用于编辑
     isLoading.value = false

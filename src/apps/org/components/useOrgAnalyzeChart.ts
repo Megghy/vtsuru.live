@@ -59,7 +59,7 @@ export function useOrgAnalyzeChart(options: {
         date: options.formatDate(Number.parseInt(timestamp, 10)),
         ...(data as Record<string, unknown>),
       }))
-      .sort((a, b) => a.timestamp - b.timestamp)
+      .toSorted((a, b) => a.timestamp - b.timestamp)
   }
 
   function getThemeColors() {

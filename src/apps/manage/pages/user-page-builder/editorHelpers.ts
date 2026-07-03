@@ -38,7 +38,7 @@ export function deepCloneJson<T>(v: T): T {
     seen.add(value)
     return value
   })
-  return JSON.parse(json) as unknown as T
+  return JSON.parse(json)
 }
 
 export function cloneBlockNode(block: BlockNode): BlockNode {
@@ -74,7 +74,7 @@ export function stableStringify(v: unknown, indent = 2): string {
     if (seen.has(x)) throw new Error('无法序列化循环引用对象')
     seen.add(x)
     const out: Record<string, unknown> = {}
-    Object.keys(x).sort().forEach((k) => {
+    Object.keys(x).toSorted().forEach((k) => {
       out[k] = normalize((x as Record<string, unknown>)[k])
     })
     return out

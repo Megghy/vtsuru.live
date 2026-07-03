@@ -314,7 +314,7 @@ const addBlockOptions = computed(() => {
   const rest = BLOCK_LIBRARY
     .map(it => it.type as unknown as string)
     .filter(type => !used.has(type))
-    .sort((a, b) => (libMap.get(a)?.label ?? a).localeCompare(libMap.get(b)?.label ?? b))
+    .toSorted((a, b) => (libMap.get(a)?.label ?? a).localeCompare(libMap.get(b)?.label ?? b))
   if (rest.length) {
     if (out.length) out.push(makeMenuDividerLabel('其他', 'rest'))
     rest.forEach((type) => out.push(makeBlockOption(type, libMap)))

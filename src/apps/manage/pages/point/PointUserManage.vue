@@ -138,7 +138,7 @@ const filteredUsers = computed(() => {
 
       return true
     })
-    .sort((a, b) => b.updateAt - a.updateAt) // 按更新时间降序排序
+    .toSorted((a, b) => b.updateAt - a.updateAt) // 按更新时间降序排序
 })
 
 // 用户统计

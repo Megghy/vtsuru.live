@@ -298,7 +298,7 @@ function updateMenuOptions() {
       title: ((cfg as any)?.title && String((cfg as any).title).trim().length) ? String((cfg as any).title).trim() : `/${slug}`,
       order: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
     }))
-    .sort((a, b) => (a.order - b.order) || a.slug.localeCompare(b.slug))
+    .toSorted((a, b) => (a.order - b.order) || a.slug.localeCompare(b.slug))
     .map(it => ({
       label: it.title,
       key: `user-page:${it.slug}`,

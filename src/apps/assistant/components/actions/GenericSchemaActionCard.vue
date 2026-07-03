@@ -79,7 +79,9 @@ function displayValue(f: EditableField) {
         <!-- 编辑态: 该项有可编辑字段时渲染输入框 -->
         <div v-if="editable && item.fields?.length" class="generic-item__edit">
           <div v-for="f in item.fields" :key="f.key" class="edit-field">
-            <NText depth="3" class="edit-field__label">{{ f.label }}</NText>
+            <NText depth="3" class="edit-field__label">
+              {{ f.label }}
+            </NText>
             <NInput
               :value="fieldValue(i, f.key)"
               :type="f.type === 'textarea' ? 'textarea' : 'text'"
@@ -94,13 +96,17 @@ function displayValue(f: EditableField) {
         <!-- 只读态: 结构化字段对比 (field 带 before, 编辑后不过期) -->
         <div v-else-if="hasFieldDiff(item)" class="generic-item__struct">
           <div v-for="f in item.fields" :key="f.key" class="struct-field">
-            <NText depth="3" class="struct-field__label">{{ f.label }}</NText>
+            <NText depth="3" class="struct-field__label">
+              {{ f.label }}
+            </NText>
             <span v-if="fieldChanged(f)" class="struct-field__val struct-field__val--changed">
               <NText delete depth="3">{{ f.before || (f.type === 'tags' ? '无' : '空') }}</NText>
               <span class="struct-field__arrow">→</span>
               <NText type="success" class="struct-field__after">{{ displayValue(f) }}</NText>
             </span>
-            <NText v-else depth="3" class="struct-field__val">{{ displayValue(f) }}</NText>
+            <NText v-else depth="3" class="struct-field__val">
+              {{ displayValue(f) }}
+            </NText>
           </div>
         </div>
 
@@ -113,7 +119,9 @@ function displayValue(f: EditableField) {
                 <span class="field__arrow">→</span>
                 <NText type="success" class="field__after">{{ f.after }}</NText>
               </span>
-              <NText v-else depth="3" class="field field--same">{{ f.after }}</NText>
+              <NText v-else depth="3" class="field field--same">
+                {{ f.after }}
+              </NText>
             </template>
           </div>
           <div v-else-if="item.before || item.after" class="generic-item__diff">

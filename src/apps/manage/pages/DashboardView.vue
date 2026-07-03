@@ -11,12 +11,11 @@ import { cookie } from '@/api/auth'
 import { BiliAuthCodeStatusType } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
-import { ACCOUNT_API_URL, availableAPIs, CN_HOST, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
+import { ACCOUNT_API_URL, availableAPIs, selectedAPIKey, TURNSTILE_KEY } from '@/shared/config'
 import { checkUpdateNote } from '@/shared/services/UpdateNote'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
 import SettingsManageView from '@/apps/manage/pages/settings/SettingsManageView.vue'
 import TemplateManager from '@/apps/manage/pages/settings/TemplateManager.vue'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 
 const token = ref('')

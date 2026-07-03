@@ -4,7 +4,7 @@ import { uploadCover, updateCover } from '@/apps/client/api/live-manage'
 
 // 封面上传校验配置
 const COVER_MAX_SIZE = 5 * 1024 * 1024 // 5MB
-const COVER_ACCEPT_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const COVER_ACCEPT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 /**
  * 直播封面上传 composable: 管理封面文件选择、格式/大小校验、预览与上传应用。
@@ -30,7 +30,7 @@ export function useLiveCover() {
     }
 
     // 格式校验
-    if (!COVER_ACCEPT_TYPES.includes(file.file.type)) {
+    if (!COVER_ACCEPT_TYPES.has(file.file.type)) {
       window.$message.error('封面格式不支持，仅支持 JPG / PNG / WEBP')
       handleCoverRemove()
       return

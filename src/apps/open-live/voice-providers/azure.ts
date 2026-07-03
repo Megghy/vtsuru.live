@@ -46,7 +46,7 @@ export class AzureVoiceProvider implements VoiceProvider {
             meta: { locale: v.Locale || v.locale || '' },
           }
         })
-        .sort((a: VoiceOption, b: VoiceOption) => {
+        .toSorted((a: VoiceOption, b: VoiceOption) => {
           const aMulti = String(a.value).toLowerCase().includes('multilingual')
           const bMulti = String(b.value).toLowerCase().includes('multilingual')
           if (aMulti && !bMulti) return -1

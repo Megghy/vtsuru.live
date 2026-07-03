@@ -83,8 +83,8 @@ const songs = computed(() => {
   return []
 })
 const onScroll = throttle((e: Event) => {
-  const container = e.target as HTMLDivElement
-  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 20) {
+  const scrollEl = e.target as HTMLDivElement
+  if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 20) {
     loadMore()
   }
 }, 100)

@@ -318,7 +318,7 @@ function moveSelected(delta: number) {
 }
 
 function sortByName() {
-  items.value = [...items.value].sort((a, b) => a.file.name.localeCompare(b.file.name, 'zh-CN', { numeric: true }))
+  items.value = [...items.value].toSorted((a, b) => a.file.name.localeCompare(b.file.name, 'zh-CN', { numeric: true }))
 }
 
 function removeItem(id: string) {

@@ -70,7 +70,7 @@ const allowUploadImage = computed(() => userInfo?.extra?.allowQuestionBoxUploadI
 const selectedFiles = ref<File[]>([])
 const imagePreviewUrls = ref<string[]>([])
 const maxImages = computed(() => isIdentified.value ? 9 : 3)
-const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon']
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'image/x-icon'])
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 // 计算属性
@@ -99,7 +99,7 @@ function validateImageFile(file: File): { valid: boolean, message?: string } {
   if (file.size > MAX_FILE_SIZE) {
     return { valid: false, message: '文件大小不能超过10MB' }
   }
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return { valid: false, message: '只支持上传 PNG, JPG, GIF, WEBP, SVG, ICO 格式的图片' }
   }
   return { valid: true }

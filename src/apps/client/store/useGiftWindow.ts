@@ -245,7 +245,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
   function getRankedList(): RankEntry[] {
     return Array.from(rankMap.value.values())
-      .sort((a, b) => b.score - a.score)
+      .toSorted((a, b) => b.score - a.score)
       .slice(0, settings.value.rankDisplayCount)
   }
 
@@ -329,7 +329,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       price: t === EventDataTypes.SC ? [30, 50, 100, 500][Math.floor(Math.random() * 4)] : t === EventDataTypes.Guard ? 198 : [100, 1000, 5000][Math.floor(Math.random() * 3)],
       guard_level: t === EventDataTypes.Guard ? GuardLevel.Jianzhang : GuardLevel.None,
       open_id: '', time: Date.now(), fans_medal_level: 0, fans_medal_name: '', fans_medal_wearing_status: false, ouid: '',
-    } as EventModel)
+    })
   }
 
   return {

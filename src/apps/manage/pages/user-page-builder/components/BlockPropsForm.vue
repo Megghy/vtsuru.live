@@ -33,7 +33,7 @@
       navOrder: typeof cfg?.navOrder === 'number' ? cfg.navOrder : 0,
       title: typeof cfg?.title === 'string' && cfg.title.trim().length ? cfg.title.trim() : `/${slug}`,
     }))
-      .sort((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug));
+      .toSorted((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug));
 
     return [
       { label: '主页', value: 'home' },

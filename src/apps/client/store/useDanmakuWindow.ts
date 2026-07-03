@@ -84,7 +84,7 @@ function generateTestDanmaku(): EventModel {
     uid: randomUid,
     open_id: randomOuid, // Assuming open_id is same as ouid for test
     time: randomTime,
-    guard_level: Math.floor(Math.random() * 4) as GuardLevel,
+    guard_level: Math.floor(Math.random() * 4),
     fans_medal_level: randomMedalLevel,
     fans_medal_name: randomMedalName,
     fans_medal_wearing_status: isWearingMedal,

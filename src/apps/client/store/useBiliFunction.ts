@@ -301,7 +301,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
 
     // 按照 key 重排参数
     const query = Object.keys(params)
-      .sort()
+      .toSorted()
       .map((key) => {
         // 过滤 value 中的 "!'()*" 字符
         const value = params[key].toString().replace(chr_filter, '')

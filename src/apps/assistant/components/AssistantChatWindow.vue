@@ -78,7 +78,7 @@ const suggestions = ref<string[]>([])
  * 抽 4 条建议: 当前页面相关分类的建议优先 (最多占 2 条), 其余随机补足, 整体打散。
  */
 function rollSuggestions() {
-  const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5)
+  const shuffle = <T,>(arr: T[]) => [...arr].toSorted(() => Math.random() - 0.5)
   const cat = preferredCategory()
   const picked: Suggestion[] = []
 

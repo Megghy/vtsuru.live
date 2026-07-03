@@ -21,7 +21,7 @@ const historyOption = ref({})
 const sortedTodayTypes = computed(() => {
   if (!currentStatistic.value || !currentStatistic.value.eventTypeCounts) return []
   return Object.entries(currentStatistic.value.eventTypeCounts)
-    .sort(([, countA], [, countB]) => countB - countA)
+    .toSorted(([, countA], [, countB]) => countB - countA)
 })
 
 interface TodayTypeRow {

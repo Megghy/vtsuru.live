@@ -151,7 +151,7 @@ export const useAssistantStore = defineStore('assistant', () => {
       id: `s_${h.id}`,
       role: h.role,
       text: h.text,
-      status: 'done' as MessageStatus,
+      status: 'done',
       // 后端片段结构与本地一致, 仅过滤掉缺字段的脏数据
       process: (h.process ?? []).filter(
         (s): s is AssistantProcessStep =>
@@ -303,7 +303,7 @@ export const useAssistantStore = defineStore('assistant', () => {
     if (sending.value) return
     const index = messages.value.findIndex(m => m.id === messageId)
     if (index < 0) return
-    const source = [...messages.value.slice(0, index)].reverse()
+    const source = messages.value.slice(0, index).toReversed()
       .find(m => m.role === 'user' && (m.text || m.images?.length || m.hasImage))
     if (!source) return
     await editAndRerun(source.id, source.text)

@@ -1,9 +1,28 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "vue"],
+  "plugins": ["typescript", "vue", "unicorn", "import", "jsdoc", "promise"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off"
+  },
   "env": {
     "builtin": true,
     "browser": true
   },
-  "rules": {}
+  "rules": {
+    "no-shadow": "warn",
+    "no-underscore-dangle": "off",
+    "import/default": "off",
+    "import/no-named-as-default": "off",
+    "promise/no-multiple-resolved": "off",
+    "promise/always-return": "off",
+    "no-await-in-loop": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "import/no-unassigned-import": "off",
+    "typescript/no-extraneous-class": "off",
+    "unicorn/require-post-message-target-origin": "off"
+  }
 }

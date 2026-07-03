@@ -62,7 +62,7 @@ export function useLiveControl() {
           children: [],
         })
       }
-      parentMap.get(area.parent_id)!.children.push({
+      parentMap.get(area.parent_id).children.push({
         label: area.name,
         value: area.id,
       })
@@ -235,7 +235,7 @@ export function useLiveControl() {
           await tauriStore.set(RTMP_INFO_KEY, {
             server: rtmpServer.value,
             code: rtmpCode.value,
-          } as RtmpInfoState)
+          })
         }
         catch (err) {
           console.error('保存推流信息失败:', err)

@@ -169,7 +169,7 @@ export async function getHistoricalStatistics(days: number = 7): Promise<Fetcher
   const store = useTauriStore()
   const keys = (await store.store.keys())
     .filter(key => key.startsWith(STATISTIC_STORE_KEY))
-    .sort((a, b) => b.localeCompare(a)) // 按日期降序排序
+    .toSorted((a, b) => b.localeCompare(a)) // 按日期降序排序
 
   const historicalData: FetcherStatisticData[] = []
   for (let i = 0; i < Math.min(days, keys.length); i++) {
@@ -178,7 +178,7 @@ export async function getHistoricalStatistics(days: number = 7): Promise<Fetcher
       historicalData.push(data)
     }
   }
-  return historicalData.reverse() // 返回按日期升序排列的结果
+  return historicalData.toReversed() // 返回按日期升序排列的结果
 }
 
 /**

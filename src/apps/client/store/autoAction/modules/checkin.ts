@@ -96,7 +96,7 @@ function normalizeEvent(source: DanmakuModel | EventModel | undefined): EventMod
     fans_medal_wearing_status: field(event, 'fans_medal_wearing_status', 'fansMedalWearingStatus', 'FansMedalWearingStatus') ?? false,
     emoji: field<string>(event, 'emoji', 'Emoji'),
     ouid: field<string>(event, 'ouid', 'ouId', 'OUId') ?? '',
-  } as EventModel
+  }
 }
 
 function isDuplicateStatus(payload: CheckInHubEvent) {

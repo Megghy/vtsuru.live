@@ -30,8 +30,8 @@ const order = {
   [FeedbackStatus.Developing]: 6,
 }
 const selectedFeedback = computed(() => {
-  // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-  return feedbacks.value.sort((a, b) => {
+   
+  return feedbacks.value.toSorted((a, b) => {
     if (orderType.value == 'time') {
       return b.createAt - a.createAt
     } else {

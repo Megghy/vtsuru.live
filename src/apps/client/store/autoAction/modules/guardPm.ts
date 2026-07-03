@@ -73,9 +73,9 @@ export function useGuardPm(
               return true
             },
           ],
-          customContextBuilder: (eventData, roomId, triggerType): ExecutionContext => {
+          customContextBuilder: (eventData, contextRoomId, triggerType): ExecutionContext => {
             // 使用标准上下文构建方法
-            const context = buildExecutionContext(eventData, roomId, triggerType)
+            const context = buildExecutionContext(eventData, contextRoomId, triggerType)
 
             // 如果是舰长事件且有事件数据，处理礼品码
             if (triggerType === TriggerType.GUARD && eventData && eventData.guard_level !== undefined) {

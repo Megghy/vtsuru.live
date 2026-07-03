@@ -322,7 +322,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
     const dirEntries = await readDir(directory)
     const backupEntries = dirEntries
       .filter((entry: DirEntry) => entry.isFile && entry.name.startsWith(BACKUP_FILE_PREFIX) && entry.name.endsWith(BACKUP_FILE_SUFFIX))
-      .sort((left, right) => right.name.localeCompare(left.name))
+      .toSorted((left, right) => right.name.localeCompare(left.name))
 
     for (const staleEntry of backupEntries.slice(Math.max(keepCount, 1))) {
       await remove(await join(directory, staleEntry.name))

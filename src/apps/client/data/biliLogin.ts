@@ -50,10 +50,7 @@ export async function getLoginUrlDataAsync(): Promise<{
   if (message.code !== 0) {
     throw new Error('获取二维码地址失败')
   }
-  return message.data as {
-    url: string
-    qrcode_key: string
-  }
+  return message.data
 }
 type QRCodeLoginInfo
   = | { status: 'expired' }

@@ -67,7 +67,7 @@ const filteredAndSortedLives = computed(() => {
     arr = arr.filter(l => l.title.toLowerCase().includes(k) || l.liveId.toLowerCase().includes(k))
   }
   // sort
-  arr = arr.slice().sort((a, b) => {
+  arr = arr.slice().toSorted((a, b) => {
     const k = sortKey.value
     const av = (a as any)[k] ?? 0
     const bv = (b as any)[k] ?? 0

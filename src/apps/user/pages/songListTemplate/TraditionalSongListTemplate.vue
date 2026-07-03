@@ -76,7 +76,7 @@ const allUniqueLanguages = computed<string[]>(() => {
       }
     })
   })
-  return Array.from(languages).sort()
+  return Array.from(languages).toSorted()
 })
 
 // Create structure for language buttons
@@ -98,7 +98,7 @@ const allUniqueTags = computed<string[]>(() => {
       }
     })
   })
-  return Array.from(tags).sort()
+  return Array.from(tags).toSorted()
 })
 
 // Create structure for tag buttons (reuse FilterButton interface)
@@ -127,7 +127,7 @@ const allArtists = computed(() => {
       }
     })
   })
-  return Array.from(artists).sort()
+  return Array.from(artists).toSorted()
 })
 
 // Format artists for NSelect options (unchanged)

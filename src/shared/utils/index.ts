@@ -18,8 +18,8 @@ const osThemeRef = useOsTheme() // 获取当前系统主题
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 export const theme = computed(() => {
   if (themeType.value == ThemeType.Auto) {
-    const osThemeRef = useOsTheme() // 获取当前系统主题
-    return osThemeRef.value === 'dark' ? darkTheme : null
+    const currentOsTheme = useOsTheme() // 获取当前系统主题
+    return currentOsTheme.value === 'dark' ? darkTheme : null
   } else {
     return themeType.value == ThemeType.Dark ? darkTheme : null
   }
@@ -59,9 +59,9 @@ export function copyToClipboard(text: string) {
 }
 
 export function hexToRgba(hex: string, alpha: number): string | null {
-  const h = hex.trim()
-  if (!h.startsWith('#')) return null
-  const raw = h.slice(1)
+  const trimmedHex = hex.trim()
+  if (!trimmedHex.startsWith('#')) return null
+  const raw = trimmedHex.slice(1)
   if (raw.length === 3) {
     const r = Number.parseInt(raw[0] + raw[0], 16)
     const g = Number.parseInt(raw[1] + raw[1], 16)

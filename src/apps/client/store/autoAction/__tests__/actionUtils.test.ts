@@ -33,8 +33,8 @@ function makeAction(overrides: Partial<AutoActionItem> = {}): AutoActionItem {
       ignoreTianXuan: false,
       keywordMatchType: KeywordMatchType.Contains,
       blockwordMatchType: KeywordMatchType.Contains,
-    } as any,
-    actionConfig: { delaySeconds: 0, cooldownSeconds: 0 } as any,
+    },
+    actionConfig: { delaySeconds: 0, cooldownSeconds: 0 },
     logicalExpression: '',
     executeCommand: '',
     ...overrides,
@@ -84,8 +84,8 @@ describe('filterValidActions', () => {
   it('excludes onlyDuringLive actions when not live', () => {
     const notLive = ref(false)
     const actions = [
-      makeAction({ id: 'a', triggerConfig: { onlyDuringLive: true } as any }),
-      makeAction({ id: 'b', triggerConfig: { onlyDuringLive: false } as any }),
+      makeAction({ id: 'a', triggerConfig: { onlyDuringLive: true } }),
+      makeAction({ id: 'b', triggerConfig: { onlyDuringLive: false } }),
     ]
     const result = filterValidActions(actions, TriggerType.DANMAKU, notLive)
     expect(result.map(a => a.id)).toEqual(['b'])
@@ -94,8 +94,8 @@ describe('filterValidActions', () => {
   it('excludes ignoreTianXuan actions when tianxuan is active', () => {
     const tx = ref(true)
     const actions = [
-      makeAction({ id: 'a', triggerConfig: { ignoreTianXuan: true } as any }),
-      makeAction({ id: 'b', triggerConfig: { ignoreTianXuan: false } as any }),
+      makeAction({ id: 'a', triggerConfig: { ignoreTianXuan: true } }),
+      makeAction({ id: 'b', triggerConfig: { ignoreTianXuan: false } }),
     ]
     const result = filterValidActions(actions, TriggerType.DANMAKU, isLive, tx)
     expect(result.map(a => a.id)).toEqual(['b'])
@@ -136,7 +136,7 @@ describe('filterValidActions', () => {
 describe('checkUserFilters', () => {
   it('passes when user filter is disabled', () => {
     const action = makeAction({
-      triggerConfig: { userFilterEnabled: false, requireMedal: true } as any,
+      triggerConfig: { userFilterEnabled: false, requireMedal: true },
     })
     const event = makeEvent({ fans_medal_wearing_status: false })
     expect(checkUserFilters(action, event)).toBe(true)
@@ -144,7 +144,7 @@ describe('checkUserFilters', () => {
 
   it('rejects when requireMedal but user has none', () => {
     const action = makeAction({
-      triggerConfig: { userFilterEnabled: true, requireMedal: true } as any,
+      triggerConfig: { userFilterEnabled: true, requireMedal: true },
     })
     const event = makeEvent({ fans_medal_wearing_status: false })
     expect(checkUserFilters(action, event)).toBe(false)
@@ -152,7 +152,7 @@ describe('checkUserFilters', () => {
 
   it('accepts when requireMedal and user wears one', () => {
     const action = makeAction({
-      triggerConfig: { userFilterEnabled: true, requireMedal: true } as any,
+      triggerConfig: { userFilterEnabled: true, requireMedal: true },
     })
     const event = makeEvent({ fans_medal_wearing_status: true })
     expect(checkUserFilters(action, event)).toBe(true)
@@ -160,7 +160,7 @@ describe('checkUserFilters', () => {
 
   it('rejects when requireCaptain but guard_level is 0', () => {
     const action = makeAction({
-      triggerConfig: { userFilterEnabled: true, requireCaptain: true } as any,
+      triggerConfig: { userFilterEnabled: true, requireCaptain: true },
     })
     const event = makeEvent({ guard_level: 0 })
     expect(checkUserFilters(action, event)).toBe(false)
@@ -168,7 +168,7 @@ describe('checkUserFilters', () => {
 
   it('accepts when requireCaptain and guard_level > 0', () => {
     const action = makeAction({
-      triggerConfig: { userFilterEnabled: true, requireCaptain: true } as any,
+      triggerConfig: { userFilterEnabled: true, requireCaptain: true },
     })
     const event = makeEvent({ guard_level: 1 })
     expect(checkUserFilters(action, event)).toBe(true)
@@ -179,7 +179,7 @@ describe('checkCooldown', () => {
   it('always passes when ignoreCooldown is true', () => {
     const action = makeAction({
       ignoreCooldown: true,
-      actionConfig: { cooldownSeconds: 60 } as any,
+      actionConfig: { cooldownSeconds: 60 },
     })
     const state = makeRuntimeState()
     state.lastExecutionTime[action.id] = Date.now()
@@ -188,14 +188,14 @@ describe('checkCooldown', () => {
 
   it('passes when no previous execution', () => {
     const action = makeAction({
-      actionConfig: { cooldownSeconds: 60 } as any,
+      actionConfig: { cooldownSeconds: 60 },
     })
     expect(checkCooldown(action, makeRuntimeState())).toBe(true)
   })
 
   it('rejects when within cooldown window', () => {
     const action = makeAction({
-      actionConfig: { cooldownSeconds: 60 } as any,
+      actionConfig: { cooldownSeconds: 60 },
     })
     const state = makeRuntimeState()
     state.lastExecutionTime[action.id] = Date.now() - 30_000
@@ -204,7 +204,7 @@ describe('checkCooldown', () => {
 
   it('passes after cooldown expires', () => {
     const action = makeAction({
-      actionConfig: { cooldownSeconds: 60 } as any,
+      actionConfig: { cooldownSeconds: 60 },
     })
     const state = makeRuntimeState()
     state.lastExecutionTime[action.id] = Date.now() - 70_000
@@ -213,7 +213,7 @@ describe('checkCooldown', () => {
 
   it('cooldownSeconds=0 means always allowed', () => {
     const action = makeAction({
-      actionConfig: { cooldownSeconds: 0 } as any,
+      actionConfig: { cooldownSeconds: 0 },
     })
     const state = makeRuntimeState()
     state.lastExecutionTime[action.id] = Date.now()

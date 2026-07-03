@@ -38,8 +38,8 @@ export function collectFileRefsFromSettings(settings: UserPagesSettingsV1): File
   walk(settings as any, 'settings')
 
   return Array.from(map.values())
-    .map(x => ({ id: x.id, path: x.path, name: x.name, locations: Array.from(x.locations).sort() }))
-    .sort((a, b) => a.id - b.id)
+    .map(x => ({ id: x.id, path: x.path, name: x.name, locations: Array.from(x.locations).toSorted() }))
+    .toSorted((a, b) => a.id - b.id)
 }
 
 export function extractImageSrcs(value: string) {

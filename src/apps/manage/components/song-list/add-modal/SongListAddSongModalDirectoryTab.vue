@@ -28,7 +28,7 @@ const folderSongsOptions = ref<Option[]>([])
 const selectedFolderSongs = ref<string[]>([])
 const isScanningFolder = ref(false)
 
-const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma', '.ape']
+const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac', '.wma', '.ape'])
 
 async function scanDirectory(
   directoryHandle: any,
@@ -40,7 +40,7 @@ async function scanDirectory(
 
     if (entry.kind === 'file') {
       const ext = entry.name.substring(entry.name.lastIndexOf('.')).toLowerCase()
-      if (AUDIO_EXTENSIONS.includes(ext)) {
+      if (AUDIO_EXTENSIONS.has(ext)) {
         const file = await entry.getFile()
         audioFiles.push({ name: entry.name, file, path: entryPath })
       }

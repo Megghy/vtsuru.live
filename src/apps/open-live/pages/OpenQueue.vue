@@ -6,7 +6,7 @@ import { Checkmark12Regular, Copy24Regular, Delete24Filled, PeopleQueue24Filled,
 import { ReloadCircleSharp } from '@vicons/ionicons5'
 import { isSameDay } from 'date-fns'
 import {
-  NAlert, NButton, NCard, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage } from 'naive-ui';
+  NAlert, NButton, NCard, NCheckbox, NDataTable, NDivider, NEmpty, NFlex, NIcon, NInput, NInputGroup, NInputGroupLabel, NPopconfirm, NRadioButton, NRadioGroup, NSpin, NTabPane, NTabs, NTag, NTime, NTooltip } from 'naive-ui';
 import { computed, h, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { QueueFrom, QueueSortType, QueueStatus } from '@/api/api-models'
@@ -27,7 +27,6 @@ defineProps<{
 }>()
 
 const accountInfo = useAccount()
-const message = useMessage()
 const client = await useDanmakuClient().initOpenlive()
 const store = useQueue()
 

@@ -37,7 +37,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   const state = ref<'waiting' | 'connecting' | 'connected'>('waiting')
   const connected = computed(() => state.value === 'connected')
   const hasRemoteSource = computed(() => {
-    remoteSourceTick.value
+    void remoteSourceTick.value // 触碰以建立响应式依赖
     return hasFreshRemoteSource()
   })
   const hasAnySource = computed(() => connected.value || hasRemoteSource.value)

@@ -114,8 +114,8 @@ function onDeleteComment(id: number) {
     comments.value.data = comments.value.data.filter(c => c.id !== id)
   }
 }
-async function delTopic(topicId: number) {
-  useForum.DelTopic(topicId).then((success) => {
+async function delTopic(id: number) {
+  useForum.DelTopic(id).then((success) => {
     if (success) {
       setTimeout(() => {
         router.push({ name: 'user-forum', params: { id: userInfo?.name } })
@@ -123,8 +123,8 @@ async function delTopic(topicId: number) {
     }
   })
 }
-async function restoreTopic(topicId: number) {
-  useForum.RestoreTopic(topicId).then((success) => {
+async function restoreTopic(id: number) {
+  useForum.RestoreTopic(id).then((success) => {
     if (success) {
       setTimeout(() => {
         topic.value.isDeleted = false

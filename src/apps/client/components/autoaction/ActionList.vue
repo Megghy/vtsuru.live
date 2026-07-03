@@ -49,7 +49,7 @@ const filteredActions = computed(() => {
   }
 
   // Sort: Enabled first
-  return list.sort((a, b) => {
+  return list.toSorted((a, b) => {
     if (a.enabled === b.enabled) return 0
     return a.enabled ? -1 : 1
   })

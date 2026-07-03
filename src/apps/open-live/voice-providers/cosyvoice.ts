@@ -126,7 +126,7 @@ export class CosyVoiceProvider implements VoiceProvider {
       const error = await response.json().catch(() => null)
       throw new Error(error?.details || error?.error || `CosyVoice 请求失败: ${response.status}`)
     }
-    return await response.blob()
+    return response.blob()
   }
 
   speak(): void {}

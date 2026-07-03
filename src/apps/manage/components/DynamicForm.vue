@@ -201,7 +201,7 @@ function stringToRgba(colorString: string | null | undefined): RGBAColor {
   const hex = colorString.replace('#', '')
   const expand = (s: string) => s.length <= 4 ? [...s].map(c => c + c).join('') : s
   const full = expand(hex)
-  if (/^[a-f\d]{6}([a-f\d]{2})?$/i.test(full)) {
+  if (/^[a-f\d]{6}(?:[a-f\d]{2})?$/i.test(full)) {
     return {
       r: Number.parseInt(full.slice(0, 2), 16),
       g: Number.parseInt(full.slice(2, 4), 16),
@@ -257,9 +257,9 @@ function renderDecorativeImages(key: string) {
       'multiple': true,
       'accept': 'image/*',
       'showFileList': false,
-      'onUpdate:fileList': (fileList: UploadFileInfo[]) => {
-        if (fileList.length > 0) {
-          const filesToUpload = fileList.map(f => f.file).filter((f): f is File => f instanceof File)
+      'onUpdate:fileList': (uploadedFileList: UploadFileInfo[]) => {
+        if (uploadedFileList.length > 0) {
+          const filesToUpload = uploadedFileList.map(f => f.file).filter((f): f is File => f instanceof File)
           if (filesToUpload.length > 0) {
             // 不立即上传，而是存储起来等待提交时上传
             if (!pendingDecorativeImages.value[key]) {

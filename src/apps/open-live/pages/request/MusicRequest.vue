@@ -2,7 +2,7 @@
 import type {
   SelectOption,
 } from 'naive-ui'
-import type { DanmakuUserInfo, EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
+import type { EventModel, OpenLiveInfo, SongsInfo } from '@/api/api-models'
 import type { Music, MusicRequestSettings, WaitMusicInfo } from '@/store/useMusicRequest'
 import { List } from 'linqts'
 import { Copy24Regular, Search24Regular } from '@vicons/fluent'
@@ -95,7 +95,7 @@ const activeCooldowns = computed(() => {
       }
     })
     .filter(c => c.remain > 0)
-    .sort((a, b) => a.remain - b.remain)
+    .toSorted((a, b) => a.remain - b.remain)
 })
 const filteredWaitingMusics = computed(() => {
   const keyword = waitingFilter.value.trim().toLowerCase()
@@ -656,167 +656,167 @@ onUnmounted(() => {
           </NFlex>
         </NTabPane>
 
-      <NTabPane
-        name="list"
-        tab="闲置歌单"
-      >
-        <NFlex align="center" :wrap="true" :size="10" class="music-request__tab-actions">
-          <NPopconfirm @positive-click="clearMusic">
-            <template #trigger>
-              <NButton type="error" secondary size="small" class="open-live-action-btn">
-                清空
-              </NButton>
-            </template>
-            确定清空吗?
-          </NPopconfirm>
-          <NButton size="small" class="open-live-action-btn" @click="showNeteaseModal = true">
-            从网易云歌单导入
-          </NButton>
-        </NFlex>
-
-        <NEmpty v-if="musicRquestStore.originMusics.length === 0">
-          暂无
-        </NEmpty>
-        <NVirtualList
-          v-else
-          class="music-request__list"
-          :item-size="36"
-          :items="originMusics"
-          item-resizable
+        <NTabPane
+          name="list"
+          tab="闲置歌单"
         >
-          <template #default="{ item }">
-            <div class="music-request__list-row">
-              <NFlex align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
-                <NPopconfirm @positive-click="delMusic(item)">
-                  <template #trigger>
-                    <NButton
-                      type="error"
-                      secondary
-                      size="tiny"
-                    >
-                      删除
-                    </NButton>
-                  </template>
-                  确定删除?
-                </NPopconfirm>
-
-                <NButton
-                  type="info"
-                  secondary
-                  size="tiny"
-                  @click="musicRquestStore.playMusic(item)"
-                >
-                  播放
-                </NButton>
-                <NText> {{ item.name }} - {{ item.author?.join('/') }} </NText>
-              </NFlex>
-            </div>
-          </template>
-        </NVirtualList>
-      </NTabPane>
-
-      <NTabPane
-        name="blacklist"
-        tab="黑名单"
-      >
-        <NList size="small" bordered>
-          <NListItem
-            v-for="item in settings.blacklist"
-            :key="item"
-          >
-            <NFlex
-              align="center"
-              style="width: 100%"
-            >
-              <NButton
-                type="error"
-                secondary
-                size="small"
-                @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)"
-              >
-                删除
-              </NButton>
-              <NText> {{ item }} </NText>
-            </NFlex>
-          </NListItem>
-        </NList>
-      </NTabPane>
-
-      <NTabPane
-        name="settings"
-        tab="设置"
-      >
-        <NFlex vertical :size="12">
-          <NFlex align="center" :wrap="true" :size="12">
-            <NRadioGroup v-model:value="settings.platform" size="small">
-              <NRadioButton value="netease">
-                网易云
-              </NRadioButton>
-              <NRadioButton value="kugou">
-                酷狗
-              </NRadioButton>
-            </NRadioGroup>
-            <NInputGroup class="music-request__field--prefix">
-              <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
-              <NInput v-model:value="settings.orderPrefix" size="small" />
-            </NInputGroup>
-            <NCheckbox
-              :checked="settings.orderCooldown != null"
-              @update:checked="(checked: boolean) => {
-                settings.orderCooldown = checked ? 300 : undefined
-              }"
-            >
-              是否启用点歌冷却
-            </NCheckbox>
-            <NInputGroup
-              v-if="settings.orderCooldown"
-              class="music-request__field--cooldown"
-            >
-              <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
-              <NInputNumber
-                v-model:value="settings.orderCooldown"
-                size="small"
-                @update:value="(value) => {
-                  if (!value || value <= 0) settings.orderCooldown = undefined
-                }"
-              />
-            </NInputGroup>
-          </NFlex>
-          <NFlex :wrap="true" :size="12">
-            <NCheckbox v-model:checked="settings.playMusicWhenFree">
-              空闲时播放空闲歌单
-            </NCheckbox>
-            <NCheckbox v-model:checked="settings.orderMusicFirst">
-              优先播放点歌
-            </NCheckbox>
-          </NFlex>
-          <NFlex align="center" :wrap="true" :size="12">
-            <NTooltip>
+          <NFlex align="center" :wrap="true" :size="10" class="music-request__tab-actions">
+            <NPopconfirm @positive-click="clearMusic">
               <template #trigger>
-                <NButton
-                  type="info"
-                  secondary
-                  size="small"
-                  @click="getOutputDevice"
-                >
-                  获取输出设备
+                <NButton type="error" secondary size="small" class="open-live-action-btn">
+                  清空
                 </NButton>
               </template>
-              获取和修改输出设备需要打开麦克风权限
-            </NTooltip>
-            <NSelect
-              v-model:value="settings.deviceId"
-              :options="deviceList"
-              :fallback-option="() => ({ label: '未选择', value: '' })"
-              class="music-request__field--device"
-              size="small"
-              @update:value="musicRquestStore.setSinkId"
-            />
+              确定清空吗?
+            </NPopconfirm>
+            <NButton size="small" class="open-live-action-btn" @click="showNeteaseModal = true">
+              从网易云歌单导入
+            </NButton>
           </NFlex>
-        </NFlex>
-      </NTabPane>
-    </NTabs>
-  </NCard>
+
+          <NEmpty v-if="musicRquestStore.originMusics.length === 0">
+            暂无
+          </NEmpty>
+          <NVirtualList
+            v-else
+            class="music-request__list"
+            :item-size="36"
+            :items="originMusics"
+            item-resizable
+          >
+            <template #default="{ item }">
+              <div class="music-request__list-row">
+                <NFlex align="center" justify="space-between" style="width: 100%" :wrap="true" :size="10">
+                  <NPopconfirm @positive-click="delMusic(item)">
+                    <template #trigger>
+                      <NButton
+                        type="error"
+                        secondary
+                        size="tiny"
+                      >
+                        删除
+                      </NButton>
+                    </template>
+                    确定删除?
+                  </NPopconfirm>
+
+                  <NButton
+                    type="info"
+                    secondary
+                    size="tiny"
+                    @click="musicRquestStore.playMusic(item)"
+                  >
+                    播放
+                  </NButton>
+                  <NText> {{ item.name }} - {{ item.author?.join('/') }} </NText>
+                </NFlex>
+              </div>
+            </template>
+          </NVirtualList>
+        </NTabPane>
+
+        <NTabPane
+          name="blacklist"
+          tab="黑名单"
+        >
+          <NList size="small" bordered>
+            <NListItem
+              v-for="item in settings.blacklist"
+              :key="item"
+            >
+              <NFlex
+                align="center"
+                style="width: 100%"
+              >
+                <NButton
+                  type="error"
+                  secondary
+                  size="small"
+                  @click="settings.blacklist.splice(settings.blacklist.indexOf(item), 1)"
+                >
+                  删除
+                </NButton>
+                <NText> {{ item }} </NText>
+              </NFlex>
+            </NListItem>
+          </NList>
+        </NTabPane>
+
+        <NTabPane
+          name="settings"
+          tab="设置"
+        >
+          <NFlex vertical :size="12">
+            <NFlex align="center" :wrap="true" :size="12">
+              <NRadioGroup v-model:value="settings.platform" size="small">
+                <NRadioButton value="netease">
+                  网易云
+                </NRadioButton>
+                <NRadioButton value="kugou">
+                  酷狗
+                </NRadioButton>
+              </NRadioGroup>
+              <NInputGroup class="music-request__field--prefix">
+                <NInputGroupLabel> 点歌弹幕前缀 </NInputGroupLabel>
+                <NInput v-model:value="settings.orderPrefix" size="small" />
+              </NInputGroup>
+              <NCheckbox
+                :checked="settings.orderCooldown != null"
+                @update:checked="(checked: boolean) => {
+                  settings.orderCooldown = checked ? 300 : undefined
+                }"
+              >
+                是否启用点歌冷却
+              </NCheckbox>
+              <NInputGroup
+                v-if="settings.orderCooldown"
+                class="music-request__field--cooldown"
+              >
+                <NInputGroupLabel> 冷却时间 (秒) </NInputGroupLabel>
+                <NInputNumber
+                  v-model:value="settings.orderCooldown"
+                  size="small"
+                  @update:value="(value) => {
+                    if (!value || value <= 0) settings.orderCooldown = undefined
+                  }"
+                />
+              </NInputGroup>
+            </NFlex>
+            <NFlex :wrap="true" :size="12">
+              <NCheckbox v-model:checked="settings.playMusicWhenFree">
+                空闲时播放空闲歌单
+              </NCheckbox>
+              <NCheckbox v-model:checked="settings.orderMusicFirst">
+                优先播放点歌
+              </NCheckbox>
+            </NFlex>
+            <NFlex align="center" :wrap="true" :size="12">
+              <NTooltip>
+                <template #trigger>
+                  <NButton
+                    type="info"
+                    secondary
+                    size="small"
+                    @click="getOutputDevice"
+                  >
+                    获取输出设备
+                  </NButton>
+                </template>
+                获取和修改输出设备需要打开麦克风权限
+              </NTooltip>
+              <NSelect
+                v-model:value="settings.deviceId"
+                :options="deviceList"
+                :fallback-option="() => ({ label: '未选择', value: '' })"
+                class="music-request__field--device"
+                size="small"
+                @update:value="musicRquestStore.setSinkId"
+              />
+            </NFlex>
+          </NFlex>
+        </NTabPane>
+      </NTabs>
+    </NCard>
   </OpenLivePageLayout>
 
   <NModal

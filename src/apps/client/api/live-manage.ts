@@ -35,7 +35,7 @@ type SignedParams = AppSignParams & { sign: string }
 
 function appSign(params: AppSignParams, appsec: string): SignedParams {
   // 按 key 排序参数
-  const sortedKeys = Object.keys(params).sort()
+  const sortedKeys = Object.keys(params).toSorted()
   const sortedParams: AppSignParams = {}
   sortedKeys.forEach(key => {
     sortedParams[key] = params[key]
