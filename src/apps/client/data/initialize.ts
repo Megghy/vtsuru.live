@@ -16,8 +16,9 @@ import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
 import { h, ref } from 'vue'
 import { isLoggedIn, useAccount } from '@/api/account'
-import { CN_HOST, isDev } from '@/shared/config'
+import { clientSupportsRpc, clientVersion, CN_HOST, initClientVersion, isDev, REQUIRED_CLIENT_VERSION } from '@/shared/config'
 import { useWebFetcher } from '@/store/useWebFetcher'
+import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useAutoAction } from '../store/useAutoAction'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
@@ -344,6 +345,9 @@ export async function initAll(isOnBoot: boolean) {
     return
   }
   clientInitStage.value = '初始化中...'
+  // 读取当前 client 本体版本 (前端 bundle 可能比 client 新, 需据此做能力门禁)
+  await initClientVersion()
+  info(`[init] 当前 client 版本: ${clientVersion.value ?? '未知'} (前端所需最低: ${REQUIRED_CLIENT_VERSION})`)
   // 初始检查更新（不阻塞初始化）
   if (!isDev) {
     void checkUpdate()
@@ -469,6 +473,14 @@ export async function initAll(isOnBoot: boolean) {
   useBiliFunction().init()
   await useClientBackup().init()
 
+  // 启动开放 RPC 接口 (供外部网页接入本地弹幕/发送能力)。
+  // 老版本 client 二进制没有 Rust 中继, 前端跑在其上时不启动, 避免徒劳等待。
+  if (clientSupportsRpc()) {
+    void useFetcherRpcServer().start().catch(err => warn(`[RPC] 启动失败: ${err}`))
+  } else {
+    warn(`[RPC] 当前 client 版本 ${clientVersion.value ?? '未知'} 过旧, 跳过开放接口 (需 ${REQUIRED_CLIENT_VERSION}+, 请更新客户端)`)
+  }
+
   // startHeartbeat()
 
   // 启动定期更新检查
@@ -493,6 +505,7 @@ export function OnClientUnmounted() {
   stopHeartbeat()
   stopUpdateCheck()
   void useClientBackup().dispose()
+  useFetcherRpcServer().dispose()
   tray.close()
   // useDanmakuWindow().closeWindow();
 }

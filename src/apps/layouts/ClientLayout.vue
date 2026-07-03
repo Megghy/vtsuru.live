@@ -4,9 +4,9 @@ import type { MenuOption } from 'naive-ui'
 // 引入 Tauri 插件
 import { openUrl } from '@tauri-apps/plugin-opener'
 
-import { Chat24Filled, CloudArchive24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, Settings24Filled, VideoPerson24Filled } from '@vicons/fluent'
+import { Chat24Filled, CloudArchive24Filled, Cookies24Filled, FlashAuto24Filled, Live24Filled, Mic24Filled, PlugConnected24Filled, Settings24Filled, VideoPerson24Filled } from '@vicons/fluent'
 import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
-import { NA, NButton, NCard, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NFlex, NSpin, NTag, NText, NTooltip } from 'naive-ui';
+import { NA, NButton, NCard, NEmpty, NIcon, NInput, NLayout, NLayoutContent, NLayoutSider, NMenu, NFlex, NPopover, NSpin, NTag, NText, NTooltip } from 'naive-ui';
 import { computed, h, ref } from 'vue' // 引入 ref, h, computed
 
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router' // 引入 Vue Router 组件
@@ -14,6 +14,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router' // 引�
 import { ACCOUNT, GetSelfAccount, isLoadingAccount, isLoggedIn } from '@/api/account'
 
 import { useWebFetcher } from '@/store/useWebFetcher'
+import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { initAll, OnClientUnmounted, clientInited, clientInitStage } from '@/apps/client/data/initialize'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
@@ -30,6 +31,7 @@ import '@/apps/client/styles/client-page.css'
 const router = useRouter()
 const route = useRoute()
 const webfetcher = useWebFetcher()
+const rpcServer = useFetcherRpcServer()
 const danmakuWindow = useDanmakuWindow()
 const giftWindow = useGiftWindow()
 const biliCookie = useBiliCookie()
@@ -54,6 +56,25 @@ const cookieStatusText = computed(() => {
 
 function goCookieManagement() {
   router.push({ name: 'client-fetcher' })
+}
+
+// RPC 连接信息展示: 精简 origin 显示, 连接时长人性化
+function formatOrigin(origin: string) {
+  if (!origin) return '未知来源'
+  try {
+    return new URL(origin).host
+  } catch {
+    return origin
+  }
+}
+
+function formatSince(connectedAt: number) {
+  const seconds = Math.max(0, Math.floor((Date.now() - connectedAt) / 1000))
+  if (seconds < 60) return `${seconds} 秒前`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes} 分钟前`
+  const hours = Math.floor(minutes / 60)
+  return `${hours} 小时前`
 }
 
 // 当前路由对应的菜单高亮 key (修复切换页面后菜单不高亮的问题)
@@ -350,17 +371,100 @@ onMounted(() => {
           :collapsed-icon-size="22"
           class="sider-menu"
         />
+
+        <!-- 底部状态区: 各类运行状态汇总, 以后有新状态往这里加行 -->
+        <div
+          v-if="!siderCollapsed && rpcServer.running"
+          class="sider-status-list"
+        >
+          <NPopover
+            trigger="hover"
+            placement="right"
+            :width="260"
+          >
+            <template #trigger>
+              <div class="status-row status-row--hoverable">
+                <div class="status-row-label">
+                  <NIcon
+                    :size="16"
+                    :color="rpcServer.connectionCount > 0 ? 'var(--n-success-color)' : 'var(--n-text-color-3)'"
+                  >
+                    <PlugConnected24Filled />
+                  </NIcon>
+                  <NText depth="2">
+                    本地接口
+                  </NText>
+                </div>
+                <NTag
+                  size="small"
+                  :type="rpcServer.connectionCount > 0 ? 'success' : 'default'"
+                  :bordered="false"
+                >
+                  {{ rpcServer.connectionCount }} 连接
+                </NTag>
+              </div>
+            </template>
+            <div class="rpc-detail">
+              <NText
+                strong
+                tag="div"
+                class="rpc-detail-title"
+              >
+                外部接入连接
+              </NText>
+              <NEmpty
+                v-if="rpcServer.connectionCount === 0"
+                size="small"
+                description="暂无外部连接"
+              />
+              <div
+                v-for="conn in rpcServer.connections"
+                v-else
+                :key="conn.connId"
+                class="rpc-detail-item"
+              >
+                <div class="rpc-detail-origin">
+                  <NText strong>
+                    {{ formatOrigin(conn.origin) }}
+                  </NText>
+                  <NTag
+                    size="tiny"
+                    :type="conn.subscribed ? 'success' : 'default'"
+                    :bordered="false"
+                  >
+                    {{ conn.subscribed ? '已订阅弹幕' : '未订阅' }}
+                  </NTag>
+                </div>
+                <NText
+                  depth="3"
+                  class="rpc-detail-time"
+                >
+                  接入于 {{ formatSince(conn.connectedAt) }}
+                </NText>
+              </div>
+            </div>
+          </NPopover>
+        </div>
+
         <div
           v-if="!siderCollapsed"
           class="cookie-status-card"
         >
           <div class="cookie-status-header">
-            <NText
-              strong
-              tag="div"
-            >
-              B站 Cookie
-            </NText>
+            <div class="status-row-label">
+              <NIcon
+                :size="16"
+                :color="cookieStatusType === 'success' ? 'var(--n-success-color)' : cookieStatusType === 'error' ? 'var(--n-error-color)' : 'var(--n-warning-color)'"
+              >
+                <Cookies24Filled />
+              </NIcon>
+              <NText
+                strong
+                tag="div"
+              >
+                B站 Cookie
+              </NText>
+            </div>
             <NTag
               size="small"
               :type="cookieStatusType"
@@ -546,6 +650,71 @@ onMounted(() => {
   .fetcher-status-button {
     padding: 0 6px;
     /* 调整按钮内边距 */
+  }
+
+  /* 底部状态区: 运行状态行列表 (开放接口连接数等) */
+  .sider-status-list {
+    margin: 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .status-row--hoverable {
+    cursor: default;
+    padding: 4px 6px;
+    margin: 0 -6px;
+    border-radius: var(--n-border-radius);
+    transition: background-color 0.2s;
+  }
+
+  .status-row--hoverable:hover {
+    background-color: var(--n-close-color-hover, rgba(128, 128, 128, 0.1));
+  }
+
+  .status-row-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* RPC 连接详情弹层 */
+  .rpc-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rpc-detail-title {
+    font-size: 0.9rem;
+  }
+
+  .rpc-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: var(--n-border-radius);
+    background-color: var(--n-close-color-hover, rgba(128, 128, 128, 0.08));
+  }
+
+  .rpc-detail-origin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .rpc-detail-time {
+    font-size: 0.78rem;
   }
 
   /* Fetcher 状态图标通用样式 */

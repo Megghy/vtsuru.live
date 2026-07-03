@@ -48,6 +48,7 @@
     "@vueuse/router": "^14.2.1",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
+    "birpc": "^4.0.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "easy-speech": "^2.4.0",

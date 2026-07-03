@@ -53,6 +53,12 @@ vi.mock('@/shared/services/DanmakuClients/DirectClient', () => ({
   default: MockDanmakuClient,
 }))
 
+// 测试环境无本地 eventfetcher: 探测直接返回 null, 走上游回退, 避免真实网络请求
+vi.mock('@/shared/rpc/client', () => ({
+  probeLocalFetcher: vi.fn(async () => null),
+  connectLocalFetcher: vi.fn(),
+}))
+
 class BroadcastChannelMock {
   private static channels = new Map<string, Set<BroadcastChannelMock>>()
   private listeners = new Set<(event: MessageEvent) => void>()
@@ -128,6 +134,13 @@ describe('useDanmakuClient event sharing', () => {
     BroadcastChannelMock.reset()
   })
 
+  // initOpenlive 现走统一选择链, 首个标签页也要先等 600ms 确认无同浏览器上游再建连
+  async function initUpstream(store: ReturnType<typeof useDanmakuClient>) {
+    const p = store.initOpenlive()
+    await vi.advanceTimersByTimeAsync(600)
+    await p
+  }
+
   it('emits model gift events from the active client to store listeners', async () => {
     const store = await createStore()
     const giftListener = vi.fn()
@@ -135,7 +148,7 @@ describe('useDanmakuClient event sharing', () => {
     store.onEvent('gift', giftListener)
     store.onEvent('all', allListener)
 
-    await store.initOpenlive()
+    await initUpstream(store)
     const event = makeEvent({ uname: 'Alice', msg: '辣条', num: 3 })
     store.danmakuClient!.eventsAsModel.gift[0](event, { cmd: 'gift' })
 
@@ -146,7 +159,7 @@ describe('useDanmakuClient event sharing', () => {
 
   it('receives gift events from another local page without starting a new client', async () => {
     const owner = await createStore()
-    await owner.initOpenlive()
+    await initUpstream(owner)
 
     const reader = await createStore()
     const giftListener = vi.fn()
@@ -162,17 +175,19 @@ describe('useDanmakuClient event sharing', () => {
     expect(startMock).toHaveBeenCalledTimes(1)
   })
 
-  it('uses a fresh remote source instead of opening a duplicate connection', async () => {
+  it('consumes a fresh remote source via a broadcast client instead of opening a duplicate upstream', async () => {
     const owner = await createStore()
-    await owner.initOpenlive()
+    await initUpstream(owner)
 
     const reader = await createStore()
     const ensurePromise = reader.ensureOpenlive()
     await vi.advanceTimersByTimeAsync(600)
     await ensurePromise
 
+    // reader 发现上游后作为 broadcast 消费者接入: 既有远端源、也是 connected, 但未建新的上游连接
     expect(reader.hasRemoteSource).toBe(true)
-    expect(reader.connected).toBe(false)
+    expect(reader.connected).toBe(true)
+    expect(reader.danmakuClient?.type).toBe('broadcast')
     expect(startMock).toHaveBeenCalledTimes(1)
   })
 

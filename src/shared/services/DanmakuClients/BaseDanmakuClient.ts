@@ -1,86 +1,23 @@
 import type { LiveWS } from '@laplace.live/ws/client'
 // BaseDanmakuClient.ts
-import type { EventModel } from '@/api/api-models'
+import DanmakuEventEmitter from './DanmakuEventEmitter'
 // 导入事件模型和类型枚举
 
-// 定义基础弹幕客户端抽象类
-export default abstract class BaseDanmakuClient {
+// B 站弹幕客户端抽象基类 (基于 @laplace.live/ws 的 LiveWS)。
+// 事件订阅/分发逻辑在 DanmakuEventEmitter, 这里只负责连接与原始命令解析。
+export default abstract class BaseDanmakuClient extends DanmakuEventEmitter {
   constructor() {
+    super()
     this.client = null // 初始化客户端实例为 null
-    // 初始化两套事件监听器存储
-    this.eventsAsModel = this.createEmptyEventModelListeners()
-    this.eventsRaw = this.createEmptyRawEventlisteners()
   }
 
   // WebSocket 客户端实例
   public client: LiveWS | null
 
-  // 客户端连接状态
-  public state: 'padding' | 'connected' | 'connecting' | 'disconnected'
-    = 'padding'
-
   // 客户端类型 (由子类实现)
   public abstract type: 'openlive' | 'direct'
   // 目标服务器地址 (由子类实现)
   public abstract serverUrl: string
-
-  // --- 事件系统 1: 使用 EventModel ---
-  // 事件监听器集合 (统一使用 EventModel)
-  public eventsAsModel: {
-    danmaku: ((arg1: EventModel, arg2?: any) => void)[]
-    gift: ((arg1: EventModel, arg2?: any) => void)[]
-    sc: ((arg1: EventModel, arg2?: any) => void)[]
-    guard: ((arg1: EventModel, arg2?: any) => void)[]
-    enter: ((arg1: EventModel, arg2?: any) => void)[] // 新增: 用户进入事件
-    scDel: ((arg1: EventModel, arg2?: any) => void)[] // 新增: SC 删除事件
-    all: ((arg1: any) => void)[] // 'all' 事件监听器接收原始消息或特定事件包
-    follow: ((arg1: EventModel, arg2?: any) => void)[] // 新增: 关注事件
-    like: ((arg1: EventModel, arg2?: any) => void)[] // 新增: 点赞事件
-  }
-
-  // --- 事件系统 2: 使用原始数据类型 ---
-  // 事件监听器集合 (使用原始数据结构, 类型设为 any, 由具体实现和调用者保证)
-  public eventsRaw: {
-    danmaku: ((arg1: any, arg2?: any) => void)[]
-    gift: ((arg1: any, arg2?: any) => void)[]
-    sc: ((arg1: any, arg2?: any) => void)[]
-    guard: ((arg1: any, arg2?: any) => void)[]
-    enter: ((arg1: any, arg2?: any) => void)[] // 新增: 用户进入事件
-    scDel: ((arg1: any, arg2?: any) => void)[] // 新增: SC 删除事件
-    all: ((arg1: any) => void)[] // 'all' 事件监听器接收原始消息或特定事件包
-    follow: ((arg1: any, arg2?: any) => void)[] // 新增: 关注事件
-    like: ((arg1: any, arg2?: any) => void)[] // 新增: 点赞事件
-  }
-
-  // 创建空的 EventModel 监听器对象
-  public createEmptyEventModelListeners() {
-    return {
-      danmaku: [],
-      gift: [],
-      sc: [],
-      guard: [],
-      enter: [],
-      scDel: [],
-      all: [],
-      follow: [], // 初始化 follow 事件
-      like: [],
-    }
-  }
-
-  // 创建空的 RawEvent 监听器对象
-  public createEmptyRawEventlisteners() {
-    return {
-      danmaku: [],
-      gift: [],
-      sc: [],
-      guard: [],
-      enter: [],
-      scDel: [],
-      all: [],
-      follow: [], // 初始化 follow 事件
-      like: [],
-    }
-  }
 
   /**
    * 启动弹幕客户端连接
@@ -167,7 +104,9 @@ export default abstract class BaseDanmakuClient {
     // this.eventsRaw = this.createEmptyRawEventlisteners();
   }
 
-  protected onUnexpectedDisconnect(): void {}
+  protected onUnexpectedDisconnect(): void {
+    this.onConnectionLost?.()
+  }
 
   /**
    * 初始化客户端实例 (抽象方法，由子类实现具体的创建逻辑)
@@ -266,24 +205,6 @@ export default abstract class BaseDanmakuClient {
     }
   }
 
-  /**
-   * 处理接收到的原始消息，并根据类型分发 (主要用于 'msg' 事件)
-   * @param command - 原始消息对象 (类型为 any)
-   */
-  public onRawMessage = (command: any) => {
-    // 触发 'all' 事件监听器 (两套系统都触发)
-    try {
-      this.eventsAsModel.all?.forEach((listener) => {
-        listener(command)
-      })
-      this.eventsRaw.all?.forEach((listener) => {
-        listener(command)
-      })
-    } catch (err) {
-      console.error(`[${this.type}] 处理 'all' 事件监听器时出错:`, err, command)
-    }
-  }
-
   // --- 抽象处理方法 (子类实现) ---
   // 这些方法负责接收原始数据, 触发 RawEvent, 转换数据, 触发 ModelEvent
 
@@ -329,67 +250,4 @@ export default abstract class BaseDanmakuClient {
    * @param rawCommand - 完整的原始消息对象 (可选, any 类型)
    */
   public abstract onLike(comand: any): void
-
-  // --- 事件系统 1: on/off (使用 EventModel) ---
-  public onEvent(eventName: 'danmaku', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'gift', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'sc', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'guard', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'enter', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
-  public onEvent(eventName: 'scDel', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
-  public onEvent(eventName: 'all', listener: (arg1: any) => void): this
-  public onEvent(eventName: 'follow', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
-  public onEvent(eventName: 'like', listener: (arg1: EventModel, arg2?: any) => void): this // 新增
-  public onEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: (...args: any[]) => void): this {
-    if (!this.eventsAsModel[eventName]) {
-      // @ts-ignore
-      this.eventsAsModel[eventName] = []
-    }
-    // @ts-ignore
-    this.eventsAsModel[eventName].push(listener)
-    return this
-  }
-
-  public offEvent(eventName: keyof BaseDanmakuClient['eventsAsModel'], listener: (...args: any[]) => void): this {
-    if (this.eventsAsModel[eventName]?.length) {
-      // @ts-ignore
-      const index = this.eventsAsModel[eventName].indexOf(listener)
-      if (index > -1) {
-        this.eventsAsModel[eventName].splice(index, 1)
-      }
-    }
-    return this
-  }
-
-  // --- 事件系统 2: on/off (使用原始数据) ---
-  // 注意: listener 的 arg1 类型为 any, 需要调用者根据 eventName 自行转换或处理
-  public on(eventName: 'danmaku', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'gift', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'sc', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'guard', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'enter', listener: (arg1: any, arg2?: any) => void): this // 新增
-  public on(eventName: 'scDel', listener: (arg1: any, arg2?: any) => void): this // 新增
-  public on(eventName: 'all', listener: (arg1: any) => void): this
-  public on(eventName: 'follow', listener: (arg1: any, arg2?: any) => void): this // 新增
-  public on(eventName: 'like', listener: (arg1: any, arg2?: any) => void): this // 新增
-  public on(eventName: keyof BaseDanmakuClient['eventsRaw'], listener: (...args: any[]) => void): this {
-    if (!this.eventsRaw[eventName]) {
-      // @ts-ignore
-      this.eventsRaw[eventName] = []
-    }
-    // @ts-ignore
-    this.eventsRaw[eventName].push(listener)
-    return this
-  }
-
-  public off(eventName: keyof BaseDanmakuClient['eventsRaw'], listener: (...args: any[]) => void): this {
-    if (this.eventsRaw[eventName]?.length) {
-      // @ts-ignore
-      const index = this.eventsRaw[eventName].indexOf(listener)
-      if (index > -1) {
-        this.eventsRaw[eventName].splice(index, 1)
-      }
-    }
-    return this
-  }
 }
