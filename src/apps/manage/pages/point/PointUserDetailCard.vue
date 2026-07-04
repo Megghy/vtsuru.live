@@ -9,13 +9,12 @@ import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
 import {
   NAvatar, NButton, NDivider, NEmpty, NFlex, NGrid, NGridItem, NIcon, NInput, NInputNumber, NModal, NSpin, NStatistic, NTabPane, NTabs, NTag, NTime, NTooltip, useMessage,
 } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { QueryGetAPI } from '@/api/query'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import PointOrderCard from '@/shared/components/points/PointOrderCard.vue'
 import { POINT_API_URL } from '@/shared/config'
 
-// 组件属性定义
 const props = defineProps<{
   user: ResponsePointUserModel
   goods: ResponsePointGoodModel[]
@@ -23,28 +22,72 @@ const props = defineProps<{
 
 const message = useMessage()
 
-// 加载状态
 const isLoading = ref(false)
-// 用户订单列表
 const orders = ref<ResponsePointOrder2OwnerModel[]>([])
-// 用户积分历史
 const pointHistory = ref<ResponsePointHisrotyModel[]>([])
 
-// 积分调整弹窗状态
 const showAddPointModal = ref(false)
 const addPointCount = ref(0)
 const addPointReason = ref<string>('')
 
-// 获取用户订单
+const emptyOpenId = '00000000-0000-0000-0000-000000000000'
+
+type PointTarget =
+  | { type: 'auth'; authId: number }
+  | { type: 'uid'; userId: number }
+  | { type: 'openid'; openId: string }
+
+const pointTarget = computed<PointTarget | null>(() => {
+  const info = props.user.info
+  if (!info) {
+    return null
+  }
+  if (info.id > 0) {
+    return { type: 'auth', authId: info.id }
+  }
+  if (info.userId > 0) {
+    return { type: 'uid', userId: info.userId }
+  }
+  if (info.openId && info.openId !== emptyOpenId) {
+    return { type: 'openid', openId: info.openId }
+  }
+  return null
+})
+
+const canAdjustPoint = computed(() => pointTarget.value !== null)
+
+function getHistoryParams(target: PointTarget) {
+  switch (target.type) {
+    case 'auth':
+      return { authId: target.authId }
+    case 'uid':
+      return { id: target.userId }
+    case 'openid':
+      return { id: target.openId }
+  }
+}
+
+function getGivePointParams(target: PointTarget) {
+  switch (target.type) {
+    case 'auth':
+      return { authId: target.authId }
+    case 'uid':
+      return { uId: target.userId }
+    case 'openid':
+      return { oId: target.openId }
+  }
+}
+
 async function getOrders() {
-  if (!props.user.info?.id) {
+  const info = props.user.info
+  if (!info || info.id <= 0) {
     return []
   }
 
   try {
     isLoading.value = true
     const data = await QueryGetAPI<ResponsePointOrder2OwnerModel[]>(`${POINT_API_URL}get-user-orders`, {
-      authId: props.user.info?.id,
+      authId: info.id,
     })
 
     if (data.code == 200) {
@@ -66,19 +109,18 @@ async function getOrders() {
   return []
 }
 
-// 获取用户积分历史
 async function getPointHistory() {
   try {
     isLoading.value = true
 
-    // 根据用户认证状态使用不同的请求参数
-    const params = props.user.info.id > 0
-      ? { authId: props.user.info.id }
-      : { id: props.user.info.userId > 0 ? props.user.info.userId : props.user.info.openId }
+    const target = pointTarget.value
+    if (!target) {
+      return []
+    }
 
     const data = await QueryGetAPI<ResponsePointHisrotyModel[]>(
       `${POINT_API_URL}get-user-histories`,
-      params,
+      getHistoryParams(target),
     )
 
     if (data.code == 200) {
@@ -100,9 +142,7 @@ async function getPointHistory() {
   return []
 }
 
-// 给用户增加/减少积分
 async function givePoint() {
-  // 验证积分数量
   if (addPointCount.value == 0) {
     message.error('积分数量不能为 0')
     return
@@ -110,44 +150,27 @@ async function givePoint() {
 
   isLoading.value = true
   try {
-    // 根据用户认证状态构建不同的请求参数
-    let params = {}
-
-    if (props.user.info?.id >= 0) {
-      params = {
-        authId: props.user.info?.id,
-        count: addPointCount.value,
-        reason: addPointReason.value ?? '',
-      }
-    }
-    else if (props.user.info?.userId) {
-      params = {
-        uId: props.user.info?.userId,
-        count: addPointCount.value,
-        reason: addPointReason.value ?? '',
-      }
-    }
-    else {
-      params = {
-        oId: props.user.info?.openId,
-        count: addPointCount.value,
-        reason: addPointReason.value ?? '',
-      }
+    const target = pointTarget.value
+    if (!target) {
+      message.error('无法识别积分目标用户')
+      return
     }
 
-    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, params)
+    const data = await QueryGetAPI(`${POINT_API_URL}give-point`, {
+      ...getGivePointParams(target),
+      count: addPointCount.value,
+      reason: addPointReason.value,
+    })
 
     if (data.code == 200) {
       message.success('添加成功')
       showAddPointModal.value = false
       props.user.point = Number((props.user.point + addPointCount.value).toFixed(1))
 
-      // 重新加载积分历史
       setTimeout(async () => {
         pointHistory.value = await getPointHistory()
       }, 1500)
 
-      // 重置表单
       addPointCount.value = 0
       addPointReason.value = ''
     }
@@ -165,11 +188,10 @@ async function givePoint() {
   }
 }
 
-// 组件挂载时加载数据
 onMounted(async () => {
   pointHistory.value = await getPointHistory()
 
-  if (props.user.info?.id) {
+  if ((props.user.info?.id ?? 0) > 0) {
     orders.value = await getOrders()
   }
 })
@@ -217,7 +239,7 @@ onMounted(async () => {
               class="user-ids"
             >
               <span v-if="user.info.userId > 0">UID: {{ user.info.userId }}</span>
-              <span v-if="user.info.openId && user.info.openId !== '00000000-0000-0000-0000-000000000000'">OpenId: {{ user.info.openId }}</span>
+              <span v-if="user.info.openId && user.info.openId !== emptyOpenId">OpenId: {{ user.info.openId }}</span>
             </NFlex>
           </div>
         </NFlex>
@@ -225,6 +247,7 @@ onMounted(async () => {
         <NButton
           type="primary"
           secondary
+          :disabled="!canAdjustPoint"
           @click="showAddPointModal = true"
         >
           <template #icon>
@@ -369,7 +392,7 @@ onMounted(async () => {
           <NButton
             type="primary"
             :loading="isLoading"
-            :disabled="!addPointCount || addPointCount === 0"
+            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0"
             @click="givePoint"
           >
             {{ !addPointCount || addPointCount === 0 ? '确定' : (addPointCount > 0 ? '确认给予' : '确认扣除') }}

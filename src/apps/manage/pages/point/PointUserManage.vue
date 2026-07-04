@@ -280,7 +280,7 @@ async function givePoint() {
     return
   }
 
-  if (!addPointTarget.value) {
+  if (!addPointTarget.value || addPointTarget.value <= 0) {
     message.error('请输入用户ID')
     return
   }
