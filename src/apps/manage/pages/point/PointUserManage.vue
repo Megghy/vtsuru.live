@@ -77,6 +77,30 @@ const pointSourceOptions = [
   { type: EventDataTypes.Gift, label: '礼物' },
 ] as const
 
+const emptyOpenId = '00000000-0000-0000-0000-000000000000'
+
+type PointUserTargetParams =
+  | { authId: number }
+  | { uId: number }
+  | { oId: string }
+
+function getPointUserTargetParams(user: ResponsePointUserModel): PointUserTargetParams | null {
+  const info = user.info
+  if (!info) {
+    return null
+  }
+  if (info.id > 0) {
+    return { authId: info.id }
+  }
+  if (info.userId > 0) {
+    return { uId: info.userId }
+  }
+  if (info.openId && info.openId !== emptyOpenId) {
+    return { oId: info.openId }
+  }
+  return null
+}
+
 const enabledPointSources = computed(() => {
   const allowType = props.pointSetting?.allowType ?? []
   return pointSourceOptions
@@ -306,11 +330,11 @@ async function givePoint() {
 
 // 删除用户
 async function deleteUser(user: ResponsePointUserModel) {
-  const params = user.isAuthed
-    ? { authId: user.info.id }
-    : user.info.userId
-      ? { uId: user.info.userId }
-      : { uId: user.info.openId }
+  const params = getPointUserTargetParams(user)
+  if (!params) {
+    message.error('无法识别积分用户')
+    return
+  }
 
   if (await run(() => QueryGetAPI(`${POINT_API_URL}delete-user`, params), { success: '已删除', fail: '删除失败' }))
     users.value = users.value.filter(u => u != user)
