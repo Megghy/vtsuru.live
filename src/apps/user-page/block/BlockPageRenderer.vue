@@ -5,20 +5,20 @@ import { darkTheme, NConfigProvider } from 'naive-ui';
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
 import { BLOCK_COMPONENTS } from './registry'
-import { hexToRgba } from '@/shared/utils'
-import { getThemeOverrides } from '@/shared/config/theme'
+import { getUserPageSurfaceCssVars } from '@/apps/user-page/background'
+import { buildTokens, getThemeOverrides } from '@/shared/config/theme'
 
 const props = defineProps<{
   project: BlockPageProject
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  isDark: boolean
   extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
 }>()
 
-// 用户页忽略系统亮暗：除非显式设置为 light，否则默认按 dark 渲染
-const isDark = computed(() => (props.project.theme as any)?.pageThemeMode !== 'light')
-const baseOverrides = computed(() => getThemeOverrides(isDark.value))
+const baseOverrides = computed(() => getThemeOverrides(props.isDark))
+const surfaceTokens = computed(() => buildTokens(props.isDark))
 
 const radius = computed(() => props.project.theme?.radius ?? 6) // Default to 6 (shadcn default)
 const spacing = computed(() => {
@@ -34,17 +34,20 @@ const pageMaxWidth = computed(() => {
   return s.length ? s : null
 })
 const containerStyle = computed(() => ({
+  ...getUserPageSurfaceCssVars(props.isDark),
   '--vtsuru-page-radius': `${radius.value}px`,
   '--vtsuru-page-spacing': `${spacing.value}px`,
-  '--vtsuru-page-primary': props.project.theme?.primaryColor ?? 'var(--n-color)',
+  '--vtsuru-page-primary': props.project.theme?.primaryColor ?? 'var(--n-primary-color)',
   '--vtsuru-page-bg': props.project.theme?.backgroundColor ?? 'transparent',
-  '--vtsuru-page-text': props.project.theme?.textColor ?? 'inherit',
-  '--vtsuru-card-border-color': isDark.value ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.10)',
+  '--vtsuru-page-text': props.project.theme?.textColor ?? surfaceTokens.value.foreground,
+  '--vtsuru-surface-fg': surfaceTokens.value.foreground,
+  '--vtsuru-surface-fg-muted': 'color-mix(in srgb, var(--vtsuru-surface-fg) 76%, transparent)',
+  '--vtsuru-surface-fg-subtle': 'color-mix(in srgb, var(--vtsuru-surface-fg) 60%, transparent)',
   ...(pageMaxWidth.value ? { '--vtsuru-page-max-width': pageMaxWidth.value } : {}),
 }))
 
 const naiveTheme = computed(() => {
-  if (isDark.value) return darkTheme
+  if (props.isDark) return darkTheme
   return null
 })
 
@@ -52,17 +55,11 @@ const naiveTheme = computed(() => {
 const userOverrides = computed<GlobalThemeOverrides>(() => {
   const t: any = props.project.theme ?? {}
   const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
-  const textColor = typeof t.textColor === 'string' ? t.textColor : undefined
-  const bodyColor = typeof t.backgroundColor === 'string' ? t.backgroundColor : undefined
   const radiusPx = `${radius.value}px`
-  const borderColor = textColor ? hexToRgba(textColor, 0.16) : null
 
   return {
     common: {
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
-      ...(textColor ? { textColorBase: textColor, textColor1: textColor, textColor2: textColor, textColor3: textColor } : {}),
-      ...(bodyColor ? { bodyColor, cardColor: bodyColor, modalColor: bodyColor, popoverColor: bodyColor } : {}),
-      ...(borderColor ? { borderColor, dividerColor: borderColor } : {}),
       borderRadius: radiusPx,
       borderRadiusSmall: radiusPx,
     },

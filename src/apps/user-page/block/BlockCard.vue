@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NCard } from 'naive-ui';
+import type { GlobalThemeOverrides } from 'naive-ui'
+import { NCard, NConfigProvider } from 'naive-ui';
 import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
@@ -24,10 +25,52 @@ const resolvedContentStyle = computed<string | CSSProperties>(() => {
 const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
+const textThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  const foreground = isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)'
+  const muted = isUnbackgrounded.value
+    ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
+    : 'var(--vtsuru-surface-fg-muted)'
+  const subtle = isUnbackgrounded.value
+    ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
+    : 'var(--vtsuru-surface-fg-subtle)'
+
+  return {
+    common: {
+      textColorBase: foreground,
+      textColor1: foreground,
+      textColor2: muted,
+      textColor3: subtle,
+    },
+    Card: {
+      textColor: foreground,
+      titleTextColor: foreground,
+    },
+    Typography: {
+      textColor: foreground,
+      textColor1Depth: foreground,
+      textColor2Depth: muted,
+      textColor3Depth: subtle,
+      pTextColor: muted,
+      pTextColor1Depth: foreground,
+      pTextColor2Depth: muted,
+      pTextColor3Depth: subtle,
+    },
+  }
+})
+
 const cardStyle = computed<CSSProperties>(() => ({
   '--n-border-color': isUnframed.value
     ? 'transparent'
     : 'var(--vtsuru-card-border-color, var(--user-page-border-color, var(--n-divider-color)))',
+  '--n-text-color': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
+  '--n-text-color-1': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
+  '--n-text-color-2': isUnbackgrounded.value
+    ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
+    : 'var(--vtsuru-surface-fg-muted)',
+  '--n-text-color-3': isUnbackgrounded.value
+    ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
+    : 'var(--vtsuru-surface-fg-subtle)',
+  '--n-title-text-color': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
 }))
 
 const borderTitleText = computed(() => (typeof props.borderTitle === 'string' ? props.borderTitle.trim() : ''))
@@ -41,39 +84,42 @@ const borderTitleAlignClass = computed(() => {
 </script>
 
 <template>
-  <div
-    class="vtsuru-block-card-wrap"
-    :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
-    :style="[cardStyle, props.wrapStyle]"
-  >
-    <div v-if="showBorderTitle" class="border-title" :class="borderTitleAlignClass">
-      <span class="border-title__text">
-        {{ borderTitleText }}
-      </span>
-    </div>
-    <NCard
-      size="small"
-      :bordered="!isUnframed"
-      class="vtsuru-block-card"
-      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
-      :content-style="resolvedContentStyle"
-      :header-style="props.headerStyle"
-      :footer-style="props.footerStyle"
+  <NConfigProvider :theme-overrides="textThemeOverrides">
+    <div
+      class="vtsuru-block-card-wrap"
+      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
+      :style="props.wrapStyle"
     >
-      <template v-if="$slots.header" #header>
-        <slot name="header" />
-      </template>
-      <template v-if="$slots['header-extra']" #header-extra>
-        <slot name="header-extra" />
-      </template>
-      <template v-if="$slots.default">
-        <slot />
-      </template>
-      <template v-if="$slots.footer" #footer>
-        <slot name="footer" />
-      </template>
-    </NCard>
-  </div>
+      <div v-if="showBorderTitle" class="border-title" :class="borderTitleAlignClass">
+        <span class="border-title__text">
+          {{ borderTitleText }}
+        </span>
+      </div>
+      <NCard
+        size="small"
+        :bordered="!isUnframed"
+        class="vtsuru-block-card"
+        :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
+        :content-style="resolvedContentStyle"
+        :header-style="props.headerStyle"
+        :footer-style="props.footerStyle"
+        :style="cardStyle"
+      >
+        <template v-if="$slots.header" #header>
+          <slot name="header" />
+        </template>
+        <template v-if="$slots['header-extra']" #header-extra>
+          <slot name="header-extra" />
+        </template>
+        <template v-if="$slots.default">
+          <slot />
+        </template>
+        <template v-if="$slots.footer" #footer>
+          <slot name="footer" />
+        </template>
+      </NCard>
+    </div>
+  </NConfigProvider>
 </template>
 
 <style scoped>
@@ -112,7 +158,7 @@ const borderTitleAlignClass = computed(() => {
   padding: 0;
   font-size: 12px;
   line-height: 1;
-  color: var(--n-text-color, var(--vtsuru-page-text, currentColor));
+  color: var(--vtsuru-surface-fg, var(--n-text-color));
   font-weight: 600;
   letter-spacing: 0.2px;
   opacity: 0.9;
@@ -123,7 +169,8 @@ const borderTitleAlignClass = computed(() => {
   flex: 1;
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
+  color: var(--vtsuru-surface-fg, var(--n-text-color));
+  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.80)));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   box-shadow:
@@ -137,10 +184,15 @@ const borderTitleAlignClass = computed(() => {
 }
 
 .vtsuru-block-card.unbackgrounded {
+  color: var(--vtsuru-page-text, var(--n-text-color));
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
+}
+
+.vtsuru-block-card-wrap.unbackgrounded .border-title__text {
+  color: var(--vtsuru-page-text, var(--n-text-color));
 }
 
 .vtsuru-block-card :deep(.n-card-header) {

@@ -13,8 +13,9 @@ import { FunctionTypes, ThemeType } from '@/api/api-models'
 import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageSurfaceCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
@@ -132,11 +133,7 @@ const pageThemeMode = computed<PageThemeMode>(() => {
   return globalThemeMode.value
 })
 
-const effectiveIsDark = computed(() => {
-  if (pageThemeMode.value === 'dark') return true
-  if (pageThemeMode.value === 'light') return false
-  return isDarkMode.value
-})
+const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
 const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
 
@@ -239,13 +236,7 @@ const layoutPageBgVars = computed(() => {
   return getPageBackgroundCssVars(bg, effectiveIsDark.value)
 })
 
-const layoutUiVars = computed(() => ({
-  '--user-page-ui-surface-bg': effectiveIsDark.value ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.80)',
-  '--user-page-ui-surface-bg-hover': effectiveIsDark.value ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.86)',
-  '--user-page-ui-surface-bg-pressed': effectiveIsDark.value ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.92)',
-  '--user-page-border-color': effectiveIsDark.value ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
-  '--vtsuru-card-border-color': effectiveIsDark.value ? 'rgba(148, 163, 184, 0.20)' : 'rgba(148, 163, 184, 0.26)',
-}))
+const layoutUiVars = computed(() => getUserPageSurfaceCssVars(effectiveIsDark.value))
 
 const mergedLayoutVars = computed(() => ({ ...layoutUiVars.value, ...layoutPageBgVars.value }))
 

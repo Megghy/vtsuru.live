@@ -68,6 +68,16 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
   }
 }
 
+export function getUserPageSurfaceCssVars(effectiveIsDark: boolean) {
+  return {
+    '--user-page-ui-surface-bg': effectiveIsDark ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.62)',
+    '--user-page-ui-surface-bg-hover': effectiveIsDark ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.72)',
+    '--user-page-ui-surface-bg-pressed': effectiveIsDark ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.80)',
+    '--user-page-border-color': effectiveIsDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
+    '--vtsuru-card-border-color': effectiveIsDark ? 'rgba(148, 163, 184, 0.20)' : 'rgba(148, 163, 184, 0.26)',
+  } as Record<string, string>
+}
+
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
   const safeUrl = img ? img.replaceAll('"', "\\\"") : ''
@@ -89,29 +99,16 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
     ? hexToRgba(bg.color, 0.55)
     : (bg.type === 'image' ? 'transparent' : null)
 
-  // UI 表面：微透明（约 70%）+ 由卡片自身应用轻微 blur
-  const uiSurfaceBg = effectiveIsDark ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.80)'
-  const uiSurfaceBgHover = effectiveIsDark ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.86)'
-  const uiSurfaceBgPressed = effectiveIsDark ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.92)'
-
-  // 使用更中性的“灰蓝”边框，避免浅色主题下出现纯黑边框的观感
-  const borderColor = effectiveIsDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)'
-  const cardBorderColor = effectiveIsDark ? 'rgba(148, 163, 184, 0.20)' : 'rgba(148, 163, 184, 0.26)'
-
   // 玻璃底色默认值：降低不透明度，避免浅色模式下出现大块白色遮罩
   const defaultGlassSurfaceBg = effectiveIsDark ? 'rgba(0, 0, 0, 0.22)' : 'rgba(255, 255, 255, 0.18)'
 
   return {
+    ...getUserPageSurfaceCssVars(effectiveIsDark),
     '--user-page-bg-color': bg.type === 'color' ? bg.color : 'transparent',
     '--user-page-bg-image': safeUrl ? `url("${safeUrl}")` : 'none',
     '--user-page-bg-size': bg.fit === 'fill' ? '100% 100%' : (bg.fit === 'none' ? 'auto' : bg.fit),
     '--user-page-bg-blur': `${blurPx}px`,
     '--user-page-bg-scrim': scrim,
     '--glass-surface-bg': glassColor || defaultGlassSurfaceBg,
-    '--user-page-ui-surface-bg': uiSurfaceBg,
-    '--user-page-ui-surface-bg-hover': uiSurfaceBgHover,
-    '--user-page-ui-surface-bg-pressed': uiSurfaceBgPressed,
-    '--user-page-border-color': borderColor,
-    '--vtsuru-card-border-color': cardBorderColor,
   } as Record<string, string>
 }

@@ -5,6 +5,8 @@ import { computed, inject } from 'vue'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
 import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { isDarkMode } from '@/shared/utils'
 import PhonePreview from './PhonePreview.vue'
 import { UserPageEditorKey } from '../context'
 
@@ -28,7 +30,7 @@ const previewMergedProject = computed(() => {
 
 const previewEffectiveIsDark = computed(() => {
   const mode = (previewMergedProject.value?.theme as any)?.pageThemeMode
-  return mode !== 'light'
+  return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
 const previewBg = computed(() => {
@@ -112,6 +114,7 @@ const previewBgClass = computed(() => ({
                     :project="previewMergedProject"
                     :user-info="editor.account.value"
                     :bili-info="undefined"
+                    :is-dark="previewEffectiveIsDark"
                     :extra-theme-overrides="previewSurfaceThemeOverrides"
                     :highlight-block-id="editor.hoveredBlockId.value"
                   />
@@ -121,6 +124,7 @@ const previewBgClass = computed(() => ({
                   :project="previewMergedProject"
                   :user-info="editor.account.value"
                   :bili-info="undefined"
+                  :is-dark="previewEffectiveIsDark"
                   :extra-theme-overrides="previewSurfaceThemeOverrides"
                   :highlight-block-id="editor.hoveredBlockId.value"
                 />

@@ -8,8 +8,10 @@ import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
+import { isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: any | undefined
@@ -102,7 +104,7 @@ const mergedBlockProject = computed(() => {
 
 const effectiveIsDark = computed(() => {
   const mode = (mergedBlockProject.value?.theme as any)?.pageThemeMode
-  return mode !== 'light'
+  return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
 const contentBg = computed(() => {
@@ -165,6 +167,7 @@ const contentBgClass = computed(() => ({
               :project="mergedBlockProject || blockValidation.project"
               :user-info="userInfo"
               :bili-info="biliInfo"
+              :is-dark="effectiveIsDark"
             />
           </template>
 
@@ -229,6 +232,7 @@ const contentBgClass = computed(() => ({
               :project="mergedBlockProject || blockValidation.project"
               :user-info="userInfo"
               :bili-info="biliInfo"
+              :is-dark="effectiveIsDark"
             />
           </template>
 
