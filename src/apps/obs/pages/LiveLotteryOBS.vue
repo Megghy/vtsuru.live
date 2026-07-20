@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { useElementSize } from '@vueuse/core'
-import { NDivider, NEmpty, NFlex, NText } from 'naive-ui';
+import { NDivider, NEmpty, NFlex, NText } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'
 import { useRoute } from 'vue-router'
@@ -21,44 +21,43 @@ const currentCode = computed<string>(() => {
 const listContainerRef = ref()
 const { height, width } = useElementSize(listContainerRef)
 
-const result = ref(await getUsers())
-const users = computed(() => {
-  return result.value?.users
+const result = ref<UpdateLiveLotteryUsersModel>({
+  users: [],
+  resultUsers: [],
+  type: OpenLiveLotteryType.Waiting,
 })
+const users = computed(() => result.value.users)
 const isMoreThanContainer = computed(() => {
-  return (users.value?.length ?? 0) * 50 > height.value
+  return users.value.length * 50 > height.value
 })
 
-async function getUsers() {
+async function refreshUsers() {
   try {
     const data = await QueryGetAPI<UpdateLiveLotteryUsersModel>(`${LOTTERY_API_URL}live/get-users`, {
       code: currentCode.value,
     })
     if (data.code === 200) {
-      return data.data
+      result.value = data.data
     }
   } catch (err) {
     console.error(err)
   }
-  return {
-    users: [],
-    resultUsers: [],
-    type: OpenLiveLotteryType.Waiting,
-  } as UpdateLiveLotteryUsersModel
 }
+
+await refreshUsers()
 
 function handleImageError(e: Event) {
   const img = e.target as HTMLImageElement
   img.src = 'https://i2.hdslb.com/bfs/face/member/noface.jpg'
 }
 
-onMounted(() => {
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    getUsers()
-  })
-})
+function handleObsUpdate() {
+  void refreshUsers()
+}
+
+onMounted(() => window.$mitt.on('onOBSComponentUpdate', handleObsUpdate))
 onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
+  window.$mitt.off('onOBSComponentUpdate', handleObsUpdate)
 })
 </script>
 
@@ -75,7 +74,7 @@ onUnmounted(() => {
       class="lottery-divider"
     >
       <p class="lottery-header-count">
-        已有 {{ users?.length ?? 0 }} 人
+        已有 {{ users.length }} 人
       </p>
     </NDivider>
     <div

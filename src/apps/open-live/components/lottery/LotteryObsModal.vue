@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NAlert, NCollapse, NCollapseItem, NDivider, NInput, NLi, NModal, NFlex, NUl } from 'naive-ui';
+import { NAlert, NButton, NCollapse, NCollapseItem, NDivider, NFlex, NInput, NInputGroup, NLi, NModal, NUl } from 'naive-ui'
 import { computed } from 'vue'
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import { copyToClipboard } from '@/shared/utils'
 
 const props = defineProps<{
   show: boolean
@@ -20,7 +21,8 @@ const showModel = computed({
 
 const url = computed(() => {
   if (!props.code) return ''
-  return `${CURRENT_HOST}obs/live-lottery?code=${props.code}`
+  const params = new URLSearchParams({ code: props.code })
+  return `${CURRENT_HOST}obs/live-lottery?${params.toString()}`
 })
 </script>
 
@@ -33,6 +35,18 @@ const url = computed(() => {
     closable
     content-style="overflow: auto"
   >
+    <template #header-extra>
+      <NButton
+        v-if="url"
+        tag="a"
+        type="primary"
+        size="small"
+        target="_blank"
+        :href="url"
+      >
+        浏览
+      </NButton>
+    </template>
     <NFlex vertical :size="12">
       <NAlert title="这是什么？" type="info" size="small" :bordered="false">
         将抽奖等待队列与结果显示在 OBS 的浏览器源中。
@@ -45,7 +59,18 @@ const url = computed(() => {
         <LiveLotteryOBS :code="code" />
       </div>
 
-      <NInput :value="url" size="small" readonly />
+      <NInputGroup>
+        <NInput :value="url" size="small" readonly />
+        <NButton
+          type="primary"
+          secondary
+          size="small"
+          :disabled="!url"
+          @click="copyToClipboard(url)"
+        >
+          复制
+        </NButton>
+      </NInputGroup>
 
       <NCollapse>
         <NCollapseItem title="使用说明">
