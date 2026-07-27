@@ -33,6 +33,7 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
         rel="noopener noreferrer"
         :href="it.url"
         class="vtsuru-link-tag"
+        :aria-label="`${it.label || '打开链接'}（新窗口打开）`"
       >
         {{ it.label }}
       </NButton>
@@ -45,14 +46,20 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
   border-radius: var(--vtsuru-page-radius);
   padding: 0 16px;
   font-weight: 500;
-  border: 1px solid var(--n-divider-color);
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
-  transition: all 0.2s ease;
+  border: 1px solid var(--vtsuru-border);
+  background: var(--vtsuru-bg-elevated);
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .vtsuru-link-tag:hover {
-  background: var(--n-action-color);
-  border-color: var(--n-primary-color-hover);
+  background: var(--vtsuru-bg-muted);
+  border-color: var(--vtsuru-page-primary, var(--vtsuru-brand));
   transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtsuru-link-tag { transition: none; }
+  .vtsuru-link-tag:hover { transform: none; }
 }
 </style>

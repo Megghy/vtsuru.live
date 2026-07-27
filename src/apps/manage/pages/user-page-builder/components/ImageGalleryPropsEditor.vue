@@ -30,15 +30,16 @@ const itemsModel = computed({
 function ensureItem(idx: number) {
   const it = itemsModel.value[idx]
   if (!it || typeof it !== 'object' || Array.isArray(it)) {
-    itemsModel.value[idx] = { desc: '' }
+    itemsModel.value[idx] = { desc: '', alt: '' }
   }
   const obj = itemsModel.value[idx]
   if (typeof obj.desc !== 'string') obj.desc = ''
+  if (typeof obj.alt !== 'string') obj.alt = ''
   return obj
 }
 
 function addItem() {
-  itemsModel.value.push({ desc: '' })
+  itemsModel.value.push({ desc: '', alt: '' })
 }
 
 function removeItem(idx: number) {
@@ -135,6 +136,22 @@ function getItemKey(it: any) {
           </NFlex>
         </NFormItem>
 
+        <NFormItem label="显示切换箭头">
+          <NFlex justify="end">
+            <NSwitch v-model:value="gallery.showArrow" size="small" />
+          </NFlex>
+        </NFormItem>
+
+        <NFormItem v-if="gallery.showDots" label="指示点样式">
+          <NSelect
+            v-model:value="gallery.dotType"
+            :options="[
+              { label: '短线', value: 'line' },
+              { label: '圆点', value: 'dot' },
+            ]"
+          />
+        </NFormItem>
+
         <NFormItem v-if="gallery.showDots" label="指示点位置">
           <NSelect
             v-model:value="gallery.dotPlacement"
@@ -143,6 +160,34 @@ function getItemKey(it: any) {
               { label: '顶部', value: 'top' },
               { label: '左侧', value: 'left' },
               { label: '右侧', value: 'right' },
+            ]"
+          />
+        </NFormItem>
+
+        <NFormItem label="循环播放">
+          <NFlex justify="end">
+            <NSwitch v-model:value="gallery.loop" size="small" />
+          </NFlex>
+        </NFormItem>
+
+        <NFormItem label="鼠标拖拽切换">
+          <NFlex justify="end">
+            <NSwitch v-model:value="gallery.draggable" size="small" />
+          </NFlex>
+        </NFormItem>
+
+        <NFormItem label="触屏滑动切换">
+          <NFlex justify="end">
+            <NSwitch v-model:value="gallery.touchable" size="small" />
+          </NFlex>
+        </NFormItem>
+
+        <NFormItem label="切换触发方式">
+          <NSelect
+            v-model:value="gallery.trigger"
+            :options="[
+              { label: '点击', value: 'click' },
+              { label: '悬停', value: 'hover' },
             ]"
           />
         </NFormItem>
@@ -208,6 +253,9 @@ function getItemKey(it: any) {
             </NFlex>
 
             <div style="margin-top: 10px">
+              <NFormItem label="替代文本" :show-feedback="false">
+                <NInput v-model:value="ensureItem(index).alt" placeholder="说明图片内容；装饰图片可留空" />
+              </NFormItem>
               <NFormItem label="图片描述" :show-feedback="false">
                 <NInput v-model:value="ensureItem(index).desc" placeholder="可选，显示在图片下方" />
               </NFormItem>

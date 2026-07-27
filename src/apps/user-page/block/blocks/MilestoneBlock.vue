@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { FlagOutline } from '@vicons/ionicons5'
-import { NIcon, NText, NTimeline, NTimelineItem } from 'naive-ui';
+import { NIcon } from 'naive-ui';
 import BlockCard from '../BlockCard.vue'
 
 interface MilestoneItem {
@@ -54,23 +54,25 @@ const items = computed(() => {
       </div>
     </template>
 
-    <NText v-if="items.length === 0" depth="3">
+    <div v-if="items.length === 0" class="empty">
       暂无里程碑
-    </NText>
+    </div>
 
     <template v-else>
-      <NTimeline v-if="cfg.mode !== 'list'" class="timeline">
-        <NTimelineItem
-          v-for="(it, idx) in items"
-          :key="idx"
-          :time="it.date || undefined"
-          :title="it.title || undefined"
-        >
+      <div v-if="cfg.mode !== 'list'" class="timeline">
+        <div v-for="(it, idx) in items" :key="idx" class="timeline-item">
+          <span class="timeline-marker" aria-hidden="true" />
+          <div v-if="it.date" class="date">
+            {{ it.date }}
+          </div>
+          <div v-if="it.title" class="title">
+            {{ it.title }}
+          </div>
           <div v-if="it.description" class="desc">
             {{ it.description }}
           </div>
-        </NTimelineItem>
-      </NTimeline>
+        </div>
+      </div>
 
       <div v-else class="list">
         <div v-for="(it, idx) in items" :key="idx" class="list-item">
@@ -93,10 +95,43 @@ const items = computed(() => {
   align-items: center;
   gap: 8px;
   font-weight: 700;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 
-.timeline :deep(.n-timeline-item__content) {
-  color: var(--n-text-color-2);
+.empty {
+  color: var(--vtsuru-fg-muted);
+}
+
+.timeline {
+  display: grid;
+  gap: 0;
+}
+
+.timeline-item {
+  position: relative;
+  min-height: 48px;
+  padding: 0 0 18px 24px;
+}
+
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: -2px;
+  left: 5px;
+  width: 1px;
+  background: var(--vtsuru-border);
+}
+
+.timeline-marker {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  border-radius: 50%;
+  background: var(--vtsuru-bg-elevated);
 }
 
 .list {
@@ -107,9 +142,9 @@ const items = computed(() => {
 
 .list-item {
   padding: 12px 14px;
-  border: 1px solid var(--n-divider-color);
+  border: 1px solid var(--vtsuru-border);
   border-radius: calc(var(--vtsuru-page-radius) - 2px);
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-muted);
 }
 
 .meta {
@@ -121,19 +156,20 @@ const items = computed(() => {
 
 .date {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-fg-muted);
 }
 
 .title {
   font-weight: 700;
   font-size: 14px;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 
 .desc {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg-muted);
   white-space: pre-wrap;
 }
 </style>

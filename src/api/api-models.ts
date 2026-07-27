@@ -1111,6 +1111,7 @@ export interface UploadFileResponse {
   path: string
   name: string
   hash: string
+  size?: number
 }
 
 /**
@@ -1135,6 +1136,7 @@ export interface APIFileModel {
   path: string
   name: string
   hash: string
+  size?: number
 }
 
 export interface VoteConfig {

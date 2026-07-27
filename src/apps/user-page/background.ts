@@ -85,12 +85,12 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
   const blurPx = bg.blurMode === 'none' ? 0 : bg.blurPx
 
   const scrimBaseAlpha = bg.blurMode === 'glass'
-    ? (effectiveIsDark ? 0.18 : 0.14)
+    ? (effectiveIsDark ? 0.24 : 0.14)
     : (bg.blurMode === 'background'
-        ? (effectiveIsDark ? 0.28 : 0.20)
-        : (effectiveIsDark ? 0.18 : 0.12))
+        ? (effectiveIsDark ? 0.42 : 0.20)
+        : (effectiveIsDark ? 0.32 : 0.12))
   const scrimAlpha = Math.min(0.9, Math.max(0, scrimBaseAlpha * (bg.scrimStrength / 100)))
-  const scrimRgb = bg.scrimMode === 'white'
+  const scrimRgb = bg.scrimMode === 'white' || (bg.scrimMode === 'auto' && !effectiveIsDark)
     ? '255, 255, 255'
     : '0, 0, 0'
   const scrim = scrimAlpha > 0 ? `rgba(${scrimRgb}, ${scrimAlpha})` : 'transparent'

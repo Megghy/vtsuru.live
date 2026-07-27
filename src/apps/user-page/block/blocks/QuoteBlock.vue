@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NText, NIcon } from 'naive-ui';
+import { NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
@@ -35,15 +35,15 @@ const cfg = computed<BlockConfig>(() => {
       <NIcon><ChatbubbleEllipsesOutline /></NIcon>
     </div>
     <div class="quote" :style="{ textAlign: cfg.align }">
-      <NText v-if="cfg.text" class="quote-text">
+      <div v-if="cfg.text" class="quote-text">
         “{{ cfg.text }}”
-      </NText>
-      <NText v-else depth="3" class="quote-text placeholder">
+      </div>
+      <div v-else class="quote-text placeholder">
         未设置内容
-      </NText>
-      <NText v-if="cfg.author" depth="3" class="quote-author">
+      </div>
+      <div v-if="cfg.author" class="quote-author">
         —— {{ cfg.author }}
-      </NText>
+      </div>
     </div>
   </BlockCard>
 </template>
@@ -63,7 +63,7 @@ const cfg = computed<BlockConfig>(() => {
   left: 10px;
   font-size: 80px;
   opacity: 0.05;
-  color: var(--n-text-color);
+  color: var(--vtsuru-fg-muted);
   pointer-events: none;
   z-index: 0;
 }
@@ -86,6 +86,7 @@ const cfg = computed<BlockConfig>(() => {
   line-height: 1.5;
   white-space: pre-wrap;
   font-style: italic;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 
 .quote-text.placeholder {
@@ -93,6 +94,7 @@ const cfg = computed<BlockConfig>(() => {
   font-style: normal;
   font-weight: 400;
   font-size: 14px;
+  color: var(--vtsuru-fg-muted);
 }
 
 .quote-author {
@@ -100,6 +102,6 @@ const cfg = computed<BlockConfig>(() => {
   margin-top: 16px;
   font-size: 14px;
   font-weight: 500;
-  opacity: 0.8;
+  color: var(--vtsuru-fg-muted);
 }
 </style>

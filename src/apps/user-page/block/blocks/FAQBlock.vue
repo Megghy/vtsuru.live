@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCollapse, NCollapseItem, NText, NIcon } from 'naive-ui';
+import { NCollapse, NCollapseItem, NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { HelpCircleOutline, ChevronDownOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
@@ -54,9 +54,9 @@ const items = computed(() => {
       </NFlex>
     </template>
 
-    <NText v-if="items.length === 0" depth="3" class="placeholder">
+    <div v-if="items.length === 0" class="placeholder">
       暂无内容
-    </NText>
+    </div>
 
     <NCollapse v-else :accordion="cfg.accordion" class="faq-collapse" arrow-placement="right">
       <template #arrow>
@@ -69,9 +69,9 @@ const items = computed(() => {
         class="faq-item"
       >
         <template #header>
-          <NText strong class="faq-q">
+          <span class="faq-q">
             {{ it.q || `问题 ${idx + 1}` }}
-          </NText>
+          </span>
         </template>
         <div class="faq-a">
           {{ it.a }}
@@ -85,6 +85,7 @@ const items = computed(() => {
 .placeholder {
   display: block;
   padding: 12px 4px;
+  color: var(--vtsuru-fg-muted);
 }
 
 .faq-collapse {
@@ -93,14 +94,14 @@ const items = computed(() => {
 
 :deep(.faq-item) {
   margin-top: 8px !important;
-  border: 1px solid var(--n-divider-color) !important;
+  border: 1px solid var(--vtsuru-border) !important;
   border-radius: var(--vtsuru-page-radius) !important;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   overflow: hidden;
 }
 
 :deep(.faq-item.n-collapse-item--active) {
-  background: var(--n-action-color);
+  background: var(--vtsuru-bg-muted);
 }
 
 :deep(.faq-item .n-collapse-item__header) {
@@ -109,13 +110,18 @@ const items = computed(() => {
 
 .faq-q {
   font-size: 14px;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 
 .faq-a {
   padding: 0 16px 16px 16px;
   white-space: pre-wrap;
-  color: var(--n-text-color-2);
+  color: var(--vtsuru-fg-muted);
   line-height: 1.6;
   font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :deep(.faq-item) { transition: none; }
 }
 </style>

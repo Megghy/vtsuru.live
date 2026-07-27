@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NText, NIcon } from 'naive-ui';
+import { NIcon } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { TimerOutline, HourglassOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
@@ -87,21 +87,21 @@ const breakdown = computed(() => {
         <NIcon size="14" class="cd-icon">
           <TimerOutline />
         </NIcon>
-        <span class="cd-title">{{ cfg.title || 'COUNTDOWN' }}</span>
+        <span class="cd-title">{{ cfg.title || '倒计时' }}</span>
       </div>
 
-      <NText v-if="!targetMs" depth="3" class="cd-placeholder">
+      <div v-if="!targetMs" class="cd-placeholder">
         未设置目标时间
-      </NText>
+      </div>
 
       <div v-else-if="breakdown?.done" class="done-display">
         <div class="done-icon-wrapper">
-          <NIcon size="32" color="#18a058">
+          <NIcon size="32" color="var(--vtsuru-page-primary, var(--vtsuru-brand))">
             <HourglassOutline />
           </NIcon>
         </div>
         <div class="done-text">
-          {{ cfg.doneText || 'MISSION COMPLETE' }}
+          {{ cfg.doneText || '已到达' }}
         </div>
       </div>
 
@@ -113,7 +113,7 @@ const breakdown = computed(() => {
               {{ breakdown?.days ?? 0 }}
             </div>
             <div class="lbl">
-              DAYS
+              天
             </div>
           </div>
 
@@ -126,7 +126,7 @@ const breakdown = computed(() => {
               {{ breakdown?.hours?.toString().padStart(2,'0') ?? '00' }}
             </div>
             <div class="lbl">
-              HRS
+              时
             </div>
           </div>
 
@@ -139,7 +139,7 @@ const breakdown = computed(() => {
               {{ breakdown?.minutes?.toString().padStart(2,'0') ?? '00' }}
             </div>
             <div class="lbl">
-              MINS
+              分
             </div>
           </div>
 
@@ -152,20 +152,20 @@ const breakdown = computed(() => {
                 {{ breakdown?.seconds?.toString().padStart(2,'0') ?? '00' }}
               </div>
               <div class="lbl">
-                SECS
+                秒
               </div>
             </div>
           </template>
         </div>
 
-        <NText v-else class="inline-time bold">
-          <span>{{ breakdown?.days ?? 0 }}</span> <small>d</small>
-          <span>{{ breakdown?.hours?.toString().padStart(2,'0') }}</span> <small>h</small>
-          <span>{{ breakdown?.minutes?.toString().padStart(2,'0') }}</span> <small>m</small>
+        <div v-else class="inline-time bold">
+          <span>{{ breakdown?.days ?? 0 }}</span> <small>天</small>
+          <span>{{ breakdown?.hours?.toString().padStart(2,'0') }}</span> <small>时</small>
+          <span>{{ breakdown?.minutes?.toString().padStart(2,'0') }}</span> <small>分</small>
           <template v-if="cfg.showSeconds">
-            <span>{{ breakdown?.seconds?.toString().padStart(2,'0') }}</span> <small>s</small>
+            <span>{{ breakdown?.seconds?.toString().padStart(2,'0') }}</span> <small>秒</small>
           </template>
-        </NText>
+        </div>
       </template>
     </div>
   </BlockCard>
@@ -173,13 +173,14 @@ const breakdown = computed(() => {
 
 <style scoped>
 .countdown-card.bold-mode {
+  container-type: inline-size;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
   position: relative;
 }
 
 .countdown-card.bold-mode.has-bg {
-  background: linear-gradient(180deg, var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7))) 0%, rgba(127,127,127,0.02) 100%);
+  background: var(--vtsuru-bg-elevated);
 }
 
 /* 移除默认 Header 占位影响 */
@@ -205,34 +206,38 @@ const breakdown = computed(() => {
   gap: 6px;
   opacity: 0.5;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(127,127,127,0.15);
+  border-bottom: 1px solid var(--vtsuru-border);
   padding-bottom: 4px;
   padding-left: 8px;
   padding-right: 8px;
+  color: var(--vtsuru-fg-muted);
 }
 
 .cd-title {
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .cd-placeholder {
   padding: 20px;
+  color: var(--vtsuru-fg-muted);
 }
 
 .cd-digits-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr);
   align-items: flex-start;
   gap: 4px;
+  width: min(100%, 340px);
 }
 
 .digit-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 60px;
+  min-width: 0;
 }
 
 .digit-box .val {
@@ -240,7 +245,7 @@ const breakdown = computed(() => {
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -2px;
+  letter-spacing: 0;
   font-family: ui-monospace, 'Menlo', 'Monaco', monospace; /* Monospace for tech feel */
 }
 
@@ -249,7 +254,7 @@ const breakdown = computed(() => {
   font-weight: 700;
   margin-top: 6px;
   opacity: 0.4;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 .sep {
@@ -261,7 +266,7 @@ const breakdown = computed(() => {
 }
 
 .digit-box.highlight .val {
-  color: var(--n-primary-color);
+  color: var(--vtsuru-page-primary, var(--vtsuru-brand));
 }
 
 .done-display {
@@ -274,14 +279,23 @@ const breakdown = computed(() => {
 .done-text {
   font-size: 18px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   opacity: 0.8;
+}
+
+@container (max-width: 420px) {
+  .countdown-inner { padding: 16px 10px; }
+  .cd-digits-wrapper { gap: 2px; grid-template-columns: minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr); }
+  .digit-box .val { font-size: 30px; }
+  .sep { font-size: 22px; }
+  .inline-time.bold { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; }
 }
 
 .inline-time.bold {
   font-size: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 .inline-time.bold small {
   font-size: 12px;

@@ -51,7 +51,7 @@ const model = computed(() => {
           嵌入链接无效
         </div>
         <div class="embed-placeholder__desc">
-          {{ model.errorMessage }}
+          请使用支持的哔哩哔哩或 YouTube 视频链接
         </div>
       </div>
     </div>
@@ -63,7 +63,7 @@ const model = computed(() => {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  background: var(--n-fill-color);
+  background: var(--vtsuru-bg-muted);
 }
 .embed-frame {
   position: absolute;
@@ -81,8 +81,8 @@ const model = computed(() => {
   justify-content: center;
   gap: 6px;
   padding: 12px 14px;
-  color: var(--n-text-color);
-  background: var(--n-action-color);
+  color: var(--vtsuru-fg);
+  background: var(--vtsuru-bg-muted);
 }
 
 .embed-placeholder__title {

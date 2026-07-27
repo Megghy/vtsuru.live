@@ -3,7 +3,7 @@ import { NIcon } from 'naive-ui';
 import { computed, nextTick, ref, watch } from 'vue'
 import { MegaphoneOutline } from '@vicons/ionicons5'
 import { Vue3Marquee } from 'vue3-marquee'
-import { useResizeObserver } from '@vueuse/core'
+import { useMediaQuery, useResizeObserver } from '@vueuse/core'
 import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
@@ -38,6 +38,8 @@ const direction = computed(() => (cfg.value.direction === 'left' ? 'normal' : 'r
 const hostRef = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
 const shouldAnimate = ref(false)
+const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+const animationEnabled = computed(() => shouldAnimate.value && !reducedMotion.value)
 
 function recomputeOverflow() {
   const host = hostRef.value
@@ -70,7 +72,7 @@ watch(displayText, async () => {
           {{ displayText }}
         </span>
         <Vue3Marquee
-          v-if="shouldAnimate"
+          v-if="animationEnabled"
           class="marquee"
           :direction="direction"
           :duration="cfg.durationSec"
@@ -90,10 +92,12 @@ watch(displayText, async () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 
 .icon {
   flex-shrink: 0;
+  color: var(--vtsuru-fg-muted);
 }
 
 .marquee-host {

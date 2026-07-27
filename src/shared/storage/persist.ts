@@ -24,13 +24,7 @@ const LEGACY_TO_CANONICAL = new Map<string, string>(Object.entries(PERSIST_LEGAC
 export function canonicalizePersistKey(key: string): string {
   const raw = key.trim()
   if (!raw) throw new Error('[persist] key 不能为空')
-
-  if (raw.startsWith('vtsuru:')) return raw
-
-  const mapped = LEGACY_TO_CANONICAL.get(raw)
-  if (mapped) return mapped
-
-  throw new Error(`[persist] 未注册的 key: ${raw}`)
+  return LEGACY_TO_CANONICAL.get(raw) ?? raw
 }
 
 async function resolvePersistBackend(): Promise<PersistBackend> {

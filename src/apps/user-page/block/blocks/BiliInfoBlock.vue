@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NFlex, NIcon, NText } from 'naive-ui';
+import type { BiliProfileStatus } from '../../types'
+import { NAlert, NAvatar, NButton, NFlex, NIcon, NSkeleton } from 'naive-ui'
 import { computed } from 'vue'
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
@@ -22,6 +23,7 @@ const props = defineProps<{
   blockProps: unknown
   userInfo?: UserInfo | undefined
   biliInfo?: any | undefined
+  biliStatus?: BiliProfileStatus
 }>()
 
 const cfg = computed<BlockConfig>(() => {
@@ -63,36 +65,58 @@ const model = computed(() => {
   const biliId = props.userInfo?.biliId ?? null
   return { name, face, sign, fans, following, videoCount, spaceUrl, liveRoomUrl, biliId }
 })
+
+const hasContent = computed(() => Boolean(
+  model.value.name
+  || model.value.face
+  || model.value.biliId
+  || model.value.spaceUrl
+  || model.value.liveRoomUrl,
+))
+const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 'ready' : 'empty'))
 </script>
 
 <template>
   <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
-    <div class="bili-card">
+    <div v-if="displayStatus === 'idle' || displayStatus === 'loading'" class="bili-loading" role="status" aria-label="正在加载B站信息">
+      <NSkeleton circle width="42px" height="42px" />
+      <div class="bili-loading__content">
+        <NSkeleton text style="width: 38%" />
+        <NSkeleton text :repeat="2" />
+      </div>
+    </div>
+    <NAlert v-else-if="displayStatus === 'error'" type="error" :show-icon="true">
+      B站信息加载失败，请稍后刷新页面重试
+    </NAlert>
+    <NAlert v-else-if="displayStatus === 'empty' || !hasContent" type="info" :show-icon="false">
+      B站信息暂不可用
+    </NAlert>
+    <div v-else class="bili-card">
       <template v-if="cfg.variant === 'compact'">
         <div class="bili-compact">
-          <NFlex align="center" justify="space-between" style="gap: 12px">
+          <NFlex align="center" justify="space-between" style="gap: 12px" class="compact-header">
             <NFlex align="center" style="gap: 10px; min-width: 0">
               <NAvatar
                 v-if="cfg.showAvatar && model.face"
                 :src="model.face"
                 round
                 :size="34"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
+                :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', decoding: 'async', alt: model.name || 'B站头像' }"
               />
               <div class="bili-header-text">
-                <NText v-if="cfg.showName && model.name" strong class="bili-name">
+                <strong v-if="cfg.showName && model.name" class="bili-name">
                   {{ model.name }}
-                </NText>
-                <NText depth="3" class="bili-sub">
+                </strong>
+                <span class="bili-sub">
                   Bilibili
                   <template v-if="model.biliId">
                     · @{{ model.biliId }}
                   </template>
-                </NText>
+                </span>
               </div>
             </NFlex>
 
-            <NFlex v-if="cfg.showButtons" align="center" style="gap: 8px; flex-shrink: 0">
+            <NFlex v-if="cfg.showButtons" align="center" style="gap: 8px; flex-shrink: 0" class="compact-actions">
               <NButton
                 v-if="model.spaceUrl"
                 size="tiny"
@@ -102,6 +126,7 @@ const model = computed(() => {
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.spaceUrl"
+                aria-label="打开B站主页（新窗口打开）"
               >
                 <template #icon>
                   <NIcon><HomeOutline /></NIcon>
@@ -117,6 +142,7 @@ const model = computed(() => {
                 target="_blank"
                 rel="noopener noreferrer"
                 :href="model.liveRoomUrl"
+                aria-label="打开直播间（新窗口打开）"
               >
                 <template #icon>
                   <NIcon><PlayCircleOutline /></NIcon>
@@ -126,9 +152,9 @@ const model = computed(() => {
             </NFlex>
           </NFlex>
 
-          <NText v-if="cfg.showSign && model.sign" depth="3" style="display:block; margin-top: 10px; white-space: pre-wrap">
+          <div v-if="cfg.showSign && model.sign" class="bili-compact-sign">
             {{ model.sign }}
-          </NText>
+          </div>
 
           <div v-if="cfg.showStats" class="bili-stats compact">
             <div class="stat compact">
@@ -182,18 +208,18 @@ const model = computed(() => {
               :src="model.face"
               round
               :size="40"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
+              :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', decoding: 'async', alt: model.name || 'B站头像' }"
             />
             <div class="bili-header-text">
-              <NText v-if="cfg.showName && model.name" strong class="bili-name">
+              <strong v-if="cfg.showName && model.name" class="bili-name">
                 {{ model.name }}
-              </NText>
-              <NText depth="3" class="bili-sub">
+              </strong>
+              <span class="bili-sub">
                 Bilibili
                 <template v-if="model.biliId">
                   · @{{ model.biliId }}
                 </template>
-              </NText>
+              </span>
             </div>
           </NFlex>
         </div>
@@ -253,6 +279,7 @@ const model = computed(() => {
             target="_blank"
             rel="noopener noreferrer"
             :href="model.spaceUrl"
+            aria-label="打开B站主页（新窗口打开）"
           >
             <template #icon>
               <NIcon><HomeOutline /></NIcon>
@@ -267,6 +294,7 @@ const model = computed(() => {
             target="_blank"
             rel="noopener noreferrer"
             :href="model.liveRoomUrl"
+            aria-label="打开直播间（新窗口打开）"
           >
             <template #icon>
               <NIcon><PlayCircleOutline /></NIcon>
@@ -281,8 +309,23 @@ const model = computed(() => {
 
 <style scoped>
 .bili-card {
+  container-type: inline-size;
   border-radius: var(--vtsuru-page-radius);
   overflow: hidden;
+}
+
+.bili-loading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 92px;
+  padding: 16px;
+}
+
+.bili-loading__content {
+  display: grid;
+  flex: 1;
+  gap: 8px;
 }
 
 .bili-header {
@@ -300,6 +343,7 @@ const model = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--vtsuru-block-fg);
 }
 
 .bili-sub {
@@ -310,13 +354,20 @@ const model = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--vtsuru-block-fg-muted);
+}
+
+.bili-compact-sign {
+  margin-top: 10px;
+  color: var(--vtsuru-block-fg-muted);
+  white-space: pre-wrap;
 }
 
 .bili-sign {
   padding: 0 16px 16px;
   font-size: 13px;
   line-height: 1.6;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-block-fg-muted);
   white-space: pre-wrap;
 }
 
@@ -324,8 +375,8 @@ const model = computed(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 4px 0;
-  border-top: 1px solid var(--n-divider-color);
-  border-bottom: 1px solid var(--n-divider-color);
+  border-top: 1px solid var(--vtsuru-block-border);
+  border-bottom: 1px solid var(--vtsuru-block-border);
 }
 
 .stat {
@@ -335,14 +386,14 @@ const model = computed(() => {
   gap: 4px;
   padding: 12px 4px;
   text-align: center;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 .stat:hover {
-  background-color: var(--n-action-color);
+  background-color: var(--vtsuru-block-bg-muted);
 }
 
 .stat-icon {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-block-fg-muted);
   margin-bottom: 2px;
 }
 
@@ -354,13 +405,13 @@ const model = computed(() => {
 
 .stat-k {
   font-size: 12px;
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-block-fg-muted);
 }
 
 .stat-v {
   font-size: 15px;
   font-weight: 700;
-  color: var(--n-text-color);
+  color: var(--vtsuru-block-fg);
   line-height: 1.2;
 }
 
@@ -414,5 +465,17 @@ const model = computed(() => {
 }
 .stat.compact .stat-k {
   font-size: 11px;
+}
+
+@container (max-width: 480px) {
+  .compact-header { align-items: flex-start !important; flex-direction: column; }
+  .compact-actions { width: 100%; flex-wrap: wrap; }
+  .compact-actions > * { flex: 1; min-width: 110px; }
+  .bili-stats.compact { grid-template-columns: repeat(3, minmax(76px, 1fr)); overflow-x: auto; }
+  .bili-actions { grid-template-columns: 1fr; padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat { transition: none; }
 }
 </style>

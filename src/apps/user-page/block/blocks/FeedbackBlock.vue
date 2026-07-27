@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAlert, NButton, NFlex, NText, NIcon } from 'naive-ui';
+import { NAlert, NButton, NFlex, NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 import QuestionBoxView from '@/apps/user/pages/QuestionBoxView.vue'
+import { parseFeedbackEmbedUrl } from '../embed'
 
 interface BlockConfig {
   title?: string
@@ -67,7 +68,15 @@ const embedMode = computed<'questionBox' | 'iframe'>(() => {
 })
 
 const canEmbedInternalQuestionBox = computed(() => cfg.value.embed && embedMode.value === 'questionBox')
-const canEmbedIframe = computed(() => cfg.value.embed && embedMode.value === 'iframe' && url.value.startsWith('https://'))
+const feedbackEmbed = computed(() => {
+  if (!cfg.value.embed || embedMode.value !== 'iframe') return null
+  try {
+    return parseFeedbackEmbedUrl(url.value)
+  } catch {
+    return null
+  }
+})
+const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value === 'iframe' && !feedbackEmbed.value)
 </script>
 
 <template>
@@ -90,9 +99,9 @@ const canEmbedIframe = computed(() => cfg.value.embed && embedMode.value === 'if
       </template>
 
       <template v-else>
-        <NText v-if="cfg.description" depth="3" class="feedback-desc">
+        <div v-if="cfg.description" class="feedback-desc">
           {{ cfg.description }}
-        </NText>
+        </div>
 
         <NAlert v-if="!url" type="info" :show-icon="false" style="border-radius: var(--vtsuru-page-radius)">
           未配置跳转链接
@@ -114,19 +123,25 @@ const canEmbedIframe = computed(() => cfg.value.embed && embedMode.value === 'if
               </template>
               {{ cfg.buttonText }}
             </NButton>
-            <NText depth="3" class="url-hint">
+            <span class="url-hint">
               {{ url }}
-            </NText>
+            </span>
           </div>
 
-          <div v-if="canEmbedIframe" class="iframe-container">
+          <div v-if="feedbackEmbed" class="iframe-container">
             <iframe
-              :src="url"
+              :src="feedbackEmbed.src"
               :height="cfg.height"
+              :title="feedbackEmbed.title"
+              :allow="feedbackEmbed.allow"
+              :sandbox="feedbackEmbed.sandbox"
+              :referrerpolicy="feedbackEmbed.referrerPolicy"
               loading="lazy"
-              referrerpolicy="no-referrer"
             />
           </div>
+          <NAlert v-else-if="externalEmbedRejected" type="info" :show-icon="false" class="embed-notice">
+            该来源暂不支持安全内嵌，请使用上方按钮访问
+          </NAlert>
         </template>
       </template>
     </div>
@@ -143,6 +158,7 @@ const canEmbedIframe = computed(() => cfg.value.embed && embedMode.value === 'if
   margin-bottom: 12px;
   white-space: pre-wrap;
   line-height: 1.6;
+  color: var(--vtsuru-fg-muted);
 }
 
 .action-row {
@@ -163,19 +179,10 @@ const canEmbedIframe = computed(() => cfg.value.embed && embedMode.value === 'if
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  color: var(--vtsuru-fg-muted);
 }
 
-.iframe-container {
-  width: 100%;
-  border: 1px solid var(--n-divider-color);
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-  background: var(--n-action-color);
-}
-
-.iframe-container iframe {
-  width: 100%;
-  border: none;
-  display: block;
-}
+.embed-notice { border-radius: var(--vtsuru-page-radius); }
+.iframe-container { width: 100%; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
+.iframe-container iframe { display: block; width: 100%; border: 0; }
 </style>

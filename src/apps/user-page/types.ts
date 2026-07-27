@@ -1,6 +1,7 @@
 import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType, PageThemeMode } from './block/schema'
 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
+export type BiliProfileStatus = 'idle' | 'loading' | 'empty' | 'error' | 'ready'
 
 export interface ContribPageRef {
   scope: 'global' | 'streamer'

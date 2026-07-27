@@ -20,6 +20,9 @@ const duplicatePageModal = ref(false)
 const duplicateFromSlug = ref('')
 const duplicateToSlug = ref('')
 
+const deletePageModal = ref(false)
+const deletePageSlug = ref('')
+
 const pageActionOptions = [
   { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
   { label: '复制', key: 'duplicate', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
@@ -114,9 +117,15 @@ function handlePageAction(key: string, slug: string) {
   if (key === 'rename') openRenamePage(slug)
   else if (key === 'duplicate') openDuplicatePage(slug)
   else if (key === 'delete') {
-    // eslint-disable-next-line no-alert
-    if (window.confirm(`确定要删除页面 /${slug} 吗？`)) editor.removePage(slug)
+    deletePageSlug.value = slug
+    deletePageModal.value = true
   }
+}
+
+function confirmDeletePage() {
+  editor.removePage(deletePageSlug.value)
+  deletePageModal.value = false
+  deletePageSlug.value = ''
 }
 
 function createPage() {
@@ -399,6 +408,17 @@ function confirmDuplicatePage() {
         </NFlex>
       </template>
     </NModal>
+
+    <NModal
+      v-model:show="deletePageModal"
+      preset="dialog"
+      type="error"
+      title="删除子页面"
+      :content="`将删除 /${deletePageSlug} 及其中全部区块，此操作可通过撤销恢复。`"
+      positive-text="删除"
+      negative-text="取消"
+      @positive-click="confirmDeletePage"
+    />
   </div>
 </template>
 

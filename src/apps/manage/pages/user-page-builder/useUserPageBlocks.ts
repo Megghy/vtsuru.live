@@ -6,6 +6,14 @@ import { computed } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { USER_PAGE_BLOCK_CLIPBOARD_KEY } from './storageKeys'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import {
+  asBlockProps,
+  blockContainsId,
+  findBlockById,
+  findBlockLocation,
+  flattenBlocks,
+  getLayoutChildrenReadonly,
+} from './userPageBlockTree'
 
 export interface UseUserPageBlocksOptions {
   currentProject: ComputedRef<BlockPageProject | null>
@@ -15,66 +23,6 @@ export interface UseUserPageBlocksOptions {
     success: (content: string) => void
     warning: (content: string) => void
   }
-}
-
-function asObject(v: unknown): Record<string, any> | null {
-  if (!v || typeof v !== 'object' || v === null || Array.isArray(v)) return null
-  return v as Record<string, any>
-}
-
-function getLayoutChildrenReadonly(layout: BlockNode): BlockNode[] | null {
-  if (layout.type !== 'layout') return null
-  const propsObj = asObject(layout.props)
-  if (!propsObj) return null
-  return Array.isArray(propsObj.children) ? (propsObj.children as BlockNode[]) : null
-}
-
-function blockContainsId(root: BlockNode, id: string): boolean {
-  if (root.id === id) return true
-  if (root.type !== 'layout') return false
-  const children = getLayoutChildrenReadonly(root)
-  if (!children) return false
-  return children.some(it => blockContainsId(it, id))
-}
-
-interface BlockLocation {
-  list: BlockNode[]
-  index: number
-  parentLayout: BlockNode | null
-}
-
-function findBlockLocationInList(list: BlockNode[], id: string, parentLayout: BlockNode | null): BlockLocation | null {
-  for (let i = 0; i < list.length; i++) {
-    const b = list[i]
-    if (b.id === id) return { list, index: i, parentLayout }
-    if (b.type !== 'layout') continue
-    const children = getLayoutChildrenReadonly(b)
-    if (!children) continue
-    const found = findBlockLocationInList(children, id, b)
-    if (found) return found
-  }
-  return null
-}
-
-function findBlockLocation(project: BlockPageProject, id: string): BlockLocation | null {
-  return findBlockLocationInList(project.blocks, id, null)
-}
-
-function findBlockById(project: BlockPageProject, id: string): BlockNode | null {
-  const loc = findBlockLocation(project, id)
-  if (!loc) return null
-  return loc.list[loc.index] ?? null
-}
-
-function flattenBlocks(list: BlockNode[], out: BlockNode[] = []): BlockNode[] {
-  for (const b of list) {
-    out.push(b)
-    if (b.type !== 'layout') continue
-    const children = getLayoutChildrenReadonly(b)
-    if (!children) continue
-    flattenBlocks(children, out)
-  }
-  return out
 }
 
 export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
@@ -177,7 +125,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
       const out: BlockNode[] = []
       for (const b of list) {
         if (b.type === 'layout') {
-          const propsObj = asObject(b.props)
+          const propsObj = asBlockProps(b.props)
           if (propsObj && Array.isArray(propsObj.children)) {
             propsObj.children = prune(propsObj.children as BlockNode[])
             if (propsObj.children.length === 0) continue
@@ -265,7 +213,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
         for (const b of list) {
           if (set.has(b.id)) continue
           if (b.type === 'layout') {
-            const propsObj = asObject(b.props)
+            const propsObj = asBlockProps(b.props)
             if (propsObj && Array.isArray(propsObj.children)) {
               const children = prune(propsObj.children as BlockNode[])
               // 如果 layout 变空了，我们也可以选择移除它

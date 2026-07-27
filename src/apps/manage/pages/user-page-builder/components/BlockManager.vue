@@ -1,23 +1,15 @@
 <script setup lang="ts">
-import type { MenuOption } from 'naive-ui'
-import { NButton, NFlex, NIcon, NMenu, NPopover, NScrollbar, NText } from 'naive-ui';
-import { computed, h, inject, onBeforeUnmount, ref, toRaw } from 'vue'
-import {
-  AddCircleOutline,
-  ArrowDownOutline,
-  ArrowUpOutline,
-  CopyOutline,
-  CreateOutline,
-  LayersOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
-import { BLOCK_LIBRARY } from '@/apps/user-page/block/registry'
-import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import { NButton, NDropdown, NEmpty, NFlex, NIcon, NInput, NMenu, NModal, NPopover, NScrollbar, NText } from 'naive-ui'
+import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { AddCircleOutline } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
 import BlockTreeList from './BlockTreeList.vue'
+import { collectInvalidBlockIds } from './blockManagerValidation'
+import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
+const managerRoot = ref<HTMLElement | null>(null)
 
 const project = computed(() => editor.currentProject.value)
 const blocksModel = computed({
@@ -35,49 +27,8 @@ const selectionCount = computed(() => editor.selectedBlockIds.value.length)
 const selectionSet = computed(() => new Set(editor.selectedBlockIds.value))
 
 const invalidBlockIdSet = computed(() => {
-  // Only recompute when we intentionally run validation (or page switches).
-  // This avoids validating on every small reactive change while editing.
   void editor.validationTick.value
-
-  const p = project.value ? toRaw(project.value) : null
-  if (!p) return new Set<string>()
-  const v = validateBlockPageProject(p)
-  if (v.ok) return new Set<string>()
-
-  const ids = new Set<string>()
-  const resolveIdByIndexPath = (path: number[]) => {
-    if (!path.length) return null
-    let node: any = null
-    let list: any[] = p.blocks
-    for (let i = 0; i < path.length; i++) {
-      const idx = path[i]
-      if (!Array.isArray(list) || idx < 0 || idx >= list.length) return null
-      node = list[idx]
-      if (!node || typeof node !== 'object') return null
-      if (i === path.length - 1) return typeof node.id === 'string' ? node.id : null
-      if (node.type !== 'layout') return null
-      const propsObj = node.props
-      if (!propsObj || typeof propsObj !== 'object' || Array.isArray(propsObj)) return null
-      list = Array.isArray((propsObj as any).children) ? (propsObj as any).children : []
-    }
-    return null
-  }
-  for (const err of v.errors) {
-    const rootMatch = err.match(/blocks\[(\d+)\]/)
-    if (!rootMatch) continue
-    const path: number[] = []
-    const rootIdx = Number(rootMatch[1])
-    if (!Number.isInteger(rootIdx) || rootIdx < 0) continue
-    path.push(rootIdx)
-    for (const m of err.matchAll(/\.children\[(\d+)\]/g)) {
-      const idx = Number(m[1])
-      if (!Number.isInteger(idx) || idx < 0) break
-      path.push(idx)
-    }
-    const id = resolveIdByIndexPath(path)
-    if (id) ids.add(id)
-  }
-  return ids
+  return collectInvalidBlockIds(project.value)
 })
 
 const selectionAnchorId = ref<string | null>(null)
@@ -104,6 +55,17 @@ function ensureExpanded(layoutId: string) {
   if (expandedLayoutIdSet.value.has(layoutId)) return
   expandedLayoutIds.value = Array.from(new Set([...expandedLayoutIds.value, layoutId]))
 }
+
+watch(() => editor.validationFocusRequest.value?.requestId, async () => {
+  const request = editor.validationFocusRequest.value
+  if (!request || request.scope !== 'block' || request.pageKey !== editor.currentKey.value) return
+  request.ancestorLayoutIds.forEach(ensureExpanded)
+  if (!request.blockId) return
+  await nextTick()
+  const row = Array.from(managerRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? [])
+    .find(element => element.dataset.blockId === request.blockId)
+  row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+})
 
 function getPointerClientPoint(ev: any): { x: number; y: number } | null {
   if (!ev) return null
@@ -255,119 +217,55 @@ function onRowClick(id: string, ev: MouseEvent) {
   selectOnly(id)
 }
 
-const showAddMenu = ref(false)
-const blockTypeSet = new Set(BLOCK_LIBRARY.map(it => it.type as unknown as string))
+const {
+  showAddMenu,
+  blockSearch,
+  templateOptions,
+  addBlockOptions,
+  blockActionOptions,
+  insertTemplate,
+  handleAddBlockMenuSelect,
+} = useBlockManagerLibrary()
 
-function makeBlockOption(type: string, libMap: Map<string, (typeof BLOCK_LIBRARY)[number]>): MenuOption {
-  const it = libMap.get(type)
-  if (!it) throw new Error(`未知区块类型：${type}`)
-  return {
-    label: it.label,
-    key: it.type,
-    icon: it.icon ? () => h(NIcon, null, { default: () => h(it.icon!) }) : undefined,
-  }
+const renameBlockModal = ref(false)
+const renameBlockId = ref<string | null>(null)
+const renameBlockName = ref('')
+const deleteBlockModal = ref(false)
+const pendingDeleteIds = ref<string[]>([])
+
+function openRenameBlock(blockId: string) {
+  renameBlockId.value = blockId
+  renameBlockName.value = editor.getBlockById(blockId)?.name ?? ''
+  renameBlockModal.value = true
 }
 
-function makeMenuDividerLabel(label: string, key: string): MenuOption {
-  return {
-    key: `divider:${key}`,
-    label: () => h(
-      'div',
-      { style: 'display:flex; align-items:center; gap: 10px; width: 100%;' },
-      [
-        h('span', { style: 'font-size: 12px; font-weight: 700; color: var(--n-text-color-3);' }, label),
-        h('div', { style: 'height: 1px; flex: 1; background: var(--n-divider-color, var(--n-border-color)); opacity: 0.9;' }),
-      ],
-    ),
-    disabled: true,
-  }
+function confirmRenameBlock() {
+  if (!renameBlockId.value) return
+  editor.setBlockName(renameBlockId.value, renameBlockName.value)
+  renameBlockModal.value = false
 }
 
-const addBlockOptions = computed(() => {
-  const libMap = new Map<string, (typeof BLOCK_LIBRARY)[number]>()
-  BLOCK_LIBRARY.forEach((it) => libMap.set(it.type as unknown as string, it))
-
-  const out: MenuOption[] = []
-  const used = new Set<string>()
-
-  const groups: Array<{ key: string, label: string, types: readonly string[] }> = [
-    { key: 'live', label: '直播与日程', types: ['liveStatus', 'streamSchedule'] },
-    { key: 'profile', label: '资料与品牌', types: ['profile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'] },
-    { key: 'content', label: '内容与媒体', types: ['videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'] },
-    { key: 'social', label: '社交与运营', types: ['socialLinks', 'links', 'button', 'buttons', 'supporter', 'feedback'] },
-    { key: 'base', label: '布局与基础', types: ['layout', 'heading', 'text', 'richText', 'alert', 'marquee', 'countdown', 'divider', 'spacer', 'footer'] },
-  ]
-
-  groups.forEach((g) => {
-    const groupOptions: MenuOption[] = []
-    g.types.forEach((type) => {
-      if (!libMap.has(type)) return
-      groupOptions.push(makeBlockOption(type, libMap))
-      used.add(type)
-    })
-    if (!groupOptions.length) return
-    out.push(makeMenuDividerLabel(g.label, g.key))
-    out.push(...groupOptions)
-  })
-
-  // 新增类型但未加入排序列表时，按 label 追加到末尾
-  const rest = BLOCK_LIBRARY
-    .map(it => it.type as unknown as string)
-    .filter(type => !used.has(type))
-    .toSorted((a, b) => (libMap.get(a)?.label ?? a).localeCompare(libMap.get(b)?.label ?? b))
-  if (rest.length) {
-    if (out.length) out.push(makeMenuDividerLabel('其他', 'rest'))
-    rest.forEach((type) => out.push(makeBlockOption(type, libMap)))
-  }
-
-  return out
-})
-
-function handleAddBlockMenuSelect(key: string) {
-  if (!blockTypeSet.has(key)) return
-  editor.addBlock(key as any)
-  showAddMenu.value = false
+function openDeleteBlocks(ids: string[]) {
+  pendingDeleteIds.value = [...ids]
+  deleteBlockModal.value = true
 }
 
-const blockActionOptions = computed(() => {
-  const options: any[] = [
-    { label: '上移', key: 'move-up', icon: () => h(NIcon, null, { default: () => h(ArrowUpOutline) }) },
-    { label: '下移', key: 'move-down', icon: () => h(NIcon, null, { default: () => h(ArrowDownOutline) }) },
-    { type: 'divider' },
-    { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
-    { label: '复制', key: 'copy', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
-    { label: '粘贴到下方', key: 'paste-after', disabled: !hasClipboard.value, icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { type: 'divider' },
-    { label: '在上方插入副本', key: 'dup-up', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { label: '在下方插入副本', key: 'dup-down', icon: () => h(NIcon, null, { default: () => h(AddCircleOutline) }) },
-    { type: 'divider' },
-    { label: '解散分组 - 仅布局', key: 'ungroup', icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
-    { type: 'divider' },
-  ]
-
-  options.push({ label: '删除区块', key: 'delete', icon: () => h(NIcon, null, { default: () => h(TrashOutline) }), props: { style: 'color: #d03050' } })
-  return options
-})
+function confirmDeleteBlocks() {
+  editor.removeBlocks(pendingDeleteIds.value)
+  deleteBlockModal.value = false
+  pendingDeleteIds.value = []
+}
 
 function handleBlockAction(key: string, blockId: string) {
   if (key === 'move-up') editor.moveBlock(blockId, -1)
   else if (key === 'move-down') editor.moveBlock(blockId, 1)
-  else if (key === 'rename') {
-    const current = editor.getBlockById(blockId)?.name ?? ''
-    // eslint-disable-next-line no-alert
-    const next = window.prompt('区块名称：仅用于编辑，不对外展示', current)
-    if (next === null) return
-    editor.setBlockName(blockId, next)
-  }
+  else if (key === 'rename') openRenameBlock(blockId)
   else if (key === 'dup-up') editor.duplicateBlockAt(blockId, -1)
   else if (key === 'dup-down') editor.duplicateBlockAt(blockId, 1)
   else if (key === 'copy') editor.copyBlocksToClipboard([blockId])
   else if (key === 'paste-after') editor.pasteBlocksAfter(blockId)
   else if (key === 'ungroup') editor.ungroupLayout(blockId)
-  else if (key === 'delete') {
-    // eslint-disable-next-line no-alert
-    if (window.confirm('确定要删除该区块吗？')) editor.removeBlock(blockId)
-  }
+  else if (key === 'delete') openDeleteBlocks([blockId])
 }
 
 function toggleExpanded(layoutId: string) {
@@ -437,9 +335,7 @@ function bulkCopy() {
 }
 
 function bulkDelete() {
-  // eslint-disable-next-line no-alert
-  if (!window.confirm(`确定要删除 ${selectionCount.value} 个区块吗？`)) return
-  editor.removeBlocks(editor.selectedBlockIds.value)
+  openDeleteBlocks(editor.selectedBlockIds.value)
 }
 
 function bulkPaste() {
@@ -461,30 +357,42 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div>
+  <div ref="managerRoot">
     <NFlex justify="space-between" align="center" style="margin-bottom: 8px">
       <NText strong>
         区块管理
       </NText>
-      <NPopover v-model:show="showAddMenu" trigger="click" placement="bottom-end">
-        <template #trigger>
-          <NButton size="small" type="primary" secondary>
-            <template #icon>
-              <NIcon><AddCircleOutline /></NIcon>
-            </template>
-            添加区块
+      <NFlex size="small" :wrap="false">
+        <NDropdown :options="templateOptions" trigger="click" @select="(key) => insertTemplate(String(key))">
+          <NButton size="small" secondary>
+            起始模板
           </NButton>
-        </template>
-        <NScrollbar style="max-height: 360px; width: 290px">
-          <NMenu
-            :options="addBlockOptions"
-            :indent="18"
-            :root-indent="18"
-            :node-props="(opt: any) => String(opt?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
-            @update:value="(key) => handleAddBlockMenuSelect(String(key))"
-          />
-        </NScrollbar>
-      </NPopover>
+        </NDropdown>
+        <NPopover v-model:show="showAddMenu" trigger="click" placement="bottom-end">
+          <template #trigger>
+            <NButton size="small" type="primary" secondary>
+              <template #icon>
+                <NIcon><AddCircleOutline /></NIcon>
+              </template>
+              添加区块
+            </NButton>
+          </template>
+          <div style="width: 310px; padding: 10px 10px 4px">
+            <NInput v-model:value="blockSearch" clearable placeholder="搜索区块名称或关键词" />
+          </div>
+          <NScrollbar style="max-height: 360px; width: 310px">
+            <NMenu
+              v-if="addBlockOptions.length"
+              :options="addBlockOptions"
+              :indent="18"
+              :root-indent="18"
+              :node-props="(opt: any) => String(opt?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
+              @update:value="(key) => handleAddBlockMenuSelect(String(key))"
+            />
+            <NEmpty v-else size="small" description="没有匹配的区块" style="padding: 24px" />
+          </NScrollbar>
+        </NPopover>
+      </NFlex>
     </NFlex>
 
     <Transition name="fade-slide">
@@ -534,6 +442,37 @@ onBeforeUnmount(() => {
         :block-action-options="blockActionOptions as any"
       />
     </div>
+
+    <NModal
+      v-model:show="renameBlockModal"
+      preset="card"
+      title="重命名区块"
+      style="width: 420px; max-width: 90vw"
+      :auto-focus="false"
+    >
+      <NInput v-model:value="renameBlockName" maxlength="50" show-count placeholder="仅用于编辑器内识别" @keyup.enter="confirmRenameBlock" />
+      <template #footer>
+        <NFlex justify="end">
+          <NButton @click="renameBlockModal = false">
+            取消
+          </NButton>
+          <NButton type="primary" @click="confirmRenameBlock">
+            保存
+          </NButton>
+        </NFlex>
+      </template>
+    </NModal>
+
+    <NModal
+      v-model:show="deleteBlockModal"
+      preset="dialog"
+      type="error"
+      title="删除区块"
+      :content="`将删除 ${pendingDeleteIds.length} 个区块，此操作可通过撤销恢复。`"
+      positive-text="删除"
+      negative-text="取消"
+      @positive-click="confirmDeleteBlocks"
+    />
   </div>
 </template>
 

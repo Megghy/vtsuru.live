@@ -25,14 +25,24 @@ const resolvedContentStyle = computed<string | CSSProperties>(() => {
 const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
-const textThemeOverrides = computed<GlobalThemeOverrides>(() => {
+const palette = computed(() => {
   const foreground = isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)'
-  const muted = isUnbackgrounded.value
-    ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
-    : 'var(--vtsuru-surface-fg-muted)'
-  const subtle = isUnbackgrounded.value
-    ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
-    : 'var(--vtsuru-surface-fg-subtle)'
+  return {
+    foreground,
+    muted: isUnbackgrounded.value
+      ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
+      : 'var(--vtsuru-surface-fg-muted)',
+    subtle: isUnbackgrounded.value
+      ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
+      : 'var(--vtsuru-surface-fg-subtle)',
+    mutedBackground: isUnbackgrounded.value
+      ? 'var(--vtsuru-bg-muted)'
+      : 'var(--user-page-ui-surface-bg-hover)',
+  }
+})
+
+const textThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  const { foreground, muted, subtle } = palette.value
 
   return {
     common: {
@@ -61,16 +71,20 @@ const textThemeOverrides = computed<GlobalThemeOverrides>(() => {
 const cardStyle = computed<CSSProperties>(() => ({
   '--n-border-color': isUnframed.value
     ? 'transparent'
-    : 'var(--vtsuru-card-border-color, var(--user-page-border-color, var(--n-divider-color)))',
-  '--n-text-color': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
-  '--n-text-color-1': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
-  '--n-text-color-2': isUnbackgrounded.value
-    ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
-    : 'var(--vtsuru-surface-fg-muted)',
-  '--n-text-color-3': isUnbackgrounded.value
-    ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
-    : 'var(--vtsuru-surface-fg-subtle)',
-  '--n-title-text-color': isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)',
+    : 'var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))',
+  '--n-text-color': palette.value.foreground,
+  '--n-text-color-1': palette.value.foreground,
+  '--n-text-color-2': palette.value.muted,
+  '--n-text-color-3': palette.value.subtle,
+  '--n-title-text-color': palette.value.foreground,
+  '--vtsuru-block-fg': palette.value.foreground,
+  '--vtsuru-block-fg-muted': palette.value.muted,
+  '--vtsuru-block-fg-subtle': palette.value.subtle,
+  '--vtsuru-block-bg-muted': palette.value.mutedBackground,
+  '--vtsuru-block-border': 'var(--user-page-border-color, var(--vtsuru-border))',
+  '--vtsuru-fg': palette.value.foreground,
+  '--vtsuru-fg-muted': palette.value.muted,
+  '--vtsuru-border': 'var(--user-page-border-color)',
 }))
 
 const borderTitleText = computed(() => (typeof props.borderTitle === 'string' ? props.borderTitle.trim() : ''))
@@ -126,6 +140,7 @@ const borderTitleAlignClass = computed(() => {
 .vtsuru-block-card-wrap {
   position: relative;
   display: flex;
+  height: 100%;
   min-width: 0;
 }
 
@@ -158,7 +173,7 @@ const borderTitleAlignClass = computed(() => {
   padding: 0;
   font-size: 12px;
   line-height: 1;
-  color: var(--vtsuru-surface-fg, var(--n-text-color));
+  color: var(--vtsuru-block-fg);
   font-weight: 600;
   letter-spacing: 0.2px;
   opacity: 0.9;
@@ -169,8 +184,8 @@ const borderTitleAlignClass = computed(() => {
   flex: 1;
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-surface-fg, var(--n-text-color));
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.80)));
+  color: var(--vtsuru-block-fg);
+  background: var(--user-page-ui-surface-bg, var(--vtsuru-bg-elevated));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   box-shadow:
@@ -184,7 +199,7 @@ const borderTitleAlignClass = computed(() => {
 }
 
 .vtsuru-block-card.unbackgrounded {
-  color: var(--vtsuru-page-text, var(--n-text-color));
+  color: var(--vtsuru-block-fg);
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -192,12 +207,12 @@ const borderTitleAlignClass = computed(() => {
 }
 
 .vtsuru-block-card-wrap.unbackgrounded .border-title__text {
-  color: var(--vtsuru-page-text, var(--n-text-color));
+  color: var(--vtsuru-block-fg);
 }
 
 .vtsuru-block-card :deep(.n-card-header) {
   padding: 12px var(--vtsuru-page-spacing);
-  border-bottom: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--vtsuru-block-border);
 }
 
 .vtsuru-block-card :deep(.n-card__content) {

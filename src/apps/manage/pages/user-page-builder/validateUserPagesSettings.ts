@@ -80,11 +80,15 @@ export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV
 
   const validatePage = (label: string, cfg: UserPageConfig | undefined) => {
     if (!cfg) return
+    if (!['legacy', 'block', 'contrib'].includes(cfg.mode)) {
+      problems.push(`${label}: mode 不合法：${String(cfg.mode)}`)
+      return
+    }
     validateTheme(label, (cfg as any).theme)
     validateBackground(label, cfg.background)
     if (cfg.mode === 'block') {
       const v = validateBlockPageProject(cfg.block)
-      if (!v.ok) problems.push(`${label}: ${v.errors.join('；')}`)
+      if (v.ok === false) problems.push(`${label}: ${v.errors.join('；')}`)
       return
     }
     if (cfg.mode === 'contrib') {

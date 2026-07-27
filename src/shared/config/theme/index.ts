@@ -22,7 +22,7 @@ function rgbTriplet(hex: string) {
  * 不在 :root 上做硬编码，是为了让暗色模式切换时同步刷新。
  * 在 App.vue 的 watchEffect 里调用即可。
  */
-export function applyThemeCssVars(tokens: ThemeTokens, target: HTMLElement = document.documentElement) {
+export function getThemeCssVars(tokens: ThemeTokens): Record<string, string> {
   const vars: Record<string, string> = {
     '--vtsuru-brand': tokens.brand,
     '--vtsuru-brand-hover': tokens.brandHover,
@@ -85,5 +85,9 @@ export function applyThemeCssVars(tokens: ThemeTokens, target: HTMLElement = doc
     '--n-error-color-rgb': rgbTriplet(errorColor),
   })
 
-  for (const [k, v] of Object.entries(vars)) target.style.setProperty(k, v)
+  return vars
+}
+
+export function applyThemeCssVars(tokens: ThemeTokens, target: HTMLElement = document.documentElement) {
+  for (const [key, value] of Object.entries(getThemeCssVars(tokens))) target.style.setProperty(key, value)
 }

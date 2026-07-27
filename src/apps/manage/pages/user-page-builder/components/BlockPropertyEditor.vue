@@ -8,7 +8,9 @@ import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type {BackgroundSettingsTarget} from './BackgroundSettingsEditor.vue';
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
+import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
 import PropsGrid from './PropsGrid.vue'
+import { useBlockPropertyFocus } from './useBlockPropertyFocus'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -50,6 +52,8 @@ const capacityStatus = computed(() => {
   if (editor.configBytes.value > editor.MAX_CONFIG_BYTES * 0.9) return 'warning'
   return 'success'
 })
+
+const { expandedPageSections, expandedBlockSections } = useBlockPropertyFocus()
 
 const pageThemeMode = computed({
   get() {
@@ -131,13 +135,6 @@ function confirmImportJson() {
   }
 }
 
-const pageOverrideBgTarget: BackgroundSettingsTarget = {
-  get: () => (editor.currentPage.value as any).background,
-  ensure: () => ((editor.currentPage.value as any).background ??= {}),
-  uploadImage: editor.triggerUploadPageBackgroundOverride,
-  clearImage: editor.clearPageBackgroundOverrideImageFile,
-}
-
 const blockThemeBgTarget: BackgroundSettingsTarget = {
   get: () => editor.currentTheme.value as any,
   ensure: () => {
@@ -149,91 +146,11 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
   clearImage: editor.clearPageBackgroundImageFile,
 }
 
-function ensurePageThemeOverride() {
-  return ((editor.currentPage.value as any).theme ??= {})
-}
-
-function cleanupPageThemeOverrideIfEmpty() {
-  const t: any = (editor.currentPage.value as any).theme
-  if (!t || typeof t !== 'object') return
-  const keys = Object.keys(t)
-  if (keys.length === 0) delete (editor.currentPage.value as any).theme
-}
-
-const pageOverrideThemePrimaryColor = computed({
-  get() {
-    const v = (editor.currentPage.value as any).theme?.primaryColor
-    return typeof v === 'string' ? v : undefined
-  },
-  set(v: string | null) {
-    const next = typeof v === 'string' ? v : ''
-    if (!next.trim().length) {
-      const t: any = (editor.currentPage.value as any).theme
-      if (t) delete t.primaryColor
-      cleanupPageThemeOverrideIfEmpty()
-      return
-    }
-    const t: any = ensurePageThemeOverride()
-    t.primaryColor = next
-  },
-})
-
-const pageOverrideThemeTextColor = computed({
-  get() {
-    const v = (editor.currentPage.value as any).theme?.textColor
-    return typeof v === 'string' ? v : undefined
-  },
-  set(v: string | null) {
-    const next = typeof v === 'string' ? v : ''
-    if (!next.trim().length) {
-      const t: any = (editor.currentPage.value as any).theme
-      if (t) delete t.textColor
-      cleanupPageThemeOverrideIfEmpty()
-      return
-    }
-    const t: any = ensurePageThemeOverride()
-    t.textColor = next
-  },
-})
-
-const pageOverrideThemeBackgroundColor = computed({
-  get() {
-    const v = (editor.currentPage.value as any).theme?.backgroundColor
-    return typeof v === 'string' ? v : undefined
-  },
-  set(v: string | null) {
-    const next = typeof v === 'string' ? v : ''
-    if (!next.trim().length) {
-      const t: any = (editor.currentPage.value as any).theme
-      if (t) delete t.backgroundColor
-      cleanupPageThemeOverrideIfEmpty()
-      return
-    }
-    const t: any = ensurePageThemeOverride()
-    t.backgroundColor = next
-  },
-})
-
-const pageOverrideThemeMode = computed({
-  get() {
-    const v = (editor.currentPage.value as any).theme?.pageThemeMode
-    return (v === 'light' || v === 'dark') ? v : 'auto'
-  },
-  set(v: 'auto' | 'light' | 'dark') {
-    const t: any = (editor.currentPage.value as any).theme
-    if (v === 'auto') {
-      if (t) delete t.pageThemeMode
-      cleanupPageThemeOverrideIfEmpty()
-      return
-    }
-    const ensured: any = ensurePageThemeOverride()
-    ensured.pageThemeMode = v
-  },
-})
 </script>
 
 <template>
   <NCard
+    class="block-property-editor"
     title="编辑"
     style="width: 100%; height: 100%"
     content-style="padding: 12px"
@@ -256,10 +173,11 @@ const pageOverrideThemeMode = computed({
     <NFlex vertical size="large">
       <NCollapse
         v-if="editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block'"
-        :default-expanded-names="[]"
+        v-model:expanded-names="expandedPageSections"
       >
         <NCollapseItem
           v-if="editor.currentKey.value !== 'home'"
+          class="page-info-section"
           title="页面基本设置"
           name="page-info"
         >
@@ -291,99 +209,7 @@ const pageOverrideThemeMode = computed({
           </NForm>
         </NCollapseItem>
 
-        <NCollapseItem v-if="editor.currentPage.value.mode !== 'block'" title="页面背景" name="page-bg">
-          <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
-            <NText depth="3">
-              不设置时将使用全局背景或默认背景。
-            </NText>
-            <NButton
-              size="small"
-              secondary
-              :disabled="!(editor.currentPage.value as any).background"
-              @click="(editor.currentPage.value as any).background = undefined"
-            >
-              使用全局背景
-            </NButton>
-          </NFlex>
-          <BackgroundSettingsEditor
-            :target="pageOverrideBgTarget"
-          />
-        </NCollapseItem>
-
-        <NCollapseItem v-if="editor.currentPage.value.mode !== 'block'" title="页面主题" name="page-theme">
-          <NFlex justify="space-between" align="center" style="margin-bottom: 10px">
-            <NText depth="3">
-              不设置时将使用全局主题或站点主题。
-            </NText>
-            <NButton
-              size="small"
-              secondary
-              :disabled="!(editor.currentPage.value as any).theme"
-              @click="(editor.currentPage.value as any).theme = undefined"
-            >
-              清除页面主题
-            </NButton>
-          </NFlex>
-          <NForm label-placement="top" size="small">
-            <PropsGrid>
-              <NFormItem label="主题色 primary">
-                <NFlex align="center" :wrap="false" style="gap: 10px">
-                  <div style="flex: 1; min-width: 0">
-                    <NColorPicker v-model:value="pageOverrideThemePrimaryColor" />
-                  </div>
-                  <NButton
-                    size="tiny"
-                    secondary
-                    :disabled="pageOverrideThemePrimaryColor == null"
-                    @click="pageOverrideThemePrimaryColor = null"
-                  >
-                    清除
-                  </NButton>
-                </NFlex>
-              </NFormItem>
-              <NFormItem label="字体颜色 text">
-                <NFlex align="center" :wrap="false" style="gap: 10px">
-                  <div style="flex: 1; min-width: 0">
-                    <NColorPicker v-model:value="pageOverrideThemeTextColor" />
-                  </div>
-                  <NButton
-                    size="tiny"
-                    secondary
-                    :disabled="pageOverrideThemeTextColor == null"
-                    @click="pageOverrideThemeTextColor = null"
-                  >
-                    清除
-                  </NButton>
-                </NFlex>
-              </NFormItem>
-              <NFormItem label="内容区域底色">
-                <NFlex align="center" :wrap="false" style="gap: 10px">
-                  <div style="flex: 1; min-width: 0">
-                    <NColorPicker v-model:value="pageOverrideThemeBackgroundColor" />
-                  </div>
-                  <NButton
-                    size="tiny"
-                    secondary
-                    :disabled="pageOverrideThemeBackgroundColor == null"
-                    @click="pageOverrideThemeBackgroundColor = null"
-                  >
-                    清除
-                  </NButton>
-                </NFlex>
-              </NFormItem>
-              <NFormItem label="页面主题模式">
-                <NSelect
-                  v-model:value="pageOverrideThemeMode"
-                  :options="[
-                    { label: '跟随站点', value: 'auto' },
-                    { label: '强制亮色', value: 'light' },
-                    { label: '强制暗色', value: 'dark' },
-                  ]"
-                />
-              </NFormItem>
-            </PropsGrid>
-          </NForm>
-        </NCollapseItem>
+        <PageAppearanceOverrides />
       </NCollapse>
 
       <div style="background: var(--n-color-embedded); padding: 12px; border-radius: 8px">
@@ -466,8 +292,8 @@ const pageOverrideThemeMode = computed({
           </template>
 
           <template v-else-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-            <NCollapse :default-expanded-names="[]">
-              <NCollapseItem title="区块页主题" name="theme">
+            <NCollapse v-model:expanded-names="expandedBlockSections">
+              <NCollapseItem class="block-theme-section" title="区块页主题" name="theme">
                 <NForm label-placement="top" size="small">
                   <NFormItem label="主题预设">
                     <NSelect
@@ -549,7 +375,12 @@ const pageOverrideThemeMode = computed({
             </NCollapse>
 
             <Transition name="fade-slide" mode="out-in">
-              <div v-if="editor.selectedBlock.value" :key="`selected:${editor.selectedBlock.value.id}`" style="margin-top: 12px">
+              <div
+                v-if="editor.selectedBlock.value"
+                :key="`selected:${editor.selectedBlock.value.id}`"
+                data-block-property-editor
+                style="margin-top: 12px"
+              >
                 <NText strong style="display:block; margin-bottom: 8px">
                   属性编辑 - {{ editor.selectedBlock.value.type }}
                 </NText>

@@ -1,39 +1,38 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import { NAvatar, NButton, NFlex, NIcon, NText } from 'naive-ui';
-import { computed } from 'vue'
+import { NAlert, NAvatar, NButton, NIcon } from 'naive-ui'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import {
+  CalendarOutline,
+  GameControllerOutline,
   HomeOutline,
   PlayCircleOutline,
   TvOutline,
-  GameControllerOutline,
-  CalendarOutline
 } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
-  variant?: 'card' | 'compact'
-  showTitle?: boolean
-  showArea?: boolean
-  showCover?: boolean
-  showButtons?: boolean
-  framed?: boolean
-  backgrounded?: boolean
+  variant: 'card' | 'compact'
+  showTitle: boolean
+  showArea: boolean
+  showCover: boolean
+  showButtons: boolean
+  framed: boolean
+  backgrounded: boolean
 }
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo | undefined
+  userInfo?: UserInfo
   biliInfo?: unknown
 }>()
 
 const cfg = computed<BlockConfig>(() => {
   const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
+    ? props.blockProps as Record<string, unknown>
     : {}
-  const variant = (o.variant === 'compact' || o.variant === 'card') ? o.variant : 'card'
   return {
-    variant,
+    variant: o.variant === 'compact' ? 'compact' : 'card',
     showTitle: typeof o.showTitle === 'boolean' ? o.showTitle : true,
     showArea: typeof o.showArea === 'boolean' ? o.showArea : true,
     showCover: typeof o.showCover === 'boolean' ? o.showCover : true,
@@ -44,612 +43,207 @@ const cfg = computed<BlockConfig>(() => {
 })
 
 const model = computed(() => {
-  const s = props.userInfo?.streamerInfo
-  const isStreaming = !!s?.isStreaming
-  const title = typeof s?.title === 'string' ? s.title : ''
-  const coverUrl = (typeof s?.coverUrl === 'string' && s.coverUrl)
-    ? s.coverUrl
-    : ((typeof s?.frameUrl === 'string' && s.frameUrl) ? s.frameUrl : '')
-  const area = typeof s?.area === 'string' ? s.area : ''
-  const parentArea = typeof s?.parentArea === 'string' ? s.parentArea : ''
-  const avatarUrl = typeof s?.faceUrl === 'string' ? s.faceUrl : ''
-  const displayName = typeof s?.name === 'string' && s.name.trim().length ? s.name : (props.userInfo?.name ?? '')
-  const roomId = typeof s?.roomId === 'number' ? s.roomId : props.userInfo?.biliRoomId
-  const liveRoomUrl = roomId ? `https://live.bilibili.com/${roomId}` : ''
-  const spaceUrl = props.userInfo?.biliId ? `https://space.bilibili.com/${props.userInfo.biliId}` : ''
-  const lastStreamAt = typeof s?.lastStreamAt === 'number' ? s.lastStreamAt : 0
-  return { isStreaming, title, coverUrl, area, parentArea, avatarUrl, displayName, liveRoomUrl, spaceUrl, lastStreamAt }
+  const stream = props.userInfo?.streamerInfo
+  const roomId = typeof stream?.roomId === 'number' ? stream.roomId : props.userInfo?.biliRoomId
+  return {
+    available: Boolean(props.userInfo),
+    isStreaming: Boolean(stream?.isStreaming),
+    title: typeof stream?.title === 'string' ? stream.title : '',
+    coverUrl: typeof stream?.coverUrl === 'string' && stream.coverUrl
+      ? stream.coverUrl
+      : typeof stream?.frameUrl === 'string' ? stream.frameUrl : '',
+    area: [stream?.parentArea, stream?.area].filter(Boolean).join(' / '),
+    avatarUrl: typeof stream?.faceUrl === 'string' ? stream.faceUrl : '',
+    displayName: typeof stream?.name === 'string' && stream.name.trim() ? stream.name : props.userInfo?.name || '主播',
+    lastStreamAt: typeof stream?.lastStreamAt === 'number' ? stream.lastStreamAt : 0,
+    liveRoomUrl: roomId ? `https://live.bilibili.com/${roomId}` : '',
+    spaceUrl: props.userInfo?.biliId ? `https://space.bilibili.com/${props.userInfo.biliId}` : '',
+  }
 })
 
-function formatTime(ts: number) {
-  if (!Number.isFinite(ts) || ts <= 0) return ''
-  const d = new Date(ts)
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
+const now = ref(Date.now())
+const coverFailed = ref(false)
+let durationTimer: number | undefined
+
+function stopDurationTimer() {
+  if (durationTimer !== undefined) window.clearInterval(durationTimer)
+  durationTimer = undefined
 }
 
-function formatDuration(ms: number) {
-  if (!Number.isFinite(ms) || ms <= 0) return ''
-  const totalMin = Math.floor(ms / 60000)
-  const hours = Math.floor(totalMin / 60)
-  const minutes = totalMin % 60
-  if (hours <= 0) return `已播 ${minutes} 分钟`
-  return `已播 ${hours} 小时 ${minutes} 分钟`
+watch(
+  () => [model.value.isStreaming, model.value.lastStreamAt] as const,
+  ([isStreaming, startedAt]) => {
+    stopDurationTimer()
+    now.value = Date.now()
+    if (isStreaming && startedAt > 0) {
+      durationTimer = window.setInterval(() => { now.value = Date.now() }, 60_000)
+    }
+  },
+  { immediate: true },
+)
+
+watch(() => model.value.coverUrl, () => { coverFailed.value = false })
+onBeforeUnmount(stopDurationTimer)
+
+function formatTime(timestamp: number) {
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return ''
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(timestamp)
 }
 
-const liveDurationText = computed(() => {
-  if (!model.value.isStreaming) return ''
-  if (!model.value.lastStreamAt) return ''
-  const ms = Date.now() - model.value.lastStreamAt
-  if (!Number.isFinite(ms) || ms <= 0) return ''
-  return formatDuration(ms)
-})
+function formatDuration(milliseconds: number) {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return ''
+  const totalMinutes = Math.floor(milliseconds / 60_000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return hours ? `已直播 ${hours} 小时 ${minutes} 分钟` : `已直播 ${minutes} 分钟`
+}
+
+const durationText = computed(() => model.value.isStreaming && model.value.lastStreamAt
+  ? formatDuration(now.value - model.value.lastStreamAt)
+  : '')
+const hasCover = computed(() => cfg.value.variant === 'card' && cfg.value.showCover && model.value.coverUrl && !coverFailed.value)
 </script>
 
 <template>
   <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
-    <div class="live-card">
-      <template v-if="cfg.variant === 'compact'">
-        <div class="live-compact">
-          <NFlex align="center" justify="space-between" style="gap: 12px">
-            <NFlex align="center" style="gap: 10px; min-width: 0">
-              <NAvatar
-                v-if="model.avatarUrl"
-                :src="model.avatarUrl"
-                round
-                :size="32"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-              />
-              <div class="live-header-text">
-                <NText strong class="live-name">
-                  {{ model.displayName || '主播' }}
-                </NText>
-                <NText v-if="cfg.showTitle && model.title" depth="3" class="live-sub">
-                  {{ model.title }}
-                </NText>
-                <NText v-else depth="3" class="live-sub">
-                  Bilibili
-                  <template v-if="cfg.showArea && (model.parentArea || model.area)">
-                    · {{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
-                  </template>
-                </NText>
-              </div>
-            </NFlex>
+    <NAlert v-if="!model.available" type="info" :show-icon="false">
+      直播信息暂不可用
+    </NAlert>
 
-            <NFlex align="center" style="gap: 10px; flex-shrink: 0">
-              <div class="live-status compact">
-                <span class="dot" :class="{ on: model.isStreaming }" />
-                <NText depth="2" style="font-weight: 700">
-                  {{ model.isStreaming ? '直播中' : '离线' }}
-                </NText>
-              </div>
-              <NButton
-                v-if="cfg.showButtons && model.liveRoomUrl"
-                size="tiny"
-                class="action compact"
-                :type="model.isStreaming ? 'primary' : 'default'"
-                secondary
-                tag="a"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="model.liveRoomUrl"
-              >
-                <template #icon>
-                  <NIcon><TvOutline /></NIcon>
-                </template>
-                直播间
-              </NButton>
-            </NFlex>
-          </NFlex>
+    <article
+      v-else
+      class="live-card"
+      :class="{ compact: cfg.variant === 'compact', immersive: hasCover }"
+    >
+      <img
+        v-if="hasCover"
+        class="cover"
+        :src="model.coverUrl"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        referrerpolicy="no-referrer"
+        @error="coverFailed = true"
+      >
+      <div v-if="hasCover" class="cover-shade" />
 
-          <NFlex v-if="model.isStreaming && liveDurationText" align="center" size="small" style="margin-top: 10px; gap: 6px">
-            <NIcon depth="3" size="14">
-              <img src="@/svgs/bilibili.svg" style="width:100%;height:100%">
-            </NIcon>
-            <NText depth="3" style="font-size: 12px">
-              {{ liveDurationText }}
-            </NText>
-          </NFlex>
-          <NFlex v-else-if="!model.isStreaming && model.lastStreamAt" align="center" size="small" style="margin-top: 10px; gap: 6px">
-            <NIcon depth="3" size="14">
-              <CalendarOutline />
-            </NIcon>
-            <NText depth="3" style="font-size: 12px">
-              上次直播：{{ formatTime(model.lastStreamAt) }}
-            </NText>
-          </NFlex>
-        </div>
-      </template>
-
-      <template v-else>
-        <!-- Immersive Cover Background Mode -->
-        <div
-          v-if="cfg.showCover && model.coverUrl"
-          class="live-immersive"
-        >
-          <!-- Background Layer -->
-          <div class="live-bg">
-            <img :src="model.coverUrl" alt="" referrerpolicy="no-referrer" decoding="async" loading="lazy">
-            <div class="live-bg-overlay" />
+      <div class="content">
+        <header class="header">
+          <div class="identity">
+            <NAvatar
+              v-if="model.avatarUrl"
+              :src="model.avatarUrl"
+              round
+              :size="cfg.variant === 'compact' ? 34 : 42"
+              :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', alt: model.displayName }"
+            />
+            <div class="identity-text">
+              <strong class="name">{{ model.displayName }}</strong>
+              <span class="platform">哔哩哔哩直播</span>
+            </div>
           </div>
 
-          <!-- Content Layer -->
-          <div class="live-content-layer">
-            <div class="live-header immersive">
-              <NFlex align="center" style="gap: 12px; min-width: 0">
-                <NAvatar
-                  v-if="model.avatarUrl"
-                  :src="model.avatarUrl"
-                  round
-                  :size="40"
-                  style="border: 2px solid var(--vtsuru-card-border-color)"
-                  :img-props="{ referrerpolicy: 'no-referrer' }"
-                />
-                <div class="live-header-text">
-                  <NText strong class="live-name text-white">
-                    {{ model.displayName || '主播' }}
-                  </NText>
-                  <div class="live-sub text-white-70">
-                    <NIcon style="vertical-align: -2px; margin-right: 2px" size="12">
-                      <TvOutline />
-                    </NIcon>
-                    Bilibili
-                    <template v-if="props.userInfo?.biliRoomId">
-                      · 房间 {{ props.userInfo.biliRoomId }}
-                    </template>
-                  </div>
-                </div>
-              </NFlex>
+          <div class="status" :class="{ online: model.isStreaming }" aria-live="polite" aria-atomic="true">
+            <span class="status-dot" />
+            {{ model.isStreaming ? '直播中' : '未开播' }}
+          </div>
+        </header>
 
-              <div class="live-status immersive">
-                <span class="dot" :class="{ on: model.isStreaming }" />
-                <span class="status-text">
-                  {{ model.isStreaming ? '直播中' : '离线' }}
-                </span>
-              </div>
-            </div>
-
-            <div class="live-body immersive">
-              <div v-if="cfg.showArea && (model.parentArea || model.area)" class="pill-area">
-                <NIcon style="vertical-align: -1px; margin-right: 4px">
-                  <GameControllerOutline />
-                </NIcon>
-                <span>{{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}</span>
-              </div>
-
-              <NText v-if="cfg.showTitle && model.title" class="live-title text-white">
-                {{ model.title }}
-              </NText>
-              <NText v-else class="live-title muted text-white">
-                {{ model.isStreaming ? '正在直播' : '暂未开播' }}
-              </NText>
-
-              <div v-if="model.isStreaming && liveDurationText" class="live-kicker text-white-90">
-                <NIcon style="vertical-align: -2px; margin-right: 4px">
-                  <PlayCircleOutline />
-                </NIcon>
-                {{ liveDurationText }}
-              </div>
-              <div v-else-if="!model.isStreaming && model.lastStreamAt" class="live-kicker text-white-90">
-                <NIcon style="vertical-align: -2px; margin-right: 4px">
-                  <CalendarOutline />
-                </NIcon>
-                上次直播：{{ formatTime(model.lastStreamAt) }}
-              </div>
-            </div>
-
-            <div v-if="cfg.showButtons" class="live-actions immersive">
-              <NButton
-                v-if="model.spaceUrl"
-                class="action immersive-btn"
-                ghost
-                tag="a"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="model.spaceUrl"
-              >
-                <template #icon>
-                  <NIcon><HomeOutline /></NIcon>
-                </template>
-                主页
-              </NButton>
-              <NButton
-                v-if="model.liveRoomUrl"
-                class="action immersive-btn"
-                :type="model.isStreaming ? 'primary' : 'default'"
-                :ghost="!model.isStreaming"
-                tag="a"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="model.liveRoomUrl"
-              >
-                <template #icon>
-                  <NIcon><TvOutline /></NIcon>
-                </template>
-                直播间
-              </NButton>
-            </div>
+        <div class="body">
+          <strong v-if="cfg.showTitle && model.title" class="title">{{ model.title }}</strong>
+          <div v-if="cfg.showArea && model.area" class="meta">
+            <NIcon><GameControllerOutline /></NIcon>
+            <span>{{ model.area }}</span>
+          </div>
+          <div v-if="durationText" class="meta" aria-live="polite">
+            <NIcon><PlayCircleOutline /></NIcon>
+            <span>{{ durationText }}</span>
+          </div>
+          <div v-else-if="model.lastStreamAt" class="meta">
+            <NIcon><CalendarOutline /></NIcon>
+            <span>上次直播：{{ formatTime(model.lastStreamAt) }}</span>
           </div>
         </div>
 
-        <!-- Classic Mode (No Cover or Cover Hidden) -->
-        <div v-else>
-          <div class="live-header">
-            <NFlex align="center" style="gap: 10px; min-width: 0">
-              <NAvatar
-                v-if="model.avatarUrl"
-                :src="model.avatarUrl"
-                round
-                :size="34"
-                :img-props="{ referrerpolicy: 'no-referrer' }"
-                style="border: 1px solid var(--n-divider-color)"
-              />
-              <div class="live-header-text">
-                <NText strong class="live-name">
-                  {{ model.displayName || '主播' }}
-                </NText>
-                <NText depth="3" class="live-sub">
-                  <NIcon style="vertical-align: -2px; margin-right: 2px" size="12">
-                    <TvOutline />
-                  </NIcon>
-                  Bilibili
-                  <template v-if="props.userInfo?.biliRoomId">
-                    · 房间 {{ props.userInfo.biliRoomId }}
-                  </template>
-                </NText>
-              </div>
-            </NFlex>
-
-            <div class="live-status">
-              <span class="dot" :class="{ on: model.isStreaming }" />
-              <NText depth="2" style="font-weight: 700">
-                {{ model.isStreaming ? '直播中' : '离线' }}
-              </NText>
-            </div>
-          </div>
-
-          <div class="live-body">
-            <NText v-if="cfg.showTitle && model.title" strong style="display:block; white-space: pre-wrap; font-size: 15px; line-height: 1.4">
-              {{ model.title }}
-            </NText>
-            <NFlex v-if="cfg.showArea && (model.parentArea || model.area)" align="center" class="meta-row">
-              <NIcon size="14">
-                <GameControllerOutline />
-              </NIcon>
-              <NText depth="3">
-                {{ model.parentArea }}{{ model.parentArea && model.area ? ' / ' : '' }}{{ model.area }}
-              </NText>
-            </NFlex>
-            <NFlex v-if="model.isStreaming && liveDurationText" align="center" class="meta-row">
-              <NIcon size="14">
-                <PlayCircleOutline />
-              </NIcon>
-              <NText depth="3">
-                {{ liveDurationText }}
-              </NText>
-            </NFlex>
-            <NFlex v-else-if="!model.isStreaming && model.lastStreamAt" align="center" class="meta-row">
-              <NIcon size="14">
-                <CalendarOutline />
-              </NIcon>
-              <NText depth="3">
-                上次直播：{{ formatTime(model.lastStreamAt) }}
-              </NText>
-            </NFlex>
-          </div>
-
-          <div v-if="cfg.showButtons" class="live-actions">
-            <NButton
-              v-if="model.spaceUrl"
-              class="action"
-              secondary
-              tag="a"
-              target="_blank"
-              rel="noopener noreferrer"
-              :href="model.spaceUrl"
-            >
-              <template #icon>
-                <NIcon><HomeOutline /></NIcon>
-              </template>
-              主页
-            </NButton>
-            <NButton
-              v-if="model.liveRoomUrl"
-              class="action"
-              :type="model.isStreaming ? 'primary' : 'default'"
-              secondary
-              tag="a"
-              target="_blank"
-              rel="noopener noreferrer"
-              :href="model.liveRoomUrl"
-            >
-              <template #icon>
-                <NIcon><TvOutline /></NIcon>
-              </template>
-              直播间
-            </NButton>
-          </div>
+        <div v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)" class="actions">
+          <NButton
+            v-if="model.spaceUrl"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.spaceUrl"
+            aria-label="打开主播主页（新窗口打开）"
+          >
+            <template #icon>
+              <NIcon><HomeOutline /></NIcon>
+            </template>
+            主页
+          </NButton>
+          <NButton
+            v-if="model.liveRoomUrl"
+            :type="model.isStreaming ? 'primary' : 'default'"
+            secondary
+            tag="a"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.liveRoomUrl"
+            aria-label="打开直播间（新窗口打开）"
+          >
+            <template #icon>
+              <NIcon><TvOutline /></NIcon>
+            </template>
+            直播间
+          </NButton>
         </div>
-      </template>
-    </div>
+      </div>
+    </article>
   </BlockCard>
 </template>
 
 <style scoped>
-.live-card {
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-}
+.live-card { container-type: inline-size; position: relative; overflow: hidden; border-radius: var(--vtsuru-page-radius); color: var(--vtsuru-block-fg); background: transparent; }
+.cover, .cover-shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cover { object-fit: cover; }
+.cover-shade { background: rgba(0, 0, 0, 0.68); }
+.content { position: relative; display: grid; gap: 16px; padding: 16px; }
+.header, .identity, .status, .meta, .actions { display: flex; align-items: center; }
+.header { justify-content: space-between; gap: 12px; min-width: 0; }
+.identity { gap: 10px; min-width: 0; }
+.identity-text { min-width: 0; }
+.name, .platform { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name { font-size: 15px; line-height: 1.3; }
+.platform { margin-top: 2px; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
+.status { flex: none; gap: 6px; padding: 4px 9px; border: 1px solid var(--vtsuru-block-border); border-radius: 999px; color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); font-size: 12px; font-weight: 600; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentcolor; }
+.status.online { color: var(--vtsuru-page-primary, var(--vtsuru-brand)); }
+.body { display: grid; gap: 8px; min-width: 0; }
+.title { font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.meta { gap: 7px; color: var(--vtsuru-block-fg-muted); font-size: 13px; line-height: 1.4; }
+.meta .n-icon { flex: none; }
+.actions { gap: 10px; }
+.actions > * { flex: 1; }
 
-.live-header {
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+.immersive { min-height: 220px; color: #ffffff; background: #111111; }
+.immersive .content { min-height: 220px; align-content: space-between; }
+.immersive .platform, .immersive .meta { color: rgba(255, 255, 255, 0.78); }
+.immersive .status { color: rgba(255, 255, 255, 0.82); border-color: rgba(255, 255, 255, 0.28); background: rgba(0, 0, 0, 0.42); }
+.immersive .status.online { color: #ff8a9c; }
 
-.live-header-text {
-  min-width: 0;
-}
+.compact .content { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; }
+.compact .header { grid-column: 1 / -1; }
+.compact .body { align-self: center; }
+.compact .actions { justify-content: flex-end; }
+.compact .actions > * { flex: none; }
 
-.live-name {
-  display: block;
-  font-size: 15px;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.live-sub {
-  display: block;
-  font-size: 13px;
-  line-height: 1.25;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.live-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--n-divider-color);
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
-}
-.live-status.compact {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--n-text-color-3);
-}
-
-.dot.on {
-  background: var(--n-error-color);
-  box-shadow: 0 0 0 2px var(--n-error-color-suppl);
-}
-
-.live-cover {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  border-top: 1px solid var(--n-divider-color);
-  border-bottom: 1px solid var(--n-divider-color);
-  background: var(--user-page-ui-surface-bg, #000);
-}
-
-.live-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.9;
-}
-
-.live-cover-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
-  pointer-events: none;
-}
-
-.live-cover-content {
-  position: absolute;
-  inset: 0;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 4px;
-  color: #fff;
-}
-
-.live-cover-top {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pill-muted {
-  font-size: 12px;
-  color: #fff;
-  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(4px);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.live-title {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.live-title.muted {
-  opacity: 0.8;
-}
-
-.live-kicker {
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-
-.live-body {
-  padding: 16px;
-}
-
-.live-actions {
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr 1fr;
-}
-
-.action {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-}
-.action.compact {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-.live-compact {
-  padding: 16px;
-}
-
-.meta-row {
-  margin-top: 8px;
-  gap: 8px;
-}
-.meta-row .n-icon {
-  opacity: 0.7;
-}
-
-.live-immersive {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--vtsuru-page-radius);
-  /* Ensure it fills the card if needed, or just flows */
-  display: flex;
-  flex-direction: column;
-}
-
-.live-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.live-bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(20px) brightness(0.6);
-  transform: scale(1.1); /* Prevent blur edges from showing white */
-}
-
-.live-bg-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
-}
-
-.live-content-layer {
-  position: relative;
-  z-index: 1;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 200px; /* Give it some height for the cover to shine */
-  justify-content: space-between;
-}
-
-.live-header.immersive {
-  padding: 0;
-  border-bottom: none;
-}
-
-.live-status.immersive {
-  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.4));
-  backdrop-filter: blur(4px);
-  padding: 4px 10px;
-  border-radius: 99px;
-  border: 1px solid var(--user-page-border-color, rgba(255, 255, 255, 0.1));
-}
-
-.live-status.immersive .status-text {
-  color: #fff;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.live-body.immersive {
-  padding: 0;
-  color: white;
-}
-
-.text-white { color: #fff; }
-.text-white-90 { color: rgba(255, 255, 255, 0.9); }
-.text-white-70 { color: rgba(255, 255, 255, 0.7); }
-
-.pill-area {
-  display: inline-flex;
-  align-items: center;
-  font-size: 12px;
-  background: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.15));
-  backdrop-filter: blur(4px);
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.live-title.muted {
-  font-style: italic;
-  opacity: 0.8;
-}
-
-.live-actions.immersive {
-  padding: 0;
-  border-top: none;
-  background: transparent;
-  gap: 12px;
-}
-
-.immersive-btn {
-  background: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.1)) !important;
-  border: 1px solid var(--vtsuru-card-border-color, rgba(255, 255, 255, 0.2)) !important;
-  color: var(--n-text-color, white) !important;
-  backdrop-filter: blur(4px);
-}
-.immersive-btn:hover {
-  background: var(--user-page-ui-surface-bg-hover, rgba(255, 255, 255, 0.2)) !important;
+@container (max-width: 520px) {
+  .content, .compact .content { grid-template-columns: 1fr; padding: 14px; }
+  .compact .header, .compact .body, .compact .actions { grid-column: 1; }
+  .header { align-items: flex-start; }
+  .actions, .compact .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  .actions > *, .compact .actions > * { width: 100%; }
 }
 
 </style>

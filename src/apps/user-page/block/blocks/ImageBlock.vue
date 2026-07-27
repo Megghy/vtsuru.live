@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
@@ -57,15 +57,38 @@ const imgStyle = computed(() => {
     objectFit: model.value.shape === 'circle' ? 'cover' : 'contain',
   } as const
 })
+
+const failed = ref(false)
+const loaded = ref(false)
+watch(() => model.value.url, () => {
+  failed.value = false
+  loaded.value = false
+})
 </script>
 
 <template>
   <BlockCard v-if="model.url" :framed="model.framed" :backgrounded="model.backgrounded" :content-style="{ padding: 0 }" :wrap-style="wrapStyle">
-    <img
-      :src="model.url"
-      :alt="model.alt"
-      referrerpolicy="no-referrer"
-      :style="imgStyle"
-    >
+    <div class="image-wrap" :class="{ loaded, failed }" :style="{ borderRadius: imgStyle.borderRadius }">
+      <span v-if="!loaded" class="image-state" role="status">{{ failed ? '图片加载失败' : '图片加载中' }}</span>
+      <img
+        v-if="!failed"
+        :src="model.url"
+        :alt="model.alt"
+        referrerpolicy="no-referrer"
+        decoding="async"
+        :style="imgStyle"
+        @load="loaded = true"
+        @error="failed = true"
+      >
+    </div>
   </BlockCard>
 </template>
+
+<style scoped>
+.image-wrap { position: relative; display: grid; min-width: min(100%, 280px); min-height: 160px; overflow: hidden; background: var(--vtsuru-bg-muted); }
+.image-wrap img { position: relative; z-index: 1; opacity: 0; transition: opacity 180ms ease; }
+.image-wrap.loaded { min-height: 0; }
+.image-wrap.loaded img { opacity: 1; }
+.image-state { position: absolute; inset: 0; display: grid; place-items: center; min-height: 160px; padding: 16px; color: var(--vtsuru-fg-muted); text-align: center; }
+@media (prefers-reduced-motion: reduce) { img { transition: none; } }
+</style>

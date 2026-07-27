@@ -143,4 +143,9 @@ const justify = computed<'start' | 'center' | 'end'>(() => align.value)
 .vtsuru-btn:active {
   transform: scale(0.98);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .vtsuru-btn { transition: none; }
+  .vtsuru-btn:active { transform: none; }
+}
 </style>

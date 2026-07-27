@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NText } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 
@@ -19,9 +18,9 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
 <template>
   <BlockCard :framed="framed" :backgrounded="backgrounded">
     <div class="footer">
-      <NText depth="3">
+      <span class="footer-text">
         {{ text || 'Powered by vtsuru.live' }}
-      </NText>
+      </span>
     </div>
   </BlockCard>
 </template>
@@ -29,5 +28,9 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
 <style scoped>
 .footer {
   text-align: center;
+}
+
+.footer-text {
+  color: var(--vtsuru-fg-muted);
 }
 </style>

@@ -49,6 +49,15 @@ const items = computed(() => {
     })
     .filter(it => it.text.length > 0)
 })
+
+function getContrastColor(color: string) {
+  const value = color.match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1]
+  if (!value) return 'var(--vtsuru-fg)'
+  const hex = value.length === 3 ? [...value].map(char => char + char).join('') : value
+  const [red, green, blue] = [0, 2, 4].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16))
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+  return luminance >= 150 ? '#111111' : '#ffffff'
+}
 </script>
 
 <template>
@@ -62,7 +71,7 @@ const items = computed(() => {
         :size="cfg.size"
         :bordered="false"
         class="vtsuru-tag"
-        :color="it.color ? { color: it.color, textColor: '#fff', borderColor: 'transparent' } : undefined"
+        :color="it.color ? { color: it.color, textColor: getContrastColor(it.color), borderColor: 'transparent' } : undefined"
       >
         {{ it.text }}
       </NTag>
@@ -73,16 +82,12 @@ const items = computed(() => {
 <style scoped>
 .vtsuru-tag {
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: filter 0.2s ease, transform 0.2s ease;
   cursor: default;
 }
 
 /* Semi-transparent background for typed tags */
-:deep(.n-tag--default-type) { background: var(--n-action-color) !important; color: var(--n-text-color-2) !important; }
-:deep(.n-tag--info-type) { background: rgba(32, 128, 240, 0.1) !important; color: #2080f0 !important; }
-:deep(.n-tag--success-type) { background: rgba(24, 160, 88, 0.1) !important; color: #18a058 !important; }
-:deep(.n-tag--warning-type) { background: rgba(240, 160, 32, 0.1) !important; color: #f0a020 !important; }
-:deep(.n-tag--error-type) { background: rgba(208, 48, 80, 0.1) !important; color: #d03050 !important; }
+:deep(.n-tag--default-type) { background: var(--vtsuru-bg-muted) !important; color: var(--vtsuru-fg-muted) !important; }
 
 .vtsuru-tag:not(.n-tag--round) {
   border-radius: var(--vtsuru-page-radius);
@@ -91,5 +96,10 @@ const items = computed(() => {
 .vtsuru-tag:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vtsuru-tag { transition: none; }
+  .vtsuru-tag:hover { transform: none; }
 }
 </style>

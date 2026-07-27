@@ -129,6 +129,7 @@ export default defineConfig({
     },
   },
   build: {
+    manifest: true,
     // 生产环境建议关闭以减少产物体积与网络请求
     sourcemap: false,
     target: 'esnext',

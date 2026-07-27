@@ -1,9 +1,9 @@
 import { clearMyUserPagesDraft, publishMyUserPagesSettings, rollbackMyUserPagesPublished, saveMyUserPagesDraft } from '@/apps/user-page/api'
 import { parseEmbedUrl } from '@/apps/user-page/block/embed'
+import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
-import { useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 
@@ -16,6 +16,7 @@ export interface UseUserPagePersistenceOptions {
   isDirty: Ref<boolean>
   lastSavedAt: Ref<number | null>
   lastSavedSnapshot: Ref<string>
+  localDraftStorage: Ref<UserPagesSettingsV1 | null>
 
   maxConfigBytes: number
   history: { batch: (fn: () => void) => void }
@@ -33,7 +34,6 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   const publishCheckErrors = ref<string[]>([])
   const publishCheckWarnings = ref<string[]>([])
   const publishCheckBytes = ref<number>(0)
-  const localDraftStorage = useUserPagesLocalDraftStorage()
 
   function scanPublishWarnings(settingsToScan: UserPagesSettingsV1) {
     let embedCount = 0
@@ -92,7 +92,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     try {
       opts.validateAll(opts.settings.value)
     } catch (e) {
-      publishCheckErrors.value.push((e as Error).message || String(e))
+      publishCheckErrors.value.push(...((e as Error).message || String(e)).split('\n').filter(Boolean))
     }
 
     const publishSnapshot = deepCloneJson(opts.settings.value)
@@ -127,18 +127,17 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
         if (!silent) opts.notify.success(`配置超过上限，已自动清理隐藏空区块：${prunedCount} 个`)
         else console.warn(`[user-page-builder] Auto save pruned hidden empty blocks due to size limit (${bytes}/${opts.maxConfigBytes})`)
       }
-      await saveMyUserPagesDraft(opts.settings.value)
-      localDraftStorage.value = deepCloneJson(opts.settings.value)
-      if (silent) {
-        opts.lastSavedSnapshot.value = JSON.stringify(opts.settings.value)
-        opts.isDirty.value = false
-        opts.lastSavedAt.value = Date.now()
-      } else {
-        await opts.loadState()
-        opts.notify.success('已保存草稿')
-      }
+      const savedSettings = deepCloneJson(opts.settings.value)
+      const savedSnapshot = JSON.stringify(savedSettings)
+      await saveMyUserPagesDraft(savedSettings)
+      opts.localDraftStorage.value = deepCloneJson(savedSettings)
+      opts.lastSavedSnapshot.value = savedSnapshot
+      opts.isDirty.value = JSON.stringify(opts.settings.value) !== savedSnapshot
+      opts.lastSavedAt.value = Date.now()
+      if (!silent) opts.notify.success(opts.isDirty.value ? '草稿已保存，当前仍有新的修改' : '已保存草稿')
       return true
     } catch (e) {
+      reportUserPageError(e, 'save-draft')
       if (!silent) opts.notify.error((e as Error).message || String(e))
       else console.error(e)
       return false
@@ -153,16 +152,19 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       opts.history.batch(() => pruneHiddenEmptyBlocks(opts.settings.value))
       opts.validateAll(opts.settings.value)
       const publishedSnapshot = deepCloneJson(opts.settings.value)
-      await publishMyUserPagesSettings(opts.settings.value)
-      localDraftStorage.value = deepCloneJson(publishedSnapshot)
+      const publishedSerialized = JSON.stringify(publishedSnapshot)
+      await publishMyUserPagesSettings(publishedSnapshot)
+      opts.localDraftStorage.value = deepCloneJson(publishedSnapshot)
       opts.loadedPublished.value = publishedSnapshot
-      if (opts.loadedFrom) opts.loadedFrom.value = 'published'
+      const hasNewerChanges = JSON.stringify(opts.settings.value) !== publishedSerialized
+      if (opts.loadedFrom && !hasNewerChanges) opts.loadedFrom.value = 'published'
       opts.lastSavedAt.value = Date.now()
-      opts.lastSavedSnapshot.value = JSON.stringify(publishedSnapshot)
-      opts.isDirty.value = false
+      opts.lastSavedSnapshot.value = publishedSerialized
+      opts.isDirty.value = hasNewerChanges
       publishModal.value = false
-      opts.notify.success('已发布')
+      opts.notify.success(hasNewerChanges ? '已发布请求时的版本，当前仍有新的修改' : '已发布')
     } catch (e) {
+      reportUserPageError(e, 'publish')
       opts.notify.error((e as Error).message || String(e))
     } finally {
       opts.isSaving.value = false
@@ -173,10 +175,11 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     opts.isSaving.value = true
     try {
       await clearMyUserPagesDraft()
-      localDraftStorage.value = null
+      opts.localDraftStorage.value = null
       await opts.loadState()
       opts.notify.success('已清空草稿')
     } catch (e) {
+      reportUserPageError(e, 'clear-draft')
       opts.notify.error((e as Error).message || String(e))
     } finally {
       opts.isSaving.value = false
@@ -190,6 +193,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       await opts.loadState()
       opts.notify.success('已回滚到上一个已发布版本')
     } catch (e) {
+      reportUserPageError(e, 'rollback')
       opts.notify.error((e as Error).message || String(e))
     } finally {
       opts.isSaving.value = false

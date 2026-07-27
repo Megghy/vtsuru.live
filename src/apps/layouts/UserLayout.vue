@@ -5,18 +5,22 @@ import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Pers
 import { BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
 import {
-  darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip, useMessage } from 'naive-ui';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip } from 'naive-ui';
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { FunctionTypes, ThemeType } from '@/api/api-models'
-import { useUser } from '@/api/user'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
+import { fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageSurfaceCssVars, resolvePageBackground } from '@/apps/user-page/background'
-import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
-import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
+import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
+import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
+import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
+import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
+import type { BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
@@ -26,7 +30,6 @@ import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // --- 响应式状态和常量 ---
 const route = useRoute()
-const message = useMessage()
 const accountInfo = useAccount() // 获取当前登录账户信息
 const useAuth = useBiliAuth() // 获取认证状态 Store
 
@@ -39,8 +42,11 @@ const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Aut
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
 const biliUserInfo = ref<any>(null) // B站用户信息
-const isLoading = ref(true) // 是否正在加载数据
-const notFound = ref(false) // 是否未找到用户
+const biliProfileStatus = ref<BiliProfileStatus>('idle')
+const loadStatus = ref<'idle' | 'loading' | 'not-found' | 'error' | 'ready'>('idle')
+const loadError = ref<Error | null>(null)
+const reloadVersion = ref(0)
+const isLoading = computed(() => loadStatus.value === 'idle' || loadStatus.value === 'loading')
 
 // UI 控制状态
 const registerAndLoginModalVisiable = ref(false) // 注册/登录弹窗可见性
@@ -66,8 +72,19 @@ type UserNavGroup = {
 }
 
 // 侧边栏菜单项
-const navGroups = ref<UserNavGroup[]>([])
+const navGroups = shallowRef<UserNavGroup[]>([])
 const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
+
+function retryPublicPage() {
+  reloadVersion.value++
+}
+
+providePublicUserPageRuntime({
+  settings: userPagesSettings,
+  status: loadStatus,
+  error: loadError,
+  retry: retryPublicPage,
+})
 
 const activeMenuKey = computed(() => {
   const name = route.name?.toString()
@@ -105,8 +122,30 @@ const currentUserPageMode = computed(() => {
 
 const currentBlockValidation = computed(() => {
   if (currentUserPageMode.value !== 'block') return null
-  return validateBlockPageProject((currentUserPageConfig.value as any)?.block)
+  return validateRenderableBlockPageProject((currentUserPageConfig.value as any)?.block)
 })
+
+const seoTitle = computed(() => {
+  if (loadStatus.value === 'not-found') return '用户页面不存在 · VTSURU'
+  if (loadStatus.value === 'error') return '用户页面加载失败 · VTSURU'
+  const pageLabel = pageSlugTitle.value || String(route.meta.title || '主页')
+  return userInfo.value ? `${pageLabel} · ${userInfo.value.name} · VTSURU` : `${pageLabel} · VTSURU`
+})
+
+const pageSlugTitle = computed(() => {
+  if (!userPageSlug.value) return '主页'
+  const title = currentUserPageConfig.value?.title?.trim()
+  return title || '页面'
+})
+
+const seoDescription = computed(() => {
+  const pageDescription = currentUserPageConfig.value?.description?.trim()
+  if (pageDescription) return pageDescription
+  if (userInfo.value) return `${userInfo.value.name} 的 VTSURU 公开主页`
+  return 'VTSURU 公开用户页面'
+})
+
+usePublicPageSeo({ title: seoTitle, description: seoDescription })
 
 type PageThemeMode = 'auto' | 'light' | 'dark'
 
@@ -164,6 +203,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.documentElement.classList.remove(USERPAGE_HOST_CLASS)
+  clearUserPageRuntimeCache()
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
@@ -304,110 +344,86 @@ function updateMenuOptions() {
   navGroups.value = groups
 }
 
-/** 获取 Bilibili 用户信息 */
-async function RequestBiliUserData() {
-  // 确保 userInfo 和 biliId 存在
-  if (!userInfo.value?.biliId) return
-
+async function requestBiliUserData(user: UserInfo, signal: AbortSignal) {
+  if (!user.biliId) {
+    biliProfileStatus.value = 'empty'
+    return
+  }
+  biliProfileStatus.value = 'loading'
   try {
-    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${userInfo.value.biliId}`)
+    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${user.biliId}`, { signal })
     const data = await response.json()
+    if (signal.aborted) return
     if (data?.code === 0 && data?.data?.card) {
       biliUserInfo.value = data.data.card
+      biliProfileStatus.value = 'ready'
     } else {
       biliUserInfo.value = null
+      biliProfileStatus.value = 'empty'
     }
-  } catch (error) {
-    console.error('Failed to fetch Bili user data:', error)
-    // message.error('获取B站信息时网络错误') // 可选: 提示用户网络问题
+  } catch (cause) {
+    if (!signal.aborted) {
+      biliProfileStatus.value = 'error'
+      reportPublicPageError(cause, 'bili-profile')
+    }
   }
 }
 
-/** 获取 Vtsuru 用户信息和相关数据 */
-async function fetchUserData(userId: string | string[] | undefined) {
-  // 验证 userId 的有效性
+async function loadPublicUser(userId: string | string[] | undefined, signal: AbortSignal) {
+  loadStatus.value = 'loading'
+  loadError.value = null
+  userInfo.value = null
+  userPagesSettings.value = null
+  biliUserInfo.value = null
+  biliProfileStatus.value = 'idle'
+  navGroups.value = []
+
   if (!userId || Array.isArray(userId)) {
-    notFound.value = true // 标记为未找到
-    isLoading.value = false // 加载结束
-    userInfo.value = null // 清空用户信息
-    navGroups.value = [] // 清空菜单
-    console.error('无效的用户 ID:', userId)
+    loadStatus.value = 'not-found'
     return
   }
 
-  // 重置状态，准备加载新数据
-  isLoading.value = true
-  notFound.value = false
-  userInfo.value = null
-  navGroups.value = []
-  biliUserInfo.value = null
-
+  let fetchedUserInfo: UserInfo | undefined
   try {
-    // 调用 API 获取用户信息
-    const fetchedUserInfo = await useUser(userId as string) // 强制转换为 string
-
-    if (!fetchedUserInfo) {
-      // 如果 API 返回 null 或 undefined，则视为未找到
-      notFound.value = true
-      userInfo.value = null
-    } else {
-      // 成功获取用户信息
-      userInfo.value = fetchedUserInfo
-      // 基于新的用户信息更新菜单
-      updateMenuOptions()
-      // 异步获取 B 站信息（不阻塞主流程）
-      void RequestBiliUserData()
-    }
-  } catch (error) {
-    console.error('获取用户信息时出错:', error)
-    message.error('加载用户信息时发生错误')
-    notFound.value = true // 标记为未找到状态
-    userInfo.value = null
-  } finally {
-    // 无论成功或失败，加载状态都结束
-    isLoading.value = false
+    fetchedUserInfo = await fetchPublicUserInfo(userId, { signal }) ?? undefined
+  } catch (cause) {
+    if (signal.aborted) return
+    reportPublicPageError(cause, 'user')
+    loadError.value = cause instanceof Error ? cause : new Error(String(cause))
+    loadStatus.value = 'error'
+    return
   }
+  if (signal.aborted) return
+  if (!fetchedUserInfo) {
+    loadStatus.value = 'not-found'
+    return
+  }
+
+  userInfo.value = fetchedUserInfo
+  try {
+    userPagesSettings.value = consumeDraftPreview(route.query.draftPreview, fetchedUserInfo.id)
+      ?? await fetchUserPagesSettingsByUserId(fetchedUserInfo.id, { signal })
+  } catch (cause) {
+    if (signal.aborted) return
+    reportPublicPageError(cause, 'settings')
+    loadError.value = cause instanceof Error ? cause : new Error(String(cause))
+    loadStatus.value = 'error'
+    return
+  }
+  if (signal.aborted) return
+
+  updateMenuOptions()
+  loadStatus.value = 'ready'
+  void requestBiliUserData(fetchedUserInfo, signal)
 }
 
-async function loadUserPagesSettings(streamerId: number) {
-  try {
-    userPagesSettings.value = await fetchUserPagesSettingsByUserId(streamerId)
-  } catch (e) {
-    console.error('Failed to fetch user pages settings:', e)
-    userPagesSettings.value = null
-  }
-}
-
-// --- Watcher ---
-
-// 监听路由参数 id 的变化
 watch(
-  () => route.params.id,
-  (newId, oldId) => {
-    // 只有当 newId 有效且与 oldId 不同时才重新加载数据
-    if (newId && newId !== oldId) {
-      fetchUserData(newId)
-    } else if (!newId) {
-      // 如果 id 从路由中移除，处理相应的状态
-      notFound.value = true
-      isLoading.value = false
-      userInfo.value = null
-      navGroups.value = []
-    }
-  },
-  { immediate: true }, // 关键: 组件挂载时立即执行一次 watcher，触发初始数据加载
-)
-
-watch(
-  () => userInfo.value?.id,
-  async (streamerId) => {
-    if (!streamerId) {
-      userPagesSettings.value = null
-      updateMenuOptions()
-      return
-    }
-    await loadUserPagesSettings(streamerId)
-    updateMenuOptions()
+  () => [route.params.id, route.query.draftPreview, reloadVersion.value] as const,
+  ([newId], _previous, onCleanup) => {
+    clearUserPageRuntimeCache()
+    const controller = new AbortController()
+    onCleanup(() => controller.abort())
+    void loadPublicUser(newId, controller.signal)
   },
   { immediate: true },
 )
@@ -415,31 +431,34 @@ watch(
 </script>
 
 <template>
-  <!-- 情况 1: 加载完毕，但 URL 中没有提供用户 ID -->
   <div
-    v-if="!id && !isLoading"
+    v-if="loadStatus === 'not-found'"
     class="center-container"
   >
     <NResult
-      status="error"
-      title="未提供用户ID"
-      description="请检查访问的URL地址"
-    />
-  </div>
-
-  <!-- 情况 2: 加载完毕，但未找到指定 ID 的用户 -->
-  <div
-    v-else-if="notFound && !isLoading"
-    class="center-container"
-  >
-    <NResult
-      status="error"
+      status="404"
       title="用户不存在"
-      description="无法找到指定ID的用户，或者该用户未完成认证"
+      :description="id ? '无法找到指定用户，或者该用户未完成认证' : '请检查访问地址中的用户 ID'"
     />
   </div>
 
-  <!-- 情况 3: 存在 ID 且 (正在加载 或 加载成功且找到用户) -->
+  <div
+    v-else-if="loadStatus === 'error'"
+    class="center-container"
+  >
+    <NResult
+      status="error"
+      title="页面加载失败"
+      description="网络暂时不可用或服务发生异常，请稍后重试"
+    >
+      <template #footer>
+        <NButton type="primary" @click="retryPublicPage">
+          重新加载
+        </NButton>
+      </template>
+    </NResult>
+  </div>
+
   <NConfigProvider
     v-else
     :theme="pageNaiveTheme"
@@ -673,7 +692,7 @@ watch(
                   depth="3"
                   class="footer-text"
                 >
-                  有有更多功能建议请 <NButton
+                  有更多功能建议请 <NButton
                     text
                     type="info"
                     tag="a"
@@ -716,7 +735,7 @@ watch(
           </div>
           <!-- 实际内容区域 (加载完成且找到用户时显示) -->
           <NScrollbar
-            v-else-if="userInfo && !notFound"
+            v-else-if="loadStatus === 'ready' && userInfo"
             class="viewer-scroll"
           >
             <div class="viewer-page-content">
@@ -728,6 +747,7 @@ watch(
                       :is="Component"
                       :key="route.fullPath.split('#')[0]"
                       :bili-info="biliUserInfo"
+                      :bili-status="biliProfileStatus"
                       :user-info="userInfo"
                     />
                   </template>
@@ -740,6 +760,7 @@ watch(
                       :is="Component"
                       :key="route.fullPath.split('#')[0]"
                       :bili-info="biliUserInfo"
+                      :bili-status="biliProfileStatus"
                       :user-info="userInfo"
                     />
                   </div>
@@ -752,7 +773,6 @@ watch(
               />
             </div>
           </NScrollbar>
-        <!-- 如果 !isLoading && notFound, 会显示顶部的 NResult，这里不需要 else -->
         </div>
       </div>
     </div>
@@ -862,6 +882,7 @@ watch(
 .site-title {
   font-size: 15px;
   letter-spacing: -0.02em;
+  color: var(--vtsuru-fg);
 }
 
 .page-title {
@@ -871,6 +892,7 @@ watch(
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--vtsuru-fg);
 }
 
 .page-root {
@@ -936,11 +958,21 @@ watch(
   z-index: 1;
 }
 
-.page-root.bg-host .layout-header,
 .page-root.bg-host .main-layout-body,
-.page-root.bg-host .user-sider,
 .page-root.bg-host .content-layout-container {
   background-color: transparent;
+}
+
+.page-root.bg-host .layout-header,
+.page-root.bg-host .user-sider {
+  background: var(--user-page-ui-surface-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.page-root.bg-host .nav-item,
+.page-root.bg-host .sider-profile {
+  color: var(--vtsuru-fg);
 }
 
 .page-root.bg-host.glass .layout-header,
@@ -972,6 +1004,20 @@ watch(
 .page-root.bg-host :deep(.n-card) {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .page-root.bg-host.glass .layout-header,
+  .page-root.bg-host.glass .main-layout-body {
+    background: var(--vtsuru-bg-elevated);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .page-root.bg-host :deep(.n-card) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 
@@ -1230,6 +1276,56 @@ watch(
 }
 
 @media (max-width: 520px) {
+  .main-layout-body {
+    flex-direction: column-reverse;
+  }
+
+  .user-sider {
+    width: 100% !important;
+    height: 58px;
+    border-top: 1px solid var(--vtsuru-border);
+    border-right: 0;
+  }
+
+  .sider-profile,
+  .sider-top,
+  .sider-footer,
+  .sider-shell > :deep(.n-divider) {
+    display: none;
+  }
+
+  .sider-scroll :deep(.n-scrollbar-container) {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .sider-scroll :deep(.n-scrollbar-content) {
+    width: max-content;
+  }
+
+  .sider-nav,
+  .sider-nav.collapsed {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    padding: 6px 8px;
+  }
+
+  .nav-group {
+    display: contents;
+  }
+
+  .nav-group__items {
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .nav-item {
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+  }
+
   .viewer-page-content {
     padding-left: 10px;
     padding-right: 12px;

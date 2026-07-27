@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NFlex, NIcon, NText } from 'naive-ui';
+import { NFlex, NIcon } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 import {
@@ -88,6 +88,24 @@ function normalize(items: SocialItem[]) {
 
 const items = computed(() => normalize(cfg.value.items ?? []))
 
+const platformNames: Record<Platform, string> = {
+  bilibili: '哔哩哔哩',
+  youtube: 'YouTube',
+  x: 'X',
+  discord: 'Discord',
+  twitch: 'Twitch',
+  qqgroup: 'QQ 群',
+  github: 'GitHub',
+  website: '网站',
+  netease: '网易云音乐',
+  spotify: 'Spotify',
+  other: '外部链接',
+}
+
+function getAccessibleName(item: { platform: Platform, label: string }) {
+  return `${item.label || platformNames[item.platform]}（新窗口打开）`
+}
+
 function getStyle(platform: Platform) {
   const presets: Record<Platform, { bg: string, fg: string }> = {
     bilibili: { bg: '#fb7299', fg: '#ffffff' },
@@ -142,6 +160,8 @@ const iconSize = computed(() => {
         :href="it.url"
         target="_blank"
         rel="noopener noreferrer"
+        :aria-label="getAccessibleName(it)"
+        :title="getAccessibleName(it)"
         :style="{
           '--social-bg': getStyle(it.platform).bg,
           '--social-fg': getStyle(it.platform).fg,
@@ -152,9 +172,9 @@ const iconSize = computed(() => {
         <NIcon :size="iconSize">
           <component :is="getIcon(it.platform)" />
         </NIcon>
-        <NText v-if="cfg.showLabel" class="social-label">
-          {{ it.label || it.platform }}
-        </NText>
+        <span v-if="cfg.showLabel" class="social-label">
+          {{ it.label || platformNames[it.platform] }}
+        </span>
       </a>
     </NFlex>
   </BlockCard>
@@ -174,7 +194,7 @@ const iconSize = computed(() => {
   color: var(--social-fg);
   text-decoration: none;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 .social:hover {
@@ -192,5 +212,15 @@ const iconSize = computed(() => {
 .social-label {
   color: var(--social-fg);
   font-weight: 600;
+}
+
+.social:focus-visible {
+  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social { transition: none; }
+  .social:hover, .social:active { transform: none; }
 }
 </style>

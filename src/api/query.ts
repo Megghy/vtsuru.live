@@ -182,6 +182,21 @@ export async function QueryGetAPI<T>(
 ): Promise<APIRoot<T>> {
   return QueryGetAPIInternal<APIRoot<T>>(urlString, params, headers, options)
 }
+
+export async function QueryDeleteAPI<T>(
+  urlString: string,
+  params?: QueryParams,
+  headers?: [string, string][],
+  options?: QueryRequestOptions,
+): Promise<APIRoot<T>> {
+  const url = new URL(urlString)
+  url.search = getParams(params)
+  return QueryAPIInternal<APIRoot<T>>(url, {
+    method: 'delete',
+    headers: buildAuthHeaders(headers),
+  }, options)
+}
+
 async function QueryGetAPIInternal<T>(
   urlString: string,
   params?: QueryParams,

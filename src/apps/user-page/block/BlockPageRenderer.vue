@@ -4,14 +4,16 @@ import type { GlobalThemeOverrides } from 'naive-ui'
 import { darkTheme, NConfigProvider } from 'naive-ui';
 import { computed } from 'vue'
 import type { BlockPageProject } from './schema'
+import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
 import { getUserPageSurfaceCssVars } from '@/apps/user-page/background'
-import { buildTokens, getThemeOverrides } from '@/shared/config/theme'
+import { buildTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 
 const props = defineProps<{
   project: BlockPageProject
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  biliStatus?: BiliProfileStatus
   isDark: boolean
   extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
@@ -34,6 +36,7 @@ const pageMaxWidth = computed(() => {
   return s.length ? s : null
 })
 const containerStyle = computed(() => ({
+  ...getThemeCssVars(surfaceTokens.value),
   ...getUserPageSurfaceCssVars(props.isDark),
   '--vtsuru-page-radius': `${radius.value}px`,
   '--vtsuru-page-spacing': `${spacing.value}px`,
@@ -100,6 +103,7 @@ const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
 })
 
 const blockComponents = BLOCK_COMPONENTS
+const visibleBlocks = computed(() => props.project.blocks.filter(block => !block.hidden))
 </script>
 
 <template>
@@ -109,7 +113,7 @@ const blockComponents = BLOCK_COMPONENTS
       :style="containerStyle"
     >
       <div
-        v-for="block in project.blocks"
+        v-for="block in visibleBlocks"
         :key="block.id"
         class="block"
         :class="{ layout: block.type === 'layout', highlight: !!props.highlightBlockId && props.highlightBlockId === block.id }"
@@ -118,10 +122,10 @@ const blockComponents = BLOCK_COMPONENTS
       >
         <component
           :is="blockComponents[block.type]"
-          v-if="!block.hidden"
           :block-props="block.props"
           :user-info="userInfo"
           :bili-info="biliInfo"
+          :bili-status="biliStatus"
           v-bind="block.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
         />
       </div>

@@ -2,35 +2,44 @@
 import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
 import { QueryGetAPI } from '@/api/query'
 import { SCHEDULE_API_URL } from '@/shared/config'
-import { NAlert, NButton, NSpin, NTag, NIcon } from 'naive-ui';
-import { computed, onMounted, ref, watch } from 'vue'
-import { CalendarNumberOutline } from '@vicons/ionicons5'
+import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { NAlert, NButton, NIcon, NSpin, NTag } from 'naive-ui'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { CalendarNumberOutline, CopyOutline, RefreshOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 
 interface BlockConfig {
-  layout?: 'list' | 'table'
-  weeksCount?: number
-  showIcs?: boolean
-  highlightToday?: boolean
-  showTag?: boolean
-  framed?: boolean
-  backgrounded?: boolean
+  layout: 'list' | 'table'
+  weeksCount: number
+  showIcs: boolean
+  highlightToday: boolean
+  showTag: boolean
+  framed: boolean
+  backgrounded: boolean
 }
 
-const props = defineProps<{
-  blockProps: unknown
-  userInfo?: UserInfo | undefined
-  biliInfo?: unknown
-}>()
+interface ScheduleRow {
+  key: string
+  year: number
+  week: number
+  dayIndex: number
+  title: string
+  tag: string
+  tagColor: string
+  time: string
+  isToday: boolean
+}
+
+const props = defineProps<{ blockProps: unknown, userInfo?: UserInfo, biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
   const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
+    ? props.blockProps as Record<string, unknown>
     : {}
-  const weeksCount = Number.isInteger(o.weeksCount) ? o.weeksCount : 1
+  const weeksCount = Number(o.weeksCount)
   return {
-    layout: (o.layout === 'table' || o.layout === 'list') ? o.layout : 'list',
-    weeksCount: Math.min(8, Math.max(1, weeksCount)),
+    layout: o.layout === 'table' ? 'table' : 'list',
+    weeksCount: Number.isInteger(weeksCount) ? Math.min(8, Math.max(1, weeksCount)) : 1,
     showIcs: typeof o.showIcs === 'boolean' ? o.showIcs : true,
     highlightToday: typeof o.highlightToday === 'boolean' ? o.highlightToday : true,
     showTag: typeof o.showTag === 'boolean' ? o.showTag : true,
@@ -39,459 +48,251 @@ const cfg = computed<BlockConfig>(() => {
   }
 })
 
-const isLoading = ref(false)
-const error = ref<string | null>(null)
-const data = ref<ScheduleWeekInfo[] | null>(null)
+const copyState = ref<'idle' | 'success' | 'error'>('idle')
+let copyTimer: number | undefined
 
-async function load() {
-  if (!props.userInfo?.id) return
-  isLoading.value = true
-  error.value = null
+const buttonThemeOverrides = {
+  colorSecondary: 'var(--vtsuru-block-bg-muted)',
+  colorSecondaryHover: 'var(--vtsuru-block-bg-muted)',
+  colorSecondaryPressed: 'var(--vtsuru-block-bg-muted)',
+  textColor: 'var(--vtsuru-block-fg)',
+  border: '1px solid var(--vtsuru-block-border)',
+  borderHover: '1px solid var(--vtsuru-page-primary)',
+  borderPressed: '1px solid var(--vtsuru-page-primary)',
+  borderFocus: '1px solid var(--vtsuru-page-primary)',
+}
+
+const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
+  key: () => `schedule:${props.userInfo?.id ?? ''}`,
+  ttlMs: 60_000,
+  loader: async (signal) => {
+    const userId = props.userInfo?.id
+    if (!userId) return []
+    const response = await QueryGetAPI<ScheduleWeekInfo[]>(
+      `${SCHEDULE_API_URL}get`,
+      { id: userId, _ts: Date.now() },
+      undefined,
+      { signal },
+    )
+    if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
+    return Array.isArray(response.data) ? response.data : []
+  },
+})
+
+const loading = computed(() => scheduleQuery.status.value === 'loading')
+const failed = computed(() => scheduleQuery.status.value === 'error')
+const allWeeks = computed(() => scheduleQuery.data.value ?? [])
+
+async function loadSchedule(force = false) {
+  if (!props.userInfo?.id) {
+    scheduleQuery.cancel()
+    return
+  }
   try {
-    const resp = await QueryGetAPI<ScheduleWeekInfo[]>(`${SCHEDULE_API_URL}get`, { id: props.userInfo.id, _ts: Date.now() })
-    if (resp.code !== 200) throw new Error(resp.message || `HTTP ${resp.code}`)
-    const all = Array.isArray(resp.data) ? resp.data : []
-    const count = cfg.value.weeksCount ?? 1
-    data.value = all.slice(0, count)
-  } catch (e) {
-    error.value = (e as Error).message || String(e)
-    data.value = null
-  } finally {
-    isLoading.value = false
+    await scheduleQuery.execute(force)
+  } catch (error) {
+    console.error('加载直播日程失败', error)
   }
 }
 
-onMounted(() => {
-  void load()
+onMounted(() => { void loadSchedule() })
+watch(() => props.userInfo?.id, () => { void loadSchedule() })
+onBeforeUnmount(() => {
+  if (copyTimer !== undefined) window.clearTimeout(copyTimer)
 })
-watch(() => props.userInfo?.id, () => void load())
-watch(() => cfg.value.weeksCount, () => void load())
 
 function dayLabel(dayIndex: number) {
-  return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][dayIndex] ?? `Day${dayIndex + 1}`
+  return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][dayIndex] ?? ''
 }
 
-function getTodayIndex() {
-  const js = new Date().getDay()
-  return js === 0 ? 6 : js - 1
-}
-
-function normalizeItem(it: ScheduleDayInfo) {
+function normalizeItem(item: ScheduleDayInfo) {
   return {
-    title: typeof it.title === 'string' ? it.title : '',
-    tag: typeof it.tag === 'string' ? it.tag : '',
-    tagColor: typeof it.tagColor === 'string' ? it.tagColor : '',
-    time: typeof it.time === 'string' ? it.time : '',
+    title: typeof item.title === 'string' ? item.title : '',
+    tag: typeof item.tag === 'string' ? item.tag : '',
+    tagColor: typeof item.tagColor === 'string' ? item.tagColor : '',
+    time: typeof item.time === 'string' ? item.time : '',
   }
 }
 
-const flatRows = computed(() => {
-  const weeks = data.value ?? []
-  const out: Array<{
-    week: ScheduleWeekInfo
-    weekIdx: number
-    dayIdx: number
-    itemIdx: number
-    title: string
-    tag: string
-    tagColor: string
-    time: string
-    isToday: boolean
-  }> = []
-  const todayIdx = getTodayIndex()
-
-  weeks.forEach((w, weekIdx) => {
-    const days = Array.isArray(w.days) ? w.days : []
-    for (let dayIdx = 0; dayIdx < days.length; dayIdx++) {
-      const list = Array.isArray(days[dayIdx]) ? days[dayIdx] : []
-      for (let itemIdx = 0; itemIdx < list.length; itemIdx++) {
-        const it = normalizeItem(list[itemIdx])
-        if (!it.title && !it.time && !it.tag) continue
-        out.push({
-          week: w,
-          weekIdx,
-          dayIdx,
-          itemIdx,
-          title: it.title,
-          tag: it.tag,
-          tagColor: it.tagColor,
-          time: it.time,
-          isToday: weekIdx === 0 && dayIdx === todayIdx,
-        })
-      }
-    }
+const rows = computed<ScheduleRow[]>(() => {
+  const today = new Date().getDay() || 7
+  return allWeeks.value.slice(0, cfg.value.weeksCount).flatMap((week, weekIndex) => {
+    const days = Array.isArray(week.days) ? week.days : []
+    return days.flatMap((items, dayIndex) => {
+      const list = Array.isArray(items) ? items : []
+      return list.flatMap((item, itemIndex) => {
+        const value = normalizeItem(item)
+        if (!value.title && !value.time && !value.tag) return []
+        return [{
+          key: `${week.year}-${week.week}-${dayIndex}-${itemIndex}`,
+          year: week.year,
+          week: week.week,
+          dayIndex,
+          ...value,
+          isToday: weekIndex === 0 && dayIndex === today - 1,
+        }]
+      })
+    })
   })
-  return out
 })
 
-function copyToClipboard(text: string) {
-  if (!text) return
-  void navigator.clipboard?.writeText(text)
+const icsUrl = computed(() => props.userInfo?.id ? `${SCHEDULE_API_URL}${props.userInfo.id}.ics` : '')
+const copyMessage = computed(() => copyState.value === 'success'
+  ? '日历链接已复制'
+  : copyState.value === 'error' ? '复制失败，请选中链接手动复制' : '')
+
+async function copyCalendarUrl() {
+  if (!icsUrl.value || copyState.value === 'success') return
+  if (copyTimer !== undefined) window.clearTimeout(copyTimer)
+  try {
+    await navigator.clipboard.writeText(icsUrl.value)
+    copyState.value = 'success'
+  } catch (error) {
+    console.error('复制日历链接失败', error)
+    copyState.value = 'error'
+  }
+  copyTimer = window.setTimeout(() => { copyState.value = 'idle' }, 3000)
 }
 </script>
 
 <template>
   <BlockCard class="schedule-card" :framed="cfg.framed" :backgrounded="cfg.backgrounded" :content-style="{ padding: 0 }">
-    <div class="schedule-block">
-      <div class="schedule-header">
-        <div class="header-left">
-          <div class="header-icon">
-            <NIcon :component="CalendarNumberOutline" />
-          </div>
-          <span class="header-title">SCHEDULE</span>
+    <section class="schedule" aria-labelledby="schedule-title">
+      <header class="schedule-header">
+        <div class="header-title-wrap">
+          <NIcon size="20">
+            <CalendarNumberOutline />
+          </NIcon>
+          <h2 id="schedule-title">
+            直播日程
+          </h2>
         </div>
-        <div class="header-desc">
-          {{ cfg.weeksCount ?? 1 }} WEEK{{ (cfg.weeksCount ?? 1) > 1 ? 'S' : '' }}
-        </div>
-      </div>
+        <span class="week-count">未来 {{ cfg.weeksCount }} 周</span>
+      </header>
 
-      <!-- Actions Toolbar -->
-      <div v-if="cfg.showIcs && userInfo?.id" class="ics-toolbar">
-        <div class="ics-link" @click="copyToClipboard(`${SCHEDULE_API_URL}${userInfo.id}.ics`)">
-          <span class="ics-url">{{ `${SCHEDULE_API_URL}${userInfo.id}.ics` }}</span>
-          <NButton size="tiny" secondary class="copy-btn">
-            Copy
-          </NButton>
-        </div>
+      <div v-if="cfg.showIcs && icsUrl" class="calendar-action">
+        <input :value="icsUrl" readonly aria-label="日历订阅链接" @focus="($event.target as HTMLInputElement).select()">
+        <NButton
+          size="small"
+          secondary
+          :theme-overrides="buttonThemeOverrides"
+          :disabled="copyState === 'success'"
+          @click="copyCalendarUrl"
+        >
+          <template #icon>
+            <NIcon><CopyOutline /></NIcon>
+          </template>
+          {{ copyState === 'success' ? '已复制' : '复制' }}
+        </NButton>
+        <span class="copy-feedback" role="status" aria-live="polite">{{ copyMessage }}</span>
       </div>
 
       <div class="schedule-body">
-        <NSpin :show="isLoading" size="small">
-          <NAlert v-if="error" type="error" :show-icon="true" class="mb-4">
-            {{ error }}
-          </NAlert>
-
-          <div v-else-if="!userInfo?.id" class="empty-state">
-            User info missing
-          </div>
-
-          <div v-else-if="flatRows.length === 0" class="empty-state">
-            No schedule available
-          </div>
-
-          <template v-else>
-            <!-- Table Layout -->
-            <div v-if="cfg.layout === 'table'" class="schedule-table-wrapper">
-              <table class="schedule-table">
-                <thead>
-                  <tr>
-                    <th>WEEK</th>
-                    <th>DAY</th>
-                    <th>TIME</th>
-                    <th>CONTENT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(r, idx) in flatRows"
-                    :key="idx"
-                    :class="{ 'row-today': cfg.highlightToday && r.isToday }"
-                  >
-                    <td class="font-mono opacity-70">
-                      {{ r.week.year }}W{{ r.week.week }}
-                    </td>
-                    <td class="font-bold">
-                      {{ dayLabel(r.dayIdx) }}
-                      <NTag v-if="cfg.highlightToday && r.isToday" type="primary" size="small" :bordered="false" class="ml-2">
-                        TODAY
-                      </NTag>
-                    </td>
-                    <td class="font-mono">
-                      {{ r.time }}
-                    </td>
-                    <td>
-                      <span>{{ r.title }}</span>
-                      <NTag
-                        v-if="cfg.showTag && r.tag"
-                        size="small"
-                        :style="r.tagColor ? `margin-left: 6px; background:${r.tagColor}; color:#fff; border-color:${r.tagColor};` : 'margin-left: 6px'"
-                        :bordered="false"
-                      >
-                        {{ r.tag }}
-                      </NTag>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+        <NSpin :show="loading" size="small">
+          <NAlert v-if="failed" type="error" :show-icon="true">
+            <div class="remote-state">
+              <span>日程加载失败，请稍后重试</span>
+              <NButton size="small" secondary :theme-overrides="buttonThemeOverrides" @click="loadSchedule(true)">
+                <template #icon>
+                  <NIcon><RefreshOutline /></NIcon>
+                </template>
+                重试
+              </NButton>
             </div>
+          </NAlert>
+          <div v-else-if="!userInfo?.id" class="empty-state">
+            暂未关联用户信息
+          </div>
+          <div v-else-if="!loading && rows.length === 0" class="empty-state">
+            暂无直播日程
+          </div>
 
-            <!-- Timeline Layout (Default) -->
-            <div v-else class="timeline-list">
-              <div
-                v-for="(r, idx) in flatRows"
-                :key="idx"
-                class="timeline-item"
-                :class="{ 'is-today': cfg.highlightToday && r.isToday }"
-              >
-                <div class="timeline-time">
-                  <div class="day-label">
-                    {{ dayLabel(r.dayIdx) }}
-                  </div>
-                  <div class="time-val">
-                    {{ r.time }}
-                  </div>
-                </div>
-
-                <div class="timeline-connector">
-                  <div class="connector-dot" :class="{ 'active': cfg.highlightToday && r.isToday }" />
-                  <div class="connector-line" />
-                </div>
-
-                <div class="timeline-content">
-                  <div class="content-header">
-                    <span class="content-title">{{ r.title }}</span>
-                    <NTag v-if="cfg.highlightToday && r.isToday" type="primary" size="small" :bordered="false" round>
-                      TODAY
+          <div v-else-if="cfg.layout === 'table'" class="table-wrap" tabindex="0" aria-label="直播日程表，可横向滚动">
+            <table>
+              <thead><tr><th>周次</th><th>日期</th><th>时间</th><th>内容</th></tr></thead>
+              <tbody>
+                <tr v-for="row in rows" :key="row.key" :class="{ today: cfg.highlightToday && row.isToday }">
+                  <td>{{ row.year }} 年第 {{ row.week }} 周</td>
+                  <td>
+                    {{ dayLabel(row.dayIndex) }}
+                    <NTag v-if="cfg.highlightToday && row.isToday" type="primary" size="small" :bordered="false">
+                      今天
                     </NTag>
-                  </div>
-                  <div class="content-meta">
-                    <span v-if="r.tag" class="meta-tag" :style="{ color: r.tagColor || 'var(--n-primary-color)' }">
-                      #{{ r.tag }}
-                    </span>
-                    <span class="meta-week">{{ r.week.year }}W{{ r.week.week }}</span>
-                  </div>
+                  </td>
+                  <td class="time">
+                    {{ row.time }}
+                  </td>
+                  <td>
+                    {{ row.title }}
+                    <NTag v-if="cfg.showTag && row.tag" size="small" :bordered="false" :style="{ color: row.tagColor || undefined }">
+                      {{ row.tag }}
+                    </NTag>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else class="timeline">
+            <article v-for="row in rows" :key="row.key" class="timeline-item" :class="{ today: cfg.highlightToday && row.isToday }">
+              <time class="timeline-time">{{ dayLabel(row.dayIndex) }}<strong>{{ row.time }}</strong></time>
+              <div class="timeline-content">
+                <div class="item-heading">
+                  <strong>{{ row.title }}</strong>
+                  <NTag v-if="cfg.highlightToday && row.isToday" type="primary" size="small" :bordered="false">
+                    今天
+                  </NTag>
+                </div>
+                <div class="item-meta">
+                  <span v-if="cfg.showTag && row.tag" :style="{ color: row.tagColor || undefined }">#{{ row.tag }}</span>
+                  <span>{{ row.year }} 年第 {{ row.week }} 周</span>
                 </div>
               </div>
-            </div>
-          </template>
+            </article>
+          </div>
         </NSpin>
       </div>
-    </div>
+    </section>
   </BlockCard>
 </template>
 
 <style scoped>
-.schedule-block {
-  width: 100%;
-}
+.schedule { container-type: inline-size; color: var(--vtsuru-block-fg); }
+.schedule-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--vtsuru-block-border); background: var(--vtsuru-block-bg-muted); }
+.header-title-wrap { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.header-title-wrap h2 { margin: 0; font-size: 15px; line-height: 1.4; letter-spacing: 0; }
+.week-count { flex: none; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
+.calendar-action { position: relative; display: flex; gap: 8px; padding: 12px 20px 28px; border-bottom: 1px solid var(--vtsuru-block-border); }
+.calendar-action input { min-width: 0; flex: 1; padding: 7px 9px; border: 1px solid var(--vtsuru-block-border); border-radius: 6px; color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); caret-color: var(--vtsuru-block-fg); font: 12px ui-monospace, monospace; }
+.calendar-action input:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 1px; }
+.copy-feedback { position: absolute; left: 20px; bottom: 7px; color: var(--vtsuru-block-fg-muted); font-size: 11px; }
+.schedule-body { min-height: 90px; padding: 20px; }
+.remote-state { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.empty-state { padding: 24px; color: var(--vtsuru-block-fg-muted); text-align: center; }
+.table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--vtsuru-block-border); border-radius: 6px; }
+.table-wrap:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 2px; }
+table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 11px 12px; border-bottom: 1px solid var(--vtsuru-block-border); text-align: left; vertical-align: middle; }
+th { color: var(--vtsuru-block-fg-muted); background: var(--vtsuru-block-bg-muted); font-size: 12px; font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+tr.today { background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent); }
+.time { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.timeline { display: grid; gap: 2px; }
+.timeline-item { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 16px; padding: 14px; border-left: 3px solid var(--vtsuru-block-border); }
+.timeline-item.today { border-left-color: var(--vtsuru-page-primary); background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent); }
+.timeline-time { color: var(--vtsuru-block-fg-muted); font-size: 12px; text-align: right; }
+.timeline-time strong { display: block; margin-top: 4px; color: var(--vtsuru-block-fg); font: 600 13px ui-monospace, monospace; }
+.timeline-content { min-width: 0; }
+.item-heading { display: flex; align-items: flex-start; gap: 8px; }
+.item-heading strong { overflow-wrap: anywhere; line-height: 1.45; }
+.item-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
 
-.schedule-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--n-divider-color);
-  background: var(--n-action-color);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(var(--n-primary-color-rgb), 0.12);
-  color: var(--n-primary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-.header-title {
-  font-weight: 800;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.header-desc {
-  font-size: 12px;
-  font-weight: 700;
-  opacity: 0.5;
-  letter-spacing: 0.05em;
-}
-
-.ics-toolbar {
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--n-divider-color);
-  background: transparent;
-}
-
-.ics-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--n-fill-color);
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.ics-link:hover {
-  background: var(--n-action-color);
-}
-
-.ics-url {
-  font-family: monospace;
-  font-size: 12px;
-  opacity: 0.6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 12px;
-}
-
-.schedule-body {
-  padding: 24px;
-}
-
-.schedule-table-wrapper {
-  overflow-x: auto;
-}
-
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.schedule-table th {
-  text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid var(--n-divider-color);
-  font-size: 12px;
-  opacity: 0.5;
-  font-weight: 700;
-}
-
-.schedule-table td {
-  padding: 16px 12px;
-  border-bottom: 1px solid var(--n-divider-color);
-}
-
-.row-today {
-  background: rgba(var(--n-primary-color-rgb), 0.1);
-}
-
-/* Timeline Styles */
-.timeline-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.timeline-item {
-  display: flex;
-  position: relative;
-  padding-bottom: 32px;
-}
-
-.timeline-item:last-child {
-  padding-bottom: 0;
-}
-
-.timeline-item:last-child .connector-line {
-  display: none;
-}
-
-.timeline-time {
-  width: 60px;
-  text-align: right;
-  padding-right: 16px;
-  padding-top: 2px;
-}
-
-.day-label {
-  font-weight: 800;
-  font-size: 14px;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.time-val {
-  font-family: monospace;
-  font-size: 13px;
-  opacity: 0.6;
-}
-
-.timeline-connector {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 20px;
-}
-
-.connector-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
-  border: 2px solid rgba(255,255,255,0.2);
-  z-index: 2;
-  transition: all 0.3s;
-}
-
-.connector-dot.active {
-  background: var(--n-primary-color);
-  border-color: var(--n-primary-color);
-  box-shadow: 0 0 0 4px rgba(var(--n-primary-color-rgb), 0.2);
-}
-
-.connector-line {
-  position: absolute;
-  top: 12px;
-  bottom: -40px; /* Connect to next */
-  width: 2px;
-  background: rgba(255,255,255,0.1);
-  z-index: 1;
-}
-
-.timeline-content {
-  flex: 1;
-  padding-left: 20px;
-  padding-top: 0;
-}
-
-.content-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 6px;
-}
-
-.content-title {
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.content-meta {
-  font-size: 13px;
-  display: flex;
-  gap: 12px;
-  opacity: 0.6;
-}
-
-.meta-tag {
-  font-weight: 600;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  opacity: 0.5;
-  font-style: italic;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-.ml-2 {
-  margin-left: 8px;
-}
-.font-mono {
-  font-family: monospace;
-}
-.font-bold {
-  font-weight: 700;
-}
-.opacity-70 {
-  opacity: 0.7;
+@container (max-width: 440px) {
+  .schedule-header { align-items: flex-start; padding: 14px; }
+  .calendar-action { padding-inline: 14px; }
+  .copy-feedback { left: 14px; }
+  .schedule-body { padding: 14px; }
+  .timeline-item { grid-template-columns: 58px minmax(0, 1fr); gap: 10px; padding: 12px 8px; }
+  .remote-state { align-items: flex-start; flex-direction: column; }
 }
 </style>

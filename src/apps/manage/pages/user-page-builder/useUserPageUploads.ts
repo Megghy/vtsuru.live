@@ -2,15 +2,16 @@ import { UserFileLocation, UserFileTypes } from '@/api/api-models'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { uploadFiles } from '@/shared/services/fileUpload'
+import { UploadStage, uploadFiles } from '@/shared/services/fileUpload'
+import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { Ref } from 'vue'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 type UploadKey = 'imageFile' | 'avatarFile'
 
 type PendingUploadContext =
   | { kind: 'block', blockId: string, key: UploadKey }
-  | { kind: 'galleryItem', blockId: string, itemIndex: number }
+  | { kind: 'galleryItem', blockId: string, item: Record<string, any> }
   | { kind: 'galleryBulk', blockId: string }
   | { kind: 'pageBackground' }
   | { kind: 'globalBackground' }
@@ -29,8 +30,9 @@ export interface UseUserPageUploadsOptions {
 
 export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   const isUploading = ref(false)
+  const uploadQueue = ref<Array<{ name: string, stage: UploadStage }>>([])
   const uploadInput = ref<HTMLInputElement | null>(null)
-  const pendingUpload = ref<PendingUploadContext | null>(null)
+  const pendingUpload = shallowRef<PendingUploadContext | null>(null)
 
   function asObject(v: unknown): Record<string, any> | null {
     if (!v || typeof v !== 'object') return null
@@ -83,7 +85,13 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('无效的图片索引')
       return
     }
-    pendingUpload.value = { kind: 'galleryItem', blockId: block.id, itemIndex }
+    const items = opts.ensurePropsObject(block).items
+    const item = Array.isArray(items) ? asObject(items[itemIndex]) : null
+    if (!item) {
+      opts.notify.error('找不到要上传到的图片项')
+      return
+    }
+    pendingUpload.value = { kind: 'galleryItem', blockId: block.id, item }
     uploadInput.value?.click()
   }
 
@@ -181,7 +189,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
         if (ctx.kind === 'galleryItem') {
           if (block.type !== 'imageGallery') return false
           if (!Array.isArray(propsObj.items)) return true
-          const it = propsObj.items[ctx.itemIndex]
+          const it = ctx.item
           if (!it || typeof it !== 'object' || Array.isArray(it)) return true
           const hasFile = !!it.imageFile
           const hasUrl = typeof it.url === 'string' && it.url.trim().length > 0
@@ -205,8 +213,16 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     }
 
     isUploading.value = true
+    uploadQueue.value = files.map(file => ({ name: file.name, stage: UploadStage.Preparing }))
     try {
-      const uploadedList = await uploadFiles(isBulk ? files : files[0], UserFileTypes.Image, UserFileLocation.Local)
+      const uploadedList = await uploadFiles(
+        isBulk ? files : files[0],
+        UserFileTypes.Image,
+        UserFileLocation.Local,
+        (stage) => {
+          uploadQueue.value = uploadQueue.value.map(item => ({ ...item, stage: stage as UploadStage }))
+        },
+      )
       if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
       if (ctx.kind === 'pageBackground') {
         project.theme ??= {}
@@ -231,9 +247,8 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
           const propsObj = opts.ensurePropsObject(block)
           if (block.type !== 'imageGallery') throw new Error('当前区块不是图片组，无法写入上传结果')
           if (!Array.isArray(propsObj.items)) propsObj.items = []
-          if (ctx.itemIndex >= propsObj.items.length) throw new Error('找不到要上传到的图片项，可能已被删除')
-          const it = propsObj.items[ctx.itemIndex]
-          if (!it || typeof it !== 'object' || Array.isArray(it)) throw new Error('图片项数据异常，无法写入上传结果')
+          const it = propsObj.items.find((item: unknown) => item === ctx.item)
+          if (!it) throw new Error('找不到要上传到的图片项，可能已被删除或撤销')
           it.imageFile = uploadedList[0]
         } else if (ctx.kind === 'galleryBulk') {
           const propsObj = opts.ensurePropsObject(block)
@@ -248,6 +263,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       }
       opts.notify.success('已上传')
     } catch (e) {
+      reportUserPageError(e, 'upload')
       opts.notify.error((e as Error).message || String(e))
     } finally {
       isUploading.value = false
@@ -289,6 +305,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
 
   return {
     isUploading,
+    uploadQueue,
     uploadInput,
     pendingUpload,
     triggerUpload,

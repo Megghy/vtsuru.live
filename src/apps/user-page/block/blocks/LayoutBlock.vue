@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
 import type { BlockNode } from '../schema'
+import type { BiliProfileStatus } from '../../types'
 import { BLOCK_COMPONENTS } from '../registry'
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
@@ -9,6 +10,7 @@ const props = defineProps<{
   blockProps: unknown
   userInfo: UserInfo | undefined
   biliInfo: any | undefined
+  biliStatus?: BiliProfileStatus
   highlightBlockId?: string | null
 }>()
 
@@ -139,7 +141,7 @@ const blockComponents = BLOCK_COMPONENTS
         row: layout === 'row',
         column: layout === 'column',
         wrap: wrap && layout === 'row',
-        'align-stretch': layout === 'row' && alignKey === 'stretch',
+        'align-stretch': layout !== 'column' && alignKey === 'stretch',
       }"
       :style="containerStyle"
     >
@@ -156,6 +158,7 @@ const blockComponents = BLOCK_COMPONENTS
           :block-props="child.props"
           :user-info="userInfo"
           :bili-info="biliInfo"
+          :bili-status="biliStatus"
           v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
         />
       </div>
@@ -169,7 +172,7 @@ const blockComponents = BLOCK_COMPONENTS
       row: layout === 'row',
       column: layout === 'column',
       wrap: wrap && layout === 'row',
-      'align-stretch': layout === 'row' && alignKey === 'stretch',
+      'align-stretch': layout !== 'column' && alignKey === 'stretch',
     }"
     :style="containerStyle"
   >
@@ -186,6 +189,7 @@ const blockComponents = BLOCK_COMPONENTS
         :block-props="child.props"
         :user-info="userInfo"
         :bili-info="biliInfo"
+        :bili-status="biliStatus"
         v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
       />
     </div>
@@ -211,12 +215,12 @@ const blockComponents = BLOCK_COMPONENTS
   min-width: 0;
 }
 
-.layout.row.align-stretch .item {
+.layout.align-stretch .item {
   align-self: stretch;
   display: flex;
 }
 
-.layout.row.align-stretch .item > :deep(*) {
+.layout.align-stretch .item > :deep(*) {
   flex: 1;
   min-width: 0;
 }
@@ -243,7 +247,7 @@ const blockComponents = BLOCK_COMPONENTS
 }
 
 .item.highlight {
-  outline: 1px solid rgba(0, 0, 0, 0);
+  outline: 1px solid transparent;
 }
 
 .item.highlight::before {
@@ -265,9 +269,9 @@ const blockComponents = BLOCK_COMPONENTS
   font-size: 11px;
   line-height: 16px;
   border-radius: 999px;
-  background: var(--user-page-ui-surface-bg, rgba(0, 0, 0, 0.45));
+  background: var(--vtsuru-bg-elevated);
   border: 1px solid var(--vtsuru-page-primary);
-  color: var(--vtsuru-page-text, var(--n-text-color, #fff));
+  color: var(--vtsuru-fg);
   pointer-events: none;
   user-select: none;
 }

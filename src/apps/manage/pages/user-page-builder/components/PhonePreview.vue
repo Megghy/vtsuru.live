@@ -1,11 +1,29 @@
 <script setup lang="ts">
-const props = defineProps<{ transparent?: boolean }>()
+import { ref, watchEffect } from 'vue'
+import { applyThemeCssVars, buildTokens } from '@/shared/config/theme'
+
+export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
+
+const props = withDefaults(defineProps<{
+  isDark: boolean
+  transparent?: boolean
+  viewport?: PreviewViewport
+}>(), {
+  viewport: 'phone',
+})
+
+const previewRoot = ref<HTMLElement | null>(null)
+
+watchEffect(() => {
+  if (!previewRoot.value) return
+  applyThemeCssVars(buildTokens(props.isDark), previewRoot.value)
+})
 </script>
 
 <template>
-  <div class="phone-preview">
-    <div class="device">
-      <div class="notch" />
+  <div ref="previewRoot" class="responsive-preview" :class="`responsive-preview--${props.viewport}`">
+    <div class="device" :class="`device--${props.viewport}`">
+      <div v-if="props.viewport !== 'desktop'" class="device-bar" />
       <div class="screen" :class="{ transparent: !!props.transparent }">
         <div class="screen-bg">
           <slot name="background" />
@@ -19,40 +37,63 @@ const props = defineProps<{ transparent?: boolean }>()
 </template>
 
 <style scoped>
-.phone-preview {
+.responsive-preview {
   display: flex;
+  justify-content: center;
+  align-items: flex-start;
   width: 100%;
   height: 100%;
-  padding: 0;
+  min-height: 520px;
+  padding: 12px;
+  overflow: auto;
 }
 
 .device {
-  width: 100%;
-  height: 100%;
+  width: min(100%, 390px);
+  height: min(100%, 844px);
+  min-height: 520px;
   background: #111;
-  border-radius: 28px;
-  padding: 12px;
+  border-radius: 24px;
+  padding: 10px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
 }
 
-.notch {
-  width: 120px;
-  height: 18px;
-  margin: 2px auto 10px;
-  border-radius: 12px;
+.device--tablet {
+  width: min(100%, 768px);
+  height: min(100%, 1024px);
+  border-radius: 18px;
+}
+
+.device--desktop {
+  width: min(100%, 1180px);
+  height: 100%;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.device-bar {
+  width: 72px;
+  height: 5px;
+  margin: 1px auto 8px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.12);
 }
 
 .screen {
   position: relative;
-  background: var(--n-color);
-  border-radius: 20px;
+  background: var(--vtsuru-bg);
+  border-radius: 16px;
   overflow: hidden;
   padding: 0;
   flex: 1;
   min-height: 0;
+}
+
+.device--desktop .screen {
+  border-radius: 4px;
 }
 
 .screen.transparent {

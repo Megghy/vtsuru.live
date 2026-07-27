@@ -1,6 +1,8 @@
+import type { QueryRequestOptions } from '@/api/query'
+import type { UserInfo } from '@/api/api-models'
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
-import { USER_PAGES_API_URL } from '@/shared/config'
-import { normalizeUserPagesSettingsV1InPlace } from './normalize'
+import { USER_API_URL, USER_PAGES_API_URL } from '@/shared/config'
+import { migrateUserPagesSettings } from './normalize'
 import type { UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
 
 function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
@@ -11,16 +13,23 @@ function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
     throw new Error('用户页面配置不是合法 JSON')
   }
 
-  if (!parsed || typeof parsed !== 'object') throw new Error('用户页面配置格式错误')
-  const v = (parsed as any).version
-  if (v !== 1) throw new Error(`用户页面配置 version 不支持: ${String(v)}`)
-  const settings = parsed as UserPagesSettingsV1
-  normalizeUserPagesSettingsV1InPlace(settings)
-  return settings
+  return migrateUserPagesSettings(parsed)
 }
 
-export async function fetchUserPagesSettingsByUserId(userId: number): Promise<UserPagesSettingsV1 | null> {
-  const resp = await QueryGetAPI<string>(`${USER_PAGES_API_URL}get-user`, { id: userId, _ts: Date.now() })
+export async function fetchPublicUserInfo(
+  routeId: string,
+  options?: QueryRequestOptions,
+): Promise<UserInfo | null> {
+  const resp = await QueryGetAPI<UserInfo>(`${USER_API_URL}info`, { id: routeId }, undefined, options)
+  if (resp.code === 404) return null
+  return unwrapOk(resp, '无法获取用户信息')
+}
+
+export async function fetchUserPagesSettingsByUserId(
+  userId: number,
+  options?: QueryRequestOptions,
+): Promise<UserPagesSettingsV1 | null> {
+  const resp = await QueryGetAPI<string>(`${USER_PAGES_API_URL}get-user`, { id: userId, _ts: Date.now() }, undefined, options)
   if (resp.code === 404) return null
   const raw = unwrapOk(resp, '无法获取用户页面配置')
   return parseUserPagesSettings(raw)

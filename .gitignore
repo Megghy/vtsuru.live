@@ -37,6 +37,9 @@ env.d.ts
 
 /VTsuru/
 VTsuru
-docs/
+/docs/*
+!/docs/user_page_builder/
+/docs/user_page_builder/*
+!/docs/user_page_builder/IMPROVEMENT_PLAN.md
 # eslint cache
 .eslintcache

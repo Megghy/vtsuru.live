@@ -1,166 +1,185 @@
 <script setup lang="ts">
-import { NCarousel } from 'naive-ui';
-import { computed } from 'vue'
+import { NCarousel, NEmpty } from 'naive-ui'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import BlockCard from '../BlockCard.vue'
-
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
 type GalleryLayout = 'grid' | 'masonry' | 'carousel'
 type GalleryFit = 'cover' | 'contain'
-interface GalleryItem { src: string, desc: string }
-
 type CarouselEffect = 'slide' | 'fade' | 'card' | 'custom'
 type CarouselDotType = 'dot' | 'line'
 type CarouselDotPlacement = 'top' | 'bottom' | 'left' | 'right'
 type CarouselTrigger = 'click' | 'hover'
 
+interface GalleryItem {
+  src: string
+  desc: string
+  alt: string
+}
+
+const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+
 const model = computed(() => {
   const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
-    ? (props.blockProps as any)
+    ? (props.blockProps as Record<string, unknown>)
     : {}
-
-  const framed = typeof o.framed === 'boolean' ? o.framed : true
-
-  const layout: GalleryLayout = (o.layout === 'masonry' || o.layout === 'carousel') ? o.layout : 'grid'
-  const columns = (Number.isFinite(Number(o.columns)) && Number(o.columns) >= 1) ? Math.min(12, Math.max(1, Number(o.columns))) : 3
-  const gap = (Number.isFinite(Number(o.gap)) && Number(o.gap) >= 0) ? Math.min(80, Math.max(0, Number(o.gap))) : 12
-  const maxWidth = typeof o.maxWidth === 'string' ? o.maxWidth : ''
-  const maxHeight = typeof o.maxHeight === 'string' ? o.maxHeight : ''
-  const fit: GalleryFit = (o.fit === 'contain') ? 'contain' : 'cover'
-  const autoplay = typeof o.autoplay === 'boolean' ? o.autoplay : false
-  const interval = (() => {
-    const v = Number(o.interval)
-    if (Number.isFinite(v) && v >= 1000) return Math.min(20000, Math.max(1000, v))
-    const legacy = Number(o.intervalMs)
-    if (Number.isFinite(legacy) && legacy >= 1000) return Math.min(20000, Math.max(1000, legacy))
-    return 5000
-  })()
-
-  const effect: CarouselEffect = (o.effect === 'fade' || o.effect === 'card' || o.effect === 'custom') ? o.effect : 'slide'
-  const dotType: CarouselDotType = 'line'
-  const dotPlacement: CarouselDotPlacement = (o.dotPlacement === 'top' || o.dotPlacement === 'left' || o.dotPlacement === 'right') ? o.dotPlacement : 'bottom'
-  const showDots = typeof o.showDots === 'boolean' ? o.showDots : true
-  const showArrow = true
-  const loop = true
-  const draggable = true
-  const touchable = true
-  const trigger: CarouselTrigger = 'click'
-
+  const layout: GalleryLayout = o.layout === 'masonry' || o.layout === 'carousel' ? o.layout : 'grid'
+  const columns = Number(o.columns)
+  const gap = Number(o.gap)
+  const interval = Number(o.interval)
   const rawItems = Array.isArray(o.items) ? o.items : []
-  const items: GalleryItem[] = rawItems
-    .map((it: any) => {
-      const obj = (it && typeof it === 'object' && !Array.isArray(it)) ? it : {}
-      const file = (obj.imageFile && typeof obj.imageFile === 'object' && !Array.isArray(obj.imageFile)) ? obj.imageFile : null
-      const src = (file && typeof file.path === 'string' && file.path) ? file.path : (typeof obj.url === 'string' ? obj.url : '')
-      const desc = typeof obj.desc === 'string' ? obj.desc : (typeof obj.alt === 'string' ? obj.alt : '')
-      return {
-        src,
-        desc,
-      }
-    })
-    .filter(it => !!it.src)
+  const items = rawItems.flatMap((item): GalleryItem[] => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return []
+    const value = item as Record<string, unknown>
+    const file = value.imageFile && typeof value.imageFile === 'object' && !Array.isArray(value.imageFile)
+      ? value.imageFile as Record<string, unknown>
+      : undefined
+    const src = typeof file?.path === 'string' && file.path
+      ? file.path
+      : typeof value.url === 'string' ? value.url : ''
+    if (!src) return []
+    const desc = typeof value.desc === 'string' ? value.desc : ''
+    const alt = typeof value.alt === 'string' ? value.alt : ''
+    return [{ src, desc, alt }]
+  })
 
   return {
-    framed,
+    framed: typeof o.framed === 'boolean' ? o.framed : false,
+    backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : false,
     layout,
-    columns,
-    gap,
-    maxWidth,
-    maxHeight,
-    fit,
-    autoplay,
-    interval,
-    effect,
-    dotType,
-    dotPlacement,
-    showArrow,
-    showDots,
-    loop,
-    draggable,
-    touchable,
-    trigger,
+    columns: Number.isInteger(columns) ? Math.min(12, Math.max(1, columns)) : 3,
+    gap: Number.isFinite(gap) ? Math.min(80, Math.max(0, gap)) : 12,
+    maxWidth: typeof o.maxWidth === 'string' ? o.maxWidth.trim() : '',
+    maxHeight: typeof o.maxHeight === 'string' ? o.maxHeight.trim() : '',
+    fit: (o.fit === 'contain' ? 'contain' : 'cover') as GalleryFit,
+    autoplay: typeof o.autoplay === 'boolean' ? o.autoplay : false,
+    interval: Number.isFinite(interval) ? Math.min(20000, Math.max(1000, interval)) : 5000,
+    effect: (['fade', 'card', 'custom'].includes(String(o.effect)) ? o.effect : 'slide') as CarouselEffect,
+    dotType: (o.dotType === 'dot' ? 'dot' : 'line') as CarouselDotType,
+    dotPlacement: (['top', 'left', 'right'].includes(String(o.dotPlacement)) ? o.dotPlacement : 'bottom') as CarouselDotPlacement,
+    showArrow: typeof o.showArrow === 'boolean' ? o.showArrow : true,
+    showDots: typeof o.showDots === 'boolean' ? o.showDots : true,
+    loop: typeof o.loop === 'boolean' ? o.loop : true,
+    draggable: typeof o.draggable === 'boolean' ? o.draggable : true,
+    touchable: typeof o.touchable === 'boolean' ? o.touchable : true,
+    trigger: (o.trigger === 'hover' ? 'hover' : 'click') as CarouselTrigger,
     items,
   }
 })
 
+const activeIndex = ref(0)
+const failedSources = ref(new Set<string>())
+const loadedSources = ref(new Set<string>())
+const reducedMotion = ref(false)
+let motionQuery: MediaQueryList | undefined
+
+function updateMotionPreference(event: MediaQueryListEvent | MediaQueryList) {
+  reducedMotion.value = event.matches
+}
+
+onMounted(() => {
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  updateMotionPreference(motionQuery)
+  motionQuery.addEventListener('change', updateMotionPreference)
+})
+
+onBeforeUnmount(() => motionQuery?.removeEventListener('change', updateMotionPreference))
+
+function markLoaded(src: string) {
+  loadedSources.value = new Set(loadedSources.value).add(src)
+}
+
+function markFailed(src: string) {
+  failedSources.value = new Set(failedSources.value).add(src)
+}
+
 const containerStyle = computed(() => ({
-  width: '100%',
-  maxWidth: model.value.maxWidth?.trim() ? model.value.maxWidth.trim() : undefined,
-  ['--vtsuru-gallery-cols' as any]: String(model.value.columns),
-  ['--vtsuru-gallery-gap' as any]: `${model.value.gap}px`,
+  maxWidth: model.value.maxWidth || undefined,
+  '--vtsuru-gallery-cols': String(model.value.columns),
+  '--vtsuru-gallery-gap': `${model.value.gap}px`,
 }))
 
-const fixedCarousel = computed(() => {
-  if (model.value.layout !== 'carousel') return false
-  if (model.value.maxHeight?.trim()) return true
-  return model.value.effect !== 'slide'
-})
-
-const carouselStyle = computed(() => {
-  const style: Record<string, string> = { width: '100%' }
-  const maxHeight = model.value.maxHeight?.trim()
-  if (maxHeight) style.height = maxHeight
-  else if (model.value.effect !== 'slide') style.aspectRatio = '16 / 9'
-  return style
-})
-
-const imgStyle = computed(() => ({
-  objectFit: model.value.fit,
-  maxHeight: (model.value.layout !== 'masonry' && model.value.maxHeight?.trim()) ? model.value.maxHeight.trim() : undefined,
+const carouselStyle = computed(() => ({
+  height: model.value.maxHeight || undefined,
+  aspectRatio: model.value.maxHeight ? undefined : '16 / 9',
 }))
+
+const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc ?? '')
 </script>
 
 <template>
-  <BlockCard :framed="false" :backgrounded="false">
-    <div class="root" :style="containerStyle">
-      <NCarousel
-        v-if="model.layout === 'carousel'"
-        class="carousel"
-        :class="{ fixed: fixedCarousel }"
-        :style="carouselStyle"
-        :autoplay="model.autoplay"
-        :interval="model.interval"
-        :effect="model.effect"
-        :show-arrow="model.showArrow"
-        :show-dots="model.showDots"
-        :dot-type="model.dotType"
-        :dot-placement="model.dotPlacement"
-        :loop="model.loop"
-        :draggable="model.draggable"
-        :touchable="model.touchable"
-        :trigger="model.trigger"
-      >
-        <div v-for="(it, idx) in model.items" :key="idx" class="slide" :class="{ fixed: fixedCarousel }">
-          <div class="media">
+  <BlockCard :framed="model.framed" :backgrounded="model.backgrounded">
+    <div class="gallery" :style="containerStyle">
+      <NEmpty v-if="model.items.length === 0" size="small" description="暂无图片" />
+
+      <template v-else-if="model.layout === 'carousel'">
+        <NCarousel
+          class="carousel"
+          :style="carouselStyle"
+          :autoplay="model.autoplay && !reducedMotion"
+          :interval="model.interval"
+          :effect="model.effect"
+          :show-arrow="model.showArrow"
+          :show-dots="model.showDots"
+          :dot-type="model.dotType"
+          :dot-placement="model.dotPlacement"
+          :loop="model.loop"
+          :draggable="model.draggable"
+          :touchable="model.touchable"
+          :trigger="model.trigger"
+          @update:current-index="activeIndex = $event"
+        >
+          <div v-for="(item, index) in model.items" :key="`${item.src}-${index}`" class="slide">
+            <div
+              class="image-state"
+              :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+              role="status"
+            >
+              {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+            </div>
             <img
-              :src="it.src"
-              :alt="it.desc"
+              :src="item.src"
+              :alt="item.alt"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              decoding="async"
               referrerpolicy="no-referrer"
-              class="img"
-              :style="imgStyle"
+              class="image"
+              :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
+              :style="{ objectFit: model.fit }"
+              @load="markLoaded(item.src)"
+              @error="markFailed(item.src)"
             >
           </div>
-          <div v-if="it.desc" class="caption">
-            {{ it.desc }}
-          </div>
-        </div>
-      </NCarousel>
+        </NCarousel>
+        <p v-if="activeCaption" class="carousel-caption">
+          {{ activeCaption }}
+        </p>
+      </template>
 
-      <div
-        v-else
-        class="list"
-        :class="{ masonry: model.layout === 'masonry', grid: model.layout === 'grid' }"
-      >
-        <figure v-for="(it, idx) in model.items" :key="idx" class="item">
-          <img
-            :src="it.src"
-            :alt="it.desc"
-            referrerpolicy="no-referrer"
-            class="img"
-            :style="imgStyle"
-          >
-          <figcaption v-if="it.desc" class="caption">
-            {{ it.desc }}
+      <div v-else class="list" :class="model.layout">
+        <figure v-for="(item, index) in model.items" :key="`${item.src}-${index}`" class="item">
+          <div class="media" :class="{ masonry: model.layout === 'masonry' }">
+            <div
+              class="image-state"
+              :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+              role="status"
+            >
+              {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
+            </div>
+            <img
+              :src="item.src"
+              :alt="item.alt"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              decoding="async"
+              referrerpolicy="no-referrer"
+              class="image"
+              :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
+              :style="{ objectFit: model.fit, maxHeight: model.maxHeight || undefined }"
+              @load="markLoaded(item.src)"
+              @error="markFailed(item.src)"
+            >
+          </div>
+          <figcaption v-if="item.desc" class="caption">
+            {{ item.desc }}
           </figcaption>
         </figure>
       </div>
@@ -169,88 +188,37 @@ const imgStyle = computed(() => ({
 </template>
 
 <style scoped>
-.root {
-  display: block;
+.gallery { container-type: inline-size; width: 100%; }
+.carousel { width: 100%; min-height: 180px; border-radius: var(--vtsuru-page-radius); overflow: hidden; }
+.slide { position: relative; width: 100%; height: 100%; background: var(--vtsuru-bg-muted); }
+.image { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 180ms ease; }
+.image.loaded { opacity: 1; }
+.image.failed { visibility: hidden; }
+.list.grid { display: grid; grid-template-columns: repeat(var(--vtsuru-gallery-cols), minmax(0, 1fr)); gap: var(--vtsuru-gallery-gap); }
+.list.masonry { columns: var(--vtsuru-gallery-cols); column-gap: var(--vtsuru-gallery-gap); }
+.item { min-width: 0; margin: 0; }
+.list.masonry .item { break-inside: avoid; margin-bottom: var(--vtsuru-gallery-gap); }
+.media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--vtsuru-border); border-radius: var(--vtsuru-page-radius); background: var(--vtsuru-bg-muted); }
+.media.masonry { aspect-ratio: auto; min-height: 120px; }
+.media.masonry .image { height: auto; min-height: 120px; }
+.image-state { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; min-height: 120px; padding: 16px; color: var(--vtsuru-fg-muted); background: var(--vtsuru-bg-muted); font-size: 13px; text-align: center; }
+.image-state.hidden { visibility: hidden; }
+.caption, .carousel-caption { margin: 8px 0 0; color: var(--vtsuru-fg-muted); font-size: 13px; line-height: 1.5; text-align: center; overflow-wrap: anywhere; }
+.carousel-caption { min-height: 20px; padding-inline: 8px; }
+.carousel :deep(.n-carousel__arrow) { color: var(--vtsuru-fg); background: var(--vtsuru-bg-elevated); border: 1px solid var(--vtsuru-border); }
+.carousel :deep(.n-carousel__arrow:focus-visible) { outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand)); outline-offset: 2px; }
+
+@container (max-width: 640px) {
+  .list.grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); }
+  .list.masonry { columns: min(var(--vtsuru-gallery-cols), 2); }
+  .carousel { min-height: 160px; }
 }
-.carousel.fixed :deep(.n-carousel__slides) {
-  height: 100%;
+
+@container (max-width: 380px) {
+  .list.masonry { columns: 1; }
 }
-.carousel.fixed :deep(.n-carousel__slide) {
-  height: 100%;
-}
-.list.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--vtsuru-gallery-cols), minmax(0, 1fr));
-  gap: var(--vtsuru-gallery-gap);
-}
-.list.masonry {
-  columns: var(--vtsuru-gallery-cols);
-  column-gap: var(--vtsuru-gallery-gap);
-}
-.item {
-  margin: 0;
-}
-.list.masonry .item {
-  break-inside: avoid;
-  margin-bottom: var(--vtsuru-gallery-gap);
-}
-.img {
-  width: 100%;
-  border-radius: var(--vtsuru-page-radius);
-  border: 1px solid var(--n-divider-color);
-  display: block;
-  transition: opacity 0.3s ease;
-}
-.caption {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--n-text-color-3);
-  text-align: center;
-  font-weight: 500;
-}
-.carousel :deep(.n-carousel__dots) {
-  bottom: 12px;
-}
-.carousel :deep(.n-carousel__arrow) {
-  background-color: var(--user-page-ui-surface-bg, rgba(255, 255, 255, 0.2));
-  backdrop-filter: blur(4px);
-  border-radius: 50%;
-  color: var(--n-text-color, white);
-}
-.carousel :deep(.n-carousel__arrow:hover) {
-  background-color: var(--user-page-ui-surface-bg-hover, rgba(255, 255, 255, 0.4));
-}
-.slide {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-.carousel .caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 24px 16px 12px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.6));
-  color: white;
-  margin: 0;
-  text-align: left;
-  border-bottom-left-radius: var(--vtsuru-page-radius);
-  border-bottom-right-radius: var(--vtsuru-page-radius);
-}
-.slide.fixed {
-  height: 100%;
-}
-.media {
-  width: 100%;
-}
-.slide.fixed .media {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-.slide.fixed .img {
-  height: 100%;
+
+@media (prefers-reduced-motion: reduce) {
+  .image { transition: none; }
 }
 </style>

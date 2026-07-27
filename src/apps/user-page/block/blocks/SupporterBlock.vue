@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui';
+import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 import { ArrowForwardOutline, CafeOutline, CardOutline, CashOutline, FlashOutline, Heart as HeartIcon, LogoTwitch, LogoYoutube } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 
 type Platform = 'afdian' | 'kofi' | 'patreon' | 'paypal' | 'twitch' | 'youtube' | 'fanbox' | 'other'
 
-// ... existing code ...
 interface SupportItem {
   platform?: Platform
   url: string
@@ -28,7 +27,7 @@ const cfg = computed<BlockConfig>(() => {
     ? (props.blockProps as any)
     : {}
   return {
-    title: typeof o.title === 'string' ? o.title : 'SUPPORT',
+    title: typeof o.title === 'string' ? o.title : '支持',
     description: typeof o.description === 'string' ? o.description : '',
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
@@ -68,11 +67,11 @@ function platformLabel(p: Platform) {
   if (p === 'twitch') return 'Twitch'
   if (p === 'youtube') return 'YouTube'
   if (p === 'fanbox') return 'Fanbox'
-  return 'Support'
+  return '支持'
 }
 
 function getStyle(p: Platform) {
-  const presets: Record<string, { bg: string, fg: string }> = {
+  const presets: Record<Platform, { bg: string, fg: string }> = {
     afdian: { bg: '#946ce6', fg: '#ffffff' },
     kofi: { bg: '#ff5f5f', fg: '#ffffff' },
     patreon: { bg: '#ff424d', fg: '#ffffff' },
@@ -80,9 +79,9 @@ function getStyle(p: Platform) {
     twitch: { bg: '#9146FF', fg: '#ffffff' },
     youtube: { bg: '#ff0000', fg: '#ffffff' },
     fanbox: { bg: '#fff015', fg: '#000000' },
-    other: { bg: 'var(--n-primary-color)', fg: '#ffffff' },
+    other: { bg: 'var(--vtsuru-page-primary)', fg: 'var(--user-page-ui-surface-bg)' },
   }
-  return presets[p] || presets.other
+  return presets[p]
 }
 </script>
 
@@ -108,6 +107,7 @@ function getStyle(p: Platform) {
           :href="it.url"
           target="_blank"
           rel="noopener noreferrer"
+          :aria-label="`${it.label || platformLabel(it.platform)}（新窗口打开）`"
           :style="{
             '--accent-color': getStyle(it.platform).bg,
             '--accent-text': getStyle(it.platform).fg
@@ -119,7 +119,7 @@ function getStyle(p: Platform) {
           </div>
           <div class="card-content">
             <span class="platform-name">{{ it.label || platformLabel(it.platform) }}</span>
-            <span class="action-text">Support on {{ platformLabel(it.platform) }}</span>
+            <span class="action-text">前往 {{ platformLabel(it.platform) }} 支持</span>
           </div>
           <div class="arrow-icon">
             <NIcon :component="ArrowForwardOutline" />
@@ -127,7 +127,7 @@ function getStyle(p: Platform) {
         </a>
       </div>
       <div v-else class="empty-state">
-        Check back later for support links!
+        暂无支持链接
       </div>
     </div>
   </BlockCard>
@@ -136,6 +136,7 @@ function getStyle(p: Platform) {
 <style scoped>
 .supporter-block {
   position: relative;
+  color: var(--vtsuru-block-fg);
 }
 
 .block-header {
@@ -143,16 +144,16 @@ function getStyle(p: Platform) {
   align-items: center;
   gap: 12px;
   padding: 20px 24px;
-  border-bottom: 1px solid var(--n-divider-color);
-  background: var(--n-action-color);
+  border-bottom: 1px solid var(--vtsuru-block-border);
+  background: var(--vtsuru-block-bg-muted);
 }
 
 .header-icon {
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: rgba(var(--n-primary-color-rgb), 0.12);
-  color: var(--n-primary-color);
+  background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
+  color: var(--vtsuru-page-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,17 +161,18 @@ function getStyle(p: Platform) {
 }
 
 .header-title {
+  color: var(--vtsuru-block-fg);
   font-weight: 800;
   font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   opacity: 0.8;
 }
 
 .block-desc {
   padding: 16px 24px 0;
   font-size: 14px;
-  opacity: 0.7;
+  color: var(--vtsuru-block-fg-muted);
   white-space: pre-wrap;
 }
 
@@ -186,11 +188,11 @@ function getStyle(p: Platform) {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: var(--n-action-color);
+  background: var(--vtsuru-block-bg-muted);
   border-radius: 12px;
   text-decoration: none;
-  color: var(--n-text-color);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: var(--vtsuru-block-fg);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
@@ -222,7 +224,7 @@ function getStyle(p: Platform) {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: var(--n-fill-color);
+  background: var(--vtsuru-block-bg-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,10 +235,12 @@ function getStyle(p: Platform) {
   transition: transform 0.3s;
 }
 
+.support-card:focus-visible { outline: 2px solid var(--vtsuru-page-primary); outline-offset: 2px; }
+
 .support-card:hover .icon-box {
   transform: scale(1.1);
   background: var(--accent-color);
-  color: #fff;
+  color: var(--accent-text);
 }
 
 .card-content {
@@ -255,7 +259,7 @@ function getStyle(p: Platform) {
 
 .action-text {
   font-size: 12px;
-  opacity: 0.6;
+  color: var(--vtsuru-block-fg-muted);
   margin-top: 2px;
 }
 
@@ -264,7 +268,7 @@ function getStyle(p: Platform) {
   opacity: 0.3;
   position: relative;
   z-index: 1;
-  transition: all 0.3s;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
 }
 
 .support-card:hover .arrow-icon {
@@ -276,6 +280,11 @@ function getStyle(p: Platform) {
 .empty-state {
   padding: 24px;
   text-align: center;
-  opacity: 0.5;
+  color: var(--vtsuru-block-fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-card, .card-glow, .icon-box, .arrow-icon { transition: none; }
+  .support-card:hover, .support-card:hover .icon-box, .support-card:hover .arrow-icon { transform: none; }
 }
 </style>

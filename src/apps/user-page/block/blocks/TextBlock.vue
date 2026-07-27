@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NText } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 
@@ -17,9 +16,9 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
 
 <template>
   <BlockCard :framed="framed" :backgrounded="backgrounded">
-    <NText class="text-content">
+    <div class="text-content">
       {{ text }}
-    </NText>
+    </div>
   </BlockCard>
 </template>
 
@@ -29,6 +28,6 @@ const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boo
   display: block;
   line-height: 1.8;
   font-size: 14px;
-  color: var(--n-text-color);
+  color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 </style>

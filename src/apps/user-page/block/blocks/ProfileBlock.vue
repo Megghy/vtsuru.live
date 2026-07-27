@@ -35,12 +35,11 @@ const model = computed(() => {
         <NAvatar
           v-if="model.avatarUrl"
           :src="model.avatarUrl"
-          :img-props="{ referrerpolicy: 'no-referrer' }"
+          :img-props="{ referrerpolicy: 'no-referrer', loading: 'lazy', decoding: 'async', alt: model.displayName || '用户头像' }"
           round
           :size="120"
           class="profile-avatar"
         />
-        <div class="avatar-glow" />
       </div>
 
       <div class="profile-info">
@@ -72,43 +71,25 @@ const model = computed(() => {
 }
 
 .profile-avatar {
-  border: 4px solid var(--user-page-ui-surface-bg, var(--n-color, rgba(255, 255, 255, 0.7)));
+  border: 4px solid var(--vtsuru-block-bg-muted);
   position: relative;
   z-index: 2;
   box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-}
-
-.avatar-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 140px;
-  height: 140px;
-  background: var(--n-primary-color);
-  border-radius: 50%;
-  opacity: 0.2;
-  filter: blur(20px);
-  z-index: 1;
 }
 
 .profile-name {
   font-size: 32px;
   font-weight: 800;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   margin: 0 0 12px;
-  background: linear-gradient(135deg, var(--n-text-color) 30%, var(--n-text-color-3, var(--n-text-color)) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--vtsuru-block-fg);
 }
 
 .profile-bio {
   font-size: 15px;
   line-height: 1.6;
-  color: var(--n-text-color-2, var(--n-text-color));
-  opacity: 0.8;
+  color: var(--vtsuru-block-fg-muted);
   max-width: 500px;
   margin: 0 auto;
   white-space: pre-wrap;
