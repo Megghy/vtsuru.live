@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { BLOCK_LIBRARY, getBlockLabel } from '@/apps/user-page/block/registry'
-import { NButton, NDropdown, NIcon, NText } from 'naive-ui';
+import { NButton, NDropdown, NIcon, NText, NTooltip } from 'naive-ui';
 import { computed, inject } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import {
@@ -254,45 +254,60 @@ function scrollToPreviewBlock(blockId: string) {
           <AlertCircleOutline />
         </NIcon>
 
-        <NButton
-          quaternary
-          circle
-          size="tiny"
-          :type="b.hidden ? 'default' : 'primary'"
-          :title="b.hidden ? '点击显示区块' : '点击隐藏区块'"
-          @click.stop="b.hidden = !b.hidden"
-        >
-          <template #icon>
-            <NIcon>
-              <EyeOutline v-if="!b.hidden" />
-              <EyeOffOutline v-else />
-            </NIcon>
+        <NTooltip>
+          <template #trigger>
+            <NButton
+              quaternary
+              circle
+              size="tiny"
+              :type="b.hidden ? 'default' : 'primary'"
+              :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+              @click.stop="b.hidden = !b.hidden"
+            >
+              <template #icon>
+                <NIcon>
+                  <EyeOutline v-if="!b.hidden" />
+                  <EyeOffOutline v-else />
+                </NIcon>
+              </template>
+            </NButton>
           </template>
-        </NButton>
+          {{ b.hidden ? '显示区块' : '隐藏区块' }}
+        </NTooltip>
 
-        <NButton
-          quaternary
-          circle
-          size="tiny"
-          title="在预览中定位"
-          @click.stop="scrollToPreviewBlock(b.id)"
-        >
-          <template #icon>
-            <NIcon><LocateOutline /></NIcon>
+        <NTooltip>
+          <template #trigger>
+            <NButton
+              quaternary
+              circle
+              size="tiny"
+              aria-label="在预览中定位"
+              @click.stop="scrollToPreviewBlock(b.id)"
+            >
+              <template #icon>
+                <NIcon><LocateOutline /></NIcon>
+              </template>
+            </NButton>
           </template>
-        </NButton>
+          在预览中定位
+        </NTooltip>
 
-        <NDropdown
-          trigger="click"
-          :options="props.blockActionOptions"
-          @select="(key) => props.onBlockAction(String(key), b.id)"
-        >
-          <NButton quaternary circle size="tiny" @click.stop>
-            <template #icon>
-              <NIcon><EllipsisHorizontalOutline /></NIcon>
-            </template>
-          </NButton>
-        </NDropdown>
+        <NTooltip>
+          <template #trigger>
+            <NDropdown
+              trigger="click"
+              :options="props.blockActionOptions"
+              @select="(key) => props.onBlockAction(String(key), b.id)"
+            >
+              <NButton quaternary circle size="tiny" aria-label="更多区块操作" @click.stop>
+                <template #icon>
+                  <NIcon><EllipsisHorizontalOutline /></NIcon>
+                </template>
+              </NButton>
+            </NDropdown>
+          </template>
+          更多区块操作
+        </NTooltip>
       </div>
 
       <Transition

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NColorPicker, NDivider, NFlex, NForm, NFormItem, NInput, NInputNumber, NModal, NProgress, NRadioButton, NRadioGroup, NSelect, NSwitch, NText } from 'naive-ui';
-import { computed, inject, ref } from 'vue'
+import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NProgress, NRadioButton, NRadioGroup, NSelect, NSwitch, NText, NTooltip } from 'naive-ui';
+import { computed, inject } from 'vue'
+import { ColorPaletteOutline } from '@vicons/ionicons5'
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { UserPageEditorKey } from '../context'
 import BlockTypeEditor from './BlockTypeEditor.vue'
-import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
-import type {BackgroundSettingsTarget} from './BackgroundSettingsEditor.vue';
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
 import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
@@ -17,134 +16,13 @@ if (!editor) throw new Error('UserPageEditor context is missing')
 
 const uploadInput = editor.uploadInput
 
-const themePresets = [
-  {
-    label: '极简黑白',
-    value: 'mono',
-    theme: { primaryColor: '#111111', backgroundColor: '#ffffff', textColor: '#111111', radius: 12, spacing: 'normal' },
-  },
-  {
-    label: '赛博朋克',
-    value: 'cyber',
-    theme: { primaryColor: '#00e5ff', backgroundColor: '#0b1020', textColor: '#e6f7ff', radius: 14, spacing: 'relaxed' },
-  },
-  {
-    label: '少女粉',
-    value: 'pink',
-    theme: { primaryColor: '#ff4d9d', backgroundColor: '#fff0f6', textColor: '#2b2b2b', radius: 16, spacing: 'normal' },
-  },
-]
-
-const themePresetKey = ref<string | null>(null)
-const themePresetOptions = computed(() => themePresets.map(p => ({ label: p.label, value: p.value })))
-
-function applyThemePreset(key: string | null) {
-  if (!key) return
-  const preset = themePresets.find(p => p.value === key)
-  if (!preset) return
-  const theme = editor.currentTheme.value
-  if (!theme) return
-  Object.assign(theme, preset.theme)
-}
-
 const capacityStatus = computed(() => {
   if (editor.configBytes.value > editor.MAX_CONFIG_BYTES) return 'error'
   if (editor.configBytes.value > editor.MAX_CONFIG_BYTES * 0.9) return 'warning'
   return 'success'
 })
 
-const { expandedPageSections, expandedBlockSections } = useBlockPropertyFocus()
-
-const pageThemeMode = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = theme?.pageThemeMode
-    return (v === 'light' || v === 'dark') ? v : 'auto'
-  },
-  set(v: 'auto' | 'light' | 'dark') {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    if (v === 'auto') delete theme.pageThemeMode
-    else theme.pageThemeMode = v
-  },
-})
-
-const pageMaxWidthSetting = computed({
-  get() {
-    const theme = editor.currentTheme.value as any
-    const v = theme?.pageMaxWidth
-    return typeof v === 'string' ? v : ''
-  },
-  set(v: string) {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return
-    const s = v.trim()
-    if (!s) delete theme.pageMaxWidth
-    else theme.pageMaxWidth = s
-  },
-})
-
-const exportModal = ref(false)
-const exportJson = ref('')
-const importModal = ref(false)
-const importJson = ref('')
-
-function openExportModal() {
-  try {
-    exportJson.value = editor.exportCurrentBlockPageJson()
-    exportModal.value = true
-  } catch (e) {
-    editor.message.error((e as Error).message || String(e))
-  }
-}
-
-async function copyExportJson() {
-  try {
-    await navigator.clipboard.writeText(exportJson.value)
-    editor.message.success('已复制到剪贴板')
-  } catch (e) {
-    editor.message.error((e as Error).message || String(e))
-  }
-}
-
-function downloadExportJson() {
-  try {
-    const json = editor.exportCurrentBlockPageJson()
-    const blob = new Blob([json], { type: 'application/json;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `vtsuru-block-page_${editor.currentKey.value}.json`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
-    editor.message.success('已开始下载')
-  } catch (e) {
-    editor.message.error((e as Error).message || String(e))
-  }
-}
-
-function confirmImportJson() {
-  try {
-    editor.importCurrentBlockPageJson(importJson.value)
-    importModal.value = false
-    importJson.value = ''
-  } catch (e) {
-    editor.message.error((e as Error).message || String(e))
-  }
-}
-
-const blockThemeBgTarget: BackgroundSettingsTarget = {
-  get: () => editor.currentTheme.value as any,
-  ensure: () => {
-    const theme = editor.currentTheme.value as any
-    if (!theme) return null
-    return theme
-  },
-  uploadImage: editor.triggerUploadPageBackground,
-  clearImage: editor.clearPageBackgroundImageFile,
-}
+const { expandedPageSections } = useBlockPropertyFocus()
 
 </script>
 
@@ -157,6 +35,25 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
   >
     <template #header-extra>
       <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
+        <NTooltip
+          v-if="editor.currentKey.value !== 'home' && editor.currentPage.value.mode === 'block' && editor.currentProject.value"
+        >
+          <template #trigger>
+            <NButton
+              type="primary"
+              secondary
+              size="tiny"
+              aria-label="编辑当前页面主题"
+              @click="editor.pageThemeModal.value = true"
+            >
+              <template #icon>
+                <NIcon><ColorPaletteOutline /></NIcon>
+              </template>
+              页面主题
+            </NButton>
+          </template>
+          编辑当前子页面的背景与主题
+        </NTooltip>
         <NText depth="3" style="font-size: 12px; white-space: nowrap">
           容量 {{ editor.configBytesPercent.value }}%
         </NText>
@@ -172,7 +69,7 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
     </template>
     <NFlex vertical size="large">
       <NCollapse
-        v-if="editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block'"
+        v-if="editor.currentPage.value.mode !== 'legacy' && (editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block')"
         v-model:expanded-names="expandedPageSections"
       >
         <NCollapseItem
@@ -292,88 +189,6 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
           </template>
 
           <template v-else-if="editor.currentPage.value.mode === 'block' && editor.currentProject.value">
-            <NCollapse v-model:expanded-names="expandedBlockSections">
-              <NCollapseItem class="block-theme-section" title="区块页主题" name="theme">
-                <NForm label-placement="top" size="small">
-                  <NFormItem label="主题预设">
-                    <NSelect
-                      v-model:value="themePresetKey"
-                      :options="themePresetOptions"
-                      clearable
-                      placeholder="选择后会覆盖主题颜色/圆角/密度"
-                      @update:value="applyThemePreset"
-                    />
-                  </NFormItem>
-                  <NDivider style="margin: 10px 0">
-                    主题颜色
-                  </NDivider>
-                  <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
-                    主题主色会影响按钮等组件的主色；文字颜色会影响页面内组件的文字与边框，部分组件。区块渲染会按此主题覆盖 NaiveUI 主题色。
-                  </NAlert>
-                  <PropsGrid :min-item-width="240">
-                    <NFormItem label="主题主色">
-                      <NColorPicker v-model:value="editor.currentTheme.value!.primaryColor" />
-                    </NFormItem>
-                    <NFormItem label="页面主题模式">
-                      <NSelect
-                        v-model:value="pageThemeMode"
-                        :options="[
-                          { label: '跟随站点', value: 'auto' },
-                          { label: '强制亮色', value: 'light' },
-                          { label: '强制暗色', value: 'dark' },
-                        ]"
-                      />
-                    </NFormItem>
-                    <NFormItem label="文字颜色">
-                      <NColorPicker v-model:value="editor.currentTheme.value!.textColor" />
-                    </NFormItem>
-                    <NFormItem label="内容区域底色">
-                      <NColorPicker v-model:value="editor.currentTheme.value!.backgroundColor" />
-                    </NFormItem>
-                    <NFormItem label="圆角大小">
-                      <NInputNumber v-model:value="editor.currentTheme.value!.radius" :min="0" :max="32" style="width: 100%" />
-                    </NFormItem>
-                    <NFormItem label="内容最大宽度">
-                      <NInput v-model:value="pageMaxWidthSetting" placeholder="默认 820px；例如 100% / 1200px / none" />
-                    </NFormItem>
-                    <NFormItem class="span-full" label="布局密度">
-                      <NSelect
-                        v-model:value="editor.currentTheme.value!.spacing"
-                        :options="[
-                          { label: '紧凑', value: 'compact' },
-                          { label: '标准', value: 'normal' },
-                          { label: '宽松', value: 'relaxed' },
-                        ]"
-                      />
-                    </NFormItem>
-                  </PropsGrid>
-
-                  <NDivider style="margin: 10px 0">
-                    导入 / 导出
-                  </NDivider>
-                  <NFlex>
-                    <NButton size="small" secondary @click="openExportModal">
-                      导出 JSON
-                    </NButton>
-                    <NButton size="small" secondary @click="importModal = true">
-                      导入 JSON
-                    </NButton>
-                  </NFlex>
-
-                  <NDivider style="margin: 10px 0">
-                    区块页背景
-                  </NDivider>
-                  <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
-                    仅对“区块模式”页面生效；当页面/全局背景已设置时，会优先使用页面/全局背景。
-                  </NAlert>
-                  <BackgroundSettingsEditor
-                    :target="blockThemeBgTarget"
-                    none-hint="未设置区块页背景时，将优先使用页面或全局背景，否则使用默认背景。"
-                  />
-                </NForm>
-              </NCollapseItem>
-            </NCollapse>
-
             <Transition name="fade-slide" mode="out-in">
               <div
                 v-if="editor.selectedBlock.value"
@@ -413,40 +228,6 @@ const blockThemeBgTarget: BackgroundSettingsTarget = {
       @change="editor.onUploadChange"
     >
   </NCard>
-
-  <NModal v-model:show="exportModal" preset="card" title="导出区块页 JSON" style="width: min(720px, 92vw)">
-    <NFlex vertical>
-      <NAlert type="info" :show-icon="true">
-        这是当前页面的区块配置 JSON，仅包含当前页。导入到其他账号/页面时，图片等资源引用可能需要重新上传替换。
-      </NAlert>
-      <NInput v-model:value="exportJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" readonly />
-      <NFlex justify="end">
-        <NButton size="small" secondary @click="copyExportJson">
-          复制
-        </NButton>
-        <NButton size="small" secondary @click="downloadExportJson">
-          下载
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
-
-  <NModal v-model:show="importModal" preset="card" title="导入区块页 JSON" style="width: min(720px, 92vw)">
-    <NFlex vertical>
-      <NAlert type="warning" :show-icon="true">
-        导入会覆盖当前页面的区块配置，不可自动回退，建议先导出备份。
-      </NAlert>
-      <NInput v-model:value="importJson" type="textarea" :autosize="{ minRows: 10, maxRows: 18 }" placeholder="粘贴导出的 JSON，支持 vtsuru-block-page 包装或直接 BlockPageProject" />
-      <NFlex justify="end">
-        <NButton secondary @click="importModal = false">
-          取消
-        </NButton>
-        <NButton type="primary" :disabled="!importJson.trim().length" @click="confirmImportJson">
-          导入并覆盖
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>

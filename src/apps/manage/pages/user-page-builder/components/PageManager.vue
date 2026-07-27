@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NSwitch, NText } from 'naive-ui';
+import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NSwitch, NText, NTooltip } from 'naive-ui';
 import { computed, h, inject, ref } from 'vue'
 import { ChevronDownOutline, ChevronUpOutline, CopyOutline, CreateOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
+import { usePageEntries } from '../usePageEntries'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -29,24 +30,13 @@ const pageActionOptions = [
   { label: '删除', key: 'delete', icon: () => h(NIcon, null, { default: () => h(TrashOutline) }), props: { style: 'color: #d03050' } },
 ]
 
-const pagesCount = computed(() => Object.keys(editor.settings.value.pages ?? {}).length)
+const { pageEntries, visiblePages, hiddenPages } = usePageEntries(editor)
+const pagesCount = computed(() => pageEntries.value.length)
 const canCreateMorePages = computed(() => pagesCount.value < editor.MAX_PAGES_COUNT)
-
-type PageEntry = { slug: string, navVisible: boolean, navOrder: number, title: string }
-const pageEntries = computed<PageEntry[]>(() => {
-  const pages = editor.settings.value.pages ?? {}
-  return Object.entries(pages)
-    .map(([slug, cfg]) => ({
-      slug,
-      navVisible: (cfg as any)?.navVisible !== false,
-      navOrder: typeof (cfg as any)?.navOrder === 'number' ? (cfg as any).navOrder : 0,
-      title: editor.getPageLabel(slug),
-    }))
-    .toSorted((a, b) => (a.navOrder - b.navOrder) || a.slug.localeCompare(b.slug))
-})
-
-const visiblePages = computed(() => pageEntries.value.filter(p => p.navVisible))
-const hiddenPages = computed(() => pageEntries.value.filter(p => !p.navVisible))
+const pageSections = computed(() => [
+  { key: 'visible', label: '子页面 · 导航显示', pages: visiblePages.value, hidden: false },
+  { key: 'hidden', label: '隐藏页面 · 仅可通过按钮跳转', pages: hiddenPages.value, hidden: true },
+].filter(section => section.pages.length))
 
 function isExpanded(slug: string) {
   return expandedSlugs.value[slug] === true
@@ -175,14 +165,15 @@ function confirmDuplicatePage() {
         新建子页面
       </NButton>
       <NFlex vertical>
-        <template v-if="visiblePages.length">
-          <NText depth="3" style="font-size: 12px; margin-top: 4px">
-            子页面 · 导航显示
+        <template v-for="section in pageSections" :key="section.key">
+          <NText depth="3" :style="{ fontSize: '12px', marginTop: section.hidden ? '10px' : '4px' }">
+            {{ section.label }}
           </NText>
           <div
-            v-for="p in visiblePages"
+            v-for="p in section.pages"
             :key="p.slug"
             class="page-item"
+            :class="{ 'page-item--hidden': section.hidden }"
           >
             <div class="page-item__row">
               <NButton
@@ -194,132 +185,76 @@ function confirmDuplicatePage() {
                   {{ p.title }}
                 </span>
               </NButton>
-              <NButton quaternary circle size="small" @click="toggleExpanded(p.slug)">
-                <template #icon>
-                  <NIcon>
-                    <ChevronUpOutline v-if="isExpanded(p.slug)" />
-                    <ChevronDownOutline v-else />
-                  </NIcon>
+              <NTooltip>
+                <template #trigger>
+                  <NButton
+                    quaternary
+                    circle
+                    size="small"
+                    :aria-label="isExpanded(p.slug) ? '收起页面设置' : '展开页面设置'"
+                    @click="toggleExpanded(p.slug)"
+                  >
+                    <template #icon>
+                      <NIcon>
+                        <ChevronUpOutline v-if="isExpanded(p.slug)" />
+                        <ChevronDownOutline v-else />
+                      </NIcon>
+                    </template>
+                  </NButton>
                 </template>
-              </NButton>
-              <NDropdown
-                trigger="click"
-                :options="pageActionOptions"
-                @select="(key) => handlePageAction(String(key), p.slug)"
-              >
-                <NButton quaternary circle size="small">
-                  <template #icon>
-                    <NIcon><EllipsisHorizontalOutline /></NIcon>
-                  </template>
-                </NButton>
-              </NDropdown>
-            </div>
-            <div v-if="isExpanded(p.slug)" class="page-item__expand">
-              <NFlex justify="space-between" align="center" :wrap="false" style="gap: 10px">
-                <NText depth="3" style="font-size: 12px">
-                  显示在侧边栏
-                </NText>
-                <NSwitch :value="getPageNavVisible(p.slug)" size="small" @update:value="(v) => setPageNavVisible(p.slug, v)" />
-              </NFlex>
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                页面名称 · 可选
-              </NText>
-              <NInput
-                size="small"
-                placeholder="用于管理列表展示"
-                :value="getPageTitle(p.slug)"
-                @update:value="(v) => setPageTitle(p.slug, v)"
-              />
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                排序权重 · 数字越小越靠前
-              </NText>
-              <NInputNumber
-                size="small"
-                style="width: 100%"
-                :value="getPageNavOrder(p.slug)"
-                @update:value="(v) => setPageNavOrder(p.slug, v)"
-              />
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px">
-                模式：{{ editor.getPageModeLabel(getPageConfig(p.slug)?.mode) }}
-              </NText>
-            </div>
-          </div>
-        </template>
-
-        <template v-if="hiddenPages.length">
-          <NText depth="3" style="font-size: 12px; margin-top: 10px">
-            隐藏页面 · 仅可通过按钮跳转
-          </NText>
-          <div
-            v-for="p in hiddenPages"
-            :key="p.slug"
-            class="page-item page-item--hidden"
-          >
-            <div class="page-item__row">
-              <NButton
-                :type="editor.currentKey.value === p.slug ? 'primary' : 'default'"
-                class="page-item__main"
-                @click="editor.currentKey.value = p.slug"
-              >
-                <span class="truncate-text">
-                  {{ p.title }}
-                </span>
-              </NButton>
-              <NButton quaternary circle size="small" @click="toggleExpanded(p.slug)">
-                <template #icon>
-                  <NIcon>
-                    <ChevronUpOutline v-if="isExpanded(p.slug)" />
-                    <ChevronDownOutline v-else />
-                  </NIcon>
+                {{ isExpanded(p.slug) ? '收起页面设置' : '展开页面设置' }}
+              </NTooltip>
+              <NTooltip>
+                <template #trigger>
+                  <NDropdown
+                    trigger="click"
+                    :options="pageActionOptions"
+                    @select="(key) => handlePageAction(String(key), p.slug)"
+                  >
+                    <NButton quaternary circle size="small" aria-label="更多页面操作">
+                      <template #icon>
+                        <NIcon><EllipsisHorizontalOutline /></NIcon>
+                      </template>
+                    </NButton>
+                  </NDropdown>
                 </template>
-              </NButton>
-              <NDropdown
-                trigger="click"
-                :options="pageActionOptions"
-                @select="(key) => handlePageAction(String(key), p.slug)"
-              >
-                <NButton quaternary circle size="small">
-                  <template #icon>
-                    <NIcon><EllipsisHorizontalOutline /></NIcon>
-                  </template>
-                </NButton>
-              </NDropdown>
+                更多页面操作
+              </NTooltip>
             </div>
-            <div v-if="isExpanded(p.slug)" class="page-item__expand">
-              <NFlex justify="space-between" align="center" :wrap="false" style="gap: 10px">
-                <NText depth="3" style="font-size: 12px">
-                  显示在侧边栏
+            <Transition name="fade-slide">
+              <div v-if="isExpanded(p.slug)" class="page-item__expand">
+                <NFlex justify="space-between" align="center" :wrap="false" style="gap: 10px">
+                  <NText depth="3" style="font-size: 12px">
+                    显示在侧边栏
+                  </NText>
+                  <NSwitch :value="getPageNavVisible(p.slug)" size="small" @update:value="(v) => setPageNavVisible(p.slug, v)" />
+                </NFlex>
+                <div style="height: 8px" />
+                <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
+                  页面名称 · 可选
                 </NText>
-                <NSwitch :value="getPageNavVisible(p.slug)" size="small" @update:value="(v) => setPageNavVisible(p.slug, v)" />
-              </NFlex>
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                页面名称 · 可选
-              </NText>
-              <NInput
-                size="small"
-                placeholder="用于管理列表展示"
-                :value="getPageTitle(p.slug)"
-                @update:value="(v) => setPageTitle(p.slug, v)"
-              />
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                排序权重 · 数字越小越靠前
-              </NText>
-              <NInputNumber
-                size="small"
-                style="width: 100%"
-                :value="getPageNavOrder(p.slug)"
-                @update:value="(v) => setPageNavOrder(p.slug, v)"
-              />
-              <div style="height: 8px" />
-              <NText depth="3" style="font-size: 12px">
-                模式：{{ editor.getPageModeLabel(getPageConfig(p.slug)?.mode) }}
-              </NText>
-            </div>
+                <NInput
+                  size="small"
+                  placeholder="用于管理列表展示"
+                  :value="getPageTitle(p.slug)"
+                  @update:value="(v) => setPageTitle(p.slug, v)"
+                />
+                <div style="height: 8px" />
+                <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
+                  排序权重 · 数字越小越靠前
+                </NText>
+                <NInputNumber
+                  size="small"
+                  style="width: 100%"
+                  :value="getPageNavOrder(p.slug)"
+                  @update:value="(v) => setPageNavOrder(p.slug, v)"
+                />
+                <div style="height: 8px" />
+                <NText depth="3" style="font-size: 12px">
+                  模式：{{ editor.getPageModeLabel(getPageConfig(p.slug)?.mode) }}
+                </NText>
+              </div>
+            </Transition>
           </div>
         </template>
       </NFlex>
@@ -421,6 +356,8 @@ function confirmDuplicatePage() {
     />
   </div>
 </template>
+
+<style scoped src="./ui-transitions.css"></style>
 
 <style scoped>
 .page-item {

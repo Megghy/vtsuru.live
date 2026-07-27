@@ -26,31 +26,36 @@ if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
 
-const moreOptions = computed<DropdownOption[]>(() => [
-  { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
-  { label: '编辑器布局', key: 'layout', icon: () => h(NIcon, null, { default: () => h(GridOutline) }) },
-  { label: '全局样式', key: 'global-style', icon: () => h(NIcon, null, { default: () => h(ColorPaletteOutline) }) },
-  { type: 'divider', key: 'divider-1' },
-  {
+const moreOptions = computed<DropdownOption[]>(() => {
+  const options: DropdownOption[] = []
+  if (editor.currentPage.value.mode === 'block') {
+    options.push(
+      { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
+      { label: '编辑器布局', key: 'layout', icon: () => h(NIcon, null, { default: () => h(GridOutline) }) },
+      { type: 'divider', key: 'divider-block' },
+    )
+  }
+  options.push({
     label: editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存',
     key: 'auto-save',
     icon: () => h(NIcon, null, { default: () => h(SettingsOutline) }),
-  },
-  { type: 'divider', key: 'divider-2' },
-  {
+  }, {
+    type: 'divider',
+    key: 'divider-history',
+  }, {
     label: '回滚已发布版本',
     key: 'rollback',
     disabled: !editor.rollbackAvailable.value || editor.isSaving.value,
     icon: () => h(NIcon, null, { default: () => h(RefreshOutline) }),
-  },
-  {
+  }, {
     label: '清空草稿',
     key: 'clear',
     disabled: editor.isSaving.value,
     props: { style: 'color: #d03050' },
     icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-  },
-])
+  })
+  return options
+})
 
 function confirmRollback() {
   dialog.warning({
@@ -75,7 +80,6 @@ function confirmClearDraft() {
 function handleMoreAction(key: string) {
   if (key === 'resources') editor.resourcesModal.value = true
   else if (key === 'layout') emit('open-layout')
-  else if (key === 'global-style') emit('open-global-style')
   else if (key === 'auto-save') editor.autoSaveEnabled.value = !editor.autoSaveEnabled.value
   else if (key === 'rollback') confirmRollback()
   else if (key === 'clear') confirmClearDraft()
@@ -104,6 +108,12 @@ function handleMoreAction(key: string) {
       </template>
       重做
     </NTooltip>
+    <NButton size="small" secondary @click="emit('open-global-style')">
+      <template #icon>
+        <NIcon><ColorPaletteOutline /></NIcon>
+      </template>
+      全局主题
+    </NButton>
     <NButton size="small" :loading="editor.isSaving.value" @click="editor.saveDraft">
       <template #icon>
         <NIcon><SaveOutline /></NIcon>
@@ -113,13 +123,18 @@ function handleMoreAction(key: string) {
     <NButton type="primary" size="small" :loading="editor.isSaving.value" @click="editor.openPublishModal">
       发布
     </NButton>
-    <NDropdown :options="moreOptions" trigger="click" @select="(key) => handleMoreAction(String(key))">
-      <NButton quaternary circle size="small" aria-label="更多操作">
-        <template #icon>
-          <NIcon><EllipsisHorizontalOutline /></NIcon>
-        </template>
-      </NButton>
-    </NDropdown>
+    <NTooltip>
+      <template #trigger>
+        <NDropdown :options="moreOptions" trigger="click" @select="(key) => handleMoreAction(String(key))">
+          <NButton quaternary circle size="small" aria-label="更多操作">
+            <template #icon>
+              <NIcon><EllipsisHorizontalOutline /></NIcon>
+            </template>
+          </NButton>
+        </NDropdown>
+      </template>
+      更多操作
+    </NTooltip>
     <NText class="save-state" depth="3" :title="editor.autoSaveEnabled.value ? '自动保存已开启' : '自动保存已关闭'">
       {{ editor.saveStatusText.value }}
     </NText>

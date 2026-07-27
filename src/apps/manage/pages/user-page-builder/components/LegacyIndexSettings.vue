@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
 import { Delete24Regular } from '@vicons/fluent'
+import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
 import {
-  NAlert, NButton, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NInput, NModal, NPopconfirm, NTag, NTooltip, useMessage } from 'naive-ui';
-import { computed, inject, ref } from 'vue'
+  NButton, NCheckbox, NDivider, NEmpty, NFlex, NIcon, NInput, NModal, NPopconfirm, NTag, NTooltip, useMessage } from 'naive-ui';
+import { computed, ref } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import { QueryGetAPI, QueryPostAPI } from '@/api/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import { USER_INDEX_API_URL } from '@/shared/config'
-import { UserPageEditorKey } from '../context'
-
-const editor = inject(UserPageEditorKey)
-if (!editor) throw new Error('UserPageEditor context is missing')
 const accountInfo = useAccount()
 const message = useMessage()
 
@@ -221,175 +218,184 @@ await loadIndexInfo()
 </script>
 
 <template>
-  <NAlert
-    v-if="editor.currentKey.value !== 'home'"
-    type="warning"
-    :show-icon="true"
-  >
-    传统模式设置仅支持主页 home。
-  </NAlert>
+  <NFlex vertical :size="12">
+    <NDivider style="margin: 0;">
+      常规
+    </NDivider>
+    <NCheckbox
+      v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
+      :disabled="isLoading"
+      @update:checked="updateUserIndexSettings"
+    >
+      允许显示在网站主页
+    </NCheckbox>
 
-  <template v-else>
-    <NFlex vertical :size="12">
-      <NDivider style="margin: 0;">
-        常规
-      </NDivider>
-      <NCheckbox
-        v-model:checked="accountInfo.settings.index.allowDisplayInIndex"
-        :disabled="isLoading"
-        @update:checked="updateUserIndexSettings"
-      >
-        允许显示在网站主页
-      </NCheckbox>
-
-      <NDivider style="margin: 0;">
-        通知
-      </NDivider>
-      <NInput
-        v-model:value="accountInfo.settings.index.notification"
-        type="textarea"
-        placeholder="可选"
-      />
-      <NFlex justify="end">
-        <NButton
-          type="primary"
-          size="small"
-          :loading="isLoading"
-          @click="updateIndexSettings"
-        >
-          保存
-        </NButton>
-      </NFlex>
-
-      <NDivider style="margin: 0;">
-        展示视频
-      </NDivider>
+    <NDivider style="margin: 0;">
+      通知
+    </NDivider>
+    <NInput
+      v-model:value="accountInfo.settings.index.notification"
+      type="textarea"
+      placeholder="可选"
+    />
+    <NFlex justify="end">
       <NButton
         type="primary"
         size="small"
-        :disabled="isLoading"
-        @click="showAddVideoModal = true"
+        :loading="isLoading"
+        @click="updateIndexSettings"
       >
-        添加视频
+        保存
       </NButton>
-      <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
-      <NFlex v-else wrap :size="12">
-        <NTooltip v-for="item in (indexDisplayInfo?.videos ?? [])" :key="item.id">
-          <template #trigger>
-            <div>
-              <SimpleVideoCard :video="item" />
-              <NFlex style="margin-top: 6px">
-                <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'up')">
-                  上移
-                </NButton>
-                <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'down')">
-                  下移
-                </NButton>
-                <NButton type="warning" size="small" :disabled="isLoading" @click="removeVideo(item.id)">
-                  删除
-                </NButton>
-              </NFlex>
-            </div>
-          </template>
-          {{ item.title }}
-        </NTooltip>
-      </NFlex>
-
-      <NDivider style="margin: 0;">
-        其他链接
-      </NDivider>
-      <NButton
-        type="primary"
-        size="small"
-        :disabled="isLoading"
-        @click="showAddLinkModal = true"
-      >
-        添加链接
-      </NButton>
-      <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
-      <NFlex
-        v-else
-        :key="linkKey"
-        wrap
-        :size="8"
-      >
-        <NFlex v-for="link in orderedLinks" :key="link[0]" align="center">
-          <template v-if="editingLinkName === link[0]">
-            <NInput v-model:value="newLinkName" size="small" style="width: 120px" />
-            <NButton size="tiny" type="primary" text @click="confirmEditLink(link[0])">
-              保存
-            </NButton>
-            <NButton size="tiny" text @click="cancelEditLink">
-              取消
-            </NButton>
-          </template>
-          <template v-else>
-            <NTooltip>
-              <template #trigger>
-                <NTag
-                  :bordered="false"
-                  size="small"
-                  type="info"
-                >
-                  {{ link[0] }}
-                </NTag>
-              </template>
-              {{ link[1] }}
-            </NTooltip>
-            <NFlex>
-              <NButton size="tiny" secondary text @click="moveLink(link[0], 'up')">
-                ↑
-              </NButton>
-              <NButton size="tiny" secondary text @click="moveLink(link[0], 'down')">
-                ↓
-              </NButton>
-              <NButton size="tiny" text @click="startEditLink(link[0])">
-                改名
-              </NButton>
-              <NPopconfirm @positive-click="removeLink(link[0])">
-                <template #trigger>
-                  <NButton type="error" text size="tiny">
-                    <template #icon>
-                      <NIcon :component="Delete24Regular" />
-                    </template>
-                  </NButton>
-                </template>
-                确定要删除这个链接吗?
-              </NPopconfirm>
-            </NFlex>
-          </template>
-        </NFlex>
-      </NFlex>
     </NFlex>
 
-    <NModal
-      v-model:show="showAddVideoModal"
-      preset="card"
-      closable
-      style="width: 600px; max-width: 90vw"
-      title="添加视频"
+    <NDivider style="margin: 0;">
+      展示视频
+    </NDivider>
+    <NButton
+      type="primary"
+      size="small"
+      :disabled="isLoading"
+      @click="showAddVideoModal = true"
     >
-      <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
-      <NDivider />
-      <NButton type="primary" :loading="isLoading" @click="addVideo">
-        添加视频
-      </NButton>
-    </NModal>
+      添加视频
+    </NButton>
+    <NEmpty v-if="accountInfo.settings.index.videos.length === 0" />
+    <NFlex v-else wrap :size="12">
+      <NTooltip v-for="item in (indexDisplayInfo?.videos ?? [])" :key="item.id">
+        <template #trigger>
+          <div>
+            <SimpleVideoCard :video="item" />
+            <NFlex style="margin-top: 6px">
+              <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'up')">
+                上移
+              </NButton>
+              <NButton size="small" secondary :disabled="isLoading" @click="moveVideo(item.id, 'down')">
+                下移
+              </NButton>
+              <NButton type="warning" size="small" :disabled="isLoading" @click="removeVideo(item.id)">
+                删除
+              </NButton>
+            </NFlex>
+          </div>
+        </template>
+        {{ item.title }}
+      </NTooltip>
+    </NFlex>
 
-    <NModal
-      v-model:show="showAddLinkModal"
-      preset="card"
-      closable
-      style="width: 600px; max-width: 90vw"
-      title="添加链接"
+    <NDivider style="margin: 0;">
+      其他链接
+    </NDivider>
+    <NButton
+      type="primary"
+      size="small"
+      :disabled="isLoading"
+      @click="showAddLinkModal = true"
     >
-      <NFlex vertical>
-        <NInput v-model:value="addLinkName" placeholder="链接名称" />
-        <NInput v-model:value="addLinkUrl" placeholder="链接地址" />
-        <NButton type="primary" :loading="isLoading" @click="addLink">
-          添加链接
-        </NButton>
+      添加链接
+    </NButton>
+    <NEmpty v-if="Object.entries(indexDisplayInfo?.links ?? {}).length === 0" />
+    <NFlex
+      v-else
+      :key="linkKey"
+      wrap
+      :size="8"
+    >
+      <NFlex v-for="link in orderedLinks" :key="link[0]" align="center">
+        <template v-if="editingLinkName === link[0]">
+          <NInput v-model:value="newLinkName" size="small" style="width: 120px" />
+          <NButton size="tiny" type="primary" text @click="confirmEditLink(link[0])">
+            保存
+          </NButton>
+          <NButton size="tiny" text @click="cancelEditLink">
+            取消
+          </NButton>
+        </template>
+        <template v-else>
+          <NTooltip>
+            <template #trigger>
+              <NTag
+                :bordered="false"
+                size="small"
+                type="info"
+              >
+                {{ link[0] }}
+              </NTag>
+            </template>
+            {{ link[1] }}
+          </NTooltip>
+          <NFlex>
+            <NTooltip>
+              <template #trigger>
+                <NButton size="tiny" secondary text aria-label="上移链接" @click="moveLink(link[0], 'up')">
+                  <template #icon>
+                    <NIcon><ArrowUpOutline /></NIcon>
+                  </template>
+                </NButton>
+              </template>
+              上移链接
+            </NTooltip>
+            <NTooltip>
+              <template #trigger>
+                <NButton size="tiny" secondary text aria-label="下移链接" @click="moveLink(link[0], 'down')">
+                  <template #icon>
+                    <NIcon><ArrowDownOutline /></NIcon>
+                  </template>
+                </NButton>
+              </template>
+              下移链接
+            </NTooltip>
+            <NButton size="tiny" text @click="startEditLink(link[0])">
+              改名
+            </NButton>
+            <NTooltip>
+              <template #trigger>
+                <NPopconfirm @positive-click="removeLink(link[0])">
+                  <template #trigger>
+                    <NButton type="error" text size="tiny" aria-label="删除链接">
+                      <template #icon>
+                        <NIcon :component="Delete24Regular" />
+                      </template>
+                    </NButton>
+                  </template>
+                  确定要删除这个链接吗?
+                </NPopconfirm>
+              </template>
+              删除链接
+            </NTooltip>
+          </NFlex>
+        </template>
       </NFlex>
-    </NModal>
-  </template>
+    </NFlex>
+  </NFlex>
+
+  <NModal
+    v-model:show="showAddVideoModal"
+    preset="card"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="添加视频"
+  >
+    <NInput v-model:value="addVideoUrl" placeholder="请输入视频链接" />
+    <NDivider />
+    <NButton type="primary" :loading="isLoading" @click="addVideo">
+      添加视频
+    </NButton>
+  </NModal>
+
+  <NModal
+    v-model:show="showAddLinkModal"
+    preset="card"
+    closable
+    style="width: 600px; max-width: 90vw"
+    title="添加链接"
+  >
+    <NFlex vertical>
+      <NInput v-model:value="addLinkName" placeholder="链接名称" />
+      <NInput v-model:value="addLinkUrl" placeholder="链接地址" />
+      <NButton type="primary" :loading="isLoading" @click="addLink">
+        添加链接
+      </NButton>
+    </NFlex>
+  </NModal>
 </template>

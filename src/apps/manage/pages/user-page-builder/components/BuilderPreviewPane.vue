@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NAlert, NButton, NButtonGroup, NCard, NConfigProvider, NFlex, NIcon, NScrollbar, NTooltip } from 'naive-ui'
+import { darkTheme, NAlert, NButton, NButtonGroup, NCard, NConfigProvider, NFlex, NIcon, NTooltip } from 'naive-ui'
 import { computed, inject, ref } from 'vue'
 import { DesktopOutline, OpenOutline, PhonePortraitOutline, TabletPortraitOutline } from '@vicons/ionicons5'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
@@ -18,7 +18,7 @@ defineOptions({ name: 'BuilderPreviewPane' })
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const viewport = ref<PreviewViewport>('phone')
+const viewport = ref<PreviewViewport>('desktop')
 const viewportOptions: Array<{ value: PreviewViewport, label: string, icon: typeof PhonePortraitOutline }> = [
   { value: 'phone', label: '手机', icon: PhonePortraitOutline },
   { value: 'tablet', label: '平板', icon: TabletPortraitOutline },
@@ -148,54 +148,61 @@ const previewBgClass = computed(() => ({
         </NTooltip>
       </NFlex>
     </template>
-    <NScrollbar class="pane-scroll">
-      <div style="height: 100%; min-height: 0; display: flex; flex-direction: column">
-        <NConfigProvider :theme="null" :theme-overrides="null">
-          <NConfigProvider :theme="previewNaiveTheme" :theme-overrides="previewThemeOverrides">
-            <PhonePreview
-              style="flex: 1; min-height: 0"
-              :style="previewBgVars"
-              :is-dark="previewEffectiveIsDark"
-              :transparent="!!previewBg"
-              :viewport="viewport"
-            >
-              <template #background>
-                <div :class="previewBgClass" />
-              </template>
+    <div class="preview-pane-content">
+      <NConfigProvider abstract :theme="null" :theme-overrides="null">
+        <NConfigProvider abstract :theme="previewNaiveTheme" :theme-overrides="previewThemeOverrides">
+          <PhonePreview
+            :style="previewBgVars"
+            :is-dark="previewEffectiveIsDark"
+            :transparent="!!previewBg"
+            :viewport="viewport"
+          >
+            <template #background>
+              <div :class="previewBgClass" />
+            </template>
 
-              <Transition name="fade-slide" mode="out-in">
-                <div
-                  :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
-                  class="preview-content"
+            <Transition name="fade-slide" mode="out-in">
+              <div
+                :key="editor.currentPage.value.mode === 'block' && editor.currentProject.value ? 'block' : editor.currentPage.value.mode"
+                class="preview-content"
+              >
+                <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
+                  <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
+                    <BlockPageRenderer
+                      :project="previewMergedProject"
+                      :user-info="editor.account.value"
+                      :bili-info="undefined"
+                      :is-dark="previewEffectiveIsDark"
+                      :extra-theme-overrides="previewSurfaceThemeOverrides"
+                      :highlight-block-id="editor.hoveredBlockId.value"
+                    />
+                  </div>
+                </template>
+                <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+                  <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
+                </template>
+                <NAlert
+                  v-else
+                  type="warning"
+                  :show-icon="true"
                 >
-                  <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
-                    <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
-                      <BlockPageRenderer
-                        :project="previewMergedProject"
-                        :user-info="editor.account.value"
-                        :bili-info="undefined"
-                        :is-dark="previewEffectiveIsDark"
-                        :extra-theme-overrides="previewSurfaceThemeOverrides"
-                        :highlight-block-id="editor.hoveredBlockId.value"
-                      />
-                    </div>
-                  </template>
-                  <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                    <DefaultIndexTemplate :user-info="editor.account.value as any" :bili-info="undefined" />
-                  </template>
-                  <NAlert
-                    v-else
-                    type="warning"
-                    :show-icon="true"
-                  >
-                    当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，非区块页，不展示预览。
-                  </NAlert>
-                </div>
-              </Transition>
-            </PhonePreview>
-          </NConfigProvider>
+                  当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}，非区块页，不展示预览。
+                </NAlert>
+              </div>
+            </Transition>
+          </PhonePreview>
         </NConfigProvider>
-      </div>
-    </NScrollbar>
+      </NConfigProvider>
+    </div>
   </NCard>
 </template>
+
+<style scoped>
+.preview-pane-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+</style>

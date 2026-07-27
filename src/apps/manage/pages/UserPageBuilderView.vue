@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NAlert, NButton, NFlex, NIcon, NModal, NSplit, NSpin, NText, useDialog } from 'naive-ui'
-import { onBeforeUnmount, onMounted, provide, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ReorderThreeOutline } from '@vicons/ionicons5'
 import { useEventListener } from '@vueuse/core'
@@ -16,6 +16,7 @@ import BuilderPropsPane from './user-page-builder/components/BuilderPropsPane.vu
 import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
 import BuilderResourcesModal from './user-page-builder/components/BuilderResourcesModal.vue'
 import GlobalPageStyleModal from './user-page-builder/components/GlobalPageStyleModal.vue'
+import BlockPageThemeModal from './user-page-builder/components/BlockPageThemeModal.vue'
 
 const editor = useUserPageEditor()
 provide(UserPageEditorKey, editor)
@@ -26,6 +27,7 @@ const dialog = useDialog()
 
 const layoutModal = ref(false)
 const globalBgModal = ref(false)
+const isLegacyMode = computed(() => editor.currentPage.value.mode === 'legacy')
 const builderLayout = useBuilderLayout()
 const {
   bodyElement: builderBodyEl,
@@ -68,7 +70,13 @@ function beforeUnloadHandler(e: BeforeUnloadEvent) {
 function focusPublishValidationError(errorMessage: string) {
   if (!editor.focusValidationError(errorMessage)) return
   editor.publishModal.value = false
-  if (editor.validationFocusRequest.value?.scope === 'settings') globalBgModal.value = true
+  const request = editor.validationFocusRequest.value
+  if (request?.scope === 'settings') globalBgModal.value = true
+  else if (
+    request?.scope === 'page'
+    && editor.currentPage.value.mode === 'block'
+    && (request.fieldPath?.startsWith('theme') || request.fieldPath?.startsWith('background'))
+  ) editor.pageThemeModal.value = true
 }
 
 onMounted(async () => {
@@ -113,7 +121,10 @@ onBeforeRouteLeave(() => {
   <div class="user-page-builder">
     <ManagePageHeader title="自定义页面" subtitle="配置个人主页与子页面">
       <template #action>
-        <BuilderToolbar @open-layout="layoutModal = true" @open-global-style="globalBgModal = true" />
+        <BuilderToolbar
+          @open-layout="layoutModal = true"
+          @open-global-style="globalBgModal = true"
+        />
       </template>
     </ManagePageHeader>
 
@@ -128,84 +139,66 @@ onBeforeRouteLeave(() => {
       </NAlert>
 
       <div ref="builderBodyEl" class="builder-body">
-        <NSplit
-          v-model:size="size0"
-          direction="horizontal"
-          :min="split0Min"
-          :max="split0Max"
-          class="builder-split"
-          :pane1-style="split0Pane1Style"
-          :pane2-style="split0Pane2Style"
-        >
-          <template #1>
-            <BuilderPagesPane
-              v-if="col0 === 'pages'"
-              :collapsed="isPagesCollapsed"
-              :resizable="isPagesResizable"
-              @toggle-collapse="togglePagesCollapse"
-            />
-            <BuilderBlocksPane
-              v-else-if="col0 === 'blocks'"
-              :merged-props="isPropsMergedInBlocks"
-              @toggle-merged-props="toggleMergePropsInBlocks"
-            />
-            <BuilderPreviewPane v-else-if="col0 === 'preview'" />
-            <BuilderPropsPane v-else />
-          </template>
+        <Transition name="workspace-switch" mode="out-in">
+          <div v-if="isLegacyMode" key="legacy" class="legacy-workspace">
+            <BuilderPreviewPane />
+            <BuilderPropsPane />
+          </div>
+          <NSplit
+            v-else
+            key="builder"
+            v-model:size="size0"
+            direction="horizontal"
+            :min="split0Min"
+            :max="split0Max"
+            class="builder-split"
+            :pane1-style="split0Pane1Style"
+            :pane2-style="split0Pane2Style"
+          >
+            <template #1>
+              <BuilderPagesPane
+                v-if="col0 === 'pages'"
+                :collapsed="isPagesCollapsed"
+                :resizable="isPagesResizable"
+                @toggle-collapse="togglePagesCollapse"
+              />
+              <BuilderBlocksPane
+                v-else-if="col0 === 'blocks'"
+                :merged-props="isPropsMergedInBlocks"
+                @toggle-merged-props="toggleMergePropsInBlocks"
+              />
+              <BuilderPreviewPane v-else-if="col0 === 'preview'" />
+              <BuilderPropsPane v-else />
+            </template>
 
-          <template #2>
-            <NSplit
-              v-model:size="size1"
-              direction="horizontal"
-              :min="split1Min"
-              :max="split1Max"
-              class="builder-split"
-              :pane1-style="split1Pane1Style"
-              :pane2-style="split1Pane2Style"
-            >
-              <template #1>
-                <BuilderPagesPane
-                  v-if="col1 === 'pages'"
-                  :collapsed="isPagesCollapsed"
-                  :resizable="isPagesResizable"
-                  @toggle-collapse="togglePagesCollapse"
-                />
-                <BuilderBlocksPane
-                  v-else-if="col1 === 'blocks'"
-                  :merged-props="isPropsMergedInBlocks"
-                  @toggle-merged-props="toggleMergePropsInBlocks"
-                />
-                <BuilderPreviewPane v-else-if="col1 === 'preview'" />
-                <BuilderPropsPane v-else />
-              </template>
-
-              <template #2>
-                <template v-if="!isFourCols">
+            <template #2>
+              <NSplit
+                v-model:size="size1"
+                direction="horizontal"
+                :min="split1Min"
+                :max="split1Max"
+                class="builder-split"
+                :pane1-style="split1Pane1Style"
+                :pane2-style="split1Pane2Style"
+              >
+                <template #1>
                   <BuilderPagesPane
-                    v-if="col2 === 'pages'"
+                    v-if="col1 === 'pages'"
                     :collapsed="isPagesCollapsed"
                     :resizable="isPagesResizable"
                     @toggle-collapse="togglePagesCollapse"
                   />
                   <BuilderBlocksPane
-                    v-else-if="col2 === 'blocks'"
+                    v-else-if="col1 === 'blocks'"
                     :merged-props="isPropsMergedInBlocks"
                     @toggle-merged-props="toggleMergePropsInBlocks"
                   />
-                  <BuilderPreviewPane v-else-if="col2 === 'preview'" />
+                  <BuilderPreviewPane v-else-if="col1 === 'preview'" />
                   <BuilderPropsPane v-else />
                 </template>
-                <NSplit
-                  v-else
-                  v-model:size="size2"
-                  direction="horizontal"
-                  :min="split2Min"
-                  :max="split2Max"
-                  class="builder-split"
-                  :pane1-style="split2Pane1Style"
-                  :pane2-style="split2Pane2Style"
-                >
-                  <template #1>
+
+                <template #2>
+                  <template v-if="!isFourCols">
                     <BuilderPagesPane
                       v-if="col2 === 'pages'"
                       :collapsed="isPagesCollapsed"
@@ -220,27 +213,53 @@ onBeforeRouteLeave(() => {
                     <BuilderPreviewPane v-else-if="col2 === 'preview'" />
                     <BuilderPropsPane v-else />
                   </template>
+                  <NSplit
+                    v-else
+                    v-model:size="size2"
+                    direction="horizontal"
+                    :min="split2Min"
+                    :max="split2Max"
+                    class="builder-split"
+                    :pane1-style="split2Pane1Style"
+                    :pane2-style="split2Pane2Style"
+                  >
+                    <template #1>
+                      <BuilderPagesPane
+                        v-if="col2 === 'pages'"
+                        :collapsed="isPagesCollapsed"
+                        :resizable="isPagesResizable"
+                        @toggle-collapse="togglePagesCollapse"
+                      />
+                      <BuilderBlocksPane
+                        v-else-if="col2 === 'blocks'"
+                        :merged-props="isPropsMergedInBlocks"
+                        @toggle-merged-props="toggleMergePropsInBlocks"
+                      />
+                      <BuilderPreviewPane v-else-if="col2 === 'preview'" />
+                      <BuilderPropsPane v-else />
+                    </template>
 
-                  <template #2>
-                    <BuilderPagesPane
-                      v-if="col3 === 'pages'"
-                      :collapsed="isPagesCollapsed"
-                      :resizable="isPagesResizable"
-                      @toggle-collapse="togglePagesCollapse"
-                    />
-                    <BuilderBlocksPane
-                      v-else-if="col3 === 'blocks'"
-                      :merged-props="isPropsMergedInBlocks"
-                      @toggle-merged-props="toggleMergePropsInBlocks"
-                    />
-                    <BuilderPreviewPane v-else-if="col3 === 'preview'" />
-                    <BuilderPropsPane v-else />
-                  </template>
-                </NSplit>
-              </template>
-            </NSplit>
-          </template>
-        </NSplit>
+                    <template #2>
+                      <BuilderPagesPane
+                        v-if="col3 === 'pages'"
+                        :collapsed="isPagesCollapsed"
+                        :resizable="isPagesResizable"
+                        @toggle-collapse="togglePagesCollapse"
+                      />
+                      <BuilderBlocksPane
+                        v-else-if="col3 === 'blocks'"
+                        :merged-props="isPropsMergedInBlocks"
+                        @toggle-merged-props="toggleMergePropsInBlocks"
+                      />
+                      <BuilderPreviewPane v-else-if="col3 === 'preview'" />
+                      <BuilderPropsPane v-else />
+                    </template>
+                  </NSplit>
+                </template>
+              </NSplit>
+            </template>
+          </NSplit>
+        </Transition>
       </div>
 
       <NModal
@@ -295,6 +314,8 @@ onBeforeRouteLeave(() => {
       <BuilderResourcesModal v-model:show="editor.resourcesModal.value" />
 
       <GlobalPageStyleModal v-model:show="globalBgModal" />
+
+      <BlockPageThemeModal v-model:show="editor.pageThemeModal.value" />
 
       <NModal
         v-model:show="editor.publishModal.value"
@@ -406,9 +427,37 @@ onBeforeRouteLeave(() => {
   min-height: 0;
 }
 
+.user-page-builder :deep(.n-split-pane-1:has(> .pages-pane)) {
+  transition: flex-basis 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.user-page-builder :deep(.n-split:has(> .n-split__resize-trigger-wrapper:active) > .n-split-pane-1) {
+  transition: none;
+}
+
+.legacy-workspace {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(320px, 420px);
+  flex: 1;
+  min-height: 0;
+  gap: 6px;
+}
+
+.workspace-switch-enter-active,
+.workspace-switch-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.workspace-switch-enter-from,
+.workspace-switch-leave-to {
+  opacity: 0;
+  transform: translateY(5px);
+}
+
 .user-page-builder :deep(.pane-card) {
   height: 100%;
   min-height: 0;
+  animation: builder-pane-enter 220ms ease both;
 }
 
 .user-page-builder :deep(.pane-scroll) {
@@ -465,5 +514,17 @@ onBeforeRouteLeave(() => {
 
 .user-page-builder :deep(.preview-content) {
   min-height: 100%;
+}
+
+@keyframes builder-pane-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

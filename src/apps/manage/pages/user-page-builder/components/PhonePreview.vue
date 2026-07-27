@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   transparent?: boolean
   viewport?: PreviewViewport
 }>(), {
-  viewport: 'phone',
+  viewport: 'desktop',
 })
 
 const previewRoot = ref<HTMLElement | null>(null)
@@ -39,26 +39,36 @@ watchEffect(() => {
 <style scoped>
 .responsive-preview {
   display: flex;
+  flex: 1;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
   height: 100%;
-  min-height: 520px;
+  min-width: 0;
+  min-height: 0;
   padding: 12px;
-  overflow: auto;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .device {
   width: min(100%, 390px);
   height: min(100%, 844px);
-  min-height: 520px;
+  min-height: 0;
   background: #111;
   border-radius: 24px;
   padding: 10px;
+  box-sizing: border-box;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
+  transition:
+    width 220ms ease,
+    height 220ms ease,
+    padding 220ms ease,
+    border-radius 220ms ease,
+    box-shadow 220ms ease;
 }
 
 .device--tablet {
@@ -90,6 +100,7 @@ watchEffect(() => {
   padding: 0;
   flex: 1;
   min-height: 0;
+  transition: border-radius 220ms ease, background-color 180ms ease;
 }
 
 .device--desktop .screen {

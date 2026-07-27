@@ -42,6 +42,7 @@ function createCoreState() {
     selectedBlockIds: ref<string[]>([]),
     hoveredBlockId: ref<string | null>(null),
     resourcesModal: ref(false),
+    pageThemeModal: ref(false),
   }
 }
 
@@ -146,6 +147,7 @@ function createCoreResult(
     ...features.uploads,
     ...features.pages,
     resourcesModal: state.resourcesModal,
+    pageThemeModal: state.pageThemeModal,
     history: features.history.history,
     canUndo: features.history.canUndo,
     canRedo: features.history.canRedo,

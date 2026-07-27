@@ -63,12 +63,16 @@ function clearTheme() {
 </script>
 
 <template>
-  <NModal v-model:show="show" preset="card" title="全局样式" style="width: 720px; max-width: 95vw" :auto-focus="false">
+  <NModal v-model:show="show" preset="card" title="全局主题" style="width: 720px; max-width: 95vw" :auto-focus="false">
     <NScrollbar style="max-height: min(78vh, 720px)">
       <div class="modal-content">
         <NAlert type="info" :show-icon="true" style="margin-bottom: 12px">
           全局背景和主题会应用到主页、子页面及内置页面，页面级设置可以覆盖这里的值。
         </NAlert>
+        <NDivider style="margin: 10px 0">
+          背景
+        </NDivider>
+        <BackgroundSettingsEditor :target="backgroundTarget" none-hint="未设置时使用站点默认背景。" />
         <NDivider style="margin: 10px 0">
           主题
         </NDivider>
@@ -100,10 +104,6 @@ function clearTheme() {
             </NButton>
           </NFlex>
         </NForm>
-        <NDivider style="margin: 12px 0">
-          背景
-        </NDivider>
-        <BackgroundSettingsEditor :target="backgroundTarget" none-hint="未设置时使用站点默认背景。" />
       </div>
     </NScrollbar>
   </NModal>

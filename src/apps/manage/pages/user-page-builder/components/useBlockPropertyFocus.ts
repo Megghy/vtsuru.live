@@ -19,7 +19,6 @@ export function useBlockPropertyFocus() {
   if (!editor) throw new Error('UserPageEditor context is missing')
 
   const expandedPageSections = ref<Array<string | number>>([])
-  const expandedBlockSections = ref<Array<string | number>>([])
 
   watch(() => editor.validationFocusRequest.value?.requestId, async () => {
     const request = editor.validationFocusRequest.value
@@ -27,16 +26,13 @@ export function useBlockPropertyFocus() {
 
     if (request.scope === 'page') {
       const appearanceField = request.fieldPath?.startsWith('theme') || request.fieldPath?.startsWith('background')
-      const blockTheme = editor.currentPage.value.mode === 'block' && appearanceField
-      const section = blockTheme
-        ? 'theme'
-        : request.fieldPath?.startsWith('theme')
-          ? 'page-theme'
-          : request.fieldPath?.startsWith('background') ? 'page-bg' : 'page-info'
-      if (blockTheme) expandedBlockSections.value = [section]
-      else expandedPageSections.value = [section]
+      if (editor.currentPage.value.mode === 'block' && appearanceField) return
+      const section = request.fieldPath?.startsWith('theme')
+        ? 'page-theme'
+        : request.fieldPath?.startsWith('background') ? 'page-bg' : 'page-info'
+      expandedPageSections.value = [section]
       await nextTick()
-      const sectionElement = document.querySelector<HTMLElement>(`.block-property-editor .${blockTheme ? 'block-theme' : section}-section`)
+      const sectionElement = document.querySelector<HTMLElement>(`.block-property-editor .${section}-section`)
       sectionElement?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       return
     }
@@ -55,5 +51,5 @@ export function useBlockPropertyFocus() {
     formItem?.querySelector<HTMLElement>('input, textarea, button, [tabindex]')?.focus({ preventScroll: true })
   }, { immediate: true })
 
-  return { expandedPageSections, expandedBlockSections }
+  return { expandedPageSections }
 }
