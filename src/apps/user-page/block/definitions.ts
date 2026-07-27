@@ -1,6 +1,7 @@
 import { parseEmbedUrl, parseFeedbackEmbedUrl, parseMusicEmbedUrl } from './embed'
 import { BLOCK_TYPES } from './schemaTypes'
 import type { BlockType } from './schemaTypes'
+import { SOCIAL_PLATFORM_IDS } from './socialPlatforms'
 import {
   isHttpsUrl,
   isNonEmptyString,
@@ -63,7 +64,6 @@ const validateLayout = withProps((props, path, errors) => {
 
 const validateProfile = withProps((props, path, errors) => {
   optionalFile(props, 'avatarFile', path, errors)
-  optionalHttpsUrl(props, 'avatarUrl', path, errors)
   optionalString(props, 'displayName', path, errors)
   optionalString(props, 'bio', path, errors)
 })
@@ -164,7 +164,7 @@ const validateSocialLinks = withProps((props, path, errors) => {
   optionalBoolean(props, 'showLabel', path, errors)
   validateItems(props, path, errors, (item, itemPath) => {
     if (!isHttpsUrl(item.url)) errors.push(`${itemPath}: url 必须是 https URL`)
-    optionalEnum(item, 'platform', ['bilibili', 'youtube', 'x', 'discord', 'twitch', 'qqgroup', 'github', 'website', 'netease', 'spotify', 'other'], itemPath, errors)
+    optionalEnum(item, 'platform', SOCIAL_PLATFORM_IDS, itemPath, errors)
     optionalString(item, 'label', itemPath, errors)
   })
 })
@@ -237,10 +237,10 @@ export const SHARED_BLOCK_DEFINITIONS = [
   definition('socialLinks', '社交图标组', 'interaction', ['社交', '平台'], { size: 'md', variant: 'round', showLabel: false, items: [] }, validateSocialLinks),
   definition('musicPlayer', '音乐播放器', 'media', ['网易云', 'Spotify', '音乐'], { provider: 'netease', url: '', height: 300, compact: false }, validateMusic),
   definition('tags', '标签组', 'content', ['标签', '关键词'], { size: 'medium', rounded: true, items: [], framed: false, backgrounded: false, borderTitle: '', borderTitleAlign: 'left' }, withProps((p, path, errors) => { optionalEnum(p, 'size', ['small', 'medium'], path, errors); optionalBoolean(p, 'rounded', path, errors); optionalString(p, 'borderTitle', path, errors); optionalEnum(p, 'borderTitleAlign', ['left', 'center', 'right'], path, errors); validateItems(p, path, errors, (item, itemPath) => { optionalString(item, 'text', itemPath, errors); optionalString(item, 'color', itemPath, errors); optionalEnum(item, 'type', ['default', 'info', 'success', 'warning', 'error'], itemPath, errors) }) })),
-  definition('milestone', '里程碑/时间轴', 'content', ['时间线', '经历'], { mode: 'timeline', items: [] }, withProps((p, path, errors) => { optionalEnum(p, 'mode', ['timeline', 'list'], path, errors); validateTextItems(['date', 'title', 'description'])(p, path, errors, { hidden: false }) })),
+  definition('milestone', '里程碑/时间轴', 'content', ['时间线', '经历'], { title: '里程碑', mode: 'timeline', items: [] }, withProps((p, path, errors) => { optionalString(p, 'title', path, errors); optionalEnum(p, 'mode', ['timeline', 'list'], path, errors); validateTextItems(['date', 'title', 'description'])(p, path, errors, { hidden: false }) })),
   definition('faq', '折叠问答', 'content', ['常见问题', '问答'], { accordion: false, items: [] }, withProps((p, path, errors) => { optionalBoolean(p, 'accordion', path, errors); validateTextItems(['q', 'a'])(p, path, errors, { hidden: false }) })),
   definition('quote', '金句引用', 'content', ['引用', '语录'], { text: '', author: '', align: 'center' }, withProps((p, path, errors) => { optionalString(p, 'text', path, errors); optionalString(p, 'author', path, errors); optionalEnum(p, 'align', ['left', 'center', 'right'], path, errors) })),
-  definition('marquee', '走马灯/公告', 'content', ['滚动', '公告'], { text: '', direction: 'left', durationSec: 18, pauseOnHover: true, framed: false, backgrounded: false }, withProps((p, path, errors) => { optionalString(p, 'text', path, errors); optionalEnum(p, 'direction', ['left', 'right'], path, errors); optionalNumber(p, 'durationSec', 4, 120, path, errors); optionalBoolean(p, 'pauseOnHover', path, errors) })),
+  definition('marquee', '走马灯/公告', 'content', ['滚动', '公告'], { text: '', direction: 'left', durationSec: 18, pauseOnHover: true, framed: false, backgrounded: false }, withProps((p, path, errors) => { optionalString(p, 'text', path, errors); optionalEnum(p, 'direction', ['left', 'right', 'up', 'down'], path, errors); optionalNumber(p, 'durationSec', 4, 120, path, errors); optionalBoolean(p, 'pauseOnHover', path, errors) })),
   definition('countdown', '倒计时', 'content', ['计时', '日期'], { title: '', target: '', style: 'cards', showSeconds: true, doneText: '已到达', framed: false, backgrounded: false }, withProps((p, path, errors) => { optionalString(p, 'title', path, errors); optionalString(p, 'target', path, errors); optionalEnum(p, 'style', ['cards', 'inline'], path, errors); optionalBoolean(p, 'showSeconds', path, errors); optionalString(p, 'doneText', path, errors) })),
   definition('feedback', '表单/留言', 'interaction', ['提问箱', '表单'], { title: '留言 / 提问', description: '', url: '', buttonText: '打开', embed: false, embedMode: 'questionBox', height: 520 }, validateFeedback),
   definition('supporter', '支持/赞助', 'interaction', ['赞助', '支持'], { title: '支持我', description: '', items: [] }, validateSupporter),

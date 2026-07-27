@@ -1,11 +1,13 @@
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
 import { deepCloneJson, estimateUtf8Bytes } from './editorHelpers'
+import { ensurePageConfig } from './editorPageConfig'
 import { validateUserPagesSettings } from './validateUserPagesSettings'
 import { useUserPageAutoSave } from './useUserPageAutoSave'
 import type { UserPageEditorCore } from './useUserPageEditorCore'
 import { useUserPagePersistence } from './useUserPagePersistence'
 import { useUserPageStateLoader } from './useUserPageStateLoader'
 import { readUserPagesLocalDraft, useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
@@ -75,9 +77,18 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     lastSavedSnapshot: core.lastSavedSnapshot,
     localDraftStorage,
     maxConfigBytes,
-    history: { batch: core.batchHistory },
+    history: { batch: core.batchHistory, clear: core.clearHistory },
     validateAll: validateUserPagesSettings,
     loadState: loader.loadState,
+    restoreSnapshot: (snapshot) => {
+      const restored = JSON.parse(snapshot) as UserPagesSettingsV1
+      core.settings.value = restored
+      core.currentPage.value = ensurePageConfig(restored, core.currentKey.value)
+      core.blocks.clearSelection()
+      localDraftStorage.value = deepCloneJson(restored)
+      core.isDirty.value = snapshot !== core.lastSavedSnapshot.value
+      core.lastSavedAt.value = Date.now()
+    },
     notify: { success: message.success, error: message.error },
   })
   const autoSave = useUserPageAutoSave({
@@ -124,6 +135,7 @@ function createLifecycleResult(
     isDirty: core.isDirty,
     isAutoSaving: autoSave.isAutoSaving,
     saveStatusText: autoSave.saveStatusText,
+    lastSavedSnapshot: core.lastSavedSnapshot,
     validationTick: autoSave.validationTick,
     liveValidationErrors: autoSave.liveValidationErrors,
     ...resources,
@@ -135,6 +147,7 @@ function createLifecycleResult(
     confirmPublish: persistence.confirmPublish,
     saveDraft: persistence.saveDraft,
     clearDraft: persistence.clearDraft,
+    discardLocalChanges: persistence.discardLocalChanges,
     rollback: persistence.rollback,
     configBytes,
     configBytesPercent,

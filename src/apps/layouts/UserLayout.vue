@@ -418,7 +418,11 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
 }
 
 watch(
-  () => [route.params.id, route.query.draftPreview, reloadVersion.value] as const,
+  [
+    () => route.params.id,
+    () => route.query.draftPreview,
+    () => reloadVersion.value,
+  ],
   ([newId], _previous, onCleanup) => {
     clearUserPageRuntimeCache()
     const controller = new AbortController()

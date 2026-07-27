@@ -77,6 +77,17 @@ function confirmClearDraft() {
   })
 }
 
+function confirmDiscardLocalChanges() {
+  const savedSnapshot = editor.lastSavedSnapshot.value
+  dialog.warning({
+    title: '放弃本地修改',
+    content: '将恢复最近一次保存的服务端草稿，已发布版本和服务端草稿不会被删除。',
+    positiveText: '放弃修改',
+    negativeText: '取消',
+    onPositiveClick: () => editor.discardLocalChanges(savedSnapshot),
+  })
+}
+
 function handleMoreAction(key: string) {
   if (key === 'resources') editor.resourcesModal.value = true
   else if (key === 'layout') emit('open-layout')
@@ -114,6 +125,24 @@ function handleMoreAction(key: string) {
       </template>
       全局主题
     </NButton>
+    <NTooltip>
+      <template #trigger>
+        <NButton
+          class="discard-button"
+          size="small"
+          secondary
+          :disabled="!editor.isDirty.value || editor.isSaving.value"
+          aria-label="放弃本地修改"
+          @click="confirmDiscardLocalChanges"
+        >
+          <template #icon>
+            <NIcon><RefreshOutline /></NIcon>
+          </template>
+          <span class="discard-label">放弃本地修改</span>
+        </NButton>
+      </template>
+      放弃本地修改
+    </NTooltip>
     <NButton size="small" :loading="editor.isSaving.value" @click="editor.saveDraft">
       <template #icon>
         <NIcon><SaveOutline /></NIcon>
@@ -157,6 +186,15 @@ function handleMoreAction(key: string) {
 }
 
 @media (max-width: 760px) {
+  .discard-label {
+    display: none;
+  }
+
+  .discard-button {
+    width: 28px;
+    padding: 0;
+  }
+
   .save-state {
     display: none;
   }

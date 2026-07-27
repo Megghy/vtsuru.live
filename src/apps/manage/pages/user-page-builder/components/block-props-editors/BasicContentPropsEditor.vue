@@ -13,9 +13,6 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
 <template>
   <NForm v-if="props.block.type === 'profile'" label-placement="top" size="small">
     <PropsGrid>
-      <NFormItem label="头像链接">
-        <NInput v-model:value="blockProps.avatarUrl" placeholder="https://..." />
-      </NFormItem>
       <NFormItem label="显示名称">
         <NInput v-model:value="blockProps.displayName" placeholder="为空则显示账号名" />
       </NFormItem>

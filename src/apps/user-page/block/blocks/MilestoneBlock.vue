@@ -11,6 +11,7 @@ interface MilestoneItem {
 }
 
 interface BlockConfig {
+  title?: string
   mode?: 'timeline' | 'list'
   items?: MilestoneItem[]
   framed?: boolean
@@ -24,6 +25,7 @@ const cfg = computed<BlockConfig>(() => {
     ? (props.blockProps as any)
     : {}
   return {
+    title: typeof o.title === 'string' && o.title.trim() ? o.title.trim() : '里程碑',
     mode: (o.mode === 'timeline' || o.mode === 'list') ? o.mode : 'timeline',
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
@@ -50,7 +52,7 @@ const items = computed(() => {
         <NIcon size="18" depth="2">
           <FlagOutline />
         </NIcon>
-        <span>里程碑</span>
+        <span>{{ cfg.title }}</span>
       </div>
     </template>
 

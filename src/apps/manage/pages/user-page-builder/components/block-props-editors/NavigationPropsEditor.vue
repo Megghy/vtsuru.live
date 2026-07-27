@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { SOCIAL_PLATFORM_OPTIONS } from '@/apps/user-page/block/socialPlatforms'
 import { NButton, NFlex, NForm, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
 import PropsGrid from '../PropsGrid.vue'
 import ButtonAppearanceFields from './ButtonAppearanceFields.vue'
@@ -8,6 +9,7 @@ import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
 const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor(() => props.block)
+
 </script>
 
 <template>
@@ -72,9 +74,9 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
         <NFlex vertical style="width: 100%">
           <div v-for="(item, index) in ensureArrayProp('items')" :key="index" style="display: flex; gap: 8px">
             <NSelect
-              v-model:value="item.platform" style="width: 140px" :options="[
-                'bilibili', 'youtube', 'x', 'discord', 'twitch', 'qqgroup', 'github', 'website', 'netease', 'spotify', 'other',
-              ].map(value => ({ label: value, value }))"
+              v-model:value="item.platform"
+              style="width: 140px"
+              :options="SOCIAL_PLATFORM_OPTIONS"
             />
             <NInput v-model:value="item.url" placeholder="https://..." />
             <NInput v-model:value="item.label" placeholder="可选显示名" />

@@ -68,6 +68,9 @@ function formatLocalDate(timestamp: number) {
 
   <NForm v-else-if="props.block.type === 'milestone'" label-placement="top" size="small">
     <PropsGrid>
+      <NFormItem label="区块标题">
+        <NInput v-model:value="blockProps.title" placeholder="里程碑" />
+      </NFormItem>
       <NFormItem label="展示方式">
         <NSelect v-model:value="blockProps.mode" :options="[{ label: 'timeline', value: 'timeline' }, { label: 'list', value: 'list' }]" />
       </NFormItem>

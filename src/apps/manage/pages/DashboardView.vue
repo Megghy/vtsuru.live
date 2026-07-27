@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BiliAuthModel } from '@/api/api-models'
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
+import { DocumentTextOutline } from '@vicons/ionicons5'
 import {
   NAlert, NButton, NCard, NCode, NCountdown, NDivider, NEllipsis, NFlex, NIcon, NInput, NInputGroup, NModal, NPopconfirm, NSelect, NTabPane, NTabs, NTag, NText, NTime, NTooltip, useMessage } from 'naive-ui';
 import { onUnmounted, ref } from 'vue'
@@ -351,6 +352,17 @@ onUnmounted(() => {
                 </NText>
               </div>
               <NFlex align="center" justify="end" wrap :size="8">
+                <NButton
+                  type="primary"
+                  secondary
+                  size="small"
+                  @click="router.push({ name: 'manage-userPageBuilder' })"
+                >
+                  <template #icon>
+                    <NIcon :component="DocumentTextOutline" />
+                  </template>
+                  自定义页面
+                </NButton>
                 <NText depth="3" code>
                   {{ accountInfo?.id }}
                 </NText>

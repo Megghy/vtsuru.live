@@ -210,8 +210,7 @@ export function isEmptyBlock(block: BlockNode): boolean {
     return imagesFile.length === 0 && isEmptyRichText(propsObj.html)
   }
   if (block.type === 'profile') {
-    const hasAny = !isEmptyText(propsObj.avatarUrl)
-      || !!propsObj.avatarFile
+    const hasAny = !!propsObj.avatarFile
       || !isEmptyText(propsObj.displayName)
       || !isEmptyText(propsObj.bio)
     return !hasAny

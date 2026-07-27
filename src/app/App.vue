@@ -262,15 +262,4 @@ a:hover {
   bottom: 0;
 }
 
-/* 尊重系统的“减少动画”偏好 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
 </style>

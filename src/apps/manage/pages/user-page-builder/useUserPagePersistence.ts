@@ -19,9 +19,13 @@ export interface UseUserPagePersistenceOptions {
   localDraftStorage: Ref<UserPagesSettingsV1 | null>
 
   maxConfigBytes: number
-  history: { batch: (fn: () => void) => void }
+  history: {
+    batch: (fn: () => void) => void
+    clear: () => void
+  }
   validateAll: (settingsToValidate: UserPagesSettingsV1) => void
   loadState: () => Promise<void>
+  restoreSnapshot: (snapshot: string) => void
 
   notify: {
     success: (content: string) => void
@@ -61,7 +65,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
             }
           }
 
-          if ((b.type === 'links' || b.type === 'buttons') && Array.isArray(propsObj.items)) {
+          if ((b.type === 'links' || b.type === 'buttons' || b.type === 'socialLinks') && Array.isArray(propsObj.items)) {
             externalLinkCount += propsObj.items.filter((it: any) => {
               const url = typeof it?.url === 'string' ? (it.url as string) : ''
               return url.startsWith('https://')
@@ -69,8 +73,6 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
           }
 
           if (b.type === 'button' && typeof propsObj.url === 'string' && propsObj.url.startsWith('https://')) externalLinkCount++
-
-          if (b.type === 'profile' && typeof propsObj.avatarUrl === 'string' && propsObj.avatarUrl.startsWith('https://')) externalLinkCount++
         })
       }
       walk(project.blocks as any[])
@@ -177,6 +179,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       await clearMyUserPagesDraft()
       opts.localDraftStorage.value = null
       await opts.loadState()
+      opts.history.clear()
       opts.notify.success('已清空草稿')
     } catch (e) {
       reportUserPageError(e, 'clear-draft')
@@ -186,11 +189,23 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     }
   }
 
+  function discardLocalChanges(snapshot: string) {
+    try {
+      opts.history.batch(() => opts.restoreSnapshot(snapshot))
+      opts.history.clear()
+      opts.notify.success('已放弃本地修改')
+    } catch (e) {
+      reportUserPageError(e, 'discard-local-changes')
+      opts.notify.error((e as Error).message || String(e))
+    }
+  }
+
   async function rollback() {
     opts.isSaving.value = true
     try {
       await rollbackMyUserPagesPublished()
       await opts.loadState()
+      opts.history.clear()
       opts.notify.success('已回滚到上一个已发布版本')
     } catch (e) {
       reportUserPageError(e, 'rollback')
@@ -210,6 +225,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     saveDraftInternal,
     confirmPublish,
     clearDraft,
+    discardLocalChanges,
     rollback,
   }
 }

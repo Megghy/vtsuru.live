@@ -1,32 +1,29 @@
 <script setup lang="ts">
 import { NFlex, NIcon } from 'naive-ui';
+import type { Component } from 'vue'
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
-import {
-  GlobeOutline,
-  LogoDiscord,
-  LogoGithub,
-  LogoTwitch,
-  LogoTwitter,
-  LogoYoutube,
-} from '@vicons/ionicons5'
-import bilibili from '@/svgs/bilibili.svg'
-
-type Platform =
-  | 'bilibili'
-  | 'youtube'
-  | 'x'
-  | 'discord'
-  | 'twitch'
-  | 'qqgroup'
-  | 'github'
-  | 'website'
-  | 'netease'
-  | 'spotify'
-  | 'other'
+import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
+import NeteaseIcon from '@/svgs/netease.svg'
+import BilibiliIcon from '@/svgs/social/bilibili.svg'
+import DouyinIcon from '@/svgs/social/douyin.svg'
+import DiscordIcon from '@/svgs/social/discord.svg'
+import GithubIcon from '@/svgs/social/github.svg'
+import KuaishouIcon from '@/svgs/social/kuaishou.svg'
+import QqIcon from '@/svgs/social/qq.svg'
+import SpotifyIcon from '@/svgs/social/spotify.svg'
+import TwitchIcon from '@/svgs/social/twitch.svg'
+import WechatIcon from '@/svgs/social/wechat.svg'
+import WeiboIcon from '@/svgs/social/weibo.svg'
+import XIcon from '@/svgs/social/x.svg'
+import XiaohongshuIcon from '@/svgs/social/xiaohongshu.svg'
+import YoutubeIcon from '@/svgs/social/youtube.svg'
+import ZhihuIcon from '@/svgs/social/zhihu.svg'
+import { SOCIAL_PLATFORM_NAMES } from '../socialPlatforms'
+import type { SocialPlatform } from '../socialPlatforms'
 
 interface SocialItem {
-  platform?: Platform
+  platform?: SocialPlatform
   url: string
   label?: string
 }
@@ -56,19 +53,29 @@ const cfg = computed<BlockConfig>(() => {
   }
 })
 
-function inferPlatform(url: string): Platform {
+function isDomain(host: string, domain: string) {
+  return host === domain || host.endsWith(`.${domain}`)
+}
+
+function inferPlatform(url: string): SocialPlatform {
   try {
     const u = new URL(url)
     const host = u.hostname.toLowerCase()
-    if (host.endsWith('bilibili.com')) return 'bilibili'
-    if (host.endsWith('youtube.com') || host === 'youtu.be') return 'youtube'
-    if (host === 'x.com' || host.endsWith('twitter.com')) return 'x'
-    if (host.endsWith('discord.com') || host === 'discord.gg') return 'discord'
-    if (host.endsWith('twitch.tv')) return 'twitch'
-    if (host.endsWith('github.com')) return 'github'
-    if (host.endsWith('qm.qq.com')) return 'qqgroup'
-    if (host.endsWith('spotify.com')) return 'spotify'
-    if (host.endsWith('music.163.com')) return 'netease'
+    if (isDomain(host, 'bilibili.com')) return 'bilibili'
+    if (isDomain(host, 'weibo.com') || isDomain(host, 'weibo.cn')) return 'weibo'
+    if (isDomain(host, 'xiaohongshu.com') || isDomain(host, 'xhslink.com')) return 'xiaohongshu'
+    if (isDomain(host, 'douyin.com') || isDomain(host, 'iesdouyin.com')) return 'douyin'
+    if (isDomain(host, 'kuaishou.com')) return 'kuaishou'
+    if (isDomain(host, 'weixin.qq.com')) return 'wechat'
+    if (isDomain(host, 'zhihu.com')) return 'zhihu'
+    if (isDomain(host, 'youtube.com') || host === 'youtu.be') return 'youtube'
+    if (host === 'x.com' || isDomain(host, 'twitter.com')) return 'x'
+    if (isDomain(host, 'discord.com') || host === 'discord.gg') return 'discord'
+    if (isDomain(host, 'twitch.tv')) return 'twitch'
+    if (isDomain(host, 'github.com')) return 'github'
+    if (isDomain(host, 'qm.qq.com')) return 'qqgroup'
+    if (isDomain(host, 'spotify.com')) return 'spotify'
+    if (isDomain(host, 'music.163.com')) return 'netease'
     return 'website'
   } catch {
     return 'other'
@@ -88,27 +95,19 @@ function normalize(items: SocialItem[]) {
 
 const items = computed(() => normalize(cfg.value.items ?? []))
 
-const platformNames: Record<Platform, string> = {
-  bilibili: '哔哩哔哩',
-  youtube: 'YouTube',
-  x: 'X',
-  discord: 'Discord',
-  twitch: 'Twitch',
-  qqgroup: 'QQ 群',
-  github: 'GitHub',
-  website: '网站',
-  netease: '网易云音乐',
-  spotify: 'Spotify',
-  other: '外部链接',
+function getAccessibleName(item: { platform: SocialPlatform, label: string }) {
+  return `${item.label || SOCIAL_PLATFORM_NAMES[item.platform]}（新窗口打开）`
 }
 
-function getAccessibleName(item: { platform: Platform, label: string }) {
-  return `${item.label || platformNames[item.platform]}（新窗口打开）`
-}
-
-function getStyle(platform: Platform) {
-  const presets: Record<Platform, { bg: string, fg: string }> = {
+function getStyle(platform: SocialPlatform) {
+  const presets: Record<SocialPlatform, { bg: string, fg: string }> = {
     bilibili: { bg: '#fb7299', fg: '#ffffff' },
+    weibo: { bg: '#e6162d', fg: '#ffffff' },
+    xiaohongshu: { bg: '#ff2442', fg: '#ffffff' },
+    douyin: { bg: '#111111', fg: '#ffffff' },
+    kuaishou: { bg: '#ff5000', fg: '#ffffff' },
+    wechat: { bg: '#07c160', fg: '#ffffff' },
+    zhihu: { bg: '#0084ff', fg: '#ffffff' },
     youtube: { bg: '#ff0000', fg: '#ffffff' },
     x: { bg: '#111111', fg: '#ffffff' },
     discord: { bg: '#5865f2', fg: '#ffffff' },
@@ -123,15 +122,25 @@ function getStyle(platform: Platform) {
   return presets[platform]
 }
 
-function getIcon(platform: Platform) {
-  if (platform === 'bilibili') return bilibili
-  if (platform === 'youtube') return LogoYoutube
-  if (platform === 'x') return LogoTwitter
-  if (platform === 'discord') return LogoDiscord
-  if (platform === 'twitch') return LogoTwitch
-  if (platform === 'github') return LogoGithub
-  return GlobeOutline
-}
+const platformIcons = {
+  bilibili: BilibiliIcon,
+  weibo: WeiboIcon,
+  xiaohongshu: XiaohongshuIcon,
+  douyin: DouyinIcon,
+  kuaishou: KuaishouIcon,
+  wechat: WechatIcon,
+  zhihu: ZhihuIcon,
+  youtube: YoutubeIcon,
+  x: XIcon,
+  discord: DiscordIcon,
+  twitch: TwitchIcon,
+  qqgroup: QqIcon,
+  github: GithubIcon,
+  website: GlobeOutline,
+  netease: NeteaseIcon,
+  spotify: SpotifyIcon,
+  other: LinkOutline,
+} satisfies Record<SocialPlatform, Component>
 
 const sizePx = computed(() => {
   if (cfg.value.size === 'sm') return 36
@@ -169,11 +178,11 @@ const iconSize = computed(() => {
           '--social-radius': cfg.variant === 'round' ? '999px' : '12px',
         }"
       >
-        <NIcon :size="iconSize">
-          <component :is="getIcon(it.platform)" />
+        <NIcon :size="iconSize" class="social-icon" aria-hidden="true">
+          <component :is="platformIcons[it.platform]" />
         </NIcon>
         <span v-if="cfg.showLabel" class="social-label">
-          {{ it.label || platformNames[it.platform] }}
+          {{ it.label || SOCIAL_PLATFORM_NAMES[it.platform] }}
         </span>
       </a>
     </NFlex>
@@ -208,6 +217,7 @@ const iconSize = computed(() => {
 }
 .social :deep(svg) {
   display: block;
+  fill: currentColor;
 }
 .social-label {
   color: var(--social-fg);
@@ -219,8 +229,4 @@ const iconSize = computed(() => {
   outline-offset: 3px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .social { transition: none; }
-  .social:hover, .social:active { transform: none; }
-}
 </style>

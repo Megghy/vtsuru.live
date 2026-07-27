@@ -52,7 +52,14 @@ function enableFeedbackEmbed(enabled: boolean) {
         <NInput v-model:value="blockProps.text" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" />
       </NFormItem>
       <NFormItem label="方向">
-        <NSelect v-model:value="blockProps.direction" :options="[{ label: 'left', value: 'left' }, { label: 'right', value: 'right' }]" />
+        <NSelect
+          v-model:value="blockProps.direction" :options="[
+            { label: '向左', value: 'left' },
+            { label: '向右', value: 'right' },
+            { label: '向上', value: 'up' },
+            { label: '向下', value: 'down' },
+          ]"
+        />
       </NFormItem>
       <NFormItem label="滚动时长 秒">
         <NInputNumber v-model:value="blockProps.durationSec" :min="4" :max="120" style="width: 100%" />

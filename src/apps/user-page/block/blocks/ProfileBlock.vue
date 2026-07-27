@@ -18,7 +18,7 @@ const model = computed(() => {
   const avatarFile = (o.avatarFile && typeof o.avatarFile === 'object' && !Array.isArray(o.avatarFile)) ? o.avatarFile : null
   const avatarUrl = (avatarFile && typeof avatarFile.path === 'string' && avatarFile.path)
     ? avatarFile.path
-    : ((typeof o.avatarUrl === 'string' && o.avatarUrl) ? o.avatarUrl : props.userInfo?.streamerInfo?.faceUrl)
+    : props.userInfo?.streamerInfo?.faceUrl
   const displayName = (typeof o.displayName === 'string' && o.displayName) ? o.displayName : props.userInfo?.name
   const bio = (typeof o.bio === 'string' && o.bio) ? o.bio : props.biliInfo?.sign
 
