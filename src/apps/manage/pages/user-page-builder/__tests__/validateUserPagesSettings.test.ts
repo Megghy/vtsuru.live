@@ -1,6 +1,6 @@
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { describe, expect, it } from 'vitest'
-import { validateUserPagesSettings } from '../validateUserPagesSettings'
+import { validateRenderableUserPagesSettings, validateUserPagesSettings } from '../validateUserPagesSettings'
 
 describe('user page structured validation', () => {
   it('keeps page, block and field locations for every issue', () => {
@@ -54,5 +54,22 @@ describe('user page structured validation', () => {
       blockId: null,
       fieldPath: 'background.pageBackgroundType',
     }))
+  })
+
+  it('does not include hidden block errors in publish validation', () => {
+    const settings = {
+      version: 1,
+      home: {
+        mode: 'block',
+        block: {
+          version: 1,
+          blocks: [{ id: 'hidden', type: 'not-registered', hidden: true, props: null }],
+        },
+      },
+      pages: {},
+    } as unknown as UserPagesSettingsV1
+
+    expect(validateUserPagesSettings(settings)).not.toHaveLength(0)
+    expect(validateRenderableUserPagesSettings(settings)).toHaveLength(0)
   })
 })

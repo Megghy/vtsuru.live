@@ -23,7 +23,7 @@ export interface UseUserPagePersistenceOptions {
     batch: (fn: () => void) => void
     clear: () => void
   }
-  validateAll: (settingsToValidate: UserPagesSettingsV1) => UserPageValidationIssue[]
+  validateForPublish: (settingsToValidate: UserPagesSettingsV1) => UserPageValidationIssue[]
   loadState: () => Promise<void>
   restoreSnapshot: (snapshot: string) => void
 
@@ -83,7 +83,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
 
   function openPublishModal() {
     publishError.value = null
-    publishCheckIssues.value = opts.validateAll(opts.settings.value)
+    publishCheckIssues.value = opts.validateForPublish(opts.settings.value)
     publishCheckWarnings.value = []
 
     const publishSnapshot = deepCloneJson(opts.settings.value)
@@ -151,7 +151,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     publishError.value = null
     try {
       opts.history.batch(() => pruneHiddenEmptyBlocks(opts.settings.value))
-      const validationIssues = opts.validateAll(opts.settings.value)
+      const validationIssues = opts.validateForPublish(opts.settings.value)
       if (validationIssues.length) {
         publishCheckIssues.value = validationIssues
         publishError.value = '请先解决发布检查中的问题'

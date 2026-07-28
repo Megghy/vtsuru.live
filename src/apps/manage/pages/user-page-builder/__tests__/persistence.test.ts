@@ -32,7 +32,7 @@ function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
     localDraftStorage: ref(null),
     maxConfigBytes: 131072,
     history: { batch: fn => fn(), clear: vi.fn() },
-    validateAll: vi.fn().mockReturnValue(validationIssues),
+    validateForPublish: vi.fn().mockReturnValue(validationIssues),
     loadState: vi.fn(),
     restoreSnapshot: vi.fn(),
     notify: { success: vi.fn(), error: vi.fn() },

@@ -1,4 +1,4 @@
-import { validateBlockPageProject } from '@/apps/user-page/block/schema'
+import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export type UserPageValidationScope = 'settings' | 'page' | 'block'
@@ -62,7 +62,14 @@ function validateBackground(value: unknown, fieldRoot: string, target: IssueTarg
   if (type === 'image' && file === undefined) report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '图片背景必须选择图片文件')
 }
 
-function validatePage(pageKey: string, page: UserPageConfig | undefined, issues: UserPageValidationIssue[]) {
+type BlockProjectValidator = typeof validateBlockPageProject
+
+function validatePage(
+  pageKey: string,
+  page: UserPageConfig | undefined,
+  issues: UserPageValidationIssue[],
+  validateBlockProject: BlockProjectValidator,
+) {
   if (!page) return
   const pageTarget: IssueTarget = { scope: 'page', pageKey, blockId: null }
   if (!['legacy', 'block', 'contrib'].includes(page.mode)) {
@@ -72,7 +79,7 @@ function validatePage(pageKey: string, page: UserPageConfig | undefined, issues:
   validateTheme((page as unknown as UnknownObject).theme, 'theme', pageTarget, issues)
   validateBackground(page.background, 'background', pageTarget, issues)
   if (page.mode === 'block') {
-    const result = validateBlockPageProject(page.block)
+    const result = validateBlockProject(page.block)
     if (result.ok === false) {
       result.issues.forEach(issue => issues.push({
         message: issue.message,
@@ -92,12 +99,20 @@ function validatePage(pageKey: string, page: UserPageConfig | undefined, issues:
   }
 }
 
-export function validateUserPagesSettings(settings: UserPagesSettingsV1) {
+function validateSettings(settings: UserPagesSettingsV1, validateBlockProject: BlockProjectValidator) {
   const issues: UserPageValidationIssue[] = []
   const settingsTarget: IssueTarget = { scope: 'settings', pageKey: null, blockId: null }
   validateTheme((settings as unknown as UnknownObject).theme, 'theme', settingsTarget, issues)
   validateBackground(settings.background, 'background', settingsTarget, issues)
-  validatePage('home', settings.home, issues)
-  Object.entries(settings.pages ?? {}).forEach(([pageKey, page]) => validatePage(pageKey, page, issues))
+  validatePage('home', settings.home, issues, validateBlockProject)
+  Object.entries(settings.pages ?? {}).forEach(([pageKey, page]) => validatePage(pageKey, page, issues, validateBlockProject))
   return issues
+}
+
+export function validateUserPagesSettings(settings: UserPagesSettingsV1) {
+  return validateSettings(settings, validateBlockPageProject)
+}
+
+export function validateRenderableUserPagesSettings(settings: UserPagesSettingsV1) {
+  return validateSettings(settings, validateRenderableBlockPageProject)
 }

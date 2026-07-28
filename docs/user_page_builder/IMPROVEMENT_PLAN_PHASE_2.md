@@ -292,6 +292,7 @@
 - 必须：`UserPagesValidator.AllowedBlockTypes` 增加 `featureNav`、`songList`、`cardList`、`qrcode`、`checkInRanking`、`featuredGoods`、`videoCollect`、`sectionNav`、`nowPlaying`，否则发布会被拒绝。
 - 必须：为九个新区块补齐与前端共享定义一致的类型、枚举、范围、URL、文件和列表校验，不能只增加白名单后透传任意属性。
 - 必须：校验区块 `name`、`hidden`、`visibility`，包括直播状态、设备、Unix 时间戳范围和开始时间早于结束时间。
+- 必须：`hidden=true` 的区块及其布局子树不参与前端发布检查和后端发布校验，隐藏内容中的未完成配置不能阻挡发布；编辑过程仍可保留完整校验提示。
 - 必须：`CountImagesInBlocks` 计入 `cardList.items[].imageFile`，继续执行单页最多 50 张图片限制。
 - 必须：配置大小使用 UTF-8 字节数限制为 131072；当前 `[StringLength(131072)]` 只限制字符数，与前端字节校验不一致。
 - 必须：公开点歌状态响应在 `ShowUserName=false` 时由服务端移除点播用户与请求者标识，不能只在 `nowPlaying` 区块中隐藏文字。

@@ -1,6 +1,6 @@
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
 import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
-import { validateUserPagesSettings } from './validateUserPagesSettings'
+import { validateRenderableUserPagesSettings, validateUserPagesSettings } from './validateUserPagesSettings'
 import { useUserPageAutoSave } from './useUserPageAutoSave'
 import type { UserPageEditorCore } from './useUserPageEditorCore'
 import { useUserPagePersistence } from './useUserPagePersistence'
@@ -78,7 +78,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     localDraftStorage,
     maxConfigBytes,
     history: { batch: core.batchHistory, clear: core.clearHistory },
-    validateAll: validateUserPagesSettings,
+    validateForPublish: validateRenderableUserPagesSettings,
     loadState: loader.loadState,
     restoreSnapshot: (snapshot) => {
       const restored = JSON.parse(snapshot) as UserPagesSettingsV1
