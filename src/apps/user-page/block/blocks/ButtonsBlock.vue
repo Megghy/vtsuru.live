@@ -3,6 +3,7 @@ import { NButton, NFlex } from 'naive-ui';
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -87,12 +88,14 @@ const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'gh
 })
 
 const align = computed<'start' | 'center' | 'end'>(() => {
+  if (!isBlockPropertyAvailable('buttons', propsObj.value, 'align')) return 'start'
   const v = propsObj.value.align
   if (v === 'center' || v === 'end' || v === 'start') return v
   return 'start'
 })
 
 const fullWidth = computed(() => {
+  if (!isBlockPropertyAvailable('buttons', propsObj.value, 'fullWidth')) return false
   const v = propsObj.value.fullWidth
   if (typeof v === 'boolean') return v
   return direction.value === 'vertical'
@@ -111,10 +114,12 @@ const backgrounded = computed(() => {
 })
 
 const borderTitle = computed(() => {
+  if (!isBlockPropertyAvailable('buttons', propsObj.value, 'borderTitle')) return ''
   const v = propsObj.value.borderTitle
   return typeof v === 'string' ? v : ''
 })
 const borderTitleAlign = computed<'left' | 'center' | 'right'>(() => {
+  if (!isBlockPropertyAvailable('buttons', propsObj.value, 'borderTitleAlign')) return 'left'
   const v = propsObj.value.borderTitleAlign
   if (v === 'center' || v === 'right' || v === 'left') return v
   return 'left'

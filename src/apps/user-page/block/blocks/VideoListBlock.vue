@@ -8,6 +8,7 @@ import { computed, onMounted, watch } from 'vue'
 import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 interface ManualVideoItem {
   url: string
@@ -43,11 +44,11 @@ const cfg = computed<BlockConfig>(() => {
   return {
     source,
     layout,
-    columns: Math.min(6, Math.max(1, columns)),
+    columns: isBlockPropertyAvailable('videoList', o, 'columns') ? Math.min(6, Math.max(1, columns)) : 1,
     maxItems: Math.min(50, Math.max(1, maxItems)),
     showTitle: typeof o.showTitle === 'boolean' ? o.showTitle : true,
-    title: typeof o.title === 'string' ? o.title : '',
-    items: Array.isArray(o.items) ? o.items : [],
+    title: isBlockPropertyAvailable('videoList', o, 'title') && typeof o.title === 'string' ? o.title : '',
+    items: isBlockPropertyAvailable('videoList', o, 'items') && Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }

@@ -2,6 +2,7 @@
 import { NFlex, NTag } from 'naive-ui';
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 interface TagItem {
   text: string
@@ -31,8 +32,8 @@ const cfg = computed<BlockConfig>(() => {
     items: Array.isArray(o.items) ? o.items : [],
     framed: typeof o.framed === 'boolean' ? o.framed : false,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : false,
-    borderTitle: typeof o.borderTitle === 'string' ? o.borderTitle : '',
-    borderTitleAlign: (o.borderTitleAlign === 'left' || o.borderTitleAlign === 'center' || o.borderTitleAlign === 'right') ? o.borderTitleAlign : 'left',
+    borderTitle: isBlockPropertyAvailable('tags', o, 'borderTitle') && typeof o.borderTitle === 'string' ? o.borderTitle : '',
+    borderTitleAlign: isBlockPropertyAvailable('tags', o, 'borderTitleAlign') && (o.borderTitleAlign === 'left' || o.borderTitleAlign === 'center' || o.borderTitleAlign === 'right') ? o.borderTitleAlign : 'left',
   }
 })
 

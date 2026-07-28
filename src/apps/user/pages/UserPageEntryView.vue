@@ -44,7 +44,7 @@ const blockValidation = computed(() => {
 
 watch(blockValidation, (validation) => {
   if (validation?.ok === false) {
-    reportPublicPageError(new Error(validation.errors.join('; ')), 'render')
+    reportPublicPageError(new Error(validation.issues.map(issue => issue.message).join('; ')), 'render')
   }
 })
 

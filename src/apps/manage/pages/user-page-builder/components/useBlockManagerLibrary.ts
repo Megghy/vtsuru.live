@@ -1,5 +1,5 @@
 import type { MenuOption } from 'naive-ui'
-import type { BlockType } from '@/apps/user-page/block/schema'
+import type { BlockNode, BlockType } from '@/apps/user-page/block/schema'
 import { BLOCK_LIBRARY, createBlockNode } from '@/apps/user-page/block/registry'
 import {
   AddCircleOutline,
@@ -10,15 +10,23 @@ import {
   LayersOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
+import { NIcon, useDialog } from 'naive-ui'
 import { computed, h, inject, ref } from 'vue'
 import { UserPageEditorKey } from '../context'
-import { createId } from '../editorHelpers'
+import { cloneBlockNode, createId, deepCloneJson } from '../editorHelpers'
+import { USER_PAGE_BLOCK_TEMPLATES_KEY } from '../storageKeys'
+import { usePersistedStorage } from '@/shared/storage/persist'
 
 interface BlockTemplate {
   key: string
   label: string
   blocks: Array<{ type: BlockType, props?: Record<string, unknown> }>
+}
+
+interface PersonalBlockTemplate {
+  id: string
+  label: string
+  blocks: BlockNode[]
 }
 
 const blockTemplates: BlockTemplate[] = [
@@ -28,6 +36,7 @@ const blockTemplates: BlockTemplate[] = [
     blocks: [
       { type: 'profile' },
       { type: 'liveStatus' },
+      { type: 'featureNav' },
       { type: 'streamSchedule' },
       { type: 'socialLinks' },
       { type: 'footer' },
@@ -57,10 +66,10 @@ const blockTemplates: BlockTemplate[] = [
 ]
 
 const blockGroups = [
-  { key: 'live', label: '直播与日程', types: ['liveStatus', 'streamSchedule'] },
+  { key: 'live', label: '直播与日程', types: ['liveStatus', 'streamSchedule', 'songList', 'nowPlaying', 'checkInRanking', 'featuredGoods', 'videoCollect'] },
   { key: 'profile', label: '资料与品牌', types: ['profile', 'biliInfo', 'tags', 'milestone', 'faq', 'quote'] },
-  { key: 'content', label: '内容与媒体', types: ['videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'] },
-  { key: 'social', label: '社交与运营', types: ['socialLinks', 'links', 'button', 'buttons', 'supporter', 'feedback'] },
+  { key: 'content', label: '内容与媒体', types: ['cardList', 'videoList', 'embed', 'image', 'imageGallery', 'musicPlayer'] },
+  { key: 'social', label: '社交与运营', types: ['featureNav', 'sectionNav', 'socialLinks', 'links', 'button', 'buttons', 'supporter', 'feedback'] },
   { key: 'base', label: '布局与基础', types: ['layout', 'heading', 'text', 'richText', 'alert', 'marquee', 'countdown', 'divider', 'spacer', 'footer'] },
 ] as const
 
@@ -86,11 +95,15 @@ function createGroupLabel(label: string, key: string): MenuOption {
 export function useBlockManagerLibrary() {
   const editor = inject(UserPageEditorKey)
   if (!editor) throw new Error('UserPageEditor context is missing')
-
+  const dialog = useDialog()
   const showAddMenu = ref(false)
   const blockSearch = ref('')
   const blockTypeSet = new Set<string>(BLOCK_LIBRARY.map(item => item.type))
-  const templateOptions = blockTemplates.map(template => ({ label: template.label, key: template.key }))
+  const personalTemplates = usePersistedStorage<PersonalBlockTemplate[]>(USER_PAGE_BLOCK_TEMPLATES_KEY, [])
+  const templateOptions = computed(() => [
+    ...blockTemplates.map(template => ({ label: template.label, key: template.key })),
+    ...personalTemplates.value.map(template => ({ label: template.label, key: `personal:${template.id}` })),
+  ])
 
   const filteredLibrary = computed(() => {
     const query = blockSearch.value.trim().toLocaleLowerCase()
@@ -122,9 +135,26 @@ export function useBlockManagerLibrary() {
     return options
   })
 
+  const moveTargets = computed<MenuOption[]>(() => {
+    const layouts: MenuOption[] = []
+    const visit = (blocks: BlockNode[]) => blocks.forEach((block) => {
+      if (block.type !== 'layout') return
+      layouts.push({ label: `移入 ${block.name?.trim() || '布局容器'}`, key: `move-to:${block.id}` })
+      const props = block.props as { children?: BlockNode[] } | undefined
+      if (Array.isArray(props?.children)) visit(props.children)
+    })
+    visit(editor.currentProject.value?.blocks ?? [])
+    return [
+      { label: '页面顶部', key: 'move-to:top' },
+      { label: '页面底部', key: 'move-to:bottom' },
+      ...layouts,
+    ]
+  })
+
   const blockActionOptions = computed<MenuOption[]>(() => [
     { label: '上移', key: 'move-up', icon: () => h(NIcon, null, { default: () => h(ArrowUpOutline) }) },
     { label: '下移', key: 'move-down', icon: () => h(NIcon, null, { default: () => h(ArrowDownOutline) }) },
+    { label: '移动到', key: 'move-to', children: moveTargets.value, icon: () => h(NIcon, null, { default: () => h(LayersOutline) }) },
     { type: 'divider', key: 'movement-divider' },
     { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
     { label: '复制', key: 'copy', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
@@ -138,26 +168,78 @@ export function useBlockManagerLibrary() {
     { label: '删除区块', key: 'delete', icon: () => h(NIcon, null, { default: () => h(TrashOutline) }), props: { style: 'color: #d03050' } },
   ])
 
-  function insertTemplate(key: string) {
+  function createTemplateNodes(key: string) {
+    if (key.startsWith('personal:')) {
+      const template = personalTemplates.value.find(item => item.id === key.slice(9))
+      return template ? { label: template.label, nodes: template.blocks.map(cloneBlockNode) } : null
+    }
     const template = blockTemplates.find(item => item.key === key)
-    const project = editor.currentProject.value
-    if (!template || !project) return
+    if (!template) return null
     const nodes = template.blocks.map(({ type, props }) => {
       const node = createBlockNode(type, createId())
       if (props) node.props = { ...node.props as Record<string, unknown>, ...props }
       return node
     })
+    return { label: template.label, nodes }
+  }
+
+  function applyTemplate(key: string, replace: boolean) {
+    const template = createTemplateNodes(key)
+    const project = editor.currentProject.value
+    if (!template || !project) return
     editor.batchHistory(() => {
-      project.blocks.push(...nodes)
-      editor.selectedBlockIds.value = nodes.map(node => node.id)
+      if (replace) project.blocks = template.nodes
+      else project.blocks.push(...template.nodes)
+      editor.selectedBlockIds.value = template.nodes.map(node => node.id)
     })
-    editor.message.success(`已插入“${template.label}”模板`)
+    editor.message.success(`${replace ? '已替换为' : '已追加'}“${template.label}”模板`)
+  }
+
+  function insertTemplate(key: string) {
+    const project = editor.currentProject.value
+    if (!project) return
+    if (!project.blocks.length) {
+      applyTemplate(key, false)
+      return
+    }
+    dialog.warning({
+      title: '应用起始模板',
+      content: '当前页面已有区块，请选择追加模板内容或替换当前页面。',
+      positiveText: '追加',
+      negativeText: '替换',
+      onPositiveClick: () => applyTemplate(key, false),
+      onNegativeClick: () => applyTemplate(key, true),
+    })
   }
 
   function handleAddBlockMenuSelect(key: string) {
     if (!blockTypeSet.has(key)) return
-    editor.addBlock(key as BlockType)
     showAddMenu.value = false
+    const selected = editor.selectedBlock.value
+    if (selected?.type !== 'layout') {
+      editor.addBlock(key as BlockType)
+      return
+    }
+    dialog.info({
+      title: '添加到布局附近',
+      content: '将新区块加入当前布局，或插入到布局下方。',
+      positiveText: '加入布局',
+      negativeText: '插到下方',
+      onPositiveClick: () => editor.addBlock(key as BlockType, 'inside'),
+      onNegativeClick: () => editor.addBlock(key as BlockType, 'after'),
+    })
+  }
+
+  function saveSelectionAsTemplate() {
+    const blocks = editor.selectedBlocks.value
+    if (!blocks.length) return
+    const firstName = blocks[0].name?.trim()
+    personalTemplates.value.push({
+      id: String(Date.now()),
+      label: firstName || `个人模板 ${personalTemplates.value.length + 1}`,
+      blocks: blocks.map(block => deepCloneJson(block)),
+    })
+    editor.message.success(`已保存 ${blocks.length} 个区块为个人模板`)
   }
 
   return {
@@ -168,5 +250,6 @@ export function useBlockManagerLibrary() {
     blockActionOptions,
     insertTemplate,
     handleAddBlockMenuSelect,
+    saveSelectionAsTemplate,
   }
 }

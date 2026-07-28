@@ -6,7 +6,7 @@ import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { editor } = useBlockPropsEditor(() => props.block)
+const { editor, propertyValues } = useBlockPropsEditor(() => props.block)
 type LayoutProps = ReturnType<typeof editor.ensureLayoutProps>
 const layout = computed(() => editor.ensureLayoutProps(props.block))
 
@@ -52,7 +52,11 @@ const verticalModel = computed<string>({
     else layout.value.align = value as LayoutProps['align']
   },
 })
-const horizontalOptions = computed(() => layout.value.layout === 'column' ? horizontalAlignOptions : horizontalJustifyOptions)
+const horizontalOptions = computed(() => {
+  if (layout.value.layout === 'column') return horizontalAlignOptions
+  const values = propertyValues('justify')
+  return values ? horizontalJustifyOptions.filter(option => values.includes(option.value as 'start' | 'center' | 'end')) : horizontalJustifyOptions
+})
 const verticalOptions = computed(() => layout.value.layout === 'column' ? verticalJustifyOptions : verticalAlignOptions)
 </script>
 

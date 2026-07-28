@@ -10,7 +10,7 @@ defineOptions({ name: 'BuilderPagesPane' })
 
 const props = defineProps<{
   collapsed: boolean
-  resizable: boolean
+  collapsible: boolean
 }>()
 
 const emit = defineEmits<{
@@ -40,7 +40,7 @@ const compactPages = computed(() => pageEntries.value.map(page => ({
             页面
           </NText>
         </Transition>
-        <NTooltip v-if="props.resizable" placement="right">
+        <NTooltip v-if="props.collapsible" placement="right">
           <template #trigger>
             <NButton
               quaternary

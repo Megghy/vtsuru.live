@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NDivider, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NProgress, NRadioButton, NRadioGroup, NSelect, NSwitch, NText, NTooltip } from 'naive-ui';
-import { computed, inject } from 'vue'
+import { NAlert, NAutoComplete, NButton, NCard, NCollapse, NCollapseItem, NDivider, NDropdown, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NProgress, NRadioButton, NRadioGroup, NSelect, NSwitch, NText, NTooltip } from 'naive-ui';
+import { computed, inject, ref, watch } from 'vue'
 import { ColorPaletteOutline } from '@vicons/ionicons5'
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { UserPageEditorKey } from '../context'
@@ -10,6 +10,7 @@ import LegacyIndexSettings from './LegacyIndexSettings.vue'
 import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
 import PropsGrid from './PropsGrid.vue'
 import { useBlockPropertyFocus } from './useBlockPropertyFocus'
+import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -23,6 +24,42 @@ const capacityStatus = computed(() => {
 })
 
 const { expandedPageSections } = useBlockPropertyFocus()
+const { templateOptions, addBlockOptions, insertTemplate, handleAddBlockMenuSelect } = useBlockManagerLibrary()
+const pageSlug = ref(editor.currentKey.value)
+
+watch(editor.currentKey, key => pageSlug.value = key)
+
+function renameCurrentPage() {
+  try {
+    editor.renamePage(editor.currentKey.value, pageSlug.value)
+  } catch (error) {
+    pageSlug.value = editor.currentKey.value
+    editor.message.error((error as Error).message || String(error))
+  }
+}
+
+function batchSetHidden(hidden: boolean) {
+  editor.setBlocksHidden(editor.selectedBlockIds.value, hidden)
+}
+
+function batchSetChrome(key: 'framed' | 'backgrounded', value: boolean) {
+  editor.batchHistory(() => {
+    editor.selectedBlocks.value.forEach((block) => {
+      editor.ensurePropsObject(block)[key] = value
+    })
+  })
+}
+
+function duplicateSelection() {
+  const ids = editor.selectedBlockIds.value
+  editor.copyBlocksToClipboard(ids)
+  editor.pasteBlocksAfter(ids.at(-1) ?? null)
+}
+
+function groupSelection() {
+  const ids = editor.selectedBlockIds.value
+  if (ids.length > 1) editor.groupBlocksIntoLayout(ids[1], ids[0])
+}
 
 </script>
 
@@ -34,7 +71,7 @@ const { expandedPageSections } = useBlockPropertyFocus()
     content-style="padding: 12px"
   >
     <template #header-extra>
-      <NFlex align="center" :wrap="false" style="gap: 10px; min-width: 0">
+      <NFlex align="center" :wrap="false" style="gap: 6px; min-width: 0">
         <NTooltip
           v-if="editor.currentKey.value !== 'home' && editor.currentPage.value.mode === 'block' && editor.currentProject.value"
         >
@@ -63,11 +100,11 @@ const { expandedPageSections } = useBlockPropertyFocus()
           :status="capacityStatus as any"
           :show-indicator="false"
           :height="6"
-          style="width: 140px"
+          style="width: 70px"
         />
       </NFlex>
     </template>
-    <NFlex vertical size="large">
+    <NFlex vertical size="small">
       <NCollapse
         v-if="editor.currentPage.value.mode !== 'legacy' && (editor.currentKey.value !== 'home' || editor.currentPage.value.mode !== 'block')"
         v-model:expanded-names="expandedPageSections"
@@ -100,7 +137,12 @@ const { expandedPageSections } = useBlockPropertyFocus()
                 <NInputNumber v-model:value="editor.currentPage.value.navOrder" style="width: 100%" placeholder="数字越小越靠前" />
               </NFormItem>
               <NFormItem label="路径 (Slug)">
-                <NInput :value="editor.currentKey.value" :disabled="true" />
+                <NFlex :wrap="false" style="width: 100%">
+                  <NInput v-model:value="pageSlug" placeholder="例如 links / sponsor / faq" @keyup.enter="renameCurrentPage" />
+                  <NButton :disabled="pageSlug === editor.currentKey.value" @click="renameCurrentPage">
+                    修改
+                  </NButton>
+                </NFlex>
               </NFormItem>
             </PropsGrid>
           </NForm>
@@ -194,14 +236,70 @@ const { expandedPageSections } = useBlockPropertyFocus()
                 v-if="editor.selectedBlock.value"
                 :key="`selected:${editor.selectedBlock.value.id}`"
                 data-block-property-editor
-                style="margin-top: 12px"
+                style="margin-top: 8px"
               >
-                <NText strong style="display:block; margin-bottom: 8px">
+                <NText strong style="display:block; margin-bottom: 6px">
                   属性编辑 - {{ editor.selectedBlock.value.type }}
                 </NText>
                 <ErrorBoundary title="区块属性面板渲染失败">
                   <BlockTypeEditor :block="editor.selectedBlock.value" />
                 </ErrorBoundary>
+              </div>
+              <div v-else-if="editor.selectedBlocks.value.length > 1" key="multi" class="multi-selection-panel">
+                <NText strong>
+                  已选择 {{ editor.selectedBlocks.value.length }} 个区块
+                </NText>
+                <NFlex size="small">
+                  <NButton size="small" secondary @click="batchSetHidden(false)">
+                    显示
+                  </NButton>
+                  <NButton size="small" secondary @click="batchSetHidden(true)">
+                    隐藏
+                  </NButton>
+                  <NButton size="small" secondary @click="batchSetChrome('framed', true)">
+                    显示边框
+                  </NButton>
+                  <NButton size="small" secondary @click="batchSetChrome('framed', false)">
+                    隐藏边框
+                  </NButton>
+                  <NButton size="small" secondary @click="batchSetChrome('backgrounded', true)">
+                    显示背景
+                  </NButton>
+                  <NButton size="small" secondary @click="batchSetChrome('backgrounded', false)">
+                    透明背景
+                  </NButton>
+                </NFlex>
+                <NFlex size="small">
+                  <NButton size="small" type="primary" secondary @click="groupSelection">
+                    成组
+                  </NButton>
+                  <NButton size="small" secondary @click="duplicateSelection">
+                    创建副本
+                  </NButton>
+                  <NButton size="small" secondary @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)">
+                    复制
+                  </NButton>
+                  <NButton size="small" type="error" secondary @click="editor.removeBlocks(editor.selectedBlockIds.value)">
+                    删除
+                  </NButton>
+                </NFlex>
+              </div>
+              <div v-else key="empty" class="empty-selection-panel">
+                <NText depth="3">
+                  当前没有选中区块
+                </NText>
+                <NFlex size="small">
+                  <NDropdown :options="addBlockOptions" trigger="click" @select="key => handleAddBlockMenuSelect(String(key))">
+                    <NButton type="primary" secondary>
+                      添加区块
+                    </NButton>
+                  </NDropdown>
+                  <NDropdown :options="templateOptions" trigger="click" @select="key => insertTemplate(String(key))">
+                    <NButton secondary>
+                      起始模板
+                    </NButton>
+                  </NDropdown>
+                </NFlex>
               </div>
             </Transition>
           </template>
@@ -231,3 +329,16 @@ const { expandedPageSections } = useBlockPropertyFocus()
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
+
+<style scoped>
+.multi-selection-panel,
+.empty-selection-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--vtsuru-border);
+  border-radius: 6px;
+  background: var(--vtsuru-bg-muted);
+}
+</style>

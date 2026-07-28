@@ -4,7 +4,7 @@ import { NFlex, NFormItem, NSelect, NSwitch } from 'naive-ui'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { blockProps } = useBlockPropsEditor(() => props.block)
+const { blockProps, propertyAvailable } = useBlockPropsEditor(() => props.block)
 
 const alignOptions = [
   { label: '左对齐', value: 'start' },
@@ -16,10 +16,10 @@ const variantOptions = ['solid', 'secondary', 'tertiary', 'quaternary', 'ghost']
 </script>
 
 <template>
-  <NFormItem label="对齐方式">
+  <NFormItem v-if="propertyAvailable('align')" label="对齐方式">
     <NSelect v-model:value="blockProps.align" :options="alignOptions" />
   </NFormItem>
-  <NFormItem label="按钮铺满宽度">
+  <NFormItem v-if="propertyAvailable('fullWidth')" label="按钮铺满宽度">
     <NFlex justify="end">
       <NSwitch v-model:value="blockProps.fullWidth" size="small" />
     </NFlex>

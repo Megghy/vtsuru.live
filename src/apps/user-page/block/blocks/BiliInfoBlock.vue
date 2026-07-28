@@ -5,6 +5,7 @@ import { NAlert, NAvatar, NButton, NFlex, NIcon, NSkeleton } from 'naive-ui'
 import { computed } from 'vue'
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 interface BlockConfig {
   variant?: 'card' | 'compact'
@@ -38,8 +39,8 @@ const cfg = computed<BlockConfig>(() => {
     showSign: typeof o.showSign === 'boolean' ? o.showSign : true,
     showStats: typeof o.showStats === 'boolean' ? o.showStats : true,
     showButtons: typeof o.showButtons === 'boolean' ? o.showButtons : true,
-    showLiveRoom: typeof o.showLiveRoom === 'boolean' ? o.showLiveRoom : true,
-    spaceUrl: typeof o.spaceUrl === 'string' ? o.spaceUrl : '',
+    showLiveRoom: isBlockPropertyAvailable('biliInfo', o, 'showLiveRoom') && (typeof o.showLiveRoom !== 'boolean' || o.showLiveRoom),
+    spaceUrl: isBlockPropertyAvailable('biliInfo', o, 'spaceUrl') && typeof o.spaceUrl === 'string' ? o.spaceUrl : '',
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }

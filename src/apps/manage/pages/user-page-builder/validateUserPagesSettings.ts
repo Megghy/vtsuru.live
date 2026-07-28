@@ -1,111 +1,103 @@
 import { validateBlockPageProject } from '@/apps/user-page/block/schema'
-import type { UserPageBackgroundConfigV1, UserPageConfig, UserPagesSettingsV1, UserPageThemeConfigV1 } from '@/apps/user-page/types'
+import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
-export function validateUserPagesSettings(settingsToValidate: UserPagesSettingsV1) {
-  const problems: string[] = []
+export type UserPageValidationScope = 'settings' | 'page' | 'block'
 
-  const asObject = (v: unknown) => {
-    if (!v || typeof v !== 'object') return null
-    if (Array.isArray(v)) return null
-    return v as Record<string, unknown>
+export interface UserPageValidationIssue {
+  message: string
+  severity: 'error'
+  scope: UserPageValidationScope
+  pageKey: string | null
+  blockId: string | null
+  fieldPath: string | null
+}
+
+type IssueTarget = Pick<UserPageValidationIssue, 'scope' | 'pageKey' | 'blockId'>
+type UnknownObject = Record<string, unknown>
+
+function asObject(value: unknown): UnknownObject | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as UnknownObject : null
+}
+
+function report(issues: UserPageValidationIssue[], target: IssueTarget, fieldPath: string | null, message: string) {
+  issues.push({ ...target, fieldPath, message, severity: 'error' })
+}
+
+function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, issues: UserPageValidationIssue[]) {
+  if (value === undefined) return
+  const theme = asObject(value)
+  if (!theme) {
+    report(issues, target, fieldRoot, '主题设置必须是 object')
+    return
   }
-
-  const validateBackground = (label: string, bg: UserPageBackgroundConfigV1 | undefined) => {
-    if (bg === undefined) return
-    const obj = asObject(bg)
-    if (!obj) {
-      problems.push(`${label}: background 必须是 object`)
-      return
-    }
-
-    const t = obj.pageBackgroundType === undefined ? 'none' : String(obj.pageBackgroundType)
-    const typeOk = t === 'none' || t === 'color' || t === 'image'
-    if (!typeOk) problems.push(`${label}: background.pageBackgroundType 不合法：${t}`)
-
-    if (obj.pageBackgroundCoverSidebar !== undefined && typeof obj.pageBackgroundCoverSidebar !== 'boolean') {
-      problems.push(`${label}: background.pageBackgroundCoverSidebar 必须是 boolean`)
-    }
-    if (obj.pageBackgroundImageFit !== undefined) {
-      const fit = String(obj.pageBackgroundImageFit)
-      if (!(fit === 'cover' || fit === 'contain' || fit === 'fill' || fit === 'none')) problems.push(`${label}: background.pageBackgroundImageFit 不合法：${fit}`)
-    }
-    if (obj.pageBackgroundBlurMode !== undefined) {
-      const m = String(obj.pageBackgroundBlurMode)
-      if (!(m === 'none' || m === 'background' || m === 'glass')) problems.push(`${label}: background.pageBackgroundBlurMode 不合法：${m}`)
-    }
-    if (obj.pageBackgroundBlur !== undefined && typeof obj.pageBackgroundBlur !== 'number') {
-      problems.push(`${label}: background.pageBackgroundBlur 必须是 number`)
-    }
-    if (obj.pageBackgroundScrimMode !== undefined) {
-      const m = String(obj.pageBackgroundScrimMode)
-      if (!(m === 'auto' || m === 'black' || m === 'white')) problems.push(`${label}: background.pageBackgroundScrimMode 不合法：${m}`)
-    }
-    if (obj.pageBackgroundScrimStrength !== undefined) {
-      if (typeof obj.pageBackgroundScrimStrength !== 'number') {
-        problems.push(`${label}: background.pageBackgroundScrimStrength 必须是 number`)
-      } else if (!Number.isFinite(obj.pageBackgroundScrimStrength) || obj.pageBackgroundScrimStrength < 0 || obj.pageBackgroundScrimStrength > 100) {
-        problems.push(`${label}: background.pageBackgroundScrimStrength 必须是 0~100 的数字`)
-      }
-    }
-
-    if (t === 'color' && obj.pageBackgroundColor !== undefined && typeof obj.pageBackgroundColor !== 'string') {
-      problems.push(`${label}: background.pageBackgroundColor 必须是 string`)
-    }
-
-    if (obj.pageBackgroundImageFile !== undefined) {
-      const f = asObject(obj.pageBackgroundImageFile)
-      const id = f?.id
-      if (typeof id !== 'number' || !Number.isInteger(id) || id <= 0) problems.push(`${label}: background.pageBackgroundImageFile.id 必须是正整数`)
-    }
-    if (t === 'image' && obj.pageBackgroundImageFile === undefined) {
-      problems.push(`${label}: background.pageBackgroundType=image 时必须提供 pageBackgroundImageFile`)
-    }
+  const colors = ['primaryColor', 'textColor', 'backgroundColor']
+  colors.forEach((key) => {
+    if (theme[key] !== undefined && typeof theme[key] !== 'string') report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
+  })
+  const mode = theme.pageThemeMode
+  if (mode !== undefined && !['auto', 'light', 'dark'].includes(String(mode))) {
+    report(issues, target, `${fieldRoot}.pageThemeMode`, `主题模式不合法：${String(mode)}`)
   }
+}
 
-  const validateTheme = (label: string, theme: UserPageThemeConfigV1 | undefined) => {
-    if (theme === undefined) return
-    const obj = asObject(theme)
-    if (!obj) {
-      problems.push(`${label}: theme 必须是 object`)
-      return
-    }
-    if (obj.primaryColor !== undefined && typeof obj.primaryColor !== 'string') problems.push(`${label}: theme.primaryColor 必须是 string`)
-    if (obj.textColor !== undefined && typeof obj.textColor !== 'string') problems.push(`${label}: theme.textColor 必须是 string`)
-    if (obj.backgroundColor !== undefined && typeof obj.backgroundColor !== 'string') problems.push(`${label}: theme.backgroundColor 必须是 string`)
-    if (obj.pageThemeMode !== undefined) {
-      const m = String(obj.pageThemeMode)
-      if (!(m === 'auto' || m === 'light' || m === 'dark')) problems.push(`${label}: theme.pageThemeMode 不合法：${m}`)
-    }
+function validateBackground(value: unknown, fieldRoot: string, target: IssueTarget, issues: UserPageValidationIssue[]) {
+  if (value === undefined) return
+  const background = asObject(value)
+  if (!background) {
+    report(issues, target, fieldRoot, '背景设置必须是 object')
+    return
   }
+  const type = background.pageBackgroundType ?? 'none'
+  if (!['none', 'color', 'image'].includes(String(type))) report(issues, target, `${fieldRoot}.pageBackgroundType`, `背景类型不合法：${String(type)}`)
+  if (background.pageBackgroundCoverSidebar !== undefined && typeof background.pageBackgroundCoverSidebar !== 'boolean') report(issues, target, `${fieldRoot}.pageBackgroundCoverSidebar`, '侧栏背景设置必须是 boolean')
+  if (background.pageBackgroundImageFit !== undefined && !['cover', 'contain', 'fill', 'none'].includes(String(background.pageBackgroundImageFit))) report(issues, target, `${fieldRoot}.pageBackgroundImageFit`, `图片填充方式不合法：${String(background.pageBackgroundImageFit)}`)
+  if (background.pageBackgroundBlurMode !== undefined && !['none', 'background', 'glass'].includes(String(background.pageBackgroundBlurMode))) report(issues, target, `${fieldRoot}.pageBackgroundBlurMode`, `模糊模式不合法：${String(background.pageBackgroundBlurMode)}`)
+  if (background.pageBackgroundBlur !== undefined && typeof background.pageBackgroundBlur !== 'number') report(issues, target, `${fieldRoot}.pageBackgroundBlur`, '模糊强度必须是 number')
+  if (background.pageBackgroundScrimMode !== undefined && !['auto', 'black', 'white'].includes(String(background.pageBackgroundScrimMode))) report(issues, target, `${fieldRoot}.pageBackgroundScrimMode`, `遮罩模式不合法：${String(background.pageBackgroundScrimMode)}`)
+  const strength = background.pageBackgroundScrimStrength
+  if (strength !== undefined && (typeof strength !== 'number' || !Number.isFinite(strength) || strength < 0 || strength > 100)) report(issues, target, `${fieldRoot}.pageBackgroundScrimStrength`, '遮罩强度必须是 0~100 的数字')
+  if (type === 'color' && background.pageBackgroundColor !== undefined && typeof background.pageBackgroundColor !== 'string') report(issues, target, `${fieldRoot}.pageBackgroundColor`, '背景颜色必须是 string')
+  const file = background.pageBackgroundImageFile
+  if (file !== undefined && (!asObject(file) || !Number.isInteger(asObject(file)?.id) || Number(asObject(file)?.id) <= 0)) report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '背景图片文件无效')
+  if (type === 'image' && file === undefined) report(issues, target, `${fieldRoot}.pageBackgroundImageFile`, '图片背景必须选择图片文件')
+}
 
-  const validatePage = (label: string, cfg: UserPageConfig | undefined) => {
-    if (!cfg) return
-    if (!['legacy', 'block', 'contrib'].includes(cfg.mode)) {
-      problems.push(`${label}: mode 不合法：${String(cfg.mode)}`)
-      return
+function validatePage(pageKey: string, page: UserPageConfig | undefined, issues: UserPageValidationIssue[]) {
+  if (!page) return
+  const pageTarget: IssueTarget = { scope: 'page', pageKey, blockId: null }
+  if (!['legacy', 'block', 'contrib'].includes(page.mode)) {
+    report(issues, pageTarget, 'mode', `页面模式不合法：${String(page.mode)}`)
+    return
+  }
+  validateTheme((page as unknown as UnknownObject).theme, 'theme', pageTarget, issues)
+  validateBackground(page.background, 'background', pageTarget, issues)
+  if (page.mode === 'block') {
+    const result = validateBlockPageProject(page.block)
+    if (result.ok === false) {
+      result.issues.forEach(issue => issues.push({
+        message: issue.message,
+        severity: issue.severity,
+        scope: 'block',
+        pageKey,
+        blockId: issue.blockId,
+        fieldPath: issue.fieldPath,
+      }))
     }
-    validateTheme(label, (cfg as any).theme)
-    validateBackground(label, cfg.background)
-    if (cfg.mode === 'block') {
-      const v = validateBlockPageProject(cfg.block)
-      if (v.ok === false) problems.push(`${label}: ${v.errors.join('；')}`)
-      return
-    }
-    if (cfg.mode === 'contrib') {
-      const c = cfg.contrib
-      if (!c) {
-        problems.push(`${label}: 缺少 contrib 配置`)
-        return
-      }
-      if (!c.pageId) problems.push(`${label}: contrib.pageId 不能为空`)
-      if (c.scope === 'streamer' && !c.streamerId) problems.push(`${label}: contrib.streamerId 不能为空`)
+  } else if (page.mode === 'contrib') {
+    if (!page.contrib) report(issues, pageTarget, 'contrib', '缺少贡献页配置')
+    else {
+      if (!page.contrib.pageId) report(issues, pageTarget, 'contrib.pageId', '贡献页 ID 不能为空')
+      if (page.contrib.scope === 'streamer' && !page.contrib.streamerId) report(issues, pageTarget, 'contrib.streamerId', '主播 ID 不能为空')
     }
   }
+}
 
-  validateTheme('settings', (settingsToValidate as any).theme)
-  validateBackground('settings', settingsToValidate.background)
-  validatePage('home', settingsToValidate.home)
-  Object.entries(settingsToValidate.pages ?? {}).forEach(([slug, cfg]) => validatePage(`pages.${slug}`, cfg))
-
-  if (problems.length) throw new Error(problems.join('\n'))
+export function validateUserPagesSettings(settings: UserPagesSettingsV1) {
+  const issues: UserPageValidationIssue[] = []
+  const settingsTarget: IssueTarget = { scope: 'settings', pageKey: null, blockId: null }
+  validateTheme((settings as unknown as UnknownObject).theme, 'theme', settingsTarget, issues)
+  validateBackground(settings.background, 'background', settingsTarget, issues)
+  validatePage('home', settings.home, issues)
+  Object.entries(settings.pages ?? {}).forEach(([pageKey, page]) => validatePage(pageKey, page, issues))
+  return issues
 }

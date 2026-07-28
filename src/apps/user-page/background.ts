@@ -70,7 +70,7 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
 
 export function getUserPageSurfaceCssVars(effectiveIsDark: boolean) {
   return {
-    '--user-page-ui-surface-bg': effectiveIsDark ? 'rgba(24, 24, 27, 0.80)' : 'rgba(255, 255, 255, 0.62)',
+    '--user-page-ui-surface-bg': effectiveIsDark ? 'rgba(24, 24, 27, 0.70)' : 'rgba(255, 255, 255, 0.62)',
     '--user-page-ui-surface-bg-hover': effectiveIsDark ? 'rgba(39, 39, 42, 0.86)' : 'rgba(244, 244, 245, 0.72)',
     '--user-page-ui-surface-bg-pressed': effectiveIsDark ? 'rgba(39, 39, 42, 0.92)' : 'rgba(244, 244, 245, 0.80)',
     '--user-page-border-color': effectiveIsDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
@@ -89,10 +89,11 @@ export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIs
     : (bg.blurMode === 'background'
         ? (effectiveIsDark ? 0.42 : 0.20)
         : (effectiveIsDark ? 0.32 : 0.12))
-  const scrimAlpha = Math.min(0.9, Math.max(0, scrimBaseAlpha * (bg.scrimStrength / 100)))
   const scrimRgb = bg.scrimMode === 'white' || (bg.scrimMode === 'auto' && !effectiveIsDark)
     ? '255, 255, 255'
     : '0, 0, 0'
+  const darkImageScrimFloor = effectiveIsDark && bg.type === 'image' && scrimRgb === '0, 0, 0' ? 0.12 : 0
+  const scrimAlpha = Math.min(0.9, Math.max(darkImageScrimFloor, scrimBaseAlpha * (bg.scrimStrength / 100)))
   const scrim = scrimAlpha > 0 ? `rgba(${scrimRgb}, ${scrimAlpha})` : 'transparent'
 
   const glassColor = bg.type === 'color' && bg.color

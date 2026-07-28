@@ -10,6 +10,7 @@ import {
   TvOutline,
 } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 interface BlockConfig {
   variant: 'card' | 'compact'
@@ -103,7 +104,10 @@ function formatDuration(milliseconds: number) {
 const durationText = computed(() => model.value.isStreaming && model.value.lastStreamAt
   ? formatDuration(now.value - model.value.lastStreamAt)
   : '')
-const hasCover = computed(() => cfg.value.variant === 'card' && cfg.value.showCover && model.value.coverUrl && !coverFailed.value)
+const hasCover = computed(() => isBlockPropertyAvailable('liveStatus', cfg.value, 'showCover') && cfg.value.showCover && model.value.coverUrl && !coverFailed.value)
+const actionButtonProps = computed(() => hasCover.value
+  ? { color: 'rgba(255, 255, 255, 0.16)', textColor: '#ffffff' }
+  : { secondary: true })
 </script>
 
 <template>
@@ -170,7 +174,7 @@ const hasCover = computed(() => cfg.value.variant === 'card' && cfg.value.showCo
         <div v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)" class="actions">
           <NButton
             v-if="model.spaceUrl"
-            secondary
+            v-bind="actionButtonProps"
             tag="a"
             target="_blank"
             rel="noopener noreferrer"
@@ -185,7 +189,7 @@ const hasCover = computed(() => cfg.value.variant === 'card' && cfg.value.showCo
           <NButton
             v-if="model.liveRoomUrl"
             :type="model.isStreaming ? 'primary' : 'default'"
-            secondary
+            v-bind="actionButtonProps"
             tag="a"
             target="_blank"
             rel="noopener noreferrer"
@@ -237,6 +241,8 @@ const hasCover = computed(() => cfg.value.variant === 'card' && cfg.value.showCo
 .compact .body { align-self: center; }
 .compact .actions { justify-content: flex-end; }
 .compact .actions > * { flex: none; }
+.compact.immersive { min-height: 156px; }
+.compact.immersive .content { min-height: 156px; }
 
 @container (max-width: 520px) {
   .content, .compact .content { grid-template-columns: 1fr; padding: 14px; }

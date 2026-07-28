@@ -1,13 +1,11 @@
 import { fetchMyUserPagesState } from '@/apps/user-page/api'
-import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { Ref } from 'vue'
 import { deepCloneJson, stableStringify } from './editorHelpers'
-import { createDefaultProject, ensurePageConfig, isEmptyDraftPlaceholder, isMeaningfulSettings } from './editorPageConfig'
+import { createDefaultProject, isEmptyDraftPlaceholder, isMeaningfulSettings } from './editorPageConfig'
 
 interface UseUserPageStateLoaderOptions {
   settings: Ref<UserPagesSettingsV1>
-  currentKey: Ref<string>
-  currentPage: Ref<UserPageConfig>
   loadedDraft: Ref<UserPagesSettingsV1 | null>
   loadedPublished: Ref<UserPagesSettingsV1 | null>
   loadedRollback: Ref<UserPagesSettingsV1 | null>
@@ -88,7 +86,6 @@ export function useUserPageStateLoader(options: UseUserPageStateLoaderOptions) {
     options.loadedFrom.value = selected.source
     options.localDraftStorage.value = deepCloneJson(selected.settings)
 
-    options.currentPage.value = ensurePageConfig(options.settings.value, options.currentKey.value)
     options.lastSavedSnapshot.value = selected.savedSettings
       ? JSON.stringify(selected.savedSettings)
       : createSavedSnapshot(options)

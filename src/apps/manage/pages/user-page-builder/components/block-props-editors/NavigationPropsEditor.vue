@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { SOCIAL_PLATFORM_OPTIONS } from '@/apps/user-page/block/socialPlatforms'
-import { NButton, NFlex, NForm, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
+import { NFlex, NForm, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
 import PropsGrid from '../PropsGrid.vue'
+import RepeaterEditor from '../RepeaterEditor.vue'
 import ButtonAppearanceFields from './ButtonAppearanceFields.vue'
 import { getNavigationTargetType, setNavigationTargetType } from './navigationTargets'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -16,18 +17,21 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
   <NForm v-if="props.block.type === 'links'" label-placement="top" size="small">
     <PropsGrid>
       <NFormItem class="span-full" label="链接项">
-        <NFlex vertical style="width: 100%">
-          <div v-for="(item, index) in ensureArrayProp('items')" :key="index" style="display: flex; gap: 8px">
-            <NInput v-model:value="item.label" placeholder="标题" />
-            <NInput v-model:value="item.url" placeholder="链接 https://..." />
-            <NButton type="error" secondary @click="ensureArrayProp('items').splice(index, 1)">
-              删除
-            </NButton>
-          </div>
-          <NButton type="info" secondary @click="ensureArrayProp('items').push({ label: '', url: 'https://' })">
-            添加
-          </NButton>
-        </NFlex>
+        <RepeaterEditor :items="ensureArrayProp('items')" :create-item="() => ({ label: '', url: 'https://' })" add-text="添加链接">
+          <template #title="{ item, index }">
+            {{ item.label || `链接 ${index + 1}` }}
+          </template>
+          <template #default="{ item }">
+            <PropsGrid>
+              <NFormItem label="标题">
+                <NInput v-model:value="item.label" />
+              </NFormItem>
+              <NFormItem label="链接">
+                <NInput v-model:value="item.url" placeholder="https://..." />
+              </NFormItem>
+            </PropsGrid>
+          </template>
+        </RepeaterEditor>
       </NFormItem>
     </PropsGrid>
   </NForm>
@@ -71,23 +75,24 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
         </NFlex>
       </NFormItem>
       <NFormItem class="span-full" label="链接项">
-        <NFlex vertical style="width: 100%">
-          <div v-for="(item, index) in ensureArrayProp('items')" :key="index" style="display: flex; gap: 8px">
-            <NSelect
-              v-model:value="item.platform"
-              style="width: 140px"
-              :options="SOCIAL_PLATFORM_OPTIONS"
-            />
-            <NInput v-model:value="item.url" placeholder="https://..." />
-            <NInput v-model:value="item.label" placeholder="可选显示名" />
-            <NButton type="error" secondary @click="ensureArrayProp('items').splice(index, 1)">
-              删除
-            </NButton>
-          </div>
-          <NButton type="info" secondary @click="ensureArrayProp('items').push({ platform: 'bilibili', url: 'https://', label: '' })">
-            添加
-          </NButton>
-        </NFlex>
+        <RepeaterEditor :items="ensureArrayProp('items')" :create-item="() => ({ platform: 'bilibili', url: 'https://', label: '' })" add-text="添加社交链接">
+          <template #title="{ item, index }">
+            {{ item.label || item.platform || `平台 ${index + 1}` }}
+          </template>
+          <template #default="{ item }">
+            <PropsGrid>
+              <NFormItem label="平台">
+                <NSelect v-model:value="item.platform" :options="SOCIAL_PLATFORM_OPTIONS" />
+              </NFormItem>
+              <NFormItem label="显示名 / 无障碍名称">
+                <NInput v-model:value="item.label" placeholder="可选" />
+              </NFormItem>
+              <NFormItem class="span-full" label="链接">
+                <NInput v-model:value="item.url" placeholder="https://..." />
+              </NFormItem>
+            </PropsGrid>
+          </template>
+        </RepeaterEditor>
       </NFormItem>
     </PropsGrid>
   </NForm>

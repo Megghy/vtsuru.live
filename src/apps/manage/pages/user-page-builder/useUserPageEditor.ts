@@ -33,6 +33,7 @@ export function useUserPageEditor() {
     currentKey: core.currentKey,
     currentPage: core.currentPage,
     currentProject: core.currentProject,
+    loadedRollback: core.loadedRollback,
     accountId,
     accountName: computed(() => account.value?.name),
     selectedBlockIds: core.selectedBlockIds,

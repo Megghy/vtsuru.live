@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
-import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Person48Filled, VideoAdd20Filled, WindowWrench20Filled, } from '@vicons/fluent'
-import { BrowsersOutline, Chatbox, ChevronBackOutline, ChevronForwardOutline, Home, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
+import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
 import {
   darkTheme, NAvatar, NBackTop, NButton, NConfigProvider, NDivider, NEllipsis, NIcon, NModal, NResult, NScrollbar, NFlex, NSpin, NSwitch, NText, NTooltip } from 'naive-ui';
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
-import { FunctionTypes, ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/api-models'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
-import { fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
+import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageSurfaceCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
@@ -20,8 +20,8 @@ import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
 import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
+import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
 import type { BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
-import { VTSURU_API_URL } from '@/shared/config'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -297,29 +297,10 @@ function updateMenuOptions() {
     { label: '主页', key: 'user-index', icon: Home, to: { name: 'user-index' } },
   ]
 
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.SongList)) {
-    baseItems.push({ label: '歌单', key: 'user-songList', icon: MusicalNote, to: { name: 'user-songList' } })
-  }
-
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Schedule)) {
-    baseItems.push({ label: '日程', key: 'user-schedule', icon: CalendarClock24Filled, to: { name: 'user-schedule' } })
-  }
-
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.QuestionBox)) {
-    baseItems.push({ label: '棉花糖 (提问箱)', key: 'user-questionBox', icon: Chatbox, to: { name: 'user-questionBox' } })
-  }
-
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.VideoCollect)) {
-    baseItems.push({ label: '视频征集', key: 'user-video-collect', icon: VideoAdd20Filled, to: { name: 'user-video-collect' } })
-  }
-
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.Point)) {
-    baseItems.push({ label: '积分', key: 'user-goods', icon: BookCoins20Filled, to: { name: 'user-goods' } })
-  }
-
-  if (userInfo.value?.extra?.enableFunctions.includes(FunctionTypes.CheckInRanking)) {
-    baseItems.push({ label: '签到排行', key: 'user-checkin', icon: CheckmarkCircle24Filled, to: { name: 'user-checkin' } })
-  }
+  const enabledFunctions = getEnabledUserFunctions(userInfo.value)
+  baseItems.push(...USER_FEATURE_DEFINITIONS
+    .filter(feature => isUserFeatureEnabled(feature, enabledFunctions))
+    .map(feature => ({ label: feature.label, key: feature.routeName, icon: feature.icon, to: { name: feature.routeName } })))
 
   const pages = userPagesSettings.value?.pages ?? {}
   const pageItems = Object.entries(pages)
@@ -351,11 +332,10 @@ async function requestBiliUserData(user: UserInfo, signal: AbortSignal) {
   }
   biliProfileStatus.value = 'loading'
   try {
-    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${user.biliId}`, { signal })
-    const data = await response.json()
+    const profile = await fetchBiliProfile(user.biliId, signal)
     if (signal.aborted) return
-    if (data?.code === 0 && data?.data?.card) {
-      biliUserInfo.value = data.data.card
+    if (profile) {
+      biliUserInfo.value = profile
       biliProfileStatus.value = 'ready'
     } else {
       biliUserInfo.value = null
@@ -984,6 +964,12 @@ watch(
   background: var(--glass-surface-bg, rgba(255, 255, 255, 0.55));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+}
+
+.page-root.bg-host.glass .user-sider {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .page-root.bg-host.glass .layout-header {

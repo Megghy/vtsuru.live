@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { NButton, NDropdown, NEmpty, NFlex, NIcon, NInput, NMenu, NModal, NPopover, NScrollbar, NText } from 'naive-ui'
+import type { MenuOption } from 'naive-ui'
+import { NButton, NFlex, NInput, NModal, NScrollbar, NText } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { AddCircleOutline } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
 import BlockTreeList from './BlockTreeList.vue'
-import { collectInvalidBlockIds } from './blockManagerValidation'
-import { useBlockManagerLibrary } from './useBlockManagerLibrary'
+
+const props = defineProps<{
+  blockActionOptions: MenuOption[]
+}>()
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 const managerRoot = ref<HTMLElement | null>(null)
+const dragStatus = ref('')
 
 const project = computed(() => editor.currentProject.value)
 const blocksModel = computed({
@@ -27,8 +30,9 @@ const selectionCount = computed(() => editor.selectedBlockIds.value.length)
 const selectionSet = computed(() => new Set(editor.selectedBlockIds.value))
 
 const invalidBlockIdSet = computed(() => {
-  void editor.validationTick.value
-  return collectInvalidBlockIds(project.value)
+  return new Set(editor.liveValidationIssues.value
+    .filter(issue => issue.scope === 'block' && issue.pageKey === editor.currentKey.value && issue.blockId)
+    .map(issue => issue.blockId as string))
 })
 
 const selectionAnchorId = ref<string | null>(null)
@@ -45,11 +49,14 @@ const INVERTED_SWAP_THRESHOLD = 0.35
 type DragGroupMode = 'into-layout' | 'wrap'
 type DragDropIntent =
   | { kind: 'group'; targetId: string; mode: DragGroupMode }
+  | { kind: 'reorder'; targetId: string; position: 'before' | 'after' }
   | null
 
 const dragDropIntent = ref<DragDropIntent>(null)
 const dragGroupTargetId = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.targetId : null)
 const dragGroupTargetMode = computed(() => dragDropIntent.value?.kind === 'group' ? dragDropIntent.value.mode : null)
+const dragInsertTargetId = computed(() => dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.targetId : null)
+const dragInsertPosition = computed(() => dragDropIntent.value?.kind === 'reorder' ? dragDropIntent.value.position : null)
 
 function ensureExpanded(layoutId: string) {
   if (expandedLayoutIdSet.value.has(layoutId)) return
@@ -61,10 +68,18 @@ watch(() => editor.validationFocusRequest.value?.requestId, async () => {
   if (!request || request.scope !== 'block' || request.pageKey !== editor.currentKey.value) return
   request.ancestorLayoutIds.forEach(ensureExpanded)
   if (!request.blockId) return
+  await scrollBlockIntoView(request.blockId)
+})
+
+async function scrollBlockIntoView(blockId: string) {
   await nextTick()
   const row = Array.from(managerRoot.value?.querySelectorAll<HTMLElement>('[data-block-id]') ?? [])
-    .find(element => element.dataset.blockId === request.blockId)
+    .find(element => element.dataset.blockId === blockId)
   row?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
+watch(() => editor.selectedBlockIds.value[0], (blockId) => {
+  if (blockId) void scrollBlockIntoView(blockId)
 })
 
 function getPointerClientPoint(ev: any): { x: number; y: number } | null {
@@ -116,7 +131,11 @@ function updateDragIntentByPointerEvent(ev: any) {
   const inCenter = point.y > rect.top + edge && point.y < rect.bottom - edge
 
   if (!inCenter) {
-    if (dragDropIntent.value) dragDropIntent.value = null
+    dragDropIntent.value = {
+      kind: 'reorder',
+      targetId,
+      position: point.y < rect.top + rect.height / 2 ? 'before' : 'after',
+    }
     clearExpandTarget()
     return
   }
@@ -217,16 +236,6 @@ function onRowClick(id: string, ev: MouseEvent) {
   selectOnly(id)
 }
 
-const {
-  showAddMenu,
-  blockSearch,
-  templateOptions,
-  addBlockOptions,
-  blockActionOptions,
-  insertTemplate,
-  handleAddBlockMenuSelect,
-} = useBlockManagerLibrary()
-
 const renameBlockModal = ref(false)
 const renameBlockId = ref<string | null>(null)
 const renameBlockName = ref('')
@@ -259,6 +268,7 @@ function confirmDeleteBlocks() {
 function handleBlockAction(key: string, blockId: string) {
   if (key === 'move-up') editor.moveBlock(blockId, -1)
   else if (key === 'move-down') editor.moveBlock(blockId, 1)
+  else if (key.startsWith('move-to:')) editor.moveBlockTo(blockId, key.slice(8))
   else if (key === 'rename') openRenameBlock(blockId)
   else if (key === 'dup-up') editor.duplicateBlockAt(blockId, -1)
   else if (key === 'dup-down') editor.duplicateBlockAt(blockId, 1)
@@ -276,6 +286,7 @@ function toggleExpanded(layoutId: string) {
 }
 
 function onDragStart(evt: any) {
+  dragStatus.value = ''
   stopDragPointerTracking()
   const id = String(evt?.item?.dataset?.blockId || '')
   draggingBlockId.value = id || null
@@ -296,7 +307,11 @@ function onDragEnd(_evt: any) {
   dragDropIntent.value = null
   clearExpandTarget()
 
-  if (!dragId || !intent || intent.kind !== 'group') return
+  if (!dragId) return
+  if (!intent || intent.kind !== 'group') {
+    dragStatus.value = '区块位置已调整'
+    return
+  }
 
   const targetId = intent.targetId
   const mode = intent.mode
@@ -304,6 +319,7 @@ function onDragEnd(_evt: any) {
   // 让 Sortable/vuedraggable 先完成自身的收尾，再变更 block tree（避免相互打架）
   setTimeout(() => {
     editor.groupBlocksIntoLayout(dragId, targetId)
+    dragStatus.value = mode === 'into-layout' ? '区块已移入布局' : '区块已成组'
 
     if (mode === 'into-layout') {
       ensureExpanded(targetId)
@@ -357,46 +373,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="managerRoot">
-    <NFlex justify="space-between" align="center" style="margin-bottom: 8px">
-      <NText strong>
-        区块管理
-      </NText>
-      <NFlex size="small" :wrap="false">
-        <NDropdown :options="templateOptions" trigger="click" @select="(key) => insertTemplate(String(key))">
-          <NButton size="small" secondary>
-            起始模板
-          </NButton>
-        </NDropdown>
-        <NPopover v-model:show="showAddMenu" trigger="click" placement="bottom-end">
-          <template #trigger>
-            <NButton size="small" type="primary" secondary>
-              <template #icon>
-                <NIcon><AddCircleOutline /></NIcon>
-              </template>
-              添加区块
-            </NButton>
-          </template>
-          <div style="width: 310px; padding: 10px 10px 4px">
-            <NInput v-model:value="blockSearch" clearable placeholder="搜索区块名称或关键词" />
-          </div>
-          <NScrollbar style="max-height: 360px; width: 310px">
-            <NMenu
-              v-if="addBlockOptions.length"
-              :options="addBlockOptions"
-              :indent="18"
-              :root-indent="18"
-              :node-props="(opt: any) => String(opt?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
-              @update:value="(key) => handleAddBlockMenuSelect(String(key))"
-            />
-            <NEmpty v-else size="small" description="没有匹配的区块" style="padding: 24px" />
-          </NScrollbar>
-        </NPopover>
-      </NFlex>
-    </NFlex>
-
+  <div ref="managerRoot" class="block-manager">
+    <span class="sr-only" role="status" aria-live="polite">{{ dragStatus }}</span>
     <Transition name="fade-slide">
-      <div v-if="selectionCount > 1" style="margin-bottom: 8px">
+      <div v-if="selectionCount > 1" class="block-manager__selection-toolbar">
         <NFlex size="small" align="center">
           <NText depth="3">
             已选择 {{ selectionCount }} 个区块
@@ -423,25 +403,29 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <div style="padding-right: 4px">
-      <BlockTreeList
-        :blocks="blocksModel"
-        :depth="0"
-        group-name="user-page-blocks"
-        :selection-set="selectionSet"
-        :invalid-set="invalidBlockIdSet"
-        :expanded-layout-id-set="expandedLayoutIdSet"
-        :drag-group-target-id="dragGroupTargetId"
-        :drag-group-target-mode="dragGroupTargetMode"
-        :on-row-click="onRowClick"
-        :on-block-action="handleBlockAction"
-        :on-toggle-expanded="toggleExpanded"
-        :on-drag-start="onDragStart"
-        :on-drag-end="onDragEnd"
-        :on-move="onMove"
-        :block-action-options="blockActionOptions as any"
-      />
-    </div>
+    <NScrollbar class="block-manager__scroll">
+      <div class="block-manager__tree">
+        <BlockTreeList
+          :blocks="blocksModel"
+          :depth="0"
+          group-name="user-page-blocks"
+          :selection-set="selectionSet"
+          :invalid-set="invalidBlockIdSet"
+          :expanded-layout-id-set="expandedLayoutIdSet"
+          :drag-group-target-id="dragGroupTargetId"
+          :drag-group-target-mode="dragGroupTargetMode"
+          :drag-insert-target-id="dragInsertTargetId"
+          :drag-insert-position="dragInsertPosition"
+          :on-row-click="onRowClick"
+          :on-block-action="handleBlockAction"
+          :on-toggle-expanded="toggleExpanded"
+          :on-drag-start="onDragStart"
+          :on-drag-end="onDragEnd"
+          :on-move="onMove"
+          :block-action-options="props.blockActionOptions as any"
+        />
+      </div>
+    </NScrollbar>
 
     <NModal
       v-model:show="renameBlockModal"
@@ -477,3 +461,42 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
+
+<style scoped>
+.block-manager {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.block-manager__selection-toolbar {
+  flex: none;
+  padding: 10px;
+  border-bottom: 1px solid var(--vtsuru-border);
+  padding-block: 8px;
+  background: var(--vtsuru-bg-muted);
+}
+
+.block-manager__scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.block-manager__tree {
+  padding: 10px 14px 10px 10px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+</style>

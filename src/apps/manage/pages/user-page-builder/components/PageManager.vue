@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NInputNumber, NModal, NSwitch, NText, NTooltip } from 'naive-ui';
+import { NAlert, NButton, NDivider, NDropdown, NFlex, NIcon, NInput, NModal, NText, NTooltip } from 'naive-ui';
 import { computed, h, inject, ref } from 'vue'
-import { ChevronDownOutline, ChevronUpOutline, CopyOutline, CreateOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
+import { CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
 import { UserPageEditorKey } from '../context'
 import { usePageEntries } from '../usePageEntries'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const expandedSlugs = ref<Record<string, boolean>>({})
-
 const addPageModal = ref(false)
 const newSlug = ref('')
-
-const renamePageModal = ref(false)
-const renameFromSlug = ref('')
-const renameToSlug = ref('')
 
 const duplicatePageModal = ref(false)
 const duplicateFromSlug = ref('')
@@ -25,7 +19,6 @@ const deletePageModal = ref(false)
 const deletePageSlug = ref('')
 
 const pageActionOptions = [
-  { label: '重命名', key: 'rename', icon: () => h(NIcon, null, { default: () => h(CreateOutline) }) },
   { label: '复制', key: 'duplicate', icon: () => h(NIcon, null, { default: () => h(CopyOutline) }) },
   { label: '删除', key: 'delete', icon: () => h(NIcon, null, { default: () => h(TrashOutline) }), props: { style: 'color: #d03050' } },
 ]
@@ -38,65 +31,6 @@ const pageSections = computed(() => [
   { key: 'hidden', label: '隐藏页面 · 仅可通过按钮跳转', pages: hiddenPages.value, hidden: true },
 ].filter(section => section.pages.length))
 
-function isExpanded(slug: string) {
-  return expandedSlugs.value[slug] === true
-}
-
-function toggleExpanded(slug: string) {
-  expandedSlugs.value = { ...expandedSlugs.value, [slug]: !isExpanded(slug) }
-}
-
-function getPageConfig(slug: string): any | null {
-  const pages = editor.settings.value.pages ?? {}
-  return (pages as any)[slug] ?? null
-}
-
-function getPageTitle(slug: string) {
-  const cfg = getPageConfig(slug)
-  const v = cfg?.title
-  return typeof v === 'string' ? v : ''
-}
-
-function setPageTitle(slug: string, v: unknown) {
-  const cfg = getPageConfig(slug)
-  if (!cfg) return
-  const s = String(v ?? '').trim()
-  if (!s.length) delete cfg.title
-  else cfg.title = s.slice(0, 50)
-}
-
-function getPageNavVisible(slug: string) {
-  const cfg = getPageConfig(slug)
-  return cfg?.navVisible !== false
-}
-
-function setPageNavVisible(slug: string, v: boolean) {
-  const cfg = getPageConfig(slug)
-  if (!cfg) return
-  if (v) delete cfg.navVisible
-  else cfg.navVisible = false
-}
-
-function getPageNavOrder(slug: string) {
-  const cfg = getPageConfig(slug)
-  const v = cfg?.navOrder
-  return typeof v === 'number' && Number.isFinite(v) ? v : 0
-}
-
-function setPageNavOrder(slug: string, v: number | null) {
-  const cfg = getPageConfig(slug)
-  if (!cfg) return
-  const next = Number(v ?? 0)
-  if (!Number.isFinite(next) || next === 0) delete cfg.navOrder
-  else cfg.navOrder = next
-}
-
-function openRenamePage(slug: string) {
-  renameFromSlug.value = slug
-  renameToSlug.value = slug
-  renamePageModal.value = true
-}
-
 function openDuplicatePage(slug: string) {
   duplicateFromSlug.value = slug
   duplicateToSlug.value = `${slug}-copy`
@@ -104,8 +38,7 @@ function openDuplicatePage(slug: string) {
 }
 
 function handlePageAction(key: string, slug: string) {
-  if (key === 'rename') openRenamePage(slug)
-  else if (key === 'duplicate') openDuplicatePage(slug)
+  if (key === 'duplicate') openDuplicatePage(slug)
   else if (key === 'delete') {
     deletePageSlug.value = slug
     deletePageModal.value = true
@@ -123,15 +56,6 @@ function createPage() {
     editor.createPage(newSlug.value)
     newSlug.value = ''
     addPageModal.value = false
-  } catch (e) {
-    editor.message.error((e as Error).message || String(e))
-  }
-}
-
-function confirmRenamePage() {
-  try {
-    editor.renamePage(renameFromSlug.value, renameToSlug.value)
-    renamePageModal.value = false
   } catch (e) {
     editor.message.error((e as Error).message || String(e))
   }
@@ -187,25 +111,6 @@ function confirmDuplicatePage() {
               </NButton>
               <NTooltip>
                 <template #trigger>
-                  <NButton
-                    quaternary
-                    circle
-                    size="small"
-                    :aria-label="isExpanded(p.slug) ? '收起页面设置' : '展开页面设置'"
-                    @click="toggleExpanded(p.slug)"
-                  >
-                    <template #icon>
-                      <NIcon>
-                        <ChevronUpOutline v-if="isExpanded(p.slug)" />
-                        <ChevronDownOutline v-else />
-                      </NIcon>
-                    </template>
-                  </NButton>
-                </template>
-                {{ isExpanded(p.slug) ? '收起页面设置' : '展开页面设置' }}
-              </NTooltip>
-              <NTooltip>
-                <template #trigger>
                   <NDropdown
                     trigger="click"
                     :options="pageActionOptions"
@@ -221,40 +126,6 @@ function confirmDuplicatePage() {
                 更多页面操作
               </NTooltip>
             </div>
-            <Transition name="fade-slide">
-              <div v-if="isExpanded(p.slug)" class="page-item__expand">
-                <NFlex justify="space-between" align="center" :wrap="false" style="gap: 10px">
-                  <NText depth="3" style="font-size: 12px">
-                    显示在侧边栏
-                  </NText>
-                  <NSwitch :value="getPageNavVisible(p.slug)" size="small" @update:value="(v) => setPageNavVisible(p.slug, v)" />
-                </NFlex>
-                <div style="height: 8px" />
-                <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                  页面名称 · 可选
-                </NText>
-                <NInput
-                  size="small"
-                  placeholder="用于管理列表展示"
-                  :value="getPageTitle(p.slug)"
-                  @update:value="(v) => setPageTitle(p.slug, v)"
-                />
-                <div style="height: 8px" />
-                <NText depth="3" style="font-size: 12px; display: block; margin-bottom: 6px">
-                  排序权重 · 数字越小越靠前
-                </NText>
-                <NInputNumber
-                  size="small"
-                  style="width: 100%"
-                  :value="getPageNavOrder(p.slug)"
-                  @update:value="(v) => setPageNavOrder(p.slug, v)"
-                />
-                <div style="height: 8px" />
-                <NText depth="3" style="font-size: 12px">
-                  模式：{{ editor.getPageModeLabel(getPageConfig(p.slug)?.mode) }}
-                </NText>
-              </div>
-            </Transition>
           </div>
         </template>
       </NFlex>
@@ -282,33 +153,6 @@ function confirmDuplicatePage() {
           </NButton>
           <NButton type="primary" @click="createPage">
             创建
-          </NButton>
-        </NFlex>
-      </template>
-    </NModal>
-
-    <NModal
-      v-model:show="renamePageModal"
-      preset="card"
-      title="重命名子页面 slug"
-      style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
-    >
-      <NForm size="small" label-placement="top">
-        <NAlert type="info" :show-icon="true">
-          原 slug：/{{ renameFromSlug || 'slug' }}
-        </NAlert>
-        <NFormItem label="新 slug" required>
-          <NInput v-model:value="renameToSlug" placeholder="例如 links / sponsor / faq" />
-        </NFormItem>
-      </NForm>
-      <template #footer>
-        <NFlex justify="end">
-          <NButton @click="renamePageModal = false">
-            取消
-          </NButton>
-          <NButton type="primary" @click="confirmRenamePage">
-            确定
           </NButton>
         </NFlex>
       </template>
@@ -379,13 +223,6 @@ function confirmDuplicatePage() {
 .page-item__main {
   flex: 1;
   min-width: 0;
-}
-
-.page-item__expand {
-  border: 1px solid var(--n-divider-color);
-  border-radius: 10px;
-  padding: 10px;
-  background: var(--n-color-embedded);
 }
 
 .truncate-text {

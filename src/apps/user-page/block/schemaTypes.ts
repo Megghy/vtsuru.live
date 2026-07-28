@@ -10,6 +10,15 @@ export const BLOCK_TYPES = [
   'buttons',
   'image',
   'imageGallery',
+  'qrcode',
+  'featureNav',
+  'songList',
+  'cardList',
+  'checkInRanking',
+  'featuredGoods',
+  'videoCollect',
+  'sectionNav',
+  'nowPlaying',
   'embed',
   'divider',
   'spacer',
@@ -65,7 +74,21 @@ export interface BlockNode {
   type: BlockType
   name?: string
   hidden?: boolean
+  visibility?: BlockVisibility
   props?: unknown
+}
+
+export interface BlockVisibility {
+  liveState?: 'live' | 'offline'
+  device?: 'desktop' | 'mobile'
+  startsAt?: number
+  endsAt?: number
+}
+
+export interface BlockVisibilityContext {
+  isLive: boolean
+  device: 'desktop' | 'mobile'
+  now: number
 }
 
 export interface BlockPageProject {

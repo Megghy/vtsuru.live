@@ -7,7 +7,7 @@ import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { editor, blockProps } = useBlockPropsEditor(() => props.block)
+const { editor, blockProps, propertyAvailable } = useBlockPropsEditor(() => props.block)
 
 const countdownTarget = computed<number | null>({
   get() {
@@ -96,17 +96,17 @@ function enableFeedbackEmbed(enabled: boolean) {
 
   <NForm v-else-if="props.block.type === 'feedback'" label-placement="top" size="small">
     <PropsGrid>
-      <NFormItem label="标题">
+      <NFormItem v-if="propertyAvailable('title')" label="标题">
         <NInput v-model:value="blockProps.title" />
       </NFormItem>
-      <NFormItem label="按钮文字">
+      <NFormItem v-if="propertyAvailable('buttonText')" label="按钮文字">
         <NInput v-model:value="blockProps.buttonText" />
       </NFormItem>
-      <NFormItem class="span-full" label="描述">
+      <NFormItem v-if="propertyAvailable('description')" class="span-full" label="描述">
         <NInput v-model:value="blockProps.description" type="textarea" :autosize="{ minRows: 2, maxRows: 6 }" />
       </NFormItem>
       <NFormItem
-        v-if="!(blockProps.embed && blockProps.embedMode === 'questionBox')"
+        v-if="propertyAvailable('url')"
         class="span-full"
         label="链接 (https)"
         :required="blockProps.embed && blockProps.embedMode === 'iframe'"
@@ -121,14 +121,14 @@ function enableFeedbackEmbed(enabled: boolean) {
           </NAlert>
         </NFlex>
       </NFormItem>
-      <NFormItem v-if="blockProps.embed" class="span-full" label="嵌入内容">
+      <NFormItem v-if="propertyAvailable('embedMode')" class="span-full" label="嵌入内容">
         <NSelect
           v-model:value="blockProps.embedMode" :options="[
             { label: '站内提问箱', value: 'questionBox' }, { label: '站外 iframe', value: 'iframe' },
           ]"
         />
       </NFormItem>
-      <NFormItem v-if="blockProps.embed && blockProps.embedMode !== 'questionBox'" label="内嵌高度">
+      <NFormItem v-if="propertyAvailable('height')" label="内嵌高度">
         <NInputNumber v-model:value="blockProps.height" :min="200" :max="1200" style="width: 100%" />
       </NFormItem>
     </PropsGrid>
@@ -196,7 +196,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       <NFormItem label="文字">
         <NInput v-model:value="blockProps.text" />
       </NFormItem>
-      <NFormItem label="文字位置">
+      <NFormItem v-if="propertyAvailable('titlePlacement')" label="文字位置">
         <NSelect
           v-model:value="blockProps.titlePlacement" :options="[
             { label: '居左', value: 'left' }, { label: '居中', value: 'center' }, { label: '居右', value: 'right' },

@@ -1,4 +1,5 @@
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { UserPageValidationIssue } from './validateUserPagesSettings'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 import { deepCloneJson } from './editorHelpers'
@@ -12,20 +13,14 @@ interface UseUserPageAutoSaveOptions {
   lastSavedSnapshot: Ref<string>
   error: Ref<string | null>
   jsonSanitizedNotified: Ref<boolean>
-  validateAll: (settings: UserPagesSettingsV1) => void
+  validateAll: (settings: UserPagesSettingsV1) => UserPageValidationIssue[]
   saveDraft: () => Promise<boolean>
   notifyError: (content: string) => void
 }
 
-function createLiveValidator(options: UseUserPageAutoSaveOptions, liveErrors: Ref<string[] | null>, tick: Ref<number>) {
+function createLiveValidator(options: UseUserPageAutoSaveOptions, liveIssues: Ref<UserPageValidationIssue[]>) {
   return () => {
-    tick.value += 1
-    try {
-      options.validateAll(options.settings.value)
-      liveErrors.value = null
-    } catch (error) {
-      liveErrors.value = ((error as Error).message || String(error)).split('\n').filter(Boolean)
-    }
+    liveIssues.value = options.validateAll(options.settings.value)
   }
 }
 
@@ -55,14 +50,15 @@ function serializeSettings(options: UseUserPageAutoSaveOptions, sanitizing: Ref<
 export function useUserPageAutoSave(options: UseUserPageAutoSaveOptions) {
   const autoSaveEnabled = ref(true)
   const isAutoSaving = ref(false)
-  const validationTick = ref(0)
-  const liveValidationErrors = ref<string[] | null>(null)
+  const liveValidationIssues = ref<UserPageValidationIssue[]>([])
   const isSanitizingJson = ref(false)
+  const hasSyncError = ref(false)
+  let retryCount = 0
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
   let validationTimer: ReturnType<typeof setTimeout> | null = null
-  const validateLive = createLiveValidator(options, liveValidationErrors, validationTick)
+  const validateLive = createLiveValidator(options, liveValidationIssues)
 
-  function scheduleAutoSave() {
+  function scheduleAutoSave(delay = 1600) {
     if (!autoSaveEnabled.value || !options.isDirty.value) return
     if (options.isLoading.value || options.isSaving.value || isAutoSaving.value) return
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
@@ -76,15 +72,22 @@ export function useUserPageAutoSave(options: UseUserPageAutoSaveOptions) {
         saved = await options.saveDraft()
       } finally {
         isAutoSaving.value = false
-        if (saved) scheduleAutoSave()
       }
-    }, 1600)
+      hasSyncError.value = !saved
+      if (saved) retryCount = 0
+      else if (retryCount < 3) {
+        retryCount += 1
+        scheduleAutoSave(3000 * retryCount)
+      }
+    }, delay)
   }
 
   watch(options.settings, () => {
     const snapshot = serializeSettings(options, isSanitizingJson)
     if (snapshot === null) return
     options.isDirty.value = snapshot !== options.lastSavedSnapshot.value
+    retryCount = 0
+    hasSyncError.value = false
 
     if (!(options.isLoading.value || options.isSaving.value || isAutoSaving.value)) {
       if (validationTimer) clearTimeout(validationTimer)
@@ -98,10 +101,12 @@ export function useUserPageAutoSave(options: UseUserPageAutoSaveOptions) {
   })
 
   const saveStatusText = computed(() => {
-    if (options.isSaving.value || isAutoSaving.value) return '保存中...'
-    if (options.isDirty.value) return '未保存'
-    if (!options.lastSavedAt.value) return '已保存'
-    return `已保存 · ${new Date(options.lastSavedAt.value).toLocaleTimeString()}`
+    if (options.isSaving.value || isAutoSaving.value) return '正在同步...'
+    if (options.isDirty.value && hasSyncError.value) return '同步失败'
+    if (options.isDirty.value && !autoSaveEnabled.value) return '本机已保存 · 自动同步关闭'
+    if (options.isDirty.value) return '本机已保存'
+    if (!options.lastSavedAt.value) return '服务端草稿已同步'
+    return `已同步 · ${new Date(options.lastSavedAt.value).toLocaleTimeString()}`
   })
 
   function destroy() {
@@ -111,5 +116,5 @@ export function useUserPageAutoSave(options: UseUserPageAutoSaveOptions) {
     validationTimer = null
   }
 
-  return { autoSaveEnabled, isAutoSaving, validationTick, liveValidationErrors, saveStatusText, destroy }
+  return { autoSaveEnabled, isAutoSaving, hasSyncError, liveValidationIssues, saveStatusText, destroy }
 }

@@ -5,6 +5,7 @@ import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types
 import type { ComputedRef, Ref } from 'vue'
 import { nextTick, ref } from 'vue'
 import { deepCloneJson, estimateUtf8Bytes } from './editorHelpers'
+import type { UserPageValidationIssue } from './validateUserPagesSettings'
 
 export interface ValidationFocusRequest {
   requestId: number
@@ -20,6 +21,7 @@ interface UseUserPageEditorIOOptions {
   currentKey: Ref<string>
   currentPage: Ref<UserPageConfig>
   currentProject: ComputedRef<BlockPageProject | null>
+  loadedRollback: Ref<UserPagesSettingsV1 | null>
   accountId: ComputedRef<number>
   accountName: ComputedRef<string>
   selectedBlockIds: Ref<string[]>
@@ -30,66 +32,16 @@ interface UseUserPageEditorIOOptions {
   notifySuccess: (content: string) => void
 }
 
-function findBlockFromValidationPath(project: BlockPageProject, errorMessage: string) {
-  const indices = Array.from(errorMessage.matchAll(/(?:blocks|children)\[(\d+)\]/g), match => Number(match[1]))
-  if (!indices.length) return null
-  let blocks = project.blocks
-  const ancestorLayoutIds: string[] = []
-  let target: BlockNode | null = null
-  for (const [position, index] of indices.entries()) {
-    const candidate = blocks[index]
-    if (!candidate) return null
-    target = candidate
-    if (position === indices.length - 1) break
-    if (target.type !== 'layout' || !Array.isArray((target.props as any)?.children)) return null
-    if (target.id) ancestorLayoutIds.push(target.id)
-    blocks = (target.props as any).children
+function findBlockAncestors(blocks: BlockNode[], blockId: string, ancestors: string[] = []): string[] | null {
+  for (const block of blocks) {
+    if (block.id === blockId) return ancestors
+    if (block.type !== 'layout') continue
+    const props = block.props as { children?: BlockNode[] } | undefined
+    if (!Array.isArray(props?.children)) continue
+    const result = findBlockAncestors(props.children, blockId, [...ancestors, block.id])
+    if (result) return result
   }
-  if (!target?.id) return null
-  return { target, ancestorLayoutIds }
-}
-
-function extractFieldPath(detail: string) {
-  const fields = detail
-    .split(/:\s*/)
-    .map(segment => segment.match(/^([a-z]\w*(?:\[\d+\])?(?:\.[a-z]\w*(?:\[\d+\])?)*)/i)?.[1] ?? null)
-    .filter((field): field is string => !!field && !field.startsWith('blocks') && !field.startsWith('children'))
-  if (fields.length) return fields.join('.')
-  if (detail.includes('缺少 props') || detail.includes('props 必须')) return 'props'
-  if (detail.includes('block type') || detail.includes('type 不能为空')) return 'type'
-  if (detail.includes('一级标题')) return 'level'
-  if (detail.includes('layout 嵌套过深')) return 'children'
   return null
-}
-
-function parseValidationTarget(settings: UserPagesSettingsV1, errorMessage: string) {
-  const prefix = errorMessage.match(/^(settings|home|pages\.([^:]+)):(.*)$/)
-  if (!prefix) return null
-  const pageLabel = prefix[1]
-  const detail = prefix[3].trimStart()
-  if (pageLabel === 'settings') {
-    const fieldPath = extractFieldPath(detail)
-    if (!fieldPath || !/^(?:theme|background)(?:\.|$)/.test(fieldPath)) return null
-    return { pageKey: 'home', blockId: null, ancestorLayoutIds: [], fieldPath, scope: 'settings' as const }
-  }
-
-  const pageKey = pageLabel === 'home' ? 'home' : prefix[2]
-  const page = pageKey === 'home' ? settings.home : settings.pages?.[pageKey]
-  if (!pageKey || !page) return null
-  const pathMatch = detail.match(/blocks\[\d+\](?:\.children\[\d+\])*/)
-  if (!pathMatch) {
-    return { pageKey, blockId: null, ancestorLayoutIds: [], fieldPath: extractFieldPath(detail), scope: 'page' as const }
-  }
-  if (page.mode !== 'block' || !page.block) return null
-  const blockTarget = findBlockFromValidationPath(page.block, pathMatch[0])
-  if (!blockTarget) return null
-  return {
-    pageKey,
-    blockId: blockTarget.target.id,
-    ancestorLayoutIds: blockTarget.ancestorLayoutIds,
-    fieldPath: extractFieldPath(detail.slice((pathMatch.index ?? 0) + pathMatch[0].length)),
-    scope: 'block' as const,
-  }
 }
 
 function parseImportedProject(raw: string) {
@@ -106,7 +58,7 @@ function parseImportedProject(raw: string) {
     : null
   if (!candidate) throw new Error('导入内容不是有效的 block page JSON')
   const validation = validateBlockPageProject(candidate)
-  if (validation.ok === false) throw new Error(validation.errors.join('；'))
+  if (validation.ok === false) throw new Error(validation.issues.map(issue => issue.message).join('；'))
   return validation.project
 }
 
@@ -127,27 +79,53 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
   const validationFocusRequest = ref<ValidationFocusRequest | null>(null)
   let validationFocusRequestId = 0
 
-  function openPreview() {
+  function openSettingsPreview(settings: UserPagesSettingsV1) {
     if (!options.accountName.value) return
-    const path = options.currentKey.value === 'home'
+    const pageKey = options.currentKey.value === 'home' || settings.pages?.[options.currentKey.value]
+      ? options.currentKey.value
+      : 'home'
+    const path = pageKey === 'home'
       ? `/@${options.accountName.value}`
-      : `/@${options.accountName.value}/${options.currentKey.value}`
+      : `/@${options.accountName.value}/${pageKey}`
     const url = new URL(path, window.location.origin)
-    url.searchParams.set('draftPreview', createDraftPreview(options.accountId.value, options.settings.value))
+    url.searchParams.set('draftPreview', createDraftPreview(options.accountId.value, settings))
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  function focusValidationError(errorMessage: string) {
-    const target = parseValidationTarget(options.settings.value, errorMessage)
-    if (!target) return false
+  function openPreview() {
+    openSettingsPreview(options.settings.value)
+  }
+
+  function openRollbackPreview() {
+    if (options.loadedRollback.value) openSettingsPreview(options.loadedRollback.value)
+  }
+
+  function focusValidationIssue(issue: UserPageValidationIssue) {
+    const pageKey = issue.pageKey ?? 'home'
+    const page = pageKey === 'home' ? options.settings.value.home : options.settings.value.pages?.[pageKey]
+    if (issue.scope !== 'settings' && !page) return false
+    let ancestorLayoutIds: string[] = []
+    if (issue.scope === 'block') {
+      if (!issue.blockId || page?.mode !== 'block' || !page.block) return false
+      const ancestors = findBlockAncestors(page.block.blocks, issue.blockId)
+      if (!ancestors) return false
+      ancestorLayoutIds = ancestors
+    }
     const requestId = ++validationFocusRequestId
-    if (target.scope !== 'settings') options.currentKey.value = target.pageKey
-    validationFocusRequest.value = { requestId, ...target }
+    if (issue.scope !== 'settings') options.currentKey.value = pageKey
+    validationFocusRequest.value = {
+      requestId,
+      pageKey,
+      blockId: issue.blockId,
+      ancestorLayoutIds,
+      fieldPath: issue.fieldPath,
+      scope: issue.scope,
+    }
     void nextTick(() => {
       if (requestId !== validationFocusRequestId) return
-      if (target.blockId) {
-        options.selectedBlockIds.value = [target.blockId]
-        options.hoveredBlockId.value = target.blockId
+      if (issue.blockId) {
+        options.selectedBlockIds.value = [issue.blockId]
+        options.hoveredBlockId.value = issue.blockId
       }
     })
     return true
@@ -182,5 +160,5 @@ export function useUserPageEditorIO(options: UseUserPageEditorIOOptions) {
     options.notifySuccess('已导入区块页面配置')
   }
 
-  return { validationFocusRequest, openPreview, focusValidationError, exportCurrentBlockPageJson, importCurrentBlockPageJson }
+  return { validationFocusRequest, openPreview, openRollbackPreview, focusValidationIssue, exportCurrentBlockPageJson, importCurrentBlockPageJson }
 }

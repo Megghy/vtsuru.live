@@ -138,12 +138,40 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     project.blocks = prune(project.blocks)
   }
 
-  function addBlock(type: BlockType) {
+  function addBlock(type: BlockType, placement: 'auto' | 'inside' | 'after' = 'auto') {
     const p = opts.currentProject.value
     if (!p) return
     opts.history.batch(() => {
       const block = createBlockNode(type, createId())
-      p.blocks.push(block)
+      const selectedId = opts.selectedBlockIds.value.length === 1 ? opts.selectedBlockIds.value[0] : null
+      const location = selectedId ? findBlockLocation(p, selectedId) : null
+      if (!location) p.blocks.push(block)
+      else if (placement === 'inside' && location.list[location.index].type === 'layout') {
+        const layoutProps = ensureLayoutProps(location.list[location.index])
+        layoutProps.children.push(block)
+      } else {
+        location.list.splice(location.index + 1, 0, block)
+      }
+      opts.selectedBlockIds.value = [block.id]
+    })
+  }
+
+  function moveBlockTo(blockId: string, target: 'top' | 'bottom' | string) {
+    const project = opts.currentProject.value
+    if (!project) return
+    const source = findBlockLocation(project, blockId)
+    if (!source) return
+    const block = source.list[source.index]
+    let targetLayout: BlockNode | null = null
+    if (target !== 'top' && target !== 'bottom') {
+      targetLayout = findBlockById(project, target)
+      if (!targetLayout || targetLayout.type !== 'layout' || blockContainsId(block, targetLayout.id)) return
+    }
+    opts.history.batch(() => {
+      source.list.splice(source.index, 1)
+      if (target === 'top') project.blocks.unshift(block)
+      else if (target === 'bottom') project.blocks.push(block)
+      else if (targetLayout) ensureLayoutProps(targetLayout).children.push(block)
       opts.selectedBlockIds.value = [block.id]
     })
   }
@@ -435,6 +463,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     ensureLayoutProps,
 
     addBlock,
+    moveBlockTo,
     moveBlock,
     duplicateBlockAt,
     removeBlock,

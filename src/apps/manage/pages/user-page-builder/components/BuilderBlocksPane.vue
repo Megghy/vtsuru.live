@@ -1,71 +1,119 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NScrollbar, NSplit } from 'naive-ui';
-import { inject } from 'vue'
+import { NButton, NCard, NDropdown, NEmpty, NFlex, NIcon, NInput, NMenu, NPopover, NScrollbar, NTooltip } from 'naive-ui'
+import { AddCircleOutline, BookmarkOutline, LayersOutline } from '@vicons/ionicons5'
+import { computed, inject } from 'vue'
 import BlockManager from './BlockManager.vue'
-import BuilderPropsPane from './BuilderPropsPane.vue'
 import { UserPageEditorKey } from '../context'
-import { USER_PAGE_BUILDER_SPLIT_BLOCKS_MERGED_TOP_SIZE_KEY } from '../storageKeys'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 
 defineOptions({ name: 'BuilderBlocksPane' })
-
-const props = defineProps<{
-  mergedProps: boolean
-}>()
-
-const emit = defineEmits<{
-  (e: 'toggle-merged-props'): void
-}>()
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const mergedTopSize = usePersistedStorage<string | number>(USER_PAGE_BUILDER_SPLIT_BLOCKS_MERGED_TOP_SIZE_KEY, '420px')
+const selectionCount = computed(() => editor.selectedBlockIds.value.length)
+const {
+  showAddMenu,
+  blockSearch,
+  templateOptions,
+  addBlockOptions,
+  blockActionOptions,
+  insertTemplate,
+  handleAddBlockMenuSelect,
+  saveSelectionAsTemplate,
+} = useBlockManagerLibrary()
 </script>
 
 <template>
   <NCard
-    class="pane-card"
+    class="pane-card blocks-pane"
     title="区块"
     content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden"
   >
     <template #header-extra>
-      <NButton size="small" quaternary @click="emit('toggle-merged-props')">
-        {{ props.mergedProps ? '拆分编辑列' : '合并编辑列' }}
-      </NButton>
+      <NFlex class="blocks-pane__actions" :wrap="false" size="small">
+        <NTooltip v-if="selectionCount">
+          <template #trigger>
+            <NButton
+              quaternary
+              circle
+              size="small"
+              aria-label="保存所选区块为模板"
+              @click="saveSelectionAsTemplate"
+            >
+              <template #icon>
+                <NIcon><BookmarkOutline /></NIcon>
+              </template>
+            </NButton>
+          </template>
+          保存所选区块为模板
+        </NTooltip>
+
+        <NTooltip :delay="0" placement="bottom">
+          <template #trigger>
+            <NDropdown :options="templateOptions" trigger="click" @select="key => insertTemplate(String(key))">
+              <NButton quaternary circle size="small" aria-label="应用起始模板" title="起始模板">
+                <template #icon>
+                  <NIcon><LayersOutline /></NIcon>
+                </template>
+              </NButton>
+            </NDropdown>
+          </template>
+          起始模板
+        </NTooltip>
+
+        <NPopover v-model:show="showAddMenu" trigger="click" placement="bottom-end">
+          <template #trigger>
+            <NTooltip>
+              <template #trigger>
+                <NButton type="primary" secondary circle size="small" aria-label="添加区块">
+                  <template #icon>
+                    <NIcon><AddCircleOutline /></NIcon>
+                  </template>
+                </NButton>
+              </template>
+              添加区块
+            </NTooltip>
+          </template>
+          <div class="blocks-pane__search">
+            <NInput v-model:value="blockSearch" clearable placeholder="搜索区块名称或关键词" />
+          </div>
+          <NScrollbar style="width: min(310px, calc(100vw - 32px)); max-height: min(360px, calc(100dvh - 160px))">
+            <NMenu
+              v-if="addBlockOptions.length"
+              :options="addBlockOptions"
+              :indent="18"
+              :root-indent="18"
+              :node-props="(option: any) => String(option?.key || '').startsWith('divider:') ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' } : {}"
+              @update:value="key => handleAddBlockMenuSelect(String(key))"
+            />
+            <NEmpty v-else size="small" description="没有匹配的区块" style="padding: 24px" />
+          </NScrollbar>
+        </NPopover>
+      </NFlex>
     </template>
 
-    <NSplit
-      v-if="props.mergedProps"
-      v-model:size="mergedTopSize"
-      direction="vertical"
-      min="220px"
-      style="flex: 1; min-height: 0"
-      :pane1-style="{ display: 'flex', flexDirection: 'column', minHeight: '0', overflow: 'hidden' }"
-      :pane2-style="{ display: 'flex', flexDirection: 'column', minHeight: '0', overflow: 'hidden' }"
-    >
-      <template #1>
-        <NScrollbar class="pane-scroll">
-          <div style="padding: 10px">
-            <BlockManager />
-          </div>
-        </NScrollbar>
-      </template>
-      <template #2>
-        <BuilderPropsPane />
-      </template>
-    </NSplit>
-
-    <NScrollbar v-else class="pane-scroll">
-      <div style="padding: 10px">
-        <BlockManager />
-      </div>
-    </NScrollbar>
-
-
-
-    <NAlert type="info" :show-icon="true">
-      请选择一个区块进行编辑。支持 Ctrl/Shift 多选批量操作。
-    </NAlert>
+    <BlockManager :block-action-options="blockActionOptions" />
   </NCard>
 </template>
+
+<style scoped>
+.blocks-pane :deep(.n-card-header) {
+  padding: 10px 12px;
+}
+
+.blocks-pane :deep(.n-card-header__main) {
+  min-width: max-content;
+}
+
+.blocks-pane__actions {
+  gap: 2px !important;
+}
+
+.blocks-pane__search {
+  width: min(310px, calc(100vw - 32px));
+  padding: 10px 10px 4px;
+  box-sizing: border-box;
+}
+
+</style>

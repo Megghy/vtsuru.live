@@ -6,6 +6,7 @@ import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
 import BlockCard from '../BlockCard.vue'
 import QuestionBoxView from '@/apps/user/pages/QuestionBoxView.vue'
 import { parseFeedbackEmbedUrl } from '../embed'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 interface BlockConfig {
   title?: string
@@ -27,13 +28,13 @@ const cfg = computed<BlockConfig>(() => {
     : {}
   const height = Number(o.height)
   return {
-    title: typeof o.title === 'string' ? o.title : '留言 / 提问',
-    description: typeof o.description === 'string' ? o.description : '',
-    url: typeof o.url === 'string' ? o.url : '',
-    buttonText: typeof o.buttonText === 'string' ? o.buttonText : '前去留言',
+    title: isBlockPropertyAvailable('feedback', o, 'title') && typeof o.title === 'string' ? o.title : '留言 / 提问',
+    description: isBlockPropertyAvailable('feedback', o, 'description') && typeof o.description === 'string' ? o.description : '',
+    url: isBlockPropertyAvailable('feedback', o, 'url') && typeof o.url === 'string' ? o.url : '',
+    buttonText: isBlockPropertyAvailable('feedback', o, 'buttonText') && typeof o.buttonText === 'string' ? o.buttonText : '前去留言',
     embed: typeof o.embed === 'boolean' ? o.embed : false,
     embedMode: (o.embedMode === 'questionBox' || o.embedMode === 'iframe') ? o.embedMode : undefined,
-    height: Number.isFinite(height) ? Math.min(1200, Math.max(200, height)) : 520,
+    height: isBlockPropertyAvailable('feedback', o, 'height') && Number.isFinite(height) ? Math.min(1200, Math.max(200, height)) : 520,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
   }

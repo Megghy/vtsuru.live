@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { UserInfo } from '@/api/api-models'
-import type { BlockNode } from '../schema'
+import type { BlockNode, BlockVisibilityContext } from '../schema'
 import type { BiliProfileStatus } from '../../types'
 import { BLOCK_COMPONENTS } from '../registry'
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
+import { isBlockVisible } from '../visibility'
 
 const props = defineProps<{
   blockProps: unknown
@@ -12,6 +13,14 @@ const props = defineProps<{
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   highlightBlockId?: string | null
+  selectedBlockIds?: string[]
+  editorMode?: 'select' | 'interact'
+  visibilityContext: BlockVisibilityContext
+}>()
+
+const emit = defineEmits<{
+  (event: 'select-block', blockId: string): void
+  (event: 'hover-block', blockId: string | null): void
 }>()
 
 function asObject(v: unknown): Record<string, any> | null {
@@ -112,15 +121,19 @@ const gridJustifyItems = computed<'start' | 'center' | 'end' | 'stretch'>(() => 
 })
 
 const children = computed(() => asBlocks(propsObj.value.children))
-const visibleChildren = computed(() => children.value.filter(it => !it.hidden))
+const renderedChildren = computed(() => props.editorMode
+  ? children.value
+  : children.value.filter(child => !child.hidden && isBlockVisible(child, props.visibilityContext)))
+const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
 const framed = computed(() => (typeof propsObj.value.framed === 'boolean' ? propsObj.value.framed : false))
 const backgrounded = computed(() => (typeof propsObj.value.backgrounded === 'boolean' ? propsObj.value.backgrounded : false))
 const containerStyle = computed(() => ({
-  '--vtsuru-layout-gap': gap.value === null ? 'var(--vtsuru-page-spacing)' : `${gap.value}px`,
-  '--vtsuru-layout-columns': String(columns.value),
   maxWidth: maxWidth.value ?? undefined,
   margin: maxWidth.value ? '0 auto' : undefined,
-  width: maxWidth.value ? '100%' : undefined,
+}))
+const layoutStyle = computed(() => ({
+  '--vtsuru-layout-gap': gap.value === null ? 'var(--vtsuru-page-spacing)' : `${gap.value}px`,
+  '--vtsuru-layout-columns': String(columns.value),
   justifyContent: layout.value === 'grid' ? justify.value.grid : justify.value.flex,
   alignItems: layout.value === 'grid' ? align.value.grid : align.value.flex,
   alignContent: layout.value === 'grid'
@@ -130,75 +143,79 @@ const containerStyle = computed(() => ({
 }))
 
 const blockComponents = BLOCK_COMPONENTS
+
+function handleBlockClick(event: MouseEvent, blockId: string) {
+  if (props.editorMode !== 'select') return
+  event.preventDefault()
+  event.stopPropagation()
+  emit('select-block', blockId)
+}
 </script>
 
 <template>
-  <BlockCard v-if="framed" :framed="true" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
-    <div
-      class="layout"
-      :class="{
-        grid: layout === 'grid',
-        row: layout === 'row',
-        column: layout === 'column',
-        wrap: wrap && layout === 'row',
-        'align-stretch': layout !== 'column' && alignKey === 'stretch',
-      }"
-      :style="containerStyle"
-    >
+  <BlockCard :framed="framed" :backgrounded="backgrounded" :content-style="{ padding: 0 }">
+    <div class="layout-container" :style="containerStyle">
       <div
-        v-for="child in visibleChildren"
-        :key="child.id"
-        class="item"
-        :class="{ highlight: !!props.highlightBlockId && props.highlightBlockId === child.id }"
-        :data-block-id="child.id"
-        :data-block-type="child.type"
+        class="layout"
+        :class="{
+          grid: layout === 'grid',
+          row: layout === 'row',
+          column: layout === 'column',
+          wrap: wrap && layout === 'row',
+          'align-stretch': layout !== 'column' && alignKey === 'stretch',
+        }"
+        :style="layoutStyle"
       >
-        <component
-          :is="blockComponents[child.type]"
-          :block-props="child.props"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-          :bili-status="biliStatus"
-          v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
-        />
+        <div
+          v-for="child in renderedChildren"
+          :key="child.id"
+          class="item"
+          :class="{
+            highlight: !!props.highlightBlockId && props.highlightBlockId === child.id,
+            selected: selectedBlockIdSet.has(child.id),
+            hidden: child.hidden,
+            unavailable: props.editorMode && !child.hidden && !isBlockVisible(child, visibilityContext),
+            selectable: props.editorMode === 'select',
+          }"
+          :data-block-overlay="child.hidden ? '已隐藏' : '当前预览条件下不显示'"
+          :data-block-id="child.id"
+          :data-block-type="child.type"
+          @click="handleBlockClick($event, child.id)"
+          @mouseenter="props.editorMode && emit('hover-block', child.id)"
+          @mouseleave="props.editorMode && emit('hover-block', null)"
+        >
+          <component
+            :is="blockComponents[child.type]"
+            :block-props="child.props"
+            :user-info="userInfo"
+            :bili-info="biliInfo"
+            :bili-status="biliStatus"
+            :block-id="child.type === 'heading' ? child.id : undefined"
+            v-bind="child.type === 'layout' ? {
+              highlightBlockId: props.highlightBlockId,
+              selectedBlockIds: props.selectedBlockIds,
+              editorMode: props.editorMode,
+              visibilityContext: props.visibilityContext,
+              onSelectBlock: (id: string) => emit('select-block', id),
+              onHoverBlock: (id: string | null) => emit('hover-block', id),
+            } : {}"
+          />
+        </div>
       </div>
     </div>
   </BlockCard>
-  <div
-    v-else
-    class="layout"
-    :class="{
-      grid: layout === 'grid',
-      row: layout === 'row',
-      column: layout === 'column',
-      wrap: wrap && layout === 'row',
-      'align-stretch': layout !== 'column' && alignKey === 'stretch',
-    }"
-    :style="containerStyle"
-  >
-    <div
-      v-for="child in visibleChildren"
-      :key="child.id"
-      class="item"
-      :class="{ highlight: !!props.highlightBlockId && props.highlightBlockId === child.id }"
-      :data-block-id="child.id"
-      :data-block-type="child.type"
-    >
-      <component
-        :is="blockComponents[child.type]"
-        :block-props="child.props"
-        :user-info="userInfo"
-        :bili-info="biliInfo"
-        :bili-status="biliStatus"
-        v-bind="child.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
-      />
-    </div>
-  </div>
 </template>
 
 <style scoped>
+.layout-container {
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
 .layout {
   display: flex;
+  width: 100%;
   gap: var(--vtsuru-layout-gap);
 }
 
@@ -235,7 +252,7 @@ const blockComponents = BLOCK_COMPONENTS
   grid-template-columns: repeat(var(--vtsuru-layout-columns), minmax(0, 1fr));
 }
 
-@media (max-width: 520px) {
+@container (max-width: 520px) {
   .layout.grid {
     grid-template-columns: 1fr;
   }
@@ -248,6 +265,35 @@ const blockComponents = BLOCK_COMPONENTS
 
 .item.highlight {
   outline: 1px solid transparent;
+}
+
+.item.selected {
+  outline: 2px solid var(--vtsuru-page-primary);
+  outline-offset: 3px;
+}
+
+.item.selectable {
+  cursor: pointer;
+}
+
+.item.hidden,
+.item.unavailable {
+  min-height: 44px;
+  opacity: 0.42;
+}
+
+.item.hidden::before,
+.item.unavailable::before {
+  content: attr(data-block-overlay);
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-text);
+  background: color-mix(in srgb, var(--vtsuru-page-bg) 72%, transparent);
+  pointer-events: none;
 }
 
 .item.highlight::before {

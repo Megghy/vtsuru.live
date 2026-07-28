@@ -1,33 +1,39 @@
 import { asObject, optionalBoolean, optionalEnum, optionalFile, optionalNumber, optionalString } from './validationUtils'
+import type { ValidationErrors } from './validationUtils'
 
-export function validateBlockPageTheme(theme: unknown, errors: string[]) {
+export function validateBlockPageTheme(theme: unknown, errors: ValidationErrors) {
   if (theme === undefined || theme === null) return
+  const themeErrors: ValidationErrors = {
+    push(message, fieldPath) {
+      errors.push(message, fieldPath ? (fieldPath.startsWith('theme') ? fieldPath : `theme.${fieldPath}`) : 'theme')
+    },
+  }
   const props = asObject(theme)
   if (!props) {
-    errors.push('theme 必须是 object')
+    themeErrors.push('theme 必须是 object')
     return
   }
 
-  ;['primaryColor', 'backgroundColor', 'textColor', 'pageBackgroundColor'].forEach(key => optionalString(props, key, 'theme', errors))
-  optionalNumber(props, 'radius', 0, 32, 'theme', errors)
-  optionalEnum(props, 'spacing', ['compact', 'normal', 'relaxed'], 'theme', errors)
-  optionalEnum(props, 'pageThemeMode', ['auto', 'light', 'dark'], 'theme', errors)
-  optionalEnum(props, 'pageBackgroundType', ['none', 'color', 'image'], 'theme', errors)
-  optionalEnum(props, 'pageBackgroundImageFit', ['cover', 'contain', 'fill', 'none'], 'theme', errors)
-  optionalBoolean(props, 'pageBackgroundCoverSidebar', 'theme', errors)
-  optionalEnum(props, 'pageBackgroundBlurMode', ['none', 'background', 'glass'], 'theme', errors)
-  optionalNumber(props, 'pageBackgroundBlur', 0, 40, 'theme', errors)
-  optionalEnum(props, 'pageBackgroundScrimMode', ['auto', 'black', 'white'], 'theme', errors)
-  optionalNumber(props, 'pageBackgroundScrimStrength', 0, 100, 'theme', errors)
-  optionalFile(props, 'pageBackgroundImageFile', 'theme', errors)
+  ;['primaryColor', 'backgroundColor', 'textColor', 'pageBackgroundColor'].forEach(key => optionalString(props, key, 'theme', themeErrors))
+  optionalNumber(props, 'radius', 0, 32, 'theme', themeErrors)
+  optionalEnum(props, 'spacing', ['compact', 'normal', 'relaxed'], 'theme', themeErrors)
+  optionalEnum(props, 'pageThemeMode', ['auto', 'light', 'dark'], 'theme', themeErrors)
+  optionalEnum(props, 'pageBackgroundType', ['none', 'color', 'image'], 'theme', themeErrors)
+  optionalEnum(props, 'pageBackgroundImageFit', ['cover', 'contain', 'fill', 'none'], 'theme', themeErrors)
+  optionalBoolean(props, 'pageBackgroundCoverSidebar', 'theme', themeErrors)
+  optionalEnum(props, 'pageBackgroundBlurMode', ['none', 'background', 'glass'], 'theme', themeErrors)
+  optionalNumber(props, 'pageBackgroundBlur', 0, 40, 'theme', themeErrors)
+  optionalEnum(props, 'pageBackgroundScrimMode', ['auto', 'black', 'white'], 'theme', themeErrors)
+  optionalNumber(props, 'pageBackgroundScrimStrength', 0, 100, 'theme', themeErrors)
+  optionalFile(props, 'pageBackgroundImageFile', 'theme', themeErrors)
 
   if (props.pageMaxWidth !== undefined) {
     if (typeof props.pageMaxWidth !== 'string'
       || (props.pageMaxWidth.trim() && props.pageMaxWidth.trim() !== 'none' && !/^\d+(?:\.\d+)?(?:px|%)$/.test(props.pageMaxWidth.trim()))) {
-      errors.push('theme: pageMaxWidth 仅支持 none / 100% / 1200px 这类格式')
+      themeErrors.push('theme: pageMaxWidth 仅支持 none / 100% / 1200px 这类格式', 'pageMaxWidth')
     }
   }
   if (props.pageBackgroundType === 'image' && props.pageBackgroundImageFile === undefined) {
-    errors.push('theme: pageBackgroundType=image 时必须提供 pageBackgroundImageFile')
+    themeErrors.push('theme: pageBackgroundType=image 时必须提供 pageBackgroundImageFile', 'pageBackgroundImageFile')
   }
 }

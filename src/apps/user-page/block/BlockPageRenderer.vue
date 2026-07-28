@@ -2,12 +2,15 @@
 import type { UserInfo } from '@/api/api-models'
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { darkTheme, NConfigProvider } from 'naive-ui';
-import { computed } from 'vue'
-import type { BlockPageProject } from './schema'
+import { computed, provide } from 'vue'
+import { useMediaQuery, useNow } from '@vueuse/core'
+import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
 import { getUserPageSurfaceCssVars } from '@/apps/user-page/background'
 import { buildTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
+import { isBlockVisible } from './visibility'
+import { collectPageSections, PageSectionsKey } from './sectionNavigation'
 
 const props = defineProps<{
   project: BlockPageProject
@@ -17,6 +20,14 @@ const props = defineProps<{
   isDark: boolean
   extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
+  selectedBlockIds?: string[]
+  editorMode?: 'select' | 'interact'
+  visibilityContext?: BlockVisibilityContext
+}>()
+
+const emit = defineEmits<{
+  (event: 'select-block', blockId: string): void
+  (event: 'hover-block', blockId: string | null): void
 }>()
 
 const baseOverrides = computed(() => getThemeOverrides(props.isDark))
@@ -103,7 +114,26 @@ const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
 })
 
 const blockComponents = BLOCK_COMPONENTS
-const visibleBlocks = computed(() => props.project.blocks.filter(block => !block.hidden))
+const isMobile = useMediaQuery('(max-width: 767px)')
+const now = useNow({ interval: 30_000 })
+const activeVisibilityContext = computed<BlockVisibilityContext>(() => props.visibilityContext ?? ({
+  isLive: props.userInfo?.streamerInfo?.isStreaming ?? false,
+  device: isMobile.value ? 'mobile' : 'desktop',
+  now: Math.floor(now.value.getTime() / 1000),
+}))
+const renderedBlocks = computed(() => props.editorMode
+  ? props.project.blocks
+  : props.project.blocks.filter(block => !block.hidden && isBlockVisible(block, activeVisibilityContext.value)))
+const selectedBlockIdSet = computed(() => new Set(props.selectedBlockIds ?? []))
+const pageSections = computed(() => collectPageSections(props.project.blocks, activeVisibilityContext.value))
+provide(PageSectionsKey, pageSections)
+
+function handleBlockClick(event: MouseEvent, blockId: string) {
+  if (props.editorMode !== 'select') return
+  event.preventDefault()
+  event.stopPropagation()
+  emit('select-block', blockId)
+}
 </script>
 
 <template>
@@ -113,12 +143,23 @@ const visibleBlocks = computed(() => props.project.blocks.filter(block => !block
       :style="containerStyle"
     >
       <div
-        v-for="block in visibleBlocks"
+        v-for="block in renderedBlocks"
         :key="block.id"
         class="block"
-        :class="{ layout: block.type === 'layout', highlight: !!props.highlightBlockId && props.highlightBlockId === block.id }"
+        :class="{
+          layout: block.type === 'layout',
+          highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
+          selected: selectedBlockIdSet.has(block.id),
+          hidden: block.hidden,
+          unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
+          selectable: props.editorMode === 'select',
+        }"
+        :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
         :data-block-id="block.id"
         :data-block-type="block.type"
+        @click="handleBlockClick($event, block.id)"
+        @mouseenter="props.editorMode && emit('hover-block', block.id)"
+        @mouseleave="props.editorMode && emit('hover-block', null)"
       >
         <component
           :is="blockComponents[block.type]"
@@ -126,7 +167,15 @@ const visibleBlocks = computed(() => props.project.blocks.filter(block => !block
           :user-info="userInfo"
           :bili-info="biliInfo"
           :bili-status="biliStatus"
-          v-bind="block.type === 'layout' ? { highlightBlockId: props.highlightBlockId } : {}"
+          :block-id="block.type === 'heading' ? block.id : undefined"
+          v-bind="block.type === 'layout' ? {
+            highlightBlockId: props.highlightBlockId,
+            selectedBlockIds: props.selectedBlockIds,
+            editorMode: props.editorMode,
+            visibilityContext: activeVisibilityContext,
+            onSelectBlock: (id: string) => emit('select-block', id),
+            onHoverBlock: (id: string | null) => emit('hover-block', id),
+          } : {}"
         />
       </div>
     </div>
@@ -156,6 +205,35 @@ const visibleBlocks = computed(() => props.project.blocks.filter(block => !block
 .block.highlight {
   outline: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 55%, transparent);
   outline-offset: 2px;
+}
+
+.block.selected {
+  outline: 2px solid var(--vtsuru-page-primary);
+  outline-offset: 3px;
+}
+
+.block.selectable {
+  cursor: pointer;
+}
+
+.block.hidden,
+.block.unavailable {
+  min-height: 44px;
+  opacity: 0.42;
+}
+
+.block.hidden::before,
+.block.unavailable::before {
+  content: attr(data-block-overlay);
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-text);
+  background: color-mix(in srgb, var(--vtsuru-page-bg) 72%, transparent);
+  pointer-events: none;
 }
 
 .block.highlight::after {

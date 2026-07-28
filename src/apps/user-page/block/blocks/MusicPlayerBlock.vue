@@ -3,6 +3,7 @@ import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
 import { parseMusicEmbedUrl } from '../embed'
 import BlockCard from '../BlockCard.vue'
+import { getBlockPropertyNumberRange, isBlockPropertyAvailable } from '../propertyCapabilities'
 
 type Provider = 'netease' | 'spotify' | 'custom'
 
@@ -13,10 +14,11 @@ const cfg = computed(() => {
     ? props.blockProps as Record<string, unknown>
     : {}
   const height = Number(o.height)
+  const heightRange = getBlockPropertyNumberRange('musicPlayer', o, 'height')!
   return {
     provider: (o.provider === 'spotify' || o.provider === 'custom' ? o.provider : 'netease') as Provider,
     url: typeof o.url === 'string' ? o.url : '',
-    height: Number.isFinite(height) ? Math.min(900, Math.max(60, height)) : 300,
+    height: isBlockPropertyAvailable('musicPlayer', o, 'height') && Number.isFinite(height) ? Math.min(heightRange.max, Math.max(heightRange.min, height)) : 300,
     compact: typeof o.compact === 'boolean' ? o.compact : false,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,

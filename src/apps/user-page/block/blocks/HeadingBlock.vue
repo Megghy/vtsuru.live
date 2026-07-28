@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
+import { getHeadingAnchorId } from '../sectionNavigation'
 
-const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown, blockId?: string, userInfo?: unknown, biliInfo?: unknown }>()
 
 const model = computed(() => {
   const o = (props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps))
@@ -17,23 +18,33 @@ const model = computed(() => {
 })
 
 const headingTag = computed(() => `h${model.value.level}` as 'h1' | 'h2' | 'h3')
+const anchorId = computed(() => props.blockId ? getHeadingAnchorId(props.blockId) : undefined)
 </script>
 
 <template>
   <BlockCard :framed="model.framed" :backgrounded="model.backgrounded">
-    <div class="heading-wrapper" :class="`level-${model.level}`">
-      <component
-        :is="headingTag"
-        class="heading-text"
-        :style="{ fontSize: model.fontSize }"
-      >
-        {{ model.text }}
-      </component>
+    <div class="heading-container">
+      <div class="heading-wrapper" :class="`level-${model.level}`">
+        <component
+          :is="headingTag"
+          :id="anchorId"
+          data-user-page-section="true"
+          class="heading-text"
+          :style="{ fontSize: model.fontSize }"
+        >
+          {{ model.text }}
+        </component>
+      </div>
     </div>
   </BlockCard>
 </template>
 
 <style scoped>
+.heading-container {
+  container-type: inline-size;
+  min-width: 0;
+}
+
 .heading-wrapper {
   position: relative;
   padding-left: 12px;
@@ -50,6 +61,7 @@ const headingTag = computed(() => `h${model.value.level}` as 'h1' | 'h2' | 'h3')
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0;
+  scroll-margin-top: 24px;
 }
 
 /* Subtle accent for H1/H2 */
@@ -65,7 +77,7 @@ const headingTag = computed(() => `h${model.value.level}` as 'h1' | 'h2' | 'h3')
   opacity: 0.8;
 }
 
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .level-1::before, .level-2::before {
     left: -8px;
   }

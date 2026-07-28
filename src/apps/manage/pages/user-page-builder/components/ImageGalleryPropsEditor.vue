@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import { VueDraggable } from 'vue-draggable-plus'
 import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
 import { NButton, NFlex, NForm, NFormItem, NIcon, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui';
@@ -11,9 +12,9 @@ const props = defineProps<{
   editor: {
     isUploading: { value: boolean }
     ensureImageGalleryProps: (block: BlockNode) => Record<string, any>
-    triggerUploadGalleryItem: (block: BlockNode, itemIndex: number) => void
+    triggerUploadItemImage: (block: BlockNode, itemIndex: number) => void
     triggerUploadGalleryBulk: (block: BlockNode) => void
-    clearUploadedGalleryItemFile: (block: BlockNode, itemIndex: number) => void
+    clearUploadedItemImage: (block: BlockNode, itemIndex: number) => void
   }
 }>()
 
@@ -64,6 +65,10 @@ function getItemKey(it: any) {
   }
   return it._k as string
 }
+
+function propertyAvailable(property: string) {
+  return isBlockPropertyAvailable(props.block.type, gallery.value, property)
+}
 </script>
 
 <template>
@@ -80,11 +85,11 @@ function getItemKey(it: any) {
         />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'carousel'" label="列数">
+      <NFormItem v-if="propertyAvailable('columns')" label="列数">
         <NInputNumber v-model:value="gallery.columns" :min="1" :max="12" style="width: 100%" />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'carousel'" label="间距 px">
+      <NFormItem v-if="propertyAvailable('gap')" label="间距 px">
         <NInputNumber v-model:value="gallery.gap" :min="0" :max="80" style="width: 100%" />
       </NFormItem>
 
@@ -92,11 +97,11 @@ function getItemKey(it: any) {
         <NInput v-model:value="gallery.maxWidth" placeholder="例如 100% 或 720px" />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'masonry'" label="图片最大高度">
+      <NFormItem v-if="propertyAvailable('maxHeight')" label="图片最大高度">
         <NInput v-model:value="gallery.maxHeight" placeholder="例如 320px" />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout !== 'masonry'" label="图片裁剪方式">
+      <NFormItem v-if="propertyAvailable('fit')" label="图片裁剪方式">
         <NSelect
           v-model:value="gallery.fit"
           :options="[
@@ -106,7 +111,7 @@ function getItemKey(it: any) {
         />
       </NFormItem>
 
-      <NFormItem v-if="gallery.layout === 'carousel'" label="自动轮播">
+      <NFormItem v-if="propertyAvailable('autoplay')" label="自动轮播">
         <NFlex justify="end">
           <NSwitch v-model:value="gallery.autoplay" size="small" />
         </NFlex>
@@ -115,7 +120,7 @@ function getItemKey(it: any) {
 
     <template v-if="gallery.layout === 'carousel'">
       <PropsGrid>
-        <NFormItem label="切换动效">
+        <NFormItem v-if="propertyAvailable('effect')" label="切换动效">
           <NSelect
             v-model:value="gallery.effect"
             :options="[
@@ -126,23 +131,23 @@ function getItemKey(it: any) {
           />
         </NFormItem>
 
-        <NFormItem v-if="gallery.autoplay" label="轮播间隔 ms">
+        <NFormItem v-if="propertyAvailable('interval')" label="轮播间隔 ms">
           <NInputNumber v-model:value="gallery.interval" :min="1000" :max="20000" style="width: 100%" />
         </NFormItem>
 
-        <NFormItem label="显示指示点">
+        <NFormItem v-if="propertyAvailable('showDots')" label="显示指示点">
           <NFlex justify="end">
             <NSwitch v-model:value="gallery.showDots" size="small" />
           </NFlex>
         </NFormItem>
 
-        <NFormItem label="显示切换箭头">
+        <NFormItem v-if="propertyAvailable('showArrow')" label="显示切换箭头">
           <NFlex justify="end">
             <NSwitch v-model:value="gallery.showArrow" size="small" />
           </NFlex>
         </NFormItem>
 
-        <NFormItem v-if="gallery.showDots" label="指示点样式">
+        <NFormItem v-if="propertyAvailable('dotType')" label="指示点样式">
           <NSelect
             v-model:value="gallery.dotType"
             :options="[
@@ -152,7 +157,7 @@ function getItemKey(it: any) {
           />
         </NFormItem>
 
-        <NFormItem v-if="gallery.showDots" label="指示点位置">
+        <NFormItem v-if="propertyAvailable('dotPlacement')" label="指示点位置">
           <NSelect
             v-model:value="gallery.dotPlacement"
             :options="[
@@ -234,13 +239,13 @@ function getItemKey(it: any) {
                 </NText>
               </NFlex>
               <NFlex align="center" :wrap="false" style="gap: 8px">
-                <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryItem(props.block, index)">
+                <NButton size="tiny" :loading="props.editor.isUploading.value" @click="props.editor.triggerUploadItemImage(props.block, index)">
                   <template #icon>
                     <NIcon><ImageOutline /></NIcon>
                   </template>
                   上传
                 </NButton>
-                <NButton size="tiny" secondary @click="props.editor.clearUploadedGalleryItemFile(props.block, index)">
+                <NButton size="tiny" secondary @click="props.editor.clearUploadedItemImage(props.block, index)">
                   清除
                 </NButton>
                 <NButton size="tiny" type="error" secondary @click="removeItem(index)">

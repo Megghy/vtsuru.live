@@ -2,6 +2,7 @@
 import { NCarousel, NEmpty } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 type GalleryLayout = 'grid' | 'masonry' | 'carousel'
 type GalleryFit = 'cover' | 'contain'
@@ -46,13 +47,13 @@ const model = computed(() => {
     framed: typeof o.framed === 'boolean' ? o.framed : false,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : false,
     layout,
-    columns: Number.isInteger(columns) ? Math.min(12, Math.max(1, columns)) : 3,
-    gap: Number.isFinite(gap) ? Math.min(80, Math.max(0, gap)) : 12,
+    columns: isBlockPropertyAvailable('imageGallery', o, 'columns') && Number.isInteger(columns) ? Math.min(12, Math.max(1, columns)) : 1,
+    gap: isBlockPropertyAvailable('imageGallery', o, 'gap') && Number.isFinite(gap) ? Math.min(80, Math.max(0, gap)) : 0,
     maxWidth: typeof o.maxWidth === 'string' ? o.maxWidth.trim() : '',
-    maxHeight: typeof o.maxHeight === 'string' ? o.maxHeight.trim() : '',
-    fit: (o.fit === 'contain' ? 'contain' : 'cover') as GalleryFit,
-    autoplay: typeof o.autoplay === 'boolean' ? o.autoplay : false,
-    interval: Number.isFinite(interval) ? Math.min(20000, Math.max(1000, interval)) : 5000,
+    maxHeight: isBlockPropertyAvailable('imageGallery', o, 'maxHeight') && typeof o.maxHeight === 'string' ? o.maxHeight.trim() : '',
+    fit: (isBlockPropertyAvailable('imageGallery', o, 'fit') && o.fit === 'contain' ? 'contain' : 'cover') as GalleryFit,
+    autoplay: isBlockPropertyAvailable('imageGallery', o, 'autoplay') && o.autoplay === true,
+    interval: isBlockPropertyAvailable('imageGallery', o, 'interval') && Number.isFinite(interval) ? Math.min(20000, Math.max(1000, interval)) : 5000,
     effect: (['fade', 'card', 'custom'].includes(String(o.effect)) ? o.effect : 'slide') as CarouselEffect,
     dotType: (o.dotType === 'dot' ? 'dot' : 'line') as CarouselDotType,
     dotPlacement: (['top', 'left', 'right'].includes(String(o.dotPlacement)) ? o.dotPlacement : 'bottom') as CarouselDotPlacement,
@@ -61,7 +62,7 @@ const model = computed(() => {
     loop: typeof o.loop === 'boolean' ? o.loop : true,
     draggable: typeof o.draggable === 'boolean' ? o.draggable : true,
     touchable: typeof o.touchable === 'boolean' ? o.touchable : true,
-    trigger: (o.trigger === 'hover' ? 'hover' : 'click') as CarouselTrigger,
+    trigger: (isBlockPropertyAvailable('imageGallery', o, 'trigger') && o.trigger === 'hover' ? 'hover' : 'click') as CarouselTrigger,
     items,
   }
 })

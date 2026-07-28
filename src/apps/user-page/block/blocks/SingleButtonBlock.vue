@@ -3,6 +3,7 @@ import { NButton, NFlex } from 'naive-ui';
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import BlockCard from '../BlockCard.vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 
@@ -60,6 +61,7 @@ const variant = computed<'solid' | 'secondary' | 'tertiary' | 'quaternary' | 'gh
 })
 
 const align = computed<'start' | 'center' | 'end'>(() => {
+  if (!isBlockPropertyAvailable('button', propsObj.value, 'align')) return 'start'
   const v = propsObj.value.align
   if (v === 'center' || v === 'end' || v === 'start') return v
   return 'start'

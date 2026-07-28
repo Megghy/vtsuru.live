@@ -5,10 +5,12 @@ import { computed, h, inject } from 'vue'
 import {
   ArrowRedoOutline,
   ArrowUndoOutline,
+  AlertCircleOutline,
   ColorPaletteOutline,
   EllipsisHorizontalOutline,
   FolderOpenOutline,
   GridOutline,
+  EyeOutline,
   RefreshOutline,
   SaveOutline,
   SettingsOutline,
@@ -25,9 +27,17 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
+const statusText = computed(() => editor.hasUnpublishedChanges.value && !editor.isDirty.value
+  ? `${editor.saveStatusText.value} · 未发布`
+  : editor.saveStatusText.value)
+const problemCount = computed(() => editor.liveValidationIssues.value.length)
 
 const moreOptions = computed<DropdownOption[]>(() => {
-  const options: DropdownOption[] = []
+  const options: DropdownOption[] = [{
+    label: `编辑来源：${editor.loadedFromLabel.value}`,
+    key: 'version-state',
+    disabled: true,
+  }]
   if (editor.currentPage.value.mode === 'block') {
     options.push(
       { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
@@ -42,6 +52,11 @@ const moreOptions = computed<DropdownOption[]>(() => {
   }, {
     type: 'divider',
     key: 'divider-history',
+  }, {
+    label: '预览可回滚版本',
+    key: 'preview-rollback',
+    disabled: !editor.rollbackAvailable.value,
+    icon: () => h(NIcon, null, { default: () => h(EyeOutline) }),
   }, {
     label: '回滚已发布版本',
     key: 'rollback',
@@ -92,6 +107,7 @@ function handleMoreAction(key: string) {
   if (key === 'resources') editor.resourcesModal.value = true
   else if (key === 'layout') emit('open-layout')
   else if (key === 'auto-save') editor.autoSaveEnabled.value = !editor.autoSaveEnabled.value
+  else if (key === 'preview-rollback') editor.openRollbackPreview()
   else if (key === 'rollback') confirmRollback()
   else if (key === 'clear') confirmClearDraft()
 }
@@ -149,6 +165,12 @@ function handleMoreAction(key: string) {
       </template>
       保存
     </NButton>
+    <NButton v-if="problemCount" size="small" type="error" secondary @click="editor.openPublishModal">
+      <template #icon>
+        <NIcon><AlertCircleOutline /></NIcon>
+      </template>
+      {{ problemCount }} 个问题
+    </NButton>
     <NButton type="primary" size="small" :loading="editor.isSaving.value" @click="editor.openPublishModal">
       发布
     </NButton>
@@ -164,8 +186,15 @@ function handleMoreAction(key: string) {
       </template>
       更多操作
     </NTooltip>
-    <NText class="save-state" depth="3" :title="editor.autoSaveEnabled.value ? '自动保存已开启' : '自动保存已关闭'">
-      {{ editor.saveStatusText.value }}
+    <NText
+      class="save-state"
+      :type="editor.hasSyncError.value ? 'error' : undefined"
+      depth="3"
+      role="status"
+      aria-live="polite"
+      :title="statusText"
+    >
+      {{ statusText }}
     </NText>
   </NFlex>
 </template>

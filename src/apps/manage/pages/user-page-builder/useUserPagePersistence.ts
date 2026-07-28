@@ -1,9 +1,9 @@
 import { clearMyUserPagesDraft, publishMyUserPagesSettings, rollbackMyUserPagesPublished, saveMyUserPagesDraft } from '@/apps/user-page/api'
-import { parseEmbedUrl } from '@/apps/user-page/block/embed'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
+import type { UserPageValidationIssue } from './validateUserPagesSettings'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 
@@ -23,7 +23,7 @@ export interface UseUserPagePersistenceOptions {
     batch: (fn: () => void) => void
     clear: () => void
   }
-  validateAll: (settingsToValidate: UserPagesSettingsV1) => void
+  validateAll: (settingsToValidate: UserPagesSettingsV1) => UserPageValidationIssue[]
   loadState: () => Promise<void>
   restoreSnapshot: (snapshot: string) => void
 
@@ -35,9 +35,10 @@ export interface UseUserPagePersistenceOptions {
 
 export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   const publishModal = ref(false)
-  const publishCheckErrors = ref<string[]>([])
+  const publishCheckIssues = ref<UserPageValidationIssue[]>([])
   const publishCheckWarnings = ref<string[]>([])
   const publishCheckBytes = ref<number>(0)
+  const publishError = ref<string | null>(null)
 
   function scanPublishWarnings(settingsToScan: UserPagesSettingsV1) {
     let embedCount = 0
@@ -56,14 +57,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
             return
           }
 
-          if (b.type === 'embed' && typeof propsObj.url === 'string' && propsObj.url.length) {
-            embedCount++
-            try {
-              parseEmbedUrl(propsObj.url, typeof propsObj.title === 'string' ? propsObj.title : undefined)
-            } catch (e) {
-              publishCheckErrors.value.push(`embed: ${(e as Error).message || String(e)}`)
-            }
-          }
+          if (b.type === 'embed' && typeof propsObj.url === 'string' && propsObj.url.length) embedCount++
 
           if ((b.type === 'links' || b.type === 'buttons' || b.type === 'socialLinks') && Array.isArray(propsObj.items)) {
             externalLinkCount += propsObj.items.filter((it: any) => {
@@ -83,19 +77,14 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       if (cfg.mode === 'block') scanProject(cfg.block)
     })
 
-    if (embedCount > 0) publishCheckWarnings.value.push(`包含 embed：${embedCount} 个，发布时会做 provider 白名单校验`)
-    if (externalLinkCount > 0) publishCheckWarnings.value.push(`包含外链：约 ${externalLinkCount} 个，访客打开将自动 noopener/noreferrer`)
+    if (embedCount > 0) publishCheckWarnings.value.push(`包含嵌入资源：${embedCount} 个，发布时会进行白名单校验`)
+    if (externalLinkCount > 0) publishCheckWarnings.value.push(`包含外链：约 ${externalLinkCount} 个，将在新页面中打开`)
   }
 
   function openPublishModal() {
-    publishCheckErrors.value = []
+    publishError.value = null
+    publishCheckIssues.value = opts.validateAll(opts.settings.value)
     publishCheckWarnings.value = []
-
-    try {
-      opts.validateAll(opts.settings.value)
-    } catch (e) {
-      publishCheckErrors.value.push(...((e as Error).message || String(e)).split('\n').filter(Boolean))
-    }
 
     const publishSnapshot = deepCloneJson(opts.settings.value)
     const prunedCount = pruneHiddenEmptyBlocks(publishSnapshot)
@@ -107,7 +96,16 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
 
     const json = JSON.stringify(publishSnapshot)
     publishCheckBytes.value = estimateUtf8Bytes(json)
-    if (publishCheckBytes.value > opts.maxConfigBytes) publishCheckErrors.value.push(`配置过大：${publishCheckBytes.value} bytes，后端上限 ${opts.maxConfigBytes} bytes`)
+    if (publishCheckBytes.value > opts.maxConfigBytes) {
+      publishCheckIssues.value.push({
+        message: `配置过大：${publishCheckBytes.value} bytes，后端上限 ${opts.maxConfigBytes} bytes`,
+        severity: 'error',
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: null,
+      })
+    }
 
     scanPublishWarnings(opts.settings.value)
     publishModal.value = true
@@ -150,9 +148,16 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
 
   async function confirmPublish() {
     opts.isSaving.value = true
+    publishError.value = null
     try {
       opts.history.batch(() => pruneHiddenEmptyBlocks(opts.settings.value))
-      opts.validateAll(opts.settings.value)
+      const validationIssues = opts.validateAll(opts.settings.value)
+      if (validationIssues.length) {
+        publishCheckIssues.value = validationIssues
+        publishError.value = '请先解决发布检查中的问题'
+        publishModal.value = true
+        return
+      }
       const publishedSnapshot = deepCloneJson(opts.settings.value)
       const publishedSerialized = JSON.stringify(publishedSnapshot)
       await publishMyUserPagesSettings(publishedSnapshot)
@@ -167,7 +172,8 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       opts.notify.success(hasNewerChanges ? '已发布请求时的版本，当前仍有新的修改' : '已发布')
     } catch (e) {
       reportUserPageError(e, 'publish')
-      opts.notify.error((e as Error).message || String(e))
+      publishError.value = (e as Error).message || String(e)
+      opts.notify.error(publishError.value)
     } finally {
       opts.isSaving.value = false
     }
@@ -217,9 +223,10 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
 
   return {
     publishModal,
-    publishCheckErrors,
+    publishCheckIssues,
     publishCheckWarnings,
     publishCheckBytes,
+    publishError,
     openPublishModal,
     saveDraft,
     saveDraftInternal,

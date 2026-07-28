@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NDivider } from 'naive-ui';
 import { computed } from 'vue'
+import { isBlockPropertyAvailable } from '../propertyCapabilities'
 
 const props = defineProps<{ blockProps: unknown, userInfo?: unknown, biliInfo?: unknown }>()
 const propsObj = computed<Record<string, any>>(() => {
@@ -11,6 +12,7 @@ const propsObj = computed<Record<string, any>>(() => {
 const text = computed(() => (typeof propsObj.value.text === 'string' ? propsObj.value.text : ''))
 
 const titlePlacement = computed<'left' | 'center' | 'right'>(() => {
+  if (!isBlockPropertyAvailable('divider', propsObj.value, 'titlePlacement')) return 'center'
   const v = propsObj.value.titlePlacement
   if (v === 'left' || v === 'right' || v === 'center') return v
   return 'center'

@@ -8,9 +8,9 @@ const props = withDefaults(defineProps<{
   colGap?: number
 }>(), {
   minItemWidth: 150,
-  gap: 12,
-  rowGap: 1,
-  colGap: 12,
+  gap: 8,
+  rowGap: 0,
+  colGap: 8,
 })
 
 const style = computed(() => ({

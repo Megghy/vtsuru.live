@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import { NButton, NFlex, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch } from 'naive-ui'
+import { NFlex, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch } from 'naive-ui'
 import PropsGrid from '../PropsGrid.vue'
+import RepeaterEditor from '../RepeaterEditor.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
-const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
+const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
@@ -39,7 +40,7 @@ const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
 
   <NForm v-else-if="props.block.type === 'streamSchedule'" label-placement="top" size="small">
     <PropsGrid>
-      <NFormItem label="布局">
+      <NFormItem v-if="propertyAvailable('layout')" label="布局">
         <NSelect v-model:value="blockProps.layout" :options="[{ label: '列表', value: 'list' }, { label: '表格', value: 'table' }]" />
       </NFormItem>
       <NFormItem label="展示周数 1~8">
@@ -93,12 +94,12 @@ const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
           <NSwitch v-model:value="blockProps.showButtons" size="small" />
         </NFlex>
       </NFormItem>
-      <NFormItem label="显示直播间按钮">
+      <NFormItem v-if="propertyAvailable('showLiveRoom')" label="显示直播间按钮">
         <NFlex justify="end">
           <NSwitch v-model:value="blockProps.showLiveRoom" size="small" />
         </NFlex>
       </NFormItem>
-      <NFormItem class="span-full" label="个人主页链接">
+      <NFormItem v-if="propertyAvailable('spaceUrl')" class="span-full" label="个人主页链接">
         <NInput v-model:value="blockProps.spaceUrl" placeholder="https://space.bilibili.com/..." />
       </NFormItem>
     </PropsGrid>
@@ -117,7 +118,7 @@ const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
       <NFormItem label="布局">
         <NSelect v-model:value="blockProps.layout" :options="[{ label: '网格', value: 'grid' }, { label: '横向滚动', value: 'row' }]" />
       </NFormItem>
-      <NFormItem label="网格列数">
+      <NFormItem v-if="propertyAvailable('columns')" label="网格列数">
         <NInputNumber v-model:value="blockProps.columns" :min="1" :max="6" style="width: 100%" />
       </NFormItem>
       <NFormItem label="最多数量">
@@ -128,22 +129,25 @@ const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
           <NSwitch v-model:value="blockProps.showTitle" size="small" />
         </NFlex>
       </NFormItem>
-      <NFormItem class="span-full" label="标题">
+      <NFormItem v-if="propertyAvailable('title')" class="span-full" label="标题">
         <NInput v-model:value="blockProps.title" placeholder="例如：最近视频" />
       </NFormItem>
-      <NFormItem v-if="blockProps.source === 'manual'" class="span-full" label="手动视频列表">
-        <NFlex vertical style="width: 100%">
-          <div v-for="(item, index) in ensureArrayProp('items')" :key="index" style="display: flex; gap: 8px">
-            <NInput v-model:value="item.title" placeholder="标题，可选" />
-            <NInput v-model:value="item.url" placeholder="视频链接 https://..." />
-            <NButton type="error" secondary @click="ensureArrayProp('items').splice(index, 1)">
-              删除
-            </NButton>
-          </div>
-          <NButton type="info" secondary @click="ensureArrayProp('items').push({ title: '', url: 'https://' })">
-            添加
-          </NButton>
-        </NFlex>
+      <NFormItem v-if="propertyAvailable('items')" class="span-full" label="手动视频列表">
+        <RepeaterEditor :items="ensureArrayProp('items')" :create-item="() => ({ title: '', url: 'https://' })" add-text="添加视频">
+          <template #title="{ item, index }">
+            {{ item.title || `视频 ${index + 1}` }}
+          </template>
+          <template #default="{ item }">
+            <PropsGrid>
+              <NFormItem label="标题">
+                <NInput v-model:value="item.title" placeholder="可选" />
+              </NFormItem>
+              <NFormItem label="链接">
+                <NInput v-model:value="item.url" placeholder="https://..." />
+              </NFormItem>
+            </PropsGrid>
+          </template>
+        </RepeaterEditor>
       </NFormItem>
     </PropsGrid>
   </NForm>
@@ -159,8 +163,13 @@ const { blockProps, ensureArrayProp } = useBlockPropsEditor(() => props.block)
           ]"
         />
       </NFormItem>
-      <NFormItem label="高度 px">
-        <NInputNumber v-model:value="blockProps.height" :min="60" :max="900" style="width: 100%" />
+      <NFormItem v-if="propertyAvailable('height')" label="高度 px">
+        <NInputNumber
+          v-model:value="blockProps.height"
+          :min="propertyNumberRange('height')?.min"
+          :max="propertyNumberRange('height')?.max"
+          style="width: 100%"
+        />
       </NFormItem>
       <NFormItem label="紧凑模式">
         <NFlex justify="end">

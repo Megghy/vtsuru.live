@@ -24,9 +24,22 @@ function createCoreState() {
     home: { mode: 'block', block: createDefaultProject() },
     pages: {},
   })
+  const currentKey = ref('home')
+  const currentPage = computed<UserPageConfig>({
+    get: () => ensurePageConfig(settings.value, currentKey.value),
+    set: (page) => {
+      if (currentKey.value === 'home') {
+        settings.value.home = page
+        return
+      }
+      settings.value.pages ??= {}
+      settings.value.pages[currentKey.value] = page
+    },
+  })
   return {
     settings,
     isLoading: ref(true),
+    loadStatus: ref<'loading' | 'ready' | 'error'>('loading'),
     isSaving: ref(false),
     error: ref<string | null>(null),
     rollbackAvailable: ref(false),
@@ -37,8 +50,8 @@ function createCoreState() {
     isDirty: ref(false),
     lastSavedAt: ref<number | null>(null),
     lastSavedSnapshot: ref(''),
-    currentKey: ref('home'),
-    currentPage: ref<UserPageConfig>({ mode: 'legacy' }),
+    currentKey,
+    currentPage,
     selectedBlockIds: ref<string[]>([]),
     hoveredBlockId: ref<string | null>(null),
     resourcesModal: ref(false),
@@ -46,12 +59,15 @@ function createCoreState() {
   }
 }
 
-function watchCurrentPage(state: ReturnType<typeof createCoreState>, clearSelection: () => void) {
-  watch(state.currentKey, (key) => {
-    state.currentPage.value = ensurePageConfig(state.settings.value, key)
+function watchCurrentPageSelection(state: ReturnType<typeof createCoreState>, clearSelection: () => void) {
+  watch([state.settings, state.currentKey], ([settings, key]) => {
+    if (key !== 'home' && !settings.pages?.[key]) {
+      state.currentKey.value = 'home'
+      return
+    }
     clearSelection()
     state.hoveredBlockId.value = null
-  }, { immediate: true })
+  }, { immediate: true, flush: 'sync' })
 }
 
 function createEditorHistory(settings: ReturnType<typeof ref<UserPagesSettingsV1>>) {
@@ -90,7 +106,7 @@ export function useUserPageEditorCore(options: UseUserPageEditorCoreOptions) {
     ensurePropsObject: blocks.ensurePropsObject,
     notify: { success: options.notify.success, error: options.notify.error },
   })
-  watchCurrentPage(state, blocks.clearSelection)
+  watchCurrentPageSelection(state, blocks.clearSelection)
   const pages = useUserPagePages({
     settings: state.settings,
     currentKey: state.currentKey,
@@ -129,6 +145,7 @@ function createCoreResult(
 ) {
   const api = {
     isLoading: state.isLoading,
+    loadStatus: state.loadStatus,
     isSaving: state.isSaving,
     error: state.error,
     rollbackAvailable: state.rollbackAvailable,

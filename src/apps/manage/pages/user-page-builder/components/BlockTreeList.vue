@@ -26,6 +26,8 @@ const props = defineProps<{
   expandedLayoutIdSet: Set<string>
   dragGroupTargetId?: string | null
   dragGroupTargetMode?: 'into-layout' | 'wrap' | null
+  dragInsertTargetId?: string | null
+  dragInsertPosition?: 'before' | 'after' | null
   onRowClick: (id: string, ev: MouseEvent) => void
   onBlockAction: (key: string, blockId: string) => void
   onToggleExpanded: (layoutId: string) => void
@@ -166,6 +168,36 @@ function scrollToPreviewBlock(blockId: string) {
   const targetTop = (elRect.top - containerRect.top) + container.scrollTop - (container.clientHeight / 2) + (elRect.height / 2)
   container.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
 }
+
+function focusTreeItem(row: HTMLElement | undefined) {
+  if (!row) return
+  const tree = row.closest<HTMLElement>('[role="tree"]')
+  tree?.querySelectorAll<HTMLElement>('[role="treeitem"]').forEach(item => { item.tabIndex = -1 })
+  row.tabIndex = 0
+  row.focus()
+}
+
+function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
+  const row = event.currentTarget as HTMLElement
+  const tree = row.closest<HTMLElement>('[role="tree"]')
+  const items = Array.from(tree?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])
+    .filter(item => item.getClientRects().length > 0)
+  const index = items.indexOf(row)
+  if (event.key === 'ArrowDown') focusTreeItem(items[index + 1])
+  else if (event.key === 'ArrowUp') focusTreeItem(items[index - 1])
+  else if (event.key === 'Home') focusTreeItem(items[0])
+  else if (event.key === 'End') focusTreeItem(items.at(-1))
+  else if (event.key === 'ArrowRight' && block.type === 'layout' && !props.expandedLayoutIdSet.has(block.id)) props.onToggleExpanded(block.id)
+  else if (event.key === 'ArrowLeft' && block.type === 'layout' && props.expandedLayoutIdSet.has(block.id)) props.onToggleExpanded(block.id)
+  else if (event.key === 'ArrowLeft') {
+    const parent = row.closest('.children')?.parentElement?.querySelector<HTMLElement>(':scope > [role="treeitem"]')
+    focusTreeItem(parent)
+  } else if (event.key === 'Enter' || event.key === ' ') {
+    props.onRowClick(block.id, event as unknown as MouseEvent)
+  } else return
+  event.preventDefault()
+  event.stopPropagation()
+}
 </script>
 
 <template>
@@ -178,6 +210,8 @@ function scrollToPreviewBlock(blockId: string) {
     :inverted-swap-threshold="0.35"
     ghost-class="drag-ghost"
     :on-move="props.onMove"
+    :role="props.depth === 0 ? 'tree' : 'group'"
+    :aria-label="props.depth === 0 ? '页面区块' : undefined"
     @start="props.onDragStart"
     @end="props.onDragEnd"
   >
@@ -195,8 +229,16 @@ function scrollToPreviewBlock(blockId: string) {
           'is-layout': b.type === 'layout',
           'drag-group-target': props.dragGroupTargetId === b.id,
           'drag-group-target-wrap': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
+          'drag-insert-before': props.dragInsertTargetId === b.id && props.dragInsertPosition === 'before',
+          'drag-insert-after': props.dragInsertTargetId === b.id && props.dragInsertPosition === 'after',
         }"
+        role="treeitem"
+        :aria-level="props.depth + 1"
+        :aria-selected="props.selectionSet.has(b.id)"
+        :aria-expanded="b.type === 'layout' ? props.expandedLayoutIdSet.has(b.id) : undefined"
+        :tabindex="editor.selectedBlockIds.value[0] === b.id || (!editor.selectedBlockIds.value.length && props.depth === 0 && blocksModel[0]?.id === b.id) ? 0 : -1"
         @click="props.onRowClick(b.id, $event)"
+        @keydown="handleTreeKeydown($event, b)"
         @mouseenter="editor.hoveredBlockId.value = b.id"
         @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
       >
@@ -328,6 +370,8 @@ function scrollToPreviewBlock(blockId: string) {
             :expanded-layout-id-set="props.expandedLayoutIdSet"
             :drag-group-target-id="props.dragGroupTargetId"
             :drag-group-target-mode="props.dragGroupTargetMode"
+            :drag-insert-target-id="props.dragInsertTargetId"
+            :drag-insert-position="props.dragInsertPosition"
             :on-row-click="props.onRowClick"
             :on-block-action="props.onBlockAction"
             :on-toggle-expanded="props.onToggleExpanded"
@@ -352,6 +396,7 @@ function scrollToPreviewBlock(blockId: string) {
 }
 
 .block-item-row {
+  position: relative;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -392,6 +437,26 @@ function scrollToPreviewBlock(blockId: string) {
 
 .block-item-row.drag-group-target-wrap {
   border-style: dashed;
+}
+
+.block-item-row.drag-insert-before::before,
+.block-item-row.drag-insert-after::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  left: 6px;
+  z-index: 3;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--n-primary-color);
+}
+
+.block-item-row.drag-insert-before::before {
+  top: -2px;
+}
+
+.block-item-row.drag-insert-after::after {
+  bottom: -2px;
 }
 
 .drag-group-hint {

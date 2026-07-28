@@ -1,6 +1,5 @@
 import { collectFileRefsFromSettings, normalizeRichTextImagesFile } from './editorResources'
-import { deepCloneJson, estimateUtf8Bytes } from './editorHelpers'
-import { ensurePageConfig } from './editorPageConfig'
+import { deepCloneJson, estimateUtf8Bytes, stableStringify } from './editorHelpers'
 import { validateUserPagesSettings } from './validateUserPagesSettings'
 import { useUserPageAutoSave } from './useUserPageAutoSave'
 import type { UserPageEditorCore } from './useUserPageEditorCore'
@@ -31,12 +30,15 @@ function createResourceApi(core: UserPageEditorCore, message: MessageApiInjectio
 function createInitializer(core: UserPageEditorCore, loadState: () => Promise<void>) {
   return async () => {
     core.isLoading.value = true
+    core.loadStatus.value = 'loading'
     core.error.value = null
     try {
       await loadState()
       core.clearHistory()
+      core.loadStatus.value = 'ready'
     } catch (error) {
       core.error.value = (error as Error).message || String(error)
+      core.loadStatus.value = 'error'
     } finally {
       core.isLoading.value = false
     }
@@ -52,8 +54,6 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
   }, { deep: true })
   const loader = useUserPageStateLoader({
     settings: core.settings,
-    currentKey: core.currentKey,
-    currentPage: core.currentPage,
     loadedDraft: core.loadedDraft,
     loadedPublished: core.loadedPublished,
     loadedRollback: core.loadedRollback,
@@ -83,7 +83,6 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     restoreSnapshot: (snapshot) => {
       const restored = JSON.parse(snapshot) as UserPagesSettingsV1
       core.settings.value = restored
-      core.currentPage.value = ensurePageConfig(restored, core.currentKey.value)
       core.blocks.clearSelection()
       localDraftStorage.value = deepCloneJson(restored)
       core.isDirty.value = snapshot !== core.lastSavedSnapshot.value
@@ -113,8 +112,12 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     }
   })
   const configBytesPercent = computed(() => Math.min(100, Math.round((configBytes.value / maxConfigBytes) * 100)))
+  const hasUnpublishedChanges = computed(() => {
+    if (!core.loadedPublished.value) return true
+    return stableStringify(core.settings.value) !== stableStringify(core.loadedPublished.value)
+  })
 
-  return createLifecycleResult(core, persistence, autoSave, resources, configBytes, configBytesPercent, createInitializer(core, loader.loadState))
+  return createLifecycleResult(core, persistence, autoSave, resources, configBytes, configBytesPercent, hasUnpublishedChanges, createInitializer(core, loader.loadState))
 }
 
 function createLifecycleResult(
@@ -124,6 +127,7 @@ function createLifecycleResult(
   resources: ReturnType<typeof createResourceApi>,
   configBytes: ComputedRef<number>,
   configBytesPercent: ComputedRef<number>,
+  hasUnpublishedChanges: ComputedRef<boolean>,
   init: () => Promise<void>,
 ) {
   return {
@@ -134,15 +138,17 @@ function createLifecycleResult(
     autoSaveEnabled: autoSave.autoSaveEnabled,
     isDirty: core.isDirty,
     isAutoSaving: autoSave.isAutoSaving,
+    hasSyncError: autoSave.hasSyncError,
     saveStatusText: autoSave.saveStatusText,
+    hasUnpublishedChanges,
     lastSavedSnapshot: core.lastSavedSnapshot,
-    validationTick: autoSave.validationTick,
-    liveValidationErrors: autoSave.liveValidationErrors,
+    liveValidationIssues: autoSave.liveValidationIssues,
     ...resources,
     publishModal: persistence.publishModal,
-    publishCheckErrors: persistence.publishCheckErrors,
+    publishCheckIssues: persistence.publishCheckIssues,
     publishCheckWarnings: persistence.publishCheckWarnings,
     publishCheckBytes: persistence.publishCheckBytes,
+    publishError: persistence.publishError,
     openPublishModal: persistence.openPublishModal,
     confirmPublish: persistence.confirmPublish,
     saveDraft: persistence.saveDraft,

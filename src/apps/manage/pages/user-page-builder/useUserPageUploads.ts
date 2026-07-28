@@ -11,7 +11,7 @@ type UploadKey = 'imageFile' | 'avatarFile'
 
 type PendingUploadContext =
   | { kind: 'block', blockId: string, key: UploadKey }
-  | { kind: 'galleryItem', blockId: string, item: Record<string, any> }
+  | { kind: 'itemImage', blockId: string, item: Record<string, any> }
   | { kind: 'galleryBulk', blockId: string }
   | { kind: 'pageBackground' }
   | { kind: 'globalBackground' }
@@ -72,7 +72,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     uploadInput.value?.click()
   }
 
-  function triggerUploadGalleryItem(block: BlockNode, itemIndex: number) {
+  function triggerUploadItemImage(block: BlockNode, itemIndex: number) {
     if (!opts.currentProject.value) {
       opts.notify.error('当前页不是区块模式，无法上传')
       return
@@ -91,7 +91,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('找不到要上传到的图片项')
       return
     }
-    pendingUpload.value = { kind: 'galleryItem', blockId: block.id, item }
+    pendingUpload.value = { kind: 'itemImage', blockId: block.id, item }
     uploadInput.value?.click()
   }
 
@@ -152,7 +152,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     const ctx = pendingUpload.value
     pendingUpload.value = null
     const isBulk = ctx.kind === 'galleryBulk'
-    const requiresProject = ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'galleryItem' || ctx.kind === 'galleryBulk'
+    const requiresProject = ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'itemImage' || ctx.kind === 'galleryBulk'
     const project = requiresProject ? opts.currentProject.value : null
     if (requiresProject && !project) {
       opts.notify.error('当前页不是区块模式，无法上传')
@@ -186,8 +186,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
           const hasUrl = typeof propsObj.url === 'string' && propsObj.url.trim().length > 0
           return !hasFile && !hasUrl
         }
-        if (ctx.kind === 'galleryItem') {
-          if (block.type !== 'imageGallery') return false
+        if (ctx.kind === 'itemImage') {
           if (!Array.isArray(propsObj.items)) return true
           const it = ctx.item
           if (!it || typeof it !== 'object' || Array.isArray(it)) return true
@@ -243,9 +242,8 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
         if (ctx.kind === 'block') {
           const propsObj = opts.ensurePropsObject(block)
           propsObj[ctx.key] = uploadedList[0]
-        } else if (ctx.kind === 'galleryItem') {
+        } else if (ctx.kind === 'itemImage') {
           const propsObj = opts.ensurePropsObject(block)
-          if (block.type !== 'imageGallery') throw new Error('当前区块不是图片组，无法写入上传结果')
           if (!Array.isArray(propsObj.items)) propsObj.items = []
           const it = propsObj.items.find((item: unknown) => item === ctx.item)
           if (!it) throw new Error('找不到要上传到的图片项，可能已被删除或撤销')
@@ -275,9 +273,8 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     delete propsObj[key]
   }
 
-  function clearUploadedGalleryItemFile(block: BlockNode, itemIndex: number) {
+  function clearUploadedItemImage(block: BlockNode, itemIndex: number) {
     const propsObj = opts.ensurePropsObject(block)
-    if (block.type !== 'imageGallery') throw new Error('当前区块不是图片组，无法清除')
     if (!Array.isArray(propsObj.items)) return
     const it = propsObj.items[itemIndex]
     if (!it || typeof it !== 'object' || Array.isArray(it)) return
@@ -309,14 +306,14 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     uploadInput,
     pendingUpload,
     triggerUpload,
-    triggerUploadGalleryItem,
+    triggerUploadItemImage,
     triggerUploadGalleryBulk,
     triggerUploadPageBackground,
     triggerUploadGlobalBackground,
     triggerUploadPageBackgroundOverride,
     onUploadChange,
     clearUploadedFile,
-    clearUploadedGalleryItemFile,
+    clearUploadedItemImage,
     clearPageBackgroundImageFile,
     clearGlobalBackgroundImageFile,
     clearPageBackgroundOverrideImageFile,
