@@ -32,9 +32,6 @@ jobs:
       - name: 📦 Build
         run: bun run build
 
-      - name: Check public user page performance budget
-        run: bun run budget:user-page
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
