@@ -10,6 +10,7 @@ import BasicContentPropsEditor from './block-props-editors/BasicContentPropsEdit
 import ButtonsPropsEditor from './block-props-editors/ButtonsPropsEditor.vue'
 import CardListPropsEditor from './block-props-editors/CardListPropsEditor.vue'
 import CheckInRankingPropsEditor from './block-props-editors/CheckInRankingPropsEditor.vue'
+import CustomHtmlPropsEditor from './block-props-editors/CustomHtmlPropsEditor.vue'
 import CollectionPropsEditor from './block-props-editors/CollectionPropsEditor.vue'
 import FeatureNavPropsEditor from './block-props-editors/FeatureNavPropsEditor.vue'
 import FeaturedGoodsPropsEditor from './block-props-editors/FeaturedGoodsPropsEditor.vue'
@@ -33,6 +34,7 @@ const editorByType: Partial<Record<BlockType, Component>> = {
   heading: BasicContentPropsEditor,
   text: BasicContentPropsEditor,
   richText: BasicContentPropsEditor,
+  customHtml: CustomHtmlPropsEditor,
   alert: BasicContentPropsEditor,
   liveStatus: RemoteContentPropsEditor,
   streamSchedule: RemoteContentPropsEditor,
@@ -77,6 +79,7 @@ const unframedTypes = new Set<BlockType>([
   'countdown',
   'imageGallery',
   'richText',
+  'customHtml',
   'marquee',
 ])
 

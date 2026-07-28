@@ -41,7 +41,6 @@ const model = computed(() => {
         :src="model.src"
         :title="model.title"
         loading="lazy"
-        allowfullscreen
         :allow="model.allow"
         :sandbox="model.sandbox"
         referrerpolicy="no-referrer"

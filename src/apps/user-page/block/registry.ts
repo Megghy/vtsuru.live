@@ -6,6 +6,7 @@ import {
   CalendarOutline,
   ChatboxOutline,
   ChatbubbleEllipsesOutline,
+  CodeSlashOutline,
   DocumentTextOutline,
   GridOutline,
   HeartOutline,
@@ -56,6 +57,7 @@ const ICONS: Record<BlockType, Component> = {
   heading: TextOutline,
   text: ChatboxOutline,
   richText: DocumentTextOutline,
+  customHtml: CodeSlashOutline,
   alert: AlertCircleOutline,
   links: LinkOutline,
   button: OpenOutline,
@@ -97,6 +99,7 @@ const VIEWERS: Record<BlockType, AsyncComponentLoader> = {
   heading: async () => import('./blocks/HeadingBlock.vue'),
   text: async () => import('./blocks/TextBlock.vue'),
   richText: async () => import('./blocks/RichTextBlock.vue'),
+  customHtml: async () => import('./blocks/CustomHtmlBlock.vue'),
   alert: async () => import('./blocks/AlertBlock.vue'),
   links: async () => import('./blocks/LinksBlock.vue'),
   button: async () => import('./blocks/SingleButtonBlock.vue'),
@@ -176,8 +179,8 @@ export const BLOCK_COMPONENTS = Object.fromEntries(
   BLOCK_DEFINITIONS.map(definition => [definition.type, definition.viewer]),
 ) as Record<BlockType, Component>
 
-export function getBlockLabel(type: BlockType): string {
-  return BLOCK_DEFINITION_MAP[type].label
+export function getBlockLabel(type: string): string {
+  return BLOCK_DEFINITION_MAP[type as BlockType]?.label ?? `不支持的区块 (${type})`
 }
 
 export function createBlockNode(type: BlockType, id: string): BlockNode {

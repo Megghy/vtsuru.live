@@ -222,6 +222,10 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   opacity: 0.42;
 }
 
+.block.selectable :deep(iframe) {
+  pointer-events: none;
+}
+
 .block.hidden::before,
 .block.unavailable::before {
   content: attr(data-block-overlay);

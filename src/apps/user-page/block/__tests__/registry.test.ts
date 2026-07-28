@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BLOCK_TYPES } from '../schema'
-import { BLOCK_DEFINITIONS, BLOCK_LIBRARY, createBlockNode } from '../registry'
+import { BLOCK_DEFINITIONS, BLOCK_LIBRARY, createBlockNode, getBlockLabel } from '../registry'
 
 describe('block registry', () => {
   it('每个区块都只有一份完整能力定义', () => {
@@ -21,5 +21,9 @@ describe('block registry', () => {
     const second = createBlockNode('layout', 'second')
     ;((first.props as any).children as unknown[]).push({ id: 'child' })
     expect((second.props as any).children).toEqual([])
+  })
+
+  it('未知区块类型不会中断旧版编辑器渲染', () => {
+    expect(getBlockLabel('futureBlock')).toBe('不支持的区块 (futureBlock)')
   })
 })

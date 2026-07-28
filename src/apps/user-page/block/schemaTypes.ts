@@ -4,6 +4,7 @@ export const BLOCK_TYPES = [
   'heading',
   'text',
   'richText',
+  'customHtml',
   'alert',
   'links',
   'button',

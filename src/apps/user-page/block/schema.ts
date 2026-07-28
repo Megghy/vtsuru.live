@@ -179,6 +179,8 @@ export function countImagesInBlocks(blocks: BlockNode[], includeHidden = false):
       }).length
     } else if (block.type === 'cardList' && Array.isArray(props?.items)) {
       count += props.items.filter(item => Boolean(asObject(item)?.imageFile)).length
+    } else if (block.type === 'customHtml' && Array.isArray(props?.assets)) {
+      count += props.assets.filter(item => Boolean(asObject(item)?.file)).length
     }
   }
   return count

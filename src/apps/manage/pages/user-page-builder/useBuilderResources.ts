@@ -83,6 +83,12 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
     }
   }
 
+  function addResources(files: APIFileModel[]) {
+    const next = new Map(allFiles.value.map(file => [file.id, file]))
+    files.forEach(file => next.set(file.id, file))
+    allFiles.value = [...next.values()]
+  }
+
   async function deleteResource(resource: BuilderResource) {
     deletingId.value = resource.id
     try {
@@ -109,6 +115,7 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
     unusedCount,
     missingCount,
     loadResources,
+    addResources,
     deleteResource,
   }
 }

@@ -33,6 +33,10 @@ export const BLOCK_PROPERTY_CAPABILITY_RULES: Partial<Record<BlockType, BlockCap
   cardList: {
     columns: props => (props.layout ?? 'grid') === 'grid',
   },
+  customHtml: {
+    height: props => props.heightMode === 'fixed',
+    maxHeight: props => props.heightMode !== 'fixed',
+  },
   button: {
     align: props => props.fullWidth !== true,
   },

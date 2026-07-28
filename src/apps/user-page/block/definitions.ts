@@ -6,6 +6,17 @@ import type { BlockType } from './schemaTypes'
 import { SOCIAL_PLATFORM_IDS } from './socialPlatforms'
 import { USER_FEATURE_KEYS } from '../featureNavigation'
 import {
+  CUSTOM_CSS_MAX_BYTES,
+  CUSTOM_HTML_ASSET_KEY_PATTERN,
+  CUSTOM_HTML_MAX_ASSETS,
+  CUSTOM_HTML_MAX_BYTES,
+  CUSTOM_HTML_MAX_HEIGHT,
+  CUSTOM_HTML_MIN_AUTO_HEIGHT,
+  CUSTOM_HTML_MIN_HEIGHT,
+  DEFAULT_CUSTOM_HTML_PROPS,
+  utf8ByteLength,
+} from './customHtmlContract'
+import {
   isHttpsUrl,
   isNonEmptyString,
   optionalBoolean,
@@ -79,6 +90,34 @@ const validateRichText = withProps((props, path, errors) => {
     if (!Array.isArray(props.imagesFile)) errors.push(`${path}: imagesFile 必须是 array`, 'imagesFile')
     else props.imagesFile.forEach((file, index) => optionalFile({ file }, 'file', `${path}: imagesFile[${index}]`, errors))
   }
+})
+
+const validateCustomHtml = withProps((props, path, errors) => {
+  if (typeof props.html !== 'string') errors.push(`${path}: html 必须是 string`, 'html')
+  else if (utf8ByteLength(props.html) > CUSTOM_HTML_MAX_BYTES) errors.push(`${path}: html 不能超过 32 KiB`, 'html')
+  if (typeof props.css !== 'string') errors.push(`${path}: css 必须是 string`, 'css')
+  else if (utf8ByteLength(props.css) > CUSTOM_CSS_MAX_BYTES) errors.push(`${path}: css 不能超过 24 KiB`, 'css')
+  optionalEnum(props, 'heightMode', ['auto', 'fixed'], path, errors)
+  optionalNumber(props, 'height', CUSTOM_HTML_MIN_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
+  optionalNumber(props, 'maxHeight', CUSTOM_HTML_MIN_AUTO_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
+  booleans(props, ['framed', 'backgrounded'], path, errors)
+
+  if (!Array.isArray(props.assets)) {
+    errors.push(`${path}: assets 必须是 array`, 'assets')
+    return
+  }
+  if (props.assets.length > CUSTOM_HTML_MAX_ASSETS) errors.push(`${path}: assets 不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, 'assets')
+  const keys = new Set<string>()
+  validateItems(props, path, errors, (item, itemPath) => {
+    requiredString(item, 'key', itemPath, errors)
+    if (typeof item.key === 'string' && !CUSTOM_HTML_ASSET_KEY_PATTERN.test(item.key)) {
+      errors.push(`${itemPath}: key 只能使用小写字母、数字和连字符`, validationFieldPath(itemPath, 'key'))
+    }
+    if (typeof item.key === 'string' && keys.has(item.key)) errors.push(`${itemPath}: key 不能重复`, validationFieldPath(itemPath, 'key'))
+    if (typeof item.key === 'string') keys.add(item.key)
+    optionalFile(item, 'file', itemPath, errors)
+    if (item.file === undefined) errors.push(`${itemPath}: file 必须提供`, validationFieldPath(itemPath, 'file'))
+  })
 })
 
 const validateLinks = withProps((props, path, errors) => validateItems(props, path, errors, (item, itemPath) => {
@@ -311,6 +350,7 @@ export const SHARED_BLOCK_DEFINITIONS = [
   definition('heading', '标题', 'basic', ['标题', 'heading'], { text: '标题', level: 2 }, withProps((p, path, errors, context) => { if (!context.hidden) requiredString(p, 'text', path, errors); optionalEnum(p, 'level', [1, 2, 3], path, errors) }), true),
   definition('text', '文本', 'basic', ['文字', '段落'], { text: '' }, withProps((p, path, errors) => { if (typeof p.text !== 'string') errors.push(`${path}: text 必须是 string`, 'text') }), true),
   definition('richText', '富文本', 'content', ['HTML', '格式化'], { html: '', imagesFile: [], framed: false, backgrounded: false }, validateRichText, true),
+  definition('customHtml', '自定义 HTML/CSS', 'content', ['代码', 'HTML', 'CSS', '组件'], DEFAULT_CUSTOM_HTML_PROPS, validateCustomHtml, true),
   definition('alert', '提示框', 'content', ['通知', '警告'], { type: 'info', title: '提示', text: '这里是一段提示内容', showIcon: true, bordered: false }, withProps((p, path, errors) => { optionalEnum(p, 'type', ['default', 'info', 'success', 'warning', 'error'], path, errors); optionalString(p, 'title', path, errors); optionalString(p, 'text', path, errors); booleans(p, ['showIcon', 'bordered'], path, errors) }), true),
   definition('links', '链接列表', 'interaction', ['网址', '导航'], { items: [] }, validateLinks, true),
   definition('button', '按钮', 'interaction', ['链接', '跳转'], { label: '按钮', page: 'home', type: 'primary', variant: 'solid', fullWidth: true, align: 'start', framed: false, backgrounded: false }, validateButton, true),

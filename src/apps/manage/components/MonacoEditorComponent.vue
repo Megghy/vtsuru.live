@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as monaco from 'monaco-editor'
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
-import CssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
-import HtmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
-import TsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import { useThemeVars } from 'naive-ui';
+import { useThemeVars } from 'naive-ui'
+import { configureMonacoEnvironment } from './monacoEnvironment'
 const { language, height = 400, theme = 'vs-dark', options, path } = defineProps<{
   language: string
   height?: number
@@ -26,24 +22,7 @@ let editor: monaco.editor.IStandaloneCodeEditor | null = null
 let model: monaco.editor.ITextModel | null = null
 let createdModel = false
 
-// 配置 Monaco Environment
-;(globalThis as any).MonacoEnvironment = {
-  getWorker(_: string, label: string) {
-    if (label === 'json') {
-      return new JsonWorker()
-    }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return new CssWorker()
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return new HtmlWorker()
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new TsWorker()
-    }
-    return new EditorWorker()
-  },
-}
+configureMonacoEnvironment()
 
 onMounted(async () => {
   try {

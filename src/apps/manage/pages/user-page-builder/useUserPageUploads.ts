@@ -6,6 +6,7 @@ import { UploadStage, uploadFiles } from '@/shared/services/fileUpload'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { Ref } from 'vue'
 import { ref, shallowRef } from 'vue'
+import { validateUserPageImageFiles } from './userPageImageUpload'
 
 type UploadKey = 'imageFile' | 'avatarFile'
 
@@ -51,12 +52,6 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       if (found) return found
     }
     return null
-  }
-
-  function isImageFile(file: File) {
-    if (file.type && file.type.startsWith('image/')) return true
-    const name = file.name.toLowerCase()
-    return ['.png', '.jpg', '.jpeg', '.gif', '.webp'].some(ext => name.endsWith(ext))
   }
 
   function triggerUpload(block: BlockNode, key: UploadKey) {
@@ -158,16 +153,9 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('当前页不是区块模式，无法上传')
       return
     }
-    if (!isBulk && files.length > 1) {
-      opts.notify.error('请选择单个图片文件')
-      return
-    }
-    if (files.some(f => f.size > 10 * 1024 * 1024)) {
-      opts.notify.error('文件大小不能超过10MB')
-      return
-    }
-    if (files.some(f => !isImageFile(f))) {
-      opts.notify.error('仅支持上传图片文件：png/jpg/jpeg/gif/webp')
+    const fileError = validateUserPageImageFiles(files, isBulk)
+    if (fileError) {
+      opts.notify.error(fileError)
       return
     }
 
