@@ -22,7 +22,7 @@ import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
 import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
 import { consumeDraftPreview } from '@/apps/user-page/runtime/draftPreview'
 import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITIONS } from '@/apps/user-page/featureNavigation'
-import type { BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
+import type { BiliProfile, BiliProfileStatus, UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -42,7 +42,7 @@ const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Aut
 
 // 用户和页面状态
 const userInfo = ref<UserInfo | null>(null) // 用户信息，初始化为 null
-const biliUserInfo = ref<any>(null) // B站用户信息
+const biliUserInfo = ref<BiliProfile | null>(null) // B站用户信息
 const biliProfileStatus = ref<BiliProfileStatus>('idle')
 const loadStatus = ref<'idle' | 'loading' | 'not-found' | 'error' | 'ready'>('idle')
 const loadError = ref<Error | null>(null)
@@ -56,6 +56,7 @@ const { width: siderWidth } = useElementSize(sider) // 侧边栏宽度
 const windowWidth = window.innerWidth // 窗口宽度，用于响应式显示
 const siderCollapsed = usePersistedStorage<boolean>('Settings.UserSiderCollapsed', windowWidth < 768)
 const siderAvatarSize = computed(() => (siderCollapsed.value ? 34 : 42))
+const siderPendantUrl = computed(() => biliUserInfo.value?.pendant?.image_enhance || biliUserInfo.value?.pendant?.image)
 
 type UserNavItem = {
   key: string
@@ -596,17 +597,30 @@ watch(
                 justify="center"
                 align="center"
               >
-                <NAvatar
-                  class="sider-avatar"
-                  :class="{ 'streaming-avatar': userInfo?.streamerInfo?.isStreaming }"
-                  :src="userInfo.streamerInfo.faceUrl"
-                  :img-props="{ referrerpolicy: 'no-referrer' }"
-                  :size="siderAvatarSize"
-                  round
-                  bordered
+                <button
+                  class="sider-avatar-button"
+                  type="button"
                   title="前往用户B站主页"
                   @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo.biliId}`)"
-                />
+                >
+                  <NAvatar
+                    class="sider-avatar"
+                    :class="{ 'streaming-avatar': userInfo.streamerInfo.isStreaming }"
+                    :src="userInfo.streamerInfo.faceUrl"
+                    :img-props="{ referrerpolicy: 'no-referrer' }"
+                    :size="siderAvatarSize"
+                    round
+                    bordered
+                  />
+                  <img
+                    v-if="siderPendantUrl && !siderCollapsed"
+                    class="sider-avatar-pendant"
+                    :src="siderPendantUrl"
+                    alt=""
+                    aria-hidden="true"
+                    referrerpolicy="no-referrer"
+                  >
+                </button>
                 <NEllipsis
                   v-if="siderWidth > 100"
                   style="max-width: 100%"
@@ -1052,12 +1066,37 @@ watch(
   background-color: var(--user-page-theme-content-bg, transparent);
 }
 
-.sider-avatar {
+.sider-avatar-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: fit-content;
+  height: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
+  overflow: visible;
+}
+
+.sider-avatar {
   &.streaming-avatar {
     outline: 2px solid var(--n-success-color);
     outline-offset: 2px;
   }
+}
+
+.sider-avatar-pendant {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 150%;
+  height: 150%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .sider-username {

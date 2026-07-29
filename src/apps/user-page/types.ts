@@ -3,6 +3,21 @@ import type { BlockPageProject, PageBackgroundBlurMode, PageBackgroundImageFit, 
 export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
 export type BiliProfileStatus = 'idle' | 'loading' | 'empty' | 'error' | 'ready'
 
+export interface BiliProfile {
+  name?: string
+  face?: string
+  sign?: string
+  fans?: number
+  attention?: number
+  friend?: number
+  archive_count?: number
+  video?: number
+  pendant?: {
+    image?: string
+    image_enhance?: string
+  }
+}
+
 export interface ContribPageRef {
   scope: 'global' | 'streamer'
   pageId: string

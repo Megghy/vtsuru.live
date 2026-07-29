@@ -3,7 +3,7 @@ import type { CheckInRankingInfo, ResponsePointGoodModel, Setting_LiveRequest, S
 import { QueryGetAPI, QueryPostAPI, unwrapOk } from '@/api/query'
 import { CHECKIN_API_URL, FORUM_API_URL, POINT_API_URL, SONG_API_URL, SONG_REQUEST_API_URL, USER_API_URL, USER_PAGES_API_URL, VIDEO_COLLECT_API_URL, VTSURU_API_URL } from '@/shared/config'
 import { migrateUserPagesSettings } from './normalize'
-import type { UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
+import type { BiliProfile, UserPagesMyStateResponse, UserPagesSettingsV1 } from './types'
 
 function parseUserPagesSettings(raw: string): UserPagesSettingsV1 {
   let parsed: unknown
@@ -25,11 +25,14 @@ export async function fetchPublicUserInfo(
   return unwrapOk(resp, '无法获取用户信息')
 }
 
-export async function fetchBiliProfile(biliId: number, signal?: AbortSignal): Promise<any | null> {
+export async function fetchBiliProfile(biliId: number, signal?: AbortSignal): Promise<BiliProfile | null> {
   const response = await fetch(`${VTSURU_API_URL}bili-user-info/${biliId}`, { signal })
   if (!response.ok) throw new Error(`B站资料请求失败：HTTP ${response.status}`)
-  const payload = await response.json()
-  return payload?.code === 0 && payload?.data?.card ? payload.data.card : null
+  const payload = await response.json() as {
+    code?: number
+    data?: { card?: BiliProfile }
+  }
+  return payload.code === 0 ? payload.data?.card ?? null : null
 }
 
 export async function fetchPublicForumExists(owner: number, options?: QueryRequestOptions) {

@@ -258,8 +258,9 @@ async function copyCalendarUrl() {
 
 <style scoped>
 .schedule { container-type: inline-size; color: var(--vtsuru-block-fg); }
-.schedule-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--vtsuru-block-border); background: var(--vtsuru-block-bg-muted); }
+.schedule-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--vtsuru-page-primary-border); background: var(--vtsuru-page-content-color, var(--vtsuru-block-bg-muted)); }
 .header-title-wrap { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.header-title-wrap :deep(.n-icon) { color: var(--vtsuru-page-primary-readable, var(--vtsuru-block-fg)); }
 .header-title-wrap h2 { margin: 0; font-size: 15px; line-height: 1.4; letter-spacing: 0; }
 .week-count { flex: none; color: var(--vtsuru-block-fg-muted); font-size: 12px; }
 .calendar-action { position: relative; display: flex; gap: 8px; padding: 12px 20px 28px; border-bottom: 1px solid var(--vtsuru-block-border); }
