@@ -12,6 +12,7 @@ import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vu
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { isDarkMode } from '@/shared/utils'
 
 defineProps<{
@@ -77,13 +78,14 @@ const effectiveIsDark = computed(() => {
   return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
-const contentThemeVars = computed(() => {
-  const theme = mergedBlockProject.value?.theme ?? {
+const contentTheme = computed(() => mergedBlockProject.value?.theme ?? {
     ...settings.value?.theme,
     ...pageConfig.value?.theme,
-  }
-  return getUserPageThemeCssVars(theme, effectiveIsDark.value)
 })
+
+useGoogleFont(computed(() => contentTheme.value.fontFamily))
+
+const contentThemeVars = computed(() => getUserPageThemeCssVars(contentTheme.value, effectiveIsDark.value))
 
 const pageBackground = computed(() => resolvePageBackground(pageConfig.value?.background))
 const globalBackground = computed(() => resolvePageBackground(settings.value?.background))
@@ -176,6 +178,7 @@ const contentClass = computed(() => ({
 <style scoped>
 .root {
   min-height: 100vh;
+  font-family: var(--vtsuru-page-font-family);
 }
 
 .content {

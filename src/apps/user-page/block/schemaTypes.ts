@@ -52,6 +52,7 @@ export type PageBackgroundScrimMode = 'auto' | 'black' | 'white'
 export type PageThemeMode = 'auto' | 'light' | 'dark'
 
 export interface BlockPageTheme {
+  fontFamily?: string
   primaryColor?: string
   backgroundColor?: string
   textColor?: string

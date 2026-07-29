@@ -73,6 +73,7 @@ const userOverrides = computed<GlobalThemeOverrides>(() => {
 
   return {
     common: {
+      fontFamily: userThemeVars.value['--vtsuru-page-font-family'],
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
       ...(textColor ? {
         textColorBase: textColor,
@@ -192,6 +193,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 <style scoped>
 .page {
   width: 100%;
+  font-family: var(--vtsuru-page-font-family);
   max-width: var(--vtsuru-page-max-width, 820px);
   margin: 0 auto;
   padding: var(--vtsuru-page-spacing) 0 var(--vtsuru-page-spacing) 0;

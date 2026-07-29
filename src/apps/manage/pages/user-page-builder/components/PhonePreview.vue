@@ -94,6 +94,7 @@ watchEffect(() => {
 
 .screen {
   position: relative;
+  font-family: var(--vtsuru-page-font-family);
   background: var(--vtsuru-bg);
   border-radius: 16px;
   overflow: hidden;

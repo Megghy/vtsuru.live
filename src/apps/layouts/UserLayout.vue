@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { GlobalThemeOverrides } from 'naive-ui'
 import type { UserInfo } from '@/api/api-models'
 import { Person48Filled, WindowWrench20Filled } from '@vicons/fluent'
 import { BrowsersOutline, ChevronBackOutline, ChevronForwardOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
@@ -12,10 +11,11 @@ import { useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageNaiveThemeOverrides, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { clearUserPageRuntimeCache } from '@/apps/user-page/runtime/query'
@@ -197,6 +197,8 @@ const layoutTheme = computed(() => ({
   ...((currentUserPageConfig.value as any)?.theme),
 }))
 
+useGoogleFont(computed(() => typeof layoutTheme.value.fontFamily === 'string' ? layoutTheme.value.fontFamily : undefined))
+
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
 const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
@@ -234,37 +236,14 @@ onBeforeUnmount(() => {
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
-const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
+const pageThemeOverrides = computed(() => {
   const vars = mergedLayoutVars.value as Record<string, string>
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
-  const textColor = vars['--vtsuru-page-text']
-  const mutedTextColor = vars['--vtsuru-surface-fg-muted']
-  const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
-  const primaryColor = typeof layoutTheme.value.primaryColor === 'string' ? layoutTheme.value.primaryColor : undefined
-  const themedSurfaceBg = typeof layoutTheme.value.backgroundColor === 'string'
-    ? layoutTheme.value.backgroundColor
-    : surfaceBg
 
   return {
-    common: {
-      borderColor,
-      dividerColor: borderColor,
-      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
-      ...(textColor ? {
-        textColorBase: textColor,
-        textColor1: textColor,
-        textColor2: mutedTextColor,
-        textColor3: subtleTextColor,
-      } : {}),
-      ...(themedSurfaceBg ? { cardColor: themedSurfaceBg, modalColor: themedSurfaceBg, popoverColor: themedSurfaceBg } : {}),
-    },
-    Card: {
-      color: themedSurfaceBg,
-      colorEmbedded: surfaceBgHover,
-      borderColor,
-    },
+    ...getUserPageNaiveThemeOverrides(layoutTheme.value, vars),
     List: {
       color: 'transparent',
       listItemColor: 'transparent',
@@ -317,6 +296,22 @@ const layoutPageBgVars = computed(() => {
   if (!bg) return {}
   return getPageBackgroundCssVars(bg, effectiveIsDark.value)
 })
+
+const layoutContentBg = computed(() => {
+  const name = route.name?.toString()
+  if (name === 'user-index' || name === 'user-page') return null
+  return globalBg.value?.coverSidebar ? null : globalBg.value
+})
+
+const layoutContentBgVars = computed(() => layoutContentBg.value
+  ? getPageBackgroundCssVars(layoutContentBg.value, effectiveIsDark.value)
+  : {})
+
+const layoutContentBgClass = computed(() => ({
+  'content-bg-host': !!layoutContentBg.value,
+  'content-bg-blur': layoutContentBg.value?.blurMode === 'background',
+  'content-bg-glass': layoutContentBg.value?.blurMode === 'glass',
+}))
 
 const layoutUiVars = computed(() => getUserPageThemeCssVars(layoutTheme.value, effectiveIsDark.value))
 
@@ -764,7 +759,7 @@ watch(
             v-else-if="loadStatus === 'ready' && userInfo"
             class="viewer-scroll"
           >
-            <div class="viewer-page-content">
+            <div class="viewer-page-content" :class="layoutContentBgClass" :style="layoutContentBgVars">
               <!-- 路由视图和动画 -->
               <RouterView v-slot="{ Component, route: viewRoute }">
                 <KeepAlive>
@@ -922,6 +917,7 @@ watch(
 }
 
 .page-root {
+  font-family: var(--vtsuru-page-font-family);
   height: 100vh;
   width: 100%;
   max-width: 100%;
@@ -1208,8 +1204,9 @@ watch(
 }
 
 .nav-item:hover {
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable);
   background: var(--vtsuru-page-primary-soft);
+  border-color: var(--vtsuru-page-primary-border);
 }
 .nav-item:focus-visible {
   outline: 2px solid rgba(127, 127, 127, 0.28);
@@ -1217,7 +1214,7 @@ watch(
 }
 
 .nav-item.active {
-  color: var(--vtsuru-page-primary);
+  color: var(--vtsuru-page-primary-readable);
   background: var(--vtsuru-page-primary-active);
   border-color: var(--vtsuru-page-primary-border);
 }
@@ -1306,6 +1303,56 @@ watch(
   background-color: var(--user-page-theme-content-bg, var(--n-body-color));
   max-width: 100%;
   overflow-x: clip;
+}
+
+.viewer-page-content.content-bg-host {
+  min-height: calc(100vh - var(--vtsuru-header-height));
+  background-color: transparent;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.content-bg-host::before,
+.content-bg-host::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.content-bg-host::before {
+  inset: calc(-24px - var(--user-page-bg-blur, 0px));
+  background-color: var(--user-page-bg-color, transparent);
+  background-image: var(--user-page-bg-image, none);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: var(--user-page-bg-size, cover);
+}
+
+.content-bg-host::after {
+  inset: 0;
+  z-index: -1;
+  background: var(--user-page-bg-scrim, transparent);
+}
+
+.content-bg-host.content-bg-blur::before {
+  filter: blur(var(--user-page-bg-blur, 0px));
+}
+
+.content-bg-host.content-bg-glass::after {
+  background:
+    linear-gradient(var(--glass-surface-bg), var(--glass-surface-bg)),
+    var(--user-page-bg-scrim, transparent);
+  backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .content-bg-host.content-bg-glass::after {
+    background: var(--vtsuru-bg-elevated);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @media (max-width: 520px) {

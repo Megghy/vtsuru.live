@@ -9,6 +9,7 @@ import { fetchBiliProfile } from '@/apps/user-page/api'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
+import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -67,6 +68,8 @@ const previewMergedTheme = computed(() => {
   return { ...globalTheme, ...pageTheme, ...projectTheme }
 })
 
+useGoogleFont(computed(() => typeof previewMergedTheme.value.fontFamily === 'string' ? previewMergedTheme.value.fontFamily : undefined))
+
 const previewMergedProject = computed(() => {
   const p = editor.currentProject.value
   if (!p) return null
@@ -103,6 +106,7 @@ const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
     : undefined
   return {
     common: {
+      fontFamily: vars['--vtsuru-page-font-family'],
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
       textColorBase: vars['--vtsuru-page-text'],
       textColor1: vars['--vtsuru-page-text'],

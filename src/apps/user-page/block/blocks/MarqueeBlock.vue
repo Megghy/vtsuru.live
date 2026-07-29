@@ -64,7 +64,7 @@ watch([displayText, vertical], async () => {
 
 <template>
   <BlockCard :framed="cfg.framed" :backgrounded="cfg.backgrounded">
-    <div class="row">
+    <div class="row" :class="{ 'row--bare': !cfg.backgrounded }">
       <NIcon size="18" depth="2" class="icon">
         <MegaphoneOutline />
       </NIcon>
@@ -97,6 +97,20 @@ watch([displayText, vertical], async () => {
   align-items: center;
   gap: 10px;
   color: var(--vtsuru-page-text, var(--vtsuru-fg));
+}
+
+.row--bare {
+  --marquee-surface: color-mix(
+    in srgb,
+    var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 62%,
+    transparent
+  );
+  margin: -4px -8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--marquee-surface);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .icon {

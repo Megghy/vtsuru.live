@@ -1,6 +1,7 @@
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
+import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export type UserPageValidationScope = 'settings' | 'page' | 'block'
@@ -36,6 +37,10 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
   colors.forEach((key) => {
     if (theme[key] !== undefined && typeof theme[key] !== 'string') report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
   })
+  if (theme.fontFamily !== undefined) {
+    if (typeof theme.fontFamily !== 'string') report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 必须是 string')
+    else if (!isValidGoogleFontFamily(theme.fontFamily)) report(issues, target, `${fieldRoot}.fontFamily`, 'fontFamily 格式不合法')
+  }
   if (theme.autoTextContrast !== undefined && typeof theme.autoTextContrast !== 'boolean') {
     report(issues, target, `${fieldRoot}.autoTextContrast`, 'autoTextContrast 必须是 boolean')
   }

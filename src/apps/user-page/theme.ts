@@ -6,6 +6,7 @@ const MIN_TEXT_CONTRAST = 4.5
 const toRgb = converter('rgb')
 
 export interface UserPageTextTheme {
+  fontFamily?: string
   textColor?: string
   textColorLight?: string
   textColorDark?: string
@@ -76,27 +77,13 @@ function selectTextColor(theme: UserPageTextTheme | undefined, isDark: boolean) 
   return { value: isDark ? '#fafafa' : '#09090b', source: 'default' as const }
 }
 
-export function resolveUserPageTextColor(
-  theme: UserPageTextTheme | undefined,
-  isDark: boolean,
-  surfaceColor?: string,
-): ResolvedUserPageTextColor {
-  const surface = resolveSurface(
-    isDark,
-    surfaceColor ?? resolveUserPageSurfaceReference(theme?.backgroundColor, isDark),
-  )
-  const selected = selectTextColor(theme, isDark)
+function ensureTextContrast(value: string, surface: Rgb, isDark: boolean, enabled = true) {
   const fallback = parseRgb(isDark ? '#fafafa' : '#09090b')
-  const requested = resolveOpaqueColor(selected.value, surface) ?? fallback
+  const requested = resolveOpaqueColor(value, surface) ?? fallback
   const requestedContrast = wcagContrast(requested, surface)
 
-  if (theme?.autoTextContrast === false || requestedContrast >= MIN_TEXT_CONTRAST) {
-    return {
-      color: formatRgb(requested),
-      contrast: requestedContrast,
-      adjusted: false,
-      source: selected.source,
-    }
+  if (!enabled || requestedContrast >= MIN_TEXT_CONTRAST) {
+    return { color: formatRgb(requested), contrast: requestedContrast, adjusted: false }
   }
 
   const black = parseRgb('#000000')
@@ -111,11 +98,48 @@ export function resolveUserPageTextColor(
     else low = middle
   }
   const color = mix(high)
+  return { color: formatRgb(color), contrast: wcagContrast(color, surface), adjusted: true }
+}
+
+export function resolveUserPageTextColor(
+  theme: UserPageTextTheme | undefined,
+  isDark: boolean,
+  surfaceColor?: string,
+): ResolvedUserPageTextColor {
+  const surface = resolveSurface(
+    isDark,
+    surfaceColor ?? resolveUserPageSurfaceReference(theme?.backgroundColor, isDark),
+  )
+  const selected = selectTextColor(theme, isDark)
   return {
-    color: formatRgb(color),
-    contrast: wcagContrast(color, surface),
-    adjusted: true,
+    ...ensureTextContrast(selected.value, surface, isDark, theme?.autoTextContrast !== false),
     source: selected.source,
+  }
+}
+
+export function resolveUserPageReadableAccent(
+  primaryColor: string | undefined,
+  backgroundColor: string | undefined,
+  isDark: boolean,
+) {
+  if (!primaryColor?.trim()) return ''
+  const surface = resolveSurface(isDark, resolveUserPageSurfaceReference(backgroundColor, isDark))
+  const accent = parseRgb(primaryColor)
+  const activeSurface = accent
+    ? compositeOpaque({ ...accent, alpha: (accent.alpha ?? 1) * 0.14 }, surface)
+    : surface
+  return ensureTextContrast(primaryColor, activeSurface, isDark).color
+}
+
+export function resolveUserPageControlOverlay(value: string) {
+  const color = parseRgb(value)
+  const white = parseRgb('#ffffff')
+  const luminance = color ? 1.05 / wcagContrast(white, { ...color, alpha: 1 }) - 0.05 : 0
+  const alpha = Math.min(0.46, 0.18 + luminance * 0.52)
+  return {
+    color: formatRgb({ ...white, alpha }),
+    focus: formatRgb({ ...white, alpha: Math.min(0.52, alpha + 0.06) }),
+    disabled: formatRgb({ ...white, alpha: alpha * 0.56 }),
   }
 }
 

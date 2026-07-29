@@ -31,6 +31,7 @@ export interface UserPageConfig {
 }
 
 export interface UserPageThemeConfigV1 {
+  fontFamily?: string
   primaryColor?: string
   textColor?: string
   textColorLight?: string

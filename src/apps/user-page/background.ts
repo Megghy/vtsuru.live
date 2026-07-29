@@ -1,5 +1,7 @@
+import type { GlobalThemeOverrides } from 'naive-ui'
 import type { PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType } from './block/schema'
-import { resolveUserPageTextPalette } from './theme'
+import { getGoogleFontFamilyCss } from './googleFonts'
+import { resolveUserPageControlOverlay, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { hexToRgba } from '@/shared/utils'
 
 export interface ResolvedPageBackground {
@@ -79,15 +81,16 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean) {
   } as Record<string, string>
 }
 
-function readThemeColor(theme: unknown, key: 'primaryColor' | 'backgroundColor') {
+function readThemeString(theme: unknown, key: 'primaryColor' | 'backgroundColor' | 'fontFamily') {
   if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return ''
   const value = (theme as Record<string, unknown>)[key]
   return typeof value === 'string' ? value.trim() : ''
 }
 
 export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean) {
-  const primaryColor = readThemeColor(theme, 'primaryColor')
-  const backgroundColor = readThemeColor(theme, 'backgroundColor')
+  const primaryColor = readThemeString(theme, 'primaryColor')
+  const backgroundColor = readThemeString(theme, 'backgroundColor')
+  const fontFamily = readThemeString(theme, 'fontFamily')
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark)
   const pagePrimary = primaryColor || 'var(--n-primary-color)'
   const textPalette = resolveUserPageTextPalette(
@@ -95,14 +98,18 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     effectiveIsDark,
   )
   const pageText = textPalette.color
+  const readablePrimary = resolveUserPageReadableAccent(primaryColor, backgroundColor, effectiveIsDark) || pageText
 
   return {
     ...surfaceVars,
     '--vtsuru-page-primary': pagePrimary,
-    '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 10%, transparent)`,
-    '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 14%, transparent)`,
+    '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
+    '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 26%, transparent)`,
     '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
     '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
+    '--vtsuru-page-primary-readable': readablePrimary,
+    '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
+    '--vtsuru-page-content-color': backgroundColor || surfaceVars['--user-page-ui-surface-bg'],
     '--vtsuru-page-text': pageText,
     '--vtsuru-surface-fg': pageText,
     '--vtsuru-surface-fg-muted': textPalette.muted,
@@ -121,6 +128,54 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
       ? `color-mix(in srgb, ${backgroundColor} 42%, transparent)`
       : surfaceVars['--user-page-ui-surface-bg-hover'],
   } as Record<string, string>
+}
+
+export function getUserPageNaiveThemeOverrides(
+  theme: unknown,
+  vars: Record<string, string>,
+): GlobalThemeOverrides {
+  const primaryColor = readThemeString(theme, 'primaryColor')
+  const backgroundColor = readThemeString(theme, 'backgroundColor')
+  const contentColor = backgroundColor || vars['--user-page-ui-surface-bg']
+  const hoverColor = vars['--user-page-ui-surface-bg-hover']
+  const borderColor = vars['--vtsuru-card-border-color'] || vars['--user-page-border-color']
+  const textColor = vars['--vtsuru-page-text']
+  const mutedTextColor = vars['--vtsuru-surface-fg-muted']
+  const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
+  const controlOverlay = resolveUserPageControlOverlay(contentColor)
+
+  return {
+    common: {
+      fontFamily: vars['--vtsuru-page-font-family'],
+      borderColor,
+      dividerColor: borderColor,
+      textColorBase: textColor,
+      textColor1: textColor,
+      textColor2: mutedTextColor,
+      textColor3: subtleTextColor,
+      cardColor: contentColor,
+      modalColor: contentColor,
+      popoverColor: contentColor,
+      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
+    },
+    Card: {
+      color: contentColor,
+      colorEmbedded: hoverColor,
+      borderColor,
+    },
+    Input: {
+      color: controlOverlay.color,
+      colorFocus: controlOverlay.focus,
+      colorDisabled: controlOverlay.disabled,
+      textColor,
+      textColorDisabled: mutedTextColor,
+      placeholderColor: subtleTextColor,
+      placeholderColorDisabled: subtleTextColor,
+      border: `1px solid ${borderColor}`,
+      borderHover: `1px solid ${primaryColor || borderColor}`,
+      borderFocus: `1px solid ${primaryColor || borderColor}`,
+    },
+  }
 }
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
