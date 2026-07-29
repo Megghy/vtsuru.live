@@ -806,9 +806,8 @@ onMounted(async () => {
 .index-background
     position: relative;
     min-height: 100vh;
+    box-sizing: border-box;
     background-color: var(--n-body-color);
-    overflow-x: hidden;
-    overflow-y: auto;
     padding-bottom: 60px;
     isolation: isolate;
 

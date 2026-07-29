@@ -52,10 +52,14 @@ const fontFamily = computed<string | null>({
     }
   },
 })
-const fontOptions = computed(() => googleFontsCatalog.value.map(font => ({
-  label: font.family,
-  value: font.family,
-})))
+const fontOptions = computed(() => {
+  const options = googleFontsCatalog.value.map(font => ({ label: font.family, value: font.family }))
+  const selected = fontFamily.value
+  if (selected && !googleFontsCatalog.value.some(font => font.family === selected)) {
+    options.unshift({ label: selected, value: selected })
+  }
+  return options
+})
 const selectedFontStyle = computed(() => ({ fontFamily: getGoogleFontFamilyCss(fontFamily.value) }))
 const fontBrowserShown = ref(false)
 const fontSearch = ref('')
