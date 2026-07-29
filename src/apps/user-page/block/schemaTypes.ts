@@ -55,6 +55,9 @@ export interface BlockPageTheme {
   primaryColor?: string
   backgroundColor?: string
   textColor?: string
+  textColorLight?: string
+  textColorDark?: string
+  autoTextContrast?: boolean
   radius?: number
   spacing?: 'compact' | 'normal' | 'relaxed'
   pageMaxWidth?: string

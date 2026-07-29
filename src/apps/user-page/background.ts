@@ -1,4 +1,5 @@
 import type { PageBackgroundBlurMode, PageBackgroundImageFit, PageBackgroundScrimMode, PageBackgroundType } from './block/schema'
+import { resolveUserPageTextPalette } from './theme'
 import { hexToRgba } from '@/shared/utils'
 
 export interface ResolvedPageBackground {
@@ -78,7 +79,7 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean) {
   } as Record<string, string>
 }
 
-function readThemeColor(theme: unknown, key: 'primaryColor' | 'textColor' | 'backgroundColor') {
+function readThemeColor(theme: unknown, key: 'primaryColor' | 'backgroundColor') {
   if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return ''
   const value = (theme as Record<string, unknown>)[key]
   return typeof value === 'string' ? value.trim() : ''
@@ -86,25 +87,33 @@ function readThemeColor(theme: unknown, key: 'primaryColor' | 'textColor' | 'bac
 
 export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean) {
   const primaryColor = readThemeColor(theme, 'primaryColor')
-  const textColor = readThemeColor(theme, 'textColor')
   const backgroundColor = readThemeColor(theme, 'backgroundColor')
   const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark)
-  const pageText = textColor || 'var(--vtsuru-fg)'
+  const pagePrimary = primaryColor || 'var(--n-primary-color)'
+  const textPalette = resolveUserPageTextPalette(
+    asObject(theme) ?? undefined,
+    effectiveIsDark,
+  )
+  const pageText = textPalette.color
 
   return {
     ...surfaceVars,
-    '--vtsuru-page-primary': primaryColor || 'var(--n-primary-color)',
+    '--vtsuru-page-primary': pagePrimary,
+    '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 10%, transparent)`,
+    '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 14%, transparent)`,
+    '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
+    '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
     '--vtsuru-page-text': pageText,
     '--vtsuru-surface-fg': pageText,
-    '--vtsuru-surface-fg-muted': `color-mix(in srgb, ${pageText} 72%, transparent)`,
-    '--vtsuru-surface-fg-subtle': `color-mix(in srgb, ${pageText} 54%, transparent)`,
+    '--vtsuru-surface-fg-muted': textPalette.muted,
+    '--vtsuru-surface-fg-subtle': textPalette.subtle,
     '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
     '--user-page-theme-content-bg': 'transparent',
     '--text-color-base': pageText,
     '--text-color-1': pageText,
-    '--text-color-2': `color-mix(in srgb, ${pageText} 72%, transparent)`,
-    '--text-color-3': `color-mix(in srgb, ${pageText} 54%, transparent)`,
-    '--primary-color': primaryColor || 'var(--n-primary-color)',
+    '--text-color-2': textPalette.muted,
+    '--text-color-3': textPalette.subtle,
+    '--primary-color': pagePrimary,
     '--user-page-theme-surface-bg': backgroundColor
       ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)`
       : surfaceVars['--user-page-ui-surface-bg'],

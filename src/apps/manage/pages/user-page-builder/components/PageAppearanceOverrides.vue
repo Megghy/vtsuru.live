@@ -6,6 +6,8 @@ import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
+import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -18,7 +20,7 @@ const backgroundTarget: BackgroundSettingsTarget = {
   clearImage: editor.clearPageBackgroundOverrideImageFile,
 }
 
-type ColorKey = 'primaryColor' | 'textColor' | 'backgroundColor'
+type ColorKey = 'primaryColor' | 'backgroundColor'
 
 function cleanupEmptyTheme() {
   if (page.value.theme && Object.keys(page.value.theme).length === 0) delete page.value.theme
@@ -40,8 +42,12 @@ function colorModel(key: ColorKey) {
 }
 
 const primaryColor = colorModel('primaryColor')
-const textColor = colorModel('textColor')
 const backgroundColor = colorModel('backgroundColor')
+const textColorTarget: ThemeTextColorTarget = {
+  get: () => page.value.theme,
+  ensure: () => (page.value.theme ??= {}),
+  cleanup: cleanupEmptyTheme,
+}
 const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>({
   get: () => page.value.theme?.pageThemeMode ?? 'auto',
   set(value) {
@@ -90,16 +96,6 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
             </NButton>
           </NFlex>
         </NFormItem>
-        <NFormItem label="字体颜色 text">
-          <NFlex align="center" :wrap="false" style="gap: 10px">
-            <div style="flex: 1; min-width: 0">
-              <NColorPicker v-model:value="textColor" />
-            </div>
-            <NButton size="tiny" secondary :disabled="textColor == null" @click="textColor = undefined">
-              清除
-            </NButton>
-          </NFlex>
-        </NFormItem>
         <NFormItem label="内容区域底色">
           <NFlex align="center" :wrap="false" style="gap: 10px">
             <div style="flex: 1; min-width: 0">
@@ -120,6 +116,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
           />
         </NFormItem>
       </PropsGrid>
+      <ThemeTextColorEditor :target="textColorTarget" />
     </NForm>
   </NCollapseItem>
 </template>

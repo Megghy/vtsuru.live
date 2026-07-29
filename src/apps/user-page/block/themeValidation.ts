@@ -14,7 +14,8 @@ export function validateBlockPageTheme(theme: unknown, errors: ValidationErrors)
     return
   }
 
-  ;['primaryColor', 'backgroundColor', 'textColor', 'pageBackgroundColor'].forEach(key => optionalString(props, key, 'theme', themeErrors))
+  ;['primaryColor', 'backgroundColor', 'textColor', 'textColorLight', 'textColorDark', 'pageBackgroundColor'].forEach(key => optionalString(props, key, 'theme', themeErrors))
+  optionalBoolean(props, 'autoTextContrast', 'theme', themeErrors)
   optionalNumber(props, 'radius', 0, 32, 'theme', themeErrors)
   optionalEnum(props, 'spacing', ['compact', 'normal', 'relaxed'], 'theme', themeErrors)
   optionalEnum(props, 'pageThemeMode', ['auto', 'light', 'dark'], 'theme', themeErrors)

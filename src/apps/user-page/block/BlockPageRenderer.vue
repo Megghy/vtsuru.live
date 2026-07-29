@@ -46,9 +46,10 @@ const pageMaxWidth = computed(() => {
   const s = v.trim()
   return s.length ? s : null
 })
+const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark))
 const containerStyle = computed(() => ({
   ...getThemeCssVars(surfaceTokens.value),
-  ...getUserPageThemeCssVars(props.project.theme, props.isDark),
+  ...userThemeVars.value,
   '--vtsuru-page-radius': `${radius.value}px`,
   '--vtsuru-page-spacing': `${spacing.value}px`,
   ...(pageMaxWidth.value ? { '--vtsuru-page-max-width': pageMaxWidth.value } : {}),
@@ -63,7 +64,9 @@ const naiveTheme = computed(() => {
 const userOverrides = computed<GlobalThemeOverrides>(() => {
   const t: any = props.project.theme ?? {}
   const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
-  const textColor = typeof t.textColor === 'string' ? t.textColor : undefined
+  const textColor = userThemeVars.value['--vtsuru-page-text']
+  const mutedTextColor = userThemeVars.value['--vtsuru-surface-fg-muted']
+  const subtleTextColor = userThemeVars.value['--vtsuru-surface-fg-subtle']
   const backgroundColor = typeof t.backgroundColor === 'string' ? t.backgroundColor : undefined
   const radiusPx = `${radius.value}px`
   const surfaceBg = backgroundColor
@@ -74,8 +77,8 @@ const userOverrides = computed<GlobalThemeOverrides>(() => {
       ...(textColor ? {
         textColorBase: textColor,
         textColor1: textColor,
-        textColor2: textColor,
-        textColor3: textColor,
+        textColor2: mutedTextColor,
+        textColor3: subtleTextColor,
       } : {}),
       ...(surfaceBg ? { cardColor: surfaceBg, modalColor: surfaceBg, popoverColor: surfaceBg } : {}),
       borderRadius: radiusPx,

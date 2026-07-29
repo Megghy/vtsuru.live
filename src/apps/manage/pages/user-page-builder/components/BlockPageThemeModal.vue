@@ -6,6 +6,8 @@ import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
+import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
 const show = defineModel<boolean>('show', { required: true })
 const editor = inject(UserPageEditorKey)
@@ -47,7 +49,7 @@ function ensureTheme() {
   return (project.theme ??= {})
 }
 
-function colorModel(key: 'primaryColor' | 'textColor' | 'backgroundColor') {
+function colorModel(key: 'primaryColor' | 'backgroundColor') {
   return computed<string | undefined>({
     get: () => editor.currentProject.value?.theme?.[key],
     set: (value) => {
@@ -58,8 +60,11 @@ function colorModel(key: 'primaryColor' | 'textColor' | 'backgroundColor') {
 }
 
 const primaryColor = colorModel('primaryColor')
-const textColor = colorModel('textColor')
 const backgroundColor = colorModel('backgroundColor')
+const textColorTarget: ThemeTextColorTarget = {
+  get: () => editor.currentProject.value?.theme,
+  ensure: ensureTheme,
+}
 const pageThemeMode = computed<PageThemeMode>({
   get: () => editor.currentProject.value?.theme?.pageThemeMode ?? 'auto',
   set: (value) => {
@@ -186,9 +191,6 @@ function confirmImportJson() {
                 ]"
               />
             </NFormItem>
-            <NFormItem label="文字颜色">
-              <NColorPicker v-model:value="textColor" />
-            </NFormItem>
             <NFormItem label="内容区域底色">
               <NColorPicker v-model:value="backgroundColor" />
             </NFormItem>
@@ -209,6 +211,7 @@ function confirmImportJson() {
               />
             </NFormItem>
           </PropsGrid>
+          <ThemeTextColorEditor :target="textColorTarget" />
         </NForm>
 
         <NDivider style="margin: 12px 0 10px">

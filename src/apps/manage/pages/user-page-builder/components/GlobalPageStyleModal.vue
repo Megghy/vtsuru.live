@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { NAlert, NButton, NColorPicker, NDivider, NFlex, NForm, NFormItem, NModal, NScrollbar, NSelect } from 'naive-ui'
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
 import type { BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
+import GlobalCssEditorModal from './GlobalCssEditorModal.vue'
+import ThemeTextColorEditor from './ThemeTextColorEditor.vue'
+import type { ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
 
 const show = defineModel<boolean>('show', { required: true })
+const cssEditorVisible = ref(false)
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
@@ -25,7 +29,7 @@ function cleanupEmptyTheme() {
   if (theme && Object.keys(theme).length === 0) delete (editor.settings.value as any).theme
 }
 
-function themeColor(key: 'primaryColor' | 'textColor' | 'backgroundColor') {
+function themeColor(key: 'primaryColor' | 'backgroundColor') {
   return computed<string | undefined>({
     get: () => {
       const value = (editor.settings.value as any).theme?.[key]
@@ -42,8 +46,12 @@ function themeColor(key: 'primaryColor' | 'textColor' | 'backgroundColor') {
 }
 
 const primaryColor = themeColor('primaryColor')
-const textColor = themeColor('textColor')
 const backgroundColor = themeColor('backgroundColor')
+const textColorTarget: ThemeTextColorTarget = {
+  get: () => (editor.settings.value as any).theme,
+  ensure: ensureTheme,
+  cleanup: cleanupEmptyTheme,
+}
 const themeMode = computed<'auto' | 'light' | 'dark'>({
   get: () => {
     const value = (editor.settings.value as any).theme?.pageThemeMode
@@ -81,9 +89,6 @@ function clearTheme() {
             <NFormItem label="主题色" class="color-field">
               <NColorPicker v-model:value="primaryColor" />
             </NFormItem>
-            <NFormItem label="文字颜色" class="color-field">
-              <NColorPicker v-model:value="textColor" />
-            </NFormItem>
             <NFormItem label="内容底色" class="color-field">
               <NColorPicker v-model:value="backgroundColor" />
             </NFormItem>
@@ -98,15 +103,28 @@ function clearTheme() {
               />
             </NFormItem>
           </NFlex>
+          <ThemeTextColorEditor :target="textColorTarget" />
           <NFlex justify="end">
             <NButton size="small" secondary :disabled="!(editor.settings.value as any).theme" @click="clearTheme">
               清除主题
             </NButton>
           </NFlex>
         </NForm>
+        <NDivider style="margin: 10px 0">
+          自定义 CSS
+        </NDivider>
+        <NFlex justify="space-between" align="center" :wrap="false">
+          <span class="css-status">
+            {{ editor.settings.value.customCss ? '已设置全局 CSS' : '未设置全局 CSS' }}
+          </span>
+          <NButton size="small" secondary @click="cssEditorVisible = true">
+            编辑全局 CSS
+          </NButton>
+        </NFlex>
       </div>
     </NScrollbar>
   </NModal>
+  <GlobalCssEditorModal v-model:show="cssEditorVisible" />
 </template>
 
 <style scoped>
@@ -118,5 +136,10 @@ function clearTheme() {
 .color-field {
   min-width: 220px;
   flex: 1;
+}
+
+.css-status {
+  color: var(--vtsuru-fg-muted);
+  font-size: 12px;
 }
 </style>

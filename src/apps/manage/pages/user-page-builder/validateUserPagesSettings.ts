@@ -1,4 +1,6 @@
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
+import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
+import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import type { UserPageConfig, UserPagesSettingsV1 } from '@/apps/user-page/types'
 
 export type UserPageValidationScope = 'settings' | 'page' | 'block'
@@ -30,10 +32,13 @@ function validateTheme(value: unknown, fieldRoot: string, target: IssueTarget, i
     report(issues, target, fieldRoot, '主题设置必须是 object')
     return
   }
-  const colors = ['primaryColor', 'textColor', 'backgroundColor']
+  const colors = ['primaryColor', 'textColor', 'textColorLight', 'textColorDark', 'backgroundColor']
   colors.forEach((key) => {
     if (theme[key] !== undefined && typeof theme[key] !== 'string') report(issues, target, `${fieldRoot}.${key}`, `${key} 必须是 string`)
   })
+  if (theme.autoTextContrast !== undefined && typeof theme.autoTextContrast !== 'boolean') {
+    report(issues, target, `${fieldRoot}.autoTextContrast`, 'autoTextContrast 必须是 boolean')
+  }
   const mode = theme.pageThemeMode
   if (mode !== undefined && !['auto', 'light', 'dark'].includes(String(mode))) {
     report(issues, target, `${fieldRoot}.pageThemeMode`, `主题模式不合法：${String(mode)}`)
@@ -102,6 +107,14 @@ function validatePage(
 function validateSettings(settings: UserPagesSettingsV1, validateBlockProject: BlockProjectValidator) {
   const issues: UserPageValidationIssue[] = []
   const settingsTarget: IssueTarget = { scope: 'settings', pageKey: null, blockId: null }
+  const customCss = (settings as unknown as UnknownObject).customCss
+  if (customCss !== undefined) {
+    if (typeof customCss !== 'string') report(issues, settingsTarget, 'customCss', '全局 CSS 必须是 string')
+    else {
+      if (utf8ByteLength(customCss) > CUSTOM_CSS_MAX_BYTES) report(issues, settingsTarget, 'customCss', `全局 CSS 不能超过 ${CUSTOM_CSS_MAX_BYTES / 1024} KiB`)
+      inspectCustomCss(customCss).issues.forEach(item => report(issues, settingsTarget, `customCss:${item.line}:${item.column}`, item.message))
+    }
+  }
   validateTheme((settings as unknown as UnknownObject).theme, 'theme', settingsTarget, issues)
   validateBackground(settings.background, 'background', settingsTarget, issues)
   validatePage('home', settings.home, issues, validateBlockProject)

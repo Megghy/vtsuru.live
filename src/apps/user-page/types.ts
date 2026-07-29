@@ -33,6 +33,9 @@ export interface UserPageConfig {
 export interface UserPageThemeConfigV1 {
   primaryColor?: string
   textColor?: string
+  textColorLight?: string
+  textColorDark?: string
+  autoTextContrast?: boolean
   backgroundColor?: string
   pageThemeMode?: PageThemeMode
 }
@@ -51,6 +54,7 @@ export interface UserPageBackgroundConfigV1 {
 
 export interface UserPagesSettingsV1 {
   version: 1
+  customCss?: string
   /**
    * 全局主题（对所有页面生效，包括内置页面）。
    * 页面可通过 UserPageConfig.theme 覆盖此设置。

@@ -13,6 +13,7 @@ import { ThemeType } from '@/api/api-models'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
@@ -74,6 +75,25 @@ type UserNavGroup = {
 // 侧边栏菜单项
 const navGroups = shallowRef<UserNavGroup[]>([])
 const userPagesSettings = ref<UserPagesSettingsV1 | null>(null)
+const publicCustomCss = computed(() => {
+  const css = userPagesSettings.value?.customCss
+  if (typeof css !== 'string' || !css.trim()) return ''
+  const result = inspectCustomCss(css)
+  return result.issues.length ? '' : result.css
+})
+let customCssElement: HTMLStyleElement | null = null
+
+function syncPublicCustomCss(css: string) {
+  customCssElement?.remove()
+  customCssElement = null
+  if (!css) return
+  customCssElement = document.createElement('style')
+  customCssElement.dataset.vtsuruUserCustomCss = 'true'
+  customCssElement.textContent = css
+  document.head.append(customCssElement)
+}
+
+watch(publicCustomCss, syncPublicCustomCss, { immediate: true })
 
 function retryPublicPage() {
   reloadVersion.value++
@@ -209,6 +229,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.documentElement.classList.remove(USERPAGE_HOST_CLASS)
   clearUserPageRuntimeCache()
+  customCssElement?.remove()
+  customCssElement = null
   if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
 })
 
@@ -217,7 +239,9 @@ const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
-  const textColor = typeof layoutTheme.value.textColor === 'string' ? layoutTheme.value.textColor : undefined
+  const textColor = vars['--vtsuru-page-text']
+  const mutedTextColor = vars['--vtsuru-surface-fg-muted']
+  const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
   const primaryColor = typeof layoutTheme.value.primaryColor === 'string' ? layoutTheme.value.primaryColor : undefined
   const themedSurfaceBg = typeof layoutTheme.value.backgroundColor === 'string'
     ? layoutTheme.value.backgroundColor
@@ -231,8 +255,8 @@ const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
       ...(textColor ? {
         textColorBase: textColor,
         textColor1: textColor,
-        textColor2: textColor,
-        textColor3: textColor,
+        textColor2: mutedTextColor,
+        textColor3: subtleTextColor,
       } : {}),
       ...(themedSurfaceBg ? { cardColor: themedSurfaceBg, modalColor: themedSurfaceBg, popoverColor: themedSurfaceBg } : {}),
     },
@@ -597,7 +621,7 @@ watch(
                     :size="4"
                     :wrap="false"
                   >
-                    <NText strong>
+                    <NText>
                       {{ userInfo?.streamerInfo.name }}
                     </NText>
                     <span
@@ -967,14 +991,13 @@ watch(
 
 .page-root.bg-host .layout-header,
 .page-root.bg-host .user-sider {
-  background: var(--user-page-ui-surface-bg);
+  background: var(--user-page-theme-surface-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-.page-root.bg-host .nav-item,
 .page-root.bg-host .sider-profile {
-  color: var(--vtsuru-fg);
+  color: var(--vtsuru-page-text);
 }
 
 .page-root.bg-host.glass .layout-header,
@@ -1058,7 +1081,7 @@ watch(
 .user-sider {
   height: 100%;
   border-right: 1px solid var(--n-border-color);
-  background: var(--n-body-color);
+  background: var(--user-page-theme-surface-bg, var(--n-body-color));
   box-sizing: border-box;
   overflow: hidden;
   flex: 0 0 auto;
@@ -1095,9 +1118,9 @@ watch(
   width: 32px;
   padding: 0;
   border-radius: 10px;
-  border: 1px solid rgba(127, 127, 127, 0.18);
-  background: rgba(127, 127, 127, 0.06);
-  color: var(--n-text-color);
+  border: 1px solid var(--vtsuru-page-primary-border);
+  background: var(--vtsuru-page-primary-soft);
+  color: var(--vtsuru-page-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1106,15 +1129,15 @@ watch(
 }
 
 .sider-collapse-btn:hover {
-  background: rgba(127, 127, 127, 0.1);
-  border-color: rgba(127, 127, 127, 0.22);
+  background: var(--vtsuru-page-primary-active);
+  border-color: var(--vtsuru-page-primary-focus);
 }
 
 .sider-collapse-btn:active {
   transform: translateY(0.5px);
 }
 .sider-collapse-btn:focus-visible {
-  outline: 2px solid rgba(127, 127, 127, 0.28);
+  outline: 2px solid var(--vtsuru-page-primary-focus);
   outline-offset: 2px;
 }
 
@@ -1151,9 +1174,9 @@ watch(
 }
 
 .nav-group__label {
-  color: var(--n-text-color-3);
+  color: var(--vtsuru-surface-fg-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1172,7 +1195,7 @@ watch(
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--n-text-color);
+  color: var(--vtsuru-page-text);
   border: 1px solid transparent;
   background: transparent;
   transition: background-color 120ms ease, border-color 120ms ease;
@@ -1185,7 +1208,8 @@ watch(
 }
 
 .nav-item:hover {
-  background: rgba(127, 127, 127, 0.08);
+  color: var(--vtsuru-page-primary);
+  background: var(--vtsuru-page-primary-soft);
 }
 .nav-item:focus-visible {
   outline: 2px solid rgba(127, 127, 127, 0.28);
@@ -1193,8 +1217,9 @@ watch(
 }
 
 .nav-item.active {
-  background: rgba(127, 127, 127, 0.12);
-  border-color: rgba(127, 127, 127, 0.18);
+  color: var(--vtsuru-page-primary);
+  background: var(--vtsuru-page-primary-active);
+  border-color: var(--vtsuru-page-primary-border);
 }
 
 .nav-item--disabled {
@@ -1210,7 +1235,7 @@ watch(
 
 .nav-item__label {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

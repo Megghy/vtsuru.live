@@ -7,7 +7,7 @@ import { DesktopOutline, HandLeftOutline, NavigateOutline, OpenOutline, OptionsO
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { fetchBiliProfile } from '@/apps/user-page/api'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
-import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getThemeOverrides } from '@/shared/config/theme'
 import { isDarkMode } from '@/shared/utils'
@@ -94,6 +94,24 @@ const previewBgVars = computed(() => {
   return getPageBackgroundCssVars(bg, previewEffectiveIsDark.value)
 })
 
+const previewUiVars = computed(() => getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value))
+
+const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
+  const vars = previewUiVars.value
+  const primaryColor = typeof previewMergedTheme.value.primaryColor === 'string'
+    ? previewMergedTheme.value.primaryColor
+    : undefined
+  return {
+    common: {
+      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
+      textColorBase: vars['--vtsuru-page-text'],
+      textColor1: vars['--vtsuru-page-text'],
+      textColor2: vars['--vtsuru-surface-fg-muted'],
+      textColor3: vars['--vtsuru-surface-fg-subtle'],
+    },
+  }
+})
+
 const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const bg = previewBg.value
   if (!bg || bg.blurMode === 'none') return {}
@@ -127,11 +145,13 @@ const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
 
 const previewThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const base = getThemeOverrides(previewEffectiveIsDark.value)
+  const user = previewUserThemeOverrides.value
   const surface = previewSurfaceThemeOverrides.value
   return {
     ...base,
+    ...user,
     ...surface,
-    common: { ...base.common, ...surface.common },
+    common: { ...base.common, ...user.common, ...surface.common },
     Card: { ...base.Card, ...surface.Card },
     List: { ...base.List, ...surface.List },
     Button: { ...base.Button, ...surface.Button },
@@ -264,7 +284,7 @@ watch(() => [editor.currentKey.value, editor.selectedBlockIds.value[0]] as const
       <NConfigProvider abstract :theme="null" :theme-overrides="null">
         <NConfigProvider abstract :theme="previewNaiveTheme" :theme-overrides="previewThemeOverrides">
           <PhonePreview
-            :style="previewBgVars"
+            :style="[previewUiVars, previewBgVars]"
             :is-dark="previewEffectiveIsDark"
             :transparent="!!previewBg"
             :viewport="viewport"
