@@ -33,6 +33,7 @@ import {
   NRadioGroup,
   NScrollbar,
   NSelect,
+  NSwitch,
   NTabPane,
   NTabs,
   NText,
@@ -75,6 +76,7 @@ const isAllowedPrivacyPolicy = ref(false)
 const showAddGoodsModal = ref(false)
 const uploadProgress = ref(0)
 const isUploadingCover = ref(false)
+const shouldWatermarkCover = ref(true)
 const goodsModalTab = ref<'basic' | 'exchange' | 'subItems' | 'advanced'>('basic')
 const subItemsSortMode = ref<'manual' | 'name' | 'price' | 'stock'>('manual')
 let tempSubItemIdSeed = -1
@@ -271,10 +273,12 @@ const rules = {
   },
 }
 
-async function uploadWatermarkedCover(file: File) {
-  const watermarkedFile = await addVtsuruLiveWatermark(file)
+async function uploadCover(file: File) {
+  const uploadFile = shouldWatermarkCover.value
+    ? await addVtsuruLiveWatermark(file)
+    : file
   return uploadFiles(
-    [watermarkedFile],
+    [uploadFile],
     undefined,
     UserFileLocation.Local,
     (stage: string) => {
@@ -388,8 +392,8 @@ async function updateGoods(e: MouseEvent) {
     const newFilesToUpload = currentGoodsModel.value.fileList.filter(f => f.file && f.status !== 'finished')
     if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
       isUploadingCover.value = true
-      message.info('正在添加封面水印并上传...')
-      const uploadResults = await uploadWatermarkedCover(newFilesToUpload[0].file)
+      message.info(shouldWatermarkCover.value ? '正在添加封面水印并上传...' : '正在上传封面...')
+      const uploadResults = await uploadCover(newFilesToUpload[0].file)
       isUploadingCover.value = false
       if (uploadResults && uploadResults.length > 0) {
         currentGoodsModel.value.goods.cover = uploadResults[0]
@@ -419,8 +423,9 @@ async function updateGoods(e: MouseEvent) {
       const subFilesToUpload = fileList.filter(f => f.file && f.status !== 'finished')
       if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
         isUploadingCover.value = true
-        message.info(`正在添加款式封面水印并上传: ${sub.name || '未命名'}...`)
-        const uploadResults = await uploadWatermarkedCover(subFilesToUpload[0].file)
+        const uploadAction = shouldWatermarkCover.value ? '添加水印并上传' : '上传'
+        message.info(`正在${uploadAction}款式封面: ${sub.name || '未命名'}...`)
+        const uploadResults = await uploadCover(subFilesToUpload[0].file)
         isUploadingCover.value = false
         if (uploadResults && uploadResults.length > 0) {
           sub.cover = uploadResults[0]
@@ -570,6 +575,7 @@ function onUpdateClick(item: ResponsePointGoodModel) {
       : [],
   }
   isAllowedPrivacyPolicy.value = true
+  shouldWatermarkCover.value = true
   goodsModalTab.value = 'basic'
   subItemsSortMode.value = 'manual'
   showAddGoodsModal.value = true
@@ -657,6 +663,7 @@ function resetGoods() {
   currentGoodsModel.value = defaultGoodsModel()
   subItemFileLists.value = {}
   isAllowedPrivacyPolicy.value = false
+  shouldWatermarkCover.value = true
   goodsModalTab.value = 'basic'
   subItemsSortMode.value = 'manual'
 }
@@ -1130,6 +1137,12 @@ onMounted(() => { })
                       <span style="font-size: 12px; color: grey">(小于10MB)</span>
                     </NFlex>
                   </NUpload>
+                  <NFlex align="center" :gap="8">
+                    <NSwitch v-model:value="shouldWatermarkCover" />
+                    <NText depth="3">
+                      添加 vtsuru.live 水印（同时应用于款式封面）
+                    </NText>
+                  </NFlex>
                   <NProgress
                     v-if="isUploadingCover"
                     type="line"
