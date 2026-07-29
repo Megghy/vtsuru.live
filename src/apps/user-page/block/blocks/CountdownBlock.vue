@@ -81,7 +81,7 @@ const breakdown = computed(() => {
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <div class="countdown-inner">
+    <div class="countdown-inner" :class="{ 'countdown-inner--bare': !cfg.backgrounded }">
       <!-- 集成式标题区 -->
       <div class="cd-header-integrated">
         <NIcon size="14" class="cd-icon">
@@ -107,7 +107,11 @@ const breakdown = computed(() => {
 
       <template v-else>
         <!-- 数字展示区 -->
-        <div v-if="cfg.style === 'cards'" class="cd-digits-wrapper">
+        <div
+          v-if="cfg.style === 'cards'"
+          class="cd-digits-wrapper"
+          :class="{ 'without-seconds': !cfg.showSeconds }"
+        >
           <div class="digit-box">
             <div class="val">
               {{ breakdown?.days ?? 0 }}
@@ -200,11 +204,21 @@ const breakdown = computed(() => {
   min-height: 140px;
 }
 
+.countdown-inner--bare {
+  border-radius: var(--vtsuru-page-radius);
+  background: color-mix(
+    in srgb,
+    var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 54%,
+    transparent
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
 .cd-header-integrated {
   display: flex;
   align-items: center;
   gap: 6px;
-  opacity: 0.5;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--vtsuru-border);
   padding-bottom: 4px;
@@ -233,6 +247,11 @@ const breakdown = computed(() => {
   width: min(100%, 340px);
 }
 
+.cd-digits-wrapper.without-seconds {
+  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr);
+  width: min(100%, 250px);
+}
+
 .digit-box {
   display: flex;
   flex-direction: column;
@@ -250,17 +269,17 @@ const breakdown = computed(() => {
 }
 
 .digit-box .lbl {
+  color: var(--vtsuru-fg-muted);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   margin-top: 6px;
-  opacity: 0.4;
   letter-spacing: 0;
 }
 
 .sep {
   font-size: 28px;
   font-weight: 300;
-  opacity: 0.2;
+  color: var(--vtsuru-fg-muted);
   margin-top: 2px;
   user-select: none;
 }
@@ -280,12 +299,12 @@ const breakdown = computed(() => {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0;
-  opacity: 0.8;
 }
 
 @container (max-width: 420px) {
   .countdown-inner { padding: 16px 10px; }
   .cd-digits-wrapper { gap: 2px; grid-template-columns: minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr); }
+  .cd-digits-wrapper.without-seconds { grid-template-columns: minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr); }
   .digit-box .val { font-size: 30px; }
   .sep { font-size: 22px; }
   .inline-time.bold { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; }
@@ -298,8 +317,8 @@ const breakdown = computed(() => {
   color: var(--vtsuru-page-text, var(--vtsuru-fg));
 }
 .inline-time.bold small {
+  color: var(--vtsuru-fg-muted);
   font-size: 12px;
-  opacity: 0.5;
   margin-right: 8px;
   text-transform: uppercase;
 }
