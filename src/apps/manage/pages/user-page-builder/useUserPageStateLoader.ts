@@ -3,6 +3,7 @@ import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { Ref } from 'vue'
 import { deepCloneJson, stableStringify } from './editorHelpers'
 import { createDefaultProject, isEmptyDraftPlaceholder, isMeaningfulSettings } from './editorPageConfig'
+import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 
 interface UseUserPageStateLoaderOptions {
   settings: Ref<UserPagesSettingsV1>
@@ -15,8 +16,10 @@ interface UseUserPageStateLoaderOptions {
   lastSavedAt: Ref<number | null>
   lastSavedSnapshot: Ref<string>
   jsonSanitizedNotified: Ref<boolean>
-  localDraftStorage: Ref<UserPagesSettingsV1 | null>
-  readLocalDraft: () => Promise<UserPagesSettingsV1 | null>
+  localDraftStorage: Ref<UserPagesLocalDraftSnapshot | null>
+  localDraftConflict: Ref<UserPagesLocalDraftSnapshot | null>
+  localDraftBaseSnapshot: Ref<string>
+  readLocalDraft: () => Promise<UserPagesLocalDraftSnapshot | null>
   notifyError: (content: string) => void
 }
 
@@ -29,19 +32,35 @@ function isSameSettings(first: UserPagesSettingsV1 | null, second: UserPagesSett
   }
 }
 
+function isSnapshotOfSettings(snapshot: string | null, settings: UserPagesSettingsV1) {
+  if (snapshot === null) return false
+  try {
+    return stableStringify(JSON.parse(snapshot)) === stableStringify(settings)
+  } catch {
+    return false
+  }
+}
+
 export function selectInitialSettings(
   state: Awaited<ReturnType<typeof fetchMyUserPagesState>>,
-  localDraft: UserPagesSettingsV1 | null,
+  localDraft: UserPagesLocalDraftSnapshot | null,
 ) {
   const serverSettings = isMeaningfulSettings(state.draft) && !(state.published && isEmptyDraftPlaceholder(state.draft))
     ? state.draft
     : state.published
-  if (isMeaningfulSettings(localDraft) && !isSameSettings(localDraft, serverSettings)) {
+  const localSettings = localDraft?.settings ?? null
+  const serverBaseSnapshot = serverSettings ? JSON.stringify(serverSettings) : ''
+  const canRecoverLocal = serverSettings
+    ? !!localDraft && isSnapshotOfSettings(localDraft.baseSnapshot, serverSettings)
+    : localDraft?.baseSnapshot === ''
+  if (isMeaningfulSettings(localSettings) && canRecoverLocal && !isSameSettings(localSettings, serverSettings)) {
     return {
-      settings: localDraft,
+      settings: localSettings,
       source: 'draft',
       savedSettings: serverSettings,
+      serverBaseSnapshot,
       dirty: true,
+      conflict: null,
     } as const
   }
   if (serverSettings) {
@@ -49,14 +68,21 @@ export function selectInitialSettings(
       settings: serverSettings,
       source: isSameSettings(serverSettings, state.published) ? 'published' : 'draft',
       savedSettings: serverSettings,
+      serverBaseSnapshot,
       dirty: false,
+      conflict: isMeaningfulSettings(localSettings) && !isSameSettings(localSettings, serverSettings)
+        ? localDraft
+        : null,
     } as const
   }
+  const settings = { version: 1, home: { mode: 'block', block: createDefaultProject() }, pages: {} } as UserPagesSettingsV1
   return {
-    settings: { version: 1, home: { mode: 'block', block: createDefaultProject() }, pages: {} } as UserPagesSettingsV1,
+    settings,
     source: 'default',
     savedSettings: null,
+    serverBaseSnapshot,
     dirty: false,
+    conflict: isMeaningfulSettings(localSettings) ? localDraft : null,
   } as const
 }
 
@@ -82,13 +108,20 @@ export function useUserPageStateLoader(options: UseUserPageStateLoaderOptions) {
     options.rollbackAvailable.value = !!state.rollback
 
     const selected = selectInitialSettings(state, localDraft)
+    options.localDraftConflict.value = selected.conflict
+    options.localDraftBaseSnapshot.value = selected.serverBaseSnapshot
     options.settings.value = selected.settings
     options.loadedFrom.value = selected.source
-    options.localDraftStorage.value = deepCloneJson(selected.settings)
 
     options.lastSavedSnapshot.value = selected.savedSettings
       ? JSON.stringify(selected.savedSettings)
       : createSavedSnapshot(options)
+    if (!selected.conflict) {
+      options.localDraftStorage.value = {
+        settings: deepCloneJson(selected.settings),
+        baseSnapshot: selected.serverBaseSnapshot,
+      }
+    }
     options.isDirty.value = selected.dirty
     options.lastSavedAt.value = Date.now()
   }

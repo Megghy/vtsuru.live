@@ -6,11 +6,22 @@ import { computed, toValue } from 'vue'
 import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 import { persistedGetItemRaw, usePersistedStorage } from '@/shared/storage/persist'
 
+export interface UserPagesLocalDraftSnapshot {
+  settings: UserPagesSettingsV1
+  baseSnapshot: string | null
+}
+
+const LEGACY_USER_PAGES_LOCAL_DRAFT_KEY = 'vtsuru:user-pages:local-draft:v1'
+
 export function getUserPagesLocalDraftKey(accountId: number) {
   return `${USER_PAGES_LOCAL_DRAFT_KEY}:${accountId}`
 }
 
-export function parseUserPagesLocalDraft(raw: string): UserPagesSettingsV1 | null {
+function getLegacyUserPagesLocalDraftKey(accountId: number) {
+  return `${LEGACY_USER_PAGES_LOCAL_DRAFT_KEY}:${accountId}`
+}
+
+export function parseUserPagesLocalDraft(raw: string): UserPagesLocalDraftSnapshot | null {
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
@@ -18,7 +29,27 @@ export function parseUserPagesLocalDraft(raw: string): UserPagesSettingsV1 | nul
     return null
   }
   try {
-    return migrateUserPagesSettings(parsed)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+    const snapshot = parsed as Record<string, unknown>
+    let baseSnapshot: string | null
+    if (typeof snapshot.baseSnapshot === 'string') baseSnapshot = snapshot.baseSnapshot
+    else if (snapshot.baseSnapshot === null) baseSnapshot = null
+    else return null
+    return {
+      settings: migrateUserPagesSettings(snapshot.settings),
+      baseSnapshot,
+    }
+  } catch {
+    return null
+  }
+}
+
+function parseLegacyUserPagesLocalDraft(raw: string): UserPagesLocalDraftSnapshot | null {
+  try {
+    return {
+      settings: migrateUserPagesSettings(JSON.parse(raw)),
+      baseSnapshot: null,
+    }
   } catch {
     return null
   }
@@ -35,11 +66,14 @@ export function useUserPagesLocalDraftStorage(accountId: MaybeRefOrGetter<number
   } as const
 
   return typeof window === 'undefined'
-    ? useStorage<UserPagesSettingsV1 | null>(storageKey, null, undefined, options)
-    : usePersistedStorage<UserPagesSettingsV1 | null>(storageKey, null, options)
+    ? useStorage<UserPagesLocalDraftSnapshot | null>(storageKey, null, undefined, options)
+    : usePersistedStorage<UserPagesLocalDraftSnapshot | null>(storageKey, null, options)
 }
 
 export async function readUserPagesLocalDraft(accountId: number) {
   const raw = await persistedGetItemRaw(getUserPagesLocalDraftKey(accountId))
-  return raw ? parseUserPagesLocalDraft(raw) : null
+  if (raw) return parseUserPagesLocalDraft(raw)
+
+  const legacyRaw = await persistedGetItemRaw(getLegacyUserPagesLocalDraftKey(accountId))
+  return legacyRaw ? parseLegacyUserPagesLocalDraft(legacyRaw) : null
 }

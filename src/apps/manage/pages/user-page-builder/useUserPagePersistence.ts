@@ -3,6 +3,7 @@ import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
+import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 import type { UserPageValidationIssue } from './validateUserPagesSettings'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
@@ -16,7 +17,8 @@ export interface UseUserPagePersistenceOptions {
   isDirty: Ref<boolean>
   lastSavedAt: Ref<number | null>
   lastSavedSnapshot: Ref<string>
-  localDraftStorage: Ref<UserPagesSettingsV1 | null>
+  localDraftStorage: Ref<UserPagesLocalDraftSnapshot | null>
+  localDraftBaseSnapshot: Ref<string>
 
   maxConfigBytes: number
   history: {
@@ -39,6 +41,21 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
   const publishCheckWarnings = ref<string[]>([])
   const publishCheckBytes = ref<number>(0)
   const publishError = ref<string | null>(null)
+
+  function applyPersistedSettings(requestSnapshot: string, persistedSettings: UserPagesSettingsV1) {
+    const persistedSnapshot = JSON.stringify(persistedSettings)
+    const hasNewerChanges = JSON.stringify(opts.settings.value) !== requestSnapshot
+    opts.lastSavedSnapshot.value = persistedSnapshot
+    opts.localDraftBaseSnapshot.value = persistedSnapshot
+    if (!hasNewerChanges) opts.settings.value = deepCloneJson(persistedSettings)
+    opts.localDraftStorage.value = {
+      settings: deepCloneJson(opts.settings.value),
+      baseSnapshot: persistedSnapshot,
+    }
+    opts.isDirty.value = hasNewerChanges
+    opts.lastSavedAt.value = Date.now()
+    return hasNewerChanges
+  }
 
   function scanPublishWarnings(settingsToScan: UserPagesSettingsV1) {
     let embedCount = 0
@@ -129,12 +146,9 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       }
       const savedSettings = deepCloneJson(opts.settings.value)
       const savedSnapshot = JSON.stringify(savedSettings)
-      await saveMyUserPagesDraft(savedSettings)
-      opts.localDraftStorage.value = deepCloneJson(savedSettings)
-      opts.lastSavedSnapshot.value = savedSnapshot
-      opts.isDirty.value = JSON.stringify(opts.settings.value) !== savedSnapshot
-      opts.lastSavedAt.value = Date.now()
-      if (!silent) opts.notify.success(opts.isDirty.value ? '草稿已保存，当前仍有新的修改' : '已保存草稿')
+      const persistedSettings = await saveMyUserPagesDraft(savedSettings)
+      const hasNewerChanges = applyPersistedSettings(savedSnapshot, persistedSettings)
+      if (!silent) opts.notify.success(hasNewerChanges ? '草稿已保存，当前仍有新的修改' : '已保存草稿')
       return true
     } catch (e) {
       reportUserPageError(e, 'save-draft')
@@ -160,14 +174,10 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       }
       const publishedSnapshot = deepCloneJson(opts.settings.value)
       const publishedSerialized = JSON.stringify(publishedSnapshot)
-      await publishMyUserPagesSettings(publishedSnapshot)
-      opts.localDraftStorage.value = deepCloneJson(publishedSnapshot)
-      opts.loadedPublished.value = publishedSnapshot
-      const hasNewerChanges = JSON.stringify(opts.settings.value) !== publishedSerialized
+      const persistedSettings = await publishMyUserPagesSettings(publishedSnapshot)
+      opts.loadedPublished.value = persistedSettings
+      const hasNewerChanges = applyPersistedSettings(publishedSerialized, persistedSettings)
       if (opts.loadedFrom && !hasNewerChanges) opts.loadedFrom.value = 'published'
-      opts.lastSavedAt.value = Date.now()
-      opts.lastSavedSnapshot.value = publishedSerialized
-      opts.isDirty.value = hasNewerChanges
       publishModal.value = false
       opts.notify.success(hasNewerChanges ? '已发布请求时的版本，当前仍有新的修改' : '已发布')
     } catch (e) {

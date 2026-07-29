@@ -6,6 +6,7 @@ import type { UserPageEditorCore } from './useUserPageEditorCore'
 import { useUserPagePersistence } from './useUserPagePersistence'
 import { useUserPageStateLoader } from './useUserPageStateLoader'
 import { readUserPagesLocalDraft, useUserPagesLocalDraftStorage } from './useUserPagesLocalDraftStorage'
+import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
 import type { UserPagesSettingsV1 } from '@/apps/user-page/types'
 import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import type { ComputedRef } from 'vue'
@@ -49,8 +50,14 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
   const { core, message, maxConfigBytes } = options
   const jsonSanitizedNotified = ref(false)
   const localDraftStorage = useUserPagesLocalDraftStorage(options.accountId)
+  const localDraftConflict = ref<UserPagesLocalDraftSnapshot | null>(null)
+  const localDraftBaseSnapshot = ref('')
   watch(core.settings, settings => {
-    localDraftStorage.value = deepCloneJson(settings)
+    if (localDraftConflict.value) return
+    localDraftStorage.value = {
+      settings: deepCloneJson(settings),
+      baseSnapshot: localDraftBaseSnapshot.value,
+    }
   }, { deep: true })
   const loader = useUserPageStateLoader({
     settings: core.settings,
@@ -64,6 +71,8 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     lastSavedSnapshot: core.lastSavedSnapshot,
     jsonSanitizedNotified,
     localDraftStorage,
+    localDraftConflict,
+    localDraftBaseSnapshot,
     readLocalDraft: async () => readUserPagesLocalDraft(options.accountId.value),
     notifyError: message.error,
   })
@@ -76,6 +85,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     lastSavedAt: core.lastSavedAt,
     lastSavedSnapshot: core.lastSavedSnapshot,
     localDraftStorage,
+    localDraftBaseSnapshot,
     maxConfigBytes,
     history: { batch: core.batchHistory, clear: core.clearHistory },
     validateForPublish: validateRenderableUserPagesSettings,
@@ -84,7 +94,10 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
       const restored = JSON.parse(snapshot) as UserPagesSettingsV1
       core.settings.value = restored
       core.blocks.clearSelection()
-      localDraftStorage.value = deepCloneJson(restored)
+      localDraftStorage.value = {
+        settings: deepCloneJson(restored),
+        baseSnapshot: localDraftBaseSnapshot.value,
+      }
       core.isDirty.value = snapshot !== core.lastSavedSnapshot.value
       core.lastSavedAt.value = Date.now()
     },
@@ -117,7 +130,38 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     return stableStringify(core.settings.value) !== stableStringify(core.loadedPublished.value)
   })
 
-  return createLifecycleResult(core, persistence, autoSave, resources, configBytes, configBytesPercent, hasUnpublishedChanges, createInitializer(core, loader.loadState))
+  function restoreConflictingLocalDraft() {
+    const conflict = localDraftConflict.value
+    if (!conflict) return
+    localDraftConflict.value = null
+    core.settings.value = deepCloneJson(conflict.settings)
+    core.blocks.clearSelection()
+    core.clearHistory()
+    core.isDirty.value = true
+    localDraftStorage.value = {
+      settings: deepCloneJson(core.settings.value),
+      baseSnapshot: localDraftBaseSnapshot.value,
+    }
+    core.lastSavedAt.value = Date.now()
+    message.success('已恢复本地修改')
+  }
+
+  function discardConflictingLocalDraft() {
+    if (!localDraftConflict.value) return
+    localDraftConflict.value = null
+    localDraftStorage.value = {
+      settings: deepCloneJson(core.settings.value),
+      baseSnapshot: localDraftBaseSnapshot.value,
+    }
+    message.success('已放弃本地修改')
+  }
+
+  return {
+    ...createLifecycleResult(core, persistence, autoSave, resources, configBytes, configBytesPercent, hasUnpublishedChanges, createInitializer(core, loader.loadState)),
+    localDraftConflict,
+    restoreConflictingLocalDraft,
+    discardConflictingLocalDraft,
+  }
 }
 
 function createLifecycleResult(

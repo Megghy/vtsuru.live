@@ -1,4 +1,4 @@
-export const USER_PAGES_LOCAL_DRAFT_KEY = 'vtsuru:user-pages:local-draft:v1'
+export const USER_PAGES_LOCAL_DRAFT_KEY = 'vtsuru:user-pages:local-draft:v2'
 export const USER_PAGE_BLOCK_CLIPBOARD_KEY = 'vtsuru.user-page.block-clipboard.v1'
 export const USER_PAGE_BLOCK_TEMPLATES_KEY = 'vtsuru.user-page.block-templates.v1'
 export const USER_PAGE_BUILDER_COLUMNS_ORDER_KEY = 'vtsuru.user-page-builder.columns.order.v1'

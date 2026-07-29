@@ -1,20 +1,28 @@
 <script setup lang="ts">
 import type { GoogleFontCatalogItem } from '@/apps/user-page/googleFonts'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getGoogleFontFamilyCss, useGoogleFont } from '@/apps/user-page/googleFonts'
 
 const props = defineProps<{
   font: GoogleFontCatalogItem
   active: boolean
   categoryLabel: string
+  loadPreview: boolean
 }>()
 
 const emit = defineEmits<{
   select: [family: string]
 }>()
 
-const fontFamily = computed(() => props.font.family)
-const fontStyle = computed(() => ({ fontFamily: getGoogleFontFamilyCss(props.font.family) }))
+const previewedFamily = ref<string | null>(null)
+watch([() => props.font.family, () => props.loadPreview], ([family, loadPreview]) => {
+  if (loadPreview) previewedFamily.value = family
+  else if (previewedFamily.value !== family) previewedFamily.value = null
+}, { immediate: true })
+const fontFamily = computed(() => previewedFamily.value ?? undefined)
+const fontStyle = computed(() => previewedFamily.value
+  ? { fontFamily: getGoogleFontFamilyCss(props.font.family) }
+  : undefined)
 useGoogleFont(fontFamily)
 </script>
 

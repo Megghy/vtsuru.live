@@ -101,10 +101,10 @@ export async function fetchMyUserPagesState(): Promise<{
 }
 
 export async function saveMyUserPagesDraft(settings: UserPagesSettingsV1) {
-  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}save-draft`, {
+  const resp = await QueryPostAPI<string>(`${USER_PAGES_API_URL}save-draft`, {
     json: JSON.stringify(settings),
   })
-  unwrapOk(resp, '保存草稿失败')
+  return parseUserPagesSettings(unwrapOk(resp, '保存草稿失败'))
 }
 
 export async function clearMyUserPagesDraft() {
@@ -113,10 +113,10 @@ export async function clearMyUserPagesDraft() {
 }
 
 export async function publishMyUserPagesSettings(settings: UserPagesSettingsV1) {
-  const resp = await QueryPostAPI<unknown>(`${USER_PAGES_API_URL}publish`, {
+  const resp = await QueryPostAPI<string>(`${USER_PAGES_API_URL}publish`, {
     json: JSON.stringify(settings),
   })
-  unwrapOk(resp, '发布失败')
+  return parseUserPagesSettings(unwrapOk(resp, '发布失败'))
 }
 
 export async function rollbackMyUserPagesPublished() {

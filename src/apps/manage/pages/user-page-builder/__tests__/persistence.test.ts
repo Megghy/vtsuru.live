@@ -30,6 +30,7 @@ function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
     lastSavedAt: ref(null),
     lastSavedSnapshot: ref(''),
     localDraftStorage: ref(null),
+    localDraftBaseSnapshot: ref(''),
     maxConfigBytes: 131072,
     history: { batch: fn => fn(), clear: vi.fn() },
     validateForPublish: vi.fn().mockReturnValue(validationIssues),
@@ -42,6 +43,7 @@ function createPersistence(validationIssues: UserPageValidationIssue[] = []) {
 describe('user page publishing', () => {
   beforeEach(() => {
     publishMyUserPagesSettings.mockReset()
+    publishMyUserPagesSettings.mockImplementation(async settings => structuredClone(settings))
   })
 
   it('keeps the publish dialog open with a retryable error', async () => {
@@ -56,7 +58,6 @@ describe('user page publishing', () => {
   })
 
   it('closes the publish dialog only after success', async () => {
-    publishMyUserPagesSettings.mockResolvedValueOnce(undefined)
     const persistence = createPersistence()
     persistence.openPublishModal()
 

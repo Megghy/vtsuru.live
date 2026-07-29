@@ -9,10 +9,11 @@ import {
   useGoogleFont,
 } from '@/apps/user-page/googleFonts'
 import { resolveUserPageTextColor } from '@/apps/user-page/theme'
+import { useEventListener } from '@vueuse/core'
 import { Info16Regular, TextFont24Regular } from '@vicons/fluent'
 import { SearchOutline } from '@vicons/ionicons5'
 import { NButton, NColorPicker, NEmpty, NFlex, NFormItem, NIcon, NInput, NModal, NSelect, NSpin, NSwitch, NTag, NText, NTooltip, NVirtualList } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import GoogleFontBrowserRow from './GoogleFontBrowserRow.vue'
 import PropsGrid from './PropsGrid.vue'
 
@@ -65,6 +66,9 @@ const fontBrowserShown = ref(false)
 const fontSearch = ref('')
 const fontCategory = ref<string | null>(null)
 const fontPreviewFamily = ref<string | null>(null)
+const fontRowPreviewEnabled = ref(true)
+let fontScrollIdleTimer: ReturnType<typeof setTimeout> | undefined
+let fontPointerActive = false
 const fontCategoryLabels: Record<string, string> = {
   'sans-serif': '无衬线',
   'serif': '衬线',
@@ -92,9 +96,35 @@ function loadFontCatalog(show = true) {
 
 function openFontBrowser() {
   fontPreviewFamily.value = fontFamily.value
+  fontRowPreviewEnabled.value = true
   fontBrowserShown.value = true
   loadFontCatalog()
 }
+
+function handleFontBrowserScroll() {
+  fontRowPreviewEnabled.value = false
+  clearTimeout(fontScrollIdleTimer)
+  if (fontPointerActive) return
+  fontScrollIdleTimer = setTimeout(() => {
+    fontRowPreviewEnabled.value = true
+  }, 180)
+}
+
+function handleFontBrowserPointerDown() {
+  fontPointerActive = true
+  fontRowPreviewEnabled.value = false
+  clearTimeout(fontScrollIdleTimer)
+}
+
+function handleFontBrowserPointerEnd() {
+  if (!fontPointerActive) return
+  fontPointerActive = false
+  handleFontBrowserScroll()
+}
+
+useEventListener(window, ['pointerup', 'pointercancel'], handleFontBrowserPointerEnd)
+
+onBeforeUnmount(() => clearTimeout(fontScrollIdleTimer))
 
 function applyPreviewFont() {
   if (!activePreviewFamily.value) return
@@ -183,12 +213,15 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
           :items="browsableFonts"
           :item-size="46"
           key-field="family"
+          @pointerdown.capture="handleFontBrowserPointerDown"
+          @scroll="handleFontBrowserScroll"
         >
           <template #default="{ item }">
             <GoogleFontBrowserRow
               :font="item"
               :active="activePreviewFamily === item.family"
               :category-label="fontCategoryLabels[item.category] ?? item.category"
+              :load-preview="fontRowPreviewEnabled"
               @select="fontPreviewFamily = $event"
             />
           </template>

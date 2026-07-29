@@ -9,6 +9,10 @@ const published: UserPagesSettingsV1 = {
   pages: {},
 }
 
+function localDraft(settings: UserPagesSettingsV1, base: UserPagesSettingsV1 = published) {
+  return { settings, baseSnapshot: JSON.stringify(base) }
+}
+
 describe('user page local draft recovery', () => {
   it('账号 key 相互隔离', () => {
     expect(getUserPagesLocalDraftKey(1)).not.toBe(getUserPagesLocalDraftKey(2))
@@ -19,7 +23,7 @@ describe('user page local draft recovery', () => {
       ...published,
       pages: { works: { mode: 'legacy', title: '本地修改' } },
     }
-    const selected = selectInitialSettings({ draft: null, published, rollback: null }, local)
+    const selected = selectInitialSettings({ draft: null, published, rollback: null }, localDraft(local))
 
     expect(selected.settings).toBe(local)
     expect(selected.savedSettings).toBe(published)
@@ -27,10 +31,74 @@ describe('user page local draft recovery', () => {
   })
 
   it('本地内容与服务端一致时保持已保存状态', () => {
-    const selected = selectInitialSettings({ draft: null, published, rollback: null }, structuredClone(published))
+    const selected = selectInitialSettings(
+      { draft: null, published, rollback: null },
+      localDraft(structuredClone(published)),
+    )
 
     expect(selected.settings).toBe(published)
     expect(selected.dirty).toBe(false)
     expect(selected.source).toBe('published')
+  })
+
+  it('保留只有全局主题的服务端草稿', () => {
+    const draft: UserPagesSettingsV1 = {
+      ...published,
+      theme: { fontFamily: 'Huninn' },
+    }
+    const selected = selectInitialSettings({ draft, published, rollback: null }, null)
+
+    expect(selected.settings).toBe(draft)
+    expect(selected.source).toBe('draft')
+  })
+
+  it('服务端已变化时忽略基于旧版本的本地内容', () => {
+    const currentDraft: UserPagesSettingsV1 = {
+      ...published,
+      home: { mode: 'legacy', title: '服务端当前版本' },
+      theme: { fontFamily: 'Huninn' },
+    }
+    const staleLocal: UserPagesSettingsV1 = {
+      ...published,
+      pages: { works: { mode: 'legacy', title: '旧本地修改' } },
+    }
+    const selected = selectInitialSettings(
+      { draft: currentDraft, published, rollback: null },
+      localDraft(staleLocal),
+    )
+
+    expect(selected.settings).toBe(currentDraft)
+    expect(selected.dirty).toBe(false)
+    expect(selected.source).toBe('draft')
+    expect(selected.conflict?.settings).toBe(staleLocal)
+  })
+
+  it('旧版未知基线的本地内容保留为待处理冲突', () => {
+    const staleLocal: UserPagesSettingsV1 = {
+      ...published,
+      pages: { works: { mode: 'legacy', title: '旧版本地修改' } },
+    }
+    const selected = selectInitialSettings(
+      { draft: null, published, rollback: null },
+      { settings: staleLocal, baseSnapshot: null },
+    )
+
+    expect(selected.settings).toBe(published)
+    expect(selected.conflict?.settings).toBe(staleLocal)
+  })
+
+  it('服务端没有配置时仅恢复基于空服务端的本地内容', () => {
+    const local: UserPagesSettingsV1 = {
+      ...published,
+      pages: { works: { mode: 'legacy', title: '首次本地修改' } },
+    }
+    const selected = selectInitialSettings(
+      { draft: null, published: null, rollback: null },
+      { settings: local, baseSnapshot: '' },
+    )
+
+    expect(selected.settings).toBe(local)
+    expect(selected.dirty).toBe(true)
+    expect(selected.conflict).toBeNull()
   })
 })

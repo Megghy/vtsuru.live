@@ -286,6 +286,23 @@ onBeforeRouteLeave(() => {
           {{ editor.error.value }}
         </NAlert>
 
+        <NAlert
+          v-if="editor.localDraftConflict.value"
+          type="warning"
+          :show-icon="true"
+          style="margin-bottom: 12px"
+        >
+          <div>检测到另一服务端版本上的本地修改，当前显示服务端内容。</div>
+          <NFlex size="small" style="margin-top: 8px">
+            <NButton size="tiny" @click="editor.discardConflictingLocalDraft">
+              放弃本地修改
+            </NButton>
+            <NButton size="tiny" type="warning" @click="editor.restoreConflictingLocalDraft">
+              恢复本地修改
+            </NButton>
+          </NFlex>
+        </NAlert>
+
         <div ref="builderBodyEl" class="builder-body" :data-workspace-mode="workspaceMode">
           <span class="sr-only" role="status" aria-live="polite">{{ keyboardStatus }}</span>
           <NButtonGroup v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1" class="workspace-tabs" size="small">
