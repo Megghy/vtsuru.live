@@ -5,7 +5,7 @@ import { NButton, NResult, NText } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DefaultIndexTemplate from '@/apps/user/pages/indexTemplate/DefaultIndexTemplate.vue'
-import { getPageBackgroundCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
@@ -68,8 +68,21 @@ const contentMaxWidth = computed(() => {
 })
 
 const effectiveIsDark = computed(() => {
-  const mode = mergedBlockProject.value?.theme?.pageThemeMode
+  const modes = [
+    mergedBlockProject.value?.theme?.pageThemeMode,
+    pageConfig.value?.theme?.pageThemeMode,
+    settings.value?.theme?.pageThemeMode,
+  ]
+  const mode = modes.find(value => value === 'light' || value === 'dark')
   return resolvePageThemeIsDark(mode, isDarkMode.value)
+})
+
+const contentThemeVars = computed(() => {
+  const theme = mergedBlockProject.value?.theme ?? {
+    ...settings.value?.theme,
+    ...pageConfig.value?.theme,
+  }
+  return getUserPageThemeCssVars(theme, effectiveIsDark.value)
 })
 
 const pageBackground = computed(() => resolvePageBackground(pageConfig.value?.background))
@@ -94,7 +107,7 @@ const contentClass = computed(() => ({
 </script>
 
 <template>
-  <div class="root">
+  <div class="root" :style="contentThemeVars">
     <div :class="contentBackgroundClass" :style="contentBackgroundVars">
       <main class="content" :class="contentClass">
         <header

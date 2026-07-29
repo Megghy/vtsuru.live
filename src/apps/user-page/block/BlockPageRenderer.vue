@@ -7,7 +7,7 @@ import { useMediaQuery, useNow } from '@vueuse/core'
 import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
-import { getUserPageSurfaceCssVars } from '@/apps/user-page/background'
+import { getUserPageThemeCssVars } from '@/apps/user-page/background'
 import { buildTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
 import { isBlockVisible } from './visibility'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
@@ -48,15 +48,9 @@ const pageMaxWidth = computed(() => {
 })
 const containerStyle = computed(() => ({
   ...getThemeCssVars(surfaceTokens.value),
-  ...getUserPageSurfaceCssVars(props.isDark),
+  ...getUserPageThemeCssVars(props.project.theme, props.isDark),
   '--vtsuru-page-radius': `${radius.value}px`,
   '--vtsuru-page-spacing': `${spacing.value}px`,
-  '--vtsuru-page-primary': props.project.theme?.primaryColor ?? 'var(--n-primary-color)',
-  '--vtsuru-page-bg': props.project.theme?.backgroundColor ?? 'transparent',
-  '--vtsuru-page-text': props.project.theme?.textColor ?? surfaceTokens.value.foreground,
-  '--vtsuru-surface-fg': surfaceTokens.value.foreground,
-  '--vtsuru-surface-fg-muted': 'color-mix(in srgb, var(--vtsuru-surface-fg) 76%, transparent)',
-  '--vtsuru-surface-fg-subtle': 'color-mix(in srgb, var(--vtsuru-surface-fg) 60%, transparent)',
   ...(pageMaxWidth.value ? { '--vtsuru-page-max-width': pageMaxWidth.value } : {}),
 }))
 
@@ -69,11 +63,21 @@ const naiveTheme = computed(() => {
 const userOverrides = computed<GlobalThemeOverrides>(() => {
   const t: any = props.project.theme ?? {}
   const primaryColor = typeof t.primaryColor === 'string' ? t.primaryColor : undefined
+  const textColor = typeof t.textColor === 'string' ? t.textColor : undefined
+  const backgroundColor = typeof t.backgroundColor === 'string' ? t.backgroundColor : undefined
   const radiusPx = `${radius.value}px`
+  const surfaceBg = backgroundColor
 
   return {
     common: {
       ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
+      ...(textColor ? {
+        textColorBase: textColor,
+        textColor1: textColor,
+        textColor2: textColor,
+        textColor3: textColor,
+      } : {}),
+      ...(surfaceBg ? { cardColor: surfaceBg, modalColor: surfaceBg, popoverColor: surfaceBg } : {}),
       borderRadius: radiusPx,
       borderRadiusSmall: radiusPx,
     },
@@ -192,7 +196,7 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   flex-direction: column;
   gap: var(--vtsuru-page-spacing);
   color: var(--vtsuru-page-text);
-  background: var(--vtsuru-page-bg);
+  background: transparent;
 }
 .block {
   min-width: 0;

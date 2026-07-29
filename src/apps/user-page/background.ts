@@ -78,6 +78,42 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean) {
   } as Record<string, string>
 }
 
+function readThemeColor(theme: unknown, key: 'primaryColor' | 'textColor' | 'backgroundColor') {
+  if (!theme || typeof theme !== 'object' || Array.isArray(theme)) return ''
+  const value = (theme as Record<string, unknown>)[key]
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean) {
+  const primaryColor = readThemeColor(theme, 'primaryColor')
+  const textColor = readThemeColor(theme, 'textColor')
+  const backgroundColor = readThemeColor(theme, 'backgroundColor')
+  const surfaceVars = getUserPageSurfaceCssVars(effectiveIsDark)
+  const pageText = textColor || 'var(--vtsuru-fg)'
+
+  return {
+    ...surfaceVars,
+    '--vtsuru-page-primary': primaryColor || 'var(--n-primary-color)',
+    '--vtsuru-page-text': pageText,
+    '--vtsuru-surface-fg': pageText,
+    '--vtsuru-surface-fg-muted': `color-mix(in srgb, ${pageText} 72%, transparent)`,
+    '--vtsuru-surface-fg-subtle': `color-mix(in srgb, ${pageText} 54%, transparent)`,
+    '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
+    '--user-page-theme-content-bg': 'transparent',
+    '--text-color-base': pageText,
+    '--text-color-1': pageText,
+    '--text-color-2': `color-mix(in srgb, ${pageText} 72%, transparent)`,
+    '--text-color-3': `color-mix(in srgb, ${pageText} 54%, transparent)`,
+    '--primary-color': primaryColor || 'var(--n-primary-color)',
+    '--user-page-theme-surface-bg': backgroundColor
+      ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)`
+      : surfaceVars['--user-page-ui-surface-bg'],
+    '--user-page-theme-surface-bg-hover': backgroundColor
+      ? `color-mix(in srgb, ${backgroundColor} 42%, transparent)`
+      : surfaceVars['--user-page-ui-surface-bg-hover'],
+  } as Record<string, string>
+}
+
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {
   const img = bg.type === 'image' ? bg.imagePath.trim() : ''
   const safeUrl = img ? img.replaceAll('"', "\\\"") : ''

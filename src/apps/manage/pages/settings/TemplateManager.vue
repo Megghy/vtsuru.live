@@ -396,17 +396,23 @@ async function setAsDisplayTemplate() {
         <!-- 右: 实时预览 (容器固定高度, 模板自带滚动则内部滚, 否则由容器兜底) -->
         <div class="template-preview-pane">
           <Transition name="fade">
-            <Suspense v-if="previewComponent" :key="selectedKey">
-              <component
-                :is="previewComponent"
-                ref="previewRef"
-                :user-info="accountInfo"
-                :bili-info="biliUserInfo"
-                :data="group.Data"
-                :config="currentConfigData"
-                @vue:mounted="onPreviewMounted"
-              />
-            </Suspense>
+            <div
+              v-if="previewComponent"
+              :key="selectedKey"
+              class="template-preview-content"
+            >
+              <Suspense>
+                <component
+                  :is="previewComponent"
+                  ref="previewRef"
+                  :user-info="accountInfo"
+                  :bili-info="biliUserInfo"
+                  :data="group.Data"
+                  :config="currentConfigData"
+                  @vue:mounted="onPreviewMounted"
+                />
+              </Suspense>
+            </div>
           </Transition>
         </div>
       </div>
@@ -504,7 +510,6 @@ async function setAsDisplayTemplate() {
   margin-right: -16px;
 }
 
-/* 右栏: 仅作定高视口盒子, 自身不滚动. 由模板根容器撑满后内部滚动, 收敛为单条 */
 .template-preview-pane {
   flex: 1 1 0;
   min-width: 0;
@@ -513,8 +518,12 @@ async function setAsDisplayTemplate() {
   position: relative;
 }
 
-/* 模板根多按整页 100vh 设计为唯一滚动容器; 预览中改为填满右栏, 让内部滚动收敛为单条 */
-.template-preview-pane > :deep(*) {
+.template-preview-content {
+  height: 100% !important;
+  overflow: auto;
+}
+
+.template-preview-content > :deep(:only-child) {
   height: 100% !important;
 }
 
@@ -535,6 +544,11 @@ async function setAsDisplayTemplate() {
 
   .template-preview-pane {
     height: auto;
+  }
+
+  .template-preview-content {
+    height: auto !important;
+    overflow: visible;
   }
 }
 

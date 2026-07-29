@@ -12,7 +12,7 @@ import { useAccount } from '@/api/account'
 import { ThemeType } from '@/api/api-models'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, getUserPageSurfaceCssVars, resolvePageBackground } from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { providePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
@@ -172,6 +172,11 @@ const pageThemeMode = computed<PageThemeMode>(() => {
   return globalThemeMode.value
 })
 
+const layoutTheme = computed(() => ({
+  ...((userPagesSettings.value as any)?.theme),
+  ...((currentUserPageConfig.value as any)?.theme),
+}))
+
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
 const pageNaiveTheme = computed(() => (effectiveIsDark.value ? darkTheme : null))
@@ -212,14 +217,27 @@ const pageThemeOverrides = computed<GlobalThemeOverrides>(() => {
   const surfaceBg = vars['--user-page-ui-surface-bg']
   const surfaceBgHover = vars['--user-page-ui-surface-bg-hover']
   const borderColor = (vars as any)['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
+  const textColor = typeof layoutTheme.value.textColor === 'string' ? layoutTheme.value.textColor : undefined
+  const primaryColor = typeof layoutTheme.value.primaryColor === 'string' ? layoutTheme.value.primaryColor : undefined
+  const themedSurfaceBg = typeof layoutTheme.value.backgroundColor === 'string'
+    ? layoutTheme.value.backgroundColor
+    : surfaceBg
 
   return {
     common: {
       borderColor,
       dividerColor: borderColor,
+      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
+      ...(textColor ? {
+        textColorBase: textColor,
+        textColor1: textColor,
+        textColor2: textColor,
+        textColor3: textColor,
+      } : {}),
+      ...(themedSurfaceBg ? { cardColor: themedSurfaceBg, modalColor: themedSurfaceBg, popoverColor: themedSurfaceBg } : {}),
     },
     Card: {
-      color: surfaceBg,
+      color: themedSurfaceBg,
       colorEmbedded: surfaceBgHover,
       borderColor,
     },
@@ -276,7 +294,7 @@ const layoutPageBgVars = computed(() => {
   return getPageBackgroundCssVars(bg, effectiveIsDark.value)
 })
 
-const layoutUiVars = computed(() => getUserPageSurfaceCssVars(effectiveIsDark.value))
+const layoutUiVars = computed(() => getUserPageThemeCssVars(layoutTheme.value, effectiveIsDark.value))
 
 const mergedLayoutVars = computed(() => ({ ...layoutUiVars.value, ...layoutPageBgVars.value }))
 
@@ -1012,7 +1030,7 @@ watch(
 
 
 .page-root.bg-host .viewer-page-content {
-  background-color: transparent;
+  background-color: var(--user-page-theme-content-bg, transparent);
 }
 
 .sider-avatar {
@@ -1260,7 +1278,7 @@ watch(
   padding: var(--vtsuru-content-padding);
   box-sizing: border-box;
   position: relative; // 为内部非绝对定位的内容提供上下文，例如 NBackTop
-  background-color: var(--n-body-color);
+  background-color: var(--user-page-theme-content-bg, var(--n-body-color));
   max-width: 100%;
   overflow-x: clip;
 }

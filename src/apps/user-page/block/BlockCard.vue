@@ -26,7 +26,7 @@ const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
 const palette = computed(() => {
-  const foreground = isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)'
+  const foreground = 'var(--vtsuru-surface-fg)'
   return {
     foreground,
     muted: isUnbackgrounded.value
@@ -35,9 +35,7 @@ const palette = computed(() => {
     subtle: isUnbackgrounded.value
       ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
       : 'var(--vtsuru-surface-fg-subtle)',
-    mutedBackground: isUnbackgrounded.value
-      ? 'var(--vtsuru-bg-muted)'
-      : 'var(--user-page-ui-surface-bg-hover)',
+    mutedBackground: isUnbackgrounded.value ? 'var(--vtsuru-bg-muted)' : 'var(--user-page-ui-surface-bg-hover)',
   }
 })
 
@@ -185,7 +183,7 @@ const borderTitleAlignClass = computed(() => {
   min-width: 0;
   border-radius: var(--vtsuru-page-radius);
   color: var(--vtsuru-block-fg);
-  background: var(--user-page-ui-surface-bg, var(--vtsuru-bg-elevated));
+  background: var(--user-page-theme-surface-bg, var(--user-page-ui-surface-bg, var(--vtsuru-bg-elevated)));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   box-shadow:

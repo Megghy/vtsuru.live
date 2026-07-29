@@ -993,7 +993,7 @@ export const Config = defineTemplateConfig([
   font-size: 0.9em;
   margin-right: 5px;
   font-weight: 500;
-  color: #555555;
+  color: var(--text-color-2);
   white-space: nowrap;
 }
 
@@ -1009,7 +1009,7 @@ html.dark .filter-label {
   font-size: 0.85em;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  color: #555555;
+  color: var(--text-color-2);
   line-height: 1.4;
 }
 
@@ -1061,7 +1061,7 @@ html.dark .filter-divider {
   transform: translateY(-50%);
   font-size: 0.9em;
   pointer-events: none;
-  color: #aaaaaa;
+  color: var(--text-color-3);
 }
 
 html.dark .search-icon {
@@ -1078,7 +1078,7 @@ html.dark .search-icon {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: rgba(255, 255, 255, 0.8);
-  color: #333333;
+  color: var(--text-color-base);
 }
 
 html.dark .filter-input {
@@ -1088,7 +1088,7 @@ html.dark .filter-input {
 }
 
 .filter-input::placeholder {
-  color: #aaaaaa;
+  color: var(--text-color-3);
 }
 
 html.dark .filter-input::placeholder {
@@ -1181,7 +1181,7 @@ html.dark .song-list-template {
   position: relative;
   padding: 20px;
   font-family: sans-serif;
-  color: #333333;
+  color: var(--text-color-base);
   min-height: 100%;
   box-sizing: border-box;
 }
@@ -1224,7 +1224,7 @@ html.dark .profile-avatar {
 
 .profile-name {
   margin-top: 5px; margin-bottom: 8px; font-size: 1.8em; font-weight: bold;
-  color: #1a1a1a;
+  color: var(--text-color-1);
 }
 
 html.dark .profile-name {
@@ -1233,7 +1233,7 @@ html.dark .profile-name {
 
 .profile-description {
   margin-bottom: 10px; font-size: 0.95em; line-height: 1.4;
-  color: #4d4d4d;
+  color: var(--text-color-2);
 }
 
 html.dark .profile-description {
@@ -1241,7 +1241,7 @@ html.dark .profile-description {
 }
 
 .profile-extra-info {
-  font-size: 0.8em; color: #666666;
+  font-size: 0.8em; color: var(--text-color-3);
 }
 
 html.dark .profile-extra-info {
@@ -1265,12 +1265,12 @@ html.dark .social-links {
 
 .social-links-title {
   font-weight: bold;
-  color: #4d4d4d;
+  color: var(--text-color-1);
 }
 
 .social-links-subtitle {
   white-space: pre-wrap;
-  color: #4d4d4d;
+  color: var(--text-color-2);
 }
 
 html.dark .social-links-title,
@@ -1284,7 +1284,7 @@ html.dark .social-links-subtitle {
 
 .social-icons-bar .icon {
   display: inline-block; width: 24px; height: 24px; border-radius: 4px;
-  font-size: 1em; cursor: pointer; color: #555555; transition: color 0.2s;
+  font-size: 1em; cursor: pointer; color: var(--text-color-2); transition: color 0.2s;
 }
 
 html.dark .social-icons-bar .icon {
@@ -1317,7 +1317,7 @@ html.dark .social-icons-bar .icon {
   border-radius: 5px;
   font-size: 0.85em;
   text-decoration: none;
-  color: #0066cc;
+  color: var(--primary-color);
   background-color: rgba(0, 102, 204, 0.1);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -1342,7 +1342,7 @@ html.dark .social-link:hover {
 
 .social-link .arrow {
   font-weight: bold;
-  color: #aaaaaa;
+  color: var(--text-color-3);
 }
 
 html.dark .social-link .arrow {
@@ -1399,7 +1399,7 @@ html.dark .song-list-container {
   background-color: rgba(245, 245, 245, 0.8);
   backdrop-filter: blur(2px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  color: #444444;
+  color: var(--text-color-1);
   user-select: none;
 }
 
@@ -1424,7 +1424,7 @@ html.dark .song-list-table thead th {
   padding: 10px 12px;
   vertical-align: middle;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  color: #4d4d4d;
+  color: var(--text-color-2);
   word-break: break-word;
 }
 
@@ -1455,7 +1455,7 @@ html.dark .song-list-table tbody tr:hover {
   gap: 8px;
   font-weight: 600;
   text-decoration: none;
-  color: #2c2c2c;
+  color: var(--text-color-1);
 }
 
 html.dark .song-name {
